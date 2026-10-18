@@ -326,8 +326,7 @@ def _invalid(message: str, **details) -> CommandRefused:
     return CommandRefused('invalid_value', message, details=details)
 
 
-def case_of(state: Mapping) -> c.Case:
-    return c.load_case(state['case']['path'], verify_data=False)
+case_of = c.case_of
 
 
 def candidate_features(case: c.Case) -> list[str]:

@@ -152,8 +152,7 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
 
 # --- identity (no pandas) ---------------------------------------------------------------
 
-def case_of(state: Mapping, *, verify_data: bool = False) -> c.Case:
-    return c.load_case(state['case']['path'], verify_data=verify_data)
+case_of = c.case_of
 
 
 def _base_inputs(state: Mapping) -> dict:
@@ -297,10 +296,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             expose('train_fit', 'train', keys['train'], features + [target])
             expose('validation_model_evaluation', 'validation', keys['validation'],
                    features + [target])
-        else:   # policy evaluation
-            missing = [{'requirement': 'result_current', 'slot': s} for s in FITS
-                       if s not in state['current']]
-            _refuse(missing, f'Running {activity}')
+        else:   # policy evaluation; current fits are a precondition (require_activity)
             inputs['results'] = {s: state['current'][s] for s in FITS}
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
             params = {'rules': evaluated_rules(state, options['rules']), 'models': list(FITS),

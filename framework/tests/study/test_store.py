@@ -153,7 +153,6 @@ def test_create_writes_revision_one_and_never_overwrites(study, case_dir):
         study.create(st.initial_state(c.load_case(case_dir)))
     assert info.value.code == 'state_exists'
     assert study.load_state() == state
-    assert sto.find_study(study.study_dir / 'notebooks') == study.study_dir
 
 
 def test_hand_edit_of_state_is_an_integrity_error(study):

@@ -22,7 +22,7 @@ INPUTS = {
  'pedagogue':['reports/data_profile.json','reports/classical-profile.json'],
 }
 TASKS = [('profile',['profile']),('checks',['checks','--data']),('preflight',['preflight']),('reference',['run','--reference']),
-         ('pipeline',['run','--pipeline','model/pipeline.py','--note','pilot: exploration provisoire']),
+         ('pipeline',['run','--pipeline','model/pipeline.py','--note','pilot: provisional exploration']),
          ('null',['run','--pipeline','model/pipeline.py','--null'])]
 STALE_RESULT='Result is stale and retained in executions; no promotion into the current journey.'
 

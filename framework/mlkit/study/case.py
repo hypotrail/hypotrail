@@ -385,6 +385,13 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def case_of(state, *, verify_data: bool = False) -> Case:
+    """The case recorded in a study ``state`` (its file is read again; the dataset bytes
+    are verified only with ``verify_data``). The one definition, used by the commands and
+    the activities."""
+    return load_case(state['case']['path'], verify_data=verify_data)
+
+
 def source_changes(state) -> list[dict]:
     """The case and dataset files whose bytes differ from the digests recorded in
     ``state`` (plan §3.7 row 12): ``[{label, path, expected_sha256, actual_sha256}]``,

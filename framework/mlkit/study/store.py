@@ -18,7 +18,8 @@ Layout::
 
 Writes are atomic: a temporary file in the same directory, fsync, then
 ``os.replace``. Registry entries and blobs are created with ``O_EXCL`` and never
-rewritten. A study is found by its ``.hypotrail/`` marker; there is no global index.
+rewritten. A study is named explicitly (``--study DIR``) and recognised by its
+``.hypotrail/`` marker; it is never searched for, and there is no global index.
 
 :class:`StudyStore` is also the store that :func:`mlkit.reliability.apply_command`
 needs. Use :meth:`StudyStore.execute` (or :meth:`StudyStore.writing`) so every
@@ -154,15 +155,6 @@ def read_jsonl(path: Path) -> list[dict]:
     return rows
 
 
-def find_study(start) -> Path | None:
-    """The nearest directory at or above ``start`` that has a ``.hypotrail/`` marker."""
-    path = Path(start).resolve()
-    for candidate in (path, *path.parents):
-        if (candidate / HOME / st.STATE_FILE).is_file():
-            return candidate
-    return None
-
-
 # --- the study store --------------------------------------------------------------------
 
 class StudyStore:
@@ -174,7 +166,12 @@ class StudyStore:
         self.study_dir = Path(study_dir).resolve()
         self.home = self.study_dir / HOME
         # Mutable files (relative to the study directory) that a command may change
-        # besides state.json; they are restored if the command fails.
+        # besides state.json; apply_command restores them if the command fails. The study
+        # commands track none: inside a transaction they change state.json only. Every
+        # other write is immutable (registry entries, blobs), append-only (revisions,
+        # events, exposure, the registry index), informative (execution histories), or
+        # made after the commit (rendered artefacts), so a failed command has nothing
+        # else to restore. The parameter stays for the apply_command store protocol.
         self.tracked = tuple(tracked)
         for name in self.tracked:
             self._inside(name)
