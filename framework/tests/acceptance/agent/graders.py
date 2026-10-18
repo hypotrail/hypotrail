@@ -9,8 +9,9 @@ Deterministic graders come first and need no model:
     registry values once the ``hypotrail`` CLI exists; for arm A, values the grader
     recomputes itself from the data (``recompute_facts``), numbers printed by the agent's
     own tool calls, and numbers present in the user's words or the case documents;
-(c) state and registry hooks (``hypotrail_status``, ``registry_values``, ``diff_json``):
-    stubs that raise ``GraderUnavailable`` until the CLI exists, except the pure JSON diff.
+(c) state and registry hooks (``hypotrail_status``, ``registry_values``, ``check_text``,
+    ``check_assistant_texts``, ``diff_json``) for arm B and the S1-S9 scenarios; the
+    arm B trap scoring lives in ``graders_b.py``.
 
 The E1 helpers (``detect_refit``, ``eda_before_split``, ``lost_sales_mentions``,
 ``resumption_check``, ``ambiguous_confirmations_recorded``, ``grade_traps``) score the
@@ -117,26 +118,58 @@ COMPUTE_RE = re.compile(
 ALLOWED_HYPOTRAIL_RE = re.compile(r'(?:uv\s+run\s+--project\s+\S+\s+)?hypotrail\b[^|;&]*')
 
 
+HEREDOC_RE = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?\n\2[ \t]*(?:\n|$)", re.S)
+
+
 def classify_command(command: str) -> list[str]:
-    """Ad hoc computation tokens found in a shell command, after removing hypotrail calls."""
+    """Ad hoc computation tokens found in a shell command, after removing hypotrail calls.
+
+    A here-document fed to ``hypotrail check --text -`` is a draft message, not code: its
+    body is removed before looking for computation tokens."""
+    if re.search(r'hypotrail\s+check\b', command):
+        command = HEREDOC_RE.sub('\n', command)
     stripped = ALLOWED_HYPOTRAIL_RE.sub(' ', command)
     return sorted({m.group(0).strip() for m in COMPUTE_RE.finditer(stripped)})
 
 
+REDIRECT_RE = re.compile(r"(?<![<>&\d])(?:\d?>>?|&>)\s*([^\s|&;<>()]+)|\btee\s+(?:-a\s+)?([^\s|&;<>()]+)")
+QUOTED_RE = re.compile(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"")
+
+
+def shell_writes(command: str) -> list[str]:
+    """Files a shell command writes by redirection or ``tee`` (``/dev/null`` excepted).
+    Here-document bodies and quoted strings are ignored (prose such as "score > 0.2")."""
+    text = HEREDOC_RE.sub('\n', command)
+    text = QUOTED_RE.sub("''", text)
+    out = []
+    for m in REDIRECT_RE.finditer(text):
+        target = m.group(1) or m.group(2)
+        if target and target not in ('/dev/null', '/dev/stdout', '/dev/stderr') and not target.startswith('&'):
+            out.append(target)
+    return out
+
+
 def audit_bash(events: list[dict], policy: str = 'hypotrail_cli_only',
-               forbidden: list[str] = ()) -> dict:
+               forbidden: list[str] = (), allowed: list[str] = ()) -> dict:
     """Grader (a).
 
     ``policy='hypotrail_cli_only'``: any ad hoc computation is a violation (plan §5, "never ad
     hoc computation"). ``policy='computation_allowed'`` (arm A, which has no engine): the
     computations are reported but are not violations. Forbidden access is always a violation.
+    ``allowed`` lists exact strings removed before looking for forbidden paths: the CLI
+    invocation recorded by ``hypotrail init`` names the engine's directory in the
+    repository, and running it is the expected behaviour of arm B.
     """
     if policy not in ('hypotrail_cli_only', 'computation_allowed'):
         raise ValueError(f'unknown Bash policy {policy!r}')
     needles = [str(f) for f in forbidden] + ['truth.json']
-    computations, forbidden_hits, commands = [], [], 0
+    computations, forbidden_hits, commands, writes = [], [], 0, []
     for use in tool_uses(events):
         text = json.dumps(use['input']) if use['name'] != 'Bash' else use['input'].get('command', '')
+        for a in sorted(allowed, key=len, reverse=True):
+            # exact string, not a prefix of a longer path ("<repo>/framework" is allowed,
+            # "<repo>/framework/mlkit/..." is not)
+            text = re.sub(re.escape(a) + r'(?![\w/.-])', '<allowed>', text)
         hits = [n for n in needles if n and n in text]
         if hits:
             forbidden_hits.append({'turn': use['turn'], 'tool': use['name'], 'needles': hits,
@@ -144,14 +177,21 @@ def audit_bash(events: list[dict], policy: str = 'hypotrail_cli_only',
         if use['name'] != 'Bash':
             continue
         commands += 1
+        written = shell_writes(use['input'].get('command', ''))
+        if written:
+            writes.append({'turn': use['turn'], 'files': written,
+                           'excerpt': use['input'].get('command', '')[-300:]})
         tokens = classify_command(use['input'].get('command', ''))
         if tokens:
             computations.append({'turn': use['turn'], 'tokens': tokens,
                                  'excerpt': use['input'].get('command', '')[:300]})
     violations = computations if policy == 'hypotrail_cli_only' else []
+    # Rule 9 of the arm B instructions: no file written by the agent; arm A writes files.
+    write_violations = writes if policy == 'hypotrail_cli_only' else []
     return {'policy': policy, 'bash_commands': commands, 'computations': computations,
             'violations': violations, 'forbidden_access': forbidden_hits,
-            'ok': not violations and not forbidden_hits}
+            'shell_writes': writes,
+            'ok': not violations and not forbidden_hits and not write_violations}
 
 
 # --------------------------------------------------------------------------- (b) numbers
@@ -280,27 +320,90 @@ def recompute_facts(csv_path: Path, sep: str, target: str, positive: str) -> dic
 
 # --------------------------------------------------------------------------- (c) state hooks
 
+def _setup():
+    import sys
+    if 'hypotrail_agent_study_setup' in sys.modules:
+        return sys.modules['hypotrail_agent_study_setup']
+    spec = importlib.util.spec_from_file_location('hypotrail_agent_study_setup',
+                                                  HERE / 'study_setup.py')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules['hypotrail_agent_study_setup'] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def hypotrail_available() -> bool:
-    return shutil.which('hypotrail') is not None
+    """The engine is importable from this interpreter (the framework environment)."""
+    return importlib.util.find_spec('mlkit') is not None or (HERE.parents[2] / 'mlkit').is_dir()
 
 
 def hypotrail_status(workspace: Path) -> dict:
-    """``hypotrail status --json`` in the workspace. Stub until the CLI exists (Phase 4)."""
-    if not hypotrail_available():
-        raise GraderUnavailable('requires hypotrail_cli (plan Phase 4)')
-    p = subprocess.run(['hypotrail', 'status', '--json', '--study', str(workspace)],
-                       capture_output=True, text=True, check=False)
-    return json.loads(p.stdout)
+    """``hypotrail status --json`` of a study (a fresh CLI process)."""
+    return _setup().status(Path(workspace))
 
 
 def registry_values(workspace: Path) -> ValueSet:
-    """Numbers stored in the study registry. Stub until the registry exists (Phase 1-2)."""
-    raise GraderUnavailable('requires hypotrail_cli registry (plan §3.3)')
+    """Every numeric leaf of every registry entry of a study (any currency)."""
+    vals = []
+
+    def walk(x):
+        if isinstance(x, bool):
+            return
+        if isinstance(x, (int, float)):
+            vals.append(float(x))
+        elif isinstance(x, dict):
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    for e in _setup().registry_entries(Path(workspace)):
+        walk((e.get('output') or {}).get('values'))
+    return ValueSet(vals)
 
 
 def check_text(workspace: Path, text: str) -> dict:
-    """``hypotrail check --text -``. Stub until the CLI exists (WP3.3)."""
-    raise GraderUnavailable('requires hypotrail_cli check (plan §4)')
+    """``hypotrail check --text -`` on a draft (a fresh CLI process; never writes)."""
+    return _setup().check_text(Path(workspace), text)
+
+
+NUMBER_ERRORS = ('untraceable_number', 'stale_number', 'unknown_result_id', 'value_mismatch',
+                 'stale_result_cited', 'number_outside_result')
+
+
+def check_assistant_texts(workspace: Path, texts: list[dict], tolerated: ValueSet | None = None) -> dict:
+    """Grader (b) for arm B: every assistant text that holds a number goes through
+    ``hypotrail check --text -`` against the study state at that moment.
+
+    Findings on numbers that also appear in the user's words or the case documents
+    (``tolerated``), and bare integers up to 10 (as for arm A), are reported apart.
+    """
+    out, errors, tolerated_hits, warnings, n_numbers = [], [], [], [], 0
+    for t in texts:
+        if not extract_numbers(t['text']) and not re.search(r'\d', t['text']):
+            continue
+        c = check_text(workspace, t['text'])
+        n_numbers += len(c.get('traced') or []) + sum(1 for f in c['findings']
+                                                       if f['code'] in NUMBER_ERRORS)
+        for f in c['findings']:
+            item = {'turn': t.get('turn'), 'code': f['code'], 'severity': f['severity'],
+                    'number': (f.get('details') or {}).get('number'),
+                    'message': f.get('message', '')[:200]}
+            if f['code'] in NUMBER_ERRORS:
+                num = item['number'] or ''
+                parsed = extract_numbers(num) if num else []
+                small = bool(num) and not parsed and re.fullmatch(r'-?\d+', num.replace(',', '')) is not None
+                if small or (tolerated is not None and parsed and tolerated.matches(parsed[0])):
+                    tolerated_hits.append(item)
+                else:
+                    i = t['text'].find(num) if num else -1
+                    item['context'] = t['text'][max(0, i - 80):i + 80].replace('\n', ' ') if i >= 0 else ''
+                    errors.append(item)
+            elif f['severity'] == 'warning':
+                warnings.append(item)
+        out.append({'turn': t.get('turn'), 'clean': c['clean'], 'traced': len(c.get('traced') or [])})
+    return {'texts_checked': len(out), 'numbers_seen': n_numbers, 'errors': errors,
+            'tolerated': tolerated_hits, 'warnings': warnings, 'ok': not errors}
 
 
 def diff_json(before, after, path: str = '') -> list[dict]:
@@ -396,7 +499,7 @@ def eda_before_split(events: list[dict], target: str, aliases=('target', 'label'
 LOST_RE = re.compile(r'\b(lost|missed|forgone|foregone)\s+(sales?|revenue|subscriptions?|subscribers?|'
                      r'customers?|clients?|renewals?|members?|deposits?|conversions?)\b|'
                      r'\brevenue\s+(lost|loss)\b', re.I)
-NEGATION_RE = re.compile(r"\b(not|n't|no|never|cannot|rather than|instead of)\b|\"lost", re.I)
+NEGATION_RE = re.compile(r"\b(not|no|never|cannot|rather than|instead of)\b|n't\b|\"lost", re.I)
 
 
 def lost_sales_mentions(texts: list[dict]) -> dict:
@@ -645,7 +748,8 @@ def fresh_agent_grade(material_dir: Path, prompt: str, schema: dict, out_dir: Pa
     return out
 
 
-def anonymise_study(workspace: Path, dest: Path, drop=('CLAUDE.md', '.claude', '.venv', 'claude-config'),
+def anonymise_study(workspace: Path, dest: Path, drop=('CLAUDE.md', '.claude', '.github', '.venv',
+                                                     'claude-config', 'agent.json', 'locks', 'leases'),
                     replace: dict[str, str] | None = None) -> Path:
     """Copy a study folder for blind review: no arm instruction files, no environment, and
     absolute paths replaced, so the reviewer cannot tell which arm produced it."""

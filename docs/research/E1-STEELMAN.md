@@ -1,6 +1,6 @@
 # E1 steelman protocol: does a good skill make the engine unnecessary?
 
-Status: protocol for plan WP0.8 (amendment A5). Arm A was run on 18 October 2026; see [runs/E1-arm-A-2026-10-18.md](runs/E1-arm-A-2026-10-18.md). Arm B waits for the `hypotrail` CLI (plan Phase 4).
+Status: protocol for plan WP0.8 (amendment A5). Arm A was run on 18 October 2026; see [runs/E1-arm-A-2026-10-18.md](runs/E1-arm-A-2026-10-18.md). Arm B was run the same day; see [runs/E1-arm-B-2026-10-18.md](runs/E1-arm-B-2026-10-18.md). That run also added a supplementary "answering" persona (`e1_persona_answering.yaml`), used for both arms, because arm B cannot pass pause 1 with the scripted persona alone.
 
 Results are **Claude Code acceptance** (plan A1). They are not Copilot acceptance, and they do not measure human comprehension.
 
@@ -128,6 +128,9 @@ uv run --project framework python framework/tests/acceptance/agent/e1.py run --c
 uv run --project framework python framework/tests/acceptance/agent/e1.py review --run $RUNS/bank-r1
 uv run --project framework python framework/tests/acceptance/agent/e1.py grade --run $RUNS/bank-r1
 uv run --project framework python framework/tests/acceptance/agent/e1.py summary $RUNS/bank-r1 $RUNS/synth-r1
+# arm B (workspace from `hypotrail init`), optionally with the answering persona:
+uv run --project framework python framework/tests/acceptance/agent/e1.py run --arm framework/tests/acceptance/agent/arms/arm_b --persona answering --case bank --out $RUNS/b-bank-r1
+uv run --project framework python framework/tests/acceptance/agent/e1.py compare --group "A=$RUNS/bank-r1,$RUNS/synth-r1" --group "B=$RUNS/b-bank-r1"
 ```
 
 Each run has these caps by default:

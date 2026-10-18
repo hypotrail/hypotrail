@@ -73,6 +73,7 @@ class Arm:
     permission_mode: str
     bash_policy: str
     extra_args: list[str]
+    setup: str = 'files'          # 'files' (copy arm files) or 'hypotrail_init' (arm B)
 
     @classmethod
     def load(cls, path: Path) -> 'Arm':
@@ -86,7 +87,8 @@ class Arm:
                    allowed_tools=list(cl.get('allowed_tools') or []),
                    permission_mode=cl.get('permission_mode', 'dontAsk'),
                    bash_policy=doc.get('bash_policy', 'hypotrail_cli_only'),
-                   extra_args=list(cl.get('extra_args') or []))
+                   extra_args=list(cl.get('extra_args') or []),
+                   setup=doc.get('setup', 'files'))
 
     def install(self, workspace: Path) -> list[str]:
         written = []
@@ -198,6 +200,51 @@ def deny_rules(paths: list[Path]) -> list[str]:
     return rules
 
 
+class InterruptWatcher:
+    """S9: kill the first ``hypotrail run`` that reaches the test pause hook.
+
+    The agent's environment sets ``HYPOTRAIL_TEST_HOOKS=1`` and
+    ``HYPOTRAIL_FAULT=run_pause_before_promote:<folder>``: every run then writes
+    ``<folder>/ready`` (its pid) after computing and waits for ``<folder>/go`` before
+    promoting. The watcher kills the first such process with SIGKILL, an abrupt end before
+    the promotion, then writes ``go`` so that any later run proceeds normally.
+    """
+
+    def __init__(self, folder: str, after_seconds: float = 1.0, poll_s: float = 0.2):
+        import threading
+        self.folder = Path(folder)
+        self.after = float(after_seconds)
+        self.poll = poll_s
+        self.events: list[dict] = []
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+
+    def start(self):
+        self.folder.mkdir(parents=True, exist_ok=True)
+        self._thread.start()
+
+    def _loop(self):
+        import signal
+        ready = self.folder / 'ready'
+        while not self._stop.is_set():
+            if ready.is_file() and not (self.folder / 'go').exists():
+                time.sleep(self.after)
+                try:
+                    pid = int(ready.read_text().strip())
+                    os.kill(pid, signal.SIGKILL)
+                    self.events.append({'killed_pid': pid, 'at': _dt.datetime.now(
+                        _dt.timezone.utc).isoformat()})
+                except (ValueError, ProcessLookupError, PermissionError) as exc:
+                    self.events.append({'kill_failed': repr(exc)})
+                (self.folder / 'go').write_text('go')
+            self._stop.wait(self.poll)
+
+    def stop(self) -> dict:
+        self._stop.set()
+        self._thread.join(timeout=5)
+        return {'folder': str(self.folder), 'events': self.events}
+
+
 class Conversation:
     """One scripted conversation (several chats) against one workspace."""
 
@@ -241,7 +288,8 @@ class Conversation:
             cmd += ['--resume', session_id]
         return cmd
 
-    def say(self, chat: int, utterance: str, label: str | None = None) -> dict:
+    def say(self, chat: int, utterance: str, label: str | None = None,
+            env_extra: dict[str, str] | None = None, interrupt: dict | None = None) -> dict:
         if self.stopped:
             raise RuntimeError(f'conversation stopped: {self.stopped}')
         if len(self.turns) >= self.caps.max_utterances:
@@ -252,14 +300,19 @@ class Conversation:
         cmd = self._command(utterance, session)
         started = _dt.datetime.now(_dt.timezone.utc).isoformat()
         t = time.time()
+        env = {**self.env, **(env_extra or {})}
+        watcher = InterruptWatcher(**interrupt) if interrupt else None
+        if watcher:
+            watcher.start()
         try:
-            p = subprocess.run(cmd, cwd=self.workspace, env=self.env, capture_output=True,
+            p = subprocess.run(cmd, cwd=self.workspace, env=env, capture_output=True,
                                text=True, timeout=self.caps.timeout_s_per_turn)
             stdout, stderr, code, timed_out = p.stdout, p.stderr, p.returncode, False
         except subprocess.TimeoutExpired as exc:
             stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or '')
             stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or '')
             code, timed_out = None, True
+        finally_watch = watcher.stop() if watcher else None
         wall = round(time.time() - t, 1)
         path = self.run_dir / 'transcript' / f'turn-{index:02d}.jsonl'
         path.write_text(stdout, encoding='utf-8')
@@ -290,6 +343,8 @@ class Conversation:
             'init_has_memory_paths': 'memory_paths' in init,
             'tool_calls': tool_calls, 'transcript': str(path.relative_to(self.run_dir)),
             'final_text': result.get('result'), 'stderr_tail': stderr[-2000:],
+            'finished_at': _dt.datetime.now(_dt.timezone.utc).isoformat(),
+            'env_extra': dict(env_extra or {}), 'interrupt': finally_watch,
         }
         self.turns.append(record)
         self.log(f'[turn {index:02d} chat {chat}] {label or ""} {wall}s ${cost:.2f} '
@@ -357,11 +412,17 @@ def archive_workspace(workspace: Path, dest: Path) -> None:
 def run_conversation(*, arm: Arm, chats: list[list[dict]], run_dir: Path, prepare_workspace,
                      caps: Caps | None = None, workspace_base: Path | None = None,
                      forbidden_paths: list[Path] = (), env_extra: dict[str, str] | None = None,
-                     meta: dict | None = None, log=print) -> dict:
+                     meta: dict | None = None, log=print, after_turn=None,
+                     before_first_turn=None, responder=None) -> dict:
     """Run a whole conversation and write ``run_dir/run.json``.
 
     ``chats`` is a list of chats; each chat is a list of ``{'say': str, 'label': str}``.
     ``prepare_workspace(ws)`` copies the case material and returns a description dict.
+    ``after_turn(ws, turn, run_dir)`` returns a dict stored as ``turn['after']`` (arm B:
+    study snapshot and number check). ``responder(ws, turn, step, next_step, answered)``
+    may return an extra step ``{'say', 'label', 'simulated'}`` said right after the turn
+    (a simulated junior answer); it is called again after that step, with ``answered``
+    counting the answers already given after the scripted step.
     """
     caps = caps or Caps()
     run_dir = Path(run_dir).resolve()
@@ -369,7 +430,7 @@ def run_conversation(*, arm: Arm, chats: list[list[dict]], run_dir: Path, prepar
     guard = RepoGuard()
     ws = make_workspace(workspace_base)
     case_info = prepare_workspace(ws)
-    installed = arm.install(ws)
+    installed = arm.install(ws) + list(case_info.get('installed') or [])
     check_isolation(ws, installed)
     for p in forbidden_paths:
         if ws in Path(p).resolve().parents or Path(p).resolve() == ws:
@@ -383,15 +444,31 @@ def run_conversation(*, arm: Arm, chats: list[list[dict]], run_dir: Path, prepar
         'forbidden_paths': [str(p) for p in forbidden_paths], 'turns': [],
     }
     conv = Conversation(ws, run_dir, arm, caps, forbidden_paths, env_extra, log)
+    if before_first_turn is not None:
+        record['before'] = before_first_turn(ws)
     t = time.time()
     try:
         for chat_index, chat in enumerate(chats, start=1):
-            for step in chat:
-                if conv.stopped:
-                    break
-                conv.say(chat_index, step['say'], step.get('label'))
-                record['turns'] = conv.turns
-                (run_dir / 'run.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
+            for position, step in enumerate(chat):
+                queue = [step]
+                answered = 0
+                while queue and not conv.stopped:
+                    current = queue.pop(0)
+                    turn = conv.say(int(current.get('chat', chat_index)), current['say'],
+                                    current.get('label'), env_extra=current.get('env'),
+                                    interrupt=current.get('interrupt'))
+                    if current.get('simulated'):
+                        turn['simulated'] = current['simulated']
+                    if after_turn is not None:
+                        turn['after'] = after_turn(ws, turn, run_dir)
+                    record['turns'] = conv.turns
+                    (run_dir / 'run.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
+                    if responder is not None:
+                        nxt = chat[position + 1] if position + 1 < len(chat) else None
+                        extra = responder(ws, turn, step, nxt, answered)
+                        if extra:
+                            answered += 1
+                            queue.append({**extra, 'chat': step.get('chat', chat_index)})
     finally:
         record.update({
             'turns': conv.turns, 'sessions': {str(k): v for k, v in conv.sessions.items()},

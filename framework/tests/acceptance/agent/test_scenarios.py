@@ -1,27 +1,28 @@
-"""Agent acceptance scenarios S1-S9 (plan WP0.7). Claude Code acceptance, not Copilot.
+"""Agent acceptance scenarios S1-S9 (plan WP0.7, WP4.3). Claude Code acceptance, not Copilot.
 
-Skipped by default (conftest.py) and, until Phase 4, skipped because the `hypotrail` CLI
-does not exist: every scenario declares ``requires: [hypotrail_cli]``. The scenario
-driver (setup through the walkthrough, interruption, and the checks named in
-scenarios.yaml) is to be completed in WP4.3 against the real CLI; until then the test
-documents and validates the contract instead of pretending to run it.
+Skipped by default (conftest.py): each test launches real ``claude -p`` sessions against a
+real Hypotrail study (cost, non-determinism). Opt in with ``HYPOTRAIL_AGENT_ACCEPTANCE=1``
+and select with ``-m agent_acceptance -k S1-bank-en``. Raw runs go to
+``$HYPOTRAIL_AGENT_RUNS`` (a directory outside the repository) or to pytest's temporary
+directory. The driver and the checks are in ``scenarios.py``; a failed check is an
+invariant violation to analyse in the transcript, never a flaky test to rerun until green.
 """
 from __future__ import annotations
 
+import json
+import os
 import shutil
 from pathlib import Path
 
 import pytest
-import yaml
 
-HERE = Path(__file__).resolve().parent
-SCENARIOS = yaml.safe_load((HERE / 'scenarios.yaml').read_text(encoding='utf-8'))
+import scenarios as sc
+
+SCENARIOS = sc.SCENARIOS
 
 
 def _capabilities() -> set[str]:
-    caps = set()
-    if shutil.which('hypotrail'):
-        caps.add('hypotrail_cli')
+    caps = {'hypotrail_cli'} if sc.graders.hypotrail_available() else set()
     if shutil.which('claude'):
         caps.add('claude_cli')
     return caps
@@ -37,10 +38,14 @@ def _params():
 
 @pytest.mark.agent_acceptance
 @pytest.mark.parametrize('scenario,case,lang', list(_params()))
-def test_scenario(scenario, case, lang):
-    required = set(scenario.get('requires', SCENARIOS['defaults']['requires'])) | {'claude_cli'}
-    missing = required - _capabilities()
+def test_scenario(scenario, case, lang, tmp_path):
+    missing = set(scenario.get('requires', SCENARIOS['defaults']['requires'])) - _capabilities()
     if missing:
-        pytest.skip(f"{scenario['id']} requires {', '.join(sorted(missing))} (plan Phase 4)")
-    pytest.fail(f"{scenario['id']}: scenario driver not implemented yet (WP4.3); the CLI now "
-                f"exists, so implement the setup and checks before claiming acceptance")
+        pytest.skip(f"{scenario['id']} requires {', '.join(sorted(missing))}")
+    base = Path(os.environ.get('HYPOTRAIL_AGENT_RUNS') or tmp_path)
+    out = base / f"{scenario['id']}-{case}-{lang}"
+    sc.run_scenario(scenario['id'], case, lang, out, workspace_base=base / 'workspaces')
+    result = sc.grade(out)
+    failed = {c['check']: {k: v for k, v in c.items() if k not in ('check', 'ok')}
+              for c in result['checks'] if not c['ok']}
+    assert not failed, json.dumps(failed, indent=1, default=str)[:4000]

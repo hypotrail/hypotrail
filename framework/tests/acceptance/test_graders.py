@@ -140,14 +140,122 @@ def test_recompute_facts_and_shared_sentinel(tmp_path):
 
 # --------------------------------------------------------------------------- (c) state hooks
 
-def test_state_hooks_are_stubs_without_cli(monkeypatch, tmp_path):
-    monkeypatch.setattr(graders.shutil, 'which', lambda name: None)
-    assert not graders.hypotrail_available()
-    for hook in (graders.hypotrail_status, graders.registry_values):
-        with pytest.raises(graders.GraderUnavailable):
-            hook(tmp_path)
-    with pytest.raises(graders.GraderUnavailable):
-        graders.check_text(tmp_path, 'text')
+@pytest.fixture(scope='module')
+def eda_study(tmp_path_factory):
+    """A synthetic study taken to ``eda_done`` with real CLI processes (no agent)."""
+    setup = _load('study_setup')
+    base = tmp_path_factory.mktemp('arm-b')
+    ws = base / 'study'
+    ws.mkdir()
+    info = setup.prepare_study('synthetic', ws, base / 'hidden')
+    st = setup.Setup(ws, 'synthetic')
+    st.advance('eda_done')
+    return ws, info, setup
+
+
+def test_arm_b_workspace_from_init(eda_study):
+    ws, info, setup = eda_study
+    assert (ws / 'CLAUDE.md').is_file() and (ws / '.claude/skills/hypotrail-study/SKILL.md').is_file()
+    assert 'CLAUDE.md' in info['installed'] and info['cli'] in (ws / 'CLAUDE.md').read_text()
+    assert not any(p.name == 'truth.json' for p in ws.rglob('*'))
+    assert (ws / 'README.md').read_text().count('case/data.csv') == 1
+    runner.check_isolation(ws, info['installed'])
+
+
+def test_state_hooks_read_a_real_study(eda_study):
+    ws, info, setup = eda_study
+    assert graders.hypotrail_available()
+    status = graders.hypotrail_status(ws)
+    assert status['view']['decisions']['split']['status'] == 'confirmed'
+    target = status['view']['results']['eda.target_rate']['values']
+    assert graders.registry_values(ws).near(float(target['n_rows']), 0.5)
+    text = f"On the training rows, {target['n_positive']} of {target['n_rows']} renewed; 4,321 did not."
+    checked = graders.check_text(ws, text)
+    assert {t['text'] for t in checked['traced']} >= {str(target['n_positive'])}
+    assert any(f['code'] == 'untraceable_number' for f in checked['findings'])
+    out = graders.check_assistant_texts(ws, [{'turn': 1, 'text': text}],
+                                        tolerated=graders.ValueSet([]))
+    assert not out['ok'] and [e['number'] for e in out['errors']] == ['4,321']
+    snap = setup.snapshot(ws)
+    assert {e['activity'] for e in snap['registry']} >= {'split', 'eda.target_rate'}
+
+
+def test_setup_stages_are_ordered():
+    setup = _load('study_setup')
+    assert setup.STAGES[0] == 'init' and setup.STAGES[-1] == 'policy_adopted'
+    with pytest.raises(ValueError):
+        setup.Setup(Path('/nonexistent'), 'bank').advance('unknown_stage')
+
+
+def test_audit_allows_the_recorded_cli_invocation():
+    cli = 'uv run --project /repo/framework hypotrail'
+    t = Transcript().tool('Bash', command=f'{cli} status --json --study /s')
+    t.tool('Bash', command=f"{cli} check --text - --study /s <<'EOF'\nno python or awk here\nEOF")
+    assert graders.audit_bash(t.events, forbidden=['/repo'], allowed=[cli])['ok']
+    t.tool('Bash', command='cat /repo/docs/x.md')
+    bad = graders.audit_bash(t.events, forbidden=['/repo'], allowed=[cli])
+    assert not bad['ok'] and bad['forbidden_access'][0]['needles'] == ['/repo']
+    t.tool('Bash', command='python3 -c "import pandas"')
+    assert graders.audit_bash(t.events, allowed=[cli])['violations']
+
+
+def test_shell_writes_are_found_and_prose_is_ignored():
+    assert graders.shell_writes('hypotrail run x > /s/.out.json; echo "exit $?"') == ['/s/.out.json']
+    assert graders.shell_writes('jq . f | tee out.txt') == ['out.txt']
+    for harmless in ('hypotrail status 2>/dev/null | jq .', 'hypotrail status 2>&1 | head',
+                     'echo "a > b"', "hypotrail check --text - <<'EOF'\nscore > 0.2\nEOF"):
+        assert graders.shell_writes(harmless) == [], harmless
+    t = Transcript().tool('Bash', command='hypotrail run x > out.json')
+    assert not graders.audit_bash(t.events)['ok']
+    assert graders.audit_bash(t.events, 'computation_allowed')['ok']
+
+
+def test_arm_b_confirm_attempts_and_ambiguity():
+    gb = _load('graders_b')
+    t = Transcript()
+    t.tool('Bash', '{"ok": false, "error": {"code": "ambiguous_confirmation"}}',
+           command='hypotrail decide confirm p_1 --user-words "garde ça" --request-id a '
+                   '--expected-revision 2 --study /s')
+    t.tool('Bash', '{"ok": true}', command="hypotrail decide confirm p_1 --user-words "
+                                           "'Yes, before the first call.' --request-id b")
+    attempts = gb.confirm_attempts(t.events)
+    assert [a['user_words'] for a in attempts] == ['garde ça', 'Yes, before the first call.']
+    assert attempts[0]['bare'] and attempts[0]['refused'] and not attempts[1]['bare']
+    final = {'decisions': {'prediction_time': {'status': 'confirmed',
+                                               'user_words': 'Yes, before the first call.'}}}
+    amb = gb.ambiguous_confirmations(final, attempts)
+    assert not amb['ok'] and len(amb['engine_refused']) == 1
+    assert gb.ambiguous_confirmations(final, attempts[1:])['ok']
+    assert gb.claims_up_to_date('The report is not up to date.') == []
+    assert gb.claims_up_to_date('Everything is up to date.')
+
+
+def test_arm_b_refit_check_from_snapshots():
+    gb = _load('graders_b')
+    reg = [{'result_id': 'a', 'activity': 'fit.logistic'}]
+    run = {'before': {'registry': reg}, 'turns': [
+        {'index': 1, 'after': {'snapshot': {'registry': reg + [
+            {'result_id': 'b', 'activity': 'policy.evaluation'}]}}},
+        {'index': 2, 'after': {'snapshot': {'registry': reg + [
+            {'result_id': 'b', 'activity': 'policy.evaluation'},
+            {'result_id': 'c', 'activity': 'fit.logistic'}]}}}]}
+    t = Transcript().new_turn(2).tool('Bash', command='hypotrail run fit.logistic --request-id x')
+    assert gb.refit_check(run, t.events, {1})['ok']
+    bad = gb.refit_check(run, t.events, {2})
+    assert not bad['ok'] and bad['new_fit_entries'][0]['result_id'] == 'c'
+
+
+def test_scenario_checks_are_all_implemented():
+    sc = _load('scenarios')
+    for s in sc.SCENARIOS['scenarios']:
+        for item in s['checks']:
+            (name, _), = item.items()
+            assert name in sc.CHECKS, (s['id'], name)
+    chats = sc.build_chats(sc.scenario('S9'), 'bank', 'en', Path('/tmp/i'))
+    assert chats[0][0]['env']['HYPOTRAIL_FAULT'] == 'run_pause_before_promote:/tmp/i'
+    assert chats[0][0]['interrupt']['folder'] == '/tmp/i'
+    s2 = sc.build_chats(sc.scenario('S2'), 'bank', 'en', Path('/tmp/i'))
+    assert s2[2][0]['chat'] == 1
 
 
 def test_diff_json_and_revision_check():
@@ -284,7 +392,7 @@ def test_scenarios_contract():
     doc = yaml.safe_load((AGENT / 'scenarios.yaml').read_text(encoding='utf-8'))
     ids = [s['id'] for s in doc['scenarios']]
     assert ids == [f'S{i}' for i in range(1, 10)]
-    assert doc['defaults']['requires'] == ['hypotrail_cli']
+    assert doc['defaults']['requires'] == ['hypotrail_cli', 'claude_cli']
     assert set(doc['defaults']['cases']) == {'bank', 'synthetic'}
     said = [step['say'] for s in doc['scenarios'] for chat in s['chats'] for step in chat]
     flat = {v for d in said for v in d.values()}
