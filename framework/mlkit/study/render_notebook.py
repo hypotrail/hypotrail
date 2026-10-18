@@ -26,7 +26,7 @@ was generated at, then regenerated. The hash is checked again immediately before
 template bump writes ``workbench.candidate.py`` instead.
 
 This module writes files; it refuses to run in a read-only process
-(``read_only_process``). It imports neither pandas nor scikit-learn.
+(``read_only``). It imports neither pandas nor scikit-learn.
 """
 from __future__ import annotations
 

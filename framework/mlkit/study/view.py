@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from . import currency
 from . import read
 from . import state as st
 from .case import EPISTEMIC_STATUSES
@@ -85,13 +86,26 @@ def _results(study: read.Study, state: dict) -> dict:
     return out
 
 
-def _artifacts(study: read.Study) -> dict:
-    manifest = study.artifacts()
-    if manifest is None:
+def _artifacts(study: read.Study, state: dict) -> dict:
+    """The manifest with each artefact's **effective** status (``currency.effective_status``).
+
+    The stored ``status`` only says how the last render went; an artefact written for an
+    earlier revision, or citing a result that is no longer current, is ``stale`` even if
+    that render succeeded. The stored value stays visible as ``recorded_status``.
+    """
+    raw = study.artifacts()
+    if raw is None:
         return dict(ARTIFACT_PLACEHOLDER, items={})
-    items = manifest.get('artifacts', manifest.get('items', {})) if isinstance(manifest, dict) else {}
-    return {'manifest': read.ARTIFACTS_FILE, 'status': manifest.get('status', 'present')
-            if isinstance(manifest, dict) else 'unreadable', 'items': items}
+    if not isinstance(raw, dict) or not isinstance(raw.get('artifacts'), dict):
+        return {'manifest': read.ARTIFACTS_FILE, 'status': 'unreadable', 'items': {}}
+    items = {}
+    for name, item in raw['artifacts'].items():
+        if not isinstance(item, dict):
+            continue
+        items[name] = {**item, 'recorded_status': item.get('status'),
+                       'status': currency.effective_status(item, state)}
+    return {'manifest': read.ARTIFACTS_FILE,
+            'status': currency.overall(i['status'] for i in items.values()), 'items': items}
 
 
 def build(study_dir) -> dict:
@@ -126,7 +140,7 @@ def build(study_dir) -> dict:
         'stale': state['stale'],
         'invalidations': state['invalidations'],
         'executions': state['executions'],
-        'artifacts': _artifacts(study),
+        'artifacts': _artifacts(study, state),
         'exposure': study.exposure_summary(),
         'not_yet_defensible': defensible,
         'settings': state['settings'],

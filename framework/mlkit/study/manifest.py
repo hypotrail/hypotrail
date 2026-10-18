@@ -30,6 +30,8 @@ import json
 from pathlib import Path
 from typing import Mapping
 
+from .currency import consumed_current, effective_status, overall  # noqa: F401 (re-exported)
+
 SCHEMA = 'hypotrail.artifacts/1'
 FILE = 'artifacts.json'
 HOME = '.hypotrail'
@@ -76,37 +78,6 @@ def item(manifest: Mapping, name: str, *, kind: str, generated: bool = True) -> 
     base = new_item(name, kind=kind, generated=generated)
     base.update(copy.deepcopy(manifest.get('artifacts', {}).get(name) or {}))
     return base
-
-
-def consumed_current(item: Mapping, state: Mapping) -> bool:
-    promoted = set(state['current'].values())
-    return all(rid in promoted and rid not in state['stale'] for rid in item.get('consumed') or [])
-
-
-def effective_status(item: Mapping | None, state: Mapping) -> str:
-    """``ok``, ``stale``, ``failed``, or ``not_rendered`` for ``item`` against ``state``."""
-    if not item:
-        return 'not_rendered'
-    status = item.get('status')
-    if status == 'failed':
-        return 'failed'
-    if status != 'ok':
-        return status or 'not_rendered'
-    if item.get('generated') is False:
-        return 'ok'
-    if item.get('revision') != state['revision'] or not consumed_current(item, state):
-        return 'stale'
-    return 'ok'
-
-
-def overall(statuses) -> str:
-    statuses = list(statuses)
-    if not statuses:
-        return 'not_rendered'
-    for s in ('failed', 'stale', 'not_rendered'):
-        if s in statuses:
-            return s
-    return 'ok'
 
 
 def summary(manifest: Mapping, state: Mapping) -> dict:

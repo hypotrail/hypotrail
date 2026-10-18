@@ -233,7 +233,7 @@ def test_cli_render_and_decide_report_artifact_statuses(b):
 
 def test_cli_render_refuses_in_a_read_only_process(b):
     code, payload, _ = _cli('render', '--study', b.study, HYPOTRAIL_READ_ONLY='1')
-    assert code == 2 and payload['error']['code'] == 'read_only_process'
+    assert code == 2 and payload['error']['code'] == 'read_only'
 
 
 def test_status_plan_and_check_stay_free_of_heavy_imports(b):
@@ -252,3 +252,26 @@ def test_status_plan_and_check_stay_free_of_heavy_imports(b):
     mods = json.loads(proc.stdout.strip().splitlines()[-1])
     heavy = [m for m in mods if m.split('.')[0] in {'pandas', 'numpy', 'sklearn', 'scipy', 'marimo'}]
     assert heavy == []
+
+
+def test_view_artifacts_use_the_effective_status_not_the_stored_one(b, no_hooks):
+    """A render that went well becomes stale when state moves on without a render
+    (here a consumed result made stale): view.artifacts says so."""
+    from mlkit.study.store import StudyStore
+
+    assert _propose(b).exit_code == 0
+    v = view.build(b.study)
+    assert v['artifacts']['status'] == 'ok'
+    assert {i['status'] for i in v['artifacts']['items'].values()} == {'ok'}
+    store = StudyStore(b.study)
+    rid = v['results']['fit.logistic']['result_id']
+    with store.writing() as state:                  # a mutation that does not render
+        state['stale'][rid] = {'reason': 'test: made stale without a render', 'since': 1}
+        store.commit(state, {'request_id': None, 'action': 'test.mutate', 'params': {},
+                             'result': {}})
+    after = view.build(b.study)['artifacts']
+    items = after['items']
+    assert items['report']['status'] == 'stale' and items['report']['recorded_status'] == 'ok'
+    assert items['notebook']['status'] == 'stale'
+    assert items['workbench']['status'] == 'ok'     # generated: false, never stale
+    assert after['status'] == 'stale'

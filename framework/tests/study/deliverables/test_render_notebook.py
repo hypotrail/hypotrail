@@ -218,7 +218,7 @@ def test_render_refuses_in_a_read_only_process(study):
               f'p = {str(study)!r}\n'
               'render_notebook.render(p, view.build(p), manifest.load(p))\n')
     proc = _run([sys.executable, '-c', script], cwd=study.parent, HYPOTRAIL_READ_ONLY='1')
-    assert proc.returncode != 0 and 'read_only_process' in proc.stderr
+    assert proc.returncode != 0 and "StudyError('read_only'," in proc.stderr
     os.environ.pop('HYPOTRAIL_READ_ONLY', None)
     with pytest.raises(StudyError) as err:
         os.environ['HYPOTRAIL_READ_ONLY'] = '1'
@@ -226,7 +226,7 @@ def test_render_refuses_in_a_read_only_process(study):
             rn.render(study, view.build(study), mf.load(study))
         finally:
             del os.environ['HYPOTRAIL_READ_ONLY']
-    assert err.value.code == 'read_only_process'
+    assert err.value.code == 'read_only'
 
 
 # --- 3. user edits preserved ------------------------------------------------------------

@@ -95,8 +95,8 @@ ERROR_CODES = {
     'lease_exists', 'lease_held',
     # Phase 2 contract commit: reserved codes now emitted, plus read_only.
     'interrupted_execution_pending', 'unknown_execution', 'read_only',
-    # Phase 3 (WP3.1-WP3.4)
-    'untraceable_number', 'read_only_process'}
+    # Phase 3 (WP3.1-WP3.4); its read_only_process was merged into read_only in Phase 4.
+    'untraceable_number'}
 RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',

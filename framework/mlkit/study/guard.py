@@ -39,9 +39,9 @@ def read_only() -> bool:
 
 
 def assert_writable() -> None:
-    """Refuse (``read_only_process``) when this process is a read-only notebook kernel."""
+    """Refuse (``read_only``) when this process is a read-only notebook kernel."""
     if read_only():
-        raise StudyError('read_only_process',
+        raise StudyError('read_only',
                          f'{ENV}=1: this process is a read-only notebook kernel and may not '
                          'render or write study state.', details={'variable': ENV})
 
