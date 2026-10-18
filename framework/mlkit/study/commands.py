@@ -78,6 +78,11 @@ ACTION_RESOLVE_NOTE = 'decide.resolve_note'
 # Post-v0.1 fixes (D5): the junior withdraws a hold that no longer applies, in their words.
 ACTION_WITHDRAW_NOTE = 'decide.withdraw_note'
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
+# Parameters an action accepts when present (CLI-CONTRACT-COMPANION §9, C9): a propose
+# request carries ``channel`` only when it is not ``chat``, so every request recorded
+# before C9 keeps its signature and a replay stays a replay. :func:`apply` widens the
+# handler's exact parameter set with the optional ones the request carries.
+OPTIONAL_PARAMS = {'decide.propose': frozenset({'channel'})}
 CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                             'delegation_scope'})
 WITHDRAW_PARAMS = frozenset({'proposal_id', 'reason'})
@@ -793,6 +798,13 @@ def basis(state: Mapping, decision_id: str) -> dict:
     return out
 
 
+def check_channel(channel: Any) -> None:
+    """C9: a proposal's channel is one of :data:`state.CHANNELS` (``invalid_value``)."""
+    if channel not in st.CHANNELS:
+        raise _invalid(f'channel is one of {", ".join(st.CHANNELS)}.', field='channel',
+                       channels=list(st.CHANNELS))
+
+
 def _ambiguous(reason: str, message: str, **details) -> CommandRefused:
     return CommandRefused('ambiguous_confirmation', message, details={'reason': reason, **details})
 
@@ -814,9 +826,11 @@ def _propose(ctx: Context) -> Handler:
         for key in ('restatement', 'rationale'):
             if not isinstance(params[key], str) or not params[key].strip():
                 raise _invalid(f'{key} is a non-empty string.', field=key)
+        check_channel(params.get('channel', DEFAULT_CHANNEL))
 
     def run(state, params):
         decision_id, value = params['decision_id'], params['value']
+        channel = params.get('channel', DEFAULT_CHANNEL)
         if decision_id not in st.decision_ids(state):
             raise CommandRefused('unknown_decision',
                                  f'Decision {decision_id!r} is not part of a {st.task_of(state)} '
@@ -854,7 +868,9 @@ def _propose(ctx: Context) -> Handler:
             'proposal_id': pid, 'decision_id': decision_id, 'value': copy.deepcopy(value),
             'restatement': params['restatement'], 'rationale': params['rationale'],
             'revision': revision, 'status': 'open', 'created': st.now(),
-            'request_id': ctx.request_id, 'basis': basis(state, decision_id)}
+            'request_id': ctx.request_id, 'basis': basis(state, decision_id),
+            # C9: where the proposal came from. The channel changes no rule.
+            'origin': {'channel': channel}}
         decision = state['decisions'][decision_id]
         if decision['status'] in ('open', 'proposed'):
             decision.update(status='proposed', value=copy.deepcopy(value), proposal_id=pid,
@@ -922,16 +938,9 @@ def _confirm(ctx: Context) -> Handler:
                              f'restatement that states the recommended default.',
                              proposal_id=pid, restatement=proposal['restatement'])
         decision_id, value = proposal['decision_id'], proposal['value']
-        holds = st.open_holds(state, decision_id)
-        if holds:
-            raise CommandRefused(
-                'decision_on_hold',
-                f'The junior put the {decision_id} on hold in their own words; it cannot be '
-                f'confirmed until their words resolve the hold (decide note --resolve). Tell '
-                f'them what is still pending and ask whether the condition is met.',
-                details={'decision_id': decision_id, 'proposal_id': pid,
-                         'notes': [{'note_id': n['note_id'], 'user_words': n['user_words']}
-                                   for n in holds]})
+        hold = _hold_refusal(state, decision_id, pid)
+        if hold is not None:
+            raise hold
         if params['basis'] == st.DELEGATED_DEFAULT \
                 and decision_id not in st.STANDING_DELEGATION_DECISIONS \
                 and params['delegation_scope'] != st.THIS_DECISION:
@@ -945,60 +954,169 @@ def _confirm(ctx: Context) -> Handler:
                              proposal_id=pid, decision_id=decision_id,
                              delegation_scope=params['delegation_scope'],
                              standing_covers=list(st.STANDING_DELEGATION_DECISIONS))
-        current_basis = basis(state, decision_id)
-        if proposal.get('basis', current_basis) != current_basis:
-            raise _ambiguous('proposal_stale', f'Proposal {pid} rests on decisions that changed '
-                                               f'since it was made; propose again.',
-                             proposal_id=pid, basis=proposal.get('basis'),
-                             current_basis=current_basis)
+        stale = _stale_refusal(state, proposal)
+        if stale is not None:
+            raise stale
         if reply_problem(params['user_words'], value=value, restatement=proposal['restatement'],
                          delegated=params['basis'] == st.DELEGATED_DEFAULT) == 'unrelated_reply':
             raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
                              proposal_id=pid, user_words=params['user_words'],
                              restatement=proposal['restatement'])
-        _verify_sources(state)
-        validate_value(state, decision_id, value)
-        preconditions.require_decision(state, decision_id, value, store=ctx.store)
-        decision = state['decisions'][decision_id]
-        revision = state['revision'] + 1
-        had = decision['status'] in ('confirmed', 'reconfirm_required') \
-            and decision['confirmation'] is not None
-        old = copy.deepcopy(decision['value']) if had else None
-        previous = ({'value': old, 'confirmation': copy.deepcopy(decision['confirmation']),
-                     'proposal_id': decision['proposal_id']} if had else None)
-        eff = dep.effects(copy.deepcopy(state), decision_id, old, value)
-        outdated = dep.outdates_conclusion(
-            state, decision_id, was_confirmed=decision['status'] == 'confirmed', old=old,
-            new=value, old_basis=st.confirmation_basis(decision['confirmation']) if had else None,
-            new_basis=params['basis'])
-        if outdated and dep.CONCLUSION not in eff['reconfirm']:
-            # D2: the conclusion no longer describes the decisions it summarizes.
-            eff['reconfirm'] = list(eff['reconfirm']) + [dep.CONCLUSION]
-            eff['re_explain'] = list(dict.fromkeys(list(eff['re_explain']) + [dep.CONCLUSION]))
-            if eff['mutation'] in dep.QUIET_MUTATIONS:
-                eff['reason'] = outdated
-        if had and decision['proposal_id'] in state['proposals'] \
-                and decision['proposal_id'] != pid:
-            state['proposals'][decision['proposal_id']].update(
-                status='superseded', closed_revision=revision,
-                closed_reason=f'replaced by {pid}')
-        confirmation = st.confirmation(user_words=params['user_words'], proposal=proposal,
-                                       channel=params['channel'], actor=params['actor'],
-                                       revision=revision, basis=params['basis'],
-                                       delegation_scope=params['delegation_scope'])
-        proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
-        decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=pid,
-                        confirmation=confirmation, revision=revision, reason=None)
-        record = dep.apply_effects(state, eff, revision=revision, decision_id=decision_id,
-                                   store=ctx.store, previous=previous)
+        # C3: the part of a confirmation that does not depend on the words is one function,
+        # shared with ``preview effects``: the refusals left (changed sources, value,
+        # preconditions, in that order) and the effects to apply.
+        plan = confirmation_plan(state, ctx.store, pid, basis=params['basis'])
+        if plan['refusals']:
+            raise plan['refusals'][0]
+        record = _apply_confirmation(state, plan, pid, store=ctx.store,
+                                     user_words=params['user_words'], channel=params['channel'],
+                                     actor=params['actor'], basis=params['basis'],
+                                     delegation_scope=params['delegation_scope'])
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
                 'value': copy.deepcopy(value), 'user_words': params['user_words'],
                 'channel': params['channel'], 'actor': params['actor'],
-                'invalidation': {k: record[k] for k in ('mutation', 'row', 'reason',
-                                                         'stale_results', 'stale_slots',
-                                                         'reconfirm_required')},
+                'invalidation': {k: record[k] for k in INVALIDATION_RESULT_KEYS},
                 'basis': params['basis'], 'delegation_scope': params['delegation_scope']}
     return Handler(CONFIRM_PARAMS, run, check)
+
+
+# The part of an invalidation record a confirmation reports in ``result.invalidation``,
+# and that ``preview effects`` predicts (CLI-CONTRACT-COMPANION §3).
+INVALIDATION_RESULT_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
+                            'reconfirm_required')
+
+
+def _hold_refusal(state: Mapping, decision_id: str, pid: str) -> CommandRefused | None:
+    holds = st.open_holds(state, decision_id)
+    if not holds:
+        return None
+    return CommandRefused(
+        'decision_on_hold',
+        f'The junior put the {decision_id} on hold in their own words; it cannot be '
+        f'confirmed until their words resolve the hold (decide note --resolve). Tell '
+        f'them what is still pending and ask whether the condition is met.',
+        details={'decision_id': decision_id, 'proposal_id': pid,
+                 'notes': [{'note_id': n['note_id'], 'user_words': n['user_words']}
+                           for n in holds]})
+
+
+def _stale_refusal(state: Mapping, proposal: Mapping) -> CommandRefused | None:
+    pid = proposal['proposal_id']
+    current_basis = basis(state, proposal['decision_id'])
+    if proposal.get('basis', current_basis) == current_basis:
+        return None
+    return _ambiguous('proposal_stale', f'Proposal {pid} rests on decisions that changed '
+                                        f'since it was made; propose again.',
+                      proposal_id=pid, basis=proposal.get('basis'), current_basis=current_basis)
+
+
+def refusal_dict(exc: Exception) -> dict:
+    """``{code, reason, message, details}`` of a refusal (``reason`` is ``details.reason``)."""
+    details = dict(getattr(exc, 'details', None) or {})
+    return {'code': exc.code, 'reason': details.get('reason'), 'message': exc.message,
+            'details': details}
+
+
+def confirmation_plan(state: Mapping, store, proposal_id: str, *,
+                      basis: str = DEFAULT_BASIS) -> dict:
+    """What confirming the open proposal ``proposal_id`` would do, whatever the words.
+
+    This is the part of ``decide confirm`` that does not depend on the user's words
+    (CLI-CONTRACT-COMPANION §3, C3). ``decide confirm`` calls it under the writer lock and
+    applies its effects; ``preview effects`` calls it on a state read without the lock
+    and discards the result. ``state`` is never mutated: the invalidation is computed by
+    applying the effects to a deep copy, with ``store`` used for lineage reads only.
+    ``basis`` is the confirmation basis (an explicit confirmation by default): a change of
+    basis can outdate a confirmed conclusion.
+
+    The caller has checked that the proposal exists and is open. Returns::
+
+        {'blocked': [refusal dicts], 'refusals': [the refusals, raisable],
+         'decision_id', 'value', 'previous', 'effects', 'invalidation',
+         'supersedes_proposal'}
+
+    ``blocked`` lists, in this order, the refusals of ``decide confirm`` that depend on
+    the state only: ``dataset_changed``, ``decision_on_hold``, ``proposal_stale``,
+    ``invalid_value``, ``precondition_missing``. ``previous`` is ``{value, confirmation,
+    proposal_id}`` of the confirmation that would be replaced, or None. ``effects`` are
+    the dependency-table effects (:func:`dependencies.effects`, with the conclusion rule
+    D2), and ``invalidation`` the record :func:`dependencies.apply_effects` returns. Both
+    are None when the effects cannot be computed (the value is invalid).
+    """
+    proposal = state['proposals'][proposal_id]
+    decision_id, value = proposal['decision_id'], proposal['value']
+    refusals: list[Exception] = []
+    changes = c.source_changes(state)
+    if changes:
+        refusals.append(c.changed_sources_error(changes))
+    for found in (_hold_refusal(state, decision_id, proposal_id), _stale_refusal(state, proposal)):
+        if found is not None:
+            refusals.append(found)
+    valid = True
+    try:
+        validate_value(state, decision_id, value)
+    except (CommandRefused, StudyError) as exc:
+        refusals.append(exc)
+        valid = False
+    if valid:
+        try:
+            preconditions.require_decision(state, decision_id, value, store=store)
+        except (CommandRefused, StudyError) as exc:
+            refusals.append(exc)
+    plan = {'blocked': [refusal_dict(e) for e in refusals], 'refusals': refusals,
+            'decision_id': decision_id, 'value': copy.deepcopy(value), 'previous': None,
+            'effects': None, 'invalidation': None, 'supersedes_proposal': None}
+    decision = state['decisions'][decision_id]
+    had = decision['status'] in ('confirmed', 'reconfirm_required') \
+        and decision['confirmation'] is not None
+    old = copy.deepcopy(decision['value']) if had else None
+    if had:
+        plan['previous'] = {'value': old, 'confirmation': copy.deepcopy(decision['confirmation']),
+                            'proposal_id': decision['proposal_id']}
+        if decision['proposal_id'] in state['proposals'] and decision['proposal_id'] != proposal_id:
+            plan['supersedes_proposal'] = decision['proposal_id']
+    if not valid:
+        return plan
+    eff = dep.effects(copy.deepcopy(state), decision_id, old, value)
+    outdated = dep.outdates_conclusion(
+        state, decision_id, was_confirmed=decision['status'] == 'confirmed', old=old,
+        new=value, old_basis=st.confirmation_basis(decision['confirmation']) if had else None,
+        new_basis=basis)
+    if outdated and dep.CONCLUSION not in eff['reconfirm']:
+        # D2: the conclusion no longer describes the decisions it summarizes.
+        eff['reconfirm'] = list(eff['reconfirm']) + [dep.CONCLUSION]
+        eff['re_explain'] = list(dict.fromkeys(list(eff['re_explain']) + [dep.CONCLUSION]))
+        if eff['mutation'] in dep.QUIET_MUTATIONS:
+            eff['reason'] = outdated
+    plan['effects'] = eff
+    dry = copy.deepcopy(dict(state))
+    plan['invalidation'] = _apply_confirmation(
+        dry, plan, proposal_id, store=store, user_words='(preview)', channel=DEFAULT_CHANNEL,
+        actor=DEFAULT_ACTOR, basis=basis, delegation_scope=None, time=state['updated'])
+    return plan
+
+
+def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, user_words: str,
+                        channel: str, actor: str, basis: str, delegation_scope: str | None,
+                        time: str | None = None) -> dict:
+    """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
+    decision_id, value = plan['decision_id'], plan['value']
+    proposal = state['proposals'][proposal_id]
+    decision = state['decisions'][decision_id]
+    revision = state['revision'] + 1
+    if plan['supersedes_proposal'] is not None:
+        state['proposals'][plan['supersedes_proposal']].update(
+            status='superseded', closed_revision=revision,
+            closed_reason=f'replaced by {proposal_id}')
+    confirmation = st.confirmation(user_words=user_words, proposal=proposal, channel=channel,
+                                   actor=actor, revision=revision, time=time, basis=basis,
+                                   delegation_scope=delegation_scope)
+    proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
+    decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
+                    confirmation=confirmation, revision=revision, reason=None)
+    return dep.apply_effects(state, copy.deepcopy(plan['effects']), revision=revision,
+                             decision_id=decision_id, store=store,
+                             previous=copy.deepcopy(plan['previous']))
 
 
 def _withdraw(ctx: Context) -> Handler:
@@ -1204,17 +1322,25 @@ def init(case_path, study_dir) -> Outcome:
                             'tutorial choices, not decisions. Every decision starts open.'})
 
 
-def status(study_dir, since: int | None = None, summary: bool = False) -> Outcome:
+def status(study_dir, since: int | None = None, summary: bool = False,
+           digest: bool = False) -> Outcome:
+    """``status`` (``hypotrail.status/1``), ``--summary`` (``hypotrail.summary/1``), and
+    ``--summary --digest`` (CLI-CONTRACT-COMPANION §1, C1): the summary with ``moments``,
+    ``pauses``, ``last_session``, ``digest``, and ``task`` appended, and ``origin`` as the
+    last key of each open proposal. Without ``--digest`` the summary is unchanged."""
     # F1: probe execution leases (read-only, no writer lock) *before* reading the state,
     # so a dead execution is reported as ``outcome_unknown``, never as running.
     leases = lock.probe_leases(study_dir)
     study = read.open(study_dir)
     built = view.build(study, leases=leases)
     if summary:
+        out = view.summary(built)
+        if digest:
+            out = view.with_digest(study, built, out, since=since)
         return Outcome({'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
                         'revision': study.revision, 'since': since,
                         'changed': None if since is None else study.revision > since,
-                        **view.summary(built)})
+                        **out})
     payload = {'schema': SCHEMAS['status'], 'ok': True, 'study': str(study.study_dir),
                'revision': study.revision, 'since': since,
                'changed': None if since is None else study.revision > since,
@@ -1243,7 +1369,12 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
                          details={'study': str(store.study_dir)})
     request = {'request_id': request_id, 'expected_revision': expected_revision,
                'action': action, 'params': params}
-    receipt = store.execute(request, handlers(Context(store, request_id)))
+    available = handlers(Context(store, request_id))
+    optional = OPTIONAL_PARAMS.get(action, frozenset()) & set(params)
+    if optional and action in available:
+        handler = available[action]
+        available[action] = Handler(handler.params | optional, handler.run, handler.check)
+    receipt = store.execute(request, available)
     payload = {'schema': SCHEMAS['decide'], 'ok': True, 'study': str(store.study_dir),
                'action': action, 'request_id': request_id,
                'replayed': bool(receipt.get('replayed')), 'revision': receipt['revision'],

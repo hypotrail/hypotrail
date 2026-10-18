@@ -89,3 +89,22 @@ regression_steps:
     method: MAE and RMSE are computed in the unit of the target on the stored validation predictions, with paired bootstrap intervals of each and of the difference with the baseline, and the residuals by period.
     interpretation: "The linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} on the validation rows, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of those rows. Its mean residual (bias) is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. These rows were used for the choice, so the figures are optimistic and are not a forecast."
     consequence: Changing the model choice reuses the stored predictions and the evaluation; nothing is refitted.
+# The four moments of JUNIOR-WORKFLOW.md, as plan step ids (CLI-CONTRACT-COMPANION §1.1,
+# C1, C11). ``status --summary --digest`` lists them in this order; a client shows the
+# plan's step titles. ``regression_moments`` replaces the steps of a moment for a
+# regression study.
+moments:
+  - id: frame
+    title: Frame the change
+    steps: [prediction_time, feature_availability, split]
+  - id: evidence
+    title: Prepare evidence
+    steps: [train_eda]
+  - id: compare
+    title: Work and compare
+    steps: [models, policy]
+  - id: conclude
+    title: Conclude and hand over
+    steps: [conclusion]
+regression_moments:
+  compare: [models, model_choice]

@@ -1,4 +1,69 @@
 # Sentences of the "since your last session" digest (CLI-CONTRACT-COMPANION §1.4, C1, C11).
-# WP-0 stub: the schema header only. WP-E1 adds one template per digest kind, with a
-# regression overlay that never uses the vocabulary of a decision rule. No digits here.
+# One template per digest kind, read by mlkit.study.view (with_digest). Placeholders in
+# braces are filled by the engine: {decision} and {activity} are labels from this file
+# ({Decision} and {Activity} capitalised), {value} is a rule identifier or a model slot,
+# {rules}, {column}, {channel}, {slots}, {decisions} and {cause} are identifiers or labels,
+# and {words} and {hold} are the junior's words, quoted verbatim (holds only).
+# A sentence never holds a revision number, a result id, a restatement, a rationale, or
+# confirmation words. No digits here. The ``regression`` mapping is merged over the rest
+# for a regression study: it never uses the vocabulary of a decision rule.
 schema: hypotrail.content.digest/1
+decisions:
+  prediction_time: the prediction moment
+  feature_availability: the feature availability
+  split: the split
+  policy: the policy
+  conclusion: the conclusion
+  model_choice: the model choice
+activities:
+  split: the split
+  eda.target_rate: the target rate
+  eda.special_values: the special-value check
+  eda.rate_by: the target rate by group
+  eda.distribution: the distribution
+  fit.baseline: the baseline model
+  fit.logistic: the logistic model
+  policy.evaluation: the policy evaluation
+activity_fallback: "the activity {activity}"
+slot_with_column: "{label} of {column}"
+templates:
+  proposed: "{Decision} was proposed."
+  proposed_value: "{Decision} was proposed: {value}."
+  superseding: "It replaces the open proposal."
+  confirmed: "{Decision} was confirmed in the junior's words (channel {channel})."
+  confirmed_again: "{Decision} was confirmed again in the junior's words (channel {channel})."
+  confirmed_delegated: "{Decision} was confirmed by delegation to the assistant's recommended default (channel {channel})."
+  withdrawn: "The proposal for {decision} was withdrawn."
+  hold_recorded: "Hold recorded on {decision}: \"{words}\"."
+  hold_resolved: "The hold on {decision}, \"{hold}\", was resolved in the junior's words: \"{words}\"."
+  hold_withdrawn: "The hold on {decision}, \"{hold}\", was withdrawn in the junior's words: \"{words}\"."
+  result_added: "{Activity} was computed."
+  result_added_column: "{Activity} was computed for {column}."
+  result_added_rules: "{Activity} was computed: {rules} evaluated."
+  result_replaced: "{Activity} was replaced."
+  result_replaced_column: "{Activity} was replaced for {column}."
+  result_replaced_rules: "{Activity} was replaced: {rules} evaluated."
+  run_late: "{Activity} finished after its inputs changed: its result was not promoted."
+  run_failed: "{Activity} failed: no result was recorded."
+  run_interrupted: "{Activity} stopped before it finished: its outcome is unknown."
+  interruption_acknowledged: "The junior acknowledged that {activity} was interrupted, without restarting it."
+  created: "The study was created."
+  other: "The study changed ({action})."
+effects:
+  nothing_refitted: "Models unchanged, nothing refitted."
+  refit: "To refit: {slots}."
+  stale: "No longer current: {slots}."
+  reconfirm_one: "{Decisions} needs confirmation again: {cause}."
+  reconfirm_many: "{Decisions} need confirmation again: {cause}."
+causes:
+  decision: "{decision} changed"
+  result_replaced: "{activity} changed"
+  hold_added: "the junior put {decision} on hold"
+  conclusion: "the decisions it summarizes changed"
+regression:
+  activities:
+    eda.target_summary: the target summary
+    eda.mean_by: the target mean by group
+    fit.baseline: the training mean baseline
+    fit.linear: the linear model
+    evaluate.regression: the model evaluation
