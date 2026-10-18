@@ -33,15 +33,22 @@ code                       severity  meaning
                                      finding F4: validation figures are not forecasts
 ``artifact_not_current``   warning   a deliverable is stale, failed, or not rendered
 ``untracked_files``        warning   scripts or data files in the study folder outside
-                                     the generated notebooks — E1 finding F3:
-                                     computations outside ``hypotrail`` are invisible
+                                     the generated notebooks and the declared case and
+                                     dataset files — E1 finding F3: computations
+                                     outside ``hypotrail`` are invisible
 =========================  ========  ==============================================
 
 Matching a number (E1 finding F5): a number written with ``d`` decimals matches a
 registry value that rounds to it at ``d`` decimals (a percentage matches a fraction
-times 100). Matches report the ``result_id`` and path they were traced to, so a
-reviewer sees what a number stands for. Numbers following "revision", "step",
-"pause", or "proposal", list markers, and ISO dates are exempt.
+times 100; "percentage points" match only a registered difference, ``deltas``, times
+100). Matches report the ``result_id`` and path they were traced to, so a reviewer sees
+what a number stands for. A number may also repeat a recorded literal: a decision or
+proposal value, a rule of the current policy evaluation, the junior's recorded words, a
+setting, a case statement, or text the junior wrote, passed with ``--allow-user-text``.
+Numbers following "revision" (with the comparison that follows it: "revision 26 instead
+of 24"), "step", "pause", "proposal", or "exit", list markers, and ISO dates are exempt.
+A rule identifier (``capacity:100``) is never reported. A minus sign may be ``-`` or the
+Unicode minus U+2212.
 
 The command always exits 0 with ``clean`` true or false; it never writes.
 No pandas, numpy, or scikit-learn.
@@ -50,6 +57,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import dataclasses
 import re
 import sys
 from html.parser import HTMLParser
@@ -89,8 +97,23 @@ FORECAST = re.compile(
     r"in (?:the )?future|(?:next|coming|upcoming) (?:rounds?|waves?|periods?|months?|quarters?|years?))\b",
     re.IGNORECASE)
 EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'
-                           r'request|req-|expected-revision|section|§|row)\s*[#:=]?\s*$',
-                           re.IGNORECASE)
+                           r'request|req-|expected-revision|section|§|row|'
+                           r'exit|exit code|exit status|exited with|exited with code)'
+                           r'\s*[#:=]?\s*$', re.IGNORECASE)
+# "revision 26 instead of 24", "revision 24 to 26", "revisions 24 and 26": every number of
+# the comparison that follows "revision" is a revision too (D4). "and" and "or" continue
+# only after the plural, so "at revision 26 and 115 clients" still checks 115.
+REVISION_SPAN = re.compile(
+    r'\brevision\s*[#:=]?\s*\d+(?:\s*(?:instead of|rather than|not|vs\.?|versus|to|->|\u2192)'
+    r'\s*(?:revision\s*)?\d+(?![.,]\d))+'
+    r'|\brevisions\s*\d+(?:\s*(?:,|and|or|to|-|\u2013)\s*\d+(?![.,]\d))+', re.IGNORECASE)
+# A rule written as an identifier ("capacity:100", "threshold:0.2") names a rule; it is
+# traced when it can be and never reported as a claim (D4).
+RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity)\s*:\s*(-?\d+(?:\.\d+)?)', re.IGNORECASE)
+# "29.5 percentage points": a difference of two rates, read as a percentage of a registered
+# difference (``deltas``), never of a rate (D4).
+PERCENTAGE_POINTS = re.compile(r'\s*(?:percentage[- ]points?|pp\b|p\.p\.|points? de pourcentage)',
+                               re.IGNORECASE)
 LIST_MARKER = re.compile(r'^\s*\d+[.)]\s', re.MULTILINE)
 ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}(?:[T ][\d:.]+(?:Z|[+-]\d{2}:?\d{2})?)?\b')
 HEADING_ORDINAL = re.compile(r'^(\s*#{1,6}\s+)\d+\.', re.MULTILINE)
@@ -125,10 +148,23 @@ def _walk_numbers(value: Any) -> Iterable[float]:
             yield from _walk_numbers(v)
 
 
-class Pool:
-    """Numbers a text may cite: current results, then stale results, then literals."""
+def _is_difference(path: str) -> bool:
+    """True when a value path addresses a registered difference (``deltas``)."""
+    if not path or path in cite.META_PATHS:
+        return False
+    return any('delta' in seg or 'difference' in seg for seg in cite.parse_path(path))
 
-    def __init__(self, view: Mapping):
+
+class Pool:
+    """Numbers a text may cite: current results, then literals, then stale results.
+
+    Literals are recorded values a text may repeat: decision and proposal values, the
+    rules evaluated by the current policy evaluation, the junior's recorded words, settings,
+    case statements, and ``user_texts`` (text the junior wrote, passed with
+    ``--allow-user-text``).
+    """
+
+    def __init__(self, view: Mapping, user_texts: Iterable[str] = ()):
         self.current, self.stale, self.literal = [], [], []
         for slot, item in sorted(view['results'].items()):
             if item['values'] is None:
@@ -146,6 +182,17 @@ class Pool:
         for p in view['open_proposals']:
             if p['decision_id'] != 'conclusion':
                 self._literal('proposal', p['proposal_id'], p['value'])
+        for d in view['decisions'].values():
+            conf = d.get('confirmation')
+            if isinstance(conf, Mapping) and isinstance(conf.get('user_words'), str):
+                self._literal('user_words', d['decision_id'], conf['user_words'])
+        for slot, item in sorted(view['results'].items()):
+            if item.get('activity') == 'policy.evaluation' and item['current'] \
+                    and isinstance(item.get('params'), Mapping):
+                for rule in item['params'].get('rules') or []:
+                    self._literal('rule', slot, rule)
+        for i, text in enumerate(user_texts):
+            self._literal('user_text', f'user_text:{i + 1}', text)
         self._literal('setting', 'settings', view['settings'])
         self._literal('case', 'dataset.rows', view['dataset'].get('rows'))
         for items in view['facts']['by_status'].values():
@@ -158,10 +205,16 @@ class Pool:
         for v in _walk_numbers(value):
             self.literal.append({'source': kind, 'id': source, 'value': v})
 
-    def trace(self, tok: cite.Token) -> tuple[str, dict | None]:
+    def trace(self, tok: cite.Token, *, difference: bool = False) -> tuple[str, dict | None]:
+        """Where ``tok`` comes from. ``difference``: the token is written in percentage
+        points, so only a registered difference (``deltas``) can match it."""
         for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
                               (self.stale, 'stale')):
+            if difference and label == 'literal':
+                continue
             for item in bucket:
+                if difference and not _is_difference(item['path']):
+                    continue
                 if cite.shown_matches(tok, item['value']) or (
                         not tok.percent and label == 'literal'
                         and abs(item['value'] - tok.value) < 1e-9):
@@ -170,9 +223,11 @@ class Pool:
 
 
 def _masked(text: str) -> str:
-    """``text`` with exempt numbers (dates, list markers) blanked, same length."""
+    """``text`` with exempt numbers (dates, list markers, revision comparisons) blanked,
+    same length."""
     text = ISO_DATE.sub(lambda m: ' ' * len(m.group(0)), text)
     text = LIST_MARKER.sub(lambda m: re.sub(r'\d', ' ', m.group(0)), text)
+    text = REVISION_SPAN.sub(lambda m: re.sub(r'\d', ' ', m.group(0)), text)
     return text
 
 
@@ -183,10 +238,18 @@ def _exempt(text: str, tok: cite.Token) -> bool:
 def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict]]:
     findings, traced = [], []
     masked = _masked(text)
+    identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
     for tok in cite.parse_numbers(masked):
         if _exempt(masked, tok):
             continue
-        label, item = pool.trace(tok)
+        difference = not tok.percent and bool(PERCENTAGE_POINTS.match(masked, tok.end))
+        if difference:
+            tok = dataclasses.replace(tok, percent=True)
+        label, item = pool.trace(tok, difference=difference)
+        if label in ('none', 'stale') and tok.start in identifiers:
+            traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'rule',
+                           'value': tok.value})
+            continue
         if label == 'current':
             traced.append({'text': tok.text.strip(), 'result_id': item['result_id'],
                            'slot': item['slot'], 'path': item['path'], 'value': item['value']})
@@ -230,8 +293,9 @@ def wording(text: str, where: str) -> list[dict]:
     return out
 
 
-def check_text(view: Mapping, text: str, where: str = 'text') -> tuple[list[dict], list[dict]]:
-    findings, traced = trace_text(Pool(view), text, where)
+def check_text(view: Mapping, text: str, where: str = 'text',
+               user_texts: Iterable[str] = ()) -> tuple[list[dict], list[dict]]:
+    findings, traced = trace_text(Pool(view, user_texts), text, where)
     return findings + wording(text, where), traced
 
 
@@ -437,11 +501,26 @@ def check_features(view: Mapping) -> list[dict]:
     return findings
 
 
-def untracked_files(study_dir: Path) -> list[str]:
+def declared_files(view: Mapping) -> set[Path]:
+    """The case file and its dataset, as recorded by the study: they are the study's own
+    inputs, not computations outside ``hypotrail``, even when the case folder lives inside
+    the study (D9)."""
+    out = set()
+    for key in ('case', 'dataset'):
+        path = (view.get(key) or {}).get('path')
+        if isinstance(path, str) and path:
+            out.add(Path(path).resolve())
+    return out
+
+
+def untracked_files(study_dir: Path, declared: Iterable[Path] = ()) -> list[str]:
+    declared = {Path(p).resolve() for p in declared}
     out = []
     for path in sorted(study_dir.rglob('*')):
         rel = path.relative_to(study_dir)
         if not path.is_file() or set(rel.parts[:-1]) & IGNORED_DIRS or rel.parts[0] in IGNORED_DIRS:
+            continue
+        if path.resolve() in declared:
             continue
         if path.suffix.lower() in SCRIPT_SUFFIXES and not OWN_NOTEBOOKS.match(rel.as_posix()):
             out.append(rel.as_posix())
@@ -476,7 +555,7 @@ def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
         f, t = check_text(view, conclusion['text'], 'decision:conclusion')
         findings += f
         traced += t
-    files = untracked_files(study.study_dir)
+    files = untracked_files(study.study_dir, declared_files(view))
     if files:
         findings.append(finding('untracked_files', 'study',
                                 'Files in the study folder look like computations outside '
@@ -491,6 +570,10 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.description = 'Check numbers and wording against the registry (never writes).'
     parser.add_argument('--text', default=None, metavar='PATH',
                         help='check a draft message instead of the deliverables (- for stdin)')
+    parser.add_argument('--allow-user-text', dest='user_text', action='append', default=None,
+                        metavar='PATH',
+                        help="text the junior wrote (- for stdin); the draft may repeat its "
+                             "numbers (repeatable, with --text)")
 
 
 def _read_text(arg: str) -> str:
@@ -503,14 +586,14 @@ def _read_text(arg: str) -> str:
     return path.read_text(encoding='utf-8')
 
 
-def run_check(study_dir, text: str | None = None) -> dict:
+def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()) -> dict:
     study_dir = Path(study_dir).resolve()
     if text is None:
         view, findings, traced = check_study(study_dir)
         target = 'study'
     else:
         view = view_model.build(read.open(study_dir))
-        findings, traced = check_text(view, text)
+        findings, traced = check_text(view, text, user_texts=user_texts)
         target = 'text'
     counts = {'error': sum(f['severity'] == 'error' for f in findings),
               'warning': sum(f['severity'] == 'warning' for f in findings)}
@@ -520,5 +603,12 @@ def run_check(study_dir, text: str | None = None) -> dict:
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
+    user = list(args.user_text or [])
+    if user and args.text is None:
+        raise StudyError('invalid_arguments', '--allow-user-text goes with --text: it gives the '
+                                              "junior's own words that a draft may repeat.")
+    if [args.text, *user].count('-') > 1:
+        raise StudyError('invalid_arguments', 'Only one of --text and --allow-user-text can read '
+                                              'stdin (-).')
     text = _read_text(args.text) if args.text is not None else None
-    return cmd.Outcome(run_check(args.study, text))
+    return cmd.Outcome(run_check(args.study, text, [_read_text(u) for u in user]))

@@ -135,6 +135,86 @@ def test_a_number_only_in_a_stale_result_is_reported(study):
     assert result['findings'][0]['details']['result_id'] == rid
 
 
+def test_percentage_points_match_only_a_registered_difference(study):
+    """D4 (ii): "22.8 percentage points" is the paired delta 0.2278 times 100; a rate written
+    in percentage points (11.9, the base rate) is not a difference and stays untraceable."""
+    v = view.build(study)
+    rid = v['results']['policy.evaluation']['result_id']
+    for text in ('The model selects 22.8 percentage points more subscribers.',
+                 'A gain of 22.8 pp in precision.'):
+        result = text_check(study, text)
+        assert result['findings'] == [], (text, result['findings'])
+        traced = result['traced'][0]
+        assert traced['result_id'] == rid and 'deltas' in traced['path']
+    result = text_check(study, 'The base rate is 11.9 percentage points.')
+    assert codes(result) == ['untraceable_number']
+
+
+def test_a_unicode_minus_makes_a_number_negative(study):
+    """D4 (iii): "−1" (U+2212) is the special value -1; "−0.714" is not the AUC 0.714."""
+    from mlkit.study import cite
+    assert [t.value for t in cite.parse_numbers('−0.99 and -1 and 10-18')] == \
+        [-0.99, -1.0, 10.0, 18.0]
+    result = text_check(study, 'The sentinel −1 marks a missing lapse.')
+    assert result['findings'] == [] and result['traced'][0]['value'] == -1
+    result = text_check(study, 'The AUC was −0.714.')
+    assert codes(result) == ['untraceable_number']
+
+
+@pytest.mark.parametrize('text', [
+    'I compared capacity:100 with threshold:0.25 before proposing.',
+    'The status now reads revision 26 instead of 24.',
+    'Revision 24 to 26 changed the prediction moment; revisions 24, 25 and 26 are listed.',
+    'The fit process ended with exit 137; the CLI returned exit code 4.',
+])
+def test_identifiers_revisions_and_exit_codes_are_not_claims(study, text):
+    """D4 (iii): rule identifiers, revision comparisons, and exit codes are not figures."""
+    result = text_check(study, text)
+    assert result['findings'] == [], result['findings']
+
+
+def test_a_revision_does_not_exempt_the_figure_that_follows_it(study):
+    result = text_check(study, 'At revision 26 and 115 clients selected, nothing changed.')
+    assert [f['details']['number'] for f in result['findings']] == ['115']
+
+
+def test_the_juniors_own_numbers_may_be_repeated(study):
+    """D4 (i): the manager's "100 calls", given by the junior, is not an untraceable figure
+    when the junior's text is passed; it stays untraceable otherwise."""
+    draft = 'Your manager can staff 100 calls, so the capacity is the constraint.'
+    assert codes(text_check(study, draft)) == ['untraceable_number']
+    result = cmd_check.run_check(study, draft, ['My manager says we can only make 100 calls.'])
+    assert result['findings'] == []
+    assert result['traced'] == [{'text': '100', 'source': 'user_text', 'id': 'user_text:1',
+                                 'value': 100.0}]
+
+
+def test_recorded_words_and_evaluated_rules_are_literals(study):
+    """D4 (i): numbers in the junior's recorded confirmation and in the rules of the current
+    policy evaluation are decision material, not computations."""
+    v = view.build(study)
+    draft = 'We said 140 calls a week; capacity 175 was evaluated too.'
+    assert [f['code'] for f in cmd_check.check_text(v, draft)[0]] == ['untraceable_number'] * 2
+    v['decisions']['split']['confirmation']['user_words'] = 'Fine, we can call 140 a week.'
+    v['results']['policy.evaluation']['params']['rules'].append('capacity:175')
+    findings, traced = cmd_check.check_text(v, draft)
+    assert findings == []
+    assert {(t['source'], t['value']) for t in traced} == {('user_words', 140.0), ('rule', 175.0)}
+
+
+def test_cli_allow_user_text(study, tmp_path):
+    draft = tmp_path / 'draft.txt'
+    draft.write_text('Your manager can staff 100 calls.')
+    code, payload = _cli('check', '--text', draft, '--allow-user-text', '-', '--study', study,
+                         stdin='We can only call 100 people this week.')
+    assert code == 0 and payload['clean'] is True, payload
+    code, payload = _cli('check', '--text', '-', '--allow-user-text', '-', '--study', study,
+                         stdin='x')
+    assert code == 2 and payload['error']['code'] == 'invalid_arguments'
+    code, payload = _cli('check', '--allow-user-text', draft, '--study', study)
+    assert code == 2 and payload['error']['code'] == 'invalid_arguments'
+
+
 @pytest.mark.parametrize('text, expected', [
     ('Holding items open causes renewals.', ['causal_wording']),
     ('Reminders lead to more renewals.', ['causal_wording']),
@@ -188,6 +268,26 @@ def test_stale_artifacts_and_untracked_files_are_warnings(study):
     stale = [f['where'] for f in result['findings'] if f['code'] == 'artifact_not_current']
     assert 'artifact:report' in stale and 'artifact:notebook' in stale
     assert 'artifact:workbench' not in stale
+
+
+def test_the_declared_case_and_dataset_inside_the_study_are_not_untracked(tmp_path,
+                                                                          synthetic_case_dir):
+    """D9: a junior naturally keeps the case folder inside the study; its case and dataset
+    files are the study's own inputs. Any other data or script file there is still reported."""
+    import shutil
+    from mlkit.study import commands as cmd
+
+    study = tmp_path / 'study'
+    case_dir = study / 'case'
+    case_dir.mkdir(parents=True)
+    for name in ('case.yaml', 'data.csv'):
+        shutil.copy(synthetic_case_dir / name, case_dir / name)
+    cmd.init(case_dir / 'case.yaml', study)
+    (case_dir / 'extract.csv').write_text('a,b\n1,2\n')
+    (study / 'scratch.py').write_text('import pandas\n')
+    result = cmd_check.run_check(study)
+    warn = {f['code']: f for f in result['findings'] if f['severity'] == 'warning'}
+    assert warn['untracked_files']['details']['files'] == ['case/extract.csv', 'scratch.py']
 
 
 def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir):

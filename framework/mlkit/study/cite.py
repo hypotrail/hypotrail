@@ -47,7 +47,8 @@ _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 # comma ("0.115", "0,115"), an integer; an optional percent sign. A number glued to a
 # letter or an underscore ("pct1", "x_2", "3f9a") is part of a word, not a number. A minus
 # sign glued to the digits makes the number negative ("-1", a sentinel); "10-18" is two numbers.
-NUMBER = re.compile(r'(?<![\w.])(-(?=\d))?([1-9]\d{0,2}(?:,\d{3})+|\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
+# The minus may be the hyphen-minus or the Unicode minus sign U+2212 ("−0.99").
+NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+|\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
 
 
 def untraceable(message: str, **details) -> StudyError:
