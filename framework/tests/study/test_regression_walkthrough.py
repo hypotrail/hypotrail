@@ -1,15 +1,19 @@
-"""Regression walkthrough through real processes (M3): Auto MPG and the synthetic variant.
+"""Regression walkthrough through real processes (M3): Auto MPG, the synthetic variant,
+and diabetes.
 
 The same junior workflow as the binary walkthrough (``test_walkthrough.py``), for a
-numeric target, on Auto MPG and on the regression variant of the synthetic generator: the
-engine holds no dataset-specific code. Every command is a fresh ``python -m
+numeric target, on Auto MPG, on the regression variant of the synthetic generator, and on
+the scikit-learn diabetes case (no time or group column: a random split, no residuals by
+period; materialized in a temporary folder by its ``prepare.py``): the engine holds no
+dataset-specific code. Every command is a fresh ``python -m
 mlkit.study.cli`` process in a temporary folder outside the repository, and every "chat"
 starts by reading ``status``.
 
 1. init: regression instructions installed, without the vocabulary of a decision rule;
 2. pause 1: prediction moment, then the junior's availability list;
 3. pause 2: a random split is refused because the case declares a time column; an ordinal
-   cutoff on the integer time column is confirmed and run; the group overlap is reported;
+   cutoff on the integer time column is confirmed and run; the group overlap is reported
+   (without a time column, a stratified or ordinal split is refused and a random one run);
 4. training EDA: target summary, special values, mean by group (an activity of a binary
    study is refused);
 5. ``fit.baseline`` (training mean) and ``fit.linear``;
@@ -70,6 +74,19 @@ JUNIOR = {
         'mean_by': 'branch_type',
         'mean_by_slot': 'eda.mean_by:branch_type',
     },
+    # M3 generality: a real regression case without a time or group column.
+    'diabetes': {
+        'prediction_time': 'at the baseline visit, once its ten measurements are available',
+        'restatement': 'You estimate the progression one year ahead at the baseline visit, '
+                       'from its measurements.',
+        'words': 'Yes, at the baseline visit, from its measurements only.',
+        'exclusions': {'s5': 'uncertain_excluded'},
+        'availability_words': 'Leave s5 out: even the documentation is unsure what it measures. '
+                              'Keep the other nine.',
+        'split': {'method': 'random', 'validation_fraction': 0.3, 'seed': 20261017},
+        'mean_by': 'sex',
+        'mean_by_slot': 'eda.mean_by:sex',
+    },
 }
 
 
@@ -77,7 +94,8 @@ JUNIOR = {
 def cases(tmp_path_factory):
     synthetic = fk.make_case(tmp_path_factory.mktemp('regression'), task='regression',
                              n_rows=800, time=True, groups=True)
-    return {'auto': AUTO, 'synthetic': synthetic['case'].parent}
+    return {'auto': AUTO, 'synthetic': synthetic['case'].parent,
+            'diabetes': fk.materialize(fk.DIABETES, tmp_path_factory.mktemp('diabetes'))}
 
 
 class Chat:
@@ -140,7 +158,7 @@ def _vocabulary(texts: dict[str, str]) -> dict[str, list[str]]:
             for name, text in texts.items() if BINARY_VOCABULARY.search(text)}
 
 
-@pytest.mark.parametrize('name', ['auto', 'synthetic'])
+@pytest.mark.parametrize('name', ['auto', 'synthetic', 'diabetes'])
 def test_regression_walkthrough(name, cases, tmp_path, capsys):
     case_dir = cases[name]
     junior = JUNIOR[name]
@@ -179,34 +197,54 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     chat = Chat(study, work, 'chat2')
     assert chat.run('eda.target_summary', expect=2)['error']['code'] == 'precondition_missing'
     time_column = chat.view['structure']['time_column']['value']
-    for method in ({'method': 'random', 'validation_fraction': 0.3, 'seed': 1},
-                   {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 1}):
-        refused = chat.propose('split', method, 'A random split.', expect=2)
-        assert refused['error']['code'] == 'invalid_value', refused
-        assert refused['error']['details']['methods'] == ['ordinal_cutoff']
-    split_value = {'method': 'ordinal_cutoff', 'column': time_column, 'cutoff': junior['cutoff']}
-    p = chat.propose('split', split_value,
-                     f'Rows with {time_column} at {junior["cutoff"]} or later are validation '
-                     f'rows; earlier rows train the models.')
-    chat.confirm(p, f'Yes, validate on {time_column} {junior["cutoff"]} and later, train on '
-                    f'the earlier rows.')
+    if time_column is not None:
+        for method in ({'method': 'random', 'validation_fraction': 0.3, 'seed': 1},
+                       {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 1}):
+            refused = chat.propose('split', method, 'A random split.', expect=2)
+            assert refused['error']['code'] == 'invalid_value', refused
+            assert refused['error']['details']['methods'] == ['ordinal_cutoff']
+        split_value = {'method': 'ordinal_cutoff', 'column': time_column,
+                       'cutoff': junior['cutoff']}
+        p = chat.propose('split', split_value,
+                         f'Rows with {time_column} at {junior["cutoff"]} or later are validation '
+                         f'rows; earlier rows train the models.')
+        chat.confirm(p, f'Yes, validate on {time_column} {junior["cutoff"]} and later, train on '
+                        f'the earlier rows.')
+    else:   # no time column: a random split, never stratified on a numeric target
+        for method in ({'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 1},
+                       {'method': 'ordinal_cutoff', 'column': junior['mean_by'], 'cutoff': 1}):
+            refused = chat.propose('split', method, 'Another split.', expect=2)
+            assert refused['error']['code'] == 'invalid_value', refused
+            assert refused['error']['details']['methods'] == ['random']
+        p = chat.propose('split', junior['split'], 'A random split: 30% of rows for '
+                                                   'validation, seed 20261017, fixed now.')
+        chat.confirm(p, 'Yes, fix that random split now, before we look at the outcome.')
     split = chat.run('split')
     assert split['status'] == 'promoted'
     values = split['values']
     parts = values['partitions']
-    assert values['method'] == 'ordinal_cutoff' and values['stratified_on'] is None
-    assert parts['train']['column_max'] < junior['cutoff'] <= parts['validation']['column_min']
+    assert values['method'] == ('ordinal_cutoff' if time_column else 'random')
+    assert values['stratified_on'] is None
+    if time_column:
+        assert parts['train']['column_max'] < junior['cutoff'] <= parts['validation']['column_min']
     assert parts['train']['n_rows'] + parts['validation']['n_rows'] == values['n_rows']
     groups = values['groups']
-    assert groups['capability'] == 'grouped split (v0.2)'
-    assert 0 < groups['shared_groups'] <= groups['validation_groups']
-    assert groups['validation_rows_in_shared_groups'] >= groups['shared_groups']
+    group_column = chat.view['structure']['group_column']['value']
+    if group_column is not None:
+        assert groups['capability'] == 'grouped split (v0.2)'
+        assert 0 < groups['shared_groups'] <= groups['validation_groups']
+        assert groups['validation_rows_in_shared_groups'] >= groups['shared_groups']
+    else:
+        assert groups is None
     split_exposure = [r for r in fk.exposure_records(study) if r['activity'] == 'split']
     target = fk.c.load_case(case_dir).target_column
     assert target not in split_exposure[-1]['columns']          # no target read to split
     view = chat.status()['view']
     nyd = {x['id']: x for x in view['not_yet_defensible']}
-    assert nyd['grouped_split_unsupported']['column'] == groups['column']
+    if group_column is not None:
+        assert nyd['grouped_split_unsupported']['column'] == groups['column']
+    else:
+        assert 'grouped_split_unsupported' not in nyd
 
     # 4. training EDA (an activity of a binary study is refused)
     assert chat.run('eda.target_rate', expect=2)['error']['code'] == 'invalid_arguments'
@@ -229,7 +267,7 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     used = linear['values']['features']
     for feature, status in junior['exclusions'].items():
         assert (feature in used) == (status == 'uncertain_included'), feature
-    assert time_column not in used and groups['column'] not in used
+    assert not ({time_column, group_column} - {None}) & set(used)
 
     # 6. the regression evaluation on validation rows, recorded as model evaluation
     chat = Chat(study, work, 'chat3')
@@ -251,9 +289,13 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert delta['point'] == pytest.approx(ev['models']['fit.linear']['mae']
                                            - ev['models']['fit.baseline']['mae'])
     assert delta['low'] <= delta['point'] <= delta['high']
-    [by_period] = ev['residuals_by']
-    assert by_period['column'] == time_column
-    assert sum(g['n_rows'] for g in by_period['groups']) == ev['n']
+    if time_column:
+        [by_period] = ev['residuals_by']
+        assert by_period['column'] == time_column
+        assert sum(g['n_rows'] for g in by_period['groups']) == ev['n']
+    else:
+        assert ev['residuals_by'] == []
+        by_period = {'groups': []}
     preview = chat('preview', 'policy', '--rule', 'capacity:10', expect=2)
     assert preview['error']['code'] == 'unsupported_capability'
     _check_words_in_the_target_unit(study, work, ev, chat.status()['view'])
@@ -279,8 +321,11 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                                                         'Limit']
     decided = recap[1]
     assert f'model choice: {"the linear model" if adopt else "the mean baseline"}' in decided
-    assert f'split (ordinal cutoff on {time_column}, validation from {junior["cutoff"]})' \
-        in decided
+    if time_column:
+        assert f'split (ordinal cutoff on {time_column}, validation from {junior["cutoff"]})' \
+            in decided
+    else:
+        assert 'split (random, 30% for validation)' in decided
     for feature in junior['exclusions']:
         assert feature in decided
     assert 'policy' not in decided and not BINARY_VOCABULARY.search(' '.join(recap))
@@ -292,7 +337,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
 
     # 9. a conclusion checked first; then a changed model choice reuses the evaluation
     lin, base = ev['models']['fit.linear'], ev['models']['fit.baseline']
-    text = (f'On the validation rows of the later periods, the linear model has an MAE of '
+    rows_named = 'the validation rows of the later periods' if time_column else 'the validation rows'
+    text = (f'On {rows_named}, the linear model has an MAE of '
             f'{lin["mae"]:.2f} against {base["mae"]:.2f} for the mean baseline, with a mean '
             f'residual of {lin["mean_residual"]:.2f}. The model was chosen on these rows, so '
             f'the comparison is optimistic and is not a forecast.')
@@ -344,7 +390,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert len(data) > 50 and all(a.get('data-result-id') and a.get('data-path') for a in data)
     current = {r['result_id'] for r in final['view']['results'].values() if r['current']}
     assert {a['data-result-id'] for a in data} <= current
-    assert 'id="model-comparison"' in page and 'class="residuals-by"' in page
+    assert 'id="model-comparison"' in page
+    assert ('class="residuals-by"' in page) == (time_column is not None)
     session = chat('session-report')
     pause3 = session['pauses'][2]
     assert pause3['decisions'] == ['model_choice', 'conclusion'] and pause3['closed_at']
@@ -377,12 +424,13 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                 'plan': json.dumps(chat('plan')), **_instructions(study)}
     assert _vocabulary(surfaces) == {}
 
-    measured = {'case': name, 'split': {'cutoff': junior['cutoff'],
+    measured = {'case': name, 'split': {'cutoff': junior.get('cutoff'),
                                         'train': parts['train']['n_rows'],
                                         'validation': parts['validation']['n_rows'],
-                                        'shared_groups': groups['shared_groups'],
+                                        'shared_groups': (groups or {}).get('shared_groups'),
                                         'validation_rows_in_shared_groups':
-                                            groups['validation_rows_in_shared_groups']},
+                                            (groups or {}).get(
+                                                'validation_rows_in_shared_groups')},
                 'train_mean': round(summary['mean'], 3),
                 'features_used': used,
                 'mae': {m: [round(ev['models'][m]['mae'], 3),

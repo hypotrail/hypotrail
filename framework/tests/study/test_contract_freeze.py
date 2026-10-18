@@ -528,3 +528,15 @@ def test_documented_keys_appear_in_the_contract_document():
     missing = sorted(k for k in keys if k not in DOC_TOKENS)
     assert not missing, missing
     assert 'Contract tests: Phase 2/3 agents must not modify' in Path(__file__).read_text()
+
+
+def test_named_refusals_of_values_and_splits_are_documented():
+    """M3 generality: every capability a split or a value check refuses with is named in
+    the contracts, in the same words as the code."""
+    from mlkit.study import activities, data
+    case_doc = (REPO / 'docs' / 'specs' / 'CASE-CONTRACT.md').read_text(encoding='utf-8')
+    for name in (activities.CAPABILITY_STRATIFY, activities.CAPABILITY_SPLIT_PARAMETERS):
+        assert f'`{name}`' in DOC, name
+    for name in (data.CAPABILITY_MISSING_TARGET, data.CAPABILITY_DUPLICATES):
+        assert f'`{name}`' in case_doc, name
+    assert f'`{data.CAPABILITY_MISSING_TARGET}`' in DOC

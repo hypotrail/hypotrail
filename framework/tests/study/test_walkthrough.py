@@ -3,7 +3,8 @@
 Every command is a fresh ``python -m mlkit.study.cli`` process whose working directory is
 a temporary folder outside the repository, and every "chat" starts by reading
 ``status`` (never memory), as the study agent must. The same flow runs on Bank Marketing
-and on the synthetic case: the engine holds no dataset-specific code.
+and on the synthetic case, and on the scikit-learn WDBC case (materialized in a temporary
+folder by its ``prepare.py``): the engine holds no dataset-specific code.
 
 1. init (instructions installed, the recorded invocation works);
 2. pause 1: ``prediction_time``, then ``feature_availability`` from the junior's list;
@@ -62,6 +63,20 @@ JUNIOR = {
                               'fines but mark them as uncertain.',
         'rate_by': 'home_branch',
     },
+    # M3 generality: a real binary case with 30 numeric features and no leaky variable.
+    'wdbc': {
+        'prediction_time': 'when the aspirate image has been analysed, before the pathology '
+                           'diagnosis',
+        'restatement': 'You score each sample once its image is analysed, before the '
+                       'pathologist gives a diagnosis.',
+        'words': 'Yes, once the image is analysed and before the diagnosis.',
+        'exclusions': {},
+        'availability_words': 'Keep all thirty measurements: they all come from the analysed '
+                              'image.',
+        'availability_restatement': 'You keep every measurement of the analysed image as a '
+                                    'feature.',
+        'rate_by': 'mean_radius',
+    },
 }
 
 
@@ -69,7 +84,8 @@ JUNIOR = {
 def cases(tmp_path_factory):
     return {'bank': fk.BANK,
             'synthetic': fk.make_case(tmp_path_factory.mktemp('synthetic'),
-                                      n_rows=4000)['case'].parent}
+                                      n_rows=4000)['case'].parent,
+            'wdbc': fk.materialize(fk.WDBC, tmp_path_factory.mktemp('wdbc'))}
 
 
 class Chat:
@@ -123,7 +139,7 @@ def _fits(study: Path) -> list[dict]:
     return [e for e in fk.registry_entries(study) if e['activity'].startswith('fit.')]
 
 
-@pytest.mark.parametrize('name', ['bank', 'synthetic'])
+@pytest.mark.parametrize('name', ['bank', 'synthetic', 'wdbc'])
 def test_walkthrough(name, cases, tmp_path, capsys):
     case_dir = cases[name]
     junior = JUNIOR[name]
@@ -146,8 +162,9 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     chat.confirm(p, junior['words'])
     availability = fk.availability(case_dir, **junior['exclusions'])
     p = chat.propose('feature_availability', availability,
-                     'You exclude the variables you listed and keep the doubtful one as a '
-                     'stated limit.')
+                     junior.get('availability_restatement',
+                                'You exclude the variables you listed and keep the doubtful '
+                                'one as a stated limit.'))
     confirmed = chat.confirm(p, junior['availability_words'])
     assert confirmed['result']['user_words'] == junior['availability_words']
 

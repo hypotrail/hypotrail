@@ -292,7 +292,13 @@ def test_the_engine_names_no_dataset():
               # Auto MPG and the regression variant of the synthetic case (M3).
               'mpg', 'car_name', 'model_year', 'horsepower', 'displacement', 'cylinders',
               'monthly_loans', 'floor_area', 'staff_count', 'opening_hours', 'branch_type',
-              'survey_score', 'heating_cost', 'returns_logged', 'site_ref'}
+              'survey_score', 'heating_cost', 'returns_logged', 'site_ref',
+              # The scikit-learn cases (M3 generality): WDBC and diabetes.
+              'wdbc', 'diagnosis', 'malignant', 'benign', 'diabetes', 'progression', 'bmi',
+              'breast', 'cancer', 'tumour', 'nuclei', 'cholesterol', 'triglycerides'}
+    for case_dir in (fk.WDBC, fk.DIABETES):      # the committed adapters; data not needed
+        case = c.load_case(case_dir, verify_data=False)
+        names |= {v['name'] for v in case.document['variables'] if '_' in v['name']}
     pattern = re.compile(r'\b(' + '|'.join(sorted(map(re.escape, names))) + r')\b', re.I)
     found = []
     for path in sorted(STUDY_PKG.rglob('*.py')):

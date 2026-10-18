@@ -42,7 +42,7 @@ uv run --project framework python -m pytest -q framework/tests/test_pilot_revisi
 
 At the v0.1 closure it reports about 800 passed; the only skips are the 34 opt-in agent scenarios of `framework/tests/acceptance/agent/test_scenarios.py`. Without the `browser` group the same command passes but skips the offline browser test with a `PytestWarning` that says so; that run is not the full gate.
 
-`framework/tests/study/` covers the junior study engine, including real `hypotrail` CLI processes (`test_cli_decisions.py`, `test_walkthrough.py` on Bank and the synthetic case) and the frozen CLI contract (`test_contract_freeze.py`, see `docs/specs/CLI-CONTRACT.md`). A contract change updates the document and the freeze test in the same commit. The `hypotrail` command is installed in `framework/.venv` by `uv sync`; run it with `uv run --project framework hypotrail <command> --study DIR`. Create test studies in a temporary directory outside the repository.
+`framework/tests/study/` covers the junior study engine, including real `hypotrail` CLI processes (`test_cli_decisions.py`, `test_walkthrough.py` on Bank, the synthetic case, and WDBC; `test_regression_walkthrough.py` on Auto MPG, the synthetic regression case, and diabetes; `test_perturbations.py` on 26 rewritten synthetic cases) and the frozen CLI contract (`test_contract_freeze.py`, see `docs/specs/CLI-CONTRACT.md`). A contract change updates the document and the freeze test in the same commit. The `hypotrail` command is installed in `framework/.venv` by `uv sync`; run it with `uv run --project framework hypotrail <command> --study DIR`. Create test studies in a temporary directory outside the repository.
 
 ### Marimo spike (opt-in)
 

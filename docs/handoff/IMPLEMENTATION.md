@@ -47,7 +47,8 @@ Refused explicitly (`unsupported_capability`, with the capability named), never 
 
 - a time column of type date or decimal (`temporal split on a date or non-integer time column (v0.2)`), duplicate records, a held-out test partition, models other than the constant baseline, logistic regression, the training-mean baseline, and linear regression (a random forest is "not supported in v0.1");
 - a grouped split: a declared group column is accepted, but the capability `grouped split (v0.2)` is named and every split reports the group values both partitions share (`grouped_split_unsupported`);
-- a missing target value in a regression study (`missing target values (v0.2)`);
+- a missing target value, refused at `init` for both tasks (`missing target values (v0.2)`); a stratified split with fewer than two rows of a class (`stratified split with fewer than two rows of each class`);
+- values that would silently change meaning, refused at `init` with `invalid_case`: a cell of a numeric variable that is not a number and not declared in `na_values`, and a binary target label other than the declared labels;
 - a changed dataset or case file (`dataset_changed`, `sources_changed`): start a new study.
 
 Not built, by design: the webview companion (paused; [ADR 0002](../decisions/0002-companion-as-cli-client.md) makes any future one a client of this CLI), an application server, MCP integration, multi-agent orchestration, decision controls in the HTML.
@@ -100,10 +101,19 @@ Measured on Auto MPG (`test_regression_walkthrough.py`, split `model_year >= 79`
 
 Limits: agentic acceptance of the regression workflow has not been run; the time column is never a model feature; no grouped split; regression has one candidate model.
 
+## Generality (M3)
+
+To test that the engine is not specialised to Bank Marketing and Auto MPG ([checklist section](../acceptance/V0.1-CHECKLIST.md#generality-m3)):
+
+- **Two more real cases** from the installed scikit-learn, without download: [Breast Cancer Wisconsin](../../use-cases/breast-cancer-wdbc/README.md) (binary, 30 numeric features) and [diabetes progression](../../use-cases/diabetes/README.md) (regression on the raw features, no time or group column, so a random split). The package files state no licence for the data, so the data are **not committed**: each use case commits `prepare.py`, which copies the bundled bytes into an ignored `data/` folder and generates the committed `case.yaml` (`--check` detects a change of the bundled bytes, `--out DIR` makes a copy). Run `prepare.py` before `hypotrail init` on them; `check_layout.py` lists an absent copy as not materialized. Both walkthroughs run on them unchanged (WDBC logistic AUC 0.9962 on 171 validation rows; diabetes MAE 47.49 points [41.91, 53.09] against 68.88 for the training mean). Both datasets are likely known to language models, and their prediction-time semantics are a scenario, as their READMEs say.
+- **26 synthetic perturbations** (`test_perturbations.py`): other names, separators, quoting, line endings, extra, constant and high-cardinality columns, declared missing values, a group column, extreme imbalance, and 60 rows complete with a clean `check`; a date time column, duplicates, a missing target, and a single positive row are refused with the capability named.
+- **Four defects fixed** (contract changes): an undeclared blank or text token in a numeric column was silently read as a category; a binary target label outside the declared labels, and a missing binary target, silently counted as negative; a stratified split on a single positive row failed with an unstructured reason. `init` now reads the data through `data.load_dataset`, whose `check_values` refuses them.
+- **Not fixed, recorded**: nothing flags a validation partition with one or two positive rows or a few dozen rows (the intervals are wide, nothing says "too small"); a capacity larger than the validation partition selects every row without a note; `rate_by` on a high-cardinality category lists every value in the report.
+
 ## Legacy and preservation
 
 The legacy pilot (`framework/mlkit/pilot.py` and its modules) is unchanged apart from the Stale exit fix (WP0.2); `mlkit/study/` imports none of it (`test_isolation`). `use-cases/*/project.json` and `results.json` remain companion tutorial contracts: `case.yaml` is generated from them and `case-supplement.yaml` by an explicit migration, with tutorial confirmations downgraded to scenario assumptions. Historical tests that concern suspended holdout and production paths stay out of the gate. Do not reset existing study state; test in temporary studies.
 
 ## Next work
 
-Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions (now also covering the post-v0.1 F3, F5, and T8 changes); the observed junior sessions of the observation kit; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3); a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.
+Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions (now also covering the post-v0.1 F3, F5, and T8 changes); the observed junior sessions of the observation kit; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3) and of a study on the scikit-learn cases (engine side tested for generality); a small-sample warning in `not_yet_defensible`; a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.

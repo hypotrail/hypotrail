@@ -184,4 +184,80 @@ def load_dataset(case: Case, *, supported_only: bool = True) -> Dataset:
                                               f'{list(frame.columns)}; expected {len(index)} '
                                               f'rows and {case.column_names}'}])
     frame.index = pd.Index(index.keys, name=ROW_KEY_NAME)
+    check_values(case, frame)
     return Dataset(case=case, index=index, frame=frame)
+
+
+NUMBER_TYPES = ('numeric', 'integer')
+CAPABILITY_MISSING_TARGET = 'missing target values (v0.2)'
+MAX_EXAMPLES = 5
+
+
+def _keys(mask) -> list[str]:
+    return sorted(mask[mask].index, key=lambda k: int(k[1:]))
+
+
+def check_values(case: Case, frame) -> None:
+    """Refuse values that would silently change meaning (structural inspection).
+
+    * A ``numeric`` or ``integer`` variable whose cells are not all numbers, once the case
+      ``na_values`` are read as missing, is refused (``invalid_case``): pandas would read
+      the column as text, and the models would one-hot encode it as a category.
+    * A binary target holding a label other than the case labels (``positive_label`` and,
+      when declared, ``negative_label``; otherwise at most one other label) is refused
+      (``invalid_case``): every unexpected label would silently count as negative.
+    * A missing target value (a cell matching ``na_values``) is refused
+      (``unsupported_capability``, ``missing target values (v0.2)``): rows are neither
+      dropped nor imputed silently.
+
+    Only the structure is read: which cells parse and which labels occur, never a rate."""
+    import pandas as pd
+    from pandas.api.types import is_numeric_dtype
+
+    problems = []
+    for i, v in enumerate(case.document['variables']):
+        column = frame[v['name']]
+        if v['type'] in NUMBER_TYPES and not is_numeric_dtype(column):
+            bad = column.notna() & pd.to_numeric(column, errors='coerce').isna()
+            tokens = sorted({str(x) for x in column[bad]})
+            problems.append({
+                'path': f'variables[{i}].type',
+                'problem': f'{v["name"]!r} is declared {v["type"]} but {int(bad.sum())} cells '
+                           f'are not numbers: {", ".join(map(repr, tokens[:MAX_EXAMPLES]))} '
+                           f'(first rows {", ".join(_keys(bad)[:MAX_EXAMPLES])}). Declare how '
+                           f'such a cell is read (dataset.na_values, with a special value) or '
+                           f'change the type; it is never read as a category silently.'})
+    target = frame[case.target_column]
+    if case.task == 'binary':
+        labels = target.dropna().astype(str)
+        positive_label = str(case.positive_label)
+        negative = case.document['target'].get('negative_label')
+        expected = {positive_label} | ({str(negative)} if negative is not None else set())
+        others = sorted(set(labels) - expected)
+        if negative is None and len(others) == 1:
+            others = []
+        if others or positive_label not in set(labels):
+            counts = {label: int((labels == label).sum()) for label in others}
+            problems.append({
+                'path': 'target',
+                'problem': (f'The target {case.target_column!r} holds labels other than '
+                            f'{" and ".join(map(repr, sorted(expected)))}: '
+                            + ', '.join(f'{label!r} ({n} rows)' for label, n in counts.items())
+                            + '. Each would silently count as negative.') if others else
+                           f'The positive label {positive_label!r} never occurs in '
+                           f'{case.target_column!r}.'})
+    if problems:
+        raise CaseError('invalid_case', 'Some values would silently change meaning.',
+                        problems=problems)
+    missing = target.isna()
+    if missing.any():
+        keys = _keys(missing)
+        reason = {'code': 'unsupported_capability', 'capability': CAPABILITY_MISSING_TARGET,
+                  'path': 'target.column', 'column': case.target_column,
+                  'rows': len(keys), 'examples': keys[:MAX_LISTED],
+                  'reason': f'{len(keys)} rows have no value of the target '
+                            f'{case.target_column!r}. This version neither drops nor imputes '
+                            f'target rows silently.'}
+        raise CaseError('unsupported_capability',
+                        f'This case needs a capability that is not available yet: '
+                        f'{CAPABILITY_MISSING_TARGET}', details={'reasons': [reason]})

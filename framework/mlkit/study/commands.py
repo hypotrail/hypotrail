@@ -876,7 +876,9 @@ def init(case_path, study_dir) -> Outcome:
         raise StudyError('state_exists', 'A study already exists here; it is never overwritten.',
                          details={'study': str(study_dir)})
     case = c.require_supported(c.load_case(_case_file(case_path)))
-    index = dt.row_index(case)
+    # Structural inspection: row keys, duplicates, and values that would silently change
+    # meaning (``data.check_values``) are refused before the study exists.
+    index = dt.load_dataset(case).index
     state = st.initial_state(case)
     study_dir.mkdir(parents=True, exist_ok=True)
     store.create(state)

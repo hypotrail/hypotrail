@@ -45,9 +45,16 @@ def dataset_fields(text):
         return fields
     return (yaml.safe_load(text) or {}).get('dataset') or {}
 
-def check_cases(errors):
-    """A case never declares a confirmation, and its dataset matches the declared sha256."""
-    count = 0
+# A use case whose data may not be redistributed commits a `prepare.py` that copies them
+# from an installed package into an ignored path; until it runs, the dataset is absent.
+MATERIALIZER = 'prepare.py'
+
+def check_cases(errors, absent=None):
+    """A case never declares a confirmation, and its dataset matches the declared sha256.
+
+    A dataset materialized by the use case's `prepare.py` may be absent (listed in
+    `absent`); when present, it must match like any other."""
+    count, absent = 0, ([] if absent is None else absent)
     for folder in sorted(p for p in (ROOT / 'use-cases').iterdir() if p.is_dir()):
         for name in CASE_FILES:
             path = folder / name
@@ -61,6 +68,8 @@ def check_cases(errors):
         raw = (folder / str(dataset.get('path') or '')).resolve()
         if not dataset.get('path') or not raw.is_relative_to(folder.resolve()):
             errors.append(f'Case dataset outside its use case: {folder.name}')
+        elif not raw.is_file() and (folder / MATERIALIZER).is_file():
+            absent.append(f'{folder.name}/{dataset["path"]} (run {folder.name}/{MATERIALIZER})')
         elif not raw.is_file() or sha(raw) != dataset.get('sha256'):
             errors.append(f'Case dataset fingerprint mismatch: {folder.name}')
     return count
@@ -87,8 +96,10 @@ def main():
             errors.append(f'Dataset fingerprint mismatch: {entry["dir"]}')
         if results['dataset']['sha256'] != project['dataset']['sha256']:
             errors.append(f'Results do not reference the declared dataset: {entry["dir"]}')
-    cases = check_cases(errors)
+    absent = []
+    cases = check_cases(errors, absent)
     print(json.dumps({'ok': not errors, 'use_cases': 2, 'cases': cases,
+                      'not_materialized': absent,
                       'compatibility_links': len(LINKS),
                       'errors': errors}, ensure_ascii=False, indent=2))
     return bool(errors)
