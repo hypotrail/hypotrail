@@ -55,8 +55,10 @@ SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resoluti
 # The limits that matter first when a chat resumes; the others are named, not quoted.
 SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds', 'result_integrity',
                     'adopted_rule_not_evaluated',
+                    'capacity_exceeds_validation', 'small_validation_partition',
                     'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
-                    'uncertain_features_included', 'validation_is_not_independent')
+                    'uncertain_features_included', 'high_cardinality_grouping',
+                    'validation_is_not_independent')
 SUMMARY_TOP = 5
 
 
@@ -155,6 +157,69 @@ def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
         if (rec.canonical_rule(rule) or rule) in {rec.canonical_rule(r) or r for r in rules}:
             return None
     return rule
+
+
+# G.12 (post-v0.1): small-data warnings, never refusals. A validation partition with fewer
+# than SMALL_VALIDATION_ROWS rows, or (binary) fewer than SMALL_VALIDATION_POSITIVES positive
+# rows, is named; so is a capacity that selects every validation row, and an exploration
+# that folds a high-cardinality column into its largest groups and "other".
+SMALL_VALIDATION_ROWS = 30
+SMALL_VALIDATION_POSITIVES = 5
+
+
+def _citable(item) -> bool:
+    return bool(item) and item['current'] and item['integrity'] == 'ok' \
+        and isinstance(item.get('values'), dict)
+
+
+def _small_data(state: dict, results: dict) -> list[dict]:
+    """The G.12 warnings of ``not_yet_defensible``, from current, verified results."""
+    out = []
+    binary = st.task_of(state) == st.BINARY
+    split = results.get('split')
+    if _citable(split):
+        part = (split['values'].get('partitions') or {}).get('validation') or {}
+        n, positives = part.get('n_rows'), part.get('n_positive')
+        few_rows = isinstance(n, int) and n < SMALL_VALIDATION_ROWS
+        few_positives = binary and isinstance(positives, int) \
+            and positives < SMALL_VALIDATION_POSITIVES
+        if few_rows or few_positives:
+            counted = f'{n} rows' + (f', {positives} of them positive' if binary
+                                     and isinstance(positives, int) else '')
+            item = {'id': 'small_validation_partition', 'slots': ['split'], 'n_rows': n,
+                    'min_rows': SMALL_VALIDATION_ROWS,
+                    'text': f'The validation partition is small ({counted}): every validation '
+                            'figure rests on these rows, its interval is wide, and a '
+                            'difference between models on them can be chance.'}
+            if binary:
+                item.update(n_positive=positives, min_positive=SMALL_VALIDATION_POSITIVES)
+            out.append(item)
+    evaluation = results.get('policy.evaluation')
+    rules = []
+    if _citable(evaluation) and isinstance(evaluation.get('params'), dict):
+        n = evaluation['values'].get('n')
+        for rule in evaluation['params'].get('rules') or []:
+            kind, _, k = str(rule).partition(':')
+            if kind == 'capacity' and k.isdigit() and isinstance(n, int) and int(k) >= n:
+                rules.append(rule)
+        if rules:
+            out.append({'id': 'capacity_exceeds_validation', 'rules': rules, 'n_rows': n,
+                        'text': f'A capacity at least as large as the {n} validation rows '
+                                'selects every row: its figures describe selecting everyone, '
+                                'not a ranking.'})
+    folded = []
+    for slot, item in sorted(results.items()):
+        other = item['values'].get('other') if _citable(item) else None
+        if isinstance(other, dict):
+            folded.append((slot, item['values']))
+    if folded:
+        named = '; '.join(f'{v.get("column")}: {v.get("n_groups")} groups, the '
+                          f'{v.get("max_groups")} largest shown' for _, v in folded)
+        out.append({'id': 'high_cardinality_grouping', 'slots': [slot for slot, _ in folded],
+                    'text': 'A column with many values is shown by its largest groups, the '
+                            f'other values folded into one group ({named}); a rate or a mean '
+                            'of the folded group mixes many small groups.'})
+    return out
 
 
 def _compact_value(decision_id: str, value):
@@ -489,6 +554,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         defensible.append({'id': 'adopted_rule_not_evaluated', 'rules': [adopted],
                            'text': f'The adopted policy {adopted} has no current evaluation; '
                                    'its figures cannot be cited until it is evaluated again.'})
+    defensible.extend(_small_data(state, results))
     return {
         'schema': SCHEMA,
         'study': str(study.study_dir),

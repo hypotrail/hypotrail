@@ -185,7 +185,9 @@ the result.
   interval means the comparison is uncertain. A paired difference whose interval contains
   0 does not show that one model is better.
 - **Denominators.** Always give the count next to a rate; a rate on fewer than 30 rows
-  (`small_count`) is too noisy to read alone.
+  (`small_count`) is too noisy to read alone. When "What is not yet defensible" names a
+  small validation partition, or a column folded into its largest groups and "other",
+  say so with the counts it gives before reading any figure from it.
 <!-- hypotrail:task binary -->
 - **Ties at the cut.** With a constant baseline every row ties; selected counts are then
   expected counts (`selection: "expected"`).

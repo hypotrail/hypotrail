@@ -140,7 +140,10 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           # M3: a declared group column without a grouped split.
                           'grouped_split_unsupported',
                           # Post-v0.1 (P2): a condition of the junior not resolved yet.
-                          'open_holds'}
+                          'open_holds',
+                          # G.12: small-data warnings (never refusals).
+                          'small_validation_partition', 'capacity_exceeds_validation',
+                          'high_cardinality_grouping'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -339,7 +342,8 @@ def test_view_model_keys(flow):
 def test_next_action_kinds_and_not_yet_defensible_ids_in_source():
     source = (STUDY_PKG / 'state.py').read_text(encoding='utf-8')
     assert set(re.findall(r"'kind': '([a-z_]+)'", source)) == NEXT_ACTION_KINDS
-    defensible = inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
+    defensible = (inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
+                  + inspect.getsource(view._small_data))
     ids = set(re.findall(r"\{'id': '([a-z_]+)'", defensible))
     assert ids == NOT_YET_DEFENSIBLE_IDS
 
@@ -397,6 +401,21 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
             | {'decide.note', 'decide.resolve_note', 'open_holds', 'notes'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
     assert ('hypotrail decide note (--about DECISION | --resolve NOTE_ID) --text TEXT' in DOC)
+
+
+def test_small_data_warnings_are_documented():
+    """G.12 (post-v0.1): the small-data thresholds, the grouping default, and the new
+    result value keys."""
+    from mlkit.study import activities as act, eda
+    assert (view.SMALL_VALIDATION_ROWS, view.SMALL_VALIDATION_POSITIVES) == (30, 5)
+    assert (eda.MAX_GROUPS, eda.OTHER_GROUP) == (20, '(other values)')
+    assert act.normalize_options('eda.rate_by', {'column': 'x'}) == {'column': 'x'}
+    assert act.normalize_options('eda.mean_by', {'column': 'x', 'max_groups': 5}) == \
+        {'column': 'x', 'max_groups': 5}
+    keys = {'view.SMALL_VALIDATION_ROWS', 'view.SMALL_VALIDATION_POSITIVES', 'eda.MAX_GROUPS',
+            'n_groups', 'max_groups', 'other', 'n_values', 'min_rows', 'min_positive'}
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert '--max-groups N' in DOC and '`(other values)`' in DOC
 
 
 def test_negative_reply_targets_the_agreement():

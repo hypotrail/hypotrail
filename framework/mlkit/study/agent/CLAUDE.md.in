@@ -248,9 +248,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} decide note --about DECISION --text "<the junior's condition, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note --resolve NOTE_ID --text "<the junior's words that resolve it, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
-{{HYPOTRAIL}} run ACTIVITY [--column NAME] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task regression -->
-{{HYPOTRAIL}} run ACTIVITY [--column NAME] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:end -->
 {{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->

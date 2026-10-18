@@ -202,6 +202,11 @@ class Walk:
                                                   self.study)['view']['not_yet_defensible']}}
 
 
+def read_view(tmp: Path) -> dict:
+    from mlkit.study import view
+    return view.build(tmp / 'study')
+
+
 def outcome(variant: Variant, tmp: Path, **walk) -> dict | Refused:
     case_dir = variant.write()
     try:
@@ -292,8 +297,30 @@ def test_high_cardinality_category(tmp_path):
     v.add('ticket_code', 'category', [f'T{(i * 7) % 509:04d}' for i in range(len(v.rows))])
     result = completed(outcome(v, tmp_path, by='ticket_code'))
     groups = read.open(tmp_path / 'study').current('eda.rate_by:ticket_code')['output']['values']
-    assert len(groups['groups']) > 300 and all(g['small_count'] for g in groups['groups'])
+    # G.12: the 20 largest groups and one "other" group, with counts; a warning, no refusal.
+    assert groups['max_groups'] == 20 and groups['n_groups'] > 300
+    assert len(groups['groups']) == 21 and groups['groups'][-1]['value'] == '(other values)'
+    other = groups['other']
+    assert other['n_values'] == groups['n_groups'] - 20
+    assert other['n_rows'] == groups['groups'][-1]['n_rows']
+    assert sum(g['n_rows'] for g in groups['groups']) == groups['n_rows']
+    assert groups['warnings'][0].startswith(f'ticket_code has {groups["n_groups"]} values')
+    assert 'high_cardinality_grouping' in result['nyd']
     assert _finite(result['candidate']['coefficients'].values())
+
+
+def test_high_cardinality_grouping_is_configurable(tmp_path):
+    v = Variant(tmp_path)
+    v.add('ticket_code', 'category', [f'T{(i * 7) % 509:04d}' for i in range(len(v.rows))])
+    walk = Walk(v.write(), tmp_path / 'study')
+    walk.walk(by='ticket_code')
+    out = walk.run('eda.rate_by', '--column', 'ticket_code', '--max-groups', '5')['values']
+    assert out['max_groups'] == 5 and len(out['groups']) == 6
+    assert out['other']['n_values'] == out['n_groups'] - 5
+    assert out['other']['n_positive'] == out['groups'][-1]['n_positive']
+    with pytest.raises(Refused) as exc:
+        walk.run('eda.rate_by', '--column', 'ticket_code', '--max-groups', '0')
+    assert exc.value.error['code'] == 'invalid_arguments'
 
 
 @pytest.mark.parametrize('task', ['binary', 'regression'])
@@ -383,6 +410,14 @@ def test_capacity_larger_than_the_validation_partition(tmp_path):
     result = completed(outcome(v, tmp_path, capacity=100))
     rule = result['evaluation']['rules']['capacity:100']['models']['fit.logistic']
     assert rule['selected'] == 18
+    # G.12: warnings, not refusals: the capacity selects every row of a small partition.
+    assert {'capacity_exceeds_validation', 'small_validation_partition'} <= result['nyd']
+    items = {x['id']: x for x in read_view(tmp_path)['not_yet_defensible']}
+    assert items['capacity_exceeds_validation']['rules'] == ['capacity:100']
+    assert items['capacity_exceeds_validation']['n_rows'] == 18
+    assert 'selects every row' in items['capacity_exceeds_validation']['text']
+    assert items['small_validation_partition']['n_rows'] == 18
+    assert '18 rows' in items['small_validation_partition']['text']
 
 
 def test_undeclared_blank_cells_in_a_numeric_feature_are_refused(tmp_path):
@@ -436,6 +471,11 @@ def test_three_positives_complete_or_name_their_limit(tmp_path):
     v.cells('outcome', lambda n, x: 'renewed' if n in keep else 'lapsed')
     result = completed(outcome(v, tmp_path, capacity=5))
     assert result['split']['partitions']['validation']['n_positive'] == 1
+    # G.12: the single validation positive is named, with the counts.
+    item = {x['id']: x for x in read_view(tmp_path)['not_yet_defensible']}[
+        'small_validation_partition']
+    assert item['n_positive'] == 1 and item['min_positive'] == 5
+    assert '1 of them positive' in item['text']
 
 
 def test_binary_target_label_outside_the_declared_labels_is_refused(tmp_path):

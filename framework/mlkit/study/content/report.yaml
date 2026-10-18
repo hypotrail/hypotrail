@@ -89,6 +89,10 @@ not_yet_defensible_extra:
   no_causality: The study ranks rows; it does not show that acting would change the outcome.
   workbench_not_tracked: Slider experiments in the workbench change nothing and prove nothing.
   delegated_decisions: You let the assistant choose. The choice is recorded, but the reasons are the assistant's, not yours.
+  open_holds: You asked to wait. Nothing on hold is confirmed until your own words resolve the condition.
+  small_validation_partition: With so few validation rows, one or two rows can change a figure; compare models with care.
+  capacity_exceeds_validation: Selecting every row says nothing about how well the model ranks; choose a capacity below the validation rows.
+  high_cardinality_grouping: Run the exploration again with a larger --max-groups to see more groups.
 notebook:
   banner_current: Generated at this revision. Numbers are frozen by result id.
   banner_stale: The study has moved on since this notebook was generated. Render again before relying on it.

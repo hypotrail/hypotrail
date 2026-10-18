@@ -158,11 +158,13 @@ def canonical(activity: str) -> str:
 
 
 def normalize_options(activity: str, options: Mapping | None) -> dict:
-    """The activity's options: ``{"column"}`` for ``eda.rate_by``, ``{"rules"}`` for the
-    policy evaluation, ``{}`` otherwise. Anything else is refused."""
+    """The activity's options: ``{"column"}`` (and ``{"max_groups"}`` when given, G.12) for
+    ``eda.rate_by`` and ``eda.mean_by``, ``{"rules"}`` for the policy evaluation, ``{}``
+    otherwise. Anything else is refused."""
     options = dict(options or {})
     given = {k for k, v in options.items() if v not in (None, [], ())}
-    allowed = {RATE_BY: {'column'}, MEAN_BY: {'column'}, POLICY: {'rules'}}.get(activity, set())
+    allowed = {RATE_BY: {'column', 'max_groups'}, MEAN_BY: {'column', 'max_groups'},
+               POLICY: {'rules'}}.get(activity, set())
     if given - allowed:
         raise CommandRefused('invalid_arguments',
                              f'{activity} does not take {", ".join(sorted(given - allowed))}.',
@@ -171,7 +173,14 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
         column = options.get('column')
         if not isinstance(column, str) or not column:
             raise CommandRefused('invalid_arguments', f'{activity} needs --column NAME.')
-        return {'column': column}
+        out = {'column': column}
+        if options.get('max_groups') is not None:
+            limit = options['max_groups']
+            if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+                raise CommandRefused('invalid_arguments', '--max-groups is a whole number of at '
+                                                          'least 1.', details={'max_groups': limit})
+            out['max_groups'] = limit
+        return out
     if activity == POLICY:
         from . import policy
         rules = options.get('rules') or []
@@ -324,6 +333,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                                                                case.document['variables']
                                                                if v['role'] in roles]})
                 params['column'] = column
+                if 'max_groups' in options:      # G.12: only when given, so the default
+                    params['max_groups'] = options['max_groups']   # keeps earlier identities
                 inputs['special_values'] = feature_special_values(case, [column])
                 columns.append(column)
             expose('train_eda', 'train', keys['train'], columns)

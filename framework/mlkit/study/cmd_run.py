@@ -1,6 +1,6 @@
 """``hypotrail run``: execute one activity, or acknowledge an interrupted execution.
 
-    hypotrail run ACTIVITY [--column X] [--rule RULE ...]
+    hypotrail run ACTIVITY [--column X [--max-groups N]] [--rule RULE ...]
                   --request-id ID --expected-revision REV --study DIR
     hypotrail run --acknowledge-interruption EXECUTION_ID --user-words TEXT
                   --request-id ID --expected-revision REV --study DIR
@@ -53,7 +53,10 @@ PAUSE_TIMEOUT = 120.0
 def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('activity', nargs='?', choices=act.CLI_NAMES,
                         help='activity to run (omit with --acknowledge-interruption)')
-    parser.add_argument('--column', default=None, help='column of eda.rate_by')
+    parser.add_argument('--column', default=None, help='column of eda.rate_by or eda.mean_by')
+    parser.add_argument('--max-groups', dest='max_groups', type=int, default=None,
+                        help='eda.rate_by / eda.mean_by: show this many largest groups and fold '
+                             'the other values into one group (default 20)')
     parser.add_argument('--rule', action='append', default=None,
                         help='policy rule: threshold:t or capacity:k (repeatable)')
     parser.add_argument('--acknowledge-interruption', dest='acknowledge', default=None,
@@ -119,7 +122,7 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
     # StudyError, not cli.ArgumentError: under ``python -m mlkit.study.cli`` the CLI module
     # is ``__main__`` and a class imported from ``mlkit.study.cli`` would not be caught.
     if args.acknowledge is not None:
-        if args.activity or args.column or args.rule:
+        if args.activity or args.column or args.rule or args.max_groups is not None:
             raise StudyError('invalid_arguments',
                              '--acknowledge-interruption takes no activity or option.')
         if not isinstance(args.user_words, str) or not args.user_words.strip():
@@ -139,7 +142,7 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
                                           request_id=args.request_id,
                                           expected_revision=args.expected_revision,
                                           user_words=args.user_words)
-        options = {'column': args.column, 'rules': args.rule}
+        options = {'column': args.column, 'rules': args.rule, 'max_groups': args.max_groups}
         return executions.run(args.study, args.activity, options, request_id=args.request_id,
                               expected_revision=args.expected_revision, hooks=test_hooks())
     except (CommandRefused, StudyError) as exc:

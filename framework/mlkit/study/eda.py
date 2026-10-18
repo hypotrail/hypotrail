@@ -14,7 +14,9 @@ and special values come from ``case.yaml``.
   denominator. A numeric column with many values is cut into training quantile
   bins; its special values and missing cells keep their own groups. A group with
   fewer than :data:`MIN_GROUP_ROWS` rows is flagged: its rate is too noisy to read
-  alone.
+  alone. A column with more than ``max_groups`` ordinary values (default
+  :data:`MAX_GROUPS`, ``--max-groups N``; G.12) shows its largest groups by count and folds
+  the others into one group, :data:`OTHER_GROUP`, with its count of values and rows.
 
 A regression study (numeric target with a unit) has its own exploration, with the same
 reading rules:
@@ -39,6 +41,9 @@ MIN_GROUP_ROWS = 30
 MAX_DISTINCT_BEFORE_BINNING = 12
 QUANTILE_BINS = 5
 MISSING_GROUP = '(missing)'
+# G.12 (post-v0.1): a high-cardinality column shows its largest groups and "other".
+MAX_GROUPS = 20
+OTHER_GROUP = '(other values)'
 
 
 def _rate(n: int, n_positive: int) -> float | None:
@@ -172,12 +177,16 @@ def _bins(values, special_mask):
     return binned.astype(str), [str(i) for i in binned.cat.categories]
 
 
-def _groups(case: c.Case, train, column: str):
-    """``(labels, order, binned)``: the group label of every training row for ``column``.
+def _groups(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS):
+    """``(labels, order, binned, folded)``: the group label of every training row for
+    ``column``.
 
     Special values and missing cells keep their own groups; a numeric column with more
     than :data:`MAX_DISTINCT_BEFORE_BINNING` ordinary values is cut into training quantile
-    bins."""
+    bins. When more than ``max_groups`` ordinary values remain, the ``max_groups`` largest
+    (by rows, then in value order) keep their groups and the others are labelled
+    :data:`OTHER_GROUP`; ``folded`` is ``{n_groups, n_values}`` (the ordinary values before
+    folding, and how many were folded), else None."""
     import pandas as pd
     from pandas.api.types import is_numeric_dtype
 
@@ -200,20 +209,41 @@ def _groups(case: c.Case, train, column: str):
         bin_labels, bin_order = _bins(values, special_mask)
         labels[bin_labels.index] = bin_labels
         order = bin_order + order
-    else:
+    folded = None
+    if not binned:
         ordinary = sorted(values[rest].unique().tolist(), key=lambda v: (str(type(v)), v))
         labels[rest] = values[rest].astype(str)
-        order = [str(v) for v in ordinary] + order
+        names = [str(v) for v in ordinary]
+        if len(names) > max_groups:
+            counts = labels[rest].value_counts()
+            rank = {name: i for i, name in enumerate(names)}
+            kept = set(sorted(names, key=lambda n: (-int(counts.get(n, 0)), rank[n]))[:max_groups])
+            labels[rest & ~labels.isin(kept)] = OTHER_GROUP
+            folded = {'n_groups': len(names), 'n_values': len(names) - len(kept)}
+            names = [n for n in names if n in kept] + [OTHER_GROUP]
+        order = names + order
     if missing.any():
         order.append(MISSING_GROUP)
-    return labels, order, binned
+    return labels, order, binned, folded
 
 
-def rate_by(case: c.Case, train, column: str) -> dict:
+def _folded(column: str, folded: dict | None, max_groups: int, groups: list) -> tuple:
+    """The ``other`` summary and its warning for a folded column (G.12)."""
+    if folded is None:
+        return None, None
+    other = next((g for g in groups if g['value'] == OTHER_GROUP), None)
+    summary = {'n_values': folded['n_values'], 'n_rows': other['n_rows'] if other else 0}
+    warning = (f'{column} has {folded["n_groups"]} values: the {max_groups} largest groups are '
+               f'shown and the other {folded["n_values"]} values are grouped as '
+               f'{OTHER_GROUP!r} ({summary["n_rows"]} training rows).')
+    return summary, warning
+
+
+def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:
     from .activities import positive
 
     y = positive(train, case)
-    labels, order, binned = _groups(case, train, column)
+    labels, order, binned, folded = _groups(case, train, column, max_groups)
     groups, warnings = [], []
     for label in order:
         mask = labels == label
@@ -227,19 +257,26 @@ def rate_by(case: c.Case, train, column: str) -> dict:
         if small:
             warnings.append(f'{column} = {label}: only {n} training rows; its rate is too noisy '
                             f'to read on its own.')
+    other, warning = _folded(column, folded, max_groups, groups)
+    if other is not None:
+        g = next(g for g in groups if g['value'] == OTHER_GROUP)
+        other.update(n_positive=g['n_positive'], rate=g['rate'])
+        warnings.insert(0, warning)
     overall = target_rate(case, train)
     return {'partition': 'train', 'column': column, 'n_rows': int(len(train)),
             'overall_rate': overall['rate'], 'binned': bool(binned),
             'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
             'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
+            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
+            'max_groups': max_groups, 'other': other,
             'note': 'Rates by group on training rows are associations, not effects of the '
                     'variable.'}
 
 
-def mean_by(case: c.Case, train, column: str) -> dict:
+def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:
     """The mean target by group of ``column`` on training rows, with counts."""
     y = numeric_target(case, train)
-    labels, order, binned = _groups(case, train, column)
+    labels, order, binned, folded = _groups(case, train, column, max_groups)
     groups, warnings = [], []
     for label in order:
         mask = labels == label
@@ -254,11 +291,17 @@ def mean_by(case: c.Case, train, column: str) -> dict:
         if small:
             warnings.append(f'{column} = {label}: only {n} training rows; its mean is too noisy '
                             f'to read on its own.')
+    other, warning = _folded(column, folded, max_groups, groups)
+    if other is not None:
+        other.update(mean=next(g['mean'] for g in groups if g['value'] == OTHER_GROUP))
+        warnings.insert(0, warning)
     return {'partition': 'train', 'column': column, 'target': case.target_column,
             'unit': case.target_unit, 'n_rows': int(len(train)),
             'overall_mean': _mean(y.dropna()), 'binned': bool(binned),
             'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
             'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
+            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
+            'max_groups': max_groups, 'other': other,
             'note': 'Mean target by group on training rows: associations, not effects of the '
                     'variable.'}
 
@@ -271,8 +314,9 @@ def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
     elif activity == 'eda.target_summary':
         values = target_summary(case, train)
     elif activity == 'eda.mean_by':
-        values = mean_by(case, train, params['column'])
+        values = mean_by(case, train, params['column'],
+                         params.get('max_groups', MAX_GROUPS))
     else:
-        values = rate_by(case, train, params['column'])
+        values = rate_by(case, train, params['column'], params.get('max_groups', MAX_GROUPS))
 
     return {'values': values, 'blobs': {}, 'partition': 'train', 'n_rows': int(len(train))}
