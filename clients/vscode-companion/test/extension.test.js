@@ -76,12 +76,13 @@ test('go to a result: needs stage v2, and a pasted id of 8 or more hex character
   assert.equal(await fake.commands.executeCommand('hypotrail.companion.goToResult'), null);
   assert.deepEqual(fake.calls.info, ['This Hypotrail link is not valid.']);
   assert.equal(fake.calls.panels.length, 0);
-  // A valid prefix opens the panel; no handler resolves it until WP-U3.
+  // A valid prefix opens the panel; WP-U3's handler resolves it through `evidence`. This
+  // fake CLI answers a summary to every command, so the results cannot be read.
   fake = createFake({ folders: [dir], answers: { inputBox: 'DEADBEEF00' } });
   await activate(fake);
-  await fake.commands.executeCommand('hypotrail.companion.goToResult');
+  assert.equal(await fake.commands.executeCommand('hypotrail.companion.goToResult'), null);
   assert.equal(fake.calls.panels.length, 1);
-  assert.match(fake.calls.info.at(-1), /not available in the current stage/);
+  assert.match(fake.calls.info.at(-1), /^The results of this study could not be read: /);
 });
 
 test('URI handler: an invalid link opens nothing (every link until WP-U3)', async () => {

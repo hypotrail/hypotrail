@@ -57,7 +57,12 @@ def test_each_view_of_its_stage_is_registered_and_placeholders_say_so(open_panel
         page.locator(f'[role="tab"][data-tab="{tab}"]').click()
         shown = page.locator(f'#panel-{tab}')
         assert shown.is_visible()
-        assert shown.locator(f'[data-placeholder="{tab}"]').inner_text() == 'Not available in this stage.'
+        placeholder = shown.locator(f'[data-placeholder="{tab}"]')
+        if placeholder.count():
+            assert placeholder.inner_text() == 'Not available in this stage.'
+        else:
+            # A work package replaced the placeholder: without data its view waits, busy.
+            assert shown.locator('[aria-busy="true"]').count() >= 1, tab
         assert page.locator('[data-recap-strip]').count() == 1, 'the recap strip is on every tab but Overview'
     page.locator('[role="tab"][data-tab="overview"]').click()
     assert page.locator('[data-recap-strip]').count() == 0
