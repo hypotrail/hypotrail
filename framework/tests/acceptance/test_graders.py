@@ -558,7 +558,12 @@ def test_auto_mpg_workspace_from_init(tmp_path):
     ws.mkdir()
     info = setup.prepare_study('auto-mpg', ws, session_log=True)
     assert info['case'] == 'auto-mpg' and info['session_log']
-    assert (ws / '.hypotrail' / 'session-log.jsonl').is_file()
+    log = ws / '.hypotrail' / 'session-log.jsonl'
+    assert log.is_file()
+    before = log.read_text()
+    setup.status(ws)                      # a harness read is never logged
+    graders.check_text(ws, 'Forty-two percent.')
+    assert log.read_text() == before
     assert (ws / 'case/data/auto-mpg.names').is_file()
     assert 'auto-mpg.data' in (ws / 'README.md').read_text()
     runner.check_isolation(ws, info['installed'])

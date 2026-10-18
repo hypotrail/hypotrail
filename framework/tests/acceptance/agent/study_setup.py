@@ -133,6 +133,9 @@ def cli_env(extra: dict | None = None) -> dict:
     env = {**os.environ, 'PYTHONPATH': os.pathsep.join(path)}
     for key in ('HYPOTRAIL_READ_ONLY', 'HYPOTRAIL_FAULT', 'HYPOTRAIL_TEST_HOOKS', 'HYPOTRAIL_CLI'):
         env.pop(key, None)
+    # The harness's own reads (per-turn snapshots and checks) never enter the study's
+    # session log: it must show the agent's calls only.
+    env['HYPOTRAIL_SESSION_LOG'] = '0'
     env.update(extra or {})
     return env
 
