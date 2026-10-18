@@ -1,0 +1,266 @@
+"""Split and training-partition EDA (plan WP2.2, §7 ``test_eda``).
+
+Every flow runs on the committed Bank case **and** on the synthetic case, whose
+generating truth (``truth.json``, never shown to an agent) is an independent oracle.
+Expected counts are recomputed here from the raw file with the ``csv`` module and the
+split's own row keys, not with the engine's code. Studies live in ``tmp_path``.
+"""
+from __future__ import annotations
+
+import csv
+import json
+import math
+import re
+from pathlib import Path
+
+import pytest
+
+from mlkit.study import activities as act, case as c, data as dt, eda, executions as ex, read
+
+import flowkit as fk
+from flowkit import Flow
+
+FRAMEWORK = Path(__file__).resolve().parents[2]
+STUDY_PKG = FRAMEWORK / 'mlkit' / 'study'
+
+
+@pytest.fixture(scope='module')
+def synthetic_full(tmp_path_factory):
+    return fk.make_case(tmp_path_factory.mktemp('synthetic'), n_rows=4000)
+
+
+@pytest.fixture(scope='module')
+def cases(synthetic_full):
+    return {'bank': fk.BANK, 'synthetic': synthetic_full['case'].parent}
+
+
+@pytest.fixture(scope='module')
+def prepared(tmp_path_factory, cases):
+    return {name: fk.prepare(path, tmp_path_factory.mktemp(name) / 'study', upto='split')
+            for name, path in cases.items()}
+
+
+@pytest.fixture(params=['bank', 'synthetic'])
+def flow(request, tmp_path, prepared, cases):
+    f = Flow(fk.clone(prepared[request.param], tmp_path / 'study'), cases[request.param])
+    f.name = request.param
+    return f
+
+
+def _raw(case_dir):
+    """``{row_key: {column: text}}`` from the raw file, independently of the engine."""
+    case = c.load_case(case_dir)
+    with open(case.dataset_path, newline='', encoding=case.dataset['encoding']) as handle:
+        reader = csv.reader(handle, delimiter=case.dataset['sep'])
+        header = next(reader)
+        return case, {f'L{i}': dict(zip(header, row)) for i, row in enumerate(reader, start=2)}
+
+
+def _train_keys(study):
+    s = read.open(study)
+    entry = s.current('split')
+    return [k for k in s.blob(entry['blobs']['train']).decode().splitlines() if k]
+
+
+def test_split_matches_the_decision_and_the_known_partition_sizes(flow):
+    values = read.open(flow.study).current('split')['output']['values']
+    train, validation = values['partitions']['train'], values['partitions']['validation']
+    case, raw = _raw(flow.case_dir)
+    assert values['n_rows'] == len(raw) == train['n_rows'] + validation['n_rows']
+    assert validation['n_rows'] == math.ceil(0.3 * len(raw))   # train_test_split rounds up
+    if flow.name == 'bank':
+        assert (train['n_rows'], validation['n_rows']) == (3164, 1357)
+
+
+def test_target_rate_on_training_rows(flow):
+    values = flow.run('eda.target_rate')['values']
+    case, raw = _raw(flow.case_dir)
+    train = _train_keys(flow.study)
+    positives = sum(raw[k][case.target_column] == str(case.positive_label) for k in train)
+    assert (values['n_rows'], values['n_positive']) == (len(train), positives)
+    assert values['rate'] == pytest.approx(positives / len(train))
+    if flow.name == 'bank':
+        assert (values['n_positive'], values['n_rows']) == (365, 3164)
+
+
+def test_special_values_and_their_co_occurrence(flow, synthetic_full):
+    values = flow.run('eda.special_values')['values']
+    case, raw = _raw(flow.case_dir)
+    train = set(_train_keys(flow.study))
+    declared = [s for s in case.document['special_values']
+                if case.variables[s['column']]['role'] == 'feature']
+    assert [(s['column'], s['value']) for s in values['special_values']] == \
+        [(s['column'], s['value']) for s in declared]
+    for item in values['special_values']:
+        expected = sum(raw[k][item['column']] == str(item['value']) for k in train)
+        assert item['n_rows'] == expected, item
+    pairs = {(p['a']['column'], p['b']['column']): p for p in values['co_occurrence']}
+    if flow.name == 'bank':
+        p = pairs[('pdays', 'poutcome')]
+        assert (p['n_a'], p['n_b'], p['n_both'], p['same_rows']) == (2608, 2608, 2608, True)
+        assert not pairs[('contact', 'poutcome')]['same_rows']
+    else:
+        truth = json.loads(synthetic_full['truth'].read_text())['sentinel']
+        a, b = list(truth['columns'])
+        p = pairs[(a, b)]
+        expected = len(set(truth['row_keys']) & train)
+        assert (p['n_a'], p['n_b'], p['n_both'], p['same_rows']) == (expected,) * 3 + (True,)
+
+
+def test_rate_by_gives_rates_with_denominators_and_flags_small_groups(flow):
+    case = c.load_case(flow.case_dir)
+    categorical = next(v['name'] for v in case.document['variables']
+                       if v['role'] == 'feature' and v['type'] == 'category')
+    values = flow.run('eda.rate_by', '--column', categorical)['values']
+    overall = flow.run('eda.target_rate')['values']
+    groups = values['groups']
+    assert sum(g['n_rows'] for g in groups) == overall['n_rows']
+    assert sum(g['n_positive'] for g in groups) == overall['n_positive']
+    for g in groups:
+        assert g['rate'] == pytest.approx(g['n_positive'] / g['n_rows'])
+        assert g['small_count'] is (g['n_rows'] < eda.MIN_GROUP_ROWS)
+    assert len(values['warnings']) == sum(g['small_count'] for g in groups)
+    if flow.name == 'bank':
+        unknown = next(g for g in groups if g['value'] == 'unknown (special value)')
+        assert unknown['n_rows'] == 26 and unknown['small_count'] is True
+
+
+def test_rate_by_bins_a_numeric_column_and_keeps_its_special_value_apart(flow):
+    case = c.load_case(flow.case_dir)
+    special = next(s for s in case.document['special_values']
+                   if case.variables[s['column']]['type'] in ('integer', 'numeric'))
+    values = flow.run('eda.rate_by', '--column', special['column'])['values']
+    assert values['binned'] is True
+    group = next(g for g in values['groups'] if g['value'] == f'{special["value"]} (special value)')
+    pairs = flow.run('eda.special_values')['values']['special_values']
+    assert group['n_rows'] == next(p['n_rows'] for p in pairs if p['column'] == special['column'])
+    assert sum(g['n_rows'] for g in values['groups']) == values['n_rows']
+
+
+def test_rate_by_refuses_the_target_and_unknown_columns(flow):
+    case = c.load_case(flow.case_dir)
+    for column in (case.target_column, 'no_such_column'):
+        payload = flow.run('eda.rate_by', '--column', column, expect=2)
+        assert payload['error']['code'] == 'invalid_arguments'
+    assert flow.run('eda.rate_by', expect=2)['error']['code'] == 'invalid_arguments'
+
+
+def test_eda_records_train_eda_exposure_on_training_rows_only(flow):
+    before = len(fk.exposure_records(flow.study))
+    runs = [flow.run('eda.target_rate'), flow.run('eda.special_values')]
+    new = fk.exposure_records(flow.study)[before:]
+    train = set(_train_keys(flow.study))
+    s = read.open(flow.study)
+    assert [(r['purpose'], r['partition'], r['result_id']) for r in new] == [
+        ('train_eda', 'train', p['result_id']) for p in runs]
+    for r in new:
+        assert set(s.blob(r['row_keys']).decode().split()) == train
+    summary = s.exposure_summary()
+    assert summary['by_partition']['train']['train_eda'] == len(train)
+    assert summary['validation_rows_used_for_selection'] == 0
+
+
+def test_no_validation_row_is_read_during_eda(flow, monkeypatch):
+    """Probe: validation rows are poisoned and every row access is recorded.
+
+    The poison sets every validation row to the positive label and to every declared
+    special value. EDA that read one validation row would change its counts.
+    """
+    case = c.load_case(flow.case_dir)
+    probe = Flow(fk.clone(flow.study, flow.study.parent / 'probe'), flow.case_dir, prefix='probe')
+    s = read.open(flow.study)
+    validation = s.blob(s.current('split')['blobs']['validation']).decode().split()
+    train = set(_train_keys(flow.study))
+    column = case.document['special_values'][-1]['column']
+    activities = (('eda.target_rate', {}), ('eda.special_values', {}),
+                  ('eda.rate_by', {'column': column}))
+    clean = {}
+    for activity, options in activities:
+        args = ('--column', options['column']) if options else ()
+        clean[activity] = flow.run(activity, *args)['values']
+
+    real_load, real_rows, accessed = dt.load_dataset, act.rows, []
+
+    def poisoned(case_, **kwargs):
+        dataset = real_load(case_, **kwargs)
+        frame = dataset.frame
+        frame.loc[validation, case_.target_column] = case_.positive_label
+        for sv in case_.document['special_values']:
+            frame.loc[validation, sv['column']] = sv['value']
+        return dataset
+
+    def recording(dataset, keys):
+        keys = list(keys)
+        accessed.append(keys)
+        return real_rows(dataset, keys)
+
+    monkeypatch.setattr(dt, 'load_dataset', poisoned)
+    monkeypatch.setattr(act, 'rows', recording)
+    for activity, options in activities:
+        out = ex.run(probe.study, activity, options, request_id=f'probe-{activity}',
+                     expected_revision=probe.rev()).payload
+        assert out['status'] == 'promoted'
+        assert out['values'] == clean[activity], activity
+    assert len(accessed) == len(activities)
+    assert all(set(keys) == train for keys in accessed)
+
+
+def test_eda_is_refused_before_the_split_result(tmp_path, cases):
+    flow = Flow(tmp_path / 'study', cases['synthetic'])
+    flow.init()
+    flow.pauses()                                       # split decided but not computed
+    for activity in ('eda.target_rate', 'eda.special_values'):
+        payload = flow.run(activity, expect=2)
+        assert payload['error']['code'] == 'precondition_missing'
+        assert {'requirement': 'result_current', 'slot': 'split',
+                'detail': 'Split the data before exploring or fitting it.'} in \
+            payload['error']['details']['missing']
+    assert fk.exposure_records(flow.study)[-1]['purpose'] == 'structural_inspection'
+
+
+def test_eda_on_a_stale_split_is_refused_and_a_late_eda_is_not_promoted(flow):
+    def meanwhile(plan):
+        flow.decide('split', {**fk.SPLIT, 'seed': fk.SPLIT['seed'] + 1})
+
+    outcome = ex.run(flow.study, 'eda.target_rate', {}, request_id='late-eda',
+                     expected_revision=flow.rev(), hooks={'after_reserve': meanwhile})
+    assert outcome.payload['status'] == 'late_not_promoted'
+    assert 'precondition_missing' in outcome.payload['result']['reason']
+    assert 'eda.target_rate' not in flow.state()['current']
+    payload = flow.run('eda.special_values', expect=2)
+    assert payload['error']['code'] == 'precondition_missing'
+
+
+def test_a_split_change_keeps_eda_exposure_and_makes_eda_stale(flow):
+    first = flow.run('eda.target_rate')
+    explored = read.open(flow.study).exposure_summary()['by_purpose']['train_eda']
+    flow.decide('split', {**fk.SPLIT, 'seed': 11})
+    state = flow.state()
+    assert first['result_id'] in state['stale']
+    flow.run('split')
+    after = read.open(flow.study)
+    assert after.exposure_summary()['by_purpose']['train_eda'] == explored
+    overlap = after.current('split')['output']['values']['overlap']
+    assert overlap['previously_exposed']['validation']['train_eda'] > 0   # explored, now validation
+    second = flow.run('eda.target_rate')
+    assert second['status'] == 'promoted' and second['result_id'] != first['result_id']
+
+
+def test_the_engine_names_no_dataset():
+    """No column, label, or dataset name of either case appears in the engine."""
+    names = set()
+    for case_dir in (fk.BANK,):
+        case = c.load_case(case_dir)
+        names |= {v['name'] for v in case.document['variables'] if '_' in v['name']
+                  or v['name'] in ('pdays', 'poutcome', 'duration', 'campaign', 'balance')}
+    names |= {'bank', 'quillmere', 'member_age', 'home_branch', 'membership_days',
+              'fines_outstanding', 'desk_followups', 'holds_open', 'visit_band',
+              'days_since_last_lapse', 'last_lapse_reason', 'reminders_sent',
+              'last_reminder_weekday', 'renewed', 'lapsed', 'subscription', 'deposit'}
+    pattern = re.compile(r'\b(' + '|'.join(sorted(map(re.escape, names))) + r')\b', re.I)
+    found = []
+    for path in sorted(STUDY_PKG.rglob('*.py')):
+        for i, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+            if pattern.search(line):
+                found.append(f'{path.name}:{i}: {line.strip()}')
+    assert not found, '\n'.join(found)
