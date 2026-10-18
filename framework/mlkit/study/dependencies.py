@@ -232,6 +232,14 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
                                           'results no longer refer to these bytes. Start a new '
                                           'study on the new data.',
                          details={'mutation': decision_id, 'old': old, 'new': new})
+    return _table_effects(old_state, decision_id, mutation, spec, new)
+
+
+def _table_effects(old_state: Mapping, decision_id: str, mutation: str, spec: Mapping,
+                   new: Any = None) -> dict:
+    """The effects of the table row ``spec`` (shared by :func:`effects` and
+    :func:`effects_for_mutation`). ``new`` is read only for ``code_fingerprint``."""
+    decisions = st.decision_ids(old_state)
     reason = (f'{decision_id} changed (§3.7 row {spec["row"]}: {mutation})'
               if mutation != 'unknown' else
               f'unknown mutation of {decision_id}: everything is stale')
@@ -261,6 +269,59 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
         row=spec['row'], reason=reason, blocked_until=list(spec['blocked_until']),
         scope=spec.get('scope'), notes=list(spec['notes']))
     return out
+
+
+# The decision a row of the table changes (advanced companion, CLI-CONTRACT-COMPANION §5).
+DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
+                        'feature_availability.feature_set': 'feature_availability',
+                        'feature_availability.wording': 'feature_availability',
+                        'split': 'split', 'policy.parameter': 'policy',
+                        'policy.rule_type': 'policy', 'model_choice': 'model_choice'}
+# The rows whose mutation can change a confirmed decision, by task (CC §5 ``impacts``):
+# rows 1 to 6 for a binary study, rows 1 to 4 and 13 for a regression study.
+DECISION_MUTATIONS = {
+    st.BINARY: ('prediction_time', 'feature_availability.feature_set',
+                'feature_availability.wording', 'split', 'policy.parameter',
+                'policy.rule_type'),
+    st.REGRESSION: ('prediction_time', 'feature_availability.feature_set',
+                    'feature_availability.wording', 'split', 'model_choice'),
+}
+
+
+def effects_for_mutation(state: Mapping, mutation: str, store=None) -> dict:
+    """What a confirmed change of the kind ``mutation`` would invalidate **now**, without
+    old and new values (CLI-CONTRACT-COMPANION §5, the ``impacts`` of ``evidence``).
+
+    Pure: the effects of the table row are applied, with lineage propagation when
+    ``store`` is given (anything :func:`mlkit.study.registry.get` can read: ``home`` and
+    ``read_blob``), to a deep copy of ``state``; ``state`` itself is never changed.
+
+    Returns ``{mutation, row, decision_id, reason, stale_results, stale_slots, kept_slots,
+    refit, reconfirm, notes, effects}``: ``stale_slots`` are the slots whose current result
+    would become stale, ``kept_slots`` the slots holding a result that is current (not marked
+    stale) and would stay so, ``reconfirm`` the confirmed decisions that would need the
+    junior's words again. A mutation outside the study's table, or the dataset row (a
+    refusal, not an invalidation), is ``invalid_arguments``.
+    """
+    table = BY_MUTATION_BY_TASK[st.task_of(state)]
+    spec = table.get(mutation)
+    if spec is None or mutation == 'unknown' or spec.get('refusal'):
+        raise StudyError('invalid_arguments',
+                         f'{mutation!r} is not a decision mutation of this study.',
+                         details={'mutations': list(DECISION_MUTATIONS[st.task_of(state)])})
+    decision_id = DECISION_OF_MUTATION[mutation]
+    work = copy.deepcopy(dict(state))
+    eff = _table_effects(work, decision_id, mutation, spec)
+    record = apply_effects(work, eff, revision=state['revision'], decision_id=decision_id,
+                           store=store)
+    stale = set(record['stale_slots'])
+    kept = [slot for slot, rid in sorted(state['current'].items())
+            if rid not in state['stale'] and slot not in stale]
+    return {'mutation': mutation, 'row': spec['row'], 'decision_id': decision_id,
+            'reason': eff['reason'], 'stale_results': list(record['stale_results']),
+            'stale_slots': list(record['stale_slots']), 'kept_slots': kept,
+            'refit': list(eff['refit']), 'reconfirm': list(record['reconfirm_required']),
+            'notes': list(eff['notes']), 'effects': eff}
 
 
 def _lineage_map(store, rids) -> dict[str, set]:

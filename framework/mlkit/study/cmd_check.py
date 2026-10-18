@@ -75,6 +75,12 @@ current result's ``groups`` list; "steps", "pauses", "decisions" to the plan. Th
 ("the seven columns we kept" is traced when the fit uses seven features; "seven calls" is
 not).
 
+Locations (CLI-CONTRACT-COMPANION C10): a finding about a file carries ``location``,
+``{path, anchor, line}``, after ``details``: the study-relative path (a ``--text`` file
+outside the study keeps its resolved path; stdin has none), the nearest enclosing ``id``
+of the HTML report, and the 1-based line. ``where`` is unchanged, and a finding about a
+result or a decision has no location. :func:`check_text` (frozen) adds none.
+
 The command always exits 0 with ``clean`` true or false; it never writes.
 No pandas, numpy, or scikit-learn.
 """
@@ -175,17 +181,66 @@ USABLE_STATUSES = ('available_at_prediction', 'uncertain_included')
 EXCLUDED_STATUSES = ('not_available', 'uncertain_excluded')
 SENTENCE = re.compile(r'(?<=[.!?])\s+|\n+')
 INLINE_CODE = re.compile(r'`[^`\n]*`')
+# The default folder of ``hypotrail export handoff`` (CLI-CONTRACT-COMPANION C7): its
+# files are the engine's own output, not computations outside hypotrail.
+HANDOFF_DIR = 'handoff'
 SCRIPT_SUFFIXES = {'.py', '.ipynb', '.r', '.sql', '.csv', '.parquet', '.xlsx', '.json', '.pkl'}
 OWN_NOTEBOOKS = re.compile(r'^notebooks/(study_generated(\.user-edits-[^/]+)?|workbench(\.candidate)?)\.py$')
 IGNORED_DIRS = {'.hypotrail', '__marimo__', '__pycache__', '.claude', '.github', '.git',
                 'reports', '.venv'}
 
 
-def finding(code: str, where: str, message: str, **details) -> dict:
+def finding(code: str, where: str, message: str, *, location: dict | None = None,
+            **details) -> dict:
+    """One finding. ``location`` (CLI-CONTRACT-COMPANION C10, optional) is
+    ``{path, anchor, line}``: the study-relative file, the nearest enclosing HTML ``id``, and
+    the 1-based line; ``where`` is unchanged."""
     out = {'code': code, 'severity': SEVERITY[code], 'where': where, 'message': message}
     if details:
         out['details'] = details
+    if location is not None:
+        out['location'] = location
     return out
+
+
+LOCATION_KEYS = ('path', 'anchor', 'line')
+
+
+def location(path: str | None, anchor: str | None = None, line: int | None = None) -> dict:
+    return {'path': path, 'anchor': anchor, 'line': line}
+
+
+def _text_locator(path: str | None, text: str, first_line: int = 1):
+    """A function from an offset of ``text`` to its location (``line`` counted from
+    ``first_line``)."""
+    def locate(offset: int) -> dict:
+        return location(path, None, first_line + text.count('\n', 0, max(0, offset)))
+    return locate
+
+
+def _code_masked(text: str) -> tuple[str, list[int]]:
+    """``INLINE_CODE.sub(' ', text)`` and, for each of its positions, the offset in
+    ``text`` it comes from (so a finding in the masked text is located in the original)."""
+    out, index, pos = [], [], 0
+    for m in INLINE_CODE.finditer(text):
+        out.append(text[pos:m.start()])
+        index.extend(range(pos, m.start()))
+        out.append(' ')
+        index.append(m.start())
+        pos = m.end()
+    out.append(text[pos:])
+    index.extend(range(pos, len(text)))
+    index.append(len(text))
+    return ''.join(out), index
+
+
+def _sentences(text: str):
+    """``(offset, sentence)`` of each piece of ``SENTENCE.split(text)``."""
+    pos = 0
+    for m in SENTENCE.finditer(text):
+        yield pos, text[pos:m.start()]
+        pos = m.end()
+    yield pos, text[pos:]
 
 
 # --- number pools -----------------------------------------------------------------------
@@ -411,8 +466,9 @@ def _result_id_prefix(pool: Pool, text: str, tok: cite.Token) -> bool:
 
 
 def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
-                 findings: list, traced: list) -> None:
+                 findings: list, traced: list, locate=None) -> None:
     """Trace one number written in words (F3) and record a finding or a trace."""
+    at = locate(word.start) if locate else None
     label, item = pool.trace_words(word)
     shown = word.text.strip()
     structure = (pool.structure_match(masked, word.end, word.value)
@@ -431,7 +487,8 @@ def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
         findings.append(finding('stale_number', where,
                                 f'"{shown}" (a number written in words) matches only a stale '
                                 'result; recompute before citing it.', number=shown,
-                                in_words=True, result_id=item['result_id'], path=item['path']))
+                                in_words=True, result_id=item['result_id'], path=item['path'],
+                                location=at))
     else:
         note, extra = _retired_note(pool, word.value)
         findings.append(finding('untraceable_number', where,
@@ -439,10 +496,12 @@ def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
                                 'matches no current registry value. Cite the registered figure '
                                 'with its result_id instead of computing or rounding it into '
                                 'words.' + note, number=shown, in_words=True, kind=word.kind,
-                                value=word.value, **extra))
+                                value=word.value, location=at, **extra))
 
 
-def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict]]:
+def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dict], list[dict]]:
+    """Trace every number of ``text``. ``locate`` (optional) maps an offset of ``text`` to
+    the ``location`` of a finding (C10)."""
     findings, traced = [], []
     masked = _masked(text)
     identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
@@ -453,7 +512,7 @@ def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict
         if _exempt(masked, tok):
             continue
         if in_words:
-            _trace_words(pool, masked, tok, where, findings, traced)
+            _trace_words(pool, masked, tok, where, findings, traced, locate)
             continue
         difference = not tok.percent and bool(PERCENTAGE_POINTS.match(masked, tok.end))
         if difference:
@@ -483,29 +542,38 @@ def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict
             findings.append(finding('stale_number', where,
                                     f'{tok.text.strip()} matches only a stale result; recompute '
                                     'before citing it.', number=tok.text.strip(),
-                                    result_id=item['result_id'], path=item['path']))
+                                    result_id=item['result_id'], path=item['path'],
+                                    location=locate(tok.start) if locate else None))
         else:
             note, extra = _retired_note(pool, tok.value, percent=tok.percent)
             findings.append(finding('untraceable_number', where,
                                     f'{tok.text.strip()} matches no current registry value at its '
                                     'displayed precision. Cite a result instead of computing.'
-                                    + note, number=tok.text.strip(), **extra))
+                                    + note, number=tok.text.strip(),
+                                    location=locate(tok.start) if locate else None, **extra))
     return findings, traced
 
 
-def wording(text: str, where: str) -> list[dict]:
-    """Causal and forecast wording, sentence by sentence (code spans ignored)."""
+def wording(text: str, where: str, locate=None) -> list[dict]:
+    """Causal and forecast wording, sentence by sentence (code spans ignored). ``locate``
+    (optional) maps an offset of ``text`` to the ``location`` of a finding (C10)."""
     out = []
-    for sentence in SENTENCE.split(INLINE_CODE.sub(' ', text)):
+    masked, index = _code_masked(text)
+    for start, sentence in _sentences(masked):
+        lead = start + len(sentence) - len(sentence.lstrip())
         sentence = sentence.strip()
         if not sentence:
             continue
+
+        def at(m):
+            return locate(index[lead + m.start()]) if locate else None
         m = CAUSAL.search(sentence)
         if m and not NEGATION.search(sentence[:m.start()]) \
                 and not UNESTABLISHED.search(sentence[m.end():]):
             out.append(finding('causal_wording', where,
                                'Causal wording: the study shows associations and rankings, not '
-                               'effects of acting.', phrase=m.group(0), sentence=sentence))
+                               'effects of acting.', phrase=m.group(0), sentence=sentence,
+                               location=at(m)))
         m = FORECAST.search(sentence)
         has_number = bool(cite.parse_numbers(_masked(sentence))) or '\x00num' in sentence \
             or bool(wordnum.parse(sentence))
@@ -514,17 +582,20 @@ def wording(text: str, where: str) -> list[dict]:
             out.append(finding('forecast_wording', where,
                                'A figure is phrased as a forecast. Validation figures describe '
                                'past rows after a choice made on them; say so instead.',
-                               phrase=m.group(0), sentence=sentence.replace('\x00num', '#')))
+                               phrase=m.group(0), sentence=sentence.replace('\x00num', '#'),
+                               location=at(m)))
     return out
 
 
-def attribution(text: str, where: str) -> list[dict]:
+def attribution(text: str, where: str, locate=None) -> list[dict]:
     """P7: a recommended default credited to the analyst instead of the assistant."""
+    masked, index = _code_masked(text)
     return [finding('misattributed_delegation', where,
                     'A recommended default is the assistant\'s: write "the assistant\'s '
                     'recommended default, delegated by the analyst", never the analyst\'s '
-                    'default or choice.', phrase=m.group(0))
-            for m in MISATTRIBUTED_DEFAULT.finditer(INLINE_CODE.sub(' ', text))]
+                    'default or choice.', phrase=m.group(0),
+                    location=locate(index[m.start()]) if locate else None)
+            for m in MISATTRIBUTED_DEFAULT.finditer(masked)]
 
 
 def check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
@@ -534,9 +605,11 @@ def check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterab
 
 def _check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
                 result_ids: Iterable[str] | None = None,
-                retired: Iterable[Mapping] = ()) -> tuple[list[dict], list[dict]]:
-    findings, traced = trace_text(Pool(view, user_texts, result_ids, retired), text, where)
-    return findings + wording(text, where) + attribution(text, where), traced
+                retired: Iterable[Mapping] = (), locate=None) -> tuple[list[dict], list[dict]]:
+    findings, traced = trace_text(Pool(view, user_texts, result_ids, retired), text, where,
+                                  locate)
+    return (findings + wording(text, where, locate) + attribution(text, where, locate),
+            traced)
 
 
 def retired_proposals(study: read.Study) -> list[dict]:
@@ -562,19 +635,37 @@ VOID_TAGS = {'br', 'meta', 'link', 'img', 'hr', 'input', 'wbr', 'source', 'col',
 
 
 class _Report(HTMLParser):
+    """Text nodes, cited ``<data>`` elements, and wording blocks of a report, each with the
+    nearest enclosing ``id`` and its line (the ``location`` of a finding, C10)."""
+
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.stack: list[tuple[str, dict]] = []
         self.texts: list[tuple[str, bool]] = []      # (text node, exempt)
+        self.places: list[tuple[str | None, int]] = []   # (anchor, line) of each text node
         self.data: list[dict] = []
         self.blocks: list[str] = []
+        self.block_places: list[tuple[str | None, int]] = []
         self._block: list[str] = []
+        self._block_place: tuple[str | None, int] | None = None
+
+    def anchor(self) -> str | None:
+        """The ``id`` of the nearest enclosing element that has one."""
+        for _, attrs in reversed(self.stack):
+            if attrs.get('id'):
+                return attrs['id']
+        return None
+
+    def _place(self) -> tuple[str | None, int]:
+        return self.anchor(), self.getpos()[0]
 
     def _flush(self):
         text = ''.join(self._block).strip()
         if text:
             self.blocks.append(text)
+            self.block_places.append(self._block_place or (None, None))
         self._block = []
+        self._block_place = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -584,7 +675,8 @@ class _Report(HTMLParser):
             return
         self.stack.append((tag, attrs))
         if tag == 'data':
-            self.data.append({'attrs': attrs, 'text': ''})
+            anchor, line = self._place()
+            self.data.append({'attrs': attrs, 'text': '', 'anchor': anchor, 'line': line})
 
     def handle_endtag(self, tag):
         for i in range(len(self.stack) - 1, -1, -1):
@@ -605,8 +697,11 @@ class _Report(HTMLParser):
             self._block.append('\x00num')
             return
         self.texts.append((data, literal))
+        self.places.append(self._place())
         quoted = any(a.get('data-literal') in QUOTED_KINDS for _, a in self.stack)
         if not quoted and not any(t in ('code', 'pre') for t in tags):
+            if self._block_place is None and data.strip():
+                self._block_place = self._place()
             self._block.append(data)
 
 
@@ -652,21 +747,26 @@ def check_html(view: Mapping, study: read.Study, page: str, where: str) -> list[
     parser.close()
     parser._flush()
     findings = []
-    for node, exempt in parser.texts:
+    for (node, exempt), (anchor, line) in zip(parser.texts, parser.places):
         if exempt:
             continue
         for tok in cite.parse_numbers(_masked(node)):
             findings.append(finding('number_outside_result', where,
                                     f'{tok.text.strip()} is not a cited registry value.',
-                                    number=tok.text.strip(), context=node.strip()[:160]))
+                                    number=tok.text.strip(), context=node.strip()[:160],
+                                    location=location(where, anchor,
+                                                      line + node.count('\n', 0, tok.start))))
     for d in parser.data:
         a = d['attrs']
         if 'data-result-id' not in a:
             continue
-        findings += _check_cited(view, study, a['data-result-id'], a.get('data-path', ''),
-                                 a.get('value'), d['text'], where)
-    for block in parser.blocks:
-        findings += wording(block, where)
+        at = location(where, d['anchor'], d['line'])
+        findings += [{**f, 'location': at}
+                     for f in _check_cited(view, study, a['data-result-id'],
+                                           a.get('data-path', ''), a.get('value'), d['text'],
+                                           where)]
+    for block, (anchor, line) in zip(parser.blocks, parser.block_places):
+        findings += wording(block, where, lambda _offset, a=anchor, n=line: location(where, a, n))
     return findings
 
 
@@ -676,7 +776,8 @@ def check_notebook(view: Mapping, study: read.Study, source: str, where: str) ->
     try:
         tree = ast.parse(source)
     except SyntaxError as exc:
-        return [finding('number_outside_result', where, f'The notebook does not parse: {exc}.')]
+        return [finding('number_outside_result', where, f'The notebook does not parse: {exc}.',
+                        location=location(where, None, exc.lineno))]
     findings = []
     generated = None
     for node in ast.walk(tree):
@@ -687,23 +788,27 @@ def check_notebook(view: Mapping, study: read.Study, source: str, where: str) ->
                 generated = ast.literal_eval(node.value)
             elif name == 'RESULT_IDS':
                 ids = ast.literal_eval(node.value)
+                at = location(where, None, node.lineno)
                 for slot, rid in sorted(ids.items()):
-                    findings += [f for f in _check_rid(view, study, rid, slot, where)]
+                    findings += [{**f, 'location': at}
+                                 for f in _check_rid(view, study, rid, slot, where)]
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
                 and node.func.attr in ('md', 'Html') and node.args \
                 and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
             text = HEADING_ORDINAL.sub(lambda m: m.group(1), node.args[0].value)
+            locate = _text_locator(where, text, node.args[0].lineno)
             for tok in cite.parse_numbers(_masked(text)):
                 findings.append(finding('number_outside_result', where,
                                         f'{tok.text.strip()} in a Markdown cell is not a cited '
                                         'registry value.', number=tok.text.strip(),
-                                        line=node.lineno))
-            findings += wording(INLINE_CODE.sub(' ', text), where)
+                                        line=node.lineno, location=locate(tok.start)))
+            findings += wording(INLINE_CODE.sub(' ', text), where,
+                                lambda _offset, n=node.args[0].lineno: location(where, None, n))
     if generated is not None and generated != view['revision']:
         findings.append(finding('artifact_not_current', where,
                                 f'The notebook was generated at an earlier revision; the study '
                                 f'has moved on.', generated_revision=generated,
-                                revision=view['revision']))
+                                revision=view['revision'], location=location(where)))
     return findings
 
 
@@ -770,6 +875,8 @@ def untracked_files(study_dir: Path, declared: Iterable[Path] = ()) -> list[str]
         rel = path.relative_to(study_dir)
         if not path.is_file() or set(rel.parts[:-1]) & IGNORED_DIRS or rel.parts[0] in IGNORED_DIRS:
             continue
+        if rel.parts[0] == HANDOFF_DIR:     # packs written by ``export handoff`` (C7)
+            continue
         if path.resolve() in declared:
             continue
         if path.suffix.lower() in SCRIPT_SUFFIXES and not OWN_NOTEBOOKS.match(rel.as_posix()):
@@ -790,7 +897,7 @@ def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
         if status != 'ok':
             findings.append(finding('artifact_not_current', f'artifact:{name}',
                                     f'{path} is {status}.', status=status,
-                                    error=(item or {}).get('error')))
+                                    error=(item or {}).get('error'), location=location(path)))
     report = study.study_dir / mf.ARTIFACTS['report']
     if report.is_file():
         findings += check_html(view, study, report.read_text(encoding='utf-8'),
@@ -846,7 +953,22 @@ def registry_ids(study: read.Study) -> list[str]:
     return sorted(p.stem for p in folder.glob('*.json')) if folder.is_dir() else []
 
 
-def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()) -> dict:
+def text_location_path(study_dir: Path, text_path: str | None) -> str | None:
+    """The ``location.path`` of a ``--text`` file: study-relative when it is inside the
+    study, else the path as resolved; None for stdin."""
+    if text_path is None or text_path == '-':
+        return None
+    path = Path(text_path).resolve()
+    try:
+        return path.relative_to(study_dir).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = (),
+              text_path: str | None = None) -> dict:
+    """The ``hypotrail.check/1`` payload. ``text_path`` names the file ``text`` was read
+    from, for the ``location`` of its findings (C10; stdin and None give a null path)."""
     study_dir = Path(study_dir).resolve()
     if text is None:
         view, findings, traced = check_study(study_dir)
@@ -856,7 +978,9 @@ def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()
         view = view_model.build(study)
         findings, traced = _check_text(view, text, user_texts=user_texts,
                                        result_ids=registry_ids(study),
-                                       retired=retired_proposals(study))
+                                       retired=retired_proposals(study),
+                                       locate=_text_locator(
+                                           text_location_path(study_dir, text_path), text))
         target = 'text'
     counts = {'error': sum(f['severity'] == 'error' for f in findings),
               'warning': sum(f['severity'] == 'warning' for f in findings)}
@@ -874,4 +998,5 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
         raise StudyError('invalid_arguments', 'Only one of --text and --allow-user-text can read '
                                               'stdin (-).')
     text = _read_text(args.text) if args.text is not None else None
-    return cmd.Outcome(run_check(args.study, text, [_read_text(u) for u in user]))
+    return cmd.Outcome(run_check(args.study, text, [_read_text(u) for u in user],
+                                 text_path=args.text))

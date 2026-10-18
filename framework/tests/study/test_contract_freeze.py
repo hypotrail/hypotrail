@@ -187,7 +187,9 @@ ERROR_CODES = {
     # Review fix L7: a concurrent duplicate run.
     'execution_in_progress',
     # Post-v0.1 (P2): holds; (P7) a default credited to the analyst.
-    'decision_on_hold', 'unknown_note', 'note_not_open', 'misattributed_delegation'}
+    'decision_on_hold', 'unknown_note', 'note_not_open', 'misattributed_delegation',
+    # Advanced companion (CLI-CONTRACT-COMPANION §12, WP-E2): export handoff.
+    'export_target_exists'}
 RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',

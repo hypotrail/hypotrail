@@ -1,3 +1,39 @@
 # Headlines and impact descriptions of the evidence read (CLI-CONTRACT-COMPANION §5, C5, C11).
-# WP-0 stub: the schema header only. WP-E2 adds them; numbers appear only as {{...}} templates.
+# No digits here: every number shown is a cited registry value.
+#
+# ``headlines`` holds one short line per activity, resolved only for a current, verified
+# result. ``{{r:@.<path>|<fmt>}}`` cites the result itself (``@`` is its result id, see
+# mlkit.study.cite). ``<rule>`` is the first rule the evaluation covers (the adopted one when
+# it is among them) and ``<unit>`` the unit of the target. A headline whose path is absent
+# from the result is not shown.
+#
+# ``changes`` describes, in words, each row of the dependency table (plan §3.7) that can
+# change a confirmed decision: "if this decision changed in this way, what would go stale?"
 schema: hypotrail.content.evidence/1
+headlines:
+  split: "{{r:@.partitions.train.n_rows|int}} training rows / {{r:@.partitions.validation.n_rows|int}} validation rows"
+  eda.target_rate: "Positive rate {{r:@.rate|pct1}} on {{r:@.n_rows|int}} training rows"
+  eda.special_values: "Special values counted on {{r:@.n_rows|int}} training rows"
+  eda.rate_by: "{{r:@.n_groups|int}} groups on {{r:@.n_rows|int}} training rows"
+  eda.distribution: "Distribution on {{r:@.n_rows|int}} training rows"
+  fit.baseline: "AUC {{r:@.validation.roc_auc|f3}} on {{r:@.validation.n_rows|int}} validation rows"
+  fit.logistic: "AUC {{r:@.validation.roc_auc|f3}} on {{r:@.validation.n_rows|int}} validation rows"
+  policy.evaluation: "<rule>: precision {{r:@.rules.[<rule>].models.[fit.logistic].precision|pct1}}, recall {{r:@.rules.[<rule>].models.[fit.logistic].recall|pct1}} on {{r:@.n|int}} validation rows"
+# A regression study reads these instead (M3: no vocabulary of a decision rule).
+regression_headlines:
+  split: "{{r:@.partitions.train.n_rows|int}} training rows / {{r:@.partitions.validation.n_rows|int}} validation rows"
+  eda.target_summary: "Mean {{r:@.mean|f2}} <unit>, standard deviation {{r:@.sd|f2}} on {{r:@.n_rows|int}} training rows"
+  eda.special_values: "Special values counted on {{r:@.n_rows|int}} training rows"
+  eda.mean_by: "{{r:@.n_groups|int}} groups on {{r:@.n_rows|int}} training rows"
+  eda.distribution: "Distribution on {{r:@.n_rows|int}} training rows"
+  fit.baseline: "Validation MAE {{r:@.validation.mae|f2}} <unit> on {{r:@.validation.n_rows|int}} rows"
+  fit.linear: "Validation MAE {{r:@.validation.mae|f2}} <unit> on {{r:@.validation.n_rows|int}} rows"
+  evaluate.regression: "MAE {{r:@.models.[fit.linear].mae|f2}} <unit> for the linear model and {{r:@.models.[fit.baseline].mae|f2}} <unit> for the mean baseline on {{r:@.n|int}} validation rows"
+changes:
+  prediction_time: a different prediction moment
+  feature_availability.feature_set: a change that alters the set of usable features
+  feature_availability.wording: a change of the variable descriptions that keeps the same usable features
+  split: a different split of the rows
+  policy.parameter: a different threshold or capacity
+  policy.rule_type: a switch between a threshold rule and a capacity rule
+  model_choice: a different model choice
