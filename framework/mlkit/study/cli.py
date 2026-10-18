@@ -8,6 +8,7 @@
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide confirm PROPOSAL --user-words TEXT [--channel chat|cli|webview]
                      [--actor NAME] [--basis explicit|delegated_default]
+                     [--delegation-scope this_decision|standing]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
@@ -117,6 +118,10 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
                    help='explicit (the default): the reply decides; delegated_default: the reply '
                         "explicitly delegates to the assistant's recommended default, which the "
                         'restatement states')
+    p.add_argument('--delegation-scope', choices=st.DELEGATION_SCOPES, default=None,
+                   help='with delegated_default: this_decision (the junior delegated at this '
+                        'pause) or standing (an earlier delegation for questions they cannot '
+                        'answer; it never covers the policy or the conclusion)')
     _mutation(p)
     p = verbs.add_parser('withdraw', parents=[common])
     p.add_argument('proposal_id')
@@ -146,7 +151,8 @@ def _decide(args) -> cmd.Outcome:
         action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id,
                                               'user_words': args.user_words,
                                               'channel': args.channel, 'actor': args.actor,
-                                              'basis': args.basis}
+                                              'basis': args.basis,
+                                              'delegation_scope': args.delegation_scope}
     else:
         action, params = cmd.ACTION_WITHDRAW, {'proposal_id': args.proposal_id,
                                                'reason': args.reason}
@@ -190,6 +196,8 @@ def _text(payload: dict) -> str:
             words = conf['user_words'] if conf else None
             delegated = ', delegated to the assistant\'s default' \
                 if conf and conf.get('basis') == st.DELEGATED_DEFAULT else ''
+            if delegated and conf.get('delegation_scope'):
+                delegated += f' ({conf["delegation_scope"]})'
             lines.append(f'decision {d["decision_id"]}: {d["status"]}'
                          + (f' - "{words}" ({conf["channel"]}{delegated})' if words else ''))
         if payload['since'] is not None:

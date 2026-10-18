@@ -48,7 +48,15 @@ CONFIRMATION_KEYS = ('user_words', 'proposal_id', 'restatement', 'authenticated'
 EXPLICIT, DELEGATED_DEFAULT = 'explicit', 'delegated_default'
 CONFIRMATION_BASES = (EXPLICIT, DELEGATED_DEFAULT)
 DEFAULT_BASIS = EXPLICIT
-CONFIRMATION_OPTIONAL_KEYS = ('basis',)
+# The scope of a delegation (R1). ``this_decision``: the junior delegated at this very
+# pause. ``standing``: an earlier delegation that covers every question the junior cannot
+# answer ("for questions I can't answer, use your recommended default"). A standing
+# delegation covers only STANDING_DELEGATION_DECISIONS; the policy and the conclusion need
+# the junior's own words or a delegation given at that pause (``this_decision``).
+THIS_DECISION, STANDING = 'this_decision', 'standing'
+DELEGATION_SCOPES = (THIS_DECISION, STANDING)
+STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
+CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope')
 
 # Which confirmed decisions a decision rests on. Changing one of them makes the
 # dependants need reconfirmation (plan §3.7, rows 1, 2, 4, and 5).
@@ -192,17 +200,20 @@ def _sha256_file(path) -> str:
 
 
 def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
-                 time: str | None = None, basis: str = DEFAULT_BASIS) -> dict:
+                 time: str | None = None, basis: str = DEFAULT_BASIS,
+                 delegation_scope: str | None = None) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
     ``authenticated`` is always False: the engine cannot verify who typed the words.
     ``basis`` is ``explicit`` or ``delegated_default`` (:data:`CONFIRMATION_BASES`).
+    ``delegation_scope`` is ``None`` for an explicit confirmation, else ``this_decision``,
+    ``standing``, or ``None`` when the delegation did not state it (:data:`DELEGATION_SCOPES`).
     """
     record = {'user_words': user_words, 'proposal_id': proposal['proposal_id'],
               'restatement': proposal['restatement'], 'authenticated': False,
               'channel': channel, 'actor': actor, 'revision': revision, 'time': time or now(),
-              'basis': basis}
+              'basis': basis, 'delegation_scope': delegation_scope}
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -243,6 +254,13 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
     if 'basis' in present and c['basis'] not in CONFIRMATION_BASES:
         problems.append({'path': f'{path}.basis',
                          'problem': f'must be one of {", ".join(CONFIRMATION_BASES)}'})
+    if 'delegation_scope' in present and c['delegation_scope'] is not None:
+        if c['delegation_scope'] not in DELEGATION_SCOPES:
+            problems.append({'path': f'{path}.delegation_scope',
+                             'problem': f'must be null or one of {", ".join(DELEGATION_SCOPES)}'})
+        elif confirmation_basis(c) != DELEGATED_DEFAULT:
+            problems.append({'path': f'{path}.delegation_scope',
+                             'problem': 'must be null unless the basis is delegated_default'})
     for key in ('user_words', 'proposal_id', 'restatement', 'actor', 'time'):
         if not _text(c[key]):
             problems.append({'path': f'{path}.{key}', 'problem': 'must be a non-empty string'})

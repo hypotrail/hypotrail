@@ -80,14 +80,16 @@ class Builder:
         self.outcomes.append(out)
         return out
 
-    def decide(self, decision_id, value, restatement, words, basis='explicit') -> cmd.Outcome:
+    def decide(self, decision_id, value, restatement, words, basis='explicit',
+               delegation_scope=None) -> cmd.Outcome:
         out = self.apply(cmd.ACTION_PROPOSE, {'decision_id': decision_id, 'value': value,
                                               'restatement': restatement,
                                               'rationale': 'The agent recommends it.'})
         pid = out.payload['result']['proposal_id']
         return self.apply(cmd.ACTION_CONFIRM, {'proposal_id': pid, 'user_words': words,
                                                'channel': 'chat', 'actor': 'user',
-                                               'basis': basis})
+                                               'basis': basis,
+                                               'delegation_scope': delegation_scope})
 
     def put(self, slot, values, *, params=None, inputs=None, blobs=None, partition='train',
             purpose='train_eda', keys=None, promote=True) -> str:
@@ -199,10 +201,35 @@ def _predictions_meta(model: str, features: list) -> dict:
             'partition': 'validation', 'n': 90, 'n_positive': 11, 'features': list(features)}
 
 
-def build(study: Path, case_dir: Path, upto: str = 'conclusion') -> Builder:
-    """A study taken through every step (or up to ``upto``) with fixture results."""
+def put_policy_evaluation(b: Builder) -> str:
+    """Evaluate the fixture rules on the current fits of ``b``'s study."""
+    current = read.open(b.study).state['current']
+    fit, base = current['fit.logistic'], current['fit.baseline']
+    return b.put('policy.evaluation', policy_values(fit, base),
+                 params={'rules': ['capacity:20', 'threshold:0.3'],
+                         'models': ['fit.baseline', 'fit.logistic'], 'reference': 'fit.baseline'},
+                 inputs={'results': {'fit.logistic': fit, 'fit.baseline': base}},
+                 partition='validation', purpose='validation_policy_selection',
+                 keys=b.validation_keys)
+
+
+def build(study: Path, case_dir: Path, upto: str = 'conclusion',
+          standing_delegation: str | None = None) -> Builder:
+    """A study taken through every step (or up to ``upto``) with fixture results.
+
+    ``standing_delegation``: the junior's words of a standing delegation; the first three
+    decisions are then proposed as the assistant's recommended default and confirmed with
+    ``delegated_default`` and scope ``standing`` (R1)."""
     cmd.init(case_dir, study)
     b = Builder(study, case_dir)
+    if standing_delegation is not None:
+        plain = b.decide
+
+        def first_three(decision_id, value, restatement, words):
+            return plain(decision_id, value, f'My recommended default: {restatement}',
+                         standing_delegation, basis='delegated_default',
+                         delegation_scope='standing')
+        b.decide = first_three
     b.decide('prediction_time', 'when the membership expires, before any reminder',
              'You predict when the membership expires, before any reminder is sent.',
              'Yes: at expiry, before the first reminder.')
@@ -218,6 +245,8 @@ def build(study: Path, case_dir: Path, upto: str = 'conclusion') -> Builder:
              'Right, drop the desk follow-ups and keep reminders as a listed limit.')
     b.decide('split', SPLIT_VALUE, 'Stratified split with 30% validation and seed 20261017.',
              'Use that split before we look at anything.')
+    if standing_delegation is not None:
+        del b.decide
     from mlkit.study import case as c
     case = c.load_case(case_dir, verify_data=False)
     target = {'target': case.target_column, 'positive_label': case.positive_label}
@@ -276,11 +305,7 @@ def build(study: Path, case_dir: Path, upto: str = 'conclusion') -> Builder:
                                                         for i in range(90)])})
     if upto == 'models':
         return b
-    b.put('policy.evaluation', policy_values(fit, base),
-          params={'rules': ['capacity:20', 'threshold:0.3'],
-                  'models': ['fit.baseline', 'fit.logistic'], 'reference': 'fit.baseline'},
-          inputs={'results': {'fit.logistic': fit, 'fit.baseline': base}},
-          partition='validation', purpose='validation_policy_selection', keys=vkeys)
+    put_policy_evaluation(b)
     b.decide('policy', POLICY_RULE, 'Call the 20 highest-scored members.',
              'Yes, twenty calls is what the desk can handle.')
     if upto == 'policy':

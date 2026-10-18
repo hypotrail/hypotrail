@@ -31,7 +31,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
                       'revision', 'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated', 'basis')
+                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
@@ -189,6 +189,7 @@ def summary(view: dict) -> dict:
         conf = dec['confirmation']
         decisions[d] = {'status': dec['status'], 'value': _compact_value(d, dec['value']),
                         'basis': conf['basis'] if conf else None,
+                        'delegation_scope': conf['delegation_scope'] if conf else None,
                         'user_words': conf['user_words'] if conf else None,
                         'reason': dec['reason'], 'open_proposals': dec['open_proposals']}
     proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],

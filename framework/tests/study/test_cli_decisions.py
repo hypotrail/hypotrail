@@ -640,7 +640,7 @@ def test_status_summary_is_compact_and_complete(study, work, features):
     assert p['restatement'].startswith('Everything is known') and p['proposal_id'] == 'p_2'
     assert p['value']['not_available'] == ['desk_followups']
     pt = summary['decisions']['prediction_time']
-    assert pt == {'status': 'confirmed', 'value': PT, 'basis': 'explicit',
+    assert pt == {'status': 'confirmed', 'value': PT, 'basis': 'explicit', 'delegation_scope': None,
                   'user_words': 'Yes: we predict before the first reminder goes out.',
                   'reason': None, 'open_proposals': []}
     assert summary['decisions']['feature_availability']['status'] == 'proposed'

@@ -32,7 +32,8 @@ SUMMARY_SCHEMA = 'hypotrail.summary/1'
 SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                         'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
                         'results', 'artifacts', 'executions', 'not_yet_defensible')
-SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'user_words', 'reason', 'open_proposals')
+SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'delegation_scope', 'user_words', 'reason',
+                         'open_proposals')
 SUMMARY_GOAL_KEYS = ('intended_use', 'decision', 'observation_unit', 'prediction_time')
 EXIT_CODES = {'EXIT_OK': 0, 'EXIT_INTERNAL': 1, 'EXIT_REFUSED': 2, 'EXIT_ARTIFACT_STALE': 3,
               'EXIT_UNKNOWN_OUTCOME': 4}
@@ -49,11 +50,12 @@ RESULT_KEYS_BY_ACTION = {
     'decide.propose': ('proposal_id', 'decision_id', 'status', 'decision_status', 'superseded',
                        'restatement'),
     'decide.confirm': ('decision_id', 'proposal_id', 'status', 'value', 'user_words', 'channel',
-                       'actor', 'invalidation', 'basis'),
+                       'actor', 'invalidation', 'basis', 'delegation_scope'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
 }
 ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rationale'},
-                 'decide.confirm': {'proposal_id', 'user_words', 'channel', 'actor', 'basis'},
+                 'decide.confirm': {'proposal_id', 'user_words', 'channel', 'actor', 'basis',
+                                    'delegation_scope'},
                  'decide.withdraw': {'proposal_id', 'reason'}}
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
@@ -62,9 +64,13 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated', 'basis')
+                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
 # Post-acceptance contract (D1): how the user decided.
 CONFIRMATION_BASES = ('explicit', 'delegated_default')
+# Acceptance rerun (R1): the scope of a delegation. A standing delegation never covers the
+# policy or the conclusion.
+DELEGATION_SCOPES = ('this_decision', 'standing')
+STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
@@ -123,7 +129,10 @@ AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not
                      # Post-acceptance contract (D1): delegated confirmations.
                      'not_a_delegation', 'delegation_needs_basis', 'restatement_not_default',
                      # Review fix H1: refusals and replies unrelated to the proposal.
-                     'negative_reply', 'unrelated_reply'}
+                     'negative_reply', 'unrelated_reply',
+                     # Acceptance rerun (R1): policy and conclusion need a delegation given
+                     # at that pause.
+                     'delegation_not_given_at_this_pause'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')
@@ -249,7 +258,7 @@ def test_view_model_keys(flow):
     assert all(tuple(d) == DECISION_VIEW_KEYS for d in v['decisions'].values())
     conf = v['decisions']['prediction_time']['confirmation']
     assert tuple(conf) == CONFIRMATION_VIEW_KEYS and conf['authenticated'] is False
-    assert conf['basis'] == 'explicit'
+    assert conf['basis'] == 'explicit' and conf['delegation_scope'] is None
     assert tuple(v['exposure']) == EXPOSURE_SUMMARY_KEYS
     assert tuple(v['artifacts']) == ARTIFACT_VIEW_KEYS
     assert tuple(v['facts']) == ('by_status', 'count')
@@ -303,8 +312,12 @@ def test_actions_and_their_parameters():
     assert set(reliability.REQUEST_KEYS) == {'request_id', 'expected_revision', 'action', 'params'}
     assert cmd.DEFAULT_CHANNEL == 'chat' and st.CHANNELS == ('chat', 'cli', 'webview')
     assert st.CONFIRMATION_BASES == CONFIRMATION_BASES and cmd.DEFAULT_BASIS == 'explicit'
-    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis',)
+    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope')
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
+    assert st.DELEGATION_SCOPES == DELEGATION_SCOPES
+    assert st.STANDING_DELEGATION_DECISIONS == STANDING_DELEGATION_DECISIONS
+    assert not (set(DELEGATION_SCOPES) | {'delegation_scope'}) - DOC_TOKENS
+    assert '--delegation-scope this_decision|standing' in DOC
     assert st.DECISION_IDS == ('prediction_time', 'feature_availability', 'split', 'policy',
                                'conclusion')
     assert st.AVAILABILITY_DECISIONS == ('available_at_prediction', 'not_available',

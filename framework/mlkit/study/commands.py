@@ -24,7 +24,11 @@ Decision actions:
   user decided: ``explicit`` (their own reply to the restatement, the default) or
   ``delegated_default`` (they explicitly delegated to the assistant's recommended
   default, which the restatement must state; the decision is then listed in
-  ``not_yet_defensible``).
+  ``not_yet_defensible``). A delegation's ``delegation_scope`` is ``this_decision`` (given
+  at this pause) or ``standing`` (an earlier "for questions I can't answer, use your
+  recommended default"); a standing delegation covers only the prediction moment, the
+  feature availability and the split, so the policy and the conclusion are delegated only
+  with ``this_decision`` (R1).
 * ``decide.withdraw``: closes an open proposal.
 
 pandas is never imported here, so ``status`` and ``plan`` stay fast.
@@ -66,7 +70,8 @@ ACTION_PROPOSE = 'decide.propose'
 ACTION_CONFIRM = 'decide.confirm'
 ACTION_WITHDRAW = 'decide.withdraw'
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
-CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis'})
+CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis',
+                            'delegation_scope'})
 WITHDRAW_PARAMS = frozenset({'proposal_id', 'reason'})
 DEFAULT_CHANNEL = 'chat'
 DEFAULT_ACTOR = 'user'
@@ -115,7 +120,8 @@ NEGATIVE_PHRASE = re.compile(r"""
 """, re.IGNORECASE | re.VERBOSE)
 # A negator ("not", "don't", "pas", "never") refuses unless one of the next words
 # describes availability or a restart: "this feature is not available", "we don't know it
-# before the call", "elle n'est pas connue", "don't restart it" are statements.
+# before the call", "elle n'est pas connue", "don't restart it" are statements. So is an
+# inability to answer ("for questions I can't answer, use your recommended default", R1).
 NEGATORS = frozenset("not n't cannot pas never".split())
 NEGATOR_SKIP = frozenset('be been yet encore really actually it them we nous that is are '
                          'was were'.split())
@@ -123,7 +129,7 @@ DESCRIPTIVE_AFTER_NEGATOR = (
     'availab', 'known', 'know', 'usable', 'used', 'use', 'included', 'include', 'recorded',
     'collected', 'observed', 'exist', 'have', 'has', 'restart', 'rerun', 'retry', 'relaunch',
     'run', 'disponib', 'connu', 'utilis', 'inclu', 'relanc', 'refai', 'sait', 'savons',
-    'collect', 'enregistr', 'observ', 'redo', 'recompute', 'refit')
+    'collect', 'enregistr', 'observ', 'redo', 'recompute', 'refit', 'answer', 'repond')
 # Words that tie an acknowledgement to the interruption it acknowledges (L5).
 ACKNOWLEDGEMENT_TOPIC = ('interrupt', 'unknown', 'outcome', 'killed', 'crash', 'died', 'dead',
                          'stopped', 'lost', 'failed', 'restart', 'rerun', 'run', 'result',
@@ -646,6 +652,13 @@ def _confirm(ctx: Context) -> Handler:
             raise _ambiguous('bare_acknowledgement', REPLY_MESSAGES[reason], user_words=words)
         if params['basis'] not in st.CONFIRMATION_BASES:
             raise _invalid(f'basis is one of {", ".join(st.CONFIRMATION_BASES)}.')
+        scope = params['delegation_scope']
+        if scope is not None and scope not in st.DELEGATION_SCOPES:
+            raise _invalid(f'delegation_scope is one of {", ".join(st.DELEGATION_SCOPES)}.',
+                           field='delegation_scope')
+        if scope is not None and params['basis'] != st.DELEGATED_DEFAULT:
+            raise _invalid('delegation_scope goes with basis delegated_default only.',
+                           field='delegation_scope')
         if params['basis'] == st.DELEGATED_DEFAULT and not is_delegation(words):
             raise _ambiguous('not_a_delegation',
                              'These words do not delegate the choice to your recommended default. '
@@ -684,6 +697,19 @@ def _confirm(ctx: Context) -> Handler:
                              f'restatement that states the recommended default.',
                              proposal_id=pid, restatement=proposal['restatement'])
         decision_id, value = proposal['decision_id'], proposal['value']
+        if params['basis'] == st.DELEGATED_DEFAULT \
+                and decision_id not in st.STANDING_DELEGATION_DECISIONS \
+                and params['delegation_scope'] != st.THIS_DECISION:
+            raise _ambiguous('delegation_not_given_at_this_pause',
+                             f'The {decision_id} is decided only with the junior\'s own words, '
+                             f'or with a delegation they give at this pause: a standing '
+                             f'delegation covers the prediction moment, the feature '
+                             f'availability and the split only. Ask the junior to choose, '
+                             f'stating your recommended default; if they delegate now, confirm '
+                             f'with --delegation-scope this_decision.',
+                             proposal_id=pid, decision_id=decision_id,
+                             delegation_scope=params['delegation_scope'],
+                             standing_covers=list(st.STANDING_DELEGATION_DECISIONS))
         current_basis = basis(state, decision_id)
         if proposal.get('basis', current_basis) != current_basis:
             raise _ambiguous('proposal_stale', f'Proposal {pid} rests on decisions that changed '
@@ -713,7 +739,8 @@ def _confirm(ctx: Context) -> Handler:
                 closed_reason=f'replaced by {pid}')
         confirmation = st.confirmation(user_words=params['user_words'], proposal=proposal,
                                        channel=params['channel'], actor=params['actor'],
-                                       revision=revision, basis=params['basis'])
+                                       revision=revision, basis=params['basis'],
+                                       delegation_scope=params['delegation_scope'])
         proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
         decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=pid,
                         confirmation=confirmation, revision=revision, reason=None)
@@ -725,7 +752,7 @@ def _confirm(ctx: Context) -> Handler:
                 'invalidation': {k: record[k] for k in ('mutation', 'row', 'reason',
                                                          'stale_results', 'stale_slots',
                                                          'reconfirm_required')},
-                'basis': params['basis']}
+                'basis': params['basis'], 'delegation_scope': params['delegation_scope']}
     return Handler(CONFIRM_PARAMS, run, check)
 
 

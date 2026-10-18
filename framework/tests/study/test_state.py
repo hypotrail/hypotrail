@@ -123,8 +123,8 @@ def test_confirmation_records_channel_actor_and_is_not_authenticated(state):
     _confirm(state, 'prediction_time', 'before the first reminder')
     assert st.validate_state(state) == []
     record = state['decisions']['prediction_time']['confirmation']
-    assert set(record) == set(st.CONFIRMATION_KEYS) | {'basis'}
-    assert record['basis'] == 'explicit'
+    assert set(record) == set(st.CONFIRMATION_KEYS) | {'basis', 'delegation_scope'}
+    assert record['basis'] == 'explicit' and record['delegation_scope'] is None
     assert record['authenticated'] is False and record['channel'] == 'chat'
     assert record['user_words'] == 'Yes, that is what I mean.'
     assert record['restatement'] == state['proposals']['p_1']['restatement']
