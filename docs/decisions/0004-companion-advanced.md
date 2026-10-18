@@ -1,6 +1,6 @@
 # ADR 0004: The advanced companion, staged behind the flag
 
-- Status: accepted for specification (the owner approved the feature set, 18 October 2026). **Not implemented.**
+- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0 (frozen interfaces, skeletons, engine stubs, contract tests) is done; the features are **not implemented** yet.
 - Date: 18 October 2026
 - Builds on: [ADR 0002](0002-companion-as-cli-client.md), the companion as a client of the CLI, and [ADR 0003](0003-companion-webview-v0.md), companion v0 and decisions CW.1–CW.12
 - Specification: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md)
@@ -67,7 +67,7 @@ The owner has approved a larger feature set. Its 11 groups are listed in the sco
    - `export handoff` writes files under `--out` only.
    - The additions live in a separate contract document, so that the frozen CLI-CONTRACT.md is touched once, by the integrator.
 
-4. **Deep links: a URI handler in the extension, none in the static report.**
+4. **Deep links: a URI handler in the extension, none in the static report** (not even opt-in, CA.1).
    - The extension handles `vscode://hypotrail-local.hypotrail-companion/result/<id>` (and `decision/`, `proposal/`).
    - The report gets anchors `r-<result_id>`, and no `vscode:` links. A link is not a decision control, but a link in a portable, offline, shareable report that only works inside one editor is dead weight for reviewers, and it blurs the report's "no decision controls" statement.
    - "Go to a result..." accepts the id that every number already carries.
@@ -76,8 +76,8 @@ The owner has approved a larger feature set. Its 11 groups are listed in the sco
    - The master flag `hypotrail.companion.enabled` stays, with default `false`.
    - One stage enum is added, `hypotrail.companion.stage`, with values `v0` to `v3` and default `v0`. There are no per-feature flags: they would multiply the test matrix, and they would make observation sessions hard to reproduce.
    - Two safety or preference booleans are added:
-     - `chatInsert`, default `false`, because the chat insertion API is unverified;
-     - `reviewer`, default `false`.
+     - `chatInsert`, default `false`, because the chat insertion API is unverified; it is not contributed in `package.json` (hidden) and has no environment override until it is verified (CA.8);
+     - `reviewer`, default `false`. Reviewer mode refuses every write except the handoff export (CA.9).
    - One preference is added: `learningLayer`, default `true`, effective only from v3.
    - The default stage moves up only by amending this ADR, after the exit criteria of that stage are met.
 
@@ -120,6 +120,21 @@ Measured per stage, with the flag off as the baseline. The sources are `session-
 | Nothing has been checked in a real VS Code | Each stage's exit criteria include a real session; until then, the documents say "not run inside a real VS Code" |
 
 ## Open questions for the owner
+
+**Answered by the integrator, 18 October 2026** (recorded as decisions CA.1 to CA.10 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md), section "Companion advanced"):
+
+| # | Answer |
+|---|---|
+| 1 | **No.** No `vscode://` link in the report, not even opt-in. The report keeps the anchors `r-<result_id>` only (CA.1). |
+| 2 | **Yes.** The engine's 20-minute gap rule is accepted for "since your last session" (CA.6). |
+| 3 | **Chat.** `policy.evaluate` stays a chat act; the panel proposes evaluated rules only (CA.7). |
+| 4 | **Yes.** One `hypotrail.companion.stage` setting, no per-feature flags (CA.8). |
+| 5 | **Yes.** Reviewer mode may export a handoff pack (W7); every other write stays refused in reviewer mode (CA.9). |
+| 6 | **v1.** Regenerate (W5) and acknowledgement (W6) stay in v1 (CA.10). |
+| 7 | **Yes.** WP-E1 adds `task` to `status --summary --digest`, after `digest`; without `--digest` the summary is unchanged (CA.3). |
+| 8 | **Clipboard only.** The agent bridge copies to the clipboard. `chatInsert` stays off and hidden (not contributed in `package.json`, no environment override) until a real VS Code session verifies that insertion does not send (CA.8). |
+
+The questions as they were asked:
 
 1. **Deep links in the report.** Should an opt-in render setting add `vscode://` links to the cited numbers of the local report, with the shared handoff copy kept link-free? The default is no links (decision 4).
 2. **"Since your last session".** It is derived by the engine from gaps of 20 minutes or more between revisions. It is not "since this panel last looked", which would need a stored revision in `workspaceState`. Is that acceptable?

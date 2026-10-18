@@ -1,6 +1,6 @@
 # Advanced companion: implementation plan for parallel agents
 
-Status: **plan, not started.**
+Status: **WP-0 done** (frozen interfaces, skeletons, stubs, contract tests; see §2.3, which is authoritative where it is more precise than §2.1 and §2.2). Phase B (WP-E1 to E3, WP-U1 to U5) can start. Integrator decisions: CA.1 to CA.19 in [V0.1-DECISIONS](V0.1-DECISIONS.md).
 
 - Scope: [ADR 0004](../decisions/0004-companion-advanced.md)
 - Behaviour: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md), the **spec**
@@ -143,6 +143,79 @@ WP-0 is done by the integrator, or by one agent under the integrator, before the
 
 **Exit of WP-0.** The full gate is green, with the `xfail` tests reported as `xfailed`. The v0 behaviour works unchanged at `stage: v0`. Every client WP can open a panel at its stage with fixtures and see an empty view registered under its tab.
 
+### 2.3 As frozen by WP-0 (reference for the parallel agents)
+
+Read [clients/vscode-companion/ARCHITECTURE.md](../../clients/vscode-companion/ARCHITECTURE.md) first: it lists the module boundaries, the message flow, and the APIs below in one page.
+
+**Engine.**
+
+| Item | Frozen as |
+|---|---|
+| Stub refusal (CC §13, CA.5) | `errors.not_implemented(command)` → `unsupported_capability`, `details: {command, reason: "not_implemented"}`, exit 2. Stubs carry `WP0_STUB = True`; the engine WP removes it |
+| `cmd_decisions.py` (E1) | `SCHEMA`, `PAYLOAD_KEYS`, `configure(parser)` (no options), `decisions(study_dir) -> dict`, `main(args)` |
+| `preview_effects.py` (E1) | `SCHEMA`, `PAYLOAD_KEYS`, `NOTE`, `preview_effects(study_dir, proposal_id) -> dict`; it must use `commands.confirmation_plan(state, store, proposal_id)` shared with `decide confirm` |
+| `cli.py` (E1) | `status --digest` is parsed: without `--summary` it is `invalid_arguments` (final); with it, replace the `not_implemented('status --summary --digest')` branch of `dispatch` by `cmd.status(..., digest=True)` (or an equivalent). `decide propose --channel` is parsed (no choices); replace the `not_implemented('decide propose --channel')` branch of `_decide` by `params['channel'] = args.channel` when it is not `chat`, validated against `state.CHANNELS` (`invalid_value`, `details.field: channel`) |
+| `cmd_evidence.py` (E2) | `configure`: `--result RID`, `--limit N` (default `DEFAULT_LIMIT = 200`); `evidence(study_dir, *, result_id=None, limit=200) -> dict` |
+| `cmd_explain.py` (E2) | `configure`: `--term ID`; `explain(study_dir, *, term=None) -> dict`. The cited example comes from a new glossary key `cited_example` (CA.2) |
+| `cmd_export.py` (E2) | `configure`: positional `kind` ∈ `KINDS = ('handoff',)`, `--out DIR`; `export_handoff(study_dir, *, out=None) -> (payload, exit_code)`; `HANDOFF_KEYS`, `FILES`, `WARNINGS` |
+| `preview_proposal.py` (E3) | `SCHEMA`, `PAYLOAD_KEYS`, `DRAFT_DECISIONS = {'binary': ('policy',), 'regression': ('model_choice',)}`, `NOTE`, `preview_proposal(study_dir, decision_id, value) -> dict` |
+| `cmd_preview.py` (WP-0, frozen) | `KINDS = ('policy', 'effects', 'proposal')`, optional positional `target`, `--rule` (append), `--intervals`, `--value`; `_arguments(args)` enforces the per-kind rules, then dispatches |
+| Constants | `state.PER_COLUMN_SLOT_PREFIXES` has `eda.distribution:`; `state.PROPOSAL_OPTIONAL_KEYS` has `origin`; `texts.CONTENT_FILES` has `digest`, `drafts`, `evidence`, `learn` (stub YAML files, schema header only); `sessionlog.SAFE_SWITCHES` has `--digest`, `SAFE_VALUE_FLAGS` has `--limit`, `--result`, `--term`, and `SAFE_PREVIEW_VALUE` logs the `--value` of `preview proposal` when it is a rule or a model slot |
+| Summary (CA.3, CA.4) | `--digest` appends `moments, pauses, last_session, digest, task`, and `origin` as the last key of each `open_proposals` item. Without `--digest`: byte-identical to `framework/tests/study/golden/summary_synthetic.json` |
+| Contract helpers | `framework/tests/study/companion_contract.py` (key lists of CC in emitted order, `binary_study()`, `regression_study()`, `r1_read_only()`, `r3_imported()`, `golden_study()`), changed only by the integrator |
+
+**Contract tests (strict `xfail`).** Each engine WP removes the `@E<n>` markers of **its own** file and deletes its `test_wp0_stub…_until_e<n>` test (CA.18). Nothing else in these files changes without the integrator.
+
+| File | Turns green with | Tests |
+|---|---|---|
+| `test_contract_companion_e1.py` | WP-E1 | `test_c1_digest_keys_moments_pauses_and_last_session`, `test_c1_since_bounds`, `test_e1_reads_are_read_only_and_import_no_heavy_module`, `test_c2_decisions_keys`, `test_c3_preview_effects_keys_and_equality_with_the_confirmation`, `test_c3_refusals`, `test_c9_channel_webview_stores_the_origin`; delete `test_wp0_stubs_refuse_until_e1`. Permanent: `test_digest_requires_summary`, `test_summary_without_digest_is_byte_identical_to_its_golden_output`, `test_a_request_recorded_before_c9_replays` |
+| `test_contract_companion_e2.py` | WP-E2 | `test_c5_evidence_keys`, `test_c5_detail_limit_and_refusals`, `test_c6_explain_keys`, `test_e2_reads_are_read_only_and_import_no_heavy_module`, `test_c7_export_handoff`, `test_c7_export_refusals`, `test_c10_check_findings_carry_a_location`; delete `test_wp0_stubs_refuse_until_e2` |
+| `test_contract_companion_e3.py` | WP-E3 | `test_c4_draft_of_an_evaluated_rule_is_proposable`, `test_c4_unevaluated_rule_and_refusals`, `test_c4_reads_are_read_only`, `test_c8_numeric_distribution_reads_training_rows_only`, `test_c8_special_values_categorical_groups_and_refusals`, `test_c10_report_anchors_one_per_cited_result_and_no_editor_links`; delete `test_wp0_stub_refuses_until_e3`. Permanent: `test_distribution_slot_prefix_is_reserved` |
+
+**Client.**
+
+| Item | Frozen as |
+|---|---|
+| Protocol | `lib/protocol.js`: `TO_EXTENSION`, `TO_WEBVIEW` (with `stage` and `write` per incoming type), `validateIncoming`, `validateOutgoing`, `explainIncoming`, `explainOutgoing`, `stageOf`, `stageAllows`, `envelope`. `media/protocol.js` is generated (`node lib/protocol.js --emit-webview`); `check_layout.py` and `protocol.test.js` fail on drift. Extra fields of CA.12 |
+| Argv | `lib/cli.js`: `READS = {summary: statusArgv(agent, {digest, since}), decisions, effects: previewEffectsArgv(agent, {proposalId}), evidence: evidenceArgv(agent, {resultId}), preview: previewPolicyArgv(agent, {rules, intervals}), draft: previewProposalArgv(agent, {decisionId, value}), check, explain, session_report}`; `WRITES = {W1: confirmArgv(agent, {proposalId, words, requestId, expectedRevision}), W2: withdrawArgv(agent, {proposalId, requestId, expectedRevision}), W3: proposeArgv(agent, {decisionId, value, restatement, rationale, requestId, expectedRevision}), W4: runEdaArgv(agent, {activity, column, requestId, expectedRevision}), W5: renderArgv(agent), W6: acknowledgeArgv(agent, {executionId, words, requestId, expectedRevision}), W7: exportArgv(agent, {parent, revision})}`; `run(argv, {timeoutMs, cwd})`; `TIMEOUTS`, `MAX_BUFFER` (16 MB), `ArgvError` |
+| Controller | `createController({agent, post, runCli, settings, host, exists, uuid, log, handlers})` → `{handle, refresh, snapshot, diagnostics, settings, updateSettings, navigate, command, hasCommand, context, dispose}`. Handler modules `{types, loads, commands, onReady}`; `ctx.read`, `ctx.write` and the rest as in ARCHITECTURE.md. Limits: 2 reads, 1 preview (`preview:*` keys), 1 exclusive write. Reviewer: W1-W6 refused, W7 allowed (CA.9) |
+| Models | `lib/models/common.js` (`ModelError`, `segments`, helpers); `lib/models/summary.js` `toSummaryModel` with `SUMMARY_KEYS` (spec §9 plus `notes`, `decisions`; `nextAction` has `proposalId`, `decision`, `executionId`; digest items have `decisionId`, `proposalId`, `resultId`, `slot`). Each model file exports `FIXTURES` |
+| Webview | `media/core.js` (`Hypotrail.el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, PALETTE, start`), `media/format.js` (`number(value, fmt)`, `localTime`), `media/components/*.js` (`bars`, `intervalRows`, `histogram`, `boxplot`, `valuesTable`, `figure`, `segments`, `cited`), `media/copy/core.js`, `media/css/tokens.css`, `media/css/core.css`. Views register `{tab, stage, views, outcomes, render(model, ctx), onMessage}` |
+| Extension | `extension.js`: commands `open`, `openReviewer`, `goToResult`; the URI handler; `onDidChangeConfiguration` → `controller.updateSettings`; host functions (ARCHITECTURE.md) |
+| Settings | `enabled` (false), `stage` (`v0`), `learningLayer` (true), `reviewer` (false) contributed; `chatInsert` read, not contributed (CA.8). Env: `HYPOTRAIL_COMPANION`, `HYPOTRAIL_COMPANION_STAGE`, `HYPOTRAIL_COMPANION_LEARNING`, `HYPOTRAIL_COMPANION_REVIEWER` |
+
+**Fixtures** (`clients/vscode-companion/test/fixtures/<name>.json` = `{about: {schema, task, exit_code, source, argv, note}, payload}`; `index.json` lists them; `test/fixture-cli.js` serves them as a fake CLI):
+
+| Schema | Binary (Bank values) | Regression (Auto MPG values) |
+|---|---|---|
+| `summary/1` | `summary.v0.binary` (captured), `summary.binary` (`--digest`), `summary.binary.health` (executions, outcome unknown, stale report) | `summary.v0.regression` (captured), `summary.regression` (`--digest`, webview origin, truncated) |
+| `decisions/1` | `decisions.binary` (delegated split, superseded threshold), `decisions.binary.reconfirm`, `decisions.binary.injection` | `decisions.regression` |
+| `preview_effects/1` | `preview_effects.binary`, `.reconfirm`, `.blocked`, `.first`, `.split` | `preview_effects.regression` |
+| `proposal_draft/1` | `proposal_draft.binary`, `proposal_draft.binary.unevaluated` | `proposal_draft.regression` |
+| `evidence/1` | `evidence.binary` (stale replaced evaluation, 5 ledger rows, catalog), `evidence.binary.detail` | `evidence.regression` |
+| `explain/1` | `explain.binary` | `explain.regression` |
+| `export/1`, `handoff/1` | `export.binary`, `export.binary.stale_report` (exit 3), `handoff.binary` | |
+| existing | `preview.binary`, `check.binary` (with `location`), `check.binary.clean`, `session_report.binary`, `render.binary`, `render.binary.problems` (exit 3), `run.rate_by.binary`, `run.eda_distribution.binary`, `run.eda_distribution.binary.late`, `run.acknowledge.binary`, `decide.confirm.binary`, `decide.withdraw.binary`, `decide.propose.binary`, `decide.propose.webview.binary`, `error.*` (`not_implemented`, `bare_acknowledgement`, `stale_revision`, `decision_on_hold`, `export_target_exists`, `read_only`, `delegation_needs_basis`, `unknown_result`) | |
+
+A work package that needs another fixture adds it under its own prefix (`<view>.<case>.json`) with an `index.json` entry, and `fixtures.test.js` checks it; it never edits a WP-0 fixture.
+
+**Test infrastructure.** `test/fake-vscode.js` (`globalState` memento, `env.clipboard`, `window.registerUriHandler`, `showInputBox`, `commands.executeCommand` with `builtinCommands`, `Uri.with({fragment})`, `Uri.parse`, `changeSettings()`), `test/fixture-cli.js`, `test/conftest.py` (`open_panel`, `model`, `payload`, `node`, `browser`, `page_file`; a `Panel` records CSP violations), and the WP-0 tests: `protocol.test.js`, `cli-argv.test.js`, `invariants.test.js`, `controller.test.js`, `fixtures.test.js`, `test_webview_frame.py`, `test_format.py`, `test_contract_keys.py`, and the migrated `unit.test.js`, `integration.test.js`, `test_webview_browser.py`.
+
+**Per-WP brief.**
+
+| WP | Owns (create or replace) | Turns green | Fixtures | Integration |
+|---|---|---|---|---|
+| E1 | `commands.py` (`confirmation_plan`), `cli.py` (two stub branches), `view.py`, `state.py` (origin validation), `cmd_decisions.py`, `preview_effects.py`, `content/steps.yaml` (`moments`), `content/digest.yaml`, its four new test files | the 7 `E1` tests | none (real CLI) | — |
+| E2 | `cmd_evidence.py`, `cmd_explain.py`, `cmd_export.py`, `dependencies.py` (`effects_for_mutation`), `read.py` helpers, `cmd_check.py` (`location`), `content/evidence.yaml`, `content/learn.yaml`, `content/glossary.yaml` (`cited_example`), its four new test files | the 7 `E2` tests | none | — |
+| E3 | `eda.py`, `activities.py`, `preconditions.py`, `preview_proposal.py`, `content/drafts.yaml`, `content/activities.yaml`, `render_html.py`, `notebook_view.py`, `render_notebook.py`, its new test files, `test_html_offline.py` (extend) | the 6 `E3` tests | none | — |
+| U1 | `media/views/overview.js`, `media/css/overview.css`, `media/copy/overview.js` (replace the placeholder), `lib/models/summary.js` (extend), `lib/models/check.js`, `lib/handlers/overview.js` (extend), `lib/study.js`, `test/overview.test.js`, `test/studies.test.js`, `test/test_webview_overview.py` | OV, HE, ST, RV-2 | `summary.binary`, `summary.binary.health`, `summary.regression`, `check.binary`, `render.binary(.problems)`, `run.acknowledge.binary`, `error.bare_acknowledgement` | E1 |
+| U2 | `media/views/decisions.js`, `media/css/decisions.css`, `media/copy/decisions.js` (replace the placeholder), `lib/models/decisions.js`, `lib/models/effects.js`, `lib/handlers/decisions.js` (extend), `lib/refusals.js` (extend), `test/decisions.test.js`, `test/test_webview_decisions.py` | DC, RQ, DH | `decisions.binary(.reconfirm, .injection)`, `decisions.regression`, `preview_effects.*`, `decide.*`, `error.*` | E1 |
+| U3 | `media/views/evidence.js`, `media/views/whatif.js`, their css and copy, `lib/models/{evidence,whatif,preview,draft}.js`, `lib/handlers/evidence.js`, `lib/handlers/whatif.js`, `lib/uri.js`, `test/{evidence,whatif,uri}.test.js`, `test/test_webview_{evidence,whatif}.py` | EV, WI | `evidence.*`, `preview.binary`, `proposal_draft.*`, `decide.propose.webview.binary` | E2, E3 |
+| U4 | `media/views/eda.js`, `media/css/eda.css`, `media/copy/eda.js`, `lib/models/eda.js`, `lib/handlers/eda.js`, `test/eda.test.js`, `test/test_webview_eda.py` | ED | `evidence.binary`, `evidence.regression`, `run.eda_distribution.binary(.late)`, `run.rate_by.binary` | E2, E3 |
+| U5 | `media/views/learn.js`, `media/css/learn.css`, `media/copy/learn.js`, `media/terms.js`, `lib/models/{explain,session_report}.js`, `lib/handlers/learn.js`, `lib/handlers/bridge.js`, `lib/bridge.js`, `lib/localstore.js`, `test/{learn,bridge,localstore}.test.js`, `test/test_webview_learn.py` | LE, HO, SR, AB | `explain.*`, `session_report.binary`, `export.binary(.stale_report)`, `error.export_target_exists` | E2 |
+
+A client WP that needs a WP-0 file changed (core.js, a component, the protocol, cli.js, the controller) asks the integrator; a small WP-0 follow-up is merged first and the WPs rebase on it (§7).
+
 ## 3. Work packages and file ownership
 
 **Rules.**
@@ -232,8 +305,8 @@ WP-0 is done by the integrator, or by one agent under the integrator, before the
 |---|---|
 | `clients/vscode-companion/media/views/overview.js`, `media/css/overview.css`, `media/copy/overview.js` | |
 | `clients/vscode-companion/lib/models/summary.js` (extend: WP-0 moves v0 `lib/model.js` there and updates its importers), `lib/models/check.js` | `toSummaryModel`, `toCheckModel` |
-| `clients/vscode-companion/lib/handlers/overview.js` | `ready`, `refresh`, `load: summary/check`, `render` (W5), `acknowledge` (W6), `open_artifact`, `switch_study` |
-| `clients/vscode-companion/lib/study.js` | discovery at depth ≤ 2 (spec §6.1.6) |
+| `clients/vscode-companion/lib/handlers/overview.js` | extend the WP-0 skeleton (it already handles `open_artifact`, with the report fragment): `load: check`, `render` (W5), `acknowledge` (W6), `switch_study` (calls `ctx.host.switchStudy()`). `ready`, `refresh`, and `load: summary` belong to the controller |
+| `clients/vscode-companion/lib/study.js` | `findStudies(folders)` at depth ≤ 2 (spec §6.1.6); `extension.js` already shows the quick pick with "Pick another folder..." on a switch |
 | `clients/vscode-companion/test/overview.test.js`, `test/studies.test.js`, `test/test_webview_overview.py` | |
 
 **Tests.**
@@ -264,9 +337,9 @@ WP-0 is done by the integrator, or by one agent under the integrator, before the
 |---|---|
 | `clients/vscode-companion/media/views/evidence.js`, `media/views/whatif.js`, `media/css/evidence.css`, `media/css/whatif.css`, `media/copy/evidence.js`, `media/copy/whatif.js` | |
 | `clients/vscode-companion/lib/models/evidence.js`, `lib/models/whatif.js`, `lib/models/preview.js`, `lib/models/draft.js` | |
-| `clients/vscode-companion/lib/handlers/evidence.js` | `load: evidence/whatif`, the `open_artifact` report anchor, the notebook hint |
-| `clients/vscode-companion/lib/handlers/whatif.js` | `preview_policy` (debounce, `seq`, cache), `draft`, `propose` (W3, with the re-read draft) |
-| `clients/vscode-companion/lib/uri.js` | deep-link parsing and validation (CC §11); `goToResult` id resolution |
+| `clients/vscode-companion/lib/handlers/evidence.js` | `load: evidence` (with `resultId`), the notebook hint (`ctx.host.openFile`), and `commands.go_to_result({prefix})` (resolve the id through `evidence`, then `ctx.post({type: 'navigate', ...})`). The report anchor of `open_artifact` is done in WP-0 |
+| `clients/vscode-companion/lib/handlers/whatif.js` | `load: whatif`, `preview_policy` (debounce, `seq`, cache key `preview:<rules>:<intervals>`), `draft`, `propose` (W3, with the re-read draft) |
+| `clients/vscode-companion/lib/uri.js` | implement the frozen `parseDeepLink(uri)` and `resultIdInput(text)` (CC §11); `extension.js` is already wired to them |
 | `clients/vscode-companion/test/evidence.test.js`, `test/whatif.test.js`, `test/uri.test.js`, `test/test_webview_evidence.py`, `test/test_webview_whatif.py` | |
 
 **Tests.**
@@ -308,7 +381,7 @@ WP-0 is done by the integrator, or by one agent under the integrator, before the
 
 | Files | Notes |
 |---|---|
-| `clients/vscode-companion/extension.js` | URI handler, the reviewer and go-to-result commands, settings change events |
+| `clients/vscode-companion/extension.js` | already wired by WP-0 (URI handler, reviewer and go-to-result commands, settings change events); WP-I only reviews it at each merge |
 | `clients/vscode-companion/package.json`, `README.md` | |
 | `clients/vscode-companion/test/integration-v1.test.js`, `integration-v2.test.js`, `integration-v3.test.js`, `test/capture_fixtures.py`, `test/fixtures/captured/` | real CLI, end to end per stage |
 | `docs/specs/CLI-CONTRACT.md` (§8.7 pointer), `framework/tests/study/test_contract_freeze.py` (new schema names) | in the commit that merges WP-E1 |

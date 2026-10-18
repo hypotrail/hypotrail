@@ -1,6 +1,6 @@
 # CLI contract: additions for the advanced companion
 
-Status: **specified, not implemented.** These are the interfaces that the advanced companion
+Status: **specified; WP-0 stubs registered (§13), features not implemented.** These are the interfaces that the advanced companion
 ([COMPANION-ADVANCED.md](COMPANION-ADVANCED.md), [ADR 0004](../decisions/0004-companion-advanced.md))
 needs from the engine. The parallel work packages of the
 [plan](../plans/COMPANION-ADVANCED-PLAN.md) treat this document as frozen. Any change goes
