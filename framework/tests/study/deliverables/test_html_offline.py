@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from mlkit.study import manifest as mf
+from mlkit.study import manifest as mf, view
 
 BROWSER_MISSING = ('the offline browser test (plan §7, test_html_offline) did not run: '
                    'Playwright is not installed. Run `uv sync --project framework --group dev '
@@ -81,7 +81,11 @@ def test_report_works_offline_without_decision_controls(browser, full_study):
         assert data.count() > 50
         assert page.locator('data:not([data-result-id])').count() == 0
         assert page.locator('[data-nyd]').count() >= 5
-        assert page.locator('#policy table.metrics tbody tr').count() == 3
+        # One row per (rule, model) of the current evaluation: 2 rules x 2 models in the
+        # fixture since the canonical value shapes (the former 3 predates them).
+        rules = view.build(full_study)['results']['policy.evaluation']['values']['rules']
+        assert page.locator('#policy table.metrics tbody tr').count() == sum(
+            len(r['models']) for r in rules.values()) == 4
         # status is written in words, not shown by colour alone
         assert 'Confirmed decision' in page.inner_text('#decisions')
         body = page.locator('body')
