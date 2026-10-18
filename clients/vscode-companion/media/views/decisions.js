@@ -122,8 +122,9 @@
     return groups.map(g => `${c.availability[g.status] || g.status}: ${g.columns.join(', ')}`).join('; ');
   }
 
+  /** Recorded words in quotes, as text (the quotes are part of the text, not CSS). */
   function quote(text) {
-    return el('q', { text: str(text) });
+    return el('span', { className: 'dc-quoted' }, ['“', el('span', { 'data-quoted': true, text: str(text) }), '”']);
   }
 
   /** Evidence chips (v2): only current results of the evidence read, never a guess. */
@@ -172,7 +173,7 @@
 
   function box(kind, title, body) {
     return el('div', { className: `dc-box dc-box-${kind}`, 'data-effects-box': kind }, [
-      el('p', { className: 'dc-box-title', text: title }), el('p', { text: body })]);
+      el('div', { className: 'dc-box-title', text: title }), el('div', { text: body })]);
   }
 
   /** "If you confirm" (v1), from the engine's preview only. */
@@ -234,6 +235,7 @@
     const busyHere = ctx.busy && ctx.busyTarget === id;
     const describedBy = [`hint-${id}`, blocked].filter(Boolean).join(' ');
     let area = null;
+    let typing = null;
     const confirm = el('button', { type: 'button', 'data-action': 'confirm', 'data-write': 'confirm', 'data-proposal': id,
       'aria-describedby': blocked || null, text: busyHere && ctx.busyOp === 'W1' ? c.working : c.confirm });
     const withdraw = el('button', { type: 'button', className: 'secondary', 'data-action': 'withdraw', 'data-write': 'withdraw',
@@ -247,7 +249,11 @@
     if (!ctx.reviewer) {
       area = ctx.wordsArea({ kind: 'drafts', key: id, id: `words-${id}`, name: `words-${id}`, rows: '3',
         'aria-describedby': describedBy, 'data-proposal': id, 'data-write': 'confirm',
-        onInput: () => { view.typedAt[id] = ctx.snapshot.revision; sync(); } });
+        onInput: () => {
+          view.typedAt[id] = ctx.snapshot.revision;
+          if (typing) typing.remove();
+          sync();
+        } });
     }
     confirm.addEventListener('click', () => {
       if (!area || !area.value.trim() || ctx.busy || blocked) return;
@@ -260,7 +266,7 @@
     sync();
 
     const typedAt = view.typedAt[id];
-    const typing = area && area.value.trim() && Number.isInteger(typedAt) && typedAt < model.revision
+    typing = area && area.value.trim() && Number.isInteger(typedAt) && typedAt < model.revision
       ? el('p', { className: 'hold', role: 'status', 'data-typing-warning': id, text: c.typing(typedAt, model.revision) }) : null;
     const groups = v1 ? availabilityGroups(p.decisionId, str(p.value)) : null;
     const pause = v1 ? pauseOf(ctx, p.decisionId) : null;
