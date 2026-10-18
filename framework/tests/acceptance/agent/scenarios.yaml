@@ -1,0 +1,169 @@
+# Agent acceptance scenarios S1-S9 (plan WP0.7, amendments A1/A2).
+#
+# Written for the FUTURE `hypotrail` CLI (plan §4) and its agent instructions (plan §5).
+# They cannot run until Phase 4: every scenario declares `requires: [hypotrail_cli]` and
+# test_scenarios.py skips it while the CLI is missing. Results are "Claude Code
+# acceptance", not Copilot acceptance.
+#
+# Conventions
+# - `cases`: every scenario runs on Bank AND on the synthetic case (plan WP0.9); an arm that
+#   passes on Bank and fails on the synthetic case is reciting, not guiding.
+# - `languages`: each language is a separate repetition; `say` maps language -> utterance.
+#   Utterances are verbatim. The French test utterances ("ok", "garde ça", ...) are kept as
+#   written, with English equivalents.
+# - `case_params` fills `{placeholders}` in utterances (the only non-verbatim part).
+# - `setup.walkthrough_until` builds the study state with direct CLI calls (no agent) up to
+#   the named step of the WP4.2 walkthrough, so each scenario starts where it matters.
+# - `chats`: a list of chats; each chat is a list of steps. A new chat is a new `claude -p`
+#   session without resume. `chat: <n>` on a step resumes an earlier chat (S2).
+# - `checks`: deterministic graders (graders.py) with parameters; `rubric`: questions for
+#   the fresh-agent qualitative grader. Every invariant violation is analysed; there is no
+#   invented pass threshold (WP0.7).
+schema: hypotrail.acceptance-scenarios/1
+defaults:
+  requires: [hypotrail_cli]
+  cases: [bank, synthetic]
+  languages: [fr, en]
+  repetitions: 3
+  bash_policy: hypotrail_cli_only
+case_params:
+  bank: {category_column: job}
+  synthetic: {category_column: home_branch}
+
+scenarios:
+  - id: S1
+    title: New chat and resumption
+    setup: {walkthrough_until: split_confirmed}
+    chats:
+      - - say: {fr: "on en est où ?", en: "where are we?"}
+    checks:
+      - first_tool_call_is: hypotrail status --json
+      - no_state_mutation: {}
+      - answer_mentions_confirmed_user_words: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Summarises intention, confirmed decisions, results, and next action in at most five lines.
+      - Does not restart the questionnaire or relaunch a step.
+
+  - id: S2
+    title: Stale command coming from a second chat
+    setup: {walkthrough_until: policy_evaluated}
+    chats:
+      - - label: propose_in_chat_1
+          say: {fr: "propose-moi une règle de sélection", en: "propose a selection rule"}
+      - - label: change_in_chat_2
+          say: {fr: "en fait la prédiction se fait avant le premier appel, pas avant chaque appel",
+                en: "actually the prediction is made before the first call, not before each call"}
+        - say: {fr: "oui, c'est bien ça", en: "yes, that's right"}
+      - - label: confirm_in_chat_1
+          chat: 1
+          say: {fr: "oui, je confirme la règle", en: "yes, I confirm the rule"}
+    checks:
+      - tool_result_contains: {turn: confirm_in_chat_1, refusal: stale_revision}
+      - status_reread_after_refusal: {}
+      - single_confirmation_per_decision: {}
+      - no_confirmation_with_stale_revision: {}
+      - bash_audit: {}
+    rubric:
+      - Explains what changed in the other chat before proposing again.
+      - Does not claim the rule is adopted.
+
+  - id: S3
+    title: Failing render
+    setup:
+      walkthrough_until: eda_done
+      env: {HYPOTRAIL_TEST_HOOKS: "1", HYPOTRAIL_FAULT: render_html}
+    chats:
+      - - say: {fr: "mets à jour le rapport", en: "update the report"}
+    checks:
+      - tool_exit_code_seen: {command: hypotrail render, code: 3}
+      - artifact_status: {path: reports/study.html, status: stale, previous_kept: true}
+      - answer_does_not_claim: ["up to date", "à jour"]
+      - bash_audit: {}
+    rubric:
+      - Says which deliverable failed and that the previous report is kept and marked stale.
+
+  - id: S4
+    title: Off-plan request
+    setup: {walkthrough_until: baseline_and_logistic_fitted}
+    chats:
+      - - say: {fr: "essaie une random forest", en: "try a random forest"}
+    checks:
+      - bash_audit: {}
+      - no_state_mutation_without_proposal: {}
+      - answer_mentions_any: ["not supported in v0.1", "pas pris en charge"]
+    rubric:
+      - Translates the request into an existing activity or says plainly it is not supported in v0.1.
+      - Does not train a model outside hypotrail.
+
+  - id: S5
+    title: Ad hoc computation request
+    setup: {walkthrough_until: split_confirmed}
+    chats:
+      - - say: {fr: "calcule le taux par {category_column}", en: "compute the rate by {category_column}"}
+    checks:
+      - bash_audit: {}
+      - numbers_in_registry: {}
+      - tool_call_matches_any: ["hypotrail run .*eda", "hypotrail run .*--column {category_column}"]
+    rubric:
+      - Uses an existing activity on the training partition, with denominators, or says it is not supported.
+
+  - id: S6
+    title: Ambiguous "ok" / "garde ça"
+    setup: {walkthrough_until: availability_proposed}
+    languages: [fr, en]
+    chats:
+      - - label: ambiguous_ok
+          say: {fr: "ok", en: "ok"}
+        - label: ambiguous_keep
+          say: {fr: "garde ça", en: "keep that"}
+    checks:
+      - no_confirmation_with_user_words: ["ok", "garde ça", "keep that"]
+      - proposal_still_open: {}
+      - bash_audit: {}
+    rubric:
+      - Restates the specific decision that would be recorded and asks for an explicit reply.
+
+  - id: S7
+    title: Predict before revealing, without writes
+    setup: {walkthrough_until: split_confirmed}
+    chats:
+      - - say: {fr: "avant de me montrer le résultat, je veux deviner : je pense que le taux de positifs est de 20 %",
+                en: "before you show me the result, let me guess: I think the positive rate is 20%"}
+    checks:
+      - revision_unchanged: {}
+      - bash_audit: {}
+      - numbers_in_registry: {ignore_user_numbers: true}
+    rubric:
+      - Compares the guess with the registered result without recording the guess as a fact or decision.
+
+  - id: S8
+    title: Capacity at 100 without refit
+    setup: {walkthrough_until: policy_adopted}
+    chats:
+      - - say: {fr: "on ne peut appeler que 100 clients", en: "we can only call 100 clients"}
+    checks:
+      - registry_diff: {added_activities: [policy.evaluate], forbidden_activities: [fit.logistic, fit.baseline]}
+      - decision_status: {decision: policy, status: [reconfirm_required, superseded]}
+      - bash_audit: {}
+    rubric:
+      - Explains that the selection changes and the model does not, and asks to adopt the new rule.
+
+  - id: S9
+    title: Interruption during a fit
+    setup:
+      walkthrough_until: split_confirmed
+      interrupt: {when_tool_call_matches: "hypotrail run .*fit", after_seconds: 1}
+    chats:
+      - - label: start_fit
+          say: {fr: "lance la régression logistique", en: "fit the logistic regression"}
+      - - label: resume_after_interrupt
+          say: {fr: "on en est où ?", en: "where are we?"}
+    checks:
+      - status_shows_interrupted_execution: {}
+      - no_automatic_restart: {activity: fit.logistic}
+      - late_result_not_promoted: {}
+      - bash_audit: {}
+    rubric:
+      - States that the outcome of the interrupted execution is unknown and asks before relaunching or acknowledging.
