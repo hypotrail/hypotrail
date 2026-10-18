@@ -113,6 +113,9 @@ LINEAR_PARAMS = {'model': 'linear', 'estimator': 'sklearn.linear_model.LinearReg
 # A split result's ``groups`` lists at most this many shared group values as examples.
 MAX_GROUP_EXAMPLES = 5
 MIN_PARTITION_ROWS = 5
+# Named refusals of a split (``details.reasons[].capability``).
+CAPABILITY_STRATIFY = 'stratified split with fewer than two rows of each class'
+CAPABILITY_SPLIT_PARAMETERS = 'random split of these rows with these parameters'
 
 
 def slot_of(activity: str, options: Mapping | None = None) -> str:
@@ -479,11 +482,23 @@ def compute_split(store, plan_: Mapping) -> dict:
             'split': {'kind': 'random', 'test_size': decision['validation_fraction'],
                       'seed': decision['seed']},
             'task': {'kind': 'binary'}}
+    negative = case.document['target'].get('negative_label')
+    counts = {str(case.positive_label): int(y.sum()),
+              str(negative) if negative is not None else f'not {case.positive_label}':
+                  int(len(y) - y.sum())}
+    if min(counts.values()) < 2:
+        raise StudyError('unsupported_capability',
+                         f'The split cannot be made: {CAPABILITY_STRATIFY}.',
+                         details={'reasons': [{
+                             'code': 'unsupported_capability', 'capability': CAPABILITY_STRATIFY,
+                             'path': 'decisions.split', 'counts': counts,
+                             'reason': 'A stratified split keeps the outcome share in both '
+                                       'partitions, which needs at least two rows of each '
+                                       'class; a class with fewer rows cannot be validated.'}]})
     try:
         train, validation = classical.split(frame, y, spec)
     except ValueError as exc:
-        raise StudyError('unsupported_capability', f'The split cannot be made: {exc}',
-                         details={'reasons': [str(exc)]}) from exc
+        raise _split_refusal(exc) from exc
     keys = np.asarray(frame.index)
     parts = {'train': sorted(keys[train], key=_line), 'validation': sorted(keys[validation], key=_line)}
     blobs = {part: rec.row_keys_bytes(parts[part]) for part in SPLIT_BLOBS}
@@ -506,6 +521,14 @@ def compute_split(store, plan_: Mapping) -> dict:
         values['overlap'] = _overlap(store, previous,
                                      plan_['inputs'].get('previous_split_stale_since'), parts)
     return {'values': values, 'blobs': blobs, 'partition': 'all', 'n_rows': len(frame)}
+
+
+def _split_refusal(exc: ValueError) -> StudyError:
+    """A split the sampler cannot make with these rows and parameters, as a named reason."""
+    return StudyError('unsupported_capability', f'The split cannot be made: {exc}',
+                      details={'reasons': [{'code': 'unsupported_capability',
+                                            'capability': CAPABILITY_SPLIT_PARAMETERS,
+                                            'path': 'decisions.split', 'reason': str(exc)}]})
 
 
 def _line(key: str) -> int:
@@ -597,8 +620,7 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
         try:
             train, validation = classical.split(frame, frame.index.to_series(), spec)
         except ValueError as exc:
-            raise StudyError('unsupported_capability', f'The split cannot be made: {exc}',
-                             details={'reasons': [str(exc)]}) from exc
+            raise _split_refusal(exc) from exc
         parts = {'train': sorted(keys[train], key=_line),
                  'validation': sorted(keys[validation], key=_line)}
         values_out = {'method': 'random', 'validation_fraction': decision['validation_fraction'],
