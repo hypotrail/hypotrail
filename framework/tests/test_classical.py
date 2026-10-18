@@ -106,3 +106,12 @@ def test_stability_does_not_recommend_collapsed_clusters(tmp_path):
  assert report['results'][0]['metrics']['stability_ari']==1.0
  assert report['results'][0]['metrics']['clusters_observed']==1
  assert report['suggested_candidate'] is None
+
+def test_integer_time_column_refused(tmp_path):
+ contract,df=prepare(tmp_path,'regression');s=contract['spec'];s['data'].update(time_col='model_year');s['split'].update(kind='time',cutoff='1979-01-01')
+ df['model_year']=np.repeat(np.arange(70,82),15)
+ tc.validate(contract)
+ with pytest.raises(ValueError,match='missing capability: integer-year temporal split'):c.split(df,df.target,s)
+ df['model_year']=pd.to_datetime((1900+df['model_year']).astype(str)+'-01-01')
+ tr,va=c.split(df,df.target,s)
+ assert df.iloc[tr].model_year.max()<pd.Timestamp('1979-01-01')<=df.iloc[va].model_year.min()

@@ -7,14 +7,19 @@ AGENTS.md
 .github/copilot-instructions.md
 framework/
   mlkit/                     reusable engine inherited from the reviewed kit
+    study/                   junior study engine; imports no legacy pilot module
   notebooks/                 reusable notebook sources
   templates/                 rendering templates
   tests/
     fixtures/legacy-project/ synthetic context required by historical tests
+    fixtures/synthetic/      planted-trap case generator (hypotrail.case/1)
+    study/                   junior study engine tests
   requirements*.txt          inherited dependencies
 use-cases/
   registry.json              existing tutorial registry
   bank-marketing/
+    case.yaml                study case contract (hypotrail.case/1), generated
+    case-supplement.yaml     migration input: reading parameters, cited documentation
     project.json             existing tutorial context
     results.json             exploratory reference results
     prepare_bank.py          explicit data preparation and experiment
@@ -22,6 +27,8 @@ use-cases/
     tutorial-results.json    historical result format
     bank-tutorial.html    historical offline teaching export
   auto-mpg/
+    case.yaml
+    case-supplement.yaml
     project.json
     results.json
     prepare_auto_mpg.py
@@ -44,7 +51,7 @@ The experimental runtime accesses case resources through repository-relative sym
 ## Sources, outputs, and state
 
 - Reusable sources: `framework/mlkit`, `framework/templates`, and `framework/notebooks`.
-- Case sources: `use-cases/<id>/prepare_*.py`, context, and variable dictionary.
+- Case sources: `use-cases/<id>/prepare_*.py`, context, and variable dictionary. The junior engine reads `use-cases/<id>/case.yaml` ([case contract](../specs/CASE-CONTRACT.md)), generated from `project.json` and `case-supplement.yaml` by `mlkit.study.migrate`.
 - Public reference data: `use-cases/<id>/data`, with provenance in `project.json`.
 - Historical results: tutorial `results.json`, predictions, and HTML. They are reference artifacts, not new junior study evidence.
 - Proposed future outputs: case `reports/study.html`, `notebooks/study.py`, and distinct persistent study state. These are conventions, not implemented deliverables.

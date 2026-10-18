@@ -2,6 +2,7 @@
 from pathlib import Path
 import hashlib
 import json
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,8 +22,48 @@ LINKS = {
     'experimental/companion/runtime/prepare_auto_mpg.py': 'use-cases/auto-mpg/prepare_auto_mpg.py',
 }
 
+CONFIRMATION = re.compile(r'confirm(?:ed|ation)', re.IGNORECASE)
+CASE_FILES = ('case.yaml', 'case-supplement.yaml')
+
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def dataset_fields(text):
+    """The `dataset` mapping of a case file: PyYAML when available, else a plain scan."""
+    try:
+        import yaml
+    except ImportError:
+        fields, inside = {}, False
+        for line in text.splitlines():
+            if line.startswith('dataset:'):
+                inside = True
+            elif inside and line.startswith('  ') and not line.startswith('   '):
+                key, _, value = line.strip().partition(':')
+                fields[key] = value.strip().strip('\'"')
+            elif inside and line and not line.startswith(' '):
+                break
+        return fields
+    return (yaml.safe_load(text) or {}).get('dataset') or {}
+
+def check_cases(errors):
+    """A case never declares a confirmation, and its dataset matches the declared sha256."""
+    count = 0
+    for folder in sorted(p for p in (ROOT / 'use-cases').iterdir() if p.is_dir()):
+        for name in CASE_FILES:
+            path = folder / name
+            if path.is_file() and CONFIRMATION.search(path.read_text(encoding='utf-8')):
+                errors.append(f'Case file declares a confirmation: {folder.name}/{name}')
+        path = folder / 'case.yaml'
+        if not path.is_file():
+            continue
+        count += 1
+        dataset = dataset_fields(path.read_text(encoding='utf-8'))
+        raw = (folder / str(dataset.get('path') or '')).resolve()
+        if not dataset.get('path') or not raw.is_relative_to(folder.resolve()):
+            errors.append(f'Case dataset outside its use case: {folder.name}')
+        elif not raw.is_file() or sha(raw) != dataset.get('sha256'):
+            errors.append(f'Case dataset fingerprint mismatch: {folder.name}')
+    return count
 
 def main():
     errors = []
@@ -46,7 +87,9 @@ def main():
             errors.append(f'Dataset fingerprint mismatch: {entry["dir"]}')
         if results['dataset']['sha256'] != project['dataset']['sha256']:
             errors.append(f'Results do not reference the declared dataset: {entry["dir"]}')
-    print(json.dumps({'ok': not errors, 'use_cases': 2, 'compatibility_links': len(LINKS),
+    cases = check_cases(errors)
+    print(json.dumps({'ok': not errors, 'use_cases': 2, 'cases': cases,
+                      'compatibility_links': len(LINKS),
                       'errors': errors}, ensure_ascii=False, indent=2))
     return bool(errors)
 

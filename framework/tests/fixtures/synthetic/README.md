@@ -44,7 +44,7 @@ The output is byte-for-byte deterministic for a given seed and options. Randomne
 ## Files
 
 - `data.csv`: separator `;`, UTF-8, header on line 1, one physical line per row, no quoting. Row keys follow the `source_line` rule: `L<line>`, so the first data row is `L2`.
-- `case.yaml`: the `hypotrail.case/1` contract an agent under test may read. Every column has an epistemic status (`documented_fact`, `scenario_assumption`, `observed`, or `unknown`) and an availability entry. No status is ever `confirmed`: confirmation is a human decision recorded in study state, not a case property.
+- `case.yaml`: the [`hypotrail.case/1`](../../../../docs/specs/CASE-CONTRACT.md) contract an agent under test may read; `mlkit.study.case.load_case` accepts it. Every column has an epistemic status (`documented_fact`, `scenario_assumption`, `observed`, or `unknown`) and an availability entry. No status is ever `confirmed`: confirmation is a human decision recorded in study state, not a case property.
 - `truth.json`: the generating model, the exact signal effect, the leaking column and its exact AUC, the sentinel row keys, the number of distinct true scores, a reference split recipe with its train target rate, and the duplicates, groups, and time column when enabled.
 
 ## Rule: truth.json is never exposed to an agent under test
