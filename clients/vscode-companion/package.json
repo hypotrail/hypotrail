@@ -1,0 +1,47 @@
+{
+  "name": "hypotrail-companion",
+  "displayName": "Hypotrail study companion (v0, feature flag)",
+  "description": "A study panel for a Hypotrail study: recap, plan position, deliverables, open proposals and holds. Its only write is confirming or withdrawing an open proposal through the hypotrail CLI, with the junior's own typed words. Off by default.",
+  "version": "0.0.1",
+  "publisher": "hypotrail-local",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:hypotrail.companion.open"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "The companion runs the study's hypotrail CLI, recorded in .hypotrail/agent.json."
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "hypotrail.companion.open",
+        "title": "Hypotrail: open the study panel"
+      }
+    ],
+    "configuration": {
+      "title": "Hypotrail companion",
+      "properties": {
+        "hypotrail.companion.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Hypotrail study panel (v0, experimental). Off by default; the environment variable HYPOTRAIL_COMPANION=1 also enables it."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

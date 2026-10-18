@@ -1,0 +1,382 @@
+'use strict';
+// Unit tests (scope U): the extension against a fake `vscode` module and a fake
+// child_process.execFile. No VS Code and no CLI process. Run: node --test test/*.test.js
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const childProcess = require('child_process');
+const { createFake, load } = require('./fake-vscode');
+
+const realExecFile = childProcess.execFile;
+const CLI = ['/opt/my tools/py "q"/bin/python', '-m', 'mlkit.study.cli'];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+function tmp(name = 'hyp') {
+  return fs.mkdtempSync(path.join(os.tmpdir(), `${name}-`));
+}
+
+function makeStudy(parent, name, { argv = CLI, study, schema = 'hypotrail.agent/1' } = {}) {
+  const dir = path.join(parent, name);
+  fs.mkdirSync(path.join(dir, '.hypotrail'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.hypotrail', 'agent.json'), JSON.stringify({
+    schema, study: study || dir, cli: { argv, shell: 'ignored; rm -rf /', how: 'override' } }));
+  return fs.realpathSync(dir);
+}
+
+function summary(studyDir, revision = 3, extra = {}) {
+  return {
+    schema: 'hypotrail.summary/1', ok: true, study: studyDir, revision, since: null, changed: null,
+    goal: {}, current_step: 'prediction_time',
+    plan: [{ id: 'prediction_time', title: 'Define the prediction moment', status: 'awaiting_confirmation' },
+      { id: 'feature_availability', title: 'Decide which variables are available at prediction time', status: 'blocked' }],
+    next_action: { kind: 'await_user_words', proposal_id: 'p_1', decision: 'prediction_time', message: 'Show the restatement.' },
+    open_proposals: [{ proposal_id: 'p_1', decision_id: 'prediction_time', value: 'before the first reminder',
+      restatement: 'You predict <b>before</b> the first reminder.', revision: 2 }],
+    decisions: {}, results: {},
+    artifacts: { status: 'ok', items: { report: { status: 'ok', revision: 3, last_ok_revision: 3, message: 'The report (reports/study.html) is up to date.' } } },
+    executions: { active: [], interrupted: [], late: [], suspected_interrupted: [] },
+    not_yet_defensible: { top: [{ id: 'open_holds', text: 'On hold.' }], more: ['workbench_not_tracked'] },
+    notes: [{ note_id: 'n_1', decision_id: 'prediction_time', status: 'open', user_words: 'wait for my manager', resolution_words: null }],
+    recap: ['Goal: g', 'Decided: nothing yet.', 'Now: n', 'Next: x', 'Limit: l'],
+    ...extra,
+  };
+}
+
+/** Replace execFile; `respond(args)` returns {payload, code} or {stdout} or {error}. */
+function fakeCli(respond) {
+  const calls = [];
+  childProcess.execFile = (file, args, options, cb) => {
+    calls.push({ file, args, options });
+    const r = respond(args, calls.length) || {};
+    setImmediate(() => {
+      if (r.spawnError) return cb(Object.assign(new Error('spawn'), { code: r.spawnError }), '', '');
+      const stdout = r.stdout !== undefined ? r.stdout : JSON.stringify(r.payload) + '\n';
+      const err = r.code ? Object.assign(new Error('exit'), { code: r.code }) : null;
+      cb(err, stdout, r.stderr || 'warning: The `UV_NATIVE_TLS` environment variable is deprecated\n');
+    });
+  };
+  return calls;
+}
+
+test.afterEach(() => { childProcess.execFile = realExecFile; delete process.env.HYPOTRAIL_COMPANION; });
+
+async function openWith(fake) {
+  const { extension, context } = load(fake);
+  const api = extension.activate(context);
+  const opened = await fake.commands.executeCommand('hypotrail.companion.open');
+  return { api, opened, context, extension };
+}
+
+test('flag off: the command shows one message and nothing else runs', async () => {
+  const calls = fakeCli(() => assert.fail('no CLI call when the flag is off'));
+  const folder = tmp();
+  makeStudy(folder, 'study');
+  const fake = createFake({ folders: [path.join(folder, 'study')] });
+  const { extension, context } = load(fake);
+  const api = extension.activate(context);
+  assert.deepEqual([...fake.registered.keys()], ['hypotrail.companion.open']);
+  assert.equal(fake.calls.configuration.length, 0, 'activation reads no setting');
+  assert.equal(await fake.commands.executeCommand('hypotrail.companion.open'), null);
+  assert.deepEqual(fake.calls.info, ['Companion disabled (feature flag)']);
+  assert.equal(fake.calls.panels.length, 0);
+  assert.equal(fake.calls.openDialog.length + fake.calls.quickPick.length + fake.calls.error.length, 0);
+  assert.equal(calls.length, 0);
+  assert.equal(api.current(), null);
+});
+
+test('flag: setting default false; setting true or HYPOTRAIL_COMPANION=1 turns it on', () => {
+  const { isEnabled } = require('../lib/flag');
+  assert.equal(isEnabled(createFake(), {}), false);
+  assert.equal(isEnabled(createFake({ settings: { 'hypotrail.companion.enabled': false } }), {}), false);
+  assert.equal(isEnabled(createFake(), { HYPOTRAIL_COMPANION: '0' }), false);
+  assert.equal(isEnabled(createFake(), { HYPOTRAIL_COMPANION: 'true' }), false);
+  assert.equal(isEnabled(createFake({ settings: { 'hypotrail.companion.enabled': true } }), {}), true);
+  assert.equal(isEnabled(createFake(), { HYPOTRAIL_COMPANION: '1' }), true);
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+  assert.equal(pkg.contributes.configuration.properties['hypotrail.companion.enabled'].default, false);
+  assert.deepEqual(pkg.activationEvents, ['onCommand:hypotrail.companion.open']);
+  assert.equal(pkg.capabilities.untrustedWorkspaces.supported, false);
+  assert.equal(pkg.dependencies, undefined, 'no runtime dependency');
+});
+
+test('untrusted workspace: refused before any CLI call', async () => {
+  const calls = fakeCli(() => assert.fail('no CLI call'));
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const folder = tmp();
+  makeStudy(folder, 'study');
+  const fake = createFake({ folders: [path.join(folder, 'study')], trusted: false });
+  const { opened } = await openWith(fake);
+  assert.equal(opened, null);
+  assert.match(fake.calls.error[0], /trusted workspace/);
+  assert.equal(fake.calls.panels.length, 0);
+  assert.equal(calls.length, 0);
+});
+
+test('discovery: one study folder, several (quick pick), none (folder dialog), invalid agent.json', async () => {
+  const { findStudies, readAgent } = require('../lib/study');
+  const folder = tmp();
+  const a = makeStudy(folder, 'a study');
+  const b = makeStudy(folder, 'b');
+  fs.mkdirSync(path.join(folder, 'plain'));
+  assert.deepEqual(findStudies([path.join(folder, 'plain'), a, b, a]), [a, b]);
+  assert.deepEqual(readAgent(a).argv, CLI);
+  assert.equal(readAgent(a).studyDir, a);
+
+  process.env.HYPOTRAIL_COMPANION = '1';
+  fakeCli(() => ({ payload: summary(a) }));
+  let fake = createFake({ folders: [path.join(folder, 'plain'), a, b], answers: { quickPick: items => items[1] } });
+  let { opened } = await openWith(fake);
+  assert.equal(fake.calls.quickPick.length, 1);
+  assert.equal(opened.agent.studyDir, b);
+
+  fake = createFake({ folders: [path.join(folder, 'plain')], answers: { openDialog: [a] } });
+  ({ opened } = await openWith(fake));
+  assert.equal(fake.calls.openDialog.length, 1);
+  assert.equal(opened.agent.studyDir, a);
+
+  fake = createFake({ folders: [path.join(folder, 'plain')], answers: { openDialog: [path.join(folder, 'plain')] } });
+  ({ opened } = await openWith(fake));
+  assert.equal(opened, null);
+  assert.match(fake.calls.error[0], /No study here/);
+
+  for (const [name, options, pattern] of [
+    ['badschema', { schema: 'other/1' }, /not a hypotrail.agent\/1 record/],
+    ['badargv', { argv: 'uv run hypotrail' }, /no valid cli.argv/],
+    ['emptyargv', { argv: [] }, /no valid cli.argv/],
+    ['moved', { study: '/somewhere/else' }, /created at \/somewhere\/else/],
+  ]) {
+    const dir = makeStudy(folder, name, options);
+    fake = createFake({ folders: [dir] });
+    ({ opened } = await openWith(fake));
+    assert.equal(opened, null, name);
+    assert.match(fake.calls.error[0], pattern, name);
+    assert.equal(fake.calls.panels.length, 0, name);
+  }
+});
+
+test('argv: taken from agent.json, paths with spaces and quotes, execFile without a shell', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const folder = tmp('with space');
+  const dir = makeStudy(folder, `study "quoted" it's`);
+  const calls = fakeCli(() => ({ payload: summary(dir) }));
+  const fake = createFake({ folders: [dir] });
+  const { opened } = await openWith(fake);
+  await opened.controller.handle({ type: 'ready' });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].file, CLI[0]);
+  assert.deepEqual(calls[0].args, [...CLI.slice(1), 'status', '--summary', '--json', '--study', dir]);
+  assert.equal(calls[0].options.shell, false);
+  assert.equal(calls[0].options.cwd, dir);
+  const snapshot = fake.calls.panels[0].posted.find(m => m.type === 'snapshot');
+  assert.equal(snapshot.model.revision, 3);
+  assert.equal(snapshot.model.proposals[0].restatement, 'You predict <b>before</b> the first reminder.');
+  assert.deepEqual(snapshot.model.proposals[0].holds, [{ noteId: 'n_1', userWords: 'wait for my manager' }]);
+  assert.equal(snapshot.model.currentStep.position, 1);
+  assert.equal(snapshot.model.recap.length, 5);
+});
+
+test('webview document: strict CSP with a nonce, scripts enabled, no remote resource', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const dir = makeStudy(tmp(), 'study');
+  fakeCli(() => ({ payload: summary(dir) }));
+  const fake = createFake({ folders: [dir] });
+  await openWith(fake);
+  const panel = fake.calls.panels[0];
+  assert.equal(panel.options.enableScripts, true);
+  assert.equal(panel.options.enableCommandUris, false);
+  assert.deepEqual(panel.options.localResourceRoots, []);
+  const html = panel.webview.html;
+  const csp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
+  const nonce = csp.match(/script-src 'nonce-([A-Za-z0-9]+)'/)[1];
+  assert.match(csp, /^default-src 'none';/);
+  assert.match(csp, /connect-src 'none'/);
+  assert.doesNotMatch(csp, /unsafe-inline|unsafe-eval|https?:/);
+  assert.equal((html.match(/<script /g) || []).length, 1);
+  assert.match(html, new RegExp(`<script nonce="${nonce}">`));
+  assert.doesNotMatch(html, /https?:\/\//);
+  assert.doesNotMatch(html, /\son[a-z]+=/i, 'no inline handler');
+});
+
+test('refresh on change: a write to state.json or revisions.jsonl refreshes once, other files do not', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const dir = makeStudy(tmp(), 'study');
+  const calls = fakeCli(() => ({ payload: summary(dir) }));
+  const fake = createFake({ folders: [dir] });
+  const { opened } = await openWith(fake);
+  await opened.controller.handle({ type: 'ready' });
+  const before = calls.length;
+  fs.writeFileSync(path.join(dir, '.hypotrail', 'unrelated.tmp'), 'x');
+  await new Promise(r => setTimeout(r, 500));
+  assert.equal(calls.length, before, 'an unrelated file does not refresh');
+  fs.writeFileSync(path.join(dir, '.hypotrail', 'state.json'), '{}');
+  fs.appendFileSync(path.join(dir, '.hypotrail', 'revisions.jsonl'), '{}\n');
+  fs.appendFileSync(path.join(dir, '.hypotrail', 'revisions.jsonl'), '{}\n');
+  await new Promise(r => setTimeout(r, 700));
+  assert.equal(calls.length, before + 1, 'one refresh per burst (debounced)');
+  fake.calls.panels[0].dispose();
+  fs.writeFileSync(path.join(dir, '.hypotrail', 'state.json'), '{"x":1}');
+  await new Promise(r => setTimeout(r, 500));
+  assert.equal(calls.length, before + 1, 'no refresh after the panel is closed');
+});
+
+test('panel becoming visible refreshes; messages go through onDidReceiveMessage', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const dir = makeStudy(tmp(), 'study');
+  const calls = fakeCli(() => ({ payload: summary(dir) }));
+  const fake = createFake({ folders: [dir] });
+  await openWith(fake);
+  const panel = fake.calls.panels[0];
+  panel.receive({ type: 'ready' });
+  await new Promise(r => setTimeout(r, 50));
+  assert.equal(calls.length, 1);
+  panel.setVisible(true);
+  await new Promise(r => setTimeout(r, 50));
+  assert.equal(calls.length, 2);
+});
+
+async function readyPanel(respond) {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const dir = makeStudy(tmp('with space'), 'my study');
+  const calls = fakeCli((args, n) => (args.includes('status') ? { payload: summary(dir, n === 1 ? 3 : 4) } : respond(args, dir)));
+  const fake = createFake({ folders: [dir], answers: { warning: 'Withdraw' } });
+  const { opened } = await openWith(fake);
+  await opened.controller.handle({ type: 'ready' });
+  return { dir, calls, fake, controller: opened.controller, panel: fake.calls.panels[0] };
+}
+
+test('confirm: exact argv with the typed words, channel webview, actor user, uuid, revision read', async () => {
+  const words = '-- yes: before the first reminder, "quoted" & <b>not</b> html';
+  const { dir, calls, panel, controller } = await readyPanel(() => ({ code: 0, payload: {
+    schema: 'hypotrail.decide/1', ok: true, action: 'decide.confirm', request_id: 'x', replayed: false, revision: 4,
+    result: { decision_id: 'prediction_time', proposal_id: 'p_1', status: 'confirmed', user_words: words, channel: 'webview', actor: 'user' },
+    artifacts: { report: { status: 'ok', message: 'The report (reports/study.html) is up to date.' } } } }));
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words, revision: 3 });
+  const confirm = calls.find(c => c.args.includes('confirm'));
+  const rid = confirm.args[confirm.args.indexOf('--request-id') + 1];
+  assert.match(rid, UUID);
+  assert.deepEqual(confirm.args, [...CLI.slice(1), 'decide', 'confirm', 'p_1', `--user-words=${words}`,
+    '--channel', 'webview', '--actor', 'user', '--request-id', rid, '--expected-revision', '3', '--json', '--study', dir]);
+  assert.equal(confirm.options.shell, false);
+  assert.ok(!confirm.args.includes('--basis'), 'never a delegation');
+  const outcome = panel.posted.find(m => m.type === 'outcome');
+  assert.equal(outcome.kind, 'confirmed');
+  assert.equal(outcome.userWords, words);
+  assert.equal(outcome.channel, 'webview');
+  assert.equal(calls.at(-1).args.includes('status'), true, 'the panel refreshes after the outcome');
+  assert.equal(panel.posted.at(-1).model.revision, 4);
+  // A second confirmation gets a new request id.
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'again before the reminder', revision: 4 });
+  const ids = calls.filter(c => c.args.includes('confirm')).map(c => c.args[c.args.indexOf('--request-id') + 1]);
+  assert.equal(new Set(ids).size, 2);
+});
+
+test('confirm: blank words, unknown proposal, or a malformed message never reach the CLI', async () => {
+  const { calls, panel, controller } = await readyPanel(() => assert.fail('no mutation'));
+  const before = calls.length;
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: '   \n', revision: 3 });
+  assert.equal(panel.posted.at(-1).kind, 'invalid');
+  for (const bad of [
+    { type: 'confirm', proposalId: 'p_1; rm', words: 'yes', revision: 3 },
+    { type: 'confirm', proposalId: 'p_1', words: 'yes', revision: '3' },
+    { type: 'confirm', proposalId: 'p_1', words: 'yes', revision: 3, basis: 'delegated_default' },
+    { type: 'confirm', proposalId: 'p_1', words: 7, revision: 3 },
+    { type: 'confirm', proposalId: 'p_1', words: 'x'.repeat(4001), revision: 3 },
+    { type: 'run', activity: 'split' },
+    { type: 'propose' },
+    { type: 'open', artifact: '../../etc/passwd' },
+    'confirm', null, [],
+  ]) await controller.handle(bad);
+  assert.equal(controller.diagnostics().ignored, 11);
+  await controller.handle({ type: 'confirm', proposalId: 'p_9', words: 'yes before the reminder', revision: 3 });
+  assert.match(panel.posted.find(m => m.type === 'outcome' && m.proposalId === 'p_9').message, /not open in the panel/);
+  assert.ok(calls.slice(before).every(c => c.args.includes('status')), 'only reads');
+});
+
+test('refusal: the engine message is shown verbatim with the human message, then a refresh', async () => {
+  const engineMessage = 'A bare acknowledgement is not a decision. Restate the proposal and ask the user to answer it in their own words.';
+  const { calls, panel, controller } = await readyPanel(() => ({ code: 2, payload: {
+    schema: 'hypotrail.error/1', ok: false, command: 'decide confirm',
+    error: { code: 'ambiguous_confirmation', message: engineMessage, details: { reason: 'bare_acknowledgement', user_words: 'ok' } } } }));
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'ok', revision: 3 });
+  const outcome = panel.posted.find(m => m.type === 'outcome');
+  assert.equal(outcome.kind, 'refused');
+  assert.equal(outcome.exitCode, 2);
+  assert.equal(outcome.refusal.code, 'ambiguous_confirmation');
+  assert.equal(outcome.refusal.reason, 'bare_acknowledgement');
+  assert.equal(outcome.refusal.engineMessage, engineMessage);
+  assert.match(outcome.refusal.human, /only acknowledged.*Nothing was recorded\.$/);
+  assert.ok(calls.at(-1).args.includes('status'));
+});
+
+test('stale revision: the diff is summarised and the panel refreshes', async () => {
+  const { panel, controller } = await readyPanel(() => ({ code: 2, payload: {
+    schema: 'hypotrail.error/1', ok: false, command: 'decide confirm',
+    error: { code: 'stale_revision', message: 'Revision is stale: reread hypotrail status before deciding',
+      details: { expected_revision: 2, current_revision: 3, changes_since: [{ revision: 3, action: 'decide.note',
+        params: { decision_id: 'prediction_time', user_words: 'wait' } }] } } } }));
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 2 });
+  const outcome = panel.posted.find(m => m.type === 'outcome');
+  assert.equal(outcome.refusal.code, 'stale_revision');
+  assert.equal(outcome.refusal.engineMessage, 'Revision is stale: reread hypotrail status before deciding');
+  assert.deepEqual(outcome.refusal.details, ['Revision read by the panel: 2', 'Current revision: 3',
+    'Changed at revision 3: decide.note (prediction_time)']);
+  assert.match(outcome.refusal.human, /refreshed/);
+  assert.equal(panel.posted.at(-1).type, 'snapshot');
+});
+
+test('a CLI that cannot start or prints no JSON: an unknown outcome, never a success', async () => {
+  const { panel, controller } = await readyPanel(() => ({ spawnError: 'ENOENT' }));
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 3 });
+  const outcome = panel.posted.find(m => m.type === 'outcome');
+  assert.equal(outcome.kind, 'failed');
+  assert.match(outcome.message, /could not be started \(ENOENT/);
+  assert.match(outcome.message, /outcome is unknown/);
+});
+
+test('withdraw: asks first (modal), exact argv; cancelled sends nothing', async () => {
+  const { dir, calls, fake, panel, controller } = await readyPanel(() => ({ code: 0, payload: {
+    schema: 'hypotrail.decide/1', ok: true, action: 'decide.withdraw', revision: 4,
+    result: { proposal_id: 'p_1', decision_id: 'prediction_time', status: 'withdrawn' }, artifacts: {} } }));
+  await controller.handle({ type: 'withdraw', proposalId: 'p_1', reason: null, revision: 3 });
+  assert.equal(fake.calls.warning[0].rest[0].modal, true);
+  const w = calls.find(c => c.args.includes('withdraw'));
+  const rid = w.args[w.args.indexOf('--request-id') + 1];
+  assert.deepEqual(w.args, [...CLI.slice(1), 'decide', 'withdraw', 'p_1', '--request-id', rid,
+    '--expected-revision', '3', '--json', '--study', dir]);
+  assert.equal(panel.posted.find(m => m.type === 'outcome').kind, 'withdrawn');
+  const n = calls.length;
+  fake.calls.warning.length = 0;
+  const cancelled = await readyPanel(() => assert.fail('cancelled'));
+  cancelled.fake.window.showWarningMessage = async () => undefined;
+  await cancelled.controller.handle({ type: 'withdraw', proposalId: 'p_1', reason: null, revision: 3 });
+  assert.ok(cancelled.calls.every(c => c.args.includes('status')));
+  assert.ok(n > 0);
+});
+
+test('open: the report in the browser, the notebook in the editor, a missing file is reported', async () => {
+  const { dir, fake, panel, controller } = await readyPanel(() => assert.fail('no mutation'));
+  fs.mkdirSync(path.join(dir, 'reports'));
+  fs.writeFileSync(path.join(dir, 'reports', 'study.html'), '<p>r</p>');
+  await controller.handle({ type: 'open', artifact: 'report' });
+  assert.deepEqual(fake.calls.openExternal, [path.join(dir, 'reports', 'study.html')]);
+  await controller.handle({ type: 'open', artifact: 'notebook' });
+  assert.match(panel.posted.at(-1).message, /notebooks\/study_generated.py does not exist yet/);
+  fs.mkdirSync(path.join(dir, 'notebooks'));
+  fs.writeFileSync(path.join(dir, 'notebooks', 'study_generated.py'), '');
+  await controller.handle({ type: 'open', artifact: 'notebook' });
+  assert.deepEqual(fake.calls.showTextDocument, [path.join(dir, 'notebooks', 'study_generated.py')]);
+});
+
+test('sources: no shell, no network module, no storage of their own', () => {
+  const root = path.join(__dirname, '..');
+  const files = ['extension.js', ...fs.readdirSync(path.join(root, 'lib')).map(f => `lib/${f}`), 'media/panel.js'];
+  for (const f of files) {
+    const text = fs.readFileSync(path.join(root, f), 'utf8');
+    assert.doesNotMatch(text, /require\(['"](https?|net|tls|dgram|http2|ws|sqlite3?|better-sqlite3|node:sqlite)['"]\)/, f);
+    assert.doesNotMatch(text, /shell:\s*true|\bexecSync\b|\bspawn\(|childProcess\.exec\(|\bexec\(/, f);
+    assert.doesNotMatch(text, /vscode\.lm\b|localStorage|indexedDB|WebSocket|fetch\(/, f);
+  }
+});
