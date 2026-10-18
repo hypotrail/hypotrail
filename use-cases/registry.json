@@ -1,0 +1,14 @@
+{
+  "schema": "hypotrail.registry/1",
+  "projects": [
+    {
+      "id": "uci-bank-marketing-v1",
+      "dir": "bank-marketing",
+      "default": true
+    },
+    {
+      "id": "uci-auto-mpg-v1",
+      "dir": "auto-mpg"
+    }
+  ]
+}

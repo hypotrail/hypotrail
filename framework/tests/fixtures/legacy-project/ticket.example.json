@@ -1,0 +1,8 @@
+{
+  "id": "ML-EXAMPLE",
+  "changes": [
+    "model"
+  ],
+  "task": "regression",
+  "interpretability": false
+}

@@ -1,0 +1,117 @@
+# frame.yaml — the frozen contract of the project.
+# Changed ONLY by a dedicated commit whose message starts with "frame:".
+# Every change invalidates all earlier results (invariant I7).
+#
+# Example filled in for Lending Club (36-month loans, default at origination).
+# Values marked "example" are starting points to discuss, not recommendations.
+
+project: lendingclub-default-36m
+frame_version: 1
+
+# Human-readable statements. Each one names the checks that verify it,
+# or carries an explicit exemption (invariant I1).
+statements:
+  F1:  {text: "Unit: a 36-month individual loan accepted under the applicable credit policy (D-005, D-006).", checked_by: [I5, D5]}
+  F2:  {text: "Target: Charged Off or Default before loan end; 0 for Fully Paid. Ongoing loans excluded.", checked_by: [I4]}
+  F3:  {text: "Prediction time: loan origination (issue_d). Only information available then may be used.", checked_by: [I5]}
+  F4:  {text: "Label observation delay: 36 months. Backtesting uses a 36-month maturity gap.", checked_by: [I4]}
+  F5:  {text: "Decision: reject the highest-risk 10% of applications.", exempt: "business decision, not script-verifiable"}
+  F6:  {text: "Primary metric: default rate among the 90% accepted loans (bad_rate_at_approval_90); lower is better.", checked_by: [I2]}
+  F7:  {text: "Preregistered secondary metrics: roc_auc, brier.", checked_by: [I2]}
+  F8:  {text: "Validation: three-origin semiannual backtest (2014H1, 2014H2, 2015H1), 36-month gap.", checked_by: [I2, I4]}
+  F9:  {text: "Reference: unchanged Lending Club subgrade (A1 lowest risk), without fitting. A refitted reference may be shown alongside it, never alone.", checked_by: [I3]}
+  F10: {text: "Acceptance: gain threshold CALCULATED from costs (acceptance.cost_model, Q-CAD-03, Q-EVA-05); holdout expected_value rule (Q-CAD-15): gain ≥ threshold and lower bound > 0 using paired monthly-block bootstrap; AND E1 passed on backtest.", checked_by: [I6, E3]}
+  F11: {text: "Holdout: loans originated July–December 2015; two readings across ALL frame versions. Freeze the threshold after a reading.", checked_by: [I6]}
+  P1:  {text: "Labeled population differs from deployment: only ACCEPTED loans have labels (no reject inference in this version).", exempt: "recorded limitation, included in the model card"}
+  Q1:  {text: "Every data/dev column is declared, documented (meaning, unit, special values), and meets its contract.", checked_by: [D1, D2, D3]}
+  Q2:  {text: "Any transformation removing rows or changing the meaning of a value is performed by the preparation script and recorded in decisions.", checked_by: [D5]}
+  Q3:  {text: "A used feature with temporal drift (PSI > threshold) or individual target predictiveness requires human justification (drift_ack, leak_ack).", checked_by: [D4, D6]}
+  E1:  {text: "Evaluation (v3): gain per test window, one-sided 95% lower bound > 0 with Nadeau-Bengio correction; preregistered stress windows checked on their own gain; noninferiority (loss ≤ 0.5 points, 95% confidence, Holm) on evaluable preregistered segments, with non-evaluable segments listed; calibration displayed and blocking only for probability use. E1 blocks acceptance, not holdout reading.", checked_by: [E1]}
+  E3:  {text: "The acceptance threshold is measurable: above the smallest gain distinguishable from zero (python -m mlkit.mde).", checked_by: [E3]}
+  E4:  {text: "Before holdout access, an unlabeled drift report exists for the same code, development data, and holdout. Its verdict is informative: population change, not gain loss. Include it in the reading report and model card. Block only when evaluation.drift_blocking is true (BROKEN CONTRACT requires signed DRIFT-ACK in decisions.md).", checked_by: [E4]}
+  E2:  {text: "Set the decision threshold on validation windows and freeze it before holdout access.", checked_by: [E1]}
+  M2:  {text: "Commit the univariate selection rule (spec.selection) before calculating IV; ratify later changes in decisions.", checked_by: [I9]}
+  M1:  {text: "Exploration budget: 100 comparisons (runs × tuning candidates) before human review.", checked_by: [I3]}
+  L1:  {text: "All labels are mature on the data extraction date.", checked_by: [D7]}
+  G1:  {text: "No command runs until required earlier-phase questions have human answers.", checked_by: [G1]}
+  S1:  {text: "Production: do not score out-of-contract input (manual review); stable 2% identifier-based control group; log every scoring.", exempt: "enforced by mlkit.score at runtime and covered by kit tests"}
+  C1:  {text: "No protected attribute or direct proxy; zip_code, emp_title, and addr_state excluded in this version.", checked_by: [I5]}
+
+# Machine-checked projection of the statements. The runner owns everything
+# below: a pipeline cannot choose its own split, metric or target.
+spec:
+  id_col: id
+  group_col: null            # the public data has no borrower id; documented limit
+  time_col: issue_d
+  target_col: default
+  label_delay_months: 36
+  metric_primary: bad_rate_at_approval_90
+  metric_primary_direction: lower
+  metrics_secondary: [roc_auc, brier]
+  backtest:
+    test_windows:            # [first month, last month] of each evaluation window
+      - ["2014-01", "2014-06"]
+      - ["2014-07", "2014-12"]
+      - ["2015-01", "2015-06"]
+    gap_months: 36           # train on loans issued <= window start - gap
+    # stress_windows:        # optional preregistered crisis windows, added to test windows if absent;
+    #   - ["2015-01", "2015-06"]   # worst-case check (gain ≥ −evaluation.stress_margin); training data required before start minus gap
+  reference:                 # F9, Q-CAD-05: use the incumbent score UNCHANGED; no fitting
+    kind: existing_score     # existing_score | refit (refit : `pipeline` + `justification`, only when no incumbent exists)
+    column: sub_grade
+    order: [A1, A2, A3, A4, A5, B1, B2, B3, B4, B5, C1, C2, C3, C4, C5, D1, D2, D3, D4, D5,
+            E1, E2, E3, E4, E5, F1, F2, F3, F4, F5, G1, G2, G3, G4, G5]   # least to most risky
+  reference_secondary_pipeline: model/reference_refit.py   # optional display only; never used for gain
+  acceptance:                # F10: CALCULATED threshold (mlkit.decision.min_gain); change inputs only before reading
+    rule: expected_value     # Q-CAD-15: expected_value maximizes expected value; margin uses a one-sided lower bound at ci_level > threshold) | expected_value (gain ≥ threshold and two-sided lower bound > 0) ; absent = expected_value
+    cost_model:              # EXAMPLE: costs and one-default-rate-point value over the same horizon
+      deployment: 150000     # production integration
+      validation: 50000      # independent validation and documentation
+      run_per_year: 50000    # operations, monitoring, control group
+      horizon_years: 3
+      value_per_point: 1750000   # avoided loss per one default-rate point over the horizon
+    ci_level: 0.90           # → threshold = 350 000 / 1 750 000 = 0,2 point
+    bootstrap: {B: 2000, seed: 0}   # Holdout CI uses monthly blocks (exact enumeration when distinct resamples ≤ B).
+  holdout:
+    window: ["2015-07", "2015-12"]
+    budget: 2
+  selection:                 # Q-MOD-06: write and commit BEFORE IV calculation (mlkit.bivariate)
+    min_iv: 0.02             # minimum IV regardless of chance floor
+    floor_quantile: 0.95     # chance floor: IV quantile from permuted targets
+    permutations: 20
+    subperiods: 3            # split the exploration period into three parts to assess stability
+    require_expected_direction: true   # contradicting expected_direction -> excluded
+    require_stable_direction: true     # direction changes across subperiods -> excluded
+    max_abs_corr: 0.85       # Spearman correlation without target: exclude the weaker feature
+  exploration_budget: 100    # Q-MOD-03: exploratory runs × tuning candidates
+  selection_rule: mean_rank_all   # best | mean_rank_all: average ranks by family across ALL runs
+  baselines: [splines_logit, monotone_hgb, ebm, autogluon]   # one comparison each; members of the final average
+  baselines_autogluon: {time_limit: 120, presets: medium_quality}   # seconds per window; use best_quality and more time for a real project
+  evaluation:                # Q-EVA-01 to 04: decision rule (mlkit.decision)
+    decision_rate: 0.90      # accepted share; derive the threshold on validation
+    decision_use: ranking    # Q-CAD-04 : ranking | probability used for pricing or provision
+    backtest_level: 0.95     # one-sided lower bound on mean window gain > 0
+    backtest_correction: months # months: t-test on monthly gains across all windows; none: t-test on window gains, default for'frames without the field; nadeau_bengio: variance × (1/k + n_test/n_train), intended for random splits; warn when n_test/n_train > 0.5; a maturity gap can make E1 almost impossible; see the historical benchmark
+    drift_blocking: false    # E4: report required, informative verdict by default; true requires signed DRIFT-ACK for a BROKEN CONTRACT
+    stress_margin: 0.005     # maximum stress-window loss; defaults to noninferiority.margin
+    noninferiority:          # define BEFORE seeing results; no segment may lose more than the margin
+      margin: 0.005
+      level: 0.95
+      multiplicity: none     # all segments must pass (intersection-union); Holm reduces power; evaluable segments only
+      unevaluable: pass      # pass | fail — un segment < min_segment_size, or where a score'accepts nobody, is not evaluable: listed; fail blocks E1
+      segments: ["home_ownership=MORTGAGE", "home_ownership=RENT", "home_ownership=OWN",
+                 "purpose=debt_consolidation", "purpose=credit_card"]
+    segments: [home_ownership, purpose, verification_status]   # complete table for information
+    min_segment_size: 1000   # also the minimum preregistered noninferiority segment size
+    max_calibration_error: 0.02   # blocking only for decision_use = probability
+  power:                     # E3 (python -m mlkit.mde)
+    swap_share: 0.10         # share of accepted applications that'a new model would change (assumption; show sensitivity)
+  deployment:                # Q-VAL-03, Q-DEP-02, Q-DEP-03
+    final_fit: dev           # dev | dev+holdout
+    on_contract_violation: review   # review: no score, manual review; flag: score with a warning
+    control_share: 0.02
+    control_salt: lendingclub-v1
+  monitoring:                # Q-SUI-01, Q-SUI-02
+    psi_alert: 0.25
+    min_auc: 0.62
+    max_calibration_error: 0.03

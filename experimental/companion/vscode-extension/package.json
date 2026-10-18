@@ -1,0 +1,107 @@
+{
+  "name": "companion",
+  "displayName": "Hypotrail · Companion",
+  "publisher": "hypotrail-local",
+  "version": "0.5.0",
+  "description": "Hypotrail Bank Marketing workshop in a webview: apply a choice and receive an explanation in the panel through the VS Code language model API (GitHub Copilot).",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onUri"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "The local Python engine requires a trusted workspace."
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "hypotrail.openTutorial",
+        "title": "Hypotrail: open companion"
+      },
+      {
+        "command": "hypotrail.chooseModel",
+        "title": "Hypotrail: choose the explanation model"
+      },
+      {
+        "command": "hypotrail.switchProject",
+        "title": "Hypotrail: switch companion project"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "hypotrail_tutorial_status",
+        "toolReferenceName": "hypotrailTutorialStatus",
+        "displayName": "Read the Hypotrail companion",
+        "modelDescription": "Read shared Bank Marketing tutorial state: recorded choice, applied choice, and existing result. Does not modify the project or train a model.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hypotrail_tutorial_apply",
+        "toolReferenceName": "hypotrailTutorialApply",
+        "displayName": "Apply a choice in the exercise",
+        "modelDescription": "Explicitly apply a recorded tutorial choice after reading its status. Confirms no project decision and starts no training. Rejects stale context.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "type": "integer"
+            },
+            "contextHash": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "eventId",
+            "expectedRevision",
+            "contextHash"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "hypotrail_tutorial_explain",
+        "toolReferenceName": "hypotrailTutorialExplain",
+        "displayName": "Explain in the companion",
+        "modelDescription": "Publish a pilot explanation in the Bank Marketing tutorial webview. To attach it to an applied choice, provide applicationEventId (application.event_id) and contextHash from hypotrailTutorialStatus; otherwise it appears as an unattached message. Does not interrupt an ongoing panel response or change any project decision.",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "maxLength": 6000
+            },
+            "applicationEventId": {
+              "type": "string"
+            },
+            "contextHash": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,407 @@
+# Synthetic fixture feature registry. Machine contracts retain their original values.
+quality:
+  min_rows_month: 200
+  psi_warn: 0.1
+  psi_stop: 0.25
+  univariate_auc_stop: 0.8
+  drift_alpha: 0.01
+  drift_wasserstein: 0.1
+  drift_share_abs: 0.05
+  drift_share_ratio: 1.5
+  drift_new_share: 0.01
+  drift_recode_overlap: 0.5
+  drift_permuted_share: 0.5
+  drift_profile_min_share: 0.02
+  drift_profile_ratio: 2.0
+  drift_missing_abs: 0.05
+  drift_adversarial_auc: 0.6
+  drift_approval_shift: 0.05
+features:
+  id:
+    available: origination
+    owner: HUMAN
+    excluded_by: F1
+    meaning: Loan identifier
+  url:
+    available: origination
+    owner: HUMAN
+    excluded_by: F1
+    meaning: Loan page URL
+  issue_d:
+    available: origination
+    owner: HUMAN
+    excluded_by: F3
+    meaning: Origination date; runner time column
+    transform: text Dec-2015 converted to 2015-12 (scripts/prepare_lendingclub.py)
+  loan_amnt:
+    available: origination
+    owner: HUMAN
+    meaning: Requested loan amount
+    unit: USD
+    contract:
+      type: numeric
+      min: 500
+      max: 40000
+      max_missing: 0.0
+  int_rate:
+    expected_direction: +
+    available: origination
+    owner: HUMAN
+    unit: '%'
+    meaning: Rate set by the Lending Club pricing model
+    note: Output from another model, available at origination; decision D-007
+    transform: 13.56% converted to 13.56
+    contract:
+      type: numeric
+      min: 4
+      max: 31
+      max_missing: 0.0
+  installment:
+    available: origination
+    owner: HUMAN
+    unit: USD/month
+    meaning: Monthly installment
+    contract:
+      type: numeric
+      min: 10
+      max: 2000
+      max_missing: 0.0
+  grade:
+    available: origination
+    owner: HUMAN
+    meaning: Lending Club risk grade A–G
+    note: decision D-007
+    contract:
+      type: categorical
+      allowed:
+      - A
+      - B
+      - C
+      - D
+      - E
+      - F
+      - G
+      max_missing: 0.0
+  sub_grade:
+    available: origination
+    owner: HUMAN
+    meaning: Lending Club subgrade A1–G5
+    note: decision D-007
+    contract:
+      type: categorical
+      pattern: ^[A-G][1-5]$
+      max_missing: 0.0
+  emp_length:
+    available: origination
+    owner: HUMAN
+    unit: years
+    meaning: Declared employment length
+    special_values:
+      < 1 year: 0
+      10+ years: '10 (capped: ten or more years)'
+      n/a: missing
+    transform: explicit lookup, decision D-004
+    contract:
+      type: numeric
+      min: 0
+      max: 10
+      max_missing: 0.15
+  home_ownership:
+    available: origination
+    owner: HUMAN
+    meaning: Declared housing status
+    contract:
+      type: categorical
+      allowed:
+      - RENT
+      - MORTGAGE
+      - OWN
+      - OTHER
+      - NONE
+      - ANY
+      max_missing: 0.0
+  annual_inc:
+    expected_direction: '-'
+    available: origination
+    owner: HUMAN
+    unit: USD/an
+    meaning: Declared annual income
+    note: Joint applications excluded (D-006); their relevant income is annual_inc_joint
+    contract:
+      type: numeric
+      min: 0
+      max: 10000000
+      max_missing: 0.0
+  verification_status:
+    available: origination
+    owner: HUMAN
+    meaning: Income verification status
+    contract:
+      type: categorical
+      allowed:
+      - Verified
+      - Source Verified
+      - Not Verified
+      max_missing: 0.0
+  purpose:
+    available: origination
+    owner: HUMAN
+    meaning: Declared loan purpose
+    contract:
+      type: categorical
+      allowed:
+      - debt_consolidation
+      - credit_card
+      - home_improvement
+      - other
+      - major_purchase
+      - small_business
+      - car
+      - medical
+      - moving
+      - vacation
+      - house
+      - wedding
+      - renewable_energy
+      - educational
+      max_missing: 0.0
+  dti:
+    expected_direction: +
+    available: origination
+    owner: HUMAN
+    unit: '%'
+    meaning: Non-mortgage debt payments divided by monthly income
+    note: 'Possible extreme values by year: check the initial profile'
+    contract:
+      type: numeric
+      min: 0
+      max: 100
+      max_missing: 0.01
+  delinq_2yrs:
+    available: origination
+    owner: HUMAN
+    meaning: Delinquencies in two years
+    contract:
+      type: numeric
+      min: 0
+      max: 40
+      max_missing: 0.01
+  earliest_cr_line:
+    available: origination
+    owner: HUMAN
+    meaning: First credit-line opening date
+    note: Replaced by credit_history_months; the raw date is not a feature
+  credit_history_months:
+    available: origination
+    owner: HUMAN
+    unit: months
+    meaning: Credit-history length
+    derived_from:
+    - issue_d
+    - earliest_cr_line
+    formula: mois(issue_d) - mois(earliest_cr_line)
+    contract:
+      type: numeric
+      min: 0
+      max: 900
+      max_missing: 0.01
+  fico_range_low:
+    expected_direction: '-'
+    available: origination
+    owner: HUMAN
+    meaning: Lower origination FICO band bound
+    contract:
+      type: numeric
+      min: 600
+      max: 850
+      max_missing: 0.0
+  fico_range_high:
+    available: origination
+    owner: HUMAN
+    meaning: Upper origination FICO band bound
+    contract:
+      type: numeric
+      min: 600
+      max: 854
+      max_missing: 0.0
+  inq_last_6mths:
+    expected_direction: +
+    available: origination
+    owner: HUMAN
+    meaning: Credit inquiries in six months
+    contract:
+      type: numeric
+      min: 0
+      max: 40
+      max_missing: 0.01
+  open_acc:
+    available: origination
+    owner: HUMAN
+    meaning: Open credit lines
+    contract:
+      type: numeric
+      min: 0
+      max: 100
+      max_missing: 0.01
+  pub_rec:
+    available: origination
+    owner: HUMAN
+    meaning: Public records
+    contract:
+      type: numeric
+      min: 0
+      max: 100
+      max_missing: 0.01
+  revol_bal:
+    available: origination
+    owner: HUMAN
+    unit: USD
+    meaning: Revolving balance
+    contract:
+      type: numeric
+      min: 0
+      max: 5000000
+      max_missing: 0.0
+  revol_util:
+    expected_direction: +
+    available: origination
+    owner: HUMAN
+    unit: '%'
+    meaning: Revolving credit utilization
+    transform: '''54.3%'' converti en 54.3'
+    note: 'May exceed 100%: verify'
+    contract:
+      type: numeric
+      min: 0
+      max: 150
+      max_missing: 0.01
+  total_acc:
+    available: origination
+    owner: HUMAN
+    meaning: Total credit lines
+    contract:
+      type: numeric
+      min: 0
+      max: 200
+      max_missing: 0.01
+  initial_list_status:
+    available: origination
+    owner: HUMAN
+    meaning: Initial listing channel
+    contract:
+      type: categorical
+      allowed:
+      - w
+      - f
+      max_missing: 0.0
+  mort_acc:
+    available: origination
+    owner: HUMAN
+    meaning: Mortgage accounts
+    note: 'Possibly absent in early years: check the initial profile'
+    contract:
+      type: numeric
+      min: 0
+      max: 60
+      max_missing: 0.2
+  pub_rec_bankruptcies:
+    available: origination
+    owner: HUMAN
+    meaning: Public-record bankruptcies
+    contract:
+      type: numeric
+      min: 0
+      max: 20
+      max_missing: 0.05
+  zip_code:
+    available: origination
+    owner: HUMAN
+    excluded_by: C1
+    meaning: Postal code
+  addr_state:
+    available: origination
+    owner: HUMAN
+    excluded_by: C1
+    meaning: State
+  emp_title:
+    available: origination
+    owner: HUMAN
+    excluded_by: C1
+    meaning: Job title
+  total_pymnt:
+    available: post_origination
+    owner: HUMAN
+    meaning: Total repayments to date
+  total_pymnt_inv:
+    available: post_origination
+    owner: HUMAN
+    meaning: Total repayments to investors
+  total_rec_prncp:
+    available: post_origination
+    owner: HUMAN
+    meaning: Principal repaid
+  total_rec_int:
+    available: post_origination
+    owner: HUMAN
+    meaning: Interest received
+  total_rec_late_fee:
+    available: post_origination
+    owner: HUMAN
+    meaning: Late fees received
+  recoveries:
+    available: post_origination
+    owner: HUMAN
+    meaning: Post-default recoveries
+  collection_recovery_fee:
+    available: post_origination
+    owner: HUMAN
+    meaning: Collection recovery fees
+  last_pymnt_d:
+    available: post_origination
+    owner: HUMAN
+    meaning: Latest payment date
+  last_pymnt_amnt:
+    available: post_origination
+    owner: HUMAN
+    meaning: Latest payment amount
+  next_pymnt_d:
+    available: post_origination
+    owner: HUMAN
+    meaning: Next due date
+  last_credit_pull_d:
+    available: post_origination
+    owner: HUMAN
+    meaning: Latest credit-file inquiry
+  last_fico_range_high:
+    available: post_origination
+    owner: HUMAN
+    meaning: Latest FICO upper bound
+  last_fico_range_low:
+    available: post_origination
+    owner: HUMAN
+    meaning: Latest FICO lower bound
+  out_prncp:
+    available: post_origination
+    owner: HUMAN
+    meaning: Outstanding principal
+  out_prncp_inv:
+    available: post_origination
+    owner: HUMAN
+    meaning: Outstanding investor principal
+  debt_settlement_flag:
+    available: post_origination
+    owner: HUMAN
+    meaning: Debt-settlement flag
+  hardship_flag:
+    available: post_origination
+    owner: HUMAN
+    meaning: Hardship flag
+  pymnt_plan:
+    available: post_origination
+    owner: HUMAN
+    meaning: Payment-plan flag
+  loan_status:
+    available: post_origination
+    owner: HUMAN
+    meaning: Loan status; target source
+    excluded_by: F2

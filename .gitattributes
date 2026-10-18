@@ -1,0 +1,14 @@
+* text=auto
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.csv -text
+*.data -text
+*.data-original -text
+*.names -text
+
+# Preserve original public data and source documentation byte for byte.
+use-cases/*/data/** -text -whitespace

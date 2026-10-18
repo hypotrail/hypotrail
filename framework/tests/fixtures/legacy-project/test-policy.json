@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "context_paths": [
+    "test-policy.json",
+    "ticket.json",
+    "src",
+    "tests",
+    "scripts",
+    "mlkit",
+    "model",
+    "project.yaml",
+    "frame.yaml",
+    "features.yaml",
+    "requirements.txt",
+    "requirements-local.txt",
+    "pyproject.toml",
+    "uv.lock",
+    ".ci",
+    "docs"
+  ],
+  "suites": [
+    {
+      "id": "reliability",
+      "title": "Idempotent revisions, interruption, and data exposure",
+      "changes": [
+        "pilot",
+        "interface",
+        "data",
+        "features",
+        "refactor"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_reliability.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "contracts",
+      "title": "Contracts, pilot, and resumption",
+      "changes": [
+        "data",
+        "features",
+        "model",
+        "refactor",
+        "dependencies",
+        "deployment",
+        "interface",
+        "pilot"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_pilot_revision.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "classical",
+      "title": "Classical ML, splitting, and constraints",
+      "changes": [
+        "data",
+        "features",
+        "model",
+        "refactor",
+        "dependencies"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_classical.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "discovery",
+      "title": "Discovery before modeling, training-only analysis, and safe HTML",
+      "changes": [
+        "data",
+        "features",
+        "model",
+        "pilot",
+        "interface",
+        "dependencies",
+        "refactor"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_discovery.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "quality",
+      "title": "Policy, failures, and stale evidence",
+      "changes": [
+        "data",
+        "features",
+        "model",
+        "refactor",
+        "dependencies",
+        "deployment",
+        "interface",
+        "pilot"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_quality.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "numerical",
+      "title": "Numerical calculations and sampling",
+      "changes": [
+        "model",
+        "data",
+        "features",
+        "dependencies",
+        "refactor"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_decision_v3.py",
+        "tests/test_training_sample.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "documentation",
+      "title": "Politique disponible et valide",
+      "changes": [
+        "docs"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "json.tool",
+        "test-policy.json"
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "candidate",
+      "title": "Qualification du vrai candidat",
+      "changes": [
+        "data",
+        "features",
+        "model",
+        "dependencies"
+      ],
+      "phases": [
+        "release"
+      ],
+      "command": null,
+      "timeout": 120,
+      "unavailable": "Configure development validation for the task, segments, and uncertainty; independent confirmation remains separate."
+    },
+    {
+      "id": "availability",
+      "title": "Point-in-time availability of actual features",
+      "changes": [
+        "data",
+        "features"
+      ],
+      "phases": [
+        "release"
+      ],
+      "command": null,
+      "timeout": 120,
+      "unavailable": "Provide point-in-time availability rules for every source; a schema alone does not establish compliance."
+    },
+    {
+      "id": "cloud",
+      "title": "Recette environnement cible et rollback",
+      "changes": [
+        "deployment"
+      ],
+      "phases": [
+        "release"
+      ],
+      "command": null,
+      "timeout": 120,
+      "unavailable": "Authorized Azure/Databricks acceptance testing required: loading, predictions, latency/memory, failures, and rollback."
+    },
+    {
+      "id": "security",
+      "title": "Dependencies and secrets",
+      "changes": [
+        "dependencies",
+        "deployment"
+      ],
+      "phases": [
+        "release"
+      ],
+      "command": null,
+      "timeout": 120,
+      "unavailable": "Connect the authorized organizational scanner; no scanner does not mean no vulnerabilities."
+    },
+    {
+      "id": "interpretability",
+      "title": "Project interpretability constraint",
+      "changes": [
+        "features",
+        "model",
+        "dependencies"
+      ],
+      "phases": [
+        "release"
+      ],
+      "command": null,
+      "timeout": 120,
+      "unavailable": "Connect the check for the selected constraint (structure, size, fidelity); no default requirement.",
+      "interpretability_only": true
+    },
+    {
+      "id": "browser",
+      "title": "Browser walkthrough of the changed interface",
+      "changes": [
+        "interface"
+      ],
+      "phases": [
+        "pr",
+        "release"
+      ],
+      "command": [
+        "{python}",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_discovery_browser.py"
+      ],
+      "timeout": 120
+    }
+  ]
+}

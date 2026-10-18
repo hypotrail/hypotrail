@@ -1,0 +1,126 @@
+{
+  "schema": "hypotrail.journey/1",
+  "id": "regression-comparison",
+  "version": 1,
+  "title": "Regression: estimate a quantity and interpret errors",
+  "problem_types": [
+    "regression"
+  ],
+  "moments": [
+    {
+      "id": "frame",
+      "label": "Frame the change"
+    },
+    {
+      "id": "evidence",
+      "label": "Prepare evidence"
+    },
+    {
+      "id": "work",
+      "label": "Work and compare"
+    },
+    {
+      "id": "conclude",
+      "label": "Conclude and hand over"
+    }
+  ],
+  "ai_guidance": [
+    "Regression task: express errors in the target unit, never as a percentage of correct answers.",
+    "Use regression metrics and interpret errors in the target unit.",
+    "When observations are ordered in time, explain why the split is chronological."
+  ],
+  "activities": [
+    {
+      "id": "start",
+      "moment": "frame",
+      "components": [
+        "objective",
+        "examples_table",
+        "variable_dictionary",
+        "clarifications",
+        "data_explorer"
+      ],
+      "choice": null,
+      "requires": [],
+      "progression": "free",
+      "instructions": "Help interpret a row, the target unit, and missing values."
+    },
+    {
+      "id": "use",
+      "moment": "frame",
+      "components": [
+        "objective",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Connect estimation to its use and to when features become available."
+    },
+    {
+      "id": "protocol",
+      "moment": "evidence",
+      "components": [
+        "objective",
+        "model_comparison",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Compare chronological and random splits; explain the optimism of the latter without presenting it as better."
+    },
+    {
+      "id": "baseline",
+      "moment": "evidence",
+      "components": [
+        "objective",
+        "model_comparison",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Interpret mean absolute error in the target unit relative to a simple reference."
+    },
+    {
+      "id": "compare",
+      "moment": "work",
+      "components": [
+        "objective",
+        "model_comparison"
+      ],
+      "choice": "result_choice",
+      "requires": [
+        "prediction_time"
+      ],
+      "progression": "free",
+      "instructions": "Compare available models under the same protocol; read MAE differences in the target unit."
+    },
+    {
+      "id": "errors",
+      "moment": "work",
+      "components": [
+        "objective",
+        "error_view"
+      ],
+      "choice": null,
+      "requires": [],
+      "progression": "free",
+      "instructions": "Examine where errors concentrate without inventing a cause."
+    },
+    {
+      "id": "handoff",
+      "moment": "conclude",
+      "components": [
+        "objective",
+        "choice_summary",
+        "limits"
+      ],
+      "choice": null,
+      "requires": [],
+      "progression": "free",
+      "instructions": "Summarize applied choices and limitations without promising future performance."
+    }
+  ]
+}

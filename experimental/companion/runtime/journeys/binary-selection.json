@@ -1,0 +1,140 @@
+{
+  "schema": "hypotrail.journey/1",
+  "id": "binary-selection",
+  "version": 1,
+  "title": "Binary classification: select before acting",
+  "problem_types": [
+    "binary_classification"
+  ],
+  "moments": [
+    {
+      "id": "frame",
+      "label": "Frame the change"
+    },
+    {
+      "id": "evidence",
+      "label": "Prepare evidence"
+    },
+    {
+      "id": "work",
+      "label": "Work and compare"
+    },
+    {
+      "id": "conclude",
+      "label": "Conclude and hand over"
+    }
+  ],
+  "ai_guidance": [
+    "Binary classification task: explain precision, recall, and selection trade-offs using project business terms.",
+    "Score-based selection describes an observed association, not the causal effect of acting."
+  ],
+  "activities": [
+    {
+      "id": "start",
+      "moment": "frame",
+      "components": [
+        "objective",
+        "examples_table",
+        "variable_dictionary",
+        "clarifications",
+        "data_explorer"
+      ],
+      "choice": null,
+      "requires": [],
+      "progression": "free",
+      "instructions": "Help interpret a row, the target, and its frequency; do not introduce modeling yet."
+    },
+    {
+      "id": "use",
+      "moment": "frame",
+      "components": [
+        "objective",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Connect the question to the decision and action capacity before discussing scores."
+    },
+    {
+      "id": "baseline",
+      "moment": "evidence",
+      "components": [
+        "objective",
+        "model_comparison",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Show why a constant reference can achieve high accuracy while retrieving no positive cases."
+    },
+    {
+      "id": "leakage",
+      "moment": "evidence",
+      "components": [
+        "objective",
+        "model_comparison",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [
+        "prediction_time"
+      ],
+      "progression": "free",
+      "instructions": "Explain that a feature known after the decision invalidates the comparison even if its score improves."
+    },
+    {
+      "id": "protocol",
+      "moment": "evidence",
+      "components": [
+        "objective",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Distinguish exploratory comparison from evidence about a future situation."
+    },
+    {
+      "id": "selection",
+      "moment": "work",
+      "components": [
+        "objective",
+        "numeric_selection",
+        "metrics"
+      ],
+      "choice": "numeric_selection",
+      "requires": [
+        "decision"
+      ],
+      "progression": "free",
+      "instructions": "Explain the selection trade-off: selecting more retrieves more positive cases but also selects more cases without a positive outcome."
+    },
+    {
+      "id": "constraints",
+      "moment": "work",
+      "components": [
+        "objective",
+        "choice_question"
+      ],
+      "choice": "choice_question",
+      "requires": [],
+      "progression": "free",
+      "instructions": "Explain that model interpretability does not establish causality."
+    },
+    {
+      "id": "handoff",
+      "moment": "conclude",
+      "components": [
+        "objective",
+        "choice_summary",
+        "limits"
+      ],
+      "choice": null,
+      "requires": [],
+      "progression": "free",
+      "instructions": "Summarize applied choices and limitations without turning the exercise into a real decision."
+    }
+  ]
+}

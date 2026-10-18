@@ -1,0 +1,365 @@
+# Historical synthetic questionnaire; examples do not replace human decisions.
+phases:
+  cadrage: Business framing
+  donnees: Data understanding
+  cible: Target definition
+  modelisation: Modeling
+  evaluation: Evaluation
+  validation: Independent validation
+  deploiement: Deployment
+  suivi: Monitoring
+questions:
+- id: Q-CAD-01
+  phase: cadrage
+  blocking: true
+  question: Which decision will the score trigger, and who makes it?
+  why: Evaluate a model through the decision it enables.
+  consequence: Set the primary metric and scored population (F5, F6).
+- id: Q-CAD-02
+  phase: cadrage
+  blocking: true
+  question: What is the action capacity in cases, rate, or budget?
+  why: Fixed capacity requires a top-of-ranking metric rather than AUC alone.
+  consequence: Choose precision@k or a rate at the specified acceptance capacity.
+- id: Q-CAD-03
+  phase: cadrage
+  blocking: true
+  question: What are false-positive and false-negative costs in business units?
+  why: Their ratio determines a useful threshold.
+  consequence: Record decision costs and business value.
+- id: Q-CAD-04
+  phase: cadrage
+  blocking: true
+  question: Will the score represent probability or only ranking?
+  why: Good ranking does not guarantee calibrated probabilities.
+  consequence: Require calibration and a tolerance for probability use (Q-EVA-04).
+- id: Q-CAD-05
+  phase: cadrage
+  blocking: true
+  question: What solution is currently used, and has it been measured?
+  why: A reference is necessary to assess added value.
+  consequence: Use the incumbent unchanged (F9); refitting requires explicit justification when none exists.
+- id: Q-CAD-06
+  phase: cadrage
+  blocking: true
+  question: What does changing models cost, and what is a metric point worth over the same horizon?
+  why: Calculate break-even from inputs before examining final evidence.
+  consequence: Use acceptance.cost_model and check measurability with mlkit.mde.
+- id: Q-CAD-07
+  phase: cadrage
+  blocking: true
+  question: Will scoring be batch or real time, at what frequency or latency?
+  why: Data available overnight may be unavailable at decision time.
+  consequence: Record prediction time and feature availability (F3).
+- id: Q-CAD-08
+  phase: cadrage
+  blocking: false
+  question: Who must validate the project?
+  why: Late validation requirements can invalidate framing.
+  consequence: Identify business, risk, compliance, and data protection reviewers as applicable.
+- id: Q-CAD-09
+  phase: cadrage
+  blocking: true
+  question: 'Which explanations are required: individual reasons, global explanation, or none?'
+  why: Required explanations constrain model families and outputs.
+  consequence: Specify allowed families and scoring outputs.
+- id: Q-CAD-10
+  phase: cadrage
+  blocking: true
+  question: Does this use assess individual creditworthiness?
+  why: Applicable obligations require a qualified assessment, not an inference from a tutorial.
+  consequence: Identify relevant documentation and review requirements; this fixture is not legal guidance.
+- id: Q-CAD-11
+  phase: cadrage
+  blocking: true
+  question: Can the score alone produce a legally or similarly significant decision about a person?
+  why: Decision organization can require specific review and contestability provisions.
+  consequence: Assess applicable requirements with the responsible reviewers.
+- id: Q-CAD-12
+  phase: cadrage
+  blocking: true
+  question: Which protected attributes or proxies exist, and what fairness assessment is required?
+  why: Features may encode protected information indirectly.
+  consequence: Declare exclusions and assess what fairness evidence is possible.
+- id: Q-CAD-13
+  phase: cadrage
+  blocking: true
+  question: Will the action change future labels?
+  why: Retraining can learn the previous intervention rather than underlying outcomes.
+  consequence: Define a control group and effect measurement (Q-DEP-03).
+- id: Q-CAD-14
+  phase: cadrage
+  blocking: false
+  question: How long must the model operate, and how often will it be retrained?
+  why: A longer operating horizon needs stronger drift robustness.
+  consequence: Specify the role of stability in evaluation.
+- id: Q-CAD-15
+  phase: cadrage
+  blocking: true
+  question: Should acceptance maximize expected value or require profit above a confidence margin?
+  why: Expected-value and margin rules trade acceptance risk against missed useful models.
+  consequence: Freeze acceptance.rule before results; changing it after final access needs fresh evidence.
+- id: Q-DON-01
+  phase: donnees
+  blocking: true
+  question: Which sources are used, who owns them, and how often are they updated?
+  why: A source needs an owner who can explain definition changes.
+  consequence: Record sources and column-meaning contacts.
+- id: Q-DON-02
+  phase: donnees
+  blocking: true
+  question: How much labeled history exists, including maturity delay and several backtest origins?
+  why: A 36-month gap and multiple origins require enough mature history.
+  consequence: Define backtest windows and holdout size.
+- id: Q-DON-03
+  phase: donnees
+  blocking: true
+  question: Are tables versioned as known at each date, or overwritten?
+  why: Overwritten tables can reveal future information without an obvious code leak.
+  consequence: Check point-in-time behavior and registry availability.
+- id: Q-DON-04
+  phase: donnees
+  blocking: true
+  question: Which basis and purpose permit this data use, and are sensitive data present?
+  why: Collection for another purpose may constrain reuse.
+  consequence: Obtain the appropriate data protection review and record exclusions.
+- id: Q-DON-05
+  phase: donnees
+  blocking: true
+  question: Is there a stable entity identifier, and can an entity appear repeatedly?
+  why: An entity in both training and test can inflate performance.
+  consequence: Declare group_col and check I4.
+- id: Q-DON-06
+  phase: donnees
+  blocking: true
+  question: Which known collection or policy changes occurred, and when?
+  why: Unexplained breaks can resemble predictive signal.
+  consequence: Record exclusions, drift_ack, and backtest windows.
+- id: Q-DON-07
+  phase: donnees
+  blocking: true
+  question: Will production compute each feature with the same code and source as training?
+  why: Train/serve skew can degrade performance without obvious failures.
+  consequence: Check time-travel behavior and enforce scoring contracts.
+- id: Q-DON-08
+  phase: donnees
+  blocking: false
+  question: Are external data used, at what cost and availability delay?
+  why: Information delivered tomorrow is not available at origination today.
+  consequence: Record temporal availability and operational cost.
+- id: Q-DON-09
+  phase: donnees
+  blocking: true
+  question: Which dictionary or expert is authoritative about each column?
+  why: A model cannot establish business meaning from a column name.
+  consequence: Record meaning sources in the feature registry.
+- id: Q-CIB-01
+  phase: cible
+  blocking: true
+  question: What exactly defines a positive outcome?
+  why: Different definitions create different tasks.
+  consequence: Specify F2 and label construction in preparation.
+- id: Q-CIB-02
+  phase: cible
+  blocking: true
+  question: Over what performance window is the outcome observed after the decision?
+  why: The observation delay determines maturity and the backtest gap.
+  consequence: Specify label_delay_months, gap_months, and D7.
+- id: Q-CIB-03
+  phase: cible
+  blocking: true
+  question: How are unresolved, early-repaid, or ongoing cases handled?
+  why: Exclusion and relabeling alter population and prevalence.
+  consequence: Trace a DECISION in preparation.
+- id: Q-CIB-04
+  phase: cible
+  blocking: false
+  question: How reliable are the labels?
+  why: Systematic label noise can create a learnable artifact.
+  consequence: Document exclusions and sensitivity analyses.
+- id: Q-CIB-05
+  phase: cible
+  blocking: true
+  question: Does the labeled population match deployment?
+  why: Accepted-only labels reflect selection policy.
+  consequence: State correction assumptions or a model-card limitation.
+- id: Q-CIB-06
+  phase: cible
+  blocking: true
+  question: Did a past intervention alter labels or require period exclusion?
+  why: Campaigns and moratoria may change rates independently of customer risk.
+  consequence: Record excluded periods and drift_ack.
+- id: Q-CIB-07
+  phase: cible
+  blocking: false
+  question: What prevalence is expected, and is it stable over time?
+  why: Prevalence changes affect calibration and thresholds.
+  consequence: Inspect target rates by month.
+- id: Q-CIB-08
+  phase: cible
+  blocking: true
+  question: When was data extracted, and are all labels mature then?
+  why: A recent loan cannot yet have a complete long-horizon outcome.
+  consequence: Record manifest as_of and check D7.
+- id: Q-MOD-01
+  phase: modelisation
+  blocking: true
+  question: Which model families are allowed by explanation and operational requirements?
+  why: A high score cannot override a required model structure.
+  consequence: Record allowed families.
+- id: Q-MOD-02
+  phase: modelisation
+  blocking: false
+  question: Which features have an expected effect direction?
+  why: Reversed effects may indicate discovery, leakage, or error.
+  consequence: Declare expected_direction and inspect evaluation directions.
+- id: Q-MOD-03
+  phase: modelisation
+  blocking: true
+  question: What exploration budget applies before mandatory human review?
+  why: Selecting the best of many trials creates optimism.
+  consequence: Count runs and tuning candidates together.
+- id: Q-MOD-04
+  phase: modelisation
+  blocking: false
+  question: Which features are excluded on principle?
+  why: Using another model output creates dependence on that model.
+  consequence: Record excluded_by and a decision rationale.
+- id: Q-MOD-05
+  phase: modelisation
+  blocking: false
+  question: How will class imbalance be handled?
+  why: Resampling changes probability interpretation.
+  consequence: Specify weighting or sampling and calibration checks.
+- id: Q-MOD-06
+  phase: modelisation
+  blocking: true
+  question: Which univariate selection rule applies before modeling?
+  why: A rule chosen after IV inspection is disguised selection.
+  consequence: Commit spec.selection before mlkit.bivariate; ratify later changes through I9.
+- id: Q-EVA-01
+  phase: evaluation
+  blocking: true
+  question: Which business segments require performance checks?
+  why: Good average performance can hide a harmed segment.
+  consequence: Preregister the relevant segments.
+- id: Q-EVA-02
+  phase: evaluation
+  blocking: true
+  question: What performance difference between segments is acceptable?
+  why: Tolerance chosen after results adapts to the observed difference.
+  consequence: Set margins before comparison.
+- id: Q-EVA-03
+  phase: evaluation
+  blocking: true
+  question: How is the decision threshold selected, using which non-holdout data?
+  why: Threshold selection is part of model selection.
+  consequence: Set it on validation windows and freeze before final access.
+- id: Q-EVA-04
+  phase: evaluation
+  blocking: true
+  question: What calibration error is tolerated for probability use?
+  why: Good AUC can hide poor probabilities.
+  consequence: Specify tolerance and whether calibration blocks acceptance.
+- id: Q-EVA-05
+  phase: evaluation
+  blocking: true
+  question: How does metric gain translate into business value?
+  why: A small gain may be valuable or negligible depending on volume.
+  consequence: Show business-value scenarios in the model card.
+- id: Q-EVA-06
+  phase: evaluation
+  blocking: false
+  question: Which findings block confirmation despite a good average?
+  why: Criteria chosen before results are distinct from later rationalization.
+  consequence: Declare stability and segment conditions in advance.
+- id: Q-VAL-01
+  phase: validation
+  blocking: true
+  question: Who validates independently of the model builders?
+  why: A fresh agent review is not independent regulatory validation.
+  consequence: Identify the responsible human validator and signature.
+- id: Q-VAL-02
+  phase: validation
+  blocking: true
+  question: Which documents are required?
+  why: Late documentation requirements can delay deployment.
+  consequence: Prepare the model card and required technical records.
+- id: Q-VAL-03
+  phase: validation
+  blocking: true
+  question: Deploy the evaluated model or refit on development plus holdout?
+  why: Refitting creates a model not evaluated in that exact form.
+  consequence: State the evidence required for the actual delivered model.
+- id: Q-VAL-04
+  phase: validation
+  blocking: true
+  question: Who signs off on production?
+  why: A named owner is needed for accountable release and withdrawal.
+  consequence: Record the responsible signer.
+- id: Q-DEP-01
+  phase: deploiement
+  blocking: true
+  question: Where will scoring run, and who operates it?
+  why: Operators need explicit behavior for invalid input and alerts.
+  consequence: Document runtime and operating procedures.
+- id: Q-DEP-02
+  phase: deploiement
+  blocking: true
+  question: What happens to input outside the contract?
+  why: Scoring invalid input creates unsupported decisions.
+  consequence: Specify refusal, manual review, or a justified flagged path.
+- id: Q-DEP-03
+  phase: deploiement
+  blocking: true
+  question: What share enters the control group, and what treatment does it receive?
+  why: A control group cannot be created retrospectively.
+  consequence: Define stable assignment and its policy.
+- id: Q-DEP-04
+  phase: deploiement
+  blocking: false
+  question: Will deployment use shadow mode or champion/challenger comparison?
+  why: Real-world comparison can reduce rollout risk.
+  consequence: Specify staged deployment and decision criteria.
+- id: Q-DEP-05
+  phase: deploiement
+  blocking: true
+  question: What replaces the model during withdrawal, and how quickly?
+  why: Unprepared rollback creates avoidable errors.
+  consequence: Record a tested rollback plan.
+- id: Q-DEP-06
+  phase: deploiement
+  blocking: true
+  question: Which inputs, scores, versions, and decisions are retained, and for how long?
+  why: Logs enable explanations and delayed-label evaluation.
+  consequence: Assess applicable logging requirements and document retention.
+- id: Q-SUI-01
+  phase: suivi
+  blocking: true
+  question: Which input or score drift triggers an alert?
+  why: Labels arrive late; input drift is an early signal.
+  consequence: Specify monitored indicators and thresholds.
+- id: Q-SUI-02
+  phase: suivi
+  blocking: true
+  question: Which mature-label performance and calibration trigger an alert?
+  why: Slow degradation may otherwise remain undeclared.
+  consequence: Define cohort-based thresholds in advance.
+- id: Q-SUI-03
+  phase: suivi
+  blocking: true
+  question: Who receives alerts and decides what follows?
+  why: An alert without an owner is not actionable.
+  consequence: Document recipients and a response procedure.
+- id: Q-SUI-04
+  phase: suivi
+  blocking: true
+  question: Which criteria trigger retraining versus withdrawal?
+  why: Model-influenced labels can make retraining harmful.
+  consequence: Define separate actions with the control group in view.
+- id: Q-SUI-05
+  phase: suivi
+  blocking: false
+  question: How is the actual intervention effect measured?
+  why: Prediction alone does not establish causal benefit.
+  consequence: Compare control and treated outcomes under a defensible design.

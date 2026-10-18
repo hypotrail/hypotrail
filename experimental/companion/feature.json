@@ -1,0 +1,9 @@
+{
+  "id": "companion",
+  "status": "paused",
+  "maturity": "experimental",
+  "default_enabled": false,
+  "scope": "Repository development priority; does not disable an installed VS Code extension",
+  "replacement_workflow": "Copilot chat + evolving HTML + Marimo notebook",
+  "resume_requires": "Explicit user request"
+}

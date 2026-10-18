@@ -1,0 +1,8 @@
+pandas>=2.1
+numpy>=1.26
+scikit-learn>=1.5
+pyyaml>=6.0
+pytest>=8.0
+interpret-core>=0.6.16   # optional ebm baseline (0.6.9 fails with numpy 2)
+# optionnel : baseline autogluon — autogluon.tabular[lightgbm,catboost,xgboost]==1.6.3 exige pandas < 2.4 :
+# use a separate environment with pandas 3 (see automatic baseline documentation)

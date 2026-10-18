@@ -1,0 +1,42 @@
+# Local environments and caches
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+**/__marimo__/
+**/*.pyc
+**/.DS_Store
+
+# Local archives and import backups
+/archive/
+
+# Local state, separate from sources and fixtures
+**/.local/
+**/.pilot/
+**/.osml/
+**/.quality/
+**/.hypotrail-tutorial/
+
+# Experimental companion build artifacts
+/experimental/companion/artifacts/
+/experimental/companion/vscode-extension/assets/
+/experimental/companion/vscode-extension/engine/
+/experimental/companion/vscode-extension/*.vsix
+
+# Generated study outputs; public reference artifacts remain trackable
+/use-cases/*/reports/
+/use-cases/*/runs/
+
+# Credentials and local overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local databases and test coverage
+*.sqlite
+*.sqlite-*
+.coverage
+.coverage.*
+htmlcov/

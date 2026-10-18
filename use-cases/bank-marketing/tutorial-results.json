@@ -1,0 +1,157 @@
+{
+  "dataset_id": "uci-bank-marketing-v1",
+  "dataset_name": "Bank Marketing · UCI",
+  "seed": 20261017,
+  "rows": 4521,
+  "train_rows": 3164,
+  "validation_rows": 1357,
+  "positive_validation": 156,
+  "models": {
+    "honnete": {
+      "accuracy": 0.8916728076639646,
+      "recall": 0.16666666666666666,
+      "auc": 0.6097456179679327,
+      "average_precision": 0.2713740709511623
+    },
+    "avec_fuite": {
+      "accuracy": 0.8938835666912307,
+      "recall": 0.30128205128205127,
+      "auc": 0.8602393304724695,
+      "average_precision": 0.45211380244441307
+    },
+    "reference": {
+      "accuracy": 0.8850405305821666,
+      "recall": 0.0,
+      "auc": 0.5,
+      "average_precision": 0.11495946941783346
+    }
+  },
+  "thresholds": [
+    {
+      "threshold": 0.1,
+      "recall": 0.391025641025641,
+      "precision": 0.20065789473684212,
+      "false_alarms": 243,
+      "missed": 95,
+      "true_alarms": 61,
+      "alerts": 304
+    },
+    {
+      "threshold": 0.2,
+      "recall": 0.20512820512820512,
+      "precision": 0.4266666666666667,
+      "false_alarms": 43,
+      "missed": 124,
+      "true_alarms": 32,
+      "alerts": 75
+    },
+    {
+      "threshold": 0.35,
+      "recall": 0.16666666666666666,
+      "precision": 0.6046511627906976,
+      "false_alarms": 17,
+      "missed": 130,
+      "true_alarms": 26,
+      "alerts": 43
+    },
+    {
+      "threshold": 0.5,
+      "recall": 0.16666666666666666,
+      "precision": 0.6046511627906976,
+      "false_alarms": 17,
+      "missed": 130,
+      "true_alarms": 26,
+      "alerts": 43
+    }
+  ],
+  "source": "prepare_bank.py::experiment",
+  "status": "PUBLIC_DATA_EXPLORATION_ONLY",
+  "features": [
+    "balance",
+    "previous",
+    "pdays",
+    "poutcome"
+  ],
+  "leaking_feature": "duration",
+  "fits": 2,
+  "raw_sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
+  "discovery": {
+    "scope": "train_only",
+    "distribution": [
+      {
+        "label": "No subscription",
+        "count": 2799
+      },
+      {
+        "label": "Subscription",
+        "count": 365
+      }
+    ],
+    "sample": [
+      {
+        "balance": -31,
+        "previous": 0,
+        "pdays": -1,
+        "poutcome": "unknown",
+        "y": "no"
+      },
+      {
+        "balance": 0,
+        "previous": 0,
+        "pdays": -1,
+        "poutcome": "unknown",
+        "y": "no"
+      },
+      {
+        "balance": 4885,
+        "previous": 0,
+        "pdays": -1,
+        "poutcome": "unknown",
+        "y": "no"
+      },
+      {
+        "balance": 225,
+        "previous": 0,
+        "pdays": -1,
+        "poutcome": "unknown",
+        "y": "yes"
+      },
+      {
+        "balance": 1341,
+        "previous": 0,
+        "pdays": -1,
+        "poutcome": "unknown",
+        "y": "yes"
+      },
+      {
+        "balance": 3371,
+        "previous": 0,
+        "pdays": -1,
+        "poutcome": "unknown",
+        "y": "yes"
+      }
+    ],
+    "unknown_outcome": 2608,
+    "no_previous_contact": 2608
+  },
+  "provenance": {
+    "url": "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+    "doi": "10.24432/C5K306",
+    "authors": "Moro, S., Rita, P., & Cortez, P. (2014)",
+    "license": "CC BY 4.0",
+    "file": "bank.csv",
+    "archive_url": "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
+  },
+  "limitations": [
+    "Random subset of historical campaigns; no full timestamp or customer identifier in this extract.",
+    "Random stratified split is exploratory only, not proof of future campaign performance or customer independence.",
+    "Observed subscriptions are not the causal effect of calling; missed subscriptions are not proven lost sales.",
+    "No deployment, fairness assessment, causal validation or independent final test."
+  ],
+  "environment": {
+    "python": "3.13.2",
+    "sklearn": "1.9.1",
+    "pandas": "3.0.6",
+    "numpy": "2.5.4"
+  }
+}

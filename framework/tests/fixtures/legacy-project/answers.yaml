@@ -1,0 +1,206 @@
+# Synthetic example answers: EXAMPLE never counts as HUMAN by default.
+Q-CAD-01:
+  by: EXAMPLE
+  answer: Reject the highest-risk 36-month loan applications; the decision follows the credit origination policy, applied
+    automatically with human review of rejections.
+  refs:
+  - F5
+Q-CAD-02:
+  by: EXAMPLE
+  answer: Reject 10% of applications based on the score.
+  refs:
+  - F5
+  - F6
+Q-CAD-03:
+  by: EXAMPLE
+  answer: 'False negative (accepted loan defaults): average loss of about 60% of outstanding principal. False positive (good
+    loan rejected): lost interest margin, about 10% of the amount.'
+Q-CAD-04:
+  by: EXAMPLE
+  answer: Ranking for decisions; probabilities for future pricing, so calibration is required.
+  refs:
+  - F7
+Q-CAD-05:
+  by: EXAMPLE
+  answer: Lending Club sub_grade used alone.
+  refs:
+  - F9
+Q-CAD-06:
+  by: EXAMPLE
+  answer: 'Three-year costs: deployment 150,000, validation 50,000, operations 50,000 per year; one default-rate point is
+    worth 1,750,000 over three years. Calculated threshold: 0.2 points.'
+  refs:
+  - F10
+Q-CAD-07:
+  by: EXAMPLE
+  answer: Calculate at application time within seconds, using only application and credit-bureau information available then.
+  refs:
+  - F3
+Q-CAD-08:
+  by: EXAMPLE
+  answer: Credit risk owner, compliance, and data protection officer.
+Q-CAD-09:
+  by: EXAMPLE
+  answer: Individual reasons required for rejection (three main reasons).
+Q-CAD-10:
+  by: EXAMPLE
+  answer: 'Yes: assessment of individual creditworthiness. High risk in this historical scenario.'
+Q-CAD-11:
+  by: EXAMPLE
+  answer: 'Rejection may be automated: human review on request, applicant information, and stated reasons.'
+Q-CAD-12:
+  by: EXAMPLE
+  answer: No protected attributes are supplied. Exclude possible proxies zip_code, addr_state, and emp_title. Without protected
+    attributes, no direct fairness measurement is possible.
+  refs:
+  - C1
+Q-CAD-13:
+  by: EXAMPLE
+  answer: 'Yes: rejected applicants never receive a label. Control group: 2% of applications handled under the previous rule.'
+  refs:
+  - P1
+Q-CAD-14:
+  by: EXAMPLE
+  answer: Two years, annual retraining.
+Q-CAD-15:
+  by: EXAMPLE
+  answer: 'Use the margin rule at 90% confidence: changing models costs 350,000; the committee prefers rejecting barely profitable
+    models over accepting one that does not cover costs.'
+  refs:
+  - F10
+Q-DON-01:
+  by: EXAMPLE
+  answer: 'One source: public Lending Club accepted-loan export, 2007–2018 (owner: Lending Club; no longer updated).'
+Q-DON-02:
+  by: EXAMPLE
+  answer: '2007–2018; 36-month labels mature for loans issued through late 2015: three semiannual origins in 2014–2015 and
+    a 2015H2 holdout.'
+  refs:
+  - F8
+  - F11
+Q-DON-03:
+  by: EXAMPLE
+  answer: 'Single non-versioned export: follow-up fields (payments, latest FICO) reflect 2018 values and are declared post_origination.'
+Q-DON-04:
+  by: EXAMPLE
+  answer: Pseudonymized public data used for method training. Production is not applicable to this dataset.
+Q-DON-05:
+  by: EXAMPLE
+  answer: No stable borrower identifier in the public export. One borrower may hold several loans; record this limitation.
+  refs:
+  - F1
+Q-DON-06:
+  by: EXAMPLE
+  answer: Credit policy differed before 2010 (statuses Does not meet the credit policy excluded under D-005); joint applications
+    began in late 2015 (excluded under D-006).
+Q-DON-07:
+  by: EXAMPLE
+  answer: Not applicable to this public dataset; production must apply the same conversions as scripts/prepare_lendingclub.py.
+Q-DON-09:
+  by: EXAMPLE
+  answer: Lending Club data dictionary (LCDataDictionary.xlsx).
+Q-CIB-01:
+  by: EXAMPLE
+  answer: Default = Charged Off or Default; non-default = Fully Paid.
+  refs:
+  - F2
+Q-CIB-02:
+  by: EXAMPLE
+  answer: 'Loan term: 36 months.'
+  refs:
+  - F4
+Q-CIB-03:
+  by: EXAMPLE
+  answer: Exclude ongoing, late, and grace-period loans (nonterminal status); count early repayment as non-default.
+  refs:
+  - F2
+Q-CIB-05:
+  by: EXAMPLE
+  answer: 'No: only accepted loans have labels. No reject inference in this version; record the limit in the model card.'
+  refs:
+  - P1
+Q-CIB-06:
+  by: EXAMPLE
+  answer: No known intervention in the public export.
+Q-CIB-08:
+  by: EXAMPLE
+  answer: 'Extraction at the end of 2018: loans issued through the end of 2015 have 36 months of observation.'
+  refs:
+  - F4
+Q-MOD-01:
+  by: EXAMPLE
+  answer: Logistic regression and gradient-boosted trees, provided individual reasons can be supplied.
+Q-MOD-02:
+  by: EXAMPLE
+  answer: Risk increases with dti, int_rate, inq_last_6mths, revol_util; decreases with fico_range_low and annual_inc.
+Q-MOD-06:
+  by: EXAMPLE
+  answer: Exclude below max(0.02, 95% chance floor), for contradicted or unstable direction, or correlation above 0.85 with
+    a stronger feature.
+  refs:
+  - M2
+Q-MOD-03:
+  by: EXAMPLE
+  answer: 100 comparisons, including exploratory runs and tuning candidates, before human review.
+  refs:
+  - F8
+Q-EVA-01:
+  by: EXAMPLE
+  answer: home_ownership, purpose, verification_status.
+Q-EVA-02:
+  by: EXAMPLE
+  answer: No negative gain relative to the reference in segments above 1,000 loans.
+Q-EVA-03:
+  by: EXAMPLE
+  answer: Threshold = 90th score percentile, averaged over validation windows; freeze in preregistration.
+Q-EVA-04:
+  by: EXAMPLE
+  answer: 'The score ranks (decision_use: ranking): display calibration without blocking. If later used for pricing: ECE <
+    0.02.'
+Q-EVA-05:
+  by: EXAMPLE
+  answer: One default-rate point among accepted loans is worth 1,750,000 over three years (volume × mean amount × loss given
+    default). Present annual value in three scenarios.
+  refs:
+  - F10
+Q-VAL-01:
+  by: EXAMPLE
+  answer: A modeler from another team using an independent checklist.
+Q-VAL-02:
+  by: EXAMPLE
+  answer: Model card and required technical documentation before any actual production release.
+Q-VAL-03:
+  by: EXAMPLE
+  answer: Deploy the development-trained model exactly as measured.
+  refs:
+  - F11
+Q-VAL-04:
+  by: EXAMPLE
+  answer: Credit risk owner.
+Q-DEP-01:
+  by: EXAMPLE
+  answer: Daily batch for current applications, operated by the data team.
+Q-DEP-02:
+  by: EXAMPLE
+  answer: 'Out-of-contract input: no score; manual review.'
+Q-DEP-03:
+  by: EXAMPLE
+  answer: 2% of applications with stable identifier-based assignment, handled under the previous sub_grade rule.
+Q-DEP-05:
+  by: EXAMPLE
+  answer: Restore the sub_grade rule within one day.
+Q-DEP-06:
+  by: EXAMPLE
+  answer: 'Inputs, score, model version, group, and decision: retain five years in this example.'
+Q-SUI-01:
+  by: EXAMPLE
+  answer: PSI > 0.25 on a used feature or the score.
+Q-SUI-02:
+  by: EXAMPLE
+  answer: AUC < 0.62 or ECE > 0.03 on a mature cohort.
+Q-SUI-03:
+  by: EXAMPLE
+  answer: Data team receives alerts; the credit risk owner decides.
+Q-SUI-04:
+  by: EXAMPLE
+  answer: Retrain after a performance alert persists across two cohorts; withdraw below reference performance.

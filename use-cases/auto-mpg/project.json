@@ -1,0 +1,471 @@
+{
+  "schema": "hypotrail.project/1",
+  "id": "uci-auto-mpg-v1",
+  "session_name": "auto-mpg",
+  "title": "Auto MPG · UCI",
+  "description": "Estimate a vehicle model fuel efficiency (miles per gallon) from its technical characteristics.",
+  "language": "en",
+  "problem_type": "regression",
+  "journey": {
+    "id": "regression-comparison",
+    "version": 1
+  },
+  "dataset": {
+    "id": "uci-auto-mpg",
+    "name": "Auto MPG · UCI",
+    "path": "data/auto-mpg.data",
+    "sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+    "rows": 398,
+    "provenance": {
+      "authors": "Quinlan, R. (1993)",
+      "doi": "10.24432/C5859H",
+      "license": "CC BY 4.0",
+      "source_url": "https://archive.ics.uci.edu/dataset/9/auto+mpg",
+      "archive_url": "https://archive.ics.uci.edu/static/public/9/auto+mpg.zip",
+      "file": "auto-mpg.data"
+    },
+    "transformations": [
+      "auto-mpg.data extracted unchanged from the official archive.",
+      "Missing horsepower (?) replaced by the training median in prepare_auto_mpg.py.",
+      "origin converted to indicator variables for codes 2 and 3."
+    ]
+  },
+  "facts": [
+    {
+      "id": "target",
+      "label": "Cible",
+      "value": "mpg: city-cycle fuel efficiency in miles per gallon according to the source",
+      "status": "confirmed",
+      "source": "auto-mpg.names (Quinlan, 1993)",
+      "depends_on": [
+        "dataset.schema"
+      ]
+    },
+    {
+      "id": "observation_unit",
+      "label": "Observation unit",
+      "value": "A vehicle model for a model year",
+      "status": "proposed",
+      "source": "Inspection: documentation describes unique names, but some recur across years",
+      "depends_on": [
+        "dataset.content"
+      ]
+    },
+    {
+      "id": "intended_use",
+      "label": "Intended use",
+      "value": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+      "status": "confirmed",
+      "source": "Tutorial scenario",
+      "depends_on": []
+    },
+    {
+      "id": "decision",
+      "label": "Decision studied",
+      "value": "Compare estimation methods without a real decision",
+      "status": "confirmed",
+      "source": "Tutorial scenario",
+      "depends_on": []
+    },
+    {
+      "id": "prediction_time",
+      "label": "Prediction time",
+      "value": "When technical characteristics are fixed, before measuring fuel efficiency",
+      "status": "proposed",
+      "source": "Scenario assumption, to confirm",
+      "depends_on": []
+    },
+    {
+      "id": "repeated_observations",
+      "label": "Repeated or temporal observations",
+      "value": "Model years 1970–1982; {{x:shared_names.count}} names occur on both sides of the split",
+      "status": "proposed",
+      "source": "Inspection (prepare_auto_mpg.py)",
+      "depends_on": [
+        "dataset.content"
+      ]
+    },
+    {
+      "id": "origin_meaning",
+      "label": "Meaning of origin codes",
+      "value": "Codes 1, 2, 3 are not documented in auto-mpg.names (often interpreted as USA, Europe, Japan)",
+      "status": "unknown",
+      "source": "auto-mpg.names",
+      "depends_on": [
+        "dataset.schema"
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "mpg",
+      "label": "Fuel efficiency (mpg)",
+      "description": "Miles per gallon: higher values mean lower fuel consumption.",
+      "type": "numeric",
+      "unit": "mpg",
+      "role": "target",
+      "available_at_prediction": "no",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "auto-mpg.names"
+    },
+    {
+      "name": "cylinders",
+      "label": "Cylinders",
+      "description": "Number of cylinders.",
+      "type": "integer",
+      "unit": "cylinders",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "auto-mpg.names"
+    },
+    {
+      "name": "displacement",
+      "label": "Displacement",
+      "description": "Engine displacement.",
+      "type": "numeric",
+      "unit": "cubic inches (assumed)",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "proposed",
+      "source": "Unit not specified in auto-mpg.names"
+    },
+    {
+      "name": "horsepower",
+      "label": "Horsepower",
+      "description": "Engine horsepower.",
+      "type": "numeric",
+      "unit": "horsepower (assumed)",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [
+        {
+          "value": "?",
+          "meaning": "Missing value ({{x:missing.horsepower}} rows)"
+        }
+      ],
+      "status": "proposed",
+      "source": "auto-mpg.names"
+    },
+    {
+      "name": "weight",
+      "label": "Weight",
+      "description": "Vehicle weight.",
+      "type": "numeric",
+      "unit": "pounds (assumed)",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "proposed",
+      "source": "Unit not specified in auto-mpg.names"
+    },
+    {
+      "name": "acceleration",
+      "label": "Acceleration",
+      "description": "Acceleration time; not used by models in this exercise.",
+      "type": "numeric",
+      "unit": "seconds (assumed)",
+      "role": "excluded",
+      "available_at_prediction": "unknown",
+      "special_values": [],
+      "status": "unknown",
+      "source": "Availability before measurement is undocumented"
+    },
+    {
+      "name": "model_year",
+      "label": "Model year",
+      "description": "Model year, from 70 (1970) to 82 (1982).",
+      "type": "integer",
+      "unit": "year (19xx)",
+      "role": "time",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "auto-mpg.names"
+    },
+    {
+      "name": "origin",
+      "label": "Origin",
+      "description": "Origin code 1, 2, or 3.",
+      "type": "category",
+      "unit": null,
+      "role": "group",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "unknown",
+      "source": "Undocumented codes"
+    },
+    {
+      "name": "car_name",
+      "label": "Name",
+      "description": "Model name; an identifier, not used for estimation.",
+      "type": "text",
+      "unit": null,
+      "role": "identifier",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "auto-mpg.names"
+    }
+  ],
+  "constraints": [
+    "Exercise only: no real decision.",
+    "No new training from the companion."
+  ],
+  "limitations": [
+    "Historical cars: a real-data exercise, not an estimate for a current vehicle."
+  ],
+  "ai_guidance": [
+    "Express all errors in mpg (miles per gallon); higher mpg means lower fuel consumption.",
+    "Units marked assumed are undocumented: mention this when relevant to the answer."
+  ],
+  "compatibility": {},
+  "activities": {
+    "start": {
+      "title": "Starting point",
+      "objective": "Discover the cars, mpg target, and missing values.",
+      "lead": "Can a vehicle model fuel efficiency be estimated from its characteristics?",
+      "blocks": [
+        {
+          "component": "objective",
+          "highlights": [
+            {
+              "value": "{{d:rows}}",
+              "label": "cars (1970–1982)"
+            },
+            {
+              "value": "mpg",
+              "label": "numeric target"
+            },
+            {
+              "value": "UCI",
+              "label": "source · CC BY 4.0"
+            }
+          ]
+        },
+        {
+          "component": "data_explorer",
+          "title": "Explore the training data",
+          "source": "eda"
+        },
+        {
+          "component": "examples_table",
+          "title": "What does a row look like?",
+          "intro": "Six training cars from different years.",
+          "columns": [
+            "car_name",
+            "model_year",
+            "cylinders",
+            "weight",
+            "horsepower",
+            "origin",
+            "mpg"
+          ]
+        },
+        {
+          "component": "variable_dictionary",
+          "title": "Understand features, units, and their status"
+        },
+        {
+          "component": "clarifications",
+          "title": "What still needs clarification"
+        }
+      ]
+    },
+    "use": {
+      "title": "What we estimate",
+      "objective": "Connect estimation to its use and when characteristics are known.",
+      "lead": "Estimate before measuring.",
+      "blocks": [
+        {
+          "component": "choice_question",
+          "key": "target_use",
+          "question": "What are we estimating, and when?",
+          "options": [
+            {
+              "label": "A model fuel efficiency in mpg from characteristics known before measurement",
+              "feedback": "Yes. The target is numeric: discuss error in mpg, not correct or incorrect answers."
+            },
+            {
+              "label": "Whether a car is fuel-efficient",
+              "feedback": "That is a different question requiring a category definition. Here the target is the mpg value itself."
+            }
+          ]
+        }
+      ]
+    },
+    "protocol": {
+      "title": "Split by year",
+      "objective": "Understand why the protocol is chronological rather than random.",
+      "lead": "Learn from the past and compare on later years.",
+      "blocks": [
+        {
+          "component": "text",
+          "label": "The protocol",
+          "text": "{{p:chronological-70-78-vs-79-82.train}} cars from 1970–1978 for training and {{p:chronological-70-78-vs-79-82.validation}} cars from 1979–1982 for comparison. A random split would let the model train on years later than those it evaluates."
+        },
+        {
+          "component": "model_comparison",
+          "results": [
+            {
+              "id": "linear-all",
+              "label": "Protocol chronologique"
+            },
+            {
+              "id": "linear-all-random-split",
+              "label": "Counterexample: random split"
+            }
+          ],
+          "metrics": [
+            "mae_mpg",
+            "within_3_mpg_share"
+          ],
+          "note": "Same model, two protocols. The difference does not make random splitting better: it measures an easier situation than the intended one."
+        },
+        {
+          "component": "choice_question",
+          "key": "split_reason",
+          "question": "Why is error lower with the random split?",
+          "options": [
+            {
+              "label": "It mixes years: the model sees cars similar to those it evaluates",
+              "feedback": "Yes. More recent cars consume less fuel; including them in training makes the comparison optimistic."
+            },
+            {
+              "label": "The model is better under this protocol",
+              "feedback": "The model is the same. Only evaluation difficulty changes."
+            }
+          ]
+        }
+      ]
+    },
+    "baseline": {
+      "title": "A simple reference",
+      "objective": "Interpret mean absolute error in mpg relative to a reference.",
+      "lead": "Read error in the target unit.",
+      "blocks": [
+        {
+          "component": "model_comparison",
+          "results": [
+            {
+              "id": "baseline-median",
+              "label": "Training median"
+            },
+            {
+              "id": "linear-all",
+              "label": "Linear regression · characteristics"
+            }
+          ],
+          "metrics": [
+            "mae_mpg",
+            "mean_error_mpg",
+            "within_3_mpg_share"
+          ],
+          "note": "On {{p:chronological-70-78-vs-79-82.validation}} cars from 1979–1982."
+        },
+        {
+          "component": "choice_question",
+          "key": "mae_reading",
+          "question": "What does an MAE of {{r:linear-all.mae_mpg}} mean?",
+          "options": [
+            {
+              "label": "On average, estimates differ from observed efficiency by this amount",
+              "feedback": "Yes. It is an average difference in mpg without indicating error direction."
+            },
+            {
+              "label": "The model is wrong on this proportion of cases",
+              "feedback": "No: MAE is not a proportion of cases; it is an error in the target unit."
+            }
+          ]
+        }
+      ]
+    },
+    "compare": {
+      "title": "Choose a model to examine",
+      "objective": "Choose an available model whose errors will be examined.",
+      "lead": "Same protocol, several models.",
+      "blocks": [
+        {
+          "component": "model_comparison",
+          "results": [
+            {
+              "id": "baseline-median",
+              "label": "Training median"
+            },
+            {
+              "id": "linear-weight",
+              "label": "Regression · weight only"
+            },
+            {
+              "id": "linear-all",
+              "label": "Regression · characteristics"
+            }
+          ],
+          "metrics": [
+            "mae_mpg",
+            "rmse_mpg",
+            "within_3_mpg_share"
+          ],
+          "choice": {
+            "key": "model",
+            "label": "Model to examine",
+            "compute": "precomputed",
+            "domain": [
+              {
+                "value": "baseline-median",
+                "result": "baseline-median"
+              },
+              {
+                "value": "linear-weight",
+                "result": "linear-weight"
+              },
+              {
+                "value": "linear-all",
+                "result": "linear-all"
+              }
+            ]
+          },
+          "note": "Models were trained once by prepare_auto_mpg.py; the companion only selects an existing result."
+        }
+      ]
+    },
+    "errors": {
+      "title": "Where are the errors?",
+      "objective": "Examine error by model year in the target unit.",
+      "lead": "Errors are not uniformly distributed.",
+      "blocks": [
+        {
+          "component": "error_view",
+          "source": "errors_by_group",
+          "for_choice": "model",
+          "metric": "mae_mpg",
+          "title": "Mean absolute error by validation year"
+        },
+        {
+          "component": "text",
+          "label": "What to observe",
+          "text": "Mean signed error is negative: models underestimate mpg for newer, more fuel-efficient cars. This describes a difference without establishing its cause."
+        }
+      ]
+    },
+    "handoff": {
+      "title": "Review and hand over",
+      "objective": "Summarize choices, results, and limitations.",
+      "lead": "Assess an estimate in its unit and under an appropriate protocol.",
+      "blocks": [
+        {
+          "component": "choice_summary",
+          "title": "Your handoff",
+          "handoff": "I have completed the Auto MPG (UCI) exercise in Hypotrail. No real decisions should be imported.\n{{choices}}\nStart by checking intended use, the mpg target, and prediction time."
+        },
+        {
+          "component": "limits",
+          "title": "Limitations to retain"
+        }
+      ]
+    }
+  }
+}

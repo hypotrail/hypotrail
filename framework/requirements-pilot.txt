@@ -1,0 +1,2 @@
+# Version used during review
+marimo==0.25.1

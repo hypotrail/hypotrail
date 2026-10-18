@@ -1,0 +1,550 @@
+{
+  "schema": "hypotrail.project/1",
+  "id": "uci-bank-marketing-v1",
+  "session_name": "bank-marketing",
+  "title": "Bank Marketing · UCI",
+  "description": "Who should be contacted when the team cannot call everyone? An exercise using actual telephone campaigns from a Portuguese bank.",
+  "language": "en",
+  "problem_type": "binary_classification",
+  "journey": {
+    "id": "binary-selection",
+    "version": 1
+  },
+  "dataset": {
+    "id": "uci-bank-marketing",
+    "name": "Bank Marketing · UCI",
+    "path": "data/bank.csv",
+    "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
+    "rows": 4521,
+    "provenance": {
+      "authors": "Moro, S., Rita, P., & Cortez, P. (2014)",
+      "doi": "10.24432/C5K306",
+      "license": "CC BY 4.0",
+      "source_url": "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+      "archive_url": "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip",
+      "file": "bank.csv"
+    },
+    "transformations": [
+      "bank.csv extracted unchanged from bank.zip in the official archive.",
+      "pdays = -1 encoded as a never-contacted indicator in prepare_bank.py."
+    ]
+  },
+  "facts": [
+    {
+      "id": "target",
+      "label": "Cible",
+      "value": "y: observed term-deposit subscription (yes/no)",
+      "status": "confirmed",
+      "source": "UCI documentation (bank-names.txt)",
+      "depends_on": [
+        "dataset.schema"
+      ]
+    },
+    {
+      "id": "observation_unit",
+      "label": "Observation unit",
+      "value": "A customer contacted during a telephone campaign",
+      "status": "confirmed",
+      "source": "UCI documentation",
+      "depends_on": [
+        "dataset.schema"
+      ]
+    },
+    {
+      "id": "intended_use",
+      "label": "Intended use",
+      "value": "Teaching simulation: prioritize contacts when call capacity is limited",
+      "status": "confirmed",
+      "source": "Tutorial scenario",
+      "depends_on": []
+    },
+    {
+      "id": "decision",
+      "label": "Decision studied",
+      "value": "Select contacts to call first",
+      "status": "confirmed",
+      "source": "Tutorial scenario",
+      "depends_on": []
+    },
+    {
+      "id": "prediction_time",
+      "label": "Prediction time",
+      "value": "Before the call",
+      "status": "confirmed",
+      "source": "Tutorial scenario",
+      "depends_on": []
+    },
+    {
+      "id": "repeated_observations",
+      "label": "Repeated customers or time structure",
+      "value": "Cannot be verified: the extract has neither a customer identifier nor a complete date.",
+      "status": "unknown",
+      "source": "Inspection du fichier",
+      "depends_on": [
+        "dataset.content"
+      ]
+    },
+    {
+      "id": "causal_effect",
+      "label": "Effect of calling on subscription",
+      "value": "Not measured by these historical observations.",
+      "status": "unknown",
+      "source": "Observational nature of the data",
+      "depends_on": []
+    }
+  ],
+  "variables": [
+    {
+      "name": "balance",
+      "label": "Balance (€)",
+      "description": "Average annual balance.",
+      "type": "numeric",
+      "unit": "euros",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "UCI documentation"
+    },
+    {
+      "name": "previous",
+      "label": "Previous contacts",
+      "description": "Number of contacts before this campaign.",
+      "type": "integer",
+      "unit": "contacts",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "UCI documentation"
+    },
+    {
+      "name": "pdays",
+      "label": "Days elapsed",
+      "description": "Days since contact in a previous campaign.",
+      "type": "integer",
+      "unit": "days",
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [
+        {
+          "value": -1,
+          "meaning": "Never contacted previously"
+        }
+      ],
+      "status": "confirmed",
+      "source": "UCI documentation"
+    },
+    {
+      "name": "poutcome",
+      "label": "Previous outcome",
+      "description": "Outcome of the previous campaign.",
+      "type": "category",
+      "unit": null,
+      "role": "feature",
+      "available_at_prediction": "yes",
+      "special_values": [
+        {
+          "value": "unknown",
+          "meaning": "Retained as a category"
+        }
+      ],
+      "status": "confirmed",
+      "source": "UCI documentation",
+      "value_labels": {
+        "unknown": "Unknown",
+        "failure": "Failure",
+        "success": "Success",
+        "other": "Other"
+      }
+    },
+    {
+      "name": "y",
+      "label": "Subscription",
+      "description": "Observed term-deposit subscription.",
+      "type": "binary",
+      "unit": null,
+      "role": "target",
+      "available_at_prediction": "no",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "UCI documentation",
+      "value_labels": {
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    {
+      "name": "duration",
+      "label": "Call duration",
+      "description": "Duration of the current call, known only afterwards; used only in the leakage counterexample.",
+      "type": "numeric",
+      "unit": "seconds",
+      "role": "excluded",
+      "available_at_prediction": "no",
+      "special_values": [],
+      "status": "confirmed",
+      "source": "UCI documentation (duration warning)"
+    }
+  ],
+  "constraints": [
+    "Exercise only: no decisions from the previous incident project are imported.",
+    "No new training from the companion."
+  ],
+  "limitations": [
+    "Random historical extract: an exercise using real data, not a campaign recommendation.",
+    "The file also includes personal characteristics; this small model uses none of them and is not a fairness assessment."
+  ],
+  "ai_guidance": [
+    "Distinguish selected contacts from observed subscriptions.",
+    "An unselected subscription is not an established lost sale: there is no evidence that calling would have caused it."
+  ],
+  "compatibility": {
+    "legacy_steps": [
+      "start",
+      "use",
+      "baseline",
+      "leakage",
+      "protocol",
+      "selection",
+      "constraints",
+      "handoff"
+    ],
+    "legacy_metric_aliases": {
+      "alerts": "selected_contacts",
+      "true_alarms": "subscriptions_found",
+      "false_alarms": "selected_without_subscription",
+      "missed": "subscriptions_not_selected",
+      "recall": "recall_subscriptions",
+      "precision": "precision_selected"
+    }
+  },
+  "activities": {
+    "start": {
+      "title": "Starting point",
+      "objective": "Discover the data, target, and provenance before modeling.",
+      "lead": "Who should be contacted when the team cannot call everyone?",
+      "blocks": [
+        {
+          "component": "objective",
+          "highlights": [
+            {
+              "value": "{{d:rows}}",
+              "label": "enregistrements publics"
+            },
+            {
+              "value": "4",
+              "label": "initial features"
+            },
+            {
+              "value": "UCI",
+              "label": "source · CC BY 4.0"
+            }
+          ]
+        },
+        {
+          "component": "data_explorer",
+          "title": "Explore the training data",
+          "source": "eda"
+        },
+        {
+          "component": "text",
+          "label": "Tutorial guide",
+          "text": "We will explore actual telephone campaigns from a Portuguese bank. The target is an observed subscription. Discover the data, compare a reference, identify leakage, and examine call capacity."
+        },
+        {
+          "component": "examples_table",
+          "title": "What does a row look like?",
+          "intro": "A telephone campaign record with its observed outcome. Six training examples illustrate both responses (3 yes, 3 no); they do not represent the actual class frequency.",
+          "columns": [
+            "balance",
+            "previous",
+            "pdays",
+            "poutcome",
+            "y"
+          ]
+        },
+        {
+          "component": "variable_dictionary",
+          "title": "Understand features and special values",
+          "note": "pdays = −1 : {{x:special.no_previous_contact}} training rows ; poutcome « unknown » : {{x:special.unknown_outcome}} training rows."
+        },
+        {
+          "component": "clarifications",
+          "title": "What still needs clarification"
+        },
+        {
+          "component": "text",
+          "label": "Keep in mind",
+          "variant": "notice",
+          "text": "Random historical bank.csv extract. An exercise using real data, not a campaign recommendation."
+        }
+      ]
+    },
+    "use": {
+      "title": "Use before modeling",
+      "objective": "Specify the decision: select contacts before calling, with limited capacity.",
+      "lead": "Decision studied: select contacts before making calls.",
+      "blocks": [
+        {
+          "component": "text",
+          "label": "Tutorial guide",
+          "text": "Target y records an observed subscription. Our scenario simulates prioritization. Actual use would require verifying when each feature is available and whether calling changes the decision."
+        },
+        {
+          "component": "choice_question",
+          "key": "goal",
+          "question": "What should be clarified before selecting a model?",
+          "options": [
+            {
+              "label": "Call capacity and the decision made before each call",
+              "feedback": "Yes. We are exploring contact prioritization. Available call capacity determines the trade-off to examine."
+            },
+            {
+              "label": "The algorithm with the highest score",
+              "feedback": "A score defines neither team capacity nor selection utility. Start with the intended use."
+            }
+          ]
+        },
+        {
+          "component": "details",
+          "summary": "Predicting a subscription does not measure the effect of calling",
+          "text": "The data describes past campaigns. It does not establish that a subscription would have been lost without a call. We therefore discuss retrieved or unselected observed subscriptions, not established sales gained or lost."
+        }
+      ]
+    },
+    "baseline": {
+      "title": "The accuracy trap",
+      "objective": "Compare the model with a constant reference to recognize a misleading score.",
+      "lead": "A simple reference helps identify a misleading score.",
+      "blocks": [
+        {
+          "component": "model_comparison",
+          "results": [
+            {
+              "id": "model-reference",
+              "label": "Always no subscription"
+            },
+            {
+              "id": "model-logistic-4",
+              "label": "Logistic regression · 4 features"
+            }
+          ],
+          "metrics": [
+            "accuracy",
+            "recall_subscriptions",
+            "auc"
+          ],
+          "note": "The reference achieves {{r:model-reference.accuracy}} accuracy without retrieving any subscription. Results use {{p:stratified-70-30.validation}} held-out rows and threshold 0.50."
+        },
+        {
+          "component": "choice_question",
+          "key": "baseline",
+          "question": "Is high accuracy enough?",
+          "options": [
+            {
+              "label": "No: examine retrieved subscriptions and call workload",
+              "feedback": "Correct. Always predicting no can look effective while retrieving no subscriptions."
+            },
+            {
+              "label": "Yes: most predictions are correct",
+              "feedback": "The reference selects no contacts. Its accuracy mainly reflects the frequency of non-subscriptions."
+            }
+          ]
+        },
+        {
+          "component": "details",
+          "summary": "Read the metrics",
+          "text": "Accuracy: share of correct predictions. Recall: share of observed subscriptions retrieved. AUC: ranking quality between subscriptions and non-subscriptions. No single metric measures commercial benefit."
+        }
+      ]
+    },
+    "leakage": {
+      "title": "Identify leakage",
+      "objective": "Understand why call duration cannot decide whom to call.",
+      "lead": "Call duration can help predict the outcome… after the call.",
+      "blocks": [
+        {
+          "component": "model_comparison",
+          "results": [
+            {
+              "id": "model-logistic-4",
+              "label": "Without call duration"
+            },
+            {
+              "id": "model-logistic-4-duration",
+              "label": "With duration · unavailable before the call"
+            }
+          ],
+          "metrics": [
+            "accuracy",
+            "recall_subscriptions",
+            "auc"
+          ],
+          "note": "duration is the actual duration of the corresponding call in seconds. This column is not fabricated. Adding it deliberately creates a counterexample for our pre-call decision."
+        },
+        {
+          "component": "choice_question",
+          "key": "leak",
+          "question": "Can call duration be used to decide whom to call?",
+          "options": [
+            {
+              "label": "No: it is known after the call",
+              "feedback": "Correct. duration is a real column, but it is unavailable before the call. A higher score does not make the feature usable."
+            },
+            {
+              "label": "Yes: it improves the ranking",
+              "feedback": "The score uses information from the future relative to the decision. A train/validation split does not fix that."
+            }
+          ]
+        },
+        {
+          "component": "text",
+          "label": "Tutorial guide",
+          "text": "Exclude duration from the model used to select contacts. Leakage need not produce perfect accuracy to invalidate an operational comparison."
+        }
+      ]
+    },
+    "protocol": {
+      "title": "A fair comparison",
+      "objective": "Read the exploratory protocol and its limits: random splitting does not establish future-campaign performance.",
+      "lead": "A reproducible comparison with visible limitations.",
+      "blocks": [
+        {
+          "component": "text",
+          "label": "The exploratory protocol",
+          "text": "{{p:stratified-70-30.train}} training rows and {{p:stratified-70-30.validation}} validation rows, stratified 70/30 split, seed {{g:seed}}. Standardization and category encoding are fitted on training data only. bank.csv is a random subset of historical campaigns: without complete dates or customer identifiers, customer independence and future-campaign performance cannot be assessed. Two regressions were fitted to prepare this exercise; displayed results are precomputed and reused."
+        },
+        {
+          "component": "choice_question",
+          "key": "split",
+          "question": "Does this random split establish quality on the next campaign?",
+          "options": [
+            {
+              "label": "No: temporal evaluation and repeated-customer checks are needed",
+              "feedback": "Correct. This extract has no complete date or customer identifier. The tutorial supports comparisons, not a generalization claim about the next campaign."
+            },
+            {
+              "label": "Yes: two partitions are enough",
+              "feedback": "A random mixture of historical campaigns does not necessarily represent the future. Customer independence cannot be checked here."
+            }
+          ]
+        }
+      ]
+    },
+    "selection": {
+      "title": "From score to action",
+      "objective": "Choose a selection threshold: how many contacts to select and which observed subscriptions to retrieve.",
+      "lead": "How many contacts should be selected, and which subscriptions are retrieved?",
+      "blocks": [
+        {
+          "component": "numeric_selection",
+          "key": "threshold",
+          "label": "Contact selection threshold",
+          "short_label": "threshold",
+          "unit": "score",
+          "format": "number:2",
+          "default": 0.5,
+          "compute": "precomputed",
+          "domain": [
+            {
+              "value": 0.1,
+              "result": "selection-0.10"
+            },
+            {
+              "value": 0.2,
+              "result": "selection-0.20"
+            },
+            {
+              "value": 0.35,
+              "result": "selection-0.35"
+            },
+            {
+              "value": 0.5,
+              "result": "selection-0.50"
+            }
+          ],
+          "hint": "Existing preview; apply the choice to attach this result. No new training."
+        },
+        {
+          "component": "metrics",
+          "for_choice": "threshold",
+          "metrics": [
+            "selected_contacts",
+            "subscriptions_found",
+            "selected_without_subscription",
+            "subscriptions_not_selected"
+          ],
+          "summary": [
+            "recall_subscriptions",
+            "precision_selected"
+          ],
+          "note": "On {{p:stratified-70-30.validation}} observations and {{p:stratified-70-30.validation_positives}} subscriptions."
+        },
+        {
+          "component": "text",
+          "label": "Tutorial guide",
+          "text": "Compare two thresholds: which better fits team capacity? Counts describe past observations. They predict neither sales caused by calls nor future-campaign performance."
+        },
+        {
+          "component": "details",
+          "summary": "Why these results remain exploratory",
+          "text": "Choosing a threshold on this validation already uses its results. A protocol suited to time and customers would then be needed to evaluate the retained selection."
+        }
+      ]
+    },
+    "constraints": {
+      "title": "Your constraints",
+      "objective": "Express the constraints that make a result usable.",
+      "lead": "Express the constraints that make a result usable.",
+      "blocks": [
+        {
+          "component": "choice_question",
+          "key": "interpret",
+          "question": "Which teaching constraint would you like to explore?",
+          "options": [
+            {
+              "label": "No additional constraint",
+              "feedback": "Keep a simple logistic regression as the starting point without treating it as a business requirement."
+            },
+            {
+              "label": "A model that is simple to explain",
+              "feedback": "Logistic regression helps examine relationships between features and scores. Its coefficients do not establish causality."
+            }
+          ]
+        },
+        {
+          "component": "text",
+          "label": "In this demo",
+          "text": "Call duration cannot select contacts before a call. The initial model is deliberately small. Real use would also require checking data availability, the population, contact rules, and selection fairness."
+        }
+      ]
+    },
+    "handoff": {
+      "title": "Review and hand over",
+      "objective": "Connect exercise choices to exploratory results and limitations.",
+      "lead": "You have connected actual data to a concrete decision.",
+      "blocks": [
+        {
+          "component": "text",
+          "label": "Tutorial guide",
+          "text": "We distinguished a flattering reference, a feature unavailable before the decision, and a selection trade-off. Your choice belongs to this Bank Marketing exercise and imports no decision into the previous incident project."
+        },
+        {
+          "component": "choice_summary",
+          "title": "Your handoff",
+          "handoff": "I have completed the Hypotrail Bank Marketing (UCI) tutorial. No real decisions should be imported. I want to discuss the exploratory Bank Marketing results with the pilot.\n{{choices}}\nStart by clarifying intended use, target, and data structure; suggest junior guidance."
+        },
+        {
+          "component": "limits",
+          "title": "Limitations to retain"
+        },
+        {
+          "component": "text",
+          "variant": "notice",
+          "text": "Buttons start no campaign, training, or final validation."
+        }
+      ]
+    }
+  }
+}

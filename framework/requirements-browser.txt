@@ -1,0 +1,2 @@
+# Local browser tests; install Chromium with python -m playwright install chromium
+playwright==1.55.0
