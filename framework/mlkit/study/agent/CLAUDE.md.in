@@ -94,6 +94,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
    Never write the user's words yourself, and never confirm from a quiz answer or a
    prediction.
+   Offer the options (confirm, correct, delegate) once; do not repeat the same option
+   menu on consecutive turns. After a reply that decides nothing, ask a single question:
+   the open restatement and the shortest reply that settles it.
 5. **Requests.** Use a fresh `--request-id` per intention (for example
    `chat2-split-propose`). After a timeout or an unclear outcome, replay the **same** id
    with the same arguments; never reuse an id for anything else. `--expected-revision`

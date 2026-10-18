@@ -31,7 +31,10 @@ SCHEMAS = {'init': 'hypotrail.init/1', 'status': 'hypotrail.status/1', 'plan': '
 SUMMARY_SCHEMA = 'hypotrail.summary/1'
 SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                         'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
-                        'results', 'artifacts', 'executions', 'not_yet_defensible')
+                        'results', 'artifacts', 'executions', 'not_yet_defensible',
+                        # Post-v0.1 (T8, F5): five resume lines generated from state.
+                        'recap')
+RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
 SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'delegation_scope', 'user_words', 'reason',
                          'open_proposals')
 SUMMARY_GOAL_KEYS = ('intended_use', 'decision', 'observation_unit', 'prediction_time')
@@ -243,11 +246,13 @@ def test_status_summary_keys(flow):
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
     assert tuple(payload['executions']) == EXECUTION_VIEW_KEYS
     assert tuple(payload['not_yet_defensible']) == ('top', 'more')
+    assert view.RECAP_LABELS == RECAP_LABELS and len(payload['recap']) == len(RECAP_LABELS)
+    assert [line.split(':', 1)[0] for line in payload['recap']] == list(RECAP_LABELS)
     assert tuple(payload['artifacts']) == ('status', 'items')
     for name, item in payload['artifacts']['items'].items():
         assert tuple(item) == ('status', 'revision', 'last_ok_revision', 'message'), name
     keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)
-            | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'})
+            | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'} | set(RECAP_LABELS))
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
