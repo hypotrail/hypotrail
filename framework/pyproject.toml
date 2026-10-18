@@ -18,9 +18,8 @@ dependencies = [
 ]
 # interpret-core (optional EBM baseline) is intentionally not a core dependency.
 
-# TODO(WP1): declare the junior entry point once mlkit/study/cli.py exists:
-# [project.scripts]
-# hypotrail = "mlkit.study.cli:main"
+[project.scripts]
+hypotrail = "mlkit.study.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0"]
