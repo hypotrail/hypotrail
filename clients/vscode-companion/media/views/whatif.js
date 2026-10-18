@@ -146,7 +146,7 @@
       if (!draft) {
         askDraft(ctx, decisionId, value);
         kids.push(ctx.el('p', { className: 'muted', 'aria-busy': 'true', text: common.readingDraft }));
-        kids.push(ctx.el('button', { type: 'button', 'data-write': 'propose', disabled: true, text: t.propose }));
+        if (!ctx.reviewer) kids.push(ctx.el('button', { type: 'button', 'data-write': 'propose', disabled: true, text: t.propose }));
       } else if (!draft.proposable) {
         kids.push(ctx.el('p', { 'data-not-evaluated': value, text: t.notEvaluated }));
       } else {
@@ -156,7 +156,9 @@
           ctx.el('p', { className: 'muted', text: draft.rationale }),
         ]));
         const busy = ctx.busy;
-        kids.push(ctx.el('div', { className: 'ht-wi-propose' }, [
+        // This area is also updated in place (draft_result), outside the frame's render that
+        // removes write controls in reviewer mode: it never builds one for a reviewer.
+        if (!ctx.reviewer) kids.push(ctx.el('div', { className: 'ht-wi-propose' }, [
           ctx.el('button', { type: 'button', 'data-write': 'propose', 'aria-describedby': 'ht-wi-propose-hint', disabled: busy,
             'aria-busy': busy && ctx.busyOp === 'W3' ? 'true' : null, text: busy && ctx.busyOp === 'W3' ? HT.copy.core.working : t.propose,
             onclick: () => ctx.send({ type: 'propose', decisionId, value, revision: draft.revision }) }),
@@ -204,6 +206,9 @@
     if (!Number.isFinite(v)) return;
     S.value = S.kind === 'capacity' ? Math.round(v) : Math.round(v * 100) / 100;
     S.rule = canonical(S.kind, S.value);
+    // A repeated event for what was already asked (a blur after a change) changes nothing.
+    const last = S.sent[S.seq];
+    if (last && last.rule === S.rule && (last.intervals || !release)) return;
     const t = C().binary;
     const n = S.nodes;
     if (n.slider) { n.slider.value = String(S.value); n.slider.setAttribute('aria-valuetext', valueText(t, ctx)); }

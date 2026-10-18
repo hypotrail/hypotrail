@@ -46,6 +46,8 @@
   }
 
   function choose(ctx, id) {
+    // A choice after a load error asks again (the earlier answer for it may have failed).
+    if (ctx.error('evidence') && ctx.snapshot) delete requested[`${ctx.snapshot.revision}|${id || ''}`];
     ctx.ui.set('selectedResult', id || undefined);
     ctx.rerender();
   }
