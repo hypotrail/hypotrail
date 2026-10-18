@@ -88,7 +88,9 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
             'feature_without_status': 'error', 'excluded_feature_used': 'error',
             'untraceable_number': 'error', 'stale_number': 'error',
             'causal_wording': 'warning', 'forecast_wording': 'warning',
-            'artifact_not_current': 'warning', 'untracked_files': 'warning'}
+            'artifact_not_current': 'warning', 'untracked_files': 'warning',
+            # Post-v0.1 (P7): a recommended default credited to the analyst.
+            'misattributed_delegation': 'error'}
 FINDING_CODES = tuple(SEVERITY)
 
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|cannot|doesn't|don't|isn't|aren't|without|"
@@ -109,6 +111,14 @@ FORECAST = re.compile(
     r"deliver|find|see|have|make|gain|win|sign)|we will|you will|we'll|you'll|"
     r"should (?:reach|get|bring|yield|convert)|(?:is|are) going to|guarantee[sd]?|"
     r"in (?:the )?future|(?:next|coming|upcoming) (?:rounds?|waves?|periods?|months?|quarters?|years?))\b",
+    re.IGNORECASE)
+# P7: a recommended default is always the assistant's. A text that credits it to the
+# analyst ("followed the analyst's recommended defaults") misreports a delegation.
+MISATTRIBUTED_DEFAULT = re.compile(
+    r"\b(?:analyst|junior|user|trainee)(?:'s|s'|\u2019s)?\s+(?:own\s+)?(?:recommended\s+)?"
+    r"(?:defaults?|default\s+choices?|recommendations?)\b"
+    r"|\b(?:defaults?|recommendations?)\s+(?:recommended|chosen|proposed|set|picked)\s+by\s+"
+    r"(?:the\s+)?(?:analyst|junior|user|trainee)\b",
     re.IGNORECASE)
 EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'
                            r'request|req-|expected-revision|section|§|row|'
@@ -226,6 +236,11 @@ class Pool:
             conf = d.get('confirmation')
             if isinstance(conf, Mapping) and isinstance(conf.get('user_words'), str):
                 self._literal('user_words', d['decision_id'], conf['user_words'])
+        # P2: the junior's recorded conditions and the words that resolved them.
+        for n in view.get('notes') or []:
+            self._literal('user_words', n['note_id'], n['user_words'])
+            if isinstance(n.get('resolution'), Mapping):
+                self._literal('user_words', n['note_id'], n['resolution'].get('user_words'))
         for slot, item in sorted(view['results'].items()):
             if item.get('activity') == 'policy.evaluation' and item['current'] \
                     and isinstance(item.get('params'), Mapping):
@@ -421,6 +436,15 @@ def wording(text: str, where: str) -> list[dict]:
     return out
 
 
+def attribution(text: str, where: str) -> list[dict]:
+    """P7: a recommended default credited to the analyst instead of the assistant."""
+    return [finding('misattributed_delegation', where,
+                    'A recommended default is the assistant\'s: write "the assistant\'s '
+                    'recommended default, delegated by the analyst", never the analyst\'s '
+                    'default or choice.', phrase=m.group(0))
+            for m in MISATTRIBUTED_DEFAULT.finditer(INLINE_CODE.sub(' ', text))]
+
+
 def check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
                result_ids: Iterable[str] | None = None) -> tuple[list[dict], list[dict]]:
     return _check_text(view, text, where, user_texts, result_ids)
@@ -430,7 +454,7 @@ def _check_text(view: Mapping, text: str, where: str = 'text', user_texts: Itera
                 result_ids: Iterable[str] | None = None,
                 retired: Iterable[Mapping] = ()) -> tuple[list[dict], list[dict]]:
     findings, traced = trace_text(Pool(view, user_texts, result_ids, retired), text, where)
-    return findings + wording(text, where), traced
+    return findings + wording(text, where) + attribution(text, where), traced
 
 
 def retired_proposals(study: read.Study) -> list[dict]:

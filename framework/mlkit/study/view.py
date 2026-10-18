@@ -27,7 +27,11 @@ SCHEMA = 'hypotrail.view/1'
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan',
              'current_step', 'next_action', 'open_proposals', 'decisions', 'facts',
              'structure', 'results', 'stale', 'invalidations', 'executions', 'artifacts',
-             'exposure', 'not_yet_defensible', 'settings', 'task')
+             'exposure', 'not_yet_defensible', 'settings', 'task',
+             # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
+             'notes')
+NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
+                  'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
                       'revision', 'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
@@ -43,10 +47,14 @@ ARTIFACT_PLACEHOLDER = {'manifest': None, 'status': 'not_rendered', 'items': {}}
 SUMMARY_SCHEMA = 'hypotrail.summary/1'
 SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
                 'results', 'artifacts', 'executions', 'not_yet_defensible',
+                # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
+                'notes',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap')
+SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
-SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'result_integrity', 'adopted_rule_not_evaluated',
+SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds', 'result_integrity',
+                    'adopted_rule_not_evaluated',
                     'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'validation_is_not_independent')
 SUMMARY_TOP = 5
@@ -227,10 +235,14 @@ def summary(view: dict) -> dict:
                   'more': [x['id'] for x in ordered[SUMMARY_TOP:]]}
     plan = [{'id': step['id'], 'title': step['title'], 'status': step['status']}
             for step in view['plan']]
+    notes = [{'note_id': n['note_id'], 'decision_id': n['decision_id'], 'status': n['status'],
+              'user_words': n['user_words'],
+              'resolution_words': (n['resolution'] or {}).get('user_words')}
+             for n in view['notes']]
     out = {'goal': goal, 'current_step': view['current_step'], 'plan': plan,
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
-           'executions': executions, 'not_yet_defensible': defensible}
+           'executions': executions, 'not_yet_defensible': defensible, 'notes': notes}
     out['recap'] = recap(out, view)
     return {k: out[k] for k in SUMMARY_KEYS}
 
@@ -246,7 +258,7 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
 # lines do not already say (unconfirmed decisions are the "Decided" and "Next" lines).
-RECAP_LIMIT_SKIP = ('unconfirmed_decisions',)
+RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds')
 
 
 def _spaced(identifier) -> str:
@@ -258,7 +270,25 @@ def _fact_value(item) -> str | None:
     return item.get('value') if isinstance(item, dict) else None
 
 
-def _recap_decision(decision_id: str, d: dict) -> str:
+# P3: a regression recap cites the current validation MAE with its result id prefix.
+RECAP_RID = 8
+
+
+def _regression_errors(view: dict) -> dict | None:
+    """The validation MAE of each model, as displayed (two decimals), with the unit and the
+    result id of the current, verified ``evaluate.regression``; None otherwise."""
+    item = view['results'].get('evaluate.regression')
+    if not item or not item['current'] or item['integrity'] != 'ok' \
+            or not isinstance(item.get('values'), dict):
+        return None
+    models = item['values'].get('models') or {}
+    mae = {slot: f'{m["mae"]:.2f}' for slot, m in models.items()
+           if isinstance(m, dict) and isinstance(m.get('mae'), (int, float))}
+    unit = item['values'].get('unit') or ''
+    return {'mae': mae, 'unit': unit, 'result_id': item['result_id']} if mae else None
+
+
+def _recap_decision(decision_id: str, d: dict, errors: dict | None = None) -> str:
     label = DECISION_LABELS[decision_id]
     value = d['value']
     if decision_id == 'feature_availability' and isinstance(value, dict):
@@ -282,6 +312,10 @@ def _recap_decision(decision_id: str, d: dict) -> str:
         text = f'{label} {value}'
     elif decision_id == 'model_choice' and isinstance(value, str):
         text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
+        mae = (errors or {}).get('mae', {}).get(value)
+        if mae is not None:
+            text += (f' (validation MAE {mae} {errors["unit"]}, result '
+                     f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
         text = f'{label} {_spaced(value.get("verdict", ""))}'.strip()
     else:
@@ -342,7 +376,8 @@ def recap(summary_out: dict, view: dict) -> list[str]:
         moment = str(pt['value'])
     else:
         moment = f'{pt["value"]} (from the case, not decided yet)'
-    decided = [_recap_decision(d, item) for d, item in summary_out['decisions'].items()
+    errors = _regression_errors(view)
+    decided = [_recap_decision(d, item, errors) for d, item in summary_out['decisions'].items()
                if item['status'] in ('confirmed', 'reconfirm_required')]
     titles = {s['id']: s['title'] for s in summary_out['plan']}
     step = titles.get(summary_out['current_step'], 'every step is done') \
@@ -351,16 +386,34 @@ def recap(summary_out: dict, view: dict) -> list[str]:
                     if item.get('status') != 'ok' and name != 'workbench')
     deliverables = ('the report and notebook are up to date' if not behind
                     else ', '.join(behind) + ' not up to date')
+    chosen = summary_out['decisions'].get('model_choice') or {}
+    if errors and chosen.get('status') not in ('confirmed', 'reconfirm_required'):
+        # Before the model choice, "Now" gives both validation errors (P3).
+        named = '; '.join(f'{MODEL_CHOICE_WORDS.get(slot, slot)} {mae} {errors["unit"]}'
+                          for slot, mae in sorted(errors['mae'].items()))
+        step += (f' (validation MAE: {named}; result '
+                 f'{errors["result_id"][:RECAP_RID]})')
     limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP]
     rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
     limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
     limit = limits[0]['text'] if limits else 'none recorded.'
+    nxt = _recap_next(summary_out, view).rstrip()
+    holds = [n for n in summary_out.get('notes', []) if n['status'] == 'open']
+    if holds:
+        # P2: a condition the junior stated stays visible in every chat until resolved.
+        said = '; '.join(f'"{n["user_words"]}" (the '
+                         f'{DECISION_LABELS.get(n["decision_id"], n["decision_id"])})'
+                         for n in holds)
+        nxt += ('' if nxt.endswith(('.', '"', '?')) else '.') + (
+            f" On hold in the junior's words: {said}; nothing on hold is confirmed until "
+            'they resolve it.')
     lines = [f'Goal: {use}; the prediction is made {moment}.',
              'Decided: ' + ('; '.join(decided) if decided else 'nothing yet') + '.',
              f'Now: {step}; {deliverables}.',
-             f'Next: {_recap_next(summary_out, view)}',
+             f'Next: {nxt}',
              f'Limit: {limit}']
-    return lines
+    # P3: one flat line each (no nested list, no line break), never a revision number.
+    return [' '.join(line.split()) for line in lines]
 
 
 LIVENESS_RUNNING, LIVENESS_UNKNOWN, LIVENESS_NOT_CHECKED = ('running', 'outcome_unknown',
@@ -461,4 +514,5 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'not_yet_defensible': defensible,
         'settings': state['settings'],
         'task': st.task_of(state),
+        'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
     }

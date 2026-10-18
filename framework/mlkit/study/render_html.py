@@ -176,6 +176,47 @@ def _confirmation(conf: Mapping) -> str:
             f'{lit("proposal", conf.get("restatement", ""))}</span></div>')
 
 
+def _credit(view: Mapping, titles: Mapping) -> str:
+    """Who decided what, next to the conclusion (P7): a delegated decision is the
+    assistant's recommended default, delegated by the analyst, never the analyst's choice."""
+    labels = _labels()
+    delegated, explicit = [], []
+    for did, d in view['decisions'].items():
+        conf = d['confirmation']
+        if did == 'conclusion' or d['status'] not in ('confirmed', 'reconfirm_required') \
+                or not conf:
+            continue
+        (delegated if conf.get('basis') == 'delegated_default' else explicit).append(
+            titles.get(did, did))
+    if not delegated and not explicit:
+        return ''
+    rows = []
+    if delegated:
+        rows.append(f'<li data-basis="delegated_default">{e(labels["credit_delegated"])} '
+                    f'{e("; ".join(delegated))}.</li>')
+    if explicit:
+        rows.append(f'<li data-basis="explicit">{e(labels["credit_explicit"])} '
+                    f'{e("; ".join(explicit))}.</li>')
+    return (f'<div class="credit"><strong>{e(labels["credit_heading"])}</strong>'
+            f'<ul>{"".join(rows)}</ul></div>')
+
+
+def _note(n: Mapping) -> str:
+    """A condition the junior stated on a decision (P2), open or resolved, verbatim."""
+    labels = _labels()
+    if n['status'] == 'open':
+        return (f'<div class="words delegated" data-note="{e(n["note_id"])}" data-status="open">'
+                f'{_badge("proposed", labels["hold_open"])}'
+                f'<q data-literal="user_words">{e(n["user_words"])}</q>'
+                f'<br><span class="small">{e(labels["hold_open_note"])}</span></div>')
+    resolution = n.get('resolution') or {}
+    return (f'<div class="words" data-note="{e(n["note_id"])}" data-status="resolved">'
+            f'{_badge("confirmed", labels["hold_resolved"])}'
+            f'<q data-literal="user_words">{e(n["user_words"])}</q>'
+            f'<br><span class="small">{e(labels["hold_resolved_by"])}: </span>'
+            f'<q data-literal="user_words">{e(resolution.get("user_words", ""))}</q></div>')
+
+
 def _availability_table(view: Mapping, variables: list[dict]) -> str:
     labels = _labels()
     decision = view['decisions']['feature_availability']
@@ -212,6 +253,7 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
                 verdict = labels['verdict'].get(d['value'].get('verdict'), d['value'].get('verdict'))
                 parts.append(f'<p><strong>{e(verdict)}.</strong> '
                              f'{lit("decision_value", d["value"].get("text", ""), "q")}</p>')
+                parts.append(_credit(view, titles))
             else:
                 parts.append(f'<p>Value: {lit("decision_value", _value_text(d["value"]), "code")}</p>')
         if did == 'feature_availability':
@@ -220,6 +262,9 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
             parts.append(_confirmation(d['confirmation']))
         if d['reason']:
             parts.append(f'<p class="notice">{lit("message", d["reason"])}</p>')
+        for n in view.get('notes') or []:
+            if n['decision_id'] == did:
+                parts.append(_note(n))
         for p in view['open_proposals']:
             if p['decision_id'] == did:
                 parts.append(f'<div class="feedback">{_badge("proposed", labels["proposal_waiting"])}'

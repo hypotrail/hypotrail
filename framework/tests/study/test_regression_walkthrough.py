@@ -321,6 +321,16 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                                                         'Limit']
     decided = recap[1]
     assert f'model choice: {"the linear model" if adopt else "the mean baseline"}' in decided
+    # P3: the chosen model's validation MAE in the target unit, with its result citation,
+    # and no revision number anywhere; the recap passes ``check`` as quoted.
+    rid = evaluation['result_id']
+    assert (f'(validation MAE {ev["models"][choice]["mae"]:.2f} {ev["unit"]}, result '
+            f'{rid[:8]})') in decided
+    assert not any('revision' in line.lower() for line in recap)
+    quoted = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'check', '--text', '-',
+                             '--study', str(study)], input='\n'.join(recap), capture_output=True,
+                            text=True, cwd=work, env=fk.env(), timeout=120)
+    assert json.loads(quoted.stdout)['clean'] is True, quoted.stdout
     if time_column:
         assert f'split (ordinal cutoff on {time_column}, validation from {junior["cutoff"]})' \
             in decided

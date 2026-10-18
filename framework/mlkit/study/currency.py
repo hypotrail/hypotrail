@@ -66,13 +66,15 @@ def message(name: str, item: Mapping | None, state: Mapping, is_current=None) ->
         return (f'The {label} {what} failed at revision {attempted}: previous {label} kept and '
                 f'marked stale at revision {attempted}. Its content is from revision {last_ok}; '
                 f'do not rely on it until a render succeeds.')
+    # P3 (post-v0.1): an up-to-date or stale message holds no revision number, so a resume
+    # recap that repeats it holds none either; the item's ``revision`` fields keep them.
     if status == 'stale':
         if attempted != revision:
-            return (f'The {label} ({path}) is stale: it was written at revision {attempted} and '
-                    f'the study is at revision {revision}. Render again before relying on it.')
+            return (f'The {label} ({path}) is stale: the study changed after it was written. '
+                    f'Render again before relying on it.')
         return (f'The {label} ({path}) is stale: it cites a result that is no longer current. '
                 f'Render again before relying on it.')
-    return f'The {label} ({path}) is up to date at revision {revision}.'
+    return f'The {label} ({path}) is up to date.'
 
 
 def overall(statuses) -> str:

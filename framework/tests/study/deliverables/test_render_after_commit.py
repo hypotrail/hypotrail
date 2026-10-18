@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -125,8 +126,10 @@ def test_artifact_messages_say_what_happened(b, monkeypatch):
     arts = out.payload['artifacts']
     assert f'previous report kept and marked stale at revision {rev}' in arts['report']['message']
     assert f'from revision {before}' in arts['report']['message']
+    # P3: an up-to-date message holds no revision number (a recap may repeat it).
     assert arts['notebook']['message'] == (f'The generated notebook ({mf.ARTIFACTS["notebook"]}) '
-                                           f'is up to date at revision {rev}.')
+                                           f'is up to date.')
+    assert arts['notebook']['revision'] == rev
     assert 'not tracked' in arts['workbench']['message']
     items = view.build(b.study)['artifacts']['items']
     assert items['report']['message'] == arts['report']['message']
@@ -150,9 +153,10 @@ def test_artifact_messages_say_what_happened(b, monkeypatch):
     now = read.open(b.study).revision
     stale = view.build(b.study)['artifacts']['items']['report']
     assert stale['status'] == 'stale'
-    assert stale['message'] == (f'The report ({mf.ARTIFACTS["report"]}) is stale: it was written '
-                                f'at revision {now - 1} and the study is at revision {now}. '
-                                'Render again before relying on it.')
+    assert stale['message'] == (f'The report ({mf.ARTIFACTS["report"]}) is stale: the study '
+                                'changed after it was written. Render again before relying on it.')
+    assert stale['revision'] == now - 1 and not re.search(r'\d', stale['message'].replace(
+        mf.ARTIFACTS['report'], ''))
 
 
 def test_repeated_failures_keep_a_single_banner(b, monkeypatch):

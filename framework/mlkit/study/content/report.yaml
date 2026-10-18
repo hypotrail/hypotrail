@@ -62,6 +62,13 @@ delegated_restatement: Recommended default you delegated to
 not_authenticated: Recorded words, not an authenticated signature.
 restatement: Restatement you answered
 proposal_waiting: Waiting for your answer
+hold_open: On hold in your words
+hold_open_note: This decision cannot be confirmed until your own words resolve the condition.
+hold_resolved: Condition resolved
+hold_resolved_by: Resolved in your words
+credit_heading: Who decided what
+credit_delegated: "The assistant's recommended default, delegated by the analyst (not the analyst's own choice):"
+credit_explicit: "Confirmed in the analyst's own words:"
 policy_note: Figures are computed on validation rows after a choice made on them. They are optimistic and are not a forecast of a future campaign.
 policy_missing: No current policy evaluation yet.
 capacity_population:

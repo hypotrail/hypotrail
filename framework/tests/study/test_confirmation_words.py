@@ -179,3 +179,121 @@ def test_an_acknowledgement_needs_words_about_the_interruption(tmp_path, synthet
                     '--request-id', flow.rid(), '--expected-revision', flow.rev(),
                     '--study', flow.study)
     assert ack['status'] == 'acknowledged' and ack['result']['user_words'] == words
+
+
+# --- P1 (post-v0.1 acceptance): a negation inside a caveat is not a refusal ----------------
+#
+# Table-driven, from the transcripts of the post-v0.1 Claude Code acceptance runs
+# (``docs/acceptance/runs/claude-code-2026-10-18-post-v0.1.md``) and earlier runs: the
+# simulated junior's replies verbatim ("run"), the report's shortened examples and the
+# task's refusal openers ("report"), French renderings of the same replies ("fr"), and the
+# H1 replies that must keep their classification ("h1"). ``True`` means a refusal
+# (``negative_reply``).
+
+AGREE_WITH_CAVEAT = [
+    ('run', "Go with your recommendation: adopt the 100-call policy as an exploratory result "
+            "only. It ranked better than the baseline on the validation rows, but those rows "
+            "were used to choose the rule, so it's not a forecast and shows association, not "
+            "that calling causes subscriptions. The next action is a randomised pilot at the "
+            "100-call limit."),
+    ('run', "Go with your recommendation: adopt the policy of calling the 156 highest logistic "
+            "scores, as an exploratory result only. It's not a forecast because the same "
+            "validation rows chose the rule, and it shows association rather than causation, so "
+            "the next step is a randomised pilot with the real call limit."),
+    ('run', "Yes, I'll hand that conclusion to my manager with the verdict to adopt the model. "
+            "My main point: the linear model beat the mean baseline on the later model years, it "
+            "still predicts mpg too low on newer cars, and this is an exploratory comparison, not "
+            "a forecast, to be checked on cars from later years."),
+    ('run', "Yes, that matches. We predict a new model's mpg once its specs (cylinders, "
+            "displacement, horsepower, weight, origin) are fixed, before mpg is measured, so mpg "
+            "is never an input."),
+    ('run', "I confirm: we adopt the linear model because it made smaller errors than the mean "
+            "baseline on the later model years (MAE 6.31 vs 10.10 mpg). It still underestimates "
+            "the fuel efficiency of newer cars, and its validation errors aren't evidence of "
+            "future error, so it should be checked on a later period before any use."),
+    ('run', "I confirm: we keep the linear model for this exploratory exercise because it made "
+            "smaller errors than the mean baseline on the later model years. It still "
+            "underestimates fuel efficiency of newer cars, its validation errors aren't evidence "
+            "of future error, and it needs to be checked on a later period before any use."),
+    ('run', "I adopt the call-the-top-100 rule as an exploratory recommendation: on the "
+            "validation rows it held more subscribers than the constant baseline, but it's not a "
+            "forecast or a causal effect, and a randomised pilot on a new campaign should "
+            "confirm it before routine use."),
+    ('run', "I confirm calling the top 156 contacts with the highest logistic scores as a "
+            "stand-in, since the team's real call limit isn't known yet."),
+    ('run', "Yes, I agree. I'm excluding acceleration because it's a measured performance, and "
+            "we don't know if it's available before mpg is measured, so it could leak "
+            "information from after the prediction moment."),
+    ('run', "That plan looks good to me, let's go with it. For questions I can't answer, use "
+            "your recommended default and tell me what you assumed."),
+    ('run', "Okay, I'll keep the recorded study as it is, with model year only ordering the rows "
+            "and not used as a feature."),
+    ('run', "Yes, save the draft as a note in the workbench. Keep the ask as the randomised "
+            "pilot, not routine use, since only a test on a new campaign can show whether the "
+            "ranking beats random calling."),
+    ('report', "Yes, and it's not a forecast"),
+    ('report', 'agreed, never an input'),
+    ('report', "ok with that — these aren't evidence of future error"),
+    ('h1', "Understood, the split was interrupted and its outcome is unknown; don't restart it."),
+    ('h1', "Right: we don't know anything after the first call."),
+    ('h1', 'Yes, duration is not available before the call.'),
+    ('fr', "Oui, j'adopte la règle des 100 appels comme résultat exploratoire : ce n'est pas une "
+           "prévision."),
+    ('fr', "D'accord, on exclut duration : elle n'est jamais connue avant l'appel."),
+    ('fr', "Je confirme : on garde le modèle linéaire, et ses erreurs de validation ne sont pas "
+           "une preuve de l'erreur future."),
+    ('fr', 'oui, on exclut age et job, ils ne sont pas disponibles avant'),
+    ('fr', "Prends ta recommandation : ce n'est pas une prévision, juste un classement."),
+]
+REFUSALS = [
+    ('h1', 'no'), ('h1', 'No, I do not agree with that at all'), ('h1', 'wait'), ('h1', 'non'),
+    ('h1', 'Nope.'), ('h1', "I don't agree"), ('h1', 'stop'),
+    ('h1', "attends, je ne suis pas d'accord"), ('h1', 'pas d’accord'), ('h1', 'ok... no'),
+    ('h1', 'Yes, but not before the first call'), ('h1', 'I disagree with this'),
+    ('h1', 'hold on, before the first call?'), ('h1', "No, I can't answer that, wait."),
+    ('h1', 'I do not agree with that split.'), ('h1', 'non, je te laisse choisir'),
+    ('run', "Keep the illustrative K and don't adopt anything until I bring my manager's "
+            "figure."),
+    ('report', 'not yet'), ('report', "Not yet, I need my manager's figure first."),
+    ('report', 'ok, not yet'), ('report', 'Not before the first call.'),
+    ('report', "I'm not sure about that."), ('report', "That's wrong."),
+    ('report', 'Yes. No, wait.'), ('report', 'Not that one.'),
+    ('fr', 'pas encore'), ('fr', 'Non, pas avant le premier appel.'),
+    ('fr', 'oui, mais pas avant le premier appel'),
+    ('fr', "d'accord, mais je ne veux pas de seuil"), ('fr', 'Je ne valide pas cette règle.'),
+    ('fr', "c'est faux"), ('fr', 'Je ne suis pas sûr.'),
+]
+NEGATION_TABLE = ([(words, False, source) for source, words in AGREE_WITH_CAVEAT]
+                  + [(words, True, source) for source, words in REFUSALS])
+
+
+def test_the_negation_table_has_enough_cases_in_both_directions_and_languages():
+    assert len(NEGATION_TABLE) >= 30
+    assert sum(1 for _, neg, _ in NEGATION_TABLE if neg) >= 15
+    assert sum(1 for _, neg, _ in NEGATION_TABLE if not neg) >= 15
+    assert {s for _, _, s in NEGATION_TABLE} >= {'run', 'report', 'fr', 'h1'}
+
+
+@pytest.mark.parametrize('words,negative,source', NEGATION_TABLE)
+def test_a_negation_is_a_refusal_only_when_it_targets_the_agreement(words, negative, source):
+    assert cmd.is_negative(words) is negative, (source, words)
+    if negative:
+        assert cmd.reply_problem(words) == 'negative_reply', words
+    else:
+        assert cmd.reply_problem(words) != 'negative_reply', words
+
+
+@pytest.mark.parametrize('words', [w for _, w in AGREE_WITH_CAVEAT[:6]])
+def test_the_refused_acceptances_now_confirm_in_a_real_process(flow, words):
+    """The six replies the post-v0.1 runs refused confirm a proposal they relate to, and the
+    recorded words keep the limits the junior stated."""
+    restatement = ('You adopt the recommended option as an exploratory result, the linear model '
+                   'or the call policy, with a pilot or a later check as the next step.')
+    extra = ()
+    if cmd.is_delegation(words):   # "Go with your recommendation: ..." delegates (D1)
+        restatement = 'My recommended default: ' + restatement
+        extra = ('--basis', 'delegated_default', '--delegation-scope', 'this_decision')
+    pid = _propose(flow, 'prediction_time', PT, restatement)
+    done = _confirm(flow, pid, words, *extra)
+    assert done['result']['status'] == 'confirmed'
+    assert done['result']['user_words'] == words

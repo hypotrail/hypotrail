@@ -69,10 +69,15 @@ EXIT_UNKNOWN_OUTCOME = 4
 ACTION_PROPOSE = 'decide.propose'
 ACTION_CONFIRM = 'decide.confirm'
 ACTION_WITHDRAW = 'decide.withdraw'
+# Post-v0.1 (P2): a condition or hold the junior states at a pause, and its resolution.
+ACTION_NOTE = 'decide.note'
+ACTION_RESOLVE_NOTE = 'decide.resolve_note'
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
 CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                             'delegation_scope'})
 WITHDRAW_PARAMS = frozenset({'proposal_id', 'reason'})
+NOTE_PARAMS = frozenset({'decision_id', 'user_words'})
+RESOLVE_NOTE_PARAMS = frozenset({'note_id', 'user_words'})
 DEFAULT_CHANNEL = 'chat'
 DEFAULT_ACTOR = 'user'
 DEFAULT_BASIS = st.DEFAULT_BASIS
@@ -116,16 +121,75 @@ FILLER_WORDS = frozenset("""
 # say which proposal, not what is decided.
 IDENTIFIER = re.compile(r'\b(?:[a-z]+_(?=[0-9a-z]*\d)[0-9a-z]+|r-[0-9a-z]+'
                         r'|(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,})\b', re.IGNORECASE)
-# A reply that refuses, hesitates or disagrees: a clause opening with one of these words,
-# or one of the phrases anywhere.
+# A reply that refuses, hesitates or disagrees (review fix H1, narrowed after the
+# post-v0.1 acceptance, P1). A negation is a refusal only when it targets the agreement
+# itself or the proposal, never when it sits in a caveat after an agreement ("Yes, and it's
+# not a forecast", "agreed, never an input"). A reply is negative when:
+#
+# 1. it refuses the agreement anywhere (``REFUSES_AGREEMENT``: "I don't agree", "pas
+#    d'accord", "disagree", "hold on", "don't adopt anything until ...");
+# 2. it opens with a refusal (its first word is in ``NEGATIVE_LEADS``, or it opens with
+#    "not yet", "pas encore", "not so fast": ``REFUSAL_OPENINGS``), also right after an
+#    agreement word ("ok, not yet", "yes no");
+# 3. its first clause negates the proposal: without an agreement lead
+#    (``AGREEMENT_LEAD``), a negator whose next word does not describe availability, a
+#    restart, or an inability to answer ("not before the call", "I'm not sure"), or a
+#    word of ``FIRST_CLAUSE_REFUSALS`` ("that's wrong");
+# 4. a later clause is a refusal on its own ("ok... no", "yes. No, wait.") or a
+#    reservation that opens with "but" or "mais" followed by a negation ("Yes, but not
+#    before the first call", "d'accord, mais je ne veux pas de seuil").
+#
+# After an agreement lead ("yes", "I confirm", "I adopt", "go with your recommendation",
+# "je confirme"), a negated description in a later clause is a statement of a limit.
 NEGATIVE_LEADS = frozenset("""
     no non nope nah nan wait stop attends attendez cancel annule annuler never jamais hold
 """.split())
-NEGATIVE_PHRASE = re.compile(r"""
-    \b(?:disagree[sd]?|incorrect|wrong|reject|refuse|wait|stop|attends|attendez|faux|
-        desaccord|hold\s+on|not\s+so\s+fast|no\s+way)\b
-  | \bpas\s+d\W?\s*accord\b
+REFUSAL_OPENINGS = (('not', 'yet'), ('pas', 'encore'), ('not', 'now'), ('pas', 'maintenant'),
+                    ('not', 'so', 'fast'), ('not', 'that'), ('pas', 'ca'))
+FIRST_CLAUSE_REFUSALS = frozenset('incorrect wrong reject rejected refuse refused faux '
+                                  'disagree'.split())
+_AGREEMENT_VERBS = r'(?:agree|confirm|accept|adopt|approve|validate|go\s+(?:with|ahead))'
+REFUSES_AGREEMENT = re.compile(rf"""
+    \bdisagree[sd]?\b | \bdesaccord\b | \bpas\s+d\W?\s*accord\b
+  | \bnot\s+so\s+fast\b | \bno\s+way\b | \bhold\s+on\b | \bhang\s+on\b
+  | (?:\b(?:i|we)\s+(?:(?:do|does|did|ca|can|could|wo|will|would|really|still)\s+)?
+        (?:not|n't|never|cannot)
+     | (?:^|[,.;:!?—–-]\s*|\b(?:so|and|but|please|then)\s+)
+        (?:do\s+n't|do\s+not|never))
+    \s+(?:really\s+|quite\s+|fully\s+|yet\s+)?{_AGREEMENT_VERBS}\b(?!\s+more)
+  | \b(?:je|nous|on)\s+n(?:e\s+|')(?:(?:le|la|les)\s+|l')?
+        (?:confirm|valid|accept|adopt|approuv|sui[st]\s+pas\s+d)\w*\s+(?:pas|rien|encore)\b
+  | \bn(?:e\s+|')(?:confirm|valid|accept|adopt|approuv)\w*\s+(?:rien|pas)\b
+  | \b(?:i'?m|i\s+am)\s+(?:not|n't)\s+(?:so\s+|really\s+|quite\s+|entirely\s+)?sure\b
+  | \bi'?m\s+unsure\b | \bje\s+ne\s+suis\s+pas\s+(?:tres\s+|vraiment\s+)?sur\b
 """, re.IGNORECASE | re.VERBOSE)
+# An opening that agrees with the restatement (rule 3 does not apply after it).
+AGREEMENT_LEAD = re.compile(r"""
+    ^\s*(?:(?:well|so|alors|bon|oh)\W+)?(?:
+        yes|yeah|yep|yup|ya|ok|okay|sure|agreed|agree|right|correct|exactly|absolutely
+      | definitely|indeed|perfect|fine|great|good|understood|noted|confirmed|approved
+      | sounds\s+(?:good|right|fine)|looks\s+(?:good|right|fine)|lgtm
+      | oui|ouais|d\W?\s*accord|parfait|exact|exactement|entendu|compris|valide
+      | tout\s+a\s+fait|c'?est\s+(?:bon|ca|correct|juste)|ca\s+me\s+va
+      | that'?s\s+(?:right|correct|it|fine|good)|that\s+is\s+(?:right|correct)
+      | that\s+(?:matches|works)
+      | (?:i|we)\s+(?:'ll\s+|will\s+|do\s+|can\s+|also\s+)?
+            (?:confirm|agree|adopt|choose|accept|approve|validate|keep|go\s+with|pick|take)
+      | (?:i'?m|i\s+am|we'?re|we\s+are)\s+
+            (?:agreeing|confirming|adopting|choosing|accepting|fine|ok|okay|good|happy)
+      | let'?s\s+(?:go|do|keep|use|adopt|take)|go\s+(?:with|ahead)
+      | je\s+(?:confirme|valide|choisis|garde|retiens|suis\s+d\W?\s*accord)
+      | j'?(?:adopte|accepte|approuve)|on\s+(?:part|garde|valide|retient|adopte)|va\s+pour
+    )\b""", re.IGNORECASE | re.VERBOSE)
+CLAUSE_BREAK = re.compile(r"[,.;:!?…—–()]+|\s-\s|\b(but|mais|however|cependant)\b")
+RESERVATION_CONJUNCTIONS = frozenset('but mais however cependant'.split())
+# Words a reservation may hold before its negation ("but I don't", "mais je ne").
+RESERVATION_SKIP = frozenset('i we you je nous on tu vous do does did ne n please'.split())
+# Words a clause made only of a refusal may also hold ("no, not yet", "wait a second").
+STANDALONE_REFUSAL = frozenset("""
+    not n't yet pas encore now maintenant please so fast a minute second sec moment that ca
+    actually merci thanks thank you on just
+""".split()) | NEGATIVE_LEADS
 # A negator ("not", "don't", "pas", "never") refuses unless one of the next words
 # describes availability or a restart: "this feature is not available", "we don't know it
 # before the call", "elle n'est pas connue", "don't restart it" are statements. So is an
@@ -136,7 +200,7 @@ NEGATOR_SKIP = frozenset('be been yet encore really actually it them we nous tha
 DESCRIPTIVE_AFTER_NEGATOR = (
     'availab', 'known', 'know', 'usable', 'used', 'use', 'included', 'include', 'recorded',
     'collected', 'observed', 'exist', 'have', 'has', 'restart', 'rerun', 'retry', 'relaunch',
-    'run', 'disponib', 'connu', 'utilis', 'inclu', 'relanc', 'refai', 'sait', 'savons',
+    'run', 'disponib', 'connu', 'conna', 'utilis', 'inclu', 'relanc', 'refai', 'sait', 'savons',
     'collect', 'enregistr', 'observ', 'redo', 'recompute', 'refit', 'answer', 'repond')
 # Words that tie an acknowledgement to the interruption it acknowledges (L5).
 ACKNOWLEDGEMENT_TOPIC = ('interrupt', 'unknown', 'outcome', 'killed', 'crash', 'died', 'dead',
@@ -328,6 +392,18 @@ def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatem
     wording = (cmd_check.wording(value['text'], 'value.text')
                + cmd_check.wording(restatement, 'restatement')
                + cmd_check.wording(rationale, 'rationale'))
+    credit = (cmd_check.attribution(value['text'], 'value.text')
+              + cmd_check.attribution(restatement, 'restatement')
+              + cmd_check.attribution(rationale, 'rationale'))
+    if credit:
+        # P7: a delegated decision is the assistant's recommended default, delegated by the
+        # analyst; the conclusion never credits it to the analyst.
+        raise CommandRefused('misattributed_delegation',
+                             'The conclusion credits a recommended default to the analyst. A '
+                             'delegated decision is the assistant\'s recommended default, '
+                             'delegated by the analyst; say so.',
+                             details={'findings': credit,
+                                      'delegated': st.delegated_decisions(state)})
     if wording:
         raise CommandRefused('causal_or_forecast_wording',
                              'The conclusion uses causal or forecast wording. The study shows '
@@ -472,23 +548,100 @@ def is_bare_acknowledgement(words: str) -> bool:
     return not content_words(words)
 
 
+def _tokens(text: str) -> list[str]:
+    return re.findall(r"n't|[^\W_]+", text)
+
+
+def _descriptive(after: list[str]) -> bool:
+    """The words after a negator describe availability, a restart, or an inability to
+    answer ("not available", "don't know", "can't answer")."""
+    after = [w for w in after[:3] if w not in NEGATOR_SKIP]
+    return bool(after) and after[0].startswith(DESCRIPTIVE_AFTER_NEGATOR)
+
+
+def _negates(tokens: list[str]) -> bool:
+    """A negator in ``tokens`` that is not followed by a descriptive word."""
+    return any(t in NEGATORS and not _descriptive(tokens[i + 1:]) for i, t in enumerate(tokens))
+
+
+def _opens_with_refusal(tokens: list[str]) -> bool:
+    return bool(tokens) and (tokens[0] in NEGATIVE_LEADS or any(
+        tuple(tokens[:len(o)]) == o for o in REFUSAL_OPENINGS))
+
+
+def _reservation(tokens: list[str]) -> bool:
+    """A clause after "but" / "mais" that negates: "but not before the call", "but no",
+    "but I don't want that", "mais je ne veux pas de seuil" (a negated description such as
+    "but we don't know it before the call" is a statement)."""
+    i = 0
+    while i < len(tokens) and tokens[i] in RESERVATION_SKIP and tokens[i] not in ('ne', 'n'):
+        i += 1
+    if i >= len(tokens):
+        return False
+    if tokens[i] in NEGATIVE_LEADS:
+        return True
+    if tokens[i] in NEGATORS:
+        return not _descriptive(tokens[i + 1:])
+    if tokens[i] in ('ne', 'n'):
+        for j in range(i + 2, min(i + 5, len(tokens))):
+            if tokens[j] in ('pas', 'jamais', 'plus', 'rien'):
+                return not tokens[i + 1].startswith(DESCRIPTIVE_AFTER_NEGATOR)
+    return False
+
+
+def _standalone_refusal(tokens: list[str]) -> bool:
+    """A clause made only of a refusal ("no", "not yet", "wait a second")."""
+    return bool(tokens) and set(tokens) <= STANDALONE_REFUSAL \
+        and any(t in NEGATIVE_LEADS or t in ('not', 'pas') for t in tokens)
+
+
 def is_negative(words: str) -> bool:
     """True when a reply refuses, hesitates or disagrees ("no", "wait", "I do not agree",
-    "pas d'accord", "yes, but not before the call"). A negated availability or restart
-    ("this feature is not available", "don't restart it") is a statement, not a refusal."""
-    folded = _fold(IDENTIFIER.sub(' ', words))
-    if NEGATIVE_PHRASE.search(folded):
+    "pas d'accord", "not yet", "yes, but not before the call").
+
+    A negation is a refusal only when it targets the agreement or the proposal (the rules
+    above :data:`NEGATIVE_LEADS`): after an agreement lead, a negated clause states a limit
+    ("Yes, and it's not a forecast", "agreed, never an input", "I confirm: its validation
+    errors aren't evidence of future error"). A negated availability, restart, or
+    inability to answer ("this feature is not available", "don't restart it", "for
+    questions I can't answer") is a statement wherever it is.
+    """
+    folded = _fold(IDENTIFIER.sub(' ', words)).strip()
+    spaced = folded.replace("n't", " n't")
+    if REFUSES_AGREEMENT.search(spaced):
         return True
-    for clause in re.split(r"[,.;:!?…—-]+|\bbut\b|\bmais\b", folded):
-        tokens = re.findall(r"[^\W_]+", clause)
-        if tokens and tokens[0] in NEGATIVE_LEADS:
+    parts = CLAUSE_BREAK.split(spaced)
+    clauses: list[tuple[str | None, list[str]]] = []
+    first_text = ''
+    conjunction = None
+    for part in parts:
+        if part is None:
+            continue
+        if part.strip() in RESERVATION_CONJUNCTIONS:
+            conjunction = part.strip()
+            continue
+        tokens = _tokens(part)
+        if tokens:
+            first_text = first_text or part
+            clauses.append((conjunction, tokens))
+            conjunction = None
+    if not clauses:
+        return False
+    first = clauses[0][1]
+    if _opens_with_refusal(first) or FIRST_CLAUSE_REFUSALS & set(first):
+        return True
+    lead = AGREEMENT_LEAD.match(spaced)
+    if lead:
+        # "ok not yet", "yes no wait": a refusal right after the agreement words.
+        if _opens_with_refusal(first[len(_tokens(lead.group(0))):]):
             return True
-    tokens = re.findall(r"n't|[^\W_]+", folded.replace("n't", " n't "))
-    for i, t in enumerate(tokens):
-        if t in NEGATORS:
-            after = [w for w in tokens[i + 1:i + 4] if w not in NEGATOR_SKIP]
-            if not after or not after[0].startswith(DESCRIPTIVE_AFTER_NEGATOR):
-                return True
+    elif not DELEGATION.search(first_text) and _negates(first):
+        return True
+    for conj, tokens in clauses[1:]:
+        if _standalone_refusal(tokens):
+            return True
+        if conj is not None and _reservation(tokens):
+            return True
     return False
 
 
@@ -763,6 +916,16 @@ def _confirm(ctx: Context) -> Handler:
                              f'restatement that states the recommended default.',
                              proposal_id=pid, restatement=proposal['restatement'])
         decision_id, value = proposal['decision_id'], proposal['value']
+        holds = st.open_holds(state, decision_id)
+        if holds:
+            raise CommandRefused(
+                'decision_on_hold',
+                f'The junior put the {decision_id} on hold in their own words; it cannot be '
+                f'confirmed until their words resolve the hold (decide note --resolve). Tell '
+                f'them what is still pending and ask whether the condition is met.',
+                details={'decision_id': decision_id, 'proposal_id': pid,
+                         'notes': [{'note_id': n['note_id'], 'user_words': n['user_words']}
+                                   for n in holds]})
         if params['basis'] == st.DELEGATED_DEFAULT \
                 and decision_id not in st.STANDING_DELEGATION_DECISIONS \
                 and params['delegation_scope'] != st.THIS_DECISION:
@@ -847,9 +1010,87 @@ def _withdraw(ctx: Context) -> Handler:
     return Handler(WITHDRAW_PARAMS, run, check)
 
 
+def _note(ctx: Context) -> Handler:
+    """``decide.note`` (P2): record a condition or hold the junior stated, verbatim.
+
+    The words are the junior's, about one decision of the study ("don't adopt anything until
+    I bring my manager's figure"). A bare acknowledgement says nothing to hold on. The note
+    stays open until :func:`_resolve_note`; while it is open the decision cannot be
+    confirmed (``decision_on_hold``)."""
+    def check(params):
+        words = params['user_words']
+        if not isinstance(words, str) or not words.strip():
+            raise _invalid("A note holds the junior's own words.", field='user_words')
+        if is_bare_acknowledgement(words):
+            raise _invalid('These words state no condition: record what the junior asked to '
+                           'wait for, verbatim.', field='user_words', user_words=words)
+
+    def run(state, params):
+        decision_id = params['decision_id']
+        if decision_id not in st.decision_ids(state):
+            raise CommandRefused('unknown_decision',
+                                 f'Decision {decision_id!r} is not part of a {st.task_of(state)} '
+                                 f'study.', details={'decisions': list(st.decision_ids(state))})
+        revision = state['revision'] + 1
+        notes = state.setdefault('notes', {})
+        nid = f'n_{len(notes) + 1}'
+        notes[nid] = {'note_id': nid, 'decision_id': decision_id, 'kind': 'hold',
+                      'user_words': params['user_words'], 'status': 'open', 'created': st.now(),
+                      'revision': revision, 'request_id': ctx.request_id, 'resolution': None}
+        return {'note_id': nid, 'decision_id': decision_id, 'status': 'open',
+                'user_words': params['user_words'],
+                'open_holds': [n['note_id'] for n in st.open_holds(state, decision_id)]}
+    return Handler(NOTE_PARAMS, run, check)
+
+
+def _resolve_note(ctx: Context) -> Handler:
+    """``decide.resolve_note`` (P2): the junior's own words resolve an open hold.
+
+    Refused like a confirmation (``ambiguous_confirmation``): empty words, a refusal ("not
+    yet"), a bare acknowledgement, or words that share nothing with the note, the decision,
+    or its open proposal (``unrelated_reply``)."""
+    def check(params):
+        words = params['user_words']
+        reason = reply_problem(words)
+        if reason is not None:
+            raise _ambiguous(reason, REPLY_MESSAGES[reason], user_words=words)
+
+    def run(state, params):
+        nid = params['note_id']
+        note = (state.get('notes') or {}).get(nid)
+        if note is None:
+            raise CommandRefused('unknown_note', f'There is no note {nid}.',
+                                 details={'note_id': nid,
+                                          'open_holds': [n['note_id'] for n in st.open_holds(state)]})
+        if note['status'] != 'open':
+            raise CommandRefused('note_not_open', f'Note {nid} is {note["status"]}.',
+                                 details={'note_id': nid, 'status': note['status']})
+        if note.get('request_id') == ctx.request_id:
+            raise _ambiguous('same_request', 'A hold is resolved by a later request than the one '
+                                             'that recorded it.', note_id=nid)
+        proposals = [p for p in st.open_proposals(state) if p['decision_id'] == note['decision_id']]
+        texts = (note['user_words'], *(p['restatement'] for p in proposals))
+        value = [p['value'] for p in proposals] or None
+        if not relates(params['user_words'], value=value, texts=texts,
+                       topic=(note['decision_id'],)):
+            raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
+                             note_id=nid, user_words=params['user_words'],
+                             note_words=note['user_words'])
+        revision = state['revision'] + 1
+        note.update(status='resolved', resolution={'user_words': params['user_words'],
+                                                   'revision': revision, 'time': st.now(),
+                                                   'request_id': ctx.request_id})
+        return {'note_id': nid, 'decision_id': note['decision_id'], 'status': 'resolved',
+                'user_words': params['user_words'],
+                'open_holds': [n['note_id'] for n in st.open_holds(state, note['decision_id'])]}
+    return Handler(RESOLVE_NOTE_PARAMS, run, check)
+
+
 register_action(ACTION_PROPOSE, _propose)
 register_action(ACTION_CONFIRM, _confirm)
 register_action(ACTION_WITHDRAW, _withdraw)
+register_action(ACTION_NOTE, _note)
+register_action(ACTION_RESOLVE_NOTE, _resolve_note)
 
 
 # --- commands ---------------------------------------------------------------------------

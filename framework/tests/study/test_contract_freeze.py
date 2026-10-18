@@ -32,8 +32,17 @@ SUMMARY_SCHEMA = 'hypotrail.summary/1'
 SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                         'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
                         'results', 'artifacts', 'executions', 'not_yet_defensible',
+                        # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
+                        'notes',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
                         'recap')
+SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
+# Post-v0.1 (P2): a junior's condition or hold on a decision.
+NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
+                  'resolution')
+NOTE_STATE_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'created',
+                   'revision', 'request_id', 'resolution')
+NOTE_RESOLUTION_KEYS = ('user_words', 'revision', 'time', 'request_id')
 RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
 SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'delegation_scope', 'user_words', 'reason',
                          'open_proposals')
@@ -55,17 +64,24 @@ RESULT_KEYS_BY_ACTION = {
     'decide.confirm': ('decision_id', 'proposal_id', 'status', 'value', 'user_words', 'channel',
                        'actor', 'invalidation', 'basis', 'delegation_scope'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
+    # Post-v0.1 (P2).
+    'decide.note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
+    'decide.resolve_note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
 }
 ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rationale'},
                  'decide.confirm': {'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                                     'delegation_scope'},
-                 'decide.withdraw': {'proposal_id', 'reason'}}
+                 'decide.withdraw': {'proposal_id', 'reason'},
+                 'decide.note': {'decision_id', 'user_words'},
+                 'decide.resolve_note': {'note_id', 'user_words'}}
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
              'stale', 'invalidations', 'executions', 'artifacts', 'exposure',
              'not_yet_defensible', 'settings',
              # M3 (regression): the task of the study, ``binary`` or ``regression``.
-             'task')
+             'task',
+             # Post-v0.1 (P2): the junior's conditions and holds.
+             'notes')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
@@ -122,7 +138,9 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           # Review fix L1 (plan §3.7 row 12, flagged by the view).
                           'sources_changed',
                           # M3: a declared group column without a grouped split.
-                          'grouped_split_unsupported'}
+                          'grouped_split_unsupported',
+                          # Post-v0.1 (P2): a condition of the junior not resolved yet.
+                          'open_holds'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -148,7 +166,9 @@ ERROR_CODES = {
     # Review fix M1: causal or forecast wording in a proposed conclusion.
     'causal_or_forecast_wording',
     # Review fix L7: a concurrent duplicate run.
-    'execution_in_progress'}
+    'execution_in_progress',
+    # Post-v0.1 (P2): holds; (P7) a default credited to the analyst.
+    'decision_on_hold', 'unknown_note', 'note_not_open', 'misattributed_delegation'}
 RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
@@ -197,7 +217,9 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
                   'feature_without_status': 'error', 'excluded_feature_used': 'error',
                   'untraceable_number': 'error', 'stale_number': 'error',
                   'causal_wording': 'warning', 'forecast_wording': 'warning',
-                  'artifact_not_current': 'warning', 'untracked_files': 'warning'}
+                  'artifact_not_current': 'warning', 'untracked_files': 'warning',
+                  # Post-v0.1 (P7).
+                  'misattributed_delegation': 'error'}
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category')
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
@@ -280,8 +302,10 @@ def test_status_summary_keys(flow):
     assert tuple(payload['artifacts']) == ('status', 'items')
     for name, item in payload['artifacts']['items'].items():
         assert tuple(item) == ('status', 'revision', 'last_ok_revision', 'message'), name
+    assert view.SUMMARY_NOTE_KEYS == SUMMARY_NOTE_KEYS
     keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)
-            | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'} | set(RECAP_LABELS))
+            | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'} | set(RECAP_LABELS)
+            | set(SUMMARY_NOTE_KEYS))
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
@@ -343,6 +367,53 @@ def test_ambiguous_confirmation_reasons():
     dynamic = {f'proposal_{s}' for s in st.PROPOSAL_STATUSES if s != 'open'}
     assert found | dynamic == AMBIGUOUS_REASONS
     assert not AMBIGUOUS_REASONS - DOC_TOKENS
+
+
+def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, synthetic_case_dir):
+    """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
+    refusal keys."""
+    assert st.TOP_OPTIONAL_KEYS == ('task', 'notes')
+    assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
+    assert st.NOTE_KINDS == ('hold',) and st.NOTE_STATUSES == ('open', 'resolved')
+    assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
+    study = tmp_path / 'study'
+    _run('init', '--case', synthetic_case_dir, '--study', study)
+    out = _run('decide', 'note', '--about', 'policy', '--text',
+               "Don't adopt anything until I bring my manager's figure.", '--request-id', 'n1',
+               '--expected-revision', 1, '--study', study)
+    assert out.exit_code == 0, out.payload
+    assert tuple(out.payload) == PAYLOAD_KEYS['decide']
+    assert tuple(out.payload['result']) == RESULT_KEYS_BY_ACTION['decide.note']
+    v = _run('status', '--study', study).payload['view']
+    assert [tuple(n) for n in v['notes']] == [NOTE_VIEW_KEYS]
+    assert 'open_holds' in {x['id'] for x in v['not_yet_defensible']}
+    summary = _run('status', '--summary', '--study', study).payload
+    assert [tuple(n) for n in summary['notes']] == [SUMMARY_NOTE_KEYS]
+    out = _run('decide', 'note', '--resolve', 'n_1', '--text', "My manager's figure is in.",
+               '--request-id', 'n2', '--expected-revision', 2, '--study', study)
+    assert out.exit_code == 0, out.payload
+    assert tuple(out.payload['result']) == RESULT_KEYS_BY_ACTION['decide.resolve_note']
+    keys = (set(NOTE_VIEW_KEYS) | set(NOTE_STATE_KEYS) | set(NOTE_RESOLUTION_KEYS)
+            | {'decide.note', 'decide.resolve_note', 'open_holds', 'notes'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert ('hypotrail decide note (--about DECISION | --resolve NOTE_ID) --text TEXT' in DOC)
+
+
+def test_negative_reply_targets_the_agreement():
+    """P1 (post-v0.1 acceptance): a negation is a refusal only when it targets the agreement
+    or the proposal; the rule's named parts are documented."""
+    for name in ('REFUSES_AGREEMENT', 'NEGATIVE_LEADS', 'REFUSAL_OPENINGS',
+                 'FIRST_CLAUSE_REFUSALS', 'AGREEMENT_LEAD', 'is_negative'):
+        assert hasattr(cmd, name) and f'commands.{name}' in DOC_TOKENS, name
+    assert {'no', 'non', 'wait', 'stop', 'attends'} <= cmd.NEGATIVE_LEADS
+    assert {('not', 'yet'), ('pas', 'encore')} <= set(cmd.REFUSAL_OPENINGS)
+    for words in ('no', 'No, I do not agree with that at all', 'wait', 'non', 'not yet',
+                  "je ne suis pas d'accord", 'pas d’accord', 'attends',
+                  'Yes, but not before the first call'):
+        assert cmd.reply_problem(words) == 'negative_reply', words
+    for words in ("Yes, and it's not a forecast", 'agreed, never an input',
+                  "ok with that — these aren't evidence of future error"):
+        assert not cmd.is_negative(words), words
 
 
 def test_actions_and_their_parameters():

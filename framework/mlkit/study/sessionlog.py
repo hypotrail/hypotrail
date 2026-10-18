@@ -41,7 +41,8 @@ HOME = '.hypotrail'
 UNLOGGED = ('session-report',)
 # Flags whose values are identifiers the study already shows; every other value is dropped.
 SAFE_VALUE_FLAGS = ('--basis', '--delegation-scope', '--rule', '--column', '--channel',
-                    '--acknowledge-interruption', '--since')
+                    '--acknowledge-interruption', '--since', '--about', '--resolve',
+                    '--max-groups')
 SAFE_SWITCHES = ('--summary', '--json', '--intervals')
 
 
@@ -73,7 +74,7 @@ def _study_arg(argv: Sequence[str]) -> str | None:
     return None
 
 
-def _options(argv: Sequence[str]) -> dict:
+def _options(argv: Sequence[str], *, text_flag: bool = True) -> dict:
     """Identifier-valued options and switches of ``argv``; free text is never kept."""
     out: dict = {}
     for i, token in enumerate(argv):
@@ -89,6 +90,8 @@ def _options(argv: Sequence[str]) -> dict:
                 out.setdefault('rules', []).append(value)
             else:
                 out[key] = value
+        elif name == '--text' and not text_flag:
+            continue   # a note's text is the junior's words: never kept
         elif name == '--text':
             out['text'] = 'stdin' if (inline or (argv[i + 1] if i + 1 < len(argv) else '')) \
                 == '-' else 'file'
@@ -117,7 +120,7 @@ def entry(argv: Sequence[str], payload: Mapping, exit_code: int, time: str) -> d
     line = {'schema': SCHEMA, 'time': time, 'command': command, 'verb': verb,
             'exit_code': exit_code, 'ok': bool(payload.get('ok')),
             'revision': payload.get('revision') if isinstance(payload.get('revision'), int)
-            else None, 'options': _options(argv[1:])}
+            else None, 'options': _options(argv[1:], text_flag=command != 'decide')}
     if command == 'decide' and verb in ('propose',) and len(argv) > 2:
         line['decision_id'] = argv[2]
     if command == 'decide' and verb in ('confirm', 'withdraw') and len(argv) > 2:
@@ -135,7 +138,8 @@ def entry(argv: Sequence[str], payload: Mapping, exit_code: int, time: str) -> d
     result = payload.get('result') if isinstance(payload.get('result'), Mapping) else {}
     if command == 'decide':
         line['replayed'] = bool(payload.get('replayed'))
-        for key in ('decision_id', 'proposal_id', 'status', 'basis', 'delegation_scope'):
+        for key in ('decision_id', 'proposal_id', 'note_id', 'status', 'basis',
+                    'delegation_scope'):
             if result.get(key) is not None:
                 line[key] = result[key]
         inv = result.get('invalidation')

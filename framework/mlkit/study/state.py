@@ -197,8 +197,9 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
             'structure', 'prior_exposure', 'decisions', 'proposals', 'current', 'stale',
             'executions', 'invalidations', 'receipts', 'settings')
 # ``task`` (``binary`` or ``regression``) is written by every new study; a state written
-# before it existed has no ``task`` and is a binary study.
-TOP_OPTIONAL_KEYS = ('task',)
+# before it existed has no ``task`` and is a binary study. ``notes`` (post-v0.1, P2) holds
+# the conditions the junior states at a pause; it appears with the first note.
+TOP_OPTIONAL_KEYS = ('task', 'notes')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -207,6 +208,15 @@ PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rational
 # confirmed values it was based on (a change makes it stale), and why it was closed.
 PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason')
 EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
+# A junior's condition or hold on a decision (post-v0.1, P2): "don't adopt anything until I
+# bring my manager's figure". Recorded verbatim by ``decide note --about``, it stays open
+# until the junior's own words resolve it (``decide note --resolve``); while it is open the
+# decision cannot be confirmed and ``not_yet_defensible`` lists it (``open_holds``).
+NOTE_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'created', 'revision',
+             'request_id', 'resolution')
+NOTE_KINDS = ('hold',)
+NOTE_STATUSES = ('open', 'resolved')
+NOTE_RESOLUTION_KEYS = ('user_words', 'revision', 'time', 'request_id')
 
 
 def now() -> str:
@@ -430,6 +440,40 @@ def _proposal_problems(pid: Any, p: Any, task: str = DEFAULT_TASK) -> list[dict]
     return problems
 
 
+def _notes_problems(notes: Any, task: str = DEFAULT_TASK) -> list[dict]:
+    if not isinstance(notes, dict):
+        return [{'path': 'notes', 'problem': 'must be a mapping'}]
+    problems: list[dict] = []
+    for nid, n in notes.items():
+        path = f'notes.{nid}'
+        if not _keys(n, path, NOTE_KEYS, problems):
+            continue
+        if n['note_id'] != nid:
+            problems.append({'path': f'{path}.note_id', 'problem': 'must equal its key'})
+        if n['decision_id'] not in decision_ids(task):
+            problems.append({'path': f'{path}.decision_id',
+                             'problem': f'must be one of {", ".join(decision_ids(task))}'})
+        if n['kind'] not in NOTE_KINDS:
+            problems.append({'path': f'{path}.kind',
+                             'problem': f'must be one of {", ".join(NOTE_KINDS)}'})
+        if n['status'] not in NOTE_STATUSES:
+            problems.append({'path': f'{path}.status',
+                             'problem': f'must be one of {", ".join(NOTE_STATUSES)}'})
+        if not _text(n['user_words']):
+            problems.append({'path': f'{path}.user_words', 'problem': 'must be a non-empty string'})
+        if type(n['revision']) is not int or n['revision'] < 0:
+            problems.append({'path': f'{path}.revision', 'problem': 'must be a revision number'})
+        if n['status'] == 'resolved':
+            r = n['resolution']
+            if _keys(r, f'{path}.resolution', NOTE_RESOLUTION_KEYS, problems) \
+                    and not _text(r['user_words']):
+                problems.append({'path': f'{path}.resolution.user_words',
+                                 'problem': 'must be a non-empty string'})
+        elif n['resolution'] is not None:
+            problems.append({'path': f'{path}.resolution', 'problem': 'an open note has none'})
+    return problems
+
+
 def validate_state(state: Any) -> list[dict]:
     """Every schema problem of ``state`` (empty when it is valid)."""
     problems: list[dict] = []
@@ -467,6 +511,8 @@ def validate_state(state: Any) -> list[dict]:
         for decision_id in decision_ids(task):
             problems += _decision_problems(decision_id, state['decisions'][decision_id],
                                            proposals, task)
+    if 'notes' in present:
+        problems += _notes_problems(state['notes'], task)
     for key in ('current', 'stale', 'receipts'):
         if not isinstance(state[key], dict):
             problems.append({'path': key, 'problem': 'must be a mapping'})
@@ -552,6 +598,18 @@ def is_current(state: dict, slot: str) -> bool:
 
 def open_proposals(state: dict) -> list[dict]:
     return [p for p in state['proposals'].values() if p['status'] == 'open']
+
+
+def notes(state: Mapping) -> list[dict]:
+    """The junior's notes (P2), oldest first; empty for a state without ``notes``."""
+    items = (state.get('notes') or {}).values()
+    return sorted(items, key=lambda n: int(str(n['note_id']).rsplit('_', 1)[-1]))
+
+
+def open_holds(state: Mapping, decision_id: str | None = None) -> list[dict]:
+    """Open holds (P2), for one decision or for all."""
+    return [n for n in notes(state) if n['status'] == 'open'
+            and (decision_id is None or n['decision_id'] == decision_id)]
 
 
 def _confirmed(state: dict, decision_id: str) -> bool:
@@ -712,6 +770,14 @@ def not_yet_defensible(state: dict) -> list[dict]:
         items.append({'id': 'uncertain_features_included', 'features': uncertain,
                       'text': 'These features are used although their availability at prediction '
                               'time is uncertain: ' + ', '.join(uncertain) + '.'})
+    holds = open_holds(state)
+    if holds:
+        said = '; '.join(f'"{n["user_words"]}" ({n["decision_id"]})' for n in holds)
+        items.append({'id': 'open_holds', 'notes': [n['note_id'] for n in holds],
+                      'decisions': sorted({n['decision_id'] for n in holds}),
+                      'text': 'The junior set a condition that is not resolved yet, so these '
+                              'decisions cannot be confirmed until their own words resolve it: '
+                              + said + '.'})
     delegated = delegated_decisions(state)
     if delegated:
         items.append({'id': 'delegated_decisions', 'decisions': delegated,
