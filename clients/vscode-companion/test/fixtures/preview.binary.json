@@ -1,0 +1,162 @@
+{
+ "about": {
+  "schema": "hypotrail.preview/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "policy",
+   "--rule",
+   "capacity:100",
+   "--intervals",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.preview/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "kind": "policy",
+  "rules": [
+   "capacity:100"
+  ],
+  "models": {
+   "fit.baseline": {
+    "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+    "current": true,
+    "stale_reason": null
+   },
+   "fit.logistic": {
+    "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+    "current": true,
+    "stale_reason": null
+   }
+  },
+  "evaluations": {
+   "capacity:100": {
+    "fit.baseline": {
+     "rule": "capacity:100",
+     "kind": "capacity",
+     "parameter": 100,
+     "n": 1357,
+     "n_positive": 156,
+     "selected": 100.0,
+     "true_positives": 11.495946941783346,
+     "false_positives": 88.50405305821666,
+     "false_negatives": 144.50405305821664,
+     "precision": 0.11495946941783347,
+     "recall": 0.07369196757553427,
+     "volume": 100.0,
+     "volume_rate": 0.07369196757553427,
+     "tied_at_cut": 1357,
+     "cut": {
+      "score": 0.11536030341340076,
+      "n_tied": 1357,
+      "fraction_selected": 0.07369196757553427
+     },
+     "selection": "expected"
+    },
+    "fit.logistic": {
+     "rule": "capacity:100",
+     "kind": "capacity",
+     "parameter": 100,
+     "n": 1357,
+     "n_positive": 156,
+     "selected": 100.0,
+     "true_positives": 36.0,
+     "false_positives": 64.0,
+     "false_negatives": 120.0,
+     "precision": 0.36,
+     "recall": 0.23076923076923078,
+     "volume": 100.0,
+     "volume_rate": 0.07369196757553427,
+     "tied_at_cut": 0,
+     "cut": {
+      "score": null,
+      "n_tied": 0,
+      "fraction_selected": null
+     },
+     "selection": "exact"
+    }
+   }
+  },
+  "intervals": {
+   "capacity:100": {
+    "rule": "capacity:100",
+    "replicates": 2000,
+    "seed": 20261017,
+    "level": 0.95,
+    "reference": "fit.baseline",
+    "method": "paired percentile bootstrap over validation rows",
+    "intervals": {
+     "fit.baseline": {
+      "precision": {
+       "low": 0.09727339719970524,
+       "high": 0.13264554163596168,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.07369196757553426,
+       "high": 0.07369196757553427,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 100.0,
+       "high": 100.0,
+       "undefined_replicates": 0
+      }
+     },
+     "fit.logistic": {
+      "precision": {
+       "low": 0.26,
+       "high": 0.47,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.1773049645390071,
+       "high": 0.2911588961396335,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 100.0,
+       "high": 100.0,
+       "undefined_replicates": 0
+      }
+     }
+    },
+    "deltas": {
+     "fit.logistic": {
+      "precision": {
+       "point": 0.24504053058216652,
+       "low": 0.15651436993367723,
+       "high": 0.3447315770081061,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.15707726319369653,
+       "low": 0.10361299696347283,
+       "high": 0.21746692856409924,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     }
+    }
+   }
+  },
+  "adopted": {
+   "status": "confirmed",
+   "value": "threshold:0.2"
+  },
+  "recorded": false,
+  "note": "Experiment, not adopted: nothing was recorded. To adopt a rule, run policy.evaluate with it (exposure validation_policy_selection), then propose and confirm the policy.",
+  "warnings": []
+ }
+}

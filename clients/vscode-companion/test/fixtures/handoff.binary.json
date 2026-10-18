@@ -1,0 +1,203 @@
+{
+ "about": {
+  "schema": "hypotrail.handoff/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "handoff.json written in the pack (hypotrail.handoff/1)."
+ },
+ "payload": {
+  "schema": "hypotrail.handoff/1",
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "task": "binary",
+  "case": {
+   "id": "bank-marketing",
+   "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929"
+  },
+  "dataset": {
+   "path": "data/bank.csv",
+   "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde"
+  },
+  "goal": "Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "value": "before the first contact of the campaign, from the client file",
+    "user_words": "Before the call: we only know the client and past campaigns.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat"
+   },
+   {
+    "decision_id": "feature_availability",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "user_words": "Remove duration, day, month and campaign; keep contact as uncertain.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat"
+   },
+   {
+    "decision_id": "split",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "user_words": "Go with your recommended default.",
+    "basis": "delegated_default",
+    "delegation_scope": "this_decision",
+    "channel": "chat"
+   },
+   {
+    "decision_id": "policy",
+    "value": "capacity:100",
+    "user_words": "Yes: we can make 100 calls per wave, so call the 100 best-scored clients.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "webview"
+   }
+  ],
+  "results_cited": [
+   {
+    "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+    "activity": "eda.target_rate",
+    "path": "rate",
+    "value": 0.11536030341340076,
+    "shown": "11.5%"
+   }
+  ],
+  "exposure": {
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "rows": 4521,
+     "records": 2,
+     "activities": [
+      "init.structure",
+      "split"
+     ],
+     "first_revision": 1,
+     "last_revision": 8
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "train",
+     "rows": 3164,
+     "records": 4,
+     "activities": [
+      "eda.target_rate",
+      "eda.special_values",
+      "eda.rate_by",
+      "eda.distribution"
+     ],
+     "first_revision": 10,
+     "last_revision": 27
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "train",
+     "rows": 3164,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "first_revision": 16,
+     "last_revision": 18
+    },
+    {
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "rows": 1357,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "first_revision": 16,
+     "last_revision": 18
+    },
+    {
+     "purpose": "validation_policy_selection",
+     "partition": "validation",
+     "rows": 1357,
+     "records": 2,
+     "activities": [
+      "policy.evaluation"
+     ],
+     "first_revision": 20,
+     "last_revision": 24
+    }
+   ]
+  },
+  "not_yet_defensible": [
+   {
+    "id": "unconfirmed_decisions",
+    "text": "These decisions are not confirmed: conclusion."
+   },
+   {
+    "id": "uncertain_features_included",
+    "text": "These features are used although their availability at prediction time is uncertain: contact."
+   },
+   {
+    "id": "validation_is_not_independent",
+    "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+   },
+   {
+    "id": "public_data_already_explored",
+    "text": "The data were explored or published before this study; its rows are not unseen."
+   },
+   {
+    "id": "no_time_or_entity_identifier",
+    "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+   }
+  ],
+  "open_items": {
+   "proposals": [
+    "p_5"
+   ],
+   "holds": [],
+   "executions": [],
+   "stale_deliverables": []
+  },
+  "deliverables": {
+   "report": "ok",
+   "notebook": "ok"
+  },
+  "reproduce": [
+   "uv run --project framework hypotrail status --study <study>"
+  ],
+  "environment": {
+   "implementation": "cpython",
+   "packages": {
+    "marimo": "0.25.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1"
+   },
+   "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+   "python": "3.13.16"
+  }
+ }
+}

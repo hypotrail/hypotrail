@@ -1,0 +1,19 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "render",
+  "error": {
+   "code": "read_only",
+   "message": "This process is read-only (HYPOTRAIL_READ_ONLY=1); nothing was written."
+  }
+ }
+}

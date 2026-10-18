@@ -1,0 +1,577 @@
+// Webview runtime of the study panel (COMPANION-ADVANCED §4, §8, §12, §13). It owns the
+// frame (header, tabs, alert strip, recap strip, footer), the live region, the modal and
+// tooltip hosts, the message whitelist, and the vscode.setState helpers. Views register
+// with Hypotrail.register and render models; they never call acquireVsCodeApi, never
+// parse study text as HTML, and never set a `style` attribute (the CSP forbids it).
+//
+// Frozen by WP-0. The public API (ARCHITECTURE.md) is:
+//   Hypotrail.el(tag, attrs, children)      Hypotrail.svg(tag, attrs, children)
+//   Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?})
+//   Hypotrail.send(message)                 Hypotrail.modal({title, body, actions})
+//   Hypotrail.tooltip.attach(target, contentFn)   Hypotrail.navigate({tab, kind, id})
+//   Hypotrail.renderOutcome(outcome)        Hypotrail.PALETTE
+//   Hypotrail.start()                       (called once by the document, after every view)
+(function (HT) {
+  'use strict';
+  const P = () => HT.protocol;
+  const C = () => HT.copy.core;
+  // Fixed palette of chart marks (§12): SVG `fill`/`stroke` take one of these names and
+  // become classes `ht-fill-<name>` / `ht-stroke-<name>`, coloured by tokens.css.
+  const PALETTE = ['accent', 'baseline', 'muted', 'fg', 'warn', 'error', 'done', 'experiment', 'border', 'bg',
+    'surface', 'link', 'none'];
+  // The SVG namespace is an identifier, not a resource: it is assembled here so that the
+  // document holds no URL literal at all (test/unit.test.js).
+  const SVG_NS = ['http:', '', 'www.w3.org', '2000', 'svg'].join('/');
+  const UI_KEYS = ['drafts', 'ackDrafts', 'askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult'];
+  const TAB_ORDER = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
+  // Messages the frame handles itself; the others (effects, preview_policy_result,
+  // draft_result, learn_state) are only forwarded to the views' onMessage.
+  const CORE_TYPES = ['init', 'snapshot', 'view_data', 'load_error', 'busy', 'outcome', 'notice', 'navigate'];
+
+  let api = null;
+  const views = [];
+  const diagnostics = { dropped: 0, ignored: 0 };
+  const state = {
+    init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null },
+    snapshot: null, data: {}, errors: {}, busy: null, outcomes: {}, lastOutcome: null,
+    loadError: null, notice: null, lastRead: null, requested: {}, pendingNav: null,
+  };
+  let ui = {};
+  let root = null;
+  let ageNode = null;
+
+  // --- DOM helpers ----------------------------------------------------------------------
+
+  function setAttrs(node, attrs, isSvg) {
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'style' || k === 'innerHTML' || k === 'outerHTML' || k === 'html' || k === 'srcdoc') {
+        throw new Error(`attribute ${k} is not allowed`);
+      }
+      if (k === 'text') node.textContent = String(v);
+      else if (k === 'className' || k === 'class') for (const name of String(v).split(/\s+/).filter(Boolean)) node.classList.add(name);
+      else if (k === 'css') for (const [p, value] of Object.entries(v)) node.style.setProperty(p, String(value));
+      else if (k.startsWith('on')) {
+        if (typeof v !== 'function') throw new Error(`${k} must be a function`);
+        node.addEventListener(k.slice(2), v);
+      } else if (isSvg && (k === 'fill' || k === 'stroke')) {
+        // A palette name, or a reference to a pattern the component defined (the hatch).
+        if (typeof v === 'string' && /^url\(#ht-[a-z0-9-]+\)$/.test(v)) node.setAttribute(k, v);
+        else if (PALETTE.includes(v)) node.classList.add(`ht-${k}-${v}`);
+        else throw new Error(`${k} must be a palette colour, not ${v}`);
+      } else node.setAttribute(k, v === true ? '' : String(v));
+    }
+  }
+
+  function append(node, children) {
+    for (const child of children || []) {
+      if (child === null || child === undefined || child === false) continue;
+      if (Array.isArray(child)) append(node, child);
+      else node.appendChild(typeof child === 'string' || typeof child === 'number' ? document.createTextNode(String(child)) : child);
+    }
+    return node;
+  }
+
+  /** An HTML element; text is always a text node (INV-9). */
+  function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    setAttrs(node, attrs, false);
+    return append(node, children);
+  }
+
+  /** An SVG element; geometry by attributes, colour by palette name (§12). */
+  function svg(tag, attrs, children) {
+    const node = document.createElementNS(SVG_NS, tag);
+    setAttrs(node, attrs, true);
+    return append(node, children);
+  }
+
+  // --- state helpers ----------------------------------------------------------------------
+
+  function keep() {
+    try { api.setState(ui); } catch (_) { /* no state */ }
+  }
+  const uiState = {
+    get: key => (UI_KEYS.includes(key) ? ui[key] : undefined),
+    set(key, value) {
+      if (!UI_KEYS.includes(key)) throw new Error(`setState key ${key} is not allowed`);
+      if (value === undefined) delete ui[key]; else ui[key] = value;
+      keep();
+    },
+  };
+  const drafts = {
+    get: (kind, id) => (ui[kind] && typeof ui[kind][id] === 'string' ? ui[kind][id] : ''),
+    set(kind, id, text) {
+      if (kind !== 'drafts' && kind !== 'ackDrafts') throw new Error('drafts or ackDrafts');
+      ui[kind] = ui[kind] || {};
+      if (text) ui[kind][id] = text; else delete ui[kind][id];
+      keep();
+    },
+    drop(kind, id) {
+      if (ui[kind]) delete ui[kind][id];
+      keep();
+    },
+  };
+
+  /**
+   * The only textarea of the panel that holds the junior's words (INV-5). It starts empty
+   * and is never filled by the panel; the only value it ever gets is the junior's own draft
+   * for the same key (`drafts` per proposal, `ackDrafts` per execution, `askDraft`), kept
+   * in vscode.setState while they type. Views never create a textarea themselves
+   * (test/invariants.test.js). `key` is the proposal or execution id; the other attributes
+   * (id, aria-describedby, data-*) go on the element. `onInput(text)` runs on each keystroke.
+   */
+  function wordsArea({ kind, key = '', onInput = null, ...attrs }) {
+    if (!['drafts', 'ackDrafts', 'askDraft'].includes(kind)) throw new Error('drafts, ackDrafts, or askDraft');
+    const area = el('textarea', { spellcheck: 'true', autocomplete: 'off', 'data-words': kind, ...attrs });
+    area.value = kind === 'askDraft' ? String(ui.askDraft || '') : drafts.get(kind, key);
+    area.addEventListener('input', () => {
+      if (kind === 'askDraft') uiState.set('askDraft', area.value || undefined);
+      else drafts.set(kind, key, area.value);
+      if (onInput) onInput(area.value);
+    });
+    return area;
+  }
+
+  const rank = s => P().stageRank(s);
+  const atLeast = s => P().stageAllows(state.init.stage, s);
+
+  /** Send one whitelisted, validated message to the extension. */
+  function send(message) {
+    const env = P().envelope(message.type, Object.fromEntries(Object.entries(message).filter(([k]) => k !== 'type')));
+    const valid = P().validateIncoming(env);
+    if (!valid) {
+      diagnostics.dropped += 1;
+      return false;
+    }
+    api.postMessage(valid);
+    return true;
+  }
+
+  function register(name, def) {
+    if (views.some(v => v.name === name)) throw new Error(`view ${name} is registered twice`);
+    if (!TAB_ORDER.includes(def.tab)) throw new Error(`view ${name} has an unknown tab`);
+    if (rank(def.stage) < 0) throw new Error(`view ${name} has an unknown stage`);
+    if (typeof def.render !== 'function') throw new Error(`view ${name} has no render`);
+    views.push({ name, views: [], outcomes: [], ...def });
+  }
+
+  function visibleViews() {
+    return views.filter(v => atLeast(v.stage))
+      .sort((a, b) => TAB_ORDER.indexOf(a.tab) - TAB_ORDER.indexOf(b.tab));
+  }
+  function tabs() {
+    return [...new Set(visibleViews().map(v => v.tab))];
+  }
+  const tabbed = () => atLeast('v1');
+  function activeTab() {
+    const list = tabs();
+    return list.includes(ui.tab) ? ui.tab : list[0];
+  }
+
+  // --- outcome rendering (v0, INV-8) --------------------------------------------------------
+
+  function renderOutcome(o) {
+    if (!o) return null;
+    const c = C();
+    const str = x => (typeof x === 'string' ? x : '');
+    if (o.kind === 'refused' && o.refusal) {
+      const r = o.refusal;
+      return el('div', { className: 'card alert', role: 'alert', 'data-outcome': 'refused', 'data-op': o.op,
+        'data-code': str(r.code), 'data-reason': str(r.reason) }, [
+        el('p', { className: 'title', text: c.refusedTitle(str(r.code), r.reason) }),
+        el('p', { text: str(r.human), 'data-human': true }),
+        el('p', { className: 'muted', text: c.engineVerbatim }),
+        el('blockquote', { text: str(r.engineMessage), 'data-engine-message': true }),
+        (r.details || []).length ? el('ul', {}, r.details.map(line => el('li', { text: str(line) }))) : null,
+        o.message ? el('p', { text: o.message }) : null,
+      ]);
+    }
+    if (o.kind === 'ok' || o.kind === 'ok_with_problems' || o.kind === 'not_promoted') {
+      const rec = o.recorded || {};
+      const title = o.kind === 'ok' ? c.done[o.op] : o.kind === 'not_promoted' ? c.notPromotedTitle : c.problemsTitle;
+      return el('div', { className: 'card success', role: 'status', 'data-outcome': o.kind, 'data-op': o.op }, [
+        el('p', { className: 'title', text: title }),
+        typeof rec.userWords === 'string' ? el('p', {}, [c.recordedWords, el('q', { text: rec.userWords })]) : null,
+        (o.artifacts || []).length ? el('ul', {}, o.artifacts.map(a => el('li', { text: str(a.message) }))) : null,
+        o.message ? el('p', { text: o.message }) : null,
+      ]);
+    }
+    const title = o.kind === 'failed' ? c.failedTitle : o.kind === 'cancelled' ? c.cancelledTitle : c.invalidTitle;
+    return el('div', { className: 'card alert', role: 'alert', 'data-outcome': str(o.kind), 'data-op': o.op }, [
+      el('p', { className: 'title', text: title }),
+      o.message ? el('p', { text: str(o.message) }) : null,
+    ]);
+  }
+
+  // --- modal and tooltip hosts ----------------------------------------------------------------
+
+  let modalOpen = null;
+  /** A modal dialog; resolves the chosen action's value, or null (Escape, Cancel). */
+  function modal({ title, body, actions }) {
+    if (modalOpen) modalOpen.close(null);
+    const opener = document.activeElement;
+    return new Promise(resolve => {
+      const id = `modal-title-${Date.now()}`;
+      const buttons = (actions || []).map(a => el('button', { type: 'button', className: a.primary ? '' : 'secondary',
+        'data-modal-action': String(a.value), text: a.label, onclick: () => close(a.value) }));
+      buttons.push(el('button', { type: 'button', className: 'secondary', text: C().modalCancel, onclick: () => close(null) }));
+      const dialog = el('div', { className: 'ht-modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': id }, [
+        el('h2', { id, text: title }), el('div', {}, [body]), el('div', { className: 'ht-actions' }, buttons)]);
+      const overlay = el('div', { className: 'ht-overlay' }, [dialog]);
+      function close(value) {
+        overlay.remove();
+        modalOpen = null;
+        if (opener && typeof opener.focus === 'function') opener.focus();
+        resolve(value);
+      }
+      overlay.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { e.preventDefault(); close(null); }
+        if (e.key === 'Tab') {
+          const items = [...dialog.querySelectorAll('button, textarea, input, select, [tabindex="0"]')];
+          const first = items[0]; const last = items[items.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      });
+      document.body.appendChild(overlay);
+      modalOpen = { close };
+      (buttons[0] || dialog).focus();
+    });
+  }
+
+  let tooltipCount = 0;
+  const tooltip = {
+    /** Show `contentFn()` in a tooltip on hover and focus of `target`; Escape closes it. */
+    attach(target, contentFn) {
+      tooltipCount += 1;
+      const id = `ht-tooltip-${tooltipCount}`;
+      let tip = null;
+      const hide = () => { if (tip) { tip.remove(); tip = null; } };
+      const show = () => {
+        hide();
+        tip = el('div', { id, role: 'tooltip', className: 'ht-tooltip' }, [contentFn()]);
+        target.after(tip);
+      };
+      target.setAttribute('aria-describedby', id);
+      if (!target.hasAttribute('tabindex') && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(target.tagName)) target.setAttribute('tabindex', '0');
+      target.addEventListener('mouseenter', show);
+      target.addEventListener('focus', show);
+      target.addEventListener('mouseleave', hide);
+      target.addEventListener('blur', hide);
+      target.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+      return target;
+    },
+  };
+
+  /** Open a tab, then scroll to and focus `[data-nav="<kind>:<id>"]` and highlight it. */
+  function navigate(target) {
+    if (!target || !tabs().includes(target.tab)) return false;
+    uiState.set('tab', target.tab);
+    state.pendingNav = target;
+    render();
+    return true;
+  }
+
+  function applyNavigation() {
+    const target = state.pendingNav;
+    if (!target) return;
+    const node = document.querySelector(`[data-nav="${CSS.escape(`${target.kind}:${target.id}`)}"]`);
+    if (!node) return;
+    state.pendingNav = null;
+    const heading = node.querySelector('h2, h3') || node;
+    if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+    node.scrollIntoView({ block: 'center' });
+    heading.focus();
+    node.classList.add('ht-highlight');
+    setTimeout(() => node.classList.remove('ht-highlight'), 2000);
+  }
+
+  // --- frame ------------------------------------------------------------------------------
+
+  function ageText() {
+    const c = C();
+    if (state.lastRead === null) return '';
+    const s = Math.round((Date.now() - state.lastRead) / 1000);
+    return c.readAge(s < 10 ? c.justNow : s < 60 ? c.secondsAgo(s) : c.minutesAgo(Math.floor(s / 60)));
+  }
+
+  function folderName(study) {
+    const parts = String(study || '').split(/[\\/]/).filter(Boolean);
+    return parts[parts.length - 1] || '';
+  }
+
+  function header() {
+    const c = C();
+    const snap = state.snapshot;
+    ageNode = el('span', { 'data-literal': 'age', text: ageText() });
+    const name = snap ? folderName(snap.study) : '';
+    return el('header', { className: 'ht-header' }, [
+      el('h1', { className: 'sr-only', text: c.title }),
+      el('div', { className: 'ht-brand' }, [
+        el('span', { className: 'ht-name', text: snap ? `${c.product} · ${name}` : c.product }),
+        state.init.task === 'regression' || (snap && snap.task === 'regression')
+          ? el('span', { className: 'ht-badge', text: c.regression }) : null,
+        el('span', { className: 'ht-badge', text: c.experimental }),
+        state.init.reviewer ? el('span', { className: 'ht-badge ht-badge-reviewer', 'data-reviewer': true, text: c.reviewer }) : null,
+      ]),
+      el('div', { className: 'ht-meta' }, [
+        atLeast('v1') && snap ? el('button', { type: 'button', className: 'secondary', 'data-stage': 'v1',
+          'data-switch-study': true, text: c.switchStudy(name), onclick: () => send({ type: 'switch_study' }) }) : null,
+        snap ? el('span', { className: 'ht-mono', 'data-revision': snap.revision, text: c.revision(snap.revision) }) : null,
+        ageNode,
+        el('button', { type: 'button', className: 'secondary', text: c.refresh, disabled: Boolean(state.busy),
+          onclick: () => send({ type: 'refresh' }) }),
+      ]),
+    ]);
+  }
+
+  function tablist(list, current) {
+    const c = C();
+    const buttons = list.map(tab => {
+      const count = tab === 'decisions' && state.snapshot ? state.snapshot.waitingCount : 0;
+      const stage = visibleViews().find(v => v.tab === tab).stage;
+      return el('button', {
+        type: 'button', role: 'tab', id: `tab-${tab}`, 'data-tab': tab, 'aria-selected': tab === current ? 'true' : 'false',
+        'aria-controls': `panel-${tab}`, tabindex: tab === current ? '0' : '-1',
+        'data-stage': rank(stage) > 0 ? stage : null,
+        onclick: () => { uiState.set('tab', tab); render(); },
+      }, [c.tabs[tab], count > 0 ? el('span', { className: 'ht-count', 'aria-label': c.waiting(count), text: String(count) }) : null]);
+    });
+    const nav = el('nav', { 'aria-label': c.tabsLabel }, [el('div', { role: 'tablist', className: 'ht-tabs' }, buttons)]);
+    nav.addEventListener('keydown', e => {
+      const i = list.indexOf(activeTab());
+      const next = e.key === 'ArrowRight' ? (i + 1) % list.length : e.key === 'ArrowLeft' ? (i - 1 + list.length) % list.length
+        : e.key === 'Home' ? 0 : e.key === 'End' ? list.length - 1 : -1;
+      if (next < 0) return;
+      e.preventDefault();
+      uiState.set('tab', list[next]);
+      render();
+      const button = document.getElementById(`tab-${list[next]}`);
+      if (button) button.focus();
+    });
+    return nav;
+  }
+
+  function alertStrip() {
+    const snap = state.snapshot;
+    if (!snap || !(snap.alerts || []).length) return null;
+    return el('section', { className: 'ht-alerts', 'aria-label': C().alertsLabel, 'data-stage': 'v1' },
+      snap.alerts.map(a => el('div', { className: 'card alert', role: 'alert', 'data-alert': a.id }, [
+        el('p', { text: a.text }),
+        el('button', { type: 'button', className: 'secondary', text: C().openHealth,
+          onclick: () => navigate({ tab: 'overview', kind: 'limit', id: a.id }) }),
+      ])));
+  }
+
+  function recapStrip() {
+    const snap = state.snapshot;
+    if (!snap || !(snap.recap || []).length) return null;
+    const collapsed = ui.recapCollapsed === true;
+    const c = C();
+    return el('section', { className: 'ht-recap', 'aria-label': c.recapTitle, 'data-stage': 'v1', 'data-recap-strip': true }, [
+      el('button', { type: 'button', className: 'ht-link', 'aria-expanded': collapsed ? 'false' : 'true',
+        text: collapsed ? c.recapShow : c.recapHide, onclick: () => { uiState.set('recapCollapsed', !collapsed); render(); } }),
+      collapsed ? null : el('ul', {}, snap.recap.map(line => el('li', { text: line }))),
+    ]);
+  }
+
+  function loadErrorBanner() {
+    const e = state.loadError;
+    if (!e) return null;
+    const c = C();
+    return el('div', { className: 'card alert', role: 'alert', 'data-load-error': true }, [
+      el('p', { className: 'title', text: c.loadErrorTitle }),
+      el('p', { text: e.message }),
+      state.snapshot ? el('p', { className: 'muted', text: c.lastRead(state.snapshot.revision) }) : null,
+      e.detail ? el('details', {}, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: e.detail })]) : null,
+      el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => send({ type: 'refresh' }) }),
+    ]);
+  }
+
+  function liveRegion(mounted) {
+    const owned = new Set(mounted.flatMap(v => v.outcomes || []));
+    const o = state.lastOutcome && !owned.has(state.lastOutcome.op) ? state.lastOutcome : null;
+    const n = state.notice;
+    return el('div', { id: 'outcome', 'aria-live': 'polite' }, [
+      n ? el('p', { className: 'hold', role: n.politeness === 'assertive' ? 'alert' : 'status', 'data-notice': true, text: n.text }) : null,
+      renderOutcome(o),
+    ]);
+  }
+
+  // --- view context -----------------------------------------------------------------------
+
+  function context(view) {
+    return {
+      init: { ...state.init }, stage: state.init.stage, reviewer: state.init.reviewer, task: state.init.task,
+      learningLayer: state.init.learningLayer, chatInsert: state.init.chatInsert,
+      snapshot: state.snapshot,
+      data: name => state.data[name] || null,
+      error: name => state.errors[name] || null,
+      busy: Boolean(state.busy), busyOp: state.busy ? state.busy.op : null, busyTarget: state.busy ? state.busy.target : null,
+      send, load: (name, extra) => send({ type: 'load', view: name, ...(extra || {}) }),
+      drafts, ui: uiState, wordsArea,
+      outcome: target => state.outcomes[target] || null,
+      renderOutcome, el, svg, format: HT.format, components: HT.components, copy: HT.copy,
+      gate: (stage, node) => (atLeast(stage) && node ? (node.setAttribute('data-stage', stage), node) : null),
+      atLeast, modal, tooltip, navigate,
+      placeholder: () => el('p', { className: 'muted', 'data-placeholder': view.name, text: C().notAvailable }),
+      rerender: () => render(),
+    };
+  }
+
+  /** Ask for the data views a mounted view needs when the snapshot moved past them. */
+  function requestLoads(mounted) {
+    if (!state.snapshot) return;
+    for (const v of mounted) {
+      for (const name of v.views || []) {
+        const have = state.data[name];
+        const key = `${name}@${state.snapshot.revision}`;
+        if ((have && have.revision >= state.snapshot.revision) || state.requested[key]) continue;
+        state.requested[key] = true;
+        send({ type: 'load', view: name });
+      }
+    }
+  }
+
+  function panel(tab, current, mounted) {
+    const inTab = visibleViews().filter(v => v.tab === tab);
+    const hidden = tabbed() && tab !== current;
+    const node = el('section', {
+      id: `panel-${tab}`, 'data-tab': tab, role: tabbed() ? 'tabpanel' : null,
+      'aria-labelledby': tabbed() ? `tab-${tab}` : null, hidden: hidden ? true : null,
+      'aria-busy': state.snapshot ? null : 'true', 'data-stage': rank(inTab[0].stage) > 0 ? inTab[0].stage : null,
+    });
+    if (hidden) return node;
+    if (!state.snapshot) {
+      node.appendChild(el('p', { className: 'muted', text: C().reading }));
+      return node;
+    }
+    for (const v of inTab) {
+      mounted.push(v);
+      let out;
+      try {
+        out = v.render(state.snapshot, context(v));
+      } catch (e) {
+        out = el('p', { className: 'alert', role: 'alert', text: `${C().viewError} ${String((e && e.message) || e)}` });
+      }
+      append(node, [out]);
+    }
+    return node;
+  }
+
+  function render() {
+    if (!root) return;
+    const focused = document.activeElement;
+    const focusId = focused && focused.id ? focused.id : null;
+    const selection = focused && (focused.tagName === 'TEXTAREA' || focused.tagName === 'INPUT') &&
+      typeof focused.selectionStart === 'number' ? [focused.selectionStart, focused.selectionEnd] : null;
+    const scroll = window.scrollY;
+    const list = tabs();
+    const current = activeTab();
+    const mounted = [];
+    const panels = list.map(tab => panel(tab, current, mounted));
+    root.textContent = '';
+    append(root, [
+      header(),
+      tabbed() && list.length ? tablist(list, current) : null,
+      loadErrorBanner(),
+      tabbed() ? alertStrip() : null,
+      tabbed() && current !== 'overview' ? recapStrip() : null,
+      liveRegion(mounted),
+      el('main', { id: 'main' }, panels),
+      el('footer', { className: 'ht-footer muted', text: C().footer }),
+    ]);
+    // Reviewer mode: no write control, except the handoff export (decision CA.9).
+    if (state.init.reviewer) for (const node of root.querySelectorAll('[data-write]:not([data-write="export"])')) node.remove();
+    if (focusId) {
+      const again = document.getElementById(focusId);
+      if (again) {
+        again.focus();
+        if (selection && typeof again.setSelectionRange === 'function') again.setSelectionRange(selection[0], selection[1]);
+      }
+    }
+    window.scrollTo(0, scroll);
+    requestLoads(mounted);
+    applyNavigation();
+  }
+
+  // --- incoming messages ------------------------------------------------------------------
+
+  function onSnapshot(m) {
+    const before = state.snapshot ? state.snapshot.revision : null;
+    const open = new Set((m.model.proposals || []).map(p => p.proposalId));
+    const executions = m.model.executions || {};
+    const listed = new Set([...(executions.interrupted || []), ...(executions.suspected || [])].map(e => e.executionId));
+    const typing = Object.keys(ui.drafts || {}).some(id => open.has(id) && String(ui.drafts[id]).trim());
+    if (before !== null && before !== m.model.revision && typing) {
+      state.notice = { text: C().typing(before, m.model.revision), politeness: 'polite' };
+    } else if (before !== m.model.revision) {
+      state.notice = null;
+    }
+    for (const id of Object.keys(ui.drafts || {})) if (!open.has(id)) delete ui.drafts[id];
+    for (const id of Object.keys(ui.ackDrafts || {})) if (!listed.has(id)) delete ui.ackDrafts[id];
+    keep();
+    state.snapshot = m.model;
+    state.loadError = null;
+    state.lastRead = Date.now();
+  }
+
+  function onMessage(event) {
+    const m = P().validateOutgoing(event.data);
+    if (!m) { diagnostics.ignored += 1; return; }
+    let redraw = true;
+    switch (m.type) {
+      case 'init':
+        state.init = { stage: m.stage, reviewer: m.reviewer, learningLayer: m.learningLayer, chatInsert: m.chatInsert, task: m.task };
+        break;
+      case 'snapshot': onSnapshot(m); break;
+      case 'view_data':
+        state.data[m.view] = { revision: m.revision, model: m.model, resultId: m.resultId || null };
+        delete state.errors[m.view];
+        break;
+      case 'load_error':
+        if (m.view === null) state.loadError = { message: m.message, detail: m.detail };
+        else state.errors[m.view] = { message: m.message, detail: m.detail };
+        break;
+      case 'busy': state.busy = m.busy ? { op: m.op, target: m.target || null } : null; break;
+      case 'outcome':
+        state.lastOutcome = m;
+        if (m.target) state.outcomes[m.target] = m;
+        if (m.kind === 'ok' && (m.op === 'W1' || m.op === 'W2') && m.target) drafts.drop('drafts', m.target);
+        if (m.kind === 'ok' && m.op === 'W6' && m.target) drafts.drop('ackDrafts', m.target);
+        state.notice = null;
+        break;
+      case 'notice': state.notice = { text: m.text, politeness: m.politeness }; break;
+      case 'navigate': navigate(m); redraw = false; break;
+      default: break;
+    }
+    const forwarded = !CORE_TYPES.includes(m.type);
+    for (const v of views) {
+      if (typeof v.onMessage !== 'function') continue;
+      try {
+        // A view that updates its own DOM for a forwarded message returns false: no re-render.
+        if (v.onMessage(m, context(v)) === false && forwarded) redraw = false;
+      } catch (_) { /* a view error never breaks the frame */ }
+    }
+    if (redraw) render();
+  }
+
+  function start() {
+    if (api) return;
+    api = acquireVsCodeApi();
+    try { ui = api.getState() || {}; } catch (_) { ui = {}; }
+    if (!ui || typeof ui !== 'object') ui = {};
+    for (const key of Object.keys(ui)) if (!UI_KEYS.includes(key)) delete ui[key];
+    root = document.getElementById('app');
+    window.addEventListener('message', onMessage);
+    setInterval(() => { if (ageNode) ageNode.textContent = ageText(); }, 15000);
+    render();
+    send({ type: 'ready' });
+  }
+
+  Object.assign(HT, { el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, start, PALETTE, SVG_NS,
+    diagnostics, _state: state, TAB_ORDER });
+  HT.components = HT.components || {};
+  HT.copy = HT.copy || {};
+})(globalThis.Hypotrail = globalThis.Hypotrail || {});

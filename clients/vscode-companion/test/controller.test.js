@@ -1,0 +1,237 @@
+'use strict';
+// Controller tests (scope U, WP-0): the router of lib/controller.js with the fixture CLI
+// (test/fixture-cli.js): stage gate, reviewer refusal, `load` dispatch, cache and
+// coalescing, the read limits and the write lock, the outcome mapping of §7, the handler
+// registry, settings, and the flag helpers. No process is started.
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createController, registry } = require('../lib/controller');
+const flag = require('../lib/flag');
+const { createCache } = require('../lib/cache');
+const { createFake } = require('./fake-vscode');
+const { fakeCli } = require('./fixture-cli');
+
+const AGENT = { argv: ['/opt/py/bin/python', '-m', 'mlkit.study.cli'], studyDir: '/studies/bank marketing "demo"' };
+
+function make({ settings = {}, route, handlers, host = {} } = {}) {
+  const posted = [];
+  const runCli = fakeCli(route, { agentArgv: AGENT.argv });
+  const c = createController({ agent: AGENT, post: m => posted.push(m), runCli, settings, host,
+    exists: () => true, uuid: () => '0f8fad5b-d9cb-469f-a165-70867728950e', ...(handlers ? { handlers } : {}) });
+  return { c, posted, runCli, last: type => posted.filter(m => m.type === type).at(-1) };
+}
+
+test('ready: init, then the summary; v0 reads without --digest, v1 with it', async () => {
+  for (const [stage, digest, revision] of [['v0', false, 26], ['v1', true, 26]]) {
+    const { c, posted, runCli } = make({ settings: { stage } });
+    await c.handle({ v: 2, type: 'ready' });
+    assert.equal(posted[0].type, 'init');
+    assert.deepEqual(posted[0], { v: 2, type: 'init', stage, reviewer: false, learningLayer: true, chatInsert: false, task: null });
+    assert.equal(runCli.calls[0].tail.includes('--digest'), digest);
+    const snap = posted.find(m => m.type === 'snapshot');
+    assert.equal(snap.revision, revision);
+    assert.equal(snap.model.task, 'binary');
+    assert.equal(posted.filter(m => m.type === 'init').at(-1).task, 'binary', 'init again once the task is known');
+    assert.equal(c.diagnostics().dropped, 0, JSON.stringify(c.diagnostics().invalid));
+  }
+});
+
+test('stage gate: a message above the active stage is ignored like an invalid one', async () => {
+  const { c, posted, runCli } = make({ settings: { stage: 'v0' } });
+  for (const m of [{ type: 'render' }, { type: 'load', view: 'decisions' }, { type: 'preview_effects', proposalId: 'p_5', revision: 26 },
+    { type: 'preview_policy', rules: ['capacity:100'], intervals: false, seq: 1 }, { type: 'export_handoff', revision: 26 },
+    { type: 'open_artifact', artifact: 'report', resultId: 'a'.repeat(64) }]) {
+    await c.handle({ v: 2, ...m });
+  }
+  assert.equal(c.diagnostics().ignored, 6);
+  assert.equal(posted.length, 0);
+  assert.equal(runCli.calls.length, 0);
+});
+
+test('reviewer: every write of the study is refused as invalid, nothing runs; the export may run (CA.9)', async () => {
+  const { c, posted, runCli } = make({ settings: { stage: 'v3', reviewer: true } });
+  await c.handle({ v: 2, type: 'ready' });
+  const before = runCli.calls.length;
+  for (const m of [{ type: 'confirm', proposalId: 'p_5', words: 'Yes, call the top 100.', revision: 26 },
+    { type: 'withdraw', proposalId: 'p_5', revision: 26 }, { type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 },
+    { type: 'run_eda', activity: 'eda.distribution', column: 'age', revision: 26 }, { type: 'render' },
+    { type: 'acknowledge', executionId: 'e_1', words: 'I know.', revision: 26 }]) {
+    await c.handle({ v: 2, ...m });
+  }
+  const outcomes = posted.filter(m => m.type === 'outcome');
+  assert.deepEqual(outcomes.map(o => o.op), ['W1', 'W2', 'W3', 'W4', 'W5', 'W6']);
+  assert.ok(outcomes.every(o => o.kind === 'invalid' && o.message === 'Read-only reviewer mode.'));
+  assert.equal(runCli.calls.length, before);
+  // ctx.write refuses too, whatever the caller.
+  assert.equal(await c.context.write('W5', { argv: () => assert.fail('no argv') }), null);
+  // W7 is allowed: the controller runs it (here against the fixture CLI).
+  const exported = await c.context.write('W7', { argv: () => c.context.cli.exportArgv(c.context.agent, { parent: '/tmp/packs', revision: 26 }) });
+  assert.equal(exported.kind, 'ok');
+});
+
+test('load: a view without a loader answers "Not available in this stage."; a loader is cached per revision', async () => {
+  const seen = [];
+  const handlers = [{ name: 'probe', loads: { decisions: { stage: 'v1', key: () => 'decisions',
+    argv: (cli, agent) => cli.decisionsArgv(agent), model: p => { seen.push(p.revision); return { revision: p.revision, n: p.history.length }; } } } }];
+  const { c, posted, runCli } = make({ settings: { stage: 'v1' }, handlers });
+  await c.handle({ v: 2, type: 'ready' });
+  await c.handle({ v: 2, type: 'load', view: 'evidence' });
+  assert.deepEqual(posted.at(-1), { v: 2, type: 'load_error', view: 'evidence', message: 'Not available in this stage.', detail: '' });
+  await Promise.all([c.handle({ v: 2, type: 'load', view: 'decisions' }), c.handle({ v: 2, type: 'load', view: 'decisions' })]);
+  await c.handle({ v: 2, type: 'load', view: 'decisions' });
+  assert.equal(runCli.calls.filter(x => x.tail[0] === 'decisions').length, 1, 'coalesced, then cached');
+  const data = posted.filter(m => m.type === 'view_data');
+  assert.equal(data.length, 3);
+  assert.deepEqual(data[0], { v: 2, type: 'view_data', view: 'decisions', revision: 27, model: { revision: 27, n: 5 } });
+  assert.deepEqual(seen, [27]);
+});
+
+test('load summary with since, and a refusal of a loader becomes a load_error', async () => {
+  const handlers = [{ name: 'probe', loads: { evidence: { key: () => 'evidence', argv: (cli, agent) => cli.evidenceArgv(agent), model: p => p } } }];
+  const { c, posted, runCli } = make({ settings: { stage: 'v2' }, handlers, route: tail => (tail[0] === 'evidence' ? 'error.not_implemented' : undefined) });
+  await c.handle({ v: 2, type: 'ready' });
+  await c.handle({ v: 2, type: 'load', view: 'summary', since: 1 });
+  assert.deepEqual(runCli.calls.at(-1).tail.slice(0, 5), ['status', '--summary', '--digest', '--since', '1']);
+  assert.equal(posted.at(-1).type, 'view_data');
+  assert.equal(posted.at(-1).view, 'summary');
+  await c.handle({ v: 2, type: 'load', view: 'evidence' });
+  assert.equal(posted.at(-1).type, 'load_error');
+  assert.match(posted.at(-1).message, /^unsupported_capability: evidence is reserved/);
+});
+
+test('an engine without C1: the v1 summary falls back to the v0 read', async () => {
+  const { c, posted, runCli } = make({ settings: { stage: 'v1' }, route: tail => (tail.includes('--digest') ? 'error.not_implemented' : undefined) });
+  await c.handle({ v: 2, type: 'ready' });
+  assert.deepEqual(runCli.calls.map(x => x.tail.includes('--digest')), [true, false]);
+  assert.equal(posted.find(m => m.type === 'snapshot').model.digest, null);
+});
+
+test('write outcome mapping: ok, exit 3, not promoted, exit 4, failed, replayed', async () => {
+  const cases = [
+    [{ name: 'render.binary' }, 'ok', null],
+    [{ name: 'render.binary.problems' }, 'ok_with_problems', null],
+    [{ name: 'run.eda_distribution.binary.late' }, 'not_promoted', /computed but not used/],
+    [{ name: 'error.read_only', exitCode: 4 }, 'refused', /unknown outcome/],
+    [{ failure: 'The hypotrail CLI could not be started (ENOENT: x).' }, 'failed', /outcome is unknown/],
+    [{ payload: { schema: 'hypotrail.render/1', ok: true, revision: 26, replayed: true, artifacts: {} } }, 'ok', /replayed, no effect/],
+  ];
+  for (const [answer, kind, message] of cases) {
+    const { c, posted } = make({ settings: { stage: 'v1' }, route: tail => (tail[0] === 'render' ? answer : undefined) });
+    await c.handle({ v: 2, type: 'ready' });
+    const outcome = await c.context.write('W5', { argv: requestId => c.context.cli.renderArgv(c.context.agent) });
+    assert.equal(outcome.kind, kind, JSON.stringify(outcome));
+    if (message) assert.match(outcome.message, message);
+    const busy = posted.filter(m => m.type === 'busy');
+    assert.deepEqual(busy.map(b => b.busy), [true, false]);
+    assert.equal(posted.at(-1).type, 'snapshot', 'refresh after every write');
+    assert.equal(c.diagnostics().dropped, 0, JSON.stringify(c.diagnostics().invalid));
+  }
+});
+
+test('the write lock: a second write is invalid while one runs; reads wait for it', async () => {
+  let release;
+  const gate = new Promise(r => { release = r; });
+  const order = [];
+  const posted = [];
+  const base = fakeCli(undefined, { agentArgv: AGENT.argv });
+  const runCli = async (argv, options) => {
+    const tail = argv.slice(AGENT.argv.length);
+    order.push(`start ${tail[0]}`);
+    if (tail[0] === 'render') await gate;
+    const res = await base(argv, options);
+    order.push(`end ${tail[0]}`);
+    return res;
+  };
+  const c = createController({ agent: AGENT, post: m => posted.push(m), runCli, settings: { stage: 'v1' }, handlers: [] });
+  await c.handle({ v: 2, type: 'ready' });
+  order.length = 0;
+  const first = c.context.write('W5', { argv: () => c.context.cli.renderArgv(AGENT) });
+  await new Promise(r => setImmediate(r));
+  const second = await c.context.write('W5', { argv: () => c.context.cli.renderArgv(AGENT) });
+  assert.equal(second, null);
+  assert.equal(posted.filter(m => m.type === 'outcome').at(-1).message, 'Another request is in progress.');
+  const read = c.context.read('x', c.context.cli.checkArgv(AGENT), p => p);
+  await new Promise(r => setImmediate(r));
+  assert.deepEqual(order, ['start render'], 'the read waits for the write');
+  release();
+  await first;
+  await read;
+  assert.equal(order[0], 'start render');
+  assert.equal(order[1], 'end render');
+  assert.ok(order.indexOf('start check') > order.indexOf('end render'));
+});
+
+test('read limits: at most two reads and one preview at a time', async () => {
+  let active = 0, peak = 0, previews = 0, previewPeak = 0;
+  const base = fakeCli(undefined, { agentArgv: AGENT.argv });
+  const runCli = async (argv, options) => {
+    const preview = argv.includes('policy');
+    active += 1; peak = Math.max(peak, active);
+    if (preview) { previews += 1; previewPeak = Math.max(previewPeak, previews); }
+    await new Promise(r => setTimeout(r, 10));
+    active -= 1;
+    if (preview) previews -= 1;
+    return base(argv, options);
+  };
+  const c = createController({ agent: AGENT, post: () => {}, runCli, settings: { stage: 'v2' }, handlers: [] });
+  const cli = c.context.cli;
+  await Promise.all([
+    ...[1, 2, 3, 4].map(i => c.context.read(`k${i}`, cli.checkArgv(AGENT), p => p)),
+    ...[1, 2, 3].map(i => c.context.read(`preview:capacity:${i}`, cli.previewPolicyArgv(AGENT, { rules: [`capacity:${i}`] }), p => p)),
+  ]);
+  assert.ok(peak <= 3, `peak ${peak}`);
+  assert.equal(previewPeak, 1);
+});
+
+test('handler registry: a type or a view claimed twice, or a core type, is refused', () => {
+  assert.throws(() => registry([{ name: 'a', types: { render: () => {} } }, { name: 'b', types: { render: () => {} } }]), /handled twice/);
+  assert.throws(() => registry([{ name: 'a', loads: { eda: {} } }, { name: 'b', loads: { eda: {} } }]), /loaded twice/);
+  assert.throws(() => registry([{ name: 'a', types: { ready: () => {} } }]), /belongs to the controller/);
+  assert.throws(() => registry([{ name: 'a', types: { open: () => {} } }]), /unknown type/);
+  assert.throws(() => registry([{ name: 'a', loads: { summary: {} } }]), /cannot load summary/);
+  // The shipped handlers load without a conflict.
+  const { c } = make();
+  assert.equal(typeof c.handle, 'function');
+});
+
+test('settings: updateSettings posts init again; navigate validates its target', async () => {
+  const { c, posted } = make({ settings: { stage: 'v1' } });
+  c.updateSettings({ stage: 'v2', chatInsert: true });
+  assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null });
+  assert.equal(c.navigate({ tab: 'evidence', kind: 'result', id: 'a'.repeat(64) }), true);
+  assert.equal(c.navigate({ tab: 'nowhere', kind: 'result', id: 'x' }), false);
+  assert.equal(await c.command('go_to_result', {}), undefined, 'no handler registers it in WP-0');
+});
+
+test('flag: stage, learning layer, reviewer, chatInsert and their overrides', () => {
+  const fake = (settings = {}) => createFake({ settings });
+  assert.deepEqual(flag.settings(fake(), {}), { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false });
+  assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'v2' }), {}), 'v2');
+  assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'v2' }), { HYPOTRAIL_COMPANION_STAGE: 'v1' }), 'v1');
+  assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'v7' }), {}), 'v3', 'a higher stage reads as the highest known');
+  assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'beta' }), {}), 'v0');
+  assert.equal(flag.learningLayer(fake({ 'hypotrail.companion.learningLayer': false }), {}), false);
+  assert.equal(flag.learningLayer(fake(), { HYPOTRAIL_COMPANION_LEARNING: '0' }), false);
+  assert.equal(flag.reviewer(fake(), { HYPOTRAIL_COMPANION_REVIEWER: '1' }), true);
+  assert.equal(flag.chatInsert(fake({ 'hypotrail.companion.chatInsert': true })), true);
+  assert.equal(flag.settings(fake(), { HYPOTRAIL_COMPANION_CHAT_INSERT: '1' }).chatInsert, false, 'no environment override');
+  assert.equal(flag.settings(fake(), {}, { forceReviewer: true }).reviewer, true);
+  assert.ok(flag.stageAtLeast('v2', 'v1') && !flag.stageAtLeast('v1', 'v2'));
+});
+
+test('cache: per key and revision; previews kept in a bounded list', () => {
+  const cache = createCache({ previewLimit: 2 });
+  cache.set('decisions', 3, 'a');
+  assert.equal(cache.get('decisions', 3), 'a');
+  assert.equal(cache.get('decisions', 4), undefined);
+  cache.set('preview:capacity:1', 3, 1);
+  cache.set('preview:capacity:2', 3, 2);
+  cache.get('preview:capacity:1', 3);
+  cache.set('preview:capacity:3', 3, 3);
+  assert.equal(cache.get('preview:capacity:2', 3), undefined, 'least recently used dropped');
+  assert.equal(cache.get('preview:capacity:1', 3), 1);
+  cache.prune(4);
+  assert.equal(cache.get('decisions', 3), undefined);
+  assert.equal(cache.get('preview:capacity:3', 3), 3, 'previews survive a newer revision');
+});

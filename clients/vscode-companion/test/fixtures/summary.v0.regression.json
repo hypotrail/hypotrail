@@ -1,0 +1,267 @@
+{
+ "about": {
+  "schema": "hypotrail.summary/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--json"
+  ],
+  "note": "Auto MPG with the model choice proposed."
+ },
+ "payload": {
+  "schema": "hypotrail.summary/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "revision": 22,
+  "since": null,
+  "changed": null,
+  "goal": {
+   "intended_use": {
+    "value": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+    "status": "scenario_assumption"
+   },
+   "decision": {
+    "value": "Compare estimation methods without a real decision",
+    "status": "scenario_assumption"
+   },
+   "observation_unit": {
+    "value": "A vehicle model for a model year",
+    "status": "scenario_assumption"
+   },
+   "prediction_time": {
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "source": "decision",
+    "status": "confirmed"
+   }
+  },
+  "current_step": "model_choice",
+  "plan": [
+   {
+    "id": "prediction_time",
+    "title": "Define the prediction moment",
+    "status": "done"
+   },
+   {
+    "id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "status": "done"
+   },
+   {
+    "id": "split",
+    "title": "Split the data before exploring it",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the training partition",
+    "status": "done"
+   },
+   {
+    "id": "models",
+    "title": "Fit a mean baseline and a linear model",
+    "status": "done"
+   },
+   {
+    "id": "model_choice",
+    "title": "Choose the model",
+    "status": "awaiting_confirmation"
+   },
+   {
+    "id": "conclusion",
+    "title": "Conclude proportionately",
+    "status": "ready"
+   }
+  ],
+  "next_action": {
+   "kind": "await_user_words",
+   "proposal_id": "p_4",
+   "decision": "model_choice",
+   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision."
+  },
+  "open_proposals": [
+   {
+    "proposal_id": "p_4",
+    "decision_id": "model_choice",
+    "value": "fit.linear",
+    "restatement": "Adopt the linear model.",
+    "revision": 22
+   }
+  ],
+  "decisions": {
+   "prediction_time": {
+    "status": "confirmed",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "feature_availability": {
+    "status": "confirmed",
+    "value": {
+     "uncertain_excluded": [
+      "acceleration"
+     ],
+     "available_at_prediction": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "origin",
+      "weight"
+     ]
+    },
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "split": {
+    "status": "confirmed",
+    "value": {
+     "column": "model_year",
+     "cutoff": 79,
+     "method": "ordinal_cutoff"
+    },
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "model_choice": {
+    "status": "proposed",
+    "value": "fit.linear",
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [
+     "p_4"
+    ]
+   },
+   "conclusion": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": []
+   }
+  },
+  "results": {
+   "eda.mean_by:model_year": {
+    "result_id": "49cddc6cff8134ce50749f83219d748241878a1fc340404bce011dfa513d7b92",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.special_values": {
+    "result_id": "56a67260f0ed30142d0779b01923172e7a37c73ced6845235cf6e8041802d85f",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.target_summary": {
+    "result_id": "3f7320adae5a5c60034155213b03bc18b3842dc256cd51a77f11b1997548e276",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "evaluate.regression": {
+    "result_id": "142ac050de162499aa31cd03b837cd162f25d7cfef4d83b9b3d6e8d3cbef5301",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.baseline": {
+    "result_id": "148b20ff6b8ad1dd05c9a0e5259d63d2463b88aca0260981efecb308ac96c41a",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.linear": {
+    "result_id": "e2fb692df878075e4c417702a123201226c5e353aa479172a91bef7d9a517c7c",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "split": {
+    "result_id": "6e96c20fe6026d4dc33b7a4b70ede72858d12d2b33195cb10763fc11be19df88",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   }
+  },
+  "artifacts": {
+   "status": "ok",
+   "items": {
+    "notebook": {
+     "status": "ok",
+     "revision": 22,
+     "last_ok_revision": 22,
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+    },
+    "report": {
+     "status": "ok",
+     "revision": 22,
+     "last_ok_revision": 22,
+     "message": "The report (reports/study.html) is up to date."
+    },
+    "workbench": {
+     "status": "ok",
+     "revision": 2,
+     "last_ok_revision": 2,
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+    }
+   }
+  },
+  "executions": {
+   "active": [],
+   "interrupted": [],
+   "late": [],
+   "suspected_interrupted": []
+  },
+  "not_yet_defensible": {
+   "top": [
+    {
+     "id": "unconfirmed_decisions",
+     "text": "These decisions are not confirmed: model_choice, conclusion."
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+    },
+    {
+     "id": "public_data_already_explored",
+     "text": "The data were explored or published before this study; its rows are not unseen."
+    },
+    {
+     "id": "grouped_split_unsupported",
+     "text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows."
+    },
+    {
+     "id": "no_causality",
+     "text": "Associations in observational data do not show that acting on a variable would change the outcome."
+    }
+   ],
+   "more": [
+    "workbench_not_tracked"
+   ]
+  },
+  "notes": [],
+  "holds": [],
+  "recap": [
+   "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
+   "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg; result 142ac050); the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+  ]
+ }
+}

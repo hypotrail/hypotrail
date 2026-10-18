@@ -1,8 +1,8 @@
 {
   "name": "hypotrail-companion",
-  "displayName": "Hypotrail study companion (v0, feature flag)",
-  "description": "A study panel for a Hypotrail study: recap, plan position, deliverables, open proposals and holds. Its only write is confirming or withdrawing an open proposal through the hypotrail CLI, with the junior's own typed words. Off by default.",
-  "version": "0.0.1",
+  "displayName": "Hypotrail study companion (feature flag)",
+  "description": "A study panel for a Hypotrail study, one more client of the hypotrail CLI. Stage v0 (the default) shows the recap, the plan, the deliverables, and the open proposals, and only confirms or withdraws a proposal with the junior's own typed words. Later stages are experimental. Off by default.",
+  "version": "0.1.0",
   "publisher": "hypotrail-local",
   "private": true,
   "license": "UNLICENSED",
@@ -14,7 +14,10 @@
   ],
   "main": "./extension.js",
   "activationEvents": [
-    "onCommand:hypotrail.companion.open"
+    "onCommand:hypotrail.companion.open",
+    "onCommand:hypotrail.companion.openReviewer",
+    "onCommand:hypotrail.companion.goToResult",
+    "onUri"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -28,6 +31,14 @@
       {
         "command": "hypotrail.companion.open",
         "title": "Hypotrail: open the study panel"
+      },
+      {
+        "command": "hypotrail.companion.openReviewer",
+        "title": "Hypotrail: open the study panel (reviewer, read-only)"
+      },
+      {
+        "command": "hypotrail.companion.goToResult",
+        "title": "Hypotrail: go to a result..."
       }
     ],
     "configuration": {
@@ -36,7 +47,28 @@
         "hypotrail.companion.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable the Hypotrail study panel (v0, experimental). Off by default; the environment variable HYPOTRAIL_COMPANION=1 also enables it."
+          "description": "Enable the Hypotrail study panel (experimental). Off by default; the environment variable HYPOTRAIL_COMPANION=1 also enables it."
+        },
+        "hypotrail.companion.stage": {
+          "type": "string",
+          "enum": [
+            "v0",
+            "v1",
+            "v2",
+            "v3"
+          ],
+          "default": "v0",
+          "description": "Which feature set of the panel is active; each stage includes the earlier ones. v0: recap, plan, deliverables, confirm or withdraw a proposal in your own words. v1 to v3 are experimental (ADR 0004). HYPOTRAIL_COMPANION_STAGE overrides it."
+        },
+        "hypotrail.companion.learningLayer": {
+          "type": "boolean",
+          "default": true,
+          "description": "From stage v3: glossary hovers, concept cards, and predict-before-you-look questions. Kept on this computer only."
+        },
+        "hypotrail.companion.reviewer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open the panel read-only: no control that writes to the study is shown."
         }
       }
     }

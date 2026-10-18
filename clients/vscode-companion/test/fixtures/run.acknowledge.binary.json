@@ -1,0 +1,57 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "W6 success (shape of an acknowledgement; hand-authored from CLI-CONTRACT §8.1 item 5)."
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "run.acknowledge",
+  "request_id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+  "replayed": false,
+  "revision": 28,
+  "activity": "policy.evaluate",
+  "execution_id": "e_4c1d9a7b2e3f5a6b7c8d9e0f",
+  "status": "acknowledged",
+  "result_id": null,
+  "values": null,
+  "result": {
+   "execution_id": "e_4c1d9a7b2e3f5a6b7c8d9e0f",
+   "status": "acknowledged",
+   "restarted": false,
+   "user_words": "I know the policy run was cut off and nobody knows what it did."
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 26,
+    "last_ok_revision": 26,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 26,
+    "last_ok_revision": 26,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

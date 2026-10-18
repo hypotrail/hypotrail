@@ -1,0 +1,66 @@
+/* Theme tokens of the study panel (COMPANION-ADVANCED §13). Each token maps a VS Code
+   theme variable first and falls back to the mockup colour (light) or its dark
+   counterpart, for a page loaded outside VS Code (the browser tests). No remote font.
+   Frozen by WP-0: views use these tokens, never raw colours. */
+:root {
+  --ht-bg: var(--vscode-editor-background, #FBFAF7);
+  --ht-surface: var(--vscode-sideBar-background, #FFFFFF);
+  --ht-border: var(--vscode-panel-border, #E3E1DA);
+  --ht-fg: var(--vscode-foreground, #1C1E21);
+  --ht-muted: var(--vscode-descriptionForeground, #5B6066);
+  --ht-accent: #0F6E66;
+  --ht-baseline: #8A8F96;
+  --ht-done-bg: #E3F1EF;
+  --ht-warn-bg: var(--vscode-inputValidation-warningBackground, #FCEFD9);
+  --ht-warn-border: var(--vscode-inputValidation-warningBorder, #EBCB97);
+  --ht-warn-fg: var(--vscode-foreground, #4A2604);
+  --ht-error-bg: var(--vscode-inputValidation-errorBackground, #FBE7E4);
+  --ht-error-border: var(--vscode-inputValidation-errorBorder, #E6B3AB);
+  --ht-error-fg: var(--vscode-errorForeground, #6B1E14);
+  --ht-experiment-bg: #EEE8F7;
+  --ht-experiment-fg: #3A2363;
+  --ht-link: var(--vscode-textLink-foreground, #1D5FAF);
+  --ht-focus: var(--vscode-focusBorder, #1D5FAF);
+  --ht-font: var(--vscode-font-family, system-ui, sans-serif);
+  --ht-mono: var(--vscode-editor-font-family, ui-monospace, monospace);
+  --ht-button-bg: var(--vscode-button-background, #0F6E66);
+  --ht-button-fg: var(--vscode-button-foreground, #FFFFFF);
+  --ht-button2-bg: var(--vscode-button-secondaryBackground, #EEEDE8);
+  --ht-button2-fg: var(--vscode-button-secondaryForeground, #1C1E21);
+  --ht-input-bg: var(--vscode-input-background, #FFFFFF);
+  --ht-input-fg: var(--vscode-input-foreground, #1C1E21);
+  --ht-input-border: var(--vscode-input-border, #8A8F96);
+  --ht-quote-bg: var(--vscode-textBlockQuote-background, #F3F2EE);
+  --ht-quote-border: var(--vscode-textBlockQuote-border, #C9C6BD);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ht-bg: var(--vscode-editor-background, #1E1F21);
+    --ht-surface: var(--vscode-sideBar-background, #252628);
+    --ht-border: var(--vscode-panel-border, #3A3C3F);
+    --ht-fg: var(--vscode-foreground, #E6E6E3);
+    --ht-muted: var(--vscode-descriptionForeground, #A3A7AD);
+    --ht-accent: #4FB3A9;
+    --ht-baseline: #7D828A;
+    --ht-done-bg: #1F3A37;
+    --ht-warn-bg: var(--vscode-inputValidation-warningBackground, #3A2C14);
+    --ht-warn-border: var(--vscode-inputValidation-warningBorder, #8A6A2E);
+    --ht-warn-fg: var(--vscode-foreground, #F2DDB8);
+    --ht-error-bg: var(--vscode-inputValidation-errorBackground, #3B1F1B);
+    --ht-error-border: var(--vscode-inputValidation-errorBorder, #8A3B30);
+    --ht-error-fg: var(--vscode-errorForeground, #F4C7BF);
+    --ht-experiment-bg: #2C2340;
+    --ht-experiment-fg: #D9CCF2;
+    --ht-link: var(--vscode-textLink-foreground, #6FA8E8);
+    --ht-focus: var(--vscode-focusBorder, #6FA8E8);
+    --ht-button-bg: var(--vscode-button-background, #2B7A72);
+    --ht-button-fg: var(--vscode-button-foreground, #FFFFFF);
+    --ht-button2-bg: var(--vscode-button-secondaryBackground, #3A3D41);
+    --ht-button2-fg: var(--vscode-button-secondaryForeground, #E6E6E3);
+    --ht-input-bg: var(--vscode-input-background, #2D2E31);
+    --ht-input-fg: var(--vscode-input-foreground, #E6E6E3);
+    --ht-input-border: var(--vscode-input-border, #6B7078);
+    --ht-quote-bg: var(--vscode-textBlockQuote-background, #2B2C2F);
+    --ht-quote-border: var(--vscode-textBlockQuote-border, #5B6066);
+  }
+}

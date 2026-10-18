@@ -1,0 +1,536 @@
+{
+ "summary.v0.binary": {
+  "schema": "hypotrail.summary/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--json"
+  ],
+  "note": "Bank after the capacity:100 evaluation, policy threshold:0.2 confirmed, p_5 open."
+ },
+ "summary.v0.regression": {
+  "schema": "hypotrail.summary/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--json"
+  ],
+  "note": "Auto MPG with the model choice proposed."
+ },
+ "preview.binary": {
+  "schema": "hypotrail.preview/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "policy",
+   "--rule",
+   "capacity:100",
+   "--intervals",
+   "--json"
+  ],
+  "note": ""
+ },
+ "render.binary": {
+  "schema": "hypotrail.render/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "render",
+   "--json"
+  ],
+  "note": ""
+ },
+ "render.binary.problems": {
+  "schema": "hypotrail.render/1",
+  "task": "binary",
+  "exit_code": 3,
+  "source": "hand-authored",
+  "argv": [
+   "render",
+   "--json"
+  ],
+  "note": "Exit 3: rendered with problems (OV-8)."
+ },
+ "run.rate_by.binary": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "eda.rate_by",
+   "--column=job",
+   "--request-id",
+   "ID",
+   "--expected-revision",
+   "R",
+   "--json"
+  ],
+  "note": ""
+ },
+ "session_report.binary": {
+  "schema": "hypotrail.session_report/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "session-report",
+   "--json"
+  ],
+  "note": ""
+ },
+ "decide.propose.binary": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [],
+  "note": ""
+ },
+ "decide.confirm.binary": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "W1 success, channel webview."
+ },
+ "decide.withdraw.binary": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "W2 success."
+ },
+ "decide.propose.webview.binary": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "W3 success: p_6 supersedes p_5."
+ },
+ "run.acknowledge.binary": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "W6 success (shape of an acknowledgement; hand-authored from CLI-CONTRACT §8.1 item 5)."
+ },
+ "error.not_implemented": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "The WP-0 stub refusal (CC §13)."
+ },
+ "error.bare_acknowledgement": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "error.stale_revision": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "error.decision_on_hold": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "error.export_target_exists": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "error.read_only": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "error.delegation_needs_basis": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "error.unknown_result": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "summary.binary": {
+  "schema": "hypotrail.summary/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "status",
+   "--summary",
+   "--digest",
+   "--json"
+  ],
+  "note": "Mockup Main: since the last session, a resolved hold, a capacity re-evaluation, a proposal."
+ },
+ "summary.regression": {
+  "schema": "hypotrail.summary/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "status",
+   "--summary",
+   "--digest",
+   "--json"
+  ],
+  "note": "Auto MPG, model choice proposed from the companion; the digest is truncated."
+ },
+ "summary.binary.health": {
+  "schema": "hypotrail.summary/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "status",
+   "--summary",
+   "--digest",
+   "--json"
+  ],
+  "note": "Health: interrupted, suspected and late executions, outcome_unknown, a stale report."
+ },
+ "decisions.binary": {
+  "schema": "hypotrail.decisions/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": "Mockup Decision history: delegated split, superseded threshold policy, policy confirmed from the panel."
+ },
+ "decisions.binary.reconfirm": {
+  "schema": "hypotrail.decisions/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": "The conclusion needs the junior's words again (RQ-1)."
+ },
+ "decisions.binary.injection": {
+  "schema": "hypotrail.decisions/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": "DH-2: HTML in words and restatements must render as text."
+ },
+ "decisions.regression": {
+  "schema": "hypotrail.decisions/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": ""
+ },
+ "preview_effects.binary": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_5",
+   "--json"
+  ],
+  "note": "Capacity replaces a confirmed threshold: both fits kept, nothing refitted."
+ },
+ "preview_effects.binary.reconfirm": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_5",
+   "--json"
+  ],
+  "note": "Mockup Decision (DC-4): the confirmed conclusion would need words again."
+ },
+ "preview_effects.binary.blocked": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_5",
+   "--json"
+  ],
+  "note": "DC-2: an open hold blocks the confirmation."
+ },
+ "preview_effects.binary.first": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_1",
+   "--json"
+  ],
+  "note": "A first confirmation: nothing recorded so far is invalidated."
+ },
+ "preview_effects.binary.split": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_8",
+   "--json"
+  ],
+  "note": "A split change makes every fit and EDA slot stale."
+ },
+ "preview_effects.regression": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_4",
+   "--json"
+  ],
+  "note": ""
+ },
+ "proposal_draft.binary": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "proposal",
+   "policy",
+   "--value=capacity:100",
+   "--json"
+  ],
+  "note": ""
+ },
+ "proposal_draft.binary.unevaluated": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "proposal",
+   "policy",
+   "--value=capacity:150",
+   "--json"
+  ],
+  "note": "WI-3: a rule that has not been evaluated cannot be proposed."
+ },
+ "proposal_draft.regression": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "proposal",
+   "model_choice",
+   "--value=fit.linear",
+   "--json"
+  ],
+  "note": ""
+ },
+ "evidence.binary": {
+  "schema": "hypotrail.evidence/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "evidence",
+   "--json"
+  ],
+  "note": "Mockups Evidence and EDA: current results, a stale replaced policy evaluation, ledger, catalog."
+ },
+ "evidence.binary.detail": {
+  "schema": "hypotrail.evidence/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "evidence",
+   "--result",
+   "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+   "--json"
+  ],
+  "note": ""
+ },
+ "evidence.regression": {
+  "schema": "hypotrail.evidence/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "evidence",
+   "--json"
+  ],
+  "note": "Mockup Regression: residuals by year, split limits, eda.mean_by."
+ },
+ "run.eda_distribution.binary": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "run",
+   "eda.distribution",
+   "--column=age",
+   "--request-id",
+   "ID",
+   "--expected-revision",
+   "R",
+   "--json"
+  ],
+  "note": ""
+ },
+ "run.eda_distribution.binary.late": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "The study changed while it ran: not promoted."
+ },
+ "explain.binary": {
+  "schema": "hypotrail.explain/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "explain",
+   "--json"
+  ],
+  "note": ""
+ },
+ "explain.regression": {
+  "schema": "hypotrail.explain/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "explain",
+   "--json"
+  ],
+  "note": ""
+ },
+ "check.binary": {
+  "schema": "hypotrail.check/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "check",
+   "--json"
+  ],
+  "note": "HE-3: an injected stale citation."
+ },
+ "check.binary.clean": {
+  "schema": "hypotrail.check/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "check",
+   "--json"
+  ],
+  "note": ""
+ },
+ "export.binary": {
+  "schema": "hypotrail.export/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "export",
+   "handoff",
+   "--out=/studies/bank marketing \"demo\"/handoff/revision-26",
+   "--json"
+  ],
+  "note": ""
+ },
+ "export.binary.stale_report": {
+  "schema": "hypotrail.export/1",
+  "task": "binary",
+  "exit_code": 3,
+  "source": "hand-authored",
+  "argv": [
+   "export",
+   "handoff",
+   "--out=/studies/bank marketing \"demo\"/handoff/revision-26",
+   "--json"
+  ],
+  "note": "Exit 3: the report was not current, so it is not in the pack."
+ },
+ "handoff.binary": {
+  "schema": "hypotrail.handoff/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "handoff.json written in the pack (hypotrail.handoff/1)."
+ }
+}

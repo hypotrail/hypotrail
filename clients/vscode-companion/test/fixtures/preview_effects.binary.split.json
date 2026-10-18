@@ -1,0 +1,92 @@
+{
+ "about": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_8",
+   "--json"
+  ],
+  "note": "A split change makes every fit and EDA slot stale."
+ },
+ "payload": {
+  "schema": "hypotrail.preview_effects/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "proposal_id": "p_8",
+  "decision_id": "split",
+  "value": {
+   "method": "stratified_random",
+   "seed": 7,
+   "validation_fraction": 0.3
+  },
+  "previous": {
+   "value": {
+    "method": "stratified_random",
+    "seed": 20261017,
+    "validation_fraction": 0.3
+   },
+   "user_words": "Go with your recommended default.",
+   "basis": "delegated_default",
+   "channel": "chat",
+   "revision": 7,
+   "proposal_id": "p_3"
+  },
+  "mutation": "split",
+  "row": 4,
+  "reason": "the split changed",
+  "stale_results": [
+   "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+   "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+   "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+   "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+   "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+   "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+   "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02"
+  ],
+  "stale_slots": [
+   "split",
+   "eda.target_rate",
+   "eda.special_values",
+   "eda.rate_by:job",
+   "fit.baseline",
+   "fit.logistic",
+   "policy.evaluation"
+  ],
+  "kept_slots": [],
+  "refit": [
+   "fit.baseline",
+   "fit.logistic"
+  ],
+  "re_eda": [
+   "eda.target_rate",
+   "eda.special_values",
+   "eda.rate_by:job"
+  ],
+  "re_policy": [
+   "policy.evaluation"
+  ],
+  "recompute": [
+   "split"
+  ],
+  "reconfirm_required": [
+   "policy"
+  ],
+  "supersedes_proposal": null,
+  "blocked": [],
+  "artifacts_after": {
+   "report": "regenerated",
+   "notebook": "regenerated",
+   "workbench": "unchanged"
+  },
+  "notes": [
+   "Changing the split does not make explored rows unseen."
+  ],
+  "recorded": false,
+  "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."
+ }
+}

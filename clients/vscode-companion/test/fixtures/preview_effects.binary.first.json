@@ -1,0 +1,46 @@
+{
+ "about": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_1",
+   "--json"
+  ],
+  "note": "A first confirmation: nothing recorded so far is invalidated."
+ },
+ "payload": {
+  "schema": "hypotrail.preview_effects/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 2,
+  "proposal_id": "p_1",
+  "decision_id": "prediction_time",
+  "value": "before the first contact of the campaign, from the client file",
+  "previous": null,
+  "mutation": "first_confirmation",
+  "row": null,
+  "reason": "prediction_time confirmed for the first time",
+  "stale_results": [],
+  "stale_slots": [],
+  "kept_slots": [],
+  "refit": [],
+  "re_eda": [],
+  "re_policy": [],
+  "recompute": [],
+  "reconfirm_required": [],
+  "supersedes_proposal": null,
+  "blocked": [],
+  "artifacts_after": {
+   "report": "regenerated",
+   "notebook": "regenerated",
+   "workbench": "unchanged"
+  },
+  "notes": [],
+  "recorded": false,
+  "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."
+ }
+}

@@ -1,6 +1,9 @@
 'use strict';
 // Unit tests (scope U): the extension against a fake `vscode` module and a fake
 // child_process.execFile. No VS Code and no CLI process. Run: node --test test/*.test.js
+//
+// Migrated by WP-0 to protocol hypotrail.panel/2 (messages carry `v: 2`, `open` is
+// `open_artifact`, an outcome is {op, kind: ok|refused|...}); every v0 assertion is kept.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -77,12 +80,19 @@ test('flag off: the command shows one message and nothing else runs', async () =
   const fake = createFake({ folders: [path.join(folder, 'study')] });
   const { extension, context } = load(fake);
   const api = extension.activate(context);
-  assert.deepEqual([...fake.registered.keys()], ['hypotrail.companion.open']);
+  assert.deepEqual([...fake.registered.keys()], ['hypotrail.companion.open', 'hypotrail.companion.openReviewer',
+    'hypotrail.companion.goToResult']);
+  assert.equal(fake.uriHandlers.length, 1, 'the URI handler is registered (onUri)');
   assert.equal(fake.calls.configuration.length, 0, 'activation reads no setting');
   assert.equal(await fake.commands.executeCommand('hypotrail.companion.open'), null);
   assert.deepEqual(fake.calls.info, ['Companion disabled (feature flag)']);
+  // Every entry point is behind the flag: the reviewer command, go to a result, a link.
+  assert.equal(await fake.commands.executeCommand('hypotrail.companion.openReviewer'), null);
+  assert.equal(await fake.commands.executeCommand('hypotrail.companion.goToResult'), null);
+  assert.equal(await fake.uriHandlers[0].handleUri({ path: '/result/' + 'a'.repeat(64), query: '' }), null);
+  assert.deepEqual(fake.calls.info, Array(4).fill('Companion disabled (feature flag)'));
   assert.equal(fake.calls.panels.length, 0);
-  assert.equal(fake.calls.openDialog.length + fake.calls.quickPick.length + fake.calls.error.length, 0);
+  assert.equal(fake.calls.openDialog.length + fake.calls.quickPick.length + fake.calls.error.length + fake.calls.inputBox.length, 0);
   assert.equal(calls.length, 0);
   assert.equal(api.current(), null);
 });
@@ -97,7 +107,10 @@ test('flag: setting default false; setting true or HYPOTRAIL_COMPANION=1 turns i
   assert.equal(isEnabled(createFake(), { HYPOTRAIL_COMPANION: '1' }), true);
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
   assert.equal(pkg.contributes.configuration.properties['hypotrail.companion.enabled'].default, false);
-  assert.deepEqual(pkg.activationEvents, ['onCommand:hypotrail.companion.open']);
+  assert.equal(pkg.contributes.configuration.properties['hypotrail.companion.stage'].default, 'v0');
+  assert.equal(pkg.contributes.configuration.properties['hypotrail.companion.chatInsert'], undefined, 'chatInsert is hidden');
+  assert.deepEqual(pkg.activationEvents, ['onCommand:hypotrail.companion.open', 'onCommand:hypotrail.companion.openReviewer',
+    'onCommand:hypotrail.companion.goToResult', 'onUri']);
   assert.equal(pkg.capabilities.untrustedWorkspaces.supported, false);
   assert.equal(pkg.dependencies, undefined, 'no runtime dependency');
 });
@@ -164,7 +177,7 @@ test('argv: taken from agent.json, paths with spaces and quotes, execFile withou
   const calls = fakeCli(() => ({ payload: summary(dir) }));
   const fake = createFake({ folders: [dir] });
   const { opened } = await openWith(fake);
-  await opened.controller.handle({ type: 'ready' });
+  await opened.controller.handle({ v: 2, type: 'ready' });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].file, CLI[0]);
   assert.deepEqual(calls[0].args, [...CLI.slice(1), 'status', '--summary', '--json', '--study', dir]);
@@ -206,7 +219,7 @@ test('refresh on change: a write to state.json or revisions.jsonl refreshes once
   const calls = fakeCli(() => ({ payload: summary(dir) }));
   const fake = createFake({ folders: [dir] });
   const { opened } = await openWith(fake);
-  await opened.controller.handle({ type: 'ready' });
+  await opened.controller.handle({ v: 2, type: 'ready' });
   const before = calls.length;
   fs.writeFileSync(path.join(dir, '.hypotrail', 'unrelated.tmp'), 'x');
   await new Promise(r => setTimeout(r, 500));
@@ -229,7 +242,7 @@ test('panel becoming visible refreshes; messages go through onDidReceiveMessage'
   const fake = createFake({ folders: [dir] });
   await openWith(fake);
   const panel = fake.calls.panels[0];
-  panel.receive({ type: 'ready' });
+  panel.receive({ v: 2, type: 'ready' });
   await new Promise(r => setTimeout(r, 50));
   assert.equal(calls.length, 1);
   panel.setVisible(true);
@@ -243,7 +256,7 @@ async function readyPanel(respond) {
   const calls = fakeCli((args, n) => (args.includes('status') ? { payload: summary(dir, n === 1 ? 3 : 4) } : respond(args, dir)));
   const fake = createFake({ folders: [dir], answers: { warning: 'Withdraw' } });
   const { opened } = await openWith(fake);
-  await opened.controller.handle({ type: 'ready' });
+  await opened.controller.handle({ v: 2, type: 'ready' });
   return { dir, calls, fake, controller: opened.controller, panel: fake.calls.panels[0] };
 }
 
@@ -253,7 +266,7 @@ test('confirm: exact argv with the typed words, channel webview, actor user, uui
     schema: 'hypotrail.decide/1', ok: true, action: 'decide.confirm', request_id: 'x', replayed: false, revision: 4,
     result: { decision_id: 'prediction_time', proposal_id: 'p_1', status: 'confirmed', user_words: words, channel: 'webview', actor: 'user' },
     artifacts: { report: { status: 'ok', message: 'The report (reports/study.html) is up to date.' } } } }));
-  await controller.handle({ type: 'confirm', proposalId: 'p_1', words, revision: 3 });
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words, revision: 3 });
   const confirm = calls.find(c => c.args.includes('confirm'));
   const rid = confirm.args[confirm.args.indexOf('--request-id') + 1];
   assert.match(rid, UUID);
@@ -262,13 +275,16 @@ test('confirm: exact argv with the typed words, channel webview, actor user, uui
   assert.equal(confirm.options.shell, false);
   assert.ok(!confirm.args.includes('--basis'), 'never a delegation');
   const outcome = panel.posted.find(m => m.type === 'outcome');
-  assert.equal(outcome.kind, 'confirmed');
-  assert.equal(outcome.userWords, words);
-  assert.equal(outcome.channel, 'webview');
+  assert.equal(outcome.v, 2);
+  assert.equal(outcome.op, 'W1');
+  assert.equal(outcome.kind, 'ok');
+  assert.equal(outcome.target, 'p_1');
+  assert.equal(outcome.recorded.userWords, words);
+  assert.equal(outcome.recorded.channel, 'webview');
   assert.equal(calls.at(-1).args.includes('status'), true, 'the panel refreshes after the outcome');
   assert.equal(panel.posted.at(-1).model.revision, 4);
   // A second confirmation gets a new request id.
-  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'again before the reminder', revision: 4 });
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'again before the reminder', revision: 4 });
   const ids = calls.filter(c => c.args.includes('confirm')).map(c => c.args[c.args.indexOf('--request-id') + 1]);
   assert.equal(new Set(ids).size, 2);
 });
@@ -276,22 +292,25 @@ test('confirm: exact argv with the typed words, channel webview, actor user, uui
 test('confirm: blank words, unknown proposal, or a malformed message never reach the CLI', async () => {
   const { calls, panel, controller } = await readyPanel(() => assert.fail('no mutation'));
   const before = calls.length;
-  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: '   \n', revision: 3 });
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: '   \n', revision: 3 });
   assert.equal(panel.posted.at(-1).kind, 'invalid');
   for (const bad of [
-    { type: 'confirm', proposalId: 'p_1; rm', words: 'yes', revision: 3 },
-    { type: 'confirm', proposalId: 'p_1', words: 'yes', revision: '3' },
-    { type: 'confirm', proposalId: 'p_1', words: 'yes', revision: 3, basis: 'delegated_default' },
-    { type: 'confirm', proposalId: 'p_1', words: 7, revision: 3 },
-    { type: 'confirm', proposalId: 'p_1', words: 'x'.repeat(4001), revision: 3 },
-    { type: 'run', activity: 'split' },
-    { type: 'propose' },
-    { type: 'open', artifact: '../../etc/passwd' },
+    { v: 2, type: 'confirm', proposalId: 'p_1; rm', words: 'yes', revision: 3 },
+    { v: 2, type: 'confirm', proposalId: 'p_1', words: 'yes', revision: '3' },
+    { v: 2, type: 'confirm', proposalId: 'p_1', words: 'yes', revision: 3, basis: 'delegated_default' },
+    { v: 2, type: 'confirm', proposalId: 'p_1', words: 7, revision: 3 },
+    { v: 2, type: 'confirm', proposalId: 'p_1', words: 'x'.repeat(4001), revision: 3 },
+    { v: 2, type: 'run', activity: 'split' },
+    { v: 2, type: 'propose' },
+    { v: 2, type: 'open_artifact', artifact: '../../etc/passwd' },
     'confirm', null, [],
   ]) await controller.handle(bad);
   assert.equal(controller.diagnostics().ignored, 11);
-  await controller.handle({ type: 'confirm', proposalId: 'p_9', words: 'yes before the reminder', revision: 3 });
-  assert.match(panel.posted.find(m => m.type === 'outcome' && m.proposalId === 'p_9').message, /not open in the panel/);
+  // A v0 message without the v2 envelope is dropped too.
+  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 3 });
+  assert.equal(controller.diagnostics().ignored, 12);
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_9', words: 'yes before the reminder', revision: 3 });
+  assert.match(panel.posted.find(m => m.type === 'outcome' && m.target === 'p_9').message, /not open in the panel/);
   assert.ok(calls.slice(before).every(c => c.args.includes('status')), 'only reads');
 });
 
@@ -300,7 +319,7 @@ test('refusal: the engine message is shown verbatim with the human message, then
   const { calls, panel, controller } = await readyPanel(() => ({ code: 2, payload: {
     schema: 'hypotrail.error/1', ok: false, command: 'decide confirm',
     error: { code: 'ambiguous_confirmation', message: engineMessage, details: { reason: 'bare_acknowledgement', user_words: 'ok' } } } }));
-  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'ok', revision: 3 });
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'ok', revision: 3 });
   const outcome = panel.posted.find(m => m.type === 'outcome');
   assert.equal(outcome.kind, 'refused');
   assert.equal(outcome.exitCode, 2);
@@ -317,7 +336,7 @@ test('stale revision: the diff is summarised and the panel refreshes', async () 
     error: { code: 'stale_revision', message: 'Revision is stale: reread hypotrail status before deciding',
       details: { expected_revision: 2, current_revision: 3, changes_since: [{ revision: 3, action: 'decide.note',
         params: { decision_id: 'prediction_time', user_words: 'wait' } }] } } } }));
-  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 2 });
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 2 });
   const outcome = panel.posted.find(m => m.type === 'outcome');
   assert.equal(outcome.refusal.code, 'stale_revision');
   assert.equal(outcome.refusal.engineMessage, 'Revision is stale: reread hypotrail status before deciding');
@@ -329,7 +348,7 @@ test('stale revision: the diff is summarised and the panel refreshes', async () 
 
 test('a CLI that cannot start or prints no JSON: an unknown outcome, never a success', async () => {
   const { panel, controller } = await readyPanel(() => ({ spawnError: 'ENOENT' }));
-  await controller.handle({ type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 3 });
+  await controller.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'yes before the reminder', revision: 3 });
   const outcome = panel.posted.find(m => m.type === 'outcome');
   assert.equal(outcome.kind, 'failed');
   assert.match(outcome.message, /could not be started \(ENOENT/);
@@ -340,18 +359,20 @@ test('withdraw: asks first (modal), exact argv; cancelled sends nothing', async 
   const { dir, calls, fake, panel, controller } = await readyPanel(() => ({ code: 0, payload: {
     schema: 'hypotrail.decide/1', ok: true, action: 'decide.withdraw', revision: 4,
     result: { proposal_id: 'p_1', decision_id: 'prediction_time', status: 'withdrawn' }, artifacts: {} } }));
-  await controller.handle({ type: 'withdraw', proposalId: 'p_1', reason: null, revision: 3 });
+  await controller.handle({ v: 2, type: 'withdraw', proposalId: 'p_1', revision: 3 });
   assert.equal(fake.calls.warning[0].rest[0].modal, true);
   const w = calls.find(c => c.args.includes('withdraw'));
   const rid = w.args[w.args.indexOf('--request-id') + 1];
   assert.deepEqual(w.args, [...CLI.slice(1), 'decide', 'withdraw', 'p_1', '--request-id', rid,
     '--expected-revision', '3', '--json', '--study', dir]);
-  assert.equal(panel.posted.find(m => m.type === 'outcome').kind, 'withdrawn');
+  const withdrawn = panel.posted.find(m => m.type === 'outcome');
+  assert.equal(withdrawn.op, 'W2');
+  assert.equal(withdrawn.kind, 'ok');
   const n = calls.length;
   fake.calls.warning.length = 0;
   const cancelled = await readyPanel(() => assert.fail('cancelled'));
   cancelled.fake.window.showWarningMessage = async () => undefined;
-  await cancelled.controller.handle({ type: 'withdraw', proposalId: 'p_1', reason: null, revision: 3 });
+  await cancelled.controller.handle({ v: 2, type: 'withdraw', proposalId: 'p_1', revision: 3 });
   assert.ok(cancelled.calls.every(c => c.args.includes('status')));
   assert.ok(n > 0);
 });
@@ -360,19 +381,23 @@ test('open: the report in the browser, the notebook in the editor, a missing fil
   const { dir, fake, panel, controller } = await readyPanel(() => assert.fail('no mutation'));
   fs.mkdirSync(path.join(dir, 'reports'));
   fs.writeFileSync(path.join(dir, 'reports', 'study.html'), '<p>r</p>');
-  await controller.handle({ type: 'open', artifact: 'report' });
+  await controller.handle({ v: 2, type: 'open_artifact', artifact: 'report' });
   assert.deepEqual(fake.calls.openExternal, [path.join(dir, 'reports', 'study.html')]);
-  await controller.handle({ type: 'open', artifact: 'notebook' });
-  assert.match(panel.posted.at(-1).message, /notebooks\/study_generated.py does not exist yet/);
+  await controller.handle({ v: 2, type: 'open_artifact', artifact: 'notebook' });
+  assert.equal(panel.posted.at(-1).type, 'notice');
+  assert.match(panel.posted.at(-1).text, /notebooks\/study_generated.py does not exist yet/);
   fs.mkdirSync(path.join(dir, 'notebooks'));
   fs.writeFileSync(path.join(dir, 'notebooks', 'study_generated.py'), '');
-  await controller.handle({ type: 'open', artifact: 'notebook' });
+  await controller.handle({ v: 2, type: 'open_artifact', artifact: 'notebook' });
   assert.deepEqual(fake.calls.showTextDocument, [path.join(dir, 'notebooks', 'study_generated.py')]);
 });
 
 test('sources: no shell, no network module, no storage of their own', () => {
   const root = path.join(__dirname, '..');
-  const files = ['extension.js', ...fs.readdirSync(path.join(root, 'lib')).map(f => `lib/${f}`), 'media/panel.js'];
+  const walk = dir => fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap(e =>
+    (e.isDirectory() ? walk(`${dir}/${e.name}`) : e.name.endsWith('.js') ? [`${dir}/${e.name}`] : []));
+  const files = ['extension.js', ...walk('lib'), ...walk('media')];
+  assert.ok(files.includes('media/core.js') && files.includes('lib/handlers/decisions.js'));
   for (const f of files) {
     const text = fs.readFileSync(path.join(root, f), 'utf8');
     assert.doesNotMatch(text, /require\(['"](https?|net|tls|dgram|http2|ws|sqlite3?|better-sqlite3|node:sqlite)['"]\)/, f);

@@ -1,0 +1,65 @@
+{
+ "about": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "preview",
+   "effects",
+   "p_5",
+   "--json"
+  ],
+  "note": "Mockup Decision (DC-4): the confirmed conclusion would need words again."
+ },
+ "payload": {
+  "schema": "hypotrail.preview_effects/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "proposal_id": "p_5",
+  "decision_id": "policy",
+  "value": "capacity:100",
+  "previous": {
+   "value": "threshold:0.2",
+   "user_words": "Yes, call everyone scored at 0.2 or more",
+   "basis": "explicit",
+   "channel": "chat",
+   "revision": 23,
+   "proposal_id": "p_4"
+  },
+  "mutation": "policy.rule_type",
+  "row": 6,
+  "reason": "the policy changed from a threshold to a capacity",
+  "stale_results": [],
+  "stale_slots": [],
+  "kept_slots": [
+   "split",
+   "eda.target_rate",
+   "eda.special_values",
+   "eda.rate_by:job",
+   "fit.baseline",
+   "fit.logistic",
+   "policy.evaluation"
+  ],
+  "refit": [],
+  "re_eda": [],
+  "re_policy": [],
+  "recompute": [],
+  "reconfirm_required": [
+   "conclusion"
+  ],
+  "supersedes_proposal": null,
+  "blocked": [],
+  "artifacts_after": {
+   "report": "regenerated",
+   "notebook": "regenerated",
+   "workbench": "unchanged"
+  },
+  "notes": [
+   "A rule change reuses the saved predictions: no model is refitted."
+  ],
+  "recorded": false,
+  "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."
+ }
+}

@@ -1,0 +1,280 @@
+{
+ "about": {
+  "schema": "hypotrail.summary/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--json"
+  ],
+  "note": "Bank after the capacity:100 evaluation, policy threshold:0.2 confirmed, p_5 open."
+ },
+ "payload": {
+  "schema": "hypotrail.summary/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "since": null,
+  "changed": null,
+  "goal": {
+   "intended_use": {
+    "value": "Teaching simulation: prioritize contacts when call capacity is limited",
+    "status": "scenario_assumption"
+   },
+   "decision": {
+    "value": "Select contacts to call first",
+    "status": "scenario_assumption"
+   },
+   "observation_unit": {
+    "value": "A customer contacted during a telephone campaign",
+    "status": "documented_fact"
+   },
+   "prediction_time": {
+    "value": "before the first contact of the campaign, from the client file",
+    "source": "decision",
+    "status": "confirmed"
+   }
+  },
+  "current_step": "conclusion",
+  "plan": [
+   {
+    "id": "prediction_time",
+    "title": "Define the prediction moment",
+    "status": "done"
+   },
+   {
+    "id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "status": "done"
+   },
+   {
+    "id": "split",
+    "title": "Split the data before exploring it",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the training partition",
+    "status": "done"
+   },
+   {
+    "id": "models",
+    "title": "Fit a baseline and a logistic model",
+    "status": "done"
+   },
+   {
+    "id": "policy",
+    "title": "Choose a decision policy",
+    "status": "done"
+   },
+   {
+    "id": "conclusion",
+    "title": "Conclude proportionately",
+    "status": "ready"
+   }
+  ],
+  "next_action": {
+   "kind": "await_user_words",
+   "proposal_id": "p_5",
+   "decision": "policy",
+   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision."
+  },
+  "open_proposals": [
+   {
+    "proposal_id": "p_5",
+    "decision_id": "policy",
+    "value": "capacity:100",
+    "restatement": "Call the 100 clients with the highest scores.",
+    "revision": 26
+   }
+  ],
+  "decisions": {
+   "prediction_time": {
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "feature_availability": {
+    "status": "confirmed",
+    "value": {
+     "available_at_prediction": [
+      "age",
+      "balance",
+      "default",
+      "education",
+      "housing",
+      "job",
+      "loan",
+      "marital",
+      "pdays",
+      "poutcome",
+      "previous"
+     ],
+     "not_available": [
+      "campaign",
+      "day",
+      "duration",
+      "month"
+     ],
+     "uncertain_included": [
+      "contact"
+     ]
+    },
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "split": {
+    "status": "confirmed",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "policy": {
+    "status": "confirmed",
+    "value": "threshold:0.2",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, call everyone scored at 0.2 or more",
+    "reason": null,
+    "open_proposals": [
+     "p_5"
+    ]
+   },
+   "conclusion": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": []
+   }
+  },
+  "results": {
+   "eda.rate_by:job": {
+    "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.special_values": {
+    "result_id": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.target_rate": {
+    "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.baseline": {
+    "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.logistic": {
+    "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "policy.evaluation": {
+    "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "split": {
+    "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   }
+  },
+  "artifacts": {
+   "status": "ok",
+   "items": {
+    "notebook": {
+     "status": "ok",
+     "revision": 26,
+     "last_ok_revision": 26,
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+    },
+    "report": {
+     "status": "ok",
+     "revision": 26,
+     "last_ok_revision": 26,
+     "message": "The report (reports/study.html) is up to date."
+    },
+    "workbench": {
+     "status": "ok",
+     "revision": 2,
+     "last_ok_revision": 2,
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+    }
+   }
+  },
+  "executions": {
+   "active": [],
+   "interrupted": [],
+   "late": [],
+   "suspected_interrupted": []
+  },
+  "not_yet_defensible": {
+   "top": [
+    {
+     "id": "unconfirmed_decisions",
+     "text": "These decisions are not confirmed: conclusion."
+    },
+    {
+     "id": "uncertain_features_included",
+     "text": "These features are used although their availability at prediction time is uncertain: contact."
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+    },
+    {
+     "id": "public_data_already_explored",
+     "text": "The data were explored or published before this study; its rows are not unseen."
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+    }
+   ],
+   "more": [
+    "no_causality",
+    "workbench_not_tracked"
+   ]
+  },
+  "notes": [],
+  "holds": [],
+  "recap": [
+   "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result ae80b53f).",
+   "Now: Conclude proportionately; the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
+   "Limit: These features are used although their availability at prediction time is uncertain: contact."
+  ]
+ }
+}

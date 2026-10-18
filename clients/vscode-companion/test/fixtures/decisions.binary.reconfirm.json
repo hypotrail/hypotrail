@@ -1,0 +1,405 @@
+{
+ "about": {
+  "schema": "hypotrail.decisions/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": "The conclusion needs the junior's words again (RQ-1)."
+ },
+ "payload": {
+  "schema": "hypotrail.decisions/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 31,
+  "task": "binary",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "title": "Define the prediction moment",
+    "pause": 1,
+    "step": "prediction_time",
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Before the call: we only know the client and past campaigns.",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You score each client before the first call.",
+     "proposal_id": "p_1",
+     "revision": 3,
+     "time": "2026-10-18T09:00:00+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "pause": 1,
+    "step": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "depends_on": [
+     "prediction_time"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Remove duration, day, month and campaign; keep contact as uncertain.",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You exclude duration, day, month and campaign.",
+     "proposal_id": "p_2",
+     "revision": 5,
+     "time": "2026-10-18T09:00:00+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "split",
+    "title": "Split the data before exploring it",
+    "pause": 2,
+    "step": "split",
+    "status": "confirmed",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "depends_on": [
+     "prediction_time",
+     "feature_availability"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Go with your recommended default.",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "My recommended default: a stratified random split, 30% for validation.",
+     "proposal_id": "p_3",
+     "revision": 7,
+     "time": "2026-10-18T09:00:00+00:00",
+     "authenticated": false,
+     "basis": "delegated_default",
+     "delegation_scope": "this_decision"
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "policy",
+    "title": "Choose a decision policy",
+    "pause": 3,
+    "step": "policy",
+    "status": "confirmed",
+    "value": "capacity:100",
+    "depends_on": [
+     "split"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes: we can make 100 calls per wave, so call the 100 best-scored clients.",
+     "channel": "webview",
+     "actor": "user",
+     "restatement": "Call the 100 clients with the highest scores.",
+     "proposal_id": "p_5",
+     "revision": 27,
+     "time": "2026-10-18T09:00:00+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "conclusion",
+    "title": "Conclude proportionately",
+    "pause": 3,
+    "step": "conclusion",
+    "status": "reconfirm_required",
+    "value": "adopt_policy",
+    "depends_on": [
+     "policy"
+    ],
+    "reason": "policy changed: capacity:100 replaces threshold:0.2",
+    "confirmation": {
+     "user_words": "We adopt the threshold policy for the next wave, knowing the figures are optimistic.",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "",
+     "proposal_id": "p_7",
+     "revision": 25,
+     "time": "2026-10-18T09:00:00+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null
+    },
+    "open_proposals": []
+   }
+  ],
+  "proposals": [
+   {
+    "proposal_id": "p_1",
+    "decision_id": "prediction_time",
+    "value": "before the first contact of the campaign, from the client file",
+    "restatement": "You decide the prediction_time as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 2,
+    "created": "2026-10-18T22:31:40.418257+00:00",
+    "closed_revision": 3,
+    "closed_reason": "confirmed",
+    "origin": null
+   },
+   {
+    "proposal_id": "p_2",
+    "decision_id": "feature_availability",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "restatement": "You decide the feature_availability as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 4,
+    "created": "2026-10-18T22:31:41.040535+00:00",
+    "closed_revision": 5,
+    "closed_reason": "confirmed",
+    "origin": null
+   },
+   {
+    "proposal_id": "p_3",
+    "decision_id": "split",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "restatement": "You decide the split as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 6,
+    "created": "2026-10-18T22:31:41.158101+00:00",
+    "closed_revision": 7,
+    "closed_reason": "confirmed",
+    "origin": null
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "policy",
+    "value": "threshold:0.5",
+    "restatement": "Call every client scored at 0.5 or more.",
+    "rationale": "A first guess.",
+    "status": "withdrawn",
+    "revision": 20,
+    "created": "2026-10-18T09:10:00+00:00",
+    "closed_revision": 21,
+    "closed_reason": "withdrawn",
+    "origin": null
+   },
+   {
+    "proposal_id": "p_4",
+    "decision_id": "policy",
+    "value": "threshold:0.2",
+    "restatement": "You decide the policy as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 22,
+    "created": "2026-10-18T22:31:44.440711+00:00",
+    "closed_revision": 23,
+    "closed_reason": "confirmed",
+    "origin": null
+   },
+   {
+    "proposal_id": "p_5",
+    "decision_id": "policy",
+    "value": "capacity:100",
+    "restatement": "Call the 100 clients with the highest scores.",
+    "rationale": "The team can make 100 calls per wave.",
+    "status": "confirmed",
+    "revision": 26,
+    "created": "2026-10-18T22:31:45.316664+00:00",
+    "closed_revision": 27,
+    "closed_reason": "confirmed",
+    "origin": null
+   }
+  ],
+  "history": [
+   {
+    "revision": 3,
+    "time": "2026-10-18T09:03:00+00:00",
+    "decision_id": "prediction_time",
+    "proposal_id": "p_1",
+    "value": "before the first contact of the campaign, from the client file",
+    "user_words": "Before the call: we only know the client and past campaigns.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 5,
+    "time": "2026-10-18T09:05:00+00:00",
+    "decision_id": "feature_availability",
+    "proposal_id": "p_2",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "user_words": "Remove duration, day, month and campaign; keep contact as uncertain.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 7,
+    "time": "2026-10-18T09:07:00+00:00",
+    "decision_id": "split",
+    "proposal_id": "p_3",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "user_words": "Go with your recommended default.",
+    "basis": "delegated_default",
+    "delegation_scope": "this_decision",
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 23,
+    "time": "2026-10-18T09:23:00+00:00",
+    "decision_id": "policy",
+    "proposal_id": "p_4",
+    "value": "threshold:0.2",
+    "user_words": "Yes, call everyone scored at 0.2 or more",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": false,
+    "superseded_at": 27
+   },
+   {
+    "revision": 25,
+    "time": "2026-10-18T09:25:00+00:00",
+    "decision_id": "conclusion",
+    "proposal_id": "p_7",
+    "value": "adopt_policy",
+    "user_words": "We adopt the threshold policy for the next wave, knowing the figures are optimistic.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 27,
+    "time": "2026-10-18T09:27:00+00:00",
+    "decision_id": "policy",
+    "proposal_id": "p_5",
+    "value": "capacity:100",
+    "user_words": "Yes: we can make 100 calls per wave, so call the 100 best-scored clients.",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "webview",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   }
+  ],
+  "reconfirm_queue": [
+   {
+    "decision_id": "conclusion",
+    "reason": "policy changed: capacity:100 replaces threshold:0.2",
+    "since_revision": 27,
+    "previous": {
+     "value": "adopt_policy",
+     "user_words": "We adopt the threshold policy for the next wave, knowing the figures are optimistic.",
+     "basis": "explicit",
+     "channel": "chat"
+    },
+    "open_proposal": null
+   }
+  ],
+  "notes": [
+   {
+    "note_id": "n_1",
+    "decision_id": "policy",
+    "kind": "hold",
+    "user_words": "don't adopt anything until I bring my manager's figure",
+    "status": "resolved",
+    "revision": 21,
+    "resolution": {
+     "user_words": "my manager says the team can make 100 calls per wave",
+     "revision": 24,
+     "time": "2026-10-19T08:27:10.120000+00:00",
+     "request_id": "chat-24"
+    }
+   }
+  ]
+ }
+}

@@ -20,6 +20,8 @@ const BY_REASON = {
   not_a_delegation: 'The engine did not read this reply as a delegation.',
   restatement_not_default: 'The proposal does not state that it is the assistant\'s recommended default.',
   delegation_not_given_at_this_pause: 'This decision needs your own words or a delegation given at this pause, in the chat.',
+  // CLI-CONTRACT-COMPANION §13 (WP-0): a reserved command of an engine that predates it.
+  not_implemented: 'The study engine in this environment does not have this command yet.',
 };
 
 const BY_CODE = {
@@ -37,6 +39,7 @@ const BY_CODE = {
   integrity_error: 'The study state does not match its digest. Do not edit `.hypotrail/` by hand.',
   invalid_arguments: 'The CLI refused the arguments of this request.',
   internal_error: 'The CLI failed unexpectedly.',
+  unsupported_capability: 'The study engine does not support this request.',
 };
 
 /** {code, reason, engineMessage, human, details} for a `hypotrail.error/1` payload. */

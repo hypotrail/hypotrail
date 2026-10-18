@@ -1,0 +1,2249 @@
+{
+ "about": {
+  "schema": "hypotrail.evidence/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "evidence",
+   "--result",
+   "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.evidence/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 27,
+  "task": "binary",
+  "results": [
+   {
+    "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+    "activity": "split",
+    "slot": "split",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "all",
+    "n_rows": 4521,
+    "params": {},
+    "upstream": {},
+    "downstream": [
+     "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+     "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+     "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+     "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+    ],
+    "created": "2026-10-18T22:31:42.330777+00:00",
+    "started_revision": 8,
+    "execution_id": "e_e1b0acf86b9621b8c13ca17b",
+    "exposure_id": "x_58e977438a994fd0a88a5f221907174a",
+    "values": {
+     "implementation": "mlkit.classical.split (stratified train_test_split)",
+     "method": "stratified_random",
+     "n_rows": 4521,
+     "overlap": null,
+     "partitions": {
+      "train": {
+       "n_positive": 365,
+       "n_rows": 3164,
+       "rate": 0.11536030341340076
+      },
+      "validation": {
+       "n_positive": 156,
+       "n_rows": 1357,
+       "rate": 0.11495946941783346
+      }
+     },
+     "seed": 20261017,
+     "stratified_on": "y",
+     "validation_fraction": 0.3
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "3,164",
+       "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+       "path": "partitions.train.n_rows",
+       "value": 3164,
+       "format": "int"
+      },
+      {
+       "text": " training rows / "
+      },
+      {
+       "text": "1,357",
+       "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+       "path": "partitions.validation.n_rows",
+       "value": 1357,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+    "activity": "eda.target_rate",
+    "slot": "eda.target_rate",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 3164,
+    "params": {},
+    "upstream": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "downstream": [],
+    "created": "2026-10-18T22:31:42.554860+00:00",
+    "started_revision": 10,
+    "execution_id": "e_92ee93de02ea87db530298f4",
+    "exposure_id": "x_4fb45a105ef6426181e18117067567d3",
+    "values": {
+     "n_negative": 2799,
+     "n_positive": 365,
+     "n_rows": 3164,
+     "partition": "train",
+     "positive_label": "yes",
+     "rate": 0.11536030341340076,
+     "target": "y"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Positive rate "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+       "path": "rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "3,164",
+       "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+       "path": "n_rows",
+       "value": 3164,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+    "activity": "eda.special_values",
+    "slot": "eda.special_values",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 3164,
+    "params": {},
+    "upstream": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "downstream": [],
+    "created": "2026-10-18T22:31:42.788706+00:00",
+    "started_revision": 12,
+    "execution_id": "e_cb440fe2f7ec20d54f472663",
+    "exposure_id": "x_8fc35b5f44fd48a9b7a72be557dfe771",
+    "values": {
+     "co_occurrence": [
+      {
+       "a": {
+        "column": "job",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "education",
+        "value": "unknown"
+       },
+       "n_a": 26,
+       "n_b": 134,
+       "n_both": 10,
+       "n_either": 150,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "job",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "contact",
+        "value": "unknown"
+       },
+       "n_a": 26,
+       "n_b": 929,
+       "n_both": 6,
+       "n_either": 949,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "job",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "pdays",
+        "value": -1
+       },
+       "n_a": 26,
+       "n_b": 2608,
+       "n_both": 22,
+       "n_either": 2612,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "job",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "poutcome",
+        "value": "unknown"
+       },
+       "n_a": 26,
+       "n_b": 2608,
+       "n_both": 22,
+       "n_either": 2612,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "education",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "contact",
+        "value": "unknown"
+       },
+       "n_a": 134,
+       "n_b": 929,
+       "n_both": 56,
+       "n_either": 1007,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "education",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "pdays",
+        "value": -1
+       },
+       "n_a": 134,
+       "n_b": 2608,
+       "n_both": 107,
+       "n_either": 2635,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "education",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "poutcome",
+        "value": "unknown"
+       },
+       "n_a": 134,
+       "n_b": 2608,
+       "n_both": 107,
+       "n_either": 2635,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "contact",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "pdays",
+        "value": -1
+       },
+       "n_a": 929,
+       "n_b": 2608,
+       "n_both": 923,
+       "n_either": 2614,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "contact",
+        "value": "unknown"
+       },
+       "b": {
+        "column": "poutcome",
+        "value": "unknown"
+       },
+       "n_a": 929,
+       "n_b": 2608,
+       "n_both": 923,
+       "n_either": 2614,
+       "same_rows": false
+      },
+      {
+       "a": {
+        "column": "pdays",
+        "value": -1
+       },
+       "b": {
+        "column": "poutcome",
+        "value": "unknown"
+       },
+       "n_a": 2608,
+       "n_b": 2608,
+       "n_both": 2608,
+       "n_either": 2608,
+       "same_rows": true
+      }
+     ],
+     "n_rows": 3164,
+     "note": "Counts on training rows. Special values that always occur together describe one fact twice.",
+     "partition": "train",
+     "special_values": [
+      {
+       "column": "job",
+       "meaning": "Listed as a category by the documentation; what it covers is not documented.",
+       "n_positive": 5,
+       "n_rows": 26,
+       "rate": 0.19230769230769232,
+       "share": 0.008217446270543615,
+       "source": "data/bank-names.txt:48",
+       "status": "unknown",
+       "value": "unknown"
+      },
+      {
+       "column": "education",
+       "meaning": "Listed as a category by the documentation; what it covers is not documented.",
+       "n_positive": 14,
+       "n_rows": 134,
+       "rate": 0.1044776119402985,
+       "share": 0.042351453855878636,
+       "source": "data/bank-names.txt:51",
+       "status": "unknown",
+       "value": "unknown"
+      },
+      {
+       "column": "contact",
+       "meaning": "Listed as a category by the documentation; what it covers is not documented.",
+       "n_positive": 43,
+       "n_rows": 929,
+       "rate": 0.04628632938643703,
+       "share": 0.2936156763590392,
+       "source": "data/bank-names.txt:57",
+       "status": "unknown",
+       "value": "unknown"
+      },
+      {
+       "column": "pdays",
+       "meaning": "The client was not previously contacted.",
+       "n_positive": 241,
+       "n_rows": 2608,
+       "rate": 0.0924079754601227,
+       "share": 0.8242730720606827,
+       "source": "data/bank-names.txt:63",
+       "status": "documented_fact",
+       "value": -1
+      },
+      {
+       "column": "poutcome",
+       "meaning": "Listed as a category by the documentation; what it covers is not documented.",
+       "n_positive": 241,
+       "n_rows": 2608,
+       "rate": 0.0924079754601227,
+       "share": 0.8242730720606827,
+       "source": "data/bank-names.txt:65",
+       "status": "unknown",
+       "value": "unknown"
+      }
+     ]
+    },
+    "headline": null
+   },
+   {
+    "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+    "activity": "eda.rate_by",
+    "slot": "eda.rate_by:job",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 3164,
+    "params": {
+     "column": "job"
+    },
+    "upstream": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "downstream": [],
+    "created": "2026-10-18T22:31:43.113220+00:00",
+    "started_revision": 14,
+    "execution_id": "e_087f4c7109d76636536c712c",
+    "exposure_id": "x_80a1cd03f61d434a8aabb43c51aa9e89",
+    "values": {
+     "binned": false,
+     "binning": null,
+     "column": "job",
+     "groups": [
+      {
+       "n_positive": 38,
+       "n_rows": 342,
+       "rate": 0.1111111111111111,
+       "small_count": false,
+       "value": "admin."
+      },
+      {
+       "n_positive": 50,
+       "n_rows": 674,
+       "rate": 0.07418397626112759,
+       "small_count": false,
+       "value": "blue-collar"
+      },
+      {
+       "n_positive": 11,
+       "n_rows": 124,
+       "rate": 0.08870967741935484,
+       "small_count": false,
+       "value": "entrepreneur"
+      },
+      {
+       "n_positive": 9,
+       "n_rows": 72,
+       "rate": 0.125,
+       "small_count": false,
+       "value": "housemaid"
+      },
+      {
+       "n_positive": 97,
+       "n_rows": 677,
+       "rate": 0.1432791728212703,
+       "small_count": false,
+       "value": "management"
+      },
+      {
+       "n_positive": 35,
+       "n_rows": 150,
+       "rate": 0.23333333333333334,
+       "small_count": false,
+       "value": "retired"
+      },
+      {
+       "n_positive": 14,
+       "n_rows": 116,
+       "rate": 0.1206896551724138,
+       "small_count": false,
+       "value": "self-employed"
+      },
+      {
+       "n_positive": 26,
+       "n_rows": 292,
+       "rate": 0.08904109589041095,
+       "small_count": false,
+       "value": "services"
+      },
+      {
+       "n_positive": 11,
+       "n_rows": 59,
+       "rate": 0.1864406779661017,
+       "small_count": false,
+       "value": "student"
+      },
+      {
+       "n_positive": 59,
+       "n_rows": 540,
+       "rate": 0.10925925925925926,
+       "small_count": false,
+       "value": "technician"
+      },
+      {
+       "n_positive": 10,
+       "n_rows": 92,
+       "rate": 0.10869565217391304,
+       "small_count": false,
+       "value": "unemployed"
+      },
+      {
+       "n_positive": 5,
+       "n_rows": 26,
+       "rate": 0.19230769230769232,
+       "small_count": true,
+       "value": "unknown (special value)"
+      }
+     ],
+     "max_groups": 20,
+     "min_group_rows": 30,
+     "n_groups": 12,
+     "n_rows": 3164,
+     "note": "Rates by group on training rows are associations, not effects of the variable.",
+     "other": null,
+     "overall_rate": 0.11536030341340076,
+     "partition": "train",
+     "warnings": [
+      "job = unknown (special value): only 26 training rows; its rate is too noisy to read on its own."
+     ]
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "12",
+       "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+       "path": "n_groups",
+       "value": 12,
+       "format": "int"
+      },
+      {
+       "text": " groups"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:age",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 3164,
+    "params": {
+     "column": "age"
+    },
+    "upstream": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "downstream": [],
+    "created": "2026-10-18T22:31:42.788706+00:00",
+    "started_revision": 12,
+    "execution_id": "e_cb440fe2f7ec20d54f472663",
+    "exposure_id": "x_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "values": {
+     "partition": "train",
+     "column": "age",
+     "role": "feature",
+     "type": "integer",
+     "kind": "numeric",
+     "n_rows": 3164,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": {
+      "n": 3164,
+      "min": 19,
+      "q25": 33,
+      "median": 39,
+      "q75": 48,
+      "max": 86,
+      "mean": 41.2,
+      "sd": 10.6,
+      "n_bins": 10,
+      "bin_width": 6.8,
+      "bins": [
+       {
+        "low": 18,
+        "high": 25.8,
+        "n_rows": 148,
+        "share": 0.04677623261694058,
+        "closed": "left"
+       },
+       {
+        "low": 25.8,
+        "high": 32.6,
+        "n_rows": 642,
+        "share": 0.20290771175726927,
+        "closed": "left"
+       },
+       {
+        "low": 32.6,
+        "high": 39.4,
+        "n_rows": 846,
+        "share": 0.26738305941845764,
+        "closed": "left"
+       },
+       {
+        "low": 39.4,
+        "high": 46.2,
+        "n_rows": 584,
+        "share": 0.1845764854614412,
+        "closed": "left"
+       },
+       {
+        "low": 46.2,
+        "high": 53,
+        "n_rows": 476,
+        "share": 0.1504424778761062,
+        "closed": "left"
+       },
+       {
+        "low": 53,
+        "high": 59.8,
+        "n_rows": 357,
+        "share": 0.11283185840707964,
+        "closed": "left"
+       },
+       {
+        "low": 59.8,
+        "high": 66.6,
+        "n_rows": 58,
+        "share": 0.018331226295828066,
+        "closed": "left"
+       },
+       {
+        "low": 66.6,
+        "high": 73.4,
+        "n_rows": 27,
+        "share": 0.008533501896333754,
+        "closed": "left"
+       },
+       {
+        "low": 73.4,
+        "high": 80.2,
+        "n_rows": 19,
+        "share": 0.0060050568900126425,
+        "closed": "left"
+       },
+       {
+        "low": 80.2,
+        "high": 87,
+        "n_rows": 7,
+        "share": 0.0022123893805309734,
+        "closed": "both"
+       }
+      ]
+     },
+     "groups": null,
+     "n_groups": null,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes."
+    },
+    "headline": null
+   },
+   {
+    "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+    "activity": "fit.baseline",
+    "slot": "fit.baseline",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 1357,
+    "params": {
+     "model": "constant_prior"
+    },
+    "upstream": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "downstream": [
+     "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02"
+    ],
+    "created": "2026-10-18T22:31:43.420161+00:00",
+    "started_revision": 16,
+    "execution_id": "e_8101d16893f3425fbb4ff727",
+    "exposure_id": "x_9950d7c5369940e3bfa00ca27cf857c2",
+    "values": {
+     "features": [],
+     "model": "constant_prior",
+     "n_train": 3164,
+     "n_train_positive": 365,
+     "note": "Every row receives the training positive rate: no ranking information.",
+     "predictions": {
+      "blob": "predictions",
+      "features": [],
+      "format": "gzip csv row_key,y,score",
+      "model": "constant_prior",
+      "n": 1357,
+      "n_positive": 156,
+      "partition": "validation",
+      "positive_label": "yes",
+      "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed."
+     },
+     "train_rate": 0.11536030341340076,
+     "validation": {
+      "average_precision": 0.11495946941783346,
+      "n_positive": 156,
+      "n_rows": 1357,
+      "roc_auc": 0.5
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "AUC "
+      },
+      {
+       "text": "0.500",
+       "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+       "path": "validation.roc_auc",
+       "value": 0.5,
+       "format": "f3"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "1,357",
+       "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+       "path": "validation.n_rows",
+       "value": 1357,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+    "activity": "fit.logistic",
+    "slot": "fit.logistic",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 1357,
+    "params": {
+     "implementation": "mlkit.classical.pipeline",
+     "max_iter": 1000,
+     "model": "logistic",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 20261017,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "downstream": [
+     "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02"
+    ],
+    "created": "2026-10-18T22:31:44.063424+00:00",
+    "started_revision": 18,
+    "execution_id": "e_8651b2bcef1776e9ebffd170",
+    "exposure_id": "x_13a01cef6ed04b6f8c328b5d0ec083c2",
+    "values": {
+     "coefficient_scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects",
+     "coefficients": {
+      "cat__contact_cellular": 0.3690521822632619,
+      "cat__contact_telephone": 0.14242766743879526,
+      "cat__contact_unknown": -0.5164761072197341,
+      "cat__default_no": 0.16650629964846084,
+      "cat__default_yes": -0.17150255716613969,
+      "cat__education_primary": -0.16621548745829653,
+      "cat__education_secondary": 0.13838679934682765,
+      "cat__education_tertiary": 0.2117388910865298,
+      "cat__education_unknown": -0.18890646049275314,
+      "cat__housing_no": 0.12844864758767505,
+      "cat__housing_yes": -0.13344490510538828,
+      "cat__job_admin.": -0.18714937057161846,
+      "cat__job_blue-collar": -0.23631386688316658,
+      "cat__job_entrepreneur": -0.1029654625168213,
+      "cat__job_housemaid": 0.06269460194374626,
+      "cat__job_management": 0.03438597715279985,
+      "cat__job_retired": 0.777804320896715,
+      "cat__job_self-employed": 0.047326220429715626,
+      "cat__job_services": -0.2768501202402688,
+      "cat__job_student": 0.07487908450760306,
+      "cat__job_technician": -0.25074073717854556,
+      "cat__job_unemployed": -0.2659180734040571,
+      "cat__job_unknown": 0.3178511683462093,
+      "cat__loan_no": 0.30481834712037625,
+      "cat__loan_yes": -0.30981460463805266,
+      "cat__marital_divorced": 0.27868904208445144,
+      "cat__marital_married": -0.28120559457638,
+      "cat__marital_single": -0.0024797050257488705,
+      "cat__poutcome_failure": -0.9853056544983114,
+      "cat__poutcome_other": -0.421469778550472,
+      "cat__poutcome_success": 1.5367765758290397,
+      "cat__poutcome_unknown": -0.1349974002979077,
+      "num__age": -0.0030167745433309374,
+      "num__balance": 0.004509729517169493,
+      "num__pdays": -0.018632990277690113,
+      "num__pdays=-1": -0.34388691489547213,
+      "num__previous": 0.04082359847951633
+     },
+     "features": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome"
+     ],
+     "intercept": -2.4064142529924215,
+     "iterations": 52,
+     "model": "logistic",
+     "n_terms": 37,
+     "n_train": 3164,
+     "n_train_positive": 365,
+     "predictions": {
+      "blob": "predictions",
+      "features": [
+       "age",
+       "job",
+       "marital",
+       "education",
+       "default",
+       "balance",
+       "housing",
+       "loan",
+       "contact",
+       "pdays",
+       "previous",
+       "poutcome"
+      ],
+      "format": "gzip csv row_key,y,score",
+      "model": "logistic",
+      "n": 1357,
+      "n_positive": 156,
+      "partition": "validation",
+      "positive_label": "yes",
+      "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed."
+     },
+     "special_value_indicators": [
+      "pdays=-1"
+     ],
+     "validation": {
+      "average_precision": 0.3128379620280094,
+      "n_positive": 156,
+      "n_rows": 1357,
+      "roc_auc": 0.709125942056833
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "AUC "
+      },
+      {
+       "text": "0.709",
+       "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+       "path": "validation.roc_auc",
+       "value": 0.709125942056833,
+       "format": "f3"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "1,357",
+       "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+       "path": "validation.n_rows",
+       "value": 1357,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+    "activity": "policy.evaluation",
+    "slot": "policy.evaluation",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 1357,
+    "params": {
+     "models": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "reference": "fit.baseline",
+     "rules": [
+      "capacity:100",
+      "threshold:0.2"
+     ]
+    },
+    "upstream": {
+     "fit.baseline": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+    },
+    "downstream": [],
+    "created": "2026-10-18T22:31:45.179361+00:00",
+    "started_revision": 24,
+    "execution_id": "e_3b7e9da2df5de95232824246",
+    "exposure_id": "x_1bb227dc541040efab93f8b8b64604d3",
+    "values": {
+     "bootstrap": {
+      "level": 0.95,
+      "method": "paired percentile bootstrap over validation rows",
+      "replicates": 2000,
+      "seed": 20261017
+     },
+     "counts": "expected counts when a capacity cut splits a tie group (tied_at_cut)",
+     "n": 1357,
+     "n_positive": 156,
+     "note": "The rule is chosen on validation rows: these figures are not independent evidence of future performance. No model was refitted.",
+     "predictions": {
+      "fit.baseline": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+      "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+     },
+     "reference": "fit.baseline",
+     "rules": {
+      "capacity:100": {
+       "deltas": {
+        "fit.logistic": {
+         "precision": {
+          "high": 0.3447315770081061,
+          "low": 0.15651436993367723,
+          "point": 0.24504053058216652,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "high": 0.21746692856409924,
+          "low": 0.10361299696347283,
+          "point": 0.15707726319369653,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "high": 0.0,
+          "low": 0.0,
+          "point": 0.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "intervals": {
+        "fit.baseline": {
+         "precision": {
+          "high": 0.13264554163596168,
+          "low": 0.09727339719970524,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "high": 0.07369196757553427,
+          "low": 0.07369196757553426,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "high": 100.0,
+          "low": 100.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.logistic": {
+         "precision": {
+          "high": 0.47,
+          "low": 0.26,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "high": 0.2911588961396335,
+          "low": 0.1773049645390071,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "high": 100.0,
+          "low": 100.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "models": {
+        "fit.baseline": {
+         "cut": {
+          "fraction_selected": 0.07369196757553427,
+          "n_tied": 1357,
+          "score": 0.11536030341340076
+         },
+         "false_negatives": 144.50405305821664,
+         "false_positives": 88.50405305821666,
+         "kind": "capacity",
+         "n": 1357,
+         "n_positive": 156,
+         "parameter": 100,
+         "precision": 0.11495946941783347,
+         "recall": 0.07369196757553427,
+         "rule": "capacity:100",
+         "selected": 100.0,
+         "selection": "expected",
+         "tied_at_cut": 1357,
+         "true_positives": 11.495946941783346,
+         "volume": 100.0,
+         "volume_rate": 0.07369196757553427
+        },
+        "fit.logistic": {
+         "cut": {
+          "fraction_selected": null,
+          "n_tied": 0,
+          "score": null
+         },
+         "false_negatives": 120.0,
+         "false_positives": 64.0,
+         "kind": "capacity",
+         "n": 1357,
+         "n_positive": 156,
+         "parameter": 100,
+         "precision": 0.36,
+         "recall": 0.23076923076923078,
+         "rule": "capacity:100",
+         "selected": 100.0,
+         "selection": "exact",
+         "tied_at_cut": 0,
+         "true_positives": 36.0,
+         "volume": 100.0,
+         "volume_rate": 0.07369196757553427
+        }
+       }
+      },
+      "threshold:0.2": {
+       "deltas": {
+        "fit.logistic": {
+         "precision": {
+          "high": null,
+          "low": null,
+          "point": null,
+          "undefined_replicates": 2000
+         },
+         "recall": {
+          "high": 0.3241513658755037,
+          "low": 0.18618748572733507,
+          "point": 0.2564102564102564,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "high": 135.0,
+          "low": 95.0,
+          "point": 115.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "intervals": {
+        "fit.baseline": {
+         "precision": {
+          "high": null,
+          "low": null,
+          "undefined_replicates": 2000
+         },
+         "recall": {
+          "high": 0.0,
+          "low": 0.0,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "high": 0.0,
+          "low": 0.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.logistic": {
+         "precision": {
+          "high": 0.43927102803738305,
+          "low": 0.2592432950191571,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "high": 0.3241513658755037,
+          "low": 0.18618748572733507,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "high": 135.0,
+          "low": 95.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "models": {
+        "fit.baseline": {
+         "cut": {
+          "fraction_selected": null,
+          "n_tied": 0,
+          "score": 0.2
+         },
+         "false_negatives": 156.0,
+         "false_positives": 0.0,
+         "kind": "threshold",
+         "n": 1357,
+         "n_positive": 156,
+         "parameter": 0.2,
+         "precision": null,
+         "recall": 0.0,
+         "rule": "threshold:0.2",
+         "selected": 0.0,
+         "selection": "exact",
+         "tied_at_cut": 0,
+         "true_positives": 0.0,
+         "volume": 0.0,
+         "volume_rate": 0.0
+        },
+        "fit.logistic": {
+         "cut": {
+          "fraction_selected": null,
+          "n_tied": 0,
+          "score": 0.2
+         },
+         "false_negatives": 116.0,
+         "false_positives": 75.0,
+         "kind": "threshold",
+         "n": 1357,
+         "n_positive": 156,
+         "parameter": 0.2,
+         "precision": 0.34782608695652173,
+         "recall": 0.2564102564102564,
+         "rule": "threshold:0.2",
+         "selected": 115.0,
+         "selection": "exact",
+         "tied_at_cut": 0,
+         "true_positives": 40.0,
+         "volume": 115.0,
+         "volume_rate": 0.0847457627118644
+        }
+       }
+      }
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "capacity:100: precision "
+      },
+      {
+       "text": "36.0%",
+       "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+       "path": "rules.capacity:100.models.[fit.logistic].precision",
+       "value": 0.36,
+       "format": "pct1"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+    "activity": "policy.evaluation",
+    "slot": "policy.evaluation",
+    "promoted": false,
+    "current": false,
+    "stale_reason": {
+     "reason": "replaced by a newer result of the same slot",
+     "code_changed": [],
+     "upstream_not_current": [],
+     "sources_changed": false
+    },
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 1357,
+    "params": {
+     "rules": [
+      "threshold:0.2"
+     ]
+    },
+    "upstream": {
+     "fit.baseline": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+    },
+    "downstream": [],
+    "created": "2026-10-18T09:21:00+00:00",
+    "started_revision": 21,
+    "execution_id": "e_dddddddddddddddddddddddd",
+    "exposure_id": "x_1bb227dc541040efab93f8b8b64604d3",
+    "values": null,
+    "headline": null
+   }
+  ],
+  "truncated": false,
+  "lineage": {
+   "nodes": [
+    {
+     "id": "case",
+     "kind": "source",
+     "label": "case.yaml",
+     "status": "ok"
+    },
+    {
+     "id": "dataset",
+     "kind": "source",
+     "label": "bank.csv",
+     "status": "ok"
+    },
+    {
+     "id": "decision:prediction_time",
+     "kind": "decision",
+     "label": "prediction_time",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:feature_availability",
+     "kind": "decision",
+     "label": "feature_availability",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:split",
+     "kind": "decision",
+     "label": "split",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:policy",
+     "kind": "decision",
+     "label": "policy",
+     "status": "confirmed"
+    },
+    {
+     "id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "kind": "result",
+     "label": "split",
+     "status": "current"
+    },
+    {
+     "id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+     "kind": "result",
+     "label": "eda.target_rate",
+     "status": "current"
+    },
+    {
+     "id": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+     "kind": "result",
+     "label": "eda.special_values",
+     "status": "current"
+    },
+    {
+     "id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+     "kind": "result",
+     "label": "eda.rate_by:job",
+     "status": "current"
+    },
+    {
+     "id": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+     "kind": "result",
+     "label": "eda.distribution:age",
+     "status": "current"
+    },
+    {
+     "id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "kind": "result",
+     "label": "fit.baseline",
+     "status": "current"
+    },
+    {
+     "id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "kind": "result",
+     "label": "fit.logistic",
+     "status": "current"
+    },
+    {
+     "id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+     "kind": "result",
+     "label": "policy.evaluation",
+     "status": "current"
+    },
+    {
+     "id": "b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+     "kind": "result",
+     "label": "policy.evaluation",
+     "status": "stale"
+    },
+    {
+     "id": "artifact:report",
+     "kind": "artifact",
+     "label": "report",
+     "status": "ok"
+    },
+    {
+     "id": "artifact:notebook",
+     "kind": "artifact",
+     "label": "notebook",
+     "status": "ok"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dataset",
+     "to": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "role": "rows"
+    },
+    {
+     "from": "decision:split",
+     "to": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "role": "split"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+     "role": "split"
+    },
+    {
+     "from": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+     "role": "split"
+    },
+    {
+     "from": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+     "role": "split"
+    },
+    {
+     "from": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+     "role": "split"
+    },
+    {
+     "from": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "role": "split"
+    },
+    {
+     "from": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "to": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "role": "split"
+    },
+    {
+     "from": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "to": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "to": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+     "role": "fit.logistic"
+    },
+    {
+     "from": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "to": "b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "to": "b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+     "role": "fit.logistic"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "role": "features"
+    }
+   ]
+  },
+  "exposure": {
+   "summary": {
+    "records": 11,
+    "rows_exposed": 4521,
+    "by_purpose": {
+     "structural_inspection": 4521,
+     "train_eda": 3164,
+     "train_fit": 3164,
+     "validation_model_evaluation": 1357,
+     "validation_policy_selection": 1357
+    },
+    "by_partition": {
+     "all": {
+      "structural_inspection": 4521
+     },
+     "train": {
+      "train_eda": 3164,
+      "train_fit": 3164
+     },
+     "validation": {
+      "validation_model_evaluation": 1357,
+      "validation_policy_selection": 1357
+     }
+    },
+    "validation_rows_used_for_selection": 1357,
+    "prior_exposure": [
+     {
+      "source": "results.json (sha256 92bb2e63de13592cc8782f36ebf1dec123583bc3729ec99195d8d218c87d62f1)",
+      "status": "observed",
+      "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+     },
+     {
+      "source": "data/split.json",
+      "status": "observed",
+      "value": "data/split.json records the companion split (seed 20261017) whose validation metrics are published in results.json. A study that reuses this seed has no unseen validation rows."
+     }
+    ]
+   },
+   "records": [
+    {
+     "exposure_id": "x_2617674587ed4cb7a12986d702484fc5",
+     "revision": 1,
+     "time": "2026-10-18T22:31:40.392917+00:00",
+     "activity": "init.structure",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "n_rows": 4521,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "day",
+      "month",
+      "duration",
+      "campaign",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_58e977438a994fd0a88a5f221907174a",
+     "revision": 8,
+     "time": "2026-10-18T22:31:42.339252+00:00",
+     "activity": "split",
+     "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+     "execution_id": "e_e1b0acf86b9621b8c13ca17b",
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "n_rows": 4521,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_4fb45a105ef6426181e18117067567d3",
+     "revision": 10,
+     "time": "2026-10-18T22:31:42.557539+00:00",
+     "activity": "eda.target_rate",
+     "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+     "execution_id": "e_92ee93de02ea87db530298f4",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 3164,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_8fc35b5f44fd48a9b7a72be557dfe771",
+     "revision": 12,
+     "time": "2026-10-18T22:31:42.794482+00:00",
+     "activity": "eda.special_values",
+     "result_id": "c183ac33ce3214c2860568f968750b0f0fb4693817308d14d58d9a41ffcc7fb0",
+     "execution_id": "e_cb440fe2f7ec20d54f472663",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 3164,
+     "columns": [
+      "y",
+      "contact",
+      "education",
+      "job",
+      "pdays",
+      "poutcome"
+     ]
+    },
+    {
+     "exposure_id": "x_80a1cd03f61d434a8aabb43c51aa9e89",
+     "revision": 14,
+     "time": "2026-10-18T22:31:43.118225+00:00",
+     "activity": "eda.rate_by",
+     "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+     "execution_id": "e_087f4c7109d76636536c712c",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 3164,
+     "columns": [
+      "y",
+      "job"
+     ]
+    },
+    {
+     "exposure_id": "x_ff5d7bcbc35f4bea8ad36c9a90a1946f",
+     "revision": 16,
+     "time": "2026-10-18T22:31:43.423000+00:00",
+     "activity": "fit.baseline",
+     "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "execution_id": "e_8101d16893f3425fbb4ff727",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 3164,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_9950d7c5369940e3bfa00ca27cf857c2",
+     "revision": 16,
+     "time": "2026-10-18T22:31:43.424276+00:00",
+     "activity": "fit.baseline",
+     "result_id": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
+     "execution_id": "e_8101d16893f3425fbb4ff727",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 1357,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_07d82f9c659340acb018155d0cd114c8",
+     "revision": 18,
+     "time": "2026-10-18T22:31:44.070458+00:00",
+     "activity": "fit.logistic",
+     "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "execution_id": "e_8651b2bcef1776e9ebffd170",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 3164,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_13a01cef6ed04b6f8c328b5d0ec083c2",
+     "revision": 18,
+     "time": "2026-10-18T22:31:44.077036+00:00",
+     "activity": "fit.logistic",
+     "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "execution_id": "e_8651b2bcef1776e9ebffd170",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 1357,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_5203bf906d3044ccb6693ffb61b0f93a",
+     "revision": 20,
+     "time": "2026-10-18T22:31:44.327750+00:00",
+     "activity": "policy.evaluation",
+     "result_id": "ab63c19042a800ac7ec9ce0e81db8409550522026a17f36ed46c780be42f0b39",
+     "execution_id": "e_76bdb563530c997e6fdf55cc",
+     "purpose": "validation_policy_selection",
+     "partition": "validation",
+     "n_rows": 1357,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_1bb227dc541040efab93f8b8b64604d3",
+     "revision": 24,
+     "time": "2026-10-18T22:31:45.182631+00:00",
+     "activity": "policy.evaluation",
+     "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+     "execution_id": "e_3b7e9da2df5de95232824246",
+     "purpose": "validation_policy_selection",
+     "partition": "validation",
+     "n_rows": 1357,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "revision": 27,
+     "time": "2026-10-19T08:40:00+00:00",
+     "activity": "eda.distribution",
+     "result_id": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+     "execution_id": "e_cccccccccccccccccccccccc",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 3164,
+     "columns": [
+      "age"
+     ]
+    }
+   ],
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "rows": 4521,
+     "records": 2,
+     "activities": [
+      "init.structure",
+      "split"
+     ],
+     "first_revision": 1,
+     "last_revision": 8
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "train",
+     "rows": 3164,
+     "records": 4,
+     "activities": [
+      "eda.target_rate",
+      "eda.special_values",
+      "eda.rate_by",
+      "eda.distribution"
+     ],
+     "first_revision": 10,
+     "last_revision": 27
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "train",
+     "rows": 3164,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "first_revision": 16,
+     "last_revision": 18
+    },
+    {
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "rows": 1357,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "first_revision": 16,
+     "last_revision": 18
+    },
+    {
+     "purpose": "validation_policy_selection",
+     "partition": "validation",
+     "rows": 1357,
+     "records": 2,
+     "activities": [
+      "policy.evaluation"
+     ],
+     "first_revision": 20,
+     "last_revision": 24
+    }
+   ],
+   "prior_exposure": [
+    {
+     "source": "results.json (sha256 92bb2e63de13592cc8782f36ebf1dec123583bc3729ec99195d8d218c87d62f1)",
+     "status": "observed",
+     "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+    },
+    {
+     "source": "data/split.json",
+     "status": "observed",
+     "value": "data/split.json records the companion split (seed 20261017) whose validation metrics are published in results.json. A study that reuses this seed has no unseen validation rows."
+    }
+   ]
+  },
+  "impacts": [
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.feature_set",
+    "row": 2,
+    "change": "a change that alters the set of usable features",
+    "stale_slots": [
+     "fit.logistic",
+     "policy.evaluation"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "eda.special_values",
+     "eda.rate_by:job",
+     "eda.distribution:age",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.logistic"
+    ],
+    "reconfirm": [
+     "policy"
+    ],
+    "notes": [
+     "The baseline uses no feature, so it stays current."
+    ]
+   },
+   {
+    "decision_id": "split",
+    "mutation": "split",
+    "row": 4,
+    "change": "a different split of the rows",
+    "stale_slots": [
+     "eda.target_rate",
+     "eda.special_values",
+     "eda.rate_by:job",
+     "eda.distribution:age",
+     "fit.baseline",
+     "fit.logistic",
+     "policy.evaluation"
+    ],
+    "kept_slots": [],
+    "refit": [
+     "fit.baseline",
+     "fit.logistic"
+    ],
+    "reconfirm": [
+     "policy"
+    ],
+    "notes": [
+     "Changing the split does not make explored rows unseen."
+    ]
+   },
+   {
+    "decision_id": "policy",
+    "mutation": "policy.parameter",
+    "row": 5,
+    "change": "a different threshold or capacity",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "eda.special_values",
+     "eda.rate_by:job",
+     "fit.baseline",
+     "fit.logistic",
+     "policy.evaluation",
+     "eda.distribution:age"
+    ],
+    "refit": [],
+    "reconfirm": [
+     "conclusion"
+    ],
+    "notes": [
+     "A rule change reuses the saved predictions: no model is refitted."
+    ]
+   }
+  ],
+  "eda_catalog": {
+   "activities": [
+    {
+     "activity": "eda.target_rate",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.special_values",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.rate_by",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "age",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "job",
+       "role": "feature",
+       "type": "category",
+       "slot": "eda.rate_by:job",
+       "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18"
+      },
+      {
+       "name": "marital",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "education",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "default",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "balance",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "housing",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "loan",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "contact",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "pdays",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "previous",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "poutcome",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.distribution",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "age",
+       "role": "feature",
+       "type": "integer",
+       "slot": "eda.distribution:age",
+       "result_id": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344"
+      },
+      {
+       "name": "job",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "marital",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "education",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "default",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "balance",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "housing",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "loan",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "contact",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "pdays",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "previous",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "poutcome",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "y",
+       "role": "target",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": []
+    }
+   ]
+  },
+  "sources": {
+   "case": {
+    "path": "case.yaml",
+    "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929",
+    "matches": true
+   },
+   "dataset": {
+    "path": "data/bank.csv",
+    "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
+    "matches": true
+   }
+  },
+  "detail": {
+   "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+   "values": {
+    "coefficient_scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects",
+    "coefficients": {
+     "cat__contact_cellular": 0.3690521822632619,
+     "cat__contact_telephone": 0.14242766743879526,
+     "cat__contact_unknown": -0.5164761072197341,
+     "cat__default_no": 0.16650629964846084,
+     "cat__default_yes": -0.17150255716613969,
+     "cat__education_primary": -0.16621548745829653,
+     "cat__education_secondary": 0.13838679934682765,
+     "cat__education_tertiary": 0.2117388910865298,
+     "cat__education_unknown": -0.18890646049275314,
+     "cat__housing_no": 0.12844864758767505,
+     "cat__housing_yes": -0.13344490510538828,
+     "cat__job_admin.": -0.18714937057161846,
+     "cat__job_blue-collar": -0.23631386688316658,
+     "cat__job_entrepreneur": -0.1029654625168213,
+     "cat__job_housemaid": 0.06269460194374626,
+     "cat__job_management": 0.03438597715279985,
+     "cat__job_retired": 0.777804320896715,
+     "cat__job_self-employed": 0.047326220429715626,
+     "cat__job_services": -0.2768501202402688,
+     "cat__job_student": 0.07487908450760306,
+     "cat__job_technician": -0.25074073717854556,
+     "cat__job_unemployed": -0.2659180734040571,
+     "cat__job_unknown": 0.3178511683462093,
+     "cat__loan_no": 0.30481834712037625,
+     "cat__loan_yes": -0.30981460463805266,
+     "cat__marital_divorced": 0.27868904208445144,
+     "cat__marital_married": -0.28120559457638,
+     "cat__marital_single": -0.0024797050257488705,
+     "cat__poutcome_failure": -0.9853056544983114,
+     "cat__poutcome_other": -0.421469778550472,
+     "cat__poutcome_success": 1.5367765758290397,
+     "cat__poutcome_unknown": -0.1349974002979077,
+     "num__age": -0.0030167745433309374,
+     "num__balance": 0.004509729517169493,
+     "num__pdays": -0.018632990277690113,
+     "num__pdays=-1": -0.34388691489547213,
+     "num__previous": 0.04082359847951633
+    },
+    "features": [
+     "age",
+     "job",
+     "marital",
+     "education",
+     "default",
+     "balance",
+     "housing",
+     "loan",
+     "contact",
+     "pdays",
+     "previous",
+     "poutcome"
+    ],
+    "intercept": -2.4064142529924215,
+    "iterations": 52,
+    "model": "logistic",
+    "n_terms": 37,
+    "n_train": 3164,
+    "n_train_positive": 365,
+    "predictions": {
+     "blob": "predictions",
+     "features": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome"
+     ],
+     "format": "gzip csv row_key,y,score",
+     "model": "logistic",
+     "n": 1357,
+     "n_positive": 156,
+     "partition": "validation",
+     "positive_label": "yes",
+     "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed."
+    },
+    "special_value_indicators": [
+     "pdays=-1"
+    ],
+    "validation": {
+     "average_precision": 0.3128379620280094,
+     "n_positive": 156,
+     "n_rows": 1357,
+     "roc_auc": 0.709125942056833
+    }
+   },
+   "params": {
+    "implementation": "mlkit.classical.pipeline",
+    "max_iter": 1000,
+    "model": "logistic",
+    "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+    "seed": 20261017,
+    "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+   },
+   "inputs": {
+    "case_sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929",
+    "dataset_sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
+    "features": [
+     "age",
+     "job",
+     "marital",
+     "education",
+     "default",
+     "balance",
+     "housing",
+     "loan",
+     "contact",
+     "pdays",
+     "previous",
+     "poutcome"
+    ],
+    "results": {
+     "split": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a"
+    },
+    "special_values": [
+     {
+      "column": "job",
+      "value": "unknown"
+     },
+     {
+      "column": "education",
+      "value": "unknown"
+     },
+     {
+      "column": "contact",
+      "value": "unknown"
+     },
+     {
+      "column": "pdays",
+      "value": -1
+     },
+     {
+      "column": "poutcome",
+      "value": "unknown"
+     }
+    ],
+    "target": {
+     "column": "y",
+     "positive_label": "yes"
+    }
+   },
+   "code": {
+    "fingerprint": "339e370b204369f23d610db74305dfe4961158dd9af50838ed4455226814d723",
+    "modules": {
+     "mlkit.classical": {
+      "sha256": "e9f14a96d522e4c4cd70c13e8e9c166678275f8caf2dbcfa681ce53c0eb587d4",
+      "matches": true
+     },
+     "mlkit.study.activities": {
+      "sha256": "fc2ddd5bed16b296d0528bd3e5c20142a5067e1f19b886cccf85772b2c6fecbb",
+      "matches": true
+     },
+     "mlkit.study.fit": {
+      "sha256": "76456734b73d31b2cd9e60782d2c93752369ae60c70dc3a4d5b81878fc078b3b",
+      "matches": true
+     },
+     "mlkit.study.metrics": {
+      "sha256": "583102e559d72e868ee19e1a7d24f08ed01e39d98c6045edb46339cce24ad991",
+      "matches": true
+     }
+    }
+   },
+   "environment": {
+    "implementation": "cpython",
+    "packages": {
+     "marimo": "0.25.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.18.1"
+    },
+    "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+    "python": "3.13.16"
+   },
+   "blobs": [
+    "predictions"
+   ],
+   "exposure": {
+    "exposure_id": "x_07d82f9c659340acb018155d0cd114c8",
+    "revision": 18,
+    "time": "2026-10-18T22:31:44.070458+00:00",
+    "activity": "fit.logistic",
+    "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+    "execution_id": "e_8651b2bcef1776e9ebffd170",
+    "purpose": "train_fit",
+    "partition": "train",
+    "n_rows": 3164,
+    "columns": [
+     "age",
+     "job",
+     "marital",
+     "education",
+     "default",
+     "balance",
+     "housing",
+     "loan",
+     "contact",
+     "pdays",
+     "previous",
+     "poutcome",
+     "y"
+    ]
+   },
+   "consumers": [
+    "report",
+    "notebook"
+   ],
+   "report_anchor": "r-d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+   "notebook_hint": {
+    "path": "notebooks/study_generated.py",
+    "search": "d0af48b2"
+   }
+  }
+ }
+}

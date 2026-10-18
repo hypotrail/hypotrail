@@ -18,11 +18,40 @@ function emitter() {
   return event;
 }
 
-function createFake({ folders = [], trusted = true, settings = {}, answers = {} } = {}) {
+/** A Memento like ExtensionContext.globalState; `updates` records every update. */
+function memento() {
+  const values = new Map();
+  const updates = [];
+  return {
+    updates,
+    get: (key, fallback) => (values.has(key) ? JSON.parse(JSON.stringify(values.get(key))) : fallback),
+    update: async (key, value) => { updates.push({ key, value: JSON.parse(JSON.stringify(value === undefined ? null : value)) });
+      if (value === undefined) values.delete(key); else values.set(key, JSON.parse(JSON.stringify(value))); },
+    keys: () => [...values.keys()],
+  };
+}
+
+function fileUri(p, fragment = '') {
+  return { scheme: 'file', fsPath: p, path: p, fragment,
+    with: change => fileUri(p, change && typeof change.fragment === 'string' ? change.fragment : fragment),
+    toString: () => 'file://' + p + (fragment ? '#' + fragment : '') };
+}
+
+function createFake({ folders = [], trusted = true, settings = {}, answers = {}, builtinCommands = {} } = {}) {
   const calls = { info: [], error: [], warning: [], quickPick: [], openDialog: [], panels: [],
-    openExternal: [], showTextDocument: [], configuration: [] };
+    openExternal: [], openExternalUris: [], showTextDocument: [], configuration: [], clipboard: [], inputBox: [],
+    executed: [] };
   const commands = new Map();
-  const Uri = { file: p => ({ scheme: 'file', fsPath: p, toString: () => 'file://' + p }) };
+  const configListeners = emitter();
+  const uriHandlers = [];
+  const Uri = {
+    file: p => fileUri(p),
+    parse: text => {
+      const m = /^([a-z]+):\/\/([^/?#]*)([^?#]*)(\?[^#]*)?(#.*)?$/.exec(String(text));
+      return m ? { scheme: m[1], authority: m[2], path: m[3], query: (m[4] || '').slice(1), fragment: (m[5] || '').slice(1),
+        toString: () => String(text) } : null;
+    },
+  };
   const fake = {
     calls, registered: commands,
     ViewColumn: { One: 1, Two: 2, Beside: -2 },
@@ -32,7 +61,12 @@ function createFake({ folders = [], trusted = true, settings = {}, answers = {} 
         commands.set(id, fn);
         return { dispose() { commands.delete(id); } };
       },
-      executeCommand(id, ...args) { return commands.get(id)(...args); },
+      executeCommand(id, ...args) {
+        calls.executed.push({ id, args });
+        if (commands.has(id)) return commands.get(id)(...args);
+        if (Object.prototype.hasOwnProperty.call(builtinCommands, id)) return builtinCommands[id](...args);
+        return Promise.reject(new Error(`command '${id}' not found`));
+      },
     },
     workspace: {
       isTrusted: trusted,
@@ -41,6 +75,7 @@ function createFake({ folders = [], trusted = true, settings = {}, answers = {} 
         calls.configuration.push(section);
         return { get: (key, def) => (Object.prototype.hasOwnProperty.call(settings, `${section}.${key}`) ? settings[`${section}.${key}`] : def) };
       },
+      onDidChangeConfiguration: configListeners,
     },
     window: {
       showInformationMessage: async (msg, ...rest) => { calls.info.push(msg); return answers.info; },
@@ -48,6 +83,11 @@ function createFake({ folders = [], trusted = true, settings = {}, answers = {} 
       showWarningMessage: async (msg, ...rest) => { calls.warning.push({ msg, rest }); return answers.warning; },
       showQuickPick: async (items, options) => { calls.quickPick.push({ items, options }); return answers.quickPick ? answers.quickPick(items) : undefined; },
       showOpenDialog: async options => { calls.openDialog.push(options); return answers.openDialog ? answers.openDialog.map(p => fake.Uri.file(p)) : undefined; },
+      showInputBox: async options => { calls.inputBox.push(options); return answers.inputBox; },
+      registerUriHandler(handler) {
+        uriHandlers.push(handler);
+        return { dispose() { const i = uriHandlers.indexOf(handler); if (i >= 0) uriHandlers.splice(i, 1); } };
+      },
       showTextDocument: async (uri, options) => { calls.showTextDocument.push(uri.fsPath); },
       createWebviewPanel(viewType, title, column, options) {
         const receive = emitter(), dispose = emitter(), view = emitter();
@@ -72,7 +112,16 @@ function createFake({ folders = [], trusted = true, settings = {}, answers = {} 
         return panel;
       },
     },
-    env: { openExternal: async uri => { calls.openExternal.push(uri.fsPath); return true; } },
+    env: {
+      openExternal: async uri => { calls.openExternal.push(uri.fsPath); calls.openExternalUris.push(uri.toString()); return true; },
+      clipboard: { writeText: async text => { calls.clipboard.push(text); }, readText: async () => calls.clipboard.at(-1) || '' },
+    },
+    // Test helpers.
+    uriHandlers,
+    changeSettings(next) {
+      Object.assign(settings, next);
+      configListeners.fire({ affectsConfiguration: section => Object.keys(next).some(k => k.startsWith(section)) });
+    },
   };
   return fake;
 }
@@ -101,8 +150,8 @@ function load(fake) {
     if (key.startsWith(ROOT + path.sep) && !key.includes(`${path.sep}test${path.sep}`)) delete require.cache[key];
   }
   const extension = require(path.join(ROOT, 'extension.js'));
-  const context = { subscriptions: [], extensionPath: ROOT };
+  const context = { subscriptions: [], extensionPath: ROOT, globalState: memento() };
   return { extension, context };
 }
 
-module.exports = { createFake, load, install };
+module.exports = { createFake, load, install, memento };

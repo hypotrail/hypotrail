@@ -1,8 +1,10 @@
-# Hypotrail study companion (v0, behind a feature flag)
+# Hypotrail study companion (behind a feature flag)
 
 A VS Code webview panel for one Hypotrail study. It is **one more client of the `hypotrail` CLI** ([ADR 0002](../../docs/decisions/0002-companion-as-cli-client.md)); its scope and the reasons for it are in [ADR 0003](../../docs/decisions/0003-companion-webview-v0.md). It is **off by default**. The chat, the HTML report, and the notebook remain the workflow; this panel adds nothing they need.
 
 This is not the paused companion in `experimental/companion/`: it shares no code, protocol, bridge, database, or language-model integration with it.
+
+**Stages.** The setting `hypotrail.companion.stage` (default `"v0"`; `HYPOTRAIL_COMPANION_STAGE` overrides it) selects the feature set of [ADR 0004](../../docs/decisions/0004-companion-advanced.md). The default `v0` is the panel described below, unchanged in behaviour. Stages `v1` to `v3` are being built in parallel work packages ([plan](../../docs/plans/COMPANION-ADVANCED-PLAN.md)); until each lands, its tabs show "Not available in this stage." Module boundaries and the frozen interfaces are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## What the panel shows and does
 
@@ -41,7 +43,7 @@ The CLI is run with the argument vector recorded in `.hypotrail/agent.json` (`cl
 - The workspace must be trusted (`capabilities.untrustedWorkspaces.supported: false`, and checked at run time): the panel executes the CLI recorded in the study.
 - The webview has a strict Content-Security-Policy: `default-src 'none'`, script and style only with a per-load nonce, `connect-src 'none'`, no remote resource, no command URIs, no local resource roots.
 - Study text is set with `textContent`; nothing from the study is parsed as HTML.
-- Messages are whitelisted both ways and validated (`lib/controller.js`, `media/panel.js`); an unknown or malformed message is ignored.
+- Messages are whitelisted both ways and validated with one schema table (`lib/protocol.js`, protocol `hypotrail.panel/2`, copied to `media/protocol.js`); an unknown or malformed message, or one of a later stage, is ignored.
 - The client keeps no state of its own: no database, server, socket, loopback HTTP, or browser storage. `scripts/check_layout.py` checks that the flag stays default-off, that there is no runtime dependency, and that the sources use no network module, shell, or language-model API.
 
 ## Tests
@@ -51,6 +53,8 @@ node --test clients/vscode-companion/test/*.test.js
 uv run --project framework python -m pytest -q -p no:cacheprovider clients/vscode-companion/test
 ```
 
+- `test/protocol.test.js`, `test/cli-argv.test.js`, `test/invariants.test.js`, `test/controller.test.js`, `test/fixtures.test.js` (unit, WP-0): the message protocol in both directions, the exact argv of every read and of the seven writes, the invariants of spec §2, the router (stage gate, reviewer refusal, cache, write lock, outcome mapping), and the fixtures of `test/fixtures/` against the frozen key lists.
+- `test/test_webview_frame.py`, `test/test_format.py`, `test/test_contract_keys.py` (WP-0): stage gating, tabs, reviewer mode, chart components, and contrast in the browser; the number format against the engine's; the client's key lists against the engine contract tests.
 - `test/unit.test.js` (unit): the extension with a fake `vscode` module (`test/fake-vscode.js`, a require hook) and a fake `execFile`: flag off and on, workspace trust, study discovery, argv with spaces and quotes, the webview document's CSP, refresh on file change, the exact confirm and withdraw argv, refusal and stale-revision display, malformed messages.
 - `test/integration.test.js` (simulated): the controller drives the **real** CLI on a temporary synthetic study outside the repository, with the argv recorded by `init`: a bare "ok" is refused and shown verbatim; a hold refuses the confirmation; a stale revision is refused with the diff; typed words confirm and the state records `channel: webview`, `actor: user`; a change made through the CLI reaches the panel through the file watch. It is skipped when `framework/.venv` is missing.
 - `test/test_webview_browser.py` (simulated browser): the real webview document in headless Chromium, offline, with a stub `acquireVsCodeApi`: no remote request, CSP present and enforced, textarea empty, "Confirm" disabled until text is typed, study text never parsed as HTML, refusal rendered verbatim, light and dark colours.

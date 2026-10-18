@@ -1,0 +1,57 @@
+{
+ "about": {
+  "schema": "hypotrail.check/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "check",
+   "--json"
+  ],
+  "note": "HE-3: an injected stale citation."
+ },
+ "payload": {
+  "schema": "hypotrail.check/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "target": "study",
+  "clean": false,
+  "counts": {
+   "error": 1,
+   "warning": 1
+  },
+  "findings": [
+   {
+    "code": "stale_number",
+    "severity": "error",
+    "where": "reports/study.html",
+    "message": "11.0% cites result b7e3c1d0, which is not current.",
+    "details": {
+     "number": "11.0%",
+     "result_id": "b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+    },
+    "location": {
+     "path": "reports/study.html",
+     "anchor": "r-b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+     "line": null
+    }
+   },
+   {
+    "code": "causal_wording",
+    "severity": "warning",
+    "where": "notebooks/workbench.py",
+    "message": "\"causes\" reads as a causal claim; the study measures associations.",
+    "details": {
+     "word": "causes"
+    },
+    "location": {
+     "path": "notebooks/workbench.py",
+     "anchor": null,
+     "line": 42
+    }
+   }
+  ],
+  "traced": []
+ }
+}

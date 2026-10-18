@@ -1,0 +1,177 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "eda.rate_by",
+   "--column=job",
+   "--request-id",
+   "ID",
+   "--expected-revision",
+   "R",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "run",
+  "request_id": "b10",
+  "replayed": false,
+  "revision": 15,
+  "activity": "eda.rate_by",
+  "execution_id": "e_087f4c7109d76636536c712c",
+  "status": "promoted",
+  "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+  "values": {
+   "binned": false,
+   "binning": null,
+   "column": "job",
+   "groups": [
+    {
+     "n_positive": 38,
+     "n_rows": 342,
+     "rate": 0.1111111111111111,
+     "small_count": false,
+     "value": "admin."
+    },
+    {
+     "n_positive": 50,
+     "n_rows": 674,
+     "rate": 0.07418397626112759,
+     "small_count": false,
+     "value": "blue-collar"
+    },
+    {
+     "n_positive": 11,
+     "n_rows": 124,
+     "rate": 0.08870967741935484,
+     "small_count": false,
+     "value": "entrepreneur"
+    },
+    {
+     "n_positive": 9,
+     "n_rows": 72,
+     "rate": 0.125,
+     "small_count": false,
+     "value": "housemaid"
+    },
+    {
+     "n_positive": 97,
+     "n_rows": 677,
+     "rate": 0.1432791728212703,
+     "small_count": false,
+     "value": "management"
+    },
+    {
+     "n_positive": 35,
+     "n_rows": 150,
+     "rate": 0.23333333333333334,
+     "small_count": false,
+     "value": "retired"
+    },
+    {
+     "n_positive": 14,
+     "n_rows": 116,
+     "rate": 0.1206896551724138,
+     "small_count": false,
+     "value": "self-employed"
+    },
+    {
+     "n_positive": 26,
+     "n_rows": 292,
+     "rate": 0.08904109589041095,
+     "small_count": false,
+     "value": "services"
+    },
+    {
+     "n_positive": 11,
+     "n_rows": 59,
+     "rate": 0.1864406779661017,
+     "small_count": false,
+     "value": "student"
+    },
+    {
+     "n_positive": 59,
+     "n_rows": 540,
+     "rate": 0.10925925925925926,
+     "small_count": false,
+     "value": "technician"
+    },
+    {
+     "n_positive": 10,
+     "n_rows": 92,
+     "rate": 0.10869565217391304,
+     "small_count": false,
+     "value": "unemployed"
+    },
+    {
+     "n_positive": 5,
+     "n_rows": 26,
+     "rate": 0.19230769230769232,
+     "small_count": true,
+     "value": "unknown (special value)"
+    }
+   ],
+   "max_groups": 20,
+   "min_group_rows": 30,
+   "n_groups": 12,
+   "n_rows": 3164,
+   "note": "Rates by group on training rows are associations, not effects of the variable.",
+   "other": null,
+   "overall_rate": 0.11536030341340076,
+   "partition": "train",
+   "warnings": [
+    "job = unknown (special value): only 26 training rows; its rate is too noisy to read on its own."
+   ]
+  },
+  "result": {
+   "execution_id": "e_087f4c7109d76636536c712c",
+   "activity": "eda.rate_by",
+   "slot": "eda.rate_by:job",
+   "status": "promoted",
+   "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
+   "input_key": "0075d6db6dc2154ec4302cc379c50cb2f5207cef47e2a5d38707890fbd858828",
+   "reason": null,
+   "started_revision": 14,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_80a1cd03f61d434a8aabb43c51aa9e89"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 15,
+    "last_ok_revision": 15,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 15,
+    "last_ok_revision": 15,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

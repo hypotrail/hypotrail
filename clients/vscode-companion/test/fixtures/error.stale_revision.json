@@ -1,0 +1,32 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide confirm",
+  "error": {
+   "code": "stale_revision",
+   "message": "Revision is stale: reread hypotrail status before deciding",
+   "details": {
+    "expected_revision": 25,
+    "current_revision": 26,
+    "changes_since": [
+     {
+      "revision": 26,
+      "action": "decide.propose",
+      "params": {
+       "decision_id": "policy"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

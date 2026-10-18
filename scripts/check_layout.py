@@ -3,6 +3,8 @@ from pathlib import Path
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +16,7 @@ REQUIRED = [
     'experimental/companion/feature.json',
     'clients/vscode-companion/package.json', 'clients/vscode-companion/extension.js',
     'clients/vscode-companion/README.md', 'docs/decisions/0003-companion-webview-v0.md',
+    'clients/vscode-companion/ARCHITECTURE.md', 'docs/decisions/0004-companion-advanced.md',
 ]
 LINKS = {
     'experimental/companion/runtime/bank-tutorial.html': 'use-cases/bank-marketing/bank-tutorial.html',
@@ -80,27 +83,43 @@ def check_cases(errors, absent=None):
 # off by default: no runtime dependency, no network module, no shell, no storage of its own.
 COMPANION_CLIENT = 'clients/vscode-companion'
 COMPANION_SETTING = 'hypotrail.companion.enabled'
+# ADR 0004 and COMPANION-ADVANCED §3.1: the stage setting defaults to v0; chatInsert is not
+# contributed (hidden until verified in a real VS Code, decision CA.8) or defaults to false.
+COMPANION_STAGE = 'hypotrail.companion.stage'
+COMPANION_CHAT_INSERT = 'hypotrail.companion.chatInsert'
+COMPANION_ACTIVATION = ['onCommand:hypotrail.companion.open', 'onCommand:hypotrail.companion.openReviewer',
+                        'onCommand:hypotrail.companion.goToResult', 'onUri']
 COMPANION_FORBIDDEN = re.compile(
     r"require\(['\"](?:node:)?(?:https?|http2|net|tls|dgram|ws|sqlite3?|better-sqlite3)['\"]\)"
     r"|shell:\s*true|\bexecSync\b|\bspawn\(|childProcess\.exec\(|\bexec\("
-    r"|vscode\.lm\b|WebSocket|localStorage|indexedDB|\bfetch\(")
+    r"|vscode\.lm\b|WebSocket|localStorage|indexedDB|\bfetch\(|workspaceState")
 
 def check_companion_client(errors):
     """The companion client stays default-off, dependency-free, and CLI-only."""
     folder = ROOT / COMPANION_CLIENT
     package = json.loads((folder / 'package.json').read_text(encoding='utf-8'))
-    setting = (package.get('contributes', {}).get('configuration', {})
-               .get('properties', {}).get(COMPANION_SETTING, {}))
+    properties = package.get('contributes', {}).get('configuration', {}).get('properties', {})
+    setting = properties.get(COMPANION_SETTING, {})
     if setting.get('default') is not False:
         errors.append(f'Companion client flag {COMPANION_SETTING} is not default-off')
-    if package.get('activationEvents') != ['onCommand:hypotrail.companion.open']:
-        errors.append('Companion client activates on more than its command')
+    if properties.get(COMPANION_STAGE, {}).get('default') != 'v0':
+        errors.append(f'Companion client setting {COMPANION_STAGE} does not default to v0')
+    if properties.get(COMPANION_CHAT_INSERT, {'default': False}).get('default') is not False:
+        errors.append(f'Companion client setting {COMPANION_CHAT_INSERT} is not default-off')
+    if package.get('activationEvents') != COMPANION_ACTIVATION:
+        errors.append('Companion client activation events are not exactly its commands and onUri')
     if package.get('capabilities', {}).get('untrustedWorkspaces', {}).get('supported') is not False:
         errors.append('Companion client does not require a trusted workspace')
     if package.get('dependencies'):
         errors.append('Companion client has runtime dependencies')
     sources = sorted(p for p in folder.rglob('*.js')
                      if 'test' not in p.relative_to(folder).parts and 'node_modules' not in p.parts)
+    # The webview's protocol copy is generated from lib/protocol.js and must not drift.
+    generated = subprocess.run(['node', str(folder / 'lib' / 'protocol.js')], capture_output=True,
+                               text=True, timeout=60) if shutil.which('node') else None
+    if generated is not None and (generated.returncode != 0 or generated.stdout
+                                  != (folder / 'media' / 'protocol.js').read_text(encoding='utf-8')):
+        errors.append('Companion client media/protocol.js differs from lib/protocol.js --emit-webview')
     for path in sources:
         if COMPANION_FORBIDDEN.search(path.read_text(encoding='utf-8')):
             errors.append(f'Companion client source uses a forbidden API: {path.relative_to(ROOT)}')
