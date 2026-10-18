@@ -44,7 +44,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import case as c
 from . import data as dt
 from . import dependencies as dep
-from . import exposure, lock, preconditions, read, view
+from . import exposure, guard, lock, preconditions, read, view
 from . import state as st
 from .errors import StudyError
 from .store import StudyStore
@@ -710,6 +710,7 @@ def _copy_agent_templates(study_dir: Path) -> dict:
 
 def init(case_path, study_dir) -> Outcome:
     """Create a study on a case (revision 1). Never overwrites an existing study."""
+    guard.assert_writable()
     lock.require_posix()
     study_dir = Path(study_dir).resolve()
     store = StudyStore(study_dir)
@@ -771,6 +772,7 @@ def plan(study_dir) -> Outcome:
 def apply(study_dir, *, action: str, params: dict, request_id: str, expected_revision: int,
           command: str = 'decide') -> Outcome:
     """Apply one registered action through ``apply_command`` and describe the receipt."""
+    guard.assert_writable()
     store = StudyStore(study_dir)
     if not store.exists():
         raise StudyError('study_missing', f'No study here: {store.state_path} does not exist.',

@@ -53,7 +53,7 @@ from mlkit.reliability import CommandRefused, Handler
 
 from . import activities as act
 from . import commands as cmd
-from . import exposure, lock, registry
+from . import exposure, guard, lock, registry
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -469,6 +469,7 @@ def _already_current(store, state, activity, options, request_id) -> dict | None
 def acknowledge(study_dir, execution: str, *, request_id: str, expected_revision: int,
                 user_words: str) -> cmd.Outcome:
     """Acknowledge an interrupted execution with the junior's words; never restarts it."""
+    guard.assert_writable()
     store = _store(study_dir)
     with store.writing() as state:
         recover(store, state)

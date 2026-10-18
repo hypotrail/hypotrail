@@ -44,7 +44,7 @@ from typing import Iterator, Mapping
 
 from mlkit import reliability
 
-from . import lock, state as st
+from . import guard, lock, state as st
 from .errors import StudyError
 
 HOME = lock.HOME
@@ -221,6 +221,7 @@ class StudyStore:
 
         ``state`` comes from :func:`mlkit.study.state.initial_state` (revision 0).
         """
+        guard.assert_writable()
         lock.require_posix()
         if self.exists():
             raise StudyError('state_exists', 'A study already exists here; it is never '
@@ -294,7 +295,12 @@ class StudyStore:
 
     @contextlib.contextmanager
     def writing(self, *, timeout: float = lock.DEFAULT_TIMEOUT) -> Iterator[dict]:
-        """Hold the writer lock and yield freshly reread, recovered state."""
+        """Hold the writer lock and yield freshly reread, recovered state.
+
+        Refused (``read_only``) in a read-only process (``HYPOTRAIL_READ_ONLY=1``): every
+        mutation of a study goes through here or through :meth:`create`.
+        """
+        guard.assert_writable()
         with lock.writer_lock(self.study_dir, timeout=timeout):
             self.finish_pending_commit()
             state = self.load_state()
@@ -307,6 +313,7 @@ class StudyStore:
 
         Refusals raise :class:`mlkit.reliability.CommandRefused`.
         """
+        guard.assert_writable()
         with self.writing(timeout=timeout) as state:
             return reliability.apply_command(self, state, request, handlers)
 
