@@ -148,9 +148,17 @@ def test_model_choice_and_regression_verdicts(auto_state):
     assert [m['slot'] for m in missing] == ['evaluate.regression']
     assert pre.missing_for_decision(state, 'conclusion',
                                     {'verdict': 'keep_baseline', 'text': 'x'}) == []
-    for verdict in ('adopt_model', 'inconclusive'):
-        [need] = pre.missing_for_decision(state, 'conclusion', {'verdict': verdict, 'text': 'x'})
-        assert need['decision'] == 'model_choice'
+    [need] = pre.missing_for_decision(state, 'conclusion', {'verdict': 'adopt_model', 'text': 'x'})
+    assert need['decision'] == 'model_choice'
+    # Post-v0.1 fixes (D6): "inconclusive" is allowed before a model is chosen.
+    assert pre.missing_for_decision(state, 'conclusion',
+                                    {'verdict': 'inconclusive', 'text': 'x'}) == []
+    with_choice = copy.deepcopy(state)
+    with_choice['decisions']['conclusion'].update(
+        status='confirmed', value={'verdict': 'inconclusive', 'text': 'x'})
+    [item] = [x for x in st.not_yet_defensible(with_choice)
+              if x['id'] == 'inconclusive_without_choice']
+    assert item['decisions'] == ['model_choice'] and 'no model is chosen' in item['text']
     state['decisions']['model_choice'].update(status='confirmed', value='fit.baseline')
     assert pre.missing_for_decision(state, 'conclusion',
                                     {'verdict': 'inconclusive', 'text': 'x'}) == []

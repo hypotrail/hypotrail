@@ -41,7 +41,7 @@ HOME = '.hypotrail'
 UNLOGGED = ('session-report',)
 # Flags whose values are identifiers the study already shows; every other value is dropped.
 SAFE_VALUE_FLAGS = ('--basis', '--delegation-scope', '--rule', '--column', '--channel',
-                    '--acknowledge-interruption', '--since', '--about', '--resolve',
+                    '--acknowledge-interruption', '--since', '--about', '--resolve', '--withdraw',
                     '--max-groups')
 SAFE_SWITCHES = ('--summary', '--json', '--intervals')
 

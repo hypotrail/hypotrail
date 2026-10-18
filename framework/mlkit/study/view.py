@@ -49,14 +49,22 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'results', 'artifacts', 'executions', 'not_yet_defensible',
                 # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
                 'notes',
+                # Post-v0.1 fixes (D5): the open holds grouped by decision.
+                'holds',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
+SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
-SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds', 'result_integrity',
+SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+                    # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
+                    'conclusion_outdated', 'result_integrity',
                     'adopted_rule_not_evaluated',
                     'capacity_exceeds_validation', 'small_validation_partition',
-                    'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
+                    'code_changed', 'stale_results',
+                    # D6: an inconclusive conclusion without a policy or a model choice.
+                    'inconclusive_without_choice',
+                    'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'high_cardinality_grouping',
                     'validation_is_not_independent')
 SUMMARY_TOP = 5
@@ -159,10 +167,11 @@ def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
     return rule
 
 
-# G.12 (post-v0.1): small-data warnings, never refusals. A validation partition with fewer
-# than SMALL_VALIDATION_ROWS rows, or (binary) fewer than SMALL_VALIDATION_POSITIVES positive
-# rows, is named; so is a capacity that selects every validation row, and an exploration
-# that folds a high-cardinality column into its largest groups and "other".
+# G.12 (post-v0.1): small-data warnings, never refusals. A validation partition with at
+# most SMALL_VALIDATION_ROWS rows, or (binary) at most SMALL_VALIDATION_POSITIVES positive
+# rows, is named (post-v0.1 fixes, D4: the thresholds are inclusive, so the boundary the
+# plan calls small is small); so is a capacity that selects every validation row, and an
+# exploration that folds a high-cardinality column into its largest groups and "other".
 SMALL_VALIDATION_ROWS = 30
 SMALL_VALIDATION_POSITIVES = 5
 
@@ -172,41 +181,61 @@ def _citable(item) -> bool:
         and isinstance(item.get('values'), dict)
 
 
+def small_partition_warning(split_values, binary: bool) -> dict | None:
+    """The ``small_validation_partition`` warning of a split result's values, or None
+    (G.12; inclusive thresholds since D4). Shared by the view and ``preview policy``."""
+    if not isinstance(split_values, dict):
+        return None
+    part = (split_values.get('partitions') or {}).get('validation') or {}
+    n, positives = part.get('n_rows'), part.get('n_positive')
+    few_rows = isinstance(n, int) and n <= SMALL_VALIDATION_ROWS
+    few_positives = binary and isinstance(positives, int) \
+        and positives <= SMALL_VALIDATION_POSITIVES
+    if not (few_rows or few_positives):
+        return None
+    counted = f'{n} rows' + (f', {positives} of them positive' if binary
+                             and isinstance(positives, int) else '')
+    item = {'id': 'small_validation_partition', 'slots': ['split'], 'n_rows': n,
+            'min_rows': SMALL_VALIDATION_ROWS,
+            'text': f'The validation partition is small ({counted}): every validation '
+                    'figure rests on these rows, its interval is wide, and a '
+                    'difference between models on them can be chance.'}
+    if binary:
+        item.update(n_positive=positives, min_positive=SMALL_VALIDATION_POSITIVES)
+    return item
+
+
+def capacity_warning(rules, n) -> dict | None:
+    """The ``capacity_exceeds_validation`` warning for ``rules`` on ``n`` validation rows,
+    or None (G.12). Shared by the view and ``preview policy`` (D4)."""
+    over = []
+    for rule in rules or []:
+        kind, _, k = str(rule).partition(':')
+        if kind == 'capacity' and k.isdigit() and isinstance(n, int) and int(k) >= n:
+            over.append(rule)
+    if not over:
+        return None
+    return {'id': 'capacity_exceeds_validation', 'rules': over, 'n_rows': n,
+            'text': f'A capacity at least as large as the {n} validation rows '
+                    'selects every row: its figures describe selecting everyone, '
+                    'not a ranking.'}
+
+
 def _small_data(state: dict, results: dict) -> list[dict]:
     """The G.12 warnings of ``not_yet_defensible``, from current, verified results."""
     out = []
     binary = st.task_of(state) == st.BINARY
     split = results.get('split')
     if _citable(split):
-        part = (split['values'].get('partitions') or {}).get('validation') or {}
-        n, positives = part.get('n_rows'), part.get('n_positive')
-        few_rows = isinstance(n, int) and n < SMALL_VALIDATION_ROWS
-        few_positives = binary and isinstance(positives, int) \
-            and positives < SMALL_VALIDATION_POSITIVES
-        if few_rows or few_positives:
-            counted = f'{n} rows' + (f', {positives} of them positive' if binary
-                                     and isinstance(positives, int) else '')
-            item = {'id': 'small_validation_partition', 'slots': ['split'], 'n_rows': n,
-                    'min_rows': SMALL_VALIDATION_ROWS,
-                    'text': f'The validation partition is small ({counted}): every validation '
-                            'figure rests on these rows, its interval is wide, and a '
-                            'difference between models on them can be chance.'}
-            if binary:
-                item.update(n_positive=positives, min_positive=SMALL_VALIDATION_POSITIVES)
+        item = small_partition_warning(split['values'], binary)
+        if item:
             out.append(item)
     evaluation = results.get('policy.evaluation')
-    rules = []
     if _citable(evaluation) and isinstance(evaluation.get('params'), dict):
-        n = evaluation['values'].get('n')
-        for rule in evaluation['params'].get('rules') or []:
-            kind, _, k = str(rule).partition(':')
-            if kind == 'capacity' and k.isdigit() and isinstance(n, int) and int(k) >= n:
-                rules.append(rule)
-        if rules:
-            out.append({'id': 'capacity_exceeds_validation', 'rules': rules, 'n_rows': n,
-                        'text': f'A capacity at least as large as the {n} validation rows '
-                                'selects every row: its figures describe selecting everyone, '
-                                'not a ranking.'})
+        item = capacity_warning(evaluation['params'].get('rules'),
+                                evaluation['values'].get('n'))
+        if item:
+            out.append(item)
     folded = []
     for slot, item in sorted(results.items()):
         other = item['values'].get('other') if _citable(item) else None
@@ -238,6 +267,19 @@ def _fact(view: dict, fact_id: str) -> dict | None:
             if f['id'] == fact_id:
                 return {'value': f['value'], 'status': status}
     return None
+
+
+def _holds(notes: list[dict], decisions: dict) -> list[dict]:
+    """The open holds grouped by decision, in plan order (D5): one entry per held decision,
+    ``{decision_id, status, notes: [{note_id, user_words}]}`` (``status`` is the decision's),
+    so a restated hold is seen next to the one already recorded."""
+    out = []
+    for d, dec in decisions.items():
+        held = [{'note_id': n['note_id'], 'user_words': n['user_words']}
+                for n in notes if n['status'] == 'open' and n['decision_id'] == d]
+        if held:
+            out.append({'decision_id': d, 'status': dec['status'], 'notes': held})
+    return out
 
 
 def summary(view: dict) -> dict:
@@ -307,7 +349,8 @@ def summary(view: dict) -> dict:
     out = {'goal': goal, 'current_step': view['current_step'], 'plan': plan,
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
-           'executions': executions, 'not_yet_defensible': defensible, 'notes': notes}
+           'executions': executions, 'not_yet_defensible': defensible, 'notes': notes,
+           'holds': _holds(notes, decisions)}
     out['recap'] = recap(out, view)
     return {k: out[k] for k in SUMMARY_KEYS}
 
@@ -323,7 +366,7 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
 # lines do not already say (unconfirmed decisions are the "Decided" and "Next" lines).
-RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds')
+RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated')
 
 
 def _spaced(identifier) -> str:
@@ -353,7 +396,53 @@ def _regression_errors(view: dict) -> dict | None:
     return {'mae': mae, 'unit': unit, 'result_id': item['result_id']} if mae else None
 
 
-def _recap_decision(decision_id: str, d: dict, errors: dict | None = None) -> str:
+# D10: a binary recap cites the headline policy result: the logistic model's precision and
+# recall at one evaluated rule, as the report displays them (one decimal, in percent), on the
+# validation rows, with the result id prefix.
+HEADLINE_MODEL = 'fit.logistic'
+
+
+def _pct(value) -> str | None:
+    return f'{100 * value:.1f}%' if isinstance(value, (int, float)) \
+        and not isinstance(value, bool) else None
+
+
+def _policy_headline(view: dict, summary_out: dict) -> dict | None:
+    """The headline of the current, verified ``policy.evaluation`` (D10), or None: the
+    adopted rule when it was evaluated, else the rule of the open policy proposal, else the
+    first evaluated rule. ``adopted`` says whether it is the confirmed (or to-reconfirm)
+    policy."""
+    item = view['results'].get('policy.evaluation')
+    if not _citable(item):
+        return None
+    by_rule = {rec.canonical_rule(r) or r: r for r in (item['values'].get('rules') or {})}
+    params = item['params'] if isinstance(item.get('params'), dict) else {}
+    decision = summary_out['decisions'].get('policy') or {}
+    adopted = decision.get('value') if decision.get('status') in (
+        'confirmed', 'reconfirm_required') else None
+    candidates = [adopted] + [p['value'] for p in summary_out['open_proposals']
+                              if p['decision_id'] == 'policy'] + list(params.get('rules') or [])
+    rule = next((by_rule[rec.canonical_rule(c) or c] for c in candidates
+                 if isinstance(c, str) and (rec.canonical_rule(c) or c) in by_rule), None)
+    if rule is None:
+        return None
+    model = ((item['values']['rules'][rule] or {}).get('models') or {}).get(HEADLINE_MODEL) or {}
+    precision, recall = _pct(model.get('precision')), _pct(model.get('recall'))
+    if precision is None and recall is None:
+        return None
+    figures = ', '.join(f'{name} {v}' for name, v in (('precision', precision),
+                                                      ('recall', recall)) if v)
+    n = item['values'].get('n')
+    rows = f' on the {n} validation rows' if isinstance(n, int) else ' on the validation rows'
+    return {'rule': rule, 'adopted': adopted is not None and (rec.canonical_rule(adopted)
+                                                              or adopted) == (
+                                                                  rec.canonical_rule(rule) or rule),
+            'text': f'the logistic model at {rule}{rows}: {figures}, result '
+                    f'{item["result_id"][:RECAP_RID]}'}
+
+
+def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
+                    headline: dict | None = None) -> str:
     label = DECISION_LABELS[decision_id]
     value = d['value']
     if decision_id == 'feature_availability' and isinstance(value, dict):
@@ -375,6 +464,8 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None) -> st
         text = f'{label} ({method}{share})'
     elif decision_id in ('policy',) and isinstance(value, str):
         text = f'{label} {value}'
+        if headline and headline['adopted']:
+            text += f' ({headline["text"]})'
     elif decision_id == 'model_choice' and isinstance(value, str):
         text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
         mae = (errors or {}).get('mae', {}).get(value)
@@ -420,13 +511,16 @@ def _recap_next(summary_out: dict, view: dict) -> str:
 def recap(summary_out: dict, view: dict) -> list[str]:
     """Five lines a new chat may quote to resume (post-v0.1, T8 and F5).
 
-    Deterministic, from the summary and the view only, with no revision numbers or ids:
+    Deterministic, from the summary and the view only, with no revision numbers or ids
+    except the result id prefix next to a headline figure (P3, D10):
     1. ``Goal``: the intended use and the prediction moment (decided or from the case);
     2. ``Decided``: each confirmed decision, with the excluded features by name and a
        note when it was delegated or must be confirmed again (a regression study names
        its model choice, "the linear model" or "the mean baseline", where a binary study
-       names its policy);
-    3. ``Now``: the current step and the deliverables that are not up to date;
+       names its policy, with the logistic model's precision and recall at that rule from
+       the current policy evaluation, D10);
+    3. ``Now``: the current step and the deliverables that are not up to date (before the
+       policy is adopted, the latest evaluated rule's precision and recall, D10);
     4. ``Next``: the next decision or action (an open restatement is quoted, so a
        stand-in figure keeps its caveat);
     5. ``Limit``: the most urgent limit of ``not_yet_defensible`` the other lines do not
@@ -442,7 +536,10 @@ def recap(summary_out: dict, view: dict) -> list[str]:
     else:
         moment = f'{pt["value"]} (from the case, not decided yet)'
     errors = _regression_errors(view)
-    decided = [_recap_decision(d, item, errors) for d, item in summary_out['decisions'].items()
+    headline = _policy_headline(view, summary_out) if st.task_of(view.get('task')) == st.BINARY \
+        else None
+    decided = [_recap_decision(d, item, errors, headline)
+               for d, item in summary_out['decisions'].items()
                if item['status'] in ('confirmed', 'reconfirm_required')]
     titles = {s['id']: s['title'] for s in summary_out['plan']}
     step = titles.get(summary_out['current_step'], 'every step is done') \
@@ -458,17 +555,21 @@ def recap(summary_out: dict, view: dict) -> list[str]:
                           for slot, mae in sorted(errors['mae'].items()))
         step += (f' (validation MAE: {named}; result '
                  f'{errors["result_id"][:RECAP_RID]})')
+    if headline and not headline['adopted']:
+        # D10: before a rule is adopted, "Now" gives the latest evaluated figures.
+        step += f' (latest policy evaluation: {headline["text"]})'
     limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP]
     rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
     limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
     limit = limits[0]['text'] if limits else 'none recorded.'
     nxt = _recap_next(summary_out, view).rstrip()
-    holds = [n for n in summary_out.get('notes', []) if n['status'] == 'open']
+    holds = summary_out.get('holds') or []
     if holds:
-        # P2: a condition the junior stated stays visible in every chat until resolved.
-        said = '; '.join(f'"{n["user_words"]}" (the '
-                         f'{DECISION_LABELS.get(n["decision_id"], n["decision_id"])})'
-                         for n in holds)
+        # P2: a condition the junior stated stays visible in every chat until resolved;
+        # D5: the holds of one decision are quoted together.
+        said = '; '.join('; '.join(f'"{n["user_words"]}"' for n in h['notes'])
+                         + f' (the {DECISION_LABELS.get(h["decision_id"], h["decision_id"])})'
+                         for h in holds)
         nxt += ('' if nxt.endswith(('.', '"', '?')) else '.') + (
             f" On hold in the junior's words: {said}; nothing on hold is confirmed until "
             'they resolve it.')

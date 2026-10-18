@@ -64,6 +64,17 @@ or superseded proposals are never literals: a number that repeats one stays
 ``untraceable_number`` and names that proposal (``details.retired_proposal``). The HTML
 report and the notebook are generated from cited values and are not scanned for words.
 
+Counts of the study's own structure (post-v0.1 fixes, D8): a count, in digits or in
+words, directly followed (at most one word between) by a structural noun is traced to the
+matching count of the view: "columns", "features", "variables", "inputs" to the length of
+a current result's ``features`` list or a count of the feature availability (every
+feature, each status, the usable ones, the excluded ones); "groups" to the length of a
+current result's ``groups`` list; "steps", "pauses", "decisions" to the plan. The trace's
+``source`` is ``structure``. A count that matches no such figure stays
+``untraceable_number``, and the same count before any other noun is not traced this way
+("the seven columns we kept" is traced when the fit uses seven features; "seven calls" is
+not).
+
 The command always exits 0 with ``clean`` true or false; it never writes.
 No pandas, numpy, or scikit-learn.
 """
@@ -147,6 +158,21 @@ PERCENTAGE_POINTS = re.compile(r'\s*(?:percentage[- ]points?|pp\b|p\.p\.|points?
 LIST_MARKER = re.compile(r'^\s*\d+[.)]\s', re.MULTILINE)
 ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}(?:[T ][\d:.]+(?:Z|[+-]\d{2}:?\d{2})?)?\b')
 HEADING_ORDINAL = re.compile(r'^(\s*#{1,6}\s+)\d+\.', re.MULTILINE)
+# D8: nouns that name the study's own structure, by the view count they refer to.
+STRUCTURE_NOUNS = {
+    'features': ('columns', 'column', 'features', 'feature', 'variables', 'variable', 'inputs',
+                 'predictors', 'colonnes', 'colonne'),
+    'groups': ('groups', 'groupes'),
+    'steps': ('steps', 'étapes'),
+    'pauses': ('pauses', 'decision points'),
+    'decisions': ('decisions', 'décisions'),
+}
+_STRUCTURE_NOUN = '|'.join(re.escape(n) for nouns in STRUCTURE_NOUNS.values()
+                           for n in sorted(nouns, key=len, reverse=True))
+STRUCTURE_AFTER = re.compile(rf"\s+(?:[^\W\d_][\w'’-]*\s+)?(?P<noun>{_STRUCTURE_NOUN})(?![\w])",
+                             re.IGNORECASE)
+USABLE_STATUSES = ('available_at_prediction', 'uncertain_included')
+EXCLUDED_STATUSES = ('not_available', 'uncertain_excluded')
 SENTENCE = re.compile(r'(?<=[.!?])\s+|\n+')
 INLINE_CODE = re.compile(r'`[^`\n]*`')
 SCRIPT_SUFFIXES = {'.py', '.ipynb', '.r', '.sql', '.csv', '.parquet', '.xlsx', '.json', '.pkl'}
@@ -248,6 +274,39 @@ class Pool:
                     self._literal('rule', slot, rule)
         for i, text in enumerate(user_texts):
             self._literal('user_text', f'user_text:{i + 1}', text)
+        # D8: counts of the study's own structure, matched only before a structural noun.
+        self.structure: list[dict] = []
+
+        def count(kind: str, source: str, value) -> None:
+            if isinstance(value, int) and not isinstance(value, bool):
+                self.structure.append({'kind': kind, 'id': source, 'value': value})
+        for slot, item in sorted(view['results'].items()):
+            values = item.get('values')
+            if not (item['current'] and item['integrity'] == 'ok' and isinstance(values, Mapping)):
+                continue
+            if isinstance(values.get('features'), list):
+                count('features', f'{slot}.features', len(values['features']))
+            if isinstance(values.get('groups'), list):
+                count('groups', f'{slot}.groups', len(values['groups']))
+        availability = [('decision', view['decisions'].get('feature_availability', {})
+                         .get('value'))]
+        availability += [(p['proposal_id'], p['value']) for p in view['open_proposals']
+                         if p['decision_id'] == 'feature_availability']
+        for source, value in availability:
+            if not isinstance(value, Mapping):
+                continue
+            count('features', f'feature_availability.{source}.all', len(value))
+            count('features', f'feature_availability.{source}.usable',
+                  sum(v in USABLE_STATUSES for v in value.values()))
+            count('features', f'feature_availability.{source}.excluded',
+                  sum(v in EXCLUDED_STATUSES for v in value.values()))
+            for status in sorted(set(value.values())):
+                count('features', f'feature_availability.{source}.{status}',
+                      sum(v == status for v in value.values()))
+        plan = view.get('plan') or []
+        count('steps', 'plan.steps', len(plan))
+        count('pauses', 'plan.pauses', len({s['pause'] for s in plan if s.get('pause')}))
+        count('decisions', 'decisions', len(view['decisions']))
         self._literal('setting', 'settings', view['settings'])
         self._literal('case', 'dataset.rows', view['dataset'].get('rows'))
         for items in view['facts']['by_status'].values():
@@ -273,6 +332,17 @@ class Pool:
                 if word.matches(item['value'], literal=label == 'literal'):
                     return label, item
         return 'none', None
+
+    def structure_match(self, text: str, end: int, value: float) -> dict | None:
+        """The structure count (D8) a number ending at ``end`` refers to, when a structural
+        noun follows it and the count matches; None otherwise."""
+        m = STRUCTURE_AFTER.match(text, end)
+        if m is None or value != int(value):
+            return None
+        noun = m.group('noun').lower()
+        kind = next(k for k, nouns in STRUCTURE_NOUNS.items() if noun in nouns)
+        return next((item for item in self.structure
+                     if item['kind'] == kind and item['value'] == int(value)), None)
 
     def retired_match(self, value: float, *, percent: bool = False) -> dict | None:
         """The withdrawn or superseded proposal whose figure ``value`` repeats, if any."""
@@ -345,6 +415,12 @@ def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
     """Trace one number written in words (F3) and record a finding or a trace."""
     label, item = pool.trace_words(word)
     shown = word.text.strip()
+    structure = (pool.structure_match(masked, word.end, word.value)
+                 if label in ('none', 'stale') and word.kind == 'count' else None)
+    if structure is not None:
+        traced.append({'text': shown, 'source': 'structure', 'id': structure['id'],
+                       'value': structure['value'], 'in_words': True})
+        return
     if label == 'current':
         traced.append({'text': shown, 'result_id': item['result_id'], 'slot': item['slot'],
                        'path': item['path'], 'value': item['value'], 'in_words': True})
@@ -386,6 +462,12 @@ def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict
         if label in ('none', 'stale') and tok.start in identifiers:
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'rule',
                            'value': tok.value})
+            continue
+        structure = (pool.structure_match(masked, tok.end, tok.value)
+                     if label in ('none', 'stale') and not tok.percent else None)
+        if structure is not None:
+            traced.append({'text': tok.text.strip(), 'source': 'structure',
+                           'id': structure['id'], 'value': structure['value']})
             continue
         if label in ('none', 'stale') and _result_id_prefix(pool, masked, tok):
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',

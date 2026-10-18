@@ -210,10 +210,12 @@ def _note(n: Mapping) -> str:
                 f'<q data-literal="user_words">{e(n["user_words"])}</q>'
                 f'<br><span class="small">{e(labels["hold_open_note"])}</span></div>')
     resolution = n.get('resolution') or {}
-    return (f'<div class="words" data-note="{e(n["note_id"])}" data-status="resolved">'
-            f'{_badge("confirmed", labels["hold_resolved"])}'
+    withdrawn = n['status'] == 'withdrawn'          # D5: a hold the junior dropped
+    return (f'<div class="words" data-note="{e(n["note_id"])}" data-status="{e(n["status"])}">'
+            f'{_badge("confirmed", labels["hold_withdrawn" if withdrawn else "hold_resolved"])}'
             f'<q data-literal="user_words">{e(n["user_words"])}</q>'
-            f'<br><span class="small">{e(labels["hold_resolved_by"])}: </span>'
+            f'<br><span class="small">'
+            f'{e(labels["hold_withdrawn_by" if withdrawn else "hold_resolved_by"])}: </span>'
             f'<q data-literal="user_words">{e(resolution.get("user_words", ""))}</q></div>')
 
 

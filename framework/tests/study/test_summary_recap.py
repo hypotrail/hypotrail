@@ -31,7 +31,17 @@ def _assert_shape(recap: list[str], summary: dict) -> None:
         assert 'revision' not in line.lower(), line
         assert not re.search(r'\b(?:p|e)_[0-9a-f]+\b', line), line       # proposal, execution ids
         assert summary['study'] not in line
-    for rid in (r['result_id'] for r in summary['results'].values()):
+    for slot, r in summary['results'].items():
+        rid = r['result_id']
+        if slot == 'policy.evaluation' and r['current']:
+            # Post-v0.1 fixes (D10): the one id a binary recap holds, next to its headline
+            # figures (precision and recall at one rule), and only there.
+            text = ' '.join(recap)
+            assert text.count(rid[:8]) <= 1
+            if rid[:8] in text:
+                assert re.search(rf'precision [\d.]+%, recall [\d.]+%, result {rid[:8]}\)',
+                                 text), text
+            continue
         assert rid[:8] not in ' '.join(recap)
 
 

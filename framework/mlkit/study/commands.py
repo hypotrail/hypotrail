@@ -30,6 +30,9 @@ Decision actions:
   feature availability and the split, so the policy and the conclusion are delegated only
   with ``this_decision`` (R1).
 * ``decide.withdraw``: closes an open proposal.
+* ``decide.note``, ``decide.resolve_note``, ``decide.withdraw_note``: a condition or hold
+  the junior states on a decision, verbatim, and its resolution or withdrawal in their
+  words (post-v0.1, P2 and D5). A hold on a confirmed decision asks for it again (D1).
 
 pandas is never imported here, so ``status`` and ``plan`` stay fast.
 """
@@ -72,12 +75,15 @@ ACTION_WITHDRAW = 'decide.withdraw'
 # Post-v0.1 (P2): a condition or hold the junior states at a pause, and its resolution.
 ACTION_NOTE = 'decide.note'
 ACTION_RESOLVE_NOTE = 'decide.resolve_note'
+# Post-v0.1 fixes (D5): the junior withdraws a hold that no longer applies, in their words.
+ACTION_WITHDRAW_NOTE = 'decide.withdraw_note'
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
 CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                             'delegation_scope'})
 WITHDRAW_PARAMS = frozenset({'proposal_id', 'reason'})
 NOTE_PARAMS = frozenset({'decision_id', 'user_words'})
 RESOLVE_NOTE_PARAMS = frozenset({'note_id', 'user_words'})
+WITHDRAW_NOTE_PARAMS = frozenset({'note_id', 'user_words'})
 DEFAULT_CHANNEL = 'chat'
 DEFAULT_ACTOR = 'user'
 DEFAULT_BASIS = st.DEFAULT_BASIS
@@ -961,6 +967,16 @@ def _confirm(ctx: Context) -> Handler:
         previous = ({'value': old, 'confirmation': copy.deepcopy(decision['confirmation']),
                      'proposal_id': decision['proposal_id']} if had else None)
         eff = dep.effects(copy.deepcopy(state), decision_id, old, value)
+        outdated = dep.outdates_conclusion(
+            state, decision_id, was_confirmed=decision['status'] == 'confirmed', old=old,
+            new=value, old_basis=st.confirmation_basis(decision['confirmation']) if had else None,
+            new_basis=params['basis'])
+        if outdated and dep.CONCLUSION not in eff['reconfirm']:
+            # D2: the conclusion no longer describes the decisions it summarizes.
+            eff['reconfirm'] = list(eff['reconfirm']) + [dep.CONCLUSION]
+            eff['re_explain'] = list(dict.fromkeys(list(eff['re_explain']) + [dep.CONCLUSION]))
+            if eff['mutation'] in dep.QUIET_MUTATIONS:
+                eff['reason'] = outdated
         if had and decision['proposal_id'] in state['proposals'] \
                 and decision['proposal_id'] != pid:
             state['proposals'][decision['proposal_id']].update(
@@ -1015,8 +1031,11 @@ def _note(ctx: Context) -> Handler:
 
     The words are the junior's, about one decision of the study ("don't adopt anything until
     I bring my manager's figure"). A bare acknowledgement says nothing to hold on. The note
-    stays open until :func:`_resolve_note`; while it is open the decision cannot be
-    confirmed (``decision_on_hold``)."""
+    stays open until :func:`_resolve_note` or :func:`_withdraw_note`; while it is open the
+    decision cannot be confirmed (``decision_on_hold``). A hold on a decision that is
+    already confirmed withdraws that agreement (D1): the decision and every confirmed
+    decision resting on it become ``reconfirm_required`` (:func:`dependencies.apply_hold`),
+    so the study never shows a decision as both confirmed and on hold."""
     def check(params):
         words = params['user_words']
         if not isinstance(words, str) or not words.strip():
@@ -1037,10 +1056,29 @@ def _note(ctx: Context) -> Handler:
         notes[nid] = {'note_id': nid, 'decision_id': decision_id, 'kind': 'hold',
                       'user_words': params['user_words'], 'status': 'open', 'created': st.now(),
                       'revision': revision, 'request_id': ctx.request_id, 'resolution': None}
+        record = dep.apply_hold(state, decision_id, nid, revision=revision)
         return {'note_id': nid, 'decision_id': decision_id, 'status': 'open',
                 'user_words': params['user_words'],
-                'open_holds': [n['note_id'] for n in st.open_holds(state, decision_id)]}
+                'open_holds': [n['note_id'] for n in st.open_holds(state, decision_id)],
+                'reconfirm_required': list(record['reconfirm_required']) if record else []}
     return Handler(NOTE_PARAMS, run, check)
+
+
+def _open_note(state, nid: str, request_id: str) -> dict:
+    """The open note ``nid``, or the refusal (``unknown_note``, ``note_not_open``,
+    ``same_request``)."""
+    note = (state.get('notes') or {}).get(nid)
+    if note is None:
+        raise CommandRefused('unknown_note', f'There is no note {nid}.',
+                             details={'note_id': nid,
+                                      'open_holds': [n['note_id'] for n in st.open_holds(state)]})
+    if note['status'] != 'open':
+        raise CommandRefused('note_not_open', f'Note {nid} is {note["status"]}.',
+                             details={'note_id': nid, 'status': note['status']})
+    if note.get('request_id') == request_id:
+        raise _ambiguous('same_request', 'A hold is resolved or withdrawn by a later request than '
+                                         'the one that recorded it.', note_id=nid)
+    return note
 
 
 def _resolve_note(ctx: Context) -> Handler:
@@ -1057,17 +1095,7 @@ def _resolve_note(ctx: Context) -> Handler:
 
     def run(state, params):
         nid = params['note_id']
-        note = (state.get('notes') or {}).get(nid)
-        if note is None:
-            raise CommandRefused('unknown_note', f'There is no note {nid}.',
-                                 details={'note_id': nid,
-                                          'open_holds': [n['note_id'] for n in st.open_holds(state)]})
-        if note['status'] != 'open':
-            raise CommandRefused('note_not_open', f'Note {nid} is {note["status"]}.',
-                                 details={'note_id': nid, 'status': note['status']})
-        if note.get('request_id') == ctx.request_id:
-            raise _ambiguous('same_request', 'A hold is resolved by a later request than the one '
-                                             'that recorded it.', note_id=nid)
+        note = _open_note(state, nid, ctx.request_id)
         proposals = [p for p in st.open_proposals(state) if p['decision_id'] == note['decision_id']]
         texts = (note['user_words'], *(p['restatement'] for p in proposals))
         value = [p['value'] for p in proposals] or None
@@ -1086,11 +1114,43 @@ def _resolve_note(ctx: Context) -> Handler:
     return Handler(RESOLVE_NOTE_PARAMS, run, check)
 
 
+def _withdraw_note(ctx: Context) -> Handler:
+    """``decide.withdraw_note`` (D5): the junior withdraws a hold that no longer applies
+    (a restatement of a hold already recorded, a condition they dropped), in their words.
+
+    Unlike a resolution, the words may hold a negation ("no need to wait for that any
+    more"): they must be non-blank and say more than an acknowledgement. A withdrawn note
+    stops blocking its decision; a decision a hold made ``reconfirm_required`` (D1) still
+    needs the junior's words again."""
+    def check(params):
+        words = params['user_words']
+        if not isinstance(words, str) or not words.strip():
+            raise _ambiguous('missing_user_words', "A hold is withdrawn with the junior's own "
+                                                   'words.')
+        if is_bare_acknowledgement(words):
+            raise _ambiguous('bare_acknowledgement', 'A bare acknowledgement does not withdraw '
+                                                     "a hold: record the junior's words that "
+                                                     'drop it.', user_words=words)
+
+    def run(state, params):
+        nid = params['note_id']
+        note = _open_note(state, nid, ctx.request_id)
+        revision = state['revision'] + 1
+        note.update(status='withdrawn', resolution={'user_words': params['user_words'],
+                                                    'revision': revision, 'time': st.now(),
+                                                    'request_id': ctx.request_id})
+        return {'note_id': nid, 'decision_id': note['decision_id'], 'status': 'withdrawn',
+                'user_words': params['user_words'],
+                'open_holds': [n['note_id'] for n in st.open_holds(state, note['decision_id'])]}
+    return Handler(WITHDRAW_NOTE_PARAMS, run, check)
+
+
 register_action(ACTION_PROPOSE, _propose)
 register_action(ACTION_CONFIRM, _confirm)
 register_action(ACTION_WITHDRAW, _withdraw)
 register_action(ACTION_NOTE, _note)
 register_action(ACTION_RESOLVE_NOTE, _resolve_note)
+register_action(ACTION_WITHDRAW_NOTE, _withdraw_note)
 
 
 # --- commands ---------------------------------------------------------------------------
