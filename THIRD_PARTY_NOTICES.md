@@ -5,7 +5,7 @@
 - Dataset: Bank Marketing, UCI Machine Learning Repository.
 - Attribution: Moro, S., Rita, P., and Cortez, P. (2014).
 - DOI: `10.24432/C5K306`.
-- Source: https://archive.ics.uci.edu/dataset/222/bank+marketing
+- Source: [UCI Bank Marketing](https://archive.ics.uci.edu/dataset/222/bank+marketing)
 - Dataset license recorded by the source: CC BY 4.0.
 - Included extract: `use-cases/bank-marketing/data/bank.csv`, with source documentation in `bank-names.txt`.
 
@@ -16,7 +16,7 @@ The source data is retained without modification. Splits, predictions, charts, a
 - Dataset: Auto MPG, UCI Machine Learning Repository.
 - Attribution: Quinlan, R. (1993).
 - DOI: `10.24432/C5859H`.
-- Source: https://archive.ics.uci.edu/dataset/9/auto+mpg
+- Source: [UCI Auto MPG](https://archive.ics.uci.edu/dataset/9/auto+mpg)
 - Dataset license recorded by the source: CC BY 4.0.
 - Included files and original documentation: `use-cases/auto-mpg/data/`.
 
