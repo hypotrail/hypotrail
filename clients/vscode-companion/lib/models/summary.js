@@ -6,6 +6,9 @@
 //
 // Moved from lib/model.js by WP-0. WP-U1 owns and extends it; its key list is frozen
 // (docs/plans/COMPANION-ADVANCED-PLAN.md §2.2): add keys, never rename or remove one.
+// WP-U1 added: `plan[].decisionStatus`, `plan[].after` (the step a blocked step waits
+// for), `digest.boundary` (the last-session boundary revision), and `regenerate`
+// (whether "Regenerate" is offered, §6.1.4).
 
 const { ModelError, str, strOrNull, list, obj, int, showValue } = require('./common');
 
@@ -24,7 +27,9 @@ const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrit
 const DECISION_PAUSE = { prediction_time: 1, feature_availability: 1, split: 2, policy: 3, model_choice: 3, conclusion: 3 };
 const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep', 'plan', 'moments', 'pauses',
   'nextAction', 'artifacts', 'artifactsStatus', 'proposals', 'holds', 'notes', 'decisions', 'executions',
-  'notYetDefensible', 'alerts', 'digest', 'waitingCount'];
+  'notYetDefensible', 'alerts', 'digest', 'waitingCount', 'regenerate'];
+// Generated deliverables: the workbench is the junior's own file and is never regenerated.
+const GENERATED = ['report', 'notebook'];
 
 class SummaryError extends ModelError {}
 
@@ -46,6 +51,7 @@ function digestModel(raw, lastSession) {
   return {
     since: int(raw.since),
     until: int(raw.until),
+    boundary: int(session.boundary_revision),
     sinceTime: strOrNull(session.boundary_time),
     gapMinutes: int(session.gap_minutes),
     items: list(raw.items).map(i => {
@@ -83,9 +89,26 @@ function toSummaryModel(summary) {
       id, title: str(step && step.title), status: str(step && step.status),
       pause: isDecision ? (pauseOf[id] || DECISION_PAUSE[id] || null) : null,
       basis: decisions[id] ? decisions[id].basis : null,
+      decisionStatus: decisions[id] ? decisions[id].status : null,
+      requires: list(step && step.requires).map(str).filter(Boolean),
+      after: null,
     };
   });
   const titles = Object.fromEntries(plan.map(s => [s.id, s.title]));
+  // A blocked step waits for its first unmet requirement: the summary's `requires` when it
+  // carries one (the full plan does, CLI-CONTRACT §3.1), else the `blocked` next action of
+  // this step, else the first earlier step of the plan that is not done.
+  const nextRaw = summary.next_action || {};
+  plan.forEach((s, i) => {
+    if (s.status !== 'blocked') return;
+    const done = id => plan.some(p => p.id === id && p.status === 'done');
+    const fromNext = str(nextRaw.kind) === 'blocked' && str(nextRaw.step) === s.id
+      ? list(Array.isArray(nextRaw.requires) ? nextRaw.requires : [nextRaw.requires]).map(str) : [];
+    const candidates = [...s.requires, ...fromNext].filter(id => titles[id] && !done(id));
+    const id = candidates[0] || (plan.slice(0, i).find(p => p.status !== 'done') || {}).id || null;
+    s.after = id ? { id, title: titles[id] } : null;
+  });
+  for (const s of plan) delete s.requires;
   const index = plan.findIndex(s => s.id === summary.current_step);
   const notes = list(summary.notes).map(n => ({
     noteId: str(n && n.note_id), decisionId: str(n && n.decision_id), status: str(n && n.status),
@@ -146,6 +169,10 @@ function toSummaryModel(summary) {
     alerts,
     digest: digestModel(summary.digest, summary.last_session),
     waitingCount: proposals.length + reconfirm,
+    // "Regenerate" is offered when a generated deliverable is stale or failed, or nothing
+    // was rendered yet (COMPANION-ADVANCED §6.1.4, OV-7).
+    regenerate: str(summary.artifacts && summary.artifacts.status) === 'not_rendered' ||
+      artifacts.some(a => GENERATED.includes(a.name) && (a.status === 'stale' || a.status === 'failed')),
   };
 }
 
@@ -155,4 +182,4 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 const toModel = toSummaryModel;
 
 module.exports = { toSummaryModel, toModel, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
-  SUMMARY_KEYS, ALERT_IDS, FIXTURES };
+  SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

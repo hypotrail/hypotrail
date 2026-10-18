@@ -1,1 +1,58 @@
-/* Overview view styles (v0 skeleton by WP-0); owned by WP-U1. Use the tokens of tokens.css. */
+/* Overview view styles (COMPANION-ADVANCED §6.1, mockup Main.dc.html); owned by WP-U1.
+   Colours come from the tokens of tokens.css only; no inline style attribute exists. */
+.ov-section { background: var(--ht-surface); border: 1px solid var(--ht-border); border-radius: 10px;
+  padding: 4px 18px 16px; margin: 16px 0; }
+.ov-section > h2 { border-bottom: none; margin: 14px 0 8px; }
+.ov-source { font-size: 0.85em; margin: 0 0 8px; }
+
+/* Where we are */
+.ov-recap { margin: 8px 0 0; display: grid; grid-template-columns: max-content 1fr; column-gap: 16px; row-gap: 8px; }
+.ov-recap-row { display: contents; }
+.ov-recap dt { color: var(--ht-muted); font-weight: 500; }
+.ov-recap dd { margin: 0; }
+
+/* Study map */
+.ov-map { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .ov-map { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ov-moment-title { font-size: 0.8em; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ht-muted); margin: 0 0 6px; }
+.ov-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.ov-step { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--ht-border); margin: 0; }
+.ov-step .ov-mark { margin-right: 6px; }
+.ov-step .ov-sub { display: block; font-size: 0.85em; font-weight: 400; color: var(--ht-muted); }
+.ov-step-done { background: var(--ht-done-bg); border-color: transparent; }
+.ov-step-awaiting_confirmation { border: 2px solid var(--ht-accent); font-weight: 600; }
+.ov-step-awaiting_confirmation .ov-sub { color: var(--ht-fg); }
+.ov-step-needs_reconfirmation { background: var(--ht-warn-bg); border-color: var(--ht-warn-border); color: var(--ht-warn-fg); }
+.ov-step-needs_reconfirmation .ov-sub { color: var(--ht-warn-fg); }
+.ov-step-blocked { color: var(--ht-muted); background: var(--ht-bg); }
+.ov-step[aria-current="step"] { box-shadow: 0 0 0 1px var(--ht-accent); }
+
+/* Since your last session and Deliverables */
+.ov-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .ov-grid { grid-template-columns: minmax(0, 1fr); } }
+.ov-grid > .ov-section { margin: 0; }
+.ov-digest { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ov-since-select { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ov-since-select label { display: inline; margin: 0; font-weight: 500; }
+.ov-deliverable { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; }
+.ov-deliverable-label { font-weight: 500; }
+.ov-deliverable-status { font-size: 0.9em; color: var(--ht-muted); }
+.ov-deliverable-status.status-stale, .ov-deliverable-status.status-failed { color: var(--ht-warn-fg); font-weight: 600; }
+
+/* Health */
+.ov-sub-section { margin: 12px 0; }
+.ov-execution h4 { margin: 0 0 4px; font-size: 1em; }
+.ov-execution { border-color: var(--ht-warn-border); }
+.ov-checks summary { cursor: pointer; font-weight: 600; }
+.ov-findings { list-style: none; padding: 0; }
+.ov-finding { padding: 4px 0; }
+.ov-severity { font-size: 0.8em; text-transform: uppercase; font-weight: 600; padding: 1px 6px; border-radius: 4px;
+  background: var(--ht-button2-bg); color: var(--ht-button2-fg); }
+.ov-finding-error .ov-severity { background: var(--ht-error-bg); color: var(--ht-error-fg); border: 1px solid var(--ht-error-border); }
+.ov-finding-warning .ov-severity { background: var(--ht-warn-bg); color: var(--ht-warn-fg); border: 1px solid var(--ht-warn-border); }
+.ov-nyd { background: var(--ht-warn-bg); border: 1px solid var(--ht-warn-border); border-radius: 10px; padding: 8px 16px;
+  color: var(--ht-warn-fg); }
+.ov-nyd .muted { color: var(--ht-warn-fg); }
+.ov-recap .ht-link { margin: 0; }
+.ov-finding button { margin-top: 0; }

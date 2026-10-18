@@ -121,7 +121,8 @@ test('settings change posts init again; the study switch offers "Pick another fo
   fake.changeSettings({ 'hypotrail.companion.stage': 'v1' });
   assert.deepEqual(panel.posted.filter(m => m.type === 'init').at(-1).stage, 'v1');
   await opened.controller.handle({ v: 2, type: 'switch_study' });
-  assert.equal(fake.calls.quickPick.length, 1, 'switch_study has no handler until WP-U1');
+  // WP-U1: switch_study runs the extension's study switch, which shows the quick pick.
+  assert.equal(fake.calls.quickPick.length, 2, 'switch_study shows the quick pick (WP-U1 handler)');
   const opened2 = await opened.controller.context.host.switchStudy();
   assert.equal(fake.calls.quickPick.at(-1).items.at(-1).label, 'Pick another folder...');
   assert.equal(opened2.agent.studyDir, a);

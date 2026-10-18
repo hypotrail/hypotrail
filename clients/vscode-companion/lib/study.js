@@ -1,5 +1,5 @@
 'use strict';
-// Study discovery (ADR 0003, CW.3). A study is a folder holding `.hypotrail/agent.json`
+// Study discovery (ADR 0003, CW.3; COMPANION-ADVANCED §6.1.6, owned by WP-U1). A study is a folder holding `.hypotrail/agent.json`
 // (`hypotrail.agent/1`, written by `hypotrail init`, CLI-CONTRACT §8.4). The CLI argv is
 // taken from `agent.json.cli.argv`, never from its shell string.
 
@@ -25,18 +25,46 @@ function isStudy(dir, fsImpl = fs) {
   }
 }
 
-/** Folders among `folders` (absolute paths) that hold a study, in the given order. */
-function findStudies(folders, fsImpl = fs) {
+const MAX_DEPTH = 2;
+const MAX_VISITED = 500;
+const SKIPPED = new Set(['node_modules', '.git', '.venv']);
+
+/**
+ * Studies under the workspace folders `folders` (absolute paths), COMPANION-ADVANCED
+ * §6.1.6: each folder, its direct subfolders, and their subfolders (depth <= 2). It skips
+ * node_modules, .git, .venv, and every dot-folder, follows no symbolic link, and stops
+ * after visiting MAX_VISITED folders. Returns the study folders, sorted. Only the
+ * existence of `.hypotrail/agent.json` is tested here; readAgent validates the one chosen.
+ */
+function findStudies(folders, fsImpl = fs, { maxDepth = MAX_DEPTH, maxVisited = MAX_VISITED } = {}) {
   const seen = new Set();
-  const out = [];
+  const found = new Set();
+  let visited = 0;
+  const queue = [];
   for (const folder of folders || []) {
     if (typeof folder !== 'string' || !folder) continue;
-    const dir = path.resolve(folder);
+    queue.push({ dir: path.resolve(folder), depth: 0 });
+  }
+  // Breadth first, so the limit cuts the deepest folders first.
+  while (queue.length && visited < maxVisited) {
+    const { dir, depth } = queue.shift();
     if (seen.has(dir)) continue;
     seen.add(dir);
-    if (isStudy(dir, fsImpl)) out.push(dir);
+    visited += 1;
+    if (isStudy(dir, fsImpl)) found.add(dir);
+    if (depth >= maxDepth) continue;
+    let entries = [];
+    try {
+      entries = fsImpl.readdirSync(dir, { withFileTypes: true });
+    } catch (_) {
+      entries = [];
+    }
+    for (const entry of entries.slice().sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+      if (!entry.isDirectory() || entry.name.startsWith('.') || SKIPPED.has(entry.name)) continue;
+      queue.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
+    }
   }
-  return out;
+  return [...found].sort();
 }
 
 function validArgv(argv) {
@@ -79,4 +107,4 @@ function readAgent(dir, fsImpl = fs) {
   return { studyDir, argv: argv.slice(), how: (record.cli && record.cli.how) || null };
 }
 
-module.exports = { findStudies, readAgent, isStudy, StudyError, AGENT_FILE, AGENT_SCHEMA };
+module.exports = { findStudies, readAgent, isStudy, StudyError, AGENT_FILE, AGENT_SCHEMA, MAX_DEPTH, MAX_VISITED, SKIPPED };
