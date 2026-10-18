@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hypotrail"
+version = "0.1.0.dev0"
+description = "Agent-assisted machine learning study engine (mlkit compatibility namespace)."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "scikit-learn>=1.5",
+    "scipy",
+    "pyyaml>=6.0",
+    "marimo==0.25.1",
+]
+# interpret-core (optional EBM baseline) is intentionally not a core dependency.
+
+# TODO(WP1): declare the junior entry point once mlkit/study/cli.py exists:
+# [project.scripts]
+# hypotrail = "mlkit.study.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+browser = ["playwright==1.55.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["mlkit"]
+
+# mlkit/assets/design.css ships inside the package. framework/notebooks/ and
+# framework/templates/ are read through Path(__file__).parents[1] (discover.py,
+# notebooks.py, tutorial.py), so they resolve only from a source checkout with the
+# editable install that `uv sync` creates. A non-editable wheel does not support them yet.
+
+[tool.pytest.ini_options]
+markers = [
+    "spike: exploratory spike tests that gate a design decision",
+    "agent_acceptance: acceptance checks that need a real agent session",
+]

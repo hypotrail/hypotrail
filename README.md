@@ -16,16 +16,15 @@ Start with [the implementation entry point](docs/START-HERE.md).
 
 ## Development
 
-Use Python 3.13 and uv. Create a dedicated environment; do not copy an environment from another checkout.
+Use Python 3.13 and uv on Linux, macOS, or WSL. The engine relies on POSIX file locking; native Windows is not supported. Create a dedicated environment; do not copy an environment from another checkout.
 
 ```sh
-uv venv framework/.venv --python 3.13
-uv pip install --python framework/.venv/bin/python -r framework/requirements.txt -r framework/requirements-pilot.txt -r framework/requirements-browser.txt
+uv sync --project framework --group dev
 python3 scripts/check_layout.py
-PYTHONPATH="$PWD/framework" framework/.venv/bin/python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py
+uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the test scopes and current limitations. Existing dependency files are inherited constraints, not a reproducibility guarantee for the future workflow.
+`framework/pyproject.toml` and `framework/uv.lock` define the reproducible environment. See [CONTRIBUTING.md](CONTRIBUTING.md) for the test scopes, current limitations, and the alternative `PYTHONPATH` setup based on the inherited requirement files.
 
 ## Data and project status
 

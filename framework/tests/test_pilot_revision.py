@@ -188,3 +188,13 @@ def test_auto_step_executes_selected_tests_in_project_root(project):
  s['steps']={k:{'returncode':0,'seconds':0} for k,_ in pilot.TASKS}
  assert 'quality: code 0' in pilot.step(s)
  assert s['steps']['quality']['returncode']==0 and s['executions']==1
+
+def test_stale_step_exits_nonzero(project,monkeypatch):
+ pilot.init('auto')
+ def changes_context(argv,**kwargs):
+  (project/'frame.yaml').write_text((project/'frame.yaml').read_text()+'\n# changed during the step\n')
+  return pilot.subprocess.CompletedProcess(argv,0,stdout='completed')
+ monkeypatch.setattr(pilot.subprocess,'run',changes_context)
+ assert pilot.main(['step'])==2
+ s=pilot.load()
+ assert s['steps']=={} and s['executions']==1

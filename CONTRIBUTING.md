@@ -8,18 +8,29 @@ Use English for maintained prose, interface text, code comments, and new example
 
 Use Python 3.13, uv, and a dedicated environment. Node.js is needed only for companion tests and extension development.
 
+Supported platforms are Linux, macOS, and WSL. The engine relies on POSIX file locking (`fcntl`); native Windows is not supported.
+
+The framework is a uv project (`framework/pyproject.toml`, locked by `framework/uv.lock`). Create its environment in `framework/.venv` with the `dev` group:
+
 ```sh
-uv venv framework/.venv --python 3.13
-uv pip install --python framework/.venv/bin/python -r framework/requirements.txt -r framework/requirements-pilot.txt -r framework/requirements-browser.txt
+uv sync --project framework --group dev
 ```
 
-Dependency locking and Python packaging remain implementation work. Do not reuse an environment copied from another checkout.
+Add `--group browser` for local browser tests, then install Chromium with `uv run --project framework python -m playwright install chromium`. The optional EBM baseline (`interpret-core`) is not a core dependency. Do not run `uv init` in this project, and do not reuse an environment copied from another checkout.
 
 ## Engine checks
 
 ```sh
 python3 scripts/check_layout.py
-PYTHONPATH="$PWD/framework" framework/.venv/bin/python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py
+uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py
+```
+
+Alternative without uv project commands, using the inherited requirement files and `PYTHONPATH`:
+
+```sh
+uv venv framework/.venv --python 3.13
+uv pip install --python framework/.venv/bin/python -r framework/requirements.txt -r framework/requirements-pilot.txt -r framework/requirements-browser.txt
+PYTHONPATH="$PWD/framework" framework/.venv/bin/python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py
 ```
 
 This is the validated targeted scope, not a claim that the entire inherited suite passes. Some historical tests concern currently suspended holdout and production paths. Do not enable those operations or weaken assertions to obtain a passing suite.
