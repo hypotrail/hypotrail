@@ -8,13 +8,24 @@ from __future__ import annotations
 
 import glob
 import os
+import warnings
 from pathlib import Path
 
 import pytest
 
 from mlkit.study import manifest as mf
 
-playwright = pytest.importorskip('playwright.sync_api')
+BROWSER_MISSING = ('the offline browser test (plan §7, test_html_offline) did not run: '
+                   'Playwright is not installed. Run `uv sync --project framework --group dev '
+                   '--group browser` and `uv run --project framework python -m playwright '
+                   'install chromium` (CONTRIBUTING.md, full gate).')
+try:
+    import playwright.sync_api as _sync_api
+except ImportError:
+    # A visible warning in the summary, not only an "s": the full gate needs this test.
+    warnings.warn(BROWSER_MISSING, pytest.PytestWarning, stacklevel=1)
+    pytest.skip(BROWSER_MISSING, allow_module_level=True)
+playwright = _sync_api
 
 
 def _chromium(p):
@@ -28,7 +39,11 @@ def _chromium(p):
             found = sorted(glob.glob(os.path.join(root, pattern)))
             if found:
                 return p.chromium.launch(headless=True, executable_path=found[-1])
-        pytest.skip('no Chromium available for Playwright')
+        warnings.warn('no Chromium for Playwright: the offline browser test did not run; run '
+                      '`uv run --project framework python -m playwright install chromium`.',
+                      pytest.PytestWarning, stacklevel=1)
+        pytest.skip('no Chromium available for Playwright (python -m playwright install '
+                    'chromium)')
 
 
 @pytest.fixture(scope='module')
