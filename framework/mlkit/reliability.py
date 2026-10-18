@@ -1,6 +1,18 @@
-"""Revisioned local commands and durable log; requires the pilot lock.
+"""Revisioned local commands and durable log; requires the writer lock.
 This mechanism confines no agent and manages no remote jobs.
+
+``apply_command(store, state, request, handlers)`` is the generic core: it knows
+nothing about the legacy pilot or about ``.hypotrail`` studies. A store provides
+persistence (transaction file, commit, events, revision log); handlers provide the
+actions. ``apply(pilot, state, request)`` and ``recover(pilot, state)`` keep their
+historical behaviour through :class:`PilotStore`.
+
+Importing this module loads no other ``mlkit`` module, so the junior study package
+(``mlkit.study``) can use it without pulling the legacy pilot.
 """
+from __future__ import annotations
+
+import contextlib
 import copy
 import hashlib
 import json
@@ -8,7 +20,9 @@ import os
 import platform
 import sys
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable, Mapping
 from importlib.metadata import version, PackageNotFoundError
 
 
@@ -32,25 +46,305 @@ def provenance(root):
             'versions': environment}
 
 
+# --- generic command core ---------------------------------------------------------------
+
+REQUEST_KEYS = frozenset({'request_id', 'expected_revision', 'action', 'params'})
+MAX_REQUEST_ID_LENGTH = 200
+
+
+class CommandRefused(ValueError):
+    """A command refused without effect. ``to_dict()`` is the machine-readable form.
+
+    Stable codes: ``invalid_request``, ``idempotency_conflict``, ``stale_revision``,
+    ``invalid_command``, plus any code a handler's ``check`` raises.
+    """
+
+    def __init__(self, code: str, message: str, *, details: dict | None = None):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.details = details or {}
+
+    def to_dict(self) -> dict:
+        out = {'code': self.code, 'message': self.message}
+        if self.details:
+            out['details'] = self.details
+        return out
+
+
+@dataclass(frozen=True)
+class Handler:
+    """One action accepted by :func:`apply_command`.
+
+    ``params`` is the exact set of parameter names. ``check(params)`` runs before any
+    write and raises to refuse. ``run(state, params)`` mutates ``state`` in memory and
+    returns the result recorded in the receipt; it must not commit state itself.
+    """
+
+    params: frozenset
+    run: Callable[[dict, dict], Any]
+    check: Callable[[dict], None] | None = None
+
+
+def request_signature(request: Mapping) -> str:
+    """SHA-256 of the canonical JSON of the whole request, the idempotency signature."""
+    return hashlib.sha256(json.dumps(request, sort_keys=True).encode()).hexdigest()
+
+
+def rollback_transaction(store, state) -> bool:
+    """Undo an uncommitted transaction left by an interrupted command.
+
+    Saving state is the commit point: a transaction whose request has a receipt in
+    ``state`` committed, and its file is only removed. Returns True if one was found.
+    """
+    row = store.read_transaction()
+    if row is None:
+        return False
+    if row['request_id'] not in state.get('receipts', {}):
+        for name, content in row['before_files'].items():
+            store.restore_file(name, content)
+        store.event('transaction_rolled_back', request_id=row['request_id'])
+    store.clear_transaction()
+    return True
+
+
+def _check_request(state: dict, request: Any):
+    """Validate ``request`` and return ``(signature, receipt or None)``.
+
+    The order matters: a replay is recognised before the revision check, so a client
+    that retries after a timeout gets its receipt even if other commands followed.
+    """
+    if not isinstance(request, Mapping) or set(request) != REQUEST_KEYS:
+        keys = set(request) if isinstance(request, Mapping) else set()
+        raise CommandRefused('invalid_request',
+                             'Command: request_id, expected_revision, action, params required',
+                             details={'missing': sorted(REQUEST_KEYS - keys),
+                                      'unexpected': sorted(map(str, keys - REQUEST_KEYS))})
+    key = request['request_id']
+    if not isinstance(key, str) or not key.strip() or len(key) > MAX_REQUEST_ID_LENGTH:
+        raise CommandRefused('invalid_request', 'Invalid idempotency key',
+                             details={'field': 'request_id'})
+    signature = request_signature(request)
+    receipt = state.get('receipts', {}).get(key)
+    if receipt:
+        if receipt['signature'] != signature:
+            raise CommandRefused('idempotency_conflict',
+                                 'Idempotency key already used for a different command',
+                                 details={'request_id': key, 'revision': receipt['revision']})
+        return signature, receipt
+    expected = request['expected_revision']
+    if type(expected) is not int:
+        raise CommandRefused('invalid_request', 'expected_revision must be an integer',
+                             details={'field': 'expected_revision'})
+    return signature, None
+
+
+def _check_revision(store, state: dict, request: Mapping) -> None:
+    current = state.get('revision', 0)
+    expected = request['expected_revision']
+    if expected != current:
+        hint = getattr(store, 'reread_hint', 'the state')
+        raise CommandRefused('stale_revision',
+                             f'Revision is stale: reread {hint} before deciding',
+                             details={'expected_revision': expected, 'current_revision': current,
+                                      'changes_since': store.changes_since(expected)})
+
+
+def _check_action(request: Mapping, handlers: Mapping[str, Handler]) -> Handler:
+    action, params = request['action'], request['params']
+    handler = handlers.get(action) if isinstance(action, str) else None
+    if handler is None or not isinstance(params, dict) or set(params) != set(handler.params):
+        raise CommandRefused('invalid_command', 'Invalid action or command parameters',
+                             details={'action': action if isinstance(action, str) else None,
+                                      'actions': sorted(handlers),
+                                      'params': sorted(handler.params) if handler else None})
+    if handler.check is not None:
+        handler.check(params)
+    return handler
+
+
+def apply_command(store, state: dict, request: Mapping, handlers: Mapping[str, Handler]) -> dict:
+    """Apply one revisioned, idempotent command and return its receipt.
+
+    The caller holds the writer lock and passes the state it has just reread.
+
+    1. ``request`` has exactly ``request_id``, ``expected_revision``, ``action``, and
+       ``params``; its signature is the SHA-256 of its canonical JSON.
+    2. A known ``request_id`` with the same signature is a replay: the stored receipt
+       is returned with ``replayed: True`` and nothing is written. With a different
+       signature it is refused (``idempotency_conflict``).
+    3. ``expected_revision`` must equal the state revision. Otherwise the refusal
+       (``stale_revision``) carries ``current_revision`` and ``changes_since``, the
+       revision log entries the client has not seen.
+    4. The action and its exact parameter set must match a handler.
+    5. The files the store tracks are saved in a transaction file, the handler mutates
+       state in memory, and ``store.commit`` persists it (the commit point). On any
+       exception before the commit, state is restored in memory and ``store.recover``
+       restores the files and removes the transaction.
+
+    The receipt is ``{signature, result, revision}`` where ``revision`` is the revision
+    created by the command.
+
+    A store provides: ``snapshot_files() -> {name: text or None}``,
+    ``write_transaction(row)``, ``read_transaction() -> row or None``,
+    ``clear_transaction()``, ``restore_file(name, content)``, ``mutating()`` (a context
+    manager around the handler), ``commit(state, change)`` (increments the revision and
+    persists), ``event(kind, **fields)``, ``changes_since(revision) -> list``, and
+    ``recover(state)``. ``reread_hint`` is optional text for the stale message.
+    """
+    signature, receipt = _check_request(state, request)
+    if receipt is not None:
+        return {**receipt, 'replayed': True}
+    _check_revision(store, state, request)
+    handler = _check_action(request, handlers)
+
+    key, action, params = request['request_id'], request['action'], request['params']
+    before = copy.deepcopy(state)
+    store.write_transaction({'request_id': key, 'before_files': store.snapshot_files()})
+    committed = False
+    try:
+        with store.mutating():
+            result = handler.run(state, params)
+        receipt = {'signature': signature, 'result': result,
+                   'revision': before.get('revision', 0) + 1}
+        state.setdefault('receipts', {})[key] = receipt
+        store.commit(state, {'request_id': key, 'action': action, 'params': params,
+                             'result': result})
+        committed = True
+        store.clear_transaction()
+        store.event('command_committed', request_id=key, action=action,
+                    revision=state['revision'])
+        return receipt
+    except BaseException:
+        if committed:
+            raise
+        state.clear()
+        state.update(before)
+        store.recover(state)
+        raise
+
+
+# --- legacy pilot adapter ---------------------------------------------------------------
+
+class PilotStore:
+    """Persistence of the legacy pilot (``.pilot/`` under ``pilot.config.ROOT``).
+
+    ``pilot.save`` is looked up at commit time, and suspended while a handler runs,
+    because pilot sub-operations call it; their state stays in memory until commit.
+    """
+
+    TRACKED = ('project.yaml', 'frame.yaml', 'answers.yaml')
+    reread_hint = 'pilot next'
+
+    def __init__(self, pilot):
+        self.pilot = pilot
+
+    @property
+    def transaction_path(self) -> Path:
+        return self.pilot.home() / 'transaction.json'
+
+    def snapshot_files(self) -> dict:
+        root = self.pilot.config.ROOT
+        return {n: (root / n).read_text() if (root / n).exists() else None for n in self.TRACKED}
+
+    def write_transaction(self, row: dict) -> None:
+        self.pilot.write(self.transaction_path, row)
+
+    def read_transaction(self) -> dict | None:
+        path = self.transaction_path
+        return json.loads(path.read_text()) if path.exists() else None
+
+    def clear_transaction(self) -> None:
+        self.transaction_path.unlink()
+
+    def restore_file(self, name: str, content: str | None) -> None:
+        path = self.pilot.config.ROOT / name
+        if content is None:
+            path.unlink(missing_ok=True)
+        else:
+            temp = path.with_suffix(path.suffix + '.recovery')
+            temp.write_text(content)
+            os.replace(temp, path)
+
+    @contextlib.contextmanager
+    def mutating(self):
+        real_save = self.pilot.save
+        self.pilot.save = lambda value: None
+        try:
+            yield
+        finally:
+            self.pilot.save = real_save
+
+    def commit(self, state: dict, change: dict) -> None:
+        self.pilot.save(state)
+
+    def event(self, kind: str, **fields) -> None:
+        self.pilot.event(kind, **fields)
+
+    def changes_since(self, revision: int) -> list:
+        """Committed commands after ``revision``, read from the pilot event log."""
+        path = self.pilot.home() / 'events.jsonl'
+        if not path.exists():
+            return []
+        changes = []
+        for line in path.read_text(encoding='utf-8').splitlines():
+            row = json.loads(line)
+            if row.get('kind') == 'command_committed' and row.get('revision', 0) > revision:
+                changes.append({k: row.get(k) for k in ('revision', 'request_id', 'action', 'time')})
+        return changes
+
+    def recover(self, state: dict) -> dict:
+        return recover(self.pilot, state)
+
+
+def _pilot_answer(pilot):
+    def check(params):
+        if type(params['confirmed']) is not bool:
+            raise CommandRefused('invalid_command', 'Explicit boolean confirmation required')
+
+    def run(state, params):
+        pilot.propose(state, params['question'], params['value'], params['rationale'],
+                      status='confirmed' if params['confirmed'] else 'assumed')
+        return {'question': params['question'], 'status': state['answers'][params['question']]['status']}
+    return Handler(frozenset({'question', 'value', 'rationale', 'confirmed'}), run, check)
+
+
+def _pilot_revise(pilot):
+    def run(state, params):
+        path = pilot.home() / 'requested-revision.json'
+        pilot.write(path, params['changes'])
+        return pilot.revise(state, path, params['expected_context'])
+    return Handler(frozenset({'changes', 'expected_context'}), run)
+
+
+def _pilot_iterate(pilot):
+    def run(state, params):
+        return pilot.iterate(state, params['reason'], params['steps'], params['seconds'])
+    return Handler(frozenset({'reason', 'steps', 'seconds'}), run)
+
+
+def _pilot_mode():
+    def check(params):
+        if params['mode'] not in {'junior', 'senior', 'auto'}:
+            raise CommandRefused('invalid_command', 'Unknown mode')
+
+    def run(state, params):
+        state['mode'] = params['mode']
+        return {'mode': params['mode']}
+    return Handler(frozenset({'mode'}), run, check)
+
+
+def pilot_handlers(pilot) -> dict:
+    return {'answer': _pilot_answer(pilot), 'revise': _pilot_revise(pilot),
+            'iterate': _pilot_iterate(pilot), 'mode': _pilot_mode()}
+
+
 def recover(pilot, state):
     """Under the acquired lock, no previous local process owns it.
 Never repeat an action with an unknown outcome automatically.
 """
     changed = False
-    transaction = pilot.home() / 'transaction.json'
-    if transaction.exists():
-        row = json.loads(transaction.read_text())
-        if row['request_id'] not in state.get('receipts', {}):
-            # Saving state.json is the commit point.
-            for name, content in row['before_files'].items():
-                path = pilot.config.ROOT / name
-                if content is None:
-                    path.unlink(missing_ok=True)
-                else:
-                    temp = path.with_suffix(path.suffix + '.recovery')
-                    temp.write_text(content); os.replace(temp, path)
-            pilot.event('transaction_rolled_back', request_id=row['request_id'])
-        transaction.unlink()
+    rollback_transaction(PilotStore(pilot), state)
     active = state.pop('active_execution', None)
     if active:
         active.update(status='interrupted_unknown', finished=pilot.now())
@@ -67,69 +361,7 @@ def apply(pilot, state, request):
     """Recommended single entry point for multi-client decisions.
 The retained historical CLI does not provide this guarantee.
 """
-    if set(request) != {'request_id', 'expected_revision', 'action', 'params'}:
-        raise ValueError('Commande : request_id, expected_revision, action, params required')
-    key = request['request_id']
-    if not isinstance(key, str) or not key.strip() or len(key) > 200:
-        raise ValueError('Invalid idempotency key')
-    signature = hashlib.sha256(json.dumps(request, sort_keys=True).encode()).hexdigest()
-    receipt = state.get('receipts', {}).get(key)
-    if receipt:
-        if receipt['signature'] != signature:
-            raise ValueError('Idempotency key already used for a different command')
-        return {**receipt, 'replayed': True}
-    if type(request['expected_revision']) is not int or request['expected_revision'] != state.get('revision', 0):
-        raise ValueError('Revision is stale: reread pilot next before deciding')
-    action, params = request['action'], request['params']
-    allowed = {'answer': {'question', 'value', 'rationale', 'confirmed'},
-               'revise': {'changes', 'expected_context'},
-               'iterate': {'reason', 'steps', 'seconds'},
-               'mode': {'mode'}}
-    if action not in allowed or not isinstance(params, dict) or set(params) != allowed[action]:
-        raise ValueError('Invalid action or command parameters')
-    if action == 'answer' and type(params['confirmed']) is not bool:
-        raise ValueError('Explicit boolean confirmation required')
-    if action == 'mode' and params['mode'] not in {'junior', 'senior', 'auto'}:
-        raise ValueError('Unknown mode')
-    before = copy.deepcopy(state)
-    names = ['project.yaml', 'frame.yaml', 'answers.yaml']
-    files = {n: (pilot.config.ROOT / n).read_text() if (pilot.config.ROOT / n).exists() else None for n in names}
-    transaction = pilot.home() / 'transaction.json'
-    pilot.write(transaction, {'request_id': key, 'before_files': files})
-    # Suboperations call save; their state remains in memory until commit.
-    real_save = pilot.save
-    pilot.save = lambda value: None
-    committed = False
-    try:
-        if action == 'answer':
-            pilot.propose(state, params['question'], params['value'], params['rationale'],
-                          status='confirmed' if params['confirmed'] else 'assumed')
-            result = {'question': params['question'], 'status': state['answers'][params['question']]['status']}
-        elif action == 'revise':
-            path = pilot.home() / 'requested-revision.json'
-            pilot.write(path, params['changes'])
-            result = pilot.revise(state, path, params['expected_context'])
-        elif action == 'iterate':
-            result = pilot.iterate(state, params['reason'], params['steps'], params['seconds'])
-        else:
-            state['mode'] = params['mode']; result = {'mode': params['mode']}
-        receipt = {'signature': signature, 'result': result, 'revision': before.get('revision', 0) + 1}
-        state.setdefault('receipts', {})[key] = receipt
-        pilot.save = real_save
-        real_save(state)
-        committed = True
-        transaction.unlink()
-        pilot.event('command_committed', request_id=key, action=action, revision=state['revision'])
-        return receipt
-    except BaseException:
-        if committed:
-            raise
-        pilot.save = real_save
-        state.clear(); state.update(before)
-        recover(pilot, state)
-        raise
-    finally:
-        pilot.save = real_save
+    return apply_command(PilotStore(pilot), state, request, pilot_handlers(pilot))
 
 
 def start(pilot, state, key, argv):
