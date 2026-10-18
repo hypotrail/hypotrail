@@ -8,6 +8,8 @@ Studies live in ``tmp_path``.
 """
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from mlkit.study import activities as act, executions as ex, lock, read
@@ -84,19 +86,31 @@ def test_runs_refused_until_acknowledged_and_never_restarted(flow, work):
     for _ in range(2):                                         # detection, then refusals
         payload = flow.run('split', expect=4)
         assert payload['error']['code'] == 'interrupted_execution_pending'
-    wrong = flow.call('run', '--acknowledge-interruption', 'e_nothing', '--request-id', 'ack0',
-                      '--expected-revision', flow.rev(), '--study', flow.study, expect=2)
+    words = 'The split run was killed; record it and I will decide about rerunning.'
+    wrong = flow.call('run', '--acknowledge-interruption', 'e_nothing', '--user-words', words,
+                      '--request-id', 'ack0', '--expected-revision', flow.rev(),
+                      '--study', flow.study, expect=2)
     assert wrong['error']['code'] == 'unknown_execution'
+    # D2: the agent may not acknowledge on its own; the junior's words are required.
+    for extra in ((), ('--user-words', '   ')):
+        silent = flow.call('run', '--acknowledge-interruption', eid, *extra, '--request-id',
+                           'ack-silent', '--expected-revision', flow.rev(), '--study',
+                           flow.study, expect=2)
+        assert silent['error']['code'] == 'invalid_arguments'
+    assert eid in flow.state()['executions']['interrupted']
     entries = len(fk.registry_entries(flow.study))
     rev = flow.rev()
-    ack = flow.call('run', '--acknowledge-interruption', eid, '--request-id', 'ack1',
-                    '--expected-revision', rev, '--study', flow.study)
+    ack = flow.call('run', '--acknowledge-interruption', eid, '--user-words', words,
+                    '--request-id', 'ack1', '--expected-revision', rev, '--study', flow.study)
     assert ack['schema'] == 'hypotrail.run/1' and ack['action'] == 'run.acknowledge'
     assert tuple(ack) == ex.PAYLOAD_KEYS
     assert ack['status'] == 'acknowledged' and ack['result']['restarted'] is False
+    assert ack['result']['user_words'] == words
     assert ack['revision'] == rev + 1
-    again = flow.call('run', '--acknowledge-interruption', eid, '--request-id', 'ack1',
-                      '--expected-revision', rev, '--study', flow.study)
+    history = json.loads((flow.study / '.hypotrail' / ex.HISTORY_DIR / f'{eid}.json').read_text())
+    assert history['user_words'] == words and history['status'] == 'acknowledged'
+    again = flow.call('run', '--acknowledge-interruption', eid, '--user-words', words,
+                      '--request-id', 'ack1', '--expected-revision', rev, '--study', flow.study)
     assert again['replayed'] is True and again['revision'] == rev + 1
     state = flow.state()
     assert state['executions']['interrupted'] == {} and state['executions']['active'] == {}

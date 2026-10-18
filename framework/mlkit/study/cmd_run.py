@@ -2,7 +2,7 @@
 
     hypotrail run ACTIVITY [--column X] [--rule RULE ...]
                   --request-id ID --expected-revision REV --study DIR
-    hypotrail run --acknowledge-interruption EXECUTION_ID
+    hypotrail run --acknowledge-interruption EXECUTION_ID --user-words TEXT
                   --request-id ID --expected-revision REV --study DIR
 
 Activities: ``split``, ``eda.target_rate``, ``eda.special_values``, ``eda.rate_by
@@ -15,6 +15,10 @@ Output: one ``hypotrail.run/1`` document (see ``mlkit.study.executions``). Its
 ``status`` is ``promoted``, ``late_not_promoted`` (stored, not promoted: the state
 changed while it computed), ``already_current``, ``running`` (replay while another
 process computes), ``failed``, ``interrupted_unknown``, or ``acknowledged``.
+
+An acknowledgement needs ``--user-words``: the junior's verbatim reply after being told
+that the outcome is unknown. It is recorded in the execution record (D2): an agent may
+not acknowledge, or rerun, an interrupted execution on its own.
 
 Exit codes: 0 committed or replayed; 2 refusal; 3 committed but an artefact is stale
 or failed; 4 an execution has an unknown outcome (``interrupted_execution_pending``
@@ -52,6 +56,9 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--acknowledge-interruption', dest='acknowledge', default=None,
                         metavar='EXECUTION_ID',
                         help='acknowledge an execution with an unknown outcome (no restart)')
+    parser.add_argument('--user-words', default=None,
+                        help="with --acknowledge-interruption: the junior's verbatim reply after "
+                             'being told the outcome is unknown')
     parser.add_argument('--request-id', required=True,
                         help='fresh per intent; replay the same one after a timeout')
     parser.add_argument('--expected-revision', required=True, type=int,
@@ -99,14 +106,23 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
         if args.activity or args.column or args.rule:
             raise StudyError('invalid_arguments',
                              '--acknowledge-interruption takes no activity or option.')
+        if not isinstance(args.user_words, str) or not args.user_words.strip():
+            raise StudyError('invalid_arguments',
+                             '--acknowledge-interruption needs --user-words: tell the junior the '
+                             'outcome is unknown, ask before acknowledging, and record their '
+                             'reply verbatim.')
     elif not args.activity:
         raise StudyError('invalid_arguments',
                          'name an activity, or use --acknowledge-interruption EXECUTION_ID.')
+    elif args.user_words is not None:
+        raise StudyError('invalid_arguments',
+                         '--user-words goes with --acknowledge-interruption only.')
     try:
         if args.acknowledge is not None:
             return executions.acknowledge(args.study, args.acknowledge,
                                           request_id=args.request_id,
-                                          expected_revision=args.expected_revision)
+                                          expected_revision=args.expected_revision,
+                                          user_words=args.user_words)
         options = {'column': args.column, 'rules': args.rule}
         return executions.run(args.study, args.activity, options, request_id=args.request_id,
                               expected_revision=args.expected_revision, hooks=test_hooks())

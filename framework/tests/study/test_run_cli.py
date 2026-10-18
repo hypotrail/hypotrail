@@ -203,6 +203,10 @@ def test_run_argument_errors(tmp_path, work, cases):
     for args in (('run', '--request-id', 'a', '--expected-revision', rev),
                  ('run', 'split', '--acknowledge-interruption', 'e_x', '--request-id', 'a',
                   '--expected-revision', rev),
+                 ('run', '--acknowledge-interruption', 'e_x', '--request-id', 'a',
+                  '--expected-revision', rev),                      # no --user-words (D2)
+                 ('run', 'split', '--user-words', 'go', '--request-id', 'a',
+                  '--expected-revision', rev),
                  ('run', 'fit.forest', '--request-id', 'a', '--expected-revision', rev),
                  ('run', 'split', '--request-id', 'a')):
         payload = cli(*args, expect=2)

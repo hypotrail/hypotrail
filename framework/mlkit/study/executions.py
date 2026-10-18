@@ -24,7 +24,8 @@ without promoting. The next ``run`` (or acknowledgement) records the execution i
 and records the exposure it had planned, with ``result_id: null``: rows that may
 have been read are never treated as unseen. From then on every ``run`` is refused
 with ``interrupted_execution_pending`` (exit code 4) until ``hypotrail run
---acknowledge-interruption E``. Nothing is restarted automatically. ``status`` is
+--acknowledge-interruption E --user-words TEXT``; the junior's words are recorded in
+the acknowledgement and the execution history. Nothing is restarted automatically. ``status`` is
 read-only and reports a dead execution as ``active`` until the next ``run``
 detects it.
 
@@ -205,6 +206,12 @@ def _recover(ctx: cmd.Context) -> Handler:
 
 
 def _acknowledge(ctx: cmd.Context) -> Handler:
+    def check(params):
+        words = params['user_words']
+        if not isinstance(words, str) or not words.strip():
+            raise CommandRefused('invalid_arguments',
+                                 'An acknowledgement records the junior\'s words (--user-words).')
+
     def run(state, params):
         eid = params['execution_id']
         record = state['executions']['interrupted'].pop(eid, None)
@@ -215,9 +222,10 @@ def _acknowledge(ctx: cmd.Context) -> Handler:
                                           'interrupted': sorted(state['executions']['interrupted'])})
         return {'execution_id': eid, 'activity': record['activity'], 'status': 'acknowledged',
                 'restarted': False, 'started_revision': record['started_revision'],
+                'user_words': params['user_words'],
                 'note': 'Acknowledged without restarting. Run the activity again with a new '
-                        'request id if it is still needed.'}
-    return Handler(frozenset({'execution_id'}), run)
+                        'request id only if the junior asks for it.'}
+    return Handler(frozenset({'execution_id', 'user_words'}), run, check)
 
 
 for _name, _factory in ((RESERVE, _reserve), (PROMOTE, _promote), (FAIL, _fail),
@@ -442,13 +450,14 @@ def _already_current(store, state, activity, options, request_id) -> dict | None
                                     'current state; nothing was computed.'})
 
 
-def acknowledge(study_dir, execution: str, *, request_id: str,
-                expected_revision: int) -> cmd.Outcome:
-    """Acknowledge an interrupted execution; never restarts it."""
+def acknowledge(study_dir, execution: str, *, request_id: str, expected_revision: int,
+                user_words: str) -> cmd.Outcome:
+    """Acknowledge an interrupted execution with the junior's words; never restarts it."""
     store = _store(study_dir)
     with store.writing() as state:
         recover(store, state)
-        receipt = _apply(store, state, request_id, ACKNOWLEDGE, {'execution_id': execution},
+        receipt = _apply(store, state, request_id, ACKNOWLEDGE,
+                         {'execution_id': execution, 'user_words': user_words},
                          expected_revision)
         replayed = bool(receipt.get('replayed'))
         r = receipt['result']

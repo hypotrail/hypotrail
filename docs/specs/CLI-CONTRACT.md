@@ -222,7 +222,7 @@ Stable codes. Clients branch on `error.code`; messages may change.
 | `invalid_state` | state | A state that does not follow `hypotrail.study/1` (refused before any write) |
 | `invalid_confirmation` | state | An incomplete confirmation record |
 | `lease_exists`, `lease_held` | lock | Execution lease conflicts |
-| `interrupted_execution_pending` | `run` | An execution has an unknown outcome; every `run` is refused (exit 4) until `run --acknowledge-interruption E` (`details.interrupted`) |
+| `interrupted_execution_pending` | `run` | An execution has an unknown outcome; every `run` is refused (exit 4) until `run --acknowledge-interruption E --user-words TEXT` (`details.interrupted`) |
 | `unknown_execution` | `run` | `--acknowledge-interruption E` names no interrupted execution (`details.interrupted`), or an internal step names no active execution |
 | `read_only` | activities, guard, `render` | `HYPOTRAIL_READ_ONLY=1` (a notebook kernel): the process may read results but never compute, record, render, or write one (`run`, every fit, `render`, and the notebook generator refuse). Phase 3's `read_only_process` was merged into this code by the Phase 4 integration |
 | `untraceable_number` | cite, renderers | A number cannot be traced to a current registry result (unknown or non-current result id, missing path, non-numeric value, unknown format). The render of that artefact fails; it is never written with the number (§8.3) |
@@ -274,6 +274,7 @@ An activity is identified by its **slot** name, which is also its registry `acti
    * Changing a split: compute `exposure.overlap(old_split, new_split, store=store)` and store it in the split result values.
    * A code change: `dependencies.effects(state, 'code_fingerprint', {'activity', 'fingerprint'}, {...})` then `dependencies.apply_effects(state, eff, revision=…, decision_id='code_fingerprint', store=store)` inside an action.
 5. **Exit code 4** for an execution with an unknown outcome, including the `interrupted_execution_pending` refusal; `unknown_execution` refuses an acknowledgement of nothing (exit 2).
+   **Acknowledgement words (D2, post-acceptance).** `hypotrail run --acknowledge-interruption E --user-words TEXT`: `--user-words` (the junior's verbatim reply after being told the outcome is unknown) is required and non-blank, otherwise `invalid_arguments`; it is refused with an activity. The action `run.acknowledge` has the parameters `{execution_id, user_words}`; its result, and the execution history `.hypotrail/executions/<E>.json`, record `user_words`. An agent never acknowledges or reruns on its own.
 6. **Payload schemas added in Phase 2** (additions; the five schemas of §3 are unchanged):
 
    | Schema | Emitted by | Keys |
@@ -281,7 +282,7 @@ An activity is identified by its **slot** name, which is also its registry `acti
    | `hypotrail.run/1` | `run`, `run --acknowledge-interruption` | `schema`, `ok`, `study`, `action` (`run` or `run.acknowledge`), `request_id`, `replayed`, `revision`, `activity`, `execution_id`, `status`, `result_id`, `values`, `result`, `artifacts` |
    | `hypotrail.preview/1` | `preview policy` | `schema`, `ok`, `study`, `revision`, `kind`, `rules`, `models`, `evaluations`, `intervals`, `adopted`, `recorded` (`false`), `note` |
 
-   `run.status` is one of `promoted`, `late_not_promoted`, `already_current`, `running`, `failed`, `interrupted_unknown`, `acknowledged`. `values` are the registry values of `result_id` (cite them only while the slot is current, §4). `preview` writes nothing and records no exposure; `validation_policy_selection` is recorded by `run policy.evaluate`.
+   `run.status` is one of `promoted`, `late_not_promoted`, `already_current`, `running`, `failed`, `interrupted_unknown`, `acknowledged`. An `acknowledged` result holds `execution_id`, `activity`, `status`, `restarted` (`false`), `started_revision`, `user_words`, `note`. `values` are the registry values of `result_id` (cite them only while the slot is current, §4). `preview` writes nothing and records no exposure; `validation_policy_selection` is recorded by `run policy.evaluate`.
 
 ### 8.2 Read API (Phase 2 and 3)
 
