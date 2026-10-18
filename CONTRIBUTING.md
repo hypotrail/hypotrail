@@ -22,8 +22,10 @@ Add `--group browser` for local browser tests, then install Chromium with `uv ru
 
 ```sh
 python3 scripts/check_layout.py
-uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py
+uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py framework/tests/test_synthetic_case.py framework/tests/study
 ```
+
+`framework/tests/study/` covers the junior study engine, including real `hypotrail` CLI processes (`test_cli_decisions.py`) and the frozen CLI contract (`test_contract_freeze.py`, see `docs/specs/CLI-CONTRACT.md`). The `hypotrail` command is installed in `framework/.venv` by `uv sync`; run it with `uv run --project framework hypotrail <command> --study DIR`. Create test studies in a temporary directory outside the repository.
 
 Alternative without uv project commands, using the inherited requirement files and `PYTHONPATH`:
 
