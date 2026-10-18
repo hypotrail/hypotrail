@@ -1,6 +1,9 @@
 # Glossary of the junior study (plan §9 bis: teaching texts are data, not code).
 # Each entry introduces the statistical term first, then explains it.
 # No digits here: every number shown to the junior comes from a registry result.
+# ``example`` (post-v0.1 fixes, D11): the contextual explanation the agent gives right after
+# the definition, at the term's first use. Its placeholders (<N>, <result_id>, ...) are
+# filled from this study's current results; the report shows the term and definition only.
 schema: hypotrail.content.glossary/1
 terms:
   prediction_time:
@@ -18,6 +21,7 @@ terms:
   stratified_split:
     term: Stratified split
     definition: A random division of the rows that keeps the share of the positive outcome similar in the training and validation partitions.
+    example: Here the training partition has <n_positive_train> positive rows out of <n_train> and the validation partition <n_positive_validation> out of <n_validation>, close shares by construction (split result <result_id>).
   exposure:
     term: Data exposure
     definition: The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.
@@ -48,9 +52,11 @@ terms:
   precision:
     term: Precision
     definition: Among the rows acted on, the share that turned out positive.
+    example: Here the logistic model's rule selects <selected> of the <n> validation rows and <true_positives> of them are positive, a precision of <precision> (policy evaluation <result_id>).
   recall:
     term: Recall
     definition: Among all positive rows, the share the policy reached.
+    example: Here the validation rows hold <n_positive> positive rows and the rule reaches <true_positives> of them, a recall of <recall> (policy evaluation <result_id>). A small capacity keeps recall low even when precision is high.
   volume:
     term: Volume
     definition: How many rows the policy acts on, also shown as a share of the partition.
@@ -60,6 +66,15 @@ terms:
   paired_bootstrap:
     term: Paired bootstrap
     definition: Resampling the same validation rows for both policies at once, so the interval describes their difference rather than each one separately.
+    example: Here the validation rows are drawn again with replacement <replicates> times, and each draw scores both models on the same rows (policy evaluation <result_id>, bootstrap).
+  paired_difference:
+    term: Paired difference
+    definition: The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.
+    example: Here the logistic model's precision minus the baseline's at <rule> is <delta>, between <low> and <high> on resamples of the validation rows (policy evaluation <result_id>, deltas). An interval that contains zero does not show that one model is better.
+  confidence_interval:
+    term: Confidence interval
+    definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.
+    example: Here the logistic model's precision at <rule> ranges from <low> to <high> on resamples of the <n> validation rows (policy evaluation <result_id>, intervals); a wide range means the figure is uncertain.
   percentile_interval:
     term: Percentile interval
     definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.
@@ -130,6 +145,15 @@ regression_terms:
   paired_bootstrap:
     term: Paired bootstrap
     definition: Resampling the same validation rows for both models at once, so the interval describes their difference rather than each one separately.
+    example: Here the validation rows are drawn again with replacement <replicates> times, and each draw measures both models on the same rows (regression evaluation <result_id>, bootstrap).
+  paired_difference:
+    term: Paired difference
+    definition: The difference between two models measured on the same rows, such as the linear model's MAE minus the baseline's. Pairing removes the noise of which rows each model was measured on.
+    example: Here the linear model's MAE minus the baseline's is <delta> <unit>, between <low> and <high> on resamples of the validation rows (regression evaluation <result_id>, deltas). Below zero means the linear model errs less on these rows; an interval that contains zero does not show that one model is better.
+  confidence_interval:
+    term: Confidence interval
+    definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for future rows.
+    example: Here the linear model's MAE ranges from <low> to <high> <unit> on resamples of the <n> validation rows (regression evaluation <result_id>, intervals); a wide range means the error is uncertain.
   percentile_interval:
     term: Percentile interval
     definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.

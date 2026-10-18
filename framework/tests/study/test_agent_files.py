@@ -284,3 +284,52 @@ def test_instructions_carry_the_closure_fixes():
                    'confirm it as explicit'):
         assert phrase in rule4, phrase
     assert 'only when you propose a default\nafter a delegation' in skill
+
+
+def test_instructions_carry_the_p_fix_defects():
+    """D3, D5, D7, D9, D11 of the P-fix acceptance (``docs/acceptance/runs/
+    claude-code-2026-10-18-p-fixes.md``): the instructions name the real commands and
+    fields, and the glossary defines the terms with a contextual example."""
+    from mlkit.study import texts, view
+    text = _binary('CLAUDE.md.in')
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    rule4, rule9 = _rule(text, 4), _rule(text, 9)
+    # D3: a business capacity is the agent's to translate; never ask for validation rows.
+    for phrase in ('is\n   yours to translate, never the junior\'s', '`volume_rate`',
+                   'Never ask the junior for a number of validation rows, a\n   share, or a '
+                   'conversion', 'selects every row and tests\n   no ranking'):
+        assert phrase in rule9, phrase
+    assert "Translating the team's capacity into\n  validation rows is your job" in skill
+    # D3, D5: holds.
+    for phrase in ('One condition, one note', '`holds` in `status --summary`',
+                   'decide note --withdraw NOTE_ID', 'resolves it unless they say otherwise',
+                   'never refuse it over its unit', 'one clarifying question at most',
+                   '`reconfirm_required`'):
+        assert phrase in rule4, phrase
+    assert 'holds' in view.SUMMARY_KEYS and cmd.ACTION_WITHDRAW_NOTE == 'decide.withdraw_note'
+    assert '--withdraw NOTE_ID' in text or 'decide note --withdraw' in text
+    # D2: an outdated conclusion.
+    assert '**An outdated conclusion.**' in rule4 and '`conclusion_outdated`' in rule4
+    # D7: an earlier agreement is quoted in a one-line confirmation, never used as one.
+    for phrase in ('ask\n   one line that quotes their earlier words',
+                   'Their earlier words never confirm it'):
+        assert phrase in rule4, phrase
+    assert 'propose it in\ntheir wording and ask one line that quotes them' in skill
+    # D9: the delegation option only at a pause, never with the plan.
+    for phrase in ('once, at a pause', 'Never put the delegation option in the message that '
+                   'presents the plan'):
+        assert phrase in rule4, phrase
+    assert 'Never offer delegation in the message that presents\nthe plan' in skill
+    # D11: term first at first use, with the glossary's example.
+    assert 'Define each term at its first use' in skill and '`example`' in skill
+    for task, terms in (('binary', ('precision', 'recall', 'stratified_split', 'paired_bootstrap',
+                                    'paired_difference', 'confidence_interval')),
+                        ('regression', ('paired_bootstrap', 'paired_difference',
+                                        'confidence_interval'))):
+        for term in terms:
+            entry = texts.glossary(term, task)
+            assert entry and entry['term'] and entry['definition'], (task, term)
+            assert '<result_id>' in entry['example'], (task, term)
+    regression = af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
+                                .read_text(), 'regression')
+    assert '**precision**' not in regression and '**paired difference**' in regression

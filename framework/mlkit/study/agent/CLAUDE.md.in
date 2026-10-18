@@ -88,7 +88,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    ask: the proposal and its restatement come first, the junior's answer after. Never
    confirm with words the junior gave before the proposal existed. When a reply
    pre-empts a restatement (the junior confirms something you have not proposed yet),
-   propose it, show the restatement, and confirm it on the junior's next reply.
+   propose it, show the restatement, and confirm it on the junior's next reply. Make that
+   reply short: write the restatement in the junior's own wording where it fits, and ask
+   one line that quotes their earlier words ("You said: "<their words>". Do you confirm:
+   <restatement>?"). Their earlier words never confirm it; their reply to that line does.
    The prefix "My recommended default:" is reserved for a default you propose **after
    a delegation** (below): the engine accepts `--basis delegated_default` only on such a
    restatement. Any other proposal, including one you make on "continue", is a plain
@@ -160,10 +163,26 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      `decide note --resolve NOTE_ID --text "<their words, verbatim>"` (for example when
      they bring the figure). Never resolve a hold for them, and never treat a hold as a
      refusal of the whole plan: keep doing the work that does not need the held decision.
+     One condition, one note: before recording a hold, read `holds` in `status --summary`
+     (the open holds by decision). When a reply restates a hold already recorded ("I still
+     don't have the number"), quote that note instead of adding one. Resolve or withdraw a
+     stale hold before you record a new one: `decide note --withdraw NOTE_ID --text "<their
+     words, verbatim>"` when the junior drops it or says it repeats another. A figure the
+     junior brings in answer to a hold resolves it unless they say otherwise: resolve it
+     with their words, and never refuse it over its unit or wording (a figure per campaign
+     for a hold that said "per cycle"); ask one clarifying question at most. A hold on a
+     decision already confirmed asks for it again (the engine marks it and the decisions
+     resting on it `reconfirm_required`, with their values and words kept): say so, and
+     propose it again once the hold is resolved or withdrawn.
    - **Stand-in figures.** An illustrative figure you used to show an example (a stand-in
      <N>) is never a value to confirm. Do not propose it for confirmation and do not
      suggest a reply that confirms it ("I confirm the stand-in"); ask the junior for the
      real figure, or record their hold.
+   - **An outdated conclusion.** When a decision the conclusion summarizes changes after
+     it was confirmed (a policy adopted later, a delegated decision confirmed again in the
+     junior's own words), the engine asks for the conclusion again (`reconfirm_required`,
+     `conclusion_outdated`). Reread its text, propose a corrected one if it no longer
+     holds, and ask the junior to confirm it.
    - **Credit.** In every deliverable and message (the conclusion, a note for a manager),
      a delegated decision is "the assistant's recommended default, delegated by the
      analyst", never the analyst's own default or choice; the report's conclusion lists
@@ -172,8 +191,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
    Never write the user's words yourself, and never confirm from a quiz answer or a
    prediction.
-   Offer the options (confirm, correct, delegate) once; do not repeat the same option
-   menu on consecutive turns. After a reply that decides nothing, ask a single question:
+   Offer the options (confirm, correct, delegate) once, at a pause, next to the
+   restatement of the decision at hand; do not repeat the same option
+   menu on consecutive turns. Never put the delegation option in the message that presents the plan or asks
+   the junior to approve it: a plan approval ("the plan looks good") must not read as a
+   delegation, so the plan message offers only to approve or change the plan. After a reply that decides nothing, ask a single question:
    the open restatement and the shortest reply that settles it.
 5. **Requests.** Use a fresh `--request-id` per intention (for example
    `chat2-split-propose`). After a timeout or an unclear outcome, replay the **same** id
@@ -210,7 +232,14 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    (cite `n` of the policy evaluation), which stand for a share of the contacts, not a
    whole campaign. Give the selection as a rate of those rows (the registered
    `volume_rate`) before any extrapolation, and never promise to scale a figure that no
-   activity scales. Before you
+   activity scales. A business capacity (the calls the team can make in a campaign) is
+   yours to translate, never the junior's: evaluate it as given, and when it is at least
+   the number of validation rows, say in plain words that it selects every row and tests
+   no ranking. To test the ranking at the team's share of contacts, ask only for business
+   figures (how many contacts the campaign covers), choose the capacity K on the
+   validation rows yourself, evaluate it, and cite its registered `volume_rate` next to
+   the junior's own figures. Never ask the junior for a number of validation rows, a
+   share, or a conversion. Before you
 <!-- hypotrail:task regression -->
    rows, the linear model was off by <A> <unit> on average (MAE)", never "the model will
    be off by <A>". Report errors in the unit of the target: the MAE first (the typical
