@@ -92,8 +92,10 @@ ERROR_CODES = {
     'invalid_value', 'literal_number_in_text', 'ambiguous_confirmation', 'precondition_missing',
     'unknown_proposal', 'proposal_not_open', 'unknown_result', 'invalid_result', 'unknown_module',
     'invalid_exposure', 'no_predictions', 'invalid_state', 'invalid_confirmation',
-    'lease_exists', 'lease_held'}
-RESERVED_CODES = {'interrupted_execution_pending', 'unknown_execution'}
+    'lease_exists', 'lease_held',
+    # Phase 2 contract commit: reserved codes now emitted, plus read_only.
+    'interrupted_execution_pending', 'unknown_execution', 'read_only'}
+RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
                      'same_request', 'proposal_stale'}
