@@ -1,0 +1,853 @@
+# Advanced companion: detailed specification
+
+Status: **specified, not implemented.** The scope and the staging are in [ADR 0004](../decisions/0004-companion-advanced.md). The engine interfaces are in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), cited below as **CC §n**. The work packages and file ownership are in [COMPANION-ADVANCED-PLAN.md](../plans/COMPANION-ADVANCED-PLAN.md). The code base is `clients/vscode-companion/`, which is v0 ([ADR 0003](../decisions/0003-companion-webview-v0.md), decisions CW.1 to CW.12).
+
+Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
+
+## 1. Purpose
+
+The companion is a study panel in VS Code. It helps a junior see where the study stands, decide in their own words, find the evidence behind a number, explore without adopting anything, and hand the study over. It does this **without** becoming a second source of truth. The chat, the HTML report, and the notebooks remain complete without it (ADR 0002, JUNIOR-WORKFLOW).
+
+Every feature is a hypothesis, to be measured against the flag-off workflow (ADR 0004, "What is measured").
+
+## 2. Invariants
+
+These hold in every stage, view, and state. The plan's `test/invariants.test.js` and `check_layout.py` check them.
+
+| Id | Invariant | Source |
+|---|---|---|
+| INV-1 | The companion reads and writes the study **only** through the `hypotrail` CLI argv recorded in `.hypotrail/agent.json` (`cli.argv`), run with `child_process.execFile` without a shell. It never reads `.hypotrail/*.json` itself; it only watches the folder. It may read deliverable files (`reports/study.html`, `notebooks/*.py`) to open them in the editor | ADR 0002 items 1 and 2, CW.3, CW.4 |
+| INV-2 | No state, database, server, socket, loopback HTTP, daemon, polling loop, or language-model call of its own. `vscode.lm` is never used. Local storage is limited to §10 | ADR 0002, CW.2 |
+| INV-3 | Every write is one argv from the whitelist of §7. It carries a fresh `--request-id` (UUID v4, one per submission) and the `--expected-revision` the junior saw, except `render` and `export`, which have no revision. One write runs at a time | CLI-CONTRACT §1, CW.7 |
+| INV-4 | No delegation from the webview: no `--basis delegated_default`, no `--delegation-scope`, no "use your recommended default" control. A typed delegation is refused by the engine (`delegation_needs_basis`), and the panel says to delegate in the chat | CW.6 |
+| INV-5 | Every textarea that becomes `--user-words` starts empty and is never filled, suggested, autocompleted, or restored from another proposal. "Confirm" and "Acknowledge" stay disabled until the field holds a non-blank character. No control confirms in one click | CW.5, PV.2 |
+| INV-6 | A proposal, a preview, a draft, a What if? result, a prediction answer, or a learning card is **never** shown as a decision. Every such surface carries its label ("proposal, not a decision yet", "Experiment, not adopted", "Draft only") | AGENTS.md |
+| INV-7 | A number is shown only when it comes from (a) a result with `current: true` and `integrity: "ok"`, as a cited segment, or a value of such a result in `evidence`/`status`; (b) a `preview` payload, shown only inside an Experiment surface; or (c) a recorded literal (revision, counts of the engine's own lists). Stale results are listed with "Not cited", without figures | CLI-CONTRACT §4 |
+| INV-8 | The engine's refusal is shown with its `code`, its `reason`, the engine message **verbatim**, and a short explanation from `lib/refusals.js` that never suggests words to type. After a refusal the panel refreshes. A write without a JSON answer is reported as "outcome unknown", never as success | CW.8 |
+| INV-9 | Study text is set with `textContent`, or as SVG text nodes; it is never parsed as HTML. The webview runs under the v0 CSP (§12) | CW.10 |
+| INV-10 | Behind the master flag `hypotrail.companion.enabled` (default `false`). With the flag off, the command and the URI handler show "Companion disabled (feature flag)", and nothing else runs: no file is read and no process is started | CW.2 |
+| INV-11 | A trusted workspace is required (`untrustedWorkspaces.supported: false`, checked at run time) | CW.2 |
+| INV-12 | In a regression study the companion's own copy never uses the vocabulary of a decision rule: `threshold`, `capacity`, `precision`, `recall`, `positive class`, `policy`, `calling rule`, `selected`. Texts from the engine are task-aware already. A Playwright test scans the whole DOM text of every tab on the Auto MPG fixtures for these words (case-insensitive, whole word) | CLI-CONTRACT §10, handoff M3 |
+| INV-13 | The companion never fits a model, runs `split`, `policy.evaluate`, or `evaluate.regression`, records or resolves a note, edits a notebook, or runs "validate all". From the webview, EDA requests reach only the `eda.*` activities that `evidence.eda_catalog` lists | owner's feature list |
+| INV-14 | No figure is computed by the companion. Bar lengths and axis positions are geometry derived from engine values. They are never displayed as numbers that the engine did not emit, except axis tick labels, which are rounded positions of an axis, are marked `aria-hidden`, and carry `data-literal="axis"` | INV-7 |
+| INV-15 | Precomputed tutorial outputs (`use-cases/*/results.json`, `project.json`) are never read | AGENTS.md |
+
+## 3. Activation, flags, stages, modes
+
+### 3.1 Flags
+
+| Setting | Type, default | Effect |
+|---|---|---|
+| `hypotrail.companion.enabled` | boolean, `false` | Master flag (INV-10). `HYPOTRAIL_COMPANION=1` also turns it on, as in v0 |
+| `hypotrail.companion.stage` | enum `"v0"`, `"v1"`, `"v2"`, `"v3"`, default `"v0"` | Which feature set is active (§3.2). `HYPOTRAIL_COMPANION_STAGE` overrides it (tests, observation sessions). Each stage includes the earlier ones. A stage higher than the extension knows reads as the highest one it knows. The default moves only through an ADR amendment after a stage's exit criteria are met (ADR 0004) |
+| `hypotrail.companion.learningLayer` | boolean, `true` | Stage v3: glossary hovers, concept cards, and predictions. Off: none of them is rendered and `explain` is not called. It is a preference of the junior, not a feature gate |
+| `hypotrail.companion.chatInsert` | boolean, `false` | Stage v2: "Ask the agent" inserts into the chat input through `workbench.action.chat.open` instead of the clipboard (§6.8). Off by default until the API is verified in a real VS Code |
+| `hypotrail.companion.reviewer` | boolean, `false` | Read-only reviewer mode (§3.3). The command "Hypotrail: open the study panel (reviewer, read-only)" opens a reviewer panel whatever the setting |
+
+**No per-feature sub-flags.** One stage enum keeps the test matrix small, at four stages: per-feature booleans would give 2^12 combinations. It also makes an observation session reproducible from one value. The only booleans are preferences or safety switches whose default must be off until something is verified (`chatInsert`) or until the user chooses it (`reviewer`).
+
+`check_layout.py` is updated to assert the following:
+
+- `enabled` defaults to `false`.
+- `stage` defaults to `"v0"`.
+- `chatInsert` defaults to `false`.
+- `activationEvents` is exactly `["onCommand:hypotrail.companion.open", "onCommand:hypotrail.companion.openReviewer", "onCommand:hypotrail.companion.goToResult", "onUri"]`.
+- The source still matches none of the forbidden APIs.
+
+The plan's WP-I owns that change.
+
+### 3.2 Stages
+
+| Stage | Tabs and features (letters of the owner's list) | Engine additions it needs |
+|---|---|---|
+| v0 | v0 panel, unchanged in behaviour, but rendered by the new view framework: recap, plan, deliverables, pending decision cards, confirm and withdraw | none |
+| v1 | **Overview** (A: map, recap, since last session; F: deliverables with Regenerate, executions with acknowledgement, check findings); **Decisions** (B: cards, impact preview, history, reconfirmation queue); multi-study switch (K); reviewer mode (I, without export) | C1, C2, C3, C10 (check `location`) |
+| v2 | **EDA** tab (gallery, Request a chart); **Evidence** tab (C: registry, lineage, exposure ledger, deep links; E: interval bars, small-data warnings); **What if?** tab (D: policy sandbox or residual explorer, Propose); agent bridge (H) | C4, C5, C8, C9, C10 (anchors) |
+| v3 | **Learn & hand off** tab (G: glossary hovers, concept cards, predictions; I: export handoff; J: session report) | C6, C7 |
+
+A tab or control of a later stage is **absent** from the DOM, not merely disabled. A test checks that every `data-stage` element is absent below its stage.
+
+### 3.3 Modes and states that apply to every tab
+
+| State | Trigger | Behaviour |
+|---|---|---|
+| Flag off | INV-10 | Nothing is rendered; one information message |
+| Untrusted | `vscode.workspace.isTrusted === false` | Error message "The Hypotrail companion runs the study CLI, so it needs a trusted workspace."; nothing is rendered or run |
+| No study | No folder found (§6.1.6) | A folder dialog (v0). If it is cancelled, nothing happens |
+| Moved study | `agent.json.study` differs from the folder | The `study_moved` message of v0 |
+| Loading | The first `status` call has not answered | The header shows "Reading the study..."; tabs are skeletons with `aria-busy="true"`; no control is enabled |
+| Load error | The CLI cannot start, prints no JSON, or refuses | A `role="alert"` banner with the message and the CLI's stderr in a collapsed `<details>`; a "Retry" button; the last good snapshot is **not** shown as current. If one exists, it is shown greyed with "Last read at revision N; the study could not be read now" |
+| Stale view | A watch event or a write moved the revision while a tab shows older data | Each tab's data carries the revision it was read at. A tab whose data revision is below the snapshot revision shows "Updating..." and reloads (§11). A textarea with text keeps the text and shows the v0 warning "The study changed while you were typing. Read the proposal again before you answer." (CW.9) |
+| Reviewer | `reviewer` setting or command | The header shows a badge "Reviewer, read-only". **No** element with `data-write` is rendered: no textarea for words, no Confirm, Withdraw, Propose, Run, Regenerate, Acknowledge, or Export. The controller refuses every write message with `kind: "invalid"` and "Read-only reviewer mode." (RV-2). Reads, navigation, Open, Show in report, and the agent bridge stay |
+| Read-only process | `HYPOTRAIL_READ_ONLY=1` in the extension host | Writes are refused by the engine (`read_only`) and shown as refusals. Nothing special is done in the client |
+| Busy | One write is running | Every `data-write` control is disabled, and the busy control shows `aria-busy="true"` and "Working..." |
+
+## 4. Information architecture
+
+### 4.1 Frame (every tab)
+
+```text
+┌ header: logo · "Hypotrail · <case id>" · [regression] · badge "Experimental · feature flag on"
+│         [Reviewer, read-only] · study switcher (v1) · "revision N" · "read from CLI · <age>" · [Refresh]
+├ tabs:   Overview · EDA (v2) · Decisions [count] · Evidence (v2) · What if? (v2) · Learn & hand off (v3)
+├ alert strip (only when present): sources changed · execution with unknown outcome · integrity error
+├ recap strip (every tab except Overview, collapsible, remembered per panel in vscode.setState):
+│         Goal / Decided / Now / Next / Limit, the five summary.recap lines verbatim
+├ main: the tab
+└ footer: "Reads the hypotrail CLI only · no state of its own · the chat, report and notebook stay complete without it."
+```
+
+**Tab order.** The order follows the mockups. The final names are Overview, EDA, Decisions, Evidence, What if?, and **Learn & hand off**. The mockups' "Learn" becomes "Learn & hand off" because the tab also holds the export and the session report.
+
+**Decisions badge.** The badge counts open proposals plus decisions in `reconfirm_required`. It is hidden when the count is 0, and its accessible name is "N waiting for you".
+
+**"read from CLI · <age>".** The age is the time since the last successful read, computed by the client from its own clock. It is a clock of the view, not a study fact. It reads "just now", then "12 s ago" or "3 min ago", updated every 15 s without a CLI call.
+
+**Tabs.** The tabs follow the WAI-ARIA tab pattern: `role="tablist"`, arrow keys, Home and End, `aria-selected`, and `aria-controls`. The selected tab is kept in `vscode.setState`.
+
+**Alert strip.** Its sources are, in this order:
+
+- the `sources_changed`, `interrupted_executions`, and `result_integrity` items of `summary.not_yet_defensible.top` (their `text` verbatim);
+- `next_action.kind == "outcome_unknown"` (its `message` verbatim).
+
+Each alert links to the Overview Health section.
+
+### 4.2 Navigation targets
+
+A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`, `proposal`, `step`, `limit`, `execution`, `term`. Navigation requests come from deep links (CC §11), evidence chips, and the command "Hypotrail: go to a result...". The target tab opens, scrolls the item into view, moves focus to its heading, and highlights it for 2 s, without motion when `prefers-reduced-motion` is set.
+
+## 5. Data sources and caching
+
+| Data key | CLI argv (after `agent.argv`) | Schema | Read when | Used by |
+|---|---|---|---|---|
+| `summary` | `status --summary --json --study S` (v0); `status --summary --digest --json --study S` (v1 and later) | `hypotrail.summary/1` (+ CC §1) | on open, on visible, on watch, after each write, on Refresh | frame, Overview, Decisions cards |
+| `decisions` | `decisions --json --study S` | `hypotrail.decisions/1` | Decisions tab shown, and the revision moved | Decisions history and queue |
+| `effects:<pid>` | `preview effects <pid> --json --study S` | `hypotrail.preview_effects/1` | a card becomes visible (IntersectionObserver), at most 3 cards at once | "If you confirm" |
+| `evidence` | `evidence --json --study S` | `hypotrail.evidence/1` | EDA, Evidence, or What if? shown, and the revision moved | EDA, Evidence, What if?, interval bars |
+| `evidence:<rid>` | `evidence --result <rid> --json --study S` | same | a result is selected | result detail |
+| `preview:<rules>` | `preview policy --rule R [--rule R2 ...] [--intervals] --json --study S` | `hypotrail.preview/1` | slider moves (debounced) | What if? (binary) |
+| `draft:<d>:<v>` | `preview proposal <d> --value=<v> --json --study S` | `hypotrail.proposal_draft/1` | "Propose this ..." pressed | the propose modal and argv |
+| `check` | `check --json --study S` | `hypotrail.check/1` | Overview Health section expanded, and the revision moved | findings |
+| `explain` | `explain --json --study S` | `hypotrail.explain/1` | first glossary hover or Learn tab, and the revision moved | Learn, hovers, cards |
+| `session_report` | `session-report --json --study S` | `hypotrail.session_report/1` | Learn tab "Session report" expanded | session report |
+
+**Free text in an argv.** It always uses the `--opt=value` form: `--user-words=`, `--value=`, `--column=`, `--restatement=`, `--rationale=`, and `--reason=`. A value that starts with `-` is therefore never read as an option (CW.7).
+
+## 6. Views
+
+Every view below lists its sources, its components, its states, its interactions, its writes, its accessibility points, its copy, and its acceptance criteria. Stable test hooks are `data-*` attributes, listed in §16.
+
+### 6.1 Overview (stage v1; v0 shows its v0 subset)
+
+Mockup: `Main.dc.html`.
+
+#### 6.1.1 Where we are (A)
+
+The five `summary.recap` lines are rendered as a `<dl>` with the labels Goal, Decided, Now, Next, and Limit. The label is the text before the first ":" of each line, which matches `view.RECAP_LABELS`. Each line is rendered verbatim.
+
+In the `Next` line, when `next_action.kind` is `await_user_words` or `reconfirm`, the panel adds a link "Open in Decisions" after the text. The recap text itself is never edited.
+
+- OV-1. The five lines equal `summary.recap`, byte for byte.
+- OV-2. Without a recap (an empty list), the section reads "No recap yet."
+
+#### 6.1.2 Study map (A)
+
+Four columns, from `summary.moments` (CC §1.1). Each column holds the plan steps listed in its moment, with their `title` from `summary.plan`.
+
+| Step status | Mark | Style | Sub-label |
+|---|---|---|---|
+| `done` | ✓ | done tint | for a step whose decision is confirmed: "pause P · your words" when the basis is `explicit`, "pause P · delegated" when it is `delegated_default` |
+| `awaiting_confirmation` | ● | accent border, bold | "pause P · waiting for you" |
+| `needs_reconfirmation` | ↺ | warning tint | "pause P · confirm again" |
+| `ready` | ○ | neutral | "ready" |
+| `blocked` | ○ | muted | "after <title of the first unmet requirement>" |
+
+The pause number comes from `summary.pauses`. The sub-labels are the only text the panel adds. The current step carries `aria-current="step"`.
+
+- OV-3. The map has 4 columns with the CC §1.1 titles. Every step appears once. The current step has `aria-current="step"`.
+- OV-4. The mark is never the only signal: each mark has an accessible text ("done", "waiting for you", "confirm again", "ready", "blocked").
+
+#### 6.1.3 Since your last session (A)
+
+The items come from `summary.digest.items` (CC §1.4):
+
+- each item's `text`, newest last;
+- an item with `invalidation.refit == []` and a non-empty `kept_fits` adds the bold sentence "Models unchanged, nothing refitted.";
+- a header line reads "Since <boundary_time, as a local date and time>"; when `gap_minutes` is null it reads "This session";
+- when `truncated` is true, a final line reads "Older changes are not listed. The Decisions tab has the full history.";
+- with no items, the section reads "Nothing has changed since then.";
+- a `<select>` labelled "Show changes since" offers the boundary revision and "the start of the study" (revision 1); choosing one re-reads `summary` with `--since`.
+
+- OV-5. With the Bank fixture after a capacity change, the list holds the re-evaluation sentence with "Models unchanged, nothing refitted.", the reconfirmation sentence, and the resolved hold, quoted verbatim.
+- OV-6. The texts hold no revision number. The test asserts no `/revision \d/` in the section's text, outside the select's option labels.
+
+#### 6.1.4 Deliverables (F)
+
+One row per item of `summary.artifacts.items`, in the order `report`, `notebook`, `workbench`:
+
+- the label and the path ("Report · study.html");
+- the status line, which is the item's `message` verbatim;
+- an "Open" button, as in v0: the report in the browser, the others in the editor.
+
+A "Regenerate the report and notebook" button (`data-write="render"`) is shown when any generated artefact has status `stale` or `failed`, or the manifest is `not_rendered` (§7, W5). The button is absent in reviewer mode.
+
+- OV-7. Each message is shown verbatim. "Regenerate" is shown only under those conditions.
+- OV-8. After "Regenerate", the outcome lists each artefact's message from `render.artifacts`. Exit 3 is shown as "Regenerated with problems", not as a failure of the command.
+
+#### 6.1.5 Health (F)
+
+- **Executions.**
+  - Each `summary.executions.interrupted` and `suspected_interrupted` item is one card: "<activity>: the outcome is unknown. Nothing will be restarted."
+  - The card has an empty textarea labelled "Your reply, in your own words".
+  - Its hint reads: "Say that you know this run was interrupted and its outcome is unknown. 'ok' alone is not enough."
+  - Its button is "Acknowledge in my words" (`data-write="acknowledge"`), disabled until text is typed (INV-5); see W6.
+  - The card offers no rerun. A line reads: "To run it again, ask the agent in the chat."
+  - `late` items are listed as "<activity>: a result was computed for a state that no longer holds; it is stored, not used."
+- **Check findings.** A collapsed `<details>` titled "Checks of the deliverables".
+  - Expanding it runs `check` (cached per revision). Each finding is shown with its `severity`, `code`, `message` verbatim, and `where`.
+  - When `location.path` is a deliverable, an "Open" button opens it: an editor at `location.line` when it is set, or the browser at `#location.anchor` for the report.
+  - The header shows `counts`, and "clean" or "N errors".
+- **Not yet defensible.** `summary.not_yet_defensible.top` texts verbatim, and "More: <ids>" for `more`, in the warning colours of the mockup.
+
+- HE-1. An acknowledgement typed in the panel runs the exact argv of W6. A bare "ok" is refused (`ambiguous_confirmation`, `bare_acknowledgement`), and the refusal is shown verbatim.
+- HE-2. An execution card never has a "Restart" or "Run" button.
+- HE-3. Check findings of the Bank fixture with an injected stale citation show `stale_number`, with a working "Open".
+
+#### 6.1.6 Studies (K)
+
+The extension discovers studies with `.hypotrail/agent.json` in:
+
+- each workspace folder;
+- each of its direct subfolders;
+- the subfolders of those (depth ≤ 2).
+
+It skips `node_modules`, `.git`, `.venv`, and dot-folders, and stops after visiting 500 folders, listing the studies it found in sorted order. No study is ever read beyond its `agent.json`, which is validated as in v0.
+
+The header switcher is a button "Study: <folder name> ▾" that opens a VS Code quick pick: one entry per study, labelled with its folder name and described by its path, plus "Pick another folder...". Choosing another study disposes the current controller and watcher and opens the new one in the same panel. Only one study is open at a time.
+
+- ST-1. Two studies in one workspace give a quick pick of both. Switching runs `status` on the new `--study` and disposes the old watcher.
+- ST-2. A study more than two levels deep is not listed; "Pick another folder..." still reaches it.
+
+### 6.2 Decisions (stage v1; v0 shows cards only)
+
+Mockup: `Decision.dc.html`.
+
+#### 6.2.1 Pending decision card (B)
+
+There is one card per `summary.open_proposals` item, oldest first. Each card holds:
+
+- **Head.** A pill "Pause P · <pause label>", where the pause labels are 1 "framing", 2 "evaluation design", and 3 "business trade-off" (binary) or "model choice" (regression). Then the plan step title as `h2`, and on the right "proposal by the agent · not a decision yet", or "proposal from this panel · not a decision yet" when `origin.channel == "webview"` (CC §9). Below, "Proposal p_N, made at revision R".
+- **Restatement.** In a blockquote, verbatim. Then "Proposed value:" in `<code>`, which is `showValue` of v0; availability is shown as status groups.
+- **Evidence** (v2). Chips for each evidence link:
+  - for a policy or model choice, the current `policy.evaluation` or `evaluate.regression` result (`<activity> · <rid8>…`), opening Evidence;
+  - for a policy, the paired difference of the proposed rule with its interval, as a cited value from `evidence`;
+  - "try other rules →", or "explore the errors →" in regression, opening What if?.
+  - For the other decisions: the `split` result for split, and the `eda.*` results for availability when they exist. Chips are absent when no current result applies.
+- **Holds.** Each open note of the decision: "On hold in your words: "<words>"", with the v0 sentence. Each resolved note: "Your condition, resolved: "<words>" → "<resolution words>"".
+- **If you confirm** (v1, from `effects:<pid>`). Three boxes:
+  - "Kept": the `kept_slots`, grouped (fits: "both models and their predictions, nothing refitted" when every fit is kept; else the slot names);
+  - "To confirm again": `reconfirm_required` titles, or "nothing";
+  - "Regenerated": "report and notebook".
+
+  The first confirmation reads "Nothing recorded so far is invalidated." `stale_slots` is listed under "Becomes stale" when it is not empty. The section has a caption, `note` verbatim, in muted text. When `blocked` is not empty, a `role="status"` box reads "The engine will refuse a confirmation now:" followed by each blocked `code` (`reason`) and `message` verbatim. "Confirm in my words" is then disabled, with that box as its `aria-describedby`. The effects are re-read whenever the revision moves.
+- **Answer.** A label "Your answer to this proposal, in your own words", an empty textarea, and the hint "Say what you accept and why it fits your situation. "ok" or "yes" alone is not enough. Nothing is filled in for you. What you type is recorded verbatim, with channel "webview"."
+- **Buttons.**
+  - "Confirm in my words" (W1, disabled until text, INV-5);
+  - "Withdraw proposal" (W2, modal);
+  - "Ask the agent about this" (H, v2; it never sends the typed words).
+- **Outcome region.** The refusal or success of the last write on this card (v0 rendering, INV-8).
+
+The decisions: binary `prediction_time`, `feature_availability`, `split`, `policy`, `conclusion`; regression with `model_choice` in place of `policy`.
+
+- DC-1. The textarea is empty on first render, after a refresh, and after a successful confirmation. The words of one card never appear in another.
+- DC-2. "Confirm" is disabled with blank words, while busy, or when `effects.blocked` is not empty.
+- DC-3. The confirm argv is exactly W1. A stale revision gives the v0 stale display and a refresh.
+- DC-4. "If you confirm" for the Bank fixture shows "both models and their predictions, nothing refitted" for a capacity change, and "the conclusion" under "To confirm again".
+- DC-5. Text from the preview is never placed in the textarea.
+- DC-6. A webview-originated proposal shows "proposal from this panel".
+
+#### 6.2.2 Reconfirmation queue (B)
+
+The queue comes from `decisions.reconfirm_queue`. It is rendered above the history when it is not empty, and titled "Needs your words again". Each item holds:
+
+- the step title;
+- `reason`, verbatim;
+- "Previously: "<previous.user_words>" (<basis> · <channel>)";
+- "Open the new proposal" when `open_proposal` is set;
+- otherwise "No new proposal yet. Ask the agent to propose it again.", with "Ask the agent" (v2). For `policy` or `model_choice`, there is also "Choose in What if?" (v2).
+
+- RQ-1. Every `reconfirm_required` decision is listed once, with its previous words verbatim.
+
+#### 6.2.3 Decision history (B)
+
+The history is a table with one row per `decisions.history` item, grouped by decision in plan order, newest first within a group. Its columns are:
+
+- **Decision**: the title, and the value in `<code>`;
+- **Words**: `user_words` verbatim in quotes;
+- **Basis and channel**: "explicit · chat", "delegated (standing) · chat", or "explicit · webview";
+- **When**: the revision, and the time in local format.
+
+Rows with `current: false` are muted and add "superseded at revision N".
+
+Below the confirmations, the withdrawn and superseded proposals of `decisions.proposals` are listed under a collapsed `<details>` titled "Proposals that were not confirmed", with their restatement, status, and `closed_reason`.
+
+A note under the table reads "Recorded words, not an authenticated signature." (`report.yaml`'s `not_authenticated`).
+
+- DH-1. Bank fixture: the split row shows the delegated basis in the warning tone. The superseded threshold policy row is muted with "superseded".
+- DH-2. Every `user_words` is rendered with `textContent`. A fixture whose words contain `<img src=x onerror=alert(1)>` renders that text literally.
+
+#### 6.2.4 Copy (Decisions)
+
+| Situation | Text |
+|---|---|
+| No open proposal | "Nothing is waiting for your answer. The assistant proposes decisions in the chat." |
+| Withdraw modal | "Withdraw proposal p_N (<title>)? Nothing is confirmed; the assistant can propose again in the chat." [Withdraw] (v0) |
+| Confirm success | "Confirmed <title> in your words (channel webview)." + "Recorded: "<words>"" + artefact messages (v0) |
+| Delegation attempted | the refusal, plus the explanation "Your reply hands the choice to the assistant. A delegation is recorded in the chat, not in this panel." (v0) |
+
+### 6.3 EDA (stage v2)
+
+Mockup: `EDA.dc.html`.
+
+**Sources.** `evidence` (results whose `activity` is an `eda.*` activity and whose `promoted` is true; `eda_catalog`; `exposure.ledger`).
+
+**Banner.** It reads: "**Training rows only.** Every chart is a registered result, computed by the engine." On the right: "rows seen in EDA · train <a> · validation <b>".
+
+- `a` is the `rows` of the ledger row (`train_eda`, `train`).
+- `b` is the sum of the `rows` of every ledger row with partition `validation` and purpose `train_eda`. It is always 0 by engine construction; it is shown so the junior sees it.
+- A second muted line: "Validation rows seen for model evaluation and selection: <rows of (validation_model_evaluation, validation) ∪ selection>", from `exposure.summary.validation_rows_used_for_selection` and the ledger.
+
+**Gallery.** One card per promoted EDA result, in this order:
+
+1. the target (`eda.target_rate` or `eda.target_summary`);
+2. `eda.special_values`;
+3. the `eda.rate_by:*` or `eda.mean_by:*` results, by column name;
+4. the `eda.distribution:*` results, by column name.
+
+Each card's header shows its title, `<activity> · <rid8>…` (a chip that opens Evidence), and "Stale · not cited" with no figures when `current` is false. The card bodies are:
+
+| Activity | Chart | Text |
+|---|---|---|
+| `eda.target_rate` | Two-segment stacked bar (positive/negative) with counts and rates | Term first: "**Class imbalance**: one value of the target is much rarer." when the rate is below 0.2 or above 0.8. Otherwise "**Base rate**: how often the outcome occurs in the training rows." Then the `explain` example of `base_rate` when the learning layer is on |
+| `eda.target_summary` | Box-and-whisker (min, q25, median, q75, max) on a value axis | "**Target distribution**", then the glossary definition |
+| `eda.special_values` | One row per special value: column, value, meaning, rows, share. For each `co_occurrence` item with `same_rows: true`: "<a.column> = <a.value> and <b.column> = <b.value> are the same <n_both> rows". Binary: bars of `rate` by special value vs. the other rows | `note` verbatim |
+| `eda.rate_by:<c>` | Horizontal bars of `rate` per group, in engine order (by group size), scale from 0 to the max rate rounded up to the next 5 %, with a vertical rule at `overall_rate`. A group with `small_count` gets a hatched bar (SVG pattern) and the text badge "small" | "Hatched bar: fewer than <min_group_rows> rows; the rate can move a lot with a few rows." Then the fixed non-causal caption (below), then `warnings` verbatim |
+| `eda.mean_by:<c>` | The same with `mean` (target unit) and a rule at `overall_mean` | The same captions with "mean" |
+| `eda.distribution:<c>` | `numeric`: histogram from `numeric.bins`; `discrete` and `categorical`: bars of `groups` (hatched `small_count`, "(other values)" last) | "Median <median> · middle half <q25>–<q75> · range <min>–<max> · <n> rows." (numeric); special values and missing as one muted line; `note` verbatim |
+
+**Non-causal caption.** It is fixed English, chosen by task:
+
+- Binary: "This describes who had the outcome in the training sample. It does not say that <column> causes it, nor how future cases will go."
+- Regression: "This describes the target in the training sample. It does not say that <column> causes it, nor how future cases will go."
+
+**Request a chart.**
+
+- **Fields.** Two selects:
+  - "Variable" lists `eda_catalog` columns of the runnable per-column activities, deduplicated by name and labelled with their role;
+  - "Chart" lists, for the chosen column, the activities that accept it: "Distribution" (`eda.distribution`), and "Outcome rate by value" (binary `eda.rate_by`) or "Target mean by value" (regression `eda.mean_by`).
+- **Button.** "Run on training rows" (`data-write="run_eda"`, W4).
+- **Already computed.** When the chosen column already has a current result for that activity, the button reads "Show it" and scrolls to the card. It does not rerun.
+- **Hint.** "Runs an engine EDA activity and records which rows were seen. Validation rows are never used here. For free exploration, use your workbench notebook, marked as an experiment." [Open the workbench]
+- **Not runnable.** When `runnable` is false: "Not available yet: <missing texts>".
+
+**States.**
+
+- Empty: "No exploration yet. EDA runs after the split is confirmed." and the catalog when it is runnable.
+- Loading: skeleton cards.
+- Stale card: listed without figures.
+- Failed run: the refusal (INV-8).
+
+| Id | Requirement |
+|---|---|
+| ED-1 | The Request argv is exactly W4. A column not in `eda_catalog` is never sent: the controller rejects it as `invalid` before any CLI call |
+| ED-2 | After a successful run, the gallery shows the new card, and the banner's train count equals the ledger. The validation count stays 0 |
+| ED-3 | Bars with `small_count` have both the hatch pattern and the text "small" (not colour only) |
+| ED-4 | Every rate and count text in a card equals the engine value, formatted with the precision of `content/activities.yaml`. A test compares the DOM `data-value` with the fixture |
+| ED-5 | There is no control that names "validation" as a partition choice |
+| ED-6 | On Auto MPG the gallery shows `eda.target_summary` and `eda.mean_by` cards, and the forbidden vocabulary (INV-12) is absent |
+
+### 6.4 Evidence (stage v2)
+
+Mockup: `Evidence.dc.html`.
+
+**Results (left column).**
+
+- **Filter.** A radio group with the options Current (default), Stale, and All.
+- **List.** Each item shows the slot (or the activity), the headline segments, and a "stale" badge where it applies. Stale items have no figures (INV-7).
+- **Selection.** Selecting an item loads `evidence:<rid>`.
+
+**Result detail (right column).**
+
+- **Header.** The slot as `h2`, then "<rid8>… · current|stale" with a "Copy id" button.
+- **Facts list.**
+  - "Evaluated on": the partition, `n_rows`, and `n_positive` when present;
+  - the headline;
+  - "Features": the count, and the excluded features by name, from `params` and `inputs.features`, and from the `feature_availability` decision;
+  - "Preprocessing": `params.preprocessing` verbatim;
+  - "Code": the module names, then "fingerprint matches" or "code changed since: <modules>";
+  - "Exposure": the purpose, partition, and rows.
+- **Buttons.**
+  - "Show in report": opens the report at `#r-<rid>` when `report_anchor` is set; otherwise it is disabled with "This result is not cited in the current report".
+  - "Show in the notebook": opens `notebook_hint.path` in the editor and selects the first line that contains `notebook_hint.search`.
+  - "Ask the agent about this" (H).
+- **Stale detail.** It shows `stale_reason` in words:
+  - `reason` verbatim;
+  - "code changed: <modules>";
+  - "computed from a result that is not current: <rid8 list>";
+  - "the case or dataset file changed".
+
+**Uncertainty (E).** It lives in the detail of a `policy.evaluation` or `evaluate.regression` result.
+
+- **Policy evaluation (binary).** For each rule in `params.rules`, one row with paired interval bars:
+  - each model's `precision` and `recall` as a point inside its `intervals.<fit>` interval;
+  - the `deltas.<fit.logistic>.precision` difference as a point and interval on an axis that includes 0, with a 0 rule.
+- **Regression evaluation.** Each model's MAE and RMSE with their intervals, and the delta with its interval and a 0 rule.
+- **Under each delta.** One fixed sentence, chosen by the position of the interval:
+  - entirely above or below 0: "On these rows the interval stays on one side of zero.";
+  - otherwise: "The interval includes zero: on these rows the difference could be chance."
+
+  It is followed by the bootstrap description: "Paired bootstrap, <replicates> replicates, <level> level." The values are those of the result.
+- **Small data.** The `small_validation_partition`, `capacity_exceeds_validation`, and `high_cardinality_grouping` items of `not_yet_defensible` that concern this result's slots are shown inside the detail, as warning boxes, verbatim.
+
+**Lineage (C).** A horizontal flow of `lineage` nodes for the selected result: its ancestors (sources, decisions, results), the result, and its consumers (results and artefacts). It is rendered as an ordered list of chips separated by aria-hidden arrows. Each chip shows its kind and status ("bank.csv · sha ok", "split · your decision"). Below it:
+
+- **Impact sentence.** It is built from `impacts`. For each impact whose `stale_slots` contains the selected slot: "Changing <decision title> (<change>) would make <stale_slots> stale; <kept fits> would stay current." For example: "Changing the feature list would make fit.logistic, its predictions and the policy evaluation stale. fit.baseline would stay current."
+- **Lineage table.** A "Show as a table" toggle renders the nodes and edges as a table, for keyboard and screen-reader users.
+
+**Exposure ledger (C).** It is a table of `exposure.ledger`. The purpose labels are:
+
+| Purpose | Label |
+|---|---|
+| `structural_inspection` | "Structural inspection" |
+| `train_eda` | "EDA" |
+| `train_fit` | "Model fitting" |
+| `validation_model_evaluation` | "Model evaluation" |
+| `validation_policy_selection` | "Rule selection" (binary only; regression selection is recorded under model evaluation) |
+
+The columns are Purpose, Partition, Rows, and "Recorded by" (activities). The row of a purpose used for selection on validation rows is highlighted. Below the table:
+
+- the `validation_is_not_independent` and `public_data_already_explored` texts of `not_yet_defensible`, verbatim, when present;
+- "Changing the split does not make explored rows unseen." whenever `split.values.overlap` is not null.
+
+| Id | Requirement |
+|---|---|
+| EV-1 | The Current filter lists exactly the promoted current results. The Stale filter lists none of their figures |
+| EV-2 | The ledger rows and counts equal `evidence.exposure.ledger`. Bank fixture: five rows, as in the mockup |
+| EV-3 | A deep link `vscode://hypotrail-local.hypotrail-companion/result/<rid>` opens Evidence with that result selected and focused. An invalid id shows "This Hypotrail link is not valid." and opens nothing |
+| EV-4 | "Show in report" opens a `file:` URI whose fragment is `r-<rid>`. It is disabled when `report_anchor` is null |
+| EV-5 | Interval bars expose their values in an accessible table ("Show values"). An interval that includes 0 shows the "could be chance" sentence |
+| EV-6 | The lineage of `fit.logistic` in the Bank fixture lists the dataset, split, feature availability, fit.logistic, policy.evaluation, and the report and notebook, in that order |
+
+### 6.5 What if? (stage v2)
+
+Mockups: `WhatIf.dc.html` (binary) and `Regression.dc.html` (regression part).
+
+**Banner on every state of this tab.** It uses the experiment colour and an icon: "**Experiment, not adopted.** Nothing here changes the study. Computed from saved predictions; no model is refitted." It carries `role="note"` and `data-experiment`.
+
+#### 6.5.1 Binary: policy sandbox
+
+- **Rule type.** A segmented control with Threshold and Capacity (`aria-pressed`).
+- **Slider.**
+  - Threshold: `<input type="range">` from 0 to 1, step 0.01. The label reads "Act on rows whose score is at least <t>".
+  - Capacity: from 1 to `n` (the validation rows, from the current `policy.evaluation.values.n` or the `split` validation `n_rows`), step 1. The label reads "Act on the <k> highest-scored rows".
+  - The initial position is the adopted or proposed rule when there is one, else the first evaluated rule.
+  - The value is also editable in a number input bound to the slider.
+  - `aria-valuetext` is "<k> rows" or "score at least <t>".
+- **Under the slider (capacity).** "<k> of the <n> validation rows = <share> of rows. Extrapolate this as a rate, not as a count." The share is `k/n`, the only ratio the client computes. It is marked `data-literal="parameter"` and is a direct restatement of the junior's own parameter.
+- **Comparison.** For each model (the logistic model and the baseline), bars of precision and recall from `preview.evaluations[rule][fit]`, with `selected`, `true_positives`, and the tie note when `tied_at_cut` is true ("Ties at the cut counted pro rata."). A `null` ratio is shown as "not defined (no row selected)".
+- **Intervals.** After the slider is released, the panel requests `--intervals` for the current rule and shows the paired difference bar (E) with the sentence of §6.4.
+- **Rules already evaluated.** A table from the current `policy.evaluation`, with these columns:
+  - Rule;
+  - Selected;
+  - True positives, with the column title from the case, `target`, or "Positives";
+  - Precision;
+  - Recall;
+  - Status: "adopted" (confirmed policy value), "proposed" (open proposal value), or "evaluated".
+
+  The superseded rules of earlier evaluations are not shown, because their results are stale (INV-7).
+- **Propose.** The button "Propose this rule" (`data-write="propose"`, W3) is enabled only when the slider's canonical rule is one of `policy.evaluation.params.rules`, that is, when `preview proposal` says `proposable: true`.
+  - Its hint reads "Creates a proposal only. You will confirm it in your own words in Decisions."
+  - For a rule that has not been evaluated, the button is replaced by the text "This rule has not been evaluated by the engine yet, so it cannot be proposed here." and "Ask the agent to evaluate <rule>" (H).
+
+The capacity text above is case-neutral: "rows", not "clients". The case's own vocabulary appears only through engine texts.
+
+#### 6.5.2 Regression: residual explorer
+
+There is no slider. The panel shows:
+
+- **Model selector.** The linear model or the training mean (radio).
+- **Error comparison.** MAE with its interval for each model, and the paired difference with its interval (E), from `evaluate.regression`. The heading is "Error on <validation description> · <n> validation rows". For an ordinal split the validation description is "<column> ≥ <cutoff>" (for example, "model_year ≥ 79"), from the split values.
+- **Residual summary.** The selected model's `residuals` quantiles, as a box plot: "Residual = observed − predicted; a positive residual means the model predicted too low."
+- **Bias by group.** From `residuals_by` (the time column), bars of `mean_residual` per group on an axis centred at 0, with `small_count` hatched.
+  - When every group's mean residual has the same sign, a fixed sentence follows: "Every group is <positive|negative>: the model predicts these rows <too low|too high> on average." It is followed by the `extrapolation` glossary term when the split is `ordinal_cutoff`: "**Extrapolation**: predicting outside the range seen in training."
+- **Split limits.** The `split.values.groups` (when `shared_groups > 0`): "<shared_groups> <column> values appear on both sides of the split (<validation_rows_in_shared_groups> validation rows). These rows are not fully independent. Grouped splits are not supported in this version."
+- **Propose.** "Propose this model choice" (W3), enabled when `preview proposal model_choice --value=<slot>` is `proposable`.
+
+#### 6.5.3 Interactions and performance (What if?)
+
+- Slider `input` events are debounced by 300 ms, and only the latest request is kept. A response whose `seq` is not the latest is dropped. At most one `preview policy` runs at a time.
+- Results are cached per `(revision, canonical rule, intervals)`, keeping the last 64.
+- Each CLI start costs about 0.5 to 2 s: `uv run` plus numpy and reading the predictions. While a preview is pending, the last values stay on screen, dimmed, with "Updating...". The slider never blocks.
+
+| Id | Requirement |
+|---|---|
+| WI-1 | The banner is present in every state of the tab (loading, error, empty, populated) |
+| WI-2 | Moving the slider never runs a mutating argv. A test records every argv during 20 slider moves: only `preview policy` appears, at most one per 300 ms window |
+| WI-3 | "Propose this rule" is enabled only for a canonical rule in `params.rules`. The propose argv is exactly W3, with the draft's texts byte-identical to `preview proposal` |
+| WI-4 | A regression study renders §6.5.2 and none of §6.5.1, and INV-12 holds |
+| WI-5 | Values from `preview` are never shown outside this tab |
+
+### 6.6 Learn & hand off (stage v3)
+
+Mockup: `Regression.dc.html` (learning parts).
+
+#### 6.6.1 Learning layer (G)
+
+The learning layer is shown only when `learningLayer` is true.
+
+**Glossary hovers.** Hovers apply to terms that the panel's own copy marks (`data-term="<id>"`), for example "Class imbalance", "MAE", or "Extrapolation".
+
+- On hover, or on focus (keyboard), a tooltip (`role="tooltip"`, linked with `aria-describedby`) shows the `term` in bold, the `definition`, and the `example` segments when `example_status == "shown"`. The term comes first (AGENTS.md: the term first, then the contextual example).
+- Escape closes the tooltip.
+- A term absent from `explain.terms` (task filter) is not marked.
+
+**Concept cards.** At the top of the tab and, when the layer is on, at the first appearance of a step in Overview, there is one card per plan step that is `current` or `awaiting_confirmation`. The card is built from `explain.steps[step]`:
+
+- the concept term, then its definition;
+- `context`, `interpretation`, and `consequence` segments.
+
+A card is "seen" each time it is fully visible for 2 s; it is not counted twice in one panel session. After it has been seen **twice**, it is collapsed to a one-line link "Show the concept: <term>". A "Hide concept cards" preference hides every card. Both are stored locally (§10).
+
+**Predict before you look.** For each `explain.predictions` item whose step is current or done and that the junior has not answered for this study:
+
+- a box shows "Optional · before you look", the `question`, and the `choices` as buttons;
+- choosing one stores the choice locally (§10), then shows `reveal` when `available` (else "The answer appears once the engine has computed it.");
+- the reveal box carries "Kept on this computer only. Never written to the study."
+
+The answer is never sent to the CLI, the chat, or the study. "Reset my answers for this study" clears them.
+
+| Id | Requirement |
+|---|---|
+| LE-1 | No message carrying a prediction choice ever reaches `cli.js`. A unit test spies on `run` |
+| LE-2 | A concept card collapses after its second sighting, and the count survives a panel reload (globalState) |
+| LE-3 | Turning `learningLayer` off removes every tooltip, card, and prediction, and no `explain` call is made |
+| LE-4 | Tooltips appear on focus as well as hover, and close on Escape |
+
+#### 6.6.2 Hand off (I)
+
+**Export.** A section "Hand the study over", with the button "Export a handoff pack" (`data-write="export"`, W7).
+
+- The extension asks for a parent folder with a folder dialog (`showOpenDialog` with `canSelectFolders`, default `<study>/handoff/`) and passes `--out=<parent>/revision-<n>`. The default output is CC §7's.
+- The outcome lists the files written with their sizes, `warnings` in words, and "Open folder" (`revealFileInOS`).
+- With exit code 3, the outcome reads "The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it."
+
+**Reviewer mode.** A line explains it: "A reviewer can open this study read-only with "Hypotrail: open the study panel (reviewer, read-only)"."
+
+- HO-1. Export runs the exact argv of W7. A non-empty target gives the `export_target_exists` refusal, verbatim.
+- HO-2. Export is absent in reviewer mode. (A reviewer exports with the CLI if they need to; that is an open question.)
+
+#### 6.6.3 Session report (J)
+
+The session report is in a collapsed `<details>` titled "Session report (for an observed session)". Expanding it runs `session-report`. It shows:
+
+- `sources.session_log.enabled`, as "Session log: on" or "off", with `sources.session_log.note` verbatim;
+- `span` (first, last, and duration);
+- `pauses` (seconds per pause);
+- `refusals` counts by code and reason;
+- `decisions` (seconds open, refused confirmations);
+- `gaps`.
+
+It shows no conversation content, because the report holds none.
+
+The panel **does not** turn the session log on or off, because that would be a write. When the log is off, the panel shows the existing instruction verbatim: "Start the CLI once with HYPOTRAIL_SESSION_LOG=1 to turn it on; delete .hypotrail/session-log.jsonl to turn it off."
+
+- SR-1. The view shows the log status and no `user_words`. A test asserts that no fixture `user_words` string appears in the section.
+
+### 6.7 Glossary, concept, and term marking in other tabs
+
+Terms marked in the panel's own copy are listed in `media/terms.js`, a map from `data-term` id to the place where it occurs. A test checks that each id exists in the glossary of at least one task.
+
+### 6.8 Agent bridge (H, stage v2)
+
+The "Ask the agent about this" buttons appear on:
+
+- decision cards;
+- reconfirmation items;
+- Evidence details;
+- not-yet-defensible items;
+- What if? for a rule that has not been evaluated;
+- Learn concept cards.
+
+Pressing one opens a small modal inside the webview. Its fields are:
+
+- "About": read-only, the cited object;
+- "Your question": an empty textarea, which may stay empty;
+- the buttons "Copy for the chat" and "Insert into the chat" (the latter only when `chatInsert` is true).
+
+The text prepared is a fixed template in English:
+
+```text
+Question about my Hypotrail study (<study folder name>), revision <N>.
+About: <kind> <id> — <label>.            e.g. "result 1a2b3c4d (fit.logistic, validation AUC)"
+                                              or "decision policy (proposal p_7, open)"
+My question: <typed question, or "Can you explain this and what it means for my study?">
+This is a question, not a confirmation of anything.
+```
+
+- It never includes the junior's draft confirmation words, a restatement, or study values beyond the identifiers above.
+- **Copy** uses `vscode.env.clipboard.writeText(text)`, then shows "Copied. Paste it into the chat with your assistant."
+- **Insert** runs `vscode.commands.executeCommand('workbench.action.chat.open', { query: text, isPartialQuery: true })`.
+  - **Unverified:** the command id and the `query` and `isPartialQuery` arguments come from offline knowledge of VS Code 1.9x. They have not been checked against the documentation or a real VS Code. The extension never passes an option that submits.
+  - If the command throws or is missing, the bridge falls back to Copy and says so.
+  - Because an older VS Code could submit a query that ignores `isPartialQuery`, `chatInsert` stays off by default until the first real VS Code session verifies that the text is inserted and **not sent** (ADR 0004, v2 exit criteria).
+  - The Claude Code extension and other agent chats have no insertion API; Copy is their path.
+
+| Id | Requirement |
+|---|---|
+| AB-1 | The bridge never calls `vscode.lm`, never sends, and never includes the textarea content of a decision card. A unit test checks the template against a card whose draft words are set |
+| AB-2 | With `chatInsert` false, only the clipboard is used. With it true and a throwing command, the clipboard is used and the notice says so |
+
+## 7. Allowed writes (whitelist)
+
+`A` is `agent.argv`, `S` is the study directory, `ID` is a fresh UUID v4, and `R` is the revision that the junior's view showed. The controller builds every argv. The webview sends only the identifiers and the typed words; it never sends argv fragments, restatements, or option names.
+
+| W | Stage | Trigger | Exact argv | Pre-checks in the controller (any failure is `kind: "invalid"`, nothing runs) |
+|---|---|---|---|---|
+| W1 | v0 | Confirm in my words | `A decide confirm <pid> --user-words=<words> --channel webview --actor user --request-id ID --expected-revision R --json --study S` | `pid` matches `^p_[0-9]+$` and is in the last snapshot's open proposals; `words` is non-blank and at most 4000 characters; not reviewer; not busy |
+| W2 | v0 | Withdraw (after a modal) | `A decide withdraw <pid> --request-id ID --expected-revision R --json --study S` | as W1, without words; the modal answered "Withdraw" |
+| W3 | v2 | Propose this rule or model choice (after a modal) | `A decide propose <d> --value=<v> --restatement=<draft.restatement> --rationale=<draft.rationale> --channel webview --request-id ID --expected-revision <draft.revision> --json --study S` | `d` ∈ {`policy` binary, `model_choice` regression}; `v` is a canonical rule or a fit slot. The controller itself re-runs `preview proposal <d> --value=<v>` **immediately before**, requires `proposable: true` and `draft.revision == R`, and takes the texts from that draft only. The modal: "Create a proposal for <title>: <v>? It is not a decision. You will confirm it in your own words in Decisions." plus "It replaces the open proposal p_N." when `supersedes_proposal` is set. [Propose] |
+| W4 | v2 | Run on training rows | `A run <activity> --column=<c> --request-id ID --expected-revision R --json --study S` | `activity` ∈ the `eda_catalog.activities[].activity` values with `per_column: true` and `runnable: true` of the evidence read at revision R; `c` is one of that activity's `columns[].name` |
+| W5 | v1 | Regenerate | `A render --json --study S` | not reviewer; not busy |
+| W6 | v1 | Acknowledge in my words | `A run --acknowledge-interruption <eid> --user-words=<words> --request-id ID --expected-revision R --json --study S` | `eid` is in the snapshot's `executions.interrupted` or `suspected_interrupted`; `words` is non-blank and at most 4000 characters |
+| W7 | v3 | Export a handoff pack | `A export handoff --out=<chosen folder>/revision-<R> --json --study S` | the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
+
+**Not in the whitelist, whatever the stage.**
+
+- `decide propose` of any other decision;
+- `decide confirm --basis ...` or `--delegation-scope`;
+- `decide note`, and `decide note --resolve`;
+- `run` of `split`, `fit.*`, `policy.evaluate`, or `evaluate.regression`;
+- `run eda.*` without `--column` (the non-per-column `eda.target_rate`, `eda.target_summary`, and `eda.special_values` are run by the agent as part of the plan);
+- `run --max-groups`;
+- `check --text`;
+- `init`.
+
+A unit test enumerates the argv builder module and asserts that exactly these seven builders exist.
+
+**Outcome handling (all writes).**
+
+| Result | Panel |
+|---|---|
+| `ok: true`, exit 0 | Success region: what was recorded (`user_words` verbatim for W1 and W6, the proposal id for W3, the slot and status for W4, the artefact messages for W5, the files for W7), then a refresh |
+| `ok: true`, exit 3 | Success with problems: the artefact messages, verbatim |
+| `ok: true`, `run.status` `late_not_promoted` | "The result was computed but not used: the study changed while it ran. Nothing in the study changed." |
+| `ok: false`, any exit | The refusal (INV-8). Exit 4 adds "An execution has an unknown outcome." |
+| no JSON, timeout, start failure | "The outcome is unknown: the refreshed panel shows whether anything was recorded." (v0) |
+| replayed | It cannot happen (new id per submission). If it does, it is shown as success with "(replayed, no effect)" |
+
+**Timeouts.** Reads: 30 s. W1, W2, W3, W5, and W7: 120 s. W4: 300 s, because EDA loads the dataset with pandas.
+
+## 8. Webview ↔ extension message protocol (`hypotrail.panel/2`)
+
+- **Envelope.** Every message is a JSON object `{v: 2, type, ...fields}`.
+- **Unknown or invalid messages.** A message with an unknown `type`, an extra field, a wrong type, or `v !== 2` is dropped and counted in `diagnostics.ignored`. It is never answered.
+- **Validation.** Both sides validate with one schema table in `lib/protocol.js`. The webview copy is `media/protocol.js`, generated by WP-0's script `lib/protocol.js --emit-webview`. A test asserts that the two are identical.
+- **v0.** The v0 messages (implicitly `/1`) are retired. The v0 tests are migrated to `/2`, not deleted.
+
+### 8.1 Webview → extension
+
+| `type` | Fields (all required unless marked `?`) | Stage |
+|---|---|---|
+| `ready` | — | v0 |
+| `refresh` | — | v0 |
+| `load` | `view` ∈ `summary`, `decisions`, `eda`, `evidence`, `whatif`, `explain`, `check`, `session_report`; `resultId?` (64 hex, `evidence` only); `since?` (int ≥ 0, `summary` only). `eda`, `evidence`, and `whatif` share the cached `evidence` read and differ by their model function | v1 |
+| `confirm` | `proposalId` (`^p_\d+$`), `words` (string ≤ 4000), `revision` (int ≥ 1) | v0 |
+| `withdraw` | `proposalId`, `revision` | v0 |
+| `preview_effects` | `proposalId`, `revision` | v1 |
+| `preview_policy` | `rules` (1–4 strings matching `^(threshold:(0(\.\d+)?\|1(\.0+)?)\|capacity:[1-9]\d{0,6})$`), `intervals` (bool), `seq` (int ≥ 0) | v2 |
+| `draft` | `decisionId` ∈ `policy`, `model_choice`; `value` (string ≤ 64); `revision` | v2 |
+| `propose` | `decisionId`, `value`, `revision` | v2 |
+| `run_eda` | `activity` (`^eda\.[a-z_]+$`), `column` (string, 1–200 characters), `revision` | v2 |
+| `render` | — | v1 |
+| `acknowledge` | `executionId` (string, 1–100 characters, `^[A-Za-z0-9_.-]+$`), `words`, `revision` | v1 |
+| `open_artifact` | `artifact` ∈ `report`, `notebook`, `workbench`; `resultId?` | v0 (+ `resultId` v2) |
+| `navigate_external` | `kind` ∈ `reveal_export`; `path` (string, must equal the last export's `out`) | v3 |
+| `ask_agent` | `about: {kind ∈ result, decision, proposal, step, limit, execution, term; id (string ≤ 100)}`, `question` (string ≤ 2000), `mode` ∈ `copy`, `insert` | v2 |
+| `export_handoff` | `revision` | v3 |
+| `switch_study` | — | v1 |
+| `learn_set` | `key` ∈ `seen`, `prediction`, `prefs`, `reset_predictions`; `id` (string ≤ 100, `^[a-z0-9_.:-]+$`); `value` (for `seen`: no value; `prediction`: a choice id ≤ 40; `prefs`: `{hideCards?: bool}`) | v3 |
+
+### 8.2 Extension → webview
+
+| `type` | Fields | Notes |
+|---|---|---|
+| `init` | `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`) | sent once after `ready`, and again when a setting changes |
+| `snapshot` | `revision`, `model: SummaryModel` | after every summary read |
+| `view_data` | `view`, `revision`, `model` (the model of §9 for that view), `resultId?` | |
+| `load_error` | `view` (or `null` for the summary), `message`, `detail` | |
+| `busy` | `busy` (bool), `op` (W id or `read`) | |
+| `outcome` | `op` (`W1`–`W7`), `kind` ∈ `ok`, `ok_with_problems`, `not_promoted`, `refused`, `failed`, `invalid`, `cancelled`; `target?` (pid, eid, slot); `revision?`; `refusal?` (`{code, reason, engineMessage, human, details: [string]}`); `recorded?` (`{userWords?, proposalId?, slot?, status?, files?: [{path, bytes}]}`); `artifacts?` (`[{name, status, message}]`); `message?` | |
+| `preview_policy_result` | `seq`, `revision`, `model: PolicyPreviewModel` | dropped by the webview when `seq` is not the latest it sent |
+| `effects` | `proposalId`, `revision`, `model: EffectsModel` | |
+| `draft_result` | `decisionId`, `value`, `revision`, `model: DraftModel` | |
+| `learn_state` | `prefs`, `seen: {cardId: count}`, `predictions: {questionId: choiceId}` (this study only) | after `ready` and after each `learn_set` |
+| `navigate` | `{tab, kind, id}` | deep link and "go to a result" |
+| `notice` | `text`, `politeness` ∈ `polite`, `assertive` | copy confirmation, invalid link, etc. |
+
+**Protocol tests (frozen by WP-0).** For every type: one valid example, one example with an extra field, and one with a wrong type, in both directions. Plus a round-trip test: every model fixture sent as `view_data` passes webview validation.
+
+## 9. Models (extension-side projections)
+
+The models are pure functions in `lib/models/*.js`, from CLI payloads to plain objects. They hold only strings, numbers, booleans, arrays, `null`, and objects. Unknown payload keys are ignored, and a missing key becomes `null` or `[]`. Each model function throws a `ModelError` for a wrong `schema`. The webview renders models and nothing else.
+
+| Model | Function | Input | Keys (top level) |
+|---|---|---|---|
+| `SummaryModel` | `toSummaryModel(summary)` (`lib/models/summary.js`, extends v0 `toModel`) | `hypotrail.summary/1` | `study`, `revision`, `task` (`null` in v0; from `plan` step ids: `model_choice` ⇒ regression), `recap[5]`, `goal`, `currentStep`, `plan[{id, title, status, pause, basis}]`, `moments[{id, title, steps}]`, `pauses`, `nextAction`, `artifacts[{name, label, path, status, message}]`, `artifactsStatus`, `proposals[{proposalId, decisionId, decisionTitle, value, restatement, revision, origin, holds, resolvedNotes}]`, `holds`, `executions{interrupted, suspected, late, active}`, `notYetDefensible{top, more}`, `alerts[{id, text}]`, `digest{since, sinceTime, gapMinutes, items[{revision, time, kind, text, keptFits, refit}], truncated}`, `waitingCount` |
+| `DecisionsModel` | `toDecisionsModel(p)` | `hypotrail.decisions/1` | `revision`, `decisions[...]`, `queue[...]`, `history[{decisionId, title, value, userWords, basis, scope, channel, actor, revision, time, current, supersededAt}]`, `unconfirmedProposals[...]` |
+| `EffectsModel` | `toEffectsModel(p)` | `hypotrail.preview_effects/1` | `proposalId`, `firstConfirmation` (bool), `kept{fitsAllKept, slots}`, `reconfirm[{id, title}]`, `stale[slots]`, `blocked[{code, reason, message}]`, `regenerated[names]`, `note` |
+| `EvidenceModel` | `toEvidenceModel(p)` (`lib/models/evidence.js`) | `hypotrail.evidence/1` | `revision`, `task`, `results[...]`, `ledger[...]`, `lineage`, `impacts`, `sources`, `detail`, `uncertainty` (interval rows of the current evaluation) |
+| `EdaModel` | `toEdaModel(p)` (`lib/models/eda.js`) | `hypotrail.evidence/1` | `revision`, `task`, `cards[{slot, activity, column, resultId, current, kind, data}]`, `catalog[{activity, label, perColumn, columns, runnable, missing}]`, `rowsSeen{trainEda, validationEda, validationModels}` |
+| `WhatIfModel` | `toWhatIfModel(p)` (`lib/models/whatif.js`) | `hypotrail.evidence/1` | `task`, binary: `n`, `evaluatedRules[{rule, selected, truePositives, precision, recall, status}]`, `initialRule`; regression: `models`, `errors`, `deltas`, `residuals`, `residualsBy`, `splitLimits` |
+| `PolicyPreviewModel` | `toPolicyPreviewModel(p)` | `hypotrail.preview/1` | `rules`, `byRule{rule: {models: {fit: {selected, truePositives, precision, recall, volume, tiedAtCut}}, intervals, deltas}}`, `adopted`, `note`, `modelsCurrent` (bool) |
+| `DraftModel` | `toDraftModel(p)` | `hypotrail.proposal_draft/1` | `proposable`, `missing`, `restatement`, `rationale`, `evidence`, `supersedesProposal`, `note` |
+| `ExplainModel` | `toExplainModel(p)` | `hypotrail.explain/1` | `terms{id: {term, definition, example(segments\|null)}}`, `steps`, `predictions` |
+| `CheckModel` | `toCheckModel(p)` | `hypotrail.check/1` | `clean`, `counts`, `findings[{code, severity, where, message, location}]` |
+| `SessionReportModel` | `toSessionReportModel(p)` | `hypotrail.session_report/1` | `log{enabled, note}`, `span`, `pauses`, `refusals`, `decisions`, `gaps` |
+
+**Segments.** A segment is rendered as a text node or a `<data value data-result-id data-path>` element with a title of "result <rid8>... · <path>". This is the same convention as the report, so a number in the panel can be traced the same way.
+
+**Number formatting.** It follows the `format` given by the engine (`int`, `pct0`–`pct2`, `f1`–`f4`) through one function `media/format.js`. That function is a port of `cite.fmt_number`, with a test that compares its output with Python's for 200 values.
+
+## 10. Local storage
+
+| Store | Keys | May hold | Must not hold |
+|---|---|---|---|
+| `vscode.setState` (webview, per panel) | `drafts{pid: text}` (v0), `ackDrafts{eid: text}`, `askDraft`, `tab`, `recapCollapsed`, `evidenceFilter`, `selectedResult` | draft words the junior is typing (never sent until submitted), view navigation | anything read back as a decision, or a number |
+| `context.globalState` (extension) | `hypotrail.learn.prefs = {hideCards: bool}`; `hypotrail.learn.seen = {cardId: count ≤ 99}` (at most 500 ids); `hypotrail.learn.predictions = {studyKey: {questionId: choiceId}}` (at most 50 studies, oldest removed first) | learning-layer preferences, seen cards, prediction answers | study values, words, revisions, proposal or result ids, paths |
+| `context.workspaceState` | not used | — | — |
+
+- `studyKey` is the first 16 hexadecimal characters of the SHA-256 of the absolute study path, so the path itself is not stored.
+- `cardId` is `<task>:<step id>` or `term:<id>`.
+- `check_layout.py` keeps forbidding `localStorage` and `indexedDB`.
+- A unit test asserts that `globalState.update` is called only with these three keys, and with values that pass their schema.
+- Draft words in `setState` are deleted on a successful confirmation, a successful acknowledgement, a withdrawal, or when the proposal is no longer open (v0 behaviour, extended to acknowledgement drafts).
+
+## 11. Performance
+
+| Item | Budget and rule |
+|---|---|
+| CLI calls on open | 1 (`status --summary --digest`) |
+| CLI calls on a watch event | 1 summary read, plus 1 read for the visible tab if its data revision is now older. Hidden tabs reload lazily when shown. Effects are re-read only for visible cards |
+| Coalescing | v0 coalescing applies to every data key: concurrent requests for one key at one revision share one process. A request made while one is running for the same key runs once more after it (v0 `again`) |
+| Cache | Per data key and revision. The entries of older revisions are dropped when a newer summary arrives, except `preview:*` (64 most recent) and `explain` (kept until the revision changes) |
+| Debounce | Watch events: 250 ms (v0). Slider: 300 ms. Variable select: no CLI call |
+| Concurrency | At most 2 read processes at once (summary plus one tab read); `preview policy`: at most 1; writes: 1 and exclusive (reads wait) |
+| Payload size | `evidence` with 200 results is expected under 1 MB. `MAX_BUFFER` is raised from 8 MB to 16 MB. A payload over the limit is a `load_error` "The study's evidence is too large to show (more than 16 MB)." |
+| Measured, not asserted | The integration test records the wall time of each read command on the synthetic study and writes it to the test output, as ADR 0002 asks. There is no invented threshold. A regression of more than 2x between two recorded runs is a review item for the integrator, not a failure |
+| Rendering | The webview re-renders only the tab whose model changed, keeps focus (v0) and scroll position, and renders at most 200 registry rows. More rows need "Show more" |
+
+## 12. Security
+
+The v0 rules still apply: CSP, nonce, no command URIs, no local resource roots, `retainContextWhenHidden: false`, `textContent` only, and whitelisted messages. These additions apply on top:
+
+- **Charts are inline SVG.** They are built with `document.createElementNS`. Geometry goes through `setAttribute` on SVG geometry attributes (`x`, `y`, `width`, `height`, `d`, `points`), and colour goes through `fill` and `stroke` attributes that take values from a fixed palette in `media/core.js`. A `style` attribute is never used: an inline style attribute is blocked by the nonce-only `style-src`. Dynamic widths of HTML elements are set with `element.style.setProperty`, which goes through CSSOM and is allowed under that CSP; a Playwright test runs with the real CSP and checks that no CSP violation is reported (`securitypolicyviolation` listener).
+- **No URI is created from study text.** Links are buttons that post messages. The extension opens only these targets:
+  - `file:` URIs of the three deliverables;
+  - the study's own files named by `check` locations, resolved and required to stay inside the study folder;
+  - the export folder.
+- **Location paths.** `location.path` is resolved with `path.resolve(S, path)` and must start with `S + path.sep`. Otherwise "Open" is not offered.
+- **Argv.** Built only in `lib/cli.js`. Values from the webview reach an argv only through the W pre-checks of §7, in `--opt=value` form, and are checked against `\0`. There is never a shell.
+- **URI handler.** Path and query are parsed with `URLSearchParams` and the patterns of CC §11. `study` must equal a discovered study's path, or one the junior confirms in the quick pick. Otherwise the handler opens the quick pick. A link never triggers a write.
+- **Clipboard.** It is written only by the agent bridge, with the template of §6.8.
+
+## 13. Accessibility and theme
+
+**Structure.** One `h1`, the panel title, visually hidden. Each tab panel has an `h2`, and sections have `h2` or `h3`. Landmarks are `header`, `nav` (the tablist), `main`, and `footer`.
+
+**Keyboard.** Every control is reachable with Tab. The tabs use the arrow keys. Escape closes tooltips and modals, and focus returns to the opener. Modals trap focus. Sliders follow the native `range` keyboard; Page Up and Page Down move by 10 % of the range.
+
+**Announcements.** One polite live region carries outcomes and "Updated to revision N". Refusals, load errors, and alerts carry `role="alert"`, as in v0.
+
+**Charts.** Every chart has:
+
+- an accessible name ("Outcome rate by job, training rows");
+- a "Show values" toggle that renders the same data as a `<table>`;
+- small counts that are indicated by text, not by colour or pattern alone;
+- contrast of at least 3:1 for marks and 4.5:1 for text against the background, in both themes.
+
+**Motion.** Highlight transitions are disabled under `prefers-reduced-motion: reduce`.
+
+**Theme tokens.** The tokens are defined in `media/css/tokens.css`. Each one maps a VS Code variable first and falls back to the mockup colour (light) or its dark counterpart:
+
+| Token | VS Code variable | Light fallback | Dark fallback |
+|---|---|---|---|
+| `--ht-bg` | `--vscode-editor-background` | `#FBFAF7` | `#1E1F21` |
+| `--ht-surface` | `--vscode-sideBar-background` | `#FFFFFF` | `#252628` |
+| `--ht-border` | `--vscode-panel-border` | `#E3E1DA` | `#3A3C3F` |
+| `--ht-fg` | `--vscode-foreground` | `#1C1E21` | `#E6E6E3` |
+| `--ht-muted` | `--vscode-descriptionForeground` | `#5B6066` | `#A3A7AD` |
+| `--ht-accent` | (fixed brand) | `#0F6E66` | `#4FB3A9` |
+| `--ht-done-bg` | (fixed) | `#E3F1EF` | `#1F3A37` |
+| `--ht-warn-bg` / `-border` / `-fg` | `--vscode-inputValidation-warningBackground` / `-warningBorder` / `--vscode-foreground` | `#FCEFD9` / `#EBCB97` / `#4A2604` | `#3A2C14` / `#8A6A2E` / `#F2DDB8` |
+| `--ht-error-bg` / `-border` / `-fg` | `--vscode-inputValidation-errorBackground` / `-errorBorder` / `--vscode-errorForeground` | `#FBE7E4` / `#E6B3AB` / `#6B1E14` | `#3B1F1B` / `#8A3B30` / `#F4C7BF` |
+| `--ht-experiment-bg` / `-fg` | (fixed) | `#EEE8F7` / `#3A2363` | `#2C2340` / `#D9CCF2` |
+| `--ht-link` | `--vscode-textLink-foreground` | `#1D5FAF` | `#6FA8E8` |
+| `--ht-font` / `--ht-mono` | `--vscode-font-family` / `--vscode-editor-font-family` | `system-ui, sans-serif` / `ui-monospace, monospace` | — |
+
+No remote font is loaded: the mockup's IBM Plex is replaced by the VS Code fonts.
+
+- A11Y-1. axe-core is **not** added, because it would be a dependency. Instead, a Playwright test asserts that every interactive element has an accessible name, every `img`-like SVG has `role="img"` and a name, there is no positive `tabindex`, and focus is visible (outline present) for each control.
+- A11Y-2. Computed contrast of text tokens against `--ht-bg` is at least 4.5:1 in both fallback themes. This is tested by computing WCAG contrast in the test.
+
+## 14. Task variants and vocabulary
+
+| Element | Binary | Regression |
+|---|---|---|
+| Third decision | `policy` | `model_choice` |
+| What if? | policy sandbox (§6.5.1) | residual explorer (§6.5.2) |
+| EDA target card | `eda.target_rate` | `eda.target_summary` |
+| EDA by-column | `eda.rate_by` "Outcome rate by value" | `eda.mean_by` "Target mean by value" |
+| Interval bars | precision, recall, volume, deltas | MAE, RMSE, deltas |
+| Pause 3 label | "business trade-off" | "model choice" |
+| Ledger "Rule selection" row | present when recorded | never (purpose not used) |
+
+**Task detection.** The task comes from `evidence.task` and `decisions.task`. `SummaryModel.task` is derived from the plan's step ids until the summary carries `task`. That is an open question: adding `task` to the summary is additive and cheap, and WP-E1 may add it.
+
+**Forbidden vocabulary.** INV-12 applies to the panel's own strings, which live in `media/copy.js`, keyed by task. The Playwright test of §6 runs the regex on the rendered DOM of all tabs with the Auto MPG fixtures.
+
+## 15. Copy catalogue
+
+All panel-owned strings live in `media/copy.js` (webview) and `lib/refusals.js` (refusal explanations, v0). They are English. They never contain digits, except through placeholders filled from models. They never suggest confirmation words. The strings quoted in this document are normative. New strings follow these rules:
+
+- they are plain sentences, with no exclamation marks;
+- they name the engine's terms (proposal, decision, result, revision);
+- they say "nothing was recorded" after any refusal or cancelled action.
+
+## 16. Stable test hooks
+
+| Attribute | On | Values |
+|---|---|---|
+| `data-tab` | tab buttons and panels | `overview`, `eda`, `decisions`, `evidence`, `whatif`, `learn` |
+| `data-stage` | any stage-gated element | `v1`, `v2`, `v3` |
+| `data-write` | every control that triggers W1–W7 | `confirm`, `withdraw`, `propose`, `run_eda`, `render`, `acknowledge`, `export` |
+| `data-proposal-card`, `data-restatement`, `data-hold` | decision cards | proposal or note id (v0) |
+| `data-outcome`, `data-code`, `data-reason`, `data-engine-message`, `data-human` | outcome regions | v0 |
+| `data-result-id`, `data-path`, `data-value` | cited numbers | engine values |
+| `data-experiment` | What if? banner and preview values | — |
+| `data-literal` | client-derived displays | `axis`, `parameter`, `age` |
+| `data-term` | glossary-marked words | glossary id |
+| `data-eda-card` | EDA cards | slot |
+| `data-ledger-row` | ledger rows | `<purpose>:<partition>` |
+
+## 17. Non-goals
+
+The companion does not get:
+
+- an embedded chat, an LLM call, or `vscode.lm`;
+- its own computation of a statistic, its own state, or a server;
+- model fitting, split, or policy evaluation from the webview;
+- notebook editing;
+- "validate all";
+- delegation;
+- notes or holds from the webview: the junior states a condition in the chat, where the agent records it verbatim (P2);
+- a test partition, or any access to historical holdouts.
