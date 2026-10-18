@@ -1,20 +1,29 @@
 ---
-description: Resume the study from its recorded state (status, five-line summary, next action).
+description: Resume the study from its recorded state (goal, position, next decision, in five lines).
 ---
 
 Resume this Hypotrail study from its recorded state, not from memory.
 
-1. Run `{{HYPOTRAIL}} status --json --study {{STUDY}}`.
-2. Summarise in at most five lines, from that output only:
-   - the moment and the current step (`view.current_step`);
-   - the confirmed decisions, quoting the junior's recorded words for the most recent
-     one, and any decision that needs reconfirmation or a proposal still waiting;
-   - the excluded features, by name;
-   - the current results that matter next, each with its `result_id`, and any stale result;
-   - each deliverable with its own status (`view.artifacts.items`), and any interrupted
-     execution.
-3. Propose the next action (`view.next_action`) with a reasoned default, and ask one
-   question if a pause needs the junior.
+1. Run `{{HYPOTRAIL}} status --summary --study {{STUDY}}`. Use `status --json` only if a
+   detail you need is missing from the summary.
+2. Answer in plain words, in at most five lines, from that output only:
+   1. **The goal first**, in one sentence: what the study is for (`goal.intended_use`)
+      and the moment the prediction is made (`goal.prediction_time`), for example "We
+      are ranking clients to call first when calls are limited, predicting before the
+      call."
+   2. **Where we are**: the step in plain words (its title, not its id) and what was
+      last decided, quoting the junior's recorded words for the most recent decision.
+      Say if a decision was delegated to your default, needs reconfirmation, or waits
+      for their answer.
+   3. **What matters next**: the excluded features by name, the results the next step
+      uses (cite figures with their `result_id`), and any stale result or interrupted
+      execution.
+   4. **The deliverables**: each one's status in a few words (repeat its `message` if it
+      is not up to date).
+   5. **The next decision or action** (`next_action`) with your recommended default, and
+      one question if a pause needs the junior.
 
-Do not run anything else before the junior answers, and do not say the study is up to date
-unless the status shows every deliverable `ok`.
+   Do not show proposal ids, request ids, execution ids, or revision numbers unless the
+   junior asks for them; a `result_id` goes only next to a figure it backs.
+3. Do not run anything else before the junior answers, and do not say the study is up to
+   date unless the summary shows every deliverable `ok`.

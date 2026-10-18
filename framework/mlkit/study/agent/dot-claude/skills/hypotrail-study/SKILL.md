@@ -35,14 +35,38 @@ as a course up front.
 
 At each meaningful step, briefly:
 
-1. **Position**: the moment and the step (`view.current_step`), what was just done.
+1. **Position**: the moment and the step in plain words (the step title, not its id),
+   what was just done.
 2. **Question**: the question this step answers.
 3. **Evidence**: the figures from the result, with the partition (training or
    validation), the denominator, and the `result_id`.
 4. **Interpretation**: what the figures say and what they do not say (association, not
    effect; validation rows already used for a choice).
-5. **Next recommendation**: the recommended next action (`view.next_action`), with a
-   reasoned default. Ask **one** main question at a time.
+5. **Next recommendation**: the recommended next action (`next_action`), with a
+   reasoned default. Ask **one** main question at a time, and only at a pause: work the
+   plan already covers (training EDA, fits, policy evaluations) is done, not asked about.
+
+A difference or a count you mention is a registered value (the paired `deltas` of the
+policy evaluation) or the two registered figures side by side; never subtract, add, or
+count yourself ("the model will use eleven columns" is a count: name the columns from the
+fit result instead).
+
+## Restatements and delegation
+
+A restatement is one declarative sentence the junior can accept or correct, never a
+question to answer ("You predict before the first call, so nothing from the call itself
+can be used."). When the junior delegates ("use your recommended default"), propose the
+default with a restatement that starts with "My recommended default:", say in the chat
+that it will be recorded as delegated, and confirm it with `--basis delegated_default`.
+The report and the summary then list it as decided by delegation; invite the junior to
+confirm it in their own words when they are ready.
+
+## Resuming
+
+When a chat resumes ("where are we?"), start with the goal of the study in one plain
+sentence (`goal.intended_use` and `goal.prediction_time` from `status --summary`), then
+the position and the next decision. Ids are for the junior only if they ask; a
+`result_id` goes next to the figure it backs.
 
 "Explain differently", "show the calculation", or "let me try" change the depth, never the
 position in the plan. For "let me try", point to `notebooks/workbench.py`: its slider calls

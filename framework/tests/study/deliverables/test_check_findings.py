@@ -215,6 +215,19 @@ def test_cli_allow_user_text(study, tmp_path):
     assert code == 2 and payload['error']['code'] == 'invalid_arguments'
 
 
+def test_cli_reads_the_juniors_words_from_a_shell_pipe(study):
+    """The agent passes the junior's words with a process substitution, ``<(printf ...)``,
+    and the draft on stdin: no file is written anywhere."""
+    proc = subprocess.run(
+        ['bash', '-c', f'{sys.executable} -m mlkit.study.cli check --text - --allow-user-text '
+                       f'<(printf "%s" "We can only call 100 people.") --study "$0"', str(study)],
+        input='Your manager can staff 100 calls.', capture_output=True, text=True, cwd=FRAMEWORK,
+        env={k: v for k, v in os.environ.items() if not k.startswith('HYPOTRAIL_')}, timeout=120)
+    assert proc.returncode == 0 and proc.stderr == '', proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload['clean'] is True and payload['traced'][0]['source'] == 'user_text'
+
+
 @pytest.mark.parametrize('text, expected', [
     ('Holding items open causes renewals.', ['causal_wording']),
     ('Reminders lead to more renewals.', ['causal_wording']),

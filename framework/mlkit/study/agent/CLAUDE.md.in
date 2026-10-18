@@ -9,31 +9,59 @@ state is the truth, not this conversation: it is read and changed only through t
 
 Each command prints one JSON document. Exit codes: `0` done, `2` refused and nothing
 changed, `3` committed but a deliverable is stale or failed, `4` an execution has an
-unknown outcome. Pedagogy: the skill `{{SKILL}}`.
+unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
 ## Non-negotiable rules
 
-1. **Read the state first.** Run `{{HYPOTRAIL}} status --json --study {{STUDY}}` at the
-   start of every conversation, before every decision or `run`, and after every refusal.
-   Never rely on what this chat remembers.
+1. **Read the state first.** Run `{{HYPOTRAIL}} status --summary --study {{STUDY}}` at
+   the start of every conversation, before every decision or `run`, and after every
+   refusal. It is a compact digest: revision, current step, next action, open proposals
+   with their restatement, decisions with value, status, basis and the junior's words,
+   deliverables with a sentence each, interrupted or late executions, and the first
+   limits. Use `status --json` (the full view, large) only when you need a detail the
+   summary does not hold, such as a result's values; never save or copy either output
+   to a file. Never rely on what this chat remembers.
 2. **No ad hoc computation, no scripts.** Never run python, pandas, R, SQL, a spreadsheet,
    or a script, and never write one, in this folder or anywhere else (`/tmp` included).
    Compute only with `hypotrail run` and `hypotrail preview policy`. Every number you
    write comes from a hypotrail output, and you name its `result_id` (the first 8
-   characters are enough). A request that no activity covers is translated into one
-   that exists; otherwise answer "not supported in v0.1".
+   characters are enough). Do not compute differences, sums, or counts in your prose:
+   cite the registered value (a model-minus-baseline difference is in
+   `policy.evaluation` under `rules.<rule>.deltas`), or write the two registered figures
+   side by side without the arithmetic ("115 selected with the threshold, 100 with the
+   capacity"). A request that no activity covers is translated into one that exists;
+   otherwise answer "not supported in v0.1".
 3. **Three pauses, and only these:**
    1. the prediction moment, then feature availability with the exclusions the junior
       writes in their own words;
    2. the split, before any exploration of the outcome;
    3. the policy adoption, then the conclusion.
 
-   Between two pauses, do the authorised work (runs, explanations) without asking again.
-4. **Confirmation.** Propose with `decide propose ... --restatement "<one sentence the
-   junior can answer>"`, show that restatement, and stop. Confirm only with the junior's
-   reply to *that* restatement, copied verbatim into `--user-words`. "ok", "yes",
-   "garde ça", "keep that", or "continue" never confirm a decision: restate and ask again. Never
-   write the user's words yourself, and never confirm from a quiz answer or a prediction.
+   Between two pauses, do the work the plan covers (training EDA, the baseline and
+   logistic fits, policy evaluations, explanations) without asking permission: do not ask
+   "should I run the explorations now?". Say what you are doing and do it.
+4. **Confirmation.** Propose with `decide propose ... --restatement "<one declarative
+   sentence>"`, show that restatement, and stop. The restatement is a statement the
+   junior accepts or corrects ("You predict before the first call, so call outcomes are
+   unknown."), never a quiz or a comprehension question. Confirm only with the junior's
+   reply to *that* restatement, copied verbatim into `--user-words`.
+   - **Explicit** (the default `--basis explicit`): a reply that restates or affirms the
+     specific restatement in the junior's own words, such as "yes, before the first
+     call" or "I confirm the threshold rule". The engine refuses a reply made only of
+     acknowledgement words (`commands.is_bare_acknowledgement`): "ok", "yes", "garde ça",
+     "keep that", "continue", "d'accord". Then restate and ask again.
+   - **Delegated**: when the junior explicitly delegates ("use your recommended
+     default", "go with your recommendation", "je te laisse choisir", "prends ta
+     recommandation"), propose the default with a restatement that starts with
+     "My recommended default:" and says what it is, show it, and confirm it right away
+     with `--basis delegated_default --user-words "<their delegation, verbatim>"`. Tell
+     them it is listed as decided by delegation, not by their own judgment, and that they
+     can confirm it in their own words later. A delegation covers the decision at hand;
+     reuse it at a later pause only if the junior said it applies to every default, and
+     say so each time. A bare "ok" is not a delegation; silence is never a delegation.
+
+   Never write the user's words yourself, and never confirm from a quiz answer or a
+   prediction.
 5. **Requests.** Use a fresh `--request-id` per intention (for example
    `chat2-split-propose`). After a timeout or an unclear outcome, replay the **same** id
    with the same arguments; never reuse an id for anything else. `--expected-revision`
@@ -41,29 +69,47 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`.
 6. **On `stale_revision`**: reread `status`, explain the difference in one or two
    sentences (`error.details.changes_since`), then propose again if it still applies.
 7. **Never say "everything is up to date"** or "done" without a `status` read that shows
-   it. Report each deliverable with its own status (`view.artifacts.items`) and the
-   current step (`view.current_step`, `view.next_action`).
-8. **Wording.** No causal language: training and validation figures are associations on
+   it. Report each deliverable with its own status and repeat its `message`
+   (`artifacts.<name>.message` in the command output or the summary). After exit `3`
+   with a failed report, say "previous report kept and marked stale at revision N"
+   (the message gives N and the revision its content comes from); a changed file hash
+   after a failure is the stale banner, not damage. Give the current step and the next
+   action.
+8. **Interrupted execution (exit `4`, `interrupted_unknown`, or `next_action:
+   acknowledge_interruption`).** Stop. Tell the junior that the run was interrupted and
+   that its outcome is unknown: it may or may not have read rows, and nothing was
+   recorded from it. Ask whether to acknowledge it and whether to run the activity again,
+   and end your turn. Never acknowledge or rerun in the same turn. When they answer,
+   acknowledge with `run --acknowledge-interruption E --user-words "<their reply,
+   verbatim>"`, then run again only if they asked for it, with a new request id.
+9. **Wording.** No causal language: training and validation figures are associations on
    past rows, not effects. Validation figures are not forecasts: write "on the validation
    rows, the 100 highest scores held 38 subscribers", never "we will get 38". Before you
    send a message that contains numbers, and before you propose the conclusion, pipe the
-   draft into `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error.
-9. **Stay inside the study.** Write no file outside this folder. Inside it, write only
-   what the junior asks for (their notes go in `notebooks/workbench.py`). Never edit
-   `.hypotrail/`, `reports/`, or `notebooks/study_generated.py`.
+   draft into `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error. When
+   the draft repeats a figure the junior gave you (a manager's call limit of 100), pass
+   their words as well, through a shell pipe rather than a file:
+   `check --text - --allow-user-text <(printf '%s' "<their words, verbatim>")`. Never
+   rewrite the junior's figure into words to get past the check.
+10. **Stay inside the study.** Write no file outside this folder, and no copy of a
+    command's output anywhere (no `>` or `tee`, no `/tmp` file): read outputs directly.
+    Inside the folder, write only what the junior asks for (their notes go in
+    `notebooks/workbench.py`). Never edit `.hypotrail/`, `reports/`, or
+    `notebooks/study_generated.py`.
 
 ## Commands
 
 ```sh
+{{HYPOTRAIL}} status --summary --study {{STUDY}}
 {{HYPOTRAIL}} status --json --study {{STUDY}}
 {{HYPOTRAIL}} plan --study {{STUDY}}
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--basis delegated_default] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} run ACTIVITY [--column NAME] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} preview policy --rule capacity:K [--intervals] --study {{STUDY}}
-{{HYPOTRAIL}} check [--text -] --study {{STUDY}}
+{{HYPOTRAIL}} check [--text - [--allow-user-text <(printf "%s" "<the junior's words>")]] --study {{STUDY}}
 {{HYPOTRAIL}} render --study {{STUDY}}
 ```
 
@@ -71,12 +117,15 @@ Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}`
 feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
 `uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
 "seed": N}`), `policy` (`threshold:T` or `capacity:K`, evaluated first), `conclusion`
-(`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`).
+(`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`). A
+restatement or rationale may repeat the figures of a current result; any other number is
+refused (`literal_number_in_text`).
 
 Activities: `split`, `eda.target_rate`, `eda.special_values`, `eda.rate_by --column NAME`,
 `fit.baseline`, `fit.logistic`, `policy.evaluate --rule R` (repeatable). Changing a
 capacity or a threshold is a new `policy.evaluate`: it reuses the stored predictions and
-never refits. A new policy needs a new confirmation.
+never refits, and it always evaluates the adopted rule too. A new policy needs a new
+confirmation.
 
 Deliverables, regenerated after every change: `reports/study.html` (the report; every
 number in it is cited from a result) and `notebooks/study_generated.py` (read-only Marimo

@@ -70,8 +70,13 @@ def test_init_installs_both_agents_with_the_exact_invocation(study):
         assert 'Not tested with GitHub Copilot' in text.split('\n---\n', 1)[1].splitlines()[0]
     assert 'mode: agent' in (target / '.github/prompts/hypotrail-resume.prompt.md').read_text()
     skill = (target / '.claude/skills/hypotrail-study/SKILL.md').read_text()
-    assert skill.startswith('---\nname: hypotrail-study\n') and str(af.GLOSSARY) in skill
-    assert af.GLOSSARY.is_file()
+    # D10: the glossary is copied into the study; the instructions point there, never into
+    # the engine's source tree (agents may not read it).
+    glossary = target.resolve() / af.STUDY_GLOSSARY
+    assert skill.startswith('---\nname: hypotrail-study\n') and str(glossary) in skill
+    assert str(af.GLOSSARY) not in skill and str(af.GLOSSARY.parent) not in claude
+    assert af.GLOSSARY.is_file() and glossary.read_bytes() == af.GLOSSARY.read_bytes()
+    assert info['glossary'] == af.STUDY_GLOSSARY and record['glossary'] == str(glossary)
 
 
 def test_the_recorded_invocation_runs_status(study):
@@ -93,8 +98,11 @@ def test_existing_files_are_never_overwritten(tmp_path, synthetic_case_dir, monk
     assert (target / 'CLAUDE.md').read_text() == 'my own rules\n'
     assert info['skipped_existing'] == ['CLAUDE.md']
     assert 'CLAUDE.md' not in info['copied'] and '.github/copilot-instructions.md' in info['copied']
+    glossary = target / af.STUDY_GLOSSARY
+    glossary.write_text('my own glossary notes\n')
     again = af.install(target)
     assert again['status'] == 'kept_existing' and again['copied'] == []
+    assert glossary.read_text() == 'my own glossary notes\n'          # never overwritten
 
 
 def test_cli_override_is_recorded(tmp_path, synthetic_case_dir, monkeypatch):
@@ -120,6 +128,37 @@ def test_instructions_name_only_real_decisions_activities_and_commands():
         assert phrase in text, phrase
     resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
     assert 'status --json' in resume and 'five lines' in resume
+
+
+def test_instructions_carry_the_acceptance_fixes():
+    """The rules added after the Claude Code acceptance run (D1-D3, D6, D7, D10-D12) name
+    the real flags, codes and fields; they must not drift from the engine."""
+    from mlkit.study import commands as c, currency, view
+    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    rule1 = text.split('1. **Read the state first.**', 1)[1].split('\n2. ', 1)[0]
+    assert 'status --summary' in rule1                                    # D3
+    for phrase in ('--basis delegated_default', 'My recommended default:',  # D1
+                   'silence is', 'never a delegation',
+                   'commands.is_bare_acknowledgement', 'never a quiz',       # D6
+                   'previous report kept and marked stale at revision N',   # D7
+                   'acknowledge_interruption', 'outcome is unknown',        # D2
+                   'Never acknowledge or rerun in the same turn',
+                   '--acknowledge-interruption E --user-words',
+                   'deltas', 'without asking permission',                   # D11
+                   '--allow-user-text', '{{GLOSSARY}}'):                    # D4, D10
+        assert phrase in text, phrase
+    assert c.is_delegation('use your recommended default')
+    assert c.states_default('My recommended default: before the first call.')
+    assert 'previous report kept and marked stale at revision' in currency.message(
+        'report', {'status': 'failed', 'revision': 3, 'last_ok_revision': 2,
+                   'path': 'reports/study.html'}, {'revision': 3, 'current': {}, 'stale': {}})
+    assert 'goal' in view.SUMMARY_KEYS
+    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    assert 'status --summary' in resume                                   # D12
+    assert resume.index('goal.intended_use') < resume.index('Where we are')
+    assert 'goal.prediction_time' in resume and 'unless the' in resume
+    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    assert '{{GLOSSARY}}' in skill and '--basis delegated_default' in skill
 
 
 def test_unknown_placeholders_are_refused():

@@ -577,10 +577,13 @@ def configure(parser: argparse.ArgumentParser) -> None:
 
 
 def _read_text(arg: str) -> str:
+    """The text of ``arg``: stdin for ``-``, else a file or a pipe (a shell process
+    substitution, ``<(printf ...)``, so an agent passes the junior's words without writing a
+    file)."""
     if arg == '-':
         return sys.stdin.read()
     path = Path(arg)
-    if not path.is_file():
+    if not path.exists() or path.is_dir():
         raise StudyError('invalid_arguments', f'--text: no such file {arg}',
                          details={'text': arg})
     return path.read_text(encoding='utf-8')
