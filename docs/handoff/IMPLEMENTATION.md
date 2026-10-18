@@ -45,8 +45,9 @@ Keep the study **outside the repository**: Claude Code loads `CLAUDE.md` and `AG
 
 Refused explicitly (`unsupported_capability`, with the capability named), never handled silently:
 
-- regression tasks: **Auto MPG** has a `case.yaml` but `init` refuses it (regression, declared group column); generality on Auto MPG is not validated;
-- declared time or group columns, duplicate records, a held-out test partition, models other than the constant baseline and logistic regression (a random forest is "not supported in v0.1");
+- a time column of type date or decimal (`temporal split on a date or non-integer time column (v0.2)`), duplicate records, a held-out test partition, models other than the constant baseline, logistic regression, the training-mean baseline, and linear regression (a random forest is "not supported in v0.1");
+- a grouped split: a declared group column is accepted, but the capability `grouped split (v0.2)` is named and every split reports the group values both partitions share (`grouped_split_unsupported`);
+- a missing target value in a regression study (`missing target values (v0.2)`);
 - a changed dataset or case file (`dataset_changed`, `sources_changed`): start a new study.
 
 Not built, by design: the webview companion (paused; [ADR 0002](../decisions/0002-companion-as-cli-client.md) makes any future one a client of this CLI), an application server, MCP integration, multi-agent orchestration, decision controls in the HTML.
@@ -82,10 +83,23 @@ Remaining defects from the acceptance reports (Claude Code, not fixed):
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the gate (`check_layout.py` and the targeted pytest scope with the `browser` group), the opt-in Marimo spike (`HYPOTRAIL_RUN_SPIKES=1`), and the opt-in agent acceptance (`HYPOTRAIL_AGENT_ACCEPTANCE=1`, real `claude -p` sessions with model cost). Agent acceptance reports: [first run](../acceptance/runs/claude-code-2026-10-18.md), [rerun](../acceptance/runs/claude-code-2026-10-18-rerun.md), [final check](../acceptance/runs/claude-code-2026-10-18-final.md); E1 steelman: [protocol](../research/E1-STEELMAN.md), [arm A](../research/runs/E1-arm-A-2026-10-18.md), [arm B](../research/runs/E1-arm-B-2026-10-18.md).
 
+## Regression study (M3)
+
+Since M3 the same workflow runs a **regression** study (`task: regression`, a numeric target with a unit), demonstrated on **Auto MPG** and on the regression variant of the synthetic generator, with no dataset-specific code ([CLI contract §10](../specs/CLI-CONTRACT.md)):
+
+- decisions `prediction_time`, `feature_availability`, `split`, `model_choice` (adopt `fit.linear` or keep `fit.baseline`), `conclusion` (`adopt_model`, `keep_baseline`, `inconclusive`); no policy, threshold, or capacity anywhere in a regression study's deliverables, status, or instructions (tested);
+- split `ordinal_cutoff` on an integer time column (read as integers, never as dates; the only method when a time column is declared) or `random`; the split reports the groups both partitions share;
+- activities `eda.target_summary`, `eda.special_values`, `eda.mean_by:<column>`, `fit.baseline` (training mean), `fit.linear`, `evaluate.regression` (MAE and RMSE in the target unit, paired bootstrap intervals of each and of the difference, residuals, residuals by period);
+- the dependency table `REGRESSION_MUTATIONS` (row 13: a new model choice reuses the evaluation and refits nothing).
+
+Measured on Auto MPG (`test_regression_walkthrough.py`, split `model_year >= 79`: 280 training rows, 118 validation rows; 16 car names, 18 validation rows, shared across the split; features cylinders, displacement, horsepower, weight, origin; acceleration excluded as uncertain): MAE 10.10 mpg [9.03, 11.18] for the training mean, 6.31 [5.58, 7.05] for the linear model, difference −3.80 [−4.34, −3.25]; RMSE 11.78 [10.67, 12.82] and 7.51 [6.69, 8.31], difference −4.27 [−4.74, −3.76]; mean residual (bias) +6.19 mpg for the linear model, from +4.04 (1979) to +8.21 (1980): fitted on 1970–1978 without the year, it predicts later cars too low. These are validation figures after a choice made on them, and the rows were published before.
+
+Limits: agentic acceptance of the regression workflow has not been run; the time column is never a model feature; no grouped split; regression has one candidate model.
+
 ## Legacy and preservation
 
 The legacy pilot (`framework/mlkit/pilot.py` and its modules) is unchanged apart from the Stale exit fix (WP0.2); `mlkit/study/` imports none of it (`test_isolation`). `use-cases/*/project.json` and `results.json` remain companion tutorial contracts: `case.yaml` is generated from them and `case-supplement.yaml` by an explicit migration, with tutorial confirmations downgraded to scenario assumptions. Historical tests that concern suspended holdout and production paths stay out of the gate. Do not reset existing study state; test in temporary studies.
 
 ## Next work
 
-Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions; F3 in `check`; Auto MPG (regression) to validate generality; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.
+Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions; F3 in `check`; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3); a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.
