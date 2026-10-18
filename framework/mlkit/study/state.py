@@ -119,6 +119,9 @@ DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
                  'status', 'created')
+# Written by ``hypotrail decide`` (WP1.4): the request that created the proposal, the
+# confirmed values it was based on (a change makes it stale), and why it was closed.
+PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason')
 EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
 
 
@@ -264,7 +267,8 @@ def _decision_problems(decision_id: str, d: Any, proposals: dict) -> list[dict]:
 def _proposal_problems(pid: Any, p: Any) -> list[dict]:
     path = f'proposals.{pid}'
     problems: list[dict] = []
-    if not _keys(p, path, PROPOSAL_KEYS, problems):
+    present = tuple(k for k in PROPOSAL_OPTIONAL_KEYS if isinstance(p, dict) and k in p)
+    if not _keys(p, path, PROPOSAL_KEYS + present, problems):
         return problems
     if p['proposal_id'] != pid:
         problems.append({'path': f'{path}.proposal_id', 'problem': 'must equal its key'})

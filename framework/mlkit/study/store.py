@@ -9,6 +9,8 @@ Layout::
       events.jsonl        operational events (append-only)
       registry/<rid>.json immutable result entries (written once)
       blobs/<sha256>      immutable content-addressed bytes (written once)
+      registry-index.jsonl input_key -> result_id index (append-only; registry.py)
+      exposure.jsonl      data-exposure log keyed by row key (append-only; exposure.py)
       executions/         execution records and leases (see lock.py)
       writer.lock         the single-writer lock (see lock.py)
       transaction.json    present only while a command is being applied
