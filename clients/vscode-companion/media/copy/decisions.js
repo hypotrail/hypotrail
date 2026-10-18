@@ -70,6 +70,8 @@
     withdraw: 'Withdraw proposal',
     ask: 'Ask the agent about this',
     working: 'Working...',
+    confirmed: (name, channel) => `Confirmed ${name} in your words (channel ${channel}).`,
+    recorded: 'Recorded: ',
     lastOutcomeTitle: 'Last answer from this panel',
     unknownHint: 'Look at the history below: a confirmation recorded in your words appears there.',
     queueTitle: 'Needs your words again',

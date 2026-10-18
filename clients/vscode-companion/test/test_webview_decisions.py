@@ -107,6 +107,8 @@ def test_dc1_dc5_textarea_starts_empty_confirm_needs_typed_words(open_panel, bin
     panel.send(effects_message(effects('preview_effects.binary.reconfirm')))
     panel.snapshot(binary)
     assert textarea_values(page) == ['']
+    assert page.locator('textarea[placeholder]').count() == 0
+    assert RESTATEMENT not in page.locator('textarea').evaluate('t => t.value + t.defaultValue + t.textContent')
     assert confirm.is_disabled()
     words.fill('  \n ')
     assert confirm.is_disabled()
@@ -144,7 +146,9 @@ def test_dc1_words_stay_on_their_card_and_are_dropped_after_a_confirmation(open_
     last = page.locator('[data-last-outcome="p_5"]')
     assert last.locator('[data-outcome="ok"]').count() == 1
     assert WORDS in last.inner_text()
-    assert 'Confirmed in your words (channel webview).' in last.inner_text()
+    assert last.locator('.title').inner_text() == 'Confirmed the calling rule in your words (channel webview).'
+    assert last.locator('[data-recorded-words]').inner_text() == f'Recorded: “{WORDS}”'
+    assert 'The report is up to date.' in last.inner_text()
     assert textarea_values(page) == ['']
     assert 'p_5' not in json.dumps((panel.state() or {}).get('drafts', {}))
     assert_clean(panel)
@@ -191,6 +195,27 @@ def test_preview_is_requested_for_a_visible_card_and_again_when_the_revision_mov
     panel.snapshot({**binary, 'revision': 27})
     wait_until(page, "window.__posted.filter(m => m.type === 'preview_effects').length === 2")
     assert [m['revision'] for m in panel.posted() if m['type'] == 'preview_effects'] == [26, 27]
+    assert_clean(panel)
+
+
+def test_previews_are_read_for_visible_cards_at_most_three_at_once(open_panel, model, payload, effects):
+    raw = copy.deepcopy(payload('summary.binary'))
+    raw['open_proposals'] = [{'proposal_id': f'p_{n}', 'decision_id': 'conclusion', 'value': 'adopt_policy',
+                              'restatement': f'Restatement {n}.', 'revision': 26, 'origin': None} for n in range(10, 16)]
+    panel = opened(open_panel, model('summary', raw))
+    page = panel.page
+    page.set_viewport_size({'width': 1280, 'height': 4000})
+    page.evaluate('() => window.scrollTo(0, 0)')
+    asked = lambda: [m['proposalId'] for m in panel.posted() if m['type'] == 'preview_effects']  # noqa: E731
+    wait_until(page, "window.__posted.filter(m => m.type === 'preview_effects').length === 3")
+    page.wait_for_timeout(200)
+    assert len(asked()) == 3, 'at most three previews are read at once'
+    base = effects('preview_effects.binary.first')
+    for pid in list(asked()):
+        panel.send(effects_message({**base, 'proposalId': pid}, revision=26))
+    wait_until(page, "window.__posted.filter(m => m.type === 'preview_effects').length === 6")
+    assert sorted(asked()) == sorted(f'p_{n}' for n in range(10, 16))
+    assert len(set(asked())) == 6, 'each card is read once per revision'
     assert_clean(panel)
 
 

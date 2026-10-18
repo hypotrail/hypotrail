@@ -220,6 +220,26 @@
     return { node: el('div', { className: 'dc-effects', 'aria-labelledby': titleId, 'data-effects': id }, parts), blocked };
   }
 
+  /**
+   * A W1 success in the words of §6.2.4 ("Confirmed <decision> in your words (channel
+   * webview)." and what was recorded, verbatim); every other outcome is the frame's v0
+   * rendering (refusals verbatim with their explanation, INV-8).
+   */
+  function outcomeNode(o, ctx, c) {
+    if (!o) return null;
+    if (!(o.op === 'W1' && o.kind === 'ok' && ctx.atLeast('v1'))) return ctx.renderOutcome(o);
+    const rec = o.recorded || {};
+    const decision = str(rec.decisionId);
+    const step = arr(ctx.snapshot && ctx.snapshot.plan).find(s => s.id === decision);
+    const name = c.decisionNames(taskOf(ctx))[decision] || (step ? step.title : decision);
+    return el('div', { className: 'card success', role: 'status', 'data-outcome': 'ok', 'data-op': 'W1' }, [
+      el('p', { className: 'title', text: c.confirmed(name, str(rec.channel) || 'webview') }),
+      typeof rec.userWords === 'string' ? el('p', { 'data-recorded-words': true }, [c.recorded, quote(rec.userWords)]) : null,
+      arr(o.artifacts).length ? el('ul', {}, arr(o.artifacts).map(a => el('li', { text: str(a.message) }))) : null,
+      o.message ? el('p', { text: str(o.message) }) : null,
+    ]);
+  }
+
   function askAgent(ctx, kind, id) {
     return ctx.send({ type: 'ask_agent', about: { kind, id }, question: '', mode: ctx.chatInsert ? 'insert' : 'copy' });
   }
@@ -312,7 +332,7 @@
         ctx.gate('v2', el('button', { type: 'button', className: 'secondary', 'data-ask': id, text: c.ask,
           onclick: () => askAgent(ctx, 'proposal', id) })),
       ]),
-      el('div', { className: 'dc-outcome', 'data-card-outcome': id }, [outcome ? ctx.renderOutcome(outcome) : null]),
+      el('div', { className: 'dc-outcome', 'data-card-outcome': id }, [outcomeNode(outcome, ctx, c)]),
     ]);
     // A deep link to the decision (CLI-CONTRACT-COMPANION §11) lands on its open card.
     return v1 ? el('div', { className: 'dc-card-wrap', 'data-nav': `decision:${str(p.decisionId)}` }, [card]) : card;
@@ -384,7 +404,7 @@
               text: c.basisChannel(c.basis(str(h.basis), h.scope), str(h.channel)) })]),
             el('td', {}, [
               el('span', { className: 'ht-mono', text: c.atRevision(h.revision) }), ' · ',
-              el('span', { 'data-literal': 'age', text: ctx.format.localTime(h.time) }),
+              el('span', { 'data-time': true, text: ctx.format.localTime(h.time) }),
               h.current ? null : el('span', { className: 'dc-superseded-at', 'data-superseded': true }, [' · ', c.supersededAt(h.supersededAt)]),
             ]),
           ]);
@@ -414,7 +434,7 @@
     const o = view.lastOutcome;
     if (!o || !o.target || arr(model.proposals).some(p => p.proposalId === o.target)) return null;
     return el('div', { className: 'dc-last', 'data-last-outcome': o.target, 'aria-label': c.lastOutcomeTitle, role: 'region' }, [
-      ctx.renderOutcome(o),
+      outcomeNode(o, ctx, c),
       o.kind === 'failed' && ctx.atLeast('v1') ? el('p', { className: 'muted', 'data-unknown-hint': true, text: c.unknownHint }) : null,
     ]);
   }
