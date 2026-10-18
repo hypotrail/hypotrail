@@ -486,3 +486,17 @@ def test_receipts_and_state_stay_valid(study, work):
     assert st.validate_state(state) == []
     assert state['proposals']['p_1']['request_id'] == 'r1'
     assert state['proposals']['p_1']['basis'] == {}
+
+
+def test_a_closed_pipe_writes_nothing_to_stderr(study, work):
+    """D8: ``hypotrail status | head`` must not print a BrokenPipeError traceback."""
+    read_end, write_end = os.pipe()
+    os.close(read_end)                      # the reader is gone before the CLI writes
+    try:
+        proc = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'status', '--study',
+                               str(study)], stdout=write_end, stderr=subprocess.PIPE,
+                              text=True, cwd=work, env=_env(), timeout=120)
+    finally:
+        os.close(write_end)
+    assert proc.stderr == ''
+    assert proc.returncode == 0

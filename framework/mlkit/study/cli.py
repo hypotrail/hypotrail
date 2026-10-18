@@ -243,8 +243,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         build_parser().print_help()
         return cmd.EXIT_OK if argv else cmd.EXIT_REFUSED
     outcome = run(argv)
-    emit(outcome, _wanted_format(argv))
+    try:
+        emit(outcome, _wanted_format(argv))
+    except BrokenPipeError:
+        # The reader closed the pipe (``status | head``): the outcome stands, nothing more
+        # can be told, and no traceback goes to stderr (a handled outcome writes none).
+        _silence_stdout()
     return outcome.exit_code
+
+
+def _silence_stdout() -> None:
+    """Point stdout at /dev/null so the interpreter's final flush cannot fail again."""
+    import os
+
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        os.close(devnull)
+    except (OSError, ValueError):   # stdout is not a real file (tests); nothing to flush
+        pass
 
 
 if __name__ == '__main__':
