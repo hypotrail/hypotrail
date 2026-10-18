@@ -24,7 +24,7 @@ import copy
 import datetime as dt
 import hashlib
 import json
-from typing import Any
+from typing import Any, Mapping
 
 from .case import EPISTEMIC_STATUSES, Case, require_supported
 from .errors import StudyError
@@ -494,15 +494,26 @@ def derive_plan(state: dict) -> list[dict]:
     return plan
 
 
-def next_action(state: dict) -> dict:
+def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     """The single next thing to do, in priority order.
 
+    0. an execution recorded as active whose lease nobody holds (``suspected``, from a
+       read-only lease probe by ``status``, F1) has an unknown outcome: tell the junior,
+       never call it in progress, and ask before acknowledging;
     1. an interrupted execution must be acknowledged (never restarted automatically);
     2. a decision needs reconfirmation;
     3. an open proposal waits for the user's verbatim answer to its restatement;
     4. the current step needs a proposal or a result;
     5. otherwise the plan is finished.
     """
+    if suspected:
+        eid = sorted(suspected)[0]
+        return {'kind': 'outcome_unknown', 'execution_id': eid,
+                'activity': suspected[eid].get('activity'),
+                'message': 'This execution is recorded as running, but no process holds its '
+                           'lease: it stopped and its outcome is unknown. Tell the junior the '
+                           'outcome is unknown (never call it in progress) and ask before '
+                           'acknowledging it; it is not restarted automatically.'}
     interrupted = sorted(state['executions']['interrupted'])
     if interrupted:
         return {'kind': 'acknowledge_interruption', 'execution_id': interrupted[0],

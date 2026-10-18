@@ -211,7 +211,11 @@ def summary(view: dict) -> dict:
                         for e, r in sorted(view['executions']['interrupted'].items())],
         'late': [{'execution_id': e, 'activity': r.get('activity'), 'reason': r.get('reason'),
                   'result_id': r.get('result_id')}
-                 for e, r in sorted(view['executions']['late'].items())]}
+                 for e, r in sorted(view['executions']['late'].items())],
+        'suspected_interrupted': [{'execution_id': e, 'activity': r.get('activity'),
+                                   'liveness': r.get('liveness'), 'reason': r.get('reason')}
+                                  for e, r in sorted(view['executions']['suspected_interrupted']
+                                                     .items())]}
     rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
     ordered = sorted(view['not_yet_defensible'],
                      key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
@@ -226,10 +230,46 @@ def summary(view: dict) -> dict:
     return {k: out[k] for k in SUMMARY_KEYS}
 
 
-def build(study_dir) -> dict:
-    """The view model of the study at ``study_dir`` (or of an open :class:`read.Study`)."""
+LIVENESS_RUNNING, LIVENESS_UNKNOWN, LIVENESS_NOT_CHECKED = ('running', 'outcome_unknown',
+                                                           'not_checked')
+
+
+def _executions(state: dict, leases: dict | None) -> tuple[dict, dict]:
+    """Executions with a per-execution ``liveness`` (F1); the suspected ones apart.
+
+    ``leases`` is a read-only lease probe taken before the state was read
+    (``lock.probe_leases``, by ``status``). An active execution whose lease file exists
+    and is not held has an unknown outcome: it moves to ``suspected_interrupted``. One
+    with no lease entry was reserved after the probe and is running. Without a probe
+    (renderers, which must stay deterministic per revision), liveness is ``not_checked``.
+    """
+    ex = state['executions']
+    active, suspected = {}, {}
+    for eid, record in sorted(ex['active'].items()):
+        if leases is None:
+            active[eid] = {**record, 'liveness': LIVENESS_NOT_CHECKED}
+        elif leases.get(eid, True):
+            active[eid] = {**record, 'liveness': LIVENESS_RUNNING}
+        else:
+            suspected[eid] = {**record, 'liveness': LIVENESS_UNKNOWN,
+                              'reason': 'Recorded as running, but no process holds its lease: '
+                                        'it stopped and its outcome is unknown. The next run '
+                                        'or acknowledgement records it as interrupted.'}
+    out = {'active': active, 'interrupted': ex['interrupted'], 'late': ex['late'],
+           'suspected_interrupted': suspected}
+    return out, suspected
+
+
+def build(study_dir, *, leases: dict | None = None) -> dict:
+    """The view model of the study at ``study_dir`` (or of an open :class:`read.Study`).
+
+    ``leases``: a read-only lease probe taken *before* the study was opened
+    (``{execution_id: held}``); ``status`` passes one so a dead execution is never shown
+    as running (F1). Renderers pass none and stay deterministic per revision.
+    """
     study = study_dir if isinstance(study_dir, read.Study) else read.open(Path(study_dir))
     state = study.state
+    executions, suspected = _executions(state, leases)
     plan = st.derive_plan(state)
     results = _results(study, state)
     defensible = st.not_yet_defensible(state)
@@ -251,6 +291,13 @@ def build(study_dir) -> dict:
                            'text': 'The code of these activities changed after their results '
                                    'were computed; those results, and the ones computed from '
                                    'them, cannot be cited until they are run again.'})
+    if suspected:
+        item = next((x for x in defensible if x['id'] == 'interrupted_executions'), None)
+        if item is None:
+            defensible.append({'id': 'interrupted_executions', 'executions': sorted(suspected),
+                               'text': 'An execution has an unknown outcome.'})
+        else:
+            item['executions'] = sorted(set(item['executions']) | set(suspected))
     adopted = _adopted_without_evaluation(state, results)
     if adopted:
         defensible.append({'id': 'adopted_rule_not_evaluated', 'rules': [adopted],
@@ -265,7 +312,7 @@ def build(study_dir) -> dict:
         'dataset': dict(state['dataset']),
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
-        'next_action': st.next_action(state),
+        'next_action': st.next_action(state, suspected),
         'open_proposals': [{k: p[k] for k in PROPOSAL_VIEW_KEYS}
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
@@ -275,7 +322,7 @@ def build(study_dir) -> dict:
         'results': results,
         'stale': state['stale'],
         'invalidations': state['invalidations'],
-        'executions': state['executions'],
+        'executions': executions,
         'artifacts': _artifacts(study, state),
         'exposure': study.exposure_summary(),
         'not_yet_defensible': defensible,

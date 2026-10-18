@@ -26,8 +26,9 @@ have been read are never treated as unseen. From then on every ``run`` is refuse
 with ``interrupted_execution_pending`` (exit code 4) until ``hypotrail run
 --acknowledge-interruption E --user-words TEXT``; the junior's words are recorded in
 the acknowledgement and the execution history. Nothing is restarted automatically. ``status`` is
-read-only and reports a dead execution as ``active`` until the next ``run``
-detects it.
+read-only and takes no writer lock: it probes the leases (``lock.probe_leases``) and
+reports a dead execution under ``executions.suspected_interrupted`` with liveness
+``outcome_unknown`` (never as running) until the next ``run`` records it (F1).
 
 **Idempotency.** The execution id is derived from the client's ``request_id``.
 Replaying a request returns the state of that execution (running, promoted, late,
@@ -516,7 +517,12 @@ def acknowledge(study_dir, execution: str, *, request_id: str, expected_revision
     guard.assert_writable()
     store = _store(study_dir)
     with store.writing() as state:
-        recover(store, state)
+        read_revision = state['revision']
+        if recover(store, state) and expected_revision == read_revision:
+            # F1: ``status`` showed this execution as ``outcome_unknown`` at the revision
+            # the client read; recording it as interrupted is not a change the client
+            # missed, so the acknowledgement applies to the revision recovery produced.
+            expected_revision = state['revision']
         receipt = _apply(store, state, request_id, ACKNOWLEDGE,
                          {'execution_id': execution, 'user_words': user_words},
                          expected_revision)

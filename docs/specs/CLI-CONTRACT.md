@@ -65,7 +65,7 @@ Every payload is a JSON object whose first keys are `schema` and `ok`. Keys are 
 | `hypotrail.error/1` | any refusal | `schema`, `ok` (`false`), `command`, `error` |
 | `hypotrail.summary/1` | `status --summary` | `schema`, `ok`, `study`, `revision`, `since`, `changed`, `goal`, `current_step`, `plan`, `next_action`, `open_proposals`, `decisions`, `results`, `artifacts`, `executions`, `not_yet_defensible` |
 
-* `status --summary` (D3, post-acceptance) prints a compact digest of the view (`view.summary`) for chat agents, a few kilobytes instead of the full view; `status --json` is unchanged and stays the client contract. `goal` is `{intended_use, decision, observation_unit, prediction_time}`: the first three are the case facts of those ids (`{value, status}` or `null`), `prediction_time` is `{value, source: decision|case, status}` (the decision value when there is one, else the case fact). `plan` lists the steps as `{id, title, status}`. `decisions` maps each decision to `{status, value, basis, delegation_scope, user_words, reason, open_proposals}` (a `feature_availability` value is grouped as `{status: [features]}`); `open_proposals` items are `{proposal_id, decision_id, value, restatement, revision}`; `results` maps a slot to `{result_id, current, stale_reason, integrity}`; `artifacts` is `{status, items: {name: {status, revision, last_ok_revision, message}}}`; `executions` is `{active: [ids], interrupted: [{execution_id, activity, reason}], late: [{execution_id, activity, reason, result_id}]}`; `not_yet_defensible` is `{top: [{id, text}] (at most five, most urgent first), more: [ids]}`.
+* `status --summary` (D3, post-acceptance) prints a compact digest of the view (`view.summary`) for chat agents, a few kilobytes instead of the full view; `status --json` is unchanged and stays the client contract. `goal` is `{intended_use, decision, observation_unit, prediction_time}`: the first three are the case facts of those ids (`{value, status}` or `null`), `prediction_time` is `{value, source: decision|case, status}` (the decision value when there is one, else the case fact). `plan` lists the steps as `{id, title, status}`. `decisions` maps each decision to `{status, value, basis, delegation_scope, user_words, reason, open_proposals}` (a `feature_availability` value is grouped as `{status: [features]}`); `open_proposals` items are `{proposal_id, decision_id, value, restatement, revision}`; `results` maps a slot to `{result_id, current, stale_reason, integrity}`; `artifacts` is `{status, items: {name: {status, revision, last_ok_revision, message}}}`; `executions` is `{active: [ids], interrupted: [{execution_id, activity, reason}], late: [{execution_id, activity, reason, result_id}], suspected_interrupted: [{execution_id, activity, liveness, reason}]}` (`active` lists only executions whose lease is held; see execution liveness, §3); `not_yet_defensible` is `{top: [{id, text}] (at most five, most urgent first), more: [ids]}`.
 * `status.since` is the `--since` value or `null`; `changed` is `revision > since` (or `null`); `changes_since` lists the revision records after `since` (or `null`). A webview polls with `--since`.
 * `decide.revision` is the revision created by the request (also on replay). `artifacts` is `null` until Phase 3 renders after commits (§8.3).
 * `init.agent_instructions` is `{source, copied, skipped_existing, status, cli, agent_file, glossary}`; `glossary` is the study path of the glossary copy (§8.4); `status` is `copied`, `kept_existing`, or `no_templates_yet`; `cli` is the exact shell command that runs this CLI (§8.4) and `agent_file` is `.hypotrail/agent.json`. `copied` and `skipped_existing` list workspace paths. `ignored_sources` names the companion files found next to the case (`project.json`, `results.json`, `tutorial-results.json`, `answers.yaml`, `project.yaml`, `frame.yaml`); they are never read. `structural_exposure` is `{exposure_id, n_rows}`.
@@ -79,6 +79,7 @@ Each item of `plan.steps` and `view.plan` has the keys `id`, `title`, `question`
 
 | `kind` | Extra keys |
 |---|---|
+| `outcome_unknown` | `execution_id`, `activity` (closure fix F1: emitted by `status` only, first in priority, when an active execution's lease is not held) |
 | `acknowledge_interruption` | `execution_id` |
 | `reconfirm` | `decision` |
 | `await_user_words` | `proposal_id`, `decision` |
@@ -99,7 +100,7 @@ Each item of `plan.steps` and `view.plan` has the keys `id`, `title`, `question`
 
 ## 4. View model `hypotrail.view/1`
 
-`mlkit.study.view.build(study_dir) -> dict` is the **single** view of a study. `status` prints it under `view`. The HTML report, the generated notebook, and a future webview consume it; renderers do not read raw state. It holds no clock reading, so two builds of one study content are equal.
+`mlkit.study.view.build(study_dir, *, leases=None) -> dict` is the **single** view of a study. `status` prints it under `view`, built with a read-only lease probe (`leases`, closure fix F1; see execution liveness below). The HTML report, the generated notebook, and a future webview consume it; renderers do not read raw state. It holds no clock reading, so two builds of one study content are equal.
 
 | Key | Content |
 |---|---|
@@ -118,10 +119,12 @@ Each item of `plan.steps` and `view.plan` has the keys `id`, `title`, `question`
 | `results` | `{slot: result item}` for every promoted slot (below) |
 | `stale` | `{result_id: {reason, since}}` |
 | `invalidations` | The invalidation records (§6), oldest first |
-| `executions` | `{active, interrupted, late}` (filled by Phase 2) |
+| `executions` | `{active, interrupted, late, suspected_interrupted}` (filled by Phase 2; `suspected_interrupted` added by closure fix F1, see below) |
 | `artifacts` | `{manifest, status, items}`; before any render `{manifest: null, status: "not_rendered", items: {}}` |
 | `exposure` | `{records, rows_exposed, by_purpose, by_partition, validation_rows_used_for_selection, prior_exposure}` |
 | `not_yet_defensible` | List of `{id, text, ...}` (plan §6) |
+
+**Execution liveness (closure fix F1).** `status` stays read-only and takes no writer lock, but before reading the state it probes every execution lease with a read-only check (`lock.probe_leases`, built on `lock.lease_is_held`: the lease file is opened read-only and a non-blocking shared lock is tried). Each record of `view.executions.active` carries `liveness`: `running` (the lease is held, or the execution was reserved after the probe) or `not_checked` (a view built without a probe: the renderers, which stay deterministic per revision). An execution recorded as active whose lease file exists but is held by no process is **not** listed under `active`: it moves to `suspected_interrupted` with `liveness: "outcome_unknown"` and a `reason`; `next_action` is then `{kind: "outcome_unknown", execution_id, activity, message}` (first in priority), and the `interrupted_executions` item of `not_yet_defensible` lists it. The state is unchanged: the next `run` or `run --acknowledge-interruption` records it as `interrupted_unknown` (§8 item 5). An agent tells the junior the outcome is unknown, never calls such an execution "in progress", and asks before acknowledging.
 | `settings` | `{bootstrap: {replicates, seed, level}}` |
 
 `decisions.*.confirmation` is `null` or `{user_words, channel, actor, restatement, proposal_id, revision, time, authenticated, basis, delegation_scope}`. `authenticated` is always `false`: the engine records words, it cannot verify who typed them. `basis` is `explicit` or `delegated_default` (§5); a stored confirmation without it (written before the post-acceptance fixes) reads as `explicit`. `delegation_scope` is `null`, `this_decision`, or `standing` (§5, R1); `null` for an explicit confirmation and for one recorded before R1. Decision status is one of `open`, `proposed`, `confirmed`, `reconfirm_required`, `superseded`.

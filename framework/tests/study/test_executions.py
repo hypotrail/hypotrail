@@ -54,8 +54,8 @@ def test_death_between_reserve_and_promote_is_an_unknown_outcome(flow, work, fau
     before = len(fk.registry_entries(flow.study))
     eid = _die(flow.study, work, 'split', fault)
     state = flow.state()
-    # status is read-only: the dead execution is still listed as active until a run
-    # detects that nobody holds its lease.
+    # The state still lists the dead execution as active until a run detects that nobody
+    # holds its lease (status reports it as outcome_unknown: test_status_liveness, F1).
     assert list(state['executions']['active']) == [eid]
     assert 'split' not in state['current']
     assert len(fk.registry_entries(flow.study)) == before      # put happens only at promotion

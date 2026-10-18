@@ -36,6 +36,7 @@ LEASE_DIR = 'executions'
 LEASE_SUFFIX = '.lease'
 DEFAULT_TIMEOUT = 30.0
 POLL_SECONDS = 0.02
+PROBE_GRACE_SECONDS = 1.0
 
 
 def require_posix() -> None:
@@ -161,7 +162,17 @@ def acquire_lease(study_dir, execution_id: str, **info) -> Lease:
         raise StudyError('lease_exists', f'Execution {execution_id} already has a lease.',
                          details={'execution_id': execution_id}) from None
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        # A read-only probe (:func:`lease_is_held`, from ``status``) may hold a shared lock
+        # on the new file for an instant; nobody else can, since the file is ours (O_EXCL).
+        deadline = time.monotonic() + PROBE_GRACE_SECONDS
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(POLL_SECONDS)
         record = {'execution_id': execution_id, 'pid': os.getpid(),
                   'host': socket.gethostname(), 'acquired': _now(), **info}
         os.write(fd, json.dumps(record, sort_keys=True).encode())
@@ -174,21 +185,50 @@ def acquire_lease(study_dir, execution_id: str, **info) -> Lease:
 
 
 def lease_is_held(path: Path) -> bool:
-    """True if a live process holds the lease lock at ``path``."""
+    """True if a live process holds the lease lock at ``path``.
+
+    A read-only check: it opens the file read-only and tries a non-blocking *shared*
+    lock, which fails only while the computing process holds its exclusive lock. It
+    writes nothing and needs no writer lock, so ``status`` may call it (F1).
+    """
     fcntl = _fcntl()
     try:
-        fd = os.open(path, os.O_RDWR)
+        fd = os.open(path, os.O_RDONLY)
     except FileNotFoundError:
         return False
     try:
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
         except BlockingIOError:
             return True
         fcntl.flock(fd, fcntl.LOCK_UN)
         return False
     finally:
         os.close(fd)
+
+
+def probe_leases(study_dir) -> dict[str, bool]:
+    """Read-only liveness probe of every execution lease: ``{execution_id: held}``.
+
+    Used by ``status`` without the writer lock (F1). Take the probe **before** reading
+    the state: an execution reserved after the probe has no entry here and is treated as
+    running, and a lease is always taken before its reservation is committed. A lease
+    file that is still empty belongs to a process that is starting: it counts as held.
+    """
+    folder = home_of(study_dir) / LEASE_DIR
+    if os.name == 'nt' or not folder.is_dir():
+        return {}
+    out = {}
+    for path in sorted(folder.glob('*' + LEASE_SUFFIX)):
+        eid = path.name[:-len(LEASE_SUFFIX)]
+        held = lease_is_held(path)
+        if not held:
+            try:
+                held = not path.read_text().strip()
+            except OSError:
+                continue          # removed meanwhile: its execution ended normally
+        out[eid] = held
+    return out
 
 
 def read_lease(path: Path) -> dict:

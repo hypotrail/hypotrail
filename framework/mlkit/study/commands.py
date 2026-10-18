@@ -836,8 +836,11 @@ def init(case_path, study_dir) -> Outcome:
 
 
 def status(study_dir, since: int | None = None, summary: bool = False) -> Outcome:
+    # F1: probe execution leases (read-only, no writer lock) *before* reading the state,
+    # so a dead execution is reported as ``outcome_unknown``, never as running.
+    leases = lock.probe_leases(study_dir)
     study = read.open(study_dir)
-    built = view.build(study)
+    built = view.build(study, leases=leases)
     if summary:
         return Outcome({'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
                         'revision': study.revision, 'since': since,

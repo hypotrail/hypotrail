@@ -200,6 +200,14 @@ def _text(payload: dict) -> str:
                 delegated += f' ({conf["delegation_scope"]})'
             lines.append(f'decision {d["decision_id"]}: {d["status"]}'
                          + (f' - "{words}" ({conf["channel"]}{delegated})' if words else ''))
+        ex = v['executions']
+        for eid, r in ex['active'].items():
+            lines.append(f'execution {eid} ({r.get("activity")}): {r.get("liveness")}')
+        for eid, r in ex['suspected_interrupted'].items():
+            lines.append(f'execution {eid} ({r.get("activity")}): outcome unknown, no process '
+                         f'holds its lease')
+        for eid, r in ex['interrupted'].items():
+            lines.append(f'execution {eid} ({r.get("activity")}): interrupted, outcome unknown')
         if payload['since'] is not None:
             lines.append(f'changes since revision {payload["since"]}: '
                          f'{len(payload["changes_since"])}')

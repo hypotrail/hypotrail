@@ -644,7 +644,8 @@ def test_status_summary_is_compact_and_complete(study, work, features):
                   'user_words': 'Yes: we predict before the first reminder goes out.',
                   'reason': None, 'open_proposals': []}
     assert summary['decisions']['feature_availability']['status'] == 'proposed'
-    assert summary['executions'] == {'active': [], 'interrupted': [], 'late': []}
+    assert summary['executions'] == {'active': [], 'interrupted': [], 'late': [],
+                                     'suspected_interrupted': []}           # F1
     top = [x['id'] for x in summary['not_yet_defensible']['top']]
     assert top[0] == 'unconfirmed_decisions' and len(top) <= 5
     assert set(top) | set(summary['not_yet_defensible']['more']) == {

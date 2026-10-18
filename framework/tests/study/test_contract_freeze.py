@@ -84,7 +84,11 @@ STEP_KEYS = ('id', 'title', 'question', 'expected_output', 'completion', 'pause'
 STEP_IDS = ('prediction_time', 'feature_availability', 'split', 'train_eda', 'models', 'policy',
             'conclusion')
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
-                     'propose', 'run', 'done'}
+                     'propose', 'run', 'done',
+                     # Closure fix F1: a dead execution seen by the read-only lease probe.
+                     'outcome_unknown'}
+EXECUTION_VIEW_KEYS = ('active', 'interrupted', 'late', 'suspected_interrupted')
+LIVENESS_VALUES = ('running', 'outcome_unknown', 'not_checked')
 NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independent',
                           'public_data_already_explored', 'no_time_or_entity_identifier',
                           'uncertain_features_included', 'stale_results',
@@ -237,7 +241,7 @@ def test_status_summary_keys(flow):
     assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(STEP_IDS)
     assert tuple(payload['decisions']) == st.DECISION_IDS
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
-    assert tuple(payload['executions']) == ('active', 'interrupted', 'late')
+    assert tuple(payload['executions']) == EXECUTION_VIEW_KEYS
     assert tuple(payload['not_yet_defensible']) == ('top', 'more')
     assert tuple(payload['artifacts']) == ('status', 'items')
     for name, item in payload['artifacts']['items'].items():
@@ -262,7 +266,11 @@ def test_view_model_keys(flow):
     assert tuple(v['exposure']) == EXPOSURE_SUMMARY_KEYS
     assert tuple(v['artifacts']) == ARTIFACT_VIEW_KEYS
     assert tuple(v['facts']) == ('by_status', 'count')
-    assert tuple(v['executions']) == ('active', 'interrupted', 'late')
+    assert tuple(v['executions']) == EXECUTION_VIEW_KEYS
+    assert (view.LIVENESS_RUNNING, view.LIVENESS_UNKNOWN, view.LIVENESS_NOT_CHECKED) \
+        == LIVENESS_VALUES
+    assert not [k for k in (*EXECUTION_VIEW_KEYS, *LIVENESS_VALUES, 'liveness')
+                if k not in DOC_TOKENS]
     assert [s['id'] for s in v['plan']] == list(STEP_IDS)
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
@@ -381,7 +389,7 @@ def test_extension_point_signatures():
     assert [n for n, _ in _params(pre.missing_for_activity)] == ['state', 'activity']
     assert [n for n, _ in _params(pre.require_decision)] == ['state', 'decision_id', 'value',
                                                              'store']
-    assert [n for n, _ in _params(view.build)] == ['study_dir']
+    assert [n for n, _ in _params(view.build)] == ['study_dir', 'leases']   # leases: F1
     assert [n for n, _ in _params(read.open)] == ['study_dir']
     for method in ('current', 'is_current', 'result', 'predictions', 'source', 'revisions',
                    'exposure_records', 'exposure_summary', 'artifacts', 'stale_reason', 'blob'):
