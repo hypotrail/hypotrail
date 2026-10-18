@@ -47,8 +47,11 @@ proposal value, a rule of the current policy evaluation, the junior's recorded w
 setting, a case statement, or text the junior wrote, passed with ``--allow-user-text``.
 Numbers following "revision" (with the comparison that follows it: "revision 26 instead
 of 24"), "step", "pause", "proposal", or "exit", list markers, and ISO dates are exempt.
-A rule identifier (``capacity:100``) is never reported. A minus sign may be ``-`` or the
-Unicode minus U+2212.
+A rule identifier (``capacity:100``) is never reported. Nor is a result id prefix made only
+of digits (R3): a run of 6 or more digits that follows "result", "result_id", "rid",
+"id", or "execution" ("(result 52659681)"), or that begins a ``result_id`` of the
+registry; a number that traces to a figure is still traced as that figure. A minus sign
+may be ``-`` or the Unicode minus U+2212.
 
 The command always exits 0 with ``clean`` true or false; it never writes.
 No pandas, numpy, or scikit-learn.
@@ -110,6 +113,12 @@ REVISION_SPAN = re.compile(
 # A rule written as an identifier ("capacity:100", "threshold:0.2") names a rule; it is
 # traced when it can be and never reported as a claim (D4).
 RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity)\s*:\s*(-?\d+(?:\.\d+)?)', re.IGNORECASE)
+# A result id prefix made only of digits ("(result 52659681)") is an identifier, not a
+# figure (R3): at least this many digits, after one of these words or as the start of a
+# registry ``result_id``.
+RESULT_ID_DIGITS = re.compile(r'\d{6,}')
+RESULT_ID_LEAD = re.compile(r'\b(?:results?(?:[ _-]?ids?)?|rids?|ids?|executions?(?:[ _-]?ids?)?)'
+                            r'\s*[#:=]?\s*[`(\[]?\s*$', re.IGNORECASE)
 # "29.5 percentage points": a difference of two rates, read as a percentage of a registered
 # difference (``deltas``), never of a rate (D4).
 PERCENTAGE_POINTS = re.compile(r'\s*(?:percentage[- ]points?|pp\b|p\.p\.|points? de pourcentage)',
@@ -164,8 +173,14 @@ class Pool:
     ``--allow-user-text``).
     """
 
-    def __init__(self, view: Mapping, user_texts: Iterable[str] = ()):
+    def __init__(self, view: Mapping, user_texts: Iterable[str] = (),
+                 result_ids: Iterable[str] | None = None):
         self.current, self.stale, self.literal = [], [], []
+        # Result ids a digit-only prefix may abbreviate (R3): the registry when known,
+        # else the results of the view.
+        self.result_ids = tuple(result_ids) if result_ids is not None else tuple(
+            item['result_id'] for item in view['results'].values()
+            if isinstance(item.get('result_id'), str))
         for slot, item in sorted(view['results'].items()):
             if item['values'] is None:
                 continue
@@ -235,6 +250,18 @@ def _exempt(text: str, tok: cite.Token) -> bool:
     return bool(EXEMPT_BEFORE.search(text[max(0, tok.start - 24):tok.start]))
 
 
+def _result_id_prefix(pool: Pool, text: str, tok: cite.Token) -> bool:
+    """True when ``tok`` is an all-digit result id prefix (R3): 6 or more digits, no sign,
+    decimals or percent, after "result" / "rid" / "id" / "execution", or the start of a
+    registry ``result_id``."""
+    body = text[tok.start:tok.end]
+    if tok.percent or not RESULT_ID_DIGITS.fullmatch(body):
+        return False
+    if RESULT_ID_LEAD.search(text[max(0, tok.start - 24):tok.start]):
+        return True
+    return any(rid.startswith(body) for rid in pool.result_ids)
+
+
 def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict]]:
     findings, traced = [], []
     masked = _masked(text)
@@ -248,6 +275,10 @@ def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict
         label, item = pool.trace(tok, difference=difference)
         if label in ('none', 'stale') and tok.start in identifiers:
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'rule',
+                           'value': tok.value})
+            continue
+        if label in ('none', 'stale') and _result_id_prefix(pool, masked, tok):
+            traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',
                            'value': tok.value})
             continue
         if label == 'current':
@@ -293,9 +324,9 @@ def wording(text: str, where: str) -> list[dict]:
     return out
 
 
-def check_text(view: Mapping, text: str, where: str = 'text',
-               user_texts: Iterable[str] = ()) -> tuple[list[dict], list[dict]]:
-    findings, traced = trace_text(Pool(view, user_texts), text, where)
+def check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
+               result_ids: Iterable[str] | None = None) -> tuple[list[dict], list[dict]]:
+    findings, traced = trace_text(Pool(view, user_texts, result_ids), text, where)
     return findings + wording(text, where), traced
 
 
@@ -589,14 +620,22 @@ def _read_text(arg: str) -> str:
     return path.read_text(encoding='utf-8')
 
 
+def registry_ids(study: read.Study) -> list[str]:
+    """Every ``result_id`` in the registry (its file names), current or not."""
+    folder = study.home / read.REGISTRY_DIR
+    return sorted(p.stem for p in folder.glob('*.json')) if folder.is_dir() else []
+
+
 def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()) -> dict:
     study_dir = Path(study_dir).resolve()
     if text is None:
         view, findings, traced = check_study(study_dir)
         target = 'study'
     else:
-        view = view_model.build(read.open(study_dir))
-        findings, traced = check_text(view, text, user_texts=user_texts)
+        study = read.open(study_dir)
+        view = view_model.build(study)
+        findings, traced = check_text(view, text, user_texts=user_texts,
+                                      result_ids=registry_ids(study))
         target = 'text'
     counts = {'error': sum(f['severity'] == 'error' for f in findings),
               'warning': sum(f['severity'] == 'warning' for f in findings)}

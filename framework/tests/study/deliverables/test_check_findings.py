@@ -174,6 +174,52 @@ def test_identifiers_revisions_and_exit_codes_are_not_claims(study, text):
     assert result['findings'] == [], result['findings']
 
 
+def _digit_only(rid: str, n: int = 8) -> str:
+    """A digit-only string of ``n`` characters that is not a prefix of ``rid``."""
+    return ('1' if rid[0] != '1' else '2') * n
+
+
+@pytest.mark.parametrize('lead', ['result', 'result_id', 'rid', 'id', 'execution'])
+def test_a_digit_only_id_after_an_id_word_is_not_a_claim(study, lead):
+    """R3: "(result 52659681)" cites a result; its digit-only id prefix is not a figure."""
+    rid = view.build(study)['results']['split']['result_id']
+    number = _digit_only(rid)
+    result = text_check(study, f'These validation rows are listed ({lead} {number}).')
+    assert result['findings'] == [], result['findings']
+    assert {'text': number, 'source': 'identifier', 'id': 'result_id',
+            'value': float(number)} in result['traced']
+
+
+def test_a_digit_only_registry_prefix_is_not_a_claim(study, monkeypatch):
+    """R3: a digit-only prefix (6 or more characters) of a registry result_id is an id,
+    even without the word "result" before it."""
+    monkeypatch.setattr(cmd_check, 'registry_ids', lambda s: ['52659681' + 'a' * 56])
+    result = text_check(study, 'The validation rows are those of 52659681 and 526596.')
+    assert result['findings'] == [], result['findings']
+    assert [t['id'] for t in result['traced']] == ['result_id', 'result_id']
+
+
+@pytest.mark.parametrize('text, number', [
+    ('The model selected 12345678 clients.', '12345678'),          # not a registry prefix
+    ('The model selected 526597 clients.', '526597'),             # diverges from the id
+    ('See result 42 for the count.', '42'),                       # fewer than 6 digits
+    ('The result 1357.5 is untraced.', '1357.5'),                  # not digits only
+    ('(result 52659681%)', '52659681%'),                           # a percentage
+])
+def test_a_real_untraced_number_is_still_reported(study, monkeypatch, text, number):
+    """R3, the other way: the exemption covers digit-only id prefixes only."""
+    monkeypatch.setattr(cmd_check, 'registry_ids', lambda s: ['52659681' + 'a' * 56])
+    result = text_check(study, text)
+    assert codes(result) == ['untraceable_number'], result['findings']
+    assert result['findings'][0]['details']['number'] == number
+
+
+def test_the_registry_holds_the_ids_a_prefix_may_abbreviate(study):
+    ids = cmd_check.registry_ids(read.open(study))
+    assert view.build(study)['results']['split']['result_id'] in ids
+    assert all(len(i) == 64 for i in ids)
+
+
 def test_a_revision_does_not_exempt_the_figure_that_follows_it(study):
     result = text_check(study, 'At revision 26 and 115 clients selected, nothing changed.')
     assert [f['details']['number'] for f in result['findings']] == ['115']

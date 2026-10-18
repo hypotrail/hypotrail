@@ -399,6 +399,11 @@ def test_phase3_render_and_check_contract():
     assert manifest.SCHEMA == PHASE3_SCHEMAS['artifacts']
     assert manifest.ARTIFACTS == ARTIFACT_NAMES and manifest.ITEM_KEYS == MANIFEST_ITEM_KEYS
     assert cmd_check.SEVERITY == CHECK_FINDINGS
+    # Acceptance rerun R3: a digit-only result id prefix is an identifier, not a figure.
+    assert cmd_check.RESULT_ID_DIGITS.pattern == r'\d{6,}'
+    assert [n for n, _ in _params(cmd_check.check_text)] == ['view', 'text', 'where',
+                                                             'user_texts', 'result_ids']
+    assert {'cmd_check.registry_ids', 'result_id'} <= DOC_TOKENS
     assert render_html.LITERAL_KINDS == LITERAL_KINDS
     assert cmd_render.FAULTS == ('render_html', 'render_notebook')
     assert (cmd_render.FAULT_ENV, cmd_render.HOOKS_ENV) == ('HYPOTRAIL_FAULT', 'HYPOTRAIL_TEST_HOOKS')
