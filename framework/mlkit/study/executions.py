@@ -130,6 +130,15 @@ def _reserve(ctx: cmd.Context) -> Handler:
         activity = act.canonical(params['activity'])
         plan = act.plan(ctx.store, state, activity, params['options'], with_exposure=True)
         eid = params['execution_id']
+        for other, running in sorted(state['executions']['active'].items()):
+            if running['slot'] == plan['slot'] and running['input_key'] == plan['input_key']:
+                # L7: the same computation is already running; never compute it twice.
+                raise CommandRefused('execution_in_progress',
+                                     f'{plan["slot"]} is already being computed on these inputs '
+                                     f'by execution {other}. Wait for it, then read status.',
+                                     details={'execution_id': other, 'slot': plan['slot'],
+                                              'activity': running['activity'],
+                                              'started_revision': running['started_revision']})
         revision = state['revision'] + 1
         record = {'execution_id': eid, 'activity': activity, 'slot': plan['slot'],
                   'options': plan['options'], 'request_id': ctx.request_id, 'status': 'running',
@@ -331,7 +340,12 @@ def _payload(store: StudyStore, *, action: str, request_id: str, replayed: bool,
              activity: str | None, eid: str | None, status: str, result_id: str | None,
              result: Mapping | None) -> dict:
     values = None
-    if result_id:
+    result = dict(result or {})
+    late = status == 'late_not_promoted'
+    if late:
+        # L6: stored, never promoted: its values describe a state that no longer holds.
+        result['citable'] = False
+    if result_id and not late:
         try:
             values = registry.get(store, result_id)['output']['values']
         except StudyError:
@@ -339,7 +353,7 @@ def _payload(store: StudyStore, *, action: str, request_id: str, replayed: bool,
     return {'schema': SCHEMA, 'ok': True, 'study': str(store.study_dir), 'action': action,
             'request_id': request_id, 'replayed': replayed, 'revision': revision,
             'activity': activity, 'execution_id': eid, 'status': status, 'result_id': result_id,
-            'values': values, 'result': dict(result or {}), 'artifacts': None}
+            'values': values, 'result': result, 'artifacts': None}
 
 
 def _outcome(store: StudyStore, payload: dict, *, render: bool) -> cmd.Outcome:
