@@ -216,8 +216,11 @@ Stable codes. Clients branch on `error.code`; messages may change.
 | `invalid_state` | state | A state that does not follow `hypotrail.study/1` (refused before any write) |
 | `invalid_confirmation` | state | An incomplete confirmation record |
 | `lease_exists`, `lease_held` | lock | Execution lease conflicts |
+| `interrupted_execution_pending` | `run` | An execution has an unknown outcome; every `run` is refused (exit 4) until `run --acknowledge-interruption E` (`details.interrupted`) |
+| `unknown_execution` | `run` | `--acknowledge-interruption E` names no interrupted execution (`details.interrupted`), or an internal step names no active execution |
+| `read_only` | activities | `HYPOTRAIL_READ_ONLY=1`: the process may read results but never compute or record one (`run` and every fit refuse) |
 
-Reserved for Phase 2 (§8.1), not yet emitted: `interrupted_execution_pending`, `unknown_execution`.
+Added in Phase 2 (contract commit, reviewed by the integrator): `interrupted_execution_pending` and `unknown_execution` (reserved in Phase 1, now emitted) and `read_only`. Phase 2 also emits the existing codes `invalid_arguments` (unknown activity, missing `--column` or `--rule`, a `--column` that is not a feature), `precondition_missing` (pauses, a candidate feature without availability decision, missing fits), and `no_predictions`.
 
 ## 8. Extension points
 
@@ -263,7 +266,15 @@ An activity is identified by its **slot** name, which is also its registry `acti
    * Record exposure for every read of rows, even for a result that is not promoted; use `result_id=None` when no result was stored (for example an interrupted execution).
    * Changing a split: compute `exposure.overlap(old_split, new_split, store=store)` and store it in the split result values.
    * A code change: `dependencies.effects(state, 'code_fingerprint', {'activity', 'fingerprint'}, {...})` then `dependencies.apply_effects(state, eff, revision=…, decision_id='code_fingerprint', store=store)` inside an action.
-5. **Exit code 4** for an execution with an unknown outcome; refusal codes `interrupted_execution_pending` and `unknown_execution` are reserved.
+5. **Exit code 4** for an execution with an unknown outcome, including the `interrupted_execution_pending` refusal; `unknown_execution` refuses an acknowledgement of nothing (exit 2).
+6. **Payload schemas added in Phase 2** (additions; the five schemas of §3 are unchanged):
+
+   | Schema | Emitted by | Keys |
+   |---|---|---|
+   | `hypotrail.run/1` | `run`, `run --acknowledge-interruption` | `schema`, `ok`, `study`, `action` (`run` or `run.acknowledge`), `request_id`, `replayed`, `revision`, `activity`, `execution_id`, `status`, `result_id`, `values`, `result`, `artifacts` |
+   | `hypotrail.preview/1` | `preview policy` | `schema`, `ok`, `study`, `revision`, `kind`, `rules`, `models`, `evaluations`, `intervals`, `adopted`, `recorded` (`false`), `note` |
+
+   `run.status` is one of `promoted`, `late_not_promoted`, `already_current`, `running`, `failed`, `interrupted_unknown`, `acknowledged`. `values` are the registry values of `result_id` (cite them only while the slot is current, §4). `preview` writes nothing and records no exposure; `validation_policy_selection` is recorded by `run policy.evaluate`.
 
 ### 8.2 Read API (Phase 2 and 3)
 

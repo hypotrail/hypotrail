@@ -157,6 +157,8 @@ class Study:
         """Persisted predictions of ``rid`` as a DataFrame (``row_key``, ``y``, ``score``).
 
         The blob is gzip-compressed CSV (plan §3.4). pandas is imported here only.
+        Scores are parsed with ``float_precision='round_trip'``: pandas' default parser
+        may differ from the written value in the last bit.
         """
         entry = self.result(rid)
         sha = entry['blobs'].get('predictions')
@@ -166,7 +168,8 @@ class Study:
         import pandas as pd
 
         data = gzip.decompress(self.blob(sha))
-        return pd.read_csv(io.BytesIO(data), dtype={'row_key': str}, keep_default_na=False)
+        return pd.read_csv(io.BytesIO(data), dtype={'row_key': str}, keep_default_na=False,
+                           float_precision='round_trip')
 
     def source(self, activity: str) -> dict:
         """Source code of the modules an activity's current result was computed with.
