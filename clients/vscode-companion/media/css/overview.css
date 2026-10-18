@@ -54,3 +54,5 @@
 .ov-nyd { background: var(--ht-warn-bg); border: 1px solid var(--ht-warn-border); border-radius: 10px; padding: 8px 16px;
   color: var(--ht-warn-fg); }
 .ov-nyd .muted { color: var(--ht-warn-fg); }
+.ov-recap .ht-link { margin: 0; }
+.ov-finding button { margin-top: 0; }
