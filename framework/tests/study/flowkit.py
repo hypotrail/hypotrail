@@ -31,6 +31,26 @@ _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)
 make_case = _module.make_case
 
+# Real cases whose data are copied from the installed scikit-learn by the use case's
+# ``prepare.py`` (not committed: redistribution terms are not stated).
+WDBC = REPO / 'use-cases' / 'breast-cancer-wdbc'
+DIABETES = REPO / 'use-cases' / 'diabetes'
+
+
+def prepare_module(case_dir: Path):
+    """The ``prepare.py`` module of a use case, imported by path."""
+    spec = importlib.util.spec_from_file_location(f'prepare_{Path(case_dir).name}'.replace('-', '_'),
+                                                  Path(case_dir) / 'prepare.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def materialize(case_dir: Path, out: Path) -> Path:
+    """A complete copy of a ``prepare.py`` case (``case.yaml`` and data) in ``out``."""
+    prepare_module(case_dir).materialize(Path(out))
+    return Path(out)
+
 
 def env(**extra) -> dict:
     path = [str(FRAMEWORK)] + [p for p in os.environ.get('PYTHONPATH', '').split(os.pathsep) if p]
