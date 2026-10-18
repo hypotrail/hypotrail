@@ -24,6 +24,17 @@
   const count = (ctx, x) => (x === null ? '' : fmt(ctx, x, Number.isInteger(x) ? 'int' : 'f1'));
   const levelText = (ctx, level) => (level === null ? '' : fmt(ctx, level, 'pct1').replace('.0%', '%'));
 
+  // The frozen intervalRows component draws in a fixed 420-unit viewBox, where a long label
+  // or interval text overflows and is clipped. Widening the viewBox (a geometry attribute,
+  // no style) keeps every text visible; the marks keep their positions.
+  function intervals(ctx, container, options) {
+    const figure = ctx.components.intervalRows(container, options);
+    const chart = figure && figure.querySelector('svg');
+    const box = chart ? String(chart.getAttribute('viewBox') || '').split(' ').map(Number) : [];
+    if (box.length === 4 && box.every(Number.isFinite)) chart.setAttribute('viewBox', `${box[0] - 60} ${box[1]} ${box[2] + 140} ${box[3]}`);
+    return figure;
+  }
+
   // --- rules ---------------------------------------------------------------------------------
 
   /** The canonical spelling of records.canonical_rule for the slider's position. */
@@ -313,7 +324,7 @@
       const delta = candidate && entry.deltas && entry.deltas[candidate] ? entry.deltas[candidate].precision : null;
       const box = ctx.el('div', { className: 'ht-wi-intervals', 'data-intervals': p.rule });
       const interval = r => (r.low === null || r.high === null ? '' : `[${fmt(ctx, r.low, 'pct1')}, ${fmt(ctx, r.high, 'pct1')}]`);
-      ctx.components.intervalRows(box, { title: t.metricAt(t.metrics.precision, p.rule), zero: false,
+      intervals(ctx, box, { title: t.metricAt(t.metrics.precision, p.rule), zero: false,
         rows: fits.map(fit => {
           const point = entry.models[fit].precision;
           const r = entry.intervals[fit].precision;
@@ -322,7 +333,7 @@
         }) });
       if (delta) {
         const f3 = x => signed(fmt(ctx, x, 'f3'), x);
-        ctx.components.intervalRows(box, { title: t.intervalsTitle, zero: true,
+        intervals(ctx, box, { title: t.intervalsTitle, zero: true,
           rows: [{ label: t.intervalRow(fitName(t, candidate), fitName(t, p.model.reference)), point: delta.point, low: delta.low, high: delta.high,
             pointText: delta.point === null ? t.notDefined : f3(delta.point),
             intervalText: delta.low === null || delta.high === null ? '' : `[${f3(delta.low)}, ${f3(delta.high)}]` }] });
@@ -355,7 +366,6 @@
     const proposed = proposalRule(ctx.snapshot);
     const cite = (x, path, f) => (x === null ? t.notDefined : { text: f(x), cited: { resultId: model.resultId, path, value: x } });
     const table = ctx.components.valuesTable(null, {
-      caption: t.evaluatedTitle,
       columns: [{ key: 'rule', label: t.columns.rule }, { key: 'selected', label: t.columns.selected },
         { key: 'tp', label: t.positives(model.targetLabel) }, { key: 'precision', label: t.columns.precision },
         { key: 'recall', label: t.columns.recall }, { key: 'status', label: t.columns.status }],
@@ -369,6 +379,7 @@
       })),
     });
     table.setAttribute('data-evaluated-rules', String(model.evaluatedRules.length));
+    table.setAttribute('aria-labelledby', 'ht-wi-ev-h');
     for (const [i, tr] of [...table.querySelectorAll('tbody tr')].entries()) tr.setAttribute('data-evaluated-rule', model.evaluatedRules[i].rule);
     return ctx.el('section', { className: 'card ht-wi-evaluated', 'aria-labelledby': 'ht-wi-ev-h' }, [
       ctx.el('h3', { id: 'ht-wi-ev-h', text: t.evaluatedTitle }), table]);
@@ -456,7 +467,7 @@
       const errors = ctx.el('section', { className: 'card ht-wi-errors', 'aria-labelledby': 'ht-wi-err-h', 'data-errors': true }, [
         ctx.el('h3', { id: 'ht-wi-err-h', text: t.errorTitle(description, model.n === null ? '' : fmt(ctx, model.n, 'int')) })]);
       const interval = (low, high, f) => (low === null || high === null ? '' : `[${f(low)}, ${f(high)}]`);
-      ctx.components.intervalRows(errors, { title: t.maeTitle, zero: false,
+      intervals(ctx, errors, { title: t.maeTitle, zero: false,
         rows: model.models.map(m => {
           const e = model.errors[m.fit];
           return { label: name(m.fit), point: e.mae, low: e.maeLow, high: e.maeHigh, pointText: e.mae === null ? '' : `${f2(e.mae)}${unit}`,
@@ -465,7 +476,7 @@
       if (model.deltas) {
         const d = model.deltas.mae;
         const s = x => signed(f2(x), x);
-        ctx.components.intervalRows(errors, { title: t.differenceTitle, zero: true,
+        intervals(ctx, errors, { title: t.differenceTitle, zero: true,
           rows: [{ label: t.differenceRow(name(model.deltas.fit), name(model.reference)), point: d.point, low: d.low, high: d.high,
             pointText: d.point === null ? '' : `${s(d.point)}${unit}`, intervalText: interval(d.low, d.high, s) }] });
         errors.appendChild(deltaSentence(ctx, d.side));
@@ -479,7 +490,7 @@
       const q = model.residuals[S.fit];
       if (q && q.min !== null && q.max !== null) {
         const box = ctx.el('section', { className: 'card ht-wi-residuals', 'aria-labelledby': 'ht-wi-res-h', 'data-residuals': S.fit }, [
-          ctx.el('h3', { id: 'ht-wi-res-h', text: t.residualTitle(name(S.fit)) })]);
+          ctx.el('h3', { id: 'ht-wi-res-h', text: t.residualSummary })]);
         ctx.components.boxplot(box, { title: t.residualTitle(name(S.fit)), min: q.min, q25: q.q25, median: q.median, q75: q.q75, max: q.max,
           texts: { min: f2(q.min), q25: f2(q.q25), median: f2(q.median), q75: f2(q.q75), max: f2(q.max) } });
         box.appendChild(ctx.el('p', { text: t.residualCaption }));

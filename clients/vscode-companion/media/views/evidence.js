@@ -22,6 +22,17 @@
   const pct = (ctx, x) => ctx.format.number(x, 'pct1');
   const signed = (text, x) => (x > 0 ? `+${text}` : text);
 
+  // The frozen intervalRows component draws in a fixed 420-unit viewBox, where a long label
+  // or interval text overflows and is clipped. Widening the viewBox (a geometry attribute,
+  // no style) keeps every text visible; the marks keep their positions.
+  function intervals(ctx, container, options) {
+    const figure = ctx.components.intervalRows(container, options);
+    const chart = figure && figure.querySelector('svg');
+    const box = chart ? String(chart.getAttribute('viewBox') || '').split(' ').map(Number) : [];
+    if (box.length === 4 && box.every(Number.isFinite)) chart.setAttribute('viewBox', `${box[0] - 60} ${box[1]} ${box[2] + 140} ${box[3]}`);
+    return figure;
+  }
+
   function selected(ctx) {
     const id = ctx.ui.get('selectedResult');
     return typeof id === 'string' && RID.test(id) ? id : null;
@@ -201,7 +212,7 @@
     const level = u.bootstrap.level !== null ? pct(ctx, u.bootstrap.level).replace('.0%', '%') : '';
     const box = ctx.el('div', { className: 'ht-ev-metric', 'data-metric': metric.metric });
     const notDefined = task === 'binary' ? c.binary.notDefined : '';
-    ctx.components.intervalRows(box, {
+    intervals(ctx, box, {
       title: c.intervalTitle(label, level),
       zero: false,
       rows: metric.models.map(m => ({ label: fitLabel(task, m.fit), point: m.point, low: m.low, high: m.high,
@@ -211,7 +222,7 @@
       const d = metric.delta;
       const cand = fitLabel(task, d.fit);
       const ref = fitLabel(task, u.reference);
-      ctx.components.intervalRows(box, {
+      intervals(ctx, box, {
         title: c.differenceTitle(label, cand, ref),
         zero: true,
         rows: [{ label: c.difference(cand, ref), point: d.point, low: d.low, high: d.high,
