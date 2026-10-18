@@ -92,6 +92,8 @@ class Study:
         self.home = self.study_dir / HOME
         self._state = load_state(self.study_dir)
         self._entries: dict[str, dict] = {}
+        self._module_shas: dict[str, str | None] = {}
+        self._currency: dict[str, dict] = {}
 
     # state
 
@@ -148,7 +150,65 @@ class Study:
         return self.result(rid) if rid else None
 
     def is_current(self, slot: str) -> bool:
-        return st.is_current(self._state, slot)
+        """True when ``slot`` holds a result that :meth:`currency` finds current."""
+        rid = self._state['current'].get(slot)
+        return rid is not None and self.currency(rid)['current']
+
+    def code_changed(self, entry: dict) -> list[str]:
+        """Modules of ``entry``'s code fingerprint whose source differs now (§3.7 row 11)."""
+        return sorted(name for name, sha in entry['code']['modules'].items()
+                      if self._module_sha(name) != sha)
+
+    def currency(self, rid: str) -> dict:
+        """``{"current", "reason"}`` of result ``rid``, derived, never stored.
+
+        A result is current when it is promoted in a slot, not marked stale, its
+        activity's code is unchanged since it was computed (``reason.code_changed``, plan
+        §3.7 row 11), and every result it was computed from (``inputs.results``, without
+        history roles) is current too (``reason.upstream_not_current``). ``reason`` is
+        the stored stale record, the derived one, or None.
+        """
+        if rid in self._currency:
+            return copy.deepcopy(self._currency[rid])
+        self._currency[rid] = {'current': False, 'reason': None}     # cycle guard
+        state = self._state
+        if rid not in set(state['current'].values()):
+            out = {'current': False, 'reason': {'reason': 'not promoted in any slot',
+                                                'since': None}}
+        elif rid in state['stale']:
+            out = {'current': False, 'reason': copy.deepcopy(state['stale'][rid])}
+        else:
+            try:
+                entry = self.result(rid)
+            except StudyError as exc:
+                out = {'current': False, 'reason': {'reason': exc.code, 'since': None}}
+            else:
+                reason: dict = {}
+                changed = self.code_changed(entry)
+                if changed:
+                    reason['code_changed'] = changed
+                parents = [p for p in rec.upstream(entry, history=False)
+                           if not self.currency(p)['current']]
+                if parents:
+                    reason['upstream_not_current'] = parents
+                if reason:
+                    text = []
+                    if changed:
+                        text.append(f'the code of {entry["activity"]} changed since it was '
+                                    'computed (§3.7 row 11)')
+                    if parents:
+                        text.append('it was computed from a result that is no longer current')
+                    reason = {'reason': '; '.join(text), 'since': None, **reason}
+                out = {'current': not reason, 'reason': reason or None}
+        self._currency[rid] = out
+        return copy.deepcopy(out)
+
+    def _module_sha(self, name: str) -> str | None:
+        if name not in self._module_shas:
+            path = _module_path(name)
+            self._module_shas[name] = (hashlib.sha256(path.read_bytes()).hexdigest()
+                                       if path is not None else None)
+        return self._module_shas[name]
 
     def stale_reason(self, rid: str) -> dict | None:
         return copy.deepcopy(self._state['stale'].get(rid))
@@ -185,9 +245,8 @@ class Study:
                              details={'slot': activity})
         texts, shas = {}, {}
         for name in sorted(entry['code']['modules']):
-            spec = importlib.util.find_spec(name)
-            path = Path(spec.origin) if spec is not None and spec.origin else None
-            if path is None or not path.is_file():
+            path = _module_path(name)
+            if path is None:
                 texts[name], shas[name] = None, None
                 continue
             raw = path.read_bytes()
@@ -216,6 +275,16 @@ class Study:
             return json.loads(path.read_text(encoding='utf-8'))
         except ValueError:
             return {'status': 'unreadable'}
+
+
+def _module_path(name: str) -> Path | None:
+    """The source file of module ``name`` (located, not imported), or None."""
+    try:
+        spec = importlib.util.find_spec(name)
+    except (ImportError, ValueError):
+        return None
+    path = Path(spec.origin) if spec is not None and spec.origin else None
+    return path if path is not None and path.is_file() else None
 
 
 def open(study_dir) -> Study:   # noqa: A001 - the documented name of the read API

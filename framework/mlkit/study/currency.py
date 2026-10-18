@@ -13,12 +13,16 @@ from __future__ import annotations
 from typing import Mapping
 
 
-def consumed_current(item: Mapping, state: Mapping) -> bool:
+def consumed_current(item: Mapping, state: Mapping, is_current=None) -> bool:
+    """Every result ``item`` consumes is current: promoted and not stale, and, with
+    ``is_current`` (``read.Study.currency``), current by lineage and code as well."""
     promoted = set(state['current'].values())
-    return all(rid in promoted and rid not in state['stale'] for rid in item.get('consumed') or [])
+    return all(rid in promoted and rid not in state['stale']
+               and (is_current is None or is_current(rid))
+               for rid in item.get('consumed') or [])
 
 
-def effective_status(item: Mapping | None, state: Mapping) -> str:
+def effective_status(item: Mapping | None, state: Mapping, is_current=None) -> str:
     """``ok``, ``stale``, ``failed``, or ``not_rendered`` for ``item`` against ``state``."""
     if not item:
         return 'not_rendered'
@@ -29,7 +33,7 @@ def effective_status(item: Mapping | None, state: Mapping) -> str:
         return status or 'not_rendered'
     if item.get('generated') is False:
         return 'ok'
-    if item.get('revision') != state['revision'] or not consumed_current(item, state):
+    if item.get('revision') != state['revision'] or not consumed_current(item, state, is_current):
         return 'stale'
     return 'ok'
 
@@ -37,7 +41,7 @@ def effective_status(item: Mapping | None, state: Mapping) -> str:
 NAMES = {'report': 'report', 'notebook': 'generated notebook', 'workbench': 'workbench'}
 
 
-def message(name: str, item: Mapping | None, state: Mapping) -> str:
+def message(name: str, item: Mapping | None, state: Mapping, is_current=None) -> str:
     """One sentence an agent can repeat to the junior about artefact ``name`` (D7).
 
     After a failed render it says that the previous file is kept and marked stale at the
@@ -46,7 +50,7 @@ def message(name: str, item: Mapping | None, state: Mapping) -> str:
     label = NAMES.get(name, name)
     path = (item or {}).get('path') or label
     revision = state['revision']
-    status = effective_status(item, state)
+    status = effective_status(item, state, is_current)
     if status == 'not_rendered':
         return f'The {label} ({path}) has not been rendered yet.'
     if (item or {}).get('generated') is False:

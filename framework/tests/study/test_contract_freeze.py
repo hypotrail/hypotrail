@@ -85,7 +85,9 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'interrupted_executions', 'no_causality', 'workbench_not_tracked',
                           'result_integrity',
                           # Post-acceptance contract (D1, adopted rule).
-                          'delegated_decisions', 'adopted_rule_not_evaluated'}
+                          'delegated_decisions', 'adopted_rule_not_evaluated',
+                          # Review fix H2 (plan §3.7 row 11, detected by the view).
+                          'code_changed'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -350,8 +352,12 @@ def test_extension_point_signatures():
     assert [n for n, _ in _params(exposure.overlap)] == ['old_split', 'new_split', 'store']
     assert [n for n, _ in _params(exposure.summary)] == ['store', 'state']
     assert [n for n, _ in _params(dep.effects)] == ['old_state', 'decision_id', 'old', 'new']
+    # Review fix H2 added the keyword-only seeds and keep (result replacement).
     assert [n for n, _ in _params(dep.apply_effects)] == ['state', 'eff', 'revision',
-                                                          'decision_id', 'store', 'previous']
+                                                          'decision_id', 'store', 'previous',
+                                                          'seeds', 'keep']
+    assert [n for n, _ in _params(dep.apply_replacement)] == ['state', 'slot', 'previous', 'new',
+                                                              'revision', 'store', 'code_changed']
     assert [n for n, _ in _params(pre.require_activity)] == ['state', 'activity']
     assert [n for n, _ in _params(pre.missing_for_activity)] == ['state', 'activity']
     assert [n for n, _ in _params(pre.require_decision)] == ['state', 'decision_id', 'value',

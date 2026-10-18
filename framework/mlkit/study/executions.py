@@ -53,6 +53,7 @@ from mlkit.reliability import CommandRefused, Handler
 
 from . import activities as act
 from . import commands as cmd
+from . import dependencies as dep
 from . import exposure, guard, lock, registry
 from . import records as rec
 from . import state as st
@@ -166,13 +167,26 @@ def _promote(ctx: cmd.Context) -> Handler:
             state['current'][slot] = rid
             state['stale'].pop(rid, None)
             done.update(status='promoted', replaced=previous if previous != rid else None)
+            if previous and previous != rid:
+                # H2: what was computed from the replaced result no longer holds.
+                code_changed = (registry.get(ctx.store, previous)['code']['fingerprint']
+                                != record['code_fingerprint'])
+                invalidation = dep.apply_replacement(
+                    state, slot, previous, rid, revision=state['revision'] + 1,
+                    store=ctx.store, code_changed=code_changed)
+                if invalidation is not None and (invalidation['stale_results']
+                                                 or invalidation['reconfirm_required']):
+                    done['invalidation'] = {k: invalidation[k] for k in (
+                        'mutation', 'row', 'reason', 'stale_results', 'stale_slots',
+                        'reconfirm_required')}
         else:
             done.update(status='late_not_promoted', reason=reason,
                         current_input_key=now['input_key'] if now else None)
             state['executions']['late'][eid] = done
         return {'execution_id': eid, 'activity': record['activity'], 'slot': record['slot'],
                 'status': done['status'], 'result_id': rid, 'input_key': params['input_key'],
-                'reason': reason, 'started_revision': record['started_revision']}
+                'reason': reason, 'started_revision': record['started_revision'],
+                'invalidation': done.get('invalidation')}
     return Handler(frozenset({'execution_id', 'result_id', 'input_key'}), run)
 
 

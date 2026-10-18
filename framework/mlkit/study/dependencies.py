@@ -231,19 +231,31 @@ def _lineage_map(store, rids) -> dict[str, set]:
     out = {}
     for rid in rids:
         try:
-            out[rid] = set(registry.lineage(store, rid))
+            # The inputs a result's values depend on: history roles (the split a new
+            # split replaced) are not inputs, so they never make a result stale.
+            seen: set = set()
+            frontier = rec.upstream(registry.get(store, rid), history=False)
+            while frontier:
+                parent = frontier.pop()
+                if parent not in seen:
+                    seen.add(parent)
+                    frontier += rec.upstream(registry.get(store, parent), history=False)
+            out[rid] = seen
         except StudyError:
             out[rid] = None
     return out
 
 
 def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
-                  store=None, previous: Mapping | None = None) -> dict:
+                  store=None, previous: Mapping | None = None, seeds=(), keep=()) -> dict:
     """Apply ``eff`` to ``state`` in memory and append the invalidation record.
 
     * The current results of every listed slot become stale with the reason.
     * With ``store``, every other current result whose registry lineage includes a
       stale result becomes stale too (downstream propagation).
+    * ``seeds`` are result ids that no longer hold (a replaced result): every current
+      result computed from one of them becomes stale too; ``keep`` (the result that
+      replaced it) never does.
     * Each confirmed decision in ``reconfirm`` becomes ``reconfirm_required``; its
       previous value and confirmation stay visible.
     * A policy confirmation does not mark its own evaluation stale: a current
@@ -261,9 +273,11 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
         rid = state['current'].get(slot)
         if rid and rid not in state['stale'] and rid not in stale:
             stale.append(rid)
-    if store is not None and stale:
-        others = [r for r in set(state['current'].values())
-                  if r not in stale and r not in state['stale']]
+    seeds = [r for r in seeds if r]
+    if store is not None and (stale or seeds):
+        others = sorted(r for r in set(state['current'].values())
+                        if r not in stale and r not in state['stale'] and r not in seeds
+                        and r not in keep)
         ancestors = _lineage_map(store, others)
         changed = True
         while changed:
@@ -272,7 +286,7 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
                 if rid in stale:
                     continue
                 parents = ancestors[rid]
-                if parents is None or parents & set(stale):
+                if parents is None or parents & (set(stale) | set(seeds)):
                     stale.append(rid)
                     changed = True
     for rid in stale:
@@ -289,6 +303,39 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
               'reconfirm_required': reconfirmed,
               'effects': {k: copy.deepcopy(eff[k]) for k in (*EFFECT_KEYS, *META_KEYS) if k in eff},
               'previous': copy.deepcopy(previous) if previous is not None else None}
-    if eff['mutation'] not in ('first_confirmation', 'unchanged_value') or stale or reconfirmed:
+    if eff['mutation'] not in QUIET_MUTATIONS or stale or reconfirmed:
         state['invalidations'].append(record)
     return record
+
+
+# Mutations recorded only when they invalidate something.
+QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced')
+# Decisions resting on the figures of a slot's result: an adopted policy and the
+# conclusion were confirmed on evaluations computed from the split and the fits.
+RESTS_ON = {'split': ('policy', 'conclusion'), 'fit.baseline': ('policy', 'conclusion'),
+            'fit.logistic': ('policy', 'conclusion')}
+
+
+def apply_replacement(state: dict, slot: str, previous: str, new: str, *, revision: int,
+                      store, code_changed: bool = False) -> dict | None:
+    """A new result replaced ``previous`` in ``slot`` (inside ``run.promote``).
+
+    Every current result computed from ``previous`` (registry lineage) becomes stale,
+    and the decisions that rest on the slot (:data:`RESTS_ON`) need reconfirmation:
+    the evaluation an adopted policy was confirmed on no longer describes the current
+    models. The invalidation is recorded with mutation ``result_replaced``,
+    ``decision_id`` the slot, and row 11 when the activity's code changed (else
+    ``None``). Returns the record, or None when ``previous`` is empty or equal to ``new``.
+    """
+    if not previous or previous == new:
+        return None
+    reason = (f'the result of {slot} was replaced ({previous[:12]} by {new[:12]})'
+              + ('; its code changed (§3.7 row 11)' if code_changed else ''))
+    eff = {**no_effects('result_replaced', reason),
+           'row': 11 if code_changed else None,
+           'reconfirm': list(RESTS_ON.get(slot, ())),
+           'scope': 'downstream',
+           'notes': ['Results computed from the replaced result are stale; decisions confirmed '
+                     "on them need the junior's words again."]}
+    return apply_effects(state, eff, revision=revision, decision_id=slot, store=store,
+                         seeds=[previous], keep=[new])

@@ -44,7 +44,7 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'results', 'artifacts', 'executions', 'not_yet_defensible')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
 SUMMARY_PRIORITY = ('interrupted_executions', 'result_integrity', 'adopted_rule_not_evaluated',
-                    'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
+                    'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'validation_is_not_independent')
 SUMMARY_TOP = 5
 
@@ -78,12 +78,13 @@ def _results(study: read.Study, state: dict) -> dict:
     for slot in sorted(state['current']):
         rid = state['current'][slot]
         item = {k: None for k in RESULT_VIEW_KEYS}
-        item.update(slot=slot, result_id=rid, current=st.is_current(state, slot),
-                    stale_reason=state['stale'].get(rid), integrity='ok')
+        currency = study.currency(rid)
+        item.update(slot=slot, result_id=rid, current=currency['current'],
+                    stale_reason=currency['reason'], integrity='ok')
         try:
             entry = study.result(rid)
         except StudyError as exc:
-            item.update(integrity=exc.code, current=False)
+            item.update(integrity=exc.code, current=False, stale_reason=state['stale'].get(rid))
         else:
             item.update(activity=entry['activity'], partition=entry['partition'],
                         n_rows=entry['n_rows'], values=entry['output']['values'],
@@ -109,14 +110,23 @@ def _artifacts(study: read.Study, state: dict) -> dict:
     if not isinstance(raw, dict) or not isinstance(raw.get('artifacts'), dict):
         return {'manifest': read.ARTIFACTS_FILE, 'status': 'unreadable', 'items': {}}
     items = {}
+
+    def current(rid):
+        return study.currency(rid)['current']
     for name, item in raw['artifacts'].items():
         if not isinstance(item, dict):
             continue
         items[name] = {**item, 'recorded_status': item.get('status'),
-                       'status': currency.effective_status(item, state),
-                       'message': currency.message(name, item, state)}
+                       'status': currency.effective_status(item, state, current),
+                       'message': currency.message(name, item, state, current)}
     return {'manifest': read.ARTIFACTS_FILE,
             'status': currency.overall(i['status'] for i in items.values()), 'items': items}
+
+
+def rid_reason(item: dict, key: str):
+    """A key of a result item's derived stale reason (``code_changed``, ...), or None."""
+    reason = item.get('stale_reason')
+    return reason.get(key) if isinstance(reason, dict) else None
 
 
 def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
@@ -226,6 +236,13 @@ def build(study_dir) -> dict:
         defensible.append({'id': 'result_integrity', 'slots': broken,
                            'text': 'Some recorded results fail their integrity check and '
                                    'cannot be cited.'})
+    changed = sorted(s for s, r in results.items()
+                     if r['integrity'] == 'ok' and rid_reason(r, 'code_changed'))
+    if changed:
+        defensible.append({'id': 'code_changed', 'slots': changed,
+                           'text': 'The code of these activities changed after their results '
+                                   'were computed; those results, and the ones computed from '
+                                   'them, cannot be cited until they are run again.'})
     adopted = _adopted_without_evaluation(state, results)
     if adopted:
         defensible.append({'id': 'adopted_rule_not_evaluated', 'rules': [adopted],

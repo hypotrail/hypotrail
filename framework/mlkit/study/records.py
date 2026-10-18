@@ -76,10 +76,19 @@ def code_digest(modules: Mapping[str, str]) -> str:
     return sha256_hex(canonical(dict(modules)))
 
 
-def upstream(entry: Mapping) -> list[str]:
-    """Result ids an entry was computed from (``inputs.results``), sorted by role."""
+# Roles of ``inputs.results`` that record history rather than an input of the
+# computation: a new split names the split it replaced, to report the overlap, but its
+# own currency does not depend on that (stale) split.
+HISTORY_ROLES = ('previous_split',)
+
+
+def upstream(entry: Mapping, *, history: bool = True) -> list[str]:
+    """Result ids an entry was computed from (``inputs.results``), sorted by role.
+
+    ``history=False`` leaves out :data:`HISTORY_ROLES`: what remains are the results the
+    entry's values depend on, so it is current only while they are."""
     results = entry.get('inputs', {}).get('results', {}) or {}
-    return [results[k] for k in sorted(results)]
+    return [results[k] for k in sorted(results) if history or k not in HISTORY_ROLES]
 
 
 def verify_entry(rid: str, entry: Any) -> dict:
