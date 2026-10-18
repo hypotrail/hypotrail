@@ -16,6 +16,7 @@ Proposed teaching scenario: prioritize contacts **before a call** when call capa
 - `data/split.json`: existing tutorial partition, 3,164 training and 1,357 validation rows.
 - `data/predictions.csv`: historical experiment predictions.
 - `prepare_bank.py`: explicit deterministic experiment; trains two logistic regressions, including a leakage counterexample. Do not run it merely to open the tutorial.
+- `case.yaml`: the junior study case contract ([`hypotrail.case/1`](../../docs/specs/CASE-CONTRACT.md)), generated from `project.json` and `case-supplement.yaml` by `mlkit.study.migrate`. It contains no confirmation: tutorial choices are scenario assumptions.
 - `project.json`, `results.json`: companion contracts, including training-only EDA.
 - `tutorial-results.json`, `bank-tutorial.html`: historical result/export formats; `design.css` is the export's frozen stylesheet.
 

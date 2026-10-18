@@ -1,0 +1,165 @@
+schema: hypotrail.case-supplement/1
+purpose: >-
+  Input of mlkit.study.migrate, next to project.json. It adds what the companion tutorial
+  contract does not carry: how to read bank.csv, the positive label, line-cited UCI
+  documentation for every column, and structural observations. Every documented_fact cites
+  data/bank-names.txt by line. Edit this file and regenerate case.yaml; never edit case.yaml.
+dataset:
+  sep: ';'
+  header: true
+  quotechar: '"'
+target:
+  positive_label: 'yes'
+  negative_label: 'no'
+facts:
+  target:
+    source: 'data/bank-names.txt:35,67-68'
+  observation_unit:
+    source: 'data/bank-names.txt:26-28'
+  repeated_observations:
+    source: 'Structural inspection of data/bank.csv (no client identifier, no year)'
+variables:
+  age:
+    type: integer
+    unit: years
+    description: Age of the client.
+    status: documented_fact
+    source: 'data/bank-names.txt:47'
+  job:
+    type: category
+    description: Type of job.
+    status: documented_fact
+    source: 'data/bank-names.txt:48-49'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:48'
+  marital:
+    type: category
+    description: Marital status; "divorced" means divorced or widowed.
+    status: documented_fact
+    source: 'data/bank-names.txt:50'
+  education:
+    type: category
+    description: Education level.
+    status: documented_fact
+    source: 'data/bank-names.txt:51'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:51'
+  default:
+    type: binary
+    description: Has credit in default? (yes/no)
+    status: documented_fact
+    source: 'data/bank-names.txt:52'
+  balance:
+    description: Average yearly balance, in euros.
+    source: 'data/bank-names.txt:53'
+  housing:
+    type: binary
+    description: Has a housing loan? (yes/no)
+    status: documented_fact
+    source: 'data/bank-names.txt:54'
+  loan:
+    type: binary
+    description: Has a personal loan? (yes/no)
+    status: documented_fact
+    source: 'data/bank-names.txt:55'
+  contact:
+    type: category
+    description: >-
+      Communication type of the last contact of the current campaign (cellular, telephone,
+      or unknown). It describes the last contact, so it may not be known before that contact.
+    status: documented_fact
+    source: 'data/bank-names.txt:56-57'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:57'
+  day:
+    type: integer
+    description: >-
+      Day of the month of the last contact of the current campaign. It describes the last
+      contact, so it may not be known before that contact.
+    status: documented_fact
+    source: 'data/bank-names.txt:56,58'
+  month:
+    type: category
+    description: >-
+      Month of the last contact of the current campaign (jan to dec); the year is not
+      recorded. It describes the last contact, so it may not be known before that contact.
+    status: documented_fact
+    source: 'data/bank-names.txt:56,59'
+  duration:
+    description: Duration of the last contact of the current campaign, in seconds.
+    source: 'data/bank-names.txt:56,60'
+    availability:
+      value: not_available
+      status: documented_fact
+      source: >-
+        data/bank-names.txt:56,60: duration of the last contact of the current campaign, which
+        is known only once that contact has ended
+  campaign:
+    type: integer
+    unit: contacts
+    description: >-
+      Number of contacts performed during this campaign for this client, including the last
+      contact. Because it includes the last contact, its value before that contact is lower.
+    status: documented_fact
+    source: 'data/bank-names.txt:62'
+  pdays:
+    description: >-
+      Number of days since the client was last contacted in a previous campaign; -1 means the
+      client was not previously contacted.
+    source: 'data/bank-names.txt:63'
+    special_values:
+      - value: -1
+        meaning: The client was not previously contacted.
+        status: documented_fact
+        source: 'data/bank-names.txt:63'
+  previous:
+    description: Number of contacts performed before this campaign for this client.
+    source: 'data/bank-names.txt:64'
+  poutcome:
+    description: Outcome of the previous marketing campaign.
+    source: 'data/bank-names.txt:65'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:65'
+  y:
+    description: Has the client subscribed a term deposit? (yes/no)
+    source: 'data/bank-names.txt:67-68'
+structure:
+  group_column:
+    value: null
+    status: unknown
+    source: >-
+      No client identifier in the extract, so repeated clients cannot be verified
+      (fact repeated_observations)
+  time_column:
+    value: null
+    status: unknown
+    source: >-
+      No complete date: day and month of the last contact without the year. bank.csv is a
+      random 10% sample of bank-full.csv, which is ordered by date (data/bank-names.txt:31-32)
+  duplicates:
+    value: 0
+    status: observed
+    source: 'Structural inspection of data/bank.csv: no exact duplicate rows'
+prior_exposure:
+  - value: >-
+      data/split.json records the companion split (seed 20261017) whose validation metrics are
+      published in results.json. A study that reuses this seed has no unseen validation rows.
+    status: observed
+    source: data/split.json
+notes:
+  - >-
+    The UCI "bank-additional" documentation warns that duration is not known before a call;
+    data/bank-names.txt, shipped here, does not contain that warning. The not_available
+    status relies on lines 56 and 60 only.
