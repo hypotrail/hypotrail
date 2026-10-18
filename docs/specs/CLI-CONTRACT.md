@@ -459,6 +459,10 @@ hypotrail session-report --study DIR [--since REV] [--gap-minutes M] [--format t
 * Enabled by `HYPOTRAIL_SESSION_LOG=1` for that process, which creates the file; once the file exists, every later invocation appends to it, in any chat, until the file is deleted. `HYPOTRAIL_SESSION_LOG=0` disables it for a process. A read-only process (`HYPOTRAIL_READ_ONLY=1`) never writes it, and `session-report` is never logged (`sessionlog.UNLOGGED`). Off by default: without the file and the variable, no command writes it, so `check` and `status` stay write-free.
 * A line has `schema`, `time`, `command`, `verb`, `exit_code`, `ok`, `revision`, `options` (only `--basis`, `--delegation-scope`, `--rule`, `--column`, `--channel`, `--acknowledge-interruption`, `--since`, `--about`, `--resolve`, `--max-groups`, the switches `--summary`, `--json`, `--intervals`, whether `--text` read a file or stdin, and how many `--allow-user-text` were given), and, as they apply: `decision_id`, `proposal_id`, `note_id`, `activity`, `refusal: {code, reason}` (the reason only when it is an identifier such as `bare_acknowledgement`), `replayed`, `status`, `basis`, `delegation_scope`, `invalidation: {mutation, stale_results}`, `artifacts` (name to status), `slot`, `result_id` (8 characters), `check: {target, clean, counts, codes, traced, in_words}`, `current_step`, `next_action` (its kind), `rules`. It never holds `--user-words`, a note's `--text`, `--restatement`, `--rationale`, `--value`/`--value-json`, `--reason`, request ids, checked or user text, or any message.
 
+### 8.7 Advanced companion
+
+The additions for the advanced companion are specified in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), which this document does not repeat. Landed so far (WP-E2): `evidence` (`hypotrail.evidence/1`), `explain` (`hypotrail.explain/1`), `export handoff` (`hypotrail.export/1`, `hypotrail.handoff/1`), and the optional `location` of `check` findings. New error code: `export_target_exists` (`export handoff`: `--out` exists and is not an empty folder; `details.path`; nothing was written).
+
 ## 9. Storage objects
 
 ### Registry entry `hypotrail.result/1`

@@ -18,8 +18,6 @@ import companion_contract as cc
 import flowkit as fk
 from mlkit.study import read
 
-E2 = pytest.mark.xfail(strict=True, reason='WP-E2: C5, C6, C7, C10 locations are not implemented')
-
 
 @pytest.fixture(scope='module')
 def binary(tmp_path_factory, synthetic_case_dir):
@@ -35,24 +33,8 @@ def _rid(study, slot):
     return read.open(study).state['current'][slot]
 
 
-# --- passes now; WP-E2 deletes it -----------------------------------------------------------
-
-def test_wp0_stubs_refuse_until_e2(binary, tmp_path):
-    before = cc.study_tree_digest(binary.study)
-    for argv, command in ((('evidence',), 'evidence'),
-                          (('evidence', '--result', _rid(binary.study, 'fit.logistic'), '--limit',
-                            5), 'evidence'),
-                          (('explain', '--term', 'base_rate'), 'explain'),
-                          (('export', 'handoff', '--out', tmp_path / 'pack'), 'export handoff')):
-        code, payload = cc.run(*argv, '--study', binary.study)
-        assert code == 2 and cc.not_implemented(payload, command), payload
-    assert cc.study_tree_digest(binary.study) == before
-    assert not (tmp_path / 'pack').exists()
-
-
 # --- C5 ------------------------------------------------------------------------------------
 
-@E2
 def test_c5_evidence_keys(binary):
     code, p = cc.run('evidence', '--study', binary.study)
     assert code == 0, p
@@ -96,7 +78,6 @@ def test_c5_evidence_keys(binary):
     assert all(tuple(p['sources'][k]) == cc.SOURCE_KEYS for k in cc.SOURCES_KEYS)
 
 
-@E2
 def test_c5_detail_limit_and_refusals(binary):
     rid = _rid(binary.study, 'fit.logistic')
     code, p = cc.run('evidence', '--result', rid, '--limit', 1, '--study', binary.study)
@@ -117,7 +98,6 @@ def test_c5_detail_limit_and_refusals(binary):
 
 # --- C6 ------------------------------------------------------------------------------------
 
-@E2
 def test_c6_explain_keys(binary):
     code, p = cc.run('explain', '--study', binary.study)
     assert code == 0, p
@@ -146,7 +126,6 @@ def test_c6_explain_keys(binary):
 
 # --- R1, R3 (C5, C6) -----------------------------------------------------------------------
 
-@E2
 def test_e2_reads_are_read_only_and_import_no_heavy_module(binary, tmp_path):
     study = fk.clone(binary.study, tmp_path / 'ro study')
     for argv in (('evidence',), ('evidence', '--result', _rid(study, 'fit.logistic')),
@@ -158,7 +137,6 @@ def test_e2_reads_are_read_only_and_import_no_heavy_module(binary, tmp_path):
 
 # --- C7 ------------------------------------------------------------------------------------
 
-@E2
 def test_c7_export_handoff(clone, tmp_path):
     before = cc.study_tree_digest(clone.study)
     out = tmp_path / 'packs' / 'first'
@@ -185,7 +163,6 @@ def test_c7_export_handoff(clone, tmp_path):
         f.name: f.read_bytes() for f in second.iterdir()}
 
 
-@E2
 def test_c7_export_refusals(clone, tmp_path):
     code, p = cc.run('export', 'handoff', '--out', clone.study / '.hypotrail' / 'pack',
                      '--study', clone.study)
@@ -206,7 +183,6 @@ def test_c7_export_refusals(clone, tmp_path):
 
 # --- C10 locations -------------------------------------------------------------------------
 
-@E2
 def test_c10_check_findings_carry_a_location(clone):
     note = clone.study / 'note.md'
     note.write_text('A first line.\nThe model reaches 97.3% here.\n', encoding='utf-8')

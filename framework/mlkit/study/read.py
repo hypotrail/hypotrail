@@ -181,6 +181,31 @@ class Study:
         self._entries[rid] = entry
         return copy.deepcopy(entry)
 
+    def result_ids(self) -> list[str]:
+        """Every ``result_id`` in the registry (its file names), sorted; none is verified."""
+        folder = self.home / REGISTRY_DIR
+        return sorted(p.stem for p in folder.glob('*.json')) if folder.is_dir() else []
+
+    def raw_result(self, rid: str) -> dict | None:
+        """The registry entry ``rid`` as stored, **unverified**, or None when it is absent or
+        not a JSON mapping. For listing an entry that fails :meth:`result`; never cite it."""
+        path = self.home / REGISTRY_DIR / f'{rid}.json'
+        if not isinstance(rid, str) or not rid or '/' in rid or rid.startswith('.') \
+                or not path.is_file():
+            return None
+        try:
+            entry = json.loads(path.read_text(encoding='utf-8'))
+        except ValueError:
+            return None
+        return entry if isinstance(entry, dict) else None
+
+    def module_status(self, entry: dict) -> dict:
+        """``{module: {"sha256", "matches"}}`` of an entry's code fingerprint: the digest the
+        result was computed with, and whether the module's source still has it."""
+        modules = (entry.get('code') or {}).get('modules') or {}
+        return {name: {'sha256': sha, 'matches': self._module_sha(name) == sha}
+                for name, sha in sorted(modules.items())}
+
     def current(self, slot: str) -> dict | None:
         """The verified entry promoted in ``slot``, or None. A stale one is returned
         too; check :meth:`is_current`."""

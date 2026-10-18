@@ -18,22 +18,26 @@ terms:
   validation_partition:
     term: Validation partition
     definition: Rows held apart from model fitting and used to compare models and choose a policy. Once used to choose, they are no longer independent evidence.
+    cited_example: "Here {{slot:split:partitions.validation.n_rows|int}} rows are held apart for validation and {{slot:split:partitions.train.n_rows|int}} rows train the models."
   stratified_split:
     term: Stratified split
     definition: A random division of the rows that keeps the share of the positive outcome similar in the training and validation partitions.
     example: Here the training partition has <n_positive_train> positive rows out of <n_train> and the validation partition <n_positive_validation> out of <n_validation>, close shares by construction (split result <result_id>).
+    cited_example: "Here the positive outcome occurs in {{slot:split:partitions.train.rate|pct1}} of the training rows and in {{slot:split:partitions.validation.rate|pct1}} of the validation rows, close shares by construction."
   exposure:
     term: Data exposure
     definition: The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.
   base_rate:
     term: Base rate
     definition: The share of rows with the positive outcome. Any model must be compared with what this share alone would give.
+    cited_example: "In this study's training rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows."
   special_value:
     term: Special value
     definition: A code that stands for something other than a measurement, such as "never" or "unknown". Treating it as an ordinary number distorts a model.
   baseline:
     term: Baseline
     definition: The simplest reference model, a constant score equal to the training base rate. Keeping the baseline is a valid conclusion.
+    cited_example: "Here the baseline gives every row the training base rate, {{slot:fit.baseline:train_rate|pct1}}, so it cannot rank the rows."
   logistic_regression:
     term: Logistic regression
     definition: A model that turns a weighted sum of the features into a score between zero and one. It ranks rows; its scores are not calibrated probabilities unless that is checked.
@@ -53,10 +57,12 @@ terms:
     term: Precision
     definition: Among the rows acted on, the share that turned out positive.
     example: Here the logistic model's rule selects <selected> of the <n> validation rows and <true_positives> of them are positive, a precision of <precision> (policy evaluation <result_id>).
+    cited_example: "At <rule>, {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} of the validation rows the logistic model acts on turn out positive."
   recall:
     term: Recall
     definition: Among all positive rows, the share the policy reached.
     example: Here the validation rows hold <n_positive> positive rows and the rule reaches <true_positives> of them, a recall of <recall> (policy evaluation <result_id>). A small capacity keeps recall low even when precision is high.
+    cited_example: "At <rule>, the logistic model reaches {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].recall|pct1}} of the positive validation rows."
   volume:
     term: Volume
     definition: How many rows the policy acts on, also shown as a share of the partition.
@@ -71,10 +77,12 @@ terms:
     term: Paired difference
     definition: The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.
     example: Here the logistic model's precision minus the baseline's at <rule> is <delta>, between <low> and <high> on resamples of the validation rows (policy evaluation <result_id>, deltas). An interval that contains zero does not show that one model is better.
+    cited_example: "At <rule>, the logistic model's precision minus the baseline's is {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, between {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} and {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
   confidence_interval:
     term: Confidence interval
     definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.
     example: Here the logistic model's precision at <rule> ranges from <low> to <high> on resamples of the <n> validation rows (policy evaluation <result_id>, intervals); a wide range means the figure is uncertain.
+    cited_example: "At <rule>, the logistic model's precision ranges from {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.low|pct1}} to {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
   percentile_interval:
     term: Percentile interval
     definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.
@@ -106,6 +114,7 @@ regression_terms:
   validation_partition:
     term: Validation partition
     definition: Rows held apart from model fitting and used to compare models and choose one. Once used to choose, they are no longer independent evidence.
+    cited_example: "Here {{slot:split:partitions.validation.n_rows|int}} rows are held apart for validation and {{slot:split:partitions.train.n_rows|int}} rows train the models."
   random_split:
     term: Random split
     definition: A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.
@@ -121,9 +130,11 @@ regression_terms:
   target_distribution:
     term: Target distribution
     definition: How the values of the target spread, summarised by the mean, the standard deviation, and the quartiles. Any model is compared with the simplest guess, the training mean.
+    cited_example: "On this study's training rows the target has a mean of {{slot:eda.target_summary:mean|f2}} <unit> and a standard deviation of {{slot:eda.target_summary:sd|f2}} <unit>."
   baseline:
     term: Baseline
     definition: The simplest reference model, here the training mean of the target predicted for every row. Keeping the baseline is a valid conclusion.
+    cited_example: "Here the mean baseline predicts {{slot:fit.baseline:train_mean|f2}} <unit> for every row, the mean of the training rows."
   linear_regression:
     term: Linear regression
     definition: A model that predicts the target as a weighted sum of the features, with weights fitted on training rows by least squares. Its weights are associations, not effects.
@@ -136,12 +147,15 @@ regression_terms:
   bias:
     term: Bias
     definition: The mean residual. A bias far from zero means the model is systematically too low or too high, for example on later periods than the ones it was fitted on.
+    cited_example: "Here the mean residual of the linear model on the validation rows is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>."
   mae:
     term: Mean absolute error (MAE)
     definition: The average size of the residuals, in the unit of the target. It reads directly as the typical error of one prediction.
+    cited_example: "Here the linear model's validation MAE is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline."
   rmse:
     term: Root mean squared error (RMSE)
     definition: The square root of the average squared residual, in the unit of the target. Squaring weighs large errors more, so a gap between RMSE and MAE signals a few large errors.
+    cited_example: "Here the linear model's validation RMSE is {{slot:evaluate.regression:models.[fit.linear].rmse|f2}} <unit>, against {{slot:evaluate.regression:models.[fit.baseline].rmse|f2}} <unit> for the mean baseline."
   paired_bootstrap:
     term: Paired bootstrap
     definition: Resampling the same validation rows for both models at once, so the interval describes their difference rather than each one separately.
@@ -150,10 +164,12 @@ regression_terms:
     term: Paired difference
     definition: The difference between two models measured on the same rows, such as the linear model's MAE minus the baseline's. Pairing removes the noise of which rows each model was measured on.
     example: Here the linear model's MAE minus the baseline's is <delta> <unit>, between <low> and <high> on resamples of the validation rows (regression evaluation <result_id>, deltas). Below zero means the linear model errs less on these rows; an interval that contains zero does not show that one model is better.
+    cited_example: "Here the linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of the validation rows."
   confidence_interval:
     term: Confidence interval
     definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for future rows.
     example: Here the linear model's MAE ranges from <low> to <high> <unit> on resamples of the <n> validation rows (regression evaluation <result_id>, intervals); a wide range means the error is uncertain.
+    cited_example: "Here the linear model's MAE ranges from {{slot:evaluate.regression:intervals.[fit.linear].mae.low|f2}} to {{slot:evaluate.regression:intervals.[fit.linear].mae.high|f2}} <unit> on resamples of the validation rows."
   percentile_interval:
     term: Percentile interval
     definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.
