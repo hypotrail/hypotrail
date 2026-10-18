@@ -28,7 +28,8 @@ browser = ["playwright==1.55.0"]
 [tool.hatch.build.targets.wheel]
 packages = ["mlkit"]
 
-# mlkit/assets/design.css ships inside the package. framework/notebooks/ and
+# mlkit/assets/design.css and the teaching texts mlkit/study/content/*.yaml ship inside
+# the package (hatch includes every file under mlkit/; read with importlib.resources). framework/notebooks/ and
 # framework/templates/ are read through Path(__file__).parents[1] (discover.py,
 # notebooks.py, tutorial.py), so they resolve only from a source checkout with the
 # editable install that `uv sync` creates. A non-editable wheel does not support them yet.

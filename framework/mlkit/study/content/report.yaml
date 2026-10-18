@@ -1,0 +1,82 @@
+# Labels of the HTML report and the generated notebook. A status is always written
+# in words, never shown by colour alone. No digits: numbers come from the registry.
+schema: hypotrail.content.report/1
+title: Study report
+subtitle: One evolving report of the study. It describes the recorded state; it does not decide anything.
+authority: This page does not update itself. The study state, read with hypotrail status, is the authority.
+no_controls: There are no decision controls on this page. Decisions are made in the chat or with hypotrail decide, in your own words.
+theme_toggle: Switch theme
+sections:
+  revision: Revision and surfaces
+  plan: Where the study stands
+  decisions: Decisions
+  facts: What the case states
+  evidence: Evidence by step
+  policy: Policy comparison
+  not_yet_defensible: What is not yet defensible
+  annex: Results annex
+surfaces:
+  report: HTML report
+  notebook: Generated notebook
+  workbench: Workbench
+surface_status:
+  ok: Up to date with this revision
+  stale: Stale
+  failed: Rendering failed
+  not_rendered: Not rendered yet
+  not_tracked: Created once and never overwritten; experiments in it are not tracked
+step_status:
+  done: Done
+  needs_reconfirmation: Needs your confirmation again
+  awaiting_confirmation: Waiting for your own words
+  ready: Ready
+  blocked: Blocked by an earlier step
+decision_status:
+  open: Open, nothing proposed
+  proposed: Proposed, not confirmed
+  confirmed: Confirmed decision
+  reconfirm_required: Needs reconfirmation
+  superseded: Superseded
+fact_status:
+  documented_fact: Documented fact
+  scenario_assumption: Scenario assumption
+  observed: Observed in the data
+  unknown: Unknown
+availability:
+  available_at_prediction: Available at prediction time
+  not_available: Not available at prediction time
+  uncertain_excluded: Uncertain, excluded
+  uncertain_included: Uncertain, included and listed as a limit
+  missing: No status
+verdict:
+  adopt_policy: Adopt the policy
+  keep_baseline: Keep the baseline
+  inconclusive: Inconclusive
+current_marker: You are here
+next_action: Next action
+user_words: Your words
+not_authenticated: Recorded words, not an authenticated signature.
+restatement: Restatement you answered
+proposal_waiting: Waiting for your answer
+policy_note: Figures are computed on validation rows after a choice made on them. They are optimistic and are not a forecast of a future campaign.
+policy_missing: No current policy evaluation yet.
+paired_heading: Paired differences, model minus baseline (paired bootstrap on the same validation rows)
+tied_none: No tie at the cut
+tied_yes: Ties at the cut counted pro rata
+adopted: Adopted rule
+proposed_rule: Proposed rule
+not_cited: Not cited
+annex_note: Every number in this report is a cited registry value. Hover a number to see its result id and path.
+not_yet_defensible_extra:
+  validation_is_not_independent: A threshold or capacity chosen on validation rows makes the validation figures optimistic.
+  no_time_or_entity_identifier: Without a time column or an entity identifier, drift and repeated entities cannot be checked.
+  public_data_already_explored: Public data may have been explored by you, by others, or by the model that assists you.
+  uncertain_features_included: Uncertain variables included in the model may carry information from after the prediction time.
+  no_causality: The study ranks rows; it does not show that acting would change the outcome.
+  workbench_not_tracked: Slider experiments in the workbench change nothing and prove nothing.
+notebook:
+  banner_current: Generated at this revision. Numbers are frozen by result id.
+  banner_stale: The study has moved on since this notebook was generated. Render again before relying on it.
+  read_only: Read-only. Write your notes in workbench.py; edits to this file are preserved as a copy and then regenerated.
+  source_label: Activity source (displayed, not executed)
+  source_changed: The module changed after this result was computed; the code shown is not what ran.

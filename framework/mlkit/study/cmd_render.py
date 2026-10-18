@@ -1,0 +1,206 @@
+"""``hypotrail render`` and the automatic render after every commit (plan WP3.4).
+
+    hypotrail render --study DIR
+
+renders, under the writer lock and from one view (:func:`mlkit.study.view.build`):
+
+1. ``notebooks/study_generated.py`` (regenerated, user edits preserved) and
+   ``notebooks/workbench.py`` (created once) — :mod:`mlkit.study.render_notebook`;
+2. ``reports/study.html`` — :mod:`mlkit.study.render_html`, written atomically;
+3. ``.hypotrail/artifacts.json`` — :mod:`mlkit.study.manifest`.
+
+Each artefact succeeds or fails on its own. When the HTML fails, the previous file is
+kept and a stale banner is injected at ``<!--hypotrail:banner-->``; its manifest item
+becomes ``failed`` with the error, and ``last_ok_revision`` keeps the last good
+revision. Nothing ever claims that everything is up to date: the output lists each
+artefact with its own status.
+
+:func:`after_commit` is called by :func:`mlkit.study.commands.apply` after every
+committed, non-replayed mutation. It never raises and never undoes the commit; a
+``stale`` or ``failed`` artefact makes the command exit with code 3.
+
+Fault injection for tests and acceptance scenarios: ``HYPOTRAIL_FAULT=render_html``
+or ``render_notebook`` (comma-separated for both) is honoured **only** when
+``HYPOTRAIL_TEST_HOOKS=1``.
+
+Rendering modules (and Marimo) are imported when a render runs, not when this module
+is imported. No pandas, numpy, or scikit-learn.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+from pathlib import Path
+
+from . import commands as cmd
+from . import guard, manifest as mf
+from .errors import StudyError
+
+SCHEMA = 'hypotrail.render/1'
+FAULT_ENV = 'HYPOTRAIL_FAULT'
+HOOKS_ENV = 'HYPOTRAIL_TEST_HOOKS'
+FAULTS = ('render_html', 'render_notebook')
+ARTIFACT_NAMES = tuple(mf.ARTIFACTS)
+
+
+class InjectedFault(RuntimeError):
+    """A failure requested by ``HYPOTRAIL_FAULT`` under ``HYPOTRAIL_TEST_HOOKS=1``."""
+
+
+def fault_requested(name: str) -> bool:
+    if os.environ.get(HOOKS_ENV) != '1':
+        return False
+    return name in {f.strip() for f in os.environ.get(FAULT_ENV, '').split(',')}
+
+
+def _inject(name: str) -> None:
+    if fault_requested(name):
+        raise InjectedFault(f'{FAULT_ENV}={name}: injected render failure (test hook)')
+
+
+def _error(exc: BaseException) -> dict:
+    if isinstance(exc, StudyError):
+        return {'code': exc.code, 'message': exc.message}
+    return {'code': 'render_failed', 'message': f'{type(exc).__name__}: {exc}'}
+
+
+def _pseudo_state(view: dict) -> dict:
+    """What :func:`manifest.effective_status` needs, taken from the view."""
+    return {'revision': view['revision'],
+            'current': {slot: r['result_id'] for slot, r in view['results'].items()},
+            'stale': view['stale']}
+
+
+def _variables(view: dict) -> list[dict]:
+    from . import case as c
+
+    try:
+        return list(c.load_case(view['case']['path'], verify_data=False).document['variables'])
+    except Exception:      # the report still renders without the variable dictionary
+        return []
+
+
+def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> dict:
+    from . import render_html
+    from .store import atomic_write
+
+    item = mf.item(manifest, 'report', kind='html')
+    path = study / mf.ARTIFACTS['report']
+    try:
+        _inject('render_html')
+        page, consumed = render_html.build(view, surfaces=surfaces, variables=_variables(view))
+        data = page.encode('utf-8')
+        atomic_write(path, data)
+    except Exception as exc:
+        error = _error(exc)
+        try:
+            banner = render_html.banner_html(report_revision=item.get('last_ok_revision'),
+                                             failed_revision=view['revision'], error=error)
+            if path.is_file():
+                data = render_html.inject_banner(path.read_text(encoding='utf-8'), banner).encode('utf-8')
+            else:
+                data = render_html.failure_page(failed_revision=view['revision'],
+                                                error=error).encode('utf-8')
+            atomic_write(path, data)
+            item['sha256'] = mf_sha(data)
+        except Exception as inner:   # keep whatever is on disk
+            error['banner_error'] = _error(inner)
+        item.update(status='failed', revision=view['revision'], error=error)
+        return item
+    item.update(status='ok', revision=view['revision'], consumed=consumed, sha256=mf_sha(data),
+                generated=True, template_version=render_html.TEMPLATE_VERSION, error=None,
+                last_ok_revision=view['revision'])
+    return item
+
+
+def mf_sha(data: bytes) -> str:
+    import hashlib
+
+    return hashlib.sha256(data).hexdigest()
+
+
+def _render_notebooks(study: Path, view: dict, manifest: dict) -> dict:
+    try:
+        _inject('render_notebook')
+        from . import render_notebook
+
+        out = render_notebook.render(study, view, manifest)
+        return {'notebook': out['notebook'], 'workbench': out['workbench']}
+    except Exception as exc:
+        item = mf.item(manifest, 'notebook', kind='marimo_notebook')
+        item.update(status='failed', revision=view['revision'], error=_error(exc))
+        out = {'notebook': item}
+        if manifest.get('artifacts', {}).get('workbench'):
+            out['workbench'] = mf.item(manifest, 'workbench', kind='marimo_notebook',
+                                       generated=False)
+        return out
+
+
+def render_all(study_dir) -> dict:
+    """Render every artefact; return ``{revision, status, artifacts: {name: {...}}}``."""
+    from . import lock, read, view as view_model
+    from .store import StudyStore
+
+    guard.assert_writable()
+    study = Path(study_dir).resolve()
+    read.open(study)                        # study_missing / integrity_error before locking
+    try:                                    # import Marimo's codegen before taking the lock
+        import marimo._ast.codegen  # noqa: F401
+    except Exception:
+        pass
+    with lock.writer_lock(study):
+        view = view_model.build(study)
+        manifest = mf.load(study)
+        items = _render_notebooks(study, view, manifest)
+        state = _pseudo_state(view)
+        surfaces = {}
+        for name, item in items.items():
+            surfaces[name] = {'status': mf.effective_status(item, state),
+                              'revision': item.get('revision'), 'error': item.get('error')}
+            if item.get('generated') is False:
+                surfaces[name]['tracked'] = False
+        items['report'] = _render_report(study, view, manifest, surfaces)
+        ordered = {name: items[name] for name in ARTIFACT_NAMES if name in items}
+        statuses = [mf.effective_status(i, state) for i in ordered.values()]
+        new = {'schema': mf.SCHEMA, 'revision': view['revision'], 'status': mf.overall(statuses),
+               'artifacts': ordered}
+        mf.save(study, new)
+        failed = sorted(n for n, i in ordered.items() if i['status'] == 'failed')
+        if failed:
+            StudyStore(study).event('render_failed', revision=view['revision'], artifacts=failed,
+                                    errors={n: ordered[n]['error'] for n in failed})
+    return {'revision': view['revision'], 'status': new['status'],
+            'artifacts': mf.summary(new, state)}
+
+
+def _failed_everywhere(exc: BaseException, payload: dict | None = None) -> dict:
+    error = _error(exc)
+    revision = (payload or {}).get('revision')
+    return {name: {'status': 'failed', 'path': mf.ARTIFACTS[name], 'revision': revision,
+                   'last_ok_revision': None, 'error': error} for name in ARTIFACT_NAMES}
+
+
+def after_commit(study_dir: Path, payload: dict) -> dict:
+    """Render after a committed mutation; never raises (the commit stands)."""
+    try:
+        return render_all(study_dir)['artifacts']
+    except BaseException as exc:            # noqa: BLE001 - a render never undoes a commit
+        if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
+        return _failed_everywhere(exc, payload)
+
+
+# --- CLI --------------------------------------------------------------------------------
+
+def configure(parser: argparse.ArgumentParser) -> None:
+    parser.description = ('Render the HTML report, the generated notebook, and the workbench '
+                          'from the current study state.')
+
+
+def main(args: argparse.Namespace) -> cmd.Outcome:
+    result = render_all(args.study)
+    payload = {'schema': SCHEMA, 'ok': True, 'study': str(Path(args.study).resolve()),
+               'revision': result['revision'], 'status': result['status'],
+               'artifacts': result['artifacts']}
+    bad = any(a['status'] in ('stale', 'failed') for a in result['artifacts'].values())
+    return cmd.Outcome(payload, cmd.EXIT_ARTIFACT_STALE if bad else cmd.EXIT_OK)
