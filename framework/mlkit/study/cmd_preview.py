@@ -1,6 +1,17 @@
-"""``hypotrail preview policy``: evaluate rules on persisted predictions, recording nothing.
+"""``hypotrail preview KIND``: read-only previews, recording nothing.
 
     hypotrail preview policy --rule RULE [--rule RULE ...] [--intervals] --study DIR
+    hypotrail preview effects PROPOSAL --study DIR        (CLI-CONTRACT-COMPANION §3, C3)
+    hypotrail preview proposal DECISION --value V --study DIR     (CLI-CONTRACT-COMPANION §4)
+
+This module is the dispatcher on the positional ``kind`` (CLI-CONTRACT-COMPANION §3):
+``policy`` is implemented here and unchanged; ``effects`` is implemented in
+:mod:`mlkit.study.preview_effects` and ``proposal`` in :mod:`mlkit.study.preview_proposal`.
+``--rule`` is required for ``policy`` only, ``TARGET`` (the proposal or decision id) for
+``effects`` and ``proposal`` only, and ``--value`` for ``proposal`` only; any other
+combination is ``invalid_arguments``.
+
+``preview policy`` evaluates rules on persisted predictions.
 
 The workbench slider (and later a webview) calls this to show what a threshold or a
 capacity would select: "Experiment, not adopted". It reads the current fits'
@@ -38,12 +49,47 @@ NOTE = ('Experiment, not adopted: nothing was recorded. To adopt a rule, run pol
         'with it (exposure validation_policy_selection), then propose and confirm the policy.')
 
 
+KINDS = ('policy', 'effects', 'proposal')
+
+
 def configure(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument('kind', choices=('policy',))
-    parser.add_argument('--rule', action='append', required=True,
-                        help='threshold:t or capacity:k (repeatable)')
+    parser.add_argument('kind', choices=KINDS)
+    parser.add_argument('target', nargs='?', default=None, metavar='TARGET',
+                        help='effects: the open proposal id; proposal: the decision id')
+    parser.add_argument('--rule', action='append', default=None,
+                        help='policy: threshold:t or capacity:k (repeatable, required)')
     parser.add_argument('--intervals', action='store_true',
-                        help='add paired bootstrap intervals (study settings)')
+                        help='policy: add paired bootstrap intervals (study settings)')
+    parser.add_argument('--value', default=None,
+                        help='proposal: a rule identifier or a model slot (required)')
+
+
+def _arguments(args: argparse.Namespace) -> None:
+    """The per-kind argument rules of CLI-CONTRACT-COMPANION §3 (``invalid_arguments``)."""
+    # StudyError, not cli.ArgumentError: under ``python -m mlkit.study.cli`` the CLI module
+    # is ``__main__`` and a class imported from ``mlkit.study.cli`` would not be caught.
+    from .errors import StudyError
+
+    def ArgumentError(message):   # noqa: N802 - reads like the parser's own error
+        return StudyError('invalid_arguments', message)
+
+    kind = args.kind
+    if kind == 'policy':
+        if not args.rule:
+            raise ArgumentError('preview policy needs at least one --rule')
+        if args.target is not None or args.value is not None:
+            raise ArgumentError('preview policy takes --rule and --intervals only')
+        return
+    if args.rule or args.intervals:
+        raise ArgumentError(f'--rule and --intervals apply to preview policy only, '
+                            f'not to preview {kind}')
+    if args.target is None:
+        what = 'PROPOSAL' if kind == 'effects' else 'DECISION'
+        raise ArgumentError(f'preview {kind} needs {what}')
+    if kind == 'effects' and args.value is not None:
+        raise ArgumentError('preview effects takes PROPOSAL only')
+    if kind == 'proposal' and args.value is None:
+        raise ArgumentError('preview proposal needs --value')
 
 
 def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
@@ -122,5 +168,12 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
+    _arguments(args)
+    if args.kind == 'effects':
+        from .preview_effects import preview_effects
+        return cmd.Outcome(preview_effects(args.study, args.target))
+    if args.kind == 'proposal':
+        from .preview_proposal import preview_proposal
+        return cmd.Outcome(preview_proposal(args.study, args.target, args.value))
     return cmd.Outcome(preview_policy(args.study, list(dict.fromkeys(args.rule)),
                                       intervals=args.intervals))

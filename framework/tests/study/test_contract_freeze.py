@@ -210,7 +210,10 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
 EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'check': 'mlkit.study.cmd_check', 'preview': 'mlkit.study.cmd_preview',
               # Post-v0.1: read-only session timeline for observed sessions.
-              'session-report': 'mlkit.study.cmd_session_report'}
+              'session-report': 'mlkit.study.cmd_session_report',
+              # Advanced companion (CLI-CONTRACT-COMPANION §13): WP-0 stubs, then WP-E1/E2.
+              'decisions': 'mlkit.study.cmd_decisions', 'evidence': 'mlkit.study.cmd_evidence',
+              'explain': 'mlkit.study.cmd_explain', 'export': 'mlkit.study.cmd_export'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
@@ -522,7 +525,8 @@ def test_regression_contract_constants():
     assert pre.MODEL_CHOICES == MODEL_CHOICES
     assert cmd.ALL_SPLIT_METHODS == SPLIT_METHODS
     assert cmd.ORDINAL_SPLIT_KEYS == ('method', 'column', 'cutoff')
-    assert st.PER_COLUMN_SLOT_PREFIXES == ('eda.rate_by:', 'eda.mean_by:')
+    # ``eda.distribution:`` reserved by WP-0 (CLI-CONTRACT-COMPANION §8, C8).
+    assert st.PER_COLUMN_SLOT_PREFIXES == ('eda.rate_by:', 'eda.mean_by:', 'eda.distribution:')
     assert act.TASK_ACTIVITIES['regression'] == ('split', 'eda.target_summary',
                                                  'eda.special_values', 'eda.mean_by',
                                                  'fit.baseline', 'fit.linear',

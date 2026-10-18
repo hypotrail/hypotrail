@@ -4,7 +4,8 @@ Status: **specified, not implemented.** These are the interfaces that the advanc
 ([COMPANION-ADVANCED.md](COMPANION-ADVANCED.md), [ADR 0004](../decisions/0004-companion-advanced.md))
 needs from the engine. The parallel work packages of the
 [plan](../plans/COMPANION-ADVANCED-PLAN.md) treat this document as frozen. Any change goes
-through the integrator, who updates this document and `framework/tests/study/test_contract_companion.py`
+through the integrator, who updates this document and the contract tests
+(`framework/tests/study/companion_contract.py` and `test_contract_companion_e{1,2,3}.py`)
 in the same commit.
 
 This document extends [CLI-CONTRACT.md](CLI-CONTRACT.md). It does not change anything that
@@ -52,7 +53,9 @@ hypotrail status --study DIR --summary --digest [--since REV] [--json]
 
 - `--digest` requires `--summary`. Without it the command fails with `invalid_arguments`.
 - Without `--digest`, `status --summary` is byte-for-byte unchanged, and `status --json` is unchanged.
-- With `--digest`, four keys are appended **after** `recap`, in this order: `moments`, `pauses`, `last_session`, `digest`. The schema stays `hypotrail.summary/1`, because the change is additive (CLI-CONTRACT §3, the precedent of `recap` and `notes`).
+- With `--digest`, five keys are appended **after** `recap`, in this order: `moments`, `pauses`, `last_session`, `digest`, `task`. The schema stays `hypotrail.summary/1`, because the change is additive (CLI-CONTRACT §3, the precedent of `recap` and `notes`).
+- `task` is `binary` or `regression` (`view.task`). It removes the client's inference from step ids (ADR 0004 open question 7, answered yes; decision CA.3).
+- With `--digest` only, each `open_proposals` item gains `origin` as its last key (C9). Without `--digest` the items are unchanged, so the byte-identical rule above holds (decision CA.4).
 
 ### 1.1 `moments`
 
@@ -385,7 +388,7 @@ This command is the learning layer's only source of text. Payload `hypotrail.exp
 
 **`terms`.** It lists the glossary entries of the task (the `regression_terms` overlay and the `binary_only` filter of `texts.py`), in file order. With `--term ID`, only that term is returned; an unknown id is `invalid_arguments`, with `details.terms`. Each item is `{id, term, definition, example, example_status, steps}`:
 
-- `example` is `null` or `{segments}`: the contextual example of the new optional `example` field of `glossary.yaml`, a template that cites study results (for example, for `base_rate`: "In this study's training rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows.").
+- `example` is `null` or `{segments}`: the contextual example of the new optional `cited_example` field of `glossary.yaml`, a template that cites study results (for example, for `base_rate`: "In this study's training rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows."). The existing `example` field of `glossary.yaml` (post-v0.1 fix D11) is the agent's placeholder text and stays unchanged; `explain` never reads it (decision CA.2).
 - `example_status` is `shown` when every cited result is current and verified, `needs_results` when a cited slot is missing or not current (`example: null`), and `none` when the term has no example.
 - `steps` lists the step ids whose `concept` is this term.
 
@@ -532,7 +535,7 @@ hypotrail decide propose DECISION ... [--channel chat|cli|webview] ...
 - **Default.** `--channel` defaults to `chat`.
 - **Action parameters.** `PROPOSE_PARAMS` accepts the parameter `channel` as optional: a request without it is still valid, and `cli.py` passes `channel` only when it is not `chat`. This keeps the identity of every earlier request, so replaying an old request id stays a replay and does not become an `idempotency_conflict`. A value outside `state.CHANNELS` is `invalid_value`, with `details.field` `channel`.
 - **Stored origin.** The proposal stores `origin: {channel}` (`state.PROPOSAL_OPTIONAL_KEYS` gains `origin`).
-- **Where it shows.** `view.open_proposals` items gain `origin` as an additive key; it is `null` for older proposals. The HTML report shows "Proposed from the companion" for `channel: webview`.
+- **Where it shows.** `decisions` (C2) lists `origin` for every proposal, and `status --summary --digest` adds it to each `open_proposals` item (§1); it is `null` for older proposals. `status --json` and `status --summary` without `--digest` are unchanged (decision CA.4). The HTML report shows "Proposed from the companion" for `channel: webview`, reading the proposal's stored `origin`.
 - **Rules unchanged.** The channel changes no rule. A webview proposal is checked like any other: numbers, wording, values. It is confirmed only by a later request with acceptable words. Nothing records the junior as the author of the restatement: the restatement of a webview proposal is the engine's draft (C4).
 
 **Acceptance.**
@@ -581,7 +584,7 @@ vscode://hypotrail-local.hypotrail-companion/proposal/<proposal_id>[?study=...]
 
 **Reaching the companion from a number in the report.** Each number carries its `result_id` (`<data data-result-id>`, and the hover title), and its annex row has the anchor `r-<result_id>` (C10). The companion's command "Hypotrail: go to a result..." accepts a pasted id, or its first 8 or more characters, and resolves it through `evidence`. From the companion to the report, "Show in report" opens the report at `#r-<result_id>`.
 
-An opt-in render setting that adds the links is an open question (ADR 0004).
+There is no opt-in render setting that adds the links, and no `vscode:` link in any deliverable, not even opt-in (ADR 0004 open question 1, answered no; decision CA.1).
 
 ## 12. New error code
 
@@ -593,10 +596,33 @@ Every other refusal in this document reuses a code of CLI-CONTRACT §7.
 
 ## 13. Reserved stubs (WP-0)
 
-Before the engine work packages start, WP-0 registers the new commands with modules that refuse with `unsupported_capability` (`details.command`):
+Before the engine work packages start, WP-0 registers the new commands with modules that refuse. **The refusal of a reserved, not yet implemented command** is:
 
-- `cli.EXTENSIONS` gains `decisions` → `mlkit.study.cmd_decisions`, `evidence` → `mlkit.study.cmd_evidence`, `explain` → `mlkit.study.cmd_explain`, and `export` → `mlkit.study.cmd_export`;
-- `preview` dispatches to `preview_effects` and `preview_proposal`;
-- `--digest` is parsed and refused.
+```json
+{"code": "unsupported_capability",
+ "message": "<command> is reserved for the advanced companion and is not implemented in this version. Nothing was read or written.",
+ "details": {"command": "<command>", "reason": "not_implemented"}}
+```
 
-The UI work can then call real argv against a real CLI from the first day. Each engine work package replaces its stubs.
+with exit code 2. It reuses the existing code `unsupported_capability` (CLI-CONTRACT §7), so every client already handles it; `details.reason: "not_implemented"` (`errors.NOT_IMPLEMENTED`, built by `errors.not_implemented(command)`) tells a reserved command from a capability the engine refuses by design. A stub reads and writes nothing, and the session log records it as a refusal. The `details.command` values are:
+
+| Invocation | `details.command` | Replaced by |
+|---|---|---|
+| `status --summary --digest` | `status --summary --digest` | WP-E1 |
+| `decisions` | `decisions` | WP-E1 |
+| `preview effects PROPOSAL` | `preview effects` | WP-E1 |
+| `decide propose ... --channel V` with `V` not `chat` | `decide propose --channel` | WP-E1 |
+| `evidence` | `evidence` | WP-E2 |
+| `explain` | `explain` | WP-E2 |
+| `export handoff` | `export handoff` | WP-E2 |
+| `preview proposal DECISION --value V` | `preview proposal` | WP-E3 |
+
+What WP-0 registers:
+
+- `cli.EXTENSIONS` gains `decisions` → `mlkit.study.cmd_decisions`, `evidence` → `mlkit.study.cmd_evidence`, `explain` → `mlkit.study.cmd_explain`, and `export` → `mlkit.study.cmd_export`. Each module parses the arguments of this document (`configure`) and exposes the frozen function its WP implements: `cmd_decisions.decisions(study_dir) -> dict`, `cmd_evidence.evidence(study_dir, *, result_id=None, limit=200) -> dict`, `cmd_explain.explain(study_dir, *, term=None) -> dict`, `cmd_export.export_handoff(study_dir, *, out=None) -> (dict, exit_code)`.
+- `cmd_preview` takes `kind` ∈ `policy`, `effects`, `proposal`, an optional positional `TARGET`, `--rule` (repeatable), `--intervals`, and `--value`. It checks the per-kind rules (`--rule` is required for `policy` only; `TARGET` for `effects` and `proposal` only; `--value` for `proposal` only; anything else is `invalid_arguments`), then calls `preview_effects.preview_effects(study_dir, proposal_id) -> dict` or `preview_proposal.preview_proposal(study_dir, decision_id, value) -> dict`.
+- `status` parses `--digest`: without `--summary` it is `invalid_arguments` (final behaviour); with it, the stub refusal above.
+- `decide propose` parses `--channel` (no choices: WP-E1 validates against `state.CHANNELS` with `invalid_value`, `details.field: "channel"`). `chat`, or no option, proposes exactly as before and passes no `channel` parameter.
+- Constants: `state.PER_COLUMN_SLOT_PREFIXES` gains `eda.distribution:`, `state.PROPOSAL_OPTIONAL_KEYS` gains `origin`, `texts.CONTENT_FILES` gains `digest`, `drafts`, `evidence`, `learn` (stub files with their `schema` header only), and `sessionlog` gains `--digest`, `--limit`, `--result`, `--term`, the positional identifier of `preview effects` and `preview proposal`, and a `--value` of `preview proposal` that is a rule or a model slot (R5).
+
+Each stub module carries `WP0_STUB = True`; its engine work package removes it with the stub. The UI work can then call real argv against a real CLI from the first day.

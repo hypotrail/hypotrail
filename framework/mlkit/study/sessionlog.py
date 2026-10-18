@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -42,8 +43,17 @@ UNLOGGED = ('session-report',)
 # Flags whose values are identifiers the study already shows; every other value is dropped.
 SAFE_VALUE_FLAGS = ('--basis', '--delegation-scope', '--rule', '--column', '--channel',
                     '--acknowledge-interruption', '--since', '--about', '--resolve', '--withdraw',
-                    '--max-groups')
-SAFE_SWITCHES = ('--summary', '--json', '--intervals')
+                    '--max-groups',
+                    # Advanced companion (CLI-CONTRACT-COMPANION R5): identifiers and a count.
+                    '--limit', '--result', '--term')
+SAFE_SWITCHES = ('--summary', '--json', '--intervals',
+                 # Advanced companion (CLI-CONTRACT-COMPANION R5).
+                 '--digest')
+# ``preview proposal DECISION --value V`` (R5): the value is logged only when it is an
+# identifier, a rule (``threshold:t``, ``capacity:k``) or a model slot (``fit.<name>``);
+# any other text is dropped. ``preview`` kinds are logged as the ``verb``.
+SAFE_PREVIEW_VALUE = re.compile(r'(?:threshold:(?:0(?:\.\d+)?|1(?:\.0+)?)|capacity:[1-9]\d{0,6}'
+                                r'|fit\.[a-z_]+)')
 
 
 def path(study_dir) -> Path:
@@ -98,6 +108,15 @@ def _options(argv: Sequence[str], *, text_flag: bool = True) -> dict:
         elif name == '--allow-user-text':
             out['allow_user_text'] = out.get('allow_user_text', 0) + 1
     return out
+
+
+def _value(argv: Sequence[str]) -> str | None:
+    for i, token in enumerate(argv):
+        if token == '--value':
+            return argv[i + 1] if i + 1 < len(argv) else None
+        if token.startswith('--value='):
+            return token.split('=', 1)[1]
+    return None
 
 
 def _short(rid) -> str | None:
@@ -172,6 +191,14 @@ def entry(argv: Sequence[str], payload: Mapping, exit_code: int, time: str) -> d
         line['next_action'] = nxt.get('kind')
     elif command == 'preview':
         line['rules'] = list(payload.get('rules') or [])
+    if command == 'preview' and verb in ('effects', 'proposal') and len(argv) > 2 \
+            and not argv[2].startswith('-'):
+        # The positional identifier: a proposal id (effects) or a decision id (proposal).
+        line['proposal_id' if verb == 'effects' else 'decision_id'] = argv[2]
+    if command == 'preview' and verb == 'proposal':
+        value = _value(argv)
+        if value is not None and SAFE_PREVIEW_VALUE.fullmatch(value):
+            line['options']['value'] = value
     return line
 
 

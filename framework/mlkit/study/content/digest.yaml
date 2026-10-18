@@ -1,0 +1,4 @@
+# Sentences of the "since your last session" digest (CLI-CONTRACT-COMPANION §1.4, C1, C11).
+# WP-0 stub: the schema header only. WP-E1 adds one template per digest kind, with a
+# regression overlay that never uses the vocabulary of a decision rule. No digits here.
+schema: hypotrail.content.digest/1

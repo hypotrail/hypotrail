@@ -22,3 +22,18 @@ class StudyError(ValueError):
         if self.details:
             out['details'] = self.details
         return out
+
+
+# Advanced companion (CLI-CONTRACT-COMPANION §13). A command, option, or ``preview`` kind
+# that is registered but not implemented yet is refused with ``unsupported_capability``,
+# ``details.command`` naming it and ``details.reason`` this value. Each engine work
+# package replaces its own stubs. A refused stub reads and writes nothing.
+NOT_IMPLEMENTED = 'not_implemented'
+
+
+def not_implemented(command: str) -> StudyError:
+    """The refusal of a reserved, not yet implemented companion command (CC §13)."""
+    return StudyError('unsupported_capability',
+                      f'{command} is reserved for the advanced companion and is not '
+                      'implemented in this version. Nothing was read or written.',
+                      details={'command': command, 'reason': NOT_IMPLEMENTED})

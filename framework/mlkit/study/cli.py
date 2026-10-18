@@ -19,6 +19,19 @@ Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlo
 
     hypotrail session-report --study DIR [--since REV] [--gap-minutes M]
 
+Advanced companion (``docs/specs/CLI-CONTRACT-COMPANION.md``; reserved by WP-0, each
+refused with ``unsupported_capability``, ``details.reason: not_implemented``, until its
+engine work package lands)::
+
+    hypotrail status --study DIR --summary --digest [--since REV]       (C1, WP-E1)
+    hypotrail decisions --study DIR                                     (C2, WP-E1)
+    hypotrail preview effects PROPOSAL --study DIR                      (C3, WP-E1)
+    hypotrail preview proposal DECISION --value V --study DIR           (C4, WP-E3)
+    hypotrail evidence --study DIR [--result RID] [--limit N]           (C5, WP-E2)
+    hypotrail explain --study DIR [--term ID]                           (C6, WP-E2)
+    hypotrail export handoff --study DIR [--out DIR]                    (C7, WP-E2)
+    hypotrail decide propose ... [--channel chat|cli|webview]           (C9, WP-E1)
+
 Output is JSON on stdout by default (one document); ``--format text`` prints a short
 human summary. ``--study`` is mandatory: the study is never taken from the current
 directory or from ``OSML_ROOT``.
@@ -47,7 +60,7 @@ from mlkit.reliability import CommandRefused
 from . import commands as cmd
 from . import state as st
 from .case import CaseError
-from .errors import StudyError
+from .errors import StudyError, not_implemented
 
 EXTENSIONS = {
     'run': 'mlkit.study.cmd_run',          # Phase 2: activities, executions (WP2.x)
@@ -56,6 +69,11 @@ EXTENSIONS = {
     'preview': 'mlkit.study.cmd_preview',  # Phase 2: read-only policy preview (WP2.4)
     # Post-v0.1: read-only timeline of a study for observed sessions.
     'session-report': 'mlkit.study.cmd_session_report',
+    # Advanced companion (CLI-CONTRACT-COMPANION §13): WP-0 stubs, replaced by WP-E1/E2.
+    'decisions': 'mlkit.study.cmd_decisions',
+    'evidence': 'mlkit.study.cmd_evidence',
+    'explain': 'mlkit.study.cmd_explain',
+    'export': 'mlkit.study.cmd_export',
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -103,6 +121,9 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',
                    help='compact digest (hypotrail.summary/1) instead of the full view')
+    p.add_argument('--digest', action='store_true',
+                   help='with --summary: add moments, pauses, last_session, and digest '
+                        '(CLI-CONTRACT-COMPANION §1)')
     sub.add_parser('plan', parents=[common], help='read-only plan with step statuses')
 
     decide = sub.add_parser('decide', help='propose, confirm, or withdraw a decision')
@@ -115,6 +136,10 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
     p.add_argument('--restatement', required=True,
                    help='the decision restated for the user to answer')
     p.add_argument('--rationale', required=True)
+    # C9 (CLI-CONTRACT-COMPANION §9): the channel the proposal came from. No argparse
+    # choices: a value outside ``state.CHANNELS`` is ``invalid_value`` (``details.field``).
+    p.add_argument('--channel', default=None,
+                   help='chat (the default), cli, or webview: where the proposal came from')
     _mutation(p)
     p = verbs.add_parser('confirm', parents=[common])
     p.add_argument('proposal_id')
@@ -167,6 +192,11 @@ def _decide(args) -> cmd.Outcome:
         action, params = cmd.ACTION_PROPOSE, {'decision_id': args.decision_id, 'value': value,
                                               'restatement': args.restatement,
                                               'rationale': args.rationale}
+        # C9: ``channel`` is passed only when it is not ``chat``, so every earlier request
+        # keeps its identity (a replay stays a replay). WP-0 reserves the option; WP-E1
+        # passes ``params['channel'] = args.channel`` here and validates it.
+        if args.channel not in (None, cmd.DEFAULT_CHANNEL):
+            raise not_implemented('decide propose --channel')
     elif args.verb == 'confirm':
         action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id,
                                               'user_words': args.user_words,
@@ -192,6 +222,11 @@ def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
         return cmd.init(args.case, args.study)
     if args.command == 'status':
+        if args.digest and not args.summary:
+            raise ArgumentError('--digest requires --summary')
+        if args.digest:
+            # C1 (CLI-CONTRACT-COMPANION §1), reserved by WP-0; WP-E1 implements it.
+            raise not_implemented('status --summary --digest')
         return cmd.status(args.study, since=args.since, summary=args.summary)
     if args.command == 'plan':
         return cmd.plan(args.study)

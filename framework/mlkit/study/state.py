@@ -190,8 +190,9 @@ ACTIVITY_SLOTS_BY_TASK = {BINARY: ACTIVITY_SLOTS, REGRESSION: REGRESSION_ACTIVIT
 # Optional slots outside the plan: ``eda.rate_by`` (binary) and ``eda.mean_by``
 # (regression) have one slot per column, ``eda.rate_by:<column>``
 # (``mlkit.study.activities.slot_of``). They are shown with the training EDA step and
-# never block a step.
-PER_COLUMN_SLOT_PREFIXES = ('eda.rate_by:', 'eda.mean_by:')
+# never block a step. ``eda.distribution:<column>`` (CLI-CONTRACT-COMPANION §8, C8) is a
+# per-column activity of both tasks; WP-0 reserves its prefix, WP-E3 implements it.
+PER_COLUMN_SLOT_PREFIXES = ('eda.rate_by:', 'eda.mean_by:', 'eda.distribution:')
 
 TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'facts',
             'structure', 'prior_exposure', 'decisions', 'proposals', 'current', 'stale',
@@ -206,7 +207,9 @@ PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rational
                  'status', 'created')
 # Written by ``hypotrail decide`` (WP1.4): the request that created the proposal, the
 # confirmed values it was based on (a change makes it stale), and why it was closed.
-PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason')
+# ``origin`` (CLI-CONTRACT-COMPANION §9, C9) is ``{channel}``, where the proposal came from;
+# WP-0 reserves the key, WP-E1 writes and validates it.
+PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason', 'origin')
 EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
 # A junior's condition or hold on a decision (post-v0.1, P2): "don't adopt anything until I
 # bring my manager's figure". Recorded verbatim by ``decide note --about``, it stays open

@@ -28,7 +28,11 @@ from importlib import resources
 
 import yaml
 
-CONTENT_FILES = ('glossary', 'steps', 'activities', 'report')
+CONTENT_FILES = ('glossary', 'steps', 'activities', 'report',
+                 # Advanced companion (CLI-CONTRACT-COMPANION C11): WP-0 stubs that carry
+                 # their schema header only; WP-E1 fills digest, WP-E2 evidence and learn,
+                 # WP-E3 drafts.
+                 'digest', 'drafts', 'evidence', 'learn')
 BINARY, REGRESSION = 'binary', 'regression'
 _TASK = contextvars.ContextVar('hypotrail_texts_task', default=BINARY)
 
