@@ -1,1 +1,26 @@
-/* Eda view styles. WP-0 placeholder; owned by WP-U4. Use the tokens of tokens.css. */
+/* EDA view styles (COMPANION-ADVANCED §6.3, mockup EDA.dc.html). Tokens of tokens.css only;
+   no inline style attribute. Owned by WP-U4. */
+.eda-banner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px;
+  margin: 8px 0; padding: 10px 14px; border: 1px solid var(--ht-border); border-radius: 6px;
+  background: var(--ht-done-bg); color: var(--ht-fg); }
+.eda-banner p { margin: 0; }
+.eda-banner .muted { flex-basis: 100%; }
+.eda-seen { font-size: 0.93em; }
+.eda-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
+.eda-card { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.eda-card p { margin: 0; }
+.eda-wide { grid-column: 1 / -1; }
+.eda-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+.eda-card-head h3 { margin: 0; }
+.eda-chip { font-size: 0.8em; color: var(--ht-muted); margin: 0; }
+.eda-split { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.eda-together { padding: 8px 10px; border-radius: 6px; background: var(--ht-quote-bg); }
+.eda-noncausal { padding: 8px 10px; border-radius: 6px; background: var(--ht-quote-bg); }
+.eda-warnings { color: var(--ht-warn-fg); }
+.eda-scale { font-size: 0.85em; }
+.eda-table { overflow-x: auto; }
+.eda-counts summary { cursor: pointer; color: var(--ht-link); }
+.eda-request select { width: 100%; max-width: 360px; }
+.eda-request label { margin-top: 4px; }
+.eda-skeleton { min-height: 120px; }
+.eda-stack { max-width: 640px; }
