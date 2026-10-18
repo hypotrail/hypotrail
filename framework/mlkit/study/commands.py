@@ -54,6 +54,8 @@ from .store import StudyStore
 SCHEMAS = {'init': 'hypotrail.init/1', 'status': 'hypotrail.status/1',
            'plan': 'hypotrail.plan/1', 'decide': 'hypotrail.decide/1',
            'error': 'hypotrail.error/1'}
+# ``status --summary`` (D3): a compact digest for chat agents; ``status --json`` is unchanged.
+SUMMARY_SCHEMA = view.SUMMARY_SCHEMA
 EXIT_OK = 0
 EXIT_INTERNAL = 1
 EXIT_REFUSED = 2
@@ -563,13 +565,19 @@ def init(case_path, study_dir) -> Outcome:
                             'tutorial choices, not decisions. Every decision starts open.'})
 
 
-def status(study_dir, since: int | None = None) -> Outcome:
+def status(study_dir, since: int | None = None, summary: bool = False) -> Outcome:
     study = read.open(study_dir)
+    built = view.build(study)
+    if summary:
+        return Outcome({'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
+                        'revision': study.revision, 'since': since,
+                        'changed': None if since is None else study.revision > since,
+                        **view.summary(built)})
     payload = {'schema': SCHEMAS['status'], 'ok': True, 'study': str(study.study_dir),
                'revision': study.revision, 'since': since,
                'changed': None if since is None else study.revision > since,
                'changes_since': None if since is None else study.revisions(since),
-               'view': view.build(study)}
+               'view': built}
     return Outcome(payload)
 
 

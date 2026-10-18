@@ -34,6 +34,43 @@ def effective_status(item: Mapping | None, state: Mapping) -> str:
     return 'ok'
 
 
+NAMES = {'report': 'report', 'notebook': 'generated notebook', 'workbench': 'workbench'}
+
+
+def message(name: str, item: Mapping | None, state: Mapping) -> str:
+    """One sentence an agent can repeat to the junior about artefact ``name`` (D7).
+
+    After a failed render it says that the previous file is kept and marked stale at the
+    failed revision, and which revision its content comes from.
+    """
+    label = NAMES.get(name, name)
+    path = (item or {}).get('path') or label
+    revision = state['revision']
+    status = effective_status(item, state)
+    if status == 'not_rendered':
+        return f'The {label} ({path}) has not been rendered yet.'
+    if (item or {}).get('generated') is False:
+        return (f'The {label} ({path}) is the junior\'s free space: created once, never '
+                f'overwritten, and not tracked by the study.')
+    attempted = item.get('revision')
+    last_ok = item.get('last_ok_revision')
+    if status == 'failed':
+        what = 'render' if name == 'report' else 'generation'
+        if last_ok is None:
+            return (f'The {label} {what} failed at revision {attempted}; there was no previous '
+                    f'{label} to keep, so nothing in {path} is current.')
+        return (f'The {label} {what} failed at revision {attempted}: previous {label} kept and '
+                f'marked stale at revision {attempted}. Its content is from revision {last_ok}; '
+                f'do not rely on it until a render succeeds.')
+    if status == 'stale':
+        if attempted != revision:
+            return (f'The {label} ({path}) is stale: it was written at revision {attempted} and '
+                    f'the study is at revision {revision}. Render again before relying on it.')
+        return (f'The {label} ({path}) is stale: it cites a result that is no longer current. '
+                f'Render again before relying on it.')
+    return f'The {label} ({path}) is up to date at revision {revision}.'
+
+
 def overall(statuses) -> str:
     statuses = list(statuses)
     if not statuses:

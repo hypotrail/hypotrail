@@ -30,7 +30,7 @@ import json
 from pathlib import Path
 from typing import Mapping
 
-from .currency import consumed_current, effective_status, overall  # noqa: F401 (re-exported)
+from .currency import consumed_current, effective_status, message, overall  # noqa: F401
 
 SCHEMA = 'hypotrail.artifacts/1'
 FILE = 'artifacts.json'
@@ -81,7 +81,8 @@ def item(manifest: Mapping, name: str, *, kind: str, generated: bool = True) -> 
 
 
 def summary(manifest: Mapping, state: Mapping) -> dict:
-    """``{name: {status, path, revision, last_ok_revision, error, ...}}`` per artefact."""
+    """``{name: {status, path, revision, last_ok_revision, error, ..., message}}`` per
+    artefact; ``message`` is one human sentence (:func:`currency.message`)."""
     out = {}
     for name in ARTIFACTS:
         raw = manifest.get('artifacts', {}).get(name)
@@ -96,6 +97,7 @@ def summary(manifest: Mapping, state: Mapping) -> dict:
             entry['candidate'] = raw['candidate']
         if raw.get('user_edits_preserved'):
             entry['user_edits_preserved'] = list(raw['user_edits_preserved'])
+        entry['message'] = message(name, raw, state)
         out[name] = entry
     return out
 

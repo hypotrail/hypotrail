@@ -175,7 +175,11 @@ def _failed_everywhere(exc: BaseException, payload: dict | None = None) -> dict:
     error = _error(exc)
     revision = (payload or {}).get('revision')
     return {name: {'status': 'failed', 'path': mf.ARTIFACTS[name], 'revision': revision,
-                   'last_ok_revision': None, 'error': error} for name in ARTIFACT_NAMES}
+                   'last_ok_revision': None, 'error': error,
+                   'message': f'Rendering failed at revision {revision} before any deliverable '
+                              f'was written ({error["code"]}); whatever {mf.ARTIFACTS[name]} '
+                              f'holds is not current.'}
+            for name in ARTIFACT_NAMES}
 
 
 def after_commit(study_dir: Path, payload: dict) -> dict:

@@ -1,7 +1,7 @@
 """``hypotrail`` command-line interface (plan §4, ``docs/specs/CLI-CONTRACT.md``).
 
     hypotrail init --case CASE --study DIR
-    hypotrail status --study DIR [--since REV] [--json]
+    hypotrail status --study DIR [--since REV] [--json] [--summary]
     hypotrail plan --study DIR
     hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
                      --restatement TEXT --rationale TEXT
@@ -92,6 +92,8 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
     p.add_argument('--case', required=True, help='case.yaml or its directory')
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
+    p.add_argument('--summary', action='store_true',
+                   help='compact digest (hypotrail.summary/1) instead of the full view')
     sub.add_parser('plan', parents=[common], help='read-only plan with step statuses')
 
     decide = sub.add_parser('decide', help='propose, confirm, or withdraw a decision')
@@ -156,7 +158,7 @@ def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
         return cmd.init(args.case, args.study)
     if args.command == 'status':
-        return cmd.status(args.study, since=args.since)
+        return cmd.status(args.study, since=args.since, summary=args.summary)
     if args.command == 'plan':
         return cmd.plan(args.study)
     if args.command == 'decide':

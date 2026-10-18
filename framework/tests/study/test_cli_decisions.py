@@ -608,6 +608,50 @@ def test_receipts_and_state_stay_valid(study, work):
     assert state['proposals']['p_1']['basis'] == {}
 
 
+SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal', 'current_step',
+                'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
+                'executions', 'not_yet_defensible')
+
+
+def test_status_summary_is_compact_and_complete(study, work, features):
+    """D3: ``status --summary`` is the digest a chat reads first; ``--json`` is unchanged."""
+    _decide(study, work, 'prediction_time', value=PT, rid='a',
+            words='Yes: we predict before the first reminder goes out.')
+    rev = _status(study, work)['revision']
+    propose(study, work, 'feature_availability',
+            value_json=_availability(features, desk_followups='not_available'), rid='b', rev=rev,
+            restatement='Everything is known before the reminder except the desk follow-ups.')
+    code, summary = hyp('status', '--summary', '--study', study, cwd=work, expect=0)
+    full = hyp('status', '--json', '--study', study, cwd=work, expect=0)[1]
+    assert tuple(summary) == SUMMARY_KEYS and summary['schema'] == 'hypotrail.summary/1'
+    assert full['schema'] == 'hypotrail.status/1' and 'view' in full
+    assert len(json.dumps(summary)) < len(json.dumps(full)) / 2   # far less once results exist
+    assert summary['revision'] == full['revision'] == rev + 1
+    assert summary['goal']['intended_use']['value'].startswith('Prioritise volunteer phone calls')
+    assert summary['goal']['prediction_time'] == {'value': PT, 'source': 'decision',
+                                                  'status': 'confirmed'}
+    assert summary['current_step'] == 'feature_availability'
+    assert summary['plan'][1] == {'id': 'feature_availability',
+                                  'title': 'Decide which variables are available at prediction time',
+                                  'status': 'awaiting_confirmation'}
+    assert summary['next_action']['kind'] == 'await_user_words'
+    [p] = summary['open_proposals']
+    assert p['restatement'].startswith('Everything is known') and p['proposal_id'] == 'p_2'
+    assert p['value']['not_available'] == ['desk_followups']
+    pt = summary['decisions']['prediction_time']
+    assert pt == {'status': 'confirmed', 'value': PT, 'basis': 'explicit',
+                  'user_words': 'Yes: we predict before the first reminder goes out.',
+                  'reason': None, 'open_proposals': []}
+    assert summary['decisions']['feature_availability']['status'] == 'proposed'
+    assert summary['executions'] == {'active': [], 'interrupted': [], 'late': []}
+    top = [x['id'] for x in summary['not_yet_defensible']['top']]
+    assert top[0] == 'unconfirmed_decisions' and len(top) <= 5
+    assert set(top) | set(summary['not_yet_defensible']['more']) == {
+        x['id'] for x in full['view']['not_yet_defensible']}
+    since = hyp('status', '--summary', '--since', 1, '--study', study, cwd=work, expect=0)[1]
+    assert since['since'] == 1 and since['changed'] is True
+
+
 def test_a_closed_pipe_writes_nothing_to_stderr(study, work):
     """D8: ``hypotrail status | head`` must not print a BrokenPipeError traceback."""
     read_end, write_end = os.pipe()

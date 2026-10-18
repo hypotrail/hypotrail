@@ -114,6 +114,47 @@ def test_failed_html_keeps_previous_file_with_banner_and_manifest_failed(b, monk
     assert 'data-hypotrail-banner' not in report.read_text()
 
 
+def test_artifact_messages_say_what_happened(b, monkeypatch):
+    """D7: every artefact carries one sentence; after a failed render it says that the
+    previous report is kept and marked stale at the failed revision."""
+    before = read.open(b.study).revision
+    monkeypatch.setenv('HYPOTRAIL_TEST_HOOKS', '1')
+    monkeypatch.setenv('HYPOTRAIL_FAULT', 'render_html')
+    out = _propose(b)
+    rev = out.payload['revision']
+    arts = out.payload['artifacts']
+    assert f'previous report kept and marked stale at revision {rev}' in arts['report']['message']
+    assert f'from revision {before}' in arts['report']['message']
+    assert arts['notebook']['message'] == (f'The generated notebook ({mf.ARTIFACTS["notebook"]}) '
+                                           f'is up to date at revision {rev}.')
+    assert 'not tracked' in arts['workbench']['message']
+    items = view.build(b.study)['artifacts']['items']
+    assert items['report']['message'] == arts['report']['message']
+    monkeypatch.setenv('HYPOTRAIL_FAULT', 'render_notebook')
+    out = _propose(b, 'Keep the baseline, again.')
+    rev = out.payload['revision']
+    message = out.payload['artifacts']['notebook']['message']
+    assert f'previous generated notebook kept and marked stale at revision {rev}' in message
+    from mlkit.study.store import StudyStore
+    store = StudyStore(b.study)
+    with store.writing() as state:
+        store.commit(state, {'request_id': None, 'action': 'test.advance', 'params': {},
+                             'result': {}})
+    stale = view.build(b.study)['artifacts']['items']['notebook']
+    assert stale['status'] == 'failed'
+    monkeypatch.delenv('HYPOTRAIL_FAULT')
+    cmd_render.render_all(b.study)
+    with store.writing() as state:
+        store.commit(state, {'request_id': None, 'action': 'test.advance', 'params': {},
+                             'result': {}})
+    now = read.open(b.study).revision
+    stale = view.build(b.study)['artifacts']['items']['report']
+    assert stale['status'] == 'stale'
+    assert stale['message'] == (f'The report ({mf.ARTIFACTS["report"]}) is stale: it was written '
+                                f'at revision {now - 1} and the study is at revision {now}. '
+                                'Render again before relying on it.')
+
+
 def test_repeated_failures_keep_a_single_banner(b, monkeypatch):
     monkeypatch.setenv('HYPOTRAIL_TEST_HOOKS', '1')
     monkeypatch.setenv('HYPOTRAIL_FAULT', 'render_html')

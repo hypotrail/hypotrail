@@ -39,6 +39,15 @@ RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 
                     'integrity')
 ARTIFACT_PLACEHOLDER = {'manifest': None, 'status': 'not_rendered', 'items': {}}
 
+SUMMARY_SCHEMA = 'hypotrail.summary/1'
+SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
+                'results', 'artifacts', 'executions', 'not_yet_defensible')
+# The limits that matter first when a chat resumes; the others are named, not quoted.
+SUMMARY_PRIORITY = ('interrupted_executions', 'result_integrity', 'adopted_rule_not_evaluated',
+                    'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
+                    'uncertain_features_included', 'validation_is_not_independent')
+SUMMARY_TOP = 5
+
 
 def _decisions(state: dict) -> dict:
     out = {}
@@ -104,7 +113,8 @@ def _artifacts(study: read.Study, state: dict) -> dict:
         if not isinstance(item, dict):
             continue
         items[name] = {**item, 'recorded_status': item.get('status'),
-                       'status': currency.effective_status(item, state)}
+                       'status': currency.effective_status(item, state),
+                       'message': currency.message(name, item, state)}
     return {'manifest': read.ARTIFACTS_FILE,
             'status': currency.overall(i['status'] for i in items.values()), 'items': items}
 
@@ -122,6 +132,86 @@ def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
         if rule in rules:
             return None
     return rule
+
+
+def _compact_value(decision_id: str, value):
+    """A decision value for the summary: availability is grouped by status."""
+    if decision_id == 'feature_availability' and isinstance(value, dict):
+        grouped: dict[str, list[str]] = {}
+        for feature, status in sorted(value.items()):
+            grouped.setdefault(status, []).append(feature)
+        return grouped
+    return value
+
+
+def _fact(view: dict, fact_id: str) -> dict | None:
+    for status, items in view['facts']['by_status'].items():
+        for f in items:
+            if f['id'] == fact_id:
+                return {'value': f['value'], 'status': status}
+    return None
+
+
+def summary(view: dict) -> dict:
+    """A compact digest of a view (``hypotrail status --summary``, D3).
+
+    It holds what a chat needs to resume and to decide its next move, in a few
+    kilobytes: the study goal in the case's words, the position (the plan's step ids,
+    titles and statuses), the open proposals with
+    their restatement, each decision with its value, status, basis and recorded words,
+    the current results by slot, each deliverable with its status and one sentence,
+    interrupted and late executions, and the first limits of ``not_yet_defensible``.
+    The full view stays in ``hypotrail status --json``.
+    """
+    pt = view['decisions']['prediction_time']
+    if pt['value'] is not None:
+        prediction_time = {'value': pt['value'], 'source': 'decision', 'status': pt['status']}
+    else:
+        fact = _fact(view, 'prediction_time')
+        prediction_time = ({'value': fact['value'], 'source': 'case', 'status': fact['status']}
+                           if fact else None)
+    goal = {'intended_use': _fact(view, 'intended_use'), 'decision': _fact(view, 'decision'),
+            'observation_unit': _fact(view, 'observation_unit'),
+            'prediction_time': prediction_time}
+    decisions = {}
+    for d, dec in view['decisions'].items():
+        conf = dec['confirmation']
+        decisions[d] = {'status': dec['status'], 'value': _compact_value(d, dec['value']),
+                        'basis': conf['basis'] if conf else None,
+                        'user_words': conf['user_words'] if conf else None,
+                        'reason': dec['reason'], 'open_proposals': dec['open_proposals']}
+    proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],
+                  'value': _compact_value(p['decision_id'], p['value']),
+                  'restatement': p['restatement'], 'revision': p['revision']}
+                 for p in view['open_proposals']]
+    results = {slot: {'result_id': r['result_id'], 'current': r['current'],
+                      'stale_reason': r['stale_reason'], 'integrity': r['integrity']}
+               for slot, r in view['results'].items()}
+    artifacts = {'status': view['artifacts']['status'],
+                 'items': {name: {'status': i.get('status'), 'revision': i.get('revision'),
+                                  'last_ok_revision': i.get('last_ok_revision'),
+                                  'message': i.get('message')}
+                           for name, i in view['artifacts']['items'].items()}}
+    executions = {
+        'active': sorted(view['executions']['active']),
+        'interrupted': [{'execution_id': e, 'activity': r.get('activity'),
+                         'reason': r.get('reason')}
+                        for e, r in sorted(view['executions']['interrupted'].items())],
+        'late': [{'execution_id': e, 'activity': r.get('activity'), 'reason': r.get('reason'),
+                  'result_id': r.get('result_id')}
+                 for e, r in sorted(view['executions']['late'].items())]}
+    rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
+    ordered = sorted(view['not_yet_defensible'],
+                     key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
+    defensible = {'top': [{'id': x['id'], 'text': x['text']} for x in ordered[:SUMMARY_TOP]],
+                  'more': [x['id'] for x in ordered[SUMMARY_TOP:]]}
+    plan = [{'id': step['id'], 'title': step['title'], 'status': step['status']}
+            for step in view['plan']]
+    out = {'goal': goal, 'current_step': view['current_step'], 'plan': plan,
+           'next_action': view['next_action'], 'open_proposals': proposals,
+           'decisions': decisions, 'results': results, 'artifacts': artifacts,
+           'executions': executions, 'not_yet_defensible': defensible}
+    return {k: out[k] for k in SUMMARY_KEYS}
 
 
 def build(study_dir) -> dict:

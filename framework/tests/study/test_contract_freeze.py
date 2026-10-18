@@ -27,6 +27,13 @@ DOC_TOKENS = {t.rstrip('.') for t in re.findall(r'[A-Za-z_][\w./]*', DOC)}
 
 SCHEMAS = {'init': 'hypotrail.init/1', 'status': 'hypotrail.status/1', 'plan': 'hypotrail.plan/1',
            'decide': 'hypotrail.decide/1', 'error': 'hypotrail.error/1'}
+# Post-acceptance contract (D3): ``status --summary``.
+SUMMARY_SCHEMA = 'hypotrail.summary/1'
+SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
+                        'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
+                        'results', 'artifacts', 'executions', 'not_yet_defensible')
+SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'user_words', 'reason', 'open_proposals')
+SUMMARY_GOAL_KEYS = ('intended_use', 'decision', 'observation_unit', 'prediction_time')
 EXIT_CODES = {'EXIT_OK': 0, 'EXIT_INTERNAL': 1, 'EXIT_REFUSED': 2, 'EXIT_ARTIFACT_STALE': 3,
               'EXIT_UNKNOWN_OUTCOME': 4}
 PAYLOAD_KEYS = {
@@ -165,6 +172,7 @@ def flow(tmp_path, synthetic_case_dir):
     out['withdraw'] = _run('decide', 'withdraw', 'p_2', '--request-id', 'd',
                            '--expected-revision', 4, '--study', study)
     out['status'] = _run('status', '--study', study, '--since', 1)
+    out['summary'] = _run('status', '--summary', '--study', study)
     out['plan'] = _run('plan', '--study', study)
     out['error'] = _run('decide', 'confirm', 'p_2', '--user-words', 'ok', '--request-id', 'e',
                         '--expected-revision', 5, '--study', study)
@@ -197,6 +205,27 @@ def test_payload_keys_of_every_command(flow):
     assert error.exit_code == 2 and tuple(error.payload) == PAYLOAD_KEYS['error']
     assert error.payload['ok'] is False and error.payload['command'] == 'decide confirm'
     assert {'code', 'message'} <= set(error.payload['error'])
+
+
+def test_status_summary_keys(flow):
+    summary = flow['summary']
+    assert summary.exit_code == 0, summary.payload
+    payload = summary.payload
+    assert cmd.SUMMARY_SCHEMA == view.SUMMARY_SCHEMA == SUMMARY_SCHEMA
+    assert tuple(payload) == SUMMARY_PAYLOAD_KEYS and payload['schema'] == SUMMARY_SCHEMA
+    assert view.SUMMARY_KEYS == SUMMARY_PAYLOAD_KEYS[6:]
+    assert tuple(payload['goal']) == SUMMARY_GOAL_KEYS
+    assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(STEP_IDS)
+    assert tuple(payload['decisions']) == st.DECISION_IDS
+    assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
+    assert tuple(payload['executions']) == ('active', 'interrupted', 'late')
+    assert tuple(payload['not_yet_defensible']) == ('top', 'more')
+    assert tuple(payload['artifacts']) == ('status', 'items')
+    for name, item in payload['artifacts']['items'].items():
+        assert tuple(item) == ('status', 'revision', 'last_ok_revision', 'message'), name
+    keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)
+            | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
 def test_view_model_keys(flow):
