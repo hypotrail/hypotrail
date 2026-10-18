@@ -111,6 +111,10 @@ STEPS = (
 )
 STEP_IDS = tuple(s['id'] for s in STEPS)
 ACTIVITY_SLOTS = tuple(a for s in STEPS for a in s['activities'])
+# Optional slots outside the plan: ``eda.rate_by`` has one slot per column,
+# ``eda.rate_by:<column>`` (``mlkit.study.activities.slot_of``). They are shown with the
+# training EDA step and never block a step.
+PER_COLUMN_SLOT_PREFIXES = ('eda.rate_by:',)
 
 TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'facts',
             'structure', 'prior_exposure', 'decisions', 'proposals', 'current', 'stale',

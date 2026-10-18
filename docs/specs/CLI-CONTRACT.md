@@ -228,7 +228,7 @@ Added in Phase 2 (contract commit, reviewed by the integrator): `interrupted_exe
 
 ### 8.1 Activities (Phase 2)
 
-An activity is identified by its **slot** name, which is also its registry `activity`: `split`, `eda.target_rate`, `eda.special_values`, `eda.rate_by`, `fit.baseline`, `fit.logistic`, `policy.evaluation`. The plan's slots are `mlkit.study.state.ACTIVITY_SLOTS`.
+An activity is identified by its **slot** name, which is also its registry `activity`: `split`, `eda.target_rate`, `eda.special_values`, `fit.baseline`, `fit.logistic`, `policy.evaluation`. The plan's slots are `mlkit.study.state.ACTIVITY_SLOTS`. **Exception (Phase 4 integration):** `eda.rate_by` has one slot per column, `eda.rate_by:<column>` (`activities.slot_of`, `state.PER_COLUMN_SLOT_PREFIXES`); its registry entries keep `activity: "eda.rate_by"` and `params.column`, so exploring a second column never replaces the first. These slots are optional: they never block a step, are shown with the `train_eda` step, and a `code_fingerprint` change of `eda.rate_by` reaches every one of them. `run.result.slot` names the slot of a promoted result. A `{{slot:…}}` template may name a per-column slot (the longest known slot prefix wins).
 
 1. **CLI command.** Create `framework/mlkit/study/cmd_run.py` (and `cmd_preview.py`) with
    ```python

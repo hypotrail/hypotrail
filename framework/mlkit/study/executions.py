@@ -169,8 +169,8 @@ def _promote(ctx: cmd.Context) -> Handler:
             done.update(status='late_not_promoted', reason=reason,
                         current_input_key=now['input_key'] if now else None)
             state['executions']['late'][eid] = done
-        return {'execution_id': eid, 'activity': record['activity'], 'status': done['status'],
-                'result_id': rid, 'input_key': params['input_key'],
+        return {'execution_id': eid, 'activity': record['activity'], 'slot': record['slot'],
+                'status': done['status'], 'result_id': rid, 'input_key': params['input_key'],
                 'reason': reason, 'started_revision': record['started_revision']}
     return Handler(frozenset({'execution_id', 'result_id', 'input_key'}), run)
 
@@ -423,8 +423,9 @@ def plan_summary(plan: Mapping, eid: str) -> dict:
 
 
 def _already_current(store, state, activity, options, request_id) -> dict | None:
-    rid = state['current'].get(activity)
-    if rid is None or not st.is_current(state, activity):
+    slot = act.slot_of(activity, options)
+    rid = state['current'].get(slot)
+    if rid is None or not st.is_current(state, slot):
         return None
     try:
         now = act.plan(store, state, activity, options)

@@ -1,8 +1,9 @@
 """Study activities: what each one reads, its identity, and its computation (plan WP2.2-2.4).
 
 An activity is named by its slot (``CLI-CONTRACT.md`` §8.1): ``split``,
-``eda.target_rate``, ``eda.special_values``, ``eda.rate_by``, ``fit.baseline``,
-``fit.logistic``, ``policy.evaluation`` (``policy.evaluate`` is accepted as an alias).
+``eda.target_rate``, ``eda.special_values``, ``eda.rate_by:<column>`` (one slot per
+column, :func:`slot_of`), ``fit.baseline``, ``fit.logistic``, ``policy.evaluation``
+(``policy.evaluate`` is accepted as an alias).
 
 Two functions per run, called by :mod:`mlkit.study.executions`:
 
@@ -79,6 +80,27 @@ LOGISTIC_PARAMS = {'model': 'logistic', 'implementation': 'mlkit.classical.pipel
                                     'fitted on training rows only',
                    'special_values': 'numeric special values: indicator column, value imputed; '
                                      'categorical special values: their own category'}
+
+
+def slot_of(activity: str, options: Mapping | None = None) -> str:
+    """The slot a result of ``activity`` is promoted into (``state.current``).
+
+    One slot per activity, except ``eda.rate_by``: one slot per column,
+    ``eda.rate_by:<column>``, so exploring a second column never replaces the first.
+    The registry entry keeps ``activity: "eda.rate_by"`` and ``params.column``.
+    """
+    activity = canonical(activity)
+    if activity == RATE_BY:
+        column = (options or {}).get('column')
+        if not isinstance(column, str) or not column:
+            raise CommandRefused('invalid_arguments', 'eda.rate_by needs --column NAME.')
+        return f'{RATE_BY}:{column}'
+    return activity
+
+
+def activity_of(slot: str) -> str:
+    """The activity of a slot (``eda.rate_by:<column>`` -> ``eda.rate_by``)."""
+    return RATE_BY if slot.startswith(RATE_BY + ':') else slot
 
 
 def guard_read_only() -> None:
@@ -284,7 +306,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             expose('validation_policy_selection', 'validation', keys['validation'], [target])
     code = registry.code_fingerprint(MODULES[activity])
     key = rec.input_key(activity, rec_json(params), rec_json(inputs), code['fingerprint'])
-    return {'activity': activity, 'slot': activity, 'options': options, 'params': params,
+    return {'activity': activity, 'slot': slot_of(activity, options), 'options': options,
+            'params': params,
             'inputs': inputs, 'code': code, 'input_key': key, 'exposures': exposures,
             'case_path': state['case']['path'], 'dataset_sha256': state['dataset']['sha256']}
 

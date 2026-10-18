@@ -205,7 +205,10 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
         activity = (new or {}).get('activity') if isinstance(new, Mapping) else None
         if not activity:
             raise StudyError('invalid_value', 'A code_fingerprint change names its activity.')
-        out[_kind(activity)] = [activity]
+        # Every slot holding a result of that activity (eda.rate_by has one per column).
+        slots = sorted(s for s in old_state['current']
+                       if s == activity or s.startswith(activity + ':'))
+        out[_kind(activity)] = slots or [activity]
         reason = f'code of activity {activity} changed (§3.7 row 11)'
     if spec['reconfirm'] == ('*',):
         reconfirm = [d for d in st.DECISION_IDS if d != decision_id]

@@ -145,6 +145,38 @@ def test_rate_by_refuses_the_target_and_unknown_columns(flow):
     assert flow.run('eda.rate_by', expect=2)['error']['code'] == 'invalid_arguments'
 
 
+def test_rate_by_has_one_slot_per_column(flow):
+    """Exploring a second column never replaces the first (contract §8.1, §8.5)."""
+    from mlkit.study import dependencies as dep, render_html, view as view_model
+    case = c.load_case(flow.case_dir)
+    first, second = [v['name'] for v in case.document['variables']
+                     if v['role'] == 'feature'][:2]
+    a = flow.run('eda.rate_by', '--column', first)
+    b = flow.run('eda.rate_by', '--column', second)
+    assert a['result']['slot'] == f'eda.rate_by:{first}'
+    assert b['result']['slot'] == f'eda.rate_by:{second}'
+    state = flow.state()
+    assert state['current'][f'eda.rate_by:{first}'] == a['result_id']
+    assert state['current'][f'eda.rate_by:{second}'] == b['result_id']
+    assert 'eda.rate_by' not in state['current']
+    entry = read.open(flow.study).result(a['result_id'])
+    assert entry['activity'] == 'eda.rate_by' and entry['params'] == {'column': first}
+    # the same request on the same column is already current; nothing is computed
+    again = flow.run('eda.rate_by', '--column', first)
+    assert again['status'] == 'already_current' and again['result_id'] == a['result_id']
+    # both are shown with the training EDA step of the report, each with its column
+    v = view_model.build(flow.study)
+    slots = render_html.slots_of_step('train_eda', v['results'])
+    assert {f'eda.rate_by:{first}', f'eda.rate_by:{second}'} <= set(slots)
+    page, consumed = render_html.build(v)
+    assert a['result_id'] in consumed and b['result_id'] in consumed
+    assert f'data-slot="eda.rate_by:{second}" data-state="current"' in page
+    # a code change of eda.rate_by reaches every per-column slot
+    eff = dep.effects(state, 'code_fingerprint', {'activity': 'eda.rate_by', 'fingerprint': 'a'},
+                      {'activity': 'eda.rate_by', 'fingerprint': 'b'})
+    assert eff['re_eda'] == sorted([f'eda.rate_by:{first}', f'eda.rate_by:{second}'])
+
+
 def test_eda_records_train_eda_exposure_on_training_rows_only(flow):
     before = len(fk.exposure_records(flow.study))
     runs = [flow.run('eda.target_rate'), flow.run('eda.special_values')]
