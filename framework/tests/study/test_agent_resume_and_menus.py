@@ -47,3 +47,28 @@ def test_numbers_in_words_are_numbers():
     for phrase in ('Numbers in words are numbers', '"one in nine"',
                    'Name a withdrawn\n   or superseded proposal without its figure'):
         assert phrase in rule2, phrase
+
+
+def test_both_task_renderings_carry_f3_f5_t8():
+    """M3 task blocks: F3, F5, and T8 reach the regression rendering too (no stale
+    regression copy of a rule), and the regression F3 example names the target unit."""
+    for task in ('binary', 'regression'):
+        claude = af.select_task(CLAUDE, task)
+        skill = af.select_task(SKILL, task)
+        resume = af.select_task(RESUME, task)
+        rule2 = _rule(claude, 2)
+        assert 'Numbers in words are numbers' in rule2, task
+        assert 'superseded proposal without its figure' in ' '.join(rule2.split()), task
+        assert 'ask a single question' in _rule(claude, 4), task
+        assert 'do not repeat the menu: ask one question' in skill, task
+        resuming = skill.split('## Resuming', 1)[1].split('\n## ', 1)[0]
+        expected = ['The goal first', 'Decisions made', 'Where we are', 'The next decision',
+                    'One limitation']
+        for doc in (resume, resuming):
+            assert _items(doc) == expected, (task, _items(doc))
+            assert '`recap`' in doc
+        assert 'hypotrail:task' not in claude + skill + resume
+    regression_rule2 = ' '.join(_rule(af.select_task(CLAUDE, 'regression'), 2).split())
+    assert '"about six <unit>"' in regression_rule2 and 'the target unit included' in \
+        regression_rule2
+    assert '"one in nine"' not in regression_rule2

@@ -20,8 +20,13 @@ starts by reading ``status``.
 9. the conclusion, checked before it is proposed; changing the model choice afterwards
    reuses the evaluation (row 13: no refit) and asks for the conclusion again;
 10. ``check`` of the report and the notebook is clean, and no deliverable, status output,
-    or installed instruction holds threshold, positive class, precision, recall, or
-    capacity.
+    resume recap, session report (JSON and Markdown), or installed instruction holds
+    threshold, positive class, precision, recall, or capacity.
+
+Post-v0.1 instruments on a regression study (merge of the observation kit with M3): a
+number written in words followed by the target unit ("about three mpg") is traced by
+``check`` (F3); the ``status --summary`` recap names the model choice, never a policy
+(T8); ``session-report`` closes pause 3 on ``model_choice`` and the conclusion.
 """
 from __future__ import annotations
 
@@ -152,6 +157,11 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert '### Regression study' in claude and 'evaluate.regression' in claude
     assert 'hypotrail:task' not in claude
     assert _vocabulary(_instructions(study)) == {}
+    # the opt-in session log, enabled once by one process (observation kit)
+    enable = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'status', '--summary',
+                             '--study', str(study)], capture_output=True, text=True, cwd=work,
+                            env={**fk.env(), 'HYPOTRAIL_SESSION_LOG': '1'}, timeout=120)
+    assert enable.returncode == 0 and (study / '.hypotrail/session-log.jsonl').is_file()
 
     # 2. pause 1: prediction moment, then the junior's availability list
     chat = Chat(study, work, 'chat1')
@@ -246,6 +256,7 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert sum(g['n_rows'] for g in by_period['groups']) == ev['n']
     preview = chat('preview', 'policy', '--rule', 'capacity:10', expect=2)
     assert preview['error']['code'] == 'unsupported_capability'
+    _check_words_in_the_target_unit(study, work, ev, chat.status()['view'])
 
     # 7. pause 3: the model choice, from the paired MAE difference
     assert chat.propose('policy', 'capacity:10', 'x', expect=2)['error']['code'] == \
@@ -258,9 +269,21 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     chat.confirm(p, 'Yes, adopt the linear model.' if adopt else 'Yes, keep the mean baseline.')
 
     # 8. a new process sees everything without any chat memory
-    view = Chat(study, work, 'chat4').view
+    resume = Chat(study, work, 'chat4')
+    view = resume.view
     for d in ('prediction_time', 'feature_availability', 'split', 'model_choice'):
         assert view['decisions'][d]['status'] == 'confirmed', d
+    # the resume recap (T8) names the model choice and the ordinal split, never a policy
+    recap = resume('status', '--summary')['recap']
+    assert [line.split(':', 1)[0] for line in recap] == ['Goal', 'Decided', 'Now', 'Next',
+                                                        'Limit']
+    decided = recap[1]
+    assert f'model choice: {"the linear model" if adopt else "the mean baseline"}' in decided
+    assert f'split (ordinal cutoff on {time_column}, validation from {junior["cutoff"]})' \
+        in decided
+    for feature in junior['exclusions']:
+        assert feature in decided
+    assert 'policy' not in decided and not BINARY_VOCABULARY.search(' '.join(recap))
     for slot in ('split', 'eda.target_summary', 'eda.special_values', junior['mean_by_slot'],
                  'fit.baseline', 'fit.linear', 'evaluate.regression'):
         assert view['results'][slot]['current'] is True, slot
@@ -322,7 +345,32 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     current = {r['result_id'] for r in final['view']['results'].values() if r['current']}
     assert {a['data-result-id'] for a in data} <= current
     assert 'id="model-comparison"' in page and 'class="residuals-by"' in page
+    session = chat('session-report')
+    pause3 = session['pauses'][2]
+    assert pause3['decisions'] == ['model_choice', 'conclusion'] and pause3['closed_at']
+    assert pause3['confirmed'] == ['conclusion', 'model_choice']
+    assert {d['decision_id'] for d in session['decisions']} >= {'model_choice', 'conclusion'}
+    assert session['sources']['session_log']['enabled'] is True
+    assert any(c.get('in_words') for c in session['checks'])    # the word-number check above
+    session_text = subprocess.run(
+        [sys.executable, '-m', 'mlkit.study.cli', 'session-report', '--format', 'text',
+         '--study', str(study)], capture_output=True, text=True, cwd=work, env=fk.env(),
+        timeout=120)
+    assert session_text.returncode == 0 and '| 3 | model_choice, conclusion |' in \
+        session_text.stdout
+    # The session report records what was tried: this walkthrough's own refused
+    # ``preview policy --rule capacity:10`` keeps its rule identifier and is left out of the
+    # vocabulary check (the refused policy proposal's value is never logged); everything
+    # the engine wrote of its own is in.
+    tried = [x for x in session['timeline'] if x['source'] == 'session_log'
+             and x.get('ok') is False and BINARY_VOCABULARY.search(json.dumps(x))]
+    assert [(x['command'], x.get('verb')) for x in tried] == [('preview', 'policy')]
+    own = {**session, 'timeline': [x for x in session['timeline'] if x not in tried]}
+    own_text = '\n'.join(line for line in session_text.stdout.splitlines()
+                         if not ('REFUSED' in line and BINARY_VOCABULARY.search(line)))
     surfaces = {'report': page,
+                'session_report': json.dumps(own), 'session_report_text': own_text,
+                'recap': '\n'.join(recap),
                 'notebook': (study / 'notebooks/study_generated.py').read_text(),
                 'workbench': (study / 'notebooks/workbench.py').read_text(),
                 'status': json.dumps(final), 'summary': json.dumps(chat('status', '--summary')),
@@ -355,3 +403,53 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     if name == 'auto':     # the historical protocol: 1970-1978 against 1979-1982
         assert (parts['train']['n_rows'], parts['validation']['n_rows']) == (280, 118)
         assert summary['n'] == 280
+
+
+def _english(n: int) -> str:
+    """``n`` (0 to 100) in English words, as ``wordnum`` reads it."""
+    from mlkit.study import wordnum
+    return next(w for w, v in wordnum.CARDINALS.items()
+                if v == n and w.isascii() and ' ' not in w and w != 'dozen')
+
+
+def _numbers(value):
+    if isinstance(value, bool):
+        return
+    if isinstance(value, (int, float)):
+        yield float(value)
+    elif isinstance(value, dict):
+        for v in value.values():
+            yield from _numbers(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _numbers(v)
+    elif isinstance(value, str):
+        yield from (float(x) for x in re.findall(r'-?\d+(?:\.\d+)?', value))
+
+
+def _check_words_in_the_target_unit(study: Path, work: Path, ev: dict, view: dict) -> None:
+    """F3 on a regression study: "about <n> <unit>" in words is traced like digits."""
+    unit = ev['unit']
+
+    def check(text):
+        proc = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'check', '--text', '-',
+                               '--study', str(study)], input=text, capture_output=True,
+                              text=True, cwd=work, env=fk.env(), timeout=120)
+        assert proc.returncode == 0, proc.stderr
+        return json.loads(proc.stdout)
+
+    mae = ev['models']['fit.linear']['mae']
+    if round(mae) <= 100 and abs(mae - round(mae)) < 0.5:
+        draft = (f'On the validation rows, the linear model was off by about '
+                 f'{_english(round(mae))} {unit} on average.')
+        out = check(draft)
+        assert out['clean'] is True, out['findings']
+        assert [t for t in out['traced'] if t.get('in_words')], out['traced']
+    # a figure no registered value, decision, or case statement holds is reported
+    known = list(_numbers(view))
+    free = next((k for k in range(97, 1, -1) if all(abs(k - v) > 0.5 for v in known)), None)
+    if free is not None:
+        out = check(f'On the validation rows, the linear model was off by about '
+                    f'{_english(free)} {unit} on average.')
+        [finding] = [f for f in out['findings'] if f['code'] == 'untraceable_number']
+        assert finding['details']['in_words'] is True and finding['details']['value'] == free

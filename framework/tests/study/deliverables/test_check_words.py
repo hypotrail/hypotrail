@@ -74,6 +74,22 @@ def test_ordinary_words_are_not_numbers(text):
     assert wordnum.parse(text) == []
 
 
+def test_a_regression_target_unit_is_a_count_noun():
+    """M3: an error written in words in the target unit ("about six mpg") is read when the
+    unit is passed (``check`` passes the units of the current results), not otherwise."""
+    text = 'The linear model was off by about six mpg on average.'
+    assert wordnum.parse(text) == []
+    [six] = wordnum.parse(text, ['mpg'])
+    assert (six.text, six.kind, six.value) == ('six', 'count', 6)
+    assert six.matches(6.309) and not six.matches(6.6)
+    [area] = wordnum.parse('an error of twelve square metres', ['square metres (assumed)'])
+    assert area.value == 12
+    assert wordnum.unit_nouns(['mpg', 'mpg', None, '', '(x)', 'square metres (assumed)']) == \
+        ('mpg', 'square metres')
+    assert wordnum.parse('We fit one model, about six mpg wide.', ['mpg'])[0].value == 6
+    assert wordnum.parse('One mpg is the unit.', ['mpg']) == []      # "one" alone never counts
+
+
 # --- tracing ------------------------------------------------------------------------------
 
 @pytest.mark.parametrize('draft, number', [
