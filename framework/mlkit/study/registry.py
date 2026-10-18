@@ -122,7 +122,9 @@ def put(store: StudyStore, *, activity: str, params: Mapping, inputs: Mapping, c
         raise StudyError('invalid_result', 'code.fingerprint does not match code.modules')
     blob_shas = {name: store.put_blob(data) for name, data in sorted((blobs or {}).items())}
     params, inputs = json.loads(rec.canonical(params)), json.loads(rec.canonical(inputs))
-    values = json.loads(rec.canonical(values))
+    # The values keep their emitted key order (CLI-CONTRACT-COMPANION §8 lists the keys of a
+    # distribution in order); their digest is computed on the canonical (sorted) form.
+    values = json.loads(json.dumps(values, ensure_ascii=False, allow_nan=False))
     out_sha = rec.output_sha256(values, blob_shas)
     key = rec.input_key(activity, params, inputs, code['fingerprint'])
     rid = rec.result_id(activity, params, inputs, code['fingerprint'], out_sha)
@@ -133,6 +135,9 @@ def put(store: StudyStore, *, activity: str, params: Mapping, inputs: Mapping, c
              'execution_id': execution_id, 'started_revision': started_revision,
              'environment': dict(env) if env is not None else environment(),
              'created': _now()}
+    # Stored sorted, as before, except ``output.values`` (emitted order, see above).
+    entry = json.loads(rec.canonical({k: v for k, v in entry.items() if k != 'output'}))
+    entry = dict(sorted({**entry, 'output': {'sha256': out_sha, 'values': values}}.items()))
     rec.verify_entry(rid, entry)
     same = sorted({row['result_id'] for row in read_jsonl(_index_path(store))
                    if row.get('input_key') == key and row.get('result_id') != rid})

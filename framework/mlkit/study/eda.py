@@ -28,6 +28,15 @@ reading rules:
 * ``eda.mean_by --column X``: the mean target by value of ``X`` with its count; the same
   groups as ``eda.rate_by`` and the same small-count warning.
 
+Both tasks also describe one column at a time (CLI-CONTRACT-COMPANION §8, C8):
+
+* ``eda.distribution --column X``: the distribution of ``X`` on training rows, without
+  the outcome (the caller passes the column ``X`` only). A numeric column with more than
+  :data:`MAX_DISTINCT_BEFORE_BINNING` ordinary values gets its quantiles and
+  :data:`DISTRIBUTION_BINS` fixed-width bins; any other column is counted by group
+  (``discrete`` in value order, ``categorical`` by descending count), with the G.12 fold
+  of the smallest groups. Special values and missing cells are counted apart.
+
 These are associations on training rows, not effects. pandas is imported by the
 caller (``activities.compute``), never at module import.
 """
@@ -44,6 +53,11 @@ MISSING_GROUP = '(missing)'
 # G.12 (post-v0.1): a high-cardinality column shows its largest groups and "other".
 MAX_GROUPS = 20
 OTHER_GROUP = '(other values)'
+# C8: fixed-width bins of a numeric distribution, and the declared types read as numbers.
+DISTRIBUTION_BINS = 10
+NUMERIC_TYPES = ('numeric', 'number', 'integer')
+DISTRIBUTION_NOTE = ('Counts of training rows only. A distribution describes this sample; it '
+                     'is not a rate of the outcome and says nothing about causes.')
 
 
 def _rate(n: int, n_positive: int) -> float | None:
@@ -306,8 +320,118 @@ def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
                     'variable.'}
 
 
+def _plain(value):
+    """A cell value as JSON: a whole float as an int, numpy scalars as Python ones."""
+    if hasattr(value, 'item'):
+        value = value.item()
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
+
+
+def _share(n: int, total: int) -> float | None:
+    return n / total if total else None
+
+
+def _numeric_bins(ordinary, n_total: int) -> dict:
+    """Quantiles (as :func:`target_summary`) and :data:`DISTRIBUTION_BINS` fixed-width bins
+    from the minimum to the maximum; every bin is closed on the left, the last on both
+    sides."""
+    import numpy as np
+    moments = _moments(ordinary)
+    out = {k: moments[k] for k in ('n', 'min', 'q25', 'median', 'q75', 'max', 'mean', 'sd')}
+    low, high = out['min'], out['max']
+    edges = np.linspace(low, high, DISTRIBUTION_BINS + 1)
+    index = np.clip(np.searchsorted(edges, ordinary.to_numpy(), side='right') - 1,
+                    0, DISTRIBUTION_BINS - 1)
+    counts = np.bincount(index, minlength=DISTRIBUTION_BINS)
+    bins = [{'low': float(edges[i]), 'high': float(edges[i + 1]), 'n_rows': int(counts[i]),
+             'share': _share(int(counts[i]), n_total),
+             'closed': 'both' if i == DISTRIBUTION_BINS - 1 else 'left'}
+            for i in range(DISTRIBUTION_BINS)]
+    return {**out, 'n_bins': DISTRIBUTION_BINS, 'bin_width': (high - low) / DISTRIBUTION_BINS,
+            'bins': bins}
+
+
+def distribution(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:
+    """The distribution of ``column`` on training rows (CLI-CONTRACT-COMPANION §8).
+
+    ``train`` may hold ``column`` only: the outcome is never read. Every ``share`` is a
+    share of the training rows, so the bins (or groups), the special values, and the
+    missing cells add up to one.
+    """
+    import pandas as pd
+    from .errors import StudyError
+
+    variable = case.variables[column]
+    values = train[column]
+    n_total = int(len(values))
+    special_mask = pd.Series(False, index=values.index)
+    specials = []
+    for s in case.document['special_values']:
+        if s['column'] != column:
+            continue
+        mask = _matches(values, s['value'], case) & ~special_mask
+        special_mask |= mask
+        n = int(mask.sum())
+        specials.append({'value': s['value'], 'meaning': s['meaning'], 'n_rows': n,
+                         'share': _share(n, n_total)})
+    missing = values.isna() & ~special_mask
+    rest = values[~special_mask & ~missing]
+    numeric_type = variable.get('type') in NUMERIC_TYPES
+    if numeric_type:
+        try:
+            rest = pd.to_numeric(rest, errors='raise').astype(float)
+        except (TypeError, ValueError) as exc:
+            raise StudyError('invalid_case', f'{column!r} is declared {variable.get("type")} but '
+                                             f'holds a value that is not a number: {exc}',
+                             details={'column': column}) from exc
+    distinct = int(rest.nunique())
+    if numeric_type and distinct > MAX_DISTINCT_BEFORE_BINNING:
+        kind = 'numeric'
+    elif numeric_type:
+        kind = 'discrete'
+    else:
+        kind = 'categorical'
+        rest = rest.astype(str)
+    numeric, groups, other, n_groups, warnings = None, None, None, None, []
+    if kind == 'numeric':
+        numeric = _numeric_bins(rest, n_total)
+    else:
+        counts = rest.value_counts()
+        ordered = sorted(counts.index.tolist(), key=lambda v: (str(type(v)), v))
+        rank = {v: i for i, v in enumerate(ordered)}
+        by_count = sorted(ordered, key=lambda v: (-int(counts[v]), rank[v]))
+        n_groups = len(ordered)
+        kept = by_count[:max_groups]
+        # Discrete groups in value order; categorical ones by descending count.
+        names = [v for v in ordered if v in set(kept)] if kind == 'discrete' else kept
+        groups = []
+        for v in names:
+            n = int(counts[v])
+            groups.append({'value': _plain(v), 'n_rows': n, 'share': _share(n, n_total),
+                           'small_count': n < MIN_GROUP_ROWS})
+        if n_groups > max_groups:      # G.12: the largest groups, the others folded
+            folded = by_count[max_groups:]
+            n = int(sum(int(counts[v]) for v in folded))
+            other = {'n_values': len(folded), 'n_rows': n, 'share': _share(n, n_total)}
+            groups.append({'value': OTHER_GROUP, 'n_rows': n, 'share': _share(n, n_total),
+                           'small_count': n < MIN_GROUP_ROWS})
+            warnings.append(f'{column} has {n_groups} values: the {max_groups} largest groups '
+                            f'are shown and the other {len(folded)} values are grouped as '
+                            f'{OTHER_GROUP!r} ({n} training rows).')
+    return {'partition': 'train', 'column': column, 'role': variable.get('role'),
+            'type': variable.get('type'), 'kind': kind, 'n_rows': n_total,
+            'n_missing': int(missing.sum()), 'special_values': specials, 'numeric': numeric,
+            'groups': groups, 'n_groups': n_groups, 'max_groups': max_groups, 'other': other,
+            'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings, 'note': DISTRIBUTION_NOTE}
+
+
 def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
-    if activity == 'eda.target_rate':
+    if activity == 'eda.distribution':
+        values = distribution(case, train, params['column'],
+                              params.get('max_groups', MAX_GROUPS))
+    elif activity == 'eda.target_rate':
         values = target_rate(case, train)
     elif activity == 'eda.special_values':
         values = special_values(case, train)

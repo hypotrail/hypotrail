@@ -66,6 +66,45 @@ activities:
           - {key: n_positive, label: Positive rows, fmt: int}
           - {key: rate, label: Positive share, fmt: pct1}
           - {key: small_count, label: Too few rows to read alone, kind: text}
+  # CLI-CONTRACT-COMPANION §8 (C8): one column's distribution on training rows, shared by
+  # both tasks (regression_activities repeats it). It never shows the outcome.
+  eda.distribution: &distribution
+    label: Distribution of one column on training rows
+    glossary: exposure
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+      - {path: n_missing, label: Missing cells, fmt: int}
+      - {path: numeric.n, label: Rows with an ordinary value, fmt: int}
+      - {path: numeric.min, label: Minimum, fmt: auto}
+      - {path: numeric.q25, label: First quartile, fmt: auto}
+      - {path: numeric.median, label: Median, fmt: auto}
+      - {path: numeric.q75, label: Third quartile, fmt: auto}
+      - {path: numeric.max, label: Maximum, fmt: auto}
+      - {path: numeric.mean, label: Mean, fmt: auto}
+      - {path: numeric.sd, label: Standard deviation, fmt: auto}
+      - {path: numeric.bin_width, label: Bin width, fmt: auto}
+      - {path: n_groups, label: Distinct values, fmt: int}
+      - {path: other.n_values, label: Values folded into the other group, fmt: int}
+    tables:
+      - rows: special_values
+        columns:
+          - {key: value, label: Code, kind: text}
+          - {key: meaning, label: Meaning, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+      - rows: numeric.bins
+        columns:
+          - {key: low, label: From, fmt: auto}
+          - {key: high, label: To, fmt: auto}
+          - {key: closed, label: Bounds included, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+      - rows: groups
+        columns:
+          - {key: value, label: Value, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+          - {key: small_count, label: Too few rows to read alone, kind: text}
   fit.baseline:
     label: Constant baseline
     glossary: baseline
@@ -173,6 +212,7 @@ regression_activities:
           - {key: mean, label: Mean target, fmt: f2}
           - {key: sd, label: Standard deviation, fmt: f2}
           - {key: small_count, label: Too few rows to read alone, kind: text}
+  eda.distribution: *distribution
   fit.baseline:
     label: Mean baseline
     glossary: baseline
