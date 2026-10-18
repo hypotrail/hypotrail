@@ -57,8 +57,9 @@ DIRECTION_RE = re.compile(r'too (?:low|high)|under-?(?:estimat|predict)\w*|over-
                           r'(?:below|above|lower|higher)', re.I)
 LATER_YEARS_RE = re.compile(r'(?:later|newer|recent|last|most recent) (?:model )?years?|'
                             r'older (?:model )?years|extrapolat\w*|(?:19)?(?:79|80|81|82)\b', re.I)
-REPEATED_NAMES_RE = re.compile(r'car[_ ]names?|same (?:car|model) names?|repeat\w* (?:car |model )?names?|'
-                               r'names? (?:that )?(?:repeat|recur|appear in both|shared)|shared? (?:car )?names?',
+REPEATED_NAMES_RE = re.compile(r'same (?:`?car_name`?|car|model) names?|repeat\w* (?:car |model )?names?|'
+                               r'names? (?:that )?(?:repeat|recur|appear (?:on|in) both|shared)|'
+                               r'shared? (?:`?car_name`?|car names?|names?)|names? appear (?:on|in) both',
                                re.I)
 
 

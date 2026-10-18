@@ -308,7 +308,8 @@ def excluded_features(run: dict, before_turn: int) -> list[str]:
         if 'error' not in s:
             snap = s
     value = (((snap.get('decisions') or {}).get('feature_availability') or {}).get('value')) or {}
-    return sorted(c for c, v in value.items() if v == 'not_available') if isinstance(value, dict) else []
+    excluded = ('not_available', 'uncertain_excluded')
+    return sorted(c for c, v in value.items() if v in excluded) if isinstance(value, dict) else []
 
 
 def mentions(events: list[dict], words: list[str]) -> dict:
