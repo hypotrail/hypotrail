@@ -5,7 +5,7 @@
 """CLI-CONTRACT-COMPANION C4 (``preview proposal``), C8 (``eda.distribution:<column>``),
 and the report anchors of C10.
 
-The ``E3``-marked tests are strict ``xfail``: they fail until WP-E3 lands.
+WP-E3 has landed: its strict ``xfail`` markers are removed and its stub test deleted.
 """
 from __future__ import annotations
 
@@ -17,9 +17,6 @@ import companion_contract as cc
 import flowkit as fk
 from mlkit.study import read
 
-E3 = pytest.mark.xfail(strict=True, reason='WP-E3: C4, C8, C10 anchors are not implemented yet')
-
-
 @pytest.fixture(scope='module')
 def binary(tmp_path_factory, synthetic_case_dir):
     return cc.binary_study(synthetic_case_dir, tmp_path_factory.mktemp('cc-e3') / 'study')
@@ -30,18 +27,6 @@ def clone(binary, tmp_path):
     return fk.Flow(fk.clone(binary.study, tmp_path / 'study'), binary.case_dir, prefix='k')
 
 
-# --- passes now; WP-E3 deletes it -----------------------------------------------------------
-
-def test_wp0_stub_refuses_until_e3(binary):
-    before = cc.study_tree_digest(binary.study)
-    code, payload = cc.run('preview', 'proposal', 'policy', '--value', cc.POLICY_RULE,
-                           '--study', binary.study)
-    assert code == 2 and cc.not_implemented(payload, 'preview proposal'), payload
-    code, payload = cc.run('preview', 'proposal', 'policy', '--study', binary.study)
-    assert code == 2 and cc.refusal(payload)[0] == 'invalid_arguments', payload
-    assert cc.study_tree_digest(binary.study) == before
-
-
 def test_distribution_slot_prefix_is_reserved():
     from mlkit.study import state as st
     assert 'eda.distribution:' in st.PER_COLUMN_SLOT_PREFIXES
@@ -49,7 +34,6 @@ def test_distribution_slot_prefix_is_reserved():
 
 # --- C4 ------------------------------------------------------------------------------------
 
-@E3
 def test_c4_draft_of_an_evaluated_rule_is_proposable(clone):
     pid = cc.open_proposal(clone, 'policy')
     before = cc.study_tree_digest(clone.study)
@@ -75,7 +59,6 @@ def test_c4_draft_of_an_evaluated_rule_is_proposable(clone):
     assert code == 0, proposed
 
 
-@E3
 def test_c4_unevaluated_rule_and_refusals(binary, tmp_path):
     code, p = cc.run('preview', 'proposal', 'policy', '--value', cc.UNEVALUATED_RULE,
                      '--study', binary.study)
@@ -97,7 +80,6 @@ def test_c4_unevaluated_rule_and_refusals(binary, tmp_path):
     assert code == 2 and cc.refusal(p)[0] == 'unknown_decision', p
 
 
-@E3
 def test_c4_reads_are_read_only(binary, tmp_path):
     study = fk.clone(binary.study, tmp_path / 'ro study')
     code, payload = cc.r1_read_only(study, 'preview', 'proposal', 'policy', '--value',
@@ -109,7 +91,6 @@ def test_c4_reads_are_read_only(binary, tmp_path):
 
 # --- C8 ------------------------------------------------------------------------------------
 
-@E3
 def test_c8_numeric_distribution_reads_training_rows_only(clone):
     p = clone.run('eda.distribution', '--column', cc.NUMERIC_COLUMN)
     assert p['status'] == 'promoted', p
@@ -134,7 +115,6 @@ def test_c8_numeric_distribution_reads_training_rows_only(clone):
         ('train_eda', 'train', [cc.NUMERIC_COLUMN])]
 
 
-@E3
 def test_c8_special_values_categorical_groups_and_refusals(clone):
     p = clone.run('eda.distribution', '--column', cc.SPECIAL_COLUMN)
     values = read.open(clone.study).result(p['result']['result_id'])['output']['values']
@@ -150,7 +130,6 @@ def test_c8_special_values_categorical_groups_and_refusals(clone):
 
 # --- C10 anchors ---------------------------------------------------------------------------
 
-@E3
 def test_c10_report_anchors_one_per_cited_result_and_no_editor_links(clone):
     code, p = cc.run('render', '--study', clone.study)
     assert code == 0, p

@@ -108,6 +108,38 @@ def test_report_follows_a_dark_preference(browser, full_study):
         context.close()
 
 
+def test_report_anchors_one_per_cited_result_and_no_editor_link(browser, full_study):
+    """C10 (CLI-CONTRACT-COMPANION §10, §11): every cited result has exactly one annex
+    anchor ``r-<result_id>``; the page holds no ``vscode:`` or ``command:`` URI; opening
+    the page at an anchor unfolds that annex row, offline."""
+    import re
+
+    report = full_study / mf.ARTIFACTS['report']
+    html = report.read_text(encoding='utf-8')
+    cited = sorted(set(re.findall(r'data-result-id="([0-9a-f]{64})"', html)))
+    assert cited
+    for rid in cited:
+        assert html.count(f'id="r-{rid}"') == 1, rid
+    assert 'vscode:' not in html and 'command:' not in html
+    context = browser.new_context(offline=True)
+    try:
+        page = context.new_page()
+        errors = []
+        page.on('pageerror', lambda exc: errors.append(str(exc)))
+        page.goto(report.resolve().as_uri() + f'#r-{cited[0]}')
+        page.wait_for_load_state('load')
+        row = page.locator(f'#annex details[id="r-{cited[0]}"]')
+        assert row.count() == 1 and row.get_attribute('open') is not None
+        assert page.locator('#annex details[open]').count() == 1
+        assert page.locator('a[href^="vscode:"], a[href^="command:"]').count() == 0
+        page.evaluate(f'window.location.hash = "#r-{cited[-1]}"')
+        page.wait_for_function(
+            f'document.getElementById("r-{cited[-1]}").open === true')
+        assert errors == []
+    finally:
+        context.close()
+
+
 def test_stale_banner_is_visible_offline(browser, full_study, monkeypatch):
     from mlkit.study import cmd_render
 

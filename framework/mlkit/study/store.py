@@ -318,10 +318,13 @@ class StudyStore:
         return data
 
     def put_registry(self, rid: str, entry: Mapping) -> bool:
-        """Write registry entry ``rid`` once. Identity is checked by the registry (WP1.3)."""
+        """Write registry entry ``rid`` once. Identity is checked by the registry (WP1.3).
+
+        The entry is written in the key order it is given: :func:`mlkit.study.registry.put`
+        sorts every key except those of ``output.values``, which keep their emitted order."""
         if not rid or '/' in rid or rid.startswith('.'):
             raise ValueError('invalid result id')
-        data = (json.dumps(entry, sort_keys=True, indent=2, ensure_ascii=False) + '\n').encode()
+        data = (json.dumps(entry, indent=2, ensure_ascii=False) + '\n').encode()
         return write_once(self.home / REGISTRY_DIR / f'{rid}.json', data)
 
     def read_registry(self, rid: str) -> dict:

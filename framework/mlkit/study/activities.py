@@ -3,7 +3,9 @@
 An activity is named by its slot (``CLI-CONTRACT.md`` §8.1): ``split``,
 ``eda.target_rate``, ``eda.special_values``, ``eda.rate_by:<column>`` (one slot per
 column, :func:`slot_of`), ``fit.baseline``, ``fit.logistic``, ``policy.evaluation``
-(``policy.evaluate`` is accepted as an alias).
+(``policy.evaluate`` is accepted as an alias). Both tasks also have
+``eda.distribution:<column>`` (CLI-CONTRACT-COMPANION §8, C8): one column's training
+distribution, which reads that column only and never the outcome.
 
 Two functions per run, called by :mod:`mlkit.study.executions`:
 
@@ -64,17 +66,28 @@ TARGET_SUMMARY = 'eda.target_summary'
 MEAN_BY = 'eda.mean_by'
 LINEAR = 'fit.linear'
 REGRESSION_EVALUATION = 'evaluate.regression'
+DISTRIBUTION = 'eda.distribution'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
-              TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION)
+              TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
     'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
                    REGRESSION_EVALUATION),
 }
+# C8: activities of every task. ``TASK_ACTIVITIES`` is frozen by test_contract_freeze.py,
+# so the shared ones are listed here and added by :func:`task_activities`.
+SHARED_ACTIVITIES = (DISTRIBUTION,)
+
+
+def task_activities(task: str) -> tuple[str, ...]:
+    """Every activity of a ``task`` study: its own, then the shared ones."""
+    return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES
 ALIASES = {'policy.evaluate': POLICY}
 CLI_NAMES = ACTIVITIES + tuple(ALIASES)
-EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY)
-PER_COLUMN = (RATE_BY, MEAN_BY)
+EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION)
+PER_COLUMN = (RATE_BY, MEAN_BY, DISTRIBUTION)
+# C8: the roles a distribution accepts (a feature, the declared time column, the target).
+DISTRIBUTION_ROLES = ('feature', 'time', 'target')
 FITS = (BASELINE, LOGISTIC)
 REGRESSION_FITS = (BASELINE, LINEAR)
 CANDIDATE_FITS = (LOGISTIC, LINEAR)
@@ -93,6 +106,7 @@ MODULES = {
     MEAN_BY: (_BASE, 'mlkit.study.eda'),
     LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical'),
     REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression'),
+    DISTRIBUTION: (_BASE, 'mlkit.study.eda'),
 }
 # The regression fit of the baseline also uses the error module.
 REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
@@ -164,7 +178,7 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
     options = dict(options or {})
     given = {k for k, v in options.items() if v not in (None, [], ())}
     allowed = {RATE_BY: {'column', 'max_groups'}, MEAN_BY: {'column', 'max_groups'},
-               POLICY: {'rules'}}.get(activity, set())
+               DISTRIBUTION: {'column', 'max_groups'}, POLICY: {'rules'}}.get(activity, set())
     if given - allowed:
         raise CommandRefused('invalid_arguments',
                              f'{activity} does not take {", ".join(sorted(given - allowed))}.',
@@ -270,10 +284,10 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
     """
     activity = canonical(activity)
     task = state.get('task', 'binary')
-    if activity not in TASK_ACTIVITIES[task]:
+    if activity not in task_activities(task):
         raise CommandRefused('invalid_arguments',
                              f'{activity} is not an activity of a {task} study.',
-                             details={'activities': list(TASK_ACTIVITIES[task]), 'task': task})
+                             details={'activities': list(task_activities(task)), 'task': task})
     options = normalize_options(activity, options)
     pre.require_activity(state, activity)
     case = case_of(state)
@@ -313,7 +327,25 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         split_rid = state['current'][SPLIT]
         keys = split_keys(store, split_rid)
         inputs['results'] = {SPLIT: split_rid}
-        if activity in EDA:
+        if activity == DISTRIBUTION:
+            # C8: one column of the training rows, never the outcome (unless the column
+            # is the target itself); no target in the inputs, the result does not depend
+            # on it.
+            column = options['column']
+            variable = case.variables.get(column)
+            if variable is None or variable['role'] not in DISTRIBUTION_ROLES:
+                raise CommandRefused('invalid_arguments',
+                                     f'{column!r} is not a feature, the time column, or the '
+                                     f'target of this case.',
+                                     details={'columns': [v['name'] for v in
+                                                          case.document['variables']
+                                                          if v['role'] in DISTRIBUTION_ROLES]})
+            params['column'] = column
+            if 'max_groups' in options:
+                params['max_groups'] = options['max_groups']
+            inputs['special_values'] = feature_special_values(case, [column])
+            expose('train_eda', 'train', keys['train'], [column])
+        elif activity in EDA:
             inputs['target'] = _target(case)
             columns = [target]
             if activity == SPECIAL_VALUES:
@@ -676,6 +708,8 @@ def compute(store, plan_: Mapping) -> dict:
         from . import eda
         case, dataset = load(plan_)
         train = rows(dataset, split_keys(store, plan_['inputs']['results'][SPLIT])['train'])
+        if activity == DISTRIBUTION:      # C8: the column only, never the outcome
+            train = train[[plan_['params']['column']]]
         return eda.compute(activity, case, train, plan_['params'])
     if activity in FITS or activity == LINEAR:
         from . import fit

@@ -1,4 +1,70 @@
 # Draft restatements and rationales of companion proposals (CLI-CONTRACT-COMPANION §4, C4, C11).
-# WP-0 stub: the schema header only. WP-E3 adds the templates of CC §4; numbers appear only
-# as {{...}} templates.
+# Read by mlkit.study.preview_proposal. The wording is that of CC §4.
+#
+# Placeholders:
+#   {name}     a parameter of the proposed value: {k} (capacity), {t} (threshold), or the
+#              evaluation's {unit} (regression); written as recorded.
+#   {{name}}   a figure of the current evaluation, named under ``figures`` below: its value
+#              path (``{rule}`` is the canonical rule) and its display format. It is written
+#              at that precision, so ``decide propose`` traces it to the result.
+#   {{rid8}}   the short id of that evaluation (its first eight characters, more when those
+#              are all digits, so the id is never read as a number).
+# Numbers appear only as placeholders. No text says "recommended default": a draft is the
+# junior's own choice in the companion, never a delegation.
 schema: hypotrail.content.drafts/1
+drafts:
+  policy:
+    capacity:
+      restatement: >-
+        Adopt the rule capacity:{k}: act on the {k} highest-scored rows. On the {{n}}
+        validation rows the logistic model's selection had precision {{precision}} against
+        {{baseline_precision}} for the baseline, and recall {{recall}}. These validation rows
+        were used to choose the rule, so these figures are optimistic.
+      rationale: >-
+        Chosen by the junior in the companion's What if? view, among rules already evaluated
+        (result {{rid8}}).
+    threshold:
+      restatement: >-
+        Adopt the rule threshold:{t}: act on every row whose score is at least {t}. On the
+        {{n}} validation rows the logistic model selected {{selected}} rows, with precision
+        {{precision}} against {{baseline_precision}} for the baseline, and recall {{recall}}.
+        These validation rows were used to choose the rule, so these figures are optimistic.
+      rationale: >-
+        Chosen by the junior in the companion's What if? view, among rules already evaluated
+        (result {{rid8}}).
+  model_choice:
+    fit.linear:
+      restatement: >-
+        Adopt the linear model. On the {{n}} validation rows its mean absolute error is
+        {{mae}} {unit} against {{baseline_mae}} for the training mean (paired difference
+        {{delta}}, interval {{low}} to {{high}}). These rows were used to choose, so the
+        figures are optimistic.
+      rationale: >-
+        Chosen by the junior in the companion's What if? view (result {{rid8}}).
+    fit.baseline:
+      restatement: >-
+        Keep the training mean as the model. On the {{n}} validation rows its mean absolute
+        error is {{baseline_mae}} {unit} against {{mae}} for the linear model (paired
+        difference of the linear model {{delta}}, interval {{low}} to {{high}}). These rows
+        were used to choose, so the figures are optimistic.
+      rationale: >-
+        Chosen by the junior in the companion's What if? view (result {{rid8}}).
+# The figures each placeholder cites: a value path as segments, a format of
+# mlkit.study.cite (int, pct1, f2, ...), and optionally the words written when the value
+# is not defined (default: "not defined"), for example a precision when no row is selected.
+figures:
+  policy:
+    n: {path: [n], fmt: int}
+    selected: {path: [rules, '{rule}', models, fit.logistic, selected], fmt: int}
+    precision: {path: [rules, '{rule}', models, fit.logistic, precision], fmt: pct1,
+                undefined: "not defined (no row selected)"}
+    baseline_precision: {path: [rules, '{rule}', models, fit.baseline, precision], fmt: pct1,
+                         undefined: "not defined (the baseline selects no row)"}
+    recall: {path: [rules, '{rule}', models, fit.logistic, recall], fmt: pct1}
+  model_choice:
+    n: {path: [n], fmt: int}
+    mae: {path: [models, fit.linear, mae], fmt: f2}
+    baseline_mae: {path: [models, fit.baseline, mae], fmt: f2}
+    delta: {path: [deltas, fit.linear, mae, point], fmt: f2}
+    low: {path: [deltas, fit.linear, mae, low], fmt: f2}
+    high: {path: [deltas, fit.linear, mae, high], fmt: f2}
