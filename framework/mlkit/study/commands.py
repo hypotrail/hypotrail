@@ -31,7 +31,6 @@ import copy
 import importlib
 import importlib.util
 import re
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -69,8 +68,6 @@ DEFAULT_ACTOR = 'user'
 SPLIT_METHODS = ('stratified_random',)
 SPLIT_KEYS = ('method', 'validation_fraction', 'seed')
 CONCLUSION_KEYS = ('verdict', 'text')
-AGENT_TEMPLATES = Path(__file__).resolve().parent / 'agent'
-AGENT_TEMPLATE_README = 'README.md'
 # Companion files that may sit next to a case. They are never read by init: their
 # statuses are tutorial choices, not human decisions (AGENTS.md).
 IGNORED_CASE_SOURCES = ('project.json', 'results.json', 'tutorial-results.json',
@@ -417,24 +414,10 @@ def _case_file(path) -> Path:
 
 
 def _copy_agent_templates(study_dir: Path) -> dict:
-    """Copy the study agent instructions (plan §5) without overwriting anything."""
-    copied, skipped = [], []
-    if AGENT_TEMPLATES.is_dir():
-        for src in sorted(AGENT_TEMPLATES.rglob('*')):
-            rel = src.relative_to(AGENT_TEMPLATES)
-            if not src.is_file() or rel.as_posix() == AGENT_TEMPLATE_README \
-                    or '__pycache__' in rel.parts:
-                continue
-            dest = study_dir / rel
-            if dest.exists():
-                skipped.append(rel.as_posix())
-                continue
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, dest)
-            copied.append(rel.as_posix())
-    status = 'copied' if copied else ('kept_existing' if skipped else 'no_templates_yet')
-    return {'source': str(AGENT_TEMPLATES), 'copied': copied, 'skipped_existing': skipped,
-            'status': status}
+    """Install the study agent instructions (plan §5, :mod:`mlkit.study.agent_files`)."""
+    from . import agent_files
+
+    return agent_files.install(study_dir)
 
 
 def init(case_path, study_dir) -> Outcome:

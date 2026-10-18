@@ -1,16 +1,19 @@
 # Study agent instruction templates
 
-Placeholder (plan WP1.4). WP4.1 fills this directory with the instructions that
-`hypotrail init` copies into a new study workspace (plan §5):
+`hypotrail init` installs these files into a new study workspace (plan §5, WP4.1;
+`mlkit/study/agent_files.py`). They are stored under names that Claude Code and Copilot
+do **not** load, so a developer session in this repository never picks up the study
+agent's rules:
 
-- `CLAUDE.md`: the short, non-negotiable rules (always read `hypotrail status --json`
-  first, never compute ad hoc, the three pauses, verbatim confirmation, a fresh
-  `request_id` per intent, stale-revision handling, no causality);
-- `.claude/skills/hypotrail-study/SKILL.md`: pedagogy (term first, then the contextual
-  explanation; guidance loop; glossary; `keep_baseline` is a valid result);
-- `.claude/commands/hypotrail-resume.md`: reread `status`, summarise, propose the next
-  action.
+| Template | Study workspace |
+|---|---|
+| `CLAUDE.md.in` | `CLAUDE.md`, `.github/copilot-instructions.md` |
+| `dot-claude/skills/hypotrail-study/SKILL.md` | `.claude/skills/hypotrail-study/SKILL.md`, `.github/skills/hypotrail-study/SKILL.md` |
+| `dot-claude/commands/hypotrail-resume.md` | `.claude/commands/hypotrail-resume.md`, `.github/prompts/hypotrail-resume.prompt.md` |
 
-`init` copies every file of this directory, keeping its relative path, **except this
-README**. It never overwrites a file that already exists in the study workspace and
-reports copied and skipped files under `agent_instructions` in its JSON output.
+The Copilot files are generated from the same source with a header comment; they are
+**not tested** while directive A1 holds. Placeholders (`{{HYPOTRAIL}}`, `{{STUDY}}`,
+`{{GLOSSARY}}`, `{{SKILL}}`) are replaced at install; the CLI invocation is also recorded
+in `.hypotrail/agent.json`. Existing files are never overwritten. This README is not
+installed. Never add a file here under a loaded name (`CLAUDE.md`, `AGENTS.md`,
+`.claude/`, `.github/`): `framework/tests/study/test_agent_files.py` refuses it.

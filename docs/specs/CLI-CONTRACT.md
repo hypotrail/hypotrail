@@ -64,7 +64,7 @@ Every payload is a JSON object whose first keys are `schema` and `ok`. Keys are 
 
 * `status.since` is the `--since` value or `null`; `changed` is `revision > since` (or `null`); `changes_since` lists the revision records after `since` (or `null`). A webview polls with `--since`.
 * `decide.revision` is the revision created by the request (also on replay). `artifacts` is `null` until Phase 3 renders after commits (§8.3).
-* `init.agent_instructions` is `{source, copied, skipped_existing, status}`; `status` is `copied`, `kept_existing`, or `no_templates_yet`. `ignored_sources` names the companion files found next to the case (`project.json`, `results.json`, `tutorial-results.json`, `answers.yaml`, `project.yaml`, `frame.yaml`); they are never read. `structural_exposure` is `{exposure_id, n_rows}`.
+* `init.agent_instructions` is `{source, copied, skipped_existing, status, cli, agent_file}`; `status` is `copied`, `kept_existing`, or `no_templates_yet`; `cli` is the exact shell command that runs this CLI (§8.4) and `agent_file` is `.hypotrail/agent.json`. `copied` and `skipped_existing` list workspace paths. `ignored_sources` names the companion files found next to the case (`project.json`, `results.json`, `tutorial-results.json`, `answers.yaml`, `project.yaml`, `frame.yaml`); they are never read. `structural_exposure` is `{exposure_id, n_rows}`.
 * `error` is `{code, message, details?, problems?}`. `problems` (case validation) is a list of `{path, problem}`.
 
 ### 3.1 Plan steps and next action
@@ -327,6 +327,28 @@ hypotrail check --study DIR [--text PATH | --text -]
 * HTML numbers are `<data value data-result-id data-path title>` elements. Text shown as recorded rather than computed is wrapped in an element with `data-literal` ∈ `revision`, `ordinal`, `user_words`, `proposal`, `decision_value`, `case`, `identifier`, `parameter`, `environment`, `setting`, `message`, `category`; `check` ignores numbers there.
 * `check` always exits `0`; `clean` is false when a finding has severity `error`. A finding is `{code, severity, where, message, details?}`. Codes (severity): `number_outside_result`, `unknown_result_id`, `value_mismatch`, `stale_result_cited`, `feature_without_status`, `excluded_feature_used`, `untraceable_number`, `stale_number` (error); `causal_wording`, `forecast_wording`, `artifact_not_current`, `untracked_files` (warning). `traced` lists each number of the checked text with the `result_id` and `path` (or the decision, setting, or case statement) it matched.
 
+### 8.4 Agent instructions (Phase 4)
+
+`init` installs the study agent instructions (`mlkit.study.agent_files`, WP4.1). The templates in `framework/mlkit/study/agent/` are stored under names that no agent loads (`CLAUDE.md.in`, `dot-claude/`), so developer sessions in this repository never load them; `agent_files.TARGETS` maps each one to its real name in the study workspace, for Claude Code and, from the same source, for GitHub Copilot (generated with a header comment, **not tested** under directive A1):
+
+| Template | Claude Code | Copilot (untested) |
+|---|---|---|
+| `CLAUDE.md.in` | `CLAUDE.md` | `.github/copilot-instructions.md` |
+| `dot-claude/skills/hypotrail-study/SKILL.md` | `.claude/skills/hypotrail-study/SKILL.md` | `.github/skills/hypotrail-study/SKILL.md` |
+| `dot-claude/commands/hypotrail-resume.md` | `.claude/commands/hypotrail-resume.md` | `.github/prompts/hypotrail-resume.prompt.md` |
+
+An existing file is never overwritten (`skipped_existing`). A template outside the table maps `dot-<name>/` to `.<name>/` and drops a trailing `.in`. The `README.md` is not installed.
+
+**How the agent invokes the CLI.** Placeholders are replaced at install: `{{HYPOTRAIL}}` by the exact command, `{{STUDY}}` by the absolute study directory, `{{GLOSSARY}}` by the absolute path of `mlkit/study/content/glossary.yaml`, `{{SKILL}}` by the agent's skill path. Every command in the instructions is therefore written in full, for example `uv run --project /abs/framework hypotrail status --json --study /abs/study`. The command is chosen in this order: the shell command in `HYPOTRAIL_CLI` if set; `uv run --project <framework> hypotrail` when the engine is the `framework/` uv project and `uv` is on `PATH` (the locked environment, from any directory); otherwise `env PYTHONPATH=<framework> <python> -m mlkit.study.cli`. It is recorded in `.hypotrail/agent.json`:
+
+```json
+{"schema": "hypotrail.agent/1", "study": "/abs/study",
+ "cli": {"argv": ["uv", "run", "--project", "/abs/framework", "hypotrail"], "shell": "uv run --project /abs/framework hypotrail", "how": "uv_project | python_module | override"},
+ "invocation": "<shell> <command> ... --study /abs/study", "glossary": "...", "files": {"CLAUDE.md": {"template", "flavour", "tested"}}, "note": "..."}
+```
+
+Moving the study or the engine makes the recorded paths wrong; a new `init` (a new study) records them again.
+
 ### 8.5 Result value shapes
 
 Added by the Phase 4 integration. Phases 2 and 3 were built in parallel and met here; this section fixes **one** shape per activity. Producers (`mlkit.study.activities`, `eda`, `fit`, `policy`) emit it; consumers (`render_html`, `notebook_view`, `cmd_check`, the workbench template, `content/activities.yaml`) read it; the test fixtures (`framework/tests/study/deliverables/phase3_study.py`) build it. It is the producers' shape, completed where the report needed a field (`split.partitions.*.n_positive`, `rate`). Keys listed here are stable within `hypotrail.result/1`; producers may add keys. Paths use the `mlkit.study.cite` grammar (a segment holding a dot goes in brackets: `rules.[threshold:0.3].models.[fit.logistic].precision`).
@@ -345,9 +367,6 @@ An *evaluation* is the output of the pure `mlkit.study.policy.evaluate(y, score,
 
 `cmd_check` reads the features a fit used from `values.features` and `inputs.features`. A number written with a minus sign glued to its digits (`-1`) is read as negative by `cite.parse_numbers`; `10-18` is still two numbers.
 
-### 8.4 Agent instructions (Phase 4)
-
-`init` copies every file under `framework/mlkit/study/agent/` except its `README.md` into the study, keeping relative paths, never overwriting.
 
 ## 9. Storage objects
 

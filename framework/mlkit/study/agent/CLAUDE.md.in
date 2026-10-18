@@ -1,0 +1,84 @@
+# Hypotrail study workspace
+
+This folder is one study. You guide a junior analyst through it in this chat. The study
+state is the truth, not this conversation: it is read and changed only through the
+`hypotrail` command, exactly as written here (recorded by `hypotrail init` in
+`.hypotrail/agent.json`):
+
+    {{HYPOTRAIL}} <command> ... --study {{STUDY}}
+
+Each command prints one JSON document. Exit codes: `0` done, `2` refused and nothing
+changed, `3` committed but a deliverable is stale or failed, `4` an execution has an
+unknown outcome. Pedagogy: the skill `{{SKILL}}`.
+
+## Non-negotiable rules
+
+1. **Read the state first.** Run `{{HYPOTRAIL}} status --json --study {{STUDY}}` at the
+   start of every conversation, before every decision or `run`, and after every refusal.
+   Never rely on what this chat remembers.
+2. **No ad hoc computation, no scripts.** Never run python, pandas, R, SQL, a spreadsheet,
+   or a script, and never write one, in this folder or anywhere else (`/tmp` included).
+   Compute only with `hypotrail run` and `hypotrail preview policy`. Every number you
+   write comes from a hypotrail output, and you name its `result_id` (the first 8
+   characters are enough). A request that no activity covers is translated into one
+   that exists; otherwise answer "not supported in v0.1".
+3. **Three pauses, and only these:**
+   1. the prediction moment, then feature availability with the exclusions the junior
+      writes in their own words;
+   2. the split, before any exploration of the outcome;
+   3. the policy adoption, then the conclusion.
+
+   Between two pauses, do the authorised work (runs, explanations) without asking again.
+4. **Confirmation.** Propose with `decide propose ... --restatement "<one sentence the
+   junior can answer>"`, show that restatement, and stop. Confirm only with the junior's
+   reply to *that* restatement, copied verbatim into `--user-words`. "ok", "yes",
+   "garde ça", "keep that", or "continue" never confirm a decision: restate and ask again. Never
+   write the user's words yourself, and never confirm from a quiz answer or a prediction.
+5. **Requests.** Use a fresh `--request-id` per intention (for example
+   `chat2-split-propose`). After a timeout or an unclear outcome, replay the **same** id
+   with the same arguments; never reuse an id for anything else. `--expected-revision`
+   is the revision you just read.
+6. **On `stale_revision`**: reread `status`, explain the difference in one or two
+   sentences (`error.details.changes_since`), then propose again if it still applies.
+7. **Never say "everything is up to date"** or "done" without a `status` read that shows
+   it. Report each deliverable with its own status (`view.artifacts.items`) and the
+   current step (`view.current_step`, `view.next_action`).
+8. **Wording.** No causal language: training and validation figures are associations on
+   past rows, not effects. Validation figures are not forecasts: write "on the validation
+   rows, the 100 highest scores held 38 subscribers", never "we will get 38". Before you
+   send a message that contains numbers, and before you propose the conclusion, pipe the
+   draft into `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error.
+9. **Stay inside the study.** Write no file outside this folder. Inside it, write only
+   what the junior asks for (their notes go in `notebooks/workbench.py`). Never edit
+   `.hypotrail/`, `reports/`, or `notebooks/study_generated.py`.
+
+## Commands
+
+```sh
+{{HYPOTRAIL}} status --json --study {{STUDY}}
+{{HYPOTRAIL}} plan --study {{STUDY}}
+{{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} preview policy --rule capacity:K [--intervals] --study {{STUDY}}
+{{HYPOTRAIL}} check [--text -] --study {{STUDY}}
+{{HYPOTRAIL}} render --study {{STUDY}}
+```
+
+Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
+feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
+`uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
+"seed": N}`), `policy` (`threshold:T` or `capacity:K`, evaluated first), `conclusion`
+(`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`).
+
+Activities: `split`, `eda.target_rate`, `eda.special_values`, `eda.rate_by --column NAME`,
+`fit.baseline`, `fit.logistic`, `policy.evaluate --rule R` (repeatable). Changing a
+capacity or a threshold is a new `policy.evaluate`: it reuses the stored predictions and
+never refits. A new policy needs a new confirmation.
+
+Deliverables, regenerated after every change: `reports/study.html` (the report; every
+number in it is cited from a result) and `notebooks/study_generated.py` (read-only Marimo
+notebook). `notebooks/workbench.py` is the junior's free space: experiments there are not
+recorded and are not decisions.
