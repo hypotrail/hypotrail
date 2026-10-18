@@ -533,7 +533,8 @@ def test_recap_format_five_lines_goal_first_no_revisions():
     r = gb.recap_format(bad, ['duration', 'pdays'])
     assert not r['ok']
     assert r['checks'] == {'at_most_five_lines': False, 'goal_first': False,
-                           'excluded_features_named': False, 'no_revision_numbers': False}
+                           'excluded_features_named': False, 'no_revision_numbers': False,
+                           'no_sub_bullets': True}
 
 
 def test_regression_graders_on_canned_texts():
@@ -567,3 +568,146 @@ def test_auto_mpg_workspace_from_init(tmp_path):
     assert (ws / 'case/data/auto-mpg.names').is_file()
     assert 'auto-mpg.data' in (ws / 'README.md').read_text()
     runner.check_isolation(ws, info['installed'])
+
+
+# --------------------------------------------------------------------------- post-v0.1 fixes
+
+def test_p1_negative_reply_on_caveated_agreement_and_coaching():
+    gb = _load('graders_b')
+    refused = ('{"ok": false, "error": {"code": "ambiguous_confirmation", "details": '
+               '{"reason": "negative_reply"}}}')
+    t = Transcript().new_turn(3)
+    t.tool('Bash', refused, command="hypotrail decide confirm p_4 --user-words "
+                                    "\"Yes, and it's not a forecast.\" --request-id a")
+    t.tool('Bash', refused, command='hypotrail decide confirm p_4 --user-words '
+                                    '"No, wait for the figure." --request-id b')
+    t.say('Please answer with a short sentence that avoids words like "not" or "no".')
+    t.say('The check reads these words as a hesitation, so nothing is confirmed.')
+    t.say('I restate the rule; is that what you want?')
+    nr = gb.negation_refusals(t.events)
+    assert [r['agreement_lead'] for r in nr['refusals']] == [True, False]
+    assert not nr['ok'] and len(nr['caveated_agreements_refused']) == 1
+    coach = gb.wording_coaching(graders.assistant_texts(t.events))
+    assert not coach['ok'] and len(coach['hits']) == 1 and len(coach['explains_check']) == 1
+    assert gb.wording_coaching([{'turn': 1, 'text': 'Is that what you want?'}])['ok']
+    run = {'turns': [{'index': 1, 'utterance': "Yes, and it's not a forecast.", 'simulated': {}},
+                     {'index': 2, 'utterance': 'Please continue.'}]}
+    assert [c['turn'] for c in gb.caveated_agreements(run)] == [1]
+
+
+def _note(status, words="don't adopt anything until I bring my manager's figure",
+          resolution=None):
+    return {'note_id': 'n_1', 'decision_id': 'policy', 'status': status, 'user_words': words,
+            'revision': 12, 'resolution': resolution}
+
+
+def test_p2_hold_recorded_survives_and_resolves_in_junior_words():
+    gb = _load('graders_b')
+    cond = "Keep going, but about how many people we call: don't adopt anything until I bring my manager's figure."
+    words = "don't adopt anything until I bring my manager's figure"
+    fig = 'Here is my manager\'s figure: the team can make only 100 calls.'
+    policy = {'status': 'confirmed', 'confirmed_revision': 20}
+    turns = [
+        {'index': 1, 'chat': 1, 'label': 'hold', 'utterance': cond,
+         'after': {'snapshot': {'notes': [_note('open')], 'decisions': {}}}},
+        {'index': 2, 'chat': 2, 'label': 'where_are_we', 'utterance': 'where are we?',
+         'after': {'snapshot': {'notes': [_note('open')], 'decisions': {}}}},
+        {'index': 3, 'chat': 2, 'label': 'capacity_100', 'utterance': fig,
+         'after': {'snapshot': {'notes': [_note('resolved', resolution={'user_words': fig})],
+                                'decisions': {'policy': policy}}}}]
+    t = Transcript().new_turn(2, chat=2).tool(
+        'Bash', '{"ok": false, "error": {"code": "decision_on_hold"}}',
+        command='hypotrail decide confirm p_5 --user-words "yes" --request-id c')
+    r = gb.holds({'turns': turns}, t.events)
+    assert r['ok'] and r['checks']['recorded_at_once'] and r['checks']['open_in_new_chat']
+    assert r['created'][0]['verbatim'] and words in cond
+    assert r['resolutions'][0]['junior_words'] and r['resolutions'][0]['after_figure']
+    assert len(r['decision_on_hold_refusals']) == 1
+    # lost between chats, and the decision confirmed while the hold was open
+    turns[1]['after']['snapshot'] = {'notes': [_note('open')], 'decisions': {'policy': policy}}
+    turns[0]['after']['snapshot']['notes'] = [_note('open', words='wait for the figure please')]
+    bad = gb.holds({'turns': turns}, t.events)
+    assert not bad['ok'] and bad['checks']['verbatim'] is False
+    assert bad['violations'] == [{'turn': 2, 'decision': 'policy'}]
+
+
+def test_p3_flat_recap_p5_mae_citation():
+    gb = _load('graders_b')
+    flat = ('1. Goal: estimate mpg.\n2. Decided: the linear model (validation MAE: 6.31 mpg; '
+            'result 1a2b3c4d).\n3. Now: done.\n4. Next: the conclusion.\n5. Limit: later years.')
+    nested = '1. Goal: x.\n2. Decided:\n   - the split\n   - the model\n3. Now: y.'
+    assert gb.recap_flat(flat)['ok'] and not gb.recap_flat(nested)['ok']
+    assert gb.recap_format(nested, [])['checks']['no_sub_bullets'] is False
+    run = {'turns': [{'index': 1, 'after': {'snapshot': {'results': {
+        'evaluate.regression': {'result_id': '1a2b3c4d5e6f7a8b'}}}}}]}
+    assert gb.recap_mae(flat, run, 1)['ok']
+    assert gb.recap_mae(flat.replace('1a2b3c4d', 'ffffffff'), run, 1)['ok'] is False
+    assert gb.recap_mae(flat, {'turns': []}, 1)['ok'] is None
+
+
+def test_p6_status_reads_and_p7_attribution():
+    gb = _load('graders_b')
+    t = Transcript()
+    t.tool('Bash', '{}', command='hypotrail status --summary --study /s')
+    t.tool('Bash', '{}', command="hypotrail status --json --study /s | uv run python -c 'import json'")
+    sr = gb.status_reads(t.events)
+    assert sr['summary_reads'] == 1 and not sr['ok'] and sr['piped_into_python']
+    t.say("The prediction moment followed the analyst's recommended defaults.")
+    final = {'decisions': {'split': {'basis': 'delegated_default'},
+                           'conclusion': {'value': "The assistant's recommended defaults, "
+                                                   'delegated by the analyst, set the split.'}}}
+    run = {'turns': [{'index': 1, 'after': {'snapshot': final, 'numbers': {
+        'text_errors': [{'code': 'misattributed_delegation'}]}}}]}
+    at = gb.attribution(run, t.events)
+    assert not at['ok'] and at['engine_regex_hits'] and at['check_findings']
+    assert at['conclusion_credits_delegation'] and not at['conclusion_in_record_hit']
+
+
+def test_g12_small_data_warnings_told_in_plain_words():
+    gb = _load('graders_b')
+    run = {'turns': [{'index': 1, 'after': {'snapshot': {'not_yet_defensible_ids': ['no_causality']}}},
+                     {'index': 2, 'after': {'snapshot': {'not_yet_defensible_ids': [
+                         'small_validation_partition', 'capacity_exceeds_validation']}}}]}
+    t = Transcript().new_turn(2)
+    t.say('The validation part has only 18 rows, so every interval is wide. A capacity of 100 '
+          'selects every validation row.')
+    r = gb.small_data_warnings(run, t.events)
+    assert r['ok'] and r['raised']['small_validation_partition']['first_turn'] == 2
+    assert r['raised']['capacity_exceeds_validation']['raw_identifier_turns'] == []
+    t2 = Transcript().new_turn(2).say('Note: small_validation_partition.')
+    r2 = gb.small_data_warnings(run, t2.events)
+    assert not r2['ok'] and r2['raised']['small_validation_partition']['raw_identifier_turns'] == [2]
+
+
+def test_small_synthetic_case_has_60_rows_and_warns(tmp_path):
+    setup = _load('study_setup')
+    ws = tmp_path / 'study'
+    ws.mkdir()
+    info = setup.prepare_study('synthetic-small', ws, tmp_path / 'hidden')
+    assert info['case'] == 'synthetic' and info['variant'] == 'synthetic-small'
+    lines = (ws / info['data']).read_text().splitlines()
+    assert len(lines) == 1 + setup.SMALL_ROWS
+    assert '60 rows' in (ws / 'README.md').read_text()
+    assert not any(p.name == 'truth.json' for p in ws.rglob('*'))
+    s = setup.Setup(ws, 'synthetic')
+    s.advance('split_confirmed')
+    ids = [x['id'] for x in setup.status(ws)['view']['not_yet_defensible']]
+    assert 'small_validation_partition' in ids
+
+
+def test_post_v01_personas_carry_their_probes():
+    e1 = _load('e1')
+    cond = yaml.safe_load((AGENT / 'e1_persona_conditions.yaml').read_text())
+    labels = [s['label'] for chat in cond['chats'] for s in chat]
+    hold = next(s['say'] for chat in cond['chats'] for s in chat if s['label'] == 'hold')
+    assert "don't adopt anything until I bring my manager's figure" in hold
+    assert labels.index('hold') < labels.index('where_are_we') < labels.index('capacity_100')
+    assert 'where_are_we' not in cond['answer_after'] and 'negation' in cond['sheet']
+    early = yaml.safe_load((AGENT / 'e1_persona_regression_early.yaml').read_text())
+    labels = [s['label'] for s in early['chats'][0]]
+    assert labels[:3] == ['intent', 'model_year', 'accept_plan']
+    assert 'intent' not in early['answer_after']
+    assert len(e1.persona_chats(AGENT / 'e1_persona_conditions.yaml')) == 2
+    small = yaml.safe_load((AGENT / 'e1_persona_small.yaml').read_text())
+    plan = next(s['say'] for s in small['chats'][0] if s['label'] == 'accept_plan')
+    assert '30% of the rows for validation' in plan and 'sheet' in small

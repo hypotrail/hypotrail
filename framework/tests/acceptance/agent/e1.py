@@ -159,6 +159,11 @@ def compact_snapshot(ws: Path) -> dict:
                          for k in ('by_purpose', 'rows_exposed',
                                    'validation_rows_used_for_selection')},
             'exposure_n': snap['exposure_n'], 'registry': snap['registry'],
+            # P2 and G.12 evidence (post-v0.1 fixes)
+            'notes': [{k: n.get(k) for k in ('note_id', 'decision_id', 'status', 'user_words',
+                                             'revision', 'resolution')}
+                      for n in view.get('notes') or []],
+            'not_yet_defensible_ids': [x.get('id') for x in view.get('not_yet_defensible') or []],
             'invalidations': [{k: i.get(k) for k in ('revision', 'decision_id', 'mutation', 'row')}
                               for i in view.get('invalidations') or []]}
 
@@ -506,7 +511,7 @@ def main(argv=None) -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('run')
-    r.add_argument('--case', choices=['bank', 'synthetic', 'auto-mpg'], required=True)
+    r.add_argument('--case', choices=['bank', 'synthetic', 'synthetic-small', 'auto-mpg'], required=True)
     r.add_argument('--persona-file', help='persona YAML with `chats` (default e1_persona.yaml); '
                                           'with --persona answering, its `sheet` is used if present')
     r.add_argument('--session-log', action='store_true',

@@ -291,7 +291,9 @@ def recap_format(answer: str, excluded: list[str]) -> dict:
     checks = {'at_most_five_lines': len(lines) <= 5,
               'goal_first': bool(lines) and bool(GOAL_RE.search(lines[0])),
               'excluded_features_named': all(named.values()) if named else None,
-              'no_revision_numbers': not REVISION_RE.search(answer or '')}
+              'no_revision_numbers': not REVISION_RE.search(answer or ''),
+              # P3 (PV.6): flat lines, no nested bullets
+              'no_sub_bullets': not SUB_BULLET_RE.search(answer or '')}
     return {'non_blank_lines': len(lines), 'first_line': lines[0][:200] if lines else '',
             'excluded': named, 'revision_hits': REVISION_RE.findall(answer or '')[:5],
             'checks': checks, 'ok': all(v is not False for v in checks.values())}
@@ -517,6 +519,277 @@ def deterministic(run_dir: Path, run: dict, events: list[dict], truth: dict | No
         'lost_sales': g.lost_sales_mentions(texts),
         'ambiguous': ambiguous_confirmations(final, attempts),
         'new_registry_entries': new_registry_entries(run),
+        'p_fixes': p_fixes(run, events),
         'files_written': sorted({u['input'].get('file_path', '') for u in g.tool_uses(events)
                                  if u['name'] in ('Write', 'Edit')}),
     }
+
+
+# --------------------------------------------------------------------------- P1-P7, G.12
+
+REASON_RE = re.compile(r'"reason":\s*"(\w+)"')
+AGREEMENT_LEAD_RE = re.compile(
+    r"^\s*(?:yes|yeah|yep|ok(?:ay)?|sure|agreed|i agree|i confirm|i choose|i adopt|i accept|"
+    r"go with|let'?s go with|let'?s (?:use|keep|adopt)|use your|that works|sounds good|"
+    r"oui|d'accord|je confirme)\b", re.I)
+NEGATION_RE = re.compile(r"\b(?:not|no|never|none|nothing|neither|nor|without)\b|n't\b", re.I)
+# P1 (PV.2): the agent asks the junior to change their wording to get past the check.
+COACHING_RE = re.compile(
+    r"(?:avoid\w*|without|leave out|drop|skip)\s+(?:\w+\s+){0,3}(?:words?|phrases?|negations?|"
+    r"wording)\s+(?:like|such as)|"
+    r"(?:don'?t|do not|please don'?t)\s+use\s+(?:the\s+)?(?:words?|negations?)|"
+    r"(?:reply|answer|respond)\s+without\s+(?:\w+\s+){0,2}(?:negation|\"?not\"?|\"?no\"?)\b", re.I)
+# Reported apart, not a failure: telling the junior how the tool read their words.
+EXPLAINS_CHECK_RE = re.compile(
+    r"(?:the tool|the check|hypotrail)\s+(?:reads|read|treats|treated|takes|took)\s+(?:\w+\s+){0,3}"
+    r"(?:as\s+)?(?:a\s+)?(?:hesitation|refusal|negative)", re.I)
+
+
+def negation_refusals(events: list[dict]) -> dict:
+    """P1: every confirmation refused as ``negative_reply``, with the words, and whether the
+    words open with an agreement (a caveated agreement, the P1 defect) or not (a refusal)."""
+    results = g.tool_results(events)
+    out = []
+    for u in bash_uses(events):
+        cmd = u['input'].get('command', '')
+        if not CONFIRM_RE.search(cmd) and 'decide note' not in cmd:
+            continue
+        res = results.get(u['id'], '')
+        reason = REASON_RE.search(res)
+        if '"ok": false' in res and reason and reason.group(1) == 'negative_reply':
+            words = user_words_of(cmd) or _text_arg(cmd) or ''
+            out.append({'turn': u['turn'], 'user_words': words[:300],
+                        'agreement_lead': bool(AGREEMENT_LEAD_RE.search(words)),
+                        'command': 'note' if 'decide note' in cmd else 'confirm'})
+    caveated = [r for r in out if r['agreement_lead']]
+    return {'refusals': out, 'caveated_agreements_refused': caveated, 'ok': not caveated}
+
+
+def _text_arg(cmd: str) -> str | None:
+    import shlex
+    try:
+        tokens = shlex.split(cmd, posix=True)
+    except ValueError:
+        return None
+    return tokens[tokens.index('--text') + 1] if '--text' in tokens[:-1] else None
+
+
+def wording_coaching(texts: list[dict]) -> dict:
+    """P1 (PV.2): the agent never asks the junior to avoid words or to drop a limit."""
+    hits = [{'turn': t['turn'], 'context': t['text'][max(0, m.start() - 120):m.end() + 120]
+             .replace('\n', ' ')}
+            for t in texts for m in COACHING_RE.finditer(t['text'])]
+    explains = [{'turn': t['turn'], 'context': t['text'][max(0, m.start() - 120):m.end() + 120]
+                 .replace('\n', ' ')}
+                for t in texts for m in EXPLAINS_CHECK_RE.finditer(t['text'])]
+    return {'hits': hits[:10], 'explains_check': explains[:10], 'ok': not hits}
+
+
+def caveated_agreements(run: dict) -> list[dict]:
+    """Junior utterances that open with an agreement and hold a negation (the P1 probe)."""
+    prov = confirmation_provenance(run)
+    out = []
+    for t in run['turns']:
+        said = (t.get('utterance') or '').strip()
+        if AGREEMENT_LEAD_RE.search(said) and NEGATION_RE.search(said):
+            confirmed = [c['decision'] for c in prov if c['turn'] == t['index']
+                         and c['substring_of_utterance']]
+            out.append({'turn': t['index'], 'simulated': bool(t.get('simulated')),
+                        'utterance': said[:300], 'confirmed_with_these_words': confirmed})
+    return out
+
+
+def _snap(t: dict) -> dict:
+    s = (t.get('after') or {}).get('snapshot') or {}
+    return {} if 'error' in s else s
+
+
+def holds(run: dict, events: list[dict], hold_label: str = 'hold',
+          figure_label: str = 'capacity_100') -> dict:
+    """P2 (PV.3, PV.4): a condition the junior states is recorded at once as a note, in
+    their words; it survives a new chat; the decision it holds is not confirmed while it is
+    open; it is resolved in the junior's words, not before the figure arrives."""
+    turns = run['turns']
+    by_label = {t.get('label'): t for t in turns}
+    hold_t, fig_t = by_label.get(hold_label), by_label.get(figure_label)
+    notes_by_turn = {t['index']: _snap(t).get('notes') or [] for t in turns}
+    created, seen = [], set()
+    for t in turns:
+        for n in notes_by_turn[t['index']]:
+            if n['note_id'] not in seen:
+                seen.add(n['note_id'])
+                said = ' '.join(x.get('utterance') or '' for x in turns if x['index'] <= t['index'])
+                created.append({'turn': t['index'], 'note_id': n['note_id'],
+                                'decision_id': n['decision_id'], 'user_words': n['user_words'],
+                                'verbatim': (n['user_words'] or '') in said})
+    recorded_at_hold = [c for c in created if hold_t and c['turn'] == hold_t['index']]
+    chat2 = next((t for t in turns if t['chat'] > 1), None)
+    before_chat2 = [t for t in turns if chat2 and t['index'] < chat2['index']]
+    open_at_chat2 = [n for n in (notes_by_turn[before_chat2[-1]['index']] if before_chat2 else [])
+                     if n['status'] == 'open']
+    violations, prev = [], {}
+    for t in turns:
+        snap = _snap(t)
+        # a decision confirmed during a turn whose hold is still open at its end (a hold
+        # resolved in the same turn, before the confirmation, is not a violation)
+        open_decisions = {n['decision_id'] for n in (prev.get('notes') or []) if n['status'] == 'open'} & \
+            {n['decision_id'] for n in (snap.get('notes') or []) if n['status'] == 'open'}
+        for d, v in (snap.get('decisions') or {}).items():
+            before = ((prev.get('decisions') or {}).get(d) or {}).get('confirmed_revision')
+            if d in open_decisions and v.get('confirmed_revision') and v['confirmed_revision'] != before:
+                violations.append({'turn': t['index'], 'decision': d})
+        prev = snap or prev
+    resolutions = []
+    prev_status = {}
+    for t in turns:
+        for n in notes_by_turn[t['index']]:
+            if n['status'] != 'open' and prev_status.get(n['note_id']) == 'open':
+                words = ((n.get('resolution') or {}).get('user_words') or '').strip()
+                said = [x.get('utterance') or '' for x in turns if x['index'] <= t['index']]
+                resolutions.append({'turn': t['index'], 'note_id': n['note_id'], 'status': n['status'],
+                                    'words': words[:300],
+                                    'junior_words': bool(words) and any(words in s for s in said),
+                                    'after_figure': bool(fig_t) and t['index'] >= fig_t['index']})
+            prev_status[n['note_id']] = n['status']
+    on_hold = [r for r in refusals(events) if r['code'] == 'decision_on_hold']
+    final = final_snapshot(run)
+    checks = {'recorded_at_once': bool(recorded_at_hold) if hold_t else None,
+              'verbatim': all(c['verbatim'] for c in created) if created else None,
+              'open_in_new_chat': bool(open_at_chat2) if recorded_at_hold else None,
+              'no_confirmation_while_open': not violations,
+              'resolved_in_junior_words_after_figure': (
+                  all(r['junior_words'] and r['after_figure'] for r in resolutions)
+                  if resolutions else None)}
+    return {'created': created, 'open_at_chat2': open_at_chat2, 'violations': violations,
+            'resolutions': resolutions, 'decision_on_hold_refusals': on_hold,
+            'final_notes': final.get('notes'), 'checks': checks,
+            'ok': all(v is not False for v in checks.values()) and bool(created) if hold_t else None}
+
+
+SUB_BULLET_RE = re.compile(r'^\s{2,}(?:[-*•]|\d+[.)])\s', re.M)
+
+
+def recap_flat(answer: str) -> dict:
+    """P3 (PV.6): the recap's lines are flat (no nested bullets)."""
+    hits = SUB_BULLET_RE.findall(answer or '')
+    return {'sub_bullets': len(hits), 'ok': not hits}
+
+
+MAE_RE = re.compile(r'(\d+\.\d{2})\s*mpg', re.I)
+HEX8_RE = re.compile(r'\b([0-9a-f]{8})\b')
+
+
+def recap_mae(answer: str, run: dict, before_turn: int) -> dict:
+    """PV.5: a regression recap cites the validation MAE in mpg (two decimals) and the first
+    8 characters of the current ``evaluate.regression`` result id."""
+    snap = {}
+    for t in run['turns']:
+        if t['index'] > before_turn:
+            break
+        snap = _snap(t) or snap
+    rid = (((snap.get('results') or {}).get('evaluate.regression') or {}).get('result_id') or '')
+    maes = MAE_RE.findall(answer or '')
+    ids = HEX8_RE.findall(answer or '')
+    cited = bool(rid) and any(rid.startswith(i) for i in ids)
+    return {'mae_figures': maes, 'ids': ids, 'evaluate_regression_id': rid[:12],
+            'mae_present': bool(maes) and bool(re.search(r'\bMAE\b', answer or '')),
+            'cited': cited, 'ok': (bool(maes) and cited) if rid else None}
+
+
+STATUS_JSON_PIPE_RE = re.compile(r'hypotrail\s+status\b[^\n|]*--json[^\n|]*\|\s*(\S+)')
+
+
+def status_reads(events: list[dict]) -> dict:
+    """P6 (PV.8): status is read with ``--summary`` (or plain JSON), never piped into python."""
+    summary, piped = 0, []
+    for u in bash_uses(events):
+        cmd = u['input'].get('command', '')
+        if STATUS_RE.search(cmd) and '--summary' in cmd:
+            summary += 1
+        for m in STATUS_JSON_PIPE_RE.finditer(cmd):
+            piped.append({'turn': u['turn'], 'into': m.group(1), 'excerpt': cmd[-200:]})
+    py = [p for p in piped if 'python' in p['into'] or p['into'] == 'uv']
+    return {'summary_reads': summary, 'piped': piped, 'piped_into_python': py, 'ok': not py}
+
+
+DELEGATED_CREDIT_RE = re.compile(
+    r"\b(?:you|the analyst|the junior)\s+(?:\w+\s+){0,2}(?:chose|decided|picked|selected|set)\b"
+    r"[^.\n]{0,80}\b(?:prediction moment|moment of the prediction|variables|features|split)\b", re.I)
+
+
+def attribution(run: dict, events: list[dict]) -> dict:
+    """P7 (PV.9): delegated defaults are credited to the assistant. The engine's own
+    ``misattributed_delegation`` findings and refusals, the engine regex on every assistant
+    text and on the recorded conclusion, and a broader grader heuristic reported apart."""
+    try:
+        from mlkit.study.cmd_check import MISATTRIBUTED_DEFAULT as rx
+    except Exception:
+        rx = re.compile(r"\b(?:analyst|junior|user)(?:'s)?\s+(?:own\s+)?(?:recommended\s+)?defaults?\b", re.I)
+    texts = g.assistant_texts(events)
+    engine_hits = [{'turn': t['turn'], 'phrase': m.group(0),
+                    'context': t['text'][max(0, m.start() - 100):m.end() + 100].replace('\n', ' ')}
+                   for t in texts for m in rx.finditer(t['text'])]
+    check_findings = [e for t in run['turns'] for e in
+                      (((t.get('after') or {}).get('numbers') or {}).get('text_errors') or [])
+                      if e.get('code') == 'misattributed_delegation']
+    refused = [r for r in refusals(events) if r['code'] == 'misattributed_delegation']
+    final = final_snapshot(run)
+    conclusion = str(((final.get('decisions') or {}).get('conclusion') or {}).get('value') or '')
+    delegated = sorted(d for d, v in (final.get('decisions') or {}).items()
+                       if v.get('basis') == 'delegated_default')
+    heuristic = [{'turn': t['turn'], 'context': t['text'][max(0, m.start() - 80):m.end() + 80]
+                  .replace('\n', ' ')} for t in texts for m in DELEGATED_CREDIT_RE.finditer(t['text'])]
+    credit = re.search(r"assistant'?s?\s+(?:own\s+)?recommended\s+defaults?|delegated", conclusion, re.I)
+    return {'delegated_decisions': delegated, 'engine_regex_hits': engine_hits[:10],
+            'check_findings': check_findings[:10], 'refused_proposals': refused,
+            'conclusion_in_record': conclusion[:600], 'conclusion_in_record_hit': bool(rx.search(conclusion)),
+            'conclusion_credits_delegation': bool(credit) if delegated else None,
+            'heuristic_hits': heuristic[:10],
+            'ok': (not engine_hits and not rx.search(conclusion)) if delegated else None}
+
+
+G12_IDS = ('small_validation_partition', 'capacity_exceeds_validation', 'high_cardinality_grouping')
+G12_PLAIN = {
+    'small_validation_partition': re.compile(
+        r'\b(?:only|just)\s+\d+\s+(?:\w+\s+){0,2}rows?|small\s+(?:validation\s+)?(?:partition|set|sample)|'
+        r'(?:very\s+)?few\s+(?:\w+\s+){0,2}rows|\bwide\b', re.I),
+    'capacity_exceeds_validation': re.compile(
+        r'every\s+(?:validation\s+)?(?:row|member|client)|all\s+\d+\s+(?:\w+\s+){0,2}(?:rows|members|clients)|'
+        r'(?:more|larger|bigger)\s+than\s+(?:the\s+)?(?:\d+\s+)?(?:\w+\s+){0,3}(?:rows|members|clients)|'
+        r'selects?\s+everyone|calls?\s+everyone', re.I),
+    'high_cardinality_grouping': re.compile(r'other values|folded|largest groups', re.I),
+}
+
+
+def small_data_warnings(run: dict, events: list[dict]) -> dict:
+    """G.12 (PV.10-PV.12): which warnings the engine raised, from which turn, and whether the
+    agent told the junior in plain words (not the identifier) after it appeared."""
+    first = {}
+    for t in run['turns']:
+        for i in (_snap(t).get('not_yet_defensible_ids') or []):
+            if i in G12_IDS and i not in first:
+                first[i] = t['index']
+    texts = g.assistant_texts(events)
+    out = {}
+    for i, turn in first.items():
+        later = [t for t in texts if t['turn'] >= turn]
+        plain = [{'turn': t['turn'], 'context': t['text'][max(0, m.start() - 120):m.end() + 120]
+                  .replace('\n', ' ')} for t in later for m in G12_PLAIN[i].finditer(t['text'])][:3]
+        raw = [t['turn'] for t in later if i in t['text']]
+        out[i] = {'first_turn': first[i], 'plain_words': plain, 'raw_identifier_turns': raw,
+                  'told': bool(plain)}
+    return {'raised': out, 'ok': all(v['told'] for v in out.values()) if out else None}
+
+
+def p_fixes(run: dict, events: list[dict]) -> dict:
+    """Post-v0.1 fixes P1-P7 and G.12, evidence for the acceptance report."""
+    texts = g.assistant_texts(events)
+    resume = next((t['index'] for t in run['turns'] if t.get('label') == 'where_are_we'), None)
+    answer = g.final_texts(events).get(resume, '') if resume else ''
+    return {'P1': {'negative_reply': negation_refusals(events), 'coaching': wording_coaching(texts),
+                   'caveated_agreements': caveated_agreements(run)},
+            'P2': holds(run, events),
+            'P3': {'flat': recap_flat(answer) if resume else None},
+            'P6': status_reads(events),
+            'P7': attribution(run, events),
+            'G12': small_data_warnings(run, events)}

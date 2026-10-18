@@ -210,6 +210,21 @@ def _load_make_case():
     return module.make_case
 
 
+SMALL_ROWS = 60
+
+
+def small_case(case_yaml: Path, data_csv: Path, keep: int) -> None:
+    """Keep the first ``keep`` data rows of a generated case, in place, and update the case
+    contract's row count and checksum (hidden copy; truth.json is left as generated)."""
+    import hashlib
+    lines = Path(data_csv).read_bytes().splitlines(keepends=True)
+    data = b''.join(lines[:keep + 1])
+    Path(data_csv).write_bytes(data)
+    doc = yaml.safe_load(Path(case_yaml).read_text(encoding='utf-8'))
+    doc['dataset'].update(rows=keep, sha256=hashlib.sha256(data).hexdigest())
+    Path(case_yaml).write_text(yaml.safe_dump(doc, sort_keys=False, width=100), encoding='utf-8')
+
+
 def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
                  seed: int = 20261018) -> dict:
     """Copy the case into ``workspace/case`` and write the neutral README. No init."""
@@ -235,7 +250,7 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
                 'target': 'mpg', 'positive': None, 'case_yaml': 'case/case.yaml',
                 'files': ['README.md', 'case/case.yaml', 'case/data/auto-mpg.data',
                           'case/data/auto-mpg.names']}
-    if case == 'synthetic':
+    if case in ('synthetic', 'synthetic-small'):
         from importlib import util as _u   # noqa: F401  (keeps the import local)
         if hidden_dir is None:
             raise ValueError('synthetic case needs a hidden directory for truth.json')
@@ -243,7 +258,13 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
         if ws.resolve() == hidden or ws.resolve() in hidden.parents:
             raise ValueError('the hidden truth directory must be outside the workspace')
         hidden.mkdir(parents=True, exist_ok=True)
-        paths = _load_make_case()(hidden, seed=seed)
+        if case == 'synthetic-small':
+            # G.12 acceptance: make_case refuses fewer than 100 rows, so (as in
+            # test_perturbations) a 100-row case is generated and its first rows are kept.
+            paths = _load_make_case()(hidden, seed=seed, n_rows=100)
+            small_case(paths['case'], paths['data'], SMALL_ROWS)
+        else:
+            paths = _load_make_case()(hidden, seed=seed)
         dest.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(paths['case'], dest / 'case.yaml')
         doc = yaml.safe_load(paths['case'].read_text(encoding='utf-8'))
@@ -258,7 +279,8 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
                                                'by the study tool.\n\n## Scenario', 1)
         (ws / 'README.md').write_text(readme, encoding='utf-8')
         assert not any(p.name == 'truth.json' for p in ws.rglob('*'))
-        return {'case': 'synthetic', 'data': f"case/{doc['dataset']['path']}", 'sep': ';',
+        return {'case': 'synthetic', 'variant': case, 'data': f"case/{doc['dataset']['path']}",
+                'sep': ';',
                 'target': 'outcome', 'positive': 'renewed', 'seed': seed,
                 'case_yaml': 'case/case.yaml', 'truth_path': str(paths['truth']),
                 'files': ['README.md', 'case/case.yaml', f"case/{doc['dataset']['path']}"]}
