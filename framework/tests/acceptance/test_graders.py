@@ -708,3 +708,6 @@ def test_post_v01_personas_carry_their_probes():
     assert labels[:3] == ['intent', 'model_year', 'accept_plan']
     assert 'intent' not in early['answer_after']
     assert len(e1.persona_chats(AGENT / 'e1_persona_conditions.yaml')) == 2
+    small = yaml.safe_load((AGENT / 'e1_persona_small.yaml').read_text())
+    plan = next(s['say'] for s in small['chats'][0] if s['label'] == 'accept_plan')
+    assert '30% of the rows for validation' in plan and 'sheet' in small
