@@ -1,0 +1,74 @@
+# How each activity's result is shown. ``highlights`` name value paths (``a.b``,
+# ``rules.[threshold:x].precision``; see mlkit.study.cite) with a label and a format;
+# a path absent from the result is skipped. ``table`` renders a list of rows.
+# Every number is cited from the registry. Formats: int, pct0, pct1, pct2, f1, f2, f3,
+# f4, auto. A ``kind: text`` column is shown as recorded (a category label).
+schema: hypotrail.content.activities/1
+activities:
+  split:
+    label: Split
+    glossary: stratified_split
+    highlights:
+      - {path: train_rows, label: Training rows, fmt: int}
+      - {path: validation_rows, label: Validation rows, fmt: int}
+      - {path: train_positives, label: Positive rows in training, fmt: int}
+      - {path: validation_positives, label: Positive rows in validation, fmt: int}
+      - {path: train_rate, label: Positive share in training, fmt: pct1}
+      - {path: validation_rate, label: Positive share in validation, fmt: pct1}
+  eda.target_rate:
+    label: Target rate on training rows
+    glossary: base_rate
+    highlights:
+      - {path: rate, label: Positive share, fmt: pct1}
+      - {path: positives, label: Positive rows, fmt: int}
+      - {path: rows, label: Rows read, fmt: int}
+  eda.special_values:
+    label: Special values on training rows
+    glossary: special_value
+    highlights:
+      - {path: co_occurrence.rows, label: Rows where the codes co-occur, fmt: int}
+    table:
+      rows: values
+      columns:
+        - {key: column, label: Variable, kind: text}
+        - {key: value, label: Code, kind: text}
+        - {key: rows, label: Rows, fmt: int}
+        - {key: share, label: Share, fmt: pct1}
+  eda.rate_by:
+    label: Target rate by group on training rows
+    glossary: base_rate
+    table:
+      rows: groups
+      columns:
+        - {key: value, label: Group, kind: text}
+        - {key: rows, label: Rows, fmt: int}
+        - {key: positives, label: Positive rows, fmt: int}
+        - {key: rate, label: Positive share, fmt: pct1}
+        - {key: warning, label: Note, kind: text}
+  fit.baseline:
+    label: Constant baseline
+    glossary: baseline
+    highlights:
+      - {path: auc, label: Ranking quality on validation (AUC), fmt: f3}
+      - {path: prior, label: Constant score, fmt: f3}
+      - {path: n, label: Validation rows scored, fmt: int}
+  fit.logistic:
+    label: Logistic model
+    glossary: logistic_regression
+    highlights:
+      - {path: auc, label: Ranking quality on validation (AUC), fmt: f3}
+      - {path: n, label: Validation rows scored, fmt: int}
+      - {path: n_positive, label: Positive rows in validation, fmt: int}
+  policy.evaluation:
+    label: Policy evaluation on validation rows
+    glossary: policy
+    highlights:
+      - {path: n, label: Validation rows, fmt: int}
+      - {path: n_positive, label: Positive rows in validation, fmt: int}
+# Metrics of a policy rule, in display order (render_html.policy_section).
+policy_metrics:
+  - {key: volume, label: Volume, fmt: auto, glossary: volume}
+  - {key: volume_rate, label: Volume share, fmt: pct1, glossary: volume}
+  - {key: true_positives, label: Positive rows reached, fmt: auto}
+  - {key: precision, label: Precision, fmt: pct1, glossary: precision}
+  - {key: recall, label: Recall, fmt: pct1, glossary: recall}

@@ -1,0 +1,52 @@
+# One section per plan step (plan §6): concept (term first, then a contextual
+# explanation), method, interpretation, consequence. The question comes from the plan
+# itself (state.STEPS).
+# Templates: {{fact:<id>|<fallback>}} quotes a case statement; {{slot:<slot>:<path>|<fmt>}}
+# cites a current result by slot (see mlkit.study.cite). No literal digits: numbers
+# come from the registry.
+schema: hypotrail.content.steps/1
+steps:
+  prediction_time:
+    concept: prediction_time
+    context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
+    method: You state the moment in your own words; the agent restates it and records your answer. No data are read.
+    interpretation: Every later step is judged against this moment.
+    consequence: Changing it later makes the availability decision, the policy, and the conclusion need confirmation again.
+  feature_availability:
+    concept: feature_availability
+    context: "The case describes one row as: {{fact:observation_unit|not stated by the case}}. For each variable you decide whether it is known at the prediction moment."
+    method: Each candidate variable gets one status. Uncertain variables are either excluded or included and listed as a limit.
+    interpretation: Variables marked not available, or uncertain and excluded, never enter a model.
+    consequence: A change that alters the set of usable variables refits the logistic model and asks for the policy again.
+  split:
+    concept: stratified_split
+    context: The split is fixed before any exploration of the outcome, so that validation rows stay apart from fitting.
+    method: A stratified random split with a recorded seed. The rows read are recorded as exposure.
+    interpretation: "Training rows: {{slot:split:train_rows|int}}. Validation rows: {{slot:split:validation_rows|int}}."
+    consequence: Changing the split refits both models and recomputes the exploration; rows already explored stay exposed.
+  train_eda:
+    concept: base_rate
+    context: "The outcome is: {{fact:target|not stated by the case}}. Exploration reads training rows only."
+    method: The target rate and the special values are computed on the training partition, with their denominators.
+    interpretation: "In the training rows, the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows. A model has to beat this base rate to be useful."
+    consequence: Special values become explicit indicators in the model instead of ordinary numbers.
+  models:
+    concept: baseline
+    context: A constant baseline and a logistic model are fitted on training rows and scored on validation rows.
+    method: Predictions on validation rows are stored, so a new policy never requires a refit.
+    interpretation: The comparison is made on validation rows, which are then no longer independent evidence.
+    consequence: The policy step reads these stored predictions.
+  policy:
+    concept: policy
+    context: "The intended use is: {{fact:intended_use|not stated by the case}}. A policy turns scores into a number of actions the team can handle."
+    method: Each rule is evaluated on the stored validation predictions, with ties at the cut counted pro rata and paired bootstrap intervals.
+    interpretation: The figures describe these validation rows after a choice made on them; they are optimistic and are not a forecast.
+    consequence: Adopting a different threshold or capacity recomputes the evaluation without refitting any model.
+  conclusion:
+    concept: confirmed_decision
+    context: The conclusion says what can be claimed, for which use, and with which limits.
+    method: You choose a verdict and write the text; keeping the baseline or calling the study inconclusive are valid results.
+    interpretation: The conclusion rests on validation rows that were used for selection.
+    consequence: The limits listed under "What is not yet defensible" stay attached to it.
+pending: Not executed yet.
+stale: Stale, not cited.

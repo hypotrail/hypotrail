@@ -1,0 +1,83 @@
+# Glossary of the junior study (plan §9 bis: teaching texts are data, not code).
+# Each entry introduces the statistical term first, then explains it.
+# No digits here: every number shown to the junior comes from a registry result.
+schema: hypotrail.content.glossary/1
+terms:
+  prediction_time:
+    term: Prediction time
+    definition: The moment when the score is computed and acted on. Only information known at that moment may enter the model.
+  leakage:
+    term: Leakage
+    definition: A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.
+  feature_availability:
+    term: Feature availability
+    definition: Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.
+  validation_partition:
+    term: Validation partition
+    definition: Rows held apart from model fitting and used to compare models and choose a policy. Once used to choose, they are no longer independent evidence.
+  stratified_split:
+    term: Stratified split
+    definition: A random division of the rows that keeps the share of the positive outcome similar in the training and validation partitions.
+  exposure:
+    term: Data exposure
+    definition: The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.
+  base_rate:
+    term: Base rate
+    definition: The share of rows with the positive outcome. Any model must be compared with what this share alone would give.
+  special_value:
+    term: Special value
+    definition: A code that stands for something other than a measurement, such as "never" or "unknown". Treating it as an ordinary number distorts a model.
+  baseline:
+    term: Baseline
+    definition: The simplest reference model, a constant score equal to the training base rate. Keeping the baseline is a valid conclusion.
+  logistic_regression:
+    term: Logistic regression
+    definition: A model that turns a weighted sum of the features into a score between zero and one. It ranks rows; its scores are not calibrated probabilities unless that is checked.
+  score:
+    term: Score
+    definition: The number a model gives to each row to rank it. A higher score places the row earlier in the queue.
+  policy:
+    term: Decision policy
+    definition: The rule that turns scores into actions, either a threshold on the score or a fixed capacity of rows to act on.
+  threshold:
+    term: Threshold rule
+    definition: Act on every row whose score is at least the threshold. The number of actions then depends on the data.
+  capacity:
+    term: Capacity rule
+    definition: Act on a fixed number of the highest-scored rows, matching what the team can actually handle.
+  precision:
+    term: Precision
+    definition: Among the rows acted on, the share that turned out positive.
+  recall:
+    term: Recall
+    definition: Among all positive rows, the share the policy reached.
+  volume:
+    term: Volume
+    definition: How many rows the policy acts on, also shown as a share of the partition.
+  tie_at_cut:
+    term: Tie at the cut
+    definition: Rows with exactly the score at the cut-off. They are counted pro rata, as an expected value, rather than broken arbitrarily.
+  paired_bootstrap:
+    term: Paired bootstrap
+    definition: Resampling the same validation rows for both policies at once, so the interval describes their difference rather than each one separately.
+  percentile_interval:
+    term: Percentile interval
+    definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.
+  selection_on_validation:
+    term: Selection on validation
+    definition: Choosing a model, a threshold, or a capacity by looking at validation results. The chosen figures are optimistic for that reason.
+  documented_fact:
+    term: Documented fact
+    definition: A statement backed by the dataset documentation, with its source.
+  scenario_assumption:
+    term: Scenario assumption
+    definition: A statement the scenario takes as given without evidence. It can be challenged and is never a decision.
+  confirmed_decision:
+    term: Confirmed decision
+    definition: A choice recorded with the user's own words in reply to a restatement. The engine records the words; it cannot verify who typed them.
+  proposal:
+    term: Proposal
+    definition: A restated choice waiting for the user's answer. It is not a decision until it is confirmed.
+  stale_result:
+    term: Stale result
+    definition: A result computed under decisions that have since changed. It is kept for the record but is not cited.
