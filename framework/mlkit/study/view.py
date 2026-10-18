@@ -30,7 +30,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
                       'revision', 'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated')
+                          'revision', 'time', 'authenticated', 'basis')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
@@ -48,7 +48,8 @@ def _decisions(state: dict) -> dict:
         out[d] = {'decision_id': d, 'status': dec['status'], 'value': dec['value'],
                   'proposal_id': dec['proposal_id'], 'depends_on': list(dec['depends_on']),
                   'revision': dec['revision'], 'reason': dec['reason'],
-                  'confirmation': ({k: conf.get(k) for k in CONFIRMATION_VIEW_KEYS}
+                  'confirmation': ({**{k: conf.get(k) for k in CONFIRMATION_VIEW_KEYS},
+                                    'basis': st.confirmation_basis(conf)}
                                    if isinstance(conf, dict) else None),
                   'open_proposals': sorted(p['proposal_id'] for p in st.open_proposals(state)
                                            if p['decision_id'] == d)}

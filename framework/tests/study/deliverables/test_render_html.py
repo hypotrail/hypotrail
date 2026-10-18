@@ -206,3 +206,37 @@ def test_teaching_texts_are_data_without_digits():
         assert texts.glossary(s['concept']), s['concept']
     for slot, spec in texts.load('activities')['activities'].items():
         assert texts.glossary(spec['glossary']), slot
+
+
+def test_a_delegated_decision_is_shown_as_delegated(tmp_path, synthetic_case_dir):
+    """D1: the report, the notebook and the view show a delegation distinctly from the
+    junior's own decision, and the check still finds nothing to report."""
+    from mlkit.study import cmd_check, cmd_render, notebook_view, read
+
+    b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='prediction_time')
+    words = 'Use your recommended default and tell me what you assumed.'
+    out = b.decide('feature_availability',
+                   {f: 'available_at_prediction' for f in fx.features_of(synthetic_case_dir)},
+                   'My recommended default: every variable is known at expiry.', words,
+                   basis='delegated_default')
+    assert out.exit_code == 0, out.payload
+    cmd_render.render_all(b.study)
+    v = view.build(b.study)
+    assert v['decisions']['feature_availability']['confirmation']['basis'] == 'delegated_default'
+    assert v['decisions']['prediction_time']['confirmation']['basis'] == 'explicit'
+    page = (b.study / 'reports' / 'study.html').read_text()
+    article = page[page.index('data-decision="feature_availability"'):]
+    article = article[:article.index('</article>')]
+    import html as h
+    labels = {k: h.escape(v) for k, v in texts.report().items() if isinstance(v, str)}
+    assert 'data-basis="delegated_default"' in article and labels['delegated'] in article
+    assert labels['delegated_note'] in article
+    explicit = page[page.index('data-decision="prediction_time"'):]
+    assert 'data-basis="explicit"' in explicit[:explicit.index('</article>')]
+    assert 'data-nyd="delegated_decisions"' in page
+    html = notebook_view.decision_html(read.open(b.study), 'feature_availability')
+    assert labels['delegated_words'] in html and 'data-basis="delegated_default"' in html
+    assert labels['user_words'] in notebook_view.decision_html(read.open(b.study),
+                                                               'prediction_time')
+    errors = [f for f in cmd_check.run_check(b.study)['findings'] if f['severity'] == 'error']
+    assert errors == []

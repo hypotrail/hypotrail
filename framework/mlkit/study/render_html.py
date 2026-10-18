@@ -56,7 +56,8 @@ REPORT_CSS = '''
 data{font-variant-numeric:tabular-nums;font-weight:650;border-bottom:1px dotted var(--muted);color:var(--ink)}
 .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.02em;border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin-right:8px;background:var(--soft);color:var(--ink)}
 .badge.confirmed{border-color:var(--accent)}
-.badge.proposed,.badge.reconfirm_required,.badge.stale,.badge.failed{border-style:dashed;border-color:var(--amber)}
+.badge.proposed,.badge.reconfirm_required,.badge.stale,.badge.failed,.badge.delegated{border-style:dashed;border-color:var(--amber)}
+.words.delegated{border-left-color:var(--amber);border-left-style:dashed}
 .status-label{font-weight:650;color:var(--ink)}
 .plan li{margin:10px 0}
 .plan li.current{border-left:3px solid var(--accent);padding-left:10px}
@@ -154,7 +155,18 @@ def _plan(view: Mapping) -> str:
 
 def _confirmation(conf: Mapping) -> str:
     labels = _labels()
-    return (f'<div class="words"><strong>{e(labels["user_words"])}:</strong> '
+    if conf.get('basis') == 'delegated_default':
+        return (f'<div class="words delegated" data-basis="delegated_default">'
+                f'{_badge("delegated", labels["delegated"])}'
+                f'<strong>{e(labels["delegated_words"])}:</strong> '
+                f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
+                f'<br><span class="small">{e(labels["delegated_note"])}</span>'
+                f'<br><span class="small">Channel {lit("identifier", conf.get("channel"))}, actor '
+                f'{lit("identifier", conf.get("actor"))}, at revision '
+                f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>'
+                f'<br><span class="small">{e(labels["delegated_restatement"])}: '
+                f'{lit("proposal", conf.get("restatement", ""))}</span></div>')
+    return (f'<div class="words" data-basis="explicit"><strong>{e(labels["user_words"])}:</strong> '
             f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
             f'<br><span class="small">Channel {lit("identifier", conf.get("channel"))}, actor '
             f'{lit("identifier", conf.get("actor"))}, at revision '

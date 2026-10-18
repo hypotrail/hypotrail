@@ -80,13 +80,14 @@ class Builder:
         self.outcomes.append(out)
         return out
 
-    def decide(self, decision_id, value, restatement, words) -> cmd.Outcome:
+    def decide(self, decision_id, value, restatement, words, basis='explicit') -> cmd.Outcome:
         out = self.apply(cmd.ACTION_PROPOSE, {'decision_id': decision_id, 'value': value,
                                               'restatement': restatement,
                                               'rationale': 'The agent recommends it.'})
         pid = out.payload['result']['proposal_id']
         return self.apply(cmd.ACTION_CONFIRM, {'proposal_id': pid, 'user_words': words,
-                                               'channel': 'chat', 'actor': 'user'})
+                                               'channel': 'chat', 'actor': 'user',
+                                               'basis': basis})
 
     def put(self, slot, values, *, params=None, inputs=None, blobs=None, partition='train',
             purpose='train_eda', keys=None, promote=True) -> str:

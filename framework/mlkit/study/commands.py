@@ -20,7 +20,11 @@ Decision actions:
   and an open proposal created by an earlier request whose basis (the confirmed
   decisions it rests on) is unchanged. Otherwise it refuses with
   ``ambiguous_confirmation``. It checks the three-pause preconditions, applies the
-  §3.7 dependency table, and records the invalidation.
+  §3.7 dependency table, and records the invalidation. Its ``basis`` says how the
+  user decided: ``explicit`` (their own reply to the restatement, the default) or
+  ``delegated_default`` (they explicitly delegated to the assistant's recommended
+  default, which the restatement must state; the decision is then listed in
+  ``not_yet_defensible``).
 * ``decide.withdraw``: closes an open proposal.
 
 pandas is never imported here, so ``status`` and ``plan`` stay fast.
@@ -60,10 +64,11 @@ ACTION_PROPOSE = 'decide.propose'
 ACTION_CONFIRM = 'decide.confirm'
 ACTION_WITHDRAW = 'decide.withdraw'
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
-CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor'})
+CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis'})
 WITHDRAW_PARAMS = frozenset({'proposal_id', 'reason'})
 DEFAULT_CHANNEL = 'chat'
 DEFAULT_ACTOR = 'user'
+DEFAULT_BASIS = st.DEFAULT_BASIS
 
 SPLIT_METHODS = ('stratified_random',)
 SPLIT_KEYS = ('method', 'validation_fraction', 'seed')
@@ -267,6 +272,52 @@ def is_bare_acknowledgement(words: str) -> bool:
     return all(t in ACKNOWLEDGEMENT_WORDS for t in tokens)
 
 
+# A reply that hands the choice to the assistant's recommendation (D1). It must name the
+# assistant's default or recommendation, or the act of leaving the choice to it: "go with
+# it", "ok", or "garde ça" never delegate.
+DELEGATION = re.compile(r"""
+    \b(?:use|go\s+with|take|follow|pick|stick\s+with|keep|accept|choose|apply)\s+
+        (?:your|the\s+assistant'?s?)\s+(?:own\s+)?(?:recommended\s+)?
+        (?:defaults?|recommendations?|suggestions?|choice|pick|proposal)\b
+  | \b(?:your|the\s+assistant'?s?)\s+(?:recommended\s+)?defaults?\b
+  | \b(?:use|take|keep|go\s+with|stick\s+with|accept)\s+the\s+(?:recommended\s+)?defaults?\b
+  | \bwhat(?:ever)?\s+you\s+(?:recommend|suggest|propose|think\s+is\s+best)\b
+  | \b(?:it'?s|that'?s|is)\s+up\s+to\s+you\b | \byour\s+call\b
+  | \bi(?:'ll|\s+will)?\s+leave\s+(?:it|that|this|the\s+choice)\s+(?:up\s+)?to\s+you\b
+  | \b(?:let\s+you|you\s+can|you\s+may)\s+(?:decide|choose|pick)\b
+  | \byou\s+(?:decide|choose|pick)\s+for\s+me\b
+  | \bje\s+(?:te|vous)\s+laisse\s+(?:choisir|d[ée]cider|faire)\b
+  | \b(?:prends|prenez|garde|gardez|utilise|utilisez|suis|suivez|retiens|retenez|applique|appliquez)\s+
+        (?:ta|votre|ton|tes|vos)\s+(?:recommandations?|propositions?|choix|d[ée]fauts?|
+        valeurs?\s+par\s+d[ée]faut)\b
+  | \b(?:valeur|choix|option)\s+par\s+d[ée]faut\b
+  | \bcomme\s+(?:tu\s+(?:veux|recommandes|proposes)|vous\s+(?:voulez|recommandez|proposez))\b
+  | \b[àa]\s+(?:toi|vous)\s+de\s+(?:voir|choisir|d[ée]cider)\b
+""", re.IGNORECASE | re.VERBOSE)
+# A restatement that says it is the assistant's recommended default, the only kind a
+# delegation can confirm: the junior must know what they delegated (D1).
+STATES_DEFAULT = re.compile(r"""
+    \brecommended\s+default\b
+  | \bdefault\s+(?:that\s+)?(?:i|we|the\s+assistant)\s+recommends?\b
+  | \bassistant'?s\s+(?:recommended\s+)?default\b
+  | \bd[ée]faut\s+recommand[ée]e?\b
+  | \brecommandation\s+par\s+d[ée]faut\b
+""", re.IGNORECASE | re.VERBOSE)
+
+
+def is_delegation(words: str) -> bool:
+    """True when ``words`` explicitly delegate the choice to the assistant's recommended
+    default ("use your recommended default", "je te laisse choisir"); a bare
+    acknowledgement never does."""
+    return isinstance(words, str) and not is_bare_acknowledgement(words) \
+        and bool(DELEGATION.search(words))
+
+
+def states_default(restatement: str) -> bool:
+    """True when a restatement says it is the assistant's recommended default."""
+    return isinstance(restatement, str) and bool(STATES_DEFAULT.search(restatement))
+
+
 def basis(state: Mapping, decision_id: str) -> dict:
     """Confirmed values a proposal rests on (its ``depends_on`` decisions)."""
     out = {}
@@ -354,6 +405,19 @@ def _confirm(ctx: Context) -> Handler:
                              'A bare acknowledgement is not a decision. Restate the proposal and '
                              'ask the user to answer it in their own words.',
                              user_words=words)
+        if params['basis'] not in st.CONFIRMATION_BASES:
+            raise _invalid(f'basis is one of {", ".join(st.CONFIRMATION_BASES)}.')
+        if params['basis'] == st.DELEGATED_DEFAULT and not is_delegation(words):
+            raise _ambiguous('not_a_delegation',
+                             'These words do not delegate the choice to your recommended default. '
+                             'Only an explicit delegation ("use your recommended default") can be '
+                             'confirmed with basis delegated_default.', user_words=words)
+        if params['basis'] == st.EXPLICIT and is_delegation(words):
+            raise _ambiguous('delegation_needs_basis',
+                             'These words delegate the choice to the assistant. Restate the '
+                             'proposal as your recommended default and confirm it with --basis '
+                             'delegated_default, so the study shows it was delegated.',
+                             user_words=words)
         if params['channel'] not in st.CHANNELS:
             raise _invalid(f'channel is one of {", ".join(st.CHANNELS)}.')
         if not isinstance(params['actor'], str) or not params['actor'].strip():
@@ -374,6 +438,12 @@ def _confirm(ctx: Context) -> Handler:
         if proposal.get('request_id') == ctx.request_id or proposal['revision'] > state['revision']:
             raise _ambiguous('same_request', 'A proposal is confirmed by a later request than the '
                                              'one that created it.', proposal_id=pid)
+        if params['basis'] == st.DELEGATED_DEFAULT and not states_default(proposal['restatement']):
+            raise _ambiguous('restatement_not_default',
+                             f'Proposal {pid} does not say it is the assistant\'s recommended '
+                             f'default, so a delegation cannot confirm it. Propose again with a '
+                             f'restatement that states the recommended default.',
+                             proposal_id=pid, restatement=proposal['restatement'])
         decision_id, value = proposal['decision_id'], proposal['value']
         current_basis = basis(state, decision_id)
         if proposal.get('basis', current_basis) != current_basis:
@@ -399,7 +469,7 @@ def _confirm(ctx: Context) -> Handler:
                 closed_reason=f'replaced by {pid}')
         confirmation = st.confirmation(user_words=params['user_words'], proposal=proposal,
                                        channel=params['channel'], actor=params['actor'],
-                                       revision=revision)
+                                       revision=revision, basis=params['basis'])
         proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
         decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=pid,
                         confirmation=confirmation, revision=revision, reason=None)
@@ -410,7 +480,8 @@ def _confirm(ctx: Context) -> Handler:
                 'channel': params['channel'], 'actor': params['actor'],
                 'invalidation': {k: record[k] for k in ('mutation', 'row', 'reason',
                                                          'stale_results', 'stale_slots',
-                                                         'reconfirm_required')}}
+                                                         'reconfirm_required')},
+                'basis': params['basis']}
     return Handler(CONFIRM_PARAMS, run, check)
 
 

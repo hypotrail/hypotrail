@@ -83,8 +83,12 @@ def decision_html(study: read.Study, decision_id: str) -> str:
     d = view_model.build(study)['decisions'][decision_id]
     out = f'<p><strong>Decision.</strong> {e(labels["decision_status"][d["status"]])}'
     if d['confirmation'] and d['status'] == 'confirmed':
-        out += (f' — {e(labels["user_words"])}: <q data-literal="user_words">'
+        delegated = d['confirmation'].get('basis') == 'delegated_default'
+        label = labels['delegated_words'] if delegated else labels['user_words']
+        out += (f' — {e(label)}: <q data-literal="user_words">'
                 f'{e(d["confirmation"]["user_words"])}</q>')
+        if delegated:
+            out += f' <em data-basis="delegated_default">{e(labels["delegated_note"])}</em>'
     return out + '</p>'
 
 

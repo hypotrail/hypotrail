@@ -31,12 +31,13 @@ hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
                  --restatement TEXT --rationale TEXT
                  --request-id ID --expected-revision REV --study DIR
 hypotrail decide confirm PROPOSAL --user-words TEXT [--channel chat|cli|webview] [--actor NAME]
+                 [--basis explicit|delegated_default]
                  --request-id ID --expected-revision REV --study DIR
 hypotrail decide withdraw PROPOSAL [--reason TEXT]
                  --request-id ID --expected-revision REV --study DIR
 ```
 
-`--channel` defaults to `chat` and `--actor` to `user`. Reserved extension commands, absent in Phase 1 and refused with `unsupported_capability` until their module exists: `run`, `render`, `check`, `preview` (§8). Phase 3 adds `render` and `check` (§8.3).
+`--channel` defaults to `chat`, `--actor` to `user`, and `--basis` to `explicit` (§5). Reserved extension commands, absent in Phase 1 and refused with `unsupported_capability` until their module exists: `run`, `render`, `check`, `preview` (§8). Phase 3 adds `render` and `check` (§8.3).
 
 ## 2. Exit codes
 
@@ -88,7 +89,7 @@ Each item of `plan.steps` and `view.plan` has the keys `id`, `title`, `question`
 | Action | `result` keys |
 |---|---|
 | `decide.propose` | `proposal_id`, `decision_id`, `status` (`open`), `decision_status`, `superseded`, `restatement` |
-| `decide.confirm` | `decision_id`, `proposal_id`, `status` (`confirmed`), `value`, `user_words`, `channel`, `actor`, `invalidation` |
+| `decide.confirm` | `decision_id`, `proposal_id`, `status` (`confirmed`), `value`, `user_words`, `channel`, `actor`, `invalidation`, `basis` |
 | `decide.withdraw` | `proposal_id`, `decision_id`, `status` (`withdrawn`), `decision_status` |
 
 `invalidation` is `{mutation, row, reason, stale_results, stale_slots, reconfirm_required}` (§6). Proposal ids are `p_<n>`, assigned in order.
@@ -120,11 +121,11 @@ Each item of `plan.steps` and `view.plan` has the keys `id`, `title`, `question`
 | `not_yet_defensible` | List of `{id, text, ...}` (plan §6) |
 | `settings` | `{bootstrap: {replicates, seed, level}}` |
 
-`decisions.*.confirmation` is `null` or `{user_words, channel, actor, restatement, proposal_id, revision, time, authenticated}`. `authenticated` is always `false`: the engine records words, it cannot verify who typed them. Decision status is one of `open`, `proposed`, `confirmed`, `reconfirm_required`, `superseded`.
+`decisions.*.confirmation` is `null` or `{user_words, channel, actor, restatement, proposal_id, revision, time, authenticated, basis}`. `authenticated` is always `false`: the engine records words, it cannot verify who typed them. `basis` is `explicit` or `delegated_default` (§5); a stored confirmation without it (written before the post-acceptance fixes) reads as `explicit`. Decision status is one of `open`, `proposed`, `confirmed`, `reconfirm_required`, `superseded`.
 
 A result item has the keys `slot`, `result_id`, `activity`, `current`, `stale_reason`, `partition`, `n_rows`, `values`, `blobs`, `params`, `inputs`, `code_fingerprint`, `environment`, `execution_id`, `exposure_id`, `started_revision`, `integrity`. `integrity` is `ok` or the refusal code (`integrity_error`, `unknown_result`); a result that fails it has `current: false`, `values: null`, and adds a `result_integrity` item to `not_yet_defensible`. **Only a result item with `current: true` and `integrity: "ok"` may be cited.**
 
-`not_yet_defensible` ids emitted in v0.1: `unconfirmed_decisions`, `validation_is_not_independent`, `public_data_already_explored`, `no_time_or_entity_identifier`, `uncertain_features_included`, `stale_results`, `interrupted_executions`, `no_causality`, `workbench_not_tracked`, `result_integrity`.
+`not_yet_defensible` ids emitted in v0.1: `unconfirmed_decisions`, `validation_is_not_independent`, `public_data_already_explored`, `no_time_or_entity_identifier`, `uncertain_features_included`, `stale_results`, `interrupted_executions`, `no_causality`, `workbench_not_tracked`, `result_integrity`. Added after the Claude Code acceptance run: `delegated_decisions` (`decisions`: every decision whose current confirmation has basis `delegated_default`, "decided by delegation to the assistant's default, not by the junior's own judgment").
 
 ## 5. Decisions and values
 
@@ -152,8 +153,13 @@ Confirmation rules (`ambiguous_confirmation`, with `details.reason`):
 | `proposal_withdrawn`, `proposal_superseded`, `proposal_confirmed` | The proposal is not open |
 | `same_request` | The proposal was not created by an earlier request |
 | `proposal_stale` | A decision the proposal rests on changed since it was made (`details.basis`, `details.current_basis`) |
+| `not_a_delegation` | `--basis delegated_default`, but the words do not explicitly delegate to the assistant's recommended default |
+| `delegation_needs_basis` | `--basis explicit`, but the words delegate the choice to the assistant: the confirmation must say so |
+| `restatement_not_default` | `--basis delegated_default`, but the proposal's restatement does not say it is the assistant's recommended default |
 
-Then, in order: the case and dataset bytes must still match (`dataset_changed`), the value must be valid (`invalid_value`), and the pause preconditions must hold (`precondition_missing`, `details.missing`). A confirmation records `{user_words (verbatim), proposal_id, restatement, authenticated: false, channel, actor, revision, time}` and applies §6.
+**Confirmation basis (D1, post-acceptance).** `explicit` (default): the user's own reply to the restatement decides. `delegated_default`: the user explicitly hands the choice to the assistant ("use your recommended default", "go with your recommendation", "je te laisse choisir", "prends ta recommandation"; `commands.is_delegation`), and the proposal's restatement states that it is the assistant's recommended default ("My recommended default: ..."; `commands.states_default`). A bare acknowledgement never delegates; silence is never a delegation. The basis is recorded in the confirmation, shown distinctly in the view, the HTML report and the notebook, and every delegated decision is listed in `not_yet_defensible` (`delegated_decisions`).
+
+Then, in order: the case and dataset bytes must still match (`dataset_changed`), the value must be valid (`invalid_value`), and the pause preconditions must hold (`precondition_missing`, `details.missing`). A confirmation records `{user_words (verbatim), proposal_id, restatement, authenticated: false, channel, actor, revision, time, basis}` and applies §6. `basis` is optional in a stored record (`state.CONFIRMATION_OPTIONAL_KEYS`) so that earlier studies stay valid.
 
 ## 6. Invalidation (plan §3.7)
 

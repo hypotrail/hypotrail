@@ -7,7 +7,8 @@
                      --restatement TEXT --rationale TEXT
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide confirm PROPOSAL --user-words TEXT [--channel chat|cli|webview]
-                     [--actor NAME] --request-id ID --expected-revision REV --study DIR
+                     [--actor NAME] [--basis explicit|delegated_default]
+                     --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
 
@@ -37,6 +38,7 @@ from typing import Sequence
 from mlkit.reliability import CommandRefused
 
 from . import commands as cmd
+from . import state as st
 from .case import CaseError
 from .errors import StudyError
 
@@ -109,6 +111,10 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
                    help="the user's verbatim reply to the restatement")
     p.add_argument('--channel', choices=('chat', 'cli', 'webview'), default=cmd.DEFAULT_CHANNEL)
     p.add_argument('--actor', default=cmd.DEFAULT_ACTOR)
+    p.add_argument('--basis', choices=st.CONFIRMATION_BASES, default=cmd.DEFAULT_BASIS,
+                   help='explicit (the default): the reply decides; delegated_default: the reply '
+                        "explicitly delegates to the assistant's recommended default, which the "
+                        'restatement states')
     _mutation(p)
     p = verbs.add_parser('withdraw', parents=[common])
     p.add_argument('proposal_id')
@@ -137,7 +143,8 @@ def _decide(args) -> cmd.Outcome:
     elif args.verb == 'confirm':
         action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id,
                                               'user_words': args.user_words,
-                                              'channel': args.channel, 'actor': args.actor}
+                                              'channel': args.channel, 'actor': args.actor,
+                                              'basis': args.basis}
     else:
         action, params = cmd.ACTION_WITHDRAW, {'proposal_id': args.proposal_id,
                                                'reason': args.reason}
@@ -177,9 +184,12 @@ def _text(payload: dict) -> str:
             lines.append(f'open proposal {p["proposal_id"]} ({p["decision_id"]}): '
                          f'{p["restatement"]}')
         for d in v['decisions'].values():
-            words = d['confirmation']['user_words'] if d['confirmation'] else None
+            conf = d['confirmation']
+            words = conf['user_words'] if conf else None
+            delegated = ', delegated to the assistant\'s default' \
+                if conf and conf.get('basis') == st.DELEGATED_DEFAULT else ''
             lines.append(f'decision {d["decision_id"]}: {d["status"]}'
-                         + (f' - "{words}" ({d["confirmation"]["channel"]})' if words else ''))
+                         + (f' - "{words}" ({conf["channel"]}{delegated})' if words else ''))
         if payload['since'] is not None:
             lines.append(f'changes since revision {payload["since"]}: '
                          f'{len(payload["changes_since"])}')

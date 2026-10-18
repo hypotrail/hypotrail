@@ -42,11 +42,11 @@ RESULT_KEYS_BY_ACTION = {
     'decide.propose': ('proposal_id', 'decision_id', 'status', 'decision_status', 'superseded',
                        'restatement'),
     'decide.confirm': ('decision_id', 'proposal_id', 'status', 'value', 'user_words', 'channel',
-                       'actor', 'invalidation'),
+                       'actor', 'invalidation', 'basis'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
 }
 ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rationale'},
-                 'decide.confirm': {'proposal_id', 'user_words', 'channel', 'actor'},
+                 'decide.confirm': {'proposal_id', 'user_words', 'channel', 'actor', 'basis'},
                  'decide.withdraw': {'proposal_id', 'reason'}}
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
@@ -55,7 +55,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated')
+                          'revision', 'time', 'authenticated', 'basis')
+# Post-acceptance contract (D1): how the user decided.
+CONFIRMATION_BASES = ('explicit', 'delegated_default')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
@@ -74,7 +76,9 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'public_data_already_explored', 'no_time_or_entity_identifier',
                           'uncertain_features_included', 'stale_results',
                           'interrupted_executions', 'no_causality', 'workbench_not_tracked',
-                          'result_integrity'}
+                          'result_integrity',
+                          # Post-acceptance contract (D1).
+                          'delegated_decisions'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -100,7 +104,9 @@ ERROR_CODES = {
 RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
-                     'same_request', 'proposal_stale'}
+                     'same_request', 'proposal_stale',
+                     # Post-acceptance contract (D1): delegated confirmations.
+                     'not_a_delegation', 'delegation_needs_basis', 'restatement_not_default'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')
@@ -204,6 +210,7 @@ def test_view_model_keys(flow):
     assert all(tuple(d) == DECISION_VIEW_KEYS for d in v['decisions'].values())
     conf = v['decisions']['prediction_time']['confirmation']
     assert tuple(conf) == CONFIRMATION_VIEW_KEYS and conf['authenticated'] is False
+    assert conf['basis'] == 'explicit'
     assert tuple(v['exposure']) == EXPOSURE_SUMMARY_KEYS
     assert tuple(v['artifacts']) == ARTIFACT_VIEW_KEYS
     assert tuple(v['facts']) == ('by_status', 'count')
@@ -256,6 +263,9 @@ def test_actions_and_their_parameters():
         assert isinstance(built[action], reliability.Handler)
     assert set(reliability.REQUEST_KEYS) == {'request_id', 'expected_revision', 'action', 'params'}
     assert cmd.DEFAULT_CHANNEL == 'chat' and st.CHANNELS == ('chat', 'cli', 'webview')
+    assert st.CONFIRMATION_BASES == CONFIRMATION_BASES and cmd.DEFAULT_BASIS == 'explicit'
+    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis',)
+    assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DECISION_IDS == ('prediction_time', 'feature_availability', 'split', 'policy',
                                'conclusion')
     assert st.AVAILABILITY_DECISIONS == ('available_at_prediction', 'not_available',

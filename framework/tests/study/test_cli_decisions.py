@@ -202,6 +202,102 @@ def test_confirm_requires_open_proposal_and_user_words(study, work, words, reaso
     assert _status(study, work)['revision'] == 2
 
 
+DEFAULT_RESTATEMENT = ('My recommended default: you predict before the first reminder is sent, '
+                       'the earliest moment the team can act.')
+DELEGATIONS = ('Use your recommended default and tell me what you assumed.',
+               'Go with your recommendation.', 'je te laisse choisir', 'prends ta recommandation')
+
+
+@pytest.mark.parametrize('words', DELEGATIONS)
+def test_a_delegation_confirms_a_recommended_default(study, work, words):
+    """D1: an explicit delegation confirms a proposal that states it is the assistant's
+    recommended default; it is recorded as delegated and listed as not yet defensible."""
+    pid = propose(study, work, 'prediction_time', value=PT, rid='r1', rev=1,
+                  restatement=DEFAULT_RESTATEMENT)['result']['proposal_id']
+    done = confirm(study, work, pid, words, rid='r2', rev=2,
+                   extra=('--basis', 'delegated_default'))
+    assert done['result']['status'] == 'confirmed' and done['result']['basis'] == 'delegated_default'
+    view = _status(study, work)['view']
+    conf = view['decisions']['prediction_time']['confirmation']
+    assert conf['basis'] == 'delegated_default' and conf['user_words'] == words
+    assert conf['restatement'] == DEFAULT_RESTATEMENT
+    item = next(x for x in view['not_yet_defensible'] if x['id'] == 'delegated_decisions')
+    assert item['decisions'] == ['prediction_time']
+    assert "decided by delegation to the assistant's default, not by the junior's own " \
+           'judgment' in item['text'].lower()
+    state = json.loads((study / '.hypotrail' / 'state.json').read_text())
+    assert st.validate_state(state) == []
+    assert state['decisions']['prediction_time']['confirmation']['basis'] == 'delegated_default'
+
+
+@pytest.mark.parametrize('words, reason', [
+    ('ok', 'bare_acknowledgement'), ('garde ça', 'bare_acknowledgement'),
+    ('yes', 'bare_acknowledgement'), ("Let's go with it.", 'not_a_delegation'),
+    ('Before the first reminder, as you wrote.', 'not_a_delegation'),
+])
+def test_a_bare_or_non_delegating_reply_never_confirms_a_default(study, work, words, reason):
+    pid = propose(study, work, 'prediction_time', value=PT, rid='r1', rev=1,
+                  restatement=DEFAULT_RESTATEMENT)['result']['proposal_id']
+    out = confirm(study, work, pid, words, rid='r2', rev=2, expect=2,
+                  extra=('--basis', 'delegated_default'))
+    assert out['error']['code'] == 'ambiguous_confirmation'
+    assert out['error']['details']['reason'] == reason
+    assert _status(study, work)['revision'] == 2
+
+
+def test_a_delegation_needs_a_restatement_of_the_default(study, work):
+    pid = propose(study, work, 'prediction_time', value=PT, rid='r1', rev=1,
+                  restatement='You predict before the first reminder is sent.')['result']['proposal_id']
+    out = confirm(study, work, pid, DELEGATIONS[0], rid='r2', rev=2, expect=2,
+                  extra=('--basis', 'delegated_default'))
+    assert out['error']['details']['reason'] == 'restatement_not_default'
+    assert _status(study, work)['revision'] == 2
+
+
+def test_a_delegation_is_never_recorded_as_explicit(study, work):
+    """D1: words that delegate cannot be filed as the junior's own decision."""
+    pid = propose(study, work, 'prediction_time', value=PT, rid='r1', rev=1,
+                  restatement=DEFAULT_RESTATEMENT)['result']['proposal_id']
+    out = confirm(study, work, pid, DELEGATIONS[1], rid='r2', rev=2, expect=2)
+    assert out['error']['details']['reason'] == 'delegation_needs_basis'
+    done = confirm(study, work, pid, 'Yes: we predict before the first reminder goes out.',
+                   rid='r3', rev=2)
+    assert done['result']['basis'] == 'explicit'
+    view = _status(study, work)['view']
+    assert view['decisions']['prediction_time']['confirmation']['basis'] == 'explicit'
+    assert 'delegated_decisions' not in {x['id'] for x in view['not_yet_defensible']}
+    code, bad = hyp('decide', 'confirm', pid, '--user-words', 'x y z', '--basis', 'guessed',
+                    '--request-id', 'r4', '--expected-revision', 3, '--study', study, cwd=work)
+    assert code == 2 and bad['error']['code'] == 'invalid_arguments'
+
+
+def test_delegation_patterns():
+    for words in DELEGATIONS + ("It's up to you.", 'I leave it to you', 'Use the default.',
+                                'Prenez votre recommandation.', 'je vous laisse décider'):
+        assert cmd.is_delegation(words), words
+    for words in ('ok', 'garde ça', 'yes', 'keep that', 'continue', "Let's go with it",
+                  'Yes, your suggestion of before the first call is right.',
+                  'Before the first call.', ''):
+        assert not cmd.is_delegation(words), words
+    assert cmd.states_default(DEFAULT_RESTATEMENT)
+    assert cmd.states_default('Ma recommandation par défaut : avant le premier appel.')
+    assert not cmd.states_default('You predict before the first reminder is sent.')
+
+
+def test_an_old_confirmation_without_basis_reads_as_explicit(study, work):
+    """A state written before the basis existed stays valid; its confirmations are explicit."""
+    pid = propose(study, work, 'prediction_time', value=PT, rid='r1', rev=1)['result']['proposal_id']
+    confirm(study, work, pid, 'Yes, before the first reminder.', rid='r2', rev=2)
+    state = json.loads((study / '.hypotrail' / 'state.json').read_text())
+    conf = state['decisions']['prediction_time']['confirmation']
+    del conf['basis']
+    assert st.validate_state(state) == []
+    assert st.confirmation_basis(conf) == 'explicit'
+    conf['basis'] = 'implied'
+    assert [p['path'] for p in st.validate_state(state)] == [
+        'decisions.prediction_time.confirmation.basis']
+
+
 def test_confirm_without_user_words_or_without_proposal_is_refused(study, work):
     code, out = hyp('decide', 'confirm', 'p_1', '--request-id', 'r1', '--expected-revision', 1,
                     '--study', study, cwd=work)

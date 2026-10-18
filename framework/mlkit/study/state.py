@@ -41,6 +41,14 @@ AVAILABILITY_DECISIONS = ('available_at_prediction', 'not_available', 'uncertain
 CHANNELS = ('chat', 'cli', 'webview')
 CONFIRMATION_KEYS = ('user_words', 'proposal_id', 'restatement', 'authenticated', 'channel',
                      'actor', 'revision', 'time')
+# How the user decided (D1). ``explicit``: their own reply to the restatement.
+# ``delegated_default``: they explicitly delegated to the assistant's recommended default,
+# which the restatement stated. Optional in the record: a confirmation without it (written
+# before the basis existed) is explicit.
+EXPLICIT, DELEGATED_DEFAULT = 'explicit', 'delegated_default'
+CONFIRMATION_BASES = (EXPLICIT, DELEGATED_DEFAULT)
+DEFAULT_BASIS = EXPLICIT
+CONFIRMATION_OPTIONAL_KEYS = ('basis',)
 
 # Which confirmed decisions a decision rests on. Changing one of them makes the
 # dependants need reconfirmation (plan §3.7, rows 1, 2, 4, and 5).
@@ -184,15 +192,17 @@ def _sha256_file(path) -> str:
 
 
 def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
-                 time: str | None = None) -> dict:
+                 time: str | None = None, basis: str = DEFAULT_BASIS) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
     ``authenticated`` is always False: the engine cannot verify who typed the words.
+    ``basis`` is ``explicit`` or ``delegated_default`` (:data:`CONFIRMATION_BASES`).
     """
     record = {'user_words': user_words, 'proposal_id': proposal['proposal_id'],
               'restatement': proposal['restatement'], 'authenticated': False,
-              'channel': channel, 'actor': actor, 'revision': revision, 'time': time or now()}
+              'channel': channel, 'actor': actor, 'revision': revision, 'time': time or now(),
+              'basis': basis}
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -220,10 +230,19 @@ def _text(node: Any) -> bool:
     return isinstance(node, str) and bool(node.strip())
 
 
+def confirmation_basis(c: Any) -> str:
+    """The basis of a confirmation record (``explicit`` when it predates the basis)."""
+    return c.get('basis', DEFAULT_BASIS) if isinstance(c, dict) else DEFAULT_BASIS
+
+
 def _confirmation_problems(c: Any, path: str) -> list[dict]:
     problems: list[dict] = []
-    if not _keys(c, path, CONFIRMATION_KEYS, problems):
+    present = tuple(k for k in CONFIRMATION_OPTIONAL_KEYS if isinstance(c, dict) and k in c)
+    if not _keys(c, path, CONFIRMATION_KEYS + present, problems):
         return problems
+    if 'basis' in present and c['basis'] not in CONFIRMATION_BASES:
+        problems.append({'path': f'{path}.basis',
+                         'problem': f'must be one of {", ".join(CONFIRMATION_BASES)}'})
     for key in ('user_words', 'proposal_id', 'restatement', 'actor', 'time'):
         if not _text(c[key]):
             problems.append({'path': f'{path}.{key}', 'problem': 'must be a non-empty string'})
@@ -499,6 +518,18 @@ def next_action(state: dict) -> dict:
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}
 
 
+def delegated_decisions(state: dict) -> list[str]:
+    """Decisions whose current confirmation is a delegation to the assistant's default."""
+    out = []
+    for d in DECISION_IDS:
+        dec = state['decisions'][d]
+        if dec['status'] in ('confirmed', 'reconfirm_required') \
+                and isinstance(dec['confirmation'], dict) \
+                and confirmation_basis(dec['confirmation']) == DELEGATED_DEFAULT:
+            out.append(d)
+    return out
+
+
 def not_yet_defensible(state: dict) -> list[dict]:
     """What the study cannot claim yet, from state only (plan §6)."""
     items = []
@@ -528,6 +559,11 @@ def not_yet_defensible(state: dict) -> list[dict]:
         items.append({'id': 'uncertain_features_included', 'features': uncertain,
                       'text': 'These features are used although their availability at prediction '
                               'time is uncertain: ' + ', '.join(uncertain) + '.'})
+    delegated = delegated_decisions(state)
+    if delegated:
+        items.append({'id': 'delegated_decisions', 'decisions': delegated,
+                      'text': 'Decided by delegation to the assistant\'s default, not by the '
+                              'junior\'s own judgment: ' + ', '.join(delegated) + '.'})
     if state['stale']:
         items.append({'id': 'stale_results', 'results': sorted(state['stale']),
                       'text': 'Some results are stale and must be recomputed before they are cited.'})

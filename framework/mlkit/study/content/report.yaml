@@ -55,6 +55,10 @@ verdict:
 current_marker: You are here
 next_action: Next action
 user_words: Your words
+delegated: Delegated to the assistant's recommended default
+delegated_words: Your words delegating the choice
+delegated_note: Decided by delegation to the assistant's default, not by your own judgment. Confirm it in your own words when you can.
+delegated_restatement: Recommended default you delegated to
 not_authenticated: Recorded words, not an authenticated signature.
 restatement: Restatement you answered
 proposal_waiting: Waiting for your answer
@@ -74,6 +78,7 @@ not_yet_defensible_extra:
   uncertain_features_included: Uncertain variables included in the model may carry information from after the prediction time.
   no_causality: The study ranks rows; it does not show that acting would change the outcome.
   workbench_not_tracked: Slider experiments in the workbench change nothing and prove nothing.
+  delegated_decisions: You let the assistant choose. The choice is recorded, but the reasons are the assistant's, not yours.
 notebook:
   banner_current: Generated at this revision. Numbers are frozen by result id.
   banner_stale: The study has moved on since this notebook was generated. Render again before relying on it.
