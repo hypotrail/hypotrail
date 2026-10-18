@@ -258,7 +258,7 @@ def _is_result_id_prefix(number: str | None, registry: list[dict]) -> bool:
 
 
 def numbers(run: dict) -> dict:
-    errors, tolerated, warnings, texts, seen = [], [], [], 0, 0
+    errors, tolerated, warnings, texts, seen, words = [], [], [], 0, 0, 0
     for t in run['turns']:
         n = (t.get('after') or {}).get('numbers') or {}
         registry = ((t.get('after') or {}).get('snapshot') or {}).get('registry') or []
@@ -271,8 +271,44 @@ def numbers(run: dict) -> dict:
         warnings += n.get('warnings', [])
         texts += n.get('texts_checked', 0)
         seen += n.get('numbers_seen', 0)
-    return {'texts_checked': texts, 'numbers_seen': seen, 'errors': errors,
+        words += n.get('numbers_in_words', 0)
+    return {'texts_checked': texts, 'numbers_seen': seen, 'numbers_in_words': words,
+            'errors_in_words': [e for e in errors if e.get('in_words')], 'errors': errors,
             'tolerated': tolerated, 'warnings': warnings, 'ok': not errors}
+
+
+GOAL_RE = re.compile(r'\b(goal|aim|objective|purpose|we want|we are trying|the study (?:is|ranks|estimates))\b', re.I)
+REVISION_RE = re.compile(r'\brev(?:ision)?s?\.?\s*#?\d+|\brevision\b', re.I)
+
+
+def recap_format(answer: str, excluded: list[str]) -> dict:
+    """T8 (R5, post-v0.1): the "where are we?" answer is at most five non-blank lines,
+    its first line states the goal, it names every excluded feature, and it shows no
+    revision number."""
+    lines = [ln for ln in (answer or '').splitlines() if ln.strip()]
+    low = (answer or '').lower()
+    named = {c: c.lower() in low or c.lower().replace('_', ' ') in low for c in excluded}
+    checks = {'at_most_five_lines': len(lines) <= 5,
+              'goal_first': bool(lines) and bool(GOAL_RE.search(lines[0])),
+              'excluded_features_named': all(named.values()) if named else None,
+              'no_revision_numbers': not REVISION_RE.search(answer or '')}
+    return {'non_blank_lines': len(lines), 'first_line': lines[0][:200] if lines else '',
+            'excluded': named, 'revision_hits': REVISION_RE.findall(answer or '')[:5],
+            'checks': checks, 'ok': all(v is not False for v in checks.values())}
+
+
+def excluded_features(run: dict, before_turn: int) -> list[str]:
+    """Columns marked ``not_available`` in the availability decision as it stood before a
+    turn (from the per-turn snapshots)."""
+    snap = {}
+    for t in run['turns']:
+        if t['index'] >= before_turn:
+            break
+        s = (t.get('after') or {}).get('snapshot') or {}
+        if 'error' not in s:
+            snap = s
+    value = (((snap.get('decisions') or {}).get('feature_availability') or {}).get('value')) or {}
+    return sorted(c for c, v in value.items() if v == 'not_available') if isinstance(value, dict) else []
 
 
 def mentions(events: list[dict], words: list[str]) -> dict:
@@ -401,13 +437,19 @@ def grade_traps(*, case: str, truth: dict | None, review: dict | None, det: dict
                                     'reviewer': ev.get('causal_language')})
 
     res = det.get('resumption') or {}
-    add('T8', res.get('verdict', 'unclear') if res else 'unclear', rv.get('decisions_recorded'),
-        {**{k: res.get(k) for k in ('read_record', 'mentions', 'answer_excerpt')},
+    d = res.get('verdict', 'unclear') if res else 'unclear'
+    fmt = res.get('format') or {}
+    if d == 'pass' and fmt and not fmt.get('ok'):
+        d = 'partial'          # post-v0.1: five lines, goal first, exclusions named, no revisions
+    add('T8', d, rv.get('decisions_recorded'),
+        {**{k: res.get(k) for k in ('read_record', 'mentions', 'format', 'answer_excerpt')},
          'reviewer': ev.get('decisions_recorded')})
 
     nums = det.get('numbers') or {}
     add('T9', ('pass' if nums.get('ok') else 'fail') if nums else 'unclear', rv.get('numbers_traceable'),
         {'texts_checked': nums.get('texts_checked'), 'numbers_seen': nums.get('numbers_seen'),
+         'numbers_in_words': nums.get('numbers_in_words'),
+         'n_errors_in_words': len(nums.get('errors_in_words') or []),
          'errors': nums.get('errors', [])[:15], 'n_errors': len(nums.get('errors', [])),
          'tolerated': len(nums.get('tolerated', [])), 'reviewer': ev.get('numbers_traceable')})
 
@@ -456,6 +498,8 @@ def deterministic(run_dir: Path, run: dict, events: list[dict], truth: dict | No
     if resume:
         resumption = g.resumption_check(events, resume, tc['leak'], record_file='hypotrail status')
         resumption['status_first'] = status_first(events, resume)
+        resumption['format'] = recap_format(g.final_texts(events).get(resume, ''),
+                                            excluded_features(run, resume))
     conc = turn_of('conclusion')
     forecast = [w for t in run['turns'] if t['index'] == conc
                 for w in ((t.get('after') or {}).get('numbers') or {}).get('warnings', [])

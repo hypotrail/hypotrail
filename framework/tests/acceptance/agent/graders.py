@@ -377,19 +377,37 @@ def check_assistant_texts(workspace: Path, texts: list[dict], tolerated: ValueSe
 
     Findings on numbers that also appear in the user's words or the case documents
     (``tolerated``), and bare integers up to 10 (as for arm A), are reported apart.
+
+    Numbers written in words ("one in nine", "a third", F3) are found by the engine's own
+    parser inside ``check`` (``details.in_words``), never by this grader. So every
+    non-empty text is checked, not only those holding a digit. A word number is tolerated
+    only when its value (``details.value``) appears in the user's words or the documents.
     """
-    out, errors, tolerated_hits, warnings, n_numbers = [], [], [], [], 0
+    out, errors, tolerated_hits, warnings, n_numbers, n_words = [], [], [], [], 0, 0
     for t in texts:
-        if not extract_numbers(t['text']) and not re.search(r'\d', t['text']):
+        if not (t.get('text') or '').strip():
             continue
         c = check_text(workspace, t['text'])
         n_numbers += len(c.get('traced') or []) + sum(1 for f in c['findings']
                                                        if f['code'] in NUMBER_ERRORS)
+        n_words += sum(1 for x in c.get('traced') or [] if x.get('in_words'))
         for f in c['findings']:
+            details = f.get('details') or {}
             item = {'turn': t.get('turn'), 'code': f['code'], 'severity': f['severity'],
-                    'number': (f.get('details') or {}).get('number'),
+                    'number': details.get('number'), 'in_words': bool(details.get('in_words')),
                     'message': f.get('message', '')[:200]}
-            if f['code'] in NUMBER_ERRORS:
+            if f['code'] in NUMBER_ERRORS and item['in_words']:
+                n_words += 1
+                value = details.get('value')
+                if tolerated is not None and isinstance(value, (int, float)) and tolerated.matches(
+                        {'value': float(value), 'decimals': 2, 'percent': details.get('kind') == 'percent'}):
+                    tolerated_hits.append(item)
+                else:
+                    num = item['number'] or ''
+                    i = t['text'].find(num) if num else -1
+                    item['context'] = t['text'][max(0, i - 80):i + 80].replace('\n', ' ') if i >= 0 else ''
+                    errors.append(item)
+            elif f['code'] in NUMBER_ERRORS:
                 num = item['number'] or ''
                 parsed = extract_numbers(num) if num else []
                 small = bool(num) and not parsed and re.fullmatch(r'-?\d+', num.replace(',', '')) is not None
@@ -402,7 +420,8 @@ def check_assistant_texts(workspace: Path, texts: list[dict], tolerated: ValueSe
             elif f['severity'] == 'warning':
                 warnings.append(item)
         out.append({'turn': t.get('turn'), 'clean': c['clean'], 'traced': len(c.get('traced') or [])})
-    return {'texts_checked': len(out), 'numbers_seen': n_numbers, 'errors': errors,
+    return {'texts_checked': len(out), 'numbers_seen': n_numbers, 'numbers_in_words': n_words,
+            'errors': errors,
             'tolerated': tolerated_hits, 'warnings': warnings, 'ok': not errors}
 
 

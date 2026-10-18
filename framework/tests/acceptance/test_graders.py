@@ -492,3 +492,66 @@ def test_arm_b_numbers_tolerate_all_digit_result_id_prefix():
     # a number that is not a registered id prefix stays an error
     run['turns'][0]['after']['snapshot']['registry'] = [{'result_id': 'ff00', 'activity': 'split'}]
     assert len(gb.numbers(run)['errors']) == 2
+
+
+# --------------------------------------------------------------------------- post-v0.1 graders
+
+def test_word_numbers_go_through_the_engine_check(eda_study):
+    """T9 extended to numbers written in words: a text with no digit is still checked, and
+    the engine's own parser (``check --text -``) reports the ratio, not the grader."""
+    ws, _info, _setup = eda_study
+    text = 'Forty-two percent renewed.'
+    out = graders.check_assistant_texts(ws, [{'turn': 1, 'text': text}],
+                                        tolerated=graders.ValueSet([]))
+    assert out['texts_checked'] == 1 and not out['ok']
+    assert out['errors'][0]['in_words'] and out['errors'][0]['number'] == 'Forty-two percent'
+    assert out['numbers_in_words'] == 1
+    # tolerated only when the junior or the documents gave that value
+    said = graders.check_assistant_texts(ws, [{'turn': 1, 'text': text}],
+                                         tolerated=graders.ValueSet([42]))
+    assert said['ok'] and said['tolerated'][0]['in_words']
+    clean = graders.check_assistant_texts(ws, [{'turn': 1, 'text': 'No figure here.'}],
+                                          tolerated=graders.ValueSet([]))
+    assert clean['texts_checked'] == 1 and clean['ok']
+
+
+def test_recap_format_five_lines_goal_first_no_revisions():
+    gb = _load('graders_b')
+    good = ('1. **Goal:** rank clients to call first, before the first call.\n'
+            '2. Decided: duration, day, month and campaign are excluded.\n3. Now: policy.\n'
+            '4. Next: confirm the rule.\n5. Limit: validation is not independent.')
+    r = gb.recap_format(good, ['duration', 'day', 'month', 'campaign'])
+    assert r['ok'] and r['non_blank_lines'] == 5
+    bad = 'We are at step 5.\nStatus read at revision 24.\n' + good
+    r = gb.recap_format(bad, ['duration', 'pdays'])
+    assert not r['ok']
+    assert r['checks'] == {'at_most_five_lines': False, 'goal_first': False,
+                           'excluded_features_named': False, 'no_revision_numbers': False}
+
+
+def test_regression_graders_on_canned_texts():
+    reg = _load('graders_reg')
+    texts = [{'turn': 1, 'text': 'The MAE is 2.9 mpg and the RMSE is 3.8. The threshold does not apply.'},
+             {'turn': 2, 'text': 'The bias is positive: the model predicts too low for later model years. '
+                                 'The same car names appear in both parts.'},
+             {'turn': 3, 'text': 'Engine capacity (displacement) is a feature.'}]
+    voc = reg.vocabulary(texts)
+    assert [h['word'] for h in voc['hits']] == ['threshold'] and not voc['ok']
+    mu = reg.metric_units(texts)
+    assert mu['figures_with_metric'] == 2 and mu['n_without_unit'] == 0   # unit within the window
+    far = 'RMSE: 3.8, far from any unit ' + 'x' * 130
+    assert reg.metric_units([{'turn': 1, 'text': far}])['ok'] is False
+    assert reg.residual_bias(texts)['ok'] and reg.split_limits(texts)['ok']
+    assert reg.residual_bias(texts[:1])['ok'] is None
+
+
+def test_auto_mpg_workspace_from_init(tmp_path):
+    setup = _load('study_setup')
+    ws = tmp_path / 'study'
+    ws.mkdir()
+    info = setup.prepare_study('auto-mpg', ws, session_log=True)
+    assert info['case'] == 'auto-mpg' and info['session_log']
+    assert (ws / '.hypotrail' / 'session-log.jsonl').is_file()
+    assert (ws / 'case/data/auto-mpg.names').is_file()
+    assert 'auto-mpg.data' in (ws / 'README.md').read_text()
+    runner.check_isolation(ws, info['installed'])

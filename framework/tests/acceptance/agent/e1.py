@@ -37,6 +37,7 @@ def _load(name: str):
 runner, graders, cases = _load('runner'), _load('graders'), _load('cases')
 study_setup = _load('study_setup')
 graders_b = _load('graders_b')
+graders_reg = _load('graders_reg')
 
 CHECK_VERDICT = {'type': 'object', 'additionalProperties': False,
                  'properties': {'verdict': {'enum': ['handled', 'partially', 'not_handled',
@@ -51,6 +52,13 @@ BLIND_CHECKS = ['leakage_post_outcome', 'availability_at_prediction_time', 'spec
 TRANSCRIPT_CHECKS = ['plan_visible', 'term_first_vocabulary', 'one_question_at_a_time',
                      'ambiguous_reply_handling', 'assumptions_explicit', 'resumption',
                      'capacity_change_explained', 'conclusion_proportionate', 'pauses_proportionate']
+# Regression study (Auto MPG): rubrics/transcript_review_regression.md.
+TRANSCRIPT_CHECKS_REGRESSION = ['plan_visible', 'term_first_vocabulary', 'one_question_at_a_time',
+                                'assumptions_explicit', 'resumption', 'task_vocabulary',
+                                'errors_in_target_unit', 'residual_bias_explained',
+                                'split_limits_explained', 'model_year_question',
+                                'conclusion_proportionate', 'pauses_proportionate']
+REGRESSION_CASES = ('auto-mpg',)
 
 
 def _checks_schema(names):
@@ -79,6 +87,11 @@ TRANSCRIPT_SCHEMA = {
                    'overall': {'enum': ['excellent', 'good', 'weak', 'poor']},
                    'summary': {'type': 'string'}},
     'required': ['checks', 'overall', 'summary']}
+
+
+def transcript_schema(checks: list[str]) -> dict:
+    return {**TRANSCRIPT_SCHEMA, 'properties': {**TRANSCRIPT_SCHEMA['properties'],
+                                                 'checks': _checks_schema(checks)}}
 
 
 def persona_chats(path: Path = HERE / 'e1_persona.yaml') -> list[list[dict]]:
@@ -114,7 +127,7 @@ def compact_snapshot(ws: Path) -> dict:
     for slot, r in (view.get('results') or {}).items():
         item = {'result_id': r.get('result_id'), 'activity': r.get('activity'),
                 'current': r.get('current')}
-        if slot == 'fit.logistic' and r.get('values'):
+        if slot in ('fit.logistic', 'fit.linear') and r.get('values'):
             item['features'] = r['values'].get('features')
         if slot == 'policy.evaluation':
             item['params'] = r.get('params')
@@ -187,7 +200,7 @@ def junior_responder(run_dir: Path, path: Path = HERE / 'e1_persona_answering.ya
     either writes the analyst's short answer or says NONE. The same function serves every
     arm: it never reads the study state."""
     import subprocess
-    doc = yaml.safe_load(path.read_text(encoding='utf-8'))
+    doc = yaml.safe_load(Path(path).read_text(encoding='utf-8'))
     allowed = set(doc['answer_after'])
     cfg = Path(run_dir) / 'simulator-config'
     cfg.mkdir(parents=True, exist_ok=True)
@@ -232,15 +245,17 @@ def cmd_run(a) -> None:
     hidden = run_dir / 'hidden'
     after_turn = None
     forbidden = [hidden]
+    persona_file = Path(a.persona_file) if a.persona_file else HERE / 'e1_persona.yaml'
+    chats = persona_chats(persona_file)
     if arm.setup == 'hypotrail_init':
-        prepare = lambda ws: study_setup.prepare_study(a.case, ws, hidden, a.seed)  # noqa: E731
-        after_turn = arm_b_after_turn(persona_chats())
+        prepare = lambda ws: study_setup.prepare_study(a.case, ws, hidden, a.seed,  # noqa: E731
+                                                       session_log=a.session_log)
+        after_turn = arm_b_after_turn(chats)
         forbidden.append(main_checkout())
     else:
         prepare = cases.preparer(a.case, hidden, a.seed)
     caps = runner.Caps(max_agent_turns=a.max_agent_turns, max_budget_usd_per_chat=a.chat_budget,
                        max_budget_usd_total=a.total_budget, timeout_s_per_turn=a.turn_timeout)
-    chats = persona_chats()
     if a.only_first:
         chats = [chats[0][:a.only_first]]
     log_file = (run_dir / 'progress.log')
@@ -251,14 +266,18 @@ def cmd_run(a) -> None:
         with log_file.open('a', encoding='utf-8') as fh:
             fh.write(msg + '\n')
 
-    responder = junior_responder(run_dir, log=log) if a.persona == 'answering' else None
+    persona_doc = yaml.safe_load(persona_file.read_text(encoding='utf-8'))
+    sheet = persona_file if 'sheet' in persona_doc else HERE / 'e1_persona_answering.yaml'
+    responder = junior_responder(run_dir, sheet, log=log) if a.persona == 'answering' else None
     record = runner.run_conversation(
         arm=arm, chats=chats, run_dir=run_dir, prepare_workspace=prepare, caps=caps,
         responder=responder,
         workspace_base=Path(a.workspace_base) if a.workspace_base else None,
         forbidden_paths=forbidden,
-        meta={'case': a.case, 'repeat': a.repeat,
-              'persona': 'e1-junior' if a.persona == 'scripted' else 'e1-junior-answering'},
+        meta={'case': a.case, 'repeat': a.repeat, 'persona_file': persona_file.name,
+              'persona': persona_doc.get('id') if a.persona_file else
+              ('e1-junior' if a.persona == 'scripted' else 'e1-junior-answering'),
+              'session_log': bool(a.session_log)},
         log=log, after_turn=after_turn,
         before_first_turn=compact_snapshot if after_turn else None)
     log(json.dumps({k: record[k] for k in ('total_cost_usd', 'wall_s', 'stopped', 'repo_guard')}))
@@ -284,19 +303,25 @@ def cmd_review(a) -> None:
     out = run_dir / 'review'
     replace = {run['workspace']: '<study>', str(run_dir): '<run>',
                str(runner.REPO_ROOT / 'framework'): '<engine>', str(runner.REPO_ROOT): '<engine>'}
-    blind_dir = runner.make_workspace(a.workspace_base, prefix='hypotrail-review-')
-    graders.anonymise_study(run_dir / 'workspace', blind_dir / 'study', replace=replace)
-    prompt = (HERE / 'rubrics/blind_review.md').read_text(encoding='utf-8')
-    blind = graders.fresh_agent_grade(blind_dir / 'study', prompt, BLIND_SCHEMA, out / 'blind',
-                                      model=a.model, max_budget_usd=a.budget)
-    print('blind review', blind['subtype'], blind['cost_usd'])
+    regression = run['case']['case'] in REGRESSION_CASES
+    if not (regression or a.dialogue_only):
+        # The blind study rubric is written for a classification study (base rate,
+        # threshold, capacity); a regression run gets the dialogue review only.
+        blind_dir = runner.make_workspace(a.workspace_base, prefix='hypotrail-review-')
+        graders.anonymise_study(run_dir / 'workspace', blind_dir / 'study', replace=replace)
+        prompt = (HERE / 'rubrics/blind_review.md').read_text(encoding='utf-8')
+        blind = graders.fresh_agent_grade(blind_dir / 'study', prompt, BLIND_SCHEMA, out / 'blind',
+                                          model=a.model, max_budget_usd=a.budget)
+        print('blind review', blind['subtype'], blind['cost_usd'])
     dlg_dir = runner.make_workspace(a.workspace_base, prefix='hypotrail-dialogue-')
     text = dialogue_markdown(run)
     for k, v in replace.items():
         text = text.replace(k, v)
     (dlg_dir / 'dialogue.md').write_text(text, encoding='utf-8')
-    prompt = (HERE / 'rubrics/transcript_review.md').read_text(encoding='utf-8')
-    dialogue = graders.fresh_agent_grade(dlg_dir, prompt, TRANSCRIPT_SCHEMA, out / 'transcript',
+    rubric = 'transcript_review_regression.md' if regression else 'transcript_review.md'
+    schema = transcript_schema(TRANSCRIPT_CHECKS_REGRESSION) if regression else TRANSCRIPT_SCHEMA
+    prompt = (HERE / 'rubrics' / rubric).read_text(encoding='utf-8')
+    dialogue = graders.fresh_agent_grade(dlg_dir, prompt, schema, out / 'transcript',
                                          model=a.model, max_budget_usd=a.budget)
     print('transcript review', dialogue['subtype'], dialogue['cost_usd'])
 
@@ -370,6 +395,8 @@ def deterministic_grades_b(run_dir: Path) -> dict:
 
 def cmd_grade(a) -> None:
     run_dir = _assert_outside_repo(a.run)
+    if json.loads((run_dir / 'run.json').read_text(encoding='utf-8'))['case']['case'] in REGRESSION_CASES:
+        return cmd_grade_regression(run_dir)
     arm_id = json.loads((run_dir / 'run.json').read_text(encoding='utf-8'))['arm']
     is_b = runner.Arm.load(HERE / 'arms' / arm_id).setup == 'hypotrail_init'
     det = deterministic_grades_b(run_dir) if is_b else deterministic_grades(run_dir)
@@ -399,6 +426,28 @@ def cmd_grade(a) -> None:
     (run_dir / 'grade.json').write_text(json.dumps(out, indent=2, default=str), encoding='utf-8')
     for t in traps:
         print(f"{t['trap']:4} {t['key']:24} det={t['deterministic']!s:8} rev={t['reviewer']!s:8} -> {t['verdict']}")
+
+
+def cmd_grade_regression(run_dir: Path) -> None:
+    """Regression run (Auto MPG): the E1 traps are classification traps, so a regression
+    run is graded on its own checks (graders_reg) plus the regression dialogue review."""
+    run = json.loads((run_dir / 'run.json').read_text(encoding='utf-8'))
+    events = runner.load_transcript(run_dir)
+    transcript_path = run_dir / 'review/transcript/reviewer.json'
+    treview = (json.loads(transcript_path.read_text())['structured_output']
+               if transcript_path.is_file() else None)
+    det = graders_reg.deterministic(run_dir, run, events)
+    costs = runner.recompute_turn_costs(run['turns'])
+    out = {'case': run['case']['case'], 'arm': run['arm'], 'repeat': run['meta'].get('repeat'),
+           'cost_usd': round(sum(costs), 4), 'wall_s': run['wall_s'], 'stopped': run['stopped'],
+           'turns': [{**{k: t[k] for k in ('index', 'chat', 'label', 'wall_s', 'agent_turns',
+                                           'result_subtype', 'tool_calls', 'models', 'cli_version')},
+                      'cost_usd': c} for t, c in zip(run['turns'], costs)],
+           'repo_guard': run['repo_guard'], 'checks': graders_reg.verdicts(det, treview),
+           'transcript_review': treview, 'deterministic': det}
+    (run_dir / 'grade.json').write_text(json.dumps(out, indent=2, default=str), encoding='utf-8')
+    for row in out['checks']:
+        print(f"{row['check']:28} det={row['deterministic']!s:8} rev={row['reviewer']!s:8} -> {row['verdict']}")
 
 
 # --------------------------------------------------------------------------- summary
@@ -457,7 +506,11 @@ def main(argv=None) -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('run')
-    r.add_argument('--case', choices=['bank', 'synthetic'], required=True)
+    r.add_argument('--case', choices=['bank', 'synthetic', 'auto-mpg'], required=True)
+    r.add_argument('--persona-file', help='persona YAML with `chats` (default e1_persona.yaml); '
+                                          'with --persona answering, its `sheet` is used if present')
+    r.add_argument('--session-log', action='store_true',
+                   help="enable the study's content-free session log (HYPOTRAIL_SESSION_LOG=1)")
     r.add_argument('--arm', default=str(HERE / 'arms/arm_a'))
     r.add_argument('--out', required=True)
     r.add_argument('--model')
@@ -478,6 +531,7 @@ def main(argv=None) -> None:
     v.add_argument('--model', default='opus')
     v.add_argument('--budget', type=float, default=6.0)
     v.add_argument('--workspace-base')
+    v.add_argument('--dialogue-only', action='store_true', help='skip the blind study review')
     v.set_defaults(func=cmd_review)
     g = sub.add_parser('grade')
     g.add_argument('--run', required=True)

@@ -29,6 +29,7 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[3]
 FRAMEWORK = REPO_ROOT / 'framework'
 BANK = REPO_ROOT / 'use-cases' / 'bank-marketing'
+AUTO_MPG = REPO_ROOT / 'use-cases' / 'auto-mpg'
 
 SPLIT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
 THRESHOLD = 'threshold:0.2'
@@ -97,6 +98,29 @@ to decide which clients to call first.
 
 This is a learning exercise on public data: the scenario is an assumption for the
 exercise, not a decision taken by the bank.
+"""
+
+
+AUTO_MPG_README = """\
+# Fuel consumption of car models
+
+## Files
+
+- `case/data/auto-mpg.data`: one row per car model and model year, whitespace-separated,
+  no header line. The column order is given in `case/data/auto-mpg.names`.
+- `case/data/auto-mpg.names`: the original documentation distributed with the data.
+- `case/case.yaml`: the case description used by the study tool.
+
+The data are the public UCI "Auto MPG" data set (Quinlan, 1993; CC BY 4.0). Do not modify
+these files.
+
+## Scenario
+
+We would like to estimate the fuel consumption (miles per gallon) of newer car models from
+what we know about older ones.
+
+This is a learning exercise on public data: the scenario is an assumption for the
+exercise, not a decision taken by anyone.
 """
 
 
@@ -198,6 +222,16 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
                 'positive': 'yes', 'case_yaml': 'case/case.yaml',
                 'files': ['README.md', 'case/case.yaml', 'case/data/bank.csv',
                           'case/data/bank-names.txt']}
+    if case == 'auto-mpg':
+        (dest / 'data').mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(AUTO_MPG / 'case.yaml', dest / 'case.yaml')
+        for name in ('auto-mpg.data', 'auto-mpg.names'):
+            shutil.copyfile(AUTO_MPG / 'data' / name, dest / 'data' / name)
+        (ws / 'README.md').write_text(AUTO_MPG_README, encoding='utf-8')
+        return {'case': 'auto-mpg', 'data': 'case/data/auto-mpg.data', 'sep': 'whitespace',
+                'target': 'mpg', 'positive': None, 'case_yaml': 'case/case.yaml',
+                'files': ['README.md', 'case/case.yaml', 'case/data/auto-mpg.data',
+                          'case/data/auto-mpg.names']}
     if case == 'synthetic':
         from importlib import util as _u   # noqa: F401  (keeps the import local)
         if hidden_dir is None:
@@ -235,10 +269,19 @@ def init_study(workspace: Path, info: dict) -> dict:
     return payload
 
 
+def enable_session_log(workspace: Path) -> None:
+    """Create the study's opt-in, content-free session log (``HYPOTRAIL_SESSION_LOG=1`` on
+    one read-only-in-effect ``status`` call); every later CLI call of any chat appends to it."""
+    hyp('status', '--summary', '--study', workspace, extra_env={'HYPOTRAIL_SESSION_LOG': '1'})
+
+
 def prepare_study(case: str, workspace: Path, hidden_dir: Path | None = None,
-                  seed: int = 20261018) -> dict:
+                  seed: int = 20261018, session_log: bool = False) -> dict:
     info = prepare_case(case, workspace, hidden_dir, seed)
     init = init_study(workspace, info)
+    if session_log:
+        enable_session_log(workspace)
+        info['session_log'] = True
     info['init'] = {k: init[k] for k in ('revision', 'case', 'dataset', 'agent_instructions')}
     info['installed'] = list(init['agent_instructions']['copied'])
     info['cli'] = init['agent_instructions']['cli']

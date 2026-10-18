@@ -1,0 +1,53 @@
+# Answering junior persona for a regression study (Auto MPG, post-v0.1 acceptance).
+#
+# Same mechanics as e1_persona_answering.yaml: the scripted utterances below are said in
+# order; after the steps listed in `answer_after`, a fresh `claude -p` (no tools, empty
+# configuration) reads only the assistant's last reply and `sheet`, and either writes the
+# analyst's short answer or says NONE. It never reads the study state.
+#
+# The scripted steps carry no column name except the one question the junior asks
+# ("why not use model year?"), and no figure. Run with:
+#   e1.py run --arm arms/arm_b --case auto-mpg --persona answering \
+#       --persona-file e1_persona_regression.yaml --session-log ...
+schema: hypotrail.acceptance-persona-answering/1
+id: e1-junior-regression
+model: sonnet
+max_answers_per_gap: 3
+# Never right after "where are we?", so the resumption test is unchanged.
+answer_after: [intent, accept_plan, continue_1, model_year, continue_2, continue_3, conclusion]
+chats:
+  - # chat 1
+    - label: intent
+      say: >-
+        Hi! I'm a junior data analyst and I'm new to machine learning. My manager shared the
+        files in this folder (start with README.md). We want to estimate the fuel consumption
+        of newer cars from older ones. Can you help me do a proper study? Please explain
+        things as we go.
+    - label: accept_plan
+      say: That plan looks good to me, let's go with it.
+    - label: continue_1
+      say: Please continue with the plan.
+    - label: model_year
+      say: Why not use model year?
+    - label: continue_2
+      say: Thanks. Keep going with the next steps.
+  - # chat 2: a new conversation, no resume
+    - label: where_are_we
+      say: where are we?
+    - label: continue_3
+      say: Please continue until we have a model to keep.
+    - label: conclusion
+      say: Can you write the conclusion for my manager? What should we conclude?
+sheet: >-
+  You play a junior data analyst who is new to machine learning, cooperative and terse.
+  Below is the assistant's last message to you. If it waits for you to confirm, choose, or
+  answer something about the study (a decision, a restatement to confirm, variables to
+  leave out, a split, the model to keep, a conclusion), reply as the analyst in one or two
+  sentences in your own words: accept the option the assistant recommends, and say
+  concretely what it means, using the assistant's own terms (for example the moment of the
+  prediction, the variables to leave out and why, how the data are split, which model to
+  keep and why, or the main point of the conclusion). If it asks you to write something in
+  your own words, write it. Never reply with only "ok", "yes", "keep that", "continue" or a
+  similar word. Do not ask for anything new and do not add numbers the assistant did not
+  give. If the message does not wait for any answer from you, reply exactly NONE. Output
+  only the analyst's reply.
