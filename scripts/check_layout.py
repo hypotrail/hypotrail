@@ -12,6 +12,8 @@ REQUIRED = [
     'framework/mlkit/pilot.py', 'framework/mlkit/reliability.py',
     'framework/tests/fixtures/legacy-project/frame.yaml',
     'experimental/companion/feature.json',
+    'clients/vscode-companion/package.json', 'clients/vscode-companion/extension.js',
+    'clients/vscode-companion/README.md', 'docs/decisions/0003-companion-webview-v0.md',
 ]
 LINKS = {
     'experimental/companion/runtime/bank-tutorial.html': 'use-cases/bank-marketing/bank-tutorial.html',
@@ -74,6 +76,36 @@ def check_cases(errors, absent=None):
             errors.append(f'Case dataset fingerprint mismatch: {folder.name}')
     return count
 
+# The study companion (ADR 0003) is a client of the `hypotrail` CLI behind a flag that is
+# off by default: no runtime dependency, no network module, no shell, no storage of its own.
+COMPANION_CLIENT = 'clients/vscode-companion'
+COMPANION_SETTING = 'hypotrail.companion.enabled'
+COMPANION_FORBIDDEN = re.compile(
+    r"require\(['\"](?:node:)?(?:https?|http2|net|tls|dgram|ws|sqlite3?|better-sqlite3)['\"]\)"
+    r"|shell:\s*true|\bexecSync\b|\bspawn\(|childProcess\.exec\(|\bexec\("
+    r"|vscode\.lm\b|WebSocket|localStorage|indexedDB|\bfetch\(")
+
+def check_companion_client(errors):
+    """The companion client stays default-off, dependency-free, and CLI-only."""
+    folder = ROOT / COMPANION_CLIENT
+    package = json.loads((folder / 'package.json').read_text(encoding='utf-8'))
+    setting = (package.get('contributes', {}).get('configuration', {})
+               .get('properties', {}).get(COMPANION_SETTING, {}))
+    if setting.get('default') is not False:
+        errors.append(f'Companion client flag {COMPANION_SETTING} is not default-off')
+    if package.get('activationEvents') != ['onCommand:hypotrail.companion.open']:
+        errors.append('Companion client activates on more than its command')
+    if package.get('capabilities', {}).get('untrustedWorkspaces', {}).get('supported') is not False:
+        errors.append('Companion client does not require a trusted workspace')
+    if package.get('dependencies'):
+        errors.append('Companion client has runtime dependencies')
+    sources = sorted(p for p in folder.rglob('*.js')
+                     if 'test' not in p.relative_to(folder).parts and 'node_modules' not in p.parts)
+    for path in sources:
+        if COMPANION_FORBIDDEN.search(path.read_text(encoding='utf-8')):
+            errors.append(f'Companion client source uses a forbidden API: {path.relative_to(ROOT)}')
+    return len(sources)
+
 def main():
     errors = []
     for rel in REQUIRED:
@@ -98,9 +130,11 @@ def main():
             errors.append(f'Results do not reference the declared dataset: {entry["dir"]}')
     absent = []
     cases = check_cases(errors, absent)
+    client_sources = check_companion_client(errors)
     print(json.dumps({'ok': not errors, 'use_cases': 2, 'cases': cases,
                       'not_materialized': absent,
                       'compatibility_links': len(LINKS),
+                      'companion_client_sources': client_sources,
                       'errors': errors}, ensure_ascii=False, indent=2))
     return bool(errors)
 

@@ -51,7 +51,7 @@ Refused explicitly (`unsupported_capability`, with the capability named), never 
 - values that would silently change meaning, refused at `init` with `invalid_case`: a cell of a numeric variable that is not a number and not declared in `na_values`, and a binary target label other than the declared labels;
 - a changed dataset or case file (`dataset_changed`, `sources_changed`): start a new study.
 
-Not built, by design: the webview companion (paused; [ADR 0002](../decisions/0002-companion-as-cli-client.md) makes any future one a client of this CLI), an application server, MCP integration, multi-agent orchestration, decision controls in the HTML.
+Not built, by design: the old webview companion (paused; [ADR 0002](../decisions/0002-companion-as-cli-client.md) makes any new one a client of this CLI; the flagged study panel below is that client), an application server, MCP integration, multi-agent orchestration, decision controls in the HTML.
 
 ## Known limits and remaining defects
 
@@ -80,6 +80,16 @@ Remaining defects from the acceptance reports (Claude Code, not fixed):
 - `delegation_scope` is shown in `status`, the summary, and the text output, but not in the HTML or the notebook.
 - `status --json` is large (tens of kilobytes); agents are told to use `status --summary`.
 - The HTML report and notebook show execution liveness as `not_checked`; only `status` probes leases.
+
+## Study panel for VS Code (companion v0, behind a flag)
+
+Post-v0.1, on the owner's explicit request: [`clients/vscode-companion/`](../../clients/vscode-companion/README.md), [ADR 0003](../decisions/0003-companion-webview-v0.md), decisions [CW.1–CW.12](../plans/V0.1-DECISIONS.md#companion-v0-study-panel-behind-a-flag-cw). It is off by default: the setting `hypotrail.companion.enabled` or `HYPOTRAIL_COMPANION=1` enables it. With the flag off, the command shows "Companion disabled (feature flag)" and nothing else runs.
+
+- It is a client of the CLI only. It reads `status --summary`, running the argv recorded in `.hypotrail/agent.json` through `execFile`, never a shell, and it refreshes on writes to `.hypotrail/`. It keeps no state and has no server or language-model integration.
+- It shows the recap, the plan position, each deliverable's message with buttons to open the report in the browser and the notebook in the editor, the open proposals with their restatement, the open holds, and the top "not yet defensible" items.
+- Its one write function is for an open proposal: the junior can confirm it in words they type themselves (`decide confirm ... --channel webview --actor user`, with a new request id and the revision shown), or withdraw it after a modal. Every engine refusal is shown verbatim with a short explanation. It offers no delegation and runs no other mutating command.
+- Tests: Node unit tests with a fake `vscode` module; integration tests that drive the real CLI on a temporary synthetic study (a bare "ok" is refused; typed words are recorded with `channel: webview`); and an offline Playwright test of the webview document. See [CONTRIBUTING.md](../../CONTRIBUTING.md).
+- **Not run inside a real VS Code**: the VS Code webview host, its theme, the CSP with VS Code's default styles, workspace trust, and the development host are untested. No junior has used it. The engine and the CLI contract are unchanged.
 
 ## Observation kit (post-v0.1)
 
@@ -117,4 +127,4 @@ The legacy pilot (`framework/mlkit/pilot.py` and its modules) is unchanged apart
 
 ## Next work
 
-Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions (now also covering the post-v0.1 F3, F5, and T8 changes); the observed junior sessions of the observation kit; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3) and of a study on the scikit-learn cases (engine side tested for generality); an agentic re-run after the P1–P7 fixes; a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.
+Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions (now also covering the post-v0.1 F3, F5, and T8 changes); the observed junior sessions of the observation kit; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3) and of a study on the scikit-learn cases (engine side tested for generality); an agentic re-run after the P1–P7 fixes; a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; a first session of the study panel inside a real VS Code, then observed sessions with the flag off and on (ADR 0003, "What is measured next"); and a first use by a real junior.

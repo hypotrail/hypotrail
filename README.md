@@ -20,6 +20,7 @@ Create the study in a folder **outside this repository** (here `~/studies/bank`)
 |---|---|
 | [framework/](framework/README.md) | Reusable Python engine, notebook sources, templates, and tests |
 | [use-cases/](use-cases/README.md) | Bank Marketing and Auto MPG data, context, adapters, and reference results |
+| [clients/vscode-companion/](clients/vscode-companion/README.md) | Study panel for VS Code, a client of the `hypotrail` CLI behind a feature flag that is off by default (v0) |
 | [experimental/companion/](experimental/companion/README.md) | Paused browser and VS Code companion experiment |
 | [docs/](docs/START-HERE.md) | Product specification, architecture, design review, and implementation handoff |
 | `scripts/` | Repository maintenance checks |

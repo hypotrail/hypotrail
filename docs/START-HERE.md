@@ -4,7 +4,7 @@ Open the **root of the `hypotrail` repository** and start the development agent 
 
 ## Where things stand
 
-**v0.1 is implemented**: a guided junior study of Bank Marketing, driven by Claude Code in chat, with one evolving offline HTML report and a generated Marimo notebook, on top of a study engine (`framework/mlkit/study/`, CLI `hypotrail`) that keeps numbers, partitions, and decisions traceable. GitHub Copilot is not tested yet, no human junior has used it, and the companion remains paused. The handoff lists what works, what is refused, and the remaining defects.
+**v0.1 is implemented**: a guided junior study of Bank Marketing, driven by Claude Code in chat, with one evolving offline HTML report and a generated Marimo notebook, on top of a study engine (`framework/mlkit/study/`, CLI `hypotrail`) that keeps numbers, partitions, and decisions traceable. GitHub Copilot is not tested yet, no human junior has used it, and the old companion remains paused; a study panel for VS Code exists behind a feature flag that is off by default ([ADR 0003](decisions/0003-companion-webview-v0.md)). The handoff lists what works, what is refused, and the remaining defects.
 
 ## Reading order
 
@@ -30,7 +30,7 @@ docs/specs/CLI-CONTRACT.md, then read any additional specifications I provide.
 
 v0.1 (Bank Marketing, Claude Code, HTML report, generated Marimo notebook) is
 implemented. Put reusable code in framework and case material in use-cases.
-The experimental companion is paused. Preserve existing study state and data;
+The experimental companion is paused; a flagged study panel (clients/vscode-companion, ADR 0003) is off by default. Preserve existing study state and data;
 create test studies outside the repository.
 
 Compare the task with the handoff's known limits, present a concrete plan,

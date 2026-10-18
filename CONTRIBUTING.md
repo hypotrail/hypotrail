@@ -1,12 +1,12 @@
 # Contributing
 
-v0.1 of the junior workflow ([the specification](docs/specs/JUNIOR-WORKFLOW.md)) is implemented for Bank Marketing with Claude Code. Start with [the handoff](docs/handoff/IMPLEMENTATION.md) for its capabilities and limits, and [the checklist](docs/acceptance/V0.1-CHECKLIST.md) for its evidence. Companion development is paused.
+v0.1 of the junior workflow ([the specification](docs/specs/JUNIOR-WORKFLOW.md)) is implemented for Bank Marketing with Claude Code. Start with [the handoff](docs/handoff/IMPLEMENTATION.md) for its capabilities and limits, and [the checklist](docs/acceptance/V0.1-CHECKLIST.md) for its evidence. The old companion is paused; a study panel for VS Code (`clients/vscode-companion/`, ADR 0003) exists behind a feature flag that is off by default.
 
 Use English for maintained prose, interface text, code comments, and new examples. Preserve original third-party data and identifiers required for compatibility. Keep changes focused and explain both behavior and validation in commits and pull requests.
 
 ## Environment
 
-Use Python 3.13, uv, and a dedicated environment. Node.js is needed only for companion tests and extension development.
+Use Python 3.13, uv, and a dedicated environment. Node.js (22 or later) is needed for the study panel's tests and for companion development.
 
 Supported platforms are Linux, macOS, and WSL. The engine relies on POSIX file locking (`fcntl`); native Windows is not supported.
 
@@ -38,7 +38,11 @@ uv sync --project framework --group dev --group browser
 uv run --project framework python -m playwright install chromium
 python3 scripts/check_layout.py
 uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py framework/tests/test_synthetic_case.py framework/tests/study framework/tests/acceptance
+node --test clients/vscode-companion/test/*.test.js
+uv run --project framework python -m pytest -q -p no:cacheprovider clients/vscode-companion/test
 ```
+
+The last two lines test the study panel (`clients/vscode-companion/`, ADR 0003). The first runs its Node unit tests, which use a fake `vscode` module, and its integration tests, which drive the real `hypotrail` CLI on a temporary synthetic study; together they take a few seconds. The second runs its offline Playwright test of the webview document, in about two seconds. Run that pytest command separately: pytest takes its configuration from `framework/pyproject.toml` only when every path is under `framework/`. None of these runs a real VS Code.
 
 At the v0.1 closure it reports about 800 passed; the only skips are the 34 opt-in agent scenarios of `framework/tests/acceptance/agent/test_scenarios.py`. Without the `browser` group the same command passes but skips the offline browser test with a `PytestWarning` that says so; that run is not the full gate.
 

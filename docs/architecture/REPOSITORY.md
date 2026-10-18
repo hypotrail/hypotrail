@@ -33,6 +33,10 @@ use-cases/
     results.json
     prepare_auto_mpg.py
     data/
+clients/
+  vscode-companion/          study panel (ADR 0003): a hypotrail CLI client behind a flag,
+                             off by default; plain JavaScript, no build, no dependency
+    extension.js, lib/, media/, test/
 experimental/companion/
   runtime/                   tutorial UI, bridge, protocol, tests
   vscode-extension/          extension sources and Node tests
@@ -42,7 +46,9 @@ scripts/check_layout.py       repository and dataset integrity checks
 
 ## Dependency direction
 
-The framework must not depend on Bank Marketing, Auto MPG, or the companion. Business adaptations belong to use cases. The future engine should consume explicit project contracts rather than recognize datasets by name in generic code.
+The framework must not depend on Bank Marketing, Auto MPG, or the companion.
+
+`clients/` depends on the framework only through the documented CLI contract (`docs/specs/CLI-CONTRACT.md`): it runs the argv recorded in a study's `.hypotrail/agent.json` and reads its JSON output. It imports no engine module and reads no state file directly; it only watches `.hypotrail/` for changes. Its tests create temporary studies with the framework's synthetic fixtures. `experimental/companion/` and `clients/` share no code. Business adaptations belong to use cases. The future engine should consume explicit project contracts rather than recognize datasets by name in generic code.
 
 The experimental runtime accesses case resources through repository-relative symbolic links. These links stay inside the checkout. `journeys/` and `prepare_discovery.py` still belong to that tutorial, not to the future junior orchestration. The Bank and Auto MPG preparation scripts physically reside in their case directories.
 
@@ -68,5 +74,7 @@ Internal symbolic links require a checkout that preserves links. Packaging the e
 ## Generated artifacts
 
 Extension `assets/`, `engine/`, VSIX bundles, browser artifacts, caches, environments, and local sessions are ignored. Run the explicit packaging script when an extension bundle is needed; do not edit generated copies.
+
+The study panel in `clients/vscode-companion/` has no generated files: it is loaded from source. It is enabled only by the setting `hypotrail.companion.enabled` or `HYPOTRAIL_COMPANION=1`.
 
 The companion's paused marker records product priority. It does not disable an extension already installed in VS Code. No installed extension is required for framework development.
