@@ -55,6 +55,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    confirm with words the junior gave before the proposal existed. When a reply
    pre-empts a restatement (the junior confirms something you have not proposed yet),
    propose it, show the restatement, and confirm it on the junior's next reply.
+   The prefix "My recommended default:" is reserved for a default you propose **after
+   a delegation** (below): the engine accepts `--basis delegated_default` only on such a
+   restatement. Any other proposal, including one you make on "continue", is a plain
+   declarative restatement without that prefix. If the junior answers a "My recommended
+   default:" proposal in their own words instead of delegating, confirm it as explicit.
    - **Explicit** (the default `--basis explicit`): a reply that restates or affirms the
      specific restatement in the junior's own words, such as "yes, before the first
      call" or "I confirm the threshold rule". The engine refuses a reply made only of
@@ -100,8 +105,12 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    (the message gives N and the revision its content comes from); a changed file hash
    after a failure is the stale banner, not damage. Give the current step and the next
    action.
-8. **Interrupted execution (exit `4`, `interrupted_unknown`, or `next_action:
-   acknowledge_interruption`).** Stop. Tell the junior that the run was interrupted and
+8. **Interrupted execution (exit `4`, `interrupted_unknown`, `next_action:
+   acknowledge_interruption` or `outcome_unknown`, or an entry under
+   `executions.suspected_interrupted`).** Stop. Never call an execution "in progress" or
+   "running" unless this chat started it and its command has not returned yet; an
+   execution that `status` lists as `outcome_unknown` (no process holds its lease)
+   stopped and its outcome is unknown, so say exactly that. Tell the junior that the run was interrupted and
    that its outcome is unknown: it may or may not have read rows, and nothing was
    recorded from it. Ask whether to acknowledge it and whether to run the activity again,
    and end your turn. Never acknowledge or rerun in the same turn. When they answer,
@@ -112,7 +121,12 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    rows, the <K> highest scores held <N> subscribers", never "we will get <N>". When a
    capacity or a threshold changes, say explicitly that the model and its predictions are
    unchanged: only the selection rule changes, nothing was refitted, and the fit results
-   are the same (cite their `result_id`s, unchanged). Before you
+   are the same (cite their `result_id`s, unchanged). When you apply a capacity, state
+   the population it applies to: the evaluation selects K of the <N> validation rows
+   (cite `n` of the policy evaluation), which stand for a share of the contacts, not a
+   whole campaign. Give the selection as a rate of those rows (the registered
+   `volume_rate`) before any extrapolation, and never promise to scale a figure that no
+   activity scales. Before you
    send a message that contains numbers, and before you propose the conclusion, pipe the
    draft into `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error. When
    the draft repeats a figure the junior gave you (a manager's call limit), pass

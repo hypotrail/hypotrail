@@ -248,3 +248,34 @@ def test_unknown_placeholders_are_refused():
         af.render('{{NOPE}}', flavour=af.CLAUDE, values={}, source='x.md')
     assert os.path.basename(af.SKILL_PATHS[af.CLAUDE]) == 'SKILL.md'
     assert Path(af.SKILL_PATHS[af.COPILOT]).parts[0] == '.github'
+
+
+def test_instructions_carry_the_closure_fixes():
+    """F1, F2, F4 of the final acceptance check: dead executions, the population of a
+    capacity, and the reserved "My recommended default:" prefix."""
+    from mlkit.study import view
+    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    # F1: never "in progress" unless this chat started it; outcome_unknown is said as such.
+    rule8 = _rule(text, 8)
+    for phrase in ('outcome_unknown', 'executions.suspected_interrupted',
+                   'Never call an execution "in progress"', 'unless this chat started it'):
+        assert phrase in rule8, phrase
+    for doc in (skill, resume):
+        assert 'suspected_interrupted' in doc and 'outcome_unknown' in doc
+        assert 'in progress' in doc
+    assert view.LIVENESS_UNKNOWN == 'outcome_unknown'
+    # F2: state the population of a capacity and give it as a rate first.
+    rule9 = _rule(text, 9)
+    for phrase in ('state\n   the population it applies to', 'validation rows',
+                   'share of the contacts', '`volume_rate`', 'before any extrapolation'):
+        assert phrase in rule9, phrase
+    assert 'share of the contacts' in skill and '`volume_rate`' in skill
+    # F4: the prefix is reserved for a default proposed after a delegation.
+    rule4 = _rule(text, 4)
+    for phrase in ('reserved for a default you propose **after\n   a delegation**',
+                   'plain\n   declarative restatement without that prefix',
+                   'confirm it as explicit'):
+        assert phrase in rule4, phrase
+    assert 'only when you propose a default\nafter a delegation' in skill

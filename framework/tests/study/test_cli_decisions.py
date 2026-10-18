@@ -271,6 +271,21 @@ def test_a_delegation_is_never_recorded_as_explicit(study, work):
     assert code == 2 and bad['error']['code'] == 'invalid_arguments'
 
 
+def test_an_explicit_reply_confirms_a_recommended_default(study, work):
+    """F4: the junior may answer a "My recommended default:" proposal in their own words;
+    it is then an explicit confirmation, not a delegation."""
+    pid = propose(study, work, 'prediction_time', value=PT, rid='r1', rev=1,
+                  restatement=DEFAULT_RESTATEMENT)['result']['proposal_id']
+    done = confirm(study, work, pid, 'Yes, before the first reminder is sent: that is when we act.',
+                   rid='r2', rev=2)
+    assert done['result']['status'] == 'confirmed' and done['result']['basis'] == 'explicit'
+    assert done['result']['delegation_scope'] is None
+    view = _status(study, work)['view']
+    assert view['decisions']['prediction_time']['confirmation']['restatement'] \
+        == DEFAULT_RESTATEMENT
+    assert 'delegated_decisions' not in {x['id'] for x in view['not_yet_defensible']}
+
+
 def test_delegation_patterns():
     for words in DELEGATIONS + ("It's up to you.", 'I leave it to you', 'Use the default.',
                                 'Prenez votre recommandation.', 'je vous laisse décider'):

@@ -58,7 +58,9 @@ fit result instead).
 A restatement is one declarative sentence the junior can accept or correct, never a
 question to answer ("You predict before the first call, so nothing from the call itself
 can be used."). Propose before you ask, and never confirm with words the junior wrote
-before the proposal existed. When the junior delegates ("use your recommended default"),
+before the proposal existed. Start a restatement with "My recommended default:" only when you propose a default
+after a delegation; every other proposal, including one made on "continue", is a plain
+declarative sentence. When the junior delegates ("use your recommended default"),
 propose the default with a restatement that starts with "My recommended default:", say in
 the chat that it will be recorded as delegated, and confirm it with
 `--basis delegated_default` and the delegation's scope: `--delegation-scope this_decision`
@@ -83,6 +85,11 @@ command, from `status --summary` only, in at most five lines, goal first:
    with their `result_id`, and any stale result or interrupted execution.
 4. **The deliverables**: each one's status in a few words.
 5. **The next decision or action** with your recommended default.
+
+Never call an execution "in progress" unless this chat started it and it is still
+running. If the summary lists one under `executions.suspected_interrupted`, or
+`next_action.kind` is `outcome_unknown`, say that the run stopped and its outcome is
+unknown, and ask before acknowledging it.
 
 No revision numbers, proposal ids, request ids, or execution ids unless the junior asks;
 a `result_id` goes only next to the figure it backs.
@@ -112,6 +119,10 @@ the result.
 - **A new capacity or threshold.** The model and its predictions are unchanged: only
   the selection rule applied to the same scores changes. Say so explicitly, and cite the
   fit result ids as unchanged.
+- **Which population a capacity applies to.** A capacity of K selects K of the <N>
+  validation rows (the evaluation's `n`), which stand for a share of the contacts, not a
+  whole campaign. Say so, and give the selection as a rate of those rows (`volume_rate`)
+  before any extrapolation to another population.
 - **Validation is not independent.** A rule chosen on validation rows is optimistic;
   the report's "What is not yet defensible" section lists these limits. Repeat them.
 

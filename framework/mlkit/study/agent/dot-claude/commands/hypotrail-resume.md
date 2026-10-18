@@ -17,7 +17,9 @@ Resume this Hypotrail study from its recorded state, not from memory.
       for their answer.
    3. **What matters next**: the excluded features by name, the results the next step
       uses (cite figures with their `result_id`), and any stale result or interrupted
-      execution.
+      execution. An execution under `executions.suspected_interrupted` (or
+      `next_action.kind` `outcome_unknown`) stopped with an unknown outcome: say so,
+      never "in progress", and ask before acknowledging it.
    4. **The deliverables**: each one's status in a few words (repeat its `message` if it
       is not up to date).
    5. **The next decision or action** (`next_action`) with your recommended default, and
