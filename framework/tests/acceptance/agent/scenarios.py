@@ -288,8 +288,10 @@ def c_artifact_status(ctx, artifact='report', status=('failed', 'stale'), previo
 
 
 def c_answer_does_not_claim_up_to_date(ctx):
-    hits = gb.claims_up_to_date(ctx.all_answers())
-    return _ok(not hits, claims=hits)
+    items = ((ctx.final.get('artifacts') or {}).get('items') or {})
+    ok_surfaces = tuple(n for n, i in items.items() if (i or {}).get('status') == 'ok')
+    hits = gb.claims_up_to_date(ctx.all_answers(), ok_surfaces)
+    return _ok(not hits, claims=hits, ok_surfaces=ok_surfaces)
 
 
 def c_answer_names_surfaces(ctx):
