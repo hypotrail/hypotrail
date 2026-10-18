@@ -197,6 +197,13 @@ def test_audit_allows_the_recorded_cli_invocation():
     assert not bad['ok'] and bad['forbidden_access'][0]['needles'] == ['/repo']
     t.tool('Bash', command='python3 -c "import pandas"')
     assert graders.audit_bash(t.events, allowed=[cli])['violations']
+    # a path containing "hypotrail" does not mask a computation piped after it
+    masked = ('uv run --project /home/u/hypotrail/framework hypotrail status --json --study '
+              '/tmp/hypotrail-ws-1 | uv run --project /home/u/hypotrail/framework python -c '
+              '"import json,sys; print(list(json.load(sys.stdin)))"')
+    assert graders.classify_command(masked) == ['python']
+    assert graders.classify_command('uv run --project /home/u/hypotrail/framework hypotrail '
+                                    'status --summary --study /tmp/hypotrail-ws-1 | head -50') == []
 
 
 def test_shell_writes_are_found_and_prose_is_ignored():

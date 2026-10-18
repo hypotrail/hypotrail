@@ -115,7 +115,9 @@ COMPUTE_RE = re.compile(
     r'uv\s+run\s+(?!--project\s+\S+\s+hypotrail\b)(?!hypotrail\b)|awk|gawk|mawk|perl|Rscript|'
     r'sqlite3|duckdb|csvstat|csvsql|xsv|qsv|mlr|datamash|bc|node\s+-e|marimo)(?![\w-])'
     r'|\.venv/bin/(?:python3?|pip3?|marimo)')
-ALLOWED_HYPOTRAIL_RE = re.compile(r'(?:uv\s+run\s+--project\s+\S+\s+)?hypotrail\b[^|;&]*')
+# ``hypotrail`` as a command word only: a path that contains "hypotrail" (the repository
+# checkout, ``/tmp/hypotrail-ws-...``) must not mask what follows it on the line.
+ALLOWED_HYPOTRAIL_RE = re.compile(r'(?:uv\s+run\s+--project\s+\S+\s+)?(?<![\w/.-])hypotrail(?![\w/.-])[^|;&]*')
 
 
 HEREDOC_RE = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?\n\2[ \t]*(?:\n|$)", re.S)
