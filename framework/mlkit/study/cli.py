@@ -13,6 +13,10 @@
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
 
+Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlog``)::
+
+    hypotrail session-report --study DIR [--since REV] [--gap-minutes M]
+
 Output is JSON on stdout by default (one document); ``--format text`` prints a short
 human summary. ``--study`` is mandatory: the study is never taken from the current
 directory or from ``OSML_ROOT``.
@@ -48,6 +52,8 @@ EXTENSIONS = {
     'render': 'mlkit.study.cmd_render',    # Phase 3: manifest, HTML, notebook (WP3.1-3.2)
     'check': 'mlkit.study.cmd_check',      # Phase 3: number and wording checks (WP3.3)
     'preview': 'mlkit.study.cmd_preview',  # Phase 2: read-only policy preview (WP2.4)
+    # Post-v0.1: read-only timeline of a study for observed sessions.
+    'session-report': 'mlkit.study.cmd_session_report',
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -222,6 +228,9 @@ def _text(payload: dict) -> str:
             ' (replayed, no effect)' if payload['replayed'] else '')
         return head + '\n' + '\n'.join(f'  {k}: {json.dumps(v, ensure_ascii=False)}'
                                        for k, v in r.items())
+    if schema.startswith('hypotrail.session_report/'):
+        from .cmd_session_report import markdown
+        return markdown(payload)
     if schema == cmd.SCHEMAS['init']:
         return (f'study created at {payload["study"]} (revision {payload["revision"]}) on case '
                 f'{payload["case"]["id"]}\nnext action: {payload["next_action"]["message"]}')
@@ -247,8 +256,20 @@ def _wanted_format(argv: Sequence[str]) -> str:
 
 
 def run(argv: Sequence[str] | None = None) -> cmd.Outcome:
-    """Parse ``argv`` and run the command; never raises for refusals."""
+    """Parse ``argv`` and run the command; never raises for refusals.
+
+    When the opt-in session log is enabled (:mod:`mlkit.study.sessionlog`), the outcome
+    is recorded there, without content, after it is final.
+    """
     argv = list(sys.argv[1:] if argv is None else argv)
+    outcome = _run(argv)
+    from . import sessionlog
+
+    sessionlog.record(argv, outcome.payload, outcome.exit_code)
+    return outcome
+
+
+def _run(argv: list) -> cmd.Outcome:
     name = argv[0] if argv else ''
     command = ' '.join(argv[:2]) if name == 'decide' else name
     try:

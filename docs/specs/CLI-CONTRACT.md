@@ -38,7 +38,7 @@ hypotrail decide withdraw PROPOSAL [--reason TEXT]
                  --request-id ID --expected-revision REV --study DIR
 ```
 
-`--channel` defaults to `chat`, `--actor` to `user`, and `--basis` to `explicit` (§5). `--delegation-scope` has no default and goes with `--basis delegated_default` only (§5, R1). Reserved extension commands, absent in Phase 1 and refused with `unsupported_capability` until their module exists: `run`, `render`, `check`, `preview` (§8). Phase 3 adds `render` and `check` (§8.3).
+`--channel` defaults to `chat`, `--actor` to `user`, and `--basis` to `explicit` (§5). `--delegation-scope` has no default and goes with `--basis delegated_default` only (§5, R1). Reserved extension commands, absent in Phase 1 and refused with `unsupported_capability` until their module exists: `run`, `render`, `check`, `preview` (§8). Phase 3 adds `render` and `check` (§8.3). Post-v0.1 adds the read-only `session-report` (§8.6).
 
 ## 2. Exit codes
 
@@ -392,6 +392,24 @@ An *evaluation* is the output of the pure `mlkit.study.policy.evaluate(y, score,
 
 `cmd_check` reads the features a fit used from `values.features` and `inputs.features`. A number written with a minus sign glued to its digits (`-1`) is read as negative by `cite.parse_numbers`; `10-18` is still two numbers.
 
+
+### 8.6 Session report and session log (post-v0.1, observation kit)
+
+For observed sessions with a junior (`docs/research/OBSERVATION-PROTOCOL.md`). Added within the extension point of §8 (`cli.EXTENSIONS['session-report']` is `mlkit.study.cmd_session_report`).
+
+```text
+hypotrail session-report --study DIR [--since REV] [--gap-minutes M] [--format text]
+```
+
+* **Read-only**: it never writes (it runs in a read-only process too) and is never logged. Exit `0`; `--gap-minutes` below 1 is `invalid_arguments`. `--format text` prints the same report as Markdown (not a contract).
+* Payload `hypotrail.session_report/1`, keys in order: `schema`, `ok`, `study`, `revision`, `since`, `sources`, `span`, `commands`, `refusals`, `decisions`, `pauses`, `runs`, `renders`, `checks`, `gaps`, `timeline`, `privacy`. `sources` is `{revisions, events, session_log: {enabled, entries, path, note}, artifacts_status}`; `span` is `{first, last, seconds, revisions}`; `commands` counts logged invocations by command and verb; `refusals` lists `{time, command, code, reason, revision, proposal_id, activity}`; `decisions` has one item per proposal `{proposal_id, decision_id, proposed_at, proposed_revision, outcome (open|confirmed|withdrawn|superseded), closed_at, seconds_open, basis, delegation_scope, refused_confirmations, refusal_reasons}`; `pauses` has one item per pause (1: `prediction_time`, `feature_availability`; 2: `split`; 3: `policy`, `conclusion`) `{pause, decisions, opened_at, closed_at, seconds, proposals, confirmed, delegated, refused_confirmations}`, a pause closing when all its decisions are confirmed; `runs` lists executions `{execution_id, activity, rules, column, started_at, outcome, ended_at, seconds, slot, result_id}`; `renders` lists deliverable statuses after logged commands and `render_failed` events; `checks` lists logged `check` runs `{time, revision, target, clean, counts, codes, traced, in_words}`; `gaps` lists idle intervals longer than `--gap-minutes` (default 20) `{from, to, minutes}`, which usually separate chats or days; `timeline` merges revision records, operational events and session-log lines, each with `source` (`revision`, `event`, `session_log`) and `time`.
+* `--since REV` keeps revisions after `REV`, and events and log lines from the time revision `REV` was committed.
+* **Privacy**: the report copies no conversation content. From revision records it keeps identifiers only: action, revision, decision and proposal ids, `superseded`, basis, delegation scope, the invalidation's mutation and how many results it made stale, activity, execution id, rule identifiers, column, slot, status, and the first 8 characters of a result id. It never copies `user_words`, restatements, rationales, proposed values, reasons, or checked text.
+
+**Session log** (`mlkit/study/sessionlog.py`): an opt-in, append-only file `.hypotrail/session-log.jsonl`, one `hypotrail.session_log/1` line per CLI invocation, written after the outcome is final (a write failure is ignored and never changes the outcome).
+
+* Enabled by `HYPOTRAIL_SESSION_LOG=1` for that process, which creates the file; once the file exists, every later invocation appends to it, in any chat, until the file is deleted. `HYPOTRAIL_SESSION_LOG=0` disables it for a process. A read-only process (`HYPOTRAIL_READ_ONLY=1`) never writes it, and `session-report` is never logged (`sessionlog.UNLOGGED`). Off by default: without the file and the variable, no command writes it, so `check` and `status` stay write-free.
+* A line has `schema`, `time`, `command`, `verb`, `exit_code`, `ok`, `revision`, `options` (only `--basis`, `--delegation-scope`, `--rule`, `--column`, `--channel`, `--acknowledge-interruption`, `--since`, the switches `--summary`, `--json`, `--intervals`, whether `--text` read a file or stdin, and how many `--allow-user-text` were given), and, as they apply: `decision_id`, `proposal_id`, `activity`, `refusal: {code, reason}` (the reason only when it is an identifier such as `bare_acknowledgement`), `replayed`, `status`, `basis`, `delegation_scope`, `invalidation: {mutation, stale_results}`, `artifacts` (name to status), `slot`, `result_id` (8 characters), `check: {target, clean, counts, codes, traced, in_words}`, `current_step`, `next_action` (its kind), `rules`. It never holds `--user-words`, `--restatement`, `--rationale`, `--value`/`--value-json`, `--reason`, request ids, checked or user text, or any message.
 
 ## 9. Storage objects
 

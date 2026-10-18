@@ -149,7 +149,16 @@ EXPOSURE_RECORD_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result
 EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'validation_model_evaluation', 'validation_policy_selection')
 EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
-              'check': 'mlkit.study.cmd_check', 'preview': 'mlkit.study.cmd_preview'}
+              'check': 'mlkit.study.cmd_check', 'preview': 'mlkit.study.cmd_preview',
+              # Post-v0.1: read-only session timeline for observed sessions.
+              'session-report': 'mlkit.study.cmd_session_report'}
+# Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
+SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
+SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
+                       'commands', 'refusals', 'decisions', 'pauses', 'runs', 'renders',
+                       'checks', 'gaps', 'timeline', 'privacy')
+SESSION_LOG = {'schema': 'hypotrail.session_log/1', 'file': 'session-log.jsonl',
+               'env': 'HYPOTRAIL_SESSION_LOG'}
 # Phase 3 (WP3.1-WP3.4): render and check payloads, the artefact manifest, check findings.
 PHASE3_SCHEMAS = {'render': 'hypotrail.render/1', 'check': 'hypotrail.check/1',
                   'artifacts': 'hypotrail.artifacts/1'}
@@ -438,6 +447,19 @@ def test_phase3_render_and_check_contract():
             | set(MANIFEST_ITEM_KEYS) | set(ARTIFACT_NAMES)
             | {k for keys in PHASE3_PAYLOAD_KEYS.values() for k in keys})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
+
+
+def test_session_report_and_session_log_contract():
+    from mlkit.study import cmd_session_report, sessionlog
+    assert cmd_session_report.SCHEMA == SESSION_REPORT_SCHEMA
+    assert cmd_session_report.PAYLOAD_KEYS == SESSION_REPORT_KEYS
+    assert (sessionlog.SCHEMA, sessionlog.LOG_FILE, sessionlog.ENV) == tuple(SESSION_LOG.values())
+    assert sessionlog.UNLOGGED == ('session-report',)
+    assert 'hypotrail session-report --study DIR [--since REV]' in DOC
+    keys = {SESSION_REPORT_SCHEMA, *SESSION_REPORT_KEYS, SESSION_LOG['schema'],
+            SESSION_LOG['env']}
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert f".hypotrail/{SESSION_LOG['file']}" in DOC
 
 
 def test_read_side_never_imports_writer_modules():
