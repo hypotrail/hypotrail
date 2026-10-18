@@ -139,7 +139,8 @@ function createStore(memento, studyDir) {
   }
 
   async function setPrefs(prefs) {
-    if (!isPlain(prefs)) throw new Error('prefs is an object');
+    const why = invalidReason(KEYS.prefs, prefs);
+    if (why) throw new Error(why);
     const next = { ...read(memento, KEYS.prefs) };
     if (prefs.hideCards !== undefined) next.hideCards = prefs.hideCards;
     await write(memento, KEYS.prefs, next);

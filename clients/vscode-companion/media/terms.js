@@ -72,6 +72,7 @@
   }
 
   function start() {
+    if (typeof document === 'undefined') return;
     const app = document.getElementById('app');
     if (!app || typeof MutationObserver !== 'function') return;
     new MutationObserver(records => {
