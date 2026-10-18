@@ -191,12 +191,16 @@ test('the WP-0 engine stubs answer a load with the not_implemented refusal; v0 g
   await v0.c.handle({ v: 2, type: 'load', view: 'decisions' });
   assert.equal(v0.c.diagnostics().ignored, 1, 'a v1 message is ignored at stage v0');
   assert.equal(v0.posted.length, 0);
-  // At v1 a load with no handler loader yet says so, without a CLI call.
-  const v1 = controller({ stage: 'v1' });
-  await v1.c.handle({ v: 2, type: 'load', view: 'decisions' });
-  const err = v1.posted.find(m => m.type === 'load_error');
+  // At v1 a load with no handler loader says so, without a CLI call (no handler module
+  // here: WP-U2 registers the decisions loader, so the real handlers would read).
+  const bare = [];
+  const none = createController({ agent, post: m => bare.push(m), settings: { stage: 'v1' }, handlers: [] });
+  await none.handle({ v: 2, type: 'load', view: 'decisions' });
+  const err = bare.find(m => m.type === 'load_error');
   assert.equal(err.view, 'decisions');
   assert.match(err.message, /Not available in this stage/);
+  assert.equal(none.diagnostics().commands.length, 0);
+  const v1 = controller({ stage: 'v1' });
   // The real stub answers through ctx.read with its refusal (CLI-CONTRACT-COMPANION §13).
   const res = await v1.c.context.read('decisions', v1.c.context.cli.decisionsArgv(agent), p => p);
   assert.equal(res.ok, false);

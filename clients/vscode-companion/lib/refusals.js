@@ -1,7 +1,13 @@
 'use strict';
 // What the panel says, for a junior, next to the engine's own refusal message, which is
-// always shown verbatim. These sentences explain what happened; they never suggest
-// words to type (the junior's confirmation must stay their own).
+// always shown verbatim (COMPANION-ADVANCED INV-8, CW.8). These sentences explain what
+// happened and that nothing was recorded; they never suggest words to type (the junior's
+// confirmation must stay their own): no example reply, no quotation, no wording to copy.
+//
+// v0 table, extended by WP-U2 with `export_target_exists` (CLI-CONTRACT-COMPANION §12) and
+// the refusal contexts of W3 (propose), W4 (run an EDA request), W6 (acknowledge an
+// interruption), and W7 (export). The context comes from the payload's `command`, so the
+// frozen `describe(payload)` signature of the controller is unchanged.
 
 const NOTHING = 'Nothing was recorded.';
 
@@ -40,7 +46,57 @@ const BY_CODE = {
   invalid_arguments: 'The CLI refused the arguments of this request.',
   internal_error: 'The CLI failed unexpectedly.',
   unsupported_capability: 'The study engine does not support this request.',
+  export_target_exists: 'The chosen folder already holds files, so the engine wrote nothing there. Choose an empty folder or a new one.',
+  unknown_result: 'The study has no result with this id.',
+  unknown_decision: 'The engine does not know this decision.',
+  literal_number_in_text: 'The engine found a number in the proposal text that it cannot trace to a current result.',
+  causal_or_forecast_wording: 'The engine found causal or forecast wording in the proposal text.',
+  misattributed_delegation: 'The engine found a recommended default credited to the analyst in the proposal text.',
+  interrupted_execution_pending: 'An execution has an unknown outcome, so the engine runs nothing until it is acknowledged in your words (Overview, Health).',
+  execution_in_progress: 'The same computation is already running.',
+  unknown_execution: 'The engine does not list this execution as interrupted any more.',
+  invalid_request: 'The engine refused the form of this request.',
+  invalid_command: 'The engine does not accept this request.',
 };
+
+// Explanations that depend on the write that was refused (the payload's `command`). A
+// `run` refusal about an execution (ambiguous words, unknown execution) is an
+// acknowledgement (W6); any other `run` refusal is an EDA request (W4).
+const BY_CONTEXT = {
+  propose: {
+    stale_revision: 'The study changed after the panel read the draft. The panel has been refreshed: look at the draft again before proposing.',
+    invalid_value: 'The engine does not accept this value as a proposal for this decision.',
+    precondition_missing: 'An earlier step must be confirmed before this decision can be proposed.',
+  },
+  run: {
+    stale_revision: 'The study changed after the panel showed it. The panel has been refreshed: look at the list again before asking for a chart.',
+    precondition_missing: 'An earlier step of the plan must be done before this chart can be computed.',
+    invalid_value: 'The engine does not accept this column for this chart.',
+  },
+  acknowledge: {
+    stale_revision: 'The study changed after the panel showed it. The panel has been refreshed: read the execution again before acknowledging it.',
+    missing_user_words: 'Your acknowledgement was empty.',
+    bare_acknowledgement: 'Your reply only acknowledged the interruption; it did not say, in your words, what you know about it.',
+    negative_reply: 'Your reply reads as a refusal or a hesitation, so it was not taken as an acknowledgement.',
+    unrelated_reply: 'Your reply shares no word with the interrupted execution, so it cannot be read as an acknowledgement of it.',
+  },
+  export: {
+    read_only: 'This process is read-only (HYPOTRAIL_READ_ONLY=1), so the engine exported nothing.',
+  },
+};
+
+/** The refusal context of a payload: propose, run, acknowledge, export, or null. */
+function contextOf(payload, code, reason, details) {
+  const command = typeof (payload && payload.command) === 'string' ? payload.command : '';
+  if (command === 'decide propose') return 'propose';
+  if (command.startsWith('export')) return 'export';
+  if (command === 'run') {
+    const aboutExecution = code === 'ambiguous_confirmation' || code === 'unknown_execution' ||
+      (typeof details.execution_id === 'string' && code !== 'execution_in_progress');
+    return aboutExecution ? 'acknowledge' : 'run';
+  }
+  return null;
+}
 
 /** {code, reason, engineMessage, human, details} for a `hypotrail.error/1` payload. */
 function describe(payload) {
@@ -48,7 +104,9 @@ function describe(payload) {
   const code = typeof error.code === 'string' ? error.code : 'unknown_error';
   const details = error.details && typeof error.details === 'object' ? error.details : {};
   const reason = typeof details.reason === 'string' ? details.reason : null;
-  const human = (reason && BY_REASON[reason]) || BY_CODE[code] || 'The engine refused this request.';
+  const context = BY_CONTEXT[contextOf(payload, code, reason, details)] || {};
+  const human = (reason && context[reason]) || context[code] || (reason && BY_REASON[reason]) || BY_CODE[code] ||
+    'The engine refused this request.';
   return {
     code, reason,
     engineMessage: typeof error.message === 'string' ? error.message : '',
@@ -79,7 +137,14 @@ function summariseDetails(code, details) {
       lines.push(`Missing: ${typeof m === 'string' ? m : (m && (m.text || m.decision || m.id || JSON.stringify(m)))}`);
     }
   }
+  if (code === 'export_target_exists' && typeof details.path === 'string') lines.push(`Folder: ${details.path}`);
+  if (code === 'interrupted_execution_pending' && Array.isArray(details.interrupted)) {
+    for (const e of details.interrupted.slice(0, 10)) {
+      const id = typeof e === 'string' ? e : (e && e.execution_id);
+      if (id) lines.push(`Unknown outcome: ${id}${e && e.activity ? ' (' + e.activity + ')' : ''}`);
+    }
+  }
   return lines.map(l => String(l));
 }
 
-module.exports = { describe, BY_REASON, BY_CODE };
+module.exports = { describe, contextOf, BY_REASON, BY_CODE, BY_CONTEXT, NOTHING };
