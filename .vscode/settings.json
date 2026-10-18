@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/__marimo__": true
+  },
+  "search.exclude": {
+    "**/.venv/**": true,
+    "experimental/companion/vscode-extension/assets/**": true,
+    "experimental/companion/vscode-extension/engine/**": true
+  }
+}
