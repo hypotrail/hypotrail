@@ -166,6 +166,39 @@ def test_capacity_change_no_refit(flow):
     assert all(r['partition'] == 'validation' for r in selection)
 
 
+def test_a_new_evaluation_keeps_the_adopted_rule(flow):
+    """An evaluation replaces the current one in its slot. Evaluating only capacity:100 after
+    threshold:0.5 was adopted must not drop the adopted rule's evaluation (S8)."""
+    flow.run('policy.evaluate', '--rule', 'threshold:0.5')
+    flow.decide('policy', 'threshold:0.5', words='Yes, call everyone scored at 0.5 or more')
+    out = flow.run('policy.evaluate', '--rule', 'capacity:100')
+    assert out['status'] == 'promoted'
+    assert set(out['values']['rules']) == {'capacity:100', 'threshold:0.5'}
+    assert read.open(flow.study).current('policy.evaluation')['params']['rules'] == [
+        'capacity:100', 'threshold:0.5']
+    view = flow.view()
+    assert view['decisions']['policy']['status'] == 'confirmed'
+    assert 'adopted_rule_not_evaluated' not in {x['id'] for x in view['not_yet_defensible']}
+    again = flow.run('policy.evaluate', '--rule', 'capacity:100', '--rule', 'threshold:0.5')
+    assert again['status'] == 'already_current'          # same rules, same identity
+
+
+def test_an_adopted_rule_without_a_current_evaluation_is_not_yet_defensible():
+    from mlkit.study import view as view_model
+    state = {'decisions': {'policy': {'status': 'confirmed', 'value': 'capacity:100'}}}
+    current = {'current': True, 'integrity': 'ok', 'params': {'rules': ['capacity:100']}}
+    assert view_model._adopted_without_evaluation(state, {'policy.evaluation': current}) is None
+    other = {**current, 'params': {'rules': ['threshold:0.2']}}
+    assert view_model._adopted_without_evaluation(state, {'policy.evaluation': other}) == \
+        'capacity:100'
+    stale = {**current, 'current': False}
+    assert view_model._adopted_without_evaluation(state, {'policy.evaluation': stale}) == \
+        'capacity:100'
+    assert view_model._adopted_without_evaluation(state, {}) == 'capacity:100'
+    proposed = {'decisions': {'policy': {'status': 'proposed', 'value': 'capacity:100'}}}
+    assert view_model._adopted_without_evaluation(proposed, {}) is None
+
+
 def test_policy_evaluation_values_and_ties(flow):
     out = flow.run('policy.evaluate', '--rule', 'capacity:100', '--rule', 'threshold:0.5')
     values = out['values']

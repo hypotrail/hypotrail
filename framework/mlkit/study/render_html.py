@@ -448,7 +448,8 @@ def _not_yet_defensible(view: Mapping) -> str:
     items = []
     for item in view['not_yet_defensible']:
         details = []
-        for key in ('decisions', 'features', 'results', 'executions', 'slots', 'missing'):
+        for key in ('decisions', 'features', 'results', 'executions', 'slots', 'missing',
+                    'rules'):
             if item.get(key):
                 details.append(', '.join(lit('identifier', x, 'code') for x in item[key]))
         for source in item.get('sources') or []:

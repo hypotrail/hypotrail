@@ -77,8 +77,8 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'uncertain_features_included', 'stale_results',
                           'interrupted_executions', 'no_causality', 'workbench_not_tracked',
                           'result_integrity',
-                          # Post-acceptance contract (D1).
-                          'delegated_decisions'}
+                          # Post-acceptance contract (D1, adopted rule).
+                          'delegated_decisions', 'adopted_rule_not_evaluated'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',

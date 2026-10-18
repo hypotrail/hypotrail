@@ -301,7 +301,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             _refuse(missing, f'Running {activity}')
             inputs['results'] = {s: state['current'][s] for s in FITS}
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
-            params = {'rules': list(options['rules']), 'models': list(FITS),
+            params = {'rules': evaluated_rules(state, options['rules']), 'models': list(FITS),
                       'reference': BASELINE}
             expose('validation_policy_selection', 'validation', keys['validation'], [target])
     code = registry.code_fingerprint(MODULES[activity])
@@ -310,6 +310,28 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             'params': params,
             'inputs': inputs, 'code': code, 'input_key': key, 'exposures': exposures,
             'case_path': state['case']['path'], 'dataset_sha256': state['dataset']['sha256']}
+
+
+def adopted_rule(state: Mapping) -> str | None:
+    """The policy rule currently adopted (confirmed, or awaiting reconfirmation), if any."""
+    decision = state['decisions']['policy']
+    value = decision['value']
+    if decision['status'] in ('confirmed', 'reconfirm_required') and isinstance(value, str):
+        return value
+    return None
+
+
+def evaluated_rules(state: Mapping, requested) -> list[str]:
+    """The rules a policy evaluation computes: the requested ones, then the adopted rule.
+
+    A new evaluation replaces the current one in its slot, so it always includes the
+    adopted rule: an adopted policy never silently loses its current evaluation.
+    """
+    rules = list(requested)
+    adopted = adopted_rule(state)
+    if adopted is not None and adopted not in rules:
+        rules.append(adopted)
+    return rules
 
 
 def rec_json(obj):

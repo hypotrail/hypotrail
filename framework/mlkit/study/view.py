@@ -109,6 +109,21 @@ def _artifacts(study: read.Study, state: dict) -> dict:
             'status': currency.overall(i['status'] for i in items.values()), 'items': items}
 
 
+def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
+    """The adopted policy rule when no current policy evaluation covers it."""
+    decision = state['decisions']['policy']
+    rule = decision['value']
+    if decision['status'] not in ('confirmed', 'reconfirm_required') or not isinstance(rule, str):
+        return None
+    item = results.get('policy.evaluation')
+    if item and item['current'] and item['integrity'] == 'ok':
+        params = item['params'] if isinstance(item['params'], dict) else {}
+        rules = params.get('rules') or ([params['rule']] if params.get('rule') else [])
+        if rule in rules:
+            return None
+    return rule
+
+
 def build(study_dir) -> dict:
     """The view model of the study at ``study_dir`` (or of an open :class:`read.Study`)."""
     study = study_dir if isinstance(study_dir, read.Study) else read.open(Path(study_dir))
@@ -121,6 +136,11 @@ def build(study_dir) -> dict:
         defensible.append({'id': 'result_integrity', 'slots': broken,
                            'text': 'Some recorded results fail their integrity check and '
                                    'cannot be cited.'})
+    adopted = _adopted_without_evaluation(state, results)
+    if adopted:
+        defensible.append({'id': 'adopted_rule_not_evaluated', 'rules': [adopted],
+                           'text': f'The adopted policy {adopted} has no current evaluation; '
+                                   'its figures cannot be cited until it is evaluated again.'})
     return {
         'schema': SCHEMA,
         'study': str(study.study_dir),
