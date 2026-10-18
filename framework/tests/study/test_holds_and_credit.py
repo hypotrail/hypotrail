@@ -80,7 +80,8 @@ def test_a_hold_blocks_the_decision_until_the_junior_resolves_it(pause):
     study = pause.study
     out = _note(study, 'hold-1', '--about', 'policy', '--text', HOLD)
     assert out['result'] == {'note_id': 'n_1', 'decision_id': 'policy', 'status': 'open',
-                             'user_words': HOLD, 'open_holds': ['n_1']}
+                             'user_words': HOLD, 'open_holds': ['n_1'],
+                             'reconfirm_required': []}
     pid = _propose_policy(pause)                                       # proposing is allowed
     before = _rev(study)
     refused = _confirm(pause, pid, 'Yes, twenty calls is what the desk can handle.')

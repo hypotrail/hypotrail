@@ -34,9 +34,14 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         'results', 'artifacts', 'executions', 'not_yet_defensible',
                         # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
                         'notes',
+                        # Post-v0.1 fixes (D5): the open holds grouped by decision.
+                        'holds',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
                         'recap')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
+SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
+# Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
+NOTE_STATUSES = ('open', 'resolved', 'withdrawn')
 # Post-v0.1 (P2): a junior's condition or hold on a decision.
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
@@ -65,15 +70,20 @@ RESULT_KEYS_BY_ACTION = {
                        'actor', 'invalidation', 'basis', 'delegation_scope'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
     # Post-v0.1 (P2).
-    'decide.note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
+    # Post-v0.1 fixes (D1): the decisions a hold on a confirmed decision asks for again.
+    'decide.note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds',
+                    'reconfirm_required'),
     'decide.resolve_note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
+    # Post-v0.1 fixes (D5).
+    'decide.withdraw_note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
 }
 ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rationale'},
                  'decide.confirm': {'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                                     'delegation_scope'},
                  'decide.withdraw': {'proposal_id', 'reason'},
                  'decide.note': {'decision_id', 'user_words'},
-                 'decide.resolve_note': {'note_id', 'user_words'}}
+                 'decide.resolve_note': {'note_id', 'user_words'},
+                 'decide.withdraw_note': {'note_id', 'user_words'}}
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
              'stale', 'invalidations', 'executions', 'artifacts', 'exposure',
@@ -143,7 +153,10 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'open_holds',
                           # G.12: small-data warnings (never refusals).
                           'small_validation_partition', 'capacity_exceeds_validation',
-                          'high_cardinality_grouping'}
+                          'high_cardinality_grouping',
+                          # Post-v0.1 fixes: the conclusion outdated by a later change (D2),
+                          # an inconclusive conclusion without a choice (D6).
+                          'conclusion_outdated', 'inconclusive_without_choice'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -306,9 +319,10 @@ def test_status_summary_keys(flow):
     for name, item in payload['artifacts']['items'].items():
         assert tuple(item) == ('status', 'revision', 'last_ok_revision', 'message'), name
     assert view.SUMMARY_NOTE_KEYS == SUMMARY_NOTE_KEYS
+    assert view.SUMMARY_HOLD_KEYS == SUMMARY_HOLD_KEYS and payload['holds'] == []
     keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)
             | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'} | set(RECAP_LABELS)
-            | set(SUMMARY_NOTE_KEYS))
+            | set(SUMMARY_NOTE_KEYS) | set(SUMMARY_HOLD_KEYS))
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
@@ -378,7 +392,7 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
     refusal keys."""
     assert st.TOP_OPTIONAL_KEYS == ('task', 'notes')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
-    assert st.NOTE_KINDS == ('hold',) and st.NOTE_STATUSES == ('open', 'resolved')
+    assert st.NOTE_KINDS == ('hold',) and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
     study = tmp_path / 'study'
     _run('init', '--case', synthetic_case_dir, '--study', study)
@@ -397,10 +411,21 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
                '--request-id', 'n2', '--expected-revision', 2, '--study', study)
     assert out.exit_code == 0, out.payload
     assert tuple(out.payload['result']) == RESULT_KEYS_BY_ACTION['decide.resolve_note']
+    out = _run('decide', 'note', '--about', 'split', '--text', 'Wait for the data owner on the '
+               'split.', '--request-id', 'n3', '--expected-revision', 3, '--study', study)
+    summary = _run('status', '--summary', '--study', study).payload
+    assert [tuple(h) for h in summary['holds']] == [SUMMARY_HOLD_KEYS]
+    out = _run('decide', 'note', '--withdraw', 'n_2', '--text', 'No need to wait for the data '
+               'owner after all.', '--request-id', 'n4', '--expected-revision', 4, '--study', study)
+    assert out.exit_code == 0, out.payload
+    assert tuple(out.payload['result']) == RESULT_KEYS_BY_ACTION['decide.withdraw_note']
+    assert out.payload['result']['status'] == 'withdrawn'
     keys = (set(NOTE_VIEW_KEYS) | set(NOTE_STATE_KEYS) | set(NOTE_RESOLUTION_KEYS)
-            | {'decide.note', 'decide.resolve_note', 'open_holds', 'notes'})
+            | set(NOTE_STATUSES) | {'decide.note', 'decide.resolve_note', 'decide.withdraw_note',
+                                    'open_holds', 'notes', 'reconfirm_required', 'hold_added'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
-    assert ('hypotrail decide note (--about DECISION | --resolve NOTE_ID) --text TEXT' in DOC)
+    assert ('hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID) '
+            '--text TEXT' in DOC)
 
 
 def test_small_data_warnings_are_documented():

@@ -632,7 +632,7 @@ def test_receipts_and_state_stay_valid(study, work):
 
 SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal', 'current_step',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
-                'executions', 'not_yet_defensible', 'notes', 'recap')
+                'executions', 'not_yet_defensible', 'notes', 'holds', 'recap')
 
 
 def test_status_summary_is_compact_and_complete(study, work, features):

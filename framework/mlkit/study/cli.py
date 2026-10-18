@@ -12,7 +12,7 @@
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide note (--about DECISION | --resolve NOTE_ID) --text TEXT
+    hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID) --text TEXT
                      --request-id ID --expected-revision REV --study DIR
 
 Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlog``)::
@@ -141,6 +141,9 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
                         help='record a condition or hold the junior stated on this decision')
     target.add_argument('--resolve', default=None, metavar='NOTE_ID',
                         help="resolve an open hold with the junior's own words")
+    target.add_argument('--withdraw', default=None, metavar='NOTE_ID',
+                        help="withdraw an open hold that no longer applies, with the junior's "
+                             'own words')
     p.add_argument('--text', required=True,
                    help="the junior's words, verbatim (the condition, or what resolves it)")
     _mutation(p)
@@ -173,6 +176,9 @@ def _decide(args) -> cmd.Outcome:
     elif args.verb == 'note' and args.resolve is not None:
         action, params = cmd.ACTION_RESOLVE_NOTE, {'note_id': args.resolve,
                                                    'user_words': args.text}
+    elif args.verb == 'note' and args.withdraw is not None:
+        action, params = cmd.ACTION_WITHDRAW_NOTE, {'note_id': args.withdraw,
+                                                    'user_words': args.text}
     elif args.verb == 'note':
         action, params = cmd.ACTION_NOTE, {'decision_id': args.about, 'user_words': args.text}
     else:

@@ -49,14 +49,22 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'results', 'artifacts', 'executions', 'not_yet_defensible',
                 # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
                 'notes',
+                # Post-v0.1 fixes (D5): the open holds grouped by decision.
+                'holds',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
+SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
-SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds', 'result_integrity',
+SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+                    # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
+                    'conclusion_outdated', 'result_integrity',
                     'adopted_rule_not_evaluated',
                     'capacity_exceeds_validation', 'small_validation_partition',
-                    'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
+                    'code_changed', 'stale_results',
+                    # D6: an inconclusive conclusion without a policy or a model choice.
+                    'inconclusive_without_choice',
+                    'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'high_cardinality_grouping',
                     'validation_is_not_independent')
 SUMMARY_TOP = 5
@@ -240,6 +248,19 @@ def _fact(view: dict, fact_id: str) -> dict | None:
     return None
 
 
+def _holds(notes: list[dict], decisions: dict) -> list[dict]:
+    """The open holds grouped by decision, in plan order (D5): one entry per held decision,
+    ``{decision_id, status, notes: [{note_id, user_words}]}`` (``status`` is the decision's),
+    so a restated hold is seen next to the one already recorded."""
+    out = []
+    for d, dec in decisions.items():
+        held = [{'note_id': n['note_id'], 'user_words': n['user_words']}
+                for n in notes if n['status'] == 'open' and n['decision_id'] == d]
+        if held:
+            out.append({'decision_id': d, 'status': dec['status'], 'notes': held})
+    return out
+
+
 def summary(view: dict) -> dict:
     """A compact digest of a view (``hypotrail status --summary``, D3).
 
@@ -307,7 +328,8 @@ def summary(view: dict) -> dict:
     out = {'goal': goal, 'current_step': view['current_step'], 'plan': plan,
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
-           'executions': executions, 'not_yet_defensible': defensible, 'notes': notes}
+           'executions': executions, 'not_yet_defensible': defensible, 'notes': notes,
+           'holds': _holds(notes, decisions)}
     out['recap'] = recap(out, view)
     return {k: out[k] for k in SUMMARY_KEYS}
 
@@ -323,7 +345,7 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
 # lines do not already say (unconfirmed decisions are the "Decided" and "Next" lines).
-RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds')
+RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated')
 
 
 def _spaced(identifier) -> str:
@@ -463,12 +485,13 @@ def recap(summary_out: dict, view: dict) -> list[str]:
     limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
     limit = limits[0]['text'] if limits else 'none recorded.'
     nxt = _recap_next(summary_out, view).rstrip()
-    holds = [n for n in summary_out.get('notes', []) if n['status'] == 'open']
+    holds = summary_out.get('holds') or []
     if holds:
-        # P2: a condition the junior stated stays visible in every chat until resolved.
-        said = '; '.join(f'"{n["user_words"]}" (the '
-                         f'{DECISION_LABELS.get(n["decision_id"], n["decision_id"])})'
-                         for n in holds)
+        # P2: a condition the junior stated stays visible in every chat until resolved;
+        # D5: the holds of one decision are quoted together.
+        said = '; '.join('; '.join(f'"{n["user_words"]}"' for n in h['notes'])
+                         + f' (the {DECISION_LABELS.get(h["decision_id"], h["decision_id"])})'
+                         for h in holds)
         nxt += ('' if nxt.endswith(('.', '"', '?')) else '.') + (
             f" On hold in the junior's words: {said}; nothing on hold is confirmed until "
             'they resolve it.')

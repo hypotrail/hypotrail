@@ -5,11 +5,13 @@
 * Pause 2: the ``split`` activity needs the split decision, and every EDA and fit
   needs a current split result.
 * Pause 3: confirming ``policy`` needs a current policy evaluation of that rule;
-  the conclusion needs an adopted policy, or the ``keep_baseline`` verdict. In a
-  regression study the third decision is ``model_choice``: confirming it needs a current
+  the conclusion ``adopt_policy`` needs an adopted policy; ``keep_baseline`` and
+  ``inconclusive`` need none (post-v0.1 fixes, D6: "inconclusive" is the honest verdict
+  while the policy is on hold, and ``not_yet_defensible`` names it). In a regression study
+  the third decision is ``model_choice``: confirming it needs a current
   ``evaluate.regression`` result that compared the chosen model; the conclusion
-  ``adopt_model`` needs the candidate model chosen, ``inconclusive`` a confirmed model
-  choice, and ``keep_baseline`` neither.
+  ``adopt_model`` needs the candidate model chosen, and ``keep_baseline`` and
+  ``inconclusive`` need no model choice.
 
 ``missing_for_decision`` and ``missing_for_activity`` return the unmet requirements
 (empty when met); the ``require_*`` functions raise
@@ -115,12 +117,10 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                                 'detail': f'Concluding adopt_model needs model_choice confirmed '
                                           f'as {REGRESSION_CANDIDATE}; otherwise conclude '
                                           f'keep_baseline.'})
-            elif verdict == 'inconclusive' and not _confirmed(state, 'model_choice'):
-                missing.append({**_need_decision(state, 'model_choice'),
-                                'detail': 'Choose a model first, or conclude keep_baseline.'})
-        elif verdict != 'keep_baseline' and not _confirmed(state, 'policy'):
+        elif verdict == 'adopt_policy' and not _confirmed(state, 'policy'):
             missing.append({**_need_decision(state, 'policy'),
-                            'detail': 'Adopt a policy first, or conclude keep_baseline.'})
+                            'detail': 'Adopt a policy first, or conclude keep_baseline or '
+                                      'inconclusive.'})
     return missing
 
 

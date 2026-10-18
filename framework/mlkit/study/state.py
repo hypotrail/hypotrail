@@ -211,11 +211,12 @@ EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
 # A junior's condition or hold on a decision (post-v0.1, P2): "don't adopt anything until I
 # bring my manager's figure". Recorded verbatim by ``decide note --about``, it stays open
 # until the junior's own words resolve it (``decide note --resolve``); while it is open the
-# decision cannot be confirmed and ``not_yet_defensible`` lists it (``open_holds``).
+# decision cannot be confirmed and ``not_yet_defensible`` lists it (``open_holds``). The
+# junior may also withdraw it in their words (``decide note --withdraw``, D5): ``withdrawn``.
 NOTE_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'created', 'revision',
              'request_id', 'resolution')
 NOTE_KINDS = ('hold',)
-NOTE_STATUSES = ('open', 'resolved')
+NOTE_STATUSES = ('open', 'resolved', 'withdrawn')
 NOTE_RESOLUTION_KEYS = ('user_words', 'revision', 'time', 'request_id')
 
 
@@ -463,7 +464,7 @@ def _notes_problems(notes: Any, task: str = DEFAULT_TASK) -> list[dict]:
             problems.append({'path': f'{path}.user_words', 'problem': 'must be a non-empty string'})
         if type(n['revision']) is not int or n['revision'] < 0:
             problems.append({'path': f'{path}.revision', 'problem': 'must be a revision number'})
-        if n['status'] == 'resolved':
+        if n['status'] in ('resolved', 'withdrawn'):
             r = n['resolution']
             if _keys(r, f'{path}.resolution', NOTE_RESOLUTION_KEYS, problems) \
                     and not _text(r['user_words']):
@@ -778,6 +779,24 @@ def not_yet_defensible(state: dict) -> list[dict]:
                       'text': 'The junior set a condition that is not resolved yet, so these '
                               'decisions cannot be confirmed until their own words resolve it: '
                               + said + '.'})
+    conclusion = state['decisions'].get('conclusion') or {}
+    if conclusion.get('status') == 'reconfirm_required':
+        # D2: a decision the conclusion summarizes changed after it was confirmed.
+        items.append({'id': 'conclusion_outdated', 'decisions': ['conclusion'],
+                      'reason': conclusion.get('reason'),
+                      'text': 'The conclusion was confirmed before a decision it summarizes '
+                              'changed, so its text may no longer describe the study: rewrite '
+                              'it if needed and ask the junior to confirm it again.'})
+    choice = choice_decision(state)
+    verdict = (conclusion.get('value') or {}).get('verdict') \
+        if isinstance(conclusion.get('value'), Mapping) else None
+    if verdict == 'inconclusive' and conclusion.get('status') in ('confirmed', 'reconfirm_required') \
+            and not _confirmed(state, choice):
+        # D6: an inconclusive conclusion without an adopted policy (or a chosen model).
+        what = 'no policy is adopted' if choice == 'policy' else 'no model is chosen'
+        items.append({'id': 'inconclusive_without_choice', 'decisions': [choice],
+                      'text': f'The conclusion is inconclusive and {what}: the study recommends '
+                              'nothing to act on yet; it records why and what would settle it.'})
     delegated = delegated_decisions(state)
     if delegated:
         items.append({'id': 'delegated_decisions', 'decisions': delegated,

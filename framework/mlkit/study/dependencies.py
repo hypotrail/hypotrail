@@ -347,7 +347,73 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
 
 
 # Mutations recorded only when they invalidate something.
-QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced')
+QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced', 'hold_added')
+
+
+def dependents(state: Mapping, decision_id: str) -> list[str]:
+    """The decisions that rest on ``decision_id`` (its ``depends_on`` closure, reversed),
+    in plan order: the conclusion rests on every other decision."""
+    ids = st.decision_ids(state)
+    out: set[str] = set()
+    frontier = [decision_id]
+    while frontier:
+        current = frontier.pop()
+        for d in ids:
+            if d not in out and d != decision_id and current in st.depends_on(state, d):
+                out.add(d)
+                frontier.append(d)
+    return [d for d in ids if d in out]
+
+
+CONCLUSION = 'conclusion'
+
+
+def outdates_conclusion(state: Mapping, decision_id: str, *, was_confirmed: bool, old: Any,
+                        new: Any, old_basis: str | None, new_basis: str) -> str | None:
+    """Why confirming ``decision_id`` makes a confirmed conclusion outdated (D2), or None.
+
+    The conclusion summarizes every decision it rests on (its ``depends_on``): their
+    values and who decided them (its credit line). A confirmation made after the
+    conclusion was confirmed outdates it when it changes the decision's status (a policy
+    adopted later, a decision confirmed again after a reconfirmation request), its value,
+    or its basis (a delegated default confirmed again in the junior's own words). The
+    dependency table already covers most value changes; this rule also covers first
+    confirmations and basis changes, which change no result."""
+    if decision_id == CONCLUSION or CONCLUSION not in st.decision_ids(state) \
+            or decision_id not in st.depends_on(state, CONCLUSION) \
+            or state['decisions'][CONCLUSION]['status'] != 'confirmed':
+        return None
+    if not was_confirmed:
+        what = 'it was confirmed after the conclusion'
+    elif rec.canonical(old) != rec.canonical(new):
+        what = 'its value changed after the conclusion was confirmed'
+    elif old_basis != new_basis:
+        what = (f'it was confirmed again with basis {new_basis} (was {old_basis}) after the '
+                'conclusion was confirmed')
+    else:
+        return None
+    return f'the {decision_id} the conclusion summarizes changed: {what}'
+
+
+def apply_hold(state: dict, decision_id: str, note_id: str, *, revision: int) -> dict | None:
+    """A hold added to an already confirmed decision (post-v0.1 fixes, D1).
+
+    The junior's condition withdraws the agreement they gave: the decision becomes
+    ``reconfirm_required`` (its value and confirmation stay visible), and so does every
+    confirmed decision that rests on it (:func:`dependents`; the conclusion rests on all
+    of them). No result is invalidated: the value did not change. The invalidation is
+    recorded with mutation ``hold_added`` and ``row`` null. Returns the record, or None
+    when the decision was not confirmed (a hold on an open decision changes no status)."""
+    if state['decisions'][decision_id]['status'] != 'confirmed':
+        return None
+    reason = (f'the junior put the {decision_id} on hold in their own words (note {note_id}) '
+              f'after it was confirmed')
+    eff = {**no_effects('hold_added', reason),
+           'reconfirm': [decision_id] + dependents(state, decision_id),
+           're_explain': [decision_id], 'scope': 'hold',
+           'notes': ['The value is kept; the decision and the decisions resting on it need the '
+                     "junior's words again once the hold is resolved or withdrawn."]}
+    return apply_effects(state, eff, revision=revision, decision_id=decision_id)
 # Decisions resting on the figures of a slot's result: an adopted policy and the
 # conclusion were confirmed on evaluations computed from the split and the fits.
 RESTS_ON = {'split': ('policy', 'conclusion'), 'fit.baseline': ('policy', 'conclusion'),

@@ -66,6 +66,8 @@ hold_open: On hold in your words
 hold_open_note: This decision cannot be confirmed until your own words resolve the condition.
 hold_resolved: Condition resolved
 hold_resolved_by: Resolved in your words
+hold_withdrawn: Condition withdrawn
+hold_withdrawn_by: Withdrawn in your words
 credit_heading: Who decided what
 credit_delegated: "The assistant's recommended default, delegated by the analyst (not the analyst's own choice):"
 credit_explicit: "Confirmed in the analyst's own words:"
