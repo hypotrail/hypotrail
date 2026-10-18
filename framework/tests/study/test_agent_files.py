@@ -1,6 +1,7 @@
 """Study agent instructions installed by ``init`` (plan §5, WP4.1)."""
 from __future__ import annotations
 
+import inspect
 import json
 import os
 import shlex
@@ -159,6 +160,44 @@ def test_instructions_carry_the_acceptance_fixes():
     assert 'goal.prediction_time' in resume and 'unless the' in resume
     skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
     assert '{{GLOSSARY}}' in skill and '--basis delegated_default' in skill
+
+
+def _rule(text: str, n: int) -> str:
+    """Rule ``n`` of the non-negotiable rules of ``CLAUDE.md.in``."""
+    return text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0]
+
+
+def test_instructions_carry_the_rerun_fixes():
+    """The rules added after the acceptance rerun (R1-R7) are where the agent reads them,
+    and name the engine's real flags and refusal reasons."""
+    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    rule4 = _rule(text, 4)
+    # R1: which decisions a standing delegation covers; the policy and conclusion pauses.
+    for phrase in ('**Standing delegation**', "for questions I can't answer",
+                   'covers the prediction moment, the feature availability, and the\n     split, '
+                   'and nothing else', 'It never covers the policy or the conclusion',
+                   'ask the junior explicitly, stating your\n     recommended default',
+                   'a\n     delegation they give now', '--delegation-scope standing',
+                   '--delegation-scope this_decision', 'delegation_not_given_at_this_pause',
+                   'without judging whether the junior could answer'):
+        assert phrase in rule4, phrase
+    assert 'reuse it at a later pause only if' not in text            # the old, unclear rule
+    assert 'delegation_not_given_at_this_pause' in inspect.getsource(cmd)
+    assert st.STANDING_DELEGATION_DECISIONS == ('prediction_time', 'feature_availability',
+                                                'split')
+    assert cmd.is_delegation("For questions I can't answer, use your recommended default.")
+    assert not cmd.is_negative("For questions I can't answer, use your recommended default.")
+    assert '--delegation-scope this_decision|standing' in text         # the command line
+    for phrase in ('--delegation-scope this_decision', '--delegation-scope standing',
+                   'prediction moment, the feature availability, and the split only',
+                   'At the policy and conclusion pauses, ask the junior explicitly'):
+        assert phrase in skill, phrase
+    # R6: propose before asking; never confirm with words older than the proposal.
+    for phrase in ('Propose before you\n   ask', 'Never\n   confirm with words the junior gave '
+                   'before the proposal existed', 'confirm it on the junior\'s next reply'):
+        assert phrase in rule4, phrase
+    assert 'never confirm with words the junior wrote\nbefore the proposal existed' in skill
 
 
 def test_unknown_placeholders_are_refused():

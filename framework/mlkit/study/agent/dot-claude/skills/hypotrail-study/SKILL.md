@@ -55,9 +55,16 @@ fit result instead).
 
 A restatement is one declarative sentence the junior can accept or correct, never a
 question to answer ("You predict before the first call, so nothing from the call itself
-can be used."). When the junior delegates ("use your recommended default"), propose the
-default with a restatement that starts with "My recommended default:", say in the chat
-that it will be recorded as delegated, and confirm it with `--basis delegated_default`.
+can be used."). Propose before you ask, and never confirm with words the junior wrote
+before the proposal existed. When the junior delegates ("use your recommended default"),
+propose the default with a restatement that starts with "My recommended default:", say in
+the chat that it will be recorded as delegated, and confirm it with
+`--basis delegated_default` and the delegation's scope: `--delegation-scope this_decision`
+for a delegation given at this pause, `--delegation-scope standing` for an earlier "for
+questions I can't answer, use your recommended default". A standing delegation covers the
+prediction moment, the feature availability, and the split only; say so when the junior
+gives it. At the policy and conclusion pauses, ask the junior explicitly, with your
+recommended default stated, and accept their own choice or a delegation they give then.
 The report and the summary then list it as decided by delegation; invite the junior to
 confirm it in their own words when they are ready.
 

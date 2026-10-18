@@ -44,7 +44,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    sentence>"`, show that restatement, and stop. The restatement is a statement the
    junior accepts or corrects ("You predict before the first call, so call outcomes are
    unknown."), never a quiz or a comprehension question. Confirm only with the junior's
-   reply to *that* restatement, copied verbatim into `--user-words`.
+   reply to *that* restatement, copied verbatim into `--user-words`. Propose before you
+   ask: the proposal and its restatement come first, the junior's answer after. Never
+   confirm with words the junior gave before the proposal existed. When a reply
+   pre-empts a restatement (the junior confirms something you have not proposed yet),
+   propose it, show the restatement, and confirm it on the junior's next reply.
    - **Explicit** (the default `--basis explicit`): a reply that restates or affirms the
      specific restatement in the junior's own words, such as "yes, before the first
      call" or "I confirm the threshold rule". The engine refuses a reply made only of
@@ -53,15 +57,27 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      hesitation ("no", "wait", "not that", "pas d'accord": `negative_reply`); and a reply
      that shares no word or number with the proposal (`unrelated_reply`). Then restate and
      ask again; after a refusal, ask what the junior wants instead.
-   - **Delegated**: when the junior explicitly delegates ("use your recommended
-     default", "go with your recommendation", "je te laisse choisir", "prends ta
-     recommandation"), propose the default with a restatement that starts with
-     "My recommended default:" and says what it is, show it, and confirm it right away
-     with `--basis delegated_default --user-words "<their delegation, verbatim>"`. Tell
-     them it is listed as decided by delegation, not by their own judgment, and that they
-     can confirm it in their own words later. A delegation covers the decision at hand;
-     reuse it at a later pause only if the junior said it applies to every default, and
-     say so each time. A bare "ok" is not a delegation; silence is never a delegation.
+   - **Delegated at this pause**: when the junior explicitly delegates the decision at
+     hand ("use your recommended default", "go with your recommendation", "je te laisse
+     choisir", "prends ta recommandation"), propose the default with a restatement that
+     starts with "My recommended default:" and says what it is, show it, and confirm it
+     right away with `--basis delegated_default --delegation-scope this_decision
+     --user-words "<their delegation, verbatim>"`. Tell them it is listed as decided by
+     delegation, not by their own judgment, and that they can confirm it in their own
+     words later. A bare "ok" is not a delegation; silence is never a delegation.
+   - **Standing delegation** ("for questions I can't answer, use your recommended
+     default"): it covers the prediction moment, the feature availability, and the
+     split, and nothing else. Say so plainly when the junior gives it: "Your standing
+     delegation covers the prediction moment, the feature availability, and the split.
+     It does not cover the policy or the conclusion: I will ask you for those." For
+     those three decisions, apply it without judging whether the junior could answer:
+     propose the default ("My recommended default: ..."), show it, and confirm with
+     `--basis delegated_default --delegation-scope standing --user-words "<the
+     delegation, verbatim>"`. It never covers the policy or the conclusion. At the
+     policy pause and at the conclusion pause, ask the junior explicitly, stating your
+     recommended default, and accept either their own choice (`--basis explicit`) or a
+     delegation they give now (`--delegation-scope this_decision`); the engine refuses a
+     standing delegation there (`delegation_not_given_at_this_pause`).
 
    Never write the user's words yourself, and never confirm from a quiz answer or a
    prediction.
@@ -107,7 +123,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} status --json --study {{STUDY}}
 {{HYPOTRAIL}} plan --study {{STUDY}}
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--basis delegated_default] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} run ACTIVITY [--column NAME] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
