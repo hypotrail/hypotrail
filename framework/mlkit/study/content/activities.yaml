@@ -1,6 +1,7 @@
 # How each activity's result is shown. ``highlights`` name value paths (``a.b``,
 # ``rules.[threshold:x].precision``; see mlkit.study.cite) with a label and a format;
-# a path absent from the result is skipped. ``table`` renders a list of rows.
+# a path absent from the result is skipped. ``tables`` render lists of rows (a column
+# ``key`` may be a dotted path inside the row). Value shapes: CLI-CONTRACT.md §8.5.
 # Every number is cited from the registry. Formats: int, pct0, pct1, pct2, f1, f2, f3,
 # f4, auto. A ``kind: text`` column is shown as recorded (a category label).
 schema: hypotrail.content.activities/1
@@ -9,62 +10,88 @@ activities:
     label: Split
     glossary: stratified_split
     highlights:
-      - {path: train_rows, label: Training rows, fmt: int}
-      - {path: validation_rows, label: Validation rows, fmt: int}
-      - {path: train_positives, label: Positive rows in training, fmt: int}
-      - {path: validation_positives, label: Positive rows in validation, fmt: int}
-      - {path: train_rate, label: Positive share in training, fmt: pct1}
-      - {path: validation_rate, label: Positive share in validation, fmt: pct1}
+      - {path: n_rows, label: Rows in the dataset, fmt: int}
+      - {path: partitions.train.n_rows, label: Training rows, fmt: int}
+      - {path: partitions.validation.n_rows, label: Validation rows, fmt: int}
+      - {path: partitions.train.n_positive, label: Positive rows in training, fmt: int}
+      - {path: partitions.validation.n_positive, label: Positive rows in validation, fmt: int}
+      - {path: partitions.train.rate, label: Positive share in training, fmt: pct1}
+      - {path: partitions.validation.rate, label: Positive share in validation, fmt: pct1}
+      - {path: validation_fraction, label: Validation fraction (decided), fmt: pct0}
+      - {path: overlap.moved, label: Rows that changed partition since the previous split, fmt: int}
+      - {path: overlap.previously_exposed.validation.train_eda, label: Validation rows already explored during EDA, fmt: int}
   eda.target_rate:
     label: Target rate on training rows
     glossary: base_rate
     highlights:
       - {path: rate, label: Positive share, fmt: pct1}
-      - {path: positives, label: Positive rows, fmt: int}
-      - {path: rows, label: Rows read, fmt: int}
+      - {path: n_positive, label: Positive rows, fmt: int}
+      - {path: n_rows, label: Rows read, fmt: int}
   eda.special_values:
     label: Special values on training rows
     glossary: special_value
     highlights:
-      - {path: co_occurrence.rows, label: Rows where the codes co-occur, fmt: int}
-    table:
-      rows: values
-      columns:
-        - {key: column, label: Variable, kind: text}
-        - {key: value, label: Code, kind: text}
-        - {key: rows, label: Rows, fmt: int}
-        - {key: share, label: Share, fmt: pct1}
+      - {path: n_rows, label: Training rows read, fmt: int}
+    tables:
+      - rows: special_values
+        columns:
+          - {key: column, label: Variable, kind: text}
+          - {key: value, label: Code, kind: text}
+          - {key: meaning, label: Meaning, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+      - rows: co_occurrence
+        columns:
+          - {key: a.column, label: First variable, kind: text}
+          - {key: a.value, label: Code, kind: text}
+          - {key: b.column, label: Second variable, kind: text}
+          - {key: b.value, label: Code, kind: text}
+          - {key: n_both, label: Rows with both, fmt: int}
+          - {key: n_either, label: Rows with either, fmt: int}
+          - {key: same_rows, label: Always together, kind: text}
   eda.rate_by:
     label: Target rate by group on training rows
     glossary: base_rate
-    table:
-      rows: groups
-      columns:
-        - {key: value, label: Group, kind: text}
-        - {key: rows, label: Rows, fmt: int}
-        - {key: positives, label: Positive rows, fmt: int}
-        - {key: rate, label: Positive share, fmt: pct1}
-        - {key: warning, label: Note, kind: text}
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+      - {path: overall_rate, label: Positive share overall, fmt: pct1}
+      - {path: min_group_rows, label: Smallest group read on its own (rows), fmt: int}
+    tables:
+      - rows: groups
+        columns:
+          - {key: value, label: Group, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+          - {key: small_count, label: Too few rows to read alone, kind: text}
   fit.baseline:
     label: Constant baseline
     glossary: baseline
     highlights:
-      - {path: auc, label: Ranking quality on validation (AUC), fmt: f3}
-      - {path: prior, label: Constant score, fmt: f3}
-      - {path: n, label: Validation rows scored, fmt: int}
+      - {path: validation.roc_auc, label: Ranking quality on validation (AUC), fmt: f3}
+      - {path: validation.average_precision, label: Average precision on validation, fmt: f3}
+      - {path: train_rate, label: Constant score (training positive share), fmt: f3}
+      - {path: n_train, label: Training rows fitted, fmt: int}
+      - {path: validation.n_rows, label: Validation rows scored, fmt: int}
   fit.logistic:
     label: Logistic model
     glossary: logistic_regression
     highlights:
-      - {path: auc, label: Ranking quality on validation (AUC), fmt: f3}
-      - {path: n, label: Validation rows scored, fmt: int}
-      - {path: n_positive, label: Positive rows in validation, fmt: int}
+      - {path: validation.roc_auc, label: Ranking quality on validation (AUC), fmt: f3}
+      - {path: validation.average_precision, label: Average precision on validation, fmt: f3}
+      - {path: n_train, label: Training rows fitted, fmt: int}
+      - {path: validation.n_rows, label: Validation rows scored, fmt: int}
+      - {path: validation.n_positive, label: Positive rows in validation, fmt: int}
+      - {path: n_terms, label: Model terms after encoding, fmt: int}
   policy.evaluation:
     label: Policy evaluation on validation rows
     glossary: policy
     highlights:
       - {path: n, label: Validation rows, fmt: int}
       - {path: n_positive, label: Positive rows in validation, fmt: int}
+      - {path: bootstrap.replicates, label: Bootstrap replicates, fmt: int}
 # Metrics of a policy rule, in display order (render_html.policy_section).
 policy_metrics:
   - {key: volume, label: Volume, fmt: auto, glossary: volume}

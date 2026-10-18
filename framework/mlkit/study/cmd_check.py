@@ -86,7 +86,8 @@ FORECAST = re.compile(
     r"\b(expect(?:s|ed|ing)?(?! value)|will (?:get|reach|bring|convert|subscribe|renew|yield|"
     r"deliver|find|see|have|make|gain|win|sign)|we will|you will|we'll|you'll|"
     r"should (?:reach|get|bring|yield|convert)|(?:is|are) going to|guarantee[sd]?|"
-    r"in (?:the )?future|next campaign)\b", re.IGNORECASE)
+    r"in (?:the )?future|(?:next|coming|upcoming) (?:rounds?|waves?|periods?|months?|quarters?|years?))\b",
+    re.IGNORECASE)
 EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'
                            r'request|req-|expected-revision|section|§|row)\s*[#:=]?\s*$',
                            re.IGNORECASE)
@@ -418,9 +419,11 @@ def check_features(view: Mapping) -> list[dict]:
     for slot, item in sorted(view['results'].items()):
         if not slot.startswith('fit.') or not item['current']:
             continue
-        params = item['params'] if isinstance(item['params'], dict) else {}
+        # Canonical shape (CLI-CONTRACT.md §8.5): ``values.features`` lists what the fit
+        # used; ``inputs.features`` is what it was asked to use (identity). Both are read.
         values = item['values'] if isinstance(item['values'], dict) else {}
-        features = params.get('features') or values.get('features') or []
+        inputs = item['inputs'] if isinstance(item['inputs'], dict) else {}
+        features = list(values.get('features') or []) + list(inputs.get('features') or [])
         for f in sorted({x for x in features if isinstance(x, str)}):
             status = statuses.get(f)
             if status is None:

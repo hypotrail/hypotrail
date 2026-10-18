@@ -22,7 +22,7 @@ steps:
     concept: stratified_split
     context: The split is fixed before any exploration of the outcome, so that validation rows stay apart from fitting.
     method: A stratified random split with a recorded seed. The rows read are recorded as exposure.
-    interpretation: "Training rows: {{slot:split:train_rows|int}}. Validation rows: {{slot:split:validation_rows|int}}."
+    interpretation: "Training rows: {{slot:split:partitions.train.n_rows|int}}, of which {{slot:split:partitions.train.rate|pct1}} are positive. Validation rows: {{slot:split:partitions.validation.n_rows|int}}, of which {{slot:split:partitions.validation.rate|pct1}} are positive: stratification keeps the share close."
     consequence: Changing the split refits both models and recomputes the exploration; rows already explored stay exposed.
   train_eda:
     concept: base_rate

@@ -19,7 +19,7 @@ the entry's ``n_rows``. A list of mappings may also be addressed by the ``rule``
 Free-text templates (content files and rendered explanations)::
 
     {{r:<result_id>.<path>|<fmt>}}   a result by id
-    {{slot:<slot>:<path>|<fmt>}}     the current result of a slot
+    {{slot:<slot>:<path>|<fmt>}}     the current result of a slot (eda.rate_by:<column> too)
     {{fact:<fact id>|<fallback>}}    a case statement, quoted as recorded
 
 Formats: ``int``, ``pct0``-``pct2`` (a fraction shown as a percentage), ``f1``-``f4``,
@@ -45,8 +45,9 @@ _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 
 # A number in prose: thousands with comma groups ("3,164"), a decimal with a dot or a
 # comma ("0.115", "0,115"), an integer; an optional percent sign. A number glued to a
-# letter or an underscore ("pct1", "x_2", "3f9a") is part of a word, not a number.
-NUMBER = re.compile(r'(?<![\w.])([1-9]\d{0,2}(?:,\d{3})+|\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
+# letter or an underscore ("pct1", "x_2", "3f9a") is part of a word, not a number. A minus
+# sign glued to the digits makes the number negative ("-1", a sentinel); "10-18" is two numbers.
+NUMBER = re.compile(r'(?<![\w.])(-(?=\d))?([1-9]\d{0,2}(?:,\d{3})+|\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
 
 
 def untraceable(message: str, **details) -> StudyError:
@@ -157,13 +158,14 @@ class Token:
 def parse_numbers(text: str) -> list[Token]:
     out = []
     for m in NUMBER.finditer(text):
-        body, pct = m.group(1), bool(m.group(2))
+        sign, body, pct = (-1.0 if m.group(1) else 1.0), m.group(2), bool(m.group(3))
         if re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+", body):
             value, decimals = float(body.replace(',', '')), 0
         else:
             norm = body.replace(',', '.')
             value = float(norm)
             decimals = len(norm.split('.')[1]) if '.' in norm else 0
+        value *= sign
         out.append(Token(m.group(0), value, decimals, pct, m.start(), m.end()))
     return out
 
@@ -269,7 +271,7 @@ class Citer:
                 rid, _, path = ref.partition('.')
                 out.append(self.num(rid, path, arg or 'auto'))
             else:
-                slot, _, path = ref.partition(':')
+                slot, path = self.split_slot_ref(ref)
                 rid = self.slot_rid(slot)
                 if rid is None:
                     raise untraceable(f'No current result in slot {slot!r} to cite.', slot=slot,
@@ -286,5 +288,14 @@ class Citer:
         problem (an unknown result id, a missing path, a bad format) is not hidden:
         :meth:`expand` refuses it with ``untraceable_number``.
         """
-        return all(self.slot_rid(m.group(2).strip().partition(':')[0]) is not None
+        return all(self.slot_rid(self.split_slot_ref(m.group(2).strip())[0]) is not None
                    for m in TEMPLATE.finditer(template) if m.group(1) == 'slot')
+
+    def split_slot_ref(self, ref: str) -> tuple[str, str]:
+        """``(slot, path)`` of a ``{{slot:...}}`` reference. A slot may itself hold a colon
+        (``eda.rate_by:<column>``): the longest known slot that prefixes ``ref`` wins."""
+        for slot in sorted((s for s in self.by_slot if s), key=len, reverse=True):
+            if ref.startswith(slot + ':'):
+                return slot, ref[len(slot) + 1:]
+        slot, _, path = ref.partition(':')
+        return slot, path

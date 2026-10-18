@@ -356,10 +356,15 @@ def compute_split(store, plan_: Mapping) -> dict:
     keys = np.asarray(frame.index)
     parts = {'train': sorted(keys[train], key=_line), 'validation': sorted(keys[validation], key=_line)}
     blobs = {part: rec.row_keys_bytes(parts[part]) for part in SPLIT_BLOBS}
+    positives = {'train': int(y.iloc[train].sum()), 'validation': int(y.iloc[validation].sum())}
+    # The positive counts per partition come from the stratification read of the target
+    # (structural_inspection); they show that stratification kept the rate, nothing more.
     values = {'method': decision['method'], 'validation_fraction': decision['validation_fraction'],
               'seed': decision['seed'], 'stratified_on': case.target_column,
               'n_rows': len(frame),
-              'partitions': {part: {'n_rows': len(parts[part])} for part in SPLIT_BLOBS},
+              'partitions': {part: {'n_rows': len(parts[part]), 'n_positive': positives[part],
+                                    'rate': positives[part] / len(parts[part])}
+                             for part in SPLIT_BLOBS},
               'implementation': 'mlkit.classical.split (stratified train_test_split)',
               'overlap': None}
     previous = plan_['inputs'].get('results', {}).get('previous_split')

@@ -328,6 +328,24 @@ hypotrail check --study DIR [--text PATH | --text -]
 * HTML numbers are `<data value data-result-id data-path title>` elements. Text shown as recorded rather than computed is wrapped in an element with `data-literal` ∈ `revision`, `ordinal`, `user_words`, `proposal`, `decision_value`, `case`, `identifier`, `parameter`, `environment`, `setting`, `message`, `category`; `check` ignores numbers there.
 * `check` always exits `0`; `clean` is false when a finding has severity `error`. A finding is `{code, severity, where, message, details?}`. Codes (severity): `number_outside_result`, `unknown_result_id`, `value_mismatch`, `stale_result_cited`, `feature_without_status`, `excluded_feature_used`, `untraceable_number`, `stale_number` (error); `causal_wording`, `forecast_wording`, `artifact_not_current`, `untracked_files` (warning). `traced` lists each number of the checked text with the `result_id` and `path` (or the decision, setting, or case statement) it matched.
 
+### 8.5 Result value shapes
+
+Added by the Phase 4 integration. Phases 2 and 3 were built in parallel and met here; this section fixes **one** shape per activity. Producers (`mlkit.study.activities`, `eda`, `fit`, `policy`) emit it; consumers (`render_html`, `notebook_view`, `cmd_check`, the workbench template, `content/activities.yaml`) read it; the test fixtures (`framework/tests/study/deliverables/phase3_study.py`) build it. It is the producers' shape, completed where the report needed a field (`split.partitions.*.n_positive`, `rate`). Keys listed here are stable within `hypotrail.result/1`; producers may add keys. Paths use the `mlkit.study.cite` grammar (a segment holding a dot goes in brackets: `rules.[threshold:0.3].models.[fit.logistic].precision`).
+
+| Activity (slot) | `values` |
+|---|---|
+| `split` | `method`, `validation_fraction`, `seed`, `stratified_on`, `n_rows`, `partitions: {train, validation: {n_rows, n_positive, rate}}`, `implementation`, `overlap` (`null`, or `{rows_in_new, rows_in_old, moved, transitions, previously_exposed: {partition: {purpose: n}}, previous_split, exposure_up_to_revision, note}` after a split change). The positive counts come from the stratification read of the target (`structural_inspection`). |
+| `eda.target_rate` | `partition` (`train`), `target`, `positive_label`, `n_rows`, `n_positive`, `n_negative`, `rate` |
+| `eda.special_values` | `partition`, `n_rows`, `special_values: [{column, value, meaning, status, source, n_rows, share, n_positive, rate}]`, `co_occurrence: [{a: {column, value}, b: {column, value}, n_a, n_b, n_both, n_either, same_rows}]`, `note` |
+| `eda.rate_by:<column>` | `partition`, `column`, `n_rows`, `overall_rate`, `binned`, `binning`, `groups: [{value, n_rows, n_positive, rate, small_count}]`, `min_group_rows`, `warnings`, `note` |
+| `fit.baseline` | `model` (`constant_prior`), `train_rate`, `n_train`, `n_train_positive`, `features` (`[]`), `validation: {n_rows, n_positive, roc_auc, average_precision}`, `predictions` (blob description), `note` |
+| `fit.logistic` | `model` (`logistic`), `features` (used, case order), `special_value_indicators`, `n_train`, `n_train_positive`, `n_terms`, `intercept`, `coefficients: {term: value}`, `coefficient_scale`, `iterations`, `validation: {…as above}`, `predictions`. `inputs.features` repeats the features (identity). |
+| `policy.evaluation` | `rules: {rule: {models: {fit slot: evaluation}, intervals: {fit slot: {precision, recall, volume: {low, high, undefined_replicates}}}, deltas: {fit slot ≠ reference: {precision, recall, volume: {point, low, high, undefined_replicates}}}}}`, `n`, `n_positive`, `predictions: {fit slot: result_id}`, `reference` (`fit.baseline`), `bootstrap: {replicates, seed, level, method}`, `counts`, `note`. `params` is `{rules, models, reference}`. |
+
+An *evaluation* is the output of the pure `mlkit.study.policy.evaluate(y, score, rule)`, also used by `preview policy` and the workbench: `rule`, `kind`, `parameter`, `n`, `n_positive`, `selected`, `true_positives`, `false_positives`, `false_negatives`, `precision`, `recall`, `volume`, `volume_rate`, `tied_at_cut`, `cut: {score, n_tied, fraction_selected}`, `selection` (`exact`, or `expected` when a capacity cut splits a tie group pro rata). A ratio with an empty denominator is `null` and is never cited.
+
+`cmd_check` reads the features a fit used from `values.features` and `inputs.features`. A number written with a minus sign glued to its digits (`-1`) is read as negative by `cite.parse_numbers`; `10-18` is still two numbers.
+
 ### 8.4 Agent instructions (Phase 4)
 
 `init` copies every file under `framework/mlkit/study/agent/` except its `README.md` into the study, keeping relative paths, never overwriting.

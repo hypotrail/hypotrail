@@ -87,7 +87,7 @@ def test_unknown_id_and_value_mismatches_are_reported(study):
 
 def test_a_cited_result_that_is_not_current_is_reported(study, synthetic_case_dir):
     b = fx.Builder(study, synthetic_case_dir)
-    orphan = b.put('eda.target_rate', {'rate': 0.5, 'positives': 1, 'rows': 2}, promote=False)
+    orphan = b.put('eda.target_rate', {'rate': 0.5, 'n_positive': 1, 'n_rows': 2}, promote=False)
     page = _report(study).read_text()
     _report(study).write_text(page.replace(
         '<main>', f'<main><p><data value="0.5" data-result-id="{orphan}" data-path="rate">'
@@ -98,7 +98,8 @@ def test_a_cited_result_that_is_not_current_is_reported(study, synthetic_case_di
 def test_features_without_status_or_excluded_are_reported(study, synthetic_case_dir):
     b = fx.Builder(study, synthetic_case_dir)
     b.n = 500
-    b.put('fit.logistic', {'auc': 0.6, 'n': 90}, params={'features': ['ghost', fx.NOT_AVAILABLE]},
+    b.put('fit.logistic', {'features': ['ghost', fx.NOT_AVAILABLE],
+                          'validation': {'roc_auc': 0.6, 'n_rows': 90}},
           partition='validation', purpose='validation_model_evaluation', keys=b.validation_keys)
     result = cmd_check.run_check(study)
     by_code = {f['code']: f for f in result['findings']}
@@ -191,8 +192,10 @@ def test_stale_artifacts_and_untracked_files_are_warnings(study):
 
 def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='policy')
+    # 47 is in no result. (9 was used before the canonical shapes; the policy evaluation now
+    # also reports the baseline's expected false negatives, 8.5556, which rounds to 9.)
     b.decide('conclusion', {'verdict': 'adopt_policy',
-                            'text': 'Adopt it: we expect 9 renewals per 20 calls.'},
+                            'text': 'Adopt it: we expect 47 renewals per 20 calls.'},
              'You adopt the policy.', 'I adopt the capacity rule as written.')
     result = cmd_check.run_check(b.study)
     where = {(f['code'], f['where']) for f in result['findings']}

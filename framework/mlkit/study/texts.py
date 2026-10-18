@@ -47,8 +47,19 @@ def step(step_id: str) -> dict:
 
 
 def activity(slot: str) -> dict:
-    """Display specification of an activity slot (an empty spec for an unknown slot)."""
-    return load('activities')['activities'].get(slot, {})
+    """Display specification of an activity slot (an empty spec for an unknown slot).
+
+    A per-column slot ``eda.rate_by:<column>`` uses the spec of ``eda.rate_by`` with the
+    column in its label."""
+    specs = load('activities')['activities']
+    if slot in specs:
+        return specs[slot]
+    base, sep, column = slot.partition(':')
+    if sep and base in specs:
+        spec = dict(specs[base])
+        spec['label'] = f'{spec.get("label", base)}: {column}'
+        return spec
+    return {}
 
 
 def policy_metrics() -> list[dict]:

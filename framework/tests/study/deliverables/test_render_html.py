@@ -116,9 +116,9 @@ def test_policy_comparison_has_intervals_ties_paired_and_adopted_rule(full_view)
     assert 'data-rule="threshold:0.3" data-model="fit.logistic"' in section
     assert labels['adopted'] in section and labels['tied_yes'] in section
     assert labels['tied_none'] in section and labels['policy_note'] in section
-    assert 'rules.capacity:20.models.[fit.logistic].intervals.precision.0' in section
-    assert 'rules.capacity:20.paired.precision.difference' in section
-    assert 'rules.capacity:20.models.[fit.baseline].tied_at_cut.accepted_fraction' in section
+    assert 'rules.capacity:20.intervals.[fit.logistic].precision.low' in section
+    assert 'rules.capacity:20.deltas.[fit.logistic].precision.point' in section
+    assert 'rules.capacity:20.models.[fit.baseline].cut.fraction_selected' in section
 
 
 def test_steps_without_results_say_not_executed_yet(tmp_path, synthetic_case_dir):

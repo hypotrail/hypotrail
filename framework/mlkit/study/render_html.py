@@ -251,27 +251,36 @@ def _figures(citer: cite.Citer, rid: str, spec: Mapping) -> str:
         if citer.has(rid, h['path']):
             rows.append(f'<dt>{e(h["label"])}</dt><dd>{citer.num(rid, h["path"], h.get("fmt", "auto"))}</dd>')
     out = f'<dl class="figures">{"".join(rows)}</dl>' if rows else ''
-    table = spec.get('table')
     entry = citer.results[rid]
-    items = entry.values.get(table['rows']) if table and isinstance(entry.values, Mapping) else None
-    if table and isinstance(items, list) and items:
-        head = ''.join(f'<th>{e(c["label"])}</th>' for c in table['columns'])
-        body = []
-        for i, row in enumerate(items):
-            cells = []
-            for c in table['columns']:
-                path = cite.format_path([table['rows'], str(i), c['key']])
-                if c.get('kind') == 'text':
-                    raw = row.get(c['key']) if isinstance(row, Mapping) else None
-                    cells.append(f'<td>{lit("category", "" if raw is None else _value_text(raw))}</td>')
-                elif citer.has(rid, path):
-                    cells.append(f'<td>{citer.num(rid, path, c.get("fmt", "auto"))}</td>')
-                else:
-                    cells.append('<td></td>')
-            body.append(f'<tr>{"".join(cells)}</tr>')
-        out += (f'<div class="scroll"><table><thead><tr>{head}</tr></thead>'
-                f'<tbody>{"".join(body)}</tbody></table></div>')
+    for table in spec.get('tables', []):
+        items = entry.values.get(table['rows']) if isinstance(entry.values, Mapping) else None
+        if isinstance(items, list) and items:
+            out += _table(citer, rid, table, items)
     return out
+
+
+def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
+    """A list of rows of a result; a column ``key`` may be a dotted path inside the row."""
+    head = ''.join(f'<th>{e(c["label"])}</th>' for c in table['columns'])
+    body = []
+    for i, row in enumerate(items):
+        cells = []
+        for c in table['columns']:
+            keys = c['key'].split('.')
+            path = cite.format_path([table['rows'], str(i)] + keys)
+            if c.get('kind') == 'text':
+                try:
+                    raw = cite.resolve(row, keys)
+                except KeyError:
+                    raw = None
+                cells.append(f'<td>{lit("category", "" if raw is None else _value_text(raw))}</td>')
+            elif citer.has(rid, path):
+                cells.append(f'<td>{citer.num(rid, path, c.get("fmt", "auto"))}</td>')
+            else:
+                cells.append('<td></td>')
+        body.append(f'<tr>{"".join(cells)}</tr>')
+    return (f'<div class="scroll"><table><thead><tr>{head}</tr></thead>'
+            f'<tbody>{"".join(body)}</tbody></table></div>')
 
 
 def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
@@ -328,48 +337,29 @@ def _evidence(view: Mapping, citer: cite.Citer) -> str:
             f'{"".join(articles)}</section>')
 
 
-def _rules(values: Any) -> list[tuple[str, list[str], Mapping]]:
-    rules = values.get('rules') if isinstance(values, Mapping) else None
-    out = []
-    if isinstance(rules, Mapping):
-        out = [(str(k), ['rules', str(k)], v) for k, v in rules.items() if isinstance(v, Mapping)]
-    elif isinstance(rules, list):
-        for i, v in enumerate(rules):
-            if isinstance(v, Mapping):
-                key = str(v.get('rule', i))
-                ref = str(v['rule']) if 'rule' in v and sum(
-                    1 for w in rules if isinstance(w, Mapping) and w.get('rule') == v['rule']) == 1 \
-                    else str(i)
-                out.append((key, ['rules', ref], v))
-    return out
-
-
-def _tied(citer: cite.Citer, rid: str, prefix: list[str], value: Any) -> str:
+def _tied(citer: cite.Citer, rid: str, prefix: list[str], model: Mapping) -> str:
+    """The tie group at the cut of one model under one rule (``tied_at_cut``, ``cut``)."""
     labels = _labels()
-    if value in (None, False, 0) or value == {}:
+    tied = model.get('tied_at_cut')
+    if not cite.is_number(tied) or tied == 0:
         return e(labels['tied_none'])
-    if value is True:
-        return e(labels['tied_yes'])
-    if cite.is_number(value):
-        return f'{e(labels["tied_yes"])}: {citer.num(rid, cite.format_path(prefix), "auto")}'
-    if isinstance(value, Mapping):
-        bits = [f'{e(str(k).replace("_", " "))} '
-                f'{citer.num(rid, cite.format_path(prefix + [str(k)]), "auto")}'
-                for k, v in sorted(value.items()) if cite.is_number(v)]
-        return e(labels['tied_yes']) + (': ' + ', '.join(bits) if bits else '')
-    return e(labels['tied_yes'])
+    bits = [f'{citer.num(rid, cite.format_path(prefix + ["tied_at_cut"]), "int")} tied rows']
+    fraction = cite.format_path(prefix + ['cut', 'fraction_selected'])
+    if citer.has(rid, fraction):
+        bits.append(f'{citer.num(rid, fraction, "pct1")} of them selected')
+    return f'{e(labels["tied_yes"])}: ' + ', '.join(bits)
 
 
-def _interval(citer: cite.Citer, rid: str, prefix: list[str], metric: Mapping) -> str:
-    path = prefix + ['intervals', metric['key']]
-    lo, hi = cite.format_path(path + ['0']), cite.format_path(path + ['1'])
+def _interval(citer: cite.Citer, rid: str, path: list[str], fmt: str) -> str:
+    lo, hi = cite.format_path(path + ['low']), cite.format_path(path + ['high'])
     if citer.has(rid, lo) and citer.has(rid, hi):
-        fmt = metric.get('fmt', 'auto')
-        return f' <span class="small">[{citer.num(rid, lo, fmt)}, {citer.num(rid, hi, fmt)}]</span>'
+        return f'[{citer.num(rid, lo, fmt)}, {citer.num(rid, hi, fmt)}]'
     return ''
 
 
 def _policy(view: Mapping, citer: cite.Citer) -> str:
+    """Policy comparison from the canonical ``policy.evaluation`` values
+    (``rules.<rule>.{models, intervals, deltas}``, CLI-CONTRACT.md section 8.5)."""
     labels = _labels()
     head = (f'<section class="card" id="policy"><h2>{e(labels["sections"]["policy"])}</h2>'
             f'{_concept("policy")}{_concept("tie_at_cut")}{_concept("paired_bootstrap")}')
@@ -380,60 +370,62 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
     adopted = view['decisions']['policy']
     proposed = {p['value'] for p in view['open_proposals'] if p['decision_id'] == 'policy'}
     metrics = texts.policy_metrics()
-    rules = _rules(values)
-    present = [m for m in metrics if any(
-        isinstance(models, Mapping) and any(isinstance(mv, Mapping) and m['key'] in mv
-                                            for mv in models.values())
-        for _, _, item in rules for models in [item.get('models') or {'': item}])]
+    rules = values.get('rules') if isinstance(values, Mapping) else None
+    rules = {str(k): v for k, v in (rules or {}).items() if isinstance(v, Mapping)}
     level = ''
     if citer.has(rid, 'bootstrap.level'):
         level = f' Intervals: {citer.num(rid, "bootstrap.level", "pct0")} percentile intervals.'
     rows, paired = [], []
-    for key, prefix, item in rules:
+    for key, item in rules.items():
+        prefix = ['rules', key]
         tag = ''
         if adopted['status'] == 'confirmed' and adopted['value'] == key:
             tag = _badge('confirmed', labels['adopted'])
         elif key in proposed:
             tag = _badge('proposed', labels['proposed_rule'])
-        models = item.get('models')
-        pairs = ([(str(m), prefix + ['models', str(m)], mv) for m, mv in models.items()
-                  if isinstance(mv, Mapping)] if isinstance(models, Mapping) else [('', prefix, item)])
-        for model, mprefix, mv in pairs:
+        models = item.get('models') if isinstance(item.get('models'), Mapping) else {}
+        for model, mv in models.items():
+            if not isinstance(mv, Mapping):
+                continue
+            mprefix = prefix + ['models', str(model)]
             cells = []
-            for m in present:
+            for m in metrics:
                 path = cite.format_path(mprefix + [m['key']])
-                cells.append(f'<td>{citer.num(rid, path, m.get("fmt", "auto")) if citer.has(rid, path) else ""}'
-                             f'{_interval(citer, rid, mprefix, m)}</td>')
-            tied_value = mv.get('tied_at_cut', item.get('tied_at_cut'))
-            tied_prefix = mprefix + ['tied_at_cut'] if 'tied_at_cut' in mv else prefix + ['tied_at_cut']
+                fmt = m.get('fmt', 'auto')
+                shown = citer.num(rid, path, fmt) if citer.has(rid, path) else ''
+                interval = _interval(citer, rid, prefix + ['intervals', str(model), m['key']], fmt)
+                extra = f' <span class="small">{interval}</span>' if interval else ''
+                cells.append(f'<td>{shown}{extra}</td>')
             rows.append(f'<tr data-rule="{e(key)}" data-model="{e(model)}">'
                         f'<td>{lit("decision_value", key, "code")} {tag}</td>'
-                        f'<td>{lit("identifier", model or "—")}</td>{"".join(cells)}'
-                        f'<td>{_tied(citer, rid, tied_prefix, tied_value)}</td></tr>')
-        for metric, diff in sorted((item.get('paired') or {}).items()):
-            if not isinstance(diff, Mapping):
+                        f'<td>{lit("identifier", model)}</td>{"".join(cells)}'
+                        f'<td>{_tied(citer, rid, mprefix, mv)}</td></tr>')
+        deltas = item.get('deltas') if isinstance(item.get('deltas'), Mapping) else {}
+        for model, by_metric in sorted(deltas.items()):
+            if not isinstance(by_metric, Mapping):
                 continue
-            base = prefix + ['paired', metric]
-            dpath = cite.format_path(base + ['difference'])
-            lo, hi = cite.format_path(base + ['interval', '0']), cite.format_path(base + ['interval', '1'])
-            fmt = next((m.get('fmt', 'auto') for m in metrics if m['key'] == metric), 'auto')
-            if not citer.has(rid, dpath):
-                continue
-            interval = (f'[{citer.num(rid, lo, fmt)}, {citer.num(rid, hi, fmt)}]'
-                        if citer.has(rid, lo) and citer.has(rid, hi) else '')
-            paired.append(f'<tr data-rule="{e(key)}" data-metric="{e(metric)}">'
-                          f'<td>{lit("decision_value", key, "code")}</td><td>{e(metric.replace("_", " "))}</td>'
-                          f'<td>{citer.num(rid, dpath, fmt)}</td><td>{interval}</td></tr>')
+            for m in metrics:
+                base = prefix + ['deltas', str(model), m['key']]
+                point = cite.format_path(base + ['point'])
+                if not citer.has(rid, point):
+                    continue
+                fmt = m.get('fmt', 'auto')
+                paired.append(f'<tr data-rule="{e(key)}" data-model="{e(model)}" '
+                              f'data-metric="{e(m["key"])}">'
+                              f'<td>{lit("decision_value", key, "code")}</td>'
+                              f'<td>{lit("identifier", model)}</td><td>{e(m["label"])}</td>'
+                              f'<td>{citer.num(rid, point, fmt)}</td>'
+                              f'<td>{_interval(citer, rid, base, fmt)}</td></tr>')
     table = ''
     if rows:
-        th = ''.join(f'<th>{e(m["label"])}</th>' for m in present)
+        th = ''.join(f'<th>{e(m["label"])}</th>' for m in metrics)
         table = (f'<div class="scroll"><table class="metrics"><thead><tr><th>Rule</th><th>Model</th>'
                  f'{th}<th>Tie at the cut</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>')
     pair_table = ''
     if paired:
         pair_table = (f'<h3>{e(labels["paired_heading"])}</h3><div class="scroll"><table class="paired">'
-                      '<thead><tr><th>Rule</th><th>Metric</th><th>Difference</th><th>Interval</th></tr>'
-                      f'</thead><tbody>{"".join(paired)}</tbody></table></div>')
+                      '<thead><tr><th>Rule</th><th>Model</th><th>Metric</th><th>Difference</th>'
+                      f'<th>Interval</th></tr></thead><tbody>{"".join(paired)}</tbody></table></div>')
     return (head + f'<p class="notice">{e(labels["policy_note"])}{level}</p>{table}{pair_table}'
             f'{_figures(citer, rid, texts.activity("policy.evaluation"))}</section>')
 
