@@ -57,24 +57,31 @@ def _jsonl(path: Path) -> list[dict]:
     return out
 
 
-def load_state(study_dir) -> dict:
-    """Read and verify ``state.json`` without the lock (same rules as the store)."""
-    home = Path(study_dir).resolve() / HOME
-    path = home / st.STATE_FILE
-    if not path.is_file():
-        raise StudyError('study_missing', f'No study here: {path} does not exist.',
-                         details={'study': str(Path(study_dir))})
-    data = path.read_bytes()
-    sha_path = home / st.SHA_FILE
-    sha_text = sha_path.read_text(encoding='utf-8') if sha_path.is_file() else None
-    pending = None
-    if (home / PENDING_FILE).is_file():
-        try:
-            pending = json.loads((home / PENDING_FILE).read_text(encoding='utf-8'))
-        except ValueError:
-            pending = None
+READ_ATTEMPTS = 3
+
+
+def _read_optional(path: Path) -> str | None:
+    """Text of ``path``, or None when it is absent or disappears while being read."""
+    try:
+        return path.read_text(encoding='utf-8')
+    except OSError:
+        return None
+
+
+def _load_once(home: Path) -> dict:
+    # The pending digest is read first: a writer creates commit.pending.json before the
+    # commit point and removes it after writing state.sha256, so a reader that sees the
+    # new state.json with the old digest has either seen the pending file, or retries.
+    pending_text = _read_optional(home / PENDING_FILE)
+    try:
+        pending = json.loads(pending_text) if pending_text is not None else None
+    except ValueError:
+        pending = None
+    data = (home / st.STATE_FILE).read_bytes()
+    sha_text = _read_optional(home / st.SHA_FILE)
     st.verify_integrity(data, sha_text,
-                        pending_sha256=pending.get('state_sha256') if pending else None)
+                        pending_sha256=pending.get('state_sha256')
+                        if isinstance(pending, dict) else None)
     try:
         return st.loads(data)
     except StudyError as exc:
@@ -82,6 +89,36 @@ def load_state(study_dir) -> dict:
             raise StudyError('integrity_error', 'state.json does not follow the study schema.',
                              details=exc.details) from exc
         raise
+
+
+def load_state(study_dir) -> dict:
+    """Read and verify ``state.json`` without the lock (the store uses it too).
+
+    A read that overlaps a commit (between the commit point and the removal of
+    ``commit.pending.json``) can see the new state with the old digest; it is retried
+    (:data:`READ_ATTEMPTS` reads in all, review fix M3) before ``integrity_error`` is
+    reported. A file that disappears while being read is treated as absent, never as an
+    exception.
+    """
+    import time
+
+    home = Path(study_dir).resolve() / HOME
+    path = home / st.STATE_FILE
+    for attempt in range(READ_ATTEMPTS):
+        if not path.is_file():
+            raise StudyError('study_missing', f'No study here: {path} does not exist.',
+                             details={'study': str(Path(study_dir))})
+        try:
+            return _load_once(home)
+        except StudyError as exc:
+            if exc.code != 'integrity_error' or attempt == READ_ATTEMPTS - 1:
+                raise
+        except FileNotFoundError:
+            if attempt == READ_ATTEMPTS - 1:
+                raise StudyError('study_missing', f'No study here: {path} does not exist.',
+                                 details={'study': str(Path(study_dir))}) from None
+        time.sleep(0.01 * (attempt + 1))
+    raise AssertionError('unreachable')
 
 
 class Study:

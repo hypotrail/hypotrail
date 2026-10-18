@@ -241,33 +241,20 @@ class StudyStore:
         return state
 
     def _pending(self) -> dict | None:
-        if not self.pending_path.exists():
-            return None
         try:
             return json.loads(self.pending_path.read_text(encoding='utf-8'))
-        except ValueError:
+        except (OSError, ValueError):
             return None
 
     def load_state(self) -> dict:
         """Read and verify state; refuse a divergent or invalid one (``integrity_error``).
 
         Read-only: it never repairs anything, so ``status`` can call it without the lock.
+        A read that overlaps a commit is retried (:func:`mlkit.study.read.load_state`).
         """
-        if not self.exists():
-            raise StudyError('study_missing', f'No study here: {self.state_path} does not exist.',
-                             details={'study': str(self.study_dir)})
-        data = self.state_path.read_bytes()
-        sha_text = self.sha_path.read_text(encoding='utf-8') if self.sha_path.exists() else None
-        pending = self._pending()
-        st.verify_integrity(data, sha_text,
-                            pending_sha256=pending.get('state_sha256') if pending else None)
-        try:
-            return st.loads(data)
-        except StudyError as exc:
-            if exc.code == 'invalid_state':
-                raise StudyError('integrity_error', 'state.json does not follow the study schema.',
-                                 details=exc.details) from exc
-            raise
+        from . import read   # the read side; it never imports this module
+
+        return read.load_state(self.study_dir)
 
     def revisions(self, since: int = 0) -> list[dict]:
         """Revision records after revision ``since``, oldest first."""
