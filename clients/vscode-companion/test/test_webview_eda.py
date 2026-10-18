@@ -394,3 +394,25 @@ def test_chip_opens_the_result_in_evidence(open_panel, model):
     page = panel.page
     page.locator('[data-eda-card="eda.rate_by:job"] [data-chip]').click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'evidence'
+
+
+def test_learning_layer_adds_the_explain_example_and_definition_when_already_read(open_panel, model):
+    """The cards use an `explain` model the Learn tab has read; they never request it (§5)."""
+    rid = 'a' * 64
+    terms = {'base_rate': {'term': 'Base rate', 'definition': 'How often the outcome occurs.',
+                           'example': [{'text': 'Here '}, {'text': '11.5%', 'resultId': rid, 'path': 'rate', 'value': 0.1154}]}}
+    panel, _ = open_eda(open_panel, model, 'binary')
+    page = panel.page
+    assert page.locator('[data-example]').count() == 0
+    assert not any(m.get('view') == 'explain' for m in panel.posted())
+    panel.view_data('explain', {'terms': terms, 'steps': [], 'predictions': []}, revision=26)
+    example = page.locator('[data-example="base_rate"]')
+    assert example.inner_text() == 'Here 11.5%'
+    assert example.locator('data').get_attribute('data-result-id') == rid
+    panel.init(stage='v2', task='binary', learningLayer=False)
+    assert page.locator('[data-example]').count() == 0
+
+    reg, _ = open_eda(open_panel, model, 'regression')
+    reg.view_data('explain', {'terms': {'target_distribution': {'term': 'Target distribution',
+                  'definition': 'How the target values spread.', 'example': None}}, 'steps': [], 'predictions': []}, revision=22)
+    assert reg.page.locator('[data-term="target_distribution"]').inner_text() == 'Target distribution: How the target values spread.'
