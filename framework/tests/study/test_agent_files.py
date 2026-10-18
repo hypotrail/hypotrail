@@ -200,6 +200,49 @@ def test_instructions_carry_the_rerun_fixes():
     assert 'never confirm with words the junior wrote\nbefore the proposal existed' in skill
 
 
+def test_instructions_carry_the_rerun_wording_fixes():
+    """R2, R4, R5, R7 of the acceptance rerun: scoped requests, no invented figures in
+    examples, the five-line "where are we?", and the unchanged model on a new rule."""
+    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    # R2: one requested action is only that action; the plan's work needs "continue".
+    rule3 = _rule(text, 3)
+    for phrase in ('When the junior asks to continue the plan', 'without asking permission',
+                   'A request for\n   one action ("update the report"',
+                   'does only\n   that action', 'name the next planned step, and stop',
+                   'never run a plan step the\n   junior did not ask for'):
+        assert phrase in rule3, phrase
+    # R4: no invented figures in example replies; placeholders instead.
+    rule2 = _rule(text, 2)
+    for phrase in ('Example replies you suggest to the junior contain no invented figures',
+                   'placeholder such as <N>', "'the team can call <N>'",
+                   'never a made-up number'):
+        assert phrase in rule2, phrase
+    assert 'Never\ninvent a figure' in skill and 'write <N>' in skill
+    for template in (text, skill, resume):        # the examples themselves use placeholders
+        for invented in ('38 subscribers', 'we will get 38', '115 selected', '3,164',
+                         '3fa9c2e1', '31 %', 'call 250', 'limit of 100'):
+            assert invented not in template, invented
+    # R5: a plain "where are we?" gets the resume command's five lines, goal first.
+    resuming = skill.split('## Resuming', 1)[1].split('\n## ', 1)[0]
+    for phrase in ('A plain "where are we?", in any chat, gets the same five-line answer',
+                   'in at most five lines, goal first', '**The goal first**',
+                   'the excluded features by name', 'No revision numbers'):
+        assert phrase in resuming, phrase
+    assert resuming.index('**The goal first**') < resuming.index('**Where we are**')
+    assert 'five lines' in resume and 'excluded features by name' in resume
+    # R7: a new capacity or threshold leaves the model and its predictions unchanged.
+    rule9 = _rule(text, 9)
+    for phrase in ('When a\n   capacity or a threshold changes, say explicitly that the model '
+                   'and its predictions are\n   unchanged', 'nothing was refitted',
+                   '`result_id`s, unchanged'):
+        assert phrase in rule9, phrase
+    for phrase in ('**A new capacity or threshold.** The model and its predictions are '
+                   'unchanged', 'cite the\n  fit result ids as unchanged'):
+        assert phrase in skill, phrase
+
+
 def test_unknown_placeholders_are_refused():
     with pytest.raises(ValueError, match='NOPE'):
         af.render('{{NOPE}}', flavour=af.CLAUDE, values={}, source='x.md')

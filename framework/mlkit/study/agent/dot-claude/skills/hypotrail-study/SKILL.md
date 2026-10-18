@@ -25,9 +25,11 @@ a completion condition. Show the plan in the first conversation and when it chan
 ## Term first, then the contextual explanation
 
 Introduce a statistical term in bold with a one-line definition, then explain it with this
-study's own figures and their `result_id`. Example, with illustrative figures: "**Base rate: the share of positive
-rows.** Here 11.5 % of the 3,164 training rows are subscriptions (result 3fa9c2e1); a
-model has to beat this to be useful." Definitions live in the glossary
+study's own figures and their `result_id`. Example, with placeholders for the study's
+figures: "**Base rate: the share of positive rows.** Here <rate> of the <N> training rows
+are subscriptions (result <result_id>); a model has to beat this to be useful." Never
+invent a figure, in an explanation or in a reply you suggest to the junior: write <N>
+until a `hypotrail` output gives the number. Definitions live in the glossary
 `{{GLOSSARY}}`; reuse its wording and introduce a term the first time it matters, not
 as a course up front.
 
@@ -70,10 +72,20 @@ confirm it in their own words when they are ready.
 
 ## Resuming
 
-When a chat resumes ("where are we?"), start with the goal of the study in one plain
-sentence (`goal.intended_use` and `goal.prediction_time` from `status --summary`), then
-the position and the next decision. Ids are for the junior only if they ask; a
-`result_id` goes next to the figure it backs.
+A plain "where are we?", in any chat, gets the same five-line answer as the resume
+command, from `status --summary` only, in at most five lines, goal first:
+
+1. **The goal first**, in one sentence (`goal.intended_use` and `goal.prediction_time`).
+2. **Where we are**: the step in plain words (its title, not its id) and the last
+   decision, quoting the junior's recorded words; say if it was delegated, needs
+   reconfirmation, or waits for their answer.
+3. **What matters next**: the excluded features by name, the figures the next step uses
+   with their `result_id`, and any stale result or interrupted execution.
+4. **The deliverables**: each one's status in a few words.
+5. **The next decision or action** with your recommended default.
+
+No revision numbers, proposal ids, request ids, or execution ids unless the junior asks;
+a `result_id` goes only next to the figure it backs.
 
 "Explain differently", "show the calculation", or "let me try" change the depth, never the
 position in the plan. For "let me try", point to `notebooks/workbench.py`: its slider calls
@@ -89,7 +101,7 @@ the result.
 ## Reading the numbers
 
 - **Intervals.** A percentile interval from the paired bootstrap describes the
-  variability of *these* validation rows: "between 31 % and 45 % on resamples of the
+  variability of *these* validation rows: "between <low> and <high> on resamples of the
   validation rows", not "the true precision is in this range" and not a forecast. A wide
   interval means the comparison is uncertain. A paired difference whose interval contains
   0 does not show that one model is better.
@@ -97,6 +109,9 @@ the result.
   (`small_count`) is too noisy to read alone.
 - **Ties at the cut.** With a constant baseline every row ties; selected counts are then
   expected counts (`selection: "expected"`).
+- **A new capacity or threshold.** The model and its predictions are unchanged: only
+  the selection rule applied to the same scores changes. Say so explicitly, and cite the
+  fit result ids as unchanged.
 - **Validation is not independent.** A rule chosen on validation rows is optimistic;
   the report's "What is not yet defensible" section lists these limits. Repeat them.
 
