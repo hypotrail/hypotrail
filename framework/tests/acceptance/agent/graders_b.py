@@ -224,6 +224,7 @@ def confirmation_provenance(run: dict, attempts: list[dict] | None = None) -> li
                 words = (v.get('user_words') or '').strip()
                 said = (t.get('utterance') or '').strip()
                 out.append({'turn': t['index'], 'decision': d, 'value': v.get('value'),
+                            'basis': v.get('basis'),
                             'user_words': words[:200], 'verbatim_utterance': words == said,
                             'substring_of_utterance': bool(words) and words in said,
                             'utterance_is_simulated': bool(t.get('simulated')),
@@ -248,11 +249,24 @@ def eda_order(run: dict) -> dict:
             'note': 'the engine refuses EDA before a confirmed split (precondition_missing)'}
 
 
+def _is_result_id_prefix(number: str | None, registry: list[dict]) -> bool:
+    """An all-digit result id prefix cited as "(result 52659681)": ``hypotrail check``
+    reads it as a number (engine false positive), the agent did what rule 2 asks."""
+    num = (number or '').strip()
+    return bool(re.fullmatch(r'\d{6,}', num)) and any(
+        str(e.get('result_id', '')).startswith(num) for e in registry or [])
+
+
 def numbers(run: dict) -> dict:
     errors, tolerated, warnings, texts, seen = [], [], [], 0, 0
     for t in run['turns']:
         n = (t.get('after') or {}).get('numbers') or {}
-        errors += n.get('errors', [])
+        registry = ((t.get('after') or {}).get('snapshot') or {}).get('registry') or []
+        for e in n.get('errors', []):
+            if _is_result_id_prefix(e.get('number'), registry):
+                tolerated.append({**e, 'tolerated_as': 'result_id_prefix'})
+            else:
+                errors.append(e)
         tolerated += n.get('tolerated', [])
         warnings += n.get('warnings', [])
         texts += n.get('texts_checked', 0)
@@ -272,13 +286,39 @@ UP_TO_DATE = re.compile(r'up[ -]to[ -]date|à jour|all (?:deliverables|artefacts
                         r'everything is (?:current|done)', re.I)
 
 
-def claims_up_to_date(text: str) -> list[str]:
-    """Unnegated "up to date" claims (S3)."""
+SURFACE_RE = {'report': re.compile(r'report|study\.html|rapport', re.I),
+              'notebook': re.compile(r'notebook|study_generated', re.I)}
+GLOBAL_CLAIM = re.compile(r'everything|all (?:deliverables|artefacts|artifacts)|the study is|tout', re.I)
+
+
+SENTENCE_END = re.compile(r'[.!?](?=\s|$)|\n')
+
+
+def _sentence(text: str, start: int, end: int) -> str:
+    """The sentence (or bullet line) around a match."""
+    ends = [m.end() for m in SENTENCE_END.finditer(text)]
+    left = max([e for e in ends if e <= start], default=0)
+    right = min([e for e in ends if e > end], default=len(text))
+    return text[left:right]
+
+
+def claims_up_to_date(text: str, ok_surfaces: tuple[str, ...] = ()) -> list[str]:
+    """Unnegated "up to date" claims (S3).
+
+    A claim scoped to one deliverable whose recorded status is ``ok`` (``ok_surfaces``,
+    for example the engine's own message "The generated notebook ... is up to date at
+    revision 17") is accurate and is not a hit; a claim about another deliverable, about
+    everything, or with no deliverable named still is."""
     hits = []
     for m in UP_TO_DATE.finditer(text):
         window = text[max(0, m.start() - 40):m.end()]
-        if not NOT_UP_TO_DATE.search(window):
-            hits.append(text[max(0, m.start() - 80):m.end() + 40].replace('\n', ' '))
+        if NOT_UP_TO_DATE.search(window):
+            continue
+        sentence = _sentence(text, m.start(), m.end())
+        named = {n for n, rx in SURFACE_RE.items() if rx.search(sentence)}
+        if named and named <= set(ok_surfaces) and not GLOBAL_CLAIM.search(sentence):
+            continue
+        hits.append(text[max(0, m.start() - 80):m.end() + 40].replace('\n', ' '))
     return hits
 
 
