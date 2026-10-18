@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from mlkit.study import cmd_check, manifest as mf, read, view
+from mlkit.reliability import CommandRefused
+from mlkit.study import cmd_check, commands as cmd, manifest as mf, read, view
 from mlkit.study.store import StudyStore
 
 import phase3_study as fx
@@ -303,12 +304,19 @@ def test_the_declared_case_and_dataset_inside_the_study_are_not_untracked(tmp_pa
     assert warn['untracked_files']['details']['files'] == ['case/extract.csv', 'scratch.py']
 
 
-def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir):
+def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir, monkeypatch):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='policy')
     # 47 is in no result. (9 was used before the canonical shapes; the policy evaluation now
     # also reports the baseline's expected false negatives, 8.5556, which rounds to 9.)
-    b.decide('conclusion', {'verdict': 'adopt_policy',
-                            'text': 'Adopt it: we expect 47 renewals per 20 calls.'},
+    text = 'Adopt it: we expect 47 renewals per 20 calls.'
+    # Since review fix M1 such a conclusion is refused when proposed ...
+    with pytest.raises(CommandRefused) as refused:
+        b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
+                 'You adopt the policy.', 'I adopt the capacity rule as written.')
+    assert refused.value.code == 'literal_number_in_text'
+    # ... and check still reports one recorded by a study written before that fix.
+    monkeypatch.setattr(cmd, 'check_conclusion', lambda *a, **k: None)
+    b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
              'You adopt the policy.', 'I adopt the capacity rule as written.')
     result = cmd_check.run_check(b.study)
     where = {(f['code'], f['where']) for f in result['findings']}

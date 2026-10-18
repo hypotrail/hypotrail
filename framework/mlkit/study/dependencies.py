@@ -98,23 +98,14 @@ BY_MUTATION = {m['mutation']: m for m in MUTATIONS}
 DATASET_MUTATIONS = ('dataset', 'case')
 
 
+canonical_rule = rec.canonical_rule
+
+
 def parse_policy(value: Any) -> tuple[str, float] | None:
     """``("threshold", t)`` or ``("capacity", k)`` from ``"threshold:0.3"`` /
-    ``"capacity:100"``; None when the value is not a policy rule."""
-    if not isinstance(value, str) or value.count(':') != 1:
-        return None
-    kind, _, number = value.partition(':')
-    if kind not in POLICY_RULES:
-        return None
-    try:
-        amount = float(number) if kind == 'threshold' else int(number)
-    except ValueError:
-        return None
-    if kind == 'threshold' and not 0.0 <= amount <= 1.0:
-        return None
-    if kind == 'capacity' and amount < 1:
-        return None
-    return kind, amount
+    ``"capacity:100"``; None when the value is not a policy rule
+    (:func:`mlkit.study.records.canonical_rule` is the grammar)."""
+    return rec.parse_rule(value)
 
 
 def feature_set(value: Any) -> frozenset | None:

@@ -101,8 +101,8 @@ FILLER_WORDS = frozenset("""
 """.split())
 # Identifiers a reply may quote (proposal and execution ids, request ids, digests): they
 # say which proposal, not what is decided.
-IDENTIFIER = re.compile(r'\b(?:[pe]_[0-9a-f]+|r-[0-9a-z]+|(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,})\b',
-                        re.IGNORECASE)
+IDENTIFIER = re.compile(r'\b(?:[a-z]+_(?=[0-9a-z]*\d)[0-9a-z]+|r-[0-9a-z]+'
+                        r'|(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,})\b', re.IGNORECASE)
 # A reply that refuses, hesitates or disagrees: a clause opening with one of these words,
 # or one of the phrases anywhere.
 NEGATIVE_LEADS = frozenset("""
@@ -182,25 +182,37 @@ def refused(command: str, exc: Exception) -> Outcome:
 
 # --- value checks -----------------------------------------------------------------------
 
-NUMBER = re.compile(r'(?<![\w.])\d+(?:[.,]\d+)?')
+# A number in free text: digits glued to letters count ("top100", review fix L4); digits
+# inside an identifier (``p_5``, ``r_1a2b``, a digest prefix) are masked first.
+NUMBER = re.compile(r'(?<![\d.])\d+(?:[.,]\d+)?')
+PERCENT_AFTER = re.compile(r'\s?(?:%|percent\b|per\s?cent\b|pour\s?cent\b)', re.IGNORECASE)
+
+
+def mask_identifiers(text: str) -> str:
+    """``text`` with identifiers blanked (same length), so their digits are not numbers."""
+    return IDENTIFIER.sub(lambda m: ' ' * len(m.group(0)), text)
 
 
 def _numbers(text: str) -> set[float]:
-    return {float(m.replace(',', '.')) for m in NUMBER.findall(text)}
+    return {float(m.replace(',', '.')) for m in NUMBER.findall(mask_identifiers(text))}
 
 
-def _value_numbers(value: Any) -> set[float]:
+def _value_numbers(value: Any, *, percents_only: bool = False) -> set[float]:
+    """Numbers of a proposed value. A fraction may also be written as a percentage (of
+    itself or of its complement). ``percents_only``: only those percentage forms."""
     found: set[float] = set()
 
     def walk(node):
         if isinstance(node, bool):
             return
         if isinstance(node, (int, float)):
-            found.add(float(node))
+            if not percents_only:
+                found.add(float(node))
             if 0 < node < 1:   # a fraction may be written as a percentage
                 found.update({round(100 * node, 6), round(100 * (1 - node), 6)})
         elif isinstance(node, str):
-            found.update(_numbers(node))
+            if not percents_only:
+                found.update(_numbers(node))
         elif isinstance(node, Mapping):
             for k, v in node.items():
                 walk(k)
@@ -218,41 +230,96 @@ def literal_numbers(text: str, value: Any, pool=None) -> list[str]:
     A proposal's restatement and rationale may repeat the numbers of the proposed
     value, and the figures of current registry results it rests on ("115 selected"),
     traced with the matcher of ``hypotrail check`` (``pool`` is a
-    :class:`mlkit.study.cmd_check.Pool` of the current results). Any other number is
-    free text and is refused.
+    :class:`mlkit.study.cmd_check.Pool` of the current results). A percentage ("100%",
+    "30 percent") comes from a result, or from a fraction of the value ("30%" for a
+    validation fraction of 0.3), never from another number of the value: "capacity:100"
+    does not allow "100% precision" (review fix L3). Any other number is free text and
+    is refused; it is reported as written, with ``%`` for a percentage.
     """
     from . import cite
 
-    allowed = _value_numbers(value)
-    tokens = cite.parse_numbers(text) if pool is not None else []
+    masked = mask_identifiers(text)
+    plain = {round(n, 6) for n in _value_numbers(value)}
+    percents = {round(n, 6) for n in _value_numbers(value, percents_only=True)}
+    tokens = cite.parse_numbers(masked) if pool is not None else []
     out = set()
-    for m in NUMBER.finditer(text):
-        if round(float(m.group().replace(',', '.')), 6) in allowed:
+    for m in NUMBER.finditer(masked):
+        number = round(float(m.group().replace(',', '.')), 6)
+        percent = bool(PERCENT_AFTER.match(masked, m.end()))
+        if number in (percents if percent else plain):
             continue
         if any(t.start <= m.start() < t.end and pool.trace(t)[0] == 'current' for t in tokens):
             continue
-        out.add(m.group())
+        out.add(m.group() + ('%' if percent else ''))
     return sorted(out)
 
 
-def current_results_pool(store: StudyStore, state: Mapping):
-    """A number pool of the current, verified registry results only (no literals): what a
-    proposal's text may cite besides its own value (D5)."""
-    from . import cmd_check, registry
+def current_results_pool(store: StudyStore, state: Mapping, *, literals: bool = False):
+    """A number pool of the current, verified registry results: what a proposal's text may
+    cite besides its own value (D5). Current means current by state, lineage and code
+    (:meth:`mlkit.study.read.Study.currency`).
 
+    ``literals`` (the conclusion text, review fix M1) also admits the recorded values a
+    report may repeat: the confirmed decisions other than the conclusion, the junior's
+    recorded words, and the rules of the current policy evaluation; never the proposed
+    conclusion itself.
+    """
+    from . import cmd_check
+
+    study = read.open(store.study_dir)
     results = {}
     for slot, rid in sorted(state['current'].items()):
-        if not st.is_current(state, slot):
+        if not st.is_current(state, slot) or not study.currency(rid)['current']:
             continue
         try:
-            entry = registry.get(store, rid)
+            entry = study.result(rid)
         except StudyError:
             continue
         results[slot] = {'result_id': rid, 'values': entry['output']['values'],
                          'n_rows': entry['n_rows'], 'current': True, 'integrity': 'ok',
                          'activity': entry['activity'], 'params': entry['params']}
-    return cmd_check.Pool({'results': results, 'decisions': {}, 'open_proposals': [],
+    decisions = {}
+    if literals:
+        decisions = {d: {'decision_id': d, 'value': dec['value'],
+                         'confirmation': dec['confirmation']}
+                     for d, dec in state['decisions'].items()
+                     if d != 'conclusion' and dec['status'] == 'confirmed'}
+    return cmd_check.Pool({'results': results, 'decisions': decisions, 'open_proposals': [],
                            'settings': {}, 'dataset': {}, 'facts': {'by_status': {}}})
+
+
+def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatement: str,
+                     rationale: str) -> None:
+    """Review fix M1: the conclusion text is traced when it is proposed.
+
+    Every number of ``value.text`` must match a current result (or a recorded literal,
+    :func:`current_results_pool`); the proposed value is no whitelist for itself
+    (``literal_number_in_text``, ``details.field`` ``value.text``). Causal or forecast
+    wording in the text, the restatement, or the rationale is refused
+    (``causal_or_forecast_wording``, ``details.findings`` as ``hypotrail check`` reports
+    them).
+    """
+    from . import cmd_check
+
+    findings, _ = cmd_check.trace_text(current_results_pool(store, state, literals=True),
+                                       mask_identifiers(value['text']), 'value.text')
+    numbers = [f['details']['number'] for f in findings
+               if f['code'] in ('untraceable_number', 'stale_number')]
+    if numbers:
+        raise CommandRefused('literal_number_in_text',
+                             'The conclusion text contains numbers that are not figures of a '
+                             'current result. Cite registered figures only.',
+                             details={'field': 'value.text', 'numbers': sorted(set(numbers)),
+                                      'findings': findings})
+    wording = (cmd_check.wording(value['text'], 'value.text')
+               + cmd_check.wording(restatement, 'restatement')
+               + cmd_check.wording(rationale, 'rationale'))
+    if wording:
+        raise CommandRefused('causal_or_forecast_wording',
+                             'The conclusion uses causal or forecast wording. The study shows '
+                             'associations and rankings on past validation rows, not effects '
+                             'of acting or forecasts; rephrase it.',
+                             details={'findings': wording})
 
 
 def _invalid(message: str, **details) -> CommandRefused:
@@ -534,6 +601,11 @@ def _propose(ctx: Context) -> Handler:
     def run(state, params):
         decision_id, value = params['decision_id'], params['value']
         validate_value(state, decision_id, value)
+        if decision_id == 'policy':
+            value = dep.canonical_rule(value)        # L2: one spelling per rule
+        if decision_id == 'conclusion':
+            check_conclusion(ctx.store, state, value, params['restatement'],
+                             params['rationale'])
         pool = None
         for key in ('restatement', 'rationale'):
             if not literal_numbers(params[key], value):

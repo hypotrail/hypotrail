@@ -91,7 +91,7 @@ CAUSAL = re.compile(
     r"(?:increases?|raises?|reduces?|lowers?) the (?:chance|probability|likelihood|odds))\b",
     re.IGNORECASE)
 FORECAST = re.compile(
-    r"\b(expect(?:s|ed|ing)?(?! value)|will (?:get|reach|bring|convert|subscribe|renew|yield|"
+    r"\b(expect(?:s|ed|ing)?(?! value)(?! (?:for|under|by|from) )|will (?:get|reach|bring|convert|subscribe|renew|yield|"
     r"deliver|find|see|have|make|gain|win|sign)|we will|you will|we'll|you'll|"
     r"should (?:reach|get|bring|yield|convert)|(?:is|are) going to|guarantee[sd]?|"
     r"in (?:the )?future|(?:next|coming|upcoming) (?:rounds?|waves?|periods?|months?|quarters?|years?))\b",

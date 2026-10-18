@@ -22,6 +22,7 @@ from typing import Any, Mapping
 
 from mlkit.reliability import CommandRefused
 
+from . import records as rec
 from . import state as st
 
 POLICY_EVALUATION = 'policy.evaluation'
@@ -50,8 +51,10 @@ def evaluated_rules(entry: Mapping) -> list[str]:
     """Rules a policy evaluation entry covers: ``params.rules`` or ``params.rule``."""
     params = entry.get('params', {})
     if isinstance(params.get('rules'), list):
-        return [str(r) for r in params['rules']]
-    return [str(params['rule'])] if params.get('rule') is not None else []
+        rules = [str(r) for r in params['rules']]
+    else:
+        rules = [str(params['rule'])] if params.get('rule') is not None else []
+    return [rec.canonical_rule(r) or r for r in rules]
 
 
 def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
@@ -66,7 +69,8 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
         elif store is not None:
             from . import registry   # read of one entry; registry is a writer-side module
             entry = registry.get(store, state['current'][POLICY_EVALUATION])
-            if value is not None and str(value) not in evaluated_rules(entry):
+            if value is not None and (rec.canonical_rule(value) or str(value)) \
+                    not in evaluated_rules(entry):
                 missing.append({'requirement': 'result_current', 'slot': POLICY_EVALUATION,
                                 'rule': value, 'evaluated': evaluated_rules(entry),
                                 'detail': 'The current evaluation did not evaluate this rule.'})

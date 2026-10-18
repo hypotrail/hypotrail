@@ -139,12 +139,14 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
         if isinstance(rules, str) or not rules:
             raise CommandRefused('invalid_arguments', 'policy.evaluation needs at least one '
                                                       '--rule (threshold:t or capacity:k).')
+        canonical = []
         for rule in rules:
             try:
                 policy.parse_rule(rule)
             except ValueError as exc:
                 raise CommandRefused('invalid_arguments', str(exc), details={'rule': rule}) from None
-        return {'rules': list(dict.fromkeys(rules))}
+            canonical.append(rec.canonical_rule(rule))
+        return {'rules': list(dict.fromkeys(canonical))}
     return {}
 
 
@@ -317,7 +319,7 @@ def adopted_rule(state: Mapping) -> str | None:
     decision = state['decisions']['policy']
     value = decision['value']
     if decision['status'] in ('confirmed', 'reconfirm_required') and isinstance(value, str):
-        return value
+        return rec.canonical_rule(value) or value
     return None
 
 
@@ -327,7 +329,7 @@ def evaluated_rules(state: Mapping, requested) -> list[str]:
     A new evaluation replaces the current one in its slot, so it always includes the
     adopted rule: an adopted policy never silently loses its current evaluation.
     """
-    rules = list(requested)
+    rules = [rec.canonical_rule(r) or r for r in requested]
     adopted = adopted_rule(state)
     if adopted is not None and adopted not in rules:
         rules.append(adopted)

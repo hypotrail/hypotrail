@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from decimal import Decimal
 from typing import Any, Iterable, Mapping
 
 from .errors import StudyError
@@ -213,3 +215,44 @@ def overlap(old_split: Mapping, new_split: Mapping,
         'previously_exposed': previously,
         'note': 'Changing the split does not make previously explored rows unseen.',
     }
+
+
+# --- policy rules (review fix L2) ------------------------------------------------------------
+
+_CAPACITY = re.compile(r'[0-9]+', re.ASCII)
+_THRESHOLD = re.compile(r'[0-9]+(?:\.[0-9]+)?', re.ASCII)
+
+
+def canonical_rule(rule: Any) -> str | None:
+    """The one spelling of a policy rule, or None when ``rule`` is not one.
+
+    ``threshold:t`` with ``0 <= t <= 1`` written in plain decimal digits, trailing zeros
+    dropped (``threshold:0.30`` and ``threshold:0.3`` are one rule, ``threshold:1.0`` is
+    ``threshold:1``); ``capacity:k`` with ``k >= 1`` written in plain digits, leading
+    zeros dropped. Spaces around the parts are ignored. Signs, exponents, underscores
+    (``capacity:1_000``), non-ASCII digits, ``nan``, and ``inf`` are refused. Every
+    comparison, identity, and stored value of a rule uses this spelling.
+    """
+    if not isinstance(rule, str) or rule.count(':') != 1:
+        return None
+    kind, _, number = rule.partition(':')
+    kind, number = kind.strip(), number.strip()
+    if kind == 'capacity' and _CAPACITY.fullmatch(number):
+        k = int(number)
+        return f'capacity:{k}' if k >= 1 else None
+    if kind == 'threshold' and _THRESHOLD.fullmatch(number):
+        t = Decimal(number)
+        if not 0 <= t <= 1:
+            return None
+        text = format(t.normalize(), 'f')
+        return f'threshold:{text}'
+    return None
+
+
+def parse_rule(rule: Any) -> tuple[str, float | int] | None:
+    """``("threshold", t)`` or ``("capacity", k)`` of a rule (:func:`canonical_rule`)."""
+    canonical = canonical_rule(rule)
+    if canonical is None:
+        return None
+    kind, _, number = canonical.partition(':')
+    return (kind, int(number)) if kind == 'capacity' else (kind, float(number))

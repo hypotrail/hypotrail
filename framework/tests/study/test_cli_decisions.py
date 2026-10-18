@@ -485,7 +485,8 @@ def test_literal_numbers_in_text_are_refused(study, work):
                     'Call the 100 top members; that reaches 37% of buyers.', '--rationale', 'x',
                     '--request-id', 'r1', '--expected-revision', 1, '--study', study, cwd=work)
     assert code == 2 and out['error']['code'] == 'literal_number_in_text'
-    assert out['error']['details']['numbers'] == ['37']
+    # Since review fix L3 a refused percentage is reported as written, with its sign.
+    assert out['error']['details']['numbers'] == ['37%']
     assert cmd.literal_numbers('Split 70/30, seed 20261017.', SPLIT) == []
 
 

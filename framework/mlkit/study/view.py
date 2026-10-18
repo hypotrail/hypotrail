@@ -18,6 +18,7 @@ from pathlib import Path
 
 from . import currency
 from . import read
+from . import records as rec
 from . import state as st
 from .case import EPISTEMIC_STATUSES
 from .errors import StudyError
@@ -139,7 +140,7 @@ def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
     if item and item['current'] and item['integrity'] == 'ok':
         params = item['params'] if isinstance(item['params'], dict) else {}
         rules = params.get('rules') or ([params['rule']] if params.get('rule') else [])
-        if rule in rules:
+        if (rec.canonical_rule(rule) or rule) in {rec.canonical_rule(r) or r for r in rules}:
             return None
     return rule
 

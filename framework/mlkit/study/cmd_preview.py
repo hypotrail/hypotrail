@@ -55,6 +55,8 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
             policy.parse_rule(rule)
         except ValueError as exc:
             raise StudyError('invalid_arguments', str(exc), details={'rule': rule}) from None
+    from .records import canonical_rule
+    rules = list(dict.fromkeys(canonical_rule(r) for r in rules))
     study = read.open(study_dir)
     state = study.state
     missing = [{'requirement': 'result_present', 'slot': s} for s in FITS

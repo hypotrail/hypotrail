@@ -41,26 +41,13 @@ def parse_rule(rule) -> tuple[str, float | int]:
 
     Same grammar as ``mlkit.study.dependencies.parse_policy`` (checked by a test).
     """
-    if not isinstance(rule, str) or rule.count(':') != 1:
-        raise ValueError(f'a rule is "threshold:<t>" or "capacity:<k>", not {rule!r}')
-    kind, _, number = rule.partition(':')
-    if kind == 'threshold':
-        try:
-            t = float(number)
-        except ValueError:
-            raise ValueError(f'threshold {number!r} is not a number') from None
-        if not 0.0 <= t <= 1.0:
-            raise ValueError('a threshold is between 0 and 1')
-        return kind, t
-    if kind == 'capacity':
-        try:
-            k = int(number)
-        except ValueError:
-            raise ValueError(f'capacity {number!r} is not an integer') from None
-        if k < 1:
-            raise ValueError('a capacity is at least 1')
-        return kind, k
-    raise ValueError(f'unknown rule type {kind!r}; use threshold or capacity')
+    from .records import parse_rule as parse
+
+    parsed = parse(rule)
+    if parsed is None:
+        raise ValueError(f'a rule is "threshold:<t>" (0 <= t <= 1, decimal digits) or '
+                         f'"capacity:<k>" (an integer k >= 1, digits only), not {rule!r}')
+    return parsed
 
 
 def capacity_weights(score, k: int) -> tuple[np.ndarray, dict]:
