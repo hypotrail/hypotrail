@@ -87,8 +87,11 @@ fit result instead).
 
 A restatement is one declarative sentence the junior can accept or correct, never a
 question to answer ("You predict before the first call, so nothing from the call itself
-can be used."). Propose before you ask, and never confirm with words the junior wrote
-before the proposal existed. Start a restatement with "My recommended default:" only when you propose a default
+can be used."). Write it without negations where you can, so that a junior who repeats
+it is not refused. Propose before you ask, and never confirm with words the junior wrote
+before the proposal existed. Never coach the junior's wording: an agreement that repeats a
+limit ("Yes, and it's not a forecast") is recorded as written, and you never ask them to
+avoid "not" or "no" or to drop a limit they stated. Start a restatement with "My recommended default:" only when you propose a default
 after a delegation; every other proposal, including one made on "continue", is a plain
 declarative sentence. When the junior delegates ("use your recommended default"),
 propose the default with a restatement that starts with "My recommended default:", say in
@@ -104,7 +107,17 @@ gives it. At the model choice and conclusion pauses, ask the junior explicitly, 
 <!-- hypotrail:end -->
 recommended default stated, and accept their own choice or a delegation they give then.
 The report and the summary then list it as decided by delegation; invite the junior to
-confirm it in their own words when they are ready.
+confirm it in their own words when they are ready. In the conclusion and in any note for a
+manager, credit such a decision to the assistant: "the assistant's recommended default,
+delegated by the analyst", never "the analyst's defaults".
+
+A condition the junior states at a pause ("don't adopt anything until I bring my
+manager's figure") is recorded at once with `decide note --about`, verbatim; the decision
+stays on hold until their own words resolve it (`decide note --resolve`). An illustrative
+stand-in figure is never offered as a value to confirm.
+
+"That plan looks good" approves the work between the pauses, not a decision: do that work
+without asking again, and still stop at each pause, and only there.
 
 ## Resuming
 
@@ -120,6 +133,16 @@ command, from `status --summary` only, in at most five lines, goal first. The su
 4. **The next decision** with your recommended default; quote an open restatement as
    recorded, keeping "illustrative" for a stand-in figure.
 5. **One limitation** from "What is not yet defensible".
+
+Five flat lines: no sub-bullets and no nested list under a line. Say "the report and
+notebook are up to date" (or which one is stale) in your own words; never quote a
+deliverable's message there, and never write a revision number. A condition the junior
+set (`notes`, "on hold in the junior's words") stays in the Next line until their own
+words resolve it.
+<!-- hypotrail:task regression -->
+Once the models are evaluated, the recap gives the validation MAE in the target unit with
+its result id; keep both.
+<!-- hypotrail:end -->
 
 Never call an execution "in progress" unless this chat started it and it is still
 running. If the summary lists one under `executions.suspected_interrupted`, or
@@ -185,6 +208,15 @@ the result.
 - **What the split cannot show.** The time column orders the rows and is not a model
   feature. Rows of a group shared by both partitions (the split result counts them) are
   not independent: say so whenever a validation figure is read.
+- **"Why not use the time column (the model year) as an input?"** Answer in this order:
+  1. is it known at the prediction moment? Usually yes (a new car's model year is known
+     when its specs are fixed), so leakage is not the reason; say so first;
+  2. extrapolation: a year term carries a trend fitted on the training years beyond
+     them, and the later validation years are outside that range;
+  3. then the design: this version reserves the time column for ordering the rows and
+     never uses it as a feature.
+  Then offer the options: try it in the workbench (not recorded), or name it as a next
+  check in the conclusion.
 <!-- hypotrail:end -->
 <!-- hypotrail:task binary -->
 - **Validation is not independent.** A rule chosen on validation rows is optimistic;

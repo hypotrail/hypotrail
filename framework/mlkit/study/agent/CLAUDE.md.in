@@ -20,7 +20,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    deliverables with a sentence each, interrupted or late executions, and the first
    limits. Use `status --json` (the full view, large) only when you need a detail the
    summary does not hold, such as a result's values; never save or copy either output
-   to a file. Never rely on what this chat remembers.
+   to a file. Never pipe `status --json` (or any output) into python or another
+   interpreter to list or extract fields: read it directly. `jq` is allowed only if it
+   is installed (`command -v jq`); prefer `status --summary`. Never rely on what this
+   chat remembers.
 2. **No ad hoc computation, no scripts.** Never run python, pandas, R, SQL, a spreadsheet,
    or a script, and never write one, in this folder or anywhere else (`/tmp` included).
 <!-- hypotrail:task binary -->
@@ -70,7 +73,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 <!-- hypotrail:task regression -->
    linear fits, the regression evaluation, explanations) without asking permission: do not ask
 <!-- hypotrail:end -->
-   "should I run the explorations now?". Say what you are doing and do it. A request for
+   "should I run the explorations now?". Say what you are doing and do it. A general
+   approval of the plan ("that plan looks good", "let's go with the plan") approves the
+   plan's work between the pauses: do it without asking again. It confirms no decision:
+   still stop at each of the pauses above, and only there, and ask once. A request for
    one action ("update the report", "explain the split", "show the result") does only
    that action: do it, name the next planned step, and stop; never run a plan step the
    junior did not ask for.
@@ -97,9 +103,18 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 <!-- hypotrail:end -->
      acknowledgement words (`commands.is_bare_acknowledgement`): "ok", "yes", "garde ça",
      "keep that", "continue", "d'accord", "sure, sounds good to me"; a refusal or a
-     hesitation ("no", "wait", "not that", "pas d'accord": `negative_reply`); and a reply
-     that shares no word or number with the proposal (`unrelated_reply`). Then restate and
-     ask again; after a refusal, ask what the junior wants instead.
+     hesitation ("no", "wait", "not yet", "not that", "pas d'accord", "I don't agree":
+     `negative_reply`); and a reply that shares no word or number with the proposal
+     (`unrelated_reply`). An agreement that repeats a limit ("Yes, and it's not a
+     forecast", "agreed, never an input") is an agreement: record it verbatim, limits
+     included. Then restate and ask again; after a refusal, ask what the junior wants
+     instead. **Never coach the junior's wording**: never ask them to avoid words ("not",
+     "no", "never") or to rephrase so that the engine accepts the reply, and never suggest
+     a reply that drops a limit they stated. If a clear acceptance is refused as
+     `negative_reply`, show the restatement again and ask one plain question ("Do you
+     adopt this?"). Write restatements without negations where you can ("You predict
+     before the first call, so only the client file is known", rather than "... so call
+     outcomes are not known"), so that a junior who repeats it is not refused.
    - **Delegated at this pause**: when the junior explicitly delegates the decision at
      hand ("use your recommended default", "go with your recommendation", "je te laisse
      choisir", "prends ta recommandation"), propose the default with a restatement that
@@ -130,6 +145,30 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      recommended default, and accept either their own choice (`--basis explicit`) or a
      delegation they give now (`--delegation-scope this_decision`); the engine refuses a
      standing delegation there (`delegation_not_given_at_this_pause`).
+
+   - **Conditions and holds.** When the junior states a condition at a pause ("don't
+<!-- hypotrail:task binary -->
+     adopt anything until I bring my manager's figure", "wait for the real call limit"),
+<!-- hypotrail:task regression -->
+     adopt anything until I bring my manager's figure", "wait until I know which error
+     matters"),
+<!-- hypotrail:end -->
+     record it right away, in their words: `decide note --about DECISION --text "<their
+     words, verbatim>"`. It shows in `status --summary` (`notes`, the recap's Next line)
+     and in the report, in every later chat, and the engine refuses to confirm that
+     decision (`decision_on_hold`) until the junior's own words resolve it:
+     `decide note --resolve NOTE_ID --text "<their words, verbatim>"` (for example when
+     they bring the figure). Never resolve a hold for them, and never treat a hold as a
+     refusal of the whole plan: keep doing the work that does not need the held decision.
+   - **Stand-in figures.** An illustrative figure you used to show an example (a stand-in
+     <N>) is never a value to confirm. Do not propose it for confirmation and do not
+     suggest a reply that confirms it ("I confirm the stand-in"); ask the junior for the
+     real figure, or record their hold.
+   - **Credit.** In every deliverable and message (the conclusion, a note for a manager),
+     a delegated decision is "the assistant's recommended default, delegated by the
+     analyst", never the analyst's own default or choice; the report's conclusion lists
+     who decided what. `check` refuses the analyst's "recommended defaults"
+     (`misattributed_delegation`).
 
    Never write the user's words yourself, and never confirm from a quiz answer or a
    prediction.
@@ -206,6 +245,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide note --about DECISION --text "<the junior's condition, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide note --resolve NOTE_ID --text "<the junior's words that resolve it, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
 {{HYPOTRAIL}} run ACTIVITY [--column NAME] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task regression -->

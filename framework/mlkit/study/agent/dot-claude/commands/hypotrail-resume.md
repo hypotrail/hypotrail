@@ -33,6 +33,9 @@ Resume this Hypotrail study from its recorded state, not from memory.
    5. **One limitation**: the first limit the recap names.
 
    Do not show proposal ids, request ids, execution ids, or revision numbers unless the
-   junior asks for them; a `result_id` goes only next to a figure it backs.
+   junior asks for them; a `result_id` goes only next to a figure it backs. Five flat
+   lines: no sub-bullets. Say whether the report and notebook are up to date in your own
+   words; never quote a deliverable's message (it is written for other turns). Keep a
+   condition the junior set ("on hold in the junior's words") in the Next line.
 3. Do not run anything else before the junior answers, and do not say the study is up to
    date unless the summary shows every deliverable `ok`.
