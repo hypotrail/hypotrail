@@ -113,7 +113,9 @@ AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
                      'same_request', 'proposal_stale',
                      # Post-acceptance contract (D1): delegated confirmations.
-                     'not_a_delegation', 'delegation_needs_basis', 'restatement_not_default'}
+                     'not_a_delegation', 'delegation_needs_basis', 'restatement_not_default',
+                     # Review fix H1: refusals and replies unrelated to the proposal.
+                     'negative_reply', 'unrelated_reply'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')

@@ -80,15 +80,56 @@ CONCLUSION_KEYS = ('verdict', 'text')
 IGNORED_CASE_SOURCES = ('project.json', 'results.json', 'tutorial-results.json',
                         'answers.yaml', 'project.yaml', 'frame.yaml')
 
-# Words that alone never confirm anything (plan §5): a reply made only of these is a
-# bare acknowledgement, not the user's own restatement of the decision.
-ACKNOWLEDGEMENT_WORDS = frozenset('''
+# Words that alone never confirm anything (plan §5): a reply made only of these, filler
+# words, and identifiers is a bare acknowledgement, not the user's own restatement.
+ACKNOWLEDGEMENT_WORDS = frozenset("""
     ok okay okey k kk yes y yep yeah yup ya sure fine go ahead do it agreed agree approve
-    approved confirm confirmed correct right exactly perfect good great sounds looks lgtm
-    keep that this one it is s let lets please thanks thank you so alright all done
+    approved confirm confirmed correct right exactly perfect good great sounds sound looks lgtm
+    keep that this one it is s let lets please thanks thank you so alright all done nice cool
     oui ouais d accord daccord garde ça ca vas parfait c est cest bon très tres bien super
-    merci valide validé go
-'''.split())
+    merci valide validé go entendu compris understood noted
+""".split())
+# Grammatical words that carry no content of their own (English and French).
+FILLER_WORDS = frozenset("""
+    i me my mine we us our ours you your yours he she they them their to with by for of from
+    the a an and or but as then now also on in at be been being am are was were will would
+    can could should shall may might must just really very quite too well oh ah hmm uh um
+    use using want wanted think mean meant like same way thing what which who
+    there here have has had get got take taken pick picked choose chosen those these
+    je j moi m nous tu te t toi vous il ils elle elles on le la les l un une des de du et ou
+    mais pour avec à au aux en sur par ce cet cette ces se y donc alors cela comme
+""".split())
+# Identifiers a reply may quote (proposal and execution ids, request ids, digests): they
+# say which proposal, not what is decided.
+IDENTIFIER = re.compile(r'\b(?:[pe]_[0-9a-f]+|r-[0-9a-z]+|(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,})\b',
+                        re.IGNORECASE)
+# A reply that refuses, hesitates or disagrees: a clause opening with one of these words,
+# or one of the phrases anywhere.
+NEGATIVE_LEADS = frozenset("""
+    no non nope nah nan wait stop attends attendez cancel annule annuler never jamais hold
+""".split())
+NEGATIVE_PHRASE = re.compile(r"""
+    \b(?:disagree[sd]?|incorrect|wrong|reject|refuse|wait|stop|attends|attendez|faux|
+        desaccord|hold\s+on|not\s+so\s+fast|no\s+way)\b
+  | \bpas\s+d\W?\s*accord\b
+""", re.IGNORECASE | re.VERBOSE)
+# A negator ("not", "don't", "pas", "never") refuses unless one of the next words
+# describes availability or a restart: "this feature is not available", "we don't know it
+# before the call", "elle n'est pas connue", "don't restart it" are statements.
+NEGATORS = frozenset("not n't cannot pas never".split())
+NEGATOR_SKIP = frozenset('be been yet encore really actually it them we nous that is are '
+                         'was were'.split())
+DESCRIPTIVE_AFTER_NEGATOR = (
+    'availab', 'known', 'know', 'usable', 'used', 'use', 'included', 'include', 'recorded',
+    'collected', 'observed', 'exist', 'have', 'has', 'restart', 'rerun', 'retry', 'relaunch',
+    'run', 'disponib', 'connu', 'utilis', 'inclu', 'relanc', 'refai', 'sait', 'savons',
+    'collect', 'enregistr', 'observ', 'redo', 'recompute', 'refit')
+# Words that tie an acknowledgement to the interruption it acknowledges (L5).
+ACKNOWLEDGEMENT_TOPIC = ('interrupt', 'unknown', 'outcome', 'killed', 'crash', 'died', 'dead',
+                         'stopped', 'lost', 'failed', 'restart', 'rerun', 'run', 'result',
+                         'execution', 'interromp', 'inconnu', 'relanc', 'arret', 'plant',
+                         'resultat', 'execut')
+STEM = 5   # two words relate when equal, or when both are long and share this prefix
 
 
 @dataclass(frozen=True)
@@ -268,10 +309,142 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
                            verdicts=list(preconditions.CONCLUSION_VERDICTS))
 
 
+def _fold(text: str) -> str:
+    """Lower case without accents, with typographic apostrophes made plain."""
+    import unicodedata
+    text = text.lower().replace('’', "'").replace('`', "'")
+    return ''.join(ch for ch in unicodedata.normalize('NFKD', text)
+                   if not unicodedata.combining(ch))
+
+
+def _words(text: str) -> list[str]:
+    """Word tokens of ``text`` (identifiers removed, underscores split, accents folded)."""
+    return re.findall(r'[^\W_]+', _fold(IDENTIFIER.sub(' ', text)))
+
+
+def _folded(words) -> frozenset:
+    return frozenset(_fold(w) for w in words)
+
+
+_ACK, _FILLER = _folded(ACKNOWLEDGEMENT_WORDS), _folded(FILLER_WORDS)
+
+
+def content_words(text: str) -> list[str]:
+    """Tokens of ``text`` that are neither acknowledgements, filler, nor identifiers."""
+    return [t for t in _words(text) if t not in _ACK and t not in _FILLER]
+
+
 def is_bare_acknowledgement(words: str) -> bool:
-    """True when a reply has no content beyond acknowledgement words ("ok", "garde ça")."""
-    tokens = re.sub(r"[^\w\s]", ' ', words.lower()).split()
-    return all(t in ACKNOWLEDGEMENT_WORDS for t in tokens)
+    """True when a reply has no content beyond acknowledgement words, filler words and
+    identifiers ("ok", "garde ça", "sure, sounds good to me", "ok p_5")."""
+    return not content_words(words)
+
+
+def is_negative(words: str) -> bool:
+    """True when a reply refuses, hesitates or disagrees ("no", "wait", "I do not agree",
+    "pas d'accord", "yes, but not before the call"). A negated availability or restart
+    ("this feature is not available", "don't restart it") is a statement, not a refusal."""
+    folded = _fold(IDENTIFIER.sub(' ', words))
+    if NEGATIVE_PHRASE.search(folded):
+        return True
+    for clause in re.split(r"[,.;:!?…—-]+|\bbut\b|\bmais\b", folded):
+        tokens = re.findall(r"[^\W_]+", clause)
+        if tokens and tokens[0] in NEGATIVE_LEADS:
+            return True
+    tokens = re.findall(r"n't|[^\W_]+", folded.replace("n't", " n't "))
+    for i, t in enumerate(tokens):
+        if t in NEGATORS:
+            after = [w for w in tokens[i + 1:i + 4] if w not in NEGATOR_SKIP]
+            if not after or not after[0].startswith(DESCRIPTIVE_AFTER_NEGATOR):
+                return True
+    return False
+
+
+def _related(a: str, b: str) -> bool:
+    return a == b or (len(a) >= STEM and len(b) >= STEM and a[:STEM] == b[:STEM])
+
+
+def _value_words(value: Any) -> list[str]:
+    out: list[str] = []
+
+    def walk(node):
+        if isinstance(node, str):
+            out.extend(_words(node))
+        elif isinstance(node, Mapping):
+            for k, v in node.items():
+                walk(k)
+                walk(v)
+        elif isinstance(node, (list, tuple)):
+            for v in node:
+                walk(v)
+    walk(value)
+    return out
+
+
+def relates(words: str, *, value: Any = None, texts: tuple[str, ...] = (),
+            topic: tuple[str, ...] = ()) -> bool:
+    """True when ``words`` share a content word or a number with ``value`` or ``texts``,
+    or contain a word that starts with one of ``topic``."""
+    mine = [w for w in content_words(words) if not w.isdigit()]
+    theirs = [w for w in _value_words(value) + [w for t in texts for w in _words(t)]
+              if w not in _FILLER and w not in _ACK and not w.isdigit()]
+    if any(_related(a, b) for a in mine for b in theirs):
+        return True
+    if topic and any(a.startswith(topic) for a in mine):
+        return True
+    numbers = _value_numbers(value)
+    for t in texts:
+        numbers |= _numbers(IDENTIFIER.sub(' ', t))
+    said = _numbers(IDENTIFIER.sub(' ', words)) | {float(NUMBER_WORDS[w]) for w in _words(words)
+                                                   if w in NUMBER_WORDS}
+    return bool({round(n, 6) for n in said} & {round(n, 6) for n in numbers})
+
+
+# Number words a reply may use for a figure of the proposal ("twenty calls", "seventy
+# thirty"): each word alone, no compound arithmetic.
+NUMBER_WORDS = {w: n for n, names in enumerate((
+    'zero', 'one un une', 'two deux', 'three trois', 'four quatre', 'five cinq', 'six',
+    'seven sept', 'eight huit', 'nine neuf', 'ten dix', 'eleven onze', 'twelve douze',
+    'thirteen treize', 'fourteen quatorze', 'fifteen quinze', 'sixteen seize', 'seventeen',
+    'eighteen', 'nineteen')) for w in names.split()}
+NUMBER_WORDS.update({w: n for n, names in (
+    (20, 'twenty vingt'), (30, 'thirty trente'), (40, 'forty quarante'), (50, 'fifty cinquante'),
+    (60, 'sixty soixante'), (70, 'seventy septante'), (80, 'eighty'), (90, 'ninety nonante'),
+    (100, 'hundred cent'), (1000, 'thousand mille')) for w in names.split()})
+
+
+def reply_problem(words: Any, *, value: Any = None, restatement: str | None = None,
+                  topic: tuple[str, ...] = (), delegated: bool = False) -> str | None:
+    """Why ``words`` cannot confirm (an ``ambiguous_confirmation`` reason), or None.
+
+    In order: ``missing_user_words`` (empty), ``negative_reply`` (a refusal, a
+    hesitation, a disagreement), ``bare_acknowledgement`` (nothing beyond
+    acknowledgements, filler and identifiers), and, when a ``value``, ``restatement`` or
+    ``topic`` is given, ``unrelated_reply`` (no word or number shared with them). A
+    delegation (D1) relates by delegating, so ``delegated`` skips the last check.
+    """
+    if not isinstance(words, str) or not words.strip():
+        return 'missing_user_words'
+    if is_negative(words):
+        return 'negative_reply'
+    if is_bare_acknowledgement(words):
+        return 'bare_acknowledgement'
+    if delegated or (value is None and restatement is None and not topic):
+        return None
+    texts = (restatement,) if restatement else ()
+    return None if relates(words, value=value, texts=texts, topic=topic) else 'unrelated_reply'
+
+
+REPLY_MESSAGES = {
+    'missing_user_words': "A confirmation needs the user's own words in reply to the restatement.",
+    'negative_reply': 'These words refuse, hesitate, or disagree: nothing is confirmed. Ask what '
+                      'the user wants instead and propose again.',
+    'bare_acknowledgement': 'A bare acknowledgement is not a decision. Restate the proposal and '
+                            'ask the user to answer it in their own words.',
+    'unrelated_reply': 'These words share nothing with the proposal (no word or number of its '
+                       'value or restatement). Restate the proposal and ask the user to answer '
+                       'it in their own words.',
+}
 
 
 # A reply that hands the choice to the assistant's recommendation (D1). It must name the
@@ -399,14 +572,13 @@ def _propose(ctx: Context) -> Handler:
 def _confirm(ctx: Context) -> Handler:
     def check(params):
         words = params['user_words']
-        if not isinstance(words, str) or not words.strip():
-            raise _ambiguous('missing_user_words', 'A confirmation needs the user\'s own words in '
-                                                   'reply to the restatement.')
-        if is_bare_acknowledgement(words):
-            raise _ambiguous('bare_acknowledgement',
-                             'A bare acknowledgement is not a decision. Restate the proposal and '
-                             'ask the user to answer it in their own words.',
-                             user_words=words)
+        reason = reply_problem(words)
+        if reason == 'missing_user_words':
+            raise _ambiguous('missing_user_words', REPLY_MESSAGES[reason])
+        if reason == 'negative_reply':
+            raise _ambiguous('negative_reply', REPLY_MESSAGES[reason], user_words=words)
+        if reason == 'bare_acknowledgement':
+            raise _ambiguous('bare_acknowledgement', REPLY_MESSAGES[reason], user_words=words)
         if params['basis'] not in st.CONFIRMATION_BASES:
             raise _invalid(f'basis is one of {", ".join(st.CONFIRMATION_BASES)}.')
         if params['basis'] == st.DELEGATED_DEFAULT and not is_delegation(words):
@@ -453,6 +625,11 @@ def _confirm(ctx: Context) -> Handler:
                                                f'since it was made; propose again.',
                              proposal_id=pid, basis=proposal.get('basis'),
                              current_basis=current_basis)
+        if reply_problem(params['user_words'], value=value, restatement=proposal['restatement'],
+                         delegated=params['basis'] == st.DELEGATED_DEFAULT) == 'unrelated_reply':
+            raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
+                             proposal_id=pid, user_words=params['user_words'],
+                             restatement=proposal['restatement'])
         _verify_sources(state)
         validate_value(state, decision_id, value)
         preconditions.require_decision(state, decision_id, value, store=ctx.store)

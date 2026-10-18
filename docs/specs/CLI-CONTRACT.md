@@ -150,7 +150,9 @@ Confirmation rules (`ambiguous_confirmation`, with `details.reason`):
 | `reason` | When |
 |---|---|
 | `missing_user_words` | `--user-words` is empty or blank |
-| `bare_acknowledgement` | The words are only acknowledgements ("ok", "yes, that is right", "keep that", "garde ça", "d'accord") |
+| `negative_reply` | The words refuse, hesitate, or disagree (review fix H1): a clause opening with "no", "non", "nope", "wait", "stop", "attends", "cancel", ...; "disagree", "wrong", "hold on", "pas d'accord" anywhere; or a negator ("not", "n't", "pas", "never") whose next word does not describe availability or a restart ("this feature is not available", "we don't know it before the call", "don't restart it" are statements) |
+| `bare_acknowledgement` | The words hold nothing beyond acknowledgements, filler words, and identifiers ("ok", "yes, that is right", "keep that", "garde ça", "d'accord", "sure, sounds good to me", "yes go with that", "ok p_5"); `commands.is_bare_acknowledgement` |
+| `unrelated_reply` | The words share no word (same word, or the same first five letters of two long words, accents folded) and no number (digits or a number word, "twenty") with the proposal's value or restatement (review fix H1). A delegation (`--basis delegated_default`) relates by delegating and skips this check. Checked after `proposal_stale` |
 | `proposal_not_found` | No such proposal |
 | `proposal_withdrawn`, `proposal_superseded`, `proposal_confirmed` | The proposal is not open |
 | `same_request` | The proposal was not created by an earlier request |
@@ -212,7 +214,7 @@ Stable codes. Clients branch on `error.code`; messages may change.
 | `unknown_decision` | `decide propose` | Decision id not in the five |
 | `invalid_value` | `decide` | The value does not fit the decision (§5) |
 | `literal_number_in_text` | `decide propose` | A number in the restatement or rationale is neither part of the value nor a figure of a current result (`details.numbers`) |
-| `ambiguous_confirmation` | `decide confirm` | §5, `details.reason` |
+| `ambiguous_confirmation` | `decide confirm`, `run --acknowledge-interruption` | §5, `details.reason` (§8.1 item 5 for an acknowledgement) |
 | `precondition_missing` | `decide confirm`, activities | A pause precondition is unmet (`details.missing`) |
 | `unknown_proposal` | `decide withdraw` | No such proposal |
 | `proposal_not_open` | `decide withdraw` | The proposal is not open |
@@ -276,7 +278,7 @@ An activity is identified by its **slot** name, which is also its registry `acti
    * Changing a split: compute `exposure.overlap(old_split, new_split, store=store)` and store it in the split result values.
    * A code change: `dependencies.effects(state, 'code_fingerprint', {'activity', 'fingerprint'}, {...})` then `dependencies.apply_effects(state, eff, revision=…, decision_id='code_fingerprint', store=store)` inside an action.
 5. **Exit code 4** for an execution with an unknown outcome, including the `interrupted_execution_pending` refusal; `unknown_execution` refuses an acknowledgement of nothing (exit 2).
-   **Acknowledgement words (D2, post-acceptance).** `hypotrail run --acknowledge-interruption E --user-words TEXT`: `--user-words` (the junior's verbatim reply after being told the outcome is unknown) is required and non-blank, otherwise `invalid_arguments`; it is refused with an activity. The action `run.acknowledge` has the parameters `{execution_id, user_words}`; its result, and the execution history `.hypotrail/executions/<E>.json`, record `user_words`. An agent never acknowledges or reruns on its own.
+   **Acknowledgement words (D2, post-acceptance).** `hypotrail run --acknowledge-interruption E --user-words TEXT`: `--user-words` (the junior's verbatim reply after being told the outcome is unknown) is required and non-blank, otherwise `invalid_arguments`; it is refused with an activity. Since review fix L5 the words follow the confirmation rule (`commands.reply_problem`): a refusal, a bare acknowledgement, or words that name neither the interrupted activity nor its interruption (interrupted, unknown, outcome, restart, ...; `commands.ACKNOWLEDGEMENT_TOPIC`) are refused with `ambiguous_confirmation` and `details.reason` `negative_reply`, `bare_acknowledgement`, or `unrelated_reply`. The action `run.acknowledge` has the parameters `{execution_id, user_words}`; its result, and the execution history `.hypotrail/executions/<E>.json`, record `user_words`. An agent never acknowledges or reruns on its own.
 6. **Payload schemas added in Phase 2** (additions; the five schemas of §3 are unchanged):
 
    | Schema | Emitted by | Keys |

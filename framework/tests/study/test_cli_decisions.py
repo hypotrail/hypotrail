@@ -232,7 +232,7 @@ def test_a_delegation_confirms_a_recommended_default(study, work, words):
 
 @pytest.mark.parametrize('words, reason', [
     ('ok', 'bare_acknowledgement'), ('garde ça', 'bare_acknowledgement'),
-    ('yes', 'bare_acknowledgement'), ("Let's go with it.", 'not_a_delegation'),
+    ('yes', 'bare_acknowledgement'), ("Let's go with it.", 'bare_acknowledgement'),
     ('Before the first reminder, as you wrote.', 'not_a_delegation'),
 ])
 def test_a_bare_or_non_delegating_reply_never_confirms_a_default(study, work, words, reason):
@@ -399,7 +399,7 @@ def test_fresh_process_status_restores_everything(study, work, features):
 def test_a_confirmed_change_applies_the_dependency_table(study, work, features):
     _decide(study, work, 'prediction_time', value=PT, rid='pt', words='Yes, before the reminder.')
     _decide(study, work, 'feature_availability', value_json=_availability(features), rid='fa',
-            words='Yes, every listed variable is known then.')
+            words='Yes, every listed variable is available then.')
     out = _decide(study, work, 'prediction_time', value='at renewal time', rid='pt2',
                   words='We now predict at renewal time instead.')
     inv = out['result']['invalidation']
@@ -408,7 +408,7 @@ def test_a_confirmed_change_applies_the_dependency_table(study, work, features):
     view = _status(study, work)['view']
     fa = view['decisions']['feature_availability']
     assert fa['status'] == 'reconfirm_required' and 'prediction_time changed' in fa['reason']
-    assert fa['confirmation']['user_words'] == 'Yes, every listed variable is known then.'
+    assert fa['confirmation']['user_words'] == 'Yes, every listed variable is available then.'
     assert view['invalidations'][-1]['previous']['value'] == PT
     assert view['next_action'] == {**view['next_action'], 'kind': 'reconfirm',
                                    'decision': 'feature_availability'}

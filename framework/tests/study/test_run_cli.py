@@ -68,7 +68,8 @@ def _start(tmp_path, work, case_dir):
     cli.decide('prediction_time', 'before the first contact of the campaign',
                'Yes, we predict before the first contact')
     cli.decide('feature_availability', fk.availability(case_dir),
-               'Yes, keep every variable except the ones known only afterwards')
+               'Yes, keep every variable available at prediction, except the ones known '
+               'only afterwards')
     return cli
 
 

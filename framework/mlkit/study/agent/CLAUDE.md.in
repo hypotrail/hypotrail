@@ -49,7 +49,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      specific restatement in the junior's own words, such as "yes, before the first
      call" or "I confirm the threshold rule". The engine refuses a reply made only of
      acknowledgement words (`commands.is_bare_acknowledgement`): "ok", "yes", "garde ça",
-     "keep that", "continue", "d'accord". Then restate and ask again.
+     "keep that", "continue", "d'accord", "sure, sounds good to me"; a refusal or a
+     hesitation ("no", "wait", "not that", "pas d'accord": `negative_reply`); and a reply
+     that shares no word or number with the proposal (`unrelated_reply`). Then restate and
+     ask again; after a refusal, ask what the junior wants instead.
    - **Delegated**: when the junior explicitly delegates ("use your recommended
      default", "go with your recommendation", "je te laisse choisir", "prends ta
      recommandation"), propose the default with a restatement that starts with

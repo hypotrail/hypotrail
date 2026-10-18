@@ -211,15 +211,31 @@ def _acknowledge(ctx: cmd.Context) -> Handler:
         if not isinstance(words, str) or not words.strip():
             raise CommandRefused('invalid_arguments',
                                  'An acknowledgement records the junior\'s words (--user-words).')
+        # L5: the same rule as a confirmation; a refusal or a bare "ok" acknowledges nothing.
+        reason = cmd.reply_problem(words)
+        if reason is not None:
+            raise CommandRefused('ambiguous_confirmation', cmd.REPLY_MESSAGES[reason],
+                                 details={'reason': reason, 'user_words': words})
 
     def run(state, params):
         eid = params['execution_id']
-        record = state['executions']['interrupted'].pop(eid, None)
+        record = state['executions']['interrupted'].get(eid)
         if record is None:
             raise CommandRefused('unknown_execution',
                                  f'Execution {eid} has no unknown outcome to acknowledge.',
                                  details={'execution_id': eid,
                                           'interrupted': sorted(state['executions']['interrupted'])})
+        # The words must be about this interruption: its activity, or its unknown outcome.
+        if cmd.reply_problem(params['user_words'], value=record['activity'],
+                             topic=cmd.ACKNOWLEDGEMENT_TOPIC) == 'unrelated_reply':
+            raise CommandRefused('ambiguous_confirmation',
+                                 'These words do not mention the interrupted activity or its '
+                                 'unknown outcome. Tell the junior what happened and record '
+                                 'their reply.',
+                                 details={'reason': 'unrelated_reply', 'execution_id': eid,
+                                          'activity': record['activity'],
+                                          'user_words': params['user_words']})
+        state['executions']['interrupted'].pop(eid)
         return {'execution_id': eid, 'activity': record['activity'], 'status': 'acknowledged',
                 'restarted': False, 'started_revision': record['started_revision'],
                 'user_words': params['user_words'],
