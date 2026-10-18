@@ -15,6 +15,13 @@ Modules: ``case`` (case contract), ``migrate`` (companion migration), ``errors``
 ``exposure`` (append-only data exposure), ``dependencies`` (the §3.7 invalidation
 table), ``read`` (strictly read-only API), and ``view`` (the single view model that
 every surface renders).
+
+Phase 2 (activities): ``executions`` (reserve, compute under a lease, promote or store
+late; interruption and acknowledgement), ``activities`` (identity, reads, and dispatch
+of every activity, and the split), ``eda`` (training-partition exploration), ``fit``
+(baseline and logistic with persisted predictions), ``metrics`` (AUC and average
+precision in numpy), ``policy`` (pure policy evaluation and paired bootstrap), and the
+CLI extensions ``cmd_run`` and ``cmd_preview``.
 The generic command core is ``mlkit.reliability.apply_command``, which imports no
 other ``mlkit`` module. ``state``, ``store``, and ``lock`` import neither pandas nor
 scikit-learn; ``data`` imports pandas only when a dataset is loaded.
