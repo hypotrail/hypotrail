@@ -703,7 +703,6 @@ def not_yet_defensible(state: dict) -> list[dict]:
                               f'training rows.'})
     if missing:
         items.append({'id': 'no_time_or_entity_identifier', 'missing': missing,
-
                       'text': 'The data have no time column or entity identifier, so the study '
                               'cannot check drift over time or repeated entities across '
                               'partitions.'})

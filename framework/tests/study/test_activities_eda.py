@@ -288,7 +288,11 @@ def test_the_engine_names_no_dataset():
     names |= {'bank', 'quillmere', 'member_age', 'home_branch', 'membership_days',
               'fines_outstanding', 'desk_followups', 'holds_open', 'visit_band',
               'days_since_last_lapse', 'last_lapse_reason', 'reminders_sent',
-              'last_reminder_weekday', 'renewed', 'lapsed', 'subscription', 'deposit'}
+              'last_reminder_weekday', 'renewed', 'lapsed', 'subscription', 'deposit',
+              # Auto MPG and the regression variant of the synthetic case (M3).
+              'mpg', 'car_name', 'model_year', 'horsepower', 'displacement', 'cylinders',
+              'monthly_loans', 'floor_area', 'staff_count', 'opening_hours', 'branch_type',
+              'survey_score', 'heating_cost', 'returns_logged', 'site_ref'}
     pattern = re.compile(r'\b(' + '|'.join(sorted(map(re.escape, names))) + r')\b', re.I)
     found = []
     for path in sorted(STUDY_PKG.rglob('*.py')):

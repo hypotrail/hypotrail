@@ -331,4 +331,3 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'settings': state['settings'],
         'task': st.task_of(state),
     }
-

@@ -266,7 +266,8 @@ class Study:
         return copy.deepcopy(self._state['stale'].get(rid))
 
     def predictions(self, rid: str):
-        """Persisted predictions of ``rid`` as a DataFrame (``row_key``, ``y``, ``score``).
+        """Persisted predictions of ``rid`` as a DataFrame (``row_key``, ``y``, ``score``; a
+        regression fit has ``row_key``, ``y``, ``prediction``).
 
         The blob is gzip-compressed CSV (plan §3.4). pandas is imported here only.
         Scores are parsed with ``float_precision='round_trip'``: pandas' default parser

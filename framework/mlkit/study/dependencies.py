@@ -377,7 +377,6 @@ def apply_replacement(state: dict, slot: str, previous: str, new: str, *, revisi
     eff = {**no_effects('result_replaced', reason),
            'row': 11 if code_changed else None,
            'reconfirm': list(RESTS_ON_BY_TASK[st.task_of(state)].get(slot, ())),
-
            'scope': 'downstream',
            'notes': ['Results computed from the replaced result are stale; decisions confirmed '
                      "on them need the junior's words again."]}

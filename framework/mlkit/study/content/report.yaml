@@ -88,3 +88,23 @@ notebook:
   read_only: Read-only. Write your notes in workbench.py; edits to this file are preserved as a copy and then regenerated.
   source_label: Activity source (displayed, not executed)
   source_changed: The module changed after this result was computed; the code shown is not what ran.
+# Regression study (M3): labels merged over the ones above (mlkit.study.texts.report).
+regression:
+  sections:
+    policy: Model comparison
+  verdict:
+    adopt_model: Adopt the linear model
+    keep_baseline: Keep the mean baseline
+    inconclusive: Inconclusive
+  model_note: Errors are computed on validation rows after a choice made on them, in the unit of the target. They are optimistic and are not a forecast of the error on future rows.
+  model_missing: No current model comparison yet.
+  model_paired_heading: Paired differences, linear model minus mean baseline (a negative difference is a smaller error; paired bootstrap on the same validation rows)
+  residuals_heading: Residuals on validation rows (observed minus predicted)
+  residuals_by_heading: Residuals by period
+  chosen_model: Chosen model
+  proposed_model: Proposed model
+  not_yet_defensible_extra:
+    validation_is_not_independent: A model chosen on validation rows makes its validation error optimistic.
+    no_causality: The study compares predictions; it does not show that changing a variable would change the target.
+    workbench_not_tracked: Experiments in the workbench change nothing and prove nothing.
+    grouped_split_unsupported: The split result shows how many group values both partitions share and how many validation rows they hold.

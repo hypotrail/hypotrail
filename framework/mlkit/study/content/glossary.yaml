@@ -81,3 +81,58 @@ terms:
   stale_result:
     term: Stale result
     definition: A result computed under decisions that have since changed. It is kept for the record but is not cited.
+# Regression study (M3). A regression study hides the binary-only terms below and reads
+# ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
+binary_only: [base_rate, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut]
+regression_terms:
+  prediction_time:
+    term: Prediction time
+    definition: The moment when the prediction is made and used. Only information known at that moment may enter the model.
+  validation_partition:
+    term: Validation partition
+    definition: Rows held apart from model fitting and used to compare models and choose one. Once used to choose, they are no longer independent evidence.
+  random_split:
+    term: Random split
+    definition: A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.
+  ordinal_split:
+    term: Ordinal (temporal) split
+    definition: A split on an ordered column such as a model year. Rows at or after a cutoff are validation rows and earlier rows train the model, so the validation asks whether a model fitted on the past holds on later periods.
+  extrapolation:
+    term: Extrapolation
+    definition: Predicting for values outside the range the model was fitted on, such as later years. A model can be accurate inside its training range and biased outside it.
+  group_overlap:
+    term: Group overlap
+    definition: Rows that describe the same entity, such as one name recorded in several years, falling in both partitions. Their validation rows are not independent of the training rows; the study reports how many groups are shared.
+  target_distribution:
+    term: Target distribution
+    definition: How the values of the target spread, summarised by the mean, the standard deviation, and the quartiles. Any model is compared with the simplest guess, the training mean.
+  baseline:
+    term: Baseline
+    definition: The simplest reference model, here the training mean of the target predicted for every row. Keeping the baseline is a valid conclusion.
+  linear_regression:
+    term: Linear regression
+    definition: A model that predicts the target as a weighted sum of the features, with weights fitted on training rows by least squares. Its weights are associations, not effects.
+  prediction:
+    term: Prediction
+    definition: The value a model gives for the target of a row, in the unit of the target.
+  residual:
+    term: Residual
+    definition: Observed minus predicted value for one row. A positive residual means the model predicted too low.
+  bias:
+    term: Bias
+    definition: The mean residual. A bias far from zero means the model is systematically too low or too high, for example on later periods than the ones it was fitted on.
+  mae:
+    term: Mean absolute error (MAE)
+    definition: The average size of the residuals, in the unit of the target. It reads directly as the typical error of one prediction.
+  rmse:
+    term: Root mean squared error (RMSE)
+    definition: The square root of the average squared residual, in the unit of the target. Squaring weighs large errors more, so a gap between RMSE and MAE signals a few large errors.
+  paired_bootstrap:
+    term: Paired bootstrap
+    definition: Resampling the same validation rows for both models at once, so the interval describes their difference rather than each one separately.
+  percentile_interval:
+    term: Percentile interval
+    definition: The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the error on future rows.
+  selection_on_validation:
+    term: Selection on validation
+    definition: Choosing a model by looking at validation results. The chosen model's validation error is optimistic for that reason.

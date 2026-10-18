@@ -50,3 +50,42 @@ steps:
     consequence: The limits listed under "What is not yet defensible" stay attached to it.
 pending: Not executed yet.
 stale: Stale, not cited.
+# Regression study (M3): steps whose text differs for a numeric target. The others are
+# shared. Templates cite only paths every regression result of the slot has.
+regression_steps:
+  prediction_time:
+    concept: prediction_time
+    context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
+    method: You state the moment in your own words; the agent restates it and records your answer. No data are read.
+    interpretation: Every later step is judged against this moment.
+    consequence: Changing it later makes the availability decision, the model choice, and the conclusion need confirmation again.
+  feature_availability:
+    concept: feature_availability
+    context: "The case describes one row as: {{fact:observation_unit|not stated by the case}}. For each variable you decide whether it is known at the prediction moment."
+    method: Each candidate variable gets one status. Uncertain variables are either excluded or included and listed as a limit. A time column is not a candidate variable; it orders the rows.
+    interpretation: Variables marked not available, or uncertain and excluded, never enter a model.
+    consequence: A change that alters the set of usable variables refits the linear model and asks for the model choice again.
+  split:
+    concept: validation_partition
+    context: "The split is fixed before any exploration of the target. When the case declares a time column, the cut is ordinal: later periods are validated on a model fitted on earlier ones, which shows extrapolation instead of hiding it. When it declares a group column, the split reports the groups both partitions share."
+    method: A random split with a recorded seed, or an ordinal cutoff on the integer time column (read as integers, never as dates). The rows read are recorded as exposure.
+    interpretation: "Training rows: {{slot:split:partitions.train.n_rows|int}}. Validation rows: {{slot:split:partitions.validation.n_rows|int}}. Shared groups and the range of the time column in each partition are listed with the result."
+    consequence: Changing the split refits both models and recomputes the exploration; rows already explored stay exposed.
+  train_eda:
+    concept: target_distribution
+    context: "The target is: {{fact:target|not stated by the case}}. Exploration reads training rows only."
+    method: The target summary and the special values are computed on the training partition, with their counts.
+    interpretation: "On the training rows the target has a mean of {{slot:eda.target_summary:mean|f2}} and a standard deviation of {{slot:eda.target_summary:sd|f2}}, in the unit of the target. The mean baseline predicts that mean for every row; a model has to do better to be useful."
+    consequence: A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number.
+  models:
+    concept: baseline
+    context: A mean baseline and a linear model are fitted on training rows and predict the validation rows.
+    method: Predictions on validation rows are stored, so comparing and choosing a model never requires a refit.
+    interpretation: "On the validation rows the mean baseline has a mean absolute error of {{slot:fit.baseline:validation.mae|f2}} and the linear model of {{slot:fit.linear:validation.mae|f2}}, in the unit of the target."
+    consequence: The model comparison reads these stored predictions.
+  model_choice:
+    concept: mae
+    context: "The intended use is: {{fact:intended_use|not stated by the case}}. A model is adopted only when it reduces the error of the mean baseline by more than the variability of these validation rows, and its residuals do not show a bias that matters for that use."
+    method: MAE and RMSE are computed in the unit of the target on the stored validation predictions, with paired bootstrap intervals of each and of the difference with the baseline, and the residuals by period.
+    interpretation: "The linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} on the validation rows, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of those rows. Its mean residual (bias) is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. These rows were used for the choice, so the figures are optimistic and are not a forecast."
+    consequence: Changing the model choice reuses the stored predictions and the evaluation; nothing is refitted.

@@ -1,6 +1,6 @@
 # Synthetic planted-trap case
 
-`make_case.py` generates a contamination-free binary case whose truth is known. It serves two purposes:
+`make_case.py` generates a contamination-free binary case whose truth is known, and a regression variant (below). It serves two purposes:
 
 - acceptance runs (plan WP0.7) and the E1 steelman (plan WP0.8) run every scenario on Bank Marketing and on this case. Models have probably memorised Bank, so spotting its `duration` leakage proves little. An arm that succeeds on Bank and fails here is reciting, not guiding;
 - unit tests can compare engine outputs with a known generating truth.
@@ -21,7 +21,20 @@ The domain is fictitious: renewal reminders sent by the Quillmere Library Networ
 | Optional repeated groups | `member_ref` | Group column declared |
 | Optional time column | `cycle_start_date` | Time column declared |
 
-The optional traps exist so that later tests can check `unsupported_capability` refusals.
+The optional traps exist so that later tests can check `unsupported_capability` refusals (a date time column is still refused; a group column is accepted with the grouped split named, M3).
+
+## Regression variant (M3)
+
+`make_case(..., task='regression')` writes a regression case of the same fictitious network: the monthly loans of a branch (`monthly_loans`, unit `loans`), a linear function of `floor_area`, `staff_count`, `opening_hours`, and the category `branch_type` (codes 1, 2, 3), plus Gaussian noise (standard deviation 30) drawn by inverse transform. `truth.json` records the intercept, the coefficients, the category effects, the noise, the variance of each term, the explained share, and the MAE and RMSE of the generating mean (the noise alone). The binary output is unchanged for every seed and option.
+
+| Trap | Column(s) | What the case documents |
+|---|---|---|
+| Leakage recorded after the target | `returns_logged` (0.6 × target + noise) | Recorded after the month |
+| Category coded with digits | `branch_type` | Codes are labels, not quantities |
+| Sentinel | `survey_score = -1` | Not surveyed |
+| Missing-value marker | `heating_cost = NA` | Observed; availability unknown |
+| Optional integer time column with a trend | `season` (1 to 8, +6 loans per season) | Time column declared: an ordinal split shows the extrapolation bias of a model without it |
+| Optional repeated sites | `site_ref` (sites keep their floor area and type) | Group column declared: the split reports the shared sites |
 
 ## Generating a case
 

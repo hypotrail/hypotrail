@@ -8,9 +8,15 @@ Resume this Hypotrail study from its recorded state, not from memory.
    detail you need is missing from the summary.
 2. Answer in plain words, in at most five lines, from that output only:
    1. **The goal first**, in one sentence: what the study is for (`goal.intended_use`)
+<!-- hypotrail:task binary -->
       and the moment the prediction is made (`goal.prediction_time`), for example "We
       are ranking clients to call first when calls are limited, predicting before the
       call."
+<!-- hypotrail:task regression -->
+      and the moment the prediction is made (`goal.prediction_time`), for example "We
+      are estimating a number for new rows, in its unit, once their characteristics are
+      known."
+<!-- hypotrail:end -->
    2. **Where we are**: the step in plain words (its title, not its id) and what was
       last decided, quoting the junior's recorded words for the most recent decision.
       Say if a decision was delegated to your default, needs reconfirmation, or waits

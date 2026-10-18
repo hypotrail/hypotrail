@@ -859,11 +859,11 @@ def _case_file(path) -> Path:
     return path / c.CASE_FILE if path.is_dir() else path
 
 
-def _copy_agent_templates(study_dir: Path) -> dict:
+def _copy_agent_templates(study_dir: Path, task: str = st.DEFAULT_TASK) -> dict:
     """Install the study agent instructions (plan §5, :mod:`mlkit.study.agent_files`)."""
     from . import agent_files
 
-    return agent_files.install(study_dir)
+    return agent_files.install(study_dir, task=task)
 
 
 def init(case_path, study_dir) -> Outcome:
@@ -886,7 +886,7 @@ def init(case_path, study_dir) -> Outcome:
                                  result_id=None, purpose='structural_inspection', partition='all',
                                  row_keys=index.keys, dataset_sha256=index.dataset_sha256,
                                  columns=case.column_names)
-    agent = _copy_agent_templates(study_dir)
+    agent = _copy_agent_templates(study_dir, case.task)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
     return Outcome({'schema': SCHEMAS['init'], 'ok': True, 'study': str(study_dir),
@@ -968,4 +968,3 @@ def after_commit(study_dir: Path, payload: dict) -> dict | None:
     module = importlib.import_module(AFTER_COMMIT_MODULE)
     hook = getattr(module, 'after_commit', None)
     return hook(Path(study_dir), payload) if hook else None
-

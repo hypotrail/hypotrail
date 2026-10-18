@@ -515,7 +515,7 @@ def _line(key: str) -> int:
 def ordinal_values(frame, column: str):
     """The integer values of a time column, as written (never converted to a date).
 
-    pandas would read an integer such as a model year 70 as nanoseconds since 1970;
+    pandas would read an integer such as a two-digit year as nanoseconds since 1970;
     the values are compared as integers instead. Missing or non-integer values are
     refused (``invalid_value``)."""
     import pandas as pd
@@ -532,8 +532,8 @@ def ordinal_values(frame, column: str):
 def group_overlap(frame, column: str, parts: Mapping) -> dict:
     """How many values of the group column the partitions share (M3).
 
-    This version has no grouped split: rows of one group (a repeated car name, a member
-    seen twice) can fall in both partitions. The overlap is reported, never hidden, so
+    This version has no grouped split: rows of one group (an entity recorded in several
+    periods) can fall in both partitions. The overlap is reported, never hidden, so
     the validation rows are not silently claimed independent of the training rows."""
     groups = {part: frame.loc[list(keys), column].astype(str) for part, keys in parts.items()}
     train, validation = set(groups['train']), set(groups['validation'])

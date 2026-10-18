@@ -253,4 +253,3 @@ def compute(activity: str, case: c.Case, train, validation, inputs: Mapping,
     if activity == 'fit.baseline':
         return baseline(case, train, validation)
     return logistic(case, train, validation, inputs, params)
-

@@ -451,4 +451,3 @@ A case with `task: regression` (a numeric target with a declared `unit`, `positi
 | Dependency table | `dependencies.MUTATIONS` | `dependencies.REGRESSION_MUTATIONS` (row 13 `model_choice`) |
 
 An activity of the other task is refused with `invalid_arguments` (`details.activities`, `details.task`); `preview policy` is refused in a regression study (`unsupported_capability`). A regression fit refuses a missing target value (`unsupported_capability`, capability `missing target values (v0.2)`). The time column is never a model feature (its role is `time`); a model fitted on earlier periods and validated on later ones extrapolates, which the residuals by period show. A declared group column is accepted (`case.limitations`), its overlap between partitions is reported in every split, and `not_yet_defensible` lists `grouped_split_unsupported`.
-

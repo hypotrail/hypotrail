@@ -102,11 +102,12 @@ def _concept(term_id: str | None) -> str:
     return f'<p><strong class="term">{e(entry["term"])}.</strong> {e(entry["definition"])}</p>'
 
 
-def slots_of_step(step_id: str, results: Mapping) -> list[str]:
+def slots_of_step(step_id: str, results: Mapping, task: str | None = None) -> list[str]:
     """Result slots shown with a step: its activities, plus extra slots of the same family."""
-    step = next(s for s in st.STEPS if s['id'] == step_id)
+    step = next(s for s in st.steps(task) if s['id'] == step_id)
     slots = list(step['activities'])
-    family = {'train_eda': 'eda.', 'models': 'fit.', 'policy': 'policy.'}.get(step_id)
+    family = {'train_eda': 'eda.', 'models': 'fit.', 'policy': 'policy.',
+              'model_choice': 'evaluate.'}.get(step_id)
     if family:
         slots += sorted(s for s in results if s.startswith(family) and s not in slots)
     return slots
@@ -201,7 +202,7 @@ def _availability_table(view: Mapping, variables: list[dict]) -> str:
 
 def _decisions(view: Mapping, variables: list[dict]) -> str:
     labels = _labels()
-    titles = {s['decision']: s['title'] for s in st.STEPS if s['decision']}
+    titles = {s['decision']: s['title'] for s in st.steps(view.get('task')) if s['decision']}
     cards = []
     for did, d in view['decisions'].items():
         status = d['status']
@@ -328,7 +329,7 @@ def _evidence(view: Mapping, citer: cite.Citer) -> str:
                  f'<p>{citer.expand(content["context"])}</p>'
                  if content.get('context') and citer.ready(content['context']) else '',
                  f'<p><strong>Method.</strong> {e(content.get("method", ""))}</p>']
-        slots = slots_of_step(step['id'], view['results'])
+        slots = slots_of_step(step['id'], view['results'], view.get('task'))
         parts += [_result_block(view, citer, slot) for slot in slots]
         if step['decision']:
             d = view['decisions'][step['decision']]
@@ -449,6 +450,125 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
             f'{_figures(citer, rid, texts.activity("policy.evaluation"))}</section>')
 
 
+def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
+    """Regression model comparison from the canonical ``evaluate.regression`` values
+    (``models``, ``intervals``, ``deltas``, ``residuals``, ``residuals_by``;
+    CLI-CONTRACT.md section 8.5). Every number is cited."""
+    labels = _labels()
+    head = (f'<section class="card" id="model-comparison"><h2>{e(labels["sections"]["policy"])}</h2>'
+            f'{_concept("mae")}{_concept("rmse")}{_concept("residual")}{_concept("bias")}'
+            f'{_concept("paired_bootstrap")}')
+    rid = citer.slot_rid('evaluate.regression')
+    if rid is None:
+        return head + f'<p class="muted">{e(labels["model_missing"])}</p></section>'
+    values = citer.results[rid].values
+    values = values if isinstance(values, Mapping) else {}
+    choice = view['decisions'].get('model_choice') or {}
+    proposed = {p['value'] for p in view['open_proposals'] if p['decision_id'] == 'model_choice'}
+    metrics = texts.regression_metrics()
+    level = ''
+    if citer.has(rid, 'bootstrap.level'):
+        level = f' Intervals: {citer.num(rid, "bootstrap.level", "pct0")} percentile intervals.'
+    unit = values.get('unit')
+    unit_note = f' Unit: {lit("case", unit)}.' if unit else ''
+    rows, paired = [], []
+    models = values.get('models') if isinstance(values.get('models'), Mapping) else {}
+    for model in models:
+        tag = ''
+        if choice.get('status') == 'confirmed' and choice.get('value') == model:
+            tag = _badge('confirmed', labels['chosen_model'])
+        elif model in proposed:
+            tag = _badge('proposed', labels['proposed_model'])
+        cells = []
+        for m in metrics:
+            path = cite.format_path(['models', str(model), m['key']])
+            fmt = m.get('fmt', 'auto')
+            shown = citer.num(rid, path, fmt) if citer.has(rid, path) else ''
+            interval = _interval(citer, rid, ['intervals', str(model), m['key']], fmt)
+            extra = f' <span class="small">{interval}</span>' if interval else ''
+            cells.append(f'<td>{shown}{extra}</td>')
+        rows.append(f'<tr data-model="{e(model)}"><td>{lit("identifier", model)} {tag}</td>'
+                    f'{"".join(cells)}</tr>')
+    deltas = values.get('deltas') if isinstance(values.get('deltas'), Mapping) else {}
+    for model, by_metric in sorted(deltas.items()):
+        if not isinstance(by_metric, Mapping):
+            continue
+        for m in metrics:
+            base = ['deltas', str(model), m['key']]
+            point = cite.format_path(base + ['point'])
+            if not citer.has(rid, point):
+                continue
+            fmt = m.get('fmt', 'auto')
+            paired.append(f'<tr data-model="{e(model)}" data-metric="{e(m["key"])}">'
+                          f'<td>{lit("identifier", model)}</td><td>{e(m["label"])}</td>'
+                          f'<td>{citer.num(rid, point, fmt)}</td>'
+                          f'<td>{_interval(citer, rid, base, fmt)}</td></tr>')
+    table = ''
+    if rows:
+        th = ''.join(f'<th>{e(m["label"])}</th>' for m in metrics)
+        table = (f'<div class="scroll"><table class="metrics"><thead><tr><th>Model</th>{th}</tr>'
+                 f'</thead><tbody>{"".join(rows)}</tbody></table></div>')
+    pair_table = ''
+    if paired:
+        pair_table = (f'<h3>{e(labels["model_paired_heading"])}</h3><div class="scroll">'
+                      '<table class="paired"><thead><tr><th>Model</th><th>Metric</th>'
+                      '<th>Difference</th><th>Interval</th></tr></thead>'
+                      f'<tbody>{"".join(paired)}</tbody></table></div>')
+    return (head + f'<p class="notice">{e(labels["model_note"])}{level}{unit_note}</p>'
+            f'{table}{pair_table}{_residuals(citer, rid, values)}'
+            f'{_figures(citer, rid, texts.activity("evaluate.regression"))}</section>')
+
+
+RESIDUAL_COLUMNS = (('mean', 'Mean (bias)'), ('sd', 'Standard deviation'), ('q05', '5th percentile'),
+                    ('q25', 'First quartile'), ('median', 'Median'), ('q75', 'Third quartile'),
+                    ('q95', '95th percentile'))
+
+
+def _residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
+    """Residual distribution per model, then residuals by period (cited tables)."""
+    labels = _labels()
+    out = ''
+    residuals = values.get('residuals') if isinstance(values.get('residuals'), Mapping) else {}
+    rows = []
+    for model in residuals:
+        cells = []
+        for key, _ in RESIDUAL_COLUMNS:
+            path = cite.format_path(['residuals', str(model), key])
+            cells.append(f'<td>{citer.num(rid, path, "f2") if citer.has(rid, path) else ""}</td>')
+        rows.append(f'<tr data-model="{e(model)}"><td>{lit("identifier", model)}</td>'
+                    f'{"".join(cells)}</tr>')
+    if rows:
+        th = ''.join(f'<th>{e(label)}</th>' for _, label in RESIDUAL_COLUMNS)
+        out += (f'<h3>{e(labels["residuals_heading"])}</h3><div class="scroll">'
+                f'<table class="residuals"><thead><tr><th>Model</th>{th}</tr></thead>'
+                f'<tbody>{"".join(rows)}</tbody></table></div>')
+    for i, block in enumerate(values.get('residuals_by') or []):
+        if not isinstance(block, Mapping):
+            continue
+        models = list(residuals) or sorted({m for g in block.get('groups', [])
+                                            for m in (g.get('models') or {})})
+        th = ''.join(f'<th>{lit("identifier", m)}: mean residual</th><th>{lit("identifier", m)}: MAE</th>'
+                     for m in models)
+        body = []
+        for j, group in enumerate(block.get('groups') or []):
+            prefix = ['residuals_by', str(i), 'groups', str(j)]
+            cells = [f'<td>{lit("category", group.get("value", ""))}</td>',
+                     f'<td>{citer.num(rid, cite.format_path(prefix + ["n_rows"]), "int")}</td>']
+            for m in models:
+                for key in ('mean_residual', 'mae'):
+                    path = cite.format_path(prefix + ['models', m, key])
+                    cells.append(f'<td>{citer.num(rid, path, "f2") if citer.has(rid, path) else ""}</td>')
+            small = 'yes' if group.get('small_count') else 'no'
+            cells.append(f'<td>{lit("category", small)}</td>')
+            body.append(f'<tr data-group="{e(str(group.get("value", "")))}">{"".join(cells)}</tr>')
+        out += (f'<h3>{e(labels["residuals_by_heading"])}: '
+                f'{lit("identifier", block.get("column", ""), "code")}</h3><div class="scroll">'
+                f'<table class="residuals-by" data-column="{e(str(block.get("column", "")))}">'
+                f'<thead><tr><th>Value</th><th>Rows</th>{th}<th>Too few rows to read alone</th>'
+                f'</tr></thead><tbody>{"".join(body)}</tbody></table></div>')
+    return out
+
+
 def _not_yet_defensible(view: Mapping) -> str:
     labels = _labels()
     extra = labels['not_yet_defensible_extra']
@@ -461,6 +581,8 @@ def _not_yet_defensible(view: Mapping) -> str:
                 details.append(', '.join(lit('identifier', x, 'code') for x in item[key]))
         for source in item.get('sources') or []:
             details.append(lit('case', source))
+        if isinstance(item.get('column'), str):
+            details.append(lit('identifier', item['column'], 'code'))
         more = f' {e(extra[item["id"]])}' if item['id'] in extra else ''
         items.append(f'<li data-nyd="{e(item["id"])}"><strong>{lit("message", item["text"])}</strong>'
                      f'{more}{"<br>" + "; ".join(details) if details else ""}</li>')
@@ -520,14 +642,23 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
     variable dictionary (for the availability table). Raises ``untraceable_number``
     when a cited number cannot be traced.
     """
+    with texts.task_context(view.get('task')):
+        return _build(view, surfaces=surfaces, variables=variables)
+
+
+def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | None
+           ) -> tuple[str, list[str]]:
     labels = _labels()
     citer = cite.Citer.from_view(view)
     surfaces = dict(surfaces or {})
     surfaces.setdefault('report', {'status': 'ok', 'revision': view['revision']})
+    comparison = (_model_comparison(view, citer) if view.get('task') == 'regression'
+                  else _policy(view, citer))
     body = ''.join([
         _surfaces(view, surfaces), _plan(view), _decisions(view, variables or []), _facts(view),
-        _evidence(view, citer), _policy(view, citer), _not_yet_defensible(view),
+        _evidence(view, citer), comparison, _not_yet_defensible(view),
         _annex(view, citer)])
+
     consumed = sorted({c['result_id'] for c in citer.cited})
     case = view['case']
     page = (

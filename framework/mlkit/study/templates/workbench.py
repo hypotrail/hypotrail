@@ -65,9 +65,40 @@ Write your observations here. Hypotrail does not read or track this notebook.
 )'''
 
 
-def cells(template_version: int = TEMPLATE_VERSION) -> list[tuple[str, str]]:
+# A regression study (M3) has no decision rule on scores: its workbench lists the
+# validation rows with the largest residuals of a chosen model, from the stored
+# predictions. Same rules: nothing is recorded, nothing is a decision.
+REGRESSION_INTRO = '''mo.md(
+    """
+# Workbench
+
+Look at the stored validation predictions of a model: the rows with the largest errors.
+**Experiments here are not recorded and are not decisions**: to choose a model, ask the
+agent, who records your own words with `hypotrail decide`.
+"""
+)'''
+
+REGRESSION_LOAD = '''study = nv.open_study(STUDY_DIR)
+preds = nv.regression_predictions(study)'''
+
+REGRESSION_CONTROLS = f'''model = mo.ui.radio(
+    options=["fit.linear", "fit.baseline"], value="fit.linear", label="Model"
+)
+rows = mo.ui.slider(start=1, stop=50, step=1, value=10, label="{EXPERIMENT_LABEL}")
+mo.vstack([model, rows])'''
+
+REGRESSION_EXPERIMENT = '''mo.Html(nv.residuals_html(preds, model.value, rows.value))'''
+
+
+def cells(template_version: int = TEMPLATE_VERSION,
+          task: str = 'binary') -> list[tuple[str, str]]:
+    if task == 'regression':
+        return [('setup', SETUP), ('intro', REGRESSION_INTRO), ('load_study', REGRESSION_LOAD),
+                ('controls', REGRESSION_CONTROLS), ('experiment', REGRESSION_EXPERIMENT),
+                ('your_notes', NOTES)]
     return [('setup', SETUP), ('intro', INTRO), ('load_study', LOAD),
             ('controls', CONTROLS), ('experiment', EXPERIMENT), ('your_notes', NOTES)]
+
 
 
 def header(template_version: int = TEMPLATE_VERSION) -> str:

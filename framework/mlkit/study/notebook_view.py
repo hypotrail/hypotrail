@@ -60,8 +60,16 @@ def banner_html(study: read.Study, generated_revision: int, result_ids: Mapping[
 
 
 def step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str],
-              context: str, interpretation: str) -> str:
-    """Context, result figures, and interpretation of one step (numbers cited)."""
+              context: str, interpretation: str, task: str | None = None) -> str:
+    """Context, result figures, and interpretation of one step (numbers cited).
+
+    ``task`` (``regression`` for a regression study) selects the display texts."""
+    with texts.task_context(task):
+        return _step_html(cited, result_ids, slots, context, interpretation)
+
+
+def _step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str],
+               context: str, interpretation: str) -> str:
     pending = texts.load('steps')['pending']
     parts = [f'<p>{cited.expand(context)}</p>'] if context and cited.ready(context) else []
     for slot in slots:
@@ -145,7 +153,57 @@ def workbench_scores(study: read.Study, slot: str = 'fit.logistic') -> dict:
             'score': [float(v) for v in frame['score']], 'message': None}
 
 
+def regression_predictions(study: read.Study) -> dict:
+    """Stored validation predictions of both regression fits (lists, not frames)."""
+    out = {'models': {}, 'message': None}
+    for slot in ('fit.linear', 'fit.baseline'):
+        entry = study.current(slot)
+        if entry is None:
+            continue
+        try:
+            frame = study.predictions(entry['result_id'])
+        except StudyError as exc:
+            out['message'] = exc.message
+            continue
+        out['models'][slot] = {'result_id': entry['result_id'], 'current': study.is_current(slot),
+                               'row_keys': [str(k) for k in frame['row_key']],
+                               'y': [float(v) for v in frame['y']],
+                               'prediction': [float(v) for v in frame['prediction']]}
+    if not out['models'] and out['message'] is None:
+        out['message'] = 'No fitted model yet: fit the models through the agent first.'
+    return out
+
+
+def residuals_html(preds: Mapping, model: str, rows: int) -> str:
+    """The validation rows with the largest absolute residuals of ``model`` (an
+    experiment: computed here, not recorded, not a decision)."""
+    if preds.get('message') and not preds.get('models'):
+        return f'<div class="notice">{e(preds["message"])}</div>'
+    data = preds['models'].get(model)
+    if data is None:
+        return f'<div class="notice">No current predictions for {e(model)}.</div>'
+    from . import regression
+    summary = regression.errors(data['y'], data['prediction'])
+    order = sorted(range(len(data['y'])),
+                   key=lambda i: (-abs(data['y'][i] - data['prediction'][i]), data['row_keys'][i]))
+    body = []
+    for i in order[:max(1, int(rows))]:
+        residual = data['y'][i] - data['prediction'][i]
+        body.append(f'<tr><td><code>{e(data["row_keys"][i])}</code></td>'
+                    f'<td>{e(cite.fmt_number(data["y"][i], "f2"))}</td>'
+                    f'<td>{e(cite.fmt_number(data["prediction"][i], "f2"))}</td>'
+                    f'<td>{e(cite.fmt_number(residual, "f2"))}</td></tr>')
+    stale = '' if data['current'] else '<p class="notice">These predictions are stale.</p>'
+    return (f'{stale}<p>Experiment, not recorded: MAE {e(cite.fmt_number(summary["mae"], "f2"))}, '
+            f'RMSE {e(cite.fmt_number(summary["rmse"], "f2"))}, mean residual '
+            f'{e(cite.fmt_number(summary["mean_residual"], "f2"))} on these validation rows.</p>'
+            '<table><thead><tr><th>Row</th><th>Observed</th><th>Predicted</th><th>Residual</th>'
+            f'</tr></thead><tbody>{"".join(body)}</tbody></table>'
+            '<p><em>Experiments here are not recorded and are not decisions.</em></p>')
+
+
 def _metrics_row(label: str, rule: str, result: Any) -> str:
+
     if not isinstance(result, Mapping):
         return f'<tr><td>{e(label)}</td><td><code>{e(rule)}</code></td><td colspan="3">{e(str(result))}</td></tr>'
     cells = []

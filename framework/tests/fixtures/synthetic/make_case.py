@@ -397,13 +397,23 @@ def _case_document(data_sha: str, n_total: int, columns: list[str], groups: bool
 
 
 def make_case(out_dir, seed: int = 20261018, n_rows: int = 4000, positive_rate: float = 0.12,
-              duplicates: int = 0, groups: bool = False, time: bool = False) -> dict[str, Path]:
+              duplicates: int = 0, groups: bool = False, time: bool = False,
+              task: str = 'binary') -> dict[str, Path]:
     """Write data.csv, case.yaml and truth.json into ``out_dir``; return their paths.
 
     ``n_rows`` is the number of distinct generated rows; ``duplicates`` exact copies of
     randomly chosen rows are inserted on top, so the file has ``n_rows + duplicates`` rows.
     ``positive_rate`` is the expected share of the positive label under the generating model.
+
+    ``task='regression'`` writes the regression variant instead (:func:`make_regression_case`:
+    a numeric target with known linear effects and noise); ``positive_rate`` is then unused.
+    The binary output is unchanged by this option.
     """
+    if task == 'regression':
+        return make_regression_case(out_dir, seed=seed, n_rows=n_rows, duplicates=duplicates,
+                                    groups=groups, time=time)
+    if task != 'binary':
+        raise ValueError('task is "binary" or "regression"')
     if not 0.0 < positive_rate < 1.0:
         raise ValueError('positive_rate must be strictly between 0 and 1')
     if n_rows < 100:
@@ -589,6 +599,343 @@ def make_case(out_dir, seed: int = 20261018, n_rows: int = 4000, positive_rate: 
     return {'data': data_path, 'case': case_path, 'truth': truth_path}
 
 
+# --- regression variant ------------------------------------------------------------------
+#
+# Monthly loans of the branches of the same fictitious library network. The target is a
+# number with a unit; only the four generating inputs below influence it, linearly, plus
+# Gaussian noise drawn by inverse transform. Traps: a leaking column recorded after the
+# month, a numeric category coded with digits, a sentinel, a missing-value marker, and,
+# optionally, an integer season index with a trend (an ordinal split then shows the
+# extrapolation bias) and repeated sites (the group overlap).
+
+REG_CASE_ID = 'synthetic-branch-loans'
+REG_TARGET, REG_UNIT = 'monthly_loans', 'loans'
+REG_INTERCEPT = 120.0
+REG_COEF_AREA = 0.05            # loans per square metre of floor_area
+REG_COEF_STAFF = 8.0            # loans per staff member
+REG_COEF_HOURS = 2.5            # loans per weekly opening hour
+REG_TYPE_EFFECTS = (0.0, 40.0, -25.0)       # branch_type codes 1, 2, 3
+REG_TYPE_PROBS = (0.5, 0.3, 0.2)
+REG_SEASON_TREND = 6.0          # loans per season index (time option only)
+REG_SEASONS = 8                 # season index 1..8
+REG_NOISE_SD = 30.0
+REG_LEAK_SHARE = 0.6            # returns_logged = 0.6 * target + Normal(0, 5)
+REG_LEAK_NOISE_SD = 5.0
+REG_AREA_RANGE = (200.0, 2000.0)
+REG_STAFF_RANGE = (2, 20)
+REG_HOURS_STEPS = 101           # 20.0, 20.5, ..., 70.0
+REG_P_NOT_SURVEYED = 0.35
+REG_SURVEY_SENTINEL = -1
+REG_P_HEATING_MISSING = 0.05
+REG_MISSING = 'NA'
+(STREAM_REG_BASE, STREAM_REG_GROUPS, STREAM_REG_TIME, STREAM_REG_DUPLICATES,
+ STREAM_REG_SPLIT) = range(10, 15)
+
+
+def _normal(u: float) -> float:
+    """Standard normal quantile of ``u`` (inverse transform, deterministic)."""
+    from statistics import NormalDist
+    return NormalDist().inv_cdf(min(max(u, 1e-12), 1 - 1e-12))
+
+
+def _reg_rows(seed: int, n_rows: int) -> list[dict]:
+    rng = _rng(seed, STREAM_REG_BASE)
+    u = rng.random((n_rows, 10))
+    rows = []
+    lo, hi = REG_AREA_RANGE
+    for i in range(n_rows):
+        r = u[i]
+        area = round(lo + float(r[0]) * (hi - lo), 1)
+        staff = REG_STAFF_RANGE[0] + int(r[1] * (REG_STAFF_RANGE[1] - REG_STAFF_RANGE[0] + 1))
+        hours = 20.0 + 0.5 * int(r[2] * REG_HOURS_STEPS)
+        kind = _categorical(r[3], REG_TYPE_PROBS)
+        survey = (REG_SURVEY_SENTINEL if r[4] < REG_P_NOT_SURVEYED
+                  else round(1.0 + 9.0 * float(r[5]), 1))
+        heating = (REG_MISSING if r[6] < REG_P_HEATING_MISSING
+                   else round(800.0 + 2400.0 * float(r[7]), 2))
+        rows.append({'floor_area': area, 'staff_count': staff, 'opening_hours': hours,
+                     'branch_type': kind + 1, 'survey_score': survey, 'heating_cost': heating,
+                     '_noise_u': float(r[8]), '_leak_u': float(r[9])})
+    return rows
+
+
+def _reg_mean(row: dict, time: bool) -> float:
+    mean = (REG_INTERCEPT + REG_COEF_AREA * row['floor_area']
+            + REG_COEF_STAFF * row['staff_count'] + REG_COEF_HOURS * row['opening_hours']
+            + REG_TYPE_EFFECTS[row['branch_type'] - 1])
+    if time:
+        mean += REG_SEASON_TREND * row['season']
+    return mean
+
+
+def _reg_variance(time: bool) -> dict:
+    """Exact variance of each generating term (independent inputs)."""
+    lo, hi = REG_AREA_RANGE
+    var_area = (hi - lo) ** 2 / 12.0      # continuous uniform before rounding
+    k = REG_STAFF_RANGE[1] - REG_STAFF_RANGE[0] + 1
+    var_staff = (k * k - 1) / 12.0
+    var_hours = 0.25 * (REG_HOURS_STEPS ** 2 - 1) / 12.0
+    mean_type = sum(p * e for p, e in zip(REG_TYPE_PROBS, REG_TYPE_EFFECTS))
+    var_type = sum(p * (e - mean_type) ** 2 for p, e in zip(REG_TYPE_PROBS, REG_TYPE_EFFECTS))
+    terms = {'floor_area': REG_COEF_AREA ** 2 * var_area,
+             'staff_count': REG_COEF_STAFF ** 2 * var_staff,
+             'opening_hours': REG_COEF_HOURS ** 2 * var_hours, 'branch_type': var_type}
+    if time:
+        terms['season'] = REG_SEASON_TREND ** 2 * (REG_SEASONS ** 2 - 1) / 12.0
+    return terms
+
+
+def _reg_dictionary(groups: bool, time: bool) -> list[dict]:
+    office = 'Branch statistics office data dictionary (fictitious)'
+
+    def avail(value, status, source):
+        return {'value': value, 'status': status, 'source': source}
+
+    assumed = avail('available_at_prediction', 'scenario_assumption',
+                    'A branch characteristic known before the month; not stated by the office')
+    entries = []
+    if groups:
+        entries.append({
+            'name': 'site_ref', 'type': 'string', 'role': 'group_id',
+            'description': 'Site reference. One site is recorded in several seasons.',
+            'status': 'documented_fact', 'source': office,
+            'availability': avail('available_at_prediction', 'scenario_assumption',
+                                  'An identifier is known before the month; not stated'),
+            'special_values': []})
+    if time:
+        entries.append({
+            'name': 'season', 'type': 'integer', 'unit': 'season index', 'role': 'time',
+            'description': 'Index of the season the month belongs to, counted from the first '
+                           'recorded season.',
+            'status': 'documented_fact', 'source': office,
+            'availability': avail('available_at_prediction', 'scenario_assumption',
+                                  'The season is known before the month starts; not stated'),
+            'special_values': []})
+    entries += [
+        {'name': 'floor_area', 'type': 'numeric', 'unit': 'square metres', 'role': 'feature',
+         'description': 'Public floor area of the branch.', 'status': 'documented_fact',
+         'source': office, 'availability': assumed, 'special_values': []},
+        {'name': 'staff_count', 'type': 'integer', 'unit': 'staff', 'role': 'feature',
+         'description': 'Staff members assigned to the branch for the month.',
+         'status': 'documented_fact', 'source': office, 'availability': assumed,
+         'special_values': []},
+        {'name': 'opening_hours', 'type': 'numeric', 'unit': 'hours per week', 'role': 'feature',
+         'description': 'Weekly opening hours planned for the month.',
+         'status': 'documented_fact', 'source': office, 'availability': assumed,
+         'special_values': []},
+        {'name': 'branch_type', 'type': 'category', 'role': 'feature',
+         'description': 'Branch type, coded 1, 2, or 3. The codes are labels, not quantities.',
+         'status': 'documented_fact', 'source': office, 'availability': assumed,
+         'special_values': []},
+        {'name': 'survey_score', 'type': 'numeric', 'role': 'feature',
+         'description': 'Satisfaction score of the last visitor survey, from 1 to 10.',
+         'status': 'documented_fact', 'source': office, 'availability': assumed,
+         'special_values': [{'value': REG_SURVEY_SENTINEL,
+                             'meaning': 'The branch was not surveyed',
+                             'status': 'documented_fact', 'source': office}]},
+        {'name': 'heating_cost', 'type': 'numeric', 'role': 'feature',
+         'description': 'Not described by the office. Values are positive amounts with two '
+                        'decimals; the unit is not known.',
+         'status': 'observed', 'source': 'Inspection of the file',
+         'availability': avail('unknown', 'unknown', 'Recording date not documented'),
+         'special_values': [{'value': REG_MISSING, 'meaning': 'Missing value',
+                             'status': 'observed', 'source': 'Inspection of the file'}]},
+        {'name': 'returns_logged', 'type': 'numeric', 'unit': 'returns', 'role': 'feature',
+         'description': 'Returns logged by the branch during the month after the loans were '
+                        'counted. It is recorded after the target.',
+         'status': 'documented_fact', 'source': office,
+         'availability': avail('not_available', 'documented_fact',
+                               'Recorded after the month, per the office'),
+         'special_values': []},
+        {'name': REG_TARGET, 'type': 'numeric', 'unit': REG_UNIT, 'role': 'target',
+         'description': 'Loans recorded by the branch during the month.',
+         'status': 'documented_fact', 'source': office,
+         'availability': avail('not_available', 'documented_fact', 'The target itself'),
+         'special_values': []},
+    ]
+    return entries
+
+
+def make_regression_case(out_dir, seed: int = 20261018, n_rows: int = 600,
+                         duplicates: int = 0, groups: bool = False,
+                         time: bool = False) -> dict[str, Path]:
+    """The regression variant: data.csv, case.yaml, truth.json for a numeric target.
+
+    ``monthly_loans = intercept + b_area * floor_area + b_staff * staff_count
+    + b_hours * opening_hours + effect[branch_type] (+ b_season * season) + Normal(0, sd)``.
+    ``time`` adds the integer time column ``season`` (with a trend); ``groups`` adds the
+    group column ``site_ref`` (sites share their floor area and type across seasons).
+    """
+    if n_rows < 100:
+        raise ValueError('n_rows must be at least 100')
+    if duplicates < 0 or duplicates > n_rows:
+        raise ValueError('duplicates must be between 0 and n_rows')
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    rows = _reg_rows(seed, n_rows)
+    if groups:
+        rng = _rng(seed, STREAM_REG_GROUPS)
+        labels, gid = [], 0
+        while len(labels) < len(rows):
+            gid += 1
+            labels.extend([gid] * (1 + _categorical(float(rng.random()), GROUP_SIZE_PROBS)))
+        order = np.argsort(rng.random(len(rows)), kind='stable')
+        first: dict[int, dict] = {}
+        for i, idx in enumerate(order):
+            row, g = rows[int(idx)], labels[i]
+            row['site_ref'] = f'S{g:04d}'
+            if g in first:      # one site keeps its floor area and type across seasons
+                row['floor_area'] = first[g]['floor_area']
+                row['branch_type'] = first[g]['branch_type']
+            else:
+                first[g] = row
+    if time:
+        u = _rng(seed, STREAM_REG_TIME).random(len(rows))
+        for row, v in zip(rows, u):
+            row['season'] = 1 + int(float(v) * REG_SEASONS)
+    for row in rows:
+        mean = _reg_mean(row, time)
+        row[REG_TARGET] = round(mean + REG_NOISE_SD * _normal(row['_noise_u']), 1)
+        leak_u = row['_leak_u']
+        row['returns_logged'] = round(REG_LEAK_SHARE * row[REG_TARGET]
+                                      + REG_LEAK_NOISE_SD * _normal(leak_u), 1)
+        row['_mean'] = mean
+    columns = ((['site_ref'] if groups else []) + (['season'] if time else []) + [
+        'floor_area', 'staff_count', 'opening_hours', 'branch_type', 'survey_score',
+        'heating_cost', 'returns_logged', REG_TARGET])
+
+    def line(row):
+        return SEP.join(_fmt(row[c]) if not isinstance(row[c], str) else row[c]
+                        for c in columns)
+
+    final = list(rows)
+    if duplicates:
+        rng = _rng(seed, STREAM_REG_DUPLICATES)
+        sources = np.argsort(rng.random(n_rows), kind='stable')[:duplicates]
+        for src in sources:
+            pos = int(float(rng.random()) * (len(final) + 1))
+            final.insert(pos, dict(rows[int(src)]))
+    data = ('\n'.join([SEP.join(columns)] + [line(r) for r in final]) + '\n').encode('utf-8')
+    data_path = out / 'data.csv'
+    data_path.write_bytes(data)
+    data_sha = hashlib.sha256(data).hexdigest()
+    keys = [f'L{i + 2}' for i in range(len(final))]
+
+    variables = _reg_dictionary(groups, time)
+    assert [v['name'] for v in variables] == columns
+    special = [{'column': v['name'], **sv} for v in variables for sv in v['special_values']]
+    office = 'Branch statistics office data dictionary (fictitious)'
+    case = {
+        'schema': 'hypotrail.case/1', 'id': REG_CASE_ID,
+        'title': f'Monthly loans · {DOMAIN} (synthetic)',
+        'description': 'Estimate the loans a branch records in a month, to plan its staffing.',
+        'provenance': {'kind': 'synthetic',
+                       'note': 'Generated by framework/tests/fixtures/synthetic/make_case.py '
+                               '(regression variant); the library network is fictitious.'},
+        'dataset': {'path': 'data.csv', 'format': 'csv', 'sep': SEP, 'encoding': 'utf-8',
+                    'decimal': '.', 'header': True, 'sha256': data_sha, 'rows': len(final),
+                    'columns': len(columns), 'na_values': [REG_MISSING]},
+        'target': {'column': REG_TARGET, 'positive_label': None},
+        'row_key': {'rule': 'source_line', 'format': 'L<line>',
+                    'description': 'Physical 1-based line number in data.csv; the header is '
+                                   'line 1, so the first data row is L2. The key is anchored '
+                                   'to the dataset sha256.'},
+        'facts': [
+            {'id': 'observation_unit', 'value': 'One branch in one month',
+             'status': 'documented_fact', 'source': office},
+            {'id': 'intended_use', 'value': 'Estimate the monthly loans of a branch to plan staff',
+             'status': 'scenario_assumption', 'source': 'Case scenario'},
+            {'id': 'prediction_time', 'value': 'Not specified by the office',
+             'status': 'unknown', 'source': 'Case scenario'},
+        ],
+        'variables': variables,
+        'special_values': special,
+        'structure': {
+            'row_unit': {'value': 'branch month', 'status': 'documented_fact', 'source': office},
+            'group_column': ({'value': 'site_ref', 'status': 'documented_fact', 'source': office}
+                             if groups else {'value': None, 'status': 'unknown',
+                                             'source': 'No site identifier in the extract'}),
+            'time_column': ({'value': 'season', 'status': 'documented_fact', 'source': office}
+                            if time else {'value': None, 'status': 'unknown',
+                                          'source': 'No season in the extract'}),
+            'duplicates': {'value': None, 'status': 'unknown', 'source': 'Not documented'},
+        },
+        'task': 'regression',
+    }
+    case_path = out / 'case.yaml'
+    case_path.write_text(yaml.safe_dump(case, sort_keys=False, allow_unicode=True, width=100),
+                         encoding='utf-8')
+
+    y = np.array([r[REG_TARGET] for r in final], dtype=float)
+    split_rng = _rng(seed, STREAM_REG_SPLIT)
+    order = np.argsort(split_rng.random(len(final)), kind='stable')
+    n_train = int(round(TRAIN_FRACTION * len(final)))
+    train_idx = np.sort(order[:n_train])
+    terms = _reg_variance(time)
+    signal_var = sum(terms.values())
+    truth = {
+        'schema': 'hypotrail.synthetic-truth/1',
+        'warning': 'Never expose this file to an agent under test.',
+        'generator': {'module': 'framework/tests/fixtures/synthetic/make_case.py',
+                      'version': GENERATOR_VERSION, 'seed': seed,
+                      'options': {'task': 'regression', 'n_rows': n_rows,
+                                  'duplicates': duplicates, 'groups': groups, 'time': time}},
+        'data': {'path': 'data.csv', 'sep': SEP, 'sha256': data_sha, 'rows': len(final),
+                 'distinct_rows': n_rows, 'columns': columns,
+                 'row_keys': {'first': keys[0], 'last': keys[-1]}},
+        'target': {'column': REG_TARGET, 'unit': REG_UNIT,
+                   'observed_mean': _r(y.mean()), 'observed_sd': _r(y.std(ddof=1))},
+        'generating_model': {
+            'link': 'identity',
+            'formula': f'{REG_TARGET} = intercept + b_area*floor_area + b_staff*staff_count '
+                       '+ b_hours*opening_hours + effect[branch_type]'
+                       + (' + b_season*season' if time else '') + ' + Normal(0, noise_sd)',
+            'intercept': REG_INTERCEPT,
+            'coefficients': {'floor_area': REG_COEF_AREA, 'staff_count': REG_COEF_STAFF,
+                             'opening_hours': REG_COEF_HOURS,
+                             **({'season': REG_SEASON_TREND} if time else {})},
+            'branch_type_effects': {str(i + 1): e for i, e in enumerate(REG_TYPE_EFFECTS)},
+            'branch_type_probabilities': {str(i + 1): p for i, p in enumerate(REG_TYPE_PROBS)},
+            'noise_sd': REG_NOISE_SD,
+            'independent_of_target': ['survey_score', 'heating_cost']
+                                     + (['site_ref'] if groups else []),
+            'variance_by_term': {k: _r(v) for k, v in terms.items()},
+            'explained_share': _r(signal_var / (signal_var + REG_NOISE_SD ** 2)),
+            'true_model_mae': _r(REG_NOISE_SD * math.sqrt(2.0 / math.pi)),
+            'true_model_rmse': REG_NOISE_SD,
+            'note': 'MAE and RMSE of the generating mean on new rows, from the noise alone '
+                    '(the target is rounded to one decimal).',
+        },
+        'leakage': {'column': 'returns_logged', 'recorded': 'after the month',
+                    'formula': f'{REG_LEAK_SHARE} * {REG_TARGET} + Normal(0, {REG_LEAK_NOISE_SD})'},
+        'categorical_codes': {'column': 'branch_type',
+                              'note': 'Digits that are labels: a model must encode them as '
+                                      'categories, not as a magnitude.'},
+        'sentinel': {'column': 'survey_score', 'value': REG_SURVEY_SENTINEL,
+                     'count': sum(r['survey_score'] == REG_SURVEY_SENTINEL for r in final)},
+        'missing': {'column': 'heating_cost', 'marker': REG_MISSING,
+                    'count': sum(r['heating_cost'] == REG_MISSING for r in final)},
+        'reference_split': {
+            'purpose': 'Test reference only; not a human decision.',
+            'seed': seed, 'stream': STREAM_REG_SPLIT, 'train_fraction': TRAIN_FRACTION,
+            'train_rows': n_train, 'validation_rows': len(final) - n_train,
+            'train_target_mean': _r(y[train_idx].mean())},
+        'duplicates': {'enabled': duplicates > 0, 'count': duplicates},
+        'groups': ({'enabled': True, 'column': 'site_ref',
+                    'groups': len({r['site_ref'] for r in final}),
+                    'shared_columns': ['floor_area', 'branch_type']}
+                   if groups else {'enabled': False}),
+        'time': ({'enabled': True, 'column': 'season', 'values': [1, REG_SEASONS],
+                  'trend_per_season': REG_SEASON_TREND,
+                  'note': 'The target rises with the season index: a model without the season, '
+                          'fitted on early seasons, predicts later seasons too low.'}
+                 if time else {'enabled': False}),
+    }
+    truth_path = out / 'truth.json'
+    truth_path.write_text(json.dumps(truth, indent=2, sort_keys=False) + '\n', encoding='utf-8')
+    return {'data': data_path, 'case': case_path, 'truth': truth_path}
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('out_dir')
@@ -598,9 +945,10 @@ def main(argv=None) -> None:
     parser.add_argument('--duplicates', type=int, default=0)
     parser.add_argument('--groups', action='store_true')
     parser.add_argument('--time', action='store_true')
+    parser.add_argument('--task', choices=('binary', 'regression'), default='binary')
     a = parser.parse_args(argv)
     paths = make_case(a.out_dir, seed=a.seed, n_rows=a.rows, positive_rate=a.positive_rate,
-                      duplicates=a.duplicates, groups=a.groups, time=a.time)
+                      duplicates=a.duplicates, groups=a.groups, time=a.time, task=a.task)
     print(json.dumps({k: str(v) for k, v in paths.items()}, indent=2))
 
 

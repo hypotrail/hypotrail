@@ -20,6 +20,11 @@ COPILOT_TARGETS = {'.github/copilot-instructions.md', '.github/skills/hypotrail-
                    '.github/prompts/hypotrail-resume.prompt.md'}
 
 
+def _binary(rel: str) -> str:
+    """A template as a binary study receives it (M3: task blocks selected, markers dropped)."""
+    return af.select_task((af.SOURCE / rel).read_text(), 'binary')
+
+
 def test_no_template_is_stored_under_a_name_an_agent_loads():
     """Developer sessions in this repository must never load the study agent's rules."""
     stored = [p.relative_to(af.SOURCE) for p in af.SOURCE.rglob('*')]
@@ -118,7 +123,7 @@ def test_cli_override_is_recorded(tmp_path, synthetic_case_dir, monkeypatch):
 
 def test_instructions_name_only_real_decisions_activities_and_commands():
     """The rules quote the contract; they must not drift from it."""
-    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    text = _binary('CLAUDE.md.in')
     for d in st.DECISION_IDS:
         assert f'`{d}`' in text, d
     for a in ('split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by', 'fit.baseline',
@@ -127,7 +132,7 @@ def test_instructions_name_only_real_decisions_activities_and_commands():
     for phrase in ('status --json', '--user-words', '--restatement', 'check --text -',
                    'stale_revision', '--request-id', 'garde ça', 'not supported in v0.1'):
         assert phrase in text, phrase
-    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    resume = _binary('dot-claude/commands/hypotrail-resume.md')
     assert 'status --json' in resume and 'five lines' in resume
 
 
@@ -135,7 +140,7 @@ def test_instructions_carry_the_acceptance_fixes():
     """The rules added after the Claude Code acceptance run (D1-D3, D6, D7, D10-D12) name
     the real flags, codes and fields; they must not drift from the engine."""
     from mlkit.study import commands as c, currency, view
-    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
+    text = _binary('CLAUDE.md.in')
     rule1 = text.split('1. **Read the state first.**', 1)[1].split('\n2. ', 1)[0]
     assert 'status --summary' in rule1                                    # D3
     for phrase in ('--basis delegated_default', 'My recommended default:',  # D1
@@ -154,11 +159,11 @@ def test_instructions_carry_the_acceptance_fixes():
         'report', {'status': 'failed', 'revision': 3, 'last_ok_revision': 2,
                    'path': 'reports/study.html'}, {'revision': 3, 'current': {}, 'stale': {}})
     assert 'goal' in view.SUMMARY_KEYS
-    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    resume = _binary('dot-claude/commands/hypotrail-resume.md')
     assert 'status --summary' in resume                                   # D12
     assert resume.index('goal.intended_use') < resume.index('Where we are')
     assert 'goal.prediction_time' in resume and 'unless the' in resume
-    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
     assert '{{GLOSSARY}}' in skill and '--basis delegated_default' in skill
 
 
@@ -170,8 +175,8 @@ def _rule(text: str, n: int) -> str:
 def test_instructions_carry_the_rerun_fixes():
     """The rules added after the acceptance rerun (R1-R7) are where the agent reads them,
     and name the engine's real flags and refusal reasons."""
-    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
-    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
+    text = _binary('CLAUDE.md.in')
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
     rule4 = _rule(text, 4)
     # R1: which decisions a standing delegation covers; the policy and conclusion pauses.
     for phrase in ('**Standing delegation**', "for questions I can't answer",
@@ -203,9 +208,9 @@ def test_instructions_carry_the_rerun_fixes():
 def test_instructions_carry_the_rerun_wording_fixes():
     """R2, R4, R5, R7 of the acceptance rerun: scoped requests, no invented figures in
     examples, the five-line "where are we?", and the unchanged model on a new rule."""
-    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
-    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
-    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    text = _binary('CLAUDE.md.in')
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    resume = _binary('dot-claude/commands/hypotrail-resume.md')
     # R2: one requested action is only that action; the plan's work needs "continue".
     rule3 = _rule(text, 3)
     for phrase in ('When the junior asks to continue the plan', 'without asking permission',
@@ -254,9 +259,9 @@ def test_instructions_carry_the_closure_fixes():
     """F1, F2, F4 of the final acceptance check: dead executions, the population of a
     capacity, and the reserved "My recommended default:" prefix."""
     from mlkit.study import view
-    text = (af.SOURCE / 'CLAUDE.md.in').read_text()
-    skill = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
-    resume = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
+    text = _binary('CLAUDE.md.in')
+    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    resume = _binary('dot-claude/commands/hypotrail-resume.md')
     # F1: never "in progress" unless this chat started it; outcome_unknown is said as such.
     rule8 = _rule(text, 8)
     for phrase in ('outcome_unknown', 'executions.suspected_interrupted',

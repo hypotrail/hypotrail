@@ -210,4 +210,3 @@ What `project.json` does not carry comes from `use-cases/<id>/case-supplement.ya
 |---|---|---|
 | `use-cases/bank-marketing/case.yaml` | `binary` | supported |
 | `use-cases/auto-mpg/case.yaml` | `regression`, time column `model_year` (integer), group column `car_name` | supported (M3); limitation `grouped split (v0.2)` |
-

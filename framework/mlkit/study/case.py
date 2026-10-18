@@ -35,8 +35,8 @@ TASKS = ('binary', 'regression')
 SUPPORTED_TASKS = ('binary', 'regression')
 # A regression target is a number with a declared unit (errors are reported in it).
 REGRESSION_TARGET_TYPES = ('numeric', 'integer')
-# A time column this version can split on: integer values ordered as written (a model year
-# coded 70 to 82). It is never converted to a date: pandas would read an integer as
+# A time column this version can split on: integer values ordered as written (a year coded
+# with two digits). It is never converted to a date: pandas would read an integer as
 # nanoseconds since 1970.
 ORDINAL_TIME_TYPES = ('integer',)
 ROLES = ('feature', 'target', 'identifier', 'group_id', 'time')
@@ -338,7 +338,6 @@ def validate(document: Any) -> list[dict]:
             if not isinstance(unit, str) or not unit.strip():
                 p.add('target.column', 'a regression target declares its unit (variable unit): '
                                        'errors are reported in it')
-
 
     rk = document['row_key']
     if p.keys(rk, 'row_key', ('rule', 'format', 'description')):

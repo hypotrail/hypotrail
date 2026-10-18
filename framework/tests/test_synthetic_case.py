@@ -254,10 +254,68 @@ def test_optional_columns_do_not_change_the_target_draws(tmp_path):
     assert (base['holds_open'] == timed['holds_open']).all()
 
 
-# Dataset-specific identifiers that must never appear in the generic study engine.
+# --- regression variant (M3) -----------------------------------------------------------------
+
+@pytest.fixture(scope='module')
+def regression_case(tmp_path_factory):
+    return make_case(tmp_path_factory.mktemp('regression'), task='regression', time=True,
+                     groups=True)
+
+
+def test_regression_variant_is_deterministic_and_leaves_binary_options_alone(tmp_path):
+    options = dict(seed=11, n_rows=400, task='regression', time=True, groups=True)
+    a = _bytes(make_case(tmp_path / 'a', **options))
+    assert a == _bytes(make_case(tmp_path / 'b', **options))
+    assert _bytes(make_case(tmp_path / 'c', **{**options, 'seed': 12}))['data'] != a['data']
+    with pytest.raises(ValueError):
+        make_case(tmp_path / 'd', task='multiclass')
+
+
+def test_regression_variant_is_a_supported_regression_case(regression_case):
+    from mlkit.study import case as c
+    case = c.load_case(regression_case['case'])
+    assert case.task == 'regression' and case.positive_label is None
+    assert case.target_unit == 'loans' and case.target_column == 'monthly_loans'
+    assert case.time_column == 'season' and case.variables['season']['type'] == 'integer'
+    assert c.unsupported_capabilities(case) == []
+    assert [x['column'] for x in c.limitations(case)] == ['site_ref']
+
+
+def test_regression_truth_holds_on_the_generated_rows(regression_case):
+    """Least squares on the generating inputs recovers the coefficients within four
+    standard errors (exact standard errors from the design and the true noise)."""
+    case, truth, df = _load(regression_case)
+    model = truth['generating_model']
+    y = df['monthly_loans'].astype(float).to_numpy()
+    kinds = df['branch_type'].astype(int)
+    X = np.column_stack([np.ones(len(df)), df['floor_area'], df['staff_count'],
+                         df['opening_hours'], (kinds == 2).astype(float),
+                         (kinds == 3).astype(float), df['season']])
+    beta, *_ = np.linalg.lstsq(X, y, rcond=None)
+    se = model['noise_sd'] * np.sqrt(np.diag(np.linalg.inv(X.T @ X)))
+    expected = [model['intercept'], model['coefficients']['floor_area'],
+                model['coefficients']['staff_count'], model['coefficients']['opening_hours'],
+                model['branch_type_effects']['2'], model['branch_type_effects']['3'],
+                model['coefficients']['season']]
+    assert np.all(np.abs(beta - np.array(expected)) <= Z * se), (beta, expected, se)
+    residual = y - X @ beta
+    assert abs(residual.std(ddof=X.shape[1]) - model['noise_sd']) <= Z * model['noise_sd'] / np.sqrt(
+        2 * len(y))
+    assert np.isclose(y.mean(), truth['target']['observed_mean'])
+    leak = df['returns_logged'].astype(float).to_numpy()
+    assert np.corrcoef(leak, y)[0, 1] > 0.95          # recorded after the target
+    assert int((df['survey_score'].astype(float) == -1).sum()) == truth['sentinel']['count']
+    assert int((df['heating_cost'] == 'NA').sum()) == truth['missing']['count']
+    assert df['site_ref'].nunique() == truth['groups']['groups'] < len(df)
+    assert sorted(df['season'].unique()) == list(range(1, 9))
+
+
+# Dataset-specific identifiers that must never appear in the generic study engine
+# (Bank Marketing, Auto MPG, and both synthetic variants).
 DATASET_NAMES = re.compile(
     r'bank|mpg|pdays|poutcome|quillmere|renewal[-_ ]reminder|desk_followups|days_since_last_lapse'
-    r'|last_lapse_reason', re.IGNORECASE)
+    r'|last_lapse_reason|car_name|model_year|horsepower|monthly_loans|returns_logged|site_ref'
+    r'|survey_score|heating_cost|branch_type', re.IGNORECASE)
 
 
 def test_study_engine_contains_no_dataset_specific_names():

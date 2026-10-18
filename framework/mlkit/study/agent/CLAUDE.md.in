@@ -23,25 +23,48 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    to a file. Never rely on what this chat remembers.
 2. **No ad hoc computation, no scripts.** Never run python, pandas, R, SQL, a spreadsheet,
    or a script, and never write one, in this folder or anywhere else (`/tmp` included).
+<!-- hypotrail:task binary -->
    Compute only with `hypotrail run` and `hypotrail preview policy`. Every number you
+<!-- hypotrail:task regression -->
+   Compute only with `hypotrail run`. Every number you
+<!-- hypotrail:end -->
    write comes from a hypotrail output, and you name its `result_id` (the first 8
    characters are enough). Do not compute differences, sums, or counts in your prose:
+<!-- hypotrail:task binary -->
    cite the registered value (a model-minus-baseline difference is in
    `policy.evaluation` under `rules.<rule>.deltas`), or write the two registered figures
    side by side without the arithmetic ("<N> selected with the threshold, <K> with the
    capacity"). Example replies you suggest to the junior contain no invented figures:
    write a placeholder such as <N> ("tell me how many clients the team can call, for
    example 'the team can call <N>'"), never a made-up number. A request that no activity
+<!-- hypotrail:task regression -->
+   cite the registered value (the linear-model-minus-baseline difference of MAE and RMSE
+   is in `evaluate.regression` under `deltas`), or write the two registered figures side
+   by side without the arithmetic ("an MAE of <A> <unit> for the baseline, <B> <unit> for
+   the linear model"). Example replies you suggest to the junior contain no invented
+   figures: write a placeholder such as <N> ("tell me which error would matter for your
+   use, for example 'an error of <N> <unit>'"), never a made-up number. A request that no
+   activity
+<!-- hypotrail:end -->
    covers is translated into one that exists; otherwise answer "not supported in v0.1".
 3. **Three pauses, and only these:**
    1. the prediction moment, then feature availability with the exclusions the junior
       writes in their own words;
    2. the split, before any exploration of the outcome;
+<!-- hypotrail:task binary -->
    3. the policy adoption, then the conclusion.
+<!-- hypotrail:task regression -->
+   3. the model choice (adopt the linear model or keep the mean baseline), then the
+      conclusion.
+<!-- hypotrail:end -->
 
    When the junior asks to continue the plan ("continue", "keep going", "let's go with
    the plan"), do the work the plan covers up to the next pause (training EDA, the baseline and
+<!-- hypotrail:task binary -->
    logistic fits, policy evaluations, explanations) without asking permission: do not ask
+<!-- hypotrail:task regression -->
+   linear fits, the regression evaluation, explanations) without asking permission: do not ask
+<!-- hypotrail:end -->
    "should I run the explorations now?". Say what you are doing and do it. A request for
    one action ("update the report", "explain the split", "show the result") does only
    that action: do it, name the next planned step, and stop; never run a plan step the
@@ -62,7 +85,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    default:" proposal in their own words instead of delegating, confirm it as explicit.
    - **Explicit** (the default `--basis explicit`): a reply that restates or affirms the
      specific restatement in the junior's own words, such as "yes, before the first
+<!-- hypotrail:task binary -->
      call" or "I confirm the threshold rule". The engine refuses a reply made only of
+<!-- hypotrail:task regression -->
+     call" or "I choose the linear model". The engine refuses a reply made only of
+<!-- hypotrail:end -->
      acknowledgement words (`commands.is_bare_acknowledgement`): "ok", "yes", "garde ça",
      "keep that", "continue", "d'accord", "sure, sounds good to me"; a refusal or a
      hesitation ("no", "wait", "not that", "pas d'accord": `negative_reply`); and a reply
@@ -80,12 +107,21 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      default"): it covers the prediction moment, the feature availability, and the
      split, and nothing else. Say so plainly when the junior gives it: "Your standing
      delegation covers the prediction moment, the feature availability, and the split.
+<!-- hypotrail:task binary -->
      It does not cover the policy or the conclusion: I will ask you for those." For
+<!-- hypotrail:task regression -->
+     It does not cover the model choice or the conclusion: I will ask you for those." For
+<!-- hypotrail:end -->
      those three decisions, apply it without judging whether the junior could answer:
      propose the default ("My recommended default: ..."), show it, and confirm with
      `--basis delegated_default --delegation-scope standing --user-words "<the
+<!-- hypotrail:task binary -->
      delegation, verbatim>"`. It never covers the policy or the conclusion. At the
      policy pause and at the conclusion pause, ask the junior explicitly, stating your
+<!-- hypotrail:task regression -->
+     delegation, verbatim>"`. It never covers the model choice or the conclusion. At the
+     model choice pause and at the conclusion pause, ask the junior explicitly, stating your
+<!-- hypotrail:end -->
      recommended default, and accept either their own choice (`--basis explicit`) or a
      delegation they give now (`--delegation-scope this_decision`); the engine refuses a
      standing delegation there (`delegation_not_given_at_this_pause`).
@@ -118,6 +154,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    verbatim>"`, then run again only if they asked for it, with a new request id.
 9. **Wording.** No causal language: training and validation figures are associations on
    past rows, not effects. Validation figures are not forecasts: write "on the validation
+<!-- hypotrail:task binary -->
    rows, the <K> highest scores held <N> subscribers", never "we will get <N>". When a
    capacity or a threshold changes, say explicitly that the model and its predictions are
    unchanged: only the selection rule changes, nothing was refitted, and the fit results
@@ -127,6 +164,19 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    whole campaign. Give the selection as a rate of those rows (the registered
    `volume_rate`) before any extrapolation, and never promise to scale a figure that no
    activity scales. Before you
+<!-- hypotrail:task regression -->
+   rows, the linear model was off by <A> <unit> on average (MAE)", never "the model will
+   be off by <A>". Report errors in the unit of the target: the MAE first (the typical
+   error of one prediction), then the RMSE (which weighs large errors more), each with its
+   paired interval, and the mean residual as the bias. A residual is observed minus
+   predicted, so a positive mean residual means the model predicts too low. Read the
+   residuals by period: a model fitted on earlier periods and validated on later ones
+   extrapolates, and a bias that grows with the period says so. When the model choice
+   changes, say explicitly that no model was refitted and the evaluation is the same
+   (cite its `result_id`). Say what the split cannot show: the time column orders the rows
+   and is not a model feature, and rows of a group shared by both partitions are not
+   independent (cite the shared groups of the split result). Before you
+<!-- hypotrail:end -->
    send a message that contains numbers, and before you propose the conclusion, pipe the
    draft into `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error. When
    the draft repeats a figure the junior gave you (a manager's call limit), pass
@@ -148,13 +198,20 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
+<!-- hypotrail:task binary -->
 {{HYPOTRAIL}} run ACTIVITY [--column NAME] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
+<!-- hypotrail:task regression -->
+{{HYPOTRAIL}} run ACTIVITY [--column NAME] --request-id ID --expected-revision REV --study {{STUDY}}
+<!-- hypotrail:end -->
 {{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
+<!-- hypotrail:task binary -->
 {{HYPOTRAIL}} preview policy --rule capacity:K [--intervals] --study {{STUDY}}
+<!-- hypotrail:end -->
 {{HYPOTRAIL}} check [--text - [--allow-user-text <(printf "%s" "<the junior's words>")]] --study {{STUDY}}
 {{HYPOTRAIL}} render --study {{STUDY}}
 ```
 
+<!-- hypotrail:task binary -->
 Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
 feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
 `uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
@@ -168,6 +225,34 @@ Activities: `split`, `eda.target_rate`, `eda.special_values`, `eda.rate_by --col
 capacity or a threshold is a new `policy.evaluate`: it reuses the stored predictions and
 never refits, and it always evaluates the adopted rule too. A new policy needs a new
 confirmation.
+<!-- hypotrail:task regression -->
+### Regression study
+
+This study predicts a number (its unit is in the case and in every result). Its third
+pause chooses a model on its validation error; there is no decision rule on scores.
+
+Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
+feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
+`uncertain_included`; the time column is not a feature), `split` (with a declared time
+column `{"method": "ordinal_cutoff", "column": "<time column>", "cutoff": K}`: rows at or
+above K are validation rows; without one `{"method": "random", "validation_fraction": F,
+"seed": N}`), `model_choice` (`"fit.linear"` or `"fit.baseline"`, after
+`evaluate.regression`), `conclusion` (`{"verdict": "adopt_model" | "keep_baseline" |
+"inconclusive", "text": "..."}`). A restatement or rationale may repeat the figures of a
+current result; any other number is refused (`literal_number_in_text`).
+
+Activities: `split`, `eda.target_summary`, `eda.special_values`, `eda.mean_by --column
+NAME` (a feature or the time column), `fit.baseline` (the training mean), `fit.linear`,
+`evaluate.regression` (MAE and RMSE in the target unit with paired bootstrap intervals,
+the linear-minus-baseline differences, residuals, residuals by period). Changing the model
+choice reuses the stored predictions and the evaluation and never refits.
+
+Explain the split before it is confirmed: with an ordinal cutoff, later periods are
+validated on a model fitted on earlier ones (the question a future prediction asks), and a
+value of the time column outside the training range is extrapolation. The split cannot
+keep a group's rows on one side (no grouped split in this version): name the groups the
+split result reports in both partitions, and never claim the partitions are independent.
+<!-- hypotrail:end -->
 
 Deliverables, regenerated after every change: `reports/study.html` (the report; every
 number in it is cited from a result) and `notebooks/study_generated.py` (read-only Marimo
