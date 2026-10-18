@@ -25,7 +25,7 @@ The engine is canonical under `framework/`. Its synthetic configurations are fix
 ## Implementation priorities
 
 1. Define junior study state and its relationship to existing engine contracts. Separate context, proposals, decisions, executions, and results. Make migration explicit.
-2. Provide an explicit per-project entry point. The engine still uses the Python path and `OSML_ROOT`; packaging has not been completed.
+2. Provide an explicit per-project entry point. The engine still uses `OSML_ROOT`; `framework/pyproject.toml` installs it in editable mode, but notebook and template resources are not yet packaged for a non-editable wheel.
 3. Build an adaptive visible plan and state-based resumption. Define when Copilot recommends, acts, and asks a useful question.
 4. Generate HTML and notebook reference sections from the same evidence, with revisions and invalidation. Handle annotations and concurrent notebook edits before regeneration.
 5. Complete Bank through conclusion, then Auto MPG with shared primitives. Loading historical results is not a new experiment.
@@ -34,7 +34,7 @@ First slice: structural inspection → proposed plan → useful confirmation →
 
 ## Environments and verification
 
-Follow `CONTRIBUTING.md`. Use uv and dedicated environments. The framework does not yet have a `pyproject.toml` or `uv.lock`. Introducing packaging must account for notebook and template resources. Existing requirement constraints are not a reproducibility guarantee.
+Follow `CONTRIBUTING.md`. Use uv and dedicated environments. `framework/pyproject.toml` and `framework/uv.lock` define the locked development environment (`uv sync --project framework --group dev`). Notebook and template resources still resolve from the source checkout only. Supported platforms are Linux, macOS, and WSL.
 
 The default validation scope is the targeted engine suite, repository integrity checks, and optional companion compatibility suites. Do not run a state-mutating pilot command at the repository root without selecting an explicit study. Browser tests require Playwright Chromium and a loopback port; their model provider is simulated.
 

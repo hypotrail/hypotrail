@@ -6,4 +6,4 @@ Read [the handoff](../docs/handoff/IMPLEMENTATION.md) before changing the engine
 
 The engine still uses `OSML_ROOT` or the current directory to select its study. Do not run a mutating command at the repository root without an explicit project. The future junior entry point should make this choice explicit.
 
-Source separation is complete. Installable Python packaging and dependency locking remain implementation work. Keep `mlkit` as the compatibility namespace.
+Source separation is complete. `pyproject.toml` and `uv.lock` provide an editable, locked environment; packaging notebook and template resources for a non-editable wheel remains implementation work. Keep `mlkit` as the compatibility namespace.

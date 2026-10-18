@@ -39,7 +39,7 @@ The framework must not depend on Bank Marketing, Auto MPG, or the companion. Bus
 
 The experimental runtime accesses case resources through repository-relative symbolic links. These links stay inside the checkout. `journeys/` and `prepare_discovery.py` still belong to that tutorial, not to the future junior orchestration. The Bank and Auto MPG preparation scripts physically reside in their case directories.
 
-`framework/mlkit/` is the canonical engine source. Its extraction did not make the old kit an installable Python library. Python packaging, explicit project selection, and resource distribution remain implementation work.
+`framework/mlkit/` is the canonical engine source. It installs in editable mode through `framework/pyproject.toml` with a locked environment. Explicit project selection and distribution of notebook and template resources remain implementation work.
 
 ## Sources, outputs, and state
 
