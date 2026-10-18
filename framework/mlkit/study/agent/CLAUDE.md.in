@@ -29,7 +29,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    cite the registered value (a model-minus-baseline difference is in
    `policy.evaluation` under `rules.<rule>.deltas`), or write the two registered figures
    side by side without the arithmetic ("<N> selected with the threshold, <K> with the
-   capacity"). Example replies you suggest to the junior contain no invented figures:
+   capacity"). Numbers in words are numbers: no self-made counts or ratios in words
+   either ("one in nine", "the eleven columns"); `check` reads them. Name a withdrawn
+   or superseded proposal without its figure. Example replies you suggest to the junior contain no invented figures:
    write a placeholder such as <N> ("tell me how many clients the team can call, for
    example 'the team can call <N>'"), never a made-up number. A request that no activity
    covers is translated into one that exists; otherwise answer "not supported in v0.1".
