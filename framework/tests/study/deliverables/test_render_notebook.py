@@ -397,3 +397,34 @@ def test_round_trip_parser_and_codegen_reproduce_bytes(study, which):
     source = path.read_text()
     assert MarimoConvert.from_py(source).to_py() == source
     assert _editor_reserialize(path) == source
+
+
+def test_cached_template_gives_the_bytes_of_a_direct_generation(study):
+    """The cached, revision-free text with the revision substituted equals codegen."""
+    cache = study / '.hypotrail' / rn.CACHE_FILE
+    assert cache.is_file()                       # written by the renders of the fixture
+    for _ in range(2):
+        advance(study)
+        v = view.build(study)
+        cached = rn.generate_study_source(v, cache_dir=study / '.hypotrail')
+        direct = rn._codegen(*rn._study_cells(v, v['revision']))
+        assert cached == direct == rn.generate_study_source(v)
+        assert f'at revision {v["revision"]}.' in cached
+        assert f'GENERATED_REVISION = {v["revision"]}' in cached
+        assert str(rn.REVISION_SENTINEL) not in cached
+
+
+def test_a_render_without_notebook_change_does_not_import_marimo(study):
+    """Performance (plan section 9 bis): Marimo's codegen is imported only on change."""
+    script = ('import json, sys\n'
+              'from mlkit.study import render_notebook as rn, view, manifest as mf\n'
+              f'p = {str(study)!r}\n'
+              'from pathlib import Path\n'
+              'out = rn.render(Path(p), view.build(p), mf.load(p))\n'
+              'print(json.dumps(sorted(m for m in sys.modules if m.startswith("marimo"))))\n')
+    advance(study)
+    first = json.loads(_run([sys.executable, '-c', script], cwd=study.parent).stdout)
+    assert first == []                           # same content, new revision: cache hit
+    (study / '.hypotrail' / rn.CACHE_FILE).write_text('not json')
+    again = json.loads(_run([sys.executable, '-c', script], cwd=study.parent).stdout)
+    assert 'marimo._ast.codegen' in again        # unreadable cache: regenerated

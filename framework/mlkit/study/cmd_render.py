@@ -23,8 +23,8 @@ Fault injection for tests and acceptance scenarios: ``HYPOTRAIL_FAULT=render_htm
 or ``render_notebook`` (comma-separated for both) is honoured **only** when
 ``HYPOTRAIL_TEST_HOOKS=1``.
 
-Rendering modules (and Marimo) are imported when a render runs, not when this module
-is imported. No pandas, numpy, or scikit-learn.
+Rendering modules are imported when a render runs, not when this module is imported;
+Marimo only when the generated notebook text changes. No pandas, numpy, or scikit-learn.
 """
 from __future__ import annotations
 
@@ -144,10 +144,8 @@ def render_all(study_dir) -> dict:
     guard.assert_writable()
     study = Path(study_dir).resolve()
     read.open(study)                        # study_missing / integrity_error before locking
-    try:                                    # import Marimo's codegen before taking the lock
-        import marimo._ast.codegen  # noqa: F401
-    except Exception:
-        pass
+    # Marimo's code generator is imported by render_notebook only when the notebook text
+    # changes (cached template); most commits render without importing it.
     with lock.writer_lock(study):
         view = view_model.build(study)
         manifest = mf.load(study)
