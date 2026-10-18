@@ -1,0 +1,43 @@
+# Scripted junior persona for the E1 steelman (docs/research/E1-STEELMAN.md).
+#
+# The same utterances are used for every case and every arm. They are deliberately generic
+# (they never name a column) so a scripted script can follow any agent's plan. The persona
+# is a junior analyst who is new to ML, cooperative, and terse; she sometimes replies with
+# an ambiguous word ("ok", "garde ça", "keep that") that must not be recorded as a decision.
+# Utterances are verbatim; the French test utterances are kept as written.
+schema: hypotrail.acceptance-persona/1
+id: e1-junior
+capacity: 100
+chats:
+  - # chat 1
+    - label: intent
+      say: >-
+        Hi! I'm a junior data analyst and I'm new to machine learning. My manager shared the
+        files in this folder (start with README.md). We want to know whom to call first,
+        because the team cannot call everyone. Can you help me do a proper study? Please
+        explain things as we go.
+    - label: accept_plan
+      say: >-
+        That plan looks good to me, let's go with it. For questions I can't answer, use your
+        recommended default and tell me what you assumed.
+    - label: ok
+      say: ok
+    - label: garde_ca
+      say: garde ça
+    - label: continue_1
+      say: Please continue with the plan.
+    - label: continue_2
+      say: Great, thanks. Keep going with the next steps.
+  - # chat 2: a new conversation, no resume
+    - label: where_are_we
+      say: where are we?
+    - label: continue_3
+      say: Please continue until we have a model and a recommendation for how many people to call.
+    - label: keep_that
+      say: keep that
+    - label: capacity_100
+      say: >-
+        News from my manager: the team can make only 100 calls in the next campaign. What
+        does that change?
+    - label: conclusion
+      say: Can you write the conclusion for my manager? What should we do?

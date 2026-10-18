@@ -33,6 +33,14 @@ uv pip install --python framework/.venv/bin/python -r framework/requirements.txt
 PYTHONPATH="$PWD/framework" framework/.venv/bin/python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py
 ```
 
+The agent acceptance graders have unit tests on canned transcripts that need no model:
+
+```sh
+uv run --project framework python -m pytest -q framework/tests/acceptance
+```
+
+The agent scenarios in `framework/tests/acceptance/agent/` (marker `agent_acceptance`) launch real `claude -p` sessions. They are skipped unless `HYPOTRAIL_AGENT_ACCEPTANCE=1` is set, and S1–S9 also wait for the `hypotrail` CLI. Their results are labelled "Claude Code acceptance" and do not count as Copilot acceptance. The E1 steelman protocol and its runner are described in [docs/research/E1-STEELMAN.md](docs/research/E1-STEELMAN.md). Keep raw runs outside the repository.
+
 This is the validated targeted scope, not a claim that the entire inherited suite passes. Some historical tests concern currently suspended holdout and production paths. Do not enable those operations or weaken assertions to obtain a passing suite.
 
 ## Companion compatibility

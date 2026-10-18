@@ -1,0 +1,26 @@
+# Arm A of the E1 steelman (docs/research/E1-STEELMAN.md): Claude Code with a good
+# pedagogy skill and an empty Marimo notebook, without the Hypotrail engine.
+#
+# Files are stored under names Claude Code does not load (CLAUDE.md.in, dot-claude/) so
+# that developer sessions in this repository never pick up the arm's instructions; the
+# runner copies them to the workspace paths given here.
+schema: hypotrail.acceptance-arm/1
+id: arm_a
+description: Claude Code + ml-study skill + empty Marimo notebook; no Hypotrail engine.
+files:
+  files/CLAUDE.md.in: CLAUDE.md
+  files/dot-claude/skills/ml-study/SKILL.md: .claude/skills/ml-study/SKILL.md
+  files/notebooks/study.py: notebooks/study.py
+# Python environment created in <workspace>/.venv before the first turn.
+python:
+  version: "3.13"
+  packages: [pandas, numpy, scikit-learn, scipy, matplotlib, "marimo==0.25.1"]
+claude:
+  # Steelman: the strongest generally available model alias.
+  model: opus
+  tools: [Bash, Read, Write, Edit, Glob, Grep, Skill]
+  allowed_tools: [Bash, Read, Write, Edit, Glob, Grep, Skill]
+  permission_mode: dontAsk
+# Bash audit policy for grader (a). Arm A has no engine, so Python on data is its only
+# means of computation: the audit reports it but does not count it as a violation.
+bash_policy: computation_allowed
