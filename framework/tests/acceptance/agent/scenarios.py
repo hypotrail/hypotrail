@@ -396,8 +396,10 @@ def interrupted_run(ctx) -> dict:
     seen_engine = []
     for u in gb.bash_uses(ctx.events):
         res = results.get(u['id'], '')
+        # F1 (14a4721): status now reports a dead execution as ``outcome_unknown`` (next
+        # action and executions bucket) instead of leaving it ``active``.
         if 'interrupted_unknown' in res or 'acknowledge_interruption' in res or \
-                'interrupted_execution_pending' in res:
+                'interrupted_execution_pending' in res or '"outcome_unknown"' in res:
             seen_engine.append({'turn': u['turn'], 'command': u['input']['command'][-120:]})
             m = EXECUTION_ID_RE.search(res)
             eid = eid or (m.group(1) if m else None)
@@ -414,7 +416,7 @@ def c_interruption_happened(ctx):
 def c_status_shows_interrupted_execution(ctx):
     """After the kill, the engine reports the execution as interrupted with an unknown
     outcome (``interrupted_unknown`` on replay, ``interrupted_execution_pending`` on a new
-    run, or ``next_action: acknowledge_interruption`` in status)."""
+    run, ``next_action: acknowledge_interruption`` or ``outcome_unknown`` in status)."""
     r = interrupted_run(ctx)
     return _ok(bool(_killed(ctx)) and bool(r.get('engine_reported')), **r)
 
