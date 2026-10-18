@@ -35,6 +35,8 @@ def _load(name: str):
 
 
 runner, graders, cases = _load('runner'), _load('graders'), _load('cases')
+study_setup = _load('study_setup')
+graders_b = _load('graders_b')
 
 CHECK_VERDICT = {'type': 'object', 'additionalProperties': False,
                  'properties': {'verdict': {'enum': ['handled', 'partially', 'not_handled',
@@ -91,6 +93,134 @@ def _assert_outside_repo(path: Path) -> Path:
     return path
 
 
+# --------------------------------------------------------------------------- arm B hooks
+
+def main_checkout() -> Path:
+    """The main checkout when the repository is a git worktree (else the repository)."""
+    import subprocess
+    p = subprocess.run(['git', '-C', str(runner.REPO_ROOT), 'rev-parse', '--git-common-dir'],
+                       capture_output=True, text=True, check=False)
+    common = Path(p.stdout.strip()) if p.returncode == 0 and p.stdout.strip() else None
+    if common is not None and not common.is_absolute():
+        common = (runner.REPO_ROOT / common).resolve()
+    return common.parent if common is not None else runner.REPO_ROOT
+
+
+def compact_snapshot(ws: Path) -> dict:
+    """What the graders need from a study after a turn (status view and registry)."""
+    snap = study_setup.snapshot(ws)
+    view = snap['view']
+    results = {}
+    for slot, r in (view.get('results') or {}).items():
+        item = {'result_id': r.get('result_id'), 'activity': r.get('activity'),
+                'current': r.get('current')}
+        if slot == 'fit.logistic' and r.get('values'):
+            item['features'] = r['values'].get('features')
+        if slot == 'policy.evaluation':
+            item['params'] = r.get('params')
+        results[slot] = item
+    decisions = {}
+    for d, v in (view.get('decisions') or {}).items():
+        conf = v.get('confirmation') or {}
+        decisions[d] = {'status': v.get('status'), 'value': v.get('value'),
+                        'user_words': conf.get('user_words'), 'proposal_id': v.get('proposal_id'),
+                        'confirmed_revision': conf.get('revision'), 'reason': v.get('reason')}
+    ex = view.get('executions') or {}
+    arts = view.get('artifacts') or {}
+    return {'revision': snap['revision'], 'current_step': view.get('current_step'),
+            'next_action': view.get('next_action'), 'decisions': decisions,
+            'open_proposals': [{k: p.get(k) for k in ('proposal_id', 'decision_id', 'value',
+                                                      'restatement', 'revision')}
+                               for p in view.get('open_proposals') or []],
+            'results': results, 'stale': sorted((view.get('stale') or {}).keys()),
+            'executions': {b: {e: {'activity': r.get('activity'), 'status': r.get('status'),
+                                   'request_id': r.get('request_id')}
+                               for e, r in (ex.get(b) or {}).items()}
+                           for b in ('active', 'interrupted', 'late')},
+            'artifacts': {'status': arts.get('status'),
+                          'items': {n: {'status': i.get('status'), 'revision': i.get('revision'),
+                                        'error': i.get('error')}
+                                    for n, i in (arts.get('items') or {}).items()}},
+            'exposure': {k: (view.get('exposure') or {}).get(k)
+                         for k in ('by_purpose', 'rows_exposed',
+                                   'validation_rows_used_for_selection')},
+            'exposure_n': snap['exposure_n'], 'registry': snap['registry'],
+            'invalidations': [{k: i.get(k) for k in ('revision', 'decision_id', 'mutation', 'row')}
+                              for i in view.get('invalidations') or []]}
+
+
+def arm_b_after_turn(chats: list[list[dict]], extra_docs: list[str] = ()):
+    """Hook run after each agent turn of arm B: snapshot the study, then check every
+    assistant text holding a number against the registry at that moment."""
+    heard: list[str] = []
+
+    def hook(ws: Path, turn: dict, run_dir: Path) -> dict:
+        events = runner.parse_stream((run_dir / turn['transcript']).read_text(encoding='utf-8'))
+        for e in events:
+            e['_turn'] = turn['index']
+        texts = graders.assistant_texts(events)
+        heard.append(turn.get('utterance') or '')
+        said = [s['say'] for chat in chats for s in chat] + heard
+        docs = [p.read_text(encoding='utf-8', errors='replace') for p in (ws / 'README.md',)
+                if p.is_file()]
+        tolerated = graders.ValueSet(graders.numbers_in(said + docs + list(extra_docs)))
+        try:
+            numbers = graders.check_assistant_texts(ws, texts, tolerated)
+        except Exception as exc:     # a grader failure must not end the conversation
+            numbers = {'error': repr(exc)}
+        try:
+            snap = compact_snapshot(ws)
+        except Exception as exc:
+            snap = {'error': repr(exc)}
+        return {'snapshot': snap, 'numbers': numbers}
+    return hook
+
+
+# --------------------------------------------------------------------------- answering persona
+
+def junior_responder(run_dir: Path, path: Path = HERE / 'e1_persona_answering.yaml', log=print):
+    """Simulated junior answers (supplementary protocol, ``e1_persona_answering.yaml``).
+
+    After the scripted steps listed in ``answer_after``, a fresh ``claude -p`` (no tools,
+    empty configuration) reads only the assistant's last reply and the persona sheet, and
+    either writes the analyst's short answer or says NONE. The same function serves every
+    arm: it never reads the study state."""
+    import subprocess
+    doc = yaml.safe_load(path.read_text(encoding='utf-8'))
+    allowed = set(doc['answer_after'])
+    cfg = Path(run_dir) / 'simulator-config'
+    cfg.mkdir(parents=True, exist_ok=True)
+    log_path = Path(run_dir) / 'simulator.jsonl'
+
+    def respond(ws: Path, turn: dict, step: dict, nxt: dict | None, answered: int):
+        if step.get('label') not in allowed or answered >= int(doc['max_answers_per_gap']):
+            return None
+        reply = (turn.get('final_text') or '').strip()
+        if not reply:
+            return None
+        prompt = doc['sheet'] + '\n\n--- assistant message ---\n' + reply
+        p = subprocess.run(['claude', '-p', prompt, '--output-format', 'json', '--model', doc['model'],
+                            '--max-turns', '1', '--tools', '', '--max-budget-usd', '0.5',
+                            '--settings', json.dumps({'autoMemoryEnabled': False})],
+                           cwd=str(Path(run_dir)), env=runner.scrubbed_env(cfg),
+                           capture_output=True, text=True, timeout=300)
+        try:
+            out = json.loads(p.stdout)
+        except json.JSONDecodeError:
+            out = {'result': '', 'error': p.stdout[-500:] + p.stderr[-500:]}
+        text = (out.get('result') or '').strip().strip('"').strip()
+        record = {'after_turn': turn['index'], 'after_label': step.get('label'), 'answer': text,
+                  'cost_usd': out.get('total_cost_usd'), 'models': sorted((out.get('modelUsage') or {}))}
+        with log_path.open('a', encoding='utf-8') as fh:
+            fh.write(json.dumps(record) + '\n')
+        if not text or text.upper().startswith('NONE'):
+            return None
+        log(f'[simulated junior after turn {turn["index"]:02d}] {text[:120]}')
+        return {'say': text, 'label': f'sim_after_{step.get("label")}_{answered + 1}',
+                'simulated': {'cost_usd': out.get('total_cost_usd'), 'model': record['models']}}
+    return respond
+
+
 # --------------------------------------------------------------------------- run
 
 def cmd_run(a) -> None:
@@ -99,7 +229,14 @@ def cmd_run(a) -> None:
     if a.model:
         arm.model = a.model
     hidden = run_dir / 'hidden'
-    prepare = cases.preparer(a.case, hidden, a.seed)
+    after_turn = None
+    forbidden = [hidden]
+    if arm.setup == 'hypotrail_init':
+        prepare = lambda ws: study_setup.prepare_study(a.case, ws, hidden, a.seed)  # noqa: E731
+        after_turn = arm_b_after_turn(persona_chats())
+        forbidden.append(main_checkout())
+    else:
+        prepare = cases.preparer(a.case, hidden, a.seed)
     caps = runner.Caps(max_agent_turns=a.max_agent_turns, max_budget_usd_per_chat=a.chat_budget,
                        max_budget_usd_total=a.total_budget, timeout_s_per_turn=a.turn_timeout)
     chats = persona_chats()
@@ -113,11 +250,16 @@ def cmd_run(a) -> None:
         with log_file.open('a', encoding='utf-8') as fh:
             fh.write(msg + '\n')
 
+    responder = junior_responder(run_dir, log=log) if a.persona == 'answering' else None
     record = runner.run_conversation(
         arm=arm, chats=chats, run_dir=run_dir, prepare_workspace=prepare, caps=caps,
+        responder=responder,
         workspace_base=Path(a.workspace_base) if a.workspace_base else None,
-        forbidden_paths=[hidden], meta={'case': a.case, 'repeat': a.repeat, 'persona': 'e1-junior'},
-        log=log)
+        forbidden_paths=forbidden,
+        meta={'case': a.case, 'repeat': a.repeat,
+              'persona': 'e1-junior' if a.persona == 'scripted' else 'e1-junior-answering'},
+        log=log, after_turn=after_turn,
+        before_first_turn=compact_snapshot if after_turn else None)
     log(json.dumps({k: record[k] for k in ('total_cost_usd', 'wall_s', 'stopped', 'repo_guard')}))
 
 
@@ -139,7 +281,8 @@ def cmd_review(a) -> None:
     run_dir = _assert_outside_repo(a.run)
     run = json.loads((run_dir / 'run.json').read_text(encoding='utf-8'))
     out = run_dir / 'review'
-    replace = {run['workspace']: '<study>', str(run_dir): '<run>'}
+    replace = {run['workspace']: '<study>', str(run_dir): '<run>',
+               str(runner.REPO_ROOT / 'framework'): '<engine>', str(runner.REPO_ROOT): '<engine>'}
     blind_dir = runner.make_workspace(a.workspace_base, prefix='hypotrail-review-')
     graders.anonymise_study(run_dir / 'workspace', blind_dir / 'study', replace=replace)
     prompt = (HERE / 'rubrics/blind_review.md').read_text(encoding='utf-8')
@@ -214,18 +357,34 @@ def deterministic_grades(run_dir: Path) -> dict:
                                           if p.is_file() and '.claude' not in p.parts)}}
 
 
+def deterministic_grades_b(run_dir: Path) -> dict:
+    run = json.loads((run_dir / 'run.json').read_text(encoding='utf-8'))
+    events = runner.load_transcript(run_dir)
+    case = run['case']
+    truth = json.loads(Path(case['truth_path']).read_text()) if case.get('truth_path') else None
+    det = graders_b.deterministic(run_dir, run, events, truth)
+    det.update({'run': run, 'truth': truth, 'case': case['case']})
+    return det
+
+
 def cmd_grade(a) -> None:
     run_dir = _assert_outside_repo(a.run)
-    det = deterministic_grades(run_dir)
+    arm_id = json.loads((run_dir / 'run.json').read_text(encoding='utf-8'))['arm']
+    is_b = runner.Arm.load(HERE / 'arms' / arm_id).setup == 'hypotrail_init'
+    det = deterministic_grades_b(run_dir) if is_b else deterministic_grades(run_dir)
     review_path = run_dir / 'review/blind/reviewer.json'
     transcript_path = run_dir / 'review/transcript/reviewer.json'
     review = json.loads(review_path.read_text())['structured_output'] if review_path.is_file() else None
     treview = json.loads(transcript_path.read_text())['structured_output'] if transcript_path.is_file() else None
     det['transcript_review'] = treview
-    traps = graders.grade_traps(case=det['case'], truth=det['truth'], review=review, deterministic=det)
+    if is_b:
+        traps = graders_b.grade_traps(case=det['case'], truth=det['truth'], review=review, det=det)
+    else:
+        traps = graders.grade_traps(case=det['case'], truth=det['truth'], review=review, deterministic=det)
     run = det.pop('run')
     det.pop('truth')
-    det.pop('study_text')
+    det.pop('study_text', None)
+    det.pop('final', None)
     costs = runner.recompute_turn_costs(run['turns'])
     for t, c in zip(run['turns'], costs):
         t['cost_usd'] = c
@@ -261,6 +420,38 @@ def cmd_summary(a) -> None:
               f"dialogue={((g.get('transcript_review') or {}).get('overall'))}")
 
 
+def compare_arms(groups: dict[str, list[dict]]) -> str:
+    """Per-trap comparison of graded runs grouped by label (for example "A scripted",
+    "B scripted", "B answering"): each cell counts verdicts over the group's runs, Bank and
+    synthetic apart, so recitation (Bank pass, synthetic fail) stays visible."""
+    labels = list(groups)
+    head = '| Trap | ' + ' | '.join(labels) + ' |'
+    lines = [head, '|---|' + '---|' * len(labels)]
+    for tid, _key, title in graders.TRAPS:
+        cells = []
+        for label in labels:
+            parts = []
+            for case in ('bank', 'synthetic'):
+                verdicts = [next(t['verdict'] for t in g['traps'] if t['trap'] == tid)
+                            for g in groups[label] if g['case'] == case]
+                if not verdicts:
+                    continue
+                counts = {v: verdicts.count(v) for v in dict.fromkeys(verdicts)}
+                parts.append(f"{case[:5]}: " + ', '.join(f'{v} {n}' for v, n in counts.items()))
+            cells.append('; '.join(parts) or '-')
+        lines.append(f'| {tid} {title} | ' + ' | '.join(cells) + ' |')
+    return '\n'.join(lines)
+
+
+def cmd_compare(a) -> None:
+    groups: dict[str, list[dict]] = {}
+    for spec in a.group:
+        label, _, dirs = spec.partition('=')
+        groups[label] = [json.loads((_assert_outside_repo(Path(d)) / 'grade.json').read_text())
+                         for d in dirs.split(',') if d]
+    print(compare_arms(groups))
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest='cmd', required=True)
@@ -271,6 +462,9 @@ def main(argv=None) -> None:
     r.add_argument('--model')
     r.add_argument('--seed', type=int, default=20261018)
     r.add_argument('--repeat', default='r1')
+    r.add_argument('--persona', choices=['scripted', 'answering'], default='scripted',
+                   help='scripted: e1_persona.yaml only; answering: plus simulated answers '
+                        '(e1_persona_answering.yaml)')
     r.add_argument('--workspace-base')
     r.add_argument('--max-agent-turns', type=int, default=80)
     r.add_argument('--chat-budget', type=float, default=15.0, help='cumulative dollars per chat session')
@@ -287,6 +481,10 @@ def main(argv=None) -> None:
     g = sub.add_parser('grade')
     g.add_argument('--run', required=True)
     g.set_defaults(func=cmd_grade)
+    c = sub.add_parser('compare', help='per-trap comparison of graded runs by group')
+    c.add_argument('--group', action='append', required=True,
+                   help='LABEL=RUN_DIR,RUN_DIR,... (repeat per group)')
+    c.set_defaults(func=cmd_compare)
     s = sub.add_parser('summary')
     s.add_argument('runs', nargs='+')
     s.set_defaults(func=cmd_summary)

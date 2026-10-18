@@ -1,0 +1,25 @@
+# Arm B of the E1 steelman (docs/research/E1-STEELMAN.md) and the agent of the S1-S9
+# acceptance scenarios (plan WP0.7, WP4.3): Claude Code in a Hypotrail study workspace.
+#
+# The arm has no files of its own. The workspace is created as a junior gets it: the case
+# is copied into <workspace>/case/, a neutral README.md describes the scenario, and
+# `hypotrail init --case case/case.yaml --study <workspace>` installs CLAUDE.md, the
+# hypotrail-study skill and the hypotrail-resume command from framework/mlkit/study/agent/
+# (study_setup.prepare_study). Model, persona, tools and caps are those of arm A, for
+# comparability.
+schema: hypotrail.acceptance-arm/1
+id: arm_b
+description: Claude Code + Hypotrail study workspace from `hypotrail init` (CLI only).
+setup: hypotrail_init
+files: {}
+# No workspace Python environment: computation goes through the hypotrail CLI only, which
+# runs in the framework's own uv environment (the invocation recorded by init).
+python:
+  packages: []
+claude:
+  model: opus
+  tools: [Bash, Read, Write, Edit, Glob, Grep, Skill]
+  allowed_tools: [Bash, Read, Write, Edit, Glob, Grep, Skill]
+  permission_mode: dontAsk
+# Grader (a): any python, pandas, awk, ... outside the hypotrail CLI is a violation.
+bash_policy: hypotrail_cli_only
