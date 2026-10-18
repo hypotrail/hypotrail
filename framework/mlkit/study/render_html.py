@@ -438,7 +438,14 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
         pair_table = (f'<h3>{e(labels["paired_heading"])}</h3><div class="scroll"><table class="paired">'
                       '<thead><tr><th>Rule</th><th>Model</th><th>Metric</th><th>Difference</th>'
                       f'<th>Interval</th></tr></thead><tbody>{"".join(paired)}</tbody></table></div>')
-    return (head + f'<p class="notice">{e(labels["policy_note"])}{level}</p>{table}{pair_table}'
+    population = ''
+    if any(key.startswith('capacity:') for key in rules) and citer.has(rid, 'n'):
+        # F2: a capacity is a count on these rows; say which population, and its rate.
+        pop = labels['capacity_population']
+        population = (f'<p class="notice" data-note="capacity_population">{e(pop["before"])} '
+                      f'{citer.num(rid, "n", "int")} {e(pop["after"])}</p>')
+    return (head + f'<p class="notice">{e(labels["policy_note"])}{level}</p>{population}'
+            f'{table}{pair_table}'
             f'{_figures(citer, rid, texts.activity("policy.evaluation"))}</section>')
 
 

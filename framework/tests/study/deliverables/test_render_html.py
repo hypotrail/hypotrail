@@ -119,6 +119,11 @@ def test_policy_comparison_has_intervals_ties_paired_and_adopted_rule(full_view)
     assert 'rules.capacity:20.intervals.[fit.logistic].precision.low' in section
     assert 'rules.capacity:20.deltas.[fit.logistic].precision.point' in section
     assert 'rules.capacity:20.models.[fit.baseline].cut.fraction_selected' in section
+    # F2: a capacity names the population it applies to and points to its rate.
+    note = section.split('data-note="capacity_population">')[1].split('</p>')[0]
+    assert labels['capacity_population']['before'] in note
+    assert 'data-result-id=' in note and 'data-path="n"' in note
+    assert labels['capacity_population']['after'] in note
 
 
 def test_steps_without_results_say_not_executed_yet(tmp_path, synthetic_case_dir):

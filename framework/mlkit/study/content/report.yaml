@@ -64,6 +64,9 @@ restatement: Restatement you answered
 proposal_waiting: Waiting for your answer
 policy_note: Figures are computed on validation rows after a choice made on them. They are optimistic and are not a forecast of a future campaign.
 policy_missing: No current policy evaluation yet.
+capacity_population:
+  before: A capacity rule here selects that many of the
+  after: validation rows, which stand for a share of the contacts, not for a whole campaign. Read its volume share as the rate to carry over; apply that rate to another population before quoting a count for it.
 paired_heading: Paired differences, model minus baseline (paired bootstrap on the same validation rows)
 tied_none: No tie at the cut
 tied_yes: Ties at the cut counted pro rata
