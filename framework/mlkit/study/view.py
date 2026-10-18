@@ -42,7 +42,9 @@ ARTIFACT_PLACEHOLDER = {'manifest': None, 'status': 'not_rendered', 'items': {}}
 
 SUMMARY_SCHEMA = 'hypotrail.summary/1'
 SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
-                'results', 'artifacts', 'executions', 'not_yet_defensible')
+                'results', 'artifacts', 'executions', 'not_yet_defensible',
+                # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
+                'recap')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
 SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'result_integrity', 'adopted_rule_not_evaluated',
                     'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
@@ -173,8 +175,8 @@ def summary(view: dict) -> dict:
     titles and statuses), the open proposals with
     their restatement, each decision with its value, status, basis and recorded words,
     the current results by slot, each deliverable with its status and one sentence,
-    interrupted and late executions, and the first limits of ``not_yet_defensible``.
-    The full view stays in ``hypotrail status --json``.
+    interrupted and late executions, the first limits of ``not_yet_defensible``, and
+    ``recap``, five lines a new chat may quote (:func:`recap`). The full view stays in ``hypotrail status --json``.
     """
     pt = view['decisions']['prediction_time']
     if pt['value'] is not None:
@@ -229,7 +231,136 @@ def summary(view: dict) -> dict:
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
            'executions': executions, 'not_yet_defensible': defensible}
+    out['recap'] = recap(out, view)
     return {k: out[k] for k in SUMMARY_KEYS}
+
+
+# --- the resume recap (post-v0.1, T8 and F5) ------------------------------------------
+
+RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
+DECISION_LABELS = {'prediction_time': 'prediction moment',
+                   'feature_availability': 'feature availability', 'split': 'split',
+                   'policy': 'policy', 'model_choice': 'model choice',
+                   'conclusion': 'conclusion'}
+# A regression study's model choice (M3), in words: the recap never says "policy".
+MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
+# The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
+# lines do not already say (unconfirmed decisions are the "Decided" and "Next" lines).
+RECAP_LIMIT_SKIP = ('unconfirmed_decisions',)
+
+
+def _spaced(identifier) -> str:
+    """``stratified_random`` as "stratified random"."""
+    return ' '.join(str(identifier).split('_'))
+
+
+def _fact_value(item) -> str | None:
+    return item.get('value') if isinstance(item, dict) else None
+
+
+def _recap_decision(decision_id: str, d: dict) -> str:
+    label = DECISION_LABELS[decision_id]
+    value = d['value']
+    if decision_id == 'feature_availability' and isinstance(value, dict):
+        parts = []
+        excluded = sorted(value.get('not_available', []) + value.get('uncertain_excluded', []))
+        doubtful = sorted(value.get('uncertain_included', []))
+        if excluded:
+            parts.append('excluded ' + ', '.join(excluded))
+        if doubtful:
+            parts.append('kept with a doubt ' + ', '.join(doubtful))
+        text = f'{label} ({"; ".join(parts) if parts else "every feature kept"})'
+    elif decision_id == 'split' and isinstance(value, dict):
+        method = _spaced(value.get('method', 'split'))
+        fraction = value.get('validation_fraction')
+        share = (f', {round(100 * fraction):d}% for validation'
+                 if isinstance(fraction, (int, float)) and not isinstance(fraction, bool) else '')
+        if value.get('method') == 'ordinal_cutoff' and value.get('column') is not None:
+            share = f' on {value["column"]}, validation from {value.get("cutoff")}'
+        text = f'{label} ({method}{share})'
+    elif decision_id in ('policy',) and isinstance(value, str):
+        text = f'{label} {value}'
+    elif decision_id == 'model_choice' and isinstance(value, str):
+        text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
+    elif decision_id == 'conclusion' and isinstance(value, dict):
+        text = f'{label} {_spaced(value.get("verdict", ""))}'.strip()
+    else:
+        text = label
+    notes = []
+    if d['basis'] == st.DELEGATED_DEFAULT:
+        notes.append('delegated to the assistant')
+    if d['status'] == 'reconfirm_required':
+        notes.append('to confirm again')
+    return text + (f' [{", ".join(notes)}]' if notes else '')
+
+
+def _recap_next(summary_out: dict, view: dict) -> str:
+    nxt = summary_out['next_action']
+    kind = nxt.get('kind')
+    titles = {s['id']: s['title'] for s in summary_out['plan']}
+    if kind in ('outcome_unknown', 'acknowledge_interruption'):
+        activity = nxt.get('activity') or 'an activity'
+        return (f'a run of {activity} stopped and its outcome is unknown; decide whether to '
+                'acknowledge it before anything else.')
+    if kind == 'reconfirm':
+        return f'confirm the {DECISION_LABELS.get(nxt.get("decision"), "decision")} again.'
+    if kind == 'await_user_words':
+        proposal = next((p for p in summary_out['open_proposals']
+                         if p['proposal_id'] == nxt.get('proposal_id')), None)
+        label = DECISION_LABELS.get(nxt.get('decision'), 'decision')
+        restatement = proposal['restatement'] if proposal else ''
+        return f'your answer, in your own words, on the {label}: "{restatement}"'
+    if kind in ('propose', 'run', 'blocked'):
+        if nxt.get('step') == summary_out['current_step']:
+            return str(nxt.get('message', '')).strip()
+        title = titles.get(nxt.get('step'), nxt.get('step') or 'the next step')
+        return f'{title}: {nxt.get("message", "")}'.strip()
+    return 'nothing left in the plan; review what is not yet defensible.'
+
+
+def recap(summary_out: dict, view: dict) -> list[str]:
+    """Five lines a new chat may quote to resume (post-v0.1, T8 and F5).
+
+    Deterministic, from the summary and the view only, with no revision numbers or ids:
+    1. ``Goal``: the intended use and the prediction moment (decided or from the case);
+    2. ``Decided``: each confirmed decision, with the excluded features by name and a
+       note when it was delegated or must be confirmed again (a regression study names
+       its model choice, "the linear model" or "the mean baseline", where a binary study
+       names its policy);
+    3. ``Now``: the current step and the deliverables that are not up to date;
+    4. ``Next``: the next decision or action (an open restatement is quoted, so a
+       stand-in figure keeps its caveat);
+    5. ``Limit``: the most urgent limit of ``not_yet_defensible`` the other lines do not
+       already say.
+    """
+    goal = summary_out['goal']
+    use = _fact_value(goal['intended_use']) or 'not stated in the case'
+    pt = goal['prediction_time']
+    if pt is None:
+        moment = 'not decided yet'
+    elif pt['source'] == 'decision' and pt['status'] == 'confirmed':
+        moment = str(pt['value'])
+    else:
+        moment = f'{pt["value"]} (from the case, not decided yet)'
+    decided = [_recap_decision(d, item) for d, item in summary_out['decisions'].items()
+               if item['status'] in ('confirmed', 'reconfirm_required')]
+    titles = {s['id']: s['title'] for s in summary_out['plan']}
+    step = titles.get(summary_out['current_step'], 'every step is done') \
+        if summary_out['current_step'] else 'every step is done'
+    behind = sorted(name for name, item in summary_out['artifacts']['items'].items()
+                    if item.get('status') != 'ok' and name != 'workbench')
+    deliverables = ('the report and notebook are up to date' if not behind
+                    else ', '.join(behind) + ' not up to date')
+    limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP]
+    rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
+    limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
+    limit = limits[0]['text'] if limits else 'none recorded.'
+    lines = [f'Goal: {use}; the prediction is made {moment}.',
+             'Decided: ' + ('; '.join(decided) if decided else 'nothing yet') + '.',
+             f'Now: {step}; {deliverables}.',
+             f'Next: {_recap_next(summary_out, view)}',
+             f'Limit: {limit}']
+    return lines
 
 
 LIVENESS_RUNNING, LIVENESS_UNKNOWN, LIVENESS_NOT_CHECKED = ('running', 'outcome_unknown',

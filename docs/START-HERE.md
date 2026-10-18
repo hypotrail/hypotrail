@@ -16,7 +16,7 @@ Open the **root of the `hypotrail` repository** and start the development agent 
 6. [CLI contract](specs/CLI-CONTRACT.md) and [case contract](specs/CASE-CONTRACT.md).
 7. [Repository architecture](architecture/REPOSITORY.md).
 8. [Bank Marketing context](../use-cases/bank-marketing/README.md).
-9. For history: [the v0.1 plan](plans/V0.1-IMPLEMENTATION-PLAN.md), the [ADRs](decisions/), the [agent acceptance runs](acceptance/runs/), and the [E1 steelman](research/E1-STEELMAN.md).
+9. For history: [the v0.1 plan](plans/V0.1-IMPLEMENTATION-PLAN.md), the [ADRs](decisions/), the [agent acceptance runs](acceptance/runs/), the [E1 steelman](research/E1-STEELMAN.md), and the [observation protocol](research/OBSERVATION-PROTOCOL.md) for sessions with human juniors.
 
 The [independent design review summary](reference/INDEPENDENT-REVIEW.md) explains the validity and coherence requirements behind this direction. It is design evidence, not verification of the current code.
 

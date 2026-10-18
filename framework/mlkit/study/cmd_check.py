@@ -53,6 +53,17 @@ of digits (R3): a run of 6 or more digits that follows "result", "result_id", "r
 registry; a number that traces to a figure is still traced as that figure. A minus sign
 may be ``-`` or the Unicode minus U+2212.
 
+Numbers written in words (final acceptance F3, :mod:`mlkit.study.wordnum`): in a draft
+(``--text``) and in the conclusion, common English and French forms used quantitatively
+("one call in nine", "un sur neuf", "the eleven kept columns", "three quarters of the
+rows", "half of the clients", "a dozen calls", "eleven percent", and, in a regression
+study, a number followed by the target unit: "about six litres") are traced like digits,
+and reported as ``untraceable_number`` (``details.in_words`` true) when they match no
+registered value. "One model", "a single", "first" are not numbers. Figures of withdrawn
+or superseded proposals are never literals: a number that repeats one stays
+``untraceable_number`` and names that proposal (``details.retired_proposal``). The HTML
+report and the notebook are generated from cited values and are not scanned for words.
+
 The command always exits 0 with ``clean`` true or false; it never writes.
 No pandas, numpy, or scikit-learn.
 """
@@ -67,7 +78,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from . import cite, manifest as mf, read, view as view_model
+from . import cite, manifest as mf, read, view as view_model, wordnum
 from . import commands as cmd
 from .errors import StudyError
 
@@ -149,6 +160,8 @@ def _walk_numbers(value: Any) -> Iterable[float]:
     elif isinstance(value, str):
         for tok in cite.parse_numbers(value):
             yield tok.value / 100 if tok.percent else tok.value
+        for word in wordnum.parse(value):         # F3: "one in ten" written by the junior
+            yield word.value / 100 if word.kind in ('percent', 'points') else word.value
     elif isinstance(value, Mapping):
         for v in value.values():
             yield from _walk_numbers(v)
@@ -174,13 +187,25 @@ class Pool:
     """
 
     def __init__(self, view: Mapping, user_texts: Iterable[str] = (),
-                 result_ids: Iterable[str] | None = None):
+                 result_ids: Iterable[str] | None = None, retired: Iterable[Mapping] = ()):
         self.current, self.stale, self.literal = [], [], []
+        # Withdrawn and superseded proposals (F3): never literals; only named in the
+        # finding when an untraceable number repeats one of their figures.
+        self.retired = []
+        for p in retired:
+            for v in _walk_numbers(_rule_spaced(p.get('value'))):
+                self.retired.append({'proposal_id': p.get('proposal_id'),
+                                     'status': p.get('status'), 'value': v})
         # Result ids a digit-only prefix may abbreviate (R3): the registry when known,
         # else the results of the view.
         self.result_ids = tuple(result_ids) if result_ids is not None else tuple(
             item['result_id'] for item in view['results'].values()
             if isinstance(item.get('result_id'), str))
+        # Target units of the results (a regression study, M3): "about six litres" is read.
+        self.units = wordnum.unit_nouns(sorted({
+            item['values']['unit'] for item in view['results'].values()
+            if isinstance(item.get('values'), Mapping)
+            and isinstance(item['values'].get('unit'), str)}))
         for slot, item in sorted(view['results'].items()):
             if item['values'] is None:
                 continue
@@ -215,10 +240,32 @@ class Pool:
                 self._literal('case', f['id'], f['value'])
 
     def _literal(self, kind: str, source: str, value: Any) -> None:
-        if isinstance(value, str) and ':' in value:     # "capacity:100", "threshold:0.3"
-            value = value.replace(':', ' ')
-        for v in _walk_numbers(value):
+        for v in _walk_numbers(_rule_spaced(value)):
             self.literal.append({'source': kind, 'id': source, 'value': v})
+
+    def trace_words(self, word: wordnum.WordNumber) -> tuple[str, dict | None]:
+        """Where a number written in words comes from (F3), like :meth:`trace`: a ratio
+        or a fraction matches at its own precision (:meth:`wordnum.WordNumber.matches`),
+        percentage points only a registered difference."""
+        points = word.kind == 'points'
+        for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
+                              (self.stale, 'stale')):
+            if points and label == 'literal':
+                continue
+            for item in bucket:
+                if points and not _is_difference(item['path']):
+                    continue
+                if word.matches(item['value'], literal=label == 'literal'):
+                    return label, item
+        return 'none', None
+
+    def retired_match(self, value: float, *, percent: bool = False) -> dict | None:
+        """The withdrawn or superseded proposal whose figure ``value`` repeats, if any."""
+        for item in self.retired:
+            v = 100 * item['value'] if percent else item['value']
+            if abs(v - value) < 1e-9:
+                return item
+        return None
 
     def trace(self, tok: cite.Token, *, difference: bool = False) -> tuple[str, dict | None]:
         """Where ``tok`` comes from. ``difference``: the token is written in percentage
@@ -235,6 +282,22 @@ class Pool:
                         and abs(item['value'] - tok.value) < 1e-9):
                     return label, item
         return 'none', None
+
+
+def _rule_spaced(value: Any) -> Any:
+    """A rule identifier with its colon spaced ("capacity 100"), so its figure is read."""
+    if isinstance(value, str) and ':' in value:     # "capacity:100", "threshold:0.3"
+        return value.replace(':', ' ')
+    return value
+
+
+def _retired_note(pool: 'Pool', value: float, percent: bool = False) -> tuple[str, dict]:
+    item = pool.retired_match(value, percent=percent)
+    if item is None:
+        return '', {}
+    return (f' It repeats a figure of the {item["status"]} proposal {item["proposal_id"]}, '
+            'which is no longer on the table: name that proposal without its figure.',
+            {'retired_proposal': item['proposal_id'], 'proposal_status': item['status']})
 
 
 def _masked(text: str) -> str:
@@ -262,12 +325,44 @@ def _result_id_prefix(pool: Pool, text: str, tok: cite.Token) -> bool:
     return any(rid.startswith(body) for rid in pool.result_ids)
 
 
+def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
+                 findings: list, traced: list) -> None:
+    """Trace one number written in words (F3) and record a finding or a trace."""
+    label, item = pool.trace_words(word)
+    shown = word.text.strip()
+    if label == 'current':
+        traced.append({'text': shown, 'result_id': item['result_id'], 'slot': item['slot'],
+                       'path': item['path'], 'value': item['value'], 'in_words': True})
+    elif label == 'literal':
+        traced.append({'text': shown, 'source': item['source'], 'id': item['id'],
+                       'value': item['value'], 'in_words': True})
+    elif label == 'stale':
+        findings.append(finding('stale_number', where,
+                                f'"{shown}" (a number written in words) matches only a stale '
+                                'result; recompute before citing it.', number=shown,
+                                in_words=True, result_id=item['result_id'], path=item['path']))
+    else:
+        note, extra = _retired_note(pool, word.value)
+        findings.append(finding('untraceable_number', where,
+                                f'"{shown}" is a number written in words ({word.kind}) that '
+                                'matches no current registry value. Cite the registered figure '
+                                'with its result_id instead of computing or rounding it into '
+                                'words.' + note, number=shown, in_words=True, kind=word.kind,
+                                value=word.value, **extra))
+
+
 def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict]]:
     findings, traced = [], []
     masked = _masked(text)
     identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
-    for tok in cite.parse_numbers(masked):
+    items = sorted([(t.start, 0, t) for t in cite.parse_numbers(masked)]
+                   + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
+                   key=lambda x: x[:2])
+    for _, in_words, tok in items:
         if _exempt(masked, tok):
+            continue
+        if in_words:
+            _trace_words(pool, masked, tok, where, findings, traced)
             continue
         difference = not tok.percent and bool(PERCENTAGE_POINTS.match(masked, tok.end))
         if difference:
@@ -293,10 +388,11 @@ def trace_text(pool: Pool, text: str, where: str) -> tuple[list[dict], list[dict
                                     'before citing it.', number=tok.text.strip(),
                                     result_id=item['result_id'], path=item['path']))
         else:
+            note, extra = _retired_note(pool, tok.value, percent=tok.percent)
             findings.append(finding('untraceable_number', where,
                                     f'{tok.text.strip()} matches no current registry value at its '
-                                    'displayed precision. Cite a result instead of computing.',
-                                    number=tok.text.strip()))
+                                    'displayed precision. Cite a result instead of computing.'
+                                    + note, number=tok.text.strip(), **extra))
     return findings, traced
 
 
@@ -314,7 +410,8 @@ def wording(text: str, where: str) -> list[dict]:
                                'Causal wording: the study shows associations and rankings, not '
                                'effects of acting.', phrase=m.group(0), sentence=sentence))
         m = FORECAST.search(sentence)
-        has_number = bool(cite.parse_numbers(_masked(sentence))) or '\x00num' in sentence
+        has_number = bool(cite.parse_numbers(_masked(sentence))) or '\x00num' in sentence \
+            or bool(wordnum.parse(sentence))
         if m and has_number and not NEGATION.search(sentence[:m.start()]) \
                 and not NEGATED_AFTER.match(sentence[m.end():]):
             out.append(finding('forecast_wording', where,
@@ -326,8 +423,24 @@ def wording(text: str, where: str) -> list[dict]:
 
 def check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
                result_ids: Iterable[str] | None = None) -> tuple[list[dict], list[dict]]:
-    findings, traced = trace_text(Pool(view, user_texts, result_ids), text, where)
+    return _check_text(view, text, where, user_texts, result_ids)
+
+
+def _check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
+                result_ids: Iterable[str] | None = None,
+                retired: Iterable[Mapping] = ()) -> tuple[list[dict], list[dict]]:
+    findings, traced = trace_text(Pool(view, user_texts, result_ids, retired), text, where)
     return findings + wording(text, where), traced
+
+
+def retired_proposals(study: read.Study) -> list[dict]:
+    """Withdrawn and superseded proposals of the study (F3): their figures are not
+    literals; a finding names the proposal when a draft repeats one of them."""
+    proposals = study.state.get('proposals') or {}
+    return [{'proposal_id': p.get('proposal_id', pid), 'status': p.get('status'),
+             'value': p.get('value')}
+            for pid, p in sorted(proposals.items())
+            if isinstance(p, Mapping) and p.get('status') in ('withdrawn', 'superseded')]
 
 
 # --- HTML -------------------------------------------------------------------------------
@@ -583,7 +696,8 @@ def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
     findings += check_features(view)
     conclusion = view['decisions']['conclusion']['value']
     if isinstance(conclusion, dict) and isinstance(conclusion.get('text'), str):
-        f, t = check_text(view, conclusion['text'], 'decision:conclusion')
+        f, t = _check_text(view, conclusion['text'], 'decision:conclusion',
+                           retired=retired_proposals(study))
         findings += f
         traced += t
     files = untracked_files(study.study_dir, declared_files(view))
@@ -634,8 +748,9 @@ def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()
     else:
         study = read.open(study_dir)
         view = view_model.build(study)
-        findings, traced = check_text(view, text, user_texts=user_texts,
-                                      result_ids=registry_ids(study))
+        findings, traced = _check_text(view, text, user_texts=user_texts,
+                                       result_ids=registry_ids(study),
+                                       retired=retired_proposals(study))
         target = 'text'
     counts = {'error': sum(f['severity'] == 'error' for f in findings),
               'warning': sum(f['severity'] == 'warning' for f in findings)}

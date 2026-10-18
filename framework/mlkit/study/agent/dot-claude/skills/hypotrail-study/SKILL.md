@@ -69,6 +69,10 @@ At each meaningful step, briefly:
    about.
 <!-- hypotrail:end -->
 
+Offer a menu of options (confirm, correct, delegate) once. If the next reply decides
+nothing, do not repeat the menu: ask one question, the open restatement with the
+shortest reply that settles it.
+
 <!-- hypotrail:task binary -->
 A difference or a count you mention is a registered value (the paired `deltas` of the
 policy evaluation) or the two registered figures side by side; never subtract, add, or
@@ -105,16 +109,17 @@ confirm it in their own words when they are ready.
 ## Resuming
 
 A plain "where are we?", in any chat, gets the same five-line answer as the resume
-command, from `status --summary` only, in at most five lines, goal first:
+command, from `status --summary` only, in at most five lines, goal first. The summary's
+`recap` is these five lines, generated from the state; quote it.
 
 1. **The goal first**, in one sentence (`goal.intended_use` and `goal.prediction_time`).
-2. **Where we are**: the step in plain words (its title, not its id) and the last
-   decision, quoting the junior's recorded words; say if it was delegated, needs
-   reconfirmation, or waits for their answer.
-3. **What matters next**: the excluded features by name, the figures the next step uses
-   with their `result_id`, and any stale result or interrupted execution.
-4. **The deliverables**: each one's status in a few words.
-5. **The next decision or action** with your recommended default.
+2. **Decisions made**: the confirmed decisions, with the excluded features by name; say
+   if one was delegated or needs reconfirmation.
+3. **Where we are**: the step in plain words (its title, not its id), and any
+   deliverable that is not up to date.
+4. **The next decision** with your recommended default; quote an open restatement as
+   recorded, keeping "illustrative" for a stand-in figure.
+5. **One limitation** from "What is not yet defensible".
 
 Never call an execution "in progress" unless this chat started it and it is still
 running. If the summary lists one under `executions.suspected_interrupted`, or

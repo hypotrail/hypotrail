@@ -34,14 +34,19 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    cite the registered value (a model-minus-baseline difference is in
    `policy.evaluation` under `rules.<rule>.deltas`), or write the two registered figures
    side by side without the arithmetic ("<N> selected with the threshold, <K> with the
-   capacity"). Example replies you suggest to the junior contain no invented figures:
+   capacity"). Numbers in words are numbers: no self-made counts or ratios in words
+   either ("one in nine", "the eleven columns"); `check` reads them. Name a withdrawn
+   or superseded proposal without its figure. Example replies you suggest to the junior contain no invented figures:
    write a placeholder such as <N> ("tell me how many clients the team can call, for
    example 'the team can call <N>'"), never a made-up number. A request that no activity
 <!-- hypotrail:task regression -->
    cite the registered value (the linear-model-minus-baseline difference of MAE and RMSE
    is in `evaluate.regression` under `deltas`), or write the two registered figures side
    by side without the arithmetic ("an MAE of <A> <unit> for the baseline, <B> <unit> for
-   the linear model"). Example replies you suggest to the junior contain no invented
+   the linear model"). Numbers in words are numbers: no self-made counts, shares, or
+   errors in words either ("the seven columns", "half of the rows", "about six <unit>");
+   `check` reads them, the target unit included. Name a withdrawn or superseded proposal
+   without its figure. Example replies you suggest to the junior contain no invented
    figures: write a placeholder such as <N> ("tell me which error would matter for your
    use, for example 'an error of <N> <unit>'"), never a made-up number. A request that no
    activity
@@ -128,6 +133,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
    Never write the user's words yourself, and never confirm from a quiz answer or a
    prediction.
+   Offer the options (confirm, correct, delegate) once; do not repeat the same option
+   menu on consecutive turns. After a reply that decides nothing, ask a single question:
+   the open restatement and the shortest reply that settles it.
 5. **Requests.** Use a fresh `--request-id` per intention (for example
    `chat2-split-propose`). After a timeout or an unclear outcome, replay the **same** id
    with the same arguments; never reuse an id for anything else. `--expected-revision`

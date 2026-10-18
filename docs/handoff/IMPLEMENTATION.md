@@ -18,7 +18,7 @@ On **Bank Marketing** (`use-cases/bank-marketing/case.yaml`) and on the **synthe
 4. change a capacity or threshold without refitting: the stored predictions are reused, and the adopted rule is always re-evaluated;
 5. resume in a new chat from the recorded state (`status --summary`), with a five-line recap;
 6. read one evolving offline HTML report (`reports/study.html`), where every number is a `<data data-result-id>` citation and a "What is not yet defensible" section lists the limits; read a generated read-only Marimo notebook (`notebooks/study_generated.py`), whose user edits are preserved as a copy before regeneration; experiment in `notebooks/workbench.py` (a policy slider labelled "Experiment, not adopted"; never overwritten, never recorded);
-7. check a draft message for untraceable numbers and causal or forecast wording (`hypotrail check --text -`).
+7. check a draft message for untraceable numbers and causal or forecast wording (`hypotrail check --text -`), including common numbers written in words (post-v0.1, F3).
 
 The engine guarantees, with tests: revisions and idempotent requests (stale requests refused with the diff, replays without effect), exposure tracking by row key (kept after a split change), invalidation per the plan's dependency table (a replaced result makes its descendants stale; changed code or sources are flagged), executions with leases (an interrupted run has an unknown outcome, is never restarted automatically, and its late result is not promoted), and a failed render that keeps the previous report marked stale.
 
@@ -30,7 +30,7 @@ uv run --project framework hypotrail init --case use-cases/bank-marketing/case.y
 cd /path/outside/the/repository/bank-study && claude          # then talk to the agent
 ```
 
-The agent uses the CLI, recorded in `.hypotrail/agent.json`: `status [--summary|--json]`, `plan`, `decide propose|confirm|withdraw`, `run <activity>`, `run --acknowledge-interruption`, `preview policy`, `check`, `render`. The full contract, with exit codes (0, 2 refusal, 3 stale or failed deliverable, 4 unknown outcome) and every schema, is [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md); the case format is [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md).
+The agent uses the CLI, recorded in `.hypotrail/agent.json`: `status [--summary|--json]`, `plan`, `decide propose|confirm|withdraw`, `run <activity>`, `run --acknowledge-interruption`, `preview policy`, `check`, `render`; and, for the facilitator of an observed session, the read-only `session-report`. The full contract, with exit codes (0, 2 refusal, 3 stale or failed deliverable, 4 unknown outcome) and every schema, is [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md); the case format is [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md).
 
 For the synthetic case:
 
@@ -72,12 +72,16 @@ Evaluation:
 Remaining defects from the acceptance reports (Claude Code, not fixed):
 
 - **F1 is fixed in the engine and the instructions, but not re-run agentically**: the S9 regression of the final check (a new chat called a killed run "in progress") is covered by `test_status_liveness.py`, not by a new agent run.
-- **F3 (T9, hallucinated number)**: agents still write self-made counts or ratios in words ("roughly one call in nine", "the 11 kept columns"), which `check` cannot see, and cite figures of withdrawn proposals, which `check` flags as untraceable. T9 failed in 2 of 3 final E1 runs.
-- **F5**: a repeated three-option menu across turns reads as bureaucratic; one resume dropped the "illustrative" caveat of a stand-in capacity.
-- **T8 (decision lost between chats)** rated partial in 3 of 3 final runs, **T1b (ambiguous availability)** partial in 1 of 3.
+- **F3 (T9, hallucinated number)**: T9 failed in 2 of 3 final E1 runs. Post-v0.1, `check` reads common English and French numbers written in words when used quantitatively ("one call in nine", "un sur neuf", "the eleven kept columns", "half of the rows"), and names the withdrawn or superseded proposal whose figure a draft repeats; rule 2 says numbers in words are numbers. Limits: cardinals above 100, vague quantities, and a cardinal without a listed count noun ("nine models") are not read; a ratio such as "one in nine" traces to a registered rate of about 1/9. **Not re-run agentically.**
+- **F5**: a repeated three-option menu across turns read as bureaucratic. Post-v0.1, rule 4 and the skill say to offer the menu once, then ask a single question. **Not re-run agentically.**
+- **T8 (decision lost between chats)** rated partial in 3 of 3 final runs. Post-v0.1, `status --summary` has a five-line `recap` generated from state (goal, decisions with excluded features, position, next decision quoting an open restatement, one limit), which the resume command and the skill quote. **Not re-run agentically.** **T1b (ambiguous availability)** partial in 1 of 3.
 - `delegation_scope` is shown in `status`, the summary, and the text output, but not in the HTML or the notebook.
 - `status --json` is large (tens of kilobytes); agents are told to use `status --summary`.
 - The HTML report and notebook show execution liveness as `not_checked`; only `status` probes leases.
+
+## Observation kit (post-v0.1)
+
+For 2 or 3 sessions with human junior developers, run later by the owner: [the protocol](../research/OBSERVATION-PROTOCOL.md) and its [templates](../research/observation/) (observation grid, comprehension test with answer key, consent form, session log). Instrumentation: `hypotrail session-report --study S [--since REV]` (read-only, content-free timeline, `--format text` for Markdown) and the opt-in session log (`HYPOTRAIL_SESSION_LOG=1` once; [CLI-CONTRACT.md §8.6](../specs/CLI-CONTRACT.md#86-session-report-and-session-log-post-v01-observation-kit)). No session has been run.
 
 ## Validation
 
@@ -102,4 +106,4 @@ The legacy pilot (`framework/mlkit/pilot.py` and its modules) is unchanged apart
 
 ## Next work
 
-Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions; F3 in `check`; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3); a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.
+Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions (now also covering the post-v0.1 F3, F5, and T8 changes); the observed junior sessions of the observation kit; an agentic run of the regression workflow on Auto MPG (the engine side is done, M3); a grouped split; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.
