@@ -420,8 +420,25 @@ def test_text_format_and_unknown_extension(study, work):
                           env=_env(), timeout=60)
     assert proc.returncode == 0 and 'at revision 1' in proc.stdout
     assert 'next action: propose' in proc.stdout
-    code, out = hyp('render', '--study', study, cwd=work)
-    assert code == 2 and out['error']['code'] == 'unsupported_capability'
+    # Extension commands whose module is absent are refused (Phase 3 added render and
+    # check, so the refusal is exercised on whichever extension is still missing, and on
+    # a module that never exists).
+    import importlib.util
+    from mlkit.study import cli
+    for name, module in cli.EXTENSIONS.items():
+        if importlib.util.find_spec(module) is None:
+            code, out = hyp(name, '--study', study, cwd=work)
+            assert code == 2 and out['error']['code'] == 'unsupported_capability'
+    saved = dict(cli.EXTENSIONS)
+    cli.EXTENSIONS['render'] = 'mlkit.study.cmd_absent_for_test'
+    try:
+        outcome = cli.run(['render', '--study', str(study)])
+    finally:
+        cli.EXTENSIONS.clear()
+        cli.EXTENSIONS.update(saved)
+    assert outcome.exit_code == 2
+    assert outcome.payload['error']['code'] == 'unsupported_capability'
+    assert outcome.payload['error']['details'] == {'command': 'render'}
 
 
 def test_console_script_is_installed():

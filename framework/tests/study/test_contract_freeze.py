@@ -92,7 +92,9 @@ ERROR_CODES = {
     'invalid_value', 'literal_number_in_text', 'ambiguous_confirmation', 'precondition_missing',
     'unknown_proposal', 'proposal_not_open', 'unknown_result', 'invalid_result', 'unknown_module',
     'invalid_exposure', 'no_predictions', 'invalid_state', 'invalid_confirmation',
-    'lease_exists', 'lease_held'}
+    'lease_exists', 'lease_held',
+    # Phase 3 (WP3.1-WP3.4)
+    'untraceable_number', 'read_only_process'}
 RESERVED_CODES = {'interrupted_execution_pending', 'unknown_execution'}
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
@@ -107,6 +109,27 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'validation_model_evaluation', 'validation_policy_selection')
 EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'check': 'mlkit.study.cmd_check', 'preview': 'mlkit.study.cmd_preview'}
+# Phase 3 (WP3.1-WP3.4): render and check payloads, the artefact manifest, check findings.
+PHASE3_SCHEMAS = {'render': 'hypotrail.render/1', 'check': 'hypotrail.check/1',
+                  'artifacts': 'hypotrail.artifacts/1'}
+PHASE3_PAYLOAD_KEYS = {
+    'render': ('schema', 'ok', 'study', 'revision', 'status', 'artifacts'),
+    'check': ('schema', 'ok', 'study', 'revision', 'target', 'clean', 'counts', 'findings',
+              'traced'),
+}
+ARTIFACT_NAMES = {'report': 'reports/study.html', 'notebook': 'notebooks/study_generated.py',
+                  'workbench': 'notebooks/workbench.py'}
+MANIFEST_ITEM_KEYS = ('path', 'kind', 'revision', 'status', 'consumed', 'sha256', 'generated',
+                      'template_version', 'error', 'last_ok_revision', 'user_edits_preserved',
+                      'candidate')
+CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error',
+                  'value_mismatch': 'error', 'stale_result_cited': 'error',
+                  'feature_without_status': 'error', 'excluded_feature_used': 'error',
+                  'untraceable_number': 'error', 'stale_number': 'error',
+                  'causal_wording': 'warning', 'forecast_wording': 'warning',
+                  'artifact_not_current': 'warning', 'untracked_files': 'warning'}
+LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
+                 'identifier', 'parameter', 'environment', 'setting', 'message', 'category')
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
                   'migrate', 'preconditions'}
 
@@ -307,6 +330,28 @@ def test_extension_modules_are_absent_in_phase_1_or_follow_the_interface():
             continue
         loaded = importlib.import_module(module)
         assert callable(getattr(loaded, 'configure')) and callable(getattr(loaded, 'main')), name
+
+
+def test_phase3_render_and_check_contract():
+    import importlib
+    import importlib.util
+    if any(importlib.util.find_spec(f'mlkit.study.{m}') is None
+           for m in ('cmd_render', 'cmd_check')):
+        pytest.skip('Phase 3 render and check are not present')
+    from mlkit.study import cmd_check, cmd_render, manifest, render_html
+    assert cmd_render.SCHEMA == PHASE3_SCHEMAS['render']
+    assert cmd_check.SCHEMA == PHASE3_SCHEMAS['check']
+    assert manifest.SCHEMA == PHASE3_SCHEMAS['artifacts']
+    assert manifest.ARTIFACTS == ARTIFACT_NAMES and manifest.ITEM_KEYS == MANIFEST_ITEM_KEYS
+    assert cmd_check.SEVERITY == CHECK_FINDINGS
+    assert render_html.LITERAL_KINDS == LITERAL_KINDS
+    assert cmd_render.FAULTS == ('render_html', 'render_notebook')
+    assert (cmd_render.FAULT_ENV, cmd_render.HOOKS_ENV) == ('HYPOTRAIL_FAULT', 'HYPOTRAIL_TEST_HOOKS')
+    assert [n for n, _ in _params(cmd_render.after_commit)] == ['study_dir', 'payload']
+    keys = (set(PHASE3_SCHEMAS.values()) | set(CHECK_FINDINGS) | set(LITERAL_KINDS)
+            | set(MANIFEST_ITEM_KEYS) | set(ARTIFACT_NAMES)
+            | {k for keys in PHASE3_PAYLOAD_KEYS.values() for k in keys})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
 def test_read_side_never_imports_writer_modules():

@@ -36,7 +36,7 @@ hypotrail decide withdraw PROPOSAL [--reason TEXT]
                  --request-id ID --expected-revision REV --study DIR
 ```
 
-`--channel` defaults to `chat` and `--actor` to `user`. Reserved extension commands, absent in Phase 1 and refused with `unsupported_capability` until their module exists: `run`, `render`, `check`, `preview` (§8).
+`--channel` defaults to `chat` and `--actor` to `user`. Reserved extension commands, absent in Phase 1 and refused with `unsupported_capability` until their module exists: `run`, `render`, `check`, `preview` (§8). Phase 3 adds `render` and `check` (§8.3).
 
 ## 2. Exit codes
 
@@ -216,6 +216,8 @@ Stable codes. Clients branch on `error.code`; messages may change.
 | `invalid_state` | state | A state that does not follow `hypotrail.study/1` (refused before any write) |
 | `invalid_confirmation` | state | An incomplete confirmation record |
 | `lease_exists`, `lease_held` | lock | Execution lease conflicts |
+| `untraceable_number` | cite, renderers | A number cannot be traced to a current registry result (unknown or non-current result id, missing path, non-numeric value, unknown format). The render of that artefact fails; it is never written with the number (§8.3) |
+| `read_only_process` | guard, `render` | The process runs with `HYPOTRAIL_READ_ONLY=1` (a notebook kernel) and may not render or write |
 
 Reserved for Phase 2 (§8.1), not yet emitted: `interrupted_execution_pending`, `unknown_execution`.
 
@@ -295,6 +297,25 @@ study.artifacts() -> dict | None                  # .hypotrail/artifacts.json
 * The manifest lives at `.hypotrail/artifacts.json` (plan §3.6) with `{"status": …, "artifacts": {name: {...}}}`; `view.artifacts` exposes it as `{manifest, status, items}`.
 * `framework/mlkit/study/cmd_check.py` provides `hypotrail check` with the same `configure`/`main` interface.
 * Teaching texts belong in `mlkit/study/content/*.yaml`, not in this contract.
+
+Added by Phase 3 (WP3.1–WP3.4), within these extension points:
+
+```text
+hypotrail render --study DIR
+hypotrail check --study DIR [--text PATH | --text -]
+```
+
+| Schema | Emitted by | Keys |
+|---|---|---|
+| `hypotrail.render/1` | `render` | `schema`, `ok`, `study`, `revision`, `status`, `artifacts` |
+| `hypotrail.check/1` | `check` | `schema`, `ok`, `study`, `revision`, `target`, `clean`, `counts`, `findings`, `traced` |
+| `hypotrail.artifacts/1` | `.hypotrail/artifacts.json` | `schema`, `revision`, `status`, `artifacts` |
+
+* Artefact names: `report` (`reports/study.html`), `notebook` (`notebooks/study_generated.py`), `workbench` (`notebooks/workbench.py`). A manifest item has `path`, `kind`, `revision`, `status`, `consumed`, `sha256`, `generated`, `template_version`, `error`, `last_ok_revision`, `user_edits_preserved`, `candidate`. An artefact is current iff `status` is `ok`, `revision` equals the state revision, and every result in `consumed` is current; the workbench (`generated: false`) is never stale.
+* `render.artifacts` and `decide.artifacts` map each artefact name to `{status, path, revision, last_ok_revision, error}`, plus `tracked: false` for the workbench and `candidate` or `user_edits_preserved` when present. `status` is `ok`, `stale`, or `failed`; `render` exits `3` when any artefact is `stale` or `failed`, and refuses with `read_only_process` in a read-only process. `error` is `{code, message}`; `code` is `render_failed` for an unexpected failure or a refusal code such as `untraceable_number`.
+* On a failed HTML render the previous `reports/study.html` is kept and a banner replaces the region `<!--hypotrail:banner-->…<!--/hypotrail:banner-->`. Fault injection for tests: `HYPOTRAIL_FAULT=render_html|render_notebook` (comma-separated), honoured only when `HYPOTRAIL_TEST_HOOKS=1`.
+* HTML numbers are `<data value data-result-id data-path title>` elements. Text shown as recorded rather than computed is wrapped in an element with `data-literal` ∈ `revision`, `ordinal`, `user_words`, `proposal`, `decision_value`, `case`, `identifier`, `parameter`, `environment`, `setting`, `message`, `category`; `check` ignores numbers there.
+* `check` always exits `0`; `clean` is false when a finding has severity `error`. A finding is `{code, severity, where, message, details?}`. Codes (severity): `number_outside_result`, `unknown_result_id`, `value_mismatch`, `stale_result_cited`, `feature_without_status`, `excluded_feature_used`, `untraceable_number`, `stale_number` (error); `causal_wording`, `forecast_wording`, `artifact_not_current`, `untracked_files` (warning). `traced` lists each number of the checked text with the `result_id` and `path` (or the decision, setting, or case statement) it matched.
 
 ### 8.4 Agent instructions (Phase 4)
 
