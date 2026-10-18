@@ -393,6 +393,30 @@ def test_literal_numbers_in_text_are_refused(study, work):
     assert cmd.literal_numbers('Split 70/30, seed 20261017.', SPLIT) == []
 
 
+def test_numbers_of_current_results_may_be_cited_in_a_proposal(tmp_path, synthetic_case_dir):
+    """D5: a restatement may repeat the figures of a current registry result it rests on,
+    traced with the matcher of ``check``; a figure of no current result is still refused,
+    and a result that became stale no longer counts."""
+    import flowkit as fk
+
+    study = fk.prepare(synthetic_case_dir, tmp_path / 's', upto='split')
+    flow = fk.Flow(study, synthetic_case_dir, prefix='d5-')
+    train = flow.view()['results']['split']['values']['partitions']['train']
+    text = (f'Predict before the first contact; the split kept {train["n_rows"]:,} training rows '
+            f'with a rate of {100 * train["rate"]:.1f}%.')
+    payload = flow.call('decide', 'propose', 'prediction_time', '--value', 'before the contact',
+                        '--restatement', text, '--rationale', 'The split is recorded.',
+                        '--request-id', flow.rid(), '--expected-revision', flow.rev(),
+                        '--study', study)
+    assert payload['result']['restatement'] == text
+    refused = flow.call('decide', 'propose', 'prediction_time', '--value', 'before the contact',
+                        '--restatement', text + ' About 4321 clients answer.',
+                        '--rationale', 'x', '--request-id', flow.rid(),
+                        '--expected-revision', flow.rev(), '--study', study, expect=2)
+    assert refused['error']['code'] == 'literal_number_in_text'
+    assert refused['error']['details']['numbers'] == ['4321']
+
+
 def test_changed_dataset_is_refused_at_confirmation(tmp_path, work, synthetic_case_dir):
     case_dir = tmp_path / 'case'
     shutil.copytree(synthetic_case_dir, case_dir)

@@ -164,15 +164,47 @@ def _value_numbers(value: Any) -> set[float]:
     return found
 
 
-def literal_numbers(text: str, value: Any) -> list[str]:
-    """Numbers written in ``text`` that do not come from ``value``.
+def literal_numbers(text: str, value: Any, pool=None) -> list[str]:
+    """Numbers written in ``text`` that come neither from ``value`` nor from ``pool``.
 
     A proposal's restatement and rationale may repeat the numbers of the proposed
-    value; any other number must come from a registry result, never from free text.
+    value, and the figures of current registry results it rests on ("115 selected"),
+    traced with the matcher of ``hypotrail check`` (``pool`` is a
+    :class:`mlkit.study.cmd_check.Pool` of the current results). Any other number is
+    free text and is refused.
     """
+    from . import cite
+
     allowed = _value_numbers(value)
-    return sorted({m for m in NUMBER.findall(text)
-                   if round(float(m.replace(',', '.')), 6) not in allowed})
+    tokens = cite.parse_numbers(text) if pool is not None else []
+    out = set()
+    for m in NUMBER.finditer(text):
+        if round(float(m.group().replace(',', '.')), 6) in allowed:
+            continue
+        if any(t.start <= m.start() < t.end and pool.trace(t)[0] == 'current' for t in tokens):
+            continue
+        out.add(m.group())
+    return sorted(out)
+
+
+def current_results_pool(store: StudyStore, state: Mapping):
+    """A number pool of the current, verified registry results only (no literals): what a
+    proposal's text may cite besides its own value (D5)."""
+    from . import cmd_check, registry
+
+    results = {}
+    for slot, rid in sorted(state['current'].items()):
+        if not st.is_current(state, slot):
+            continue
+        try:
+            entry = registry.get(store, rid)
+        except StudyError:
+            continue
+        results[slot] = {'result_id': rid, 'values': entry['output']['values'],
+                         'n_rows': entry['n_rows'], 'current': True, 'integrity': 'ok',
+                         'activity': entry['activity'], 'params': entry['params']}
+    return cmd_check.Pool({'results': results, 'decisions': {}, 'open_proposals': [],
+                           'settings': {}, 'dataset': {}, 'facts': {'by_status': {}}})
 
 
 def _invalid(message: str, **details) -> CommandRefused:
@@ -272,16 +304,22 @@ def _propose(ctx: Context) -> Handler:
         for key in ('restatement', 'rationale'):
             if not isinstance(params[key], str) or not params[key].strip():
                 raise _invalid(f'{key} is a non-empty string.', field=key)
-            found = literal_numbers(params[key], params['value'])
-            if found:
-                raise CommandRefused('literal_number_in_text',
-                                     f'The {key} contains numbers that are not part of the '
-                                     f'proposed value. Cite results by their result_id instead.',
-                                     details={'field': key, 'numbers': found})
 
     def run(state, params):
         decision_id, value = params['decision_id'], params['value']
         validate_value(state, decision_id, value)
+        pool = None
+        for key in ('restatement', 'rationale'):
+            if not literal_numbers(params[key], value):
+                continue
+            pool = pool or current_results_pool(ctx.store, state)
+            found = literal_numbers(params[key], value, pool)
+            if found:
+                raise CommandRefused('literal_number_in_text',
+                                     f'The {key} contains numbers that are neither part of the '
+                                     f'proposed value nor a figure of a current result. Repeat '
+                                     f'only registered figures, or cite results by their '
+                                     f'result_id.', details={'field': key, 'numbers': found})
         revision = state['revision'] + 1
         superseded = []
         for p in st.open_proposals(state):

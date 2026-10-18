@@ -140,7 +140,7 @@ Proposal rules:
 
 * A proposal is first-class: `{proposal_id, decision_id, value, restatement, rationale, revision, status, created, request_id, basis}`; status ∈ `open`, `confirmed`, `withdrawn`, `superseded`. `basis` holds the confirmed values of the decisions it depends on.
 * Proposing never changes a confirmed decision. A new proposal supersedes an older open one for the same decision.
-* The restatement and rationale may only contain numbers that appear in the proposed value (a fraction may also appear as a percentage); anything else is `literal_number_in_text`.
+* The restatement and rationale may only contain numbers that appear in the proposed value (a fraction may also appear as a percentage), or figures of a current, verified registry result, traced with the matcher of `hypotrail check` (`cmd_check.Pool`, current results only, at their displayed precision: "115 selected", "11.5%"); anything else is `literal_number_in_text`. Since the post-acceptance fixes (D5) this check runs on the state the proposal is made against.
 
 Confirmation rules (`ambiguous_confirmation`, with `details.reason`):
 
@@ -203,7 +203,7 @@ Stable codes. Clients branch on `error.code`; messages may change.
 | `unsupported_capability` | case, data, CLI | A capability this version does not have (`details.reasons` or `details.command`) |
 | `unknown_decision` | `decide propose` | Decision id not in the five |
 | `invalid_value` | `decide` | The value does not fit the decision (§5) |
-| `literal_number_in_text` | `decide propose` | A number in the restatement or rationale is not part of the value (`details.numbers`) |
+| `literal_number_in_text` | `decide propose` | A number in the restatement or rationale is neither part of the value nor a figure of a current result (`details.numbers`) |
 | `ambiguous_confirmation` | `decide confirm` | §5, `details.reason` |
 | `precondition_missing` | `decide confirm`, activities | A pause precondition is unmet (`details.missing`) |
 | `unknown_proposal` | `decide withdraw` | No such proposal |
