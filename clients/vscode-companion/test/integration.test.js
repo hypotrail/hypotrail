@@ -176,17 +176,19 @@ test('withdraw through the panel', { skip }, async () => {
   assert.equal(snapshot().model.proposals.length, 0);
 });
 
-test('stage v1 on an engine without C1: the summary falls back to the v0 read', { skip }, async () => {
+// WP-E1 implemented C1: at stage v1 the summary is read once, with --digest (the v0
+// fallback on a not_implemented refusal is covered by the controller unit tests).
+test('stage v1 on an engine with C1: the summary is read with the digest', { skip }, async () => {
   const { c, posted, snapshot } = controller({ stage: 'v1' });
   await c.handle({ v: 2, type: 'ready' });
   assert.equal(posted[0].type, 'init');
   assert.equal(posted[0].stage, 'v1');
   assert.ok(snapshot(), JSON.stringify(posted));
-  assert.equal(snapshot().model.digest, null);
-  assert.deepEqual(c.diagnostics().commands.filter(x => x.startsWith('status')), ['status --summary', 'status --summary']);
+  assert.notEqual(snapshot().model.digest, null);
+  assert.deepEqual(c.diagnostics().commands.filter(x => x.startsWith('status')), ['status --summary']);
 });
 
-test('the WP-0 engine stubs answer a load with the not_implemented refusal; v0 gates them', { skip }, async () => {
+test('v0 gates a v1 load, and the real decisions command answers it (WP-E1)', { skip }, async () => {
   const v0 = controller();
   await v0.c.handle({ v: 2, type: 'load', view: 'decisions' });
   assert.equal(v0.c.diagnostics().ignored, 1, 'a v1 message is ignored at stage v0');
@@ -201,9 +203,9 @@ test('the WP-0 engine stubs answer a load with the not_implemented refusal; v0 g
   assert.match(err.message, /Not available in this stage/);
   assert.equal(none.diagnostics().commands.length, 0);
   const v1 = controller({ stage: 'v1' });
-  // The real stub answers through ctx.read with its refusal (CLI-CONTRACT-COMPANION §13).
+  // WP-E1 replaced the decisions stub: the real command answers through ctx.read.
   const res = await v1.c.context.read('decisions', v1.c.context.cli.decisionsArgv(agent), p => p);
-  assert.equal(res.ok, false);
-  assert.equal(res.refusal.code, 'unsupported_capability');
-  assert.equal(res.refusal.reason, 'not_implemented');
+  assert.equal(res.ok, true, JSON.stringify(res));
+  assert.equal(res.model.schema, 'hypotrail.decisions/1');
+  assert.equal(res.model.task, 'binary');
 });

@@ -19,9 +19,9 @@ Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlo
 
     hypotrail session-report --study DIR [--since REV] [--gap-minutes M]
 
-Advanced companion (``docs/specs/CLI-CONTRACT-COMPANION.md``; reserved by WP-0, each
-refused with ``unsupported_capability``, ``details.reason: not_implemented``, until its
-engine work package lands)::
+Advanced companion (``docs/specs/CLI-CONTRACT-COMPANION.md``; a command still reserved
+is refused with ``unsupported_capability``, ``details.reason: not_implemented``, until its
+engine work package lands; C1, C2, C3, and C9 are implemented)::
 
     hypotrail status --study DIR --summary --digest [--since REV]       (C1, WP-E1)
     hypotrail decisions --study DIR                                     (C2, WP-E1)
@@ -60,7 +60,7 @@ from mlkit.reliability import CommandRefused
 from . import commands as cmd
 from . import state as st
 from .case import CaseError
-from .errors import StudyError, not_implemented
+from .errors import StudyError
 
 EXTENSIONS = {
     'run': 'mlkit.study.cmd_run',          # Phase 2: activities, executions (WP2.x)
@@ -193,10 +193,10 @@ def _decide(args) -> cmd.Outcome:
                                               'restatement': args.restatement,
                                               'rationale': args.rationale}
         # C9: ``channel`` is passed only when it is not ``chat``, so every earlier request
-        # keeps its identity (a replay stays a replay). WP-0 reserves the option; WP-E1
-        # passes ``params['channel'] = args.channel`` here and validates it.
+        # keeps its identity (a replay stays a replay).
         if args.channel not in (None, cmd.DEFAULT_CHANNEL):
-            raise not_implemented('decide propose --channel')
+            cmd.check_channel(args.channel)
+            params['channel'] = args.channel
     elif args.verb == 'confirm':
         action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id,
                                               'user_words': args.user_words,
@@ -224,10 +224,8 @@ def dispatch(args) -> cmd.Outcome:
     if args.command == 'status':
         if args.digest and not args.summary:
             raise ArgumentError('--digest requires --summary')
-        if args.digest:
-            # C1 (CLI-CONTRACT-COMPANION §1), reserved by WP-0; WP-E1 implements it.
-            raise not_implemented('status --summary --digest')
-        return cmd.status(args.study, since=args.since, summary=args.summary)
+        return cmd.status(args.study, since=args.since, summary=args.summary,
+                          digest=args.digest)
     if args.command == 'plan':
         return cmd.plan(args.study)
     if args.command == 'decide':

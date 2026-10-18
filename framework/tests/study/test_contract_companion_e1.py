@@ -1,14 +1,13 @@
-# Contract tests of the advanced companion, WP-E1 part (C1, C2, C3, C9). Written by WP-0.
-# WP-E1 removes the ``E1`` markers of this file only, and deletes
-# ``test_wp0_stubs_refuse_until_e1``, whose stubs it replaces. Nothing else changes here
-# without the integrator (docs/plans/COMPANION-ADVANCED-PLAN.md §2.1).
+# Contract tests of the advanced companion, WP-E1 part (C1, C2, C3, C9). Written by WP-0;
+# WP-E1 removed its ``E1`` markers and the WP-0 stub test it replaced. Nothing else changes
+# here without the integrator (docs/plans/COMPANION-ADVANCED-PLAN.md §2.1).
 """CLI-CONTRACT-COMPANION C1 (``status --summary --digest``), C2 (``decisions``), C3
 (``preview effects``), C9 (``decide propose --channel``), with R1 and R3.
 
-The ``E1``-marked tests are strict ``xfail``: they fail until WP-E1 lands, and a feature
-that is implemented while its marker stays fails the gate. The unmarked tests pass now and
-stay: ``status --summary`` without ``--digest`` is byte-identical to its golden output,
-``--digest`` requires ``--summary``, and a request recorded before C9 replays.
+WP-E1 implemented C1, C2, C3, and C9, so these tests are no longer marked ``xfail``. The
+first three were permanent from WP-0: ``status --summary`` without ``--digest`` is
+byte-identical to its golden output, ``--digest`` requires ``--summary``, and a request
+recorded before C9 replays.
 """
 from __future__ import annotations
 
@@ -21,8 +20,6 @@ import companion_contract as cc
 import flowkit as fk
 from mlkit.study import read
 
-E1 = pytest.mark.xfail(strict=True, reason='WP-E1: C1, C2, C3, C9 are not implemented yet')
-
 
 @pytest.fixture(scope='module')
 def binary(tmp_path_factory, synthetic_case_dir):
@@ -34,28 +31,7 @@ def clone(binary, tmp_path):
     return fk.Flow(fk.clone(binary.study, tmp_path / 'study'), binary.case_dir, prefix='k')
 
 
-# --- passes now, and stays ------------------------------------------------------------------
-
-def test_wp0_stubs_refuse_until_e1(binary):
-    """WP-0 stubs (CC §13): refused with ``unsupported_capability``, nothing written.
-    WP-E1 deletes this test with the stubs it replaces."""
-    s = binary.study
-    pid = cc.open_proposal(binary, 'policy')
-    before = cc.study_tree_digest(s)
-    checks = [
-        (('status', '--summary', '--digest'), 'status --summary --digest'),
-        (('decisions',), 'decisions'),
-        (('preview', 'effects', pid), 'preview effects'),
-        (('decide', 'propose', 'policy', '--value', cc.POLICY_RULE, '--restatement',
-          'You decide the policy as stated.', '--rationale', 'It fits.', '--channel', 'webview',
-          '--request-id', 'stub-webview', '--expected-revision', binary.rev()),
-         'decide propose --channel'),
-    ]
-    for argv, command in checks:
-        code, payload = cc.run(*argv, '--study', s)
-        assert code == 2 and cc.not_implemented(payload, command), payload
-    assert cc.study_tree_digest(s) == before
-
+# --- permanent since WP-0 --------------------------------------------------------------------
 
 def test_digest_requires_summary(binary):
     code, payload = cc.run('status', '--digest', '--study', binary.study)
@@ -89,7 +65,6 @@ def test_a_request_recorded_before_c9_replays(clone):
 
 # --- C1 ------------------------------------------------------------------------------------
 
-@E1
 def test_c1_digest_keys_moments_pauses_and_last_session(binary):
     code, p = cc.run('status', '--summary', '--digest', '--study', binary.study)
     assert code == 0, p
@@ -124,7 +99,6 @@ def test_c1_digest_keys_moments_pauses_and_last_session(binary):
     assert pids and all(tuple(o)[-1] == 'origin' for o in p['open_proposals'])
 
 
-@E1
 def test_c1_since_bounds(binary):
     rev = binary.rev()
     code, p = cc.run('status', '--summary', '--digest', '--since', rev, '--study', binary.study)
@@ -139,7 +113,6 @@ def test_c1_since_bounds(binary):
 
 # --- R1, R3 (C1, C2, C3) -----------------------------------------------------------------
 
-@E1
 def test_e1_reads_are_read_only_and_import_no_heavy_module(binary, tmp_path):
     study = fk.clone(binary.study, tmp_path / 'ro study')
     pid = cc.open_proposal(fk.Flow(study, binary.case_dir), 'policy')
@@ -154,7 +127,6 @@ def test_e1_reads_are_read_only_and_import_no_heavy_module(binary, tmp_path):
 
 # --- C2 ------------------------------------------------------------------------------------
 
-@E1
 def test_c2_decisions_keys(binary):
     code, p = cc.run('decisions', '--study', binary.study)
     assert code == 0, p
@@ -180,7 +152,6 @@ def test_c2_decisions_keys(binary):
 
 # --- C3 ------------------------------------------------------------------------------------
 
-@E1
 def test_c3_preview_effects_keys_and_equality_with_the_confirmation(clone):
     pid = cc.open_proposal(clone, 'policy')
     before = cc.study_tree_digest(clone.study)
@@ -205,7 +176,6 @@ def test_c3_preview_effects_keys_and_equality_with_the_confirmation(clone):
         k: invalidation[k] for k in cc.PREVIEW_EQUALS_INVALIDATION}
 
 
-@E1
 def test_c3_refusals(binary):
     code, p = cc.run('preview', 'effects', 'p_999', '--study', binary.study)
     assert code == 2 and cc.refusal(p)[0] == 'unknown_proposal', p
@@ -220,7 +190,6 @@ def test_c3_refusals(binary):
 
 # --- C9 ------------------------------------------------------------------------------------
 
-@E1
 def test_c9_channel_webview_stores_the_origin(clone):
     rev = clone.rev()
     code, p = cc.run('decide', 'propose', 'policy', '--value', cc.POLICY_RULE, '--restatement',

@@ -683,3 +683,345 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
     }
+
+
+# --- the digest of the advanced companion (CLI-CONTRACT-COMPANION §1, C1) -------------
+
+# ``status --summary --digest`` appends these keys after ``recap``, in this order.
+DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task')
+MOMENT_KEYS = ('id', 'title', 'steps')
+PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
+LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
+DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts')
+DIGEST_ITEM_KEYS = ('revision', 'time', 'action', 'kind', 'decision_id', 'proposal_id', 'note_id',
+                    'activity', 'slot', 'result_id', 'execution_id', 'rules', 'column', 'channel',
+                    'basis', 'delegation_scope', 'superseded', 'invalidation', 'text')
+DIGEST_KINDS = ('proposed', 'confirmed', 'withdrawn', 'hold_recorded', 'hold_resolved',
+                'result_added', 'result_replaced', 'run_failed', 'run_interrupted',
+                'interruption_acknowledged', 'other')
+DIGEST_INVALIDATION_KEYS = ('mutation', 'row', 'stale_slots', 'reconfirm_required', 'refit',
+                            'kept_fits')
+DIGEST_COUNT_KEYS = ('proposed', 'confirmed', 'withdrawn', 'holds_recorded', 'holds_resolved',
+                     'results_added', 'results_replaced', 'runs_started', 'runs_failed',
+                     'invalidations')
+# The gap that separates two working sessions: the default of ``session-report
+# --gap-minutes``. Recorded commit times are compared with each other, never with the clock.
+SESSION_GAP_MINUTES = 20
+# The digest lists the newest items only (``truncated`` says older ones were dropped).
+DIGEST_MAX_ITEMS = 50
+# Invalidations recorded only when they invalidate something (``dependencies``).
+_QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced', 'hold_added')
+_RESERVE, _PROMOTE = 'run.reserve', 'run.promote'
+_KIND_OF_ACTION = {'decide.propose': 'proposed', 'decide.confirm': 'confirmed',
+                   'decide.withdraw': 'withdrawn', 'decide.note': 'hold_recorded',
+                   'decide.resolve_note': 'hold_resolved', 'decide.withdraw_note': 'hold_resolved',
+                   'run.fail': 'run_failed', 'run.recover': 'run_interrupted',
+                   'run.acknowledge': 'interruption_acknowledged'}
+_COUNT_OF_KIND = {'proposed': 'proposed', 'confirmed': 'confirmed', 'withdrawn': 'withdrawn',
+                  'hold_recorded': 'holds_recorded', 'hold_resolved': 'holds_resolved',
+                  'result_added': 'results_added', 'result_replaced': 'results_replaced',
+                  'run_failed': 'runs_failed'}
+
+
+def moments(task: str) -> list[dict]:
+    """The four moments of the plan (``content/steps.yaml``, ``moments``)."""
+    from . import texts
+
+    data = texts.load('steps')
+    overlay = data.get('regression_moments', {}) if task == st.REGRESSION else {}
+    return [{'id': m['id'], 'title': m['title'], 'steps': list(overlay.get(m['id'], m['steps']))}
+            for m in data['moments']]
+
+
+def pause_decisions(state) -> dict[int, list[str]]:
+    """``{pause: [decision ids]}`` from the plan's steps (as ``session-report``)."""
+    out: dict[int, list[str]] = {}
+    for step in st.steps(state):
+        if step.get('pause') and step.get('decision'):
+            out.setdefault(step['pause'], []).append(step['decision'])
+    return dict(sorted(out.items()))
+
+
+def pauses(state: dict) -> list[dict]:
+    """Each pause with its decisions; ``closed`` when every one of them is confirmed."""
+    out = []
+    for number, ids in pause_decisions(state).items():
+        confirmed = [d for d in ids if state['decisions'][d]['status'] == 'confirmed']
+        out.append({'pause': number, 'decisions': list(ids),
+                    'status': 'closed' if len(confirmed) == len(ids) else 'open',
+                    'confirmed': confirmed})
+    return out
+
+
+def _time(text):
+    import datetime as dt
+
+    try:
+        return dt.datetime.fromisoformat(str(text))
+    except (TypeError, ValueError):
+        return None
+
+
+def last_session(records: list[dict]) -> dict:
+    """The last revision before the latest gap of more than :data:`SESSION_GAP_MINUTES`
+    between two consecutive commit times, with that gap in whole minutes; revision 1 and
+    a null gap when the study was worked on in one session."""
+    first = next((r for r in records if r.get('revision') == 1), records[0] if records else None)
+    out = {'boundary_revision': 1, 'boundary_time': first.get('time') if first else None,
+           'gap_minutes': None}
+    for a, b in zip(records, records[1:]):
+        ta, tb = _time(a.get('time')), _time(b.get('time'))
+        if ta is None or tb is None:
+            continue
+        seconds = (tb - ta).total_seconds()
+        if seconds > SESSION_GAP_MINUTES * 60:
+            out = {'boundary_revision': a['revision'], 'boundary_time': a.get('time'),
+                   'gap_minutes': int(seconds // 60)}
+    return out
+
+
+class _Texts:
+    """The digest sentences of ``content/digest.yaml`` for one task."""
+
+    def __init__(self, task: str):
+        from . import texts
+
+        data = texts.load('digest')
+        if task == st.REGRESSION:
+            data = texts._merge({k: v for k, v in data.items() if k != st.REGRESSION},
+                                data.get(st.REGRESSION, {}))
+        self.data = data
+
+    def decision(self, decision_id) -> str:
+        return self.data['decisions'].get(decision_id, ' '.join(str(decision_id).split('_')))
+
+    def slot(self, slot) -> str:
+        base, sep, column = str(slot).partition(':')
+        label = self.data['activities'].get(base) or self.data['activity_fallback'].format(
+            activity=base)
+        return self.data['slot_with_column'].format(label=label, column=column) if sep else label
+
+    @staticmethod
+    def join(labels) -> str:
+        labels = list(labels)
+        return labels[0] if len(labels) == 1 else ', '.join(labels[:-1]) + ' and ' + labels[-1]
+
+    def template(self, name: str, **fields) -> str:
+        return self.data['templates'][name].format(**fields)
+
+
+def _cap(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+def _invalidation(result: dict, full: dict | None, kept_fits: list[str]) -> dict | None:
+    """The digest's invalidation of a record: the record's own (a confirmation, a
+    replacement) or the one ``state['invalidations']`` holds for its revision.
+    ``kept_fits`` are the fit slots current before the record; those it made stale are
+    dropped."""
+    own = result.get('invalidation')
+    base = own if isinstance(own, dict) else full
+    if base is None:
+        return None
+    effects = (full or {}).get('effects') or {}
+    stale_slots = list(base.get('stale_slots') or [])
+    return {'mutation': base.get('mutation'), 'row': base.get('row'), 'stale_slots': stale_slots,
+            'reconfirm_required': list(base.get('reconfirm_required') or []),
+            'refit': list(effects.get('refit') or []),
+            'kept_fits': [s for s in kept_fits if s not in stale_slots]}
+
+
+def _effect_sentences(t: _Texts, item: dict, full: dict | None, kept: list[str]) -> list[str]:
+    inv = item['invalidation']
+    if inv is None:
+        # A replaced result that invalidated nothing (a re-evaluated policy): say that the
+        # models were kept when there were current fits.
+        replaced = item['kind'] == 'result_replaced' and not str(item['slot']).startswith('fit.')
+        return [t.data['effects']['nothing_refitted']] if replaced and kept else []
+    out = []
+    if inv['mutation'] not in ('first_confirmation', 'unchanged_value', 'hold_added'):
+        if inv['refit']:
+            out.append(t.data['effects']['refit'].format(
+                slots=t.join(t.slot(s) for s in inv['refit'])))
+        elif inv['kept_fits']:
+            out.append(t.data['effects']['nothing_refitted'])
+        others = [s for s in inv['stale_slots'] if s not in inv['refit']]
+        if others:
+            out.append(t.data['effects']['stale'].format(slots=t.join(t.slot(s) for s in others)))
+    again = inv['reconfirm_required']
+    if again:
+        causes = t.data['causes']
+        if inv['mutation'] == 'result_replaced':
+            cause = causes['result_replaced'].format(
+                activity=t.slot(item['slot'] or (full or {}).get('decision_id')))
+        elif inv['mutation'] == 'hold_added':
+            cause = causes['hold_added'].format(decision=t.decision(item['decision_id']))
+        else:
+            cause = causes['decision'].format(
+                decision=t.decision((full or {}).get('decision_id') or item['decision_id']))
+        name = 'reconfirm_one' if len(again) == 1 else 'reconfirm_many'
+        out.append(t.data['effects'][name].format(
+            Decisions=_cap(t.join(t.decision(d) for d in again)), cause=cause))
+    return out
+
+
+def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
+          record: dict, kept: list[str]) -> str:
+    kind, action = item['kind'], item['action']
+    params = record.get('params') or {}
+    decision = t.decision(item['decision_id']) if item['decision_id'] else ''
+    fields = {'decision': decision, 'Decision': _cap(decision)}
+    if kind == 'proposed':
+        value = params.get('value')
+        # Only a rule identifier or a model slot is quoted: other values are free text.
+        identifier = item['decision_id'] in st.CHOICE_DECISION.values() and isinstance(value, str)
+        main = (t.template('proposed_value', value=value, **fields) if identifier
+                else t.template('proposed', **fields))
+        if item['superseded']:
+            main += ' ' + t.data['templates']['superseding']
+    elif kind == 'confirmed':
+        name = ('confirmed_delegated' if item['basis'] == st.DELEGATED_DEFAULT
+                else 'confirmed_again' if again else 'confirmed')
+        main = t.template(name, channel=item['channel'], **fields)
+    elif kind == 'withdrawn':
+        main = t.template('withdrawn', **fields)
+    elif kind == 'hold_recorded':
+        main = t.template('hold_recorded', words=params.get('user_words'), **fields)
+    elif kind == 'hold_resolved':
+        note = (state.get('notes') or {}).get(item['note_id']) or {}
+        name = 'hold_withdrawn' if action == 'decide.withdraw_note' else 'hold_resolved'
+        main = t.template(name, hold=note.get('user_words'), words=params.get('user_words'),
+                          **fields)
+    elif item['activity'] is not None or item['slot'] is not None:
+        activity = t.slot(item['slot'] or item['activity'])
+        act = {'activity': activity, 'Activity': _cap(activity)}
+        if kind in ('result_added', 'result_replaced'):
+            if item['rules']:
+                main = t.template(f'{kind}_rules', rules=', '.join(item['rules']), **act)
+            elif item['column'] and ':' not in str(item['slot']):
+                main = t.template(f'{kind}_column', column=item['column'], **act)
+            else:
+                main = t.template(kind, **act)
+        elif action == _PROMOTE:
+            main = t.template('run_late', **act)
+        else:
+            main = t.template(kind, **act)
+    elif action == 'init':
+        main = t.template('created')
+    else:
+        main = t.template('other', action=action)
+    return ' '.join([main, *_effect_sentences(t, item, full, kept)])
+
+
+def digest(study: read.Study, state: dict, *, since: int) -> dict:
+    """The revision records after ``since`` as digest items (CLI-CONTRACT-COMPANION §1.4).
+
+    Every record is read in order, from the first one, to know which slots were already
+    filled (``result_replaced``), which fits were current (``kept_fits``), what each
+    execution was started with (``rules``, ``column``), and whether a decision was
+    confirmed before (a reconfirmation). Only the records after ``since`` are listed.
+    """
+    records = study.revisions(0)
+    t = _Texts(st.task_of(state))
+    full_by_revision: dict[int, dict] = {}
+    for inv in state['invalidations']:
+        full_by_revision.setdefault(inv['revision'], inv)
+    reserved: dict[str, dict] = {}
+    occupant: dict[str, str] = {}
+    confirmed_before: set = set()
+    stale: set = set()
+    counts = dict.fromkeys(DIGEST_COUNT_KEYS, 0)
+    items = []
+    for record in records:
+        revision, action = record['revision'], record.get('action') or ''
+        params, result = record.get('params') or {}, record.get('result') or {}
+        full = full_by_revision.get(revision)
+        listed = since < revision <= study.revision
+        run = action.startswith('run.')
+        eid = (params.get('execution_id') or result.get('execution_id')) if run else None
+        if action == _RESERVE:
+            reserved[eid] = {'activity': params.get('activity'),
+                             'options': params.get('options') or {}}
+            if listed:
+                counts['runs_started'] += 1
+            continue
+        kept = [s for s in sorted(occupant) if s.startswith('fit.') and occupant[s] not in stale]
+        kind = _KIND_OF_ACTION.get(action, 'other')
+        promoted = action == _PROMOTE and result.get('status') == 'promoted'
+        if promoted:
+            kind = 'result_replaced' if result.get('slot') in occupant else 'result_added'
+        again = False
+        if kind == 'confirmed':
+            again = result.get('decision_id') in confirmed_before
+            confirmed_before.add(result.get('decision_id'))
+        started = reserved.get(eid) or {}
+        options = started.get('options') or {}
+        item = dict.fromkeys(DIGEST_ITEM_KEYS)
+        item.update(revision=revision, time=record.get('time'), action=action, kind=kind)
+        if run:
+            item.update(activity=result.get('activity') or started.get('activity'),
+                        slot=result.get('slot'), result_id=result.get('result_id'),
+                        execution_id=eid,
+                        rules=list(options['rules']) if options.get('rules') else None,
+                        column=options.get('column'))
+        else:
+            item.update(decision_id=result.get('decision_id') or params.get('decision_id'),
+                        proposal_id=result.get('proposal_id') or params.get('proposal_id'),
+                        note_id=result.get('note_id') or params.get('note_id'))
+        if kind == 'proposed':
+            item['superseded'] = list(result.get('superseded') or [])
+        if kind == 'confirmed':
+            item.update(channel=result.get('channel') or params.get('channel') or 'chat',
+                        basis=result.get('basis') or params.get('basis') or st.EXPLICIT,
+                        delegation_scope=result.get('delegation_scope',
+                                                    params.get('delegation_scope')))
+        own = full if kind in ('confirmed', 'hold_recorded', 'hold_resolved') or promoted \
+            else None
+        item['invalidation'] = _invalidation(result, own, kept)
+        if promoted:
+            occupant[result['slot']] = result['result_id']
+            stale.discard(result['result_id'])
+        if full is not None:
+            stale.update(full.get('stale_results') or [])
+        elif isinstance(result.get('invalidation'), dict):
+            stale.update(result['invalidation'].get('stale_results') or [])
+        if not listed:
+            continue
+        item['text'] = _text(t, item, again=again, state=state, full=own, record=record,
+                             kept=kept)
+        if kind in _COUNT_OF_KIND:
+            counts[_COUNT_OF_KIND[kind]] += 1
+        inv = item['invalidation']
+        if inv is not None and (inv['mutation'] not in _QUIET_MUTATIONS or inv['stale_slots']
+                                or inv['reconfirm_required']):
+            counts['invalidations'] += 1
+        items.append(item)
+    return {'since': since, 'until': study.revision, 'items': items[-DIGEST_MAX_ITEMS:],
+            'truncated': len(items) > DIGEST_MAX_ITEMS, 'counts': counts}
+
+
+def with_digest(study: read.Study, built: dict, summary_out: dict, *,
+                since: int | None = None) -> dict:
+    """``summary_out`` with the keys of ``--digest`` (CLI-CONTRACT-COMPANION §1, C1).
+
+    It appends :data:`DIGEST_SUMMARY_KEYS` after ``recap`` and adds ``origin`` (C9, null
+    for a proposal recorded before C9) as the last key of each open proposal. ``since``
+    is ``--since``: the digest then starts after it instead of at the last session's
+    boundary. Deterministic for a study content: no clock is read.
+    """
+    if since is not None and not 0 <= since <= study.revision:
+        raise StudyError('invalid_arguments',
+                         f'--since must be between 0 and the current revision '
+                         f'({study.revision}).',
+                         details={'since': since, 'revision': study.revision})
+    state = study.state
+    session = last_session(study.revisions(0))
+    out = dict(summary_out)
+    out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
+                              .get('origin')} for p in summary_out['open_proposals']]
+    out.update({'moments': moments(built['task']), 'pauses': pauses(state),
+                'last_session': session,
+                'digest': digest(study, state, since=session['boundary_revision']
+                                 if since is None else since),
+                'task': built['task']})
+    return out

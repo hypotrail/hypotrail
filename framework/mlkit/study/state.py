@@ -208,8 +208,9 @@ PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rational
 # Written by ``hypotrail decide`` (WP1.4): the request that created the proposal, the
 # confirmed values it was based on (a change makes it stale), and why it was closed.
 # ``origin`` (CLI-CONTRACT-COMPANION §9, C9) is ``{channel}``, where the proposal came from;
-# WP-0 reserves the key, WP-E1 writes and validates it.
+# ``decide propose`` writes it on every new proposal; one recorded before C9 has none.
 PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason', 'origin')
+ORIGIN_KEYS = ('channel',)
 EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
 # A junior's condition or hold on a decision (post-v0.1, P2): "don't adopt anything until I
 # bring my manager's figure". Recorded verbatim by ``decide note --about``, it stays open
@@ -441,6 +442,14 @@ def _proposal_problems(pid: Any, p: Any, task: str = DEFAULT_TASK) -> list[dict]
             problems.append({'path': f'{path}.{key}', 'problem': 'must be a non-empty string'})
     if type(p['revision']) is not int or p['revision'] < 0:
         problems.append({'path': f'{path}.revision', 'problem': 'must be a revision number'})
+    if 'origin' in p:
+        # C9: where the proposal came from, ``{channel}``; absent before C9.
+        origin = p['origin']
+        if not isinstance(origin, dict) or tuple(origin) != ORIGIN_KEYS \
+                or origin['channel'] not in CHANNELS:
+            problems.append({'path': f'{path}.origin',
+                             'problem': f'must be {{channel}} with channel one of '
+                                        f'{", ".join(CHANNELS)}'})
     return problems
 
 
