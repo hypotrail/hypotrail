@@ -27,7 +27,10 @@ refusals included).
 Test hooks, honoured only with ``HYPOTRAIL_TEST_HOOKS=1``: ``HYPOTRAIL_FAULT`` set to
 ``run_after_reserve`` or ``run_before_promote`` ends the process abruptly at that
 point (``os._exit``); ``run_pause_before_promote:DIR`` writes ``DIR/ready`` and waits
-for ``DIR/go`` before promoting.
+for ``DIR/go`` before promoting; ``run_fail_before_promote`` makes the computation fail;
+``recover_kill`` and ``fail_kill`` end the process after an execution's exposure is
+recorded and before the ``run.recover`` or ``run.fail`` commit (review fix M2). Several
+faults may be listed, comma-separated.
 
 pandas and scikit-learn are imported only by the computation.
 """
@@ -81,18 +84,31 @@ def _pause(folder: Path):
     return hook
 
 
+def _raise(_plan) -> None:
+    raise RuntimeError('test hook: the computation failed')
+
+
 def test_hooks() -> dict:
-    """Fault hooks from the environment (only with ``HYPOTRAIL_TEST_HOOKS=1``)."""
+    """Fault hooks from the environment (only with ``HYPOTRAIL_TEST_HOOKS=1``).
+
+    ``HYPOTRAIL_FAULT`` may list several faults, comma-separated."""
     if os.environ.get(HOOKS_ENV) != '1':
         return {}
-    fault = os.environ.get(FAULT_ENV, '')
-    if fault == 'run_after_reserve':
-        return {'after_reserve': _die}
-    if fault == 'run_before_promote':
-        return {'before_promote': _die}
-    if fault.startswith('run_pause_before_promote:'):
-        return {'before_promote': _pause(Path(fault.split(':', 1)[1]))}
-    return {}
+    hooks = {}
+    for fault in filter(None, os.environ.get(FAULT_ENV, '').split(',')):
+        if fault == 'run_after_reserve':
+            hooks['after_reserve'] = _die
+        elif fault == 'run_before_promote':
+            hooks['before_promote'] = _die
+        elif fault == 'run_fail_before_promote':
+            hooks['before_promote'] = _raise
+        elif fault == 'recover_kill':
+            hooks['recover_kill'] = _die
+        elif fault == 'fail_kill':
+            hooks['fail_kill'] = _die
+        elif fault.startswith('run_pause_before_promote:'):
+            hooks['before_promote'] = _pause(Path(fault.split(':', 1)[1]))
+    return hooks
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:

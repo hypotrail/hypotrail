@@ -277,7 +277,18 @@ def _apply(store: StudyStore, state: dict, request_id: str, action: str, params:
 # --- recovery ---------------------------------------------------------------------------
 
 def _record_exposures(store: StudyStore, state: Mapping, eid: str, activity: str,
-                      exposures, result_id: str | None, ids: list[str] | None = None) -> list[str]:
+                      exposures, result_id: str | None, ids: list[str] | None = None,
+                      *, once: bool = False) -> list[str]:
+    """Record the planned exposures of execution ``eid``.
+
+    ``once``: record nothing when the execution already has exposure records (a
+    recovery or failure retried after a process died between recording and committing,
+    or a promotion that recorded them before dying). Exposure is recorded **before**
+    the commit that closes the execution, so a crash can duplicate the attempt but never
+    lose the rows (review fix M2).
+    """
+    if once and any(r.get('execution_id') == eid for r in exposure.records(store)):
+        return []
     ids = list(ids) if ids is not None else [exposure.new_exposure_id() for _ in exposures]
     for eid_x, x in zip(ids, exposures):
         exposure.record(store, exposure_id=eid_x, revision=state['revision'], activity=activity,
@@ -288,7 +299,7 @@ def _record_exposures(store: StudyStore, state: Mapping, eid: str, activity: str
     return ids
 
 
-def recover(store: StudyStore, state: dict) -> list[str]:
+def recover(store: StudyStore, state: dict, hooks: Mapping | None = None) -> list[str]:
     """Record every orphaned execution as ``interrupted_unknown`` (under the writer lock).
 
     Returns the execution ids recorded. Lease files without a reservation (a process
@@ -299,8 +310,11 @@ def recover(store: StudyStore, state: dict) -> list[str]:
         record = state['executions']['active'][eid]
         if lock.lease_is_held(lock.lease_path(store.study_dir, eid)):
             continue
+        _record_exposures(store, state, eid, record['activity'], record.get('exposures', []), None,
+                          once=True)
+        if 'recover_kill' in (hooks or {}):
+            hooks['recover_kill'](record)
         _apply(store, state, derived_request_id('recover', eid), RECOVER, {'execution_id': eid})
-        _record_exposures(store, state, eid, record['activity'], record.get('exposures', []), None)
         store.event('interrupted_execution', execution_id=eid, activity=record['activity'])
         lock.remove_orphaned_lease(store.study_dir, eid)
         _history(store, eid, state['executions']['interrupted'][eid])
@@ -397,7 +411,7 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     eid = execution_id(request_id)
     params = {'activity': activity, 'options': options, 'execution_id': eid}
     with store.writing() as state:
-        recover(store, state)
+        recover(store, state, hooks)
         if request_id in state['receipts']:
             _apply(store, state, request_id, RESERVE, params, expected_revision)
             return _outcome(store, describe(store, state, request_id), render=False)
@@ -425,9 +439,11 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         with store.writing() as state:
             error = exc.to_dict() if hasattr(exc, 'to_dict') else {
                 'code': 'internal_error', 'message': f'{type(exc).__name__}: {exc}'}
+            _record_exposures(store, state, eid, activity, plan['exposures'], None, once=True)
+            if 'fail_kill' in hooks:
+                hooks['fail_kill'](plan)
             _apply(store, state, derived_request_id('fail', request_id), FAIL,
                    {'execution_id': eid, 'error': error})
-            _record_exposures(store, state, eid, activity, plan['exposures'], None)
             _history(store, eid, {**plan_summary(plan, eid), 'status': 'failed', 'error': error})
             lease.release()
         raise
