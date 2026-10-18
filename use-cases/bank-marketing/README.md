@@ -1,6 +1,6 @@
 # Bank Marketing
 
-First acceptance case for the junior Copilot + HTML + Marimo workflow.
+First case of the junior workflow (v0.1: Claude Code chat, an evolving HTML report, and a generated Marimo notebook; GitHub Copilot is not tested yet).
 
 ## Data and question
 
@@ -20,8 +20,22 @@ Proposed teaching scenario: prioritize contacts **before a call** when call capa
 - `project.json`, `results.json`: companion contracts, including training-only EDA.
 - `tutorial-results.json`, `bank-tutorial.html`: historical result/export formats; `design.css` is the export's frozen stylesheet.
 
-## Limits and next work
+## Running the study (v0.1)
 
-Random stratified validation is exploratory. Without a complete timestamp or customer identifier, this extract does not establish customer independence or future-campaign performance. Threshold selection on validation is part of model selection. Observed subscriptions do not measure the causal effect of calling.
+From the repository root, create a study in a folder outside the repository and open it with Claude Code:
 
-The new workflow needs distinct study state, progressively generated reports and notebook, and tested resumption. See [the specification](../../docs/specs/JUNIOR-WORKFLOW.md). Do not import synthetic-demo or companion answers as new study confirmations.
+```sh
+uv sync --project framework --group dev
+uv run --project framework hypotrail init --case use-cases/bank-marketing/case.yaml --study ~/studies/bank
+cd ~/studies/bank && claude
+```
+
+The study starts with every decision open. The agent guides three pauses: the prediction moment and the availability of each feature (`duration` is documented as known only after the call; `day`, `month`, `contact`, and `campaign` describe the last contact and must be discussed), the split before any look at the outcome, and the policy adoption followed by the conclusion. Between pauses it runs the training-partition EDA, a constant baseline, a logistic model, and policy evaluations under a threshold or a call capacity. `keep_baseline` is a valid conclusion. Every number in `reports/study.html` cites a recorded result. See [the handoff](../../docs/handoff/IMPLEMENTATION.md) for what is supported and what is refused.
+
+The study's own split (stratified, seed 20261017) reproduces the tutorial partition sizes, 3,164 training rows (365 subscriptions) and 1,357 validation rows. The study records that this public extract and its validation figures were explored and published before, so validation is not independent evidence.
+
+## Limits
+
+Random stratified validation is exploratory. Without a complete timestamp or customer identifier, this extract does not establish customer independence or future-campaign performance. Threshold or capacity selection on validation is part of model selection. Observed subscriptions do not measure the causal effect of calling. The study lists these limits in its "What is not yet defensible" section.
+
+Do not import synthetic-demo or companion answers as new study confirmations: `case.yaml` contains none, and `hypotrail init` ignores the companion files.

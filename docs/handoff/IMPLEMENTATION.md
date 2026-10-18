@@ -1,49 +1,91 @@
-# Implementation handoff
+# Implementation handoff (v0.1)
 
-The repository contains the reusable engine and public-data tutorials. **The new junior workflow remains to be implemented.** The initial import prepares source boundaries and context; it does not deliver that future experience.
+Status: **v0.1 implemented** on branch `claude/hypotrail-product-review-yrstzb`, 18 October 2026. It is a vertical slice of the [junior workflow](../specs/JUNIOR-WORKFLOW.md) on Bank Marketing, guided by **Claude Code**, not GitHub Copilot. Evidence per behaviour: [V0.1-CHECKLIST.md](../acceptance/V0.1-CHECKLIST.md). Decisions taken during implementation, and open questions for the owner: [V0.1-DECISIONS.md](../plans/V0.1-DECISIONS.md). The plan: [V0.1-IMPLEMENTATION-PLAN.md](../plans/V0.1-IMPLEMENTATION-PLAN.md).
 
-## Where to start
+v0.1 delivers the repositioned promise on one workflow: *do your ML study with an agent; Hypotrail guarantees that numbers, partitions, and decisions are traceable, and says what is not yet defensible.*
 
-Work at the root of `hypotrail`. Read `AGENTS.md`, the user's specification, and `docs/specs/JUNIOR-WORKFLOW.md`. Put reusable work in `framework/` and the first study in `use-cases/bank-marketing/`. Use Auto MPG as the second adaptation check.
+## What a user can do now
 
-Companion development is paused. Its protocols and tests can inform design, but the new workflow must not require its UI or Copilot tutorial tools.
+On **Bank Marketing** (`use-cases/bank-marketing/case.yaml`) and on the **synthetic planted-trap case** (`framework/tests/fixtures/synthetic/make_case.py`, a fictitious library network), a user can:
 
-## Existing capabilities and gaps
+1. create a study in a folder outside the repository (`hypotrail init`), which installs the study agent's instructions (`CLAUDE.md`, a skill, a resume command) and starts at revision 1 with every decision open; the case's facts keep their epistemic status (`documented_fact`, `scenario_assumption`, `observed`, `unknown`), and no tutorial choice is imported as a confirmation;
+2. open that folder with Claude Code and follow the plan in chat, in seven steps and three pauses:
+   - pause 1: the prediction moment, then each feature's availability (`duration` is documented as not available; `day`, `month`, `contact`, `campaign` describe the last contact and must be discussed);
+   - pause 2: a stratified random split, before any look at the outcome;
+   - then, without further questions: training-partition EDA (target rate, special values such as `pdays=-1` / `poutcome=unknown`, rate by a column), a constant baseline and a logistic model with persisted validation predictions, and policy evaluations (`threshold:T`, `capacity:K`) with paired bootstrap intervals and pro-rata ties;
+   - pause 3: the policy adoption, then a proportionate conclusion (`adopt_policy`, `keep_baseline`, or `inconclusive`);
+3. confirm each decision in their own words (copied verbatim), or delegate it explicitly ("use your recommended default"), which is recorded as a delegation and listed as not yet defensible; bare "ok", "keep that", refusals and unrelated replies never confirm;
+4. change a capacity or threshold without refitting: the stored predictions are reused, and the adopted rule is always re-evaluated;
+5. resume in a new chat from the recorded state (`status --summary`), with a five-line recap;
+6. read one evolving offline HTML report (`reports/study.html`), where every number is a `<data data-result-id>` citation and a "What is not yet defensible" section lists the limits; read a generated read-only Marimo notebook (`notebooks/study_generated.py`), whose user edits are preserved as a copy before regeneration; experiment in `notebooks/workbench.py` (a policy slider labelled "Experiment, not adopted"; never overwritten, never recorded);
+7. check a draft message for untraceable numbers and causal or forecast wording (`hypotrail check --text -`).
 
-| Source | Reusable capability | Current limitation |
-|---|---|---|
-| `framework/mlkit/pilot.py` | Historical guidance, answers, progress, revisions | Compare its contract and phases with the new specification |
-| `framework/mlkit/reliability.py` | Idempotence, revisions, recovery, stale results | Integrate these controls into every new mutation |
-| `framework/mlkit/discover.py` | Discovery, reports, exposure records | Connect to the new plan and evolving outputs |
-| `framework/mlkit/task_contract.py`, `classical.py` | Task contracts and calculations | Different from the companion's `project.json` contract |
-| `framework/mlkit/notebooks.py`, `framework/notebooks/` | Rendering and notebook foundations | Not yet a complete narrative notebook that preserves user cells |
-| `framework/tests/` | Engine, quality, revision, and calculation checks | Some historical tests concern suspended holdout operations; do not reactivate them to obtain passing tests |
-| `use-cases/*/project.json`, `results.json` | Documented context, EDA, tutorial results | No junior session or human decisions should be imported automatically |
+The engine guarantees, with tests: revisions and idempotent requests (stale requests refused with the diff, replays without effect), exposure tracking by row key (kept after a split change), invalidation per the plan's dependency table (a replaced result makes its descendants stale; changed code or sources are flagged), executions with leases (an interrupted run has an unknown outcome, is never restarted automatically, and its late result is not promoted), and a failed render that keeps the previous report marked stale.
 
-The engine is canonical under `framework/`. Its synthetic configurations are fixtures under `framework/tests/fixtures/legacy-project/`. Historical archives and sessions are not repository dependencies.
+## Commands
 
-## Implementation priorities
+```sh
+uv sync --project framework --group dev
+uv run --project framework hypotrail init --case use-cases/bank-marketing/case.yaml --study /path/outside/the/repository/bank-study
+cd /path/outside/the/repository/bank-study && claude          # then talk to the agent
+```
 
-1. Define junior study state and its relationship to existing engine contracts. Separate context, proposals, decisions, executions, and results. Make migration explicit.
-2. Provide an explicit per-project entry point. The engine still uses `OSML_ROOT`; `framework/pyproject.toml` installs it in editable mode, but notebook and template resources are not yet packaged for a non-editable wheel.
-3. Build an adaptive visible plan and state-based resumption. Define when Copilot recommends, acts, and asks a useful question.
-4. Generate HTML and notebook reference sections from the same evidence, with revisions and invalidation. Handle annotations and concurrent notebook edits before regeneration.
-5. Complete Bank through conclusion, then Auto MPG with shared primitives. Loading historical results is not a new experiment.
+The agent uses the CLI, recorded in `.hypotrail/agent.json`: `status [--summary|--json]`, `plan`, `decide propose|confirm|withdraw`, `run <activity>`, `run --acknowledge-interruption`, `preview policy`, `check`, `render`. The full contract, with exit codes (0, 2 refusal, 3 stale or failed deliverable, 4 unknown outcome) and every schema, is [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md); the case format is [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md).
 
-First slice: structural inspection → proposed plan → useful confirmation → authorized EDA → consistent HTML and notebook → resumption in a new chat. Then add preparation, baseline, modeling, error analysis, and conclusion. Test failures and preservation alongside the successful path.
+For the synthetic case:
 
-## Environments and verification
+```sh
+uv run --project framework python framework/tests/fixtures/synthetic/make_case.py /path/outside/the/repository/synthetic-case
+uv run --project framework hypotrail init --case /path/outside/the/repository/synthetic-case/case.yaml --study /path/outside/the/repository/synthetic-study
+```
 
-Follow `CONTRIBUTING.md`. Use uv and dedicated environments. `framework/pyproject.toml` and `framework/uv.lock` define the locked development environment (`uv sync --project framework --group dev`). Notebook and template resources still resolve from the source checkout only. Supported platforms are Linux, macOS, and WSL.
+Keep the study **outside the repository**: Claude Code loads `CLAUDE.md` and `AGENTS.md` from parent folders, so a study inside the repository would also receive the repository's development instructions.
 
-The default validation scope is the targeted engine suite, repository integrity checks, and optional companion compatibility suites. Do not run a state-mutating pilot command at the repository root without selecting an explicit study. Browser tests require Playwright Chromium and a loopback port; their model provider is simulated.
+## What is excluded from v0.1
 
-See `docs/handoff/IMPORT-CHECKS.md` for validation performed during import. A real Copilot acceptance session remains separate from automated tests.
+Refused explicitly (`unsupported_capability`, with the capability named), never handled silently:
 
-## Preservation
+- regression tasks: **Auto MPG** has a `case.yaml` but `init` refuses it (regression, declared group column); generality on Auto MPG is not validated;
+- declared time or group columns, duplicate records, a held-out test partition, models other than the constant baseline and logistic regression (a random forest is "not supported in v0.1");
+- a changed dataset or case file (`dataset_changed`, `sources_changed`): start a new study.
 
-Do not reset existing study state to install changes. No previous personal session was imported. The public datasets and exploratory reference outputs were retained with provenance; tutorial scenario facts are not new human confirmations.
+Not built, by design: the webview companion (paused; [ADR 0002](../decisions/0002-companion-as-cli-client.md) makes any future one a client of this CLI), an application server, MCP integration, multi-agent orchestration, decision controls in the HTML.
 
-## Completion criterion
+## Known limits and remaining defects
 
-A junior user can follow Bank in Copilot, consult one current HTML report, manipulate the notebook at each phase, resume after interruption, and understand results without losing choices or notes. Outputs share evidence and limitations. Auto MPG demonstrates adaptation to another task. Identify real-user checks separately from automated tests.
+Platform and packaging:
+
+- **POSIX only** (Linux, macOS, WSL): the engine uses `fcntl.flock`; native Windows is refused (`platform_unsupported`).
+- **Editable install only**: notebook and template resources are not packaged for a non-editable wheel.
+- **Absolute paths**: `init` records the absolute CLI command and study path; moving the study or the checkout needs a new study.
+- **Marimo internal API**: notebooks are generated with Marimo's internal codegen, pinned to `marimo==0.25.1`; any upgrade must rerun the spike (`HYPOTRAIL_RUN_SPIKES=1`, [ADR 0001](../decisions/0001-notebook-and-html.md)), whose four strict `xfail` tests document Marimo limitations.
+- **Float time columns** are still misread by `pd.to_datetime` in the legacy `classical.split`; only integer years are refused.
+
+Evaluation:
+
+- **GitHub Copilot is untested.** Its instruction files are generated from the same templates, with a header saying so. All agentic evidence is "Claude Code acceptance" on Opus (`claude-opus-5-5`) and does not count as Copilot acceptance.
+- **No human junior has used v0.1.** The agentic runs measure an agent's behaviour against the instructions, with simulated juniors, not a junior's understanding.
+- **One run per condition.** Each scenario ran once per round; a pass is weak evidence, a failure a counterexample.
+- The scripted persona never confirms a policy or a conclusion, so those confirmations are exercised only by the answering persona (one Bank run, rerun round) and by the simulated tests.
+
+Remaining defects from the acceptance reports (Claude Code, not fixed):
+
+- **F1 is fixed in the engine and the instructions, but not re-run agentically**: the S9 regression of the final check (a new chat called a killed run "in progress") is covered by `test_status_liveness.py`, not by a new agent run.
+- **F3 (T9, hallucinated number)**: agents still write self-made counts or ratios in words ("roughly one call in nine", "the 11 kept columns"), which `check` cannot see, and cite figures of withdrawn proposals, which `check` flags as untraceable. T9 failed in 2 of 3 final E1 runs.
+- **F5**: a repeated three-option menu across turns reads as bureaucratic; one resume dropped the "illustrative" caveat of a stand-in capacity.
+- **T8 (decision lost between chats)** rated partial in 3 of 3 final runs, **T1b (ambiguous availability)** partial in 1 of 3.
+- `delegation_scope` is shown in `status`, the summary, and the text output, but not in the HTML or the notebook.
+- `status --json` is large (tens of kilobytes); agents are told to use `status --summary`.
+- The HTML report and notebook show execution liveness as `not_checked`; only `status` probes leases.
+
+## Validation
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the gate (`check_layout.py` and the targeted pytest scope with the `browser` group), the opt-in Marimo spike (`HYPOTRAIL_RUN_SPIKES=1`), and the opt-in agent acceptance (`HYPOTRAIL_AGENT_ACCEPTANCE=1`, real `claude -p` sessions with model cost). Agent acceptance reports: [first run](../acceptance/runs/claude-code-2026-10-18.md), [rerun](../acceptance/runs/claude-code-2026-10-18-rerun.md), [final check](../acceptance/runs/claude-code-2026-10-18-final.md); E1 steelman: [protocol](../research/E1-STEELMAN.md), [arm A](../research/runs/E1-arm-A-2026-10-18.md), [arm B](../research/runs/E1-arm-B-2026-10-18.md).
+
+## Legacy and preservation
+
+The legacy pilot (`framework/mlkit/pilot.py` and its modules) is unchanged apart from the Stale exit fix (WP0.2); `mlkit/study/` imports none of it (`test_isolation`). `use-cases/*/project.json` and `results.json` remain companion tutorial contracts: `case.yaml` is generated from them and `case-supplement.yaml` by an explicit migration, with tutorial confirmations downgraded to scenario assumptions. Historical tests that concern suspended holdout and production paths stay out of the gate. Do not reset existing study state; test in temporary studies.
+
+## Next work
+
+Owner decisions first ([open questions](../plans/V0.1-DECISIONS.md#open-questions-for-the-owner)), then, in the plan's spirit: an agentic re-run of S9 and the E1 runs with N repetitions; F3 in `check`; Auto MPG (regression) to validate generality; a test partition; Copilot acceptance when directive A1 is lifted; and a first use by a real junior.

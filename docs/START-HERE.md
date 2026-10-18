@@ -1,18 +1,22 @@
-# Starting the next Hypotrail implementation
+# Starting work on Hypotrail
 
-Open the **root of the `hypotrail` repository** in VS Code. On the current machine this is `/Users/schadli/source/hypotrail`. Start the implementation agent there so it can read repository instructions and all three source areas.
+Open the **root of the `hypotrail` repository** and start the development agent there, so it reads the repository instructions and all three source areas.
 
-## Next task
+## Where things stand
 
-Implement the junior Copilot + HTML + Marimo workflow for Bank Marketing using the user's specification. Build a fluid, explicit experience with defensible evidence and reliable resumption. Companion development remains paused.
+**v0.1 is implemented**: a guided junior study of Bank Marketing, driven by Claude Code in chat, with one evolving offline HTML report and a generated Marimo notebook, on top of a study engine (`framework/mlkit/study/`, CLI `hypotrail`) that keeps numbers, partitions, and decisions traceable. GitHub Copilot is not tested yet, no human junior has used it, and the companion remains paused. The handoff lists what works, what is refused, and the remaining defects.
 
 ## Reading order
 
 1. [Repository instructions](../AGENTS.md).
-2. [Implementation handoff](handoff/IMPLEMENTATION.md).
-3. [Consolidated junior specification](specs/JUNIOR-WORKFLOW.md).
-4. [Repository architecture](architecture/REPOSITORY.md).
-5. [Bank Marketing context](../use-cases/bank-marketing/README.md).
+2. [Implementation handoff](handoff/IMPLEMENTATION.md): v0.1 capabilities, commands, exclusions, known limits.
+3. [v0.1 acceptance checklist](acceptance/V0.1-CHECKLIST.md): each behaviour with its test or agentic evidence.
+4. [v0.1 decisions and open questions](plans/V0.1-DECISIONS.md): what the implementing agents decided, and what the owner should review.
+5. [Consolidated junior specification](specs/JUNIOR-WORKFLOW.md): the target; v0.1 implements a slice of it.
+6. [CLI contract](specs/CLI-CONTRACT.md) and [case contract](specs/CASE-CONTRACT.md).
+7. [Repository architecture](architecture/REPOSITORY.md).
+8. [Bank Marketing context](../use-cases/bank-marketing/README.md).
+9. For history: [the v0.1 plan](plans/V0.1-IMPLEMENTATION-PLAN.md), the [ADRs](decisions/), the [agent acceptance runs](acceptance/runs/), and the [E1 steelman](research/E1-STEELMAN.md).
 
 The [independent design review summary](reference/INDEPENDENT-REVIEW.md) explains the validity and coherence requirements behind this direction. It is design evidence, not verification of the current code.
 
@@ -21,17 +25,16 @@ The [independent design review summary](reference/INDEPENDENT-REVIEW.md) explain
 ```text
 You are developing Hypotrail in the root of this repository.
 Read AGENTS.md, docs/START-HERE.md, docs/handoff/IMPLEMENTATION.md,
-docs/architecture/REPOSITORY.md, and docs/specs/JUNIOR-WORKFLOW.md,
-then read any additional specifications I provide.
+docs/acceptance/V0.1-CHECKLIST.md, docs/plans/V0.1-DECISIONS.md and
+docs/specs/CLI-CONTRACT.md, then read any additional specifications I provide.
 
-Implement the junior Copilot chat + HTML + evolving Marimo notebook workflow.
-Start with use-cases/bank-marketing and put reusable code in framework.
-The experimental companion is paused. Preserve existing study state and data.
+v0.1 (Bank Marketing, Claude Code, HTML report, generated Marimo notebook) is
+implemented. Put reusable code in framework and case material in use-cases.
+The experimental companion is paused. Preserve existing study state and data;
+create test studies outside the repository.
 
-Compare the specification with the actual implementation and present a concrete
-plan. First build a complete slice: structural inspection, a proposed plan,
-a useful confirmation, EDA on the authorized partition, consistent HTML and
-notebook outputs, and resumption in a new chat. Then complete the remaining
-accepted phases. Do not present precomputed companion outputs as a new run.
-Test the changes and identify acceptance checks that require actual Copilot use.
+Compare the task with the handoff's known limits, present a concrete plan,
+and keep the CLI contract, its freeze test, and the documentation in step.
+Run the gate in CONTRIBUTING.md before each commit. Identify acceptance
+checks that need an agent session or a real Copilot session separately.
 ```

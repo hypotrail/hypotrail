@@ -1,10 +1,20 @@
 # Hypotrail
 
-Hypotrail is an experimental method for agent-assisted machine learning development. Its next milestone is a guided junior workflow with **GitHub Copilot chat, an evolving HTML report, and an explanatory Marimo notebook**.
+Hypotrail is an experimental method for agent-assisted machine learning studies: *do your ML study with an agent; Hypotrail guarantees that numbers, partitions, and decisions are traceable, and says what is not yet defensible.*
 
-The reusable engine and two public-data examples are included. The new junior workflow is specified and remains to be implemented. The visual companion is an experimental feature whose development is paused.
+**v0.1** guides a junior through a Bank Marketing study in **Claude Code chat**, with one evolving offline HTML report and a generated Marimo notebook. GitHub Copilot is the longer-term target but is not tested yet. The visual companion is an experimental feature whose development is paused.
 
-Start with [the implementation entry point](docs/START-HERE.md).
+Start with [the implementation entry point](docs/START-HERE.md); [the handoff](docs/handoff/IMPLEMENTATION.md) lists what works and what does not.
+
+## Quickstart (Linux, macOS, or WSL)
+
+```sh
+uv sync --project framework --group dev
+uv run --project framework hypotrail init --case use-cases/bank-marketing/case.yaml --study ~/studies/bank
+cd ~/studies/bank && claude
+```
+
+Create the study in a folder **outside this repository** (here `~/studies/bank`): Claude Code also loads instruction files from parent folders. `init` installs the study agent's instructions (`CLAUDE.md`, a skill, and a `/hypotrail-resume` command) in that folder. Open it with Claude Code and say what you want to do; the agent reads the study state, proposes each decision, and records it only with your own words or an explicit delegation. The report `reports/study.html` and the notebooks in `notebooks/` are generated after each recorded change.
 
 | Directory | Purpose |
 |---|---|
@@ -18,13 +28,7 @@ Start with [the implementation entry point](docs/START-HERE.md).
 
 Use Python 3.13 and uv on Linux, macOS, or WSL. The engine relies on POSIX file locking; native Windows is not supported. Create a dedicated environment; do not copy an environment from another checkout.
 
-```sh
-uv sync --project framework --group dev
-python3 scripts/check_layout.py
-uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py
-```
-
-`framework/pyproject.toml` and `framework/uv.lock` define the reproducible environment. See [CONTRIBUTING.md](CONTRIBUTING.md) for the test scopes, current limitations, and the alternative `PYTHONPATH` setup based on the inherited requirement files.
+`framework/pyproject.toml` and `framework/uv.lock` define the reproducible environment. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full gate (with the `browser` group), the opt-in Marimo spike and agent acceptance, and current limitations.
 
 ## Data and project status
 
