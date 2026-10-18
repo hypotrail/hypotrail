@@ -8,6 +8,8 @@ import shutil, subprocess, sys, time
 import yaml
 from . import config
 
+# PHASES values are persisted compatibility identifiers (in .pilot state, gate.py, and
+# question phases): keep their historical spelling; translate only displayed labels.
 PHASES = ['cadrage','donnees','cible','modelisation','evaluation','validation','deploiement','suivi']
 ROLES = {'data-analyst','explorer','feature-builder','leak-reviewer','validator','pedagogue'}
 # Explicit export capability set; never allow arbitrary project paths or free-form handoffs.

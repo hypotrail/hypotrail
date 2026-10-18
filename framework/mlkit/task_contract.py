@@ -42,28 +42,28 @@ def validate(contract):
  for key in ['task','data','split','model_options','evaluation','budget','confirmation']:
   if not isinstance(s[key],dict) or set(s[key])!=set(base[key]):raise ValueError('Invalid schema: '+key)
  kind=s['task']['kind'];d=s['data'];sp=s['split']
- if not isinstance(d['features'],list) or not d['features'] or len(set(d['features']))!=len(d['features']) or not all(isinstance(x,str) for x in d['features']):raise ValueError('Features explicites distinctes required')
+ if not isinstance(d['features'],list) or not d['features'] or len(set(d['features']))!=len(d['features']) or not all(isinstance(x,str) for x in d['features']):raise ValueError('An explicit list of distinct feature names is required')
  reserved={d[k] for k in ['target_col','id_col','time_col','group_col','query_col'] if d[k] is not None}
  if reserved & set(d['features']):raise ValueError('Target/id/time/group/query must not appear among features')
- if kind!='clustering' and not d['target_col']:raise ValueError('Cible required')
+ if kind!='clustering' and not d['target_col']:raise ValueError('A target column is required')
  if kind=='clustering' and d['target_col'] is not None:raise ValueError('Clustering: target_col must be null; no implicit pseudo-target')
  if sp['kind'] not in {'random','group','time'}:raise ValueError('Unknown split')
  if not isinstance(sp['test_size'],(int,float)) or not 0<sp['test_size']<1:raise ValueError('test_size must be between 0 and 1')
- if type(sp['seed']) is not int or type(sp['gap_days']) is not int or sp['gap_days']<0:raise ValueError('Graine et gap invalides')
+ if type(sp['seed']) is not int or type(sp['gap_days']) is not int or sp['gap_days']<0:raise ValueError('Invalid seed or gap: integers required, gap_days >= 0')
  if sp['kind']=='random' and (d['group_col'] or d['time_col'] or d['query_col']):raise ValueError('Declared dependence: use group or time, not random')
  if sp['kind']=='group' and not (d['group_col'] or d['query_col']):raise ValueError('Group column required')
  if sp['kind']=='time' and (not d['time_col'] or not sp['cutoff']):raise ValueError('Temporal split requires explicit time column and cutoff')
  if kind=='ranking' and (not d['query_col'] or sp['kind']!='group' or (d['group_col'] and d['group_col']!=d['query_col'])):raise ValueError('Ranking v1 requires disjoint query groups; other structures are unsupported')
- if kind=='binary' and s['task']['positive_label'] is None:raise ValueError('Classe positive explicite required')
- if type(s['task']['ndcg_k']) is not int or s['task']['ndcg_k']<1:raise ValueError('ndcg_k invalid')
+ if kind=='binary' and s['task']['positive_label'] is None:raise ValueError('An explicit positive class is required')
+ if type(s['task']['ndcg_k']) is not int or s['task']['ndcg_k']<1:raise ValueError('Invalid ndcg_k: a positive integer is required')
  if not isinstance(s['models'],list) or not s['models'] or len(set(s['models']))!=len(s['models']) or set(s['models'])-set(CATALOG[kind]['models']):raise ValueError('Unknown, duplicate, or incompatible model; deep learning excluded')
  if s['evaluation']['primary'] not in CATALOG[kind]['metrics']:raise ValueError('Metric incompatible with the task')
  for key in ['tree_depth','n_clusters','forest_trees']:
   if type(s['model_options'][key]) is not int or s['model_options'][key]<1:raise ValueError('Invalid model option: '+key)
- if s['model_options']['n_clusters']<2:raise ValueError('Au less deux clusters')
+ if s['model_options']['n_clusters']<2:raise ValueError('At least two clusters are required')
  for k in ['stability_repeats','silhouette_sample']:
   if type(s['evaluation'][k]) is not int or s['evaluation'][k]<2:raise ValueError('Invalid evaluation parameter: '+k)
- if type(s['budget']['max_fits']) is not int or s['budget']['max_fits']<1:raise ValueError('Budget invalid')
+ if type(s['budget']['max_fits']) is not int or s['budget']['max_fits']<1:raise ValueError('Invalid budget: max_fits must be a positive integer')
  if s['confirmation']!={'status':'exploratory_only','independent_review_required':True}:raise ValueError('This version does not automatically certify models')
  if not isinstance(s['constraints'],list):raise ValueError('constraints must be a list')
  for c in s['constraints']:
@@ -71,13 +71,13 @@ def validate(contract):
   if expected is None or set(c)!=expected or type(c['hard']) is not bool:raise ValueError('Unknown constraint or incomplete schema: '+str(kindc))
   if kindc=='interpretability' and c['level'] not in {'intrinsic','posthoc'}:raise ValueError('Interpretability: intrinsic or posthoc')
   for key in ['max_terms','max_depth','maximum','batch_size']:
-   if key in c and (type(c[key]) is not int or c[key]<1):raise ValueError('Plafond entier positif required')
+   if key in c and (type(c[key]) is not int or c[key]<1):raise ValueError('A positive integer limit is required: '+key)
   for key in ['max_batch_p95_ms','max_mb','max_seconds']:
-   if key in c and (type(c[key]) not in [int,float] or not 0<c[key]<float('inf')):raise ValueError('Plafond fini positif required')
+   if key in c and (type(c[key]) not in [int,float] or not 0<c[key]<float('inf')):raise ValueError('A finite positive limit is required: '+key)
   if kindc in {'allowed_models','forbidden_features'}:
    vals=c['models' if kindc=='allowed_models' else 'columns']
-   if not isinstance(vals,list) or not all(isinstance(v,str) for v in vals):raise ValueError('Liste de names required')
-  if kindc=='custom' and (not str(c['name']).strip() or not str(c['evidence_required']).strip()):raise ValueError('Constraint externe : nom et evidence attendue required')
+   if not isinstance(vals,list) or not all(isinstance(v,str) for v in vals):raise ValueError('A list of names is required')
+  if kindc=='custom' and (not str(c['name']).strip() or not str(c['evidence_required']).strip()):raise ValueError('External constraint: a name and the expected evidence are required')
  return s
 
 def load(root):return validate(yaml.safe_load((Path(root)/'project.yaml').read_text()))
