@@ -49,6 +49,9 @@ NOTE_STATE_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'cr
                    'revision', 'request_id', 'resolution')
 NOTE_RESOLUTION_KEYS = ('user_words', 'revision', 'time', 'request_id')
 RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
+# ``preview policy`` (Phase 2), with ``warnings`` added by the post-v0.1 fixes (D4).
+PREVIEW_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'rules', 'models',
+                        'evaluations', 'intervals', 'adopted', 'recorded', 'note', 'warnings')
 SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'delegation_scope', 'user_words', 'reason',
                          'open_proposals')
 SUMMARY_GOAL_KEYS = ('intended_use', 'decision', 'observation_unit', 'prediction_time')
@@ -357,7 +360,9 @@ def test_next_action_kinds_and_not_yet_defensible_ids_in_source():
     source = (STUDY_PKG / 'state.py').read_text(encoding='utf-8')
     assert set(re.findall(r"'kind': '([a-z_]+)'", source)) == NEXT_ACTION_KINDS
     defensible = (inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
-                  + inspect.getsource(view._small_data))
+                  + inspect.getsource(view._small_data)
+                  + inspect.getsource(view.small_partition_warning)
+                  + inspect.getsource(view.capacity_warning))
     ids = set(re.findall(r"\{'id': '([a-z_]+)'", defensible))
     assert ids == NOT_YET_DEFENSIBLE_IDS
 
@@ -441,6 +446,28 @@ def test_small_data_warnings_are_documented():
             'n_groups', 'max_groups', 'other', 'n_values', 'min_rows', 'min_positive'}
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
     assert '--max-groups N' in DOC and '`(other values)`' in DOC
+    # Post-v0.1 fixes (D4): inclusive thresholds, and the warnings of ``preview policy``.
+    split = {'partitions': {'validation': {'n_rows': 30, 'n_positive': 5}}}
+    assert view.small_partition_warning(split, True)['id'] == 'small_validation_partition'
+    assert view.capacity_warning(['capacity:30'], 30)['id'] == 'capacity_exceeds_validation'
+    from mlkit.study import cmd_preview
+    assert cmd_preview.PAYLOAD_KEYS == PREVIEW_PAYLOAD_KEYS
+    keys = {'view.small_partition_warning', 'view.capacity_warning', 'warnings'}
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert 'at most `view.SMALL_VALIDATION_ROWS` (30) rows' in DOC
+
+
+def test_check_traces_structure_counts_and_the_binary_recap_headline():
+    """Post-v0.1 fixes D8 (structure counts in ``check``) and D10 (the binary recap's
+    headline policy result)."""
+    from mlkit.study import cmd_check
+    assert tuple(cmd_check.STRUCTURE_NOUNS) == ('features', 'groups', 'steps', 'pauses',
+                                                'decisions')
+    assert {'columns', 'features', 'variables'} <= set(cmd_check.STRUCTURE_NOUNS['features'])
+    assert view.HEADLINE_MODEL == 'fit.logistic' and view.RECAP_RID == 8
+    keys = {'cmd_check.STRUCTURE_NOUNS', 'structure', 'plan.steps', 'plan.pauses',
+            'latest', 'Decided', 'Now'}
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
 def test_negative_reply_targets_the_agreement():

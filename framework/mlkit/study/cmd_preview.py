@@ -15,6 +15,11 @@ choosing a rule on them is recorded as ``validation_policy_selection`` only by
 ``hypotrail run policy.evaluate``, whose result is what a policy confirmation needs.
 A preview is therefore never evidence and never a decision.
 
+``warnings`` (post-v0.1 fixes, D4) holds the G.12 warnings that bear on the previewed
+rules, as the view words them: ``capacity_exceeds_validation`` when a previewed capacity
+is at least the number of validation rows (it selects every row), and
+``small_validation_partition`` when the current split's validation partition is small.
+
 Works under ``HYPOTRAIL_READ_ONLY=1``. Output: ``hypotrail.preview/1``.
 """
 from __future__ import annotations
@@ -25,7 +30,9 @@ from . import commands as cmd
 
 SCHEMA = 'hypotrail.preview/1'
 PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'rules', 'models', 'evaluations',
-                'intervals', 'adopted', 'recorded', 'note')
+                'intervals', 'adopted', 'recorded', 'note',
+                # Post-v0.1 fixes (D4): the small-data warnings that bear on these rules.
+                'warnings')
 FITS = ('fit.baseline', 'fit.logistic')
 NOTE = ('Experiment, not adopted: nothing was recorded. To adopt a rule, run policy.evaluate '
         'with it (exposure validation_policy_selection), then propose and confirm the policy.')
@@ -98,11 +105,20 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
                                               reference=FITS[0])
                 for rule in rules}
     decision = state['decisions']['policy']
+    from . import view
+    warnings = []
+    if study.is_current('split'):
+        small = view.small_partition_warning(study.current('split')['output']['values'], True)
+        if small:
+            warnings.append(small)
+    over = view.capacity_warning(rules, len(keys))
+    if over:
+        warnings.insert(0, over)
     return {'schema': SCHEMA, 'ok': True, 'study': str(study.study_dir),
             'revision': study.revision, 'kind': 'policy', 'rules': list(rules), 'models': models,
             'evaluations': evaluations, 'intervals': boot,
             'adopted': {'status': decision['status'], 'value': decision['value']},
-            'recorded': False, 'note': NOTE}
+            'recorded': False, 'note': NOTE, 'warnings': warnings}
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
