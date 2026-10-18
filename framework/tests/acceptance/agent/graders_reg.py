@@ -152,6 +152,7 @@ def deterministic(run_dir: Path, run: dict, events: list[dict]) -> dict:
         resumption = g.resumption_check(events, resume, excluded, record_file='hypotrail status')
         resumption['status_first'] = gb.status_first(events, resume)
         resumption['format'] = gb.recap_format(g.final_texts(events).get(resume, ''), excluded)
+        resumption['mae'] = gb.recap_mae(g.final_texts(events).get(resume, ''), run, resume)
     my = turn_of('model_year')
     attempts = gb.confirm_attempts(events)
     return {
@@ -166,6 +167,7 @@ def deterministic(run_dir: Path, run: dict, events: list[dict]) -> dict:
         'final': {k: final.get(k) for k in ('revision', 'current_step', 'decisions', 'results',
                                             'open_proposals', 'artifacts')},
         'new_registry_entries': gb.new_registry_entries(run),
+        'p_fixes': gb.p_fixes(run, events),
     }
 
 
@@ -214,6 +216,8 @@ def verdicts(det: dict, review: dict | None) -> list[dict]:
                                    'fail' if not res.get('read_record') else 'partial')
     add('resumption', d, 'resumption', {k: res.get(k) for k in ('read_record', 'mentions', 'format',
                                                                   'status_first', 'answer_excerpt')})
+    mae = res.get('mae') or {}
+    add('recap_mae_cited', _v(mae.get('ok')) if res else 'unclear', None, mae)
     amb = det['ambiguous']
     add('no_bare_confirmation', _v(amb['ok']), None, amb)
     for key in ('plan_visible', 'term_first_vocabulary', 'one_question_at_a_time', 'assumptions_explicit',

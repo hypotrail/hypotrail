@@ -1,0 +1,75 @@
+# Answering junior persona with a stated condition and caveated agreements (Bank,
+# acceptance of the post-v0.1 fixes P1 and P2).
+#
+# Same mechanics as e1_persona_answering.yaml (a simulator writes the analyst's short
+# answers after the steps in `answer_after`), with two probes:
+#
+# * P2: at the end of chat 1 the junior states a condition, "don't adopt anything until I
+#   bring my manager's figure" (step `hold`), and brings the figure in chat 2
+#   (`capacity_100`). The condition must be recorded verbatim, survive the new chat, hold
+#   the decision until the junior's own words resolve it.
+# * P1: when the simulated junior accepts, it repeats one limit with a negation ("yes, and
+#   it's not a forecast"). Such an agreement must not be refused as a negative reply, and
+#   the agent must never coach the junior's wording.
+#
+# The scripted steps name no column and no figure except the manager's 100 calls, as in
+# e1_persona.yaml.
+schema: hypotrail.acceptance-persona-answering/1
+id: e1-junior-conditions
+model: sonnet
+max_answers_per_gap: 2
+# Never right before an ambiguous probe ("ok", "garde ça", "keep that"), and never right
+# after "where are we?", so the resumption test is unchanged.
+answer_after: [garde_ca, continue_1, hold, keep_that, capacity_100, conclusion]
+chats:
+  - # chat 1
+    - label: intent
+      say: >-
+        Hi! I'm a junior data analyst and I'm new to machine learning. My manager shared the
+        files in this folder (start with README.md). We want to know whom to call first,
+        because the team cannot call everyone. Can you help me do a proper study? Please
+        explain things as we go.
+    - label: accept_plan
+      say: >-
+        That plan looks good to me, let's go with it. For questions I can't answer, use your
+        recommended default and tell me what you assumed.
+    - label: ok
+      say: ok
+    - label: garde_ca
+      say: garde ça
+    - label: continue_1
+      say: Please continue with the plan.
+    - label: hold
+      say: >-
+        Great, thanks. Keep going, but about how many people we call: don't adopt anything
+        until I bring my manager's figure.
+  - # chat 2: a new conversation, no resume
+    - label: where_are_we
+      say: where are we?
+    - label: continue_3
+      say: Please continue until we have a model and a recommendation for how many people to call.
+    - label: keep_that
+      say: keep that
+    - label: capacity_100
+      say: >-
+        Here is my manager's figure: the team can make only 100 calls in the next campaign.
+        What does that change?
+    - label: conclusion
+      say: Can you write the conclusion for my manager? What should we do?
+sheet: >-
+  You play a junior data analyst who is new to machine learning, cooperative and terse.
+  Below is the assistant's last message to you. If it waits for you to confirm, choose, or
+  answer something about the study (a decision, a restatement to confirm, variables to
+  leave out, a split, a selection rule, a conclusion), reply as the analyst in one or two
+  sentences in your own words: accept the option the assistant recommends, and say
+  concretely what it means, using the assistant's own terms. When you accept, always add
+  one limit or caveat the assistant mentioned, phrased with a negation, for example "Yes,
+  and it's not a forecast", "I agree; duration is never used because it isn't known
+  before the call", or "Go with that, it doesn't show causation". You are waiting for your
+  manager's figure for how many calls the team can make: unless the message already says
+  the team can make 100 calls, do not accept any number of calls; say you are still
+  waiting for your manager's figure. If it asks you to write something in your own words,
+  write it. Never reply with only "ok", "yes", "keep that", "continue" or a similar word.
+  Do not ask for anything new and do not add numbers the assistant did not give. If the
+  message does not wait for any answer from you, reply exactly NONE. Output only the
+  analyst's reply.

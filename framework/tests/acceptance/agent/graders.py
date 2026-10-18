@@ -386,6 +386,7 @@ def check_assistant_texts(workspace: Path, texts: list[dict], tolerated: ValueSe
     only when its value (``details.value``) appears in the user's words or the documents.
     """
     out, errors, tolerated_hits, warnings, n_numbers, n_words = [], [], [], [], 0, 0
+    text_errors = []
     for t in texts:
         if not (t.get('text') or '').strip():
             continue
@@ -421,10 +422,13 @@ def check_assistant_texts(workspace: Path, texts: list[dict], tolerated: ValueSe
                     errors.append(item)
             elif f['severity'] == 'warning':
                 warnings.append(item)
+            else:
+                text_errors.append(item)      # e.g. misattributed_delegation (P7); not a T9 error
         out.append({'turn': t.get('turn'), 'clean': c['clean'], 'traced': len(c.get('traced') or [])})
     return {'texts_checked': len(out), 'numbers_seen': n_numbers, 'numbers_in_words': n_words,
             'errors': errors,
-            'tolerated': tolerated_hits, 'warnings': warnings, 'ok': not errors}
+            'tolerated': tolerated_hits, 'warnings': warnings, 'text_errors': text_errors,
+            'ok': not errors}
 
 
 def diff_json(before, after, path: str = '') -> list[dict]:
