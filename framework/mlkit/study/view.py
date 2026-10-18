@@ -44,7 +44,7 @@ SUMMARY_SCHEMA = 'hypotrail.summary/1'
 SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals', 'decisions',
                 'results', 'artifacts', 'executions', 'not_yet_defensible')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
-SUMMARY_PRIORITY = ('interrupted_executions', 'result_integrity', 'adopted_rule_not_evaluated',
+SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'result_integrity', 'adopted_rule_not_evaluated',
                     'code_changed', 'stale_results', 'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'validation_is_not_independent')
 SUMMARY_TOP = 5
@@ -237,6 +237,12 @@ def build(study_dir) -> dict:
         defensible.append({'id': 'result_integrity', 'slots': broken,
                            'text': 'Some recorded results fail their integrity check and '
                                    'cannot be cited.'})
+    sources = study.source_changes()
+    if sources:
+        defensible.append({'id': 'sources_changed', 'changes': sources,
+                           'text': 'The case or dataset file changed since the study started: '
+                                   'no result describes the current bytes, and every decision, '
+                                   'run and render is refused. Start a new study on the new data.'})
     changed = sorted(s for s, r in results.items()
                      if r['integrity'] == 'ok' and rid_reason(r, 'code_changed'))
     if changed:

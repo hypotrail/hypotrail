@@ -385,6 +385,33 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def source_changes(state) -> list[dict]:
+    """The case and dataset files whose bytes differ from the digests recorded in
+    ``state`` (plan §3.7 row 12): ``[{label, path, expected_sha256, actual_sha256}]``,
+    empty when both match. ``actual_sha256`` is None for a missing file."""
+    out = []
+    for label in ('case', 'dataset'):
+        path, expected = Path(state[label]['path']), state[label]['sha256']
+        actual = sha256_file(path) if path.is_file() else None
+        if actual != expected:
+            out.append({'label': label, 'path': str(path), 'expected_sha256': expected,
+                        'actual_sha256': actual})
+    return out
+
+
+def changed_sources_error(changes: list[dict]):
+    """The ``dataset_changed`` refusal of :func:`source_changes` (first change in details)."""
+    from .errors import StudyError
+
+    first = changes[0]
+    return StudyError('dataset_changed',
+                      f'The {first["label"]} file changed since the study started; decisions and '
+                      f'results refer to the original bytes. Start a new study on the new data.',
+                      details={**{k: first[k] for k in ('path', 'expected_sha256',
+                                                         'actual_sha256')},
+                               'changes': changes})
+
+
 def _header_fields(first_line: str, d: dict) -> list[str]:
     if d['sep'] == WHITESPACE_SEP:
         return first_line.split()

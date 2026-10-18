@@ -373,8 +373,20 @@ def rows(dataset, keys):
 
 
 def load(plan_: Mapping):
-    """Case and dataset of a plan, with the dataset bytes verified against state."""
+    """Case and dataset of a plan, with the case and dataset bytes verified against the
+    digests the plan was derived from (the case file is read again here, review fix L1)."""
     from . import data as dt
+    path = plan_['case_path']
+    if os.path.isdir(path):
+        path = os.path.join(path, c.CASE_FILE)
+    expected = plan_['inputs'].get('case_sha256')
+    actual = c.sha256_file(path) if os.path.isfile(path) else None
+    if expected is not None and actual != expected:
+        raise StudyError('dataset_changed', 'The case file changed after this execution was '
+                                            'reserved; its result would not describe the '
+                                            'recorded case.',
+                         details={'path': str(path), 'expected_sha256': expected,
+                                  'actual_sha256': actual})
     case = c.load_case(plan_['case_path'])
     if case.dataset['sha256'] != plan_['dataset_sha256']:
         raise StudyError('dataset_changed', 'The case now names a different dataset digest.',

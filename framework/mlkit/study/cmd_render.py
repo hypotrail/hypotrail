@@ -143,7 +143,10 @@ def render_all(study_dir) -> dict:
 
     guard.assert_writable()
     study = Path(study_dir).resolve()
-    read.open(study)                        # study_missing / integrity_error before locking
+    snapshot = read.open(study)             # study_missing / integrity_error before locking
+    if snapshot.source_changes():           # L1: never render from changed case bytes
+        from .case import changed_sources_error
+        raise changed_sources_error(snapshot.source_changes())
     # Marimo's code generator is imported by render_notebook only when the notebook text
     # changes (cached template); most commits render without importing it.
     with lock.writer_lock(study):

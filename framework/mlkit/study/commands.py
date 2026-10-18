@@ -575,16 +575,9 @@ def _ambiguous(reason: str, message: str, **details) -> CommandRefused:
 
 def _verify_sources(state: Mapping) -> None:
     """Plan §3.7 row 12: a changed case or dataset is refused, never absorbed."""
-    case_path, data_path = Path(state['case']['path']), Path(state['dataset']['path'])
-    for label, path, expected in (('case', case_path, state['case']['sha256']),
-                                  ('dataset', data_path, state['dataset']['sha256'])):
-        actual = c.sha256_file(path) if path.is_file() else None
-        if actual != expected:
-            raise CommandRefused('dataset_changed',
-                                 f'The {label} file changed since the study started; decisions '
-                                 f'and results refer to the original bytes.',
-                                 details={'path': str(path), 'expected_sha256': expected,
-                                          'actual_sha256': actual})
+    changes = c.source_changes(state)
+    if changes:
+        raise c.changed_sources_error(changes)
 
 
 # --- decision actions -------------------------------------------------------------------
@@ -600,6 +593,7 @@ def _propose(ctx: Context) -> Handler:
 
     def run(state, params):
         decision_id, value = params['decision_id'], params['value']
+        _verify_sources(state)                     # L1: never propose on changed bytes
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
             value = dep.canonical_rule(value)        # L2: one spelling per rule

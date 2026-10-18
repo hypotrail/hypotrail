@@ -87,7 +87,9 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           # Post-acceptance contract (D1, adopted rule).
                           'delegated_decisions', 'adopted_rule_not_evaluated',
                           # Review fix H2 (plan §3.7 row 11, detected by the view).
-                          'code_changed'}
+                          'code_changed',
+                          # Review fix L1 (plan §3.7 row 12, flagged by the view).
+                          'sources_changed'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',

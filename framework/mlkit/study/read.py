@@ -131,6 +131,7 @@ class Study:
         self._entries: dict[str, dict] = {}
         self._module_shas: dict[str, str | None] = {}
         self._currency: dict[str, dict] = {}
+        self._sources: list[dict] | None = None
 
     # state
 
@@ -191,6 +192,14 @@ class Study:
         rid = self._state['current'].get(slot)
         return rid is not None and self.currency(rid)['current']
 
+    def source_changes(self) -> list[dict]:
+        """Case and dataset files whose bytes changed since ``init``
+        (:func:`mlkit.study.case.source_changes`); read once per snapshot."""
+        if self._sources is None:
+            from .case import source_changes
+            self._sources = source_changes(self._state)
+        return copy.deepcopy(self._sources)
+
     def code_changed(self, entry: dict) -> list[str]:
         """Modules of ``entry``'s code fingerprint whose source differs now (§3.7 row 11)."""
         return sorted(name for name, sha in entry['code']['modules'].items()
@@ -209,7 +218,13 @@ class Study:
             return copy.deepcopy(self._currency[rid])
         self._currency[rid] = {'current': False, 'reason': None}     # cycle guard
         state = self._state
-        if rid not in set(state['current'].values()):
+        if self.source_changes():
+            labels = [c['label'] for c in self.source_changes()]
+            out = {'current': False,
+                   'reason': {'reason': 'the ' + ' and '.join(labels) + ' file changed since the '
+                                        'study started (§3.7 row 12)',
+                              'since': None, 'sources_changed': labels}}
+        elif rid not in set(state['current'].values()):
             out = {'current': False, 'reason': {'reason': 'not promoted in any slot',
                                                 'since': None}}
         elif rid in state['stale']:
