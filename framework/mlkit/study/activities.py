@@ -30,6 +30,13 @@ fit.*               training rows, then validation ``train_fit``, ``validation_m
 policy.evaluation   validation predictions         ``validation_policy_selection``
 ==================  =============================  ===========================================
 
+A regression study (M3) has its own activities, chosen by the task of the study:
+``split`` (``random`` or ``ordinal_cutoff``), ``eda.target_summary``,
+``eda.special_values``, ``eda.mean_by:<column>``, ``fit.baseline`` (the training mean),
+``fit.linear``, and ``evaluate.regression`` (MAE, RMSE, residuals, paired bootstrap
+intervals on validation rows, exposure ``validation_model_evaluation``). Running an
+activity of the other task is refused (``invalid_arguments``).
+
 ``HYPOTRAIL_READ_ONLY=1`` makes :func:`compute` refuse (``read_only``): a notebook
 opened read-only can display results but never produce one.
 """
@@ -53,11 +60,24 @@ RATE_BY = 'eda.rate_by'
 BASELINE = 'fit.baseline'
 LOGISTIC = 'fit.logistic'
 POLICY = 'policy.evaluation'
-ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY)
+TARGET_SUMMARY = 'eda.target_summary'
+MEAN_BY = 'eda.mean_by'
+LINEAR = 'fit.linear'
+REGRESSION_EVALUATION = 'evaluate.regression'
+ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
+              TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION)
+TASK_ACTIVITIES = {
+    'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
+    'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
+                   REGRESSION_EVALUATION),
+}
 ALIASES = {'policy.evaluate': POLICY}
 CLI_NAMES = ACTIVITIES + tuple(ALIASES)
-EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY)
+EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY)
+PER_COLUMN = (RATE_BY, MEAN_BY)
 FITS = (BASELINE, LOGISTIC)
+REGRESSION_FITS = (BASELINE, LINEAR)
+CANDIDATE_FITS = (LOGISTIC, LINEAR)
 
 # Modules whose source defines each result (registry code fingerprint, plan §3.3).
 _BASE = 'mlkit.study.activities'
@@ -69,7 +89,13 @@ MODULES = {
     BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics'),
     LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical'),
     POLICY: (_BASE, 'mlkit.study.policy'),
+    TARGET_SUMMARY: (_BASE, 'mlkit.study.eda'),
+    MEAN_BY: (_BASE, 'mlkit.study.eda'),
+    LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical'),
+    REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression'),
 }
+# The regression fit of the baseline also uses the error module.
+REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
 READ_ONLY_ENV = 'HYPOTRAIL_READ_ONLY'
 SPLIT_BLOBS = ('train', 'validation')
 PREDICTIONS = 'predictions'
@@ -80,6 +106,13 @@ LOGISTIC_PARAMS = {'model': 'logistic', 'implementation': 'mlkit.classical.pipel
                                     'fitted on training rows only',
                    'special_values': 'numeric special values: indicator column, value imputed; '
                                      'categorical special values: their own category'}
+LINEAR_PARAMS = {'model': 'linear', 'estimator': 'sklearn.linear_model.LinearRegression',
+                 'implementation': 'mlkit.classical.pipeline',
+                 'preprocessing': LOGISTIC_PARAMS['preprocessing'],
+                 'special_values': LOGISTIC_PARAMS['special_values']}
+# A split result's ``groups`` lists at most this many shared group values as examples.
+MAX_GROUP_EXAMPLES = 5
+MIN_PARTITION_ROWS = 5
 
 
 def slot_of(activity: str, options: Mapping | None = None) -> str:
@@ -90,17 +123,20 @@ def slot_of(activity: str, options: Mapping | None = None) -> str:
     The registry entry keeps ``activity: "eda.rate_by"`` and ``params.column``.
     """
     activity = canonical(activity)
-    if activity == RATE_BY:
+    if activity in PER_COLUMN:
         column = (options or {}).get('column')
         if not isinstance(column, str) or not column:
-            raise CommandRefused('invalid_arguments', 'eda.rate_by needs --column NAME.')
-        return f'{RATE_BY}:{column}'
+            raise CommandRefused('invalid_arguments', f'{activity} needs --column NAME.')
+        return f'{activity}:{column}'
     return activity
 
 
 def activity_of(slot: str) -> str:
     """The activity of a slot (``eda.rate_by:<column>`` -> ``eda.rate_by``)."""
-    return RATE_BY if slot.startswith(RATE_BY + ':') else slot
+    for activity in PER_COLUMN:
+        if slot.startswith(activity + ':'):
+            return activity
+    return slot
 
 
 def guard_read_only() -> None:
@@ -123,15 +159,15 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
     policy evaluation, ``{}`` otherwise. Anything else is refused."""
     options = dict(options or {})
     given = {k for k, v in options.items() if v not in (None, [], ())}
-    allowed = {RATE_BY: {'column'}, POLICY: {'rules'}}.get(activity, set())
+    allowed = {RATE_BY: {'column'}, MEAN_BY: {'column'}, POLICY: {'rules'}}.get(activity, set())
     if given - allowed:
         raise CommandRefused('invalid_arguments',
                              f'{activity} does not take {", ".join(sorted(given - allowed))}.',
                              details={'activity': activity, 'options': sorted(allowed)})
-    if activity == RATE_BY:
+    if activity in PER_COLUMN:
         column = options.get('column')
         if not isinstance(column, str) or not column:
-            raise CommandRefused('invalid_arguments', 'eda.rate_by needs --column NAME.')
+            raise CommandRefused('invalid_arguments', f'{activity} needs --column NAME.')
         return {'column': column}
     if activity == POLICY:
         from . import policy
@@ -221,6 +257,11 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
     missing fits), ``invalid_arguments`` (an unknown ``--column``).
     """
     activity = canonical(activity)
+    task = state.get('task', 'binary')
+    if activity not in TASK_ACTIVITIES[task]:
+        raise CommandRefused('invalid_arguments',
+                             f'{activity} is not an activity of a {task} study.',
+                             details={'activities': list(TASK_ACTIVITIES[task]), 'task': task})
     options = normalize_options(activity, options)
     pre.require_activity(state, activity)
     case = case_of(state)
@@ -237,14 +278,25 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                               'n_rows': len(rec.parse_row_keys(data)), 'columns': list(columns)})
 
     if activity == SPLIT:
-        inputs.update(decision=state['decisions']['split']['value'], target=_target(case))
+        decision = state['decisions']['split']['value']
+        inputs.update(decision=decision, target=_target(case))
         previous, since = _previous_split(store, state)
         if previous:
             inputs['results'] = {'previous_split': previous}
             inputs['previous_split_stale_since'] = since
+        # A stratified split reads the target; a random or ordinal split reads no target,
+        # only the time column it cuts on. Each reads the declared group column, whose
+        # overlap between partitions it reports.
+        if decision.get('method') == 'stratified_random':
+            read = [target]
+        else:
+            read = [decision['column']] if decision.get('method') == 'ordinal_cutoff' else []
+        if case.group_column:
+            read.append(case.group_column)
+            inputs['group_column'] = case.group_column
         if with_exposure:
             from . import data as dt
-            expose('structural_inspection', 'all', dt.row_index(case).keys, [target])
+            expose('structural_inspection', 'all', dt.row_index(case).keys, read)
     else:
         split_rid = state['current'][SPLIT]
         keys = split_keys(store, split_rid)
@@ -258,23 +310,24 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                 inputs['special_values'] = [{'column': s['column'], 'value': s['value']}
                                             for s in specials]
                 columns += sorted({s['column'] for s in specials})
-            elif activity == RATE_BY:
+            elif activity in PER_COLUMN:
                 column = options['column']
                 variable = case.variables.get(column)
-                if variable is None or variable['role'] != 'feature':
+                roles = ('feature', 'time') if activity == MEAN_BY else ('feature',)
+                if variable is None or variable['role'] not in roles:
                     raise CommandRefused('invalid_arguments',
                                          f'{column!r} is not a feature of this case.',
                                          details={'features': [v['name'] for v in
                                                                case.document['variables']
-                                                               if v['role'] == 'feature']})
+                                                               if v['role'] in roles]})
                 params['column'] = column
                 inputs['special_values'] = feature_special_values(case, [column])
                 columns.append(column)
             expose('train_eda', 'train', keys['train'], columns)
-        elif activity in FITS:
+        elif activity in FITS or activity == LINEAR:
             inputs['target'] = _target(case)
             features: list[str] = []
-            if activity == LOGISTIC:
+            if activity in CANDIDATE_FITS:
                 availability = state['decisions']['feature_availability']['value'] or {}
                 candidates = [v['name'] for v in case.document['variables']
                               if v['role'] == 'feature']
@@ -290,19 +343,40 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                         f'Running {activity}')
                 inputs['features'] = features
                 inputs['special_values'] = feature_special_values(case, features)
-                params = dict(LOGISTIC_PARAMS, seed=state['decisions']['split']['value']['seed'])
+                if activity == LINEAR:
+                    params = dict(LINEAR_PARAMS, seed=0)
+                else:
+                    params = dict(LOGISTIC_PARAMS,
+                                  seed=state['decisions']['split']['value']['seed'])
+            elif task == 'regression':
+                params = {'model': 'train_mean'}
             else:
                 params = {'model': 'constant_prior'}
             expose('train_fit', 'train', keys['train'], features + [target])
             expose('validation_model_evaluation', 'validation', keys['validation'],
                    features + [target])
+        elif activity == REGRESSION_EVALUATION:
+            # Current fits are a precondition (require_activity). The time column, when the
+            # case declares one, breaks the residuals down by period.
+            inputs['results'] = {SPLIT: split_rid,
+                                 **{s: state['current'][s] for s in REGRESSION_FITS}}
+            inputs['bootstrap'] = dict(state['settings']['bootstrap'])
+            inputs['target'] = _target(case)
+            columns = [case.time_column] if case.time_column else []
+            inputs['residual_columns'] = columns
+            params = {'models': list(REGRESSION_FITS), 'reference': BASELINE,
+                      'candidate': LINEAR, 'metrics': ['mae', 'rmse']}
+            expose('validation_model_evaluation', 'validation', keys['validation'],
+                   [target] + columns)
         else:   # policy evaluation; current fits are a precondition (require_activity)
             inputs['results'] = {s: state['current'][s] for s in FITS}
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
             params = {'rules': evaluated_rules(state, options['rules']), 'models': list(FITS),
                       'reference': BASELINE}
             expose('validation_policy_selection', 'validation', keys['validation'], [target])
-    code = registry.code_fingerprint(MODULES[activity])
+    modules = (REGRESSION_MODULES.get(activity, MODULES[activity]) if task == 'regression'
+               else MODULES[activity])
+    code = registry.code_fingerprint(modules)
     key = rec.input_key(activity, rec_json(params), rec_json(inputs), code['fingerprint'])
     return {'activity': activity, 'slot': slot_of(activity, options), 'options': options,
             'params': params,
@@ -397,6 +471,8 @@ def compute_split(store, plan_: Mapping) -> dict:
 
     case, dataset = load(plan_)
     decision = plan_['inputs']['decision']
+    if decision['method'] != 'stratified_random':
+        return compute_unstratified_split(store, plan_, case, dataset)
     frame = dataset.frame
     y = positive(frame, case)
     spec = {'data': {'group_col': None, 'query_col': None, 'time_col': None},
@@ -422,6 +498,9 @@ def compute_split(store, plan_: Mapping) -> dict:
                              for part in SPLIT_BLOBS},
               'implementation': 'mlkit.classical.split (stratified train_test_split)',
               'overlap': None}
+    group = plan_['inputs'].get('group_column')
+    if group:
+        values['groups'] = group_overlap(frame, group, parts)
     previous = plan_['inputs'].get('results', {}).get('previous_split')
     if previous:
         values['overlap'] = _overlap(store, previous,
@@ -431,6 +510,111 @@ def compute_split(store, plan_: Mapping) -> dict:
 
 def _line(key: str) -> int:
     return int(key[1:])
+
+
+def ordinal_values(frame, column: str):
+    """The integer values of a time column, as written (never converted to a date).
+
+    pandas would read an integer such as a model year 70 as nanoseconds since 1970;
+    the values are compared as integers instead. Missing or non-integer values are
+    refused (``invalid_value``)."""
+    import pandas as pd
+    raw = frame[column]
+    values = pd.to_numeric(raw, errors='coerce')
+    bad = raw[values.isna() | (values != values.round())]
+    if len(bad):
+        raise StudyError('invalid_value', f'The time column {column!r} must hold an integer on '
+                                          f'every row to be cut by an ordinal cutoff.',
+                         details={'column': column, 'rows': sorted(bad.index, key=_line)[:20]})
+    return values.astype('int64')
+
+
+def group_overlap(frame, column: str, parts: Mapping) -> dict:
+    """How many values of the group column the partitions share (M3).
+
+    This version has no grouped split: rows of one group (a repeated car name, a member
+    seen twice) can fall in both partitions. The overlap is reported, never hidden, so
+    the validation rows are not silently claimed independent of the training rows."""
+    groups = {part: frame.loc[list(keys), column].astype(str) for part, keys in parts.items()}
+    train, validation = set(groups['train']), set(groups['validation'])
+    shared = sorted(train & validation)
+    in_shared = groups['validation'].isin(shared)
+    n_val = len(groups['validation'])
+    return {'column': column, 'n_groups': len(train | validation),
+            'train_groups': len(train), 'validation_groups': len(validation),
+            'shared_groups': len(shared), 'validation_rows': n_val,
+            'validation_rows_in_shared_groups': int(in_shared.sum()),
+            'validation_share_in_shared_groups': (float(in_shared.sum()) / n_val
+                                                  if n_val else None),
+            'examples': shared[:MAX_GROUP_EXAMPLES],
+            'capability': c.CAPABILITY_GROUPED_SPLIT,
+            'note': 'Grouped split is not available in this version: validation rows of a shared '
+                    'group are not independent of the training rows.'}
+
+
+def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
+    """A ``random`` split (numeric target, not stratified) or an ``ordinal_cutoff`` split
+    on an integer time column (rows at or above the cutoff go to validation)."""
+    import numpy as np
+    from mlkit import classical
+
+    decision = plan_['inputs']['decision']
+    frame = dataset.frame
+    keys = np.asarray(frame.index)
+    if decision['method'] == 'ordinal_cutoff':
+        column, cutoff = decision['column'], decision['cutoff']
+        values = ordinal_values(frame, column)
+        is_validation = (values >= cutoff).to_numpy()
+        parts = {'train': sorted(keys[~is_validation], key=_line),
+                 'validation': sorted(keys[is_validation], key=_line)}
+        small = {p: len(k) for p, k in parts.items() if len(k) < MIN_PARTITION_ROWS}
+        if small:
+            raise StudyError('invalid_value',
+                             f'The cutoff {cutoff} on {column!r} leaves fewer than '
+                             f'{MIN_PARTITION_ROWS} rows in a partition.',
+                             details={'column': column, 'cutoff': cutoff, 'rows': small,
+                                      'min': int(values.min()), 'max': int(values.max())})
+
+        def describe(part):
+            v = values.loc[parts[part]]
+            return {'n_rows': len(parts[part]), 'column_min': int(v.min()),
+                    'column_max': int(v.max()), 'distinct_values': int(v.nunique())}
+        values_out = {'method': 'ordinal_cutoff', 'column': column, 'cutoff': cutoff,
+                      'n_rows': len(frame), 'partitions': {p: describe(p) for p in SPLIT_BLOBS},
+                      'validation_share': len(parts['validation']) / len(frame),
+                      'stratified_on': None,
+                      'implementation': 'mlkit.study.activities (ordinal cutoff on the integer '
+                                        'values of the time column, never converted to a date)',
+                      'scenario': f'Rows with {column} >= {cutoff} are validated on a model fitted '
+                                  f'on rows with {column} < {cutoff}: later periods validated on '
+                                  f'earlier ones. Values beyond the training range are '
+                                  f'extrapolation.'}
+    else:
+        spec = {'data': {'group_col': None, 'query_col': None, 'time_col': None},
+                'split': {'kind': 'random', 'test_size': decision['validation_fraction'],
+                          'seed': decision['seed']},
+                'task': {'kind': 'regression'}}
+        try:
+            train, validation = classical.split(frame, frame.index.to_series(), spec)
+        except ValueError as exc:
+            raise StudyError('unsupported_capability', f'The split cannot be made: {exc}',
+                             details={'reasons': [str(exc)]}) from exc
+        parts = {'train': sorted(keys[train], key=_line),
+                 'validation': sorted(keys[validation], key=_line)}
+        values_out = {'method': 'random', 'validation_fraction': decision['validation_fraction'],
+                      'seed': decision['seed'], 'stratified_on': None, 'n_rows': len(frame),
+                      'partitions': {p: {'n_rows': len(parts[p])} for p in SPLIT_BLOBS},
+                      'implementation': 'mlkit.classical.split (random train_test_split, not '
+                                        'stratified)'}
+    group = plan_['inputs'].get('group_column')
+    values_out['groups'] = group_overlap(frame, group, parts) if group else None
+    values_out['overlap'] = None
+    previous = plan_['inputs'].get('results', {}).get('previous_split')
+    if previous:
+        values_out['overlap'] = _overlap(store, previous,
+                                         plan_['inputs'].get('previous_split_stale_since'), parts)
+    blobs = {part: rec.row_keys_bytes(parts[part]) for part in SPLIT_BLOBS}
+    return {'values': values_out, 'blobs': blobs, 'partition': 'all', 'n_rows': len(frame)}
 
 
 def _overlap(store, previous: str, since: int | None, parts: Mapping) -> dict:
@@ -460,12 +644,14 @@ def compute(store, plan_: Mapping) -> dict:
         case, dataset = load(plan_)
         train = rows(dataset, split_keys(store, plan_['inputs']['results'][SPLIT])['train'])
         return eda.compute(activity, case, train, plan_['params'])
-    if activity in FITS:
+    if activity in FITS or activity == LINEAR:
         from . import fit
         case, dataset = load(plan_)
         keys = split_keys(store, plan_['inputs']['results'][SPLIT])
         return fit.compute(activity, case, rows(dataset, keys['train']),
                            rows(dataset, keys['validation']), plan_['inputs'], plan_['params'])
+    if activity == REGRESSION_EVALUATION:
+        return compute_regression_evaluation(store, plan_)
     return compute_policy(store, plan_)
 
 
@@ -483,6 +669,14 @@ def read_predictions(store, rid: str) -> dict:
                          details={'result_id': rid})
     reader = csv.reader(io.StringIO(gzip.decompress(store.read_blob(sha)).decode('utf-8')))
     header = next(reader)
+    if header == ['row_key', 'y', 'prediction']:
+        keys, y, pred = [], [], []
+        for row_key, value, prediction in reader:
+            keys.append(row_key)
+            y.append(float(value))
+            pred.append(float(prediction))
+        return {'row_keys': keys, 'y': np.asarray(y, dtype=float),
+                'prediction': np.asarray(pred, dtype=float)}
     if header != ['row_key', 'y', 'score']:
         raise StudyError('integrity_error', f'Predictions of {rid} have header {header}.')
     keys, y, score = [], [], []
@@ -493,7 +687,80 @@ def read_predictions(store, rid: str) -> dict:
     return {'row_keys': keys, 'y': np.asarray(y, dtype=float), 'score': np.asarray(score)}
 
 
+def _residual_groups(column: str, values, y, preds: Mapping) -> dict:
+    """Residuals by value of ``column`` on validation rows (training-free bins)."""
+    import numpy as np
+    from . import eda, regression
+    labels = values.astype(str).to_numpy()
+    distinct = sorted(set(values.dropna().tolist()), key=lambda v: (str(type(v)), v))
+    binned = len(distinct) > eda.MAX_DISTINCT_BEFORE_BINNING
+    if binned:
+        import pandas as pd
+        cut = pd.qcut(values, eda.QUANTILE_BINS, duplicates='drop')
+        labels = cut.astype(str).to_numpy()
+        order = [str(i) for i in cut.cat.categories]
+    else:
+        order = [str(v) for v in distinct]
+    groups = []
+    for label in order:
+        mask = labels == label
+        n = int(mask.sum())
+        if not n:
+            continue
+        groups.append({'value': label, 'n_rows': n, 'small_count': n < eda.MIN_GROUP_ROWS,
+                       'models': {slot: {k: v for k, v in regression.errors(
+                           y[mask], p[mask]).items() if k in ('mae', 'mean_residual')}
+                                  for slot, p in preds.items()}})
+    return {'column': column, 'binned': bool(binned),
+            'binning': (f'{eda.QUANTILE_BINS} validation quantile bins' if binned else None),
+            'groups': groups, 'min_group_rows': eda.MIN_GROUP_ROWS}
+
+
+def compute_regression_evaluation(store, plan_: Mapping) -> dict:
+    """MAE, RMSE, and residuals of both regression fits on the validation rows, with
+    paired bootstrap intervals of each and of the candidate's difference with the
+    baseline. The predictions are read back from the fits; nothing is refitted."""
+    from . import regression
+
+    results = plan_['inputs']['results']
+    preds = {slot: read_predictions(store, results[slot]) for slot in REGRESSION_FITS}
+    first = preds[REGRESSION_FITS[0]]
+    for slot in REGRESSION_FITS[1:]:
+        if preds[slot]['row_keys'] != first['row_keys'] or \
+                not (preds[slot]['y'] == first['y']).all():
+            raise StudyError('integrity_error', 'The fits were not scored on the same validation '
+                                                'rows; their errors cannot be compared.',
+                             details={'results': {s: results[s] for s in REGRESSION_FITS}})
+    y = first['y']
+    predictions = {slot: preds[slot]['prediction'] for slot in REGRESSION_FITS}
+    boot = plan_['inputs']['bootstrap']
+    paired = regression.paired_bootstrap(y, predictions, int(boot['replicates']),
+                                         int(boot['seed']), level=float(boot['level']),
+                                         reference=plan_['params']['reference'])
+    case, dataset = load(plan_)
+    frame = rows(dataset, first['row_keys'])
+    by = [_residual_groups(column, frame[column], y, predictions)
+          for column in plan_['inputs']['residual_columns']]
+
+    values = {'n': len(y), 'target': case.target_column, 'unit': case.target_unit,
+              'models': paired['models'], 'intervals': paired['intervals'],
+              'deltas': paired['deltas'],
+              'residuals': {slot: regression.residual_summary(y, p)
+                            for slot, p in predictions.items()},
+              'residuals_by': by,
+              'predictions': {slot: results[slot] for slot in REGRESSION_FITS},
+              'reference': plan_['params']['reference'],
+              'candidate': plan_['params']['candidate'],
+              'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
+                            'level': float(boot['level']), 'method': paired['method']},
+              'residual_definition': regression.RESIDUAL_DEFINITION,
+              'note': 'The model is chosen on these validation rows: these errors are not '
+                      'independent evidence of future error. No model was refitted.'}
+    return {'values': values, 'blobs': {}, 'partition': 'validation', 'n_rows': len(y)}
+
+
 def compute_policy(store, plan_: Mapping) -> dict:
+
     from . import policy
 
     fits = plan_['inputs']['results']

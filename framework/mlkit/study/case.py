@@ -32,7 +32,13 @@ CASE_FILE = 'case.yaml'
 EPISTEMIC_STATUSES = ('documented_fact', 'scenario_assumption', 'observed', 'unknown')
 AVAILABILITY_VALUES = ('available_at_prediction', 'not_available', 'uncertain', 'unknown')
 TASKS = ('binary', 'regression')
-SUPPORTED_TASKS = ('binary',)
+SUPPORTED_TASKS = ('binary', 'regression')
+# A regression target is a number with a declared unit (errors are reported in it).
+REGRESSION_TARGET_TYPES = ('numeric', 'integer')
+# A time column this version can split on: integer values ordered as written (a model year
+# coded 70 to 82). It is never converted to a date: pandas would read an integer as
+# nanoseconds since 1970.
+ORDINAL_TIME_TYPES = ('integer',)
 ROLES = ('feature', 'target', 'identifier', 'group_id', 'time')
 VARIABLE_TYPES = ('numeric', 'integer', 'binary', 'category', 'ordinal', 'string', 'date')
 ROW_KEY_RULE = 'source_line'
@@ -42,8 +48,10 @@ WHITESPACE_SEP = 'whitespace'
 # state. These words are refused as a key or as a whole string value anywhere.
 FORBIDDEN_WORDS = ('confirmed', 'confirmation')
 
-CAPABILITY_REGRESSION = 'regression study (v0.2)'
-CAPABILITY_STRUCTURED_SPLIT = 'temporal/grouped split (v0.2)'
+CAPABILITY_TIME_SPLIT = 'temporal split on a date or non-integer time column (v0.2)'
+# Not a refusal: a declared group column is accepted, and every split reports how many group
+# values its partitions share (``limitations``). The capability is named, never assumed.
+CAPABILITY_GROUPED_SPLIT = 'grouped split (v0.2)'
 
 TOP_REQUIRED = ('schema', 'id', 'title', 'description', 'provenance', 'dataset', 'target',
                 'row_key', 'facts', 'variables', 'special_values', 'structure', 'task')
@@ -130,6 +138,11 @@ class Case:
     @property
     def positive_label(self) -> Any:
         return self.document['target'].get('positive_label')
+
+    @property
+    def target_unit(self) -> str | None:
+        """The unit of the target variable (required for a regression target)."""
+        return self.variables[self.target_column].get('unit')
 
     @property
     def time_column(self) -> str | None:
@@ -316,6 +329,16 @@ def validate(document: Any) -> list[dict]:
             p.add('target.positive_label', 'is required for a binary task')
         if document['task'] == 'regression' and t['positive_label'] is not None:
             p.add('target.positive_label', 'must be null for a regression task')
+        if document['task'] == 'regression' and t['column'] in names:
+            target = next(v for v in variables if v['name'] == t['column'])
+            if target['type'] not in REGRESSION_TARGET_TYPES:
+                p.add('target.column', 'a regression target has type '
+                      + ' or '.join(REGRESSION_TARGET_TYPES))
+            unit = target.get('unit')
+            if not isinstance(unit, str) or not unit.strip():
+                p.add('target.column', 'a regression target declares its unit (variable unit): '
+                                       'errors are reported in it')
+
 
     rk = document['row_key']
     if p.keys(rk, 'row_key', ('rule', 'format', 'description')):
@@ -492,26 +515,53 @@ def load_case(path, *, verify_data: bool = True) -> Case:
     return case
 
 
+def _variable(doc: dict, name: str) -> dict:
+    return next((v for v in doc['variables'] if v['name'] == name), {})
+
+
 def unsupported_capabilities(case: Case | dict) -> list[dict]:
-    """Structured reasons why this version cannot run a study on ``case``."""
+    """Structured reasons why this version cannot run a study on ``case``.
+
+    Supported: a ``binary`` or a ``regression`` task, and a declared time column whose
+    variable type is ``integer`` (split by an ordinal cutoff, ``ordinal_cutoff``). A time
+    column of another type (a date, a decimal number) is refused: it is never handled by a
+    random split, and it is never converted silently. A declared group column is not
+    refused; see :func:`limitations`.
+    """
     doc = case.document if isinstance(case, Case) else case
     reasons = []
-    if doc['task'] not in SUPPORTED_TASKS:
-        reasons.append({
-            'code': 'unsupported_capability', 'capability': CAPABILITY_REGRESSION,
-            'path': 'task',
-            'reason': f'The case declares a {doc["task"]} task; this version runs binary '
-                      f'studies only. It does not reframe the target as a classification.'})
-    for key, kind in (('time_column', 'time'), ('group_column', 'group')):
-        column = doc['structure'][key]['value']
-        if column is not None:
+    column = doc['structure']['time_column']['value']
+    if column is not None:
+        kind = _variable(doc, column).get('type')
+        if kind not in ORDINAL_TIME_TYPES:
             reasons.append({
-                'code': 'unsupported_capability', 'capability': CAPABILITY_STRUCTURED_SPLIT,
-                'path': f'structure.{key}', 'column': column,
-                'reason': f'The case declares {kind} column "{column}"; a random split would '
-                          f'mix related rows across partitions, and this version has no '
-                          f'temporal or grouped split. It does not fall back to a random split.'})
+                'code': 'unsupported_capability', 'capability': CAPABILITY_TIME_SPLIT,
+                'path': 'structure.time_column', 'column': column,
+                'reason': f'The case declares time column "{column}" of type {kind}; this '
+                          f'version splits on an integer time column only (an ordinal cutoff). '
+                          f'A random split would mix earlier and later rows across partitions, '
+                          f'so it does not fall back to a random split.'})
     return reasons
+
+
+def limitations(case: Case | dict) -> list[dict]:
+    """Named capabilities a supported case lacks, without being refused.
+
+    A declared group column (rows that describe the same entity) cannot be kept on one
+    side of the split: this version has no grouped split. The study is not refused, but
+    the capability is named, and every split reports the group values its partitions
+    share (``split.values.groups``), so independence is never claimed silently.
+    """
+    doc = case.document if isinstance(case, Case) else case
+    out = []
+    column = doc['structure']['group_column']['value']
+    if column is not None:
+        out.append({'capability': CAPABILITY_GROUPED_SPLIT, 'path': 'structure.group_column',
+                    'column': column,
+                    'consequence': f'Rows sharing a value of "{column}" may fall in both '
+                                   f'partitions; each split reports the shared group values.'})
+    return out
+
 
 
 def require_supported(case: Case) -> Case:

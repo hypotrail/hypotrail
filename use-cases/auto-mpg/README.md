@@ -2,7 +2,7 @@
 
 Second acceptance case, used after Bank Marketing to verify adaptation to regression.
 
-`case.yaml` is the junior study case contract ([`hypotrail.case/1`](../../docs/specs/CASE-CONTRACT.md)), generated from `project.json` and `case-supplement.yaml`. The v0.1 engine refuses it explicitly: it needs `regression study (v0.2)` and `temporal/grouped split (v0.2)`.
+`case.yaml` is the junior study case contract ([`hypotrail.case/1`](../../docs/specs/CASE-CONTRACT.md)), generated from `project.json` and `case-supplement.yaml`. Since M3 the engine runs it as a regression study: an ordinal split on `model_year`, MAE and RMSE in mpg, residuals, and a model choice against the training mean. The declared group column `car_name` is accepted with its limitation named (`grouped split (v0.2)`): each split reports the car names both partitions share.
 
 UCI Auto MPG contains 398 observations with numeric target `mpg`. Provenance, limitations, and units needing confirmation are in `project.json` and `data/auto-mpg.names`. Higher mpg means more distance per gallon and therefore better fuel efficiency.
 

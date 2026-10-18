@@ -147,10 +147,16 @@ def test_bank_init_imports_no_tutorial_confirmation(tmp_path, work):
 
 
 def test_init_refuses_an_unsupported_case(tmp_path, work):
-    code, out = hyp('init', '--case', REPO / 'use-cases' / 'auto-mpg', '--study', tmp_path / 'a',
-                    cwd=work)
+    # A date time column is still unsupported (Auto MPG, regression with integer years,
+    # became supported in M3).
+    import flowkit as fk
+    case_dir = fk.make_case(tmp_path / 'dated', n_rows=200, time=True)['case'].parent
+    code, out = hyp('init', '--case', case_dir, '--study', tmp_path / 'a', cwd=work)
     assert code == 2 and out['error']['code'] == 'unsupported_capability'
+    assert [r['capability'] for r in out['error']['details']['reasons']] == [
+        c.CAPABILITY_TIME_SPLIT]
     assert not (tmp_path / 'a' / '.hypotrail').exists()
+
 
 
 # --- propose and confirm ----------------------------------------------------------------

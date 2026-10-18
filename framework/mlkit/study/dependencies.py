@@ -97,6 +97,47 @@ MUTATIONS: tuple[dict, ...] = (
 BY_MUTATION = {m['mutation']: m for m in MUTATIONS}
 DATASET_MUTATIONS = ('dataset', 'case')
 
+# The table of a regression study (same row numbers for the same mutations). Its third
+# decision is ``model_choice`` and its evaluation slot is ``evaluate.regression``, listed
+# under ``re_policy`` (the effect key of evaluations computed from stored predictions).
+# Row 13 is new: changing the model choice reuses the evaluation and refits nothing.
+# Rows 5 and 6 (policy rules) do not exist in a regression study.
+REGRESSION_MUTATIONS: tuple[dict, ...] = (
+    {'row': 1, 'mutation': 'prediction_time', 'refit': ('fit.linear',), 're_eda': (),
+     're_policy': ('evaluate.regression',), 'recompute': (),
+     'reconfirm': ('feature_availability', 'model_choice', 'conclusion'),
+     'blocked_until': ('feature_availability',),
+     'notes': ('The linear refit waits until feature availability is confirmed again.',)},
+    {'row': 2, 'mutation': 'feature_availability.feature_set', 'refit': ('fit.linear',),
+     're_eda': (), 're_policy': ('evaluate.regression',), 'recompute': (),
+     'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
+     'notes': ('The mean baseline uses no feature and stays current.',)},
+    MUTATIONS[2],
+    {'row': 4, 'mutation': 'split', 'refit': ('fit.baseline', 'fit.linear'),
+     're_eda': ('*',), 're_policy': ('evaluate.regression',), 'recompute': ('split',),
+     'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
+     'notes': ('Exposure is retained: rows explored under the old split are not unseen. '
+               'The split activity reports the overlap (exposure.overlap) when it runs.',)},
+    {'row': 7, 'mutation': 'settings.bootstrap', 'refit': (), 're_eda': (),
+     're_policy': ('evaluate.regression',), 'recompute': (),
+     'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (), 'scope': 'intervals',
+     'notes': ('Only the intervals are recomputed; point estimates do not change.',)},
+    MUTATIONS[7], MUTATIONS[8], MUTATIONS[9], MUTATIONS[10], MUTATIONS[11],
+    {'row': 13, 'mutation': 'model_choice', 'refit': (), 're_eda': (), 're_policy': (),
+     'recompute': (), 'reconfirm': ('conclusion',), 'blocked_until': (),
+     'notes': ('No refit and no new evaluation: the stored predictions and the current '
+               'evaluation are reused. The previous model choice is superseded.',)},
+    MUTATIONS[12],
+)
+REGRESSION_BY_MUTATION = {m['mutation']: m for m in REGRESSION_MUTATIONS}
+MUTATIONS_BY_TASK = {st.BINARY: MUTATIONS, st.REGRESSION: REGRESSION_MUTATIONS}
+BY_MUTATION_BY_TASK = {st.BINARY: BY_MUTATION, st.REGRESSION: REGRESSION_BY_MUTATION}
+
+
+def mutations(state: Mapping | str | None = None) -> tuple[dict, ...]:
+    """The dependency table of a study's task (plan §3.7)."""
+    return MUTATIONS_BY_TASK[st.task_of(state)]
+
 
 canonical_rule = rec.canonical_rule
 
@@ -120,7 +161,7 @@ def _kind(slot: str) -> str:
         return 'refit'
     if slot.startswith('eda.'):
         return 're_eda'
-    if slot.startswith('policy.'):
+    if slot.startswith('policy.') or slot.startswith('evaluate.'):
         return 're_policy'
     return 'recompute'
 
@@ -144,6 +185,8 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
         if before is None or after is None:
             return 'unknown'
         return 'policy.parameter' if before[0] == after[0] else 'policy.rule_type'
+    if decision_id == 'model_choice':
+        return 'model_choice' if isinstance(old, str) and isinstance(new, str) else 'unknown'
     if decision_id in ('settings.bootstrap', 'usage_label', 'eda_added', 'conclusion',
                        'code_fingerprint'):
         return decision_id
@@ -154,7 +197,7 @@ def _expand(names, kind: str, old_state: Mapping) -> list[str]:
     out: list[str] = []
     for name in names:
         if name == '*':
-            pool = list(old_state['current']) + list(st.ACTIVITY_SLOTS)
+            pool = list(old_state['current']) + list(st.activity_slots(old_state))
             out += [s for s in pool if _kind(s) == kind]
         else:
             out.append(name)
@@ -174,12 +217,16 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
     has no effect). For ``code_fingerprint``, ``old`` and ``new`` are
     ``{"activity", "fingerprint"}``. Pure: ``old_state`` is only read.
     """
-    if old is None and decision_id in st.DECISION_IDS:
+    decisions = st.decision_ids(old_state)
+    if old is None and decision_id in decisions:
         return no_effects('first_confirmation', f'{decision_id} confirmed for the first time')
-    if decision_id in st.DECISION_IDS and rec.canonical(old) == rec.canonical(new):
+    if decision_id in decisions and rec.canonical(old) == rec.canonical(new):
         return no_effects('unchanged_value', f'{decision_id} confirmed again with the same value')
     mutation = classify(decision_id, old, new)
-    spec = BY_MUTATION[mutation]
+    table = BY_MUTATION_BY_TASK[st.task_of(old_state)]
+    spec = table.get(mutation, table['unknown'])
+    if mutation not in table:
+        mutation = 'unknown'
     if spec.get('refusal'):
         raise StudyError(spec['refusal'], 'The dataset or case changed: recorded row keys and '
                                           'results no longer refer to these bytes. Start a new '
@@ -202,11 +249,11 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
         out[_kind(activity)] = slots or [activity]
         reason = f'code of activity {activity} changed (§3.7 row 11)'
     if spec['reconfirm'] == ('*',):
-        reconfirm = [d for d in st.DECISION_IDS if d != decision_id]
+        reconfirm = [d for d in decisions if d != decision_id]
     else:
         reconfirm = [d for d in spec['reconfirm'] if d != decision_id]
     explain = list(spec.get('re_explain', ())) + reconfirm
-    if decision_id in st.DECISION_IDS and decision_id not in explain:
+    if decision_id in decisions and decision_id not in explain:
         explain.insert(0, decision_id)
     out.update(
         re_chart=sorted(set(out['refit'] + out['re_eda'] + out['re_policy'] + out['recompute'])),
@@ -305,6 +352,11 @@ QUIET_MUTATIONS = ('first_confirmation', 'unchanged_value', 'result_replaced')
 # conclusion were confirmed on evaluations computed from the split and the fits.
 RESTS_ON = {'split': ('policy', 'conclusion'), 'fit.baseline': ('policy', 'conclusion'),
             'fit.logistic': ('policy', 'conclusion')}
+# In a regression study the model choice and the conclusion rest on the split and the fits.
+REGRESSION_RESTS_ON = {'split': ('model_choice', 'conclusion'),
+                       'fit.baseline': ('model_choice', 'conclusion'),
+                       'fit.linear': ('model_choice', 'conclusion')}
+RESTS_ON_BY_TASK = {st.BINARY: RESTS_ON, st.REGRESSION: REGRESSION_RESTS_ON}
 
 
 def apply_replacement(state: dict, slot: str, previous: str, new: str, *, revision: int,
@@ -324,7 +376,8 @@ def apply_replacement(state: dict, slot: str, previous: str, new: str, *, revisi
               + ('; its code changed (§3.7 row 11)' if code_changed else ''))
     eff = {**no_effects('result_replaced', reason),
            'row': 11 if code_changed else None,
-           'reconfirm': list(RESTS_ON.get(slot, ())),
+           'reconfirm': list(RESTS_ON_BY_TASK[st.task_of(state)].get(slot, ())),
+
            'scope': 'downstream',
            'notes': ['Results computed from the replaced result are stale; decisions confirmed '
                      "on them need the junior's words again."]}

@@ -27,7 +27,7 @@ SCHEMA = 'hypotrail.view/1'
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan',
              'current_step', 'next_action', 'open_proposals', 'decisions', 'facts',
              'structure', 'results', 'stale', 'invalidations', 'executions', 'artifacts',
-             'exposure', 'not_yet_defensible', 'settings')
+             'exposure', 'not_yet_defensible', 'settings', 'task')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
                       'revision', 'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
@@ -52,7 +52,7 @@ SUMMARY_TOP = 5
 
 def _decisions(state: dict) -> dict:
     out = {}
-    for d in st.DECISION_IDS:
+    for d in st.decision_ids(state):
         dec = state['decisions'][d]
         conf = dec['confirmation']
         out[d] = {'decision_id': d, 'status': dec['status'], 'value': dec['value'],
@@ -132,6 +132,8 @@ def rid_reason(item: dict, key: str):
 
 def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
     """The adopted policy rule when no current policy evaluation covers it."""
+    if 'policy' not in state['decisions']:
+        return None
     decision = state['decisions']['policy']
     rule = decision['value']
     if decision['status'] not in ('confirmed', 'reconfirm_required') or not isinstance(rule, str):
@@ -327,4 +329,6 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'exposure': study.exposure_summary(),
         'not_yet_defensible': defensible,
         'settings': state['settings'],
+        'task': st.task_of(state),
     }
+

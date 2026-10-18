@@ -60,39 +60,75 @@ def test_default_synthetic_case_loads_and_is_supported(synthetic):
 
 
 @pytest.mark.parametrize('options, expected', [
-    ({'groups': True}, [('structure.group_column', 'member_ref')]),
     ({'time': True}, [('structure.time_column', 'cycle_start_date')]),
-    ({'groups': True, 'time': True}, [('structure.time_column', 'cycle_start_date'),
-                                      ('structure.group_column', 'member_ref')]),
+    ({'groups': True, 'time': True}, [('structure.time_column', 'cycle_start_date')]),
 ])
-def test_declared_time_or_group_column_is_refused_with_its_capability(tmp_path, options, expected):
+def test_declared_date_time_column_is_refused_with_its_capability(tmp_path, options, expected):
+    """M3: an integer time column is split by an ordinal cutoff; a date time column is
+    still refused, never handled by a random split or converted silently."""
     paths = make_case(tmp_path / 'case', n_rows=200, **options)
     case = c.load_case(paths['case'])        # a valid case; only the capability is missing
     reasons = c.unsupported_capabilities(case)
     assert [(r['path'], r['column']) for r in reasons] == expected
     assert {r['code'] for r in reasons} == {'unsupported_capability'}
-    assert {r['capability'] for r in reasons} == {c.CAPABILITY_STRUCTURED_SPLIT}
-    assert c.CAPABILITY_STRUCTURED_SPLIT == 'temporal/grouped split (v0.2)'
+    assert {r['capability'] for r in reasons} == {c.CAPABILITY_TIME_SPLIT}
+    assert c.CAPABILITY_TIME_SPLIT == 'temporal split on a date or non-integer time column (v0.2)'
     with pytest.raises(c.CaseError) as info:
         c.require_supported(case)
     refusal = info.value.to_dict()
     assert refusal['code'] == 'unsupported_capability'
-    assert 'temporal/grouped split (v0.2)' in refusal['message']
+    assert c.CAPABILITY_TIME_SPLIT in refusal['message']
     assert refusal['details']['reasons'] == reasons
     assert all('does not fall back' in r['reason'] for r in reasons)
+    assert all('of type date' in r['reason'] for r in reasons)
 
 
-def test_regression_task_is_refused_with_its_capability(synthetic):
+def test_declared_group_column_is_accepted_with_the_grouped_split_named(tmp_path):
+    """M3: a declared group column is not refused, but the missing grouped split is named
+    (``limitations``), so independence across partitions is never claimed silently."""
+    paths = make_case(tmp_path / 'case', n_rows=200, groups=True)
+    case = c.load_case(paths['case'])
+    assert c.unsupported_capabilities(case) == []
+    assert c.require_supported(case) is case
+    [limit] = c.limitations(case)
+    assert limit['capability'] == c.CAPABILITY_GROUPED_SPLIT == 'grouped split (v0.2)'
+    assert (limit['path'], limit['column']) == ('structure.group_column', 'member_ref')
+    assert 'both partitions' in limit['consequence']
+    assert c.limitations(c.load_case(make_case(tmp_path / 'plain', n_rows=200)['case'])) == []
+
+
+def test_integer_time_column_is_supported(tmp_path, synthetic):
+    doc = _doc(synthetic)
+    doc['structure']['time_column'] = {'value': 'member_age', 'status': 'scenario_assumption',
+                                       'source': 'test'}
+    doc['variables'][[v['name'] for v in doc['variables']].index('member_age')]['role'] = 'time'
+    case = c.load_case(_write(synthetic, doc))
+    assert case.variables['member_age']['type'] == 'integer'
+    assert c.unsupported_capabilities(case) == []
+    for kind in ('numeric', 'date'):
+        doc['variables'][[v['name'] for v in doc['variables']].index('member_age')]['type'] = kind
+        reasons = c.unsupported_capabilities(c.load_case(_write(synthetic, doc)))
+        assert [r['capability'] for r in reasons] == [c.CAPABILITY_TIME_SPLIT], kind
+
+
+def test_regression_task_is_supported_with_a_numeric_target_and_unit(synthetic):
     doc = _doc(synthetic)
     doc['task'] = 'regression'
     doc['target']['positive_label'] = None
-    case = c.load_case(_write(synthetic, doc))
-    reasons = c.unsupported_capabilities(case)
-    assert [(r['capability'], r['path']) for r in reasons] == [('regression study (v0.2)', 'task')]
-    with pytest.raises(c.CaseError) as info:
-        c.require_supported(case)
-    assert info.value.code == 'unsupported_capability'
-    assert 'regression study (v0.2)' in info.value.message
+    doc['target'].pop('negative_label', None)
+    target = next(v for v in doc['variables'] if v['role'] == 'target')
+    # A binary target is not a regression target: no silent reframing.
+    _refusal(_write(synthetic, doc), 'invalid_case')
+    target['type'] = 'numeric'
+    error = _refusal(_write(synthetic, doc), 'invalid_case')
+    assert {'path': 'target.column', 'problem': 'a regression target declares its unit '
+            '(variable unit): errors are reported in it'} in error.problems
+    target['unit'] = 'renewals'
+    case = c.load_case(_write(synthetic, doc), verify_data=False)
+    assert case.task == 'regression' and case.target_unit == 'renewals'
+    assert c.unsupported_capabilities(case) == []
+    assert c.require_supported(case) is case
+
 
 
 def test_dataset_sha_mismatch_is_refused(synthetic):

@@ -60,7 +60,9 @@ ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rati
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
              'stale', 'invalidations', 'executions', 'artifacts', 'exposure',
-             'not_yet_defensible', 'settings')
+             'not_yet_defensible', 'settings',
+             # M3 (regression): the task of the study, ``binary`` or ``regression``.
+             'task')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
@@ -83,6 +85,22 @@ STEP_KEYS = ('id', 'title', 'question', 'expected_output', 'completion', 'pause'
              'activities', 'decide_first', 'missing_results', 'requires', 'status', 'current')
 STEP_IDS = ('prediction_time', 'feature_availability', 'split', 'train_eda', 'models', 'policy',
             'conclusion')
+# M3 (regression): the same pauses; the third decision is model_choice.
+TASKS = ('binary', 'regression')
+REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'model_choice',
+                           'conclusion')
+REGRESSION_STEP_IDS = ('prediction_time', 'feature_availability', 'split', 'train_eda', 'models',
+                       'model_choice', 'conclusion')
+REGRESSION_ACTIVITY_SLOTS = ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
+                             'fit.linear', 'evaluate.regression')
+REGRESSION_CONCLUSION_VERDICTS = ('adopt_model', 'keep_baseline', 'inconclusive')
+MODEL_CHOICES = ('fit.linear', 'fit.baseline')
+SPLIT_METHODS = ('stratified_random', 'random', 'ordinal_cutoff')
+REGRESSION_MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.feature_set',
+                           3: 'feature_availability.wording', 4: 'split', 7: 'settings.bootstrap',
+                           8: 'usage_label', 9: 'eda_added', 10: 'conclusion',
+                           11: 'code_fingerprint', 12: 'dataset', 13: 'model_choice',
+                           '*': 'unknown'}
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
                      'propose', 'run', 'done',
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
@@ -99,7 +117,9 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           # Review fix H2 (plan §3.7 row 11, detected by the view).
                           'code_changed',
                           # Review fix L1 (plan §3.7 row 12, flagged by the view).
-                          'sources_changed'}
+                          'sources_changed',
+                          # M3: a declared group column without a grouped split.
+                          'grouped_split_unsupported'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -333,7 +353,36 @@ def test_actions_and_their_parameters():
     assert pre.CONCLUSION_VERDICTS == ('adopt_policy', 'keep_baseline', 'inconclusive')
 
 
+def test_regression_contract_constants():
+    """M3: the regression study's decisions, steps, slots, verdicts, split methods, and
+    dependency table ids."""
+    from mlkit.study import activities as act, case as c
+    assert st.TASKS == TASKS and c.SUPPORTED_TASKS == TASKS
+    assert st.REGRESSION_DECISION_IDS == REGRESSION_DECISION_IDS
+    assert st.REGRESSION_STEP_IDS == REGRESSION_STEP_IDS
+    assert st.REGRESSION_ACTIVITY_SLOTS == REGRESSION_ACTIVITY_SLOTS
+    assert st.CHOICE_DECISION == {'binary': 'policy', 'regression': 'model_choice'}
+    assert pre.REGRESSION_CONCLUSION_VERDICTS == REGRESSION_CONCLUSION_VERDICTS
+    assert pre.MODEL_CHOICES == MODEL_CHOICES
+    assert cmd.ALL_SPLIT_METHODS == SPLIT_METHODS
+    assert cmd.ORDINAL_SPLIT_KEYS == ('method', 'column', 'cutoff')
+    assert st.PER_COLUMN_SLOT_PREFIXES == ('eda.rate_by:', 'eda.mean_by:')
+    assert act.TASK_ACTIVITIES['regression'] == ('split', 'eda.target_summary',
+                                                 'eda.special_values', 'eda.mean_by',
+                                                 'fit.baseline', 'fit.linear',
+                                                 'evaluate.regression')
+    assert {m['row']: m['mutation'] for m in dep.REGRESSION_MUTATIONS} == REGRESSION_MUTATION_IDS
+    assert c.CAPABILITY_TIME_SPLIT == 'temporal split on a date or non-integer time column (v0.2)'
+    assert c.CAPABILITY_GROUPED_SPLIT == 'grouped split (v0.2)'
+    keys = (set(TASKS) | set(REGRESSION_DECISION_IDS) | set(REGRESSION_STEP_IDS)
+            | set(REGRESSION_ACTIVITY_SLOTS) | set(REGRESSION_CONCLUSION_VERDICTS)
+            | set(MODEL_CHOICES) | set(SPLIT_METHODS) | set(REGRESSION_MUTATION_IDS.values())
+            | {'eda.mean_by', 'residuals_by', 'mean_residual', 'cutoff', 'groups'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+
+
 def test_dependency_table_ids_and_effect_keys(flow):
+
     assert dep.EFFECT_KEYS == EFFECT_KEYS
     assert {m['row']: m['mutation'] for m in dep.MUTATIONS} == MUTATION_IDS
     state = read.open(flow['study']).state

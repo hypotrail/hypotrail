@@ -90,7 +90,7 @@ target:
 task: binary
 ```
 
-`column` names the single variable whose role is `target`. `positive_label` is required for `binary` and must be `null` for `regression`. Quote labels such as `'yes'` and `'no'`, which YAML 1.1 would otherwise read as booleans.
+`column` names the single variable whose role is `target`. `positive_label` is required for `binary` and must be `null` for `regression`. Quote labels such as `'yes'` and `'no'`, which YAML 1.1 would otherwise read as booleans. A `regression` target has type `numeric` or `integer` and declares its `unit` (the variable's `unit`): errors are reported in it (`invalid_case` otherwise; a binary target is never reframed as a number).
 
 ### Variables
 
@@ -132,17 +132,19 @@ structure:
 `load_case` validates the contract. `unsupported_capabilities(case)` then lists what this version cannot do, and `require_supported(case)` refuses with every reason. Each reason is structured:
 
 ```json
-{"code": "unsupported_capability", "capability": "temporal/grouped split (v0.2)",
- "path": "structure.time_column", "column": "model_year", "reason": "..."}
+{"code": "unsupported_capability", "capability": "temporal split on a date or non-integer time column (v0.2)",
+ "path": "structure.time_column", "column": "cycle_start_date", "reason": "..."}
 ```
 
 | Condition | Capability |
 |---|---|
-| `task` is not `binary` | `regression study (v0.2)` |
-| `structure.time_column.value` is not null | `temporal/grouped split (v0.2)` |
-| `structure.group_column.value` is not null | `temporal/grouped split (v0.2)` |
+| `structure.time_column.value` names a variable whose type is not `integer` (a date, a decimal number) | `temporal split on a date or non-integer time column (v0.2)` |
 
-There is no silent fallback: a declared time or group column is never handled by a random split, and a regression target is never reframed as a classification. A time or group column is "declared" whatever its status, because a `scenario_assumption` of dependence is enough to invalidate a random split.
+Since M3, `binary` and `regression` tasks are supported, and a declared time column of type `integer` is supported: the study splits it by an ordinal cutoff (`{"method": "ordinal_cutoff", "column", "cutoff"}`, `CLI-CONTRACT.md` §5), reading its values as integers, never as dates.
+
+There is no silent fallback: a declared time column is never handled by a random split (an `ordinal_cutoff` split is then the only method), a date time column is refused rather than converted, and a regression target is never reframed as a classification. A time or group column is "declared" whatever its status, because a `scenario_assumption` of dependence is enough to invalidate a random split.
+
+**Limitations (not refusals).** `limitations(case)` names capabilities a supported case lacks: a declared group column (`structure.group_column.value` not null) gets `grouped split (v0.2)`. The case is accepted, but nothing keeps a group's rows on one side of the split: every split reports the group values its partitions share (`split.values.groups`), and the study lists `grouped_split_unsupported` under what is not yet defensible. Independence across partitions is never claimed silently.
 
 ## Errors
 
@@ -207,4 +209,5 @@ What `project.json` does not carry comes from `use-cases/<id>/case-supplement.ya
 | Case | Task | Capability check |
 |---|---|---|
 | `use-cases/bank-marketing/case.yaml` | `binary` | supported |
-| `use-cases/auto-mpg/case.yaml` | `regression`, time column `model_year`, group column `car_name` | refused: `regression study (v0.2)`, `temporal/grouped split (v0.2)` |
+| `use-cases/auto-mpg/case.yaml` | `regression`, time column `model_year` (integer), group column `car_name` | supported (M3); limitation `grouped split (v0.2)` |
+

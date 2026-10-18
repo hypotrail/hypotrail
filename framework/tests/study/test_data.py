@@ -112,13 +112,22 @@ def test_a_line_that_is_not_one_record_is_refused(tmp_path):
     assert info.value.problems == [{'path': 'L6', 'problem': '13 fields, expected 12'}]
 
 
-def test_auto_mpg_is_refused_before_reading_data():
-    auto = c.load_case(REPO / 'use-cases/auto-mpg')
+def test_a_date_time_column_is_refused_before_reading_data(tmp_path):
+    case = c.load_case(make_case(tmp_path / 'case', n_rows=200, time=True)['case'])
     with pytest.raises(c.CaseError) as info:
-        data.load_dataset(auto)
+        data.load_dataset(case)
     assert info.value.code == 'unsupported_capability'
-    assert {r['capability'] for r in info.value.details['reasons']} == {
-        c.CAPABILITY_REGRESSION, c.CAPABILITY_STRUCTURED_SPLIT}
+    assert {r['capability'] for r in info.value.details['reasons']} == {c.CAPABILITY_TIME_SPLIT}
+
+
+def test_auto_mpg_is_supported_and_loads_its_integer_years():
+    """M3: a regression case with an integer time column loads; the years stay integers."""
+    auto = data.load_dataset(c.load_case(REPO / 'use-cases/auto-mpg'))
+    assert auto.frame.shape == (398, 9)
+    assert str(auto.frame['model_year'].dtype) == 'int64'
+    assert (auto.frame['model_year'].min(), auto.frame['model_year'].max()) == (70, 82)
+    assert int(auto.frame['horsepower'].isna().sum()) == 6
+
 
 
 def test_auto_mpg_structural_reading_without_header():

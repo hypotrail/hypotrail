@@ -77,8 +77,16 @@ DEFAULT_CHANNEL = 'chat'
 DEFAULT_ACTOR = 'user'
 DEFAULT_BASIS = st.DEFAULT_BASIS
 
+# Split methods (plan WP2.2; regression, M3). A random split keeps rows apart at random
+# (``stratified_random`` keeps the outcome share for a binary target; ``random`` for a
+# numeric target); ``ordinal_cutoff`` puts the rows whose integer time column is at least
+# ``cutoff`` in validation (later years validated on a model fitted on earlier years).
 SPLIT_METHODS = ('stratified_random',)
+RANDOM_SPLIT_METHODS = {st.BINARY: 'stratified_random', st.REGRESSION: 'random'}
+ORDINAL_CUTOFF = 'ordinal_cutoff'
+ALL_SPLIT_METHODS = ('stratified_random', 'random', ORDINAL_CUTOFF)
 SPLIT_KEYS = ('method', 'validation_fraction', 'seed')
+ORDINAL_SPLIT_KEYS = ('method', 'column', 'cutoff')
 CONCLUSION_KEYS = ('verdict', 'text')
 # Companion files that may sit next to a case. They are never read by init: their
 # statuses are tutorial choices, not human decisions (AGENTS.md).
@@ -357,28 +365,80 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
                            missing=missing, not_features=unknown, invalid_status=bad,
                            statuses=list(st.AVAILABILITY_DECISIONS))
     elif decision_id == 'split':
-        if not isinstance(value, Mapping) or set(value) != set(SPLIT_KEYS):
-            raise _invalid('split is {"method", "validation_fraction", "seed"}.',
-                           keys=list(SPLIT_KEYS))
-        if value['method'] not in SPLIT_METHODS:
-            raise CommandRefused('unsupported_capability',
-                                 f'Split method {value["method"]!r} is not available.',
-                                 details={'methods': list(SPLIT_METHODS)})
-        fraction = value['validation_fraction']
-        if isinstance(fraction, bool) or not isinstance(fraction, (int, float)) \
-                or not 0 < fraction < 1:
-            raise _invalid('validation_fraction is strictly between 0 and 1.')
-        if type(value['seed']) is not int:
-            raise _invalid('seed is an integer.')
+        validate_split(state, value)
     elif decision_id == 'policy':
         if dep.parse_policy(value) is None:
             raise _invalid('policy is "threshold:<t in [0, 1]>" or "capacity:<k >= 1>".')
+    elif decision_id == 'model_choice':
+        if value not in preconditions.MODEL_CHOICES:
+            raise _invalid('model_choice names the model slot you adopt: '
+                           + ' or '.join(f'"{m}"' for m in preconditions.MODEL_CHOICES) + '.',
+                           choices=list(preconditions.MODEL_CHOICES))
     elif decision_id == 'conclusion':
+        verdicts = preconditions.conclusion_verdicts(state)
         if not isinstance(value, Mapping) or set(value) != set(CONCLUSION_KEYS) \
-                or value['verdict'] not in preconditions.CONCLUSION_VERDICTS \
+                or value['verdict'] not in verdicts \
                 or not isinstance(value['text'], str) or not value['text'].strip():
-            raise _invalid('conclusion is {"verdict", "text"}.',
-                           verdicts=list(preconditions.CONCLUSION_VERDICTS))
+            raise _invalid('conclusion is {"verdict", "text"}.', verdicts=list(verdicts))
+
+
+def split_methods(state: Mapping) -> list[str]:
+    """The split methods of a study: its random method, and ``ordinal_cutoff`` when the
+    case declares an integer time column. A declared time column allows ``ordinal_cutoff``
+    only: a random split would mix earlier and later rows (no silent fallback)."""
+    time_column = state['structure']['time_column']['value']
+    if time_column is not None:
+        return [ORDINAL_CUTOFF]
+    return [RANDOM_SPLIT_METHODS[st.task_of(state)]]
+
+
+def validate_split(state: Mapping, value: Any) -> None:
+    """Refuse a split value that does not fit the study (``invalid_value``,
+    ``unsupported_capability`` for an unknown method)."""
+    allowed = split_methods(state)
+    time_column = state['structure']['time_column']['value']
+    if not isinstance(value, Mapping) or 'method' not in value:
+        raise _invalid('split is {"method", "validation_fraction", "seed"} or '
+                       '{"method": "ordinal_cutoff", "column", "cutoff"}.',
+                       keys=list(SPLIT_KEYS), ordinal_keys=list(ORDINAL_SPLIT_KEYS),
+                       methods=allowed)
+    method = value['method']
+    if method not in ALL_SPLIT_METHODS:
+        raise CommandRefused('unsupported_capability',
+                             f'Split method {method!r} is not available.',
+                             details={'methods': allowed})
+    if method not in allowed:
+        if time_column is not None:
+            why = (f'The case declares the time column {time_column!r}: a random split would '
+                   f'mix earlier and later rows across partitions. Split by an ordinal cutoff on '
+                   f'{time_column!r}.')
+        elif method == ORDINAL_CUTOFF:
+            why = 'The case declares no time column to cut on.'
+        elif st.task_of(state) == st.REGRESSION:
+            why = 'A numeric target is not stratified: use "random".'
+        else:
+            why = 'A binary target keeps its outcome share: use "stratified_random".'
+        raise _invalid(f'Split method {method!r} does not fit this study. {why}', methods=allowed)
+    if method == ORDINAL_CUTOFF:
+        if set(value) != set(ORDINAL_SPLIT_KEYS):
+            raise _invalid('An ordinal cutoff split is {"method", "column", "cutoff"}.',
+                           keys=list(ORDINAL_SPLIT_KEYS))
+        if value['column'] != time_column:
+            raise _invalid(f'An ordinal cutoff cuts on the declared time column {time_column!r}.',
+                           column=value['column'], time_column=time_column)
+        if type(value['cutoff']) is not int:
+            raise _invalid('cutoff is an integer value of the time column (rows at or above it '
+                           'go to validation).')
+        return
+    if set(value) != set(SPLIT_KEYS):
+        raise _invalid('split is {"method", "validation_fraction", "seed"}.',
+                       keys=list(SPLIT_KEYS))
+    fraction = value['validation_fraction']
+    if isinstance(fraction, bool) or not isinstance(fraction, (int, float)) \
+            or not 0 < fraction < 1:
+        raise _invalid('validation_fraction is strictly between 0 and 1.')
+    if type(value['seed']) is not int:
+        raise _invalid('seed is an integer.')
 
 
 def _fold(text: str) -> str:
@@ -568,7 +628,7 @@ def states_default(restatement: str) -> bool:
 def basis(state: Mapping, decision_id: str) -> dict:
     """Confirmed values a proposal rests on (its ``depends_on`` decisions)."""
     out = {}
-    for d in st.DEPENDS_ON[decision_id]:
+    for d in st.depends_on(state, decision_id):
         dec = state['decisions'][d]
         out[d] = dec['value'] if dec['status'] == 'confirmed' else None
     return out
@@ -589,7 +649,7 @@ def _verify_sources(state: Mapping) -> None:
 
 def _propose(ctx: Context) -> Handler:
     def check(params):
-        if params['decision_id'] not in st.DECISION_IDS:
+        if params['decision_id'] not in st.ALL_DECISION_IDS:
             raise CommandRefused('unknown_decision', f'Unknown decision {params["decision_id"]!r}.',
                                  details={'decisions': list(st.DECISION_IDS)})
         for key in ('restatement', 'rationale'):
@@ -598,7 +658,13 @@ def _propose(ctx: Context) -> Handler:
 
     def run(state, params):
         decision_id, value = params['decision_id'], params['value']
+        if decision_id not in st.decision_ids(state):
+            raise CommandRefused('unknown_decision',
+                                 f'Decision {decision_id!r} is not part of a {st.task_of(state)} '
+                                 f'study.', details={'decisions': list(st.decision_ids(state)),
+                                                     'task': st.task_of(state)})
         _verify_sources(state)                     # L1: never propose on changed bytes
+
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
             value = dep.canonical_rule(value)        # L2: one spelling per rule

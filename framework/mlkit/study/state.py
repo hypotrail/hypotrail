@@ -33,7 +33,20 @@ SCHEMA = 'hypotrail.study/1'
 STATE_FILE = 'state.json'
 SHA_FILE = 'state.sha256'
 
+# The decisions of a binary study (frozen by the contract). A regression study has the same
+# pauses, but its third decision is ``model_choice`` (adopt the candidate model or keep the
+# mean baseline): a decision rule on scores has no meaning for a numeric target.
+# :func:`decision_ids` gives the decisions of a study's task.
 DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'policy', 'conclusion')
+REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'model_choice',
+                           'conclusion')
+BINARY, REGRESSION = 'binary', 'regression'
+TASKS = (BINARY, REGRESSION)
+DEFAULT_TASK = BINARY
+DECISION_IDS_BY_TASK = {BINARY: DECISION_IDS, REGRESSION: REGRESSION_DECISION_IDS}
+ALL_DECISION_IDS = tuple(dict.fromkeys(DECISION_IDS + REGRESSION_DECISION_IDS))
+# The decision of the third pause, per task (the choice made on validation results).
+CHOICE_DECISION = {BINARY: 'policy', REGRESSION: 'model_choice'}
 DECISION_STATUSES = ('open', 'proposed', 'confirmed', 'reconfirm_required', 'superseded')
 PROPOSAL_STATUSES = ('open', 'confirmed', 'withdrawn', 'superseded')
 AVAILABILITY_DECISIONS = ('available_at_prediction', 'not_available', 'uncertain_excluded',
@@ -67,6 +80,14 @@ DEPENDS_ON = {
     'policy': ('prediction_time', 'feature_availability', 'split'),
     'conclusion': ('prediction_time', 'feature_availability', 'split', 'policy'),
 }
+REGRESSION_DEPENDS_ON = {
+    'prediction_time': (),
+    'feature_availability': ('prediction_time',),
+    'split': (),
+    'model_choice': ('prediction_time', 'feature_availability', 'split'),
+    'conclusion': ('prediction_time', 'feature_availability', 'split', 'model_choice'),
+}
+DEPENDS_ON_BY_TASK = {BINARY: DEPENDS_ON, REGRESSION: REGRESSION_DEPENDS_ON}
 
 DEFAULT_SETTINGS = {'bootstrap': {'replicates': 2000, 'seed': 20261017, 'level': 0.95}}
 
@@ -127,14 +148,57 @@ STEPS = (
 )
 STEP_IDS = tuple(s['id'] for s in STEPS)
 ACTIVITY_SLOTS = tuple(a for s in STEPS for a in s['activities'])
-# Optional slots outside the plan: ``eda.rate_by`` has one slot per column,
-# ``eda.rate_by:<column>`` (``mlkit.study.activities.slot_of``). They are shown with the
-# training EDA step and never block a step.
-PER_COLUMN_SLOT_PREFIXES = ('eda.rate_by:',)
+
+# The plan of a regression study: the same pauses, a numeric target. The training EDA
+# summarises the target distribution, the models are the training mean and a linear
+# model, and the third pause chooses a model on the validation error (MAE and RMSE in the
+# target unit, with paired bootstrap intervals), not a decision rule on scores.
+REGRESSION_STEPS = (
+    STEPS[0], STEPS[1], STEPS[2],
+    {'id': 'train_eda', 'pause': None, 'decision': None,
+     'activities': ('eda.target_summary', 'eda.special_values'), 'requires': ('split',),
+     'title': 'Explore the training partition',
+     'question': 'What does the training partition show about the distribution of the target '
+                 'and the special values?',
+     'expected_output': 'A target summary (count, mean, standard deviation, quantiles, missing '
+                        'values) and special-value counts on training rows, with their exposure '
+                        'recorded.',
+     'completion': 'The training EDA results are current.'},
+    {'id': 'models', 'pause': None, 'decision': None,
+     'activities': ('fit.baseline', 'fit.linear'), 'requires': ('split',),
+     'title': 'Fit a mean baseline and a linear model',
+     'question': 'Which predictions do the training mean and a linear model give for the '
+                 'validation rows?',
+     'expected_output': 'Persisted validation predictions for the mean baseline and the linear '
+                        'model.',
+     'completion': 'Both fit results are current.'},
+    {'id': 'model_choice', 'pause': 3, 'decision': 'model_choice',
+     'activities': ('evaluate.regression',), 'requires': ('models',), 'decide_first': False,
+     'title': 'Choose the model',
+     'question': 'Does the linear model reduce the validation error of the mean baseline, in the '
+                 'target unit, by enough to adopt it, given the paired intervals and the '
+                 'residuals?',
+     'expected_output': 'A current regression evaluation and a confirmed model choice.',
+     'completion': 'The regression evaluation is current and decision model_choice is '
+                   'confirmed.'},
+    STEPS[6],
+)
+STEPS_BY_TASK = {BINARY: STEPS, REGRESSION: REGRESSION_STEPS}
+REGRESSION_STEP_IDS = tuple(s['id'] for s in REGRESSION_STEPS)
+REGRESSION_ACTIVITY_SLOTS = tuple(a for s in REGRESSION_STEPS for a in s['activities'])
+ACTIVITY_SLOTS_BY_TASK = {BINARY: ACTIVITY_SLOTS, REGRESSION: REGRESSION_ACTIVITY_SLOTS}
+# Optional slots outside the plan: ``eda.rate_by`` (binary) and ``eda.mean_by``
+# (regression) have one slot per column, ``eda.rate_by:<column>``
+# (``mlkit.study.activities.slot_of``). They are shown with the training EDA step and
+# never block a step.
+PER_COLUMN_SLOT_PREFIXES = ('eda.rate_by:', 'eda.mean_by:')
 
 TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'facts',
             'structure', 'prior_exposure', 'decisions', 'proposals', 'current', 'stale',
             'executions', 'invalidations', 'receipts', 'settings')
+# ``task`` (``binary`` or ``regression``) is written by every new study; a state written
+# before it existed has no ``task`` and is a binary study.
+TOP_OPTIONAL_KEYS = ('task',)
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -149,11 +213,47 @@ def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
+# --- task -------------------------------------------------------------------------------
+
+def task_of(state: Mapping | str | None) -> str:
+    """The task of a study state (``binary`` when the state predates the ``task`` key).
+    A task name is returned as it is."""
+    if isinstance(state, str):
+        return state
+    if isinstance(state, Mapping):
+        return state.get('task', DEFAULT_TASK)
+    return DEFAULT_TASK
+
+
+def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
+    """The decisions of a study (or of a task name)."""
+    return DECISION_IDS_BY_TASK[task_of(state)]
+
+
+def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]:
+    return DEPENDS_ON_BY_TASK[task_of(state)][decision_id]
+
+
+def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
+    """The plan steps of a study's task."""
+    return STEPS_BY_TASK[task_of(state)]
+
+
+def activity_slots(state: Mapping | str | None = None) -> tuple[str, ...]:
+    return ACTIVITY_SLOTS_BY_TASK[task_of(state)]
+
+
+def choice_decision(state: Mapping | str | None = None) -> str:
+    """The decision of the third pause: ``policy`` (binary) or ``model_choice``."""
+    return CHOICE_DECISION[task_of(state)]
+
+
 # --- construction -----------------------------------------------------------------------
 
-def empty_decision(decision_id: str) -> dict:
+def empty_decision(decision_id: str, task: str = DEFAULT_TASK) -> dict:
     return {'status': 'open', 'value': None, 'proposal_id': None, 'confirmation': None,
-            'depends_on': list(DEPENDS_ON[decision_id]), 'revision': None, 'reason': None}
+            'depends_on': list(depends_on(task, decision_id)), 'revision': None,
+            'reason': None}
 
 
 def initial_state(case: Case, *, created: str | None = None) -> dict:
@@ -166,8 +266,10 @@ def initial_state(case: Case, *, created: str | None = None) -> dict:
     require_supported(case)
     doc = case.document
     stamp = created or now()
+    task = case.task
     return {
         'schema': SCHEMA,
+        'task': task,
         'revision': 0,
         'created': stamp,
         'updated': stamp,
@@ -180,7 +282,7 @@ def initial_state(case: Case, *, created: str | None = None) -> dict:
                   for f in doc['facts']},
         'structure': copy.deepcopy(doc['structure']),
         'prior_exposure': copy.deepcopy(doc.get('prior_exposure', [])),
-        'decisions': {d: empty_decision(d) for d in DECISION_IDS},
+        'decisions': {d: empty_decision(d, task) for d in decision_ids(task)},
         'proposals': {},
         'current': {},
         'stale': {},
@@ -274,7 +376,8 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
     return problems
 
 
-def _decision_problems(decision_id: str, d: Any, proposals: dict) -> list[dict]:
+def _decision_problems(decision_id: str, d: Any, proposals: dict,
+                       task: str = DEFAULT_TASK) -> list[dict]:
     path = f'decisions.{decision_id}'
     problems: list[dict] = []
     if not _keys(d, path, DECISION_KEYS, problems):
@@ -282,9 +385,9 @@ def _decision_problems(decision_id: str, d: Any, proposals: dict) -> list[dict]:
     if d['status'] not in DECISION_STATUSES:
         problems.append({'path': f'{path}.status',
                          'problem': f'must be one of {", ".join(DECISION_STATUSES)}'})
-    if d['depends_on'] != list(DEPENDS_ON[decision_id]):
-        problems.append({'path': f'{path}.depends_on',
-                         'problem': f'must be {list(DEPENDS_ON[decision_id])}'})
+    expected = list(depends_on(task, decision_id))
+    if d['depends_on'] != expected:
+        problems.append({'path': f'{path}.depends_on', 'problem': f'must be {expected}'})
     if d['status'] == 'confirmed':
         problems += _confirmation_problems(d['confirmation'], f'{path}.confirmation')
         if isinstance(d['confirmation'], dict) and d['confirmation'].get('proposal_id') != d['proposal_id']:
@@ -305,7 +408,7 @@ def _decision_problems(decision_id: str, d: Any, proposals: dict) -> list[dict]:
     return problems
 
 
-def _proposal_problems(pid: Any, p: Any) -> list[dict]:
+def _proposal_problems(pid: Any, p: Any, task: str = DEFAULT_TASK) -> list[dict]:
     path = f'proposals.{pid}'
     problems: list[dict] = []
     present = tuple(k for k in PROPOSAL_OPTIONAL_KEYS if isinstance(p, dict) and k in p)
@@ -313,9 +416,9 @@ def _proposal_problems(pid: Any, p: Any) -> list[dict]:
         return problems
     if p['proposal_id'] != pid:
         problems.append({'path': f'{path}.proposal_id', 'problem': 'must equal its key'})
-    if p['decision_id'] not in DECISION_IDS:
+    if p['decision_id'] not in decision_ids(task):
         problems.append({'path': f'{path}.decision_id',
-                         'problem': f'must be one of {", ".join(DECISION_IDS)}'})
+                         'problem': f'must be one of {", ".join(decision_ids(task))}'})
     if p['status'] not in PROPOSAL_STATUSES:
         problems.append({'path': f'{path}.status',
                          'problem': f'must be one of {", ".join(PROPOSAL_STATUSES)}'})
@@ -330,8 +433,13 @@ def _proposal_problems(pid: Any, p: Any) -> list[dict]:
 def validate_state(state: Any) -> list[dict]:
     """Every schema problem of ``state`` (empty when it is valid)."""
     problems: list[dict] = []
-    if not _keys(state, '', TOP_KEYS, problems):
+    present = tuple(k for k in TOP_OPTIONAL_KEYS if isinstance(state, dict) and k in state)
+    if not _keys(state, '', TOP_KEYS + present, problems):
         return problems
+    if 'task' in present and state['task'] not in TASKS:
+        problems.append({'path': 'task', 'problem': f'must be one of {", ".join(TASKS)}'})
+        return problems
+    task = task_of(state)
     if state['schema'] != SCHEMA:
         problems.append({'path': 'schema', 'problem': f'must be "{SCHEMA}"'})
     if type(state['revision']) is not int or state['revision'] < 0:
@@ -354,10 +462,11 @@ def validate_state(state: Any) -> list[dict]:
     if not isinstance(state['proposals'], dict):
         problems.append({'path': 'proposals', 'problem': 'must be a mapping'})
     for pid, p in proposals.items():
-        problems += _proposal_problems(pid, p)
-    if _keys(state['decisions'], 'decisions', DECISION_IDS, problems):
-        for decision_id in DECISION_IDS:
-            problems += _decision_problems(decision_id, state['decisions'][decision_id], proposals)
+        problems += _proposal_problems(pid, p, task)
+    if _keys(state['decisions'], 'decisions', decision_ids(task), problems):
+        for decision_id in decision_ids(task):
+            problems += _decision_problems(decision_id, state['decisions'][decision_id],
+                                           proposals, task)
     for key in ('current', 'stale', 'receipts'):
         if not isinstance(state[key], dict):
             problems.append({'path': key, 'problem': 'must be a mapping'})
@@ -456,7 +565,7 @@ def _step_done(state: dict, step: dict) -> bool:
 
 
 def _step_requirements_met(state: dict, step: dict) -> bool:
-    by_id = {s['id']: s for s in STEPS}
+    by_id = {s['id']: s for s in steps(state)}
     return all(_step_done(state, by_id[r]) for r in step['requires'])
 
 
@@ -469,7 +578,7 @@ def derive_plan(state: dict) -> list[dict]:
     """
     plan, current_found = [], False
     waiting = {p['decision_id'] for p in open_proposals(state)}
-    for step in STEPS:
+    for step in steps(state):
         decision = state['decisions'][step['decision']] if step['decision'] else None
         missing = [a for a in step['activities'] if not is_current(state, a)]
         if decision is not None and decision['status'] == 'reconfirm_required':
@@ -519,7 +628,7 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
         return {'kind': 'acknowledge_interruption', 'execution_id': interrupted[0],
                 'message': 'An execution was interrupted and its outcome is unknown. Inspect it '
                            'and acknowledge it; it is not restarted automatically.'}
-    for decision_id in DECISION_IDS:
+    for decision_id in decision_ids(state):
         decision = state['decisions'][decision_id]
         if decision['status'] == 'reconfirm_required':
             return {'kind': 'reconfirm', 'decision': decision_id,
@@ -550,7 +659,7 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
 def delegated_decisions(state: dict) -> list[str]:
     """Decisions whose current confirmation is a delegation to the assistant's default."""
     out = []
-    for d in DECISION_IDS:
+    for d in decision_ids(state):
         dec = state['decisions'][d]
         if dec['status'] in ('confirmed', 'reconfirm_required') \
                 and isinstance(dec['confirmation'], dict) \
@@ -562,14 +671,20 @@ def delegated_decisions(state: dict) -> list[str]:
 def not_yet_defensible(state: dict) -> list[dict]:
     """What the study cannot claim yet, from state only (plan §6)."""
     items = []
-    unconfirmed = [d for d in DECISION_IDS if not _confirmed(state, d)]
+    unconfirmed = [d for d in decision_ids(state) if not _confirmed(state, d)]
     if unconfirmed:
         items.append({'id': 'unconfirmed_decisions', 'decisions': unconfirmed,
                       'text': 'These decisions are not confirmed: ' + ', '.join(unconfirmed) + '.'})
-    items.append({'id': 'validation_is_not_independent',
-                  'text': 'Validation rows are used to compare models and to choose the policy '
-                          'and its threshold or capacity, so validation results are not '
-                          'independent evidence of future performance.'})
+    if task_of(state) == REGRESSION:
+        items.append({'id': 'validation_is_not_independent',
+                      'text': 'Validation rows are used to compare the models and to choose '
+                              'one, so validation errors are not independent evidence of '
+                              'future error.'})
+    else:
+        items.append({'id': 'validation_is_not_independent',
+                      'text': 'Validation rows are used to compare models and to choose the '
+                              'policy and its threshold or capacity, so validation results '
+                              'are not independent evidence of future performance.'})
     if state['prior_exposure']:
         items.append({'id': 'public_data_already_explored',
                       'text': 'The data were explored or published before this study; its rows '
@@ -577,8 +692,18 @@ def not_yet_defensible(state: dict) -> list[dict]:
                       'sources': [p['source'] for p in state['prior_exposure']]})
     structure = state['structure']
     missing = [k for k in ('time_column', 'group_column') if structure[k]['value'] is None]
+    group = structure['group_column']['value']
+    if group is not None:
+        items.append({'id': 'grouped_split_unsupported', 'column': group,
+                      'capability': 'grouped split (v0.2)',
+                      'text': f'Rows that share a value of {group} can fall in both partitions: '
+                              f'this version has no grouped split, so a split reports how many '
+                              f'group values its partitions share instead of preventing it. '
+                              f'Validation rows of a shared group are not independent of the '
+                              f'training rows.'})
     if missing:
         items.append({'id': 'no_time_or_entity_identifier', 'missing': missing,
+
                       'text': 'The data have no time column or entity identifier, so the study '
                               'cannot check drift over time or repeated entities across '
                               'partitions.'})

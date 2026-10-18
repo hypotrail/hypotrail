@@ -79,13 +79,30 @@ def test_bank_initial_state_carries_prior_exposure():
     assert 'public_data_already_explored' in {x['id'] for x in st.not_yet_defensible(bank)}
 
 
-def test_auto_mpg_is_refused_by_capability_without_fallback():
-    auto = c.load_case(REPO / 'use-cases/auto-mpg')
-    with pytest.raises(c.CaseError) as info:
-        st.initial_state(auto)
-    assert info.value.code == 'unsupported_capability'
-    assert {x['capability'] for x in info.value.details['reasons']} == {
-        c.CAPABILITY_REGRESSION, c.CAPABILITY_STRUCTURED_SPLIT}
+def test_auto_mpg_initial_state_is_a_regression_study():
+    """M3: the regression study has the same pauses, with model_choice as its third
+    decision; no policy decision exists, and the missing grouped split is listed."""
+    auto = st.initial_state(c.load_case(REPO / 'use-cases/auto-mpg'))
+    assert st.validate_state(auto) == []
+    assert auto['task'] == 'regression' and st.task_of(auto) == 'regression'
+    assert tuple(auto['decisions']) == st.REGRESSION_DECISION_IDS == (
+        'prediction_time', 'feature_availability', 'split', 'model_choice', 'conclusion')
+    assert auto['decisions']['conclusion']['depends_on'] == [
+        'prediction_time', 'feature_availability', 'split', 'model_choice']
+    assert [s['id'] for s in st.derive_plan(auto)] == list(st.REGRESSION_STEP_IDS) == [
+        'prediction_time', 'feature_availability', 'split', 'train_eda', 'models',
+        'model_choice', 'conclusion']
+    items = {x['id']: x for x in st.not_yet_defensible(auto)}
+    assert items['grouped_split_unsupported']['column'] == 'car_name'
+    assert items['grouped_split_unsupported']['capability'] == c.CAPABILITY_GROUPED_SPLIT
+    assert 'no_time_or_entity_identifier' not in items
+    broken = copy.deepcopy(auto)
+    broken['decisions']['policy'] = broken['decisions'].pop('model_choice')
+    assert {'path': 'decisions.model_choice', 'problem': 'is required'} in st.validate_state(broken)
+    legacy = copy.deepcopy(auto)
+    legacy.pop('task')          # a state without task is a binary study
+    assert st.task_of(legacy) == 'binary' and st.validate_state(legacy)
+
 
 
 @pytest.mark.parametrize('mutate, path', [

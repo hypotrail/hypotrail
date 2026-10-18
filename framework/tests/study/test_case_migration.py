@@ -150,19 +150,19 @@ def test_bank_structural_observations_hold():
     assert ('pdays', -1) in sentinels and ('poutcome', 'unknown') in sentinels
 
 
-def test_auto_mpg_case_is_refused_for_regression_and_structure_with_named_capabilities():
+def test_auto_mpg_case_is_supported_as_regression_with_the_grouped_split_named():
+    """M3: regression with an integer time column is supported; the declared group column
+    is accepted with the missing grouped split named, never assumed."""
     case, doc = _committed('auto')
     assert case.task == 'regression' and case.positive_label is None
-    reasons = c.unsupported_capabilities(case)
-    assert [r['capability'] for r in reasons] == ['regression study (v0.2)',
-                                                  'temporal/grouped split (v0.2)',
-                                                  'temporal/grouped split (v0.2)']
-    assert [r.get('column') for r in reasons] == [None, 'model_year', 'car_name']
-    with pytest.raises(c.CaseError) as info:
-        c.require_supported(case)
-    assert info.value.code == 'unsupported_capability'
-    assert 'regression study (v0.2)' in info.value.message
+    assert case.target_unit == 'mpg'
+    assert case.time_column == 'model_year' and case.variables['model_year']['type'] == 'integer'
+    assert c.unsupported_capabilities(case) == []
+    assert c.require_supported(case) is case
+    assert [(x['capability'], x['column']) for x in c.limitations(case)] == [
+        ('grouped split (v0.2)', 'car_name')]
     assert case.row_key(1) == 'L1'                      # no header: the first row is line 1
+
 
 
 def test_auto_mpg_structural_observations_hold():

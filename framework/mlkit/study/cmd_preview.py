@@ -59,6 +59,11 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
     rules = list(dict.fromkeys(canonical_rule(r) for r in rules))
     study = read.open(study_dir)
     state = study.state
+    if state.get('task', 'binary') != 'binary':
+        raise StudyError('unsupported_capability',
+                         'preview policy applies to a binary study. A regression study compares '
+                         'models by their error with run evaluate.regression.',
+                         details={'command': 'preview policy', 'task': state['task']})
     missing = [{'requirement': 'result_present', 'slot': s} for s in FITS
                if state['current'].get(s) is None]
     if missing:
