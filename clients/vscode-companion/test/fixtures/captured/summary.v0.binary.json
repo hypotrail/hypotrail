@@ -79,7 +79,9 @@
    "kind": "await_user_words",
    "proposal_id": "p_5",
    "decision": "policy",
-   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision."
+   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
+   "audience": "agent",
+   "junior_message": "A proposal on the decision policy is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
   },
   "open_proposals": [
    {
@@ -98,7 +100,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "feature_availability": {
     "status": "confirmed",
@@ -130,7 +133,27 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": {
+     "default_from_case": [
+      "age",
+      "balance",
+      "campaign",
+      "contact",
+      "day",
+      "default",
+      "duration",
+      "education",
+      "housing",
+      "job",
+      "loan",
+      "marital",
+      "month",
+      "pdays",
+      "poutcome",
+      "previous"
+     ]
+    }
    },
    "split": {
     "status": "confirmed",
@@ -143,7 +166,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the split exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "policy": {
     "status": "confirmed",
@@ -154,7 +178,8 @@
     "reason": null,
     "open_proposals": [
      "p_5"
-    ]
+    ],
+    "feature_basis": null
    },
    "conclusion": {
     "status": "open",
@@ -163,60 +188,61 @@
     "delegation_scope": null,
     "user_words": null,
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    }
   },
   "results": {
    "eda.distribution:age": {
-    "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+    "result_id": "33a3d395e9c3db7de611504aed9104048bc5013e4e40290db9c549026809f6fb",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+    "result_id": "cc339053feb834e9fb0534197e54478d85f9ed15bd56fb1f1833aabb9aad517f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+    "result_id": "297833fd492bb5d52eb24e25cdb485cc96a66fba3a50a359e672cc4d84fa8e84",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+    "result_id": "48270a4d623a206ca41ca6d7d6cf5dd6fee7f168fa91bf36c6043265047cc546",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+    "result_id": "649868b31c662843497236fbf7829ef32555e62e44639318a7770386a83c55a8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+    "result_id": "cffda2c8255a0279c825f705e65485978c42e190c84783a1e50dc425e95c7f2d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+    "result_id": "77b9c21e62622af3ea009f676f5a3ffa9e269423e6cfde252316933d12e8b4fa",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+    "result_id": "9b90c63b03628e347ec18aead1bad8a2e6e98e253f74002a21cccd4ce6f88ca5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "result_id": "bc68e38bc1cc5796a6f49ae8151fc7ca3b711031a0d36823a69a7df32476ece5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -229,19 +255,25 @@
      "status": "ok",
      "revision": 30,
      "last_ok_revision": 30,
-     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+     "audience": "agent",
+     "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
      "revision": 30,
      "last_ok_revision": 30,
-     "message": "The report (reports/study.html) is up to date."
+     "message": "The report (reports/study.html) is up to date.",
+     "audience": "agent",
+     "junior_message": "The report is up to date."
     },
     "workbench": {
      "status": "ok",
      "revision": 2,
      "last_ok_revision": 2,
-     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+     "audience": "agent",
+     "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
     }
    }
   },
@@ -255,23 +287,33 @@
    "top": [
     {
      "id": "unconfirmed_decisions",
-     "text": "These decisions are not confirmed: conclusion."
+     "text": "These decisions are not confirmed: conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: the conclusion."
     },
     {
      "id": "uncertain_features_included",
-     "text": "These features are used although their availability at prediction time is uncertain: contact."
+     "text": "These features are used although their availability at prediction time is uncertain: contact.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "validation_is_not_independent",
-     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "public_data_already_explored",
-     "text": "The data were explored or published before this study; its rows are not unseen."
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "no_time_or_entity_identifier",
-     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions.",
+     "audience": "junior",
+     "junior_text": null
     }
    ],
    "more": [
@@ -283,7 +325,15 @@
   "holds": [],
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result 8f1781d8).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result 9b90c63b).",
+   "Now: Conclude proportionately; the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
+   "Limit: These features are used although their availability at prediction time is uncertain: contact."
+  ],
+  "recap_audience": "agent",
+  "recap_junior": [
+   "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%).",
    "Now: Conclude proportionately; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."

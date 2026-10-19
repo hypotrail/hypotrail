@@ -80,7 +80,9 @@
    "kind": "await_user_words",
    "proposal_id": "p_4",
    "decision": "model_choice",
-   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision."
+   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
+   "audience": "agent",
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
   },
   "open_proposals": [
    {
@@ -102,7 +104,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "feature_availability": {
     "status": "confirmed",
@@ -122,7 +125,17 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": {
+     "default_from_case": [
+      "acceleration",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "origin",
+      "weight"
+     ]
+    }
    },
    "split": {
     "status": "confirmed",
@@ -135,7 +148,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the split exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "model_choice": {
     "status": "proposed",
@@ -146,7 +160,8 @@
     "reason": null,
     "open_proposals": [
      "p_4"
-    ]
+    ],
+    "feature_basis": null
    },
    "conclusion": {
     "status": "open",
@@ -155,54 +170,55 @@
     "delegation_scope": null,
     "user_words": null,
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    }
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+    "result_id": "c2438c9b9b0f1aa26d3e47e744e7e2c7e31afbee44655bdb84c2d85ae6047cb5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+    "result_id": "e232c2e867d68fb1ae87c1d9c8ca2eda25a89e6f1aae86c1a9af1ed95a170289",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+    "result_id": "3e72acb825cc981ba6226638d6e2aaeed5be799b7ab6458a6d50db77ec016d95",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+    "result_id": "e31e668befa6d8c839a8068d1906bb693a8fe0667b9c7d11fc1aefd180f90623",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+    "result_id": "e8061edc1e35cc295e1e1bbfaa3989b733c1535559076a067826840269e7909e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+    "result_id": "bc034f6c61bd053418749fd7115815f8e4d801089b3fd1f40f0fc21eeba5cdee",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+    "result_id": "1c4df48b03e0c9e6caa7e05c25a5b53e761f639e3d3c31584b50591a1bd173ba",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+    "result_id": "67df122f3d003ca79013849f9550718f9985076feda7be30c244ad271cf73fdb",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -215,19 +231,25 @@
      "status": "ok",
      "revision": 24,
      "last_ok_revision": 24,
-     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+     "audience": "agent",
+     "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
      "revision": 24,
      "last_ok_revision": 24,
-     "message": "The report (reports/study.html) is up to date."
+     "message": "The report (reports/study.html) is up to date.",
+     "audience": "agent",
+     "junior_message": "The report is up to date."
     },
     "workbench": {
      "status": "ok",
      "revision": 2,
      "last_ok_revision": 2,
-     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+     "audience": "agent",
+     "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
     }
    }
   },
@@ -241,23 +263,33 @@
    "top": [
     {
      "id": "unconfirmed_decisions",
-     "text": "These decisions are not confirmed: model_choice, conclusion."
+     "text": "These decisions are not confirmed: model_choice, conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: the model choice and the conclusion."
     },
     {
      "id": "validation_is_not_independent",
-     "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+     "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "public_data_already_explored",
-     "text": "The data were explored or published before this study; its rows are not unseen."
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "grouped_split_unsupported",
-     "text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows."
+     "text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "no_causality",
-     "text": "Associations in observational data do not show that acting on a variable would change the outcome."
+     "text": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "audience": "junior",
+     "junior_text": null
     }
    ],
    "more": [
@@ -269,7 +301,15 @@
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg; result ef58893e); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg; result e8061edc); the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+  ],
+  "recap_audience": "agent",
+  "recap_junior": [
+   "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
+   "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
@@ -341,7 +381,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-19T02:13:39.059180+00:00",
+   "boundary_time": "2026-10-19T08:00:30.217623+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -350,7 +390,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-19T02:13:39.087461+00:00",
+     "time": "2026-10-19T08:00:30.243964+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -371,7 +411,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-19T02:13:39.137669+00:00",
+     "time": "2026-10-19T08:00:30.298082+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -399,7 +439,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-19T02:13:39.203836+00:00",
+     "time": "2026-10-19T08:00:30.416411+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -420,7 +460,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-19T02:13:39.265046+00:00",
+     "time": "2026-10-19T08:00:30.469508+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -448,7 +488,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-19T02:13:39.304400+00:00",
+     "time": "2026-10-19T08:00:30.509661+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -469,7 +509,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-19T02:13:39.345840+00:00",
+     "time": "2026-10-19T08:00:30.578998+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -497,7 +537,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-19T02:13:39.470083+00:00",
+     "time": "2026-10-19T08:00:30.772950+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -505,7 +545,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "result_id": "67df122f3d003ca79013849f9550718f9985076feda7be30c244ad271cf73fdb",
      "execution_id": "e_20377cec9f51f6bf5ba1fa64",
      "rules": null,
      "column": null,
@@ -518,7 +558,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-19T02:13:39.630248+00:00",
+     "time": "2026-10-19T08:00:31.022321+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -526,7 +566,7 @@
      "note_id": null,
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
-     "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "result_id": "e31e668befa6d8c839a8068d1906bb693a8fe0667b9c7d11fc1aefd180f90623",
      "execution_id": "e_ce609b5bf3b974a84907e237",
      "rules": null,
      "column": null,
@@ -539,7 +579,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-19T02:13:39.840431+00:00",
+     "time": "2026-10-19T08:00:31.254621+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -547,7 +587,7 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "result_id": "3e72acb825cc981ba6226638d6e2aaeed5be799b7ab6458a6d50db77ec016d95",
      "execution_id": "e_2b12242f306cde1c5f3670f1",
      "rules": null,
      "column": null,
@@ -560,7 +600,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-19T02:13:39.987475+00:00",
+     "time": "2026-10-19T08:00:31.402647+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -568,7 +608,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:model_year",
-     "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "result_id": "e232c2e867d68fb1ae87c1d9c8ca2eda25a89e6f1aae86c1a9af1ed95a170289",
      "execution_id": "e_e80fb65ac70384bd8bab0358",
      "rules": null,
      "column": "model_year",
@@ -581,7 +621,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-19T02:13:40.111635+00:00",
+     "time": "2026-10-19T08:00:31.550618+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -589,7 +629,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:weight",
-     "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "result_id": "c2438c9b9b0f1aa26d3e47e744e7e2c7e31afbee44655bdb84c2d85ae6047cb5",
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
      "rules": null,
      "column": "weight",
@@ -602,7 +642,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-19T02:13:40.257019+00:00",
+     "time": "2026-10-19T08:00:31.695631+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -610,7 +650,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "result_id": "bc034f6c61bd053418749fd7115815f8e4d801089b3fd1f40f0fc21eeba5cdee",
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
      "rules": null,
      "column": null,
@@ -623,7 +663,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-19T02:13:40.426642+00:00",
+     "time": "2026-10-19T08:00:31.888800+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -631,7 +671,7 @@
      "note_id": null,
      "activity": "fit.linear",
      "slot": "fit.linear",
-     "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "result_id": "1c4df48b03e0c9e6caa7e05c25a5b53e761f639e3d3c31584b50591a1bd173ba",
      "execution_id": "e_305370681065d9971a93f227",
      "rules": null,
      "column": null,
@@ -644,7 +684,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-19T02:13:40.609366+00:00",
+     "time": "2026-10-19T08:00:32.104622+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -652,7 +692,7 @@
      "note_id": null,
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
-     "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "result_id": "e8061edc1e35cc295e1e1bbfaa3989b733c1535559076a067826840269e7909e",
      "execution_id": "e_808e66ec55e19cf01a72e71c",
      "rules": null,
      "column": null,
@@ -665,7 +705,7 @@
     },
     {
      "revision": 24,
-     "time": "2026-10-19T02:13:40.677804+00:00",
+     "time": "2026-10-19T08:00:32.177735+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -700,6 +740,6 @@
    }
   },
   "task": "regression",
-  "currency": "155930486d07d75c"
+  "currency": "2239cb3674fb7dcf"
  }
 }

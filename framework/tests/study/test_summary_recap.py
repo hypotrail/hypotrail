@@ -59,7 +59,7 @@ def test_a_new_study_recaps_the_goal_and_the_first_decision(flow):
     # v0.2a (WP-A1): additive keys follow the recap; it still follows the holds.
     keys = tuple(summary)
     assert keys[keys.index('holds') + 1] == 'recap'
-    assert keys[-3:] == ('recap_audience', 'recap_junior', 'deliverables')
+    assert keys[-2:] == ('recap_audience', 'recap_junior')
     intended = summary['goal']['intended_use']['value']
     assert recap[0].startswith(f'Goal: {intended}; the prediction is made ')
     assert recap[1] == 'Decided: nothing yet.'

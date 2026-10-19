@@ -21,7 +21,9 @@
     "not_yet_defensible",
     "notes",
     "holds",
-    "recap"
+    "recap",
+    "recap_audience",
+    "recap_junior"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -45,6 +47,8 @@
     "notes",
     "holds",
     "recap",
+    "recap_audience",
+    "recap_junior",
     "moments",
     "pauses",
     "last_session",

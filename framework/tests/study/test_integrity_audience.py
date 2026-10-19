@@ -80,8 +80,7 @@ def test_existing_settings_are_kept_and_the_line_is_given(tmp_path, synthetic_ca
 
 def test_launch_commands_open_the_two_notebooks_with_the_engine(flow):
     init_deliverables = launch.deliverables(flow.study)
-    summary = flow.call('status', '--summary', '--study', flow.study)
-    assert summary['deliverables'] == init_deliverables
+    assert flow.view()['deliverables'] == init_deliverables
     launch_ = init_deliverables['launch']
     assert set(launch_) == {'notebook', 'workbench'}
     for name, mode, rel in (('notebook', 'run', 'notebooks/study_generated.py'),
@@ -133,6 +132,9 @@ def test_limits_and_deliverables_carry_their_audience(flow):
         assert x['audience'] in audience.AUDIENCES and x['junior_text']
         if x['audience'] == 'junior':
             assert x['junior_text'] == x['text']
+    top = flow.call('status', '--summary', '--study', flow.study)['not_yet_defensible']['top']
+    for x in top:            # compact: the junior variant only where the text is the agent's
+        assert (x['junior_text'] is None) == (x['audience'] == 'junior'), x
     held = audience.limit({'id': 'open_holds', 'decisions': ['policy'],
                            'text': "The junior set a condition ..."})
     assert held['audience'] == 'agent' and held['junior_text'].startswith('You set')

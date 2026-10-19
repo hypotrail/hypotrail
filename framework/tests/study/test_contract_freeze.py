@@ -38,9 +38,8 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         'holds',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
                         'recap',
-                        # v0.2a (WP-A1): who the recap is for, its junior variant, and the
-                        # commands that open the notebooks with the engine's Python (R7).
-                        'recap_audience', 'recap_junior', 'deliverables')
+                        # v0.2a (WP-A1): who the recap is for, and its junior variant.
+                        'recap_audience', 'recap_junior')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
@@ -110,7 +109,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # M3 (regression): the task of the study, ``binary`` or ``regression``.
              'task',
              # Post-v0.1 (P2): the junior's conditions and holds.
-             'notes')
+             'notes',
+             # v0.2a (WP-A1, R7): the engine's Python and the notebook launch commands.
+             'deliverables')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -347,13 +348,12 @@ def test_status_summary_keys(flow):
     for name, item in payload['artifacts']['items'].items():
         assert tuple(item) == SUMMARY_ARTIFACT_ITEM_KEYS, name
         assert item['audience'] in AUDIENCES and item['junior_message'], name
-    assert all(tuple(x) == SUMMARY_LIMIT_KEYS and x['audience'] in AUDIENCES and x['junior_text']
+    assert all(tuple(x) == SUMMARY_LIMIT_KEYS and x['audience'] in AUDIENCES
+               and (x['junior_text'] if x['audience'] == 'agent' else x['junior_text'] is None)
                for x in payload['not_yet_defensible']['top'])
     assert payload['recap_audience'] == 'agent' and len(payload['recap_junior']) == len(RECAP_LABELS)
     assert [line.split(':', 1)[0] for line in payload['recap_junior']] == list(RECAP_LABELS)
     assert {'audience', 'junior_message'} <= set(payload['next_action'])
-    assert tuple(payload['deliverables']) == DELIVERABLES_KEYS
-    assert all(tuple(x) == LAUNCH_KEYS for x in payload['deliverables']['launch'].values())
     assert view.SUMMARY_NOTE_KEYS == SUMMARY_NOTE_KEYS
     assert view.SUMMARY_HOLD_KEYS == SUMMARY_HOLD_KEYS and payload['holds'] == []
     keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)
@@ -393,6 +393,8 @@ def test_view_model_keys(flow):
     assert all(x['audience'] in AUDIENCES and x['junior_text'] for x in v['not_yet_defensible'])
     assert all(i['audience'] in AUDIENCES and i['junior_message']
                for i in v['artifacts']['items'].values())
+    assert tuple(v['deliverables']) == DELIVERABLES_KEYS
+    assert all(tuple(x) == LAUNCH_KEYS for x in v['deliverables']['launch'].values())
     basis = v['decisions']['feature_availability']['feature_basis']
     assert basis is None or set(basis.values()) <= set(FEATURE_BASES)
     assert 'revision' in flow['status'].payload['changes_since'][0]

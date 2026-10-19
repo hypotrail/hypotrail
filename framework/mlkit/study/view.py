@@ -20,6 +20,7 @@ from pathlib import Path
 
 from . import audience
 from . import currency
+from . import launch
 from . import read
 from . import records as rec
 from . import state as st
@@ -32,7 +33,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'structure', 'results', 'stale', 'invalidations', 'executions', 'artifacts',
              'exposure', 'not_yet_defensible', 'settings', 'task',
              # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
-             'notes')
+             'notes',
+             # v0.2a (WP-A1, R7): the engine's Python and the commands that open the
+             # notebooks with it.
+             'deliverables')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -61,9 +65,8 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'holds',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap',
-                # v0.2a (WP-A1): who the recap is written for, its junior variant, and the
-                # commands that open the notebooks with the engine's Python (R7).
-                'recap_audience', 'recap_junior', 'deliverables')
+                # v0.2a (WP-A1): who the recap is written for, and its junior variant.
+                'recap_audience', 'recap_junior')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
@@ -391,7 +394,9 @@ def summary(view: dict) -> dict:
                      key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
     defensible = {'top': [{'id': x['id'], 'text': x['text'],
                            'audience': x.get('audience', audience.JUNIOR),
-                           'junior_text': audience.junior_text(x)}
+                           # Compact: null when ``text`` is already written for the junior.
+                           'junior_text': (audience.junior_text(x)
+                                           if x.get('audience') == audience.AGENT else None)}
                           for x in ordered[:SUMMARY_TOP]],
                   'more': [x['id'] for x in ordered[SUMMARY_TOP:]]}
     plan = [{'id': step['id'], 'title': step['title'], 'status': step['status']}
@@ -408,9 +413,6 @@ def summary(view: dict) -> dict:
     out['recap'] = recap(out, view)
     out['recap_audience'] = audience.AGENT
     out['recap_junior'] = recap(out, view, junior=True)
-    from . import launch
-
-    out['deliverables'] = launch.deliverables(view['study'])
     return {k: out[k] for k in SUMMARY_KEYS}
 
 
@@ -773,6 +775,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'settings': state['settings'],
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
+        'deliverables': launch.deliverables(study.study_dir),
     }
 
 
