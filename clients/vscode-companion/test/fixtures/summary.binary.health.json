@@ -307,7 +307,7 @@
      "id": "unconfirmed_decisions",
      "text": "These decisions are not confirmed: conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: ."
+     "junior_text": "Not confirmed by you yet: the conclusion."
     },
     {
      "id": "uncertain_features_included",
@@ -360,17 +360,17 @@
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result ae80b53f).",
-   "Now: Conclude proportionately; the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
-   "Limit: These features are used although their availability at prediction time is uncertain: contact."
+   "Now: Conclude proportionately; notebook, report not up to date.",
+   "Next: a run of eda.distribution stopped and its outcome is unknown; decide whether to acknowledge it before anything else.",
+   "Limit: An execution has an unknown outcome."
   ],
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%).",
-   "Now: Conclude proportionately; the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
-   "Limit: These features are used although their availability at prediction time is uncertain: contact."
+   "Now: Conclude proportionately; notebook, report not up to date.",
+   "Next: A run stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted.",
+   "Limit: An execution has an unknown outcome."
   ],
   "moments": [
    {
@@ -468,7 +468,7 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "Your condition on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in your words: \"my manager says the team can make 100 calls per wave\"."
+     "text": "The hold on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in the junior's words: \"my manager says the team can make 100 calls per wave\"."
     },
     {
      "revision": 25,

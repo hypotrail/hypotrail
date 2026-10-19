@@ -134,12 +134,18 @@ def test_proposal_textarea_starts_empty_and_confirm_needs_typed_words(opened, su
 def test_panel_shows_recap_plan_artifacts_and_limits(opened, summary_model):
     page, *_ = opened
     _snapshot(page, summary_model)
-    assert page.locator('[data-recap] li').count() == 5
-    assert page.locator('[data-current-step="prediction_time"]').inner_text() == \
-        'Step 1 of 2: Define the prediction moment.'
+    # WP-A5: the first block is the next move; the recap of an engine without audience
+    # keys is kept, line by line, under Details.
+    assert page.locator('[data-recap-details] li').all_text_contents() == SUMMARY['recap']
+    hero = page.locator('[data-ov="hero"]')
+    assert hero.get_attribute('data-hero') == 'await_user_words'
+    assert hero.locator('[data-hero-title]').inner_text() == 'Answer the proposal on the prediction moment'
+    assert hero.locator('[data-hero-restatement="p_1"]').inner_text() == 'You predict <b>before</b> the first reminder.'
     assert page.locator('li[aria-current="step"]').count() == 1
-    assert 'stale' in page.locator('[data-artifact="report"]').inner_text()
-    assert page.locator('[data-nyd="no_causality"]').inner_text() == 'Associations are not causes.'
+    assert page.locator('li[aria-current="step"]').get_attribute('data-step') == 'prediction_time'
+    assert page.locator('[data-artifact="report"] [data-status-chip]').inner_text() == 'out of date'
+    assert page.locator('[data-nyd="no_causality"] [data-limit-text]').inner_text() == 'Associations are not causes.'
+    assert page.locator('[data-nyd="workbench_not_tracked"]').count() == 1, 'the ids under "more" are listed in words'
     page.get_by_role('button', name='Open the report in the browser').click()
     assert _posted(page)[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}
 

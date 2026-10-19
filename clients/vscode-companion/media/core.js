@@ -501,6 +501,15 @@
       error: name => state.errors[name] || null,
       busy: Boolean(state.busy), busyOp: state.busy ? state.busy.op : null, busyTarget: state.busy ? state.busy.target : null,
       send, load: (name, extra) => send({ type: 'load', view: name, ...(extra || {}) }),
+      // WP-A5: ask for a data view once per version, shared with the frame's own requests
+      // (another tab that needs the same view does not ask again).
+      wanted: name => Boolean(state.requested[`${name}@${version()}`]) && !state.errors[name],
+      want: name => {
+        const key = `${name}@${version()}`;
+        if (fresh(state.data[name]) || state.requested[key] || state.errors[name]) return;
+        state.requested[key] = true;
+        send({ type: 'load', view: name });
+      },
       version, fresh, stamp, epoch: () => state.epoch,
       retry: name => { delete state.errors[name]; for (const k of Object.keys(state.requested)) if (k.startsWith(`${name}@`)) delete state.requested[k]; },
       drafts, ui: uiState, wordsArea,
@@ -640,6 +649,11 @@
         state.data[m.view] = { ...stamp(m, state.loadEpoch[m.view] === undefined ? state.epoch : state.loadEpoch[m.view]),
           model: m.model, resultId: m.resultId || null };
         delete state.errors[m.view];
+        // A request made at another version is answered (or superseded): forget it, so a
+        // later return to that version asks again (WP-A5, the shared `want`).
+        for (const k of Object.keys(state.requested)) {
+          if (k.startsWith(`${m.view}@`) && k !== `${m.view}@${version()}`) delete state.requested[k];
+        }
         break;
       case 'load_error':
         if (m.view === null) state.loadError = { message: m.message, detail: m.detail };

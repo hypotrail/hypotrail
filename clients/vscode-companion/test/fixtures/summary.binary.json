@@ -281,7 +281,7 @@
      "id": "unconfirmed_decisions",
      "text": "These decisions are not confirmed: conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: ."
+     "junior_text": "Not confirmed by you yet: the conclusion."
     },
     {
      "id": "uncertain_features_included",
@@ -442,7 +442,7 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "Your condition on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in your words: \"my manager says the team can make 100 calls per wave\"."
+     "text": "The hold on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in the junior's words: \"my manager says the team can make 100 calls per wave\"."
     },
     {
      "revision": 25,

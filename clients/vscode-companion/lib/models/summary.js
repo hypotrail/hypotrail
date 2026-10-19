@@ -92,7 +92,9 @@ function digestModel(raw, lastSession) {
       const inv = i && i.invalidation && typeof i.invalidation === 'object' ? i.invalidation : null;
       return {
         revision: int(i && i.revision), time: strOrNull(i && i.time), kind: str(i && i.kind), text: str(i && i.text),
-        decisionId: strOrNull(i && i.decision_id), proposalId: strOrNull(i && i.proposal_id),
+        decisionId: strOrNull(i && i.decision_id), proposalId: strOrNull(i && i.proposal_id), noteId: strOrNull(i && i.note_id),
+        basis: strOrNull(i && i.basis), channel: strOrNull(i && i.channel), activity: strOrNull(i && i.activity),
+        column: strOrNull(i && i.column),
         resultId: strOrNull(i && i.result_id), slot: strOrNull(i && i.slot),
         keptFits: inv ? list(inv.kept_fits).map(str) : [], refit: inv ? list(inv.refit).map(str) : null,
       };

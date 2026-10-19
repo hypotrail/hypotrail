@@ -47,6 +47,8 @@
     const key = `${ctx.version()}|${sel || ''}`;
     if (requested[key]) return;
     requested[key] = true;
+    // WP-A5: the plain read may already be asked by another tab (the Overview's next move).
+    if (!sel && ctx.wanted && ctx.wanted('evidence')) return;
     ctx.load('evidence', sel ? { resultId: sel } : undefined);
   }
 

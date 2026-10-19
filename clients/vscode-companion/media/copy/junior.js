@@ -236,7 +236,8 @@
   };
 
   /** One digest item in the panel's words; null keeps the engine text (audience junior). */
-  function digestText(item, task) {
+  function digestText(item, task, note) {
+    const words = note && note.userWords ? ` "${note.userWords}"` : '';
     const name = decisionName(item.decisionId, task);
     const col = item.column ? ` of ${item.column}` : str(item.slot).includes(':') ? ` of ${str(item.slot).split(':')[1]}` : '';
     const act = item.activity || item.slot;
@@ -245,8 +246,10 @@
       case 'confirmed': return item.basis === 'delegated_default'
         ? `${cap(name)} was left to the assistant's default.` : `You confirmed ${name} in your own words.`;
       case 'withdrawn': return `The proposal on ${name} was withdrawn.`;
-      case 'hold_recorded': return `You put ${name} on hold.`;
-      case 'hold_resolved': return `Your condition on ${name} was resolved.`;
+      case 'hold_recorded': return `You put ${name} on hold:${words || ' a condition of yours'}.`;
+      case 'hold_resolved': return note && note.resolutionWords
+        ? `Your condition on ${name},${words}, was resolved in your words: "${note.resolutionWords}".`
+        : `Your condition on ${name} was resolved.`;
       case 'result_added': return `${activity(act, task)}${col} was computed.`;
       case 'result_replaced': return `${activity(act, task)}${col} was computed again.`;
       case 'run_failed': return `${activity(act, task)}${col} failed; nothing was stored.`;

@@ -43,7 +43,9 @@ def test_tabs_of_a_later_stage_are_absent(open_panel, binary, stage):
     if stage == 'v0':
         # v0: one page, no tablist, the v0 sections only.
         assert page.locator('[role="tablist"]').count() == 0
-        assert page.locator('[data-recap] li').count() == 5
+        # WP-A5: the next move first, then the plan; the junior recap under Details.
+        assert page.locator('main [data-ov]').first.get_attribute('data-ov') == 'hero'
+        assert page.locator('[data-recap-details] li').count() == 5
         assert page.locator('[data-proposal-card]').count() == 1
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
@@ -123,7 +125,9 @@ def test_alert_strip_and_navigation_to_health(open_panel, model):
     assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == 'proposal:p_5'
 
 
-def test_load_error_banner_keeps_the_last_snapshot_greyed(open_panel, binary):
+def test_load_error_replaces_the_content_and_gives_a_next_step(open_panel, binary):
+    # WP-A5: the error state replaces the content (nothing read before is shown as current),
+    # says what to do next, and keeps the CLI's message and stderr under Details.
     panel = open_panel()
     panel.init(stage='v1')
     panel.snapshot(binary)
@@ -132,8 +136,18 @@ def test_load_error_banner_keeps_the_last_snapshot_greyed(open_panel, binary):
     banner = panel.page.locator('[data-load-error]')
     assert banner.get_attribute('role') == 'alert'
     assert f"Last read at revision {binary['revision']}" in banner.inner_text()
+    assert 'Press Retry' in banner.locator('[data-next-step]').inner_text()
+    assert banner.locator('details [data-error-message]').text_content() == 'The hypotrail CLI could not be started.'
+    assert banner.locator('details pre').text_content() == 'stderr text'
+    page = panel.page
+    assert page.locator('main [data-load-error]').count() == 1
+    assert page.locator('main section[data-tab]').count() == 0, 'no tab content under the error'
+    assert page.locator('[data-ov="hero"], [data-proposal-card], .ht-alerts, [data-recap-strip]').count() == 0
     banner.get_by_role('button', name='Retry').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'refresh'}
+    panel.snapshot(binary)
+    assert page.locator('[data-load-error]').count() == 0
+    assert page.locator('[data-ov="hero"]').count() == 1, 'the content is back once the study is read'
 
 
 def test_components_render_geometry_hatch_values_and_citations(open_panel):

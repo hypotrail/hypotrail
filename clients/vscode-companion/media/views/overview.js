@@ -96,7 +96,7 @@
   function supporting(model, ctx, proposal) {
     if (!proposal || !ctx.atLeast('v2')) return null;
     const got = ctx.data('evidence');
-    if (!ctx.fresh(got)) askOnce(ctx, 'evidence');
+    ctx.want('evidence');
     const m = got && got.model;
     const u = m && m.uncertainty;
     if (!u) return null;
@@ -278,7 +278,9 @@
       })) : el('span', { className: 'muted', text: c.nothingDecided })]),
     ]));
     const body = el('dl', { className: 'ov-recap', 'data-recap-list': true }, rows);
-    const recap = junior.length ? junior : [];
+    // The engine's recap under Details: its junior variant; an older engine's recap (no
+    // audience) as it is; never a recap written for the agent.
+    const recap = junior.length ? junior : model.recapAudience === 'agent' ? [] : arr(model.recap);
     return section('ov-where', c.whereTitle, [body,
       details(c.recapDetails, recap.map((line, i) => ({ id: `recap:${i}`, text: line })), { 'data-recap-details': true })],
     { 'data-ov': 'where' });
@@ -289,11 +291,12 @@
   function digestRows(digest, model, ctx) {
     const task = taskOf(model, ctx);
     const open = new Set(arr(model.proposals).map(p => p.proposalId));
+    const notes = Object.fromEntries(arr(model.notes).map(n => [n.noteId, n]));
     const rows = arr(digest.items).map(item => {
       let group = J().GROUP_OF_KIND[item.kind] || 'other';
       if (item.kind === 'proposed' && !open.has(item.proposalId)) group = 'resolved';
       if (item.kind === 'result_replaced' || item.kind === 'result_added') group = 'evaluated';
-      const text = J().digestText(item, task) || str(item.text);
+      const text = J().digestText(item, task, item.noteId ? notes[item.noteId] : null) || str(item.text);
       return { item, group, text };
     });
     // Newest first inside each group; groups in a fixed order (needs you first).
