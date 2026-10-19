@@ -56,7 +56,7 @@
       },
       {
        "text": "96",
-       "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
+       "result_id": "75ebb4274891122fed6bee478140f98907db83f7541fd5b3230feb5deac13853",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "222",
-       "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
+       "result_id": "75ebb4274891122fed6bee478140f98907db83f7541fd5b3230feb5deac13853",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -116,7 +116,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "c4704a54d010eb0569cbd419fe3f2476ba050f359a1efdd4b473b3f5c0e7990a",
+       "result_id": "0b634412b2558231e3f87324f5b5a7a0f2bb4b56c534eb6aef0a0c38b6681f2c",
        "path": "train_mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -150,7 +150,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -160,7 +160,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -170,7 +170,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -194,7 +194,7 @@
       },
       {
        "text": "5.69",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "intervals.[fit.linear].mae.low",
        "value": 5.690730215654784,
        "format": "f2"
@@ -204,7 +204,7 @@
       },
       {
        "text": "7.31",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "intervals.[fit.linear].mae.high",
        "value": 7.3058496174077225,
        "format": "f2"
@@ -378,6 +378,30 @@
     "steps": []
    },
    {
+    "id": "heteroscedasticity",
+    "term": "Heteroscedasticity",
+    "definition": "Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of fuel efficiency errs more for the cars it predicts most efficient, its errors are heteroscedastic.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "qq_plot",
+    "term": "Quantile-quantile plot",
+    "definition": "The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few cars with very large errors bend the ends of the plot away from the diagonal.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "example_errors",
+    "term": "Example errors",
+    "definition": "The rows with the largest errors, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the cars the model predicts worst can reveal a group of cars it was not fitted to describe.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
     "id": "random_split",
     "term": "Random split",
     "definition": "A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.",
@@ -420,7 +444,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
+       "result_id": "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -430,7 +454,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
+       "result_id": "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -480,7 +504,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -504,7 +528,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -514,7 +538,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -540,7 +564,7 @@
       },
       {
        "text": "7.66",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.linear].rmse",
        "value": 7.664419781686159,
        "format": "f2"
@@ -550,7 +574,7 @@
       },
       {
        "text": "11.92",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.baseline].rmse",
        "value": 11.924502477405836,
        "format": "f2"
@@ -561,6 +585,14 @@
      ]
     },
     "example_status": "shown",
+    "steps": []
+   },
+   {
+    "id": "smearing",
+    "term": "Retransformation (smearing)",
+    "definition": "When a model predicts the logarithm of the target, turning its predictions back to the original unit underestimates the mean, and a correction such as Duan's smearing is needed. For example, a model of the log of fuel efficiency would need it; this engine does not transform the target, so it does not apply here.",
+    "example": null,
+    "example_status": "none",
     "steps": []
    }
   ],
@@ -708,7 +740,7 @@
       },
       {
        "text": "222",
-       "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
+       "result_id": "75ebb4274891122fed6bee478140f98907db83f7541fd5b3230feb5deac13853",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -718,7 +750,7 @@
       },
       {
        "text": "96",
-       "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
+       "result_id": "75ebb4274891122fed6bee478140f98907db83f7541fd5b3230feb5deac13853",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -804,7 +836,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
+       "result_id": "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -814,7 +846,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
+       "result_id": "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -900,7 +932,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "c4704a54d010eb0569cbd419fe3f2476ba050f359a1efdd4b473b3f5c0e7990a",
+       "result_id": "0b634412b2558231e3f87324f5b5a7a0f2bb4b56c534eb6aef0a0c38b6681f2c",
        "path": "validation.mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -910,7 +942,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "a8c0556df9b89171a6c84ccb5f439e5f2cce6dff1f173bbe456a2b0c94b8115d",
+       "result_id": "f38462465ce8cedd7dbaa2cde5e55914264747ca866cb422ef4229c41a5dc536",
        "path": "validation.mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -966,7 +998,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -976,7 +1008,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -986,7 +1018,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -996,7 +1028,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1088,7 +1120,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1125,7 +1157,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1135,7 +1167,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -1145,7 +1177,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1155,7 +1187,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1165,7 +1197,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+       "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"

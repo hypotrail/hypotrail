@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "59716cbd554a11f556a109f170130f0c4b78264a0c7d704f69bc1e29681b077a",
+       "result_id": "ef342aaf9092f5f54915a234332ff5324e1becd31a8e3ee09be0af94035a256f",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "2a256ccfe61bee776341ff3526add0c47545f206c2b6debe128a229396cb7723",
+       "result_id": "6aecc2a0c915c4d076b4d72332fd8adb36a45139f85f5d62af967dc260dc53a6",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
+       "result_id": "6bc8d3ab8be636e8c91ae58fd7da48ec36382cae0fa73a0b13c252f3ad452570",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
+       "result_id": "6bc8d3ab8be636e8c91ae58fd7da48ec36382cae0fa73a0b13c252f3ad452570",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.2%",
-       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
+       "result_id": "6bc8d3ab8be636e8c91ae58fd7da48ec36382cae0fa73a0b13c252f3ad452570",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.28153703501690847,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "48.0%",
-       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
+       "result_id": "6bc8d3ab8be636e8c91ae58fd7da48ec36382cae0fa73a0b13c252f3ad452570",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.48000980392156856,
        "format": "pct1"
@@ -440,7 +440,7 @@
    {
     "id": "calibration",
     "term": "Calibration",
-    "definition": "Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated, and this study does not assess calibration. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.",
+    "definition": "Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated; the model diagnostics compare the mean score with the observed rate in bins of rows sorted by score. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -551,6 +551,62 @@
     "id": "single_feature_signal",
     "term": "Single-feature signal",
     "definition": "How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "confusion_matrix",
+    "term": "Confusion matrix",
+    "definition": "The four counts of a decision rule against the outcome, selected positive rows, selected negative rows, missed positive rows and correctly left-out negative rows. Precision and recall are read from it. For example, of the clients a call list selects, some subscribe and some do not, and some subscribers are never called; the matrix counts each case.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "gain_curve",
+    "term": "Gain curve",
+    "definition": "The share of all positive rows found when acting on the top share of the rows ranked by score, for every share from the top of the list to all of it. A curve above the diagonal finds positive rows faster than acting at random. For example, it tells how many of all subscribers a campaign would reach by calling only the best-ranked tenth, fifth, or half of the clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "roc_curve",
+    "term": "ROC curve",
+    "definition": "The share of positive rows found against the share of negative rows selected, as the cut-off moves down the ranked list. The area under it is the AUC. For example, it shows how many non-subscribers a call list must also call to reach a given share of the subscribers.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "brier_score",
+    "term": "Brier score",
+    "definition": "The mean squared difference between a score and the outcome counted as zero or one. Lower is better; giving every row the base rate is the reference to beat, and a model that ranks well can still score worse than it when its scores are not probabilities. For example, scoring every client with the average subscription rate gives the Brier score a model of the clients must improve on.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "heteroscedasticity",
+    "term": "Heteroscedasticity",
+    "definition": "Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of client deposits errs more for the clients it ranks highest, its errors are heteroscedastic.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "qq_plot",
+    "term": "Quantile-quantile plot",
+    "definition": "The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few clients with very large errors bend the ends of the plot away from the diagonal.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "example_errors",
+    "term": "Example errors",
+    "definition": "A few rows where the decision and the outcome disagree, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the called clients with the highest scores who did not subscribe can reveal a variable the model reads too much.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -700,7 +756,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -710,7 +766,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -720,7 +776,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -730,7 +786,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
+       "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -816,7 +872,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "59716cbd554a11f556a109f170130f0c4b78264a0c7d704f69bc1e29681b077a",
+       "result_id": "ef342aaf9092f5f54915a234332ff5324e1becd31a8e3ee09be0af94035a256f",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -1030,7 +1086,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "59716cbd554a11f556a109f170130f0c4b78264a0c7d704f69bc1e29681b077a",
+       "result_id": "ef342aaf9092f5f54915a234332ff5324e1becd31a8e3ee09be0af94035a256f",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

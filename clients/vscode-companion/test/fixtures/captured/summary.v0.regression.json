@@ -250,67 +250,67 @@
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "6cdd871d009b93d3a305c4d44cf6ee23689181f6704393e59c298b64241d846d",
+    "result_id": "7685b06364262b98c1a79e57ed5e15f06c4425e9410a858c34a18a6508314e26",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "30f4dd184732433d4fbfe6a08c005291d9e28569e8141ff95cefd8a369a077e6",
+    "result_id": "30eb23c2cce0d1520d224705903f83a112bed695855440d1204cd0276d355127",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "c391e55d1c615b66fcb3a3a40d7ae0b696269a620eeba413b7f968fda07ae598",
+    "result_id": "0cb698669776b645d3f1d398fe80547ad89406f6291be5be78a05716cdf401dd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "a865fd8729bbfde554fe80caeb90a62041a546202c50b19af1f320be85d0c051",
+    "result_id": "6c291837defc93164c88b2178447491b3ef5bdbdcda960cf2f7dc6920b147c9f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "c024228b193aa2bfe75f0e56e2c92581c937e82179811b7ff00a62bac79752f0",
+    "result_id": "936a0fd4e993b9fd291be5d9b41ea86f80d894613c7927bf6290c7a4ebaffe65",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
+    "result_id": "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+    "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "c4704a54d010eb0569cbd419fe3f2476ba050f359a1efdd4b473b3f5c0e7990a",
+    "result_id": "0b634412b2558231e3f87324f5b5a7a0f2bb4b56c534eb6aef0a0c38b6681f2c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "a8c0556df9b89171a6c84ccb5f439e5f2cce6dff1f173bbe456a2b0c94b8115d",
+    "result_id": "f38462465ce8cedd7dbaa2cde5e55914264747ca866cb422ef4229c41a5dc536",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "f068ce8d4886ffe4fe0e557be8b958b4b0c4a44d42d79ca376fef9b5291f2ef2",
+    "result_id": "a1a11892800487f64941705373fa4f2cfe93fbb4623bf7e8b8b5367cf17c0be8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
+    "result_id": "75ebb4274891122fed6bee478140f98907db83f7541fd5b3230feb5deac13853",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -415,23 +415,23 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
+   "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
    "contradicts_verdict": false,
    "final_test": null
   },
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
-    "c024228b193aa2bfe75f0e56e2c92581c937e82179811b7ff00a62bac79752f0",
-    "a865fd8729bbfde554fe80caeb90a62041a546202c50b19af1f320be85d0c051",
-    "30f4dd184732433d4fbfe6a08c005291d9e28569e8141ff95cefd8a369a077e6"
+    "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
+    "936a0fd4e993b9fd291be5d9b41ea86f80d894613c7927bf6290c7a4ebaffe65",
+    "6c291837defc93164c88b2178447491b3ef5bdbdcda960cf2f7dc6920b147c9f",
+    "30eb23c2cce0d1520d224705903f83a112bed695855440d1204cd0276d355127"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result dd1aef40); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 408ad9b8); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],

@@ -1,0 +1,2241 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "diag.binary"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-diag",
+  "action": "run",
+  "request_id": "bd1",
+  "replayed": false,
+  "revision": 44,
+  "activity": "diag.binary",
+  "execution_id": "e_58ab52047846c7c88a36253e",
+  "status": "promoted",
+  "result_id": "627240fe199b3387c5a863db24b45e495eaaea4b225bc640a07efef5eb82ac23",
+  "values": {
+   "question": "Where does the model err at the rule, and can its score be read as a probability?",
+   "evidence": "development",
+   "purpose": "development_diagnostics",
+   "partition": "validation",
+   "evaluation": "validation",
+   "n": 1086,
+   "n_positive": 125,
+   "base_rate": 0.1151012891344383,
+   "rule": "threshold:0.2",
+   "rule_source": "adopted",
+   "segment_columns": [
+    "job",
+    "marital"
+   ],
+   "segment_rule": "The first two categorical features the model uses, in the order of the case; at most 12 values each, the rarer ones folded into \"(other values)\".",
+   "models": {
+    "fit.logistic": {
+     "confusion": {
+      "rule": "threshold:0.2",
+      "n": 1086,
+      "n_positive": 125,
+      "n_negative": 961,
+      "selected": 97.0,
+      "true_positives": 37.0,
+      "false_positives": 60.0,
+      "false_negatives": 88.0,
+      "true_negatives": 901.0,
+      "precision": 0.38144329896907214,
+      "recall": 0.296,
+      "specificity": 0.9375650364203955,
+      "selection": "exact",
+      "tied_at_cut": 0
+     },
+     "curve": {
+      "n": 1086,
+      "n_positive": 125,
+      "base_rate": 0.1151012891344383,
+      "points": [
+       {
+        "share": 0.05,
+        "capacity": 54,
+        "selected": 54.0,
+        "true_positives": 31.0,
+        "false_positives": 23.0,
+        "recall": 0.248,
+        "false_positive_rate": 0.023933402705515087,
+        "precision": 0.5740740740740741,
+        "lift": 4.987555555555556
+       },
+       {
+        "share": 0.1,
+        "capacity": 109,
+        "selected": 109.0,
+        "true_positives": 39.0,
+        "false_positives": 70.0,
+        "recall": 0.312,
+        "false_positive_rate": 0.07284079084287201,
+        "precision": 0.3577981651376147,
+        "lift": 3.1085504587155968
+       },
+       {
+        "share": 0.15,
+        "capacity": 163,
+        "selected": 163.0,
+        "true_positives": 49.0,
+        "false_positives": 114.0,
+        "recall": 0.392,
+        "false_positive_rate": 0.1186264308012487,
+        "precision": 0.3006134969325153,
+        "lift": 2.611730061349693
+       },
+       {
+        "share": 0.2,
+        "capacity": 217,
+        "selected": 217.0,
+        "true_positives": 54.0,
+        "false_positives": 163.0,
+        "recall": 0.432,
+        "false_positive_rate": 0.1696149843912591,
+        "precision": 0.2488479262672811,
+        "lift": 2.1619907834101384
+       },
+       {
+        "share": 0.25,
+        "capacity": 272,
+        "selected": 272.0,
+        "true_positives": 63.0,
+        "false_positives": 209.0,
+        "recall": 0.504,
+        "false_positive_rate": 0.21748178980228927,
+        "precision": 0.23161764705882354,
+        "lift": 2.012294117647059
+       },
+       {
+        "share": 0.3,
+        "capacity": 326,
+        "selected": 326.0,
+        "true_positives": 70.0,
+        "false_positives": 256.0,
+        "recall": 0.56,
+        "false_positive_rate": 0.2663891779396462,
+        "precision": 0.2147239263803681,
+        "lift": 1.865521472392638
+       },
+       {
+        "share": 0.35,
+        "capacity": 380,
+        "selected": 380.0,
+        "true_positives": 77.0,
+        "false_positives": 303.0,
+        "recall": 0.616,
+        "false_positive_rate": 0.3152965660770031,
+        "precision": 0.2026315789473684,
+        "lift": 1.7604631578947367
+       },
+       {
+        "share": 0.4,
+        "capacity": 434,
+        "selected": 434.0,
+        "true_positives": 85.0,
+        "false_positives": 349.0,
+        "recall": 0.68,
+        "false_positive_rate": 0.3631633714880333,
+        "precision": 0.195852534562212,
+        "lift": 1.7015668202764977
+       },
+       {
+        "share": 0.45,
+        "capacity": 489,
+        "selected": 489.0,
+        "true_positives": 94.0,
+        "false_positives": 395.0,
+        "recall": 0.752,
+        "false_positive_rate": 0.41103017689906346,
+        "precision": 0.19222903885480572,
+        "lift": 1.6700858895705522
+       },
+       {
+        "share": 0.5,
+        "capacity": 543,
+        "selected": 543.0,
+        "true_positives": 99.0,
+        "false_positives": 444.0,
+        "recall": 0.792,
+        "false_positive_rate": 0.4620187304890739,
+        "precision": 0.18232044198895028,
+        "lift": 1.584
+       },
+       {
+        "share": 0.55,
+        "capacity": 597,
+        "selected": 597.0,
+        "true_positives": 104.0,
+        "false_positives": 493.0,
+        "recall": 0.832,
+        "false_positive_rate": 0.5130072840790842,
+        "precision": 0.17420435510887772,
+        "lift": 1.5134874371859297
+       },
+       {
+        "share": 0.6,
+        "capacity": 652,
+        "selected": 652.0,
+        "true_positives": 110.0,
+        "false_positives": 542.0,
+        "recall": 0.88,
+        "false_positive_rate": 0.5639958376690947,
+        "precision": 0.1687116564417178,
+        "lift": 1.4657668711656442
+       },
+       {
+        "share": 0.65,
+        "capacity": 706,
+        "selected": 706.0,
+        "true_positives": 112.0,
+        "false_positives": 594.0,
+        "recall": 0.896,
+        "false_positive_rate": 0.6181061394380853,
+        "precision": 0.15864022662889518,
+        "lift": 1.3782662889518413
+       },
+       {
+        "share": 0.7,
+        "capacity": 760,
+        "selected": 760.0,
+        "true_positives": 115.0,
+        "false_positives": 645.0,
+        "recall": 0.92,
+        "false_positive_rate": 0.6711758584807492,
+        "precision": 0.1513157894736842,
+        "lift": 1.3146315789473684
+       },
+       {
+        "share": 0.75,
+        "capacity": 815,
+        "selected": 815.0,
+        "true_positives": 116.0,
+        "false_positives": 699.0,
+        "recall": 0.928,
+        "false_positive_rate": 0.7273673257023934,
+        "precision": 0.1423312883435583,
+        "lift": 1.2365742331288345
+       },
+       {
+        "share": 0.8,
+        "capacity": 869,
+        "selected": 869.0,
+        "true_positives": 118.0,
+        "false_positives": 751.0,
+        "recall": 0.944,
+        "false_positive_rate": 0.7814776274713839,
+        "precision": 0.13578826237054084,
+        "lift": 1.1797284234752587
+       },
+       {
+        "share": 0.85,
+        "capacity": 923,
+        "selected": 923.0,
+        "true_positives": 122.0,
+        "false_positives": 801.0,
+        "recall": 0.976,
+        "false_positive_rate": 0.8335067637877211,
+        "precision": 0.13217768147345613,
+        "lift": 1.148359696641387
+       },
+       {
+        "share": 0.9,
+        "capacity": 977,
+        "selected": 977.0,
+        "true_positives": 123.0,
+        "false_positives": 854.0,
+        "recall": 0.984,
+        "false_positive_rate": 0.8886576482830385,
+        "precision": 0.12589559877175024,
+        "lift": 1.0937809621289662
+       },
+       {
+        "share": 0.95,
+        "capacity": 1032,
+        "selected": 1032.0,
+        "true_positives": 124.0,
+        "false_positives": 908.0,
+        "recall": 0.992,
+        "false_positive_rate": 0.9448491155046826,
+        "precision": 0.12015503875968993,
+        "lift": 1.0439069767441862
+       },
+       {
+        "share": 1.0,
+        "capacity": 1086,
+        "selected": 1086.0,
+        "true_positives": 125.0,
+        "false_positives": 961.0,
+        "recall": 1.0,
+        "false_positive_rate": 1.0,
+        "precision": 0.1151012891344383,
+        "lift": 1.0
+       }
+      ],
+      "definition": "For the top share of the rows by score: recall is the share of the positive rows found (the cumulative gain, and the true positive rate of the ROC curve); lift is the precision over the base rate; the false positive rate is the share of the negative rows selected."
+     },
+     "roc_auc": 0.7348678459937565,
+     "average_precision": 0.3719979635443628,
+     "calibration": {
+      "binning": "10 equal-count bins of the score, in score order",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 109,
+        "n_positive": 2,
+        "score_min": 0.012189495567247558,
+        "score_max": 0.029110300665247335,
+        "mean_predicted": 0.023236722587345215,
+        "observed_rate": 0.01834862385321101,
+        "low": 0.005046362367343297,
+        "high": 0.06444457564998826,
+        "inside_interval": true
+       },
+       {
+        "bin": 2,
+        "n": 109,
+        "n_positive": 6,
+        "score_min": 0.029270497496462808,
+        "score_max": 0.04074297582055265,
+        "mean_predicted": 0.034567049923431334,
+        "observed_rate": 0.05504587155963303,
+        "low": 0.025469592397235466,
+        "high": 0.11491727415210894,
+        "inside_interval": true
+       },
+       {
+        "bin": 3,
+        "n": 108,
+        "n_positive": 2,
+        "score_min": 0.041194462256213094,
+        "score_max": 0.05838756387291489,
+        "mean_predicted": 0.04816882780036053,
+        "observed_rate": 0.018518518518518517,
+        "low": 0.0050932243447687105,
+        "high": 0.06501904800376768,
+        "inside_interval": true
+       },
+       {
+        "bin": 4,
+        "n": 109,
+        "n_positive": 5,
+        "score_min": 0.058513884603567975,
+        "score_max": 0.07443733647512803,
+        "mean_predicted": 0.06709968283812551,
+        "observed_rate": 0.045871559633027525,
+        "low": 0.019750448413382082,
+        "high": 0.10291243600295912,
+        "inside_interval": true
+       },
+       {
+        "bin": 5,
+        "n": 108,
+        "n_positive": 11,
+        "score_min": 0.07452957287645136,
+        "score_max": 0.08601025379353486,
+        "mean_predicted": 0.07959999368052341,
+        "observed_rate": 0.10185185185185185,
+        "low": 0.057829317593360796,
+        "high": 0.17322506146408273,
+        "inside_interval": true
+       },
+       {
+        "bin": 6,
+        "n": 109,
+        "n_positive": 14,
+        "score_min": 0.08619964418152272,
+        "score_max": 0.10401209041519503,
+        "mean_predicted": 0.0946150694582969,
+        "observed_rate": 0.12844036697247707,
+        "low": 0.07807440620579806,
+        "high": 0.20410431740757204,
+        "inside_interval": true
+       },
+       {
+        "bin": 7,
+        "n": 109,
+        "n_positive": 16,
+        "score_min": 0.10414367390855711,
+        "score_max": 0.12405674893845718,
+        "mean_predicted": 0.1128770218811385,
+        "observed_rate": 0.14678899082568808,
+        "low": 0.09241910768700462,
+        "high": 0.22520758019237191,
+        "inside_interval": true
+       },
+       {
+        "bin": 8,
+        "n": 108,
+        "n_positive": 15,
+        "score_min": 0.12426104492836598,
+        "score_max": 0.15378345868316246,
+        "mean_predicted": 0.13770194649095824,
+        "observed_rate": 0.1388888888888889,
+        "low": 0.0860100868411725,
+        "high": 0.2165741174202298,
+        "inside_interval": true
+       },
+       {
+        "bin": 9,
+        "n": 109,
+        "n_positive": 15,
+        "score_min": 0.15394210655906407,
+        "score_max": 0.18922298987839645,
+        "mean_predicted": 0.16795818686770353,
+        "observed_rate": 0.13761467889908258,
+        "low": 0.08520332276298494,
+        "high": 0.21469938298338836,
+        "inside_interval": true
+       },
+       {
+        "bin": 10,
+        "n": 108,
+        "n_positive": 39,
+        "score_min": 0.18942171850265563,
+        "score_max": 0.8306005695794338,
+        "mean_predicted": 0.34718760800235676,
+        "observed_rate": 0.3611111111111111,
+        "low": 0.276735447828849,
+        "high": 0.45502770765630557,
+        "inside_interval": true
+       }
+      ],
+      "brier": 0.08741843466633818,
+      "brier_base_rate": 0.10185298237402875,
+      "mean_absolute_gap": 0.0211851071473001,
+      "bins_outside_interval": 0,
+      "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
+     },
+     "segments": [
+      {
+       "column": "job",
+       "groups": [
+        {
+         "value": "admin.",
+         "n": 134,
+         "n_positive": 16,
+         "selected": 18.0,
+         "true_positives": 8.0,
+         "precision": 0.4444444444444444,
+         "precision_low": 0.24559518127005633,
+         "precision_high": 0.6628358435795723,
+         "recall": 0.5,
+         "recall_low": 0.27999563610326017,
+         "recall_high": 0.7200043638967398,
+         "small_cell": false
+        },
+        {
+         "value": "blue-collar",
+         "n": 224,
+         "n_positive": 15,
+         "selected": 3.0,
+         "true_positives": 1.0,
+         "precision": 0.3333333333333333,
+         "precision_low": 0.06149194472039621,
+         "precision_high": 0.7923403991979522,
+         "recall": 0.06666666666666667,
+         "recall_low": 0.011866895493268553,
+         "recall_high": 0.2981652987378003,
+         "small_cell": true
+        },
+        {
+         "value": "entrepreneur",
+         "n": 50,
+         "n_positive": 4,
+         "selected": 1.0,
+         "true_positives": 1.0,
+         "precision": 1.0,
+         "precision_low": 0.20654931437723745,
+         "precision_high": 1.0,
+         "recall": 0.25,
+         "recall_low": 0.04558726080970055,
+         "recall_high": 0.6993581574175981,
+         "small_cell": true
+        },
+        {
+         "value": "housemaid",
+         "n": 14,
+         "n_positive": 0,
+         "selected": 3.0,
+         "true_positives": 0.0,
+         "precision": 0.0,
+         "precision_low": 0.0,
+         "precision_high": 0.5614970317550454,
+         "recall": null,
+         "recall_low": null,
+         "recall_high": null,
+         "small_cell": true
+        },
+        {
+         "value": "management",
+         "n": 223,
+         "n_positive": 35,
+         "selected": 15.0,
+         "true_positives": 5.0,
+         "precision": 0.3333333333333333,
+         "precision_low": 0.1517632443971473,
+         "precision_high": 0.5828645226148023,
+         "recall": 0.14285714285714285,
+         "recall_low": 0.06260231079433715,
+         "recall_high": 0.29375554086595146,
+         "small_cell": false
+        },
+        {
+         "value": "retired",
+         "n": 46,
+         "n_positive": 13,
+         "selected": 28.0,
+         "true_positives": 8.0,
+         "precision": 0.2857142857142857,
+         "precision_low": 0.1525399605666909,
+         "precision_high": 0.47059288433295715,
+         "recall": 0.6153846153846154,
+         "recall_low": 0.355228915126657,
+         "recall_high": 0.8229029220223743,
+         "small_cell": false
+        },
+        {
+         "value": "self-employed",
+         "n": 54,
+         "n_positive": 6,
+         "selected": 4.0,
+         "true_positives": 2.0,
+         "precision": 0.5,
+         "precision_low": 0.15003898915214947,
+         "precision_high": 0.8499610108478506,
+         "recall": 0.3333333333333333,
+         "recall_low": 0.09677141110578041,
+         "recall_high": 0.700006684861608,
+         "small_cell": true
+        },
+        {
+         "value": "services",
+         "n": 103,
+         "n_positive": 10,
+         "selected": 2.0,
+         "true_positives": 2.0,
+         "precision": 1.0,
+         "precision_low": 0.34238022750665303,
+         "precision_high": 1.0,
+         "recall": 0.2,
+         "recall_low": 0.05668215145437519,
+         "recall_high": 0.5098375284633583,
+         "small_cell": true
+        },
+        {
+         "value": "student",
+         "n": 25,
+         "n_positive": 5,
+         "selected": 16.0,
+         "true_positives": 5.0,
+         "precision": 0.3125,
+         "precision_low": 0.14164643854782039,
+         "precision_high": 0.5559564416525933,
+         "recall": 1.0,
+         "recall_low": 0.5655175352168251,
+         "recall_high": 1.0,
+         "small_cell": true
+        },
+        {
+         "value": "technician",
+         "n": 169,
+         "n_positive": 14,
+         "selected": 4.0,
+         "true_positives": 3.0,
+         "precision": 0.75,
+         "precision_low": 0.30064184258240184,
+         "precision_high": 0.9544127391902995,
+         "recall": 0.21428571428571427,
+         "recall_low": 0.07571386712693184,
+         "recall_high": 0.47589230586600295,
+         "small_cell": true
+        },
+        {
+         "value": "unemployed",
+         "n": 31,
+         "n_positive": 6,
+         "selected": 1.0,
+         "true_positives": 1.0,
+         "precision": 1.0,
+         "precision_low": 0.20654931437723745,
+         "precision_high": 1.0,
+         "recall": 0.16666666666666666,
+         "recall_low": 0.030053369748306635,
+         "recall_high": 0.5635028221864702,
+         "small_cell": true
+        },
+        {
+         "value": "unknown",
+         "n": 13,
+         "n_positive": 1,
+         "selected": 2.0,
+         "true_positives": 1.0,
+         "precision": 0.5,
+         "precision_low": 0.09453120573423074,
+         "precision_high": 0.9054687942657693,
+         "recall": 1.0,
+         "recall_low": 0.20654931437723745,
+         "recall_high": 1.0,
+         "small_cell": true
+        }
+       ],
+       "small_cell_rule": "fewer than 30 rows or fewer than 10 selected rows"
+      },
+      {
+       "column": "marital",
+       "groups": [
+        {
+         "value": "divorced",
+         "n": 120,
+         "n_positive": 20,
+         "selected": 21.0,
+         "true_positives": 8.0,
+         "precision": 0.38095238095238093,
+         "precision_low": 0.20751011368564493,
+         "precision_high": 0.5912134622488425,
+         "recall": 0.4,
+         "recall_low": 0.21880653237281705,
+         "recall_high": 0.6134184992377469,
+         "small_cell": false
+        },
+        {
+         "value": "married",
+         "n": 688,
+         "n_positive": 63,
+         "selected": 46.0,
+         "true_positives": 19.0,
+         "precision": 0.41304347826086957,
+         "precision_low": 0.2828860322481277,
+         "precision_high": 0.5566050222015385,
+         "recall": 0.30158730158730157,
+         "recall_low": 0.20237691162188495,
+         "recall_high": 0.4236037231355958,
+         "small_cell": false
+        },
+        {
+         "value": "single",
+         "n": 278,
+         "n_positive": 42,
+         "selected": 30.0,
+         "true_positives": 10.0,
+         "precision": 0.3333333333333333,
+         "precision_low": 0.19230498083676134,
+         "precision_high": 0.5121994835545616,
+         "recall": 0.23809523809523808,
+         "recall_low": 0.13480964224647127,
+         "recall_high": 0.38527543868318304,
+         "small_cell": false
+        }
+       ],
+       "small_cell_rule": "fewer than 30 rows or fewer than 10 selected rows"
+      }
+     ],
+     "examples": {
+      "false_positives": [
+       {
+        "row_key": "L3372",
+        "score": 0.8166810958932174,
+        "values": {
+         "age": "31",
+         "job": "student",
+         "marital": "single",
+         "education": "tertiary",
+         "default": "no",
+         "balance": "64",
+         "housing": "no",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "105",
+         "previous": "2",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L2994",
+        "score": 0.6745031944898816,
+        "values": {
+         "age": "47",
+         "job": "housemaid",
+         "marital": "married",
+         "education": "secondary",
+         "default": "no",
+         "balance": "3940",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "96",
+         "previous": "5",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L557",
+        "score": 0.5867005228447776,
+        "values": {
+         "age": "37",
+         "job": "admin.",
+         "marital": "married",
+         "education": "secondary",
+         "default": "no",
+         "balance": "1314",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "85",
+         "previous": "7",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L1423",
+        "score": 0.5425439259690862,
+        "values": {
+         "age": "28",
+         "job": "admin.",
+         "marital": "married",
+         "education": "secondary",
+         "default": "no",
+         "balance": "-97",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "225",
+         "previous": "2",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L1982",
+        "score": 0.5362639336046814,
+        "values": {
+         "age": "56",
+         "job": "admin.",
+         "marital": "married",
+         "education": "unknown",
+         "default": "no",
+         "balance": "2038",
+         "housing": "no",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "305",
+         "previous": "1",
+         "poutcome": "success"
+        }
+       }
+      ],
+      "false_negatives": [
+       {
+        "row_key": "L3031",
+        "score": 0.02309447617723845,
+        "values": {
+         "age": "39",
+         "job": "blue-collar",
+         "marital": "married",
+         "education": "primary",
+         "default": "no",
+         "balance": "2303",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L1456",
+        "score": 0.027070029298466317,
+        "values": {
+         "age": "45",
+         "job": "services",
+         "marital": "single",
+         "education": "primary",
+         "default": "no",
+         "balance": "1893",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L796",
+        "score": 0.03289490772135476,
+        "values": {
+         "age": "29",
+         "job": "blue-collar",
+         "marital": "single",
+         "education": "secondary",
+         "default": "no",
+         "balance": "908",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L1665",
+        "score": 0.034999828817002844,
+        "values": {
+         "age": "52",
+         "job": "blue-collar",
+         "marital": "divorced",
+         "education": "primary",
+         "default": "no",
+         "balance": "-191",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L1009",
+        "score": 0.03670448407118496,
+        "values": {
+         "age": "45",
+         "job": "technician",
+         "marital": "single",
+         "education": "secondary",
+         "default": "no",
+         "balance": "410",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       }
+      ],
+      "features": [
+       "age",
+       "job",
+       "marital",
+       "education",
+       "default",
+       "balance",
+       "housing",
+       "loan",
+       "contact",
+       "pdays",
+       "previous",
+       "poutcome"
+      ],
+      "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
+     },
+     "coefficients": {
+      "terms": [
+       {
+        "term": "cat__poutcome_success",
+        "value": 1.3344775208767705,
+        "low": 0.9939010323300723,
+        "high": 1.8899685189534825,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__poutcome_failure",
+        "value": -0.8456249997565658,
+        "low": -1.186653077973408,
+        "high": -0.5196735447706985,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_unemployed",
+        "value": -0.7543360738409751,
+        "low": -1.3513259702157119,
+        "high": -0.26513573681365216,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_student",
+        "value": 0.7079093023894353,
+        "low": 0.012508076519062206,
+        "high": 1.2650189294679806,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__contact_unknown",
+        "value": -0.6565081264888405,
+        "low": -0.9891892849308732,
+        "high": -0.39433177991236446,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_retired",
+        "value": 0.6442074430681997,
+        "low": 0.18659411054783237,
+        "high": 1.202037035970952,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_housemaid",
+        "value": 0.48769436582016,
+        "low": -0.0036411618952755277,
+        "high": 0.9898108877118131,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_entrepreneur",
+        "value": -0.46142919227504636,
+        "low": -1.044769085084504,
+        "high": 0.23277443178015472,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__poutcome_other",
+        "value": -0.37185665331321965,
+        "low": -0.7919054486284501,
+        "high": -0.10002285242420297,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__education_unknown",
+        "value": -0.36463752140278527,
+        "low": -1.0178230235358003,
+        "high": 0.11778982538926948,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__contact_cellular",
+        "value": 0.33503851239656524,
+        "low": 0.11822978847928803,
+        "high": 0.5571776831312514,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__default_no",
+        "value": -0.3217156266658136,
+        "low": -0.664293324654016,
+        "high": 0.2555956530762678,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__pdays=-1",
+        "value": -0.31315764791424305,
+        "low": -0.439454885683489,
+        "high": -0.2005441504505212,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_services",
+        "value": -0.3040029073241516,
+        "low": -0.8289951512844341,
+        "high": 0.16866816955140257,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__default_yes",
+        "value": 0.299444141863969,
+        "low": -0.25559565307626425,
+        "high": 0.6642933246540168,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__contact_telephone",
+        "value": 0.2991981292904287,
+        "low": 0.034809590812819854,
+        "high": 0.6393868351465646,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_blue-collar",
+        "value": -0.2917257580286748,
+        "low": -0.7102607077260477,
+        "high": 0.15022360780087518,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__education_tertiary",
+        "value": 0.27699278167290287,
+        "low": -0.07223967755179048,
+        "high": 0.6259936878869006,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__loan_yes",
+        "value": -0.25102817709490083,
+        "low": -0.4234531482770835,
+        "high": -0.06775529307963085,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_technician",
+        "value": -0.23653531863244176,
+        "low": -0.5739381278598484,
+        "high": 0.10850672428337356,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__loan_no",
+        "value": 0.22875669229304743,
+        "low": 0.06775529307963625,
+        "high": 0.4234531482770789,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__housing_yes",
+        "value": -0.22171970971514324,
+        "low": -0.3523516427927616,
+        "high": -0.08510786075642364,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__marital_divorced",
+        "value": 0.20850300064695476,
+        "low": -0.04565395273528254,
+        "high": 0.44856332049866626,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__housing_no",
+        "value": 0.1994482249132906,
+        "low": 0.08510786075641572,
+        "high": 0.352351642792763,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__marital_married",
+        "value": -0.1931684010761404,
+        "low": -0.3726239247740197,
+        "high": -0.05624795069313684,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__education_secondary",
+        "value": 0.16363838996832328,
+        "low": -0.07400772857668515,
+        "high": 0.4266707547414526,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_admin.",
+        "value": 0.14479639493196514,
+        "low": -0.2422445933966549,
+        "high": 0.5449061756836306,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_unknown",
+        "value": 0.13941140157546897,
+        "low": -1.0757196761211882,
+        "high": 0.9647182310177572,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__poutcome_unknown",
+        "value": -0.13926735260884196,
+        "low": -0.16989786238369906,
+        "high": -0.07753246939585998,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__education_primary",
+        "value": -0.09826513504029587,
+        "low": -0.449166990392762,
+        "high": 0.35875102303125905,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_management",
+        "value": -0.08569923520989894,
+        "low": -0.37332065898601136,
+        "high": 0.321383906740643,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__age",
+        "value": 0.04258998044357821,
+        "low": -0.10573693291335957,
+        "high": 0.18988004535226344,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__marital_single",
+        "value": -0.03760608437266867,
+        "low": -0.18964063540638126,
+        "high": 0.20514941123282338,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__balance",
+        "value": 0.031925775865689836,
+        "low": -0.06491547204695633,
+        "high": 0.13032020194373425,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__pdays",
+        "value": -0.023090210208733745,
+        "low": -0.1863349750603673,
+        "high": 0.08952500182076344,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__previous",
+        "value": 0.021777036869236457,
+        "low": -0.12962291729643435,
+        "high": 0.14853523938169247,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_self-employed",
+        "value": -0.012561907275882737,
+        "low": -0.6397499038542754,
+        "high": 0.48481073726501567,
+        "excludes_zero": false
+       }
+      ],
+      "n_rows": 2531,
+      "replicates": 100,
+      "seed": 20261019,
+      "level": 0.95,
+      "skipped_replicates": 0,
+      "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
+      "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+      "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
+     },
+     "predictions": "ec6eb18d3876b76fbd2efc1d5af0d6dac71a7717fdf3605c9f1ffd2a18f0b0ee"
+    },
+    "fit.variant": {
+     "confusion": {
+      "rule": "threshold:0.2",
+      "n": 1086,
+      "n_positive": 125,
+      "n_negative": 961,
+      "selected": 86.0,
+      "true_positives": 36.0,
+      "false_positives": 50.0,
+      "false_negatives": 89.0,
+      "true_negatives": 911.0,
+      "precision": 0.4186046511627907,
+      "recall": 0.288,
+      "specificity": 0.9479708636836629,
+      "selection": "exact",
+      "tied_at_cut": 0
+     },
+     "curve": {
+      "n": 1086,
+      "n_positive": 125,
+      "base_rate": 0.1151012891344383,
+      "points": [
+       {
+        "share": 0.05,
+        "capacity": 54,
+        "selected": 54.0,
+        "true_positives": 30.0,
+        "false_positives": 24.0,
+        "recall": 0.24,
+        "false_positive_rate": 0.02497398543184183,
+        "precision": 0.5555555555555556,
+        "lift": 4.826666666666667
+       },
+       {
+        "share": 0.1,
+        "capacity": 109,
+        "selected": 109.0,
+        "true_positives": 41.0,
+        "false_positives": 68.0,
+        "recall": 0.328,
+        "false_positive_rate": 0.07075962539021852,
+        "precision": 0.3761467889908257,
+        "lift": 3.267963302752294
+       },
+       {
+        "share": 0.15,
+        "capacity": 163,
+        "selected": 163.0,
+        "true_positives": 47.0,
+        "false_positives": 116.0,
+        "recall": 0.376,
+        "false_positive_rate": 0.12070759625390219,
+        "precision": 0.2883435582822086,
+        "lift": 2.5051288343558284
+       },
+       {
+        "share": 0.2,
+        "capacity": 217,
+        "selected": 217.0,
+        "true_positives": 54.0,
+        "false_positives": 163.0,
+        "recall": 0.432,
+        "false_positive_rate": 0.1696149843912591,
+        "precision": 0.2488479262672811,
+        "lift": 2.1619907834101384
+       },
+       {
+        "share": 0.25,
+        "capacity": 272,
+        "selected": 272.0,
+        "true_positives": 66.0,
+        "false_positives": 206.0,
+        "recall": 0.528,
+        "false_positive_rate": 0.21436004162330904,
+        "precision": 0.2426470588235294,
+        "lift": 2.1081176470588234
+       },
+       {
+        "share": 0.3,
+        "capacity": 326,
+        "selected": 326.0,
+        "true_positives": 72.0,
+        "false_positives": 254.0,
+        "recall": 0.576,
+        "false_positive_rate": 0.2643080124869927,
+        "precision": 0.22085889570552147,
+        "lift": 1.9188220858895706
+       },
+       {
+        "share": 0.35,
+        "capacity": 380,
+        "selected": 380.0,
+        "true_positives": 81.0,
+        "false_positives": 299.0,
+        "recall": 0.648,
+        "false_positive_rate": 0.31113423517169614,
+        "precision": 0.2131578947368421,
+        "lift": 1.8519157894736842
+       },
+       {
+        "share": 0.4,
+        "capacity": 434,
+        "selected": 434.0,
+        "true_positives": 89.0,
+        "false_positives": 345.0,
+        "recall": 0.712,
+        "false_positive_rate": 0.3590010405827263,
+        "precision": 0.20506912442396313,
+        "lift": 1.7816405529953918
+       },
+       {
+        "share": 0.45,
+        "capacity": 489,
+        "selected": 489.0,
+        "true_positives": 94.0,
+        "false_positives": 395.0,
+        "recall": 0.752,
+        "false_positive_rate": 0.41103017689906346,
+        "precision": 0.19222903885480572,
+        "lift": 1.6700858895705522
+       },
+       {
+        "share": 0.5,
+        "capacity": 543,
+        "selected": 543.0,
+        "true_positives": 99.0,
+        "false_positives": 444.0,
+        "recall": 0.792,
+        "false_positive_rate": 0.4620187304890739,
+        "precision": 0.18232044198895028,
+        "lift": 1.584
+       },
+       {
+        "share": 0.55,
+        "capacity": 597,
+        "selected": 597.0,
+        "true_positives": 105.0,
+        "false_positives": 492.0,
+        "recall": 0.84,
+        "false_positive_rate": 0.5119667013527576,
+        "precision": 0.17587939698492464,
+        "lift": 1.5280402010050254
+       },
+       {
+        "share": 0.6,
+        "capacity": 652,
+        "selected": 652.0,
+        "true_positives": 111.0,
+        "false_positives": 541.0,
+        "recall": 0.888,
+        "false_positive_rate": 0.562955254942768,
+        "precision": 0.17024539877300612,
+        "lift": 1.4790920245398773
+       },
+       {
+        "share": 0.65,
+        "capacity": 706,
+        "selected": 706.0,
+        "true_positives": 114.0,
+        "false_positives": 592.0,
+        "recall": 0.912,
+        "false_positive_rate": 0.6160249739854319,
+        "precision": 0.16147308781869688,
+        "lift": 1.4028781869688385
+       },
+       {
+        "share": 0.7,
+        "capacity": 760,
+        "selected": 760.0,
+        "true_positives": 114.0,
+        "false_positives": 646.0,
+        "recall": 0.912,
+        "false_positive_rate": 0.6722164412070759,
+        "precision": 0.15,
+        "lift": 1.3032
+       },
+       {
+        "share": 0.75,
+        "capacity": 815,
+        "selected": 815.0,
+        "true_positives": 116.0,
+        "false_positives": 699.0,
+        "recall": 0.928,
+        "false_positive_rate": 0.7273673257023934,
+        "precision": 0.1423312883435583,
+        "lift": 1.2365742331288345
+       },
+       {
+        "share": 0.8,
+        "capacity": 869,
+        "selected": 869.0,
+        "true_positives": 118.0,
+        "false_positives": 751.0,
+        "recall": 0.944,
+        "false_positive_rate": 0.7814776274713839,
+        "precision": 0.13578826237054084,
+        "lift": 1.1797284234752587
+       },
+       {
+        "share": 0.85,
+        "capacity": 923,
+        "selected": 923.0,
+        "true_positives": 121.0,
+        "false_positives": 802.0,
+        "recall": 0.968,
+        "false_positive_rate": 0.8345473465140478,
+        "precision": 0.13109425785482123,
+        "lift": 1.138946912242687
+       },
+       {
+        "share": 0.9,
+        "capacity": 977,
+        "selected": 977.0,
+        "true_positives": 124.0,
+        "false_positives": 853.0,
+        "recall": 0.992,
+        "false_positive_rate": 0.8876170655567117,
+        "precision": 0.1269191402251791,
+        "lift": 1.1026734902763562
+       },
+       {
+        "share": 0.95,
+        "capacity": 1032,
+        "selected": 1032.0,
+        "true_positives": 124.0,
+        "false_positives": 908.0,
+        "recall": 0.992,
+        "false_positive_rate": 0.9448491155046826,
+        "precision": 0.12015503875968993,
+        "lift": 1.0439069767441862
+       },
+       {
+        "share": 1.0,
+        "capacity": 1086,
+        "selected": 1086.0,
+        "true_positives": 125.0,
+        "false_positives": 961.0,
+        "recall": 1.0,
+        "false_positive_rate": 1.0,
+        "precision": 0.1151012891344383,
+        "lift": 1.0
+       }
+      ],
+      "definition": "For the top share of the rows by score: recall is the share of the positive rows found (the cumulative gain, and the true positive rate of the ROC curve); lift is the precision over the base rate; the false positive rate is the share of the negative rows selected."
+     },
+     "roc_auc": 0.7433090530697191,
+     "average_precision": 0.37708644271079733,
+     "calibration": {
+      "binning": "10 equal-count bins of the score, in score order",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 109,
+        "n_positive": 1,
+        "score_min": 0.01932164719076602,
+        "score_max": 0.03589362316143166,
+        "mean_predicted": 0.029738194339280797,
+        "observed_rate": 0.009174311926605505,
+        "low": 0.001621331292545096,
+        "high": 0.05014562459178324,
+        "inside_interval": true
+       },
+       {
+        "bin": 2,
+        "n": 109,
+        "n_positive": 6,
+        "score_min": 0.03616450092208443,
+        "score_max": 0.04786042359224765,
+        "mean_predicted": 0.04196999276607662,
+        "observed_rate": 0.05504587155963303,
+        "low": 0.025469592397235466,
+        "high": 0.11491727415210894,
+        "inside_interval": true
+       },
+       {
+        "bin": 3,
+        "n": 108,
+        "n_positive": 4,
+        "score_min": 0.047909671556955864,
+        "score_max": 0.06544933459112418,
+        "mean_predicted": 0.056520483095780956,
+        "observed_rate": 0.037037037037037035,
+        "low": 0.014495541339902766,
+        "high": 0.09138164361061299,
+        "inside_interval": true
+       },
+       {
+        "bin": 4,
+        "n": 109,
+        "n_positive": 3,
+        "score_min": 0.06580021430065873,
+        "score_max": 0.07951913621420932,
+        "mean_predicted": 0.07307772979740443,
+        "observed_rate": 0.027522935779816515,
+        "low": 0.00940385586167223,
+        "high": 0.07781106428866252,
+        "inside_interval": true
+       },
+       {
+        "bin": 5,
+        "n": 108,
+        "n_positive": 12,
+        "score_min": 0.07968588321020255,
+        "score_max": 0.09400676897228372,
+        "mean_predicted": 0.08640432654234127,
+        "observed_rate": 0.1111111111111111,
+        "low": 0.06471266928983735,
+        "high": 0.18422416606859587,
+        "inside_interval": true
+       },
+       {
+        "bin": 6,
+        "n": 109,
+        "n_positive": 10,
+        "score_min": 0.09403239033990589,
+        "score_max": 0.10862969833800006,
+        "mean_predicted": 0.10104648296717053,
+        "observed_rate": 0.09174311926605505,
+        "low": 0.05059743473947775,
+        "high": 0.1606853603418795,
+        "inside_interval": true
+       },
+       {
+        "bin": 7,
+        "n": 109,
+        "n_positive": 18,
+        "score_min": 0.10874681246342228,
+        "score_max": 0.1292017906183484,
+        "mean_predicted": 0.1187495882198894,
+        "observed_rate": 0.1651376146788991,
+        "low": 0.10708689548802482,
+        "high": 0.24598775665735811,
+        "inside_interval": true
+       },
+       {
+        "bin": 8,
+        "n": 108,
+        "n_positive": 17,
+        "score_min": 0.12941901510138565,
+        "score_max": 0.15150965034499506,
+        "mean_predicted": 0.14039192935124561,
+        "observed_rate": 0.1574074074074074,
+        "low": 0.10066202670916789,
+        "high": 0.23768709015421374,
+        "inside_interval": true
+       },
+       {
+        "bin": 9,
+        "n": 109,
+        "n_positive": 13,
+        "score_min": 0.15152976325277348,
+        "score_max": 0.1875127757831619,
+        "mean_predicted": 0.16589416866485832,
+        "observed_rate": 0.11926605504587157,
+        "low": 0.07103973893221358,
+        "high": 0.19341500254815328,
+        "inside_interval": true
+       },
+       {
+        "bin": 10,
+        "n": 108,
+        "n_positive": 41,
+        "score_min": 0.18754331759625179,
+        "score_max": 0.7145663968094792,
+        "mean_predicted": 0.3068966367483687,
+        "observed_rate": 0.37962962962962965,
+        "low": 0.2937291883118688,
+        "high": 0.47379887977526525,
+        "inside_interval": true
+       }
+      ],
+      "brier": 0.08830862049160385,
+      "brier_base_rate": 0.10185298237402875,
+      "mean_absolute_gap": 0.03153813278115348,
+      "bins_outside_interval": 0,
+      "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
+     },
+     "segments": [
+      {
+       "column": "job",
+       "groups": [
+        {
+         "value": "admin.",
+         "n": 134,
+         "n_positive": 16,
+         "selected": 17.0,
+         "true_positives": 8.0,
+         "precision": 0.47058823529411764,
+         "precision_low": 0.26165106442409436,
+         "precision_high": 0.6903676493999558,
+         "recall": 0.5,
+         "recall_low": 0.27999563610326017,
+         "recall_high": 0.7200043638967398,
+         "small_cell": false
+        },
+        {
+         "value": "blue-collar",
+         "n": 224,
+         "n_positive": 15,
+         "selected": 3.0,
+         "true_positives": 1.0,
+         "precision": 0.3333333333333333,
+         "precision_low": 0.06149194472039621,
+         "precision_high": 0.7923403991979522,
+         "recall": 0.06666666666666667,
+         "recall_low": 0.011866895493268553,
+         "recall_high": 0.2981652987378003,
+         "small_cell": true
+        },
+        {
+         "value": "entrepreneur",
+         "n": 50,
+         "n_positive": 4,
+         "selected": 1.0,
+         "true_positives": 1.0,
+         "precision": 1.0,
+         "precision_low": 0.20654931437723745,
+         "precision_high": 1.0,
+         "recall": 0.25,
+         "recall_low": 0.04558726080970055,
+         "recall_high": 0.6993581574175981,
+         "small_cell": true
+        },
+        {
+         "value": "housemaid",
+         "n": 14,
+         "n_positive": 0,
+         "selected": 2.0,
+         "true_positives": 0.0,
+         "precision": 0.0,
+         "precision_low": 0.0,
+         "precision_high": 0.6576197724933469,
+         "recall": null,
+         "recall_low": null,
+         "recall_high": null,
+         "small_cell": true
+        },
+        {
+         "value": "management",
+         "n": 223,
+         "n_positive": 35,
+         "selected": 15.0,
+         "true_positives": 6.0,
+         "precision": 0.4,
+         "precision_low": 0.1982449614134158,
+         "precision_high": 0.6425316987937539,
+         "recall": 0.17142857142857143,
+         "recall_low": 0.08102640053701589,
+         "recall_high": 0.3268228229904496,
+         "small_cell": false
+        },
+        {
+         "value": "retired",
+         "n": 46,
+         "n_positive": 13,
+         "selected": 22.0,
+         "true_positives": 6.0,
+         "precision": 0.2727272727272727,
+         "precision_low": 0.13150760287989469,
+         "precision_high": 0.4815173401240238,
+         "recall": 0.46153846153846156,
+         "recall_low": 0.23206067809538303,
+         "recall_high": 0.7085620428549398,
+         "small_cell": false
+        },
+        {
+         "value": "self-employed",
+         "n": 54,
+         "n_positive": 6,
+         "selected": 4.0,
+         "true_positives": 2.0,
+         "precision": 0.5,
+         "precision_low": 0.15003898915214947,
+         "precision_high": 0.8499610108478506,
+         "recall": 0.3333333333333333,
+         "recall_low": 0.09677141110578041,
+         "recall_high": 0.700006684861608,
+         "small_cell": true
+        },
+        {
+         "value": "services",
+         "n": 103,
+         "n_positive": 10,
+         "selected": 4.0,
+         "true_positives": 2.0,
+         "precision": 0.5,
+         "precision_low": 0.15003898915214947,
+         "precision_high": 0.8499610108478506,
+         "recall": 0.2,
+         "recall_low": 0.05668215145437519,
+         "recall_high": 0.5098375284633583,
+         "small_cell": true
+        },
+        {
+         "value": "student",
+         "n": 25,
+         "n_positive": 5,
+         "selected": 10.0,
+         "true_positives": 4.0,
+         "precision": 0.4,
+         "precision_low": 0.16818032970623614,
+         "precision_high": 0.6873262302663417,
+         "recall": 0.8,
+         "recall_low": 0.37553462976252533,
+         "recall_high": 0.9637758913675698,
+         "small_cell": true
+        },
+        {
+         "value": "technician",
+         "n": 169,
+         "n_positive": 14,
+         "selected": 5.0,
+         "true_positives": 4.0,
+         "precision": 0.8,
+         "precision_low": 0.37553462976252533,
+         "precision_high": 0.9637758913675698,
+         "recall": 0.2857142857142857,
+         "recall_low": 0.11721378644576919,
+         "recall_high": 0.5464908432989318,
+         "small_cell": true
+        },
+        {
+         "value": "unemployed",
+         "n": 31,
+         "n_positive": 6,
+         "selected": 2.0,
+         "true_positives": 1.0,
+         "precision": 0.5,
+         "precision_low": 0.09453120573423074,
+         "precision_high": 0.9054687942657693,
+         "recall": 0.16666666666666666,
+         "recall_low": 0.030053369748306635,
+         "recall_high": 0.5635028221864702,
+         "small_cell": true
+        },
+        {
+         "value": "unknown",
+         "n": 13,
+         "n_positive": 1,
+         "selected": 1.0,
+         "true_positives": 1.0,
+         "precision": 1.0,
+         "precision_low": 0.20654931437723745,
+         "precision_high": 1.0,
+         "recall": 1.0,
+         "recall_low": 0.20654931437723745,
+         "recall_high": 1.0,
+         "small_cell": true
+        }
+       ],
+       "small_cell_rule": "fewer than 30 rows or fewer than 10 selected rows"
+      },
+      {
+       "column": "marital",
+       "groups": [
+        {
+         "value": "divorced",
+         "n": 120,
+         "n_positive": 20,
+         "selected": 15.0,
+         "true_positives": 8.0,
+         "precision": 0.5333333333333333,
+         "precision_low": 0.30116980025498397,
+         "precision_high": 0.7519046463426261,
+         "recall": 0.4,
+         "recall_low": 0.21880653237281705,
+         "recall_high": 0.6134184992377469,
+         "small_cell": false
+        },
+        {
+         "value": "married",
+         "n": 688,
+         "n_positive": 63,
+         "selected": 43.0,
+         "true_positives": 18.0,
+         "precision": 0.4186046511627907,
+         "precision_low": 0.28384550927849195,
+         "precision_high": 0.5667142261303578,
+         "recall": 0.2857142857142857,
+         "recall_low": 0.18903191986400805,
+         "recall_high": 0.40702716567407127,
+         "small_cell": false
+        },
+        {
+         "value": "single",
+         "n": 278,
+         "n_positive": 42,
+         "selected": 28.0,
+         "true_positives": 10.0,
+         "precision": 0.35714285714285715,
+         "precision_low": 0.2070582950773768,
+         "precision_high": 0.5416969348557219,
+         "recall": 0.23809523809523808,
+         "recall_low": 0.13480964224647127,
+         "recall_high": 0.38527543868318304,
+         "small_cell": false
+        }
+       ],
+       "small_cell_rule": "fewer than 30 rows or fewer than 10 selected rows"
+      }
+     ],
+     "examples": {
+      "false_positives": [
+       {
+        "row_key": "L3372",
+        "score": 0.6460660504224757,
+        "values": {
+         "age": "31",
+         "job": "student",
+         "marital": "single",
+         "education": "tertiary",
+         "default": "no",
+         "balance": "64",
+         "housing": "no",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "105",
+         "previous": "2",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L2994",
+        "score": 0.49783603821423683,
+        "values": {
+         "age": "47",
+         "job": "housemaid",
+         "marital": "married",
+         "education": "secondary",
+         "default": "no",
+         "balance": "3940",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "96",
+         "previous": "5",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L557",
+        "score": 0.4599944095928864,
+        "values": {
+         "age": "37",
+         "job": "admin.",
+         "marital": "married",
+         "education": "secondary",
+         "default": "no",
+         "balance": "1314",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "85",
+         "previous": "7",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L1982",
+        "score": 0.45510287837307956,
+        "values": {
+         "age": "56",
+         "job": "admin.",
+         "marital": "married",
+         "education": "unknown",
+         "default": "no",
+         "balance": "2038",
+         "housing": "no",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "305",
+         "previous": "1",
+         "poutcome": "success"
+        }
+       },
+       {
+        "row_key": "L521",
+        "score": 0.41493035806882356,
+        "values": {
+         "age": "61",
+         "job": "retired",
+         "marital": "married",
+         "education": "secondary",
+         "default": "no",
+         "balance": "5207",
+         "housing": "no",
+         "loan": "no",
+         "contact": "cellular",
+         "pdays": "81",
+         "previous": "2",
+         "poutcome": "other"
+        }
+       }
+      ],
+      "false_negatives": [
+       {
+        "row_key": "L3031",
+        "score": 0.028757036054060558,
+        "values": {
+         "age": "39",
+         "job": "blue-collar",
+         "marital": "married",
+         "education": "primary",
+         "default": "no",
+         "balance": "2303",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L1456",
+        "score": 0.037108059971298665,
+        "values": {
+         "age": "45",
+         "job": "services",
+         "marital": "single",
+         "education": "primary",
+         "default": "no",
+         "balance": "1893",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L796",
+        "score": 0.037426679021421175,
+        "values": {
+         "age": "29",
+         "job": "blue-collar",
+         "marital": "single",
+         "education": "secondary",
+         "default": "no",
+         "balance": "908",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L1665",
+        "score": 0.04144564928179902,
+        "values": {
+         "age": "52",
+         "job": "blue-collar",
+         "marital": "divorced",
+         "education": "primary",
+         "default": "no",
+         "balance": "-191",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       },
+       {
+        "row_key": "L2116",
+        "score": 0.04347668574577252,
+        "values": {
+         "age": "33",
+         "job": "management",
+         "marital": "married",
+         "education": "tertiary",
+         "default": "no",
+         "balance": "1412",
+         "housing": "yes",
+         "loan": "no",
+         "contact": "unknown",
+         "pdays": "-1",
+         "previous": "0",
+         "poutcome": "unknown"
+        }
+       }
+      ],
+      "features": [
+       "age",
+       "job",
+       "marital",
+       "education",
+       "default",
+       "balance",
+       "housing",
+       "loan",
+       "contact",
+       "pdays",
+       "previous",
+       "poutcome"
+      ],
+      "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
+     },
+     "coefficients": {
+      "terms": [
+       {
+        "term": "cat__poutcome_success",
+        "value": 0.8752566165474105,
+        "low": 0.6594062005660364,
+        "high": 1.1806542452846478,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__poutcome_failure",
+        "value": -0.5822535593340734,
+        "low": -0.7915253287695002,
+        "high": -0.3454243435884904,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__contact_unknown",
+        "value": -0.5170318186375981,
+        "low": -0.7378643862472828,
+        "high": -0.32820316177196956,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_retired",
+        "value": 0.42700825090345945,
+        "low": 0.1574909517252619,
+        "high": 0.743399349861412,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_student",
+        "value": 0.3386657746980399,
+        "low": 0.031100406405406483,
+        "high": 0.5912473595278032,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__contact_cellular",
+        "value": 0.3107706405823122,
+        "low": 0.11481200008494268,
+        "high": 0.4687033472648513,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_unemployed",
+        "value": -0.2975509044430464,
+        "low": -0.46288960058012407,
+        "high": -0.11613013790708067,
+        "excludes_zero": true
+       },
+       {
+        "term": "num__pdays=-1",
+        "value": -0.29268753123419455,
+        "low": -0.39859389413579227,
+        "high": -0.18529929790377397,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_blue-collar",
+        "value": -0.2454546046081266,
+        "low": -0.5135747767501848,
+        "high": 0.05019656351299394,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_housemaid",
+        "value": 0.2346830494602064,
+        "low": -0.038529311679676166,
+        "high": 0.5046868939961586,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__housing_yes",
+        "value": -0.22765957778085885,
+        "low": -0.35402406973764766,
+        "high": -0.12328134378561778,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__housing_no",
+        "value": 0.22721285080121498,
+        "low": 0.12328134378561673,
+        "high": 0.35402406973764894,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__loan_yes",
+        "value": -0.20873239864249124,
+        "low": -0.35504430333670955,
+        "high": -0.06655789900751072,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__loan_no",
+        "value": 0.20828567166284723,
+        "low": 0.06655789900751038,
+        "high": 0.3550443033367084,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_entrepreneur",
+        "value": -0.20727339211465698,
+        "low": -0.42516954488113157,
+        "high": 0.09147993516675859,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__contact_telephone",
+        "value": 0.20581445107564217,
+        "low": 0.01713477091701488,
+        "high": 0.4436170966463347,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__job_services",
+        "value": -0.18667762761924908,
+        "low": -0.4706268166288843,
+        "high": 0.08081703636997106,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__education_tertiary",
+        "value": 0.18503014623002037,
+        "low": -0.06502486827051086,
+        "high": 0.3830657889970286,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__poutcome_other",
+        "value": -0.1799287120465342,
+        "low": -0.43253153349565815,
+        "high": -0.014976623693811746,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__education_unknown",
+        "value": -0.16952925185025464,
+        "low": -0.4826478338252619,
+        "high": 0.11150635389656077,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__marital_married",
+        "value": -0.16274686115406933,
+        "low": -0.325019378538618,
+        "high": -0.03832429704683455,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__default_no",
+        "value": -0.16209667548471066,
+        "low": -0.35983790960417594,
+        "high": 0.09984119036647288,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__default_yes",
+        "value": 0.16164994850506648,
+        "low": -0.0998411903664728,
+        "high": 0.3598379096041762,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__marital_divorced",
+        "value": 0.1562452174817698,
+        "low": -0.04452859941454096,
+        "high": 0.32516257956084715,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_technician",
+        "value": -0.1452019900483077,
+        "low": -0.4110379252979801,
+        "high": 0.10665462593355651,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_admin.",
+        "value": 0.1327228238498346,
+        "low": -0.14388715117015366,
+        "high": 0.39705617341064964,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__poutcome_unknown",
+        "value": -0.11352107214644629,
+        "low": -0.15410057500564733,
+        "high": -0.07163864970141193,
+        "excludes_zero": true
+       },
+       {
+        "term": "cat__education_primary",
+        "value": -0.10169586358422066,
+        "low": -0.32806004243731723,
+        "high": 0.18736399675583576,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__education_secondary",
+        "value": 0.08574824222481126,
+        "low": -0.0821772228646808,
+        "high": 0.2508431655021226,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__age",
+        "value": 0.07295214804277342,
+        "low": -0.03979570015627456,
+        "high": 0.20607836075500993,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__pdays",
+        "value": -0.05540520459772619,
+        "low": -0.20283150367949423,
+        "high": 0.0581700744388054,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_management",
+        "value": -0.05268242197704335,
+        "low": -0.2784860252411477,
+        "high": 0.20355781302589482,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__balance",
+        "value": 0.03621762824243343,
+        "low": -0.059769604457407095,
+        "high": 0.12396464265355303,
+        "excludes_zero": false
+       },
+       {
+        "term": "num__previous",
+        "value": 0.030446118311035202,
+        "low": -0.07895893458448765,
+        "high": 0.14376870892390164,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_unknown",
+        "value": 0.015574131156693989,
+        "low": -0.22797576609392733,
+        "high": 0.25876052302509533,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__job_self-employed",
+        "value": -0.01425981623744723,
+        "low": -0.29583856392973346,
+        "high": 0.2463218858529411,
+        "excludes_zero": false
+       },
+       {
+        "term": "cat__marital_single",
+        "value": 0.006054916692657561,
+        "low": -0.12537141571807597,
+        "high": 0.19358192830901003,
+        "excludes_zero": false
+       }
+      ],
+      "n_rows": 2531,
+      "replicates": 100,
+      "seed": 20261019,
+      "level": 0.95,
+      "skipped_replicates": 0,
+      "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
+      "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+      "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
+     },
+     "predictions": "189b04fb6c9094abd7e2d2786dd19a36c71c203bf3394753881fd662c8b7264f"
+    }
+   },
+   "coefficient_rows": 2531,
+   "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence."
+  },
+  "result": {
+   "execution_id": "e_58ab52047846c7c88a36253e",
+   "activity": "diag.binary",
+   "slot": "diag.binary",
+   "status": "promoted",
+   "result_id": "627240fe199b3387c5a863db24b45e495eaaea4b225bc640a07efef5eb82ac23",
+   "input_key": "2cd10f4dcdbcf9c1af30598516ddd7916183172ca5c3e4c5dc11821bc03f29e7",
+   "reason": null,
+   "started_revision": 43,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_2056a7eeb4ac4f8c999e7a1e22b2f8d1",
+    "x_1794ec369a1c497abe826309c128a3b4"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 44,
+    "last_ok_revision": 44,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 44,
+    "last_ok_revision": 44,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}
