@@ -39,7 +39,8 @@ function binary(results, base) {
   const splitN = split ? int(obj(obj(obj(split.values).partitions).validation).n_rows) : null;
   if (!evaluation) {
     return { ...base, resultId: null, n: splitN, nPositive: null, evaluatedRules: [], initialRule: null,
-      reference: null, candidate: null, bootstrap: null, targetLabel: target ? strOrNull(target.values.target) : null, gain: null };
+      reference: null, candidate: null, bootstrap: null, targetLabel: target ? strOrNull(target.values.target) : null, gain: null,
+      evaluation: null };
   }
   const v = obj(evaluation.values);
   const params = obj(evaluation.params);
@@ -66,6 +67,8 @@ function binary(results, base) {
     }),
     initialRule: rules.length ? rules[0] : null,
     gain: gainOf(results),
+    // WP-B5: `out_of_fold` under cross-validation, `validation` otherwise (null before WP-B1).
+    evaluation: strOrNull(v.evaluation),
   };
 }
 

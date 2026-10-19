@@ -103,6 +103,8 @@ function policyUncertainty(r) {
   return {
     kind: 'policy',
     resultId: str(r.result_id),
+    // WP-B5: `out_of_fold` under cross-validation, `validation` otherwise (null before WP-B1).
+    evaluation: strOrNull(v.evaluation),
     reference,
     bootstrap: bootstrapOf(v),
     rules: rules.map(rule => {
@@ -138,6 +140,7 @@ function regressionUncertainty(r) {
   return {
     kind: 'regression',
     resultId: str(r.result_id),
+    evaluation: strOrNull(v.evaluation),
     reference,
     candidate,
     unit: strOrNull(v.unit),
@@ -365,6 +368,14 @@ function variantOf(rawResults, task) {
     const d = interval(raw, path);
     return { ...d, side: side(d.low, d.high) };
   };
+  // Each model's value and interval on the same rows (candidate, variant, baseline), so the
+  // difference is read next to what it is a difference of.
+  const FITS = [task === 'regression' ? 'fit.linear' : 'fit.logistic', 'fit.variant', 'fit.baseline'];
+  const modelsOf = (entry, m, prefix) => FITS.filter(f => obj(entry.models)[f]).map(f => {
+    const i = obj(obj(obj(entry.intervals)[f])[m]);
+    return { fit: f, point: num(obj(obj(entry.models)[f])[m]), low: num(i.low), high: num(i.high),
+      path: pathOf(...prefix, 'models', f, m) };
+  });
   let comparisons = [];
   let reference = null;
   if (evaluation && task === 'binary') {
@@ -373,15 +384,17 @@ function variantOf(rawResults, task) {
     comparisons = rules.map(rule => {
       const c = obj(obj(obj(obj(ev.rules)[rule]).comparisons)['fit.variant']);
       reference = reference || strOrNull(c.reference);
+      const entry = obj(obj(ev.rules)[rule]);
       return { rule, metrics: ['precision', 'recall'].map(m => ({ metric: m,
-        ...metric(c[m], pathOf('rules', rule, 'comparisons', 'fit.variant', m, 'point')) })) };
+        ...metric(c[m], pathOf('rules', rule, 'comparisons', 'fit.variant', m, 'point')),
+        models: modelsOf(entry, m, ['rules', rule]) })) };
     });
   } else if (evaluation) {
     const c = obj(obj(ev.comparisons)['fit.variant']);
     if (Object.keys(c).length) {
       reference = strOrNull(c.reference);
       comparisons = [{ rule: null, metrics: ['mae', 'rmse'].map(m => ({ metric: m,
-        ...metric(c[m], pathOf('comparisons', 'fit.variant', m, 'point')) })) }];
+        ...metric(c[m], pathOf('comparisons', 'fit.variant', m, 'point')), models: modelsOf(ev, m, []) })) }];
     }
   }
   const ranking = task === 'binary' && ev.ranking ? Object.entries(obj(ev.ranking)).map(([slot, r]) => ({

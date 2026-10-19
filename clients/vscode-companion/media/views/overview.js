@@ -28,8 +28,9 @@
   const MAP_STATUSES = ['done', 'awaiting_confirmation', 'needs_reconfirmation', 'ready', 'blocked', 'reopened'];
   const MAX_DIGEST = 4;
   // WP-A7: the success criterion and the data preparation are decisions too (WP-A4).
-  const DECISIONS = ['prediction_time', 'feature_availability', 'split', 'success_criterion', 'preprocessing', 'policy',
-    'model_choice', 'conclusion'];
+  // WP-B5: and the variant and the opening of the final test (WP-B1).
+  const DECISIONS = ['prediction_time', 'feature_availability', 'split', 'success_criterion', 'preprocessing', 'model_variant',
+    'policy', 'model_choice', 'final_test', 'conclusion'];
   const CRITERION_TONE = { met: 'ok', uncertain: 'stale', not_met: 'error', not_assessed: 'neutral' };
 
   // View-local, not persisted: the chosen digest boundary, the checks expansion, the reads
@@ -106,6 +107,7 @@
     const c = copy().hero;
     const pct = x => ctx.format.number(x, 'pct1');
     const cite = (text, path, value) => ctx.components.cited(text, { resultId: u.resultId, path, value });
+    const oof = u.evaluation === 'out_of_fold';
     if (u.kind === 'policy' && proposal.decisionId === 'policy') {
       const rule = arr(u.rules).find(r => r && r.rule === proposal.value);
       const metric = rule && arr(rule.metrics).find(x => x && x.metric === 'precision');
@@ -113,7 +115,7 @@
       const base = metric && arr(metric.models).find(x => x && x.fit === u.reference && typeof x.point === 'number');
       if (!model0) return null;
       return el('p', { className: 'ov-hero-support', 'data-hero-support': 'policy' }, [
-        c.successShare, cite(pct(model0.point), model0.path, model0.point),
+        oof ? c.successShareOutOfFold : c.successShare, cite(pct(model0.point), model0.path, model0.point),
         typeof model0.low === 'number' && typeof model0.high === 'number'
           ? [c.interval(u.bootstrap && typeof u.bootstrap.level === 'number' ? ctx.format.number(u.bootstrap.level, 'pct0') : null), cite(pct(model0.low), model0.path, model0.low), c.to, cite(pct(model0.high), model0.path, model0.high), c.close] : null,
         base ? [c.againstBaseline, cite(pct(base.point), base.path, base.point), '.'] : '.',
@@ -127,7 +129,8 @@
       const f2 = x => ctx.format.number(x, 'f2');
       const unit = u.unit ? ` ${u.unit}` : '';
       return el('p', { className: 'ov-hero-support', 'data-hero-support': 'model_choice' }, [
-        c.averageError(J().modelName(chosen.fit, 'regression')), cite(`${f2(chosen.point)}${unit}`, chosen.path, chosen.point),
+        (oof ? c.averageErrorOutOfFold : c.averageError)(J().modelName(chosen.fit, 'regression')),
+        cite(`${f2(chosen.point)}${unit}`, chosen.path, chosen.point),
         other ? [c.againstOther(J().modelName(other.fit, 'regression')), cite(`${f2(other.point)}${unit}`, other.path, other.point), '.'] : '.',
       ]);
     }
@@ -140,14 +143,17 @@
     const task = taskOf(model, ctx);
     const next = model.nextAction || {};
     const kind = N[next.kind] ? next.kind : 'other';
-    const spec = N[kind];
     const step = arr(model.plan).find(s => s.id === (next.decision || next.step));
+    // WP-B5: the opening of the final test is a chat act: its own words, and no action.
+    const opening = (next.decision || next.step) === 'final_test';
+    const spec = opening && kind === 'await_user_words' ? N.finalTest.await
+      : opening && ['propose', 'run', 'blocked'].includes(kind) ? N.finalTest.propose : N[kind];
     const pause = step && Number.isInteger(step.pause) ? step.pause : null;
     const proposal = next.kind === 'await_user_words'
       ? arr(model.proposals).find(p => p.proposalId === next.proposalId) || arr(model.proposals)[0] || null : null;
     const decision = next.decision || (proposal && proposal.decisionId) || null;
     const name = decision ? J().decisionName(decision, task) : '';
-    const title = kind === 'await_user_words' || kind === 'reconfirm' ? spec.title(name)
+    const title = opening ? spec.title() : kind === 'await_user_words' || kind === 'reconfirm' ? spec.title(name)
       : kind === 'propose' || kind === 'run' || kind === 'blocked' ? spec.title(step ? str(step.title) : c.nextStep) : spec.title();
     const eyebrow = [N.eyebrow, pause ? c.pause(pause, task) : null].filter(Boolean).join(' · ');
     const children = [
@@ -174,7 +180,8 @@
     if (support) children.push(support);
     // The action: where the junior answers.
     const actions = [];
-    const target = kind === 'await_user_words' && proposal ? { tab: 'decisions', kind: 'proposal', id: proposal.proposalId }
+    const target = opening ? null
+      : kind === 'await_user_words' && proposal ? { tab: 'decisions', kind: 'proposal', id: proposal.proposalId }
       : kind === 'reconfirm' && decision ? { tab: 'decisions', kind: 'decision', id: decision }
         : (kind === 'outcome_unknown' || kind === 'acknowledge_interruption') && next.executionId && ctx.atLeast('v1')
           ? { tab: 'overview', kind: 'execution', id: next.executionId } : null;
@@ -183,6 +190,8 @@
         text: spec.action, onclick: () => ctx.navigate(target) }));
     } else if (kind === 'outcome_unknown' || kind === 'acknowledge_interruption') {
       children.push(el('p', { className: 'muted', text: N.inChat }));
+    } else if (opening && kind === 'await_user_words') {
+      children.push(el('p', { className: 'ov-hero-chat', 'data-hero-chat': 'final_test', text: c.finalChat }));
     }
     if (actions.length) children.push(el('div', { className: 'ov-hero-actions' }, actions));
     // Layer 2: the engine's own words, for whoever wants them.
@@ -296,6 +305,67 @@
     ]);
   }
 
+  /**
+   * WP-B5: the final test in "Where we are": sealed, opened once (when, in whose words), or
+   * changed after the opening, with the success criterion judged on it (the engine's gain
+   * and interval, cited). Its opening stays a chat act: nothing here is a control.
+   */
+  function finalTestRow(model, ctx) {
+    const F = J().finalTest;
+    const ft = model.finalTest;
+    const state = J().finalTestState(ft);
+    if (!state) return null;
+    const task = taskOf(model, ctx);
+    const int = n => (n === null || n === undefined ? '' : ctx.format.number(n, 'int'));
+    const kids = [el('span', { className: `ht-status ${state === 'sealed' ? 'ht-st-sealed' : state === 'opened' ? 'ht-st-ok'
+      : state === 'absent' ? 'ht-st-neutral' : 'ht-st-stale'}`, 'data-final-state': state, text: F.titles[state] })];
+    if (state === 'sealed') kids.push(el('p', { className: 'muted', text: F.sealed(int(ft.rows), ft.method) }));
+    if (state === 'absent') kids.push(el('p', { className: 'muted', text: F.absent }));
+    if (state === 'interrupted') kids.push(el('p', { className: 'muted', text: F.interrupted }));
+    if ((state === 'opened' || state === 'changed') && ft.opening) {
+      kids.push(el('p', {}, [F.opened(ft.opening.revision), ' ',
+        el('span', { className: 'ov-quoted', 'data-opening-words': true }, ['“', ft.opening.userWords || '', '”'])]));
+      const k = model.criterion && model.criterion.finalTest;
+      if (k && typeof k.gain === 'number' && k.resultId) {
+        const share = k.unit === 'share';
+        const fmt = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, share ? 'pct1' : 'f1')}`;
+        const cite = (x, p) => ctx.components.cited(fmt(x), { resultId: k.resultId, path: p, value: x });
+        const has = x => typeof x === 'number';
+        const C = copy().criterion;
+        kids.push(el('p', { 'data-final-criterion': k.status }, [F.criterion,
+          el('span', { className: `ht-status ht-st-${CRITERION_TONE[k.status] || 'neutral'}`, text: C.status[k.status] || k.status }), ' · ',
+          cite(k.gain, 'criterion.gain'), share ? '' : C.points,
+          has(k.low) && has(k.high) ? [C.interval, cite(k.low, 'criterion.low'), C.to, cite(k.high, 'criterion.high'), C.close] : null, '.']));
+      }
+    }
+    if (state === 'changed') {
+      kids.push(el('p', { className: 'hold', 'data-changed-after': true,
+        text: F.changed(arr(ft.changedAfter).map(x => J().changedName(x, task)).join(', ')) }));
+    }
+    return el('div', { className: 'ov-recap-row', 'data-recap-line': 'FinalTest', 'data-final-test-row': state }, [
+      el('dt', { text: copy().finalTestTitle }), el('dd', {}, kids)]);
+  }
+
+  /**
+   * WP-B5: what counts as an answer in this study's mode (ADR 0005), a row of "Where we
+   * are"; changing the mode is a chat act, so there is no control.
+   */
+  function modeRow(model, ctx) {
+    const M = J().modes;
+    const mode = str(model.mode);
+    if (!['guided', 'training', 'express'].includes(mode)) return null;
+    const finalTest = arr(model.plan).some(s => s.id === 'final_test');
+    return el('div', { className: 'ov-recap-row', 'data-recap-line': 'Mode', 'data-mode-explainer': mode }, [
+      el('dt', { text: copy().modeTitle }),
+      el('dd', {}, [
+        el('p', {}, [el('span', { className: 'ht-status ht-st-needs', 'data-mode-chip': mode, text: M.names[mode] }), ' ',
+          M.line(M.names[mode])]),
+        el('ul', { className: 'ov-mode-rules', 'data-mode-rules': true }, M.rules(mode, taskOf(model, ctx), finalTest).map(t => el('li', { text: t }))),
+        el('p', { className: 'muted', 'data-mode-change': true, text: M.change }),
+      ]),
+    ]);
+  }
+
   function whereWeAre(model, ctx) {
     const c = copy();
     const task = taskOf(model, ctx);
@@ -319,6 +389,10 @@
     ]));
     const criterion = criterionRow(model, ctx);
     if (criterion) rows.push(criterion);
+    const final = finalTestRow(model, ctx);
+    if (final) rows.push(final);
+    const mode = modeRow(model, ctx);
+    if (mode) rows.push(mode);
     const body = el('dl', { className: 'ov-recap', 'data-recap-list': true }, rows);
     // The engine's recap under Details: its junior variant; an older engine's recap (no
     // audience) as it is; never a recap written for the agent.

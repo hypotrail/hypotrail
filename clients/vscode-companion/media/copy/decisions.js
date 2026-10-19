@@ -56,6 +56,9 @@
       // WP-A7: the two decisions of WP-A4, in the words of media/copy/junior.js.
       success_criterion: 'the success criterion',
       preprocessing: 'the data preparation',
+      // WP-B5: the two decisions of WP-B1.
+      model_variant: 'the variant to compare',
+      final_test: 'the opening of the final test',
       policy: regression(task) ? 'the third decision' : 'the calling rule',
       model_choice: 'the model choice',
       conclusion: 'the conclusion',
@@ -123,10 +126,14 @@
       'When the assistant raises a point about your reason, you may keep your words; the point is recorded next to them.',
     ],
     modeOther: 'This mode is described in the chat; the panel shows its name only.',
+    // WP-B5: the opening of the final test is a chat act; its card explains and points there.
+    finalTestTitle: 'Answer this one in the chat',
+    finalTestBody: 'Opening the final test is decided in the chat, in your own words and with your reason. This panel has no field and no button for it.',
+    finalTestOnce: 'The final test opens once. Afterwards it is never measured again, and anything changed is marked as made after it.',
     modeChange: 'The mode changes only in the chat, in your own words; this panel cannot change it.',
     // WP-A7: the reason the guided rule asks for at a trade-off, said before typing.
     reasonHint: 'This decision is a trade-off: say why it fits your situation, not only that you agree.',
-    reasonDecisions: ['policy', 'model_choice', 'conclusion'],
+    reasonDecisions: ['policy', 'model_choice', 'conclusion', 'final_test'],
     atRevision: rev => `revision ${rev}`,
     supersededAt: rev => (rev === null || rev === undefined ? 'superseded' : `superseded at revision ${rev}`),
     noHistory: 'No confirmation is recorded yet.',

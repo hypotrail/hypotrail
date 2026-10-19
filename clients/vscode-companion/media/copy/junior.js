@@ -27,7 +27,7 @@
     model_choice: 'the model choice',
     success_criterion: 'the success criterion',
     preprocessing: 'the data preparation',
-    // WP-B1: named in words only; their panel views are WP-B5.
+    // WP-B1: named in words; WP-B5 gives them their panel views.
     model_variant: 'the variant to compare',
     final_test: 'the opening of the final test',
     conclusion: 'the conclusion',
@@ -43,6 +43,11 @@
     model_choice: 'The model choice picks the model whose errors on the validation rows fit your use.',
     success_criterion: 'The success criterion fixes, before you see the results, how much better than the baseline a model must be to be worth adopting.',
     preprocessing: 'The data preparation says how missing values, rare categories, extreme values and skewed columns are handled; it is learned on the training rows only.',
+    // WP-B5: the two decisions of WP-B1.
+    model_variant: regression(task)
+      ? 'A variant is one change to the model, compared under the same protocol, so the choice between the two has a purpose and is counted.'
+      : 'A variant is one change to the model, such as stronger regularisation or one group of variables left out, compared under the same protocol: the choice between the two has a purpose and is counted.',
+    final_test: 'The final test is the set of rows sealed when the study was created. Opened once, after the choices, it gives the one figure that did not help to choose; anything changed afterwards is marked as made after it.',
     conclusion: 'The conclusion says what the study supports, and what it does not.',
   })[id] || '';
 
@@ -84,13 +89,26 @@
     return out.available.length + out.uncertainIn.length + out.uncertainOut.length + out.excluded.length ? out : null;
   }
 
-  /** A recorded rule (`capacity:N`, `threshold:T`) in words; the numbers are the rule's own. */
+  /**
+   * A share of rows as a percentage (`share:0.1` -> "10%"): a restatement of the recorded
+   * parameter, rounded to two decimals of a percent, not a figure computed from results.
+   */
+  function sharePercent(p) {
+    const x = Number(p);
+    if (!Number.isFinite(x)) return null;
+    return `${Number((x * 100).toFixed(2))}%`;
+  }
+
+  /** A recorded rule (`capacity:N`, `threshold:T`, `share:P`) in words; the numbers are the rule's own. */
   function rule(value, task) {
     // WP-B1: a rule applied to the variant ends with "@fit.variant".
     const [v, model] = str(value).split('@');
     const tail = model === 'fit.variant' ? ', with the variant' : '';
     let m = v.match(/^capacity:([0-9]+)$/);
     if (m && !regression(task)) return `Call the top ${m[1]} by score${tail}`;
+    // WP-B5: a share of the scored rows (WP-B3).
+    m = v.match(/^share:([0-9.]+)$/);
+    if (m && !regression(task) && sharePercent(m[1])) return `Call the top ${sharePercent(m[1])} by score${tail}`;
     m = v.match(/^threshold:([0-9.]+)$/);
     if (m && !regression(task)) return `Call everyone scored ${m[1]} or more${tail}`;
     return null;
@@ -226,6 +244,15 @@
     done: { title: () => 'Every step is done', action: null,
       lead: 'The report and the notebook carry the study. Read them again before you hand them over.' },
     other: { title: () => 'Continue in the chat', action: null, lead: 'The assistant guides the next step in the chat.' },
+    // WP-B5: the opening of the final test is a chat act. The panel explains it and points
+    // to the chat; it never offers a control that opens it.
+    finalTest: {
+      await: { title: () => 'Open the final test, in the chat', action: null,
+        lead: 'A proposal to open the final test waits for your answer. Give it in the chat, in your own words and with your reason: the final test opens once, and this panel has no control for it.' },
+      propose: { title: () => 'Next step: open the final test once', action: null,
+        lead: 'When the model and the rule are settled, say in the chat that you open the final test and why. It opens once; nothing is measured on it again.' },
+      what: (model, rule) => `It would measure ${model}${rule ? ` with the rule: ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}, once, on rows nobody has looked at.`,
+    },
     proposalSaid: 'The proposal says',
     proposedValue: 'In short',
     whyTitle: 'Why it matters',
@@ -246,6 +273,9 @@
     uncertain_features_included: 'caveat', delegated_decisions: 'caveat', small_validation_partition: 'caveat',
     capacity_exceeds_validation: 'caveat', high_cardinality_grouping: 'caveat', grouped_split_unsupported: 'caveat',
     validation_is_not_independent: 'sealed',
+    // WP-B5: the final test (ADR 0006 and its WP-B1 amendment), the scenario's capacity.
+    final_test_sealed: 'sealed', changed_after_final_test: 'caveat', final_test_opening_interrupted: 'blocking',
+    capacity_assumed_for_exercise: 'caveat', verdict_contradicts_criterion: 'blocking',
     public_data_already_explored: 'context', no_time_or_entity_identifier: 'context', no_causality: 'context',
     workbench_not_tracked: 'context',
   };
@@ -276,6 +306,12 @@
     no_time_or_entity_identifier: 'The data have no date or entity identifier, so drift and repeated entities cannot be checked.',
     no_causality: 'The study shows associations; it does not measure the effect of an action.',
     workbench_not_tracked: 'Your workbench is not tracked, so nothing in it counts as evidence.',
+    // WP-B5.
+    final_test_sealed: 'The final test is still sealed: every figure so far comes from the development rows that helped to choose.',
+    changed_after_final_test: 'Something changed after the final test was opened, so the final test no longer measures what the study now holds.',
+    final_test_opening_interrupted: 'The opening of the final test stopped before its result was recorded; the final test is used up and cannot be opened again.',
+    capacity_assumed_for_exercise: 'The share of cases acted on is the teaching scenario\'s assumption, not a figure from a team.',
+    verdict_contradicts_criterion: 'The conclusion adopts although the success criterion is not met.',
   };
   const limitFallback = id => `${cap(String(id || '').replace(/_/g, ' '))}.`;
 
@@ -346,8 +382,90 @@
     return `Decided: ${parts.length ? parts.join('; ') : 'nothing yet'}.`;
   }
 
+  // WP-B5: the confirmation modes (ADR 0005), what counts as an answer in each. The mode
+  // changes in the chat only; the panel shows it and offers no control.
+  const modes = {
+    title: 'How your answers are read',
+    names: { guided: 'guided', training: 'training', express: 'express' },
+    line: name => `This study uses the ${name} mode.`,
+    // `finalTest`: the study has the opening of a final test (WP-B1), which also needs a reason.
+    rules: (mode, task, finalTest) => {
+      const choice = regression(task) ? 'the model choice' : 'the calling rule';
+      const opening = finalTest ? 'Opening the final test also needs your reason, and you give it in the chat only.' : null;
+      if (mode === 'training') {
+        return [
+          'An answer says in your own words what the proposal decides, its key points, not only that you agree.',
+          'When a key point is missing, the confirmation is stopped and the missing points are named, without words to copy.',
+          `For ${choice} and the conclusion, also give your reason with a word such as "because".`,
+          opening,
+          'Words that keep a variable the proposal leaves out, or the other way round, stop the confirmation.',
+        ].filter(Boolean);
+      }
+      if (mode === 'express') {
+        return [
+          'An answer is a reply to the open proposal, in your own words, that agrees with it, as in the guided mode.',
+          'Once you say so in the chat, the success criterion and the data preparation may be left to the assistant\'s recommended default; they stay marked as not decided by you.',
+          `${choice.charAt(0).toUpperCase()}${choice.slice(1)} and the conclusion are always yours, with your reason.`,
+          opening,
+        ].filter(Boolean);
+      }
+      return [
+        'An answer is a reply to the open proposal, in your own words, that agrees with it.',
+        'It is not an answer when it is only "ok", asks a question, or keeps a condition such as "yes, but" or "unless".',
+        `For ${choice} and the conclusion, also give your reason: why it fits your situation.`,
+        opening,
+        'When the assistant raises a point about your reason, you may keep your words; the point is recorded next to them.',
+      ].filter(Boolean);
+    },
+    change: 'The mode changes only in the chat: making it stricter needs no words, making it less strict needs your words naming the mode. This panel cannot change it.',
+  };
+
+  // WP-B5: the state of the final test in words (ADR 0006 and its WP-B1 amendment). Counts
+  // and revisions are the engine's; the junior's words are quoted as recorded.
+  const METHOD = {
+    stratified: 'the same share of each outcome',
+    quantile_stratified: 'the same share of each range of the target',
+    temporal: 'the latest rows in time order',
+  };
+  const SLOTS = {
+    split: 'the split', 'policy.evaluation': 'the calling-rule evaluation', 'evaluate.regression': 'the model comparison',
+    'fit.baseline': 'the baseline', 'fit.logistic': 'the logistic model', 'fit.linear': 'the linear model', 'fit.variant': 'the variant',
+  };
+  /** A decision id or a result slot of `changed_after` in words. */
+  function changedName(id, task) {
+    const key = str(id);
+    if (SLOTS[key]) return regression(task) && key === 'policy.evaluation' ? 'an evaluation' : SLOTS[key];
+    return decisionName(key, task);
+  }
+  /** `sealed`, `opened`, `changed` (opened, then something changed), `interrupted`, `absent`, or null. */
+  function finalTestState(ft) {
+    if (!ft || !ft.status) return null;
+    if (ft.status === 'absent') return 'absent';
+    if (ft.status === 'sealed') return 'sealed';
+    if (ft.status === 'opened' && !(ft.opening && ft.opening.resultId)) return 'interrupted';
+    if (ft.status === 'opened') return ft.postFinalTest ? 'changed' : 'opened';
+    return null;
+  }
+  const finalTestCopy = {
+    eyebrow: 'Final test',
+    titles: {
+      sealed: 'Final test sealed', opened: 'Final test opened once', changed: 'Final test opened, then the study changed',
+      interrupted: 'The opening of the final test stopped', absent: 'No final test',
+    },
+    sealed: (rows, method) => `${rows} rows were set aside when the study was created${METHOD[method] ? `, ${METHOD[method]}` : ''}. Nobody has read them: no chart, fit or evaluation uses them.`,
+    sealedNext: 'They open once, in the chat, after the model and the rule are chosen. Until then every figure comes from the development rows that helped to choose, so it is optimistic.',
+    opened: rev => `Opened once, at revision ${rev}, in your words:`,
+    measured: (model, rule) => `It measured ${model}${rule ? `, ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}, on rows nobody had looked at.`,
+    changed: names => `Changed after the opening: ${names}. The final test measured what the study held then, not what it holds now; it is not opened again.`,
+    interrupted: 'The opening started but no result was recorded. The final test is used up: it is not opened a second time.',
+    absent: 'This study was created before a final test was set aside, so every figure comes from rows the study has already used.',
+    criterion: 'Success criterion on the final test: ',
+    trials: n => `Configurations evaluated: ${n}.`,
+    trialsWhy: 'Each model or variant tried on the same rows is one more chance for a good figure by luck. The count is a disclosure: the more configurations, the more optimistic the best development figure.',
+  };
+
   HT.copy.junior = {
-    decidedLine,
+    decidedLine, sharePercent, modes, finalTest: finalTestCopy, finalTestState, changedName,
     decisionName, why, value, availability, modelName, nextMove,
     SEVERITY, SEVERITY_ORDER, severityLabel, limitText, limitFallback,
     GROUP_OF_KIND, groups, GROUP_ORDER, digestText,

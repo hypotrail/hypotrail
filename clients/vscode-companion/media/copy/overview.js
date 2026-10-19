@@ -26,6 +26,10 @@
       nextStep: 'the next step',
       becauseChanged: 'Your earlier answer was set aside because something it rests on changed. The reason is in Decisions.',
       successShare: 'On the validation rows, the share of successes among the cases it picks is ',
+      // WP-B5: under cross-validation the evaluation reads out-of-fold predictions.
+      successShareOutOfFold: 'On the out-of-fold predictions of the development rows, the share of successes among the cases it picks is ',
+      averageErrorOutOfFold: name => `On the out-of-fold predictions of the development rows, ${name} is off by `,
+      finalChat: 'Answer it in the chat. This panel has no control that opens the final test.',
       interval: level => (level ? ` (${level} interval ` : ' (interval '),
       to: ' to ',
       close: ')',
@@ -62,6 +66,11 @@
     },
     noRecap: 'No recap yet.',
     openInDecisions: 'Open in Decisions',
+
+    // WP-B5: the final test in "Where we are" (sealed, opened, changed after), and the
+    // confirmation mode explained (ADR 0005); both are read only.
+    finalTestTitle: 'Final test',
+    modeTitle: 'Answers',
 
     // The journey (§6.1.2)
     journeyTitle: 'The plan',

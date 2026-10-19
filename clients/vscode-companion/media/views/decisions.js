@@ -57,11 +57,15 @@
   function modeSection(model, ctx, c) {
     const mode = str(model.mode);
     if (!mode) return null;
+    const M = J().modes;
     const name = c.modeNames[mode] || mode;
+    // WP-B5: every mode says what counts as an answer (ADR 0005, decision 8).
+    const known = ['guided', 'training', 'express'].includes(mode);
+    const finalTest = arr(model.plan).some(s => s.id === 'final_test');
     return el('section', { className: 'card dc-mode', 'aria-labelledby': 'h-dc-mode', 'data-mode': mode }, [
       el('h3', { id: 'h-dc-mode', text: c.modeTitle }),
       el('p', {}, [el('span', { className: 'ht-status ht-st-needs', 'data-mode-chip': mode, text: name }), ' ', c.modeLine(name)]),
-      mode === 'guided' ? el('ul', { className: 'dc-mode-rules' }, c.modeRules(taskOf(ctx)).map(t => el('li', { text: t })))
+      known ? el('ul', { className: 'dc-mode-rules' }, M.rules(mode, taskOf(ctx), finalTest).map(t => el('li', { text: t })))
         : el('p', { className: 'muted', text: c.modeOther }),
       el('p', { className: 'muted', 'data-mode-change': true, text: c.modeChange }),
     ]);
@@ -305,6 +309,9 @@
     const effects = v1 ? effectsSection(p, ctx, c) : null;
     const blocked = effects ? effects.blocked : null;
     const busyHere = ctx.busy && ctx.busyTarget === id;
+    // WP-B5: the opening of the final test is answered in the chat only; its card explains
+    // and offers no words field and no confirmation (the controller refuses one too).
+    const opening = str(p.decisionId) === 'final_test';
     const describedBy = [`hint-${id}`, blocked].filter(Boolean).join(' ');
     let area = null;
     let typing = null;
@@ -318,7 +325,7 @@
       confirm.disabled = ctx.busy || !typed || Boolean(blocked);
       withdraw.disabled = ctx.busy;
     };
-    if (!ctx.reviewer) {
+    if (!ctx.reviewer && !opening) {
       area = ctx.wordsArea({ kind: 'drafts', key: id, id: `words-${id}`, name: `words-${id}`, rows: '3',
         'aria-describedby': describedBy, 'data-proposal': id, 'data-write': 'confirm',
         onInput: () => {
@@ -383,7 +390,11 @@
       ...holds,
       ...resolved,
       effects ? effects.node : null,
-      area ? el('div', { className: 'dc-answer' }, [
+      opening ? el('div', { className: 'hold dc-final-chat', role: 'note', 'data-final-test-chat': id }, [
+        el('p', { className: 'title', text: c.finalTestTitle }),
+        el('p', { text: c.finalTestBody }),
+        el('p', { className: 'muted', text: c.finalTestOnce }),
+      ]) : area ? el('div', { className: 'dc-answer' }, [
         el('label', { for: `words-${id}`, text: v1 ? c.answerLabel : c.answerLabelV0 }),
         area,
         v1 && c.reasonDecisions.includes(str(p.decisionId))
@@ -392,7 +403,7 @@
         typing,
       ]) : el('p', { className: 'muted', 'data-reviewer-note': true, text: c.reviewerNote }),
       el('div', { className: 'dc-actions' }, [
-        ctx.reviewer ? null : confirm,
+        ctx.reviewer || opening ? null : confirm,
         ctx.reviewer ? null : withdraw,
         // The shared agent-bridge helper of media/terms.js: a modal, then copy (§6.8; WP-I).
         HT.askButton(ctx, { kind: 'proposal', id }, c.askAbout(str(p.decisionTitle)), { label: c.ask, attrs: { 'data-ask': id } }),
