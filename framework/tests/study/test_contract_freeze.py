@@ -106,7 +106,9 @@ CONFIRMATION_BASES = ('explicit', 'delegated_default')
 DELEGATION_SCOPES = ('this_decision', 'standing')
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
-                      'revision', 'created')
+                      'revision', 'created',
+                      # Advanced companion (C9, decision CI.6): additive, last.
+                      'origin')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
                     'n_rows', 'values', 'blobs', 'params', 'inputs', 'code_fingerprint',
                     'environment', 'execution_id', 'exposure_id', 'started_revision', 'integrity')
@@ -688,3 +690,24 @@ def test_named_refusals_of_values_and_splits_are_documented():
     for name in (data.CAPABILITY_MISSING_TARGET, data.CAPABILITY_DUPLICATES):
         assert f'`{name}`' in case_doc, name
     assert f'`{data.CAPABILITY_MISSING_TARGET}`' in DOC
+
+
+# Advanced companion (CLI-CONTRACT §8.7, CLI-CONTRACT-COMPANION; WP-I): the schema names of
+# the new reads and the export, pinned here as CLI-CONTRACT-COMPANION §0 lists them.
+COMPANION_SCHEMAS = {'decisions': 'hypotrail.decisions/1', 'preview_effects': 'hypotrail.preview_effects/1',
+                     'proposal_draft': 'hypotrail.proposal_draft/1', 'evidence': 'hypotrail.evidence/1',
+                     'explain': 'hypotrail.explain/1', 'export': 'hypotrail.export/1',
+                     'handoff': 'hypotrail.handoff/1'}
+
+
+def test_companion_schema_names():
+    from mlkit.study import (cmd_decisions, cmd_evidence, cmd_explain, cmd_export, preview_effects,
+                             preview_proposal)
+    assert {'decisions': cmd_decisions.SCHEMA, 'preview_effects': preview_effects.SCHEMA,
+            'proposal_draft': preview_proposal.SCHEMA, 'evidence': cmd_evidence.SCHEMA,
+            'explain': cmd_explain.SCHEMA, 'export': cmd_export.SCHEMA,
+            'handoff': cmd_export.HANDOFF_SCHEMA} == COMPANION_SCHEMAS
+    section = DOC[DOC.index('### 8.7 Advanced companion'):DOC.index('## 9. Storage objects')]
+    assert all(f'`{name}`' in section for name in COMPANION_SCHEMAS.values())
+    for module in (cmd_decisions, cmd_evidence, cmd_explain, cmd_export, preview_effects, preview_proposal):
+        assert not getattr(module, 'WP0_STUB', False), module.__name__

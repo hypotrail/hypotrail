@@ -1,6 +1,6 @@
 # CLI contract: additions for the advanced companion
 
-Status: **specified; WP-0 stubs registered (§13), features not implemented.** These are the interfaces that the advanced companion
+Status: **implemented** (C1 to C11, WP-E1 to WP-E3; integrated by WP-I, decisions CI.1 to CI.12 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)). The WP-0 stubs of §13 are gone. These are the interfaces that the advanced companion
 ([COMPANION-ADVANCED.md](COMPANION-ADVANCED.md), [ADR 0004](../decisions/0004-companion-advanced.md))
 needs from the engine. The parallel work packages of the
 [plan](../plans/COMPANION-ADVANCED-PLAN.md) treat this document as frozen. Any change goes
@@ -17,7 +17,7 @@ document lists. Every rule of CLI-CONTRACT §1 to §3 applies here too:
 - payload keys are listed in their emitted order;
 - clients ignore keys they do not know.
 
-When the first work package lands, the integrator adds a section §8.7 to CLI-CONTRACT.md. That section points here and lists the new schemas, and `test_contract_freeze.py` gains the new schema names in the same commit.
+CLI-CONTRACT.md §8.7 points here and lists the new schemas; `test_contract_freeze.py` pins their names (`test_companion_schema_names`).
 
 **Why a separate document.** CLI-CONTRACT.md is frozen. Its freeze test reads it. Three engine work packages will edit their parts of this contract in parallel. Keeping the additions in one separate file avoids merge conflicts in the frozen document, and it keeps the v0.1 contract readable on its own.
 
@@ -52,7 +52,7 @@ hypotrail status --study DIR --summary --digest [--since REV] [--json]
 ```
 
 - `--digest` requires `--summary`. Without it the command fails with `invalid_arguments`.
-- Without `--digest`, `status --summary` is byte-for-byte unchanged, and `status --json` is unchanged.
+- Without `--digest`, `status --summary` is byte-for-byte unchanged. `status --json` changes only by the additive `origin` of its `open_proposals` (§9, decision CI.6).
 - With `--digest`, five keys are appended **after** `recap`, in this order: `moments`, `pauses`, `last_session`, `digest`, `task`. The schema stays `hypotrail.summary/1`, because the change is additive (CLI-CONTRACT §3, the precedent of `recap` and `notes`).
 - `task` is `binary` or `regression` (`view.task`). It removes the client's inference from step ids (ADR 0004 open question 7, answered yes; decision CA.3).
 - With `--digest` only, each `open_proposals` item gains `origin` as its last key (C9). Without `--digest` the items are unchanged, so the byte-identical rule above holds (decision CA.4).
@@ -535,7 +535,7 @@ hypotrail decide propose DECISION ... [--channel chat|cli|webview] ...
 - **Default.** `--channel` defaults to `chat`.
 - **Action parameters.** `PROPOSE_PARAMS` accepts the parameter `channel` as optional: a request without it is still valid, and `cli.py` passes `channel` only when it is not `chat`. This keeps the identity of every earlier request, so replaying an old request id stays a replay and does not become an `idempotency_conflict`. A value outside `state.CHANNELS` is `invalid_value`, with `details.field` `channel`.
 - **Stored origin.** The proposal stores `origin: {channel}` (`state.PROPOSAL_OPTIONAL_KEYS` gains `origin`).
-- **Where it shows.** `decisions` (C2) lists `origin` for every proposal, and `status --summary --digest` adds it to each `open_proposals` item (§1); it is `null` for older proposals. `status --json` and `status --summary` without `--digest` are unchanged (decision CA.4). The HTML report shows "Proposed from the companion" for `channel: webview`, reading the proposal's stored `origin`.
+- **Where it shows.** `decisions` (C2) lists `origin` for every proposal, and `status --summary --digest` adds it to each `open_proposals` item (§1); it is `null` for older proposals. `status --summary` without `--digest` is unchanged (decision CA.4). `status --json` lists it as the last key of each `open_proposals` item (`view.PROPOSAL_VIEW_KEYS`, additive; decision CI.6, which amends CA.4 for the view only), and the HTML report, which renders from that view, shows "Proposed from the companion" for `channel: webview`.
 - **Rules unchanged.** The channel changes no rule. A webview proposal is checked like any other: numbers, wording, values. It is confirmed only by a later request with acceptable words. Nothing records the junior as the author of the restatement: the restatement of a webview proposal is the engine's draft (C4).
 
 **Acceptance.**
@@ -594,9 +594,9 @@ There is no opt-in render setting that adds the links, and no `vscode:` link in 
 
 Every other refusal in this document reuses a code of CLI-CONTRACT §7.
 
-## 13. Reserved stubs (WP-0)
+## 13. Reserved stubs (WP-0, historical)
 
-Before the engine work packages start, WP-0 registers the new commands with modules that refuse. **The refusal of a reserved, not yet implemented command** is:
+Every stub below has been replaced by its engine work package; no module carries `WP0_STUB` any more, and the refusal shape stays reserved for a future reserved command. Before the engine work packages started, WP-0 registered the new commands with modules that refuse. **The refusal of a reserved, not yet implemented command** is:
 
 ```json
 {"code": "unsupported_capability",

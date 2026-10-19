@@ -114,14 +114,20 @@ def test_the_session_log_records_the_channel(clone, monkeypatch):
     assert 'Chosen in the panel' not in json.dumps(last)
 
 
-def test_origin_shows_in_decisions_and_the_digest_only(clone):
+def test_origin_shows_in_decisions_the_digest_and_the_view_not_the_v01_summary(clone):
     pid = _propose(clone, '--channel', 'webview')['result']['proposal_id']
     code, d = cc.run('decisions', '--study', clone.study)
     assert {x['proposal_id']: x['origin'] for x in d['proposals']}[pid] == {'channel': 'webview'}
     code, s = cc.run('status', '--summary', '--digest', '--study', clone.study)
     assert s['open_proposals'][-1]['origin'] == {'channel': 'webview'}
+    # WP-I, decision CI.6 (amends CA.4 for the view only): `status --json` lists the origin
+    # as the last key of each open proposal, so the report can say "Proposed from the
+    # companion"; `status --summary` without --digest keeps the v0.1 shape.
     code, full = cc.run('status', '--json', '--study', clone.study)
-    assert all('origin' not in p for p in full['view']['open_proposals'])
+    assert {p['proposal_id']: p['origin'] for p in full['view']['open_proposals']}[pid] == {'channel': 'webview'}
+    assert all(list(p)[-1] == 'origin' for p in full['view']['open_proposals'])
+    code, v01 = cc.run('status', '--summary', '--study', clone.study)
+    assert all('origin' not in p for p in v01['open_proposals'])
 
 
 def test_the_state_schema_checks_the_origin(binary):

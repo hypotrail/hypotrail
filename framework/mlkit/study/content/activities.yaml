@@ -70,7 +70,7 @@ activities:
   # both tasks (regression_activities repeats it). It never shows the outcome.
   eda.distribution: &distribution
     label: Distribution of one column on training rows
-    glossary: exposure
+    glossary: distribution
     highlights:
       - {path: n_rows, label: Training rows read, fmt: int}
       - {path: n_missing, label: Missing cells, fmt: int}

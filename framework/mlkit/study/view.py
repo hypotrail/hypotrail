@@ -14,6 +14,7 @@ scikit-learn at import and at build time.
 """
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 
 from . import currency
@@ -37,7 +38,10 @@ DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
                           'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
-                      'revision', 'created')
+                      'revision', 'created',
+                      # Advanced companion (C9, decision CI.6): the stored origin, ``null``
+                      # for a proposal recorded before C9. The report reads it.
+                      'origin')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
                     'n_rows', 'values', 'blobs', 'params', 'inputs', 'code_fingerprint',
                     'environment', 'execution_id', 'exposure_id', 'started_revision',
@@ -666,7 +670,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         'next_action': st.next_action(state, suspected),
-        'open_proposals': [{k: p[k] for k in PROPOSAL_VIEW_KEYS}
+        'open_proposals': [{k: copy.deepcopy(p.get(k)) if k == 'origin' else p[k]
+                            for k in PROPOSAL_VIEW_KEYS}
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
         'decisions': _decisions(state),

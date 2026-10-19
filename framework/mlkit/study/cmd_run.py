@@ -53,7 +53,8 @@ PAUSE_TIMEOUT = 120.0
 def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('activity', nargs='?', choices=act.CLI_NAMES,
                         help='activity to run (omit with --acknowledge-interruption)')
-    parser.add_argument('--column', default=None, help='column of eda.rate_by or eda.mean_by')
+    parser.add_argument('--column', default=None,
+                        help='column of eda.rate_by, eda.mean_by, or eda.distribution')
     parser.add_argument('--max-groups', dest='max_groups', type=int, default=None,
                         help='eda.rate_by / eda.mean_by: show this many largest groups and fold '
                              'the other values into one group (default 20)')

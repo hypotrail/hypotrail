@@ -27,6 +27,12 @@ terms:
   exposure:
     term: Data exposure
     definition: The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.
+  distribution:
+    term: Distribution
+    definition: How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.
+  class_imbalance:
+    term: Class imbalance
+    definition: An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.
   base_rate:
     term: Base rate
     definition: The share of rows with the positive outcome. Any model must be compared with what this share alone would give.
@@ -106,7 +112,7 @@ terms:
     definition: A result computed under decisions that have since changed. It is kept for the record but is not cited.
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
-binary_only: [base_rate, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut]
+binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut]
 regression_terms:
   prediction_time:
     term: Prediction time

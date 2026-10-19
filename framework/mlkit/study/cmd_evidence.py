@@ -28,6 +28,7 @@ import argparse
 from pathlib import Path
 from typing import Mapping
 
+from . import activities as act
 from . import cite, currency, dependencies, preconditions, read, texts
 from . import commands as cmd
 from . import manifest as mf
@@ -53,14 +54,14 @@ IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_
 DETAIL_KEYS = ('result_id', 'values', 'params', 'inputs', 'code', 'environment', 'blobs',
                'exposure', 'consumers', 'report_anchor', 'notebook_hint')
 PARTITION_ORDER = ('all', 'train', 'validation')
-EDA_CATALOG = {
-    st.BINARY: ('eda.target_rate', 'eda.special_values', 'eda.rate_by', 'eda.distribution'),
-    st.REGRESSION: ('eda.target_summary', 'eda.special_values', 'eda.mean_by',
-                    'eda.distribution'),
-}
+# The EDA activities of each task, in plan order: those of ``activities.task_activities``
+# (the task's own, then the shared ``eda.distribution``), so the catalog cannot drift from
+# what ``run`` accepts (WP-I).
+EDA_CATALOG = {task: tuple(a for a in act.task_activities(task) if a in act.EDA)
+               for task in (st.BINARY, st.REGRESSION)}
 # The roles of the columns each per-column activity accepts (as ``run`` would accept them).
-PER_COLUMN_ROLES = {'eda.rate_by': ('feature',), 'eda.mean_by': ('feature', 'time'),
-                    'eda.distribution': ('feature', 'time', 'target')}
+PER_COLUMN_ROLES = {act.RATE_BY: ('feature',), act.MEAN_BY: ('feature', 'time'),
+                    act.DISTRIBUTION: act.DISTRIBUTION_ROLES}
 LINEAGE_ARTIFACTS = ('report', 'notebook')
 NOTEBOOK_HINT_CHARS = 8
 DEFAULT_LIMIT = 200

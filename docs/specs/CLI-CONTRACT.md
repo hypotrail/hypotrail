@@ -118,7 +118,7 @@ Each item of `plan.steps` and `view.plan` has the keys `id`, `title`, `question`
 | `plan` | Steps (§3.1) |
 | `current_step` | Id of the first step not done, or `null` |
 | `next_action` | §3.1 |
-| `open_proposals` | List of `{proposal_id, decision_id, value, restatement, rationale, revision, created}`, oldest first |
+| `open_proposals` | List of `{proposal_id, decision_id, value, restatement, rationale, revision, created, origin}`, oldest first. `origin` (advanced companion, C9; additive, last) is the stored `{channel}` of the proposal, or `null` for one recorded before C9 |
 | `decisions` | `{decision_id: {decision_id, status, value, proposal_id, depends_on, revision, reason, confirmation, open_proposals}}` for the five decisions |
 | `facts` | `{by_status: {documented_fact: [...], scenario_assumption: [...], observed: [...], unknown: [...]}, count}`; items are `{id, value, source}` |
 | `structure` | The case structure statements (`row_unit`, `group_column`, `time_column`, `duplicates`) |
@@ -461,7 +461,22 @@ hypotrail session-report --study DIR [--since REV] [--gap-minutes M] [--format t
 
 ### 8.7 Advanced companion
 
-The additions for the advanced companion are specified in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), which this document does not repeat. Landed so far (WP-E2): `evidence` (`hypotrail.evidence/1`), `explain` (`hypotrail.explain/1`), `export handoff` (`hypotrail.export/1`, `hypotrail.handoff/1`), and the optional `location` of `check` findings. New error code: `export_target_exists` (`export handoff`: `--out` exists and is not an empty folder; `details.path`; nothing was written).
+The additions for the advanced companion (ADR 0004) are specified in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), which this document does not repeat. All of them are implemented (WP-E1 to WP-E3):
+
+| Addition | Command | Schema |
+|---|---|---|
+| C1 | `status --summary --digest [--since REV]` | `hypotrail.summary/1` (keys `moments`, `pauses`, `last_session`, `digest`, `task` after `recap`; `origin` in `open_proposals`) |
+| C2 | `decisions` | `hypotrail.decisions/1` |
+| C3 | `preview effects PROPOSAL` | `hypotrail.preview_effects/1` |
+| C4 | `preview proposal DECISION --value V` | `hypotrail.proposal_draft/1` |
+| C5 | `evidence [--result RID] [--limit N]` | `hypotrail.evidence/1` |
+| C6 | `explain [--term ID]` | `hypotrail.explain/1` |
+| C7 | `export handoff [--out DIR]` | `hypotrail.export/1`, and the pack's `hypotrail.handoff/1` |
+| C8 | activity `eda.distribution` (`--column`, training rows) | `hypotrail.run/1`, value shape in CC §8 |
+| C9 | `decide propose ... --channel chat\|cli\|webview` | `hypotrail.decide/1`; the proposal's `origin`, also the last key of `open_proposals` in §4 |
+| C10 | report anchors `r-<result_id>`; the optional `location` of `check` findings | `hypotrail.check/1` |
+
+`status --summary` without `--digest` is byte-for-byte unchanged. A refusal of `export handoff` names the command `export handoff`, as `decide` names its verb. New error code: `export_target_exists` (`export handoff`: `--out` exists and is not an empty folder; `details.path`; nothing was written). `test_contract_freeze.py` pins the schema names (`test_companion_schema_names`).
 
 ## 9. Storage objects
 

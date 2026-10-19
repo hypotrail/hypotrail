@@ -19,9 +19,8 @@ Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlo
 
     hypotrail session-report --study DIR [--since REV] [--gap-minutes M]
 
-Advanced companion (``docs/specs/CLI-CONTRACT-COMPANION.md``; a command still reserved
-is refused with ``unsupported_capability``, ``details.reason: not_implemented``, until its
-engine work package lands; C1, C2, C3, and C9 are implemented)::
+Advanced companion (``docs/specs/CLI-CONTRACT-COMPANION.md``; C1 to C10 are implemented,
+behind the companion's own feature flag on the client side)::
 
     hypotrail status --study DIR --summary --digest [--since REV]       (C1, WP-E1)
     hypotrail decisions --study DIR                                     (C2, WP-E1)
@@ -69,7 +68,8 @@ EXTENSIONS = {
     'preview': 'mlkit.study.cmd_preview',  # Phase 2: read-only policy preview (WP2.4)
     # Post-v0.1: read-only timeline of a study for observed sessions.
     'session-report': 'mlkit.study.cmd_session_report',
-    # Advanced companion (CLI-CONTRACT-COMPANION §13): WP-0 stubs, replaced by WP-E1/E2.
+    # Advanced companion (CLI-CONTRACT-COMPANION §13): registered by WP-0, implemented by
+    # WP-E1 (decisions), WP-E2 (evidence, explain, export).
     'decisions': 'mlkit.study.cmd_decisions',
     'evidence': 'mlkit.study.cmd_evidence',
     'explain': 'mlkit.study.cmd_explain',
@@ -326,7 +326,9 @@ def run(argv: Sequence[str] | None = None) -> cmd.Outcome:
 
 def _run(argv: list) -> cmd.Outcome:
     name = argv[0] if argv else ''
-    command = ' '.join(argv[:2]) if name == 'decide' else name
+    # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
+    # own payloads name it (WP-I).
+    command = ' '.join(argv[:2]) if name in ('decide', 'export') else name
     try:
         extension = name if name in EXTENSIONS else None
         if extension and importlib.util.find_spec(EXTENSIONS[extension]) is None:
