@@ -55,7 +55,16 @@ CAPABILITY_GROUPED_SPLIT = 'grouped split (v0.2)'
 
 TOP_REQUIRED = ('schema', 'id', 'title', 'description', 'provenance', 'dataset', 'target',
                 'row_key', 'facts', 'variables', 'special_values', 'structure', 'task')
-TOP_OPTIONAL = ('prior_exposure', 'migration', 'order', 'duplicates', 'scenario_defaults')
+TOP_OPTIONAL = ('prior_exposure', 'migration', 'order', 'duplicates', 'scenario_defaults',
+                'prior_exposed_rows')
+# ``prior_exposed_rows`` (v0.2b, WP-B6a): the rows of this dataset that were already seen
+# outside the study (published results, a tutorial), ``{path, sha256, rows, match, status,
+# source}``. ``path`` is a file inside the case directory listing their row keys, one per
+# line (``match: row_key``, the only matching rule); ``sha256`` its bytes, ``rows`` its
+# number of keys. At ``init`` these rows are kept on the development side: the sealed final
+# test never holds a row that was already exposed (``partition.assign``).
+PRIOR_ROWS_KEYS = ('path', 'sha256', 'rows', 'match', 'status', 'source')
+PRIOR_ROWS_MATCHES = ('row_key',)
 # ``duplicates`` (v0.2b, WP-B3): how identical records are treated, ``{policy, status,
 # source}``. The only policy is ``group``: records with identical content are one entity
 # group, kept whole on one side of the final test, the split, and the folds. Without the
@@ -188,6 +197,12 @@ class Case:
     def scenario_defaults(self) -> dict | None:
         """The teaching scenario's defaults (``scenario_defaults``), or None."""
         return self.document.get('scenario_defaults')
+
+    @property
+    def prior_exposed_rows(self) -> dict | None:
+        """The declaration of rows already exposed outside the study
+        (``prior_exposed_rows``, WP-B6a), or None."""
+        return self.document.get('prior_exposed_rows')
 
     @property
     def group_column(self) -> str | None:
@@ -454,6 +469,22 @@ def validate(document: Any) -> list[dict]:
         else:
             for i, item in enumerate(pe):
                 p.statement(item, f'prior_exposure[{i}]')
+    if 'prior_exposed_rows' in document:
+        pr = document['prior_exposed_rows']
+        if p.keys(pr, 'prior_exposed_rows', PRIOR_ROWS_KEYS):
+            path_ = pr['path']
+            p.text(path_, 'prior_exposed_rows.path')
+            if isinstance(path_, str) and (Path(path_).is_absolute() or '..' in Path(path_).parts):
+                p.add('prior_exposed_rows.path', 'must be a relative path inside the case directory')
+            if not isinstance(pr['sha256'], str) or not SHA256.fullmatch(pr['sha256']):
+                p.add('prior_exposed_rows.sha256', 'must be 64 lowercase hexadecimal characters')
+            if type(pr['rows']) is not int or pr['rows'] < 1:
+                p.add('prior_exposed_rows.rows', 'must be a positive integer')
+            if pr['match'] not in PRIOR_ROWS_MATCHES:
+                p.add('prior_exposed_rows.match',
+                      f'must be one of {", ".join(PRIOR_ROWS_MATCHES)}')
+            p.status(pr['status'], 'prior_exposed_rows.status')
+            p.text(pr['source'], 'prior_exposed_rows.source')
     if 'order' in document:
         o = document['order']
         if p.keys(o, 'order', ORDER_KEYS):
@@ -593,6 +624,40 @@ def verify_dataset(case: Case) -> None:
                                        'problem': f'header {fields} differs from {case.column_names}'}])
 
 
+def prior_exposed_keys(case: Case) -> list[str] | None:
+    """The row keys of ``prior_exposed_rows`` (WP-B6a), read from the declared file and
+    verified (inside the case directory, sha256, number of keys, no repeat); None when the
+    case declares none. Whether each key names a row of the dataset is checked by
+    ``partition.assign``."""
+    pr = case.prior_exposed_rows
+    if pr is None:
+        return None
+    root = case.root.resolve()
+    path = (case.root / pr['path']).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise CaseError('dataset_missing', f'Prior-exposed rows file not found: {pr["path"]}',
+                        details={'path': pr['path']})
+    actual = sha256_file(path)
+    if actual != pr['sha256']:
+        raise CaseError('dataset_changed', 'The prior-exposed rows file differs from the '
+                                           'sha256 declared in the case.',
+                        details={'path': pr['path'], 'declared_sha256': pr['sha256'],
+                                 'actual_sha256': actual})
+    keys = [line.strip() for line in path.read_text(encoding='utf-8').splitlines()
+            if line.strip()]
+    problems = []
+    if len(keys) != pr['rows']:
+        problems.append({'path': 'prior_exposed_rows.rows',
+                         'problem': f'declared {pr["rows"]}, the file lists {len(keys)} keys'})
+    if len(set(keys)) != len(keys):
+        problems.append({'path': 'prior_exposed_rows.path',
+                         'problem': 'the file lists a row key more than once'})
+    if problems:
+        raise CaseError('invalid_case', 'The prior-exposed rows file does not match its '
+                                        'declaration.', problems=problems)
+    return keys
+
+
 # --- loading and capabilities -----------------------------------------------------------
 
 def check_document(document: Any) -> None:
@@ -623,6 +688,7 @@ def load_case(path, *, verify_data: bool = True) -> Case:
     case = Case(path=path.resolve(), document=copy.deepcopy(document))
     if verify_data:
         verify_dataset(case)
+        prior_exposed_keys(case)
     return case
 
 

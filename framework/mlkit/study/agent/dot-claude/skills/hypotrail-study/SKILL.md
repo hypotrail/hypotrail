@@ -23,13 +23,17 @@ Keep the professional activity names inside four moments, and say which one you 
 <!-- hypotrail:task binary -->
 2. **Prepare evidence**: data quality, target rate, special values, rate by group,
    single-feature signal, on training rows; then the preprocessing.
-3. **Work and compare**: constant baseline, logistic model, policy evaluation.
-4. **Conclude and hand over**: policy adoption and a proportionate conclusion (pause 3).
+3. **Work and compare**: constant baseline, logistic model, the variant, policy
+   evaluation, diagnostics.
+4. **Conclude and hand over**: policy adoption, the final test opening, and a
+   proportionate conclusion.
 <!-- hypotrail:task regression -->
 2. **Prepare evidence**: data quality, target summary, special values, mean by group,
    single-feature signal, on training rows; then the preprocessing.
-3. **Work and compare**: mean baseline, linear model, regression evaluation.
-4. **Conclude and hand over**: model choice and a proportionate conclusion (pause 3).
+3. **Work and compare**: mean baseline, linear model, the variant, regression
+   evaluation, diagnostics.
+4. **Conclude and hand over**: model choice, the final test opening, and a proportionate
+   conclusion.
 <!-- hypotrail:end -->
 
 The plan is `view.plan` from `status`; its steps have a question, an expected output, and
@@ -67,12 +71,15 @@ as a course up front. Define each term at its first use in the chat, even a comm
 **precision**, **recall**, **stratified split**, **paired difference**, **paired
 bootstrap**, and **confidence interval** included, and the v0.2 terms **development rows**,
 **final test**, **Wilson interval**, **permutation null band**, **single-feature signal**,
-**success criterion**, and **data-contingent decision**. Their glossary entries have an
+**success criterion**, **data-contingent decision**, **cross-validation**, **out-of-fold
+prediction**, **fold spread**, **regularisation**, and **calibration**. Their glossary entries have an
 `example`: fill its placeholders from this study's result and cite its `result_id`.
 <!-- hypotrail:task regression -->
 **paired difference**, **paired bootstrap**, and **confidence interval** included, and
 the v0.2 terms **development rows**, **final test**, **permutation null band**,
-**single-feature signal**, **success criterion**, and **data-contingent decision**. Their
+**single-feature signal**, **success criterion**, **data-contingent decision**,
+**cross-validation**, **out-of-fold prediction**, **fold spread**, and
+**regularisation**. Their
 glossary entries have an `example`: fill its placeholders from this study's result and
 cite its `result_id`.
 <!-- hypotrail:end -->
@@ -334,11 +341,30 @@ the result.
 - **Validation is not independent.** A model chosen on validation rows is optimistic;
 <!-- hypotrail:end -->
   the report's "What is not yet defensible" section lists these limits. Repeat them.
-- **Development evidence, final evidence.** Every figure of this version comes from the
-  development rows: validation figures are development evidence. The final test is
-  sealed and no command reads it; a junior who asks for the final performance hears that
-  it does not exist yet, and why (rows set aside before any look, opened once after the
-  model and the rule are frozen, in a later version).
+- **Development evidence, final evidence.** Before the opening, every figure comes from
+  the development rows: validation or out-of-fold figures are development evidence. A
+  junior who asks for the final performance then hears that it does not exist yet, and
+  why (rows set aside before any look, opened once after the model and the rule are
+  fixed). After the opening, the final test's figures come first, as final evidence; the
+  development figures follow, labelled as such.
+
+## Cross-validation, the variant, the diagnostics and the final test (v0.2b)
+
+- **The split pause** proposes the cross-validation the engine drafts. Introduce
+  **cross-validation**, then **out-of-fold predictions** and the **fold spread** from the
+  glossary, with this study's folds; read a difference between models against the spread.
+- **The variant.** After the candidate's fit, offer one analytical variant, a stronger or
+  weaker **regularisation** or dropping one feature group, with what each would tell, and
+  your recommendation; the junior chooses. Each configuration fitted is a trial (`trials`):
+  disclose the count when you compare them.
+- **The diagnostics** (`diag.binary` or `diag.regression`) come after the fits and before
+  the choice: read the **calibration** or the residuals, the segments or the errors by
+  feature, and the coefficients with their intervals, as development evidence.
+- **The opening** is a ritual, not a step to rush: only when the model, the rule and the
+  success criterion are confirmed and nothing is stale; explain that it happens once and
+  that its result stands, whatever it shows; the junior's own words and reason open it.
+  Then run `diag.final_test` and read it with the junior. A later change is labelled
+  "after the final test".
 
 ## The conclusion
 

@@ -66,19 +66,29 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    2. the split, before any exploration of the target; then the **success criterion**,
       fixed before any model is fitted, so no result can shape it; then, after the
       training exploration, the **preprocessing** (below);
+   3. in a study with `model_variant` (v0.2b), the **variant**, after the fits (below);
 <!-- hypotrail:task binary -->
-   3. the policy adoption, then the conclusion.
+   4. the policy adoption, then, in a v0.2b study, the **final test opening** (rule 10),
+      then the conclusion.
 <!-- hypotrail:task regression -->
-   3. the model choice (adopt the linear model or keep the mean baseline), then the
-      conclusion.
+   4. the model choice (adopt the linear model or keep the mean baseline), then, in a
+      v0.2b study, the **final test opening** (rule 10), then the conclusion.
 <!-- hypotrail:end -->
+
+   **The split as an evaluation scheme** (v0.2b). Propose the cross-validation that
+   `next_action.default_value` drafts, as the split pause. Introduce **cross-validation**
+   and **out-of-fold predictions** (term first): each fold is predicted by a model that
+   did not see it, so every development row is scored once. Each fit then reports its
+   **fold spread** (`cross_validation.spread`: the lowest and highest fold value): say how
+   far the figure moves from fold to fold before you read a difference between models
+   smaller than that spread.
 
    When the junior asks to continue the plan ("continue", "keep going", "let's go with
    the plan"), do the work the plan covers up to the next pause (training EDA, the baseline and
 <!-- hypotrail:task binary -->
-   logistic fits, policy evaluations, explanations) without asking permission: do not ask
+   logistic fits, policy evaluations, diagnostics, explanations) without asking permission: do not ask
 <!-- hypotrail:task regression -->
-   linear fits, the regression evaluation, explanations) without asking permission: do not ask
+   linear fits, the regression evaluation, diagnostics, explanations) without asking permission: do not ask
 <!-- hypotrail:end -->
    "should I run the explorations now?". Say what you are doing and do it. A general
    approval of the plan ("that plan looks good", "let's go with the plan") approves the
@@ -102,6 +112,26 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    `motivated_by`. The engine stamps the decision `data_contingent` when a motivating
    result read the target: say in the restatement that it was chosen after looking at the
    target, so the validation figures may be slightly optimistic.
+
+   **The variant** (v0.2b). Once the candidate is fitted, offer one analytical variant
+   and let the junior choose it: a stronger or weaker **regularisation** (the coefficients
+   pulled towards zero, more or less) or dropping one feature group (a `group` of the data
+   card). Say in one line what each would tell about this study, recommend one, and say
+   that every configuration fitted counts as a trial (`trials` in the summary): more
+   trials, more chance that the best one looks better than it is. Then `run fit.variant`.
+
+   **Diagnostics** (v0.2b). After the fits and the variant, before proposing the
+<!-- hypotrail:task binary -->
+   rule, run `diag.binary` and read it with the junior: the **calibration** (do the scores
+   match the observed rates, bin by bin), the segments (where the rule selects well or
+   badly, small cells flagged), and the largest coefficients with their intervals
+   (associations). It is development evidence, like every figure before the opening.
+<!-- hypotrail:task regression -->
+   model choice, run `diag.regression` and read it with the junior: the residuals against
+   the prediction (does the error grow with it), by feature, the largest errors, and the
+   largest coefficients with their intervals (associations). It is development evidence,
+   like every figure before the opening.
+<!-- hypotrail:end -->
 4. **Confirmation.** Propose with `decide propose ... --restatement "<one declarative
    sentence>"`, show that restatement, and stop. The restatement is a statement the
    junior accepts or corrects ("You predict before the first call, so call outcomes are
@@ -298,9 +328,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    whole population. Give the selection as a rate of those rows (the registered
    `volume_rate`) before any extrapolation, and promise no scaling that no activity
    does. **Capacity as a share.** When the case sets `scenario_defaults.capacity_share`
-   (`status --json`; the policy's `next_action.default_value` is then `share:<p>`), ask the
-   capacity as one question, as a share of the scored rows (what share of them the team
-   can act on), not as counts. Before you recommend a share, show what 5, 10 and 20 % of
+   (`scenario_defaults` in `status --summary`; the policy's `next_action.default_value`
+   is then `share:<p>`), ask the capacity as one question, as a share of the scored rows
+   (what share of them the team can act on), not as counts. Before you recommend a share, show what 5, 10 and 20 % of
    the rows would give: the gain in points over the baseline at each share
    (`gain_points.points` of the policy evaluation, cited with its `result_id`). Present
    the default as the exercise's assumption in words ("the exercise assumes the team can
@@ -335,15 +365,26 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    their words as well, through a shell pipe rather than a file:
    `check --text - --allow-user-text <(printf '%s' "<their words, verbatim>")`. Keep the
    junior's figure in digits, as they gave it.
-10. **The final test is sealed.** `init` set aside the final-test rows before any look
-    (`final_test` in `status --summary`: `sealed`, with its row count). No command of this
-    version reads them, and nothing you do should try: no file read, no option, no
-    workaround. Every figure of this study comes from development rows. Call validation
-    figures "development evidence"; the study holds no final evidence until a later
-    version opens the final test once, after the model and the rule are frozen. When the
-    junior asks for the final performance or for the final-test rows, say this in plain
-    words and offer what exists (the validation figures, labelled as development
-    evidence).
+10. **The final test is sealed, then opened once.** `init` set aside the final-test rows
+    before any look (`final_test` in `status --summary`: `sealed`, its row count, and the
+    rows kept out as already exposed, `excluded_prior_exposed`). Nothing reads them before
+    the opening, and nothing you do should try: no file read, no option, no workaround.
+    Until then, call every figure "development evidence"; the study holds no final
+    evidence. When the junior asks for the final performance, say this in plain words and
+    offer what exists, labelled as development evidence. In a study without the
+    `final_test` decision, the final test stays sealed.
+
+    **The opening ritual.** Propose `final_test` (the drafted `{"model", "rule"}`) only
+    when the model choice, the rule and the success criterion are confirmed and nothing is
+    stale or waiting for reconfirmation. Before the restatement, explain: the final test
+    is opened once, for this configuration; its figures are the result, a disappointing
+    one included; anything changed afterwards is labelled "after the final test". Confirm
+    with the junior's own words and their reason; a delegation is refused. Confirming
+    scores the final test; then run `diag.final_test` and read the final figures first,
+    as **final evidence**, with the development figures next to them, labelled as such.
+    After the opening, label every later change, proposed or made, as after the final
+    test (`final_test.changed_after`), and keep development figures out of any sentence
+    about the final result.
 11. **Speak to the junior.** Answer in the junior's language. Engine texts carry an
     `audience`: show the junior only the junior variant (`junior_message`,
     `junior_text`, `recap_junior`); a text with `audience: agent` is an instruction for
@@ -369,7 +410,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} decide note --about DECISION --kind correction --text "<the junior's corrected reasoning, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note --resolve NOTE_ID --text "<the junior's words that resolve it, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
-{{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] [--rule threshold:T --rule capacity:K --rule share:P] --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task regression -->
 {{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:end -->
@@ -398,7 +439,8 @@ repeat the figures of a current result; any other number is refused
 Activities: `split`, `eda.quality` (no target, before or after the split),
 `eda.target_rate`, `eda.special_values`, `eda.rate_by --column NAME`,
 `eda.single_feature_signal` (a high signal only raises a legitimacy question),
-`fit.baseline`, `fit.logistic`, `policy.evaluate --rule R` (repeatable). Changing a
+`fit.baseline`, `fit.logistic`, `fit.variant`, `policy.evaluate --rule R` (repeatable),
+`diag.binary`, `diag.final_test`. Changing a
 capacity or a threshold is a new `policy.evaluate`: it reuses the stored predictions and
 does not refit, and it always evaluates the adopted rule too. A new policy needs a new
 confirmation.
@@ -423,8 +465,9 @@ current result; any other number is refused (`literal_number_in_text`).
 
 Activities: `split`, `eda.quality`, `eda.target_summary`, `eda.special_values`, `eda.mean_by
 --column NAME` (a feature or the time column), `eda.single_feature_signal`, `fit.baseline` (the training mean), `fit.linear`,
-`evaluate.regression` (MAE and RMSE in the target unit with paired bootstrap intervals,
-the linear-minus-baseline differences, residuals, residuals by period). Changing the model
+`fit.variant`, `evaluate.regression` (MAE and RMSE in the target unit with paired
+bootstrap intervals, the linear-minus-baseline differences, residuals, residuals by
+period), `diag.regression`, `diag.final_test`. Changing the model
 choice reuses the stored predictions and the evaluation and does not refit.
 
 Explain the split before it is confirmed: with an ordinal cutoff, later periods are
@@ -436,12 +479,13 @@ split result reports in both partitions, and do not claim the partitions are ind
 
 Since v0.2b a new study also has `model_variant` and `final_test`. Its `split` is the
 cross-validation `next_action.default_value` drafts (`{"method", "folds", "seed"}`): every
-figure is out of fold, development evidence. After the fits, the junior names one variant
-(`{"kind": "regularisation", "strength": "weak" | "strong"}` or `{"kind": "drop_group",
-"group": G}`), then `run fit.variant`; the choice may pick it (a choice value ending in
-`@fit.variant`, or `"fit.variant"`). After the choice, `final_test` (`{"model", "rule"}`,
-the drafted value) is confirmed in the junior's own words with a reason; confirming it
-scores the sealed final test once, and anything changed afterwards is after the final test.
+figure is out of fold, development evidence, and "validation rows" in the rules above
+reads "the out-of-fold predictions of the development rows". The variant is
+`{"kind": "regularisation", "strength": "weak" | "strong"}` or `{"kind": "drop_group",
+"group": G}`, then `run fit.variant`; the choice may pick it (a choice value ending in
+`@fit.variant`, or `"fit.variant"`). Diagnostics: `diag.binary` or `diag.regression`
+(development evidence, before the choice), `diag.final_test` (after the opening only).
+`final_test` (`{"model", "rule"}`, the drafted value) follows rule 10.
 
 Deliverables, regenerated after every change: `reports/study.html` (the report; every
 number in it is cited from a result) and `notebooks/study_generated.py` (a Marimo notebook

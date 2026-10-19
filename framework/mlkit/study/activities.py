@@ -185,8 +185,17 @@ REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regressi
 READ_ONLY_ENV = 'HYPOTRAIL_READ_ONLY'
 SPLIT_BLOBS = ('train', 'validation')
 PREDICTIONS = 'predictions'
+# WP-B6a: the Newton-Cholesky solver reaches the optimum of the penalised likelihood. The
+# default L-BFGS stopped early along the nearly flat direction that a full one-hot encoding
+# and the intercept share, so a stored coefficient could lie outside its own bootstrap
+# interval (a one-hot category of a real case). Results recorded without ``solver`` keep
+# L-BFGS.
+# A tight tolerance (quadratic convergence: a few more steps) keeps the solver's own noise
+# along that direction far below the width of a bootstrap interval.
+LOGISTIC_SOLVER = 'newton-cholesky'
+LOGISTIC_TOL = 1e-8
 LOGISTIC_PARAMS = {'model': 'logistic', 'implementation': 'mlkit.classical.pipeline',
-                   'max_iter': 1000,
+                   'max_iter': 1000, 'solver': LOGISTIC_SOLVER, 'tol': LOGISTIC_TOL,
                    'preprocessing': 'numeric: median imputation and standardisation; '
                                     'categorical: most frequent imputation and one-hot encoding; '
                                     'fitted on training rows only',
@@ -1368,6 +1377,10 @@ def compute(store, plan_: Mapping) -> dict:
         if activity == DISTRIBUTION:      # C8: the column only, never the outcome
             train = train[[plan_['params']['column']]]
         params = plan_['params']
+        if split_scheme(store, plan_['inputs']['results'][SPLIT]) is not None:
+            # WP-B6a: under cross-validation the "training" rows are every development row,
+            # and the bins are said to be cut on them (not part of the identity).
+            params = {**params, 'rows_word': 'development'}
         if activity == SIGNAL:
             params = {**params, 'candidates': plan_['inputs']['candidates'],
                       'availability': plan_['inputs']['availability'],

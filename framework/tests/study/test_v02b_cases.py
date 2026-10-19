@@ -81,12 +81,25 @@ def test_bank_full_is_ordered_by_line_and_contains_bank(tmp_path):
     flow = Flow(tmp_path / 'study', BANK_FULL)
     init = flow.init()
     final = init['final_test']
-    assert final['method'] == 'temporal' and final['rows'] == 9042
-    assert final['development_rows'] == 36169 and final['schema_check'] == 'pass'
+    # WP-B6a (review M2): the latest 9,042 lines less the 893 of them that are bank.csv
+    # records (already exposed by the tutorial and any Bank study): 8,149 sealed rows.
+    prior = set(c.prior_exposed_keys(case))
+    assert len(prior) == 4521
+    tail = [f'L{n}' for n in range(45212 - 9042 + 1, 45213)]           # the latest lines
+    assert sum(k in prior for k in tail) == 893
+    assert final['method'] == 'temporal' and final['rows'] == 8149
+    assert final['excluded_prior_exposed'] == 893
+    assert final['development_rows'] == 37062 and final['schema_check'] == 'pass'
     keys = fk.partition_keys(flow.study, 'final_test')
-    assert keys == [f'L{n}' for n in range(45212 - 9042 + 1, 45213)]   # the latest lines
+    assert keys == [k for k in tail if k not in prior]
+    assert not prior & set(keys)                       # no bank.csv record is sealed
+    assert prior <= set(fk.partition_keys(flow.study, 'development'))
+    record = flow.state()['partition']['prior_exposed']
+    assert record == {'path': 'data/prior-exposed-rows.txt',
+                      'sha256': case.prior_exposed_rows['sha256'], 'declared_rows': 4521,
+                      'excluded_rows': 893}
     card = flow.call('data', '--study', flow.study)
-    assert card['development']['rows'] == 36169
+    assert card['development']['rows'] == 37062
     assert card['development']['duplicates']['n_groups'] == 0
     assert flow.view()['scenario_defaults']['capacity_share']['value'] == 0.1
 

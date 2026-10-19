@@ -437,6 +437,15 @@ prior_exposure:
     them (use-cases/bank-marketing). Those rows are not unseen.
   status: observed
   source: Fact data_contains_sample
+prior_exposed_rows:
+  path: data/prior-exposed-rows.txt
+  sha256: db0cdae76b7c1a7749a1740cbfaa6ca28029745305783e39f1ac31b12e319e8e
+  rows: 4521
+  match: row_key
+  status: observed
+  source: 'Fact data_contains_sample; data/prior-exposed-rows.txt lists the row keys of the bank-full.csv
+    records that are bank.csv records (exact record match after csv parsing, build_case.py). They stay
+    development rows: the sealed final test holds none of them.'
 order:
   by: line
   direction: ascending

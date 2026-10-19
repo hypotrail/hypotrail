@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
+       "result_id": "83369a7ca2440858f0edd3e0b1d279c7e5084040b0f9c52ffabaa988f8abed03",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "2b631b03e9689b44015d9a77f6acc781c0e12a733f1f1561081c745bdda5a3fb",
+       "result_id": "5bb36d11bb5bae4744d78fc3224bd1c3c87dc285ce8de4fb586570e658420ce9",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "866aeaeb9dbff332dc4c8d126e66ecfd9eeb156aaf1f0cad5ba2525851ab63dd",
+       "result_id": "3b4b0d1cf741a2740ec94276ad3bf723a661e0051405bc517da4eeb6b2bfd4df",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "866aeaeb9dbff332dc4c8d126e66ecfd9eeb156aaf1f0cad5ba2525851ab63dd",
+       "result_id": "3b4b0d1cf741a2740ec94276ad3bf723a661e0051405bc517da4eeb6b2bfd4df",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -331,20 +331,20 @@
        "text": "At threshold:0.2, the logistic model's precision ranges from "
       },
       {
-       "text": "28.2%",
-       "result_id": "866aeaeb9dbff332dc4c8d126e66ecfd9eeb156aaf1f0cad5ba2525851ab63dd",
+       "text": "28.3%",
+       "result_id": "3b4b0d1cf741a2740ec94276ad3bf723a661e0051405bc517da4eeb6b2bfd4df",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
-       "value": 0.28153703501690847,
+       "value": 0.2828227931488801,
        "format": "pct1"
       },
       {
        "text": " to "
       },
       {
-       "text": "48.0%",
-       "result_id": "866aeaeb9dbff332dc4c8d126e66ecfd9eeb156aaf1f0cad5ba2525851ab63dd",
+       "text": "47.8%",
+       "result_id": "3b4b0d1cf741a2740ec94276ad3bf723a661e0051405bc517da4eeb6b2bfd4df",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
-       "value": 0.48000980392156856,
+       "value": 0.4783043478260867,
        "format": "pct1"
       },
       {
@@ -489,6 +489,22 @@
     "id": "cross_validation",
     "term": "Cross-validation",
     "definition": "Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the clients, each model is fitted five times and judged each time on clients it did not see.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "out_of_fold",
+    "term": "Out-of-fold prediction",
+    "definition": "The score of a development row given by the model fitted on the other folds, so by a model that never saw that row. Every development row gets one, and the comparisons and the decision rule are read on them; they are development evidence, because the choice is made on them. For example, a client in the third fold is scored by the model fitted on the other folds' clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "fold_spread",
+    "term": "Fold spread",
+    "definition": "How much a figure moves from one fold to another, given as its lowest and highest fold value. A difference between two models smaller than the spread is not a difference this study can see. For example, if the ranking quality of the call list ranges widely across folds, a small gain of the variant over the candidate says little.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -756,7 +772,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -766,7 +782,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -776,7 +792,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -786,7 +802,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+       "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -872,7 +888,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
+       "result_id": "83369a7ca2440858f0edd3e0b1d279c7e5084040b0f9c52ffabaa988f8abed03",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -1086,7 +1102,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
+       "result_id": "83369a7ca2440858f0edd3e0b1d279c7e5084040b0f9c52ffabaa988f8abed03",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

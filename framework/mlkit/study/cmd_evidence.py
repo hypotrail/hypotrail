@@ -138,10 +138,31 @@ def _select(items: list[dict], promoted: set, limit: int) -> tuple[list[dict], b
     return first + kept, len(kept) < len(others)
 
 
+def _cross_validated(study: read.Study, entry: Mapping) -> bool:
+    """WP-B6a: does ``entry`` describe a cross-validated study's rows: a split with
+    ``scheme: cross_validation``, a fit or an evaluation of out-of-fold predictions, or a
+    result computed on such a split?"""
+    from . import errors
+    values = (entry.get('output') or {}).get('values') or {}
+    if values.get('scheme') == 'cross_validation' or values.get('evaluation') == 'out_of_fold':
+        return True
+    split = ((entry.get('inputs') or {}).get('results') or {}).get('split')
+    if not isinstance(split, str):
+        return False
+    try:
+        parent = study.result(split)
+    except errors.StudyError:
+        return False
+    return ((parent.get('output') or {}).get('values') or {}).get('scheme') == 'cross_validation'
+
+
 def _headline(task: str, activity: str | None, rid: str, citer: cite.Citer,
-              values: Mapping) -> dict | None:
+              values: Mapping, cv: bool = False) -> dict | None:
     data = texts.load('evidence')
-    table = data.get('regression_headlines' if task == st.REGRESSION else 'headlines') or {}
+    name = 'regression_headlines' if task == st.REGRESSION else 'headlines'
+    table = data.get(name) or {}
+    if cv:
+        table = {**table, **(data.get(name.replace('headlines', 'cv_headlines')) or {})}
     template = table.get(activity or '')
     if not template:
         return None
@@ -176,7 +197,8 @@ def _result_items(study: read.Study, view: Mapping, selected: list[dict], slots:
             'created': entry.get('created'), 'started_revision': entry.get('started_revision'),
             'execution_id': entry.get('execution_id'), 'exposure_id': entry.get('exposure_id'),
             'values': entry['output'].get('values') if shown else None,
-            'headline': _headline(task, entry.get('activity'), rid, citer, values)
+            'headline': _headline(task, entry.get('activity'), rid, citer, values,
+                                  _cross_validated(study, entry))
             if shown else None})
         if integrity != 'ok' and out[-1]['stale_reason'] is None:
             out[-1]['stale_reason'] = {'reason': integrity, 'since': None}

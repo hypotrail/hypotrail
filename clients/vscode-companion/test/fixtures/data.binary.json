@@ -54,7 +54,8 @@
    "audience": "junior",
    "opening": null,
    "post_final_test": false,
-   "changed_after": []
+   "changed_after": [],
+   "excluded_prior_exposed": 0
   },
   "groups": [
    {

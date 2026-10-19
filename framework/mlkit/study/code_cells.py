@@ -310,6 +310,7 @@ assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE'''
     seed = (item.get('params') or {}).get('seed')
     if not isinstance(seed, int):
         return None
+    solver = _solver_arg(item)
     code = head + f'''y_validation = {_positive_expr("development", target, positive)}.astype(int)
 score = np.zeros(len(development))
 for _fold in sorted(folds.unique()):
@@ -318,7 +319,7 @@ for _fold in sorted(folds.unique()):
                                       development[_held])
     _model = Pipeline([
         ("prepare", _prepare_columns(_X_fit)),
-        ("model", LogisticRegression(max_iter=1000, random_state={seed})),
+        ("model", LogisticRegression(max_iter=1000, random_state={seed}{solver})),
     ])
     _model.fit(_X_fit, y_validation[~_held])
     score[_held] = _model.predict_proba(_X_held)[:, 1]
@@ -327,6 +328,15 @@ print(f"Out-of-fold AUC: {{validation_auc:.4f}}")
 
 assert abs(validation_auc - candidate["validation"]["roc_auc"]) < FIT_TOLERANCE'''
     return 'recompute_model', code
+
+
+def _solver_arg(item: Mapping) -> str:
+    """The fit's recorded solver as a keyword argument (WP-B6a), or nothing for a fit
+    recorded with scikit-learn's default."""
+    params = item.get('params') or {}
+    solver, tol = params.get('solver'), params.get('tol')
+    out = f', solver="{solver}"' if isinstance(solver, str) else ''
+    return out + (f', tol={float(tol)!r}' if isinstance(tol, (int, float)) else '')
 
 
 def fit_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str, str] | None:
@@ -378,13 +388,14 @@ assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE'''
     seed = (item.get('params') or {}).get('seed')
     if not isinstance(seed, int):
         return None
+    solver = _solver_arg(item)
     code = head + f'''y_train = {_positive_expr("train", target, positive)}.astype(int)
 y_validation = {_positive_expr("validation", target, positive)}.astype(int)
 
 {PIPELINE}
 model = Pipeline([
     ("prepare", prepare_columns),
-    ("model", LogisticRegression(max_iter=1000, random_state={seed})),
+    ("model", LogisticRegression(max_iter=1000, random_state={seed}{solver})),
 ])
 model.fit(X_train, y_train)
 score = model.predict_proba(X_validation)[:, 1]

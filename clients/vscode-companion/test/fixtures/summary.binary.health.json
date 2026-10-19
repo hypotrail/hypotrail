@@ -389,7 +389,8 @@
    "schema_check": "pass",
    "opening": null,
    "post_final_test": false,
-   "changed_after": []
+   "changed_after": [],
+   "excluded_prior_exposed": 0
   },
   "criterion": {
    "decision_status": "confirmed",
@@ -406,7 +407,8 @@
    "rule": "capacity:100",
    "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
    "contradicts_verdict": false,
-   "final_test": null
+   "final_test": null,
+   "model": "fit.logistic"
   },
   "eda_looks": {
    "target_looks": 3,
@@ -464,6 +466,9 @@
   },
   "trials": {
    "count": 2
+  },
+  "scenario_defaults": {
+   "capacity_share": 0.1
   },
   "moments": [
    {

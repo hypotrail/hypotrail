@@ -155,8 +155,8 @@ verdict_card:
   limits: Main limits
   all_limits: All the limits of this study
   development: Development evidence
-  development_note: The figures above are out-of-fold figures on the development rows, used to choose; they are optimistic.
-  validation_note: The figures above are on the validation rows, used to choose; they are optimistic.
+  development_note: The figures that follow are out-of-fold figures on the development rows, used to choose; they are optimistic, and they are not the final result.
+  validation_note: The figures that follow are on the validation rows, used to choose; they are optimistic, and they are not the final result.
   final: Final test
   final_absent: This study has no final test; nothing in it is independent evidence.
   final_sealed: Still sealed. It is opened once, after the choice, in your own words.

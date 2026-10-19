@@ -48,7 +48,9 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         # view's ``deliverables``.
                         'mode', 'deliverables',
                         # v0.2b (WP-B1): the trial count.
-                        'trials')
+                        'trials',
+                        # v0.2b (WP-B6a): the scenario defaults, values only.
+                        'scenario_defaults')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
@@ -365,7 +367,9 @@ EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test'
 FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
                           'schema_check',
                           # v0.2b (WP-B1): the opening, and what changed after it.
-                          'opening', 'post_final_test', 'changed_after')
+                          'opening', 'post_final_test', 'changed_after',
+                          # v0.2b (WP-B6a): rows kept out as already exposed.
+                          'excluded_prior_exposed')
 PARTITION_RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on',
                          'bins', 'order', 'dataset_sha256', 'n_rows', 'development',
                          'final_test', 'schema_check', 'created', 'implementation')
@@ -974,7 +978,12 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     # WP-B1: the final test is opened once (optional record key ``opening``); WP-B3: the
     # optional ``groups`` of a case whose identical records are grouped.
     assert partition.STATUSES == ('sealed', 'opened') and partition.STATUS_ABSENT == 'absent'
-    assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening')
+    assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening', 'prior_exposed')
+    # WP-B6a: rows the case declares as already exposed, kept out of the final test; the
+    # opening's time in the status view.
+    assert partition.PRIOR_EXPOSED_KEYS == ('path', 'sha256', 'declared_rows', 'excluded_rows')
+    assert partition.OPENING_VIEW_KEYS == ('revision', 'model', 'rule', 'result_id',
+                                           'user_words', 'time')
     assert partition.OPENING_KEYS == ('revision', 'execution_id', 'proposal_id', 'user_words',
                                       'model', 'rule', 'time', 'result_id')
     assert partition.METHODS == ('stratified', 'quantile_stratified', 'temporal')
@@ -987,6 +996,7 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     assert tuple(v['final_test']) == FINAL_TEST_STATUS_KEYS
     assert tuple(_run('status', '--summary', '--study', study).payload['final_test']) == \
         FINAL_TEST_STATUS_KEYS
+    assert init['final_test']['excluded_prior_exposed'] == 0   # the case declares none
 def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_case_dir):
     """ADR 0005: modes, languages, ``mode set``, the guided reasons, ``reason_required`` and
     the ``words_contradict_value`` warning."""

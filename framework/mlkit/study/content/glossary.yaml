@@ -143,6 +143,13 @@ terms:
   cross_validation:
     term: Cross-validation
     definition: Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the clients, each model is fitted five times and judged each time on clients it did not see.
+  # v0.2b (WP-B6a): the vocabulary of a cross-validated study.
+  out_of_fold:
+    term: Out-of-fold prediction
+    definition: The score of a development row given by the model fitted on the other folds, so by a model that never saw that row. Every development row gets one, and the comparisons and the decision rule are read on them; they are development evidence, because the choice is made on them. For example, a client in the third fold is scored by the model fitted on the other folds' clients.
+  fold_spread:
+    term: Fold spread
+    definition: How much a figure moves from one fold to another, given as its lowest and highest fold value. A difference between two models smaller than the spread is not a difference this study can see. For example, if the ranking quality of the call list ranges widely across folds, a small gain of the variant over the candidate says little.
   final_test:
     term: Final test (holdout)
     definition: Rows set apart and sealed before any look at the data, opened once, after the model and the decision rule are frozen, to measure them on rows that played no part in any choice. It is the study's only independent evidence. For example, the clients sealed at the start are scored once by the chosen model and call list; any change made after that opening is reported as made after the final test.
@@ -283,6 +290,13 @@ regression_terms:
   cross_validation:
     term: Cross-validation
     definition: Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.
+  # v0.2b (WP-B6a): the vocabulary of a cross-validated study.
+  out_of_fold:
+    term: Out-of-fold prediction
+    definition: The prediction for a development row made by the model fitted on the other folds, so by a model that never saw that row. Every development row gets one, and the errors and the model choice are read on them; they are development evidence, because the choice is made on them. For example, a car in the third fold is predicted by the model fitted on the other folds' cars.
+  fold_spread:
+    term: Fold spread
+    definition: How much a figure moves from one fold to another, given as its lowest and highest fold value. A difference between two models smaller than the spread is not a difference this study can see. For example, if the mean error ranges widely across folds, a small gain of the variant over the candidate says little.
   final_test:
     term: Final test (holdout)
     definition: Rows set apart and sealed before any look at the data, opened once, after the model is chosen, to measure it on rows that played no part in any choice. It is the study's only independent evidence. For example, the cars sealed at the start are predicted once by the chosen model; any change made after that opening is reported as made after the final test.

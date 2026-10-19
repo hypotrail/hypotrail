@@ -29,7 +29,8 @@
     "recap_junior",
     "mode",
     "deliverables",
-    "trials"
+    "trials",
+    "scenario_defaults"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -61,6 +62,7 @@
     "mode",
     "deliverables",
     "trials",
+    "scenario_defaults",
     "moments",
     "pauses",
     "last_session",

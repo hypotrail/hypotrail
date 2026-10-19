@@ -215,6 +215,10 @@ def _fit_predict(case: c.Case, train, test, inputs: Mapping, params: Mapping, bi
         y_train = positive(train, case)
         spec = {'task': {'kind': 'binary'}, 'model_options': {}}
         model = classical.pipeline('logistic', X_train, spec, params['seed'])
+        if params.get('solver') is not None:
+            model.set_params(model__solver=str(params['solver']))
+        if params.get('tol') is not None:
+            model.set_params(model__tol=float(params['tol']))
         if params.get('C') is not None:
             model.set_params(model__C=float(params['C']))
         model.fit(X_train, y_train.to_numpy())

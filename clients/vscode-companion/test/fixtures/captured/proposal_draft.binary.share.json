@@ -22,10 +22,10 @@
   "value": "share:0.2",
   "proposable": true,
   "missing": [],
-  "restatement": "Adopt the rule share:0.2: act on the 20% highest-scored rows, 723 of the 3,617 validation rows. There the logistic model's selection had precision 25.2% against 11.5% for the baseline, and recall 43.6%. These validation rows were used to choose the rule, so these figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 6412e78a).",
+  "restatement": "Adopt the rule share:0.2: act on the 20% highest-scored rows, 723 of the 3,617 development rows in the out-of-fold predictions. There the logistic model's selection had precision 25.3% against 11.5% for the baseline, and recall 43.9%. These predictions were used to choose the rule, so these figures are development evidence and optimistic.",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result e3ca1a05).",
   "evidence": {
-   "result_id": "6412e78a5fd4d628d726c014b6ef827dcc4f8ab1c7f83d58210d99a9afcc8a85",
+   "result_id": "e3ca1a05f4d0b0b8e07ff5cabb596a13010bcf993198f2defe376d4114b6949d",
    "activity": "policy.evaluation",
    "figures": [
     {
@@ -40,8 +40,8 @@
     },
     {
      "path": "rules.[share:0.2].models.[fit.logistic].precision",
-     "value": 0.2517289073305671,
-     "shown": "25.2%"
+     "value": 0.25311203319502074,
+     "shown": "25.3%"
     },
     {
      "path": "rules.[share:0.2].models.[fit.baseline].precision",
@@ -50,8 +50,8 @@
     },
     {
      "path": "rules.[share:0.2].models.[fit.logistic].recall",
-     "value": 0.4364508393285372,
-     "shown": "43.6%"
+     "value": 0.43884892086330934,
+     "shown": "43.9%"
     }
    ]
   },

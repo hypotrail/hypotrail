@@ -36,7 +36,9 @@ def _raw(case_dir):
 
 
 # WP-B1: the surfaces also say how the final test was opened, and what changed after it.
-SEALED_EXTRA = {'opening': None, 'post_final_test': False, 'changed_after': []}
+SEALED_EXTRA = {'opening': None, 'post_final_test': False, 'changed_after': [],
+                # WP-B6a: rows kept out as already exposed (none declared).
+                'excluded_prior_exposed': 0}
 
 
 def _half_up(n, fraction=partition.DEFAULT_FRACTION):
@@ -305,7 +307,8 @@ def test_a_legacy_study_without_partition_loads_runs_and_shows_no_final_test(tmp
     flow = Flow(tmp_path / 'study', case_dir)
     assert 'partition' not in flow.state()
     absent = {'status': 'absent', 'rows': None, 'method': None, 'fraction': None,
-              'development_rows': None, 'schema_check': None, **SEALED_EXTRA}
+              'development_rows': None, 'schema_check': None, **SEALED_EXTRA,
+              'excluded_prior_exposed': None}                    # no final test at all
     assert flow.view()['final_test'] == absent
     assert flow.call('status', '--summary', '--study', flow.study)['final_test'] == absent
     flow.pauses()

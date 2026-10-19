@@ -64,7 +64,8 @@ def test_a_new_study_recaps_the_goal_and_the_first_decision(flow):
         'final_test', 'criterion', 'eda_looks', 'recap')
     # WP-A7: the confirmation mode and the notebook launch commands follow them; WP-B1: the
     # trial count, last.
-    assert keys[-5:] == ('recap_audience', 'recap_junior', 'mode', 'deliverables', 'trials')
+    assert keys[-6:] == ('recap_audience', 'recap_junior', 'mode', 'deliverables', 'trials',
+                         'scenario_defaults')                 # WP-B6a: additive, last
     intended = summary['goal']['intended_use']['value']
     assert recap[0].startswith(f'Goal: {intended}; the prediction is made ')
     assert recap[1] == 'Decided: nothing yet.'

@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
   "status": "promoted",
-  "result_id": "d336252c94b7905adbd095b9d4f44aee49c4f0a47e527f42c7367fad97f5540e",
+  "result_id": "69bc31a7d7d7a6c58d6bfde8cea1e63fbe24fc96fc69fbb49711bf29010f221c",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -88,45 +88,45 @@
         "share": 0.15,
         "capacity": 543,
         "selected": 543.0,
-        "true_positives": 162.0,
-        "false_positives": 381.0,
-        "recall": 0.38848920863309355,
-        "false_positive_rate": 0.1190625,
-        "precision": 0.2983425414364641,
-        "lift": 2.5877817083349894
+        "true_positives": 163.0,
+        "false_positives": 380.0,
+        "recall": 0.3908872901678657,
+        "false_positive_rate": 0.11875,
+        "precision": 0.3001841620626151,
+        "lift": 2.603755669497551
        },
        {
         "share": 0.2,
         "capacity": 723,
         "selected": 723.0,
-        "true_positives": 182.0,
-        "false_positives": 541.0,
-        "recall": 0.4364508393285372,
-        "false_positive_rate": 0.1690625,
-        "precision": 0.2517289073305671,
-        "lift": 2.183461529531561
+        "true_positives": 183.0,
+        "false_positives": 540.0,
+        "recall": 0.43884892086330934,
+        "false_positive_rate": 0.16875,
+        "precision": 0.25311203319502074,
+        "lift": 2.195458570902614
        },
        {
         "share": 0.25,
         "capacity": 904,
         "selected": 904.0,
-        "true_positives": 204.0,
-        "false_positives": 700.0,
-        "recall": 0.4892086330935252,
-        "false_positive_rate": 0.21875,
-        "precision": 0.22566371681415928,
-        "lift": 1.9573756923664607
+        "true_positives": 203.0,
+        "false_positives": 701.0,
+        "recall": 0.486810551558753,
+        "false_positive_rate": 0.2190625,
+        "precision": 0.2245575221238938,
+        "lift": 1.9477807134823113
        },
        {
         "share": 0.3,
         "capacity": 1085,
         "selected": 1085.0,
-        "true_positives": 228.0,
-        "false_positives": 857.0,
-        "recall": 0.5467625899280576,
-        "false_positive_rate": 0.2678125,
-        "precision": 0.21013824884792626,
-        "lift": 1.8227099426449622
+        "true_positives": 226.0,
+        "false_positives": 859.0,
+        "recall": 0.5419664268585132,
+        "false_positive_rate": 0.2684375,
+        "precision": 0.20829493087557605,
+        "lift": 1.8067212589375503
        },
        {
         "share": 0.35,
@@ -143,12 +143,12 @@
         "share": 0.4,
         "capacity": 1447,
         "selected": 1447.0,
-        "true_positives": 280.0,
-        "false_positives": 1167.0,
-        "recall": 0.6714628297362111,
-        "false_positive_rate": 0.3646875,
-        "precision": 0.193503800967519,
-        "lift": 1.6784250553945232
+        "true_positives": 279.0,
+        "false_positives": 1168.0,
+        "recall": 0.6690647482014388,
+        "false_positive_rate": 0.365,
+        "precision": 0.19281271596406357,
+        "lift": 1.6724306801966857
        },
        {
         "share": 0.45,
@@ -176,12 +176,12 @@
         "share": 0.55,
         "capacity": 1989,
         "selected": 1989.0,
-        "true_positives": 330.0,
-        "false_positives": 1659.0,
-        "recall": 0.7913669064748201,
-        "false_positive_rate": 0.5184375,
-        "precision": 0.16591251885369532,
-        "lift": 1.4391021119755778
+        "true_positives": 329.0,
+        "false_positives": 1660.0,
+        "recall": 0.7889688249400479,
+        "false_positive_rate": 0.51875,
+        "precision": 0.16540975364504776,
+        "lift": 1.4347411964847427
        },
        {
         "share": 0.6,
@@ -209,12 +209,12 @@
         "share": 0.7,
         "capacity": 2532,
         "selected": 2532.0,
-        "true_positives": 370.0,
-        "false_positives": 2162.0,
-        "recall": 0.8872901678657075,
-        "false_positive_rate": 0.675625,
-        "precision": 0.146129541864139,
-        "lift": 1.267507321157292
+        "true_positives": 371.0,
+        "false_positives": 2161.0,
+        "recall": 0.8896882494004796,
+        "false_positive_rate": 0.6753125,
+        "precision": 0.14652448657187994,
+        "lift": 1.2709330166198793
        },
        {
         "share": 0.75,
@@ -231,12 +231,12 @@
         "share": 0.8,
         "capacity": 2894,
         "selected": 2894.0,
-        "true_positives": 394.0,
-        "false_positives": 2500.0,
-        "recall": 0.9448441247002398,
-        "false_positive_rate": 0.78125,
-        "precision": 0.13614374568071874,
-        "lift": 1.180891913974004
+        "true_positives": 393.0,
+        "false_positives": 2501.0,
+        "recall": 0.9424460431654677,
+        "false_positive_rate": 0.7815625,
+        "precision": 0.13579820317899102,
+        "lift": 1.1778947263750852
        },
        {
         "share": 0.85,
@@ -285,8 +285,8 @@
       ],
       "definition": "For the top share of the rows by score: recall is the share of the positive rows found (the cumulative gain, and the true positive rate of the ROC curve); lift is the precision over the base rate; the false positive rate is the share of the negative rows selected."
      },
-     "roc_auc": 0.7152517985611511,
-     "average_precision": 0.32221465785588066,
+     "roc_auc": 0.7153657074340528,
+     "average_precision": 0.3223676976907518,
      "calibration": {
       "binning": "10 equal-count bins of the score, in score order",
       "bins": [
@@ -294,9 +294,9 @@
         "bin": 1,
         "n": 362,
         "n_positive": 9,
-        "score_min": 0.009625779050571137,
-        "score_max": 0.03062590002928132,
-        "mean_predicted": 0.023626681412045016,
+        "score_min": 0.009567420617237352,
+        "score_max": 0.030645556217617345,
+        "mean_predicted": 0.023617984894779637,
         "observed_rate": 0.024861878453038673,
         "low": 0.013133963468143346,
         "high": 0.046568014790693196,
@@ -305,46 +305,46 @@
        {
         "bin": 2,
         "n": 362,
-        "n_positive": 14,
-        "score_min": 0.03063800356606568,
-        "score_max": 0.04273441117415278,
-        "mean_predicted": 0.036838641399735784,
-        "observed_rate": 0.03867403314917127,
-        "low": 0.02317479947794019,
-        "high": 0.06386142359895342,
+        "n_positive": 15,
+        "score_min": 0.03066875463341658,
+        "score_max": 0.0427310929622015,
+        "mean_predicted": 0.03684939386278712,
+        "observed_rate": 0.04143646408839779,
+        "low": 0.02526933157094898,
+        "high": 0.06723374046955605,
         "inside_interval": true
        },
        {
         "bin": 3,
         "n": 362,
-        "n_positive": 24,
-        "score_min": 0.04274443970782147,
-        "score_max": 0.05772586139201383,
-        "mean_predicted": 0.04994234964017429,
-        "observed_rate": 0.06629834254143646,
-        "low": 0.04495370583707839,
-        "high": 0.09675100687592936,
+        "n_positive": 22,
+        "score_min": 0.042778034268859455,
+        "score_max": 0.05778057679671768,
+        "mean_predicted": 0.04998596024343198,
+        "observed_rate": 0.06077348066298342,
+        "low": 0.04047304586309551,
+        "high": 0.09029796892268942,
         "inside_interval": true
        },
        {
         "bin": 4,
         "n": 361,
-        "n_positive": 27,
-        "score_min": 0.05773204804165699,
-        "score_max": 0.07292456861530583,
-        "mean_predicted": 0.06576834370923756,
-        "observed_rate": 0.07479224376731301,
-        "low": 0.05190798631832022,
-        "high": 0.10663062661141545,
+        "n_positive": 28,
+        "score_min": 0.05796514043246288,
+        "score_max": 0.07300544020091354,
+        "mean_predicted": 0.06573841108304102,
+        "observed_rate": 0.07756232686980609,
+        "low": 0.05420546790587061,
+        "high": 0.10981497816438796,
         "inside_interval": true
        },
        {
         "bin": 5,
         "n": 362,
         "n_positive": 29,
-        "score_min": 0.07294186777137901,
-        "score_max": 0.09149735436031246,
-        "mean_predicted": 0.08198419025745775,
+        "score_min": 0.07300977508178974,
+        "score_max": 0.09138691521603073,
+        "mean_predicted": 0.08198362445899086,
         "observed_rate": 0.08011049723756906,
         "low": 0.05635498954182924,
         "high": 0.1126839679892356,
@@ -353,67 +353,67 @@
        {
         "bin": 6,
         "n": 362,
-        "n_positive": 34,
-        "score_min": 0.09154402082760103,
-        "score_max": 0.10760963004030658,
-        "mean_predicted": 0.09943524482685098,
-        "observed_rate": 0.09392265193370165,
-        "low": 0.0679910309747018,
-        "high": 0.1283821713744201,
+        "n_positive": 35,
+        "score_min": 0.09139802927253214,
+        "score_max": 0.10753839333091011,
+        "mean_predicted": 0.0994031541370522,
+        "observed_rate": 0.09668508287292818,
+        "low": 0.07034219808111107,
+        "high": 0.13149785323162225,
         "inside_interval": true
        },
        {
         "bin": 7,
         "n": 361,
-        "n_positive": 52,
-        "score_min": 0.10767465302489607,
-        "score_max": 0.12833268006723444,
-        "mean_predicted": 0.1176084402077607,
-        "observed_rate": 0.1440443213296399,
-        "low": 0.11156736444602958,
-        "high": 0.18401707699677847,
+        "n_positive": 53,
+        "score_min": 0.10767567913375409,
+        "score_max": 0.1283330789886041,
+        "mean_predicted": 0.11761050744782378,
+        "observed_rate": 0.14681440443213298,
+        "low": 0.11402689634257346,
+        "high": 0.1870393782407575,
         "inside_interval": true
        },
        {
         "bin": 8,
         "n": 362,
-        "n_positive": 46,
-        "score_min": 0.12834736188808127,
-        "score_max": 0.15541324539338988,
-        "mean_predicted": 0.14093803312341968,
-        "observed_rate": 0.1270718232044199,
-        "low": 0.09663540922161765,
-        "high": 0.1653399806908413,
+        "n_positive": 43,
+        "score_min": 0.1283334712664542,
+        "score_max": 0.15579837205783095,
+        "mean_predicted": 0.14092345687328098,
+        "observed_rate": 0.11878453038674033,
+        "low": 0.08939365690930673,
+        "high": 0.1561811861123179,
         "inside_interval": true
        },
        {
         "bin": 9,
         "n": 362,
-        "n_positive": 54,
-        "score_min": 0.15543139634351016,
-        "score_max": 0.20368947684435887,
-        "mean_predicted": 0.17593737520847144,
-        "observed_rate": 0.14917127071823205,
-        "low": 0.11616360671528198,
-        "high": 0.1895465749060683,
+        "n_positive": 55,
+        "score_min": 0.1558069118374713,
+        "score_max": 0.20272595320293949,
+        "mean_predicted": 0.17599539944583317,
+        "observed_rate": 0.15193370165745856,
+        "low": 0.11862468694345632,
+        "high": 0.19255234364150534,
         "inside_interval": true
        },
        {
         "bin": 10,
         "n": 361,
         "n_positive": 128,
-        "score_min": 0.20370593704713097,
-        "score_max": 0.889949098074472,
-        "mean_predicted": 0.3638267801743778,
+        "score_min": 0.20437532064466127,
+        "score_max": 0.8897904455969814,
+        "mean_predicted": 0.3641139980941199,
         "observed_rate": 0.3545706371191136,
         "low": 0.3069904093710366,
         "high": 0.40521335075151144,
         "inside_interval": true
        }
       ],
-      "brier": 0.09072054231414428,
+      "brier": 0.09071934025194879,
       "brier_base_rate": 0.10199737989644175,
-      "mean_absolute_gap": 0.011213050743149188,
+      "mean_absolute_gap": 0.011793952126972753,
       "bins_outside_interval": 0,
       "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
      },
@@ -481,11 +481,11 @@
          "value": "management",
          "n": 761,
          "n_positive": 104,
-         "selected": 76.0,
+         "selected": 77.0,
          "true_positives": 24.0,
-         "precision": 0.3157894736842105,
-         "precision_low": 0.22230854157063415,
-         "precision_high": 0.42699646345336384,
+         "precision": 0.3116883116883117,
+         "precision_low": 0.21927281991691477,
+         "precision_high": 0.42200035324140456,
          "recall": 0.23076923076923078,
          "recall_low": 0.16026407469596943,
          "recall_high": 0.32045511611996624,
@@ -565,11 +565,11 @@
          "value": "unemployed",
          "n": 101,
          "n_positive": 10,
-         "selected": 5.0,
+         "selected": 4.0,
          "true_positives": 3.0,
-         "precision": 0.6,
-         "precision_low": 0.2307242812760128,
-         "precision_high": 0.882379225767352,
+         "precision": 0.75,
+         "precision_low": 0.30064184258240184,
+         "precision_high": 0.9544127391902995,
          "recall": 0.3,
          "recall_low": 0.10779126740630099,
          "recall_high": 0.6032218525388546,
@@ -599,11 +599,11 @@
          "value": "divorced",
          "n": 433,
          "n_positive": 64,
-         "selected": 82.0,
+         "selected": 81.0,
          "true_positives": 32.0,
-         "precision": 0.3902439024390244,
-         "precision_low": 0.2918468135988424,
-         "precision_high": 0.4984642989184968,
+         "precision": 0.3950617283950617,
+         "precision_low": 0.29568103807990187,
+         "precision_high": 0.5039452267639383,
          "recall": 0.5,
          "recall_low": 0.3810209474394701,
          "recall_high": 0.6189790525605299,
@@ -627,11 +627,11 @@
          "value": "single",
          "n": 955,
          "n_positive": 127,
-         "selected": 112.0,
+         "selected": 113.0,
          "true_positives": 32.0,
-         "precision": 0.2857142857142857,
-         "precision_low": 0.21024839799081713,
-         "precision_high": 0.3753921793235873,
+         "precision": 0.2831858407079646,
+         "precision_low": 0.20831003095179917,
+         "precision_high": 0.3723182794564455,
          "recall": 0.25196850393700787,
          "recall_low": 0.18450608083766096,
          "recall_high": 0.3339951605285366,
@@ -645,7 +645,7 @@
       "false_positives": [
        {
         "row_key": "L4325",
-        "score": 0.8824982228113256,
+        "score": 0.8826544098582253,
         "values": {
          "age": "83",
          "job": "retired",
@@ -663,7 +663,7 @@
        },
        {
         "row_key": "L2072",
-        "score": 0.8628530758803058,
+        "score": 0.8629721568158325,
         "values": {
          "age": "80",
          "job": "retired",
@@ -681,7 +681,7 @@
        },
        {
         "row_key": "L3372",
-        "score": 0.8593948535946722,
+        "score": 0.8570962523411906,
         "values": {
          "age": "31",
          "job": "student",
@@ -699,7 +699,7 @@
        },
        {
         "row_key": "L1444",
-        "score": 0.8180604232229948,
+        "score": 0.8180532531601502,
         "values": {
          "age": "73",
          "job": "retired",
@@ -717,7 +717,7 @@
        },
        {
         "row_key": "L340",
-        "score": 0.7873392536596655,
+        "score": 0.7878032855568858,
         "values": {
          "age": "63",
          "job": "retired",
@@ -737,7 +737,7 @@
       "false_negatives": [
        {
         "row_key": "L2204",
-        "score": 0.016659304006320923,
+        "score": 0.016756583612585217,
         "values": {
          "age": "29",
          "job": "management",
@@ -755,7 +755,7 @@
        },
        {
         "row_key": "L1023",
-        "score": 0.01937638309248918,
+        "score": 0.019360285174735488,
         "values": {
          "age": "45",
          "job": "admin.",
@@ -773,7 +773,7 @@
        },
        {
         "row_key": "L2975",
-        "score": 0.02368084098500058,
+        "score": 0.023491000401455124,
         "values": {
          "age": "46",
          "job": "admin.",
@@ -791,7 +791,7 @@
        },
        {
         "row_key": "L3031",
-        "score": 0.026052511607304794,
+        "score": 0.026153571864721965,
         "values": {
          "age": "39",
          "job": "blue-collar",
@@ -809,7 +809,7 @@
        },
        {
         "row_key": "L3273",
-        "score": 0.02770300069802406,
+        "score": 0.027750778297941994,
         "values": {
          "age": "36",
          "job": "blue-collar",
@@ -846,262 +846,299 @@
       "terms": [
        {
         "term": "cat__poutcome_success",
-        "value": 1.4749245665734745,
-        "low": 1.2147390148124875,
-        "high": 1.848188085468825,
-        "excludes_zero": true
+        "value": 1.5210027675184337,
+        "low": 1.2148417660536335,
+        "high": 1.8489042803963436,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__poutcome_failure",
-        "value": -0.9640891977064188,
-        "low": -1.1303523503205173,
-        "high": -0.6939390766885358,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__contact_unknown",
-        "value": -0.7486128847827955,
-        "low": -0.8015481898415486,
-        "high": -0.3667344596800456,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__loan_yes",
-        "value": -0.5980431945541215,
-        "low": -0.5796459199877367,
-        "high": -0.16984692753999842,
-        "excludes_zero": true
+        "value": -0.9169330096535167,
+        "low": -1.1304774666600161,
+        "high": -0.6941310130459463,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_retired",
-        "value": 0.5645006397251668,
-        "low": 0.1601330082361932,
-        "high": 1.0017641366354062,
-        "excludes_zero": true
+        "value": 0.6087198081190006,
+        "low": 0.15998603306631018,
+        "high": 1.0019822347847842,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__contact_unknown",
+        "value": -0.5878741561862811,
+        "low": -0.8017015094872285,
+        "high": -0.36669070940406584,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_student",
-        "value": 0.5368238865569789,
-        "low": -0.06662826913540505,
-        "high": 1.0426826554226167,
-        "excludes_zero": false
+        "value": 0.5684124435264754,
+        "low": -0.06663293436003054,
+        "high": 1.0429182109877881,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__poutcome_other",
-        "value": -0.5069499230819352,
-        "low": -0.746009815917792,
-        "high": -0.12677994601599923,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__poutcome_unknown",
-        "value": -0.4840391584801423,
-        "low": -0.1756677821854382,
-        "high": -0.10083553575481134,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__education_unknown",
-        "value": -0.452535780018625,
-        "low": -0.8588005579995642,
-        "high": 0.09373590813909936,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__default_no",
-        "value": -0.45233864432280996,
-        "low": -0.5744489980041031,
-        "high": 0.321161499486279,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__marital_married",
-        "value": -0.447033832898276,
-        "low": -0.4432836718054758,
-        "high": -0.1357416422667261,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__housing_yes",
-        "value": -0.44011252451385696,
-        "low": -0.3201392149651425,
-        "high": -0.09720207320168898,
-        "excludes_zero": true
+        "value": -0.4679501904896617,
+        "low": -0.7466234341281137,
+        "high": -0.1267802697732309,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_entrepreneur",
-        "value": -0.4132308114383731,
-        "low": -0.9990019108558859,
-        "high": 0.09620876938852578,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__job_unemployed",
-        "value": -0.36868814838147307,
-        "low": -0.9368082194786015,
-        "high": 0.14457289643681343,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__job_technician",
-        "value": -0.32376171978261836,
-        "low": -0.5436826600716825,
-        "high": -0.05328312621779855,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__job_blue-collar",
-        "value": -0.3189464876201946,
-        "low": -0.5415654042409871,
-        "high": 0.10901048569718286,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__job_services",
-        "value": -0.2662222088259588,
-        "low": -0.5982145473319576,
-        "high": 0.17636138397355644,
-        "excludes_zero": false
-       },
-       {
-        "term": "num__pdays=-1",
-        "value": -0.23588158112266383,
-        "low": -0.4561707662378218,
-        "high": -0.2618478074751478,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__job_housemaid",
-        "value": 0.2269587383527349,
-        "low": -0.3662479900389011,
-        "high": 0.7161062011222137,
-        "excludes_zero": false
+        "value": -0.3666829799138865,
+        "low": -1.002225563219628,
+        "high": 0.09491490563149868,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__contact_cellular",
-        "value": 0.2007550797365924,
-        "low": 0.18425615181175165,
-        "high": 0.5298482826964341,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__education_primary",
-        "value": -0.1633320959425906,
-        "low": -0.3904808741189631,
-        "high": 0.20476213594334586,
-        "excludes_zero": false
+        "value": 0.36236446398131145,
+        "low": 0.18425728873162875,
+        "high": 0.5298788860025768,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__loan_no",
-        "value": 0.11788948185908837,
-        "low": 0.16984692753999733,
-        "high": 0.5796459199877422,
-        "excludes_zero": true
+        "value": 0.3621615134160482,
+        "low": 0.17030708935970326,
+        "high": 0.5796548792627575,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
-        "term": "num__age",
-        "value": 0.11017993918145644,
-        "low": -0.044177992428499915,
-        "high": 0.21774024763570624,
-        "excludes_zero": false
+        "term": "cat__loan_yes",
+        "value": -0.36216151341604164,
+        "low": -0.5796548792627586,
+        "high": -0.17030708935971128,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
-        "term": "cat__education_tertiary",
-        "value": 0.09889534731846174,
-        "low": 0.03222569205583535,
-        "high": 0.49595611184020844,
-        "excludes_zero": true
+        "term": "num__pdays=-1",
+        "value": -0.35347271182600665,
+        "low": -0.45639019000897973,
+        "high": -0.26185773384534083,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
-        "term": "cat__marital_single",
-        "value": -0.09598296717253445,
-        "low": -0.11631291597716252,
-        "high": 0.23684867783094565,
-        "excludes_zero": false
+        "term": "cat__education_unknown",
+        "value": -0.3314495674431663,
+        "low": -0.860026271746984,
+        "high": 0.09288387476475286,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
-        "term": "cat__job_unknown",
-        "value": -0.09154150223616074,
-        "low": -1.0141498641131845,
-        "high": 0.5978520013482868,
-        "excludes_zero": false
+        "term": "cat__job_unemployed",
+        "value": -0.32320443466373977,
+        "low": -0.9398475344636744,
+        "high": 0.1440746812500473,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__marital_married",
+        "value": -0.28677230167837836,
+        "low": -0.44328450622647264,
+        "high": -0.13574152914714827,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_technician",
+        "value": -0.2813344952173388,
+        "low": -0.5436806984025527,
+        "high": -0.05330233591972386,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_blue-collar",
+        "value": -0.27549787772397055,
+        "low": -0.5413298956873677,
+        "high": 0.10978056959188771,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_housemaid",
+        "value": 0.2597534974616277,
+        "low": -0.37196740231627706,
+        "high": 0.7156135640891138,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__contact_telephone",
-        "value": 0.06770409235117048,
-        "low": -0.04391743230698582,
-        "high": 0.4826355750394977,
-        "excludes_zero": false
+        "value": 0.2255096922049799,
+        "low": -0.04428746078719943,
+        "high": 0.48248296968363436,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_services",
+        "value": -0.22386566273123207,
+        "low": -0.5981704049567285,
+        "high": 0.17635784886751424,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__marital_divorced",
-        "value": 0.06286308737577631,
-        "low": -0.013091472519972874,
-        "high": 0.41179073855285536,
-        "excludes_zero": false
+        "value": 0.22182185402368232,
+        "low": -0.013093169867848448,
+        "high": 0.41171394155262503,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__education_tertiary",
+        "value": 0.21822118008266336,
+        "low": 0.03222810372189484,
+        "high": 0.4980454717513678,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__housing_no",
-        "value": -0.04004118818117607,
-        "low": 0.09720207320168595,
-        "high": 0.3201392149651536,
-        "excludes_zero": true
+        "value": 0.2014565216699658,
+        "low": 0.09724213008634688,
+        "high": 0.32032403636486684,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
-        "term": "cat__education_secondary",
-        "value": 0.036818815947720164,
-        "low": -0.02009838484440954,
-        "high": 0.4020433088110465,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__job_self-employed",
-        "value": -0.03539424840408425,
-        "low": -0.35160117122208556,
-        "high": 0.38733155227995236,
-        "excludes_zero": false
+        "term": "cat__housing_yes",
+        "value": -0.20145652166996394,
+        "low": -0.3203240363648684,
+        "high": -0.0972421300863487,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__default_yes",
-        "value": -0.02781506837222232,
-        "low": -0.3211614994862556,
-        "high": 0.5744489980041134,
-        "excludes_zero": false
+        "value": 0.19787999607677687,
+        "low": -0.3352653002747555,
+        "high": 0.5725200278380908,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
-        "term": "num__pdays",
-        "value": -0.017394120088682966,
-        "low": -0.12311210612607067,
-        "high": 0.06804979287383009,
-        "excludes_zero": false
+        "term": "cat__default_no",
+        "value": -0.19787999607677323,
+        "low": -0.5725200278380861,
+        "high": 0.33526530027474755,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
-        "term": "num__balance",
-        "value": 0.013327420739127599,
-        "low": -0.08599805520043843,
-        "high": 0.08922852599950593,
-        "excludes_zero": false
+        "term": "cat__education_secondary",
+        "value": 0.1583058390966499,
+        "low": -0.020094975309231135,
+        "high": 0.40409513905562305,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__poutcome_unknown",
+        "value": -0.13611956737525746,
+        "low": -0.17575228055770065,
+        "high": -0.10083935832202212,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "num__age",
+        "value": 0.1095925432700592,
+        "low": -0.0441598513498066,
+        "high": 0.2177955868483939,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__marital_single",
+        "value": 0.06495044765469307,
+        "low": -0.11639917617643455,
+        "high": 0.23674401401761666,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_unknown",
+        "value": -0.06126534899371248,
+        "low": -1.0201041830329314,
+        "high": 0.5970055401723088,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_admin.",
-        "value": 0.010625934425050707,
-        "low": -0.27018990071591603,
-        "high": 0.3356093820521425,
-        "excludes_zero": false
+        "value": 0.050213917890223135,
+        "low": -0.270258257613501,
+        "high": 0.3357174498175057,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
-        "term": "num__previous",
-        "value": 0.002113824732884696,
-        "low": -0.11778877642546011,
-        "high": 0.09758978009181367,
-        "excludes_zero": false
+        "term": "cat__education_primary",
+        "value": -0.04507745173614467,
+        "low": -0.39019647183325495,
+        "high": 0.20502256461686835,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_management",
-        "value": -0.0012777850661032579,
-        "low": -0.2141162325894628,
-        "high": 0.3268755800613567,
-        "excludes_zero": false
+        "value": 0.040602625315680964,
+        "low": -0.21375442915983822,
+        "high": 0.32777388918370726,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "num__pdays",
+        "value": -0.016960096070927046,
+        "low": -0.12343363270581342,
+        "high": 0.06802793102166264,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "num__balance",
+        "value": 0.012997757206100748,
+        "low": -0.08621574377783296,
+        "high": 0.08920144883783653,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_self-employed",
+        "value": 0.004148506930874031,
+        "low": -0.35252610063471557,
+        "high": 0.38672871386348073,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "num__previous",
+        "value": 0.0011839204515415305,
+        "low": -0.11863426930100958,
+        "high": 0.09751422183544792,
+        "excludes_zero": false,
+        "inside_interval": true
        }
       ],
       "n_rows": 3617,
@@ -1109,11 +1146,18 @@
       "seed": 20261019,
       "level": 0.95,
       "skipped_replicates": 0,
+      "point_check": {
+       "consistent": true,
+       "max_difference": 3.0054070343510375e-11,
+       "tolerance": 0.0001,
+       "misaligned_terms": [],
+       "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
+      },
       "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "6f71b88e6a426d7fd392655e16417e6956b8a44fc75934b239a4bd3d07ed5118"
+     "predictions": "d4b0fc85eb70f5c5732f01f0f4cbd181771a1f0ace6386baa012804fe324efac"
     },
     "fit.variant": {
      "confusion": {
@@ -1122,13 +1166,13 @@
       "n_positive": 417,
       "n_negative": 3200,
       "selected": 362.0,
-      "true_positives": 134.0,
-      "false_positives": 228.0,
-      "false_negatives": 283.0,
-      "true_negatives": 2972.0,
-      "precision": 0.3701657458563536,
-      "recall": 0.3213429256594724,
-      "specificity": 0.92875,
+      "true_positives": 133.0,
+      "false_positives": 229.0,
+      "false_negatives": 284.0,
+      "true_negatives": 2971.0,
+      "precision": 0.3674033149171271,
+      "recall": 0.31894484412470026,
+      "specificity": 0.9284375,
       "selection": "exact",
       "tied_at_cut": 0,
       "capacity": 362
@@ -1153,12 +1197,12 @@
         "share": 0.1,
         "capacity": 362,
         "selected": 362.0,
-        "true_positives": 134.0,
-        "false_positives": 228.0,
-        "recall": 0.3213429256594724,
-        "false_positive_rate": 0.07125,
-        "precision": 0.3701657458563536,
-        "lift": 3.2107661936748944
+        "true_positives": 133.0,
+        "false_positives": 229.0,
+        "recall": 0.31894484412470026,
+        "false_positive_rate": 0.0715625,
+        "precision": 0.3674033149171271,
+        "lift": 3.1868052519310517
        },
        {
         "share": 0.15,
@@ -1197,34 +1241,34 @@
         "share": 0.3,
         "capacity": 1085,
         "selected": 1085.0,
-        "true_positives": 230.0,
-        "false_positives": 855.0,
-        "recall": 0.5515587529976019,
-        "false_positive_rate": 0.2671875,
-        "precision": 0.2119815668202765,
-        "lift": 1.8386986263523741
+        "true_positives": 229.0,
+        "false_positives": 856.0,
+        "recall": 0.5491606714628298,
+        "false_positive_rate": 0.2675,
+        "precision": 0.2110599078341014,
+        "lift": 1.8307042844986683
        },
        {
         "share": 0.35,
         "capacity": 1266,
         "selected": 1266.0,
-        "true_positives": 254.0,
-        "false_positives": 1012.0,
-        "recall": 0.6091127098321343,
-        "false_positive_rate": 0.31625,
-        "precision": 0.20063191153238547,
-        "lift": 1.7402532949943361
+        "true_positives": 255.0,
+        "false_positives": 1011.0,
+        "recall": 0.6115107913669064,
+        "false_positive_rate": 0.3159375,
+        "precision": 0.2014218009478673,
+        "lift": 1.7471046859195107
        },
        {
         "share": 0.4,
         "capacity": 1447,
         "selected": 1447.0,
-        "true_positives": 277.0,
-        "false_positives": 1170.0,
-        "recall": 0.6642685851318945,
-        "false_positive_rate": 0.365625,
-        "precision": 0.19143054595715273,
-        "lift": 1.6604419298010105
+        "true_positives": 276.0,
+        "false_positives": 1171.0,
+        "recall": 0.6618705035971223,
+        "false_positive_rate": 0.3659375,
+        "precision": 0.19073946095369732,
+        "lift": 1.654447554603173
        },
        {
         "share": 0.45,
@@ -1263,12 +1307,12 @@
         "share": 0.6,
         "capacity": 2170,
         "selected": 2170.0,
-        "true_positives": 348.0,
-        "false_positives": 1822.0,
-        "recall": 0.8345323741007195,
-        "false_positive_rate": 0.569375,
-        "precision": 0.16036866359447005,
-        "lift": 1.3910154825448398
+        "true_positives": 349.0,
+        "false_positives": 1821.0,
+        "recall": 0.8369304556354916,
+        "false_positive_rate": 0.5690625,
+        "precision": 0.1608294930875576,
+        "lift": 1.3950126534716925
        },
        {
         "share": 0.65,
@@ -1361,8 +1405,8 @@
       ],
       "definition": "For the top share of the rows by score: recall is the share of the positive rows found (the cumulative gain, and the true positive rate of the ROC curve); lift is the precision over the base rate; the false positive rate is the share of the negative rows selected."
      },
-     "roc_auc": 0.7172189748201439,
-     "average_precision": 0.3200220762336965,
+     "roc_auc": 0.7172429556354916,
+     "average_precision": 0.32116139126814924,
      "calibration": {
       "binning": "10 equal-count bins of the score, in score order",
       "bins": [
@@ -1370,9 +1414,9 @@
         "bin": 1,
         "n": 362,
         "n_positive": 8,
-        "score_min": 0.012773756260264512,
-        "score_max": 0.03629058974739823,
-        "mean_predicted": 0.028690433312509617,
+        "score_min": 0.012733057596356985,
+        "score_max": 0.03623284336686657,
+        "mean_predicted": 0.02869398963045459,
         "observed_rate": 0.022099447513812154,
         "low": 0.01123975165374054,
         "high": 0.04299537764148458,
@@ -1382,9 +1426,9 @@
         "bin": 2,
         "n": 362,
         "n_positive": 21,
-        "score_min": 0.036302607985066196,
-        "score_max": 0.04908318075683304,
-        "mean_predicted": 0.042445256417717854,
+        "score_min": 0.0362535105573154,
+        "score_max": 0.04900952621067434,
+        "mean_predicted": 0.04245661534696099,
         "observed_rate": 0.058011049723756904,
         "low": 0.0382525296577131,
         "high": 0.08705163616446042,
@@ -1393,22 +1437,22 @@
        {
         "bin": 3,
         "n": 362,
-        "n_positive": 16,
-        "score_min": 0.049117724181770676,
-        "score_max": 0.06440955513853273,
-        "mean_predicted": 0.05695475134122285,
-        "observed_rate": 0.04419889502762431,
-        "low": 0.02738642148684002,
-        "high": 0.07058349951727642,
+        "n_positive": 15,
+        "score_min": 0.04917516013805697,
+        "score_max": 0.06439583178280453,
+        "mean_predicted": 0.05695438708261061,
+        "observed_rate": 0.04143646408839779,
+        "low": 0.02526933157094898,
+        "high": 0.06723374046955605,
         "inside_interval": true
        },
        {
         "bin": 4,
         "n": 361,
         "n_positive": 24,
-        "score_min": 0.06447325454662087,
-        "score_max": 0.0787484588570933,
-        "mean_predicted": 0.07126604656489638,
+        "score_min": 0.06441340873620449,
+        "score_max": 0.07873488370326727,
+        "mean_predicted": 0.07121436753756018,
         "observed_rate": 0.0664819944598338,
         "low": 0.04507936936546763,
         "high": 0.09701374414269937,
@@ -1417,22 +1461,22 @@
        {
         "bin": 5,
         "n": 362,
-        "n_positive": 28,
-        "score_min": 0.07877526220737537,
-        "score_max": 0.09449450193283024,
-        "mean_predicted": 0.08673119184903579,
-        "observed_rate": 0.07734806629834254,
-        "low": 0.054054196607499536,
-        "high": 0.10951791195995388,
+        "n_positive": 29,
+        "score_min": 0.07874320999332372,
+        "score_max": 0.09460936652148719,
+        "mean_predicted": 0.08668578604452482,
+        "observed_rate": 0.08011049723756906,
+        "low": 0.05635498954182924,
+        "high": 0.1126839679892356,
         "inside_interval": true
        },
        {
         "bin": 6,
         "n": 362,
         "n_positive": 44,
-        "score_min": 0.09452532603089724,
-        "score_max": 0.11244147382256238,
-        "mean_predicted": 0.10307522189600361,
+        "score_min": 0.09468341851024556,
+        "score_max": 0.1125078069139644,
+        "mean_predicted": 0.10301881126103035,
         "observed_rate": 0.12154696132596685,
         "low": 0.09180219494467418,
         "high": 0.1592394970405619,
@@ -1441,55 +1485,55 @@
        {
         "bin": 7,
         "n": 361,
-        "n_positive": 46,
-        "score_min": 0.11253619614998565,
-        "score_max": 0.13189954472757034,
-        "mean_predicted": 0.12217497226083472,
-        "observed_rate": 0.12742382271468145,
-        "low": 0.09690706235147817,
-        "high": 0.16578638024819253,
+        "n_positive": 47,
+        "score_min": 0.11254238757909012,
+        "score_max": 0.1320479787378769,
+        "mean_predicted": 0.12212632099720978,
+        "observed_rate": 0.13019390581717452,
+        "low": 0.09933832361904033,
+        "high": 0.16883695212115324,
         "inside_interval": true
        },
        {
         "bin": 8,
         "n": 362,
-        "n_positive": 48,
-        "score_min": 0.13210846760175163,
-        "score_max": 0.15601573577145847,
-        "mean_predicted": 0.14320513138745003,
-        "observed_rate": 0.13259668508287292,
-        "low": 0.10148917038823008,
-        "high": 0.17141991745145163,
+        "n_positive": 47,
+        "score_min": 0.1320951243134687,
+        "score_max": 0.15589173053690303,
+        "mean_predicted": 0.14319155472445336,
+        "observed_rate": 0.1298342541436464,
+        "low": 0.0990597904436128,
+        "high": 0.16838244843245753,
         "inside_interval": true
        },
        {
         "bin": 9,
         "n": 362,
-        "n_positive": 48,
-        "score_min": 0.15621970346047803,
-        "score_max": 0.19779820859436775,
-        "mean_predicted": 0.17470699613087293,
-        "observed_rate": 0.13259668508287292,
-        "low": 0.10148917038823008,
-        "high": 0.17141991745145163,
+        "n_positive": 49,
+        "score_min": 0.15627526154533664,
+        "score_max": 0.1978146788154296,
+        "mean_predicted": 0.17477120929761888,
+        "observed_rate": 0.13535911602209943,
+        "low": 0.10392341976099528,
+        "high": 0.17445251704229786,
         "inside_interval": false
        },
        {
         "bin": 10,
         "n": 361,
-        "n_positive": 134,
-        "score_min": 0.19792534739985504,
-        "score_max": 0.7909808613960402,
-        "mean_predicted": 0.32649087137870375,
-        "observed_rate": 0.37119113573407203,
-        "low": 0.32295481235768225,
-        "high": 0.4221399466080032,
+        "n_positive": 133,
+        "score_min": 0.19794942799231677,
+        "score_max": 0.7916886230815008,
+        "mean_predicted": 0.32656966429412065,
+        "observed_rate": 0.3684210526315789,
+        "low": 0.3202897175722076,
+        "high": 0.4193232082529549,
         "inside_interval": true
        }
       ],
-      "brier": 0.09113450298571776,
+      "brier": 0.09113868545810415,
       "brier_base_rate": 0.10199737989644175,
-      "mean_absolute_gap": 0.017020928549107566,
+      "mean_absolute_gap": 0.01701811419768698,
       "bins_outside_interval": 1,
       "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
      },
@@ -1557,14 +1601,14 @@
          "value": "management",
          "n": 761,
          "n_positive": 104,
-         "selected": 88.0,
-         "true_positives": 31.0,
-         "precision": 0.3522727272727273,
-         "precision_low": 0.2605633194255029,
-         "precision_high": 0.4563401320891244,
-         "recall": 0.2980769230769231,
-         "recall_low": 0.21864009635527715,
-         "recall_high": 0.39189929675667456,
+         "selected": 89.0,
+         "true_positives": 30.0,
+         "precision": 0.33707865168539325,
+         "precision_low": 0.24742835204837482,
+         "precision_high": 0.4402111963993928,
+         "recall": 0.28846153846153844,
+         "recall_low": 0.21015909303902086,
+         "recall_high": 0.3818345568877857,
          "small_cell": false
         },
         {
@@ -1627,11 +1671,11 @@
          "value": "technician",
          "n": 623,
          "n_positive": 64,
-         "selected": 32.0,
+         "selected": 31.0,
          "true_positives": 15.0,
-         "precision": 0.46875,
-         "precision_low": 0.30869387108068835,
-         "precision_high": 0.6355048288102536,
+         "precision": 0.4838709677419355,
+         "precision_low": 0.31970251562417307,
+         "precision_high": 0.651596045519712,
          "recall": 0.234375,
          "recall_low": 0.1474989559392414,
          "recall_high": 0.35133257582568644,
@@ -1675,11 +1719,11 @@
          "value": "divorced",
          "n": 433,
          "n_positive": 64,
-         "selected": 82.0,
+         "selected": 81.0,
          "true_positives": 33.0,
-         "precision": 0.4024390243902439,
-         "precision_low": 0.3029744315621252,
-         "precision_high": 0.5106354462310653,
+         "precision": 0.4074074074074074,
+         "precision_low": 0.3069627781339348,
+         "precision_high": 0.5162368673165123,
          "recall": 0.515625,
          "recall_low": 0.39581601478580125,
          "recall_high": 0.6336644833456737,
@@ -1689,25 +1733,25 @@
          "value": "married",
          "n": 2229,
          "n_positive": 226,
-         "selected": 175.0,
-         "true_positives": 67.0,
-         "precision": 0.38285714285714284,
-         "precision_low": 0.3140886983673994,
-         "precision_high": 0.4566579715023287,
-         "recall": 0.29646017699115046,
-         "recall_low": 0.2407220700696048,
-         "recall_high": 0.3590020159501772,
+         "selected": 174.0,
+         "true_positives": 66.0,
+         "precision": 0.3793103448275862,
+         "precision_low": 0.3105570775693035,
+         "precision_high": 0.45327751826391083,
+         "recall": 0.2920353982300885,
+         "recall_low": 0.2366247780633634,
+         "recall_high": 0.3543976576525007,
          "small_cell": false
         },
         {
          "value": "single",
          "n": 955,
          "n_positive": 127,
-         "selected": 105.0,
+         "selected": 107.0,
          "true_positives": 34.0,
-         "precision": 0.3238095238095238,
-         "precision_low": 0.24189996231126903,
-         "precision_high": 0.418156045749465,
+         "precision": 0.3177570093457944,
+         "precision_low": 0.23716419886300422,
+         "precision_high": 0.4109818972372874,
          "recall": 0.2677165354330709,
          "recall_low": 0.1983634464489371,
          "recall_high": 0.3507091446717877,
@@ -1721,7 +1765,7 @@
       "false_positives": [
        {
         "row_key": "L4325",
-        "score": 0.7909808613960402,
+        "score": 0.7912001450869292,
         "values": {
          "age": "83",
          "job": "retired",
@@ -1739,7 +1783,7 @@
        },
        {
         "row_key": "L2072",
-        "score": 0.7594313316440936,
+        "score": 0.7606093635736363,
         "values": {
          "age": "80",
          "job": "retired",
@@ -1757,7 +1801,7 @@
        },
        {
         "row_key": "L3372",
-        "score": 0.7034653624253489,
+        "score": 0.7027750534763639,
         "values": {
          "age": "31",
          "job": "student",
@@ -1775,7 +1819,7 @@
        },
        {
         "row_key": "L1444",
-        "score": 0.6966075707967037,
+        "score": 0.6976514162613776,
         "values": {
          "age": "73",
          "job": "retired",
@@ -1793,7 +1837,7 @@
        },
        {
         "row_key": "L3245",
-        "score": 0.6634646620238206,
+        "score": 0.6642486103188597,
         "values": {
          "age": "27",
          "job": "management",
@@ -1813,7 +1857,7 @@
       "false_negatives": [
        {
         "row_key": "L2204",
-        "score": 0.02052950628840816,
+        "score": 0.020456533636298766,
         "values": {
          "age": "29",
          "job": "management",
@@ -1831,7 +1875,7 @@
        },
        {
         "row_key": "L1023",
-        "score": 0.024655473818811963,
+        "score": 0.024658920698491207,
         "values": {
          "age": "45",
          "job": "admin.",
@@ -1849,7 +1893,7 @@
        },
        {
         "row_key": "L2975",
-        "score": 0.027968314495538375,
+        "score": 0.028025133392465814,
         "values": {
          "age": "46",
          "job": "admin.",
@@ -1867,7 +1911,7 @@
        },
        {
         "row_key": "L3031",
-        "score": 0.030314495560825796,
+        "score": 0.03048531605353667,
         "values": {
          "age": "39",
          "job": "blue-collar",
@@ -1885,7 +1929,7 @@
        },
        {
         "row_key": "L3273",
-        "score": 0.03212807163801712,
+        "score": 0.03210900544272568,
         "values": {
          "age": "36",
          "job": "blue-collar",
@@ -1922,262 +1966,299 @@
       "terms": [
        {
         "term": "cat__poutcome_success",
-        "value": 1.1009727010712498,
-        "low": 0.8709260587925178,
-        "high": 1.3122432729423972,
-        "excludes_zero": true
+        "value": 1.0976947814371023,
+        "low": 0.8710213087653217,
+        "high": 1.3123153318974579,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__poutcome_failure",
-        "value": -0.6909541853466677,
-        "low": -0.8470992231489055,
-        "high": -0.5252203979644773,
-        "excludes_zero": true
+        "value": -0.6904071477693708,
+        "low": -0.8471509631682704,
+        "high": -0.5252114677003787,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__contact_unknown",
-        "value": -0.4997985360517311,
-        "low": -0.6575462864438568,
-        "high": -0.32607581382874196,
-        "excludes_zero": true
+        "value": -0.49928568407753243,
+        "low": -0.6580348920974086,
+        "high": -0.3266574101930294,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_retired",
-        "value": 0.4336325617955048,
-        "low": 0.12633578535797452,
-        "high": 0.6674095314287473,
-        "excludes_zero": true
+        "value": 0.43590849676635895,
+        "low": 0.12629962094030395,
+        "high": 0.6674434718493711,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__contact_cellular",
-        "value": 0.33761061664319236,
-        "low": 0.18236096825539705,
-        "high": 0.4776456880605743,
-        "excludes_zero": true
+        "value": 0.33761635553978575,
+        "low": 0.18249360709067947,
+        "high": 0.4776805436017599,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "num__pdays=-1",
-        "value": -0.3328242352792066,
-        "low": -0.4133503431913283,
-        "high": -0.2504475669167547,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__job_student",
-        "value": 0.3188304515351628,
-        "low": -0.011174926890518973,
-        "high": 0.5873277915034433,
-        "excludes_zero": false
-       },
-       {
-        "term": "cat__loan_yes",
-        "value": -0.3142141863934632,
-        "low": -0.4828011396332666,
-        "high": -0.15548187345281728,
-        "excludes_zero": true
+        "value": -0.33244590253820583,
+        "low": -0.4133852054118119,
+        "high": -0.2504477448259891,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__loan_no",
-        "value": 0.31406467833156987,
-        "low": 0.15548187345281558,
-        "high": 0.4828011396332677,
-        "excludes_zero": true
+        "value": 0.31639716074225643,
+        "low": 0.15623083729867465,
+        "high": 0.48339746576268927,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__loan_yes",
+        "value": -0.3163971607422553,
+        "low": -0.48339746576268994,
+        "high": -0.1562308372986756,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_student",
+        "value": 0.3156320196934801,
+        "low": -0.011184380151419173,
+        "high": 0.5872546681890692,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__poutcome_other",
-        "value": -0.28187758893473996,
-        "low": -0.46885217617575387,
-        "high": -0.042297765478986005,
-        "excludes_zero": true
+        "value": -0.27926532553705297,
+        "low": -0.46892975837400686,
+        "high": -0.04237684001213488,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__marital_married",
-        "value": -0.26046160344756236,
-        "low": -0.3977953462013499,
-        "high": -0.12358969932302254,
-        "excludes_zero": true
+        "value": -0.25998343422188164,
+        "low": -0.39778667982004323,
+        "high": -0.12363402259596644,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_blue-collar",
-        "value": -0.2388552350774481,
-        "low": -0.43808677816253133,
-        "high": 0.011331748612849779,
-        "excludes_zero": false
+        "value": -0.24106334353822134,
+        "low": -0.438093819051395,
+        "high": 0.011062992541141087,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__housing_yes",
-        "value": -0.21774199597218025,
-        "low": -0.3231493369627962,
-        "high": -0.12181080718302675,
-        "excludes_zero": true
+        "value": -0.2172171468787808,
+        "low": -0.3232262234089751,
+        "high": -0.12182995479161861,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__housing_no",
-        "value": 0.2175924879102867,
-        "low": 0.12181080718302625,
-        "high": 0.3231493369627948,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__job_entrepreneur",
-        "value": -0.20468591734644148,
-        "low": -0.45671997830734395,
-        "high": 0.04222115865516017,
-        "excludes_zero": false
+        "value": 0.21721714687878055,
+        "low": 0.12182995479161755,
+        "high": 0.3232262234089747,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_technician",
-        "value": -0.20228537668487342,
-        "low": -0.38928985657014537,
-        "high": -0.016847773411515374,
-        "excludes_zero": true
+        "value": -0.20516551811113323,
+        "low": -0.3893446431955747,
+        "high": -0.01685549684906591,
+        "excludes_zero": true,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__job_entrepreneur",
+        "value": -0.2047469639768081,
+        "low": -0.4568497663655334,
+        "high": 0.04206163001866202,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__education_unknown",
-        "value": -0.1874484733164011,
-        "low": -0.45369761963837674,
-        "high": 0.06753969345285912,
-        "excludes_zero": false
+        "value": -0.1890600432812835,
+        "low": -0.4540142337615401,
+        "high": 0.06739765462422741,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__marital_divorced",
-        "value": 0.17747381052388195,
-        "low": -0.019232634966410145,
-        "high": 0.3331216699585759,
-        "excludes_zero": false
+        "value": 0.17695188632905465,
+        "low": -0.01958578736908959,
+        "high": 0.33311127288542275,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__contact_telephone",
-        "value": 0.16203841134664496,
-        "low": -0.042563332784775636,
-        "high": 0.3579641826696592,
-        "excludes_zero": false
+        "value": 0.16166932853774688,
+        "low": -0.04260688752429119,
+        "high": 0.3578708148769151,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__education_tertiary",
-        "value": 0.15838574383025977,
-        "low": 0.021420890959104363,
-        "high": 0.3230100347485411,
-        "excludes_zero": true
+        "value": 0.1585336956938475,
+        "low": 0.0214430377188696,
+        "high": 0.32305098838268526,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__job_unemployed",
-        "value": -0.15133387086443106,
-        "low": -0.407749754474074,
-        "high": 0.09114235585060056,
-        "excludes_zero": false
+        "value": -0.14987834573042919,
+        "low": -0.4078581564860228,
+        "high": 0.09101492617628061,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_services",
-        "value": -0.1476614925750029,
-        "low": -0.40481024484105477,
-        "high": 0.1424799869615085,
-        "excludes_zero": false
+        "value": -0.14879932492400083,
+        "low": -0.4049654771917983,
+        "high": 0.14192419669258458,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_housemaid",
-        "value": 0.12947342180767055,
-        "low": -0.18613560826184836,
-        "high": 0.40334480705849785,
-        "excludes_zero": false
+        "value": 0.13021531574786616,
+        "low": -0.18641809731042341,
+        "high": 0.40322462918506624,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__poutcome_unknown",
-        "value": -0.12829043485174424,
-        "low": -0.1591779733121537,
-        "high": -0.09644539258145739,
-        "excludes_zero": true
+        "value": -0.1280223081306796,
+        "low": -0.1591913984796759,
+        "high": -0.09644546109291223,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "num__age",
-        "value": 0.12727178588609683,
-        "low": 0.0027057806608309495,
-        "high": 0.21486002961566017,
-        "excludes_zero": true
-       },
-       {
-        "term": "cat__default_no",
-        "value": -0.10455422615483453,
-        "low": -0.3297895245207973,
-        "high": 0.1402611378310182,
-        "excludes_zero": false
+        "value": 0.12741228529638018,
+        "low": 0.0027208771882438,
+        "high": 0.21490132182040805,
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__default_yes",
-        "value": 0.10440471809294094,
-        "low": -0.14026113783101693,
-        "high": 0.3297895245207958,
-        "excludes_zero": false
+        "value": 0.10446876402441647,
+        "low": -0.1403852877631147,
+        "high": 0.32971694871257834,
+        "excludes_zero": false,
+        "inside_interval": true
+       },
+       {
+        "term": "cat__default_no",
+        "value": -0.10446876402441624,
+        "low": -0.32971694871257773,
+        "high": 0.14038528776311412,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__education_secondary",
-        "value": 0.09165015993144308,
-        "low": -0.05501848347472059,
-        "high": 0.26089319634115177,
-        "excludes_zero": false
+        "value": 0.09264129959975022,
+        "low": -0.054973130240937106,
+        "high": 0.26102193384923766,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__marital_single",
-        "value": 0.0828382848617885,
-        "low": -0.06796330258606671,
-        "high": 0.22522112955657983,
-        "excludes_zero": false
+        "value": 0.08303154789282699,
+        "low": -0.06799357151835593,
+        "high": 0.22524285311731887,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_admin.",
-        "value": 0.06581012150959566,
-        "low": -0.16807941279854957,
-        "high": 0.2798773737061765,
-        "excludes_zero": false
+        "value": 0.06704196393860819,
+        "low": -0.16812494839121428,
+        "high": 0.2797722581749955,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__education_primary",
-        "value": -0.0627369385071957,
-        "low": -0.3010971166473848,
-        "high": 0.11344422025892363,
-        "excludes_zero": false
+        "value": -0.06211495201231471,
+        "low": -0.3011112838023231,
+        "high": 0.11341004704604533,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_management",
-        "value": 0.04241412772905559,
-        "low": -0.1445240781727497,
-        "high": 0.2561396678826107,
-        "excludes_zero": false
+        "value": 0.0431322022066476,
+        "low": -0.14450346584910323,
+        "high": 0.25619648460943534,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__pdays",
-        "value": -0.04136079449173299,
-        "low": -0.13902356122932524,
-        "high": 0.0367571549247482,
-        "excludes_zero": false
+        "value": -0.04195515485658304,
+        "low": -0.13917228938451523,
+        "high": 0.036712848209386376,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_unknown",
-        "value": -0.03770329892773388,
-        "low": -0.2576567536800006,
-        "high": 0.1940730646202394,
-        "excludes_zero": false
+        "value": -0.03601178884985792,
+        "low": -0.257668483783474,
+        "high": 0.19397982296426738,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__balance",
-        "value": 0.01613738965778256,
-        "low": -0.07547842024876074,
-        "high": 0.08573858134195037,
-        "excludes_zero": false
+        "value": 0.01568980784546906,
+        "low": -0.07609853549320096,
+        "high": 0.08571070118641759,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__previous",
-        "value": 0.00967086857316037,
-        "low": -0.08573486588000333,
-        "high": 0.10021045775097565,
-        "excludes_zero": false
+        "value": 0.010113412407297124,
+        "low": -0.08609642014901922,
+        "high": 0.10005553928913756,
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__job_self-employed",
-        "value": -0.0077850009629520335,
-        "low": -0.2035166619518592,
-        "high": 0.2328741592070406,
-        "excludes_zero": false
+        "value": -0.0062647132225118396,
+        "low": -0.20359042774350342,
+        "high": 0.23281857012839108,
+        "excludes_zero": false,
+        "inside_interval": true
        }
       ],
       "n_rows": 3617,
@@ -2185,11 +2266,18 @@
       "seed": 20261019,
       "level": 0.95,
       "skipped_replicates": 0,
+      "point_check": {
+       "consistent": true,
+       "max_difference": 6.428746424091969e-13,
+       "tolerance": 0.0001,
+       "misaligned_terms": [],
+       "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
+      },
       "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "2313dfb16d9cfc71ce85e7a6f18abe090fd79ce131460e1f15261a27fad51eee"
+     "predictions": "cce66b8e6de0389058c33956e8add5017a61c84e3e0dcb42c93b5325dd603975"
     }
    },
    "coefficient_rows": 3617,
@@ -2200,13 +2288,13 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "d336252c94b7905adbd095b9d4f44aee49c4f0a47e527f42c7367fad97f5540e",
-   "input_key": "c9b516240ba33bdacb0aa75ce77543e58a6e53660428f3f2e30d42ecca85f9a7",
+   "result_id": "69bc31a7d7d7a6c58d6bfde8cea1e63fbe24fc96fc69fbb49711bf29010f221c",
+   "input_key": "774e51df1342feff34b5dc8440f0550dcc87979dccce7fe79e0edca0b3d75e17",
    "reason": null,
    "started_revision": 29,
    "invalidation": null,
    "exposure_ids": [
-    "x_f80fef4a9b9d4ee78e5851c183627a9b"
+    "x_157c681a3d42429db67118eb849553f5"
    ],
    "registry_created": true,
    "nondeterministic": false

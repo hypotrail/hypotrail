@@ -137,6 +137,16 @@ NORMALITY_NOTE = ('The quantile-quantile points compare the standardised residua
                   'normal distribution. Normality is not needed for the mean error or the '
                   'coefficients with this many rows (Lumley et al. 2002); it matters for '
                   'prediction intervals, which this study does not give.')
+# A stored coefficient further than this from the refit on the same prepared rows (the
+# replicates' solver, every row) is flagged: its interval would not describe it.
+POINT_TOLERANCE = 1e-4
+POINT_CONSISTENT_NOTE = ('The coefficients and their intervals come from the same prepared rows '
+                         'and the same penalised fit.')
+POINT_INCONSISTENT_NOTE = ('The stored coefficients differ from a refit of the same model on the '
+                           'same prepared rows (a fit recorded by an earlier engine version '
+                           'stopped before its optimum): '
+                           'the intervals describe the refit, not these values. Run the fit '
+                           'again to align them.')
 COEFFICIENT_NOTE = ('Coefficients of the model fitted on these rows, with percentile bootstrap '
                     'intervals: the model refitted on rows drawn with replacement, the '
                     'preparation of the variables kept as fitted. Associations given the other '
@@ -599,6 +609,21 @@ def coefficient_intervals(case, frame, inputs: Mapping, params: Mapping, binary:
     Z = np.asarray(model['preprocess'].transform(X), dtype=float)
     names = [str(x) for x in model['preprocess'].get_feature_names_out()]
     y = positive(frame, case).to_numpy() if binary else fit._target(case, frame, 'development')
+    stored = model['model'].coef_[0] if binary else model['model'].coef_
+    # The point and the replicates must solve the same problem on the same design: the
+    # refit of the fit's model on every row of Z, with the replicates' solver, is the
+    # reference the stored point is compared with (WP-B6a).
+    reference = clone(model['model'])
+    if binary:
+        reference.set_params(warm_start=True, solver='newton-cholesky')
+        reference.coef_ = model['model'].coef_.copy()
+        reference.intercept_ = model['model'].intercept_.copy()
+    reference.fit(Z, y)
+    ref = reference.coef_[0] if binary else reference.coef_
+    drift = {term: abs(float(point[term]) - float(r)) for term, r in zip(names, ref)
+             if term in point}
+    misaligned = sorted(term for term, s_ in zip(names, stored)
+                        if term in point and abs(float(point[term]) - float(s_)) > 1e-9)
     rng = np.random.default_rng(seed)
     n = len(frame)
     samples = []
@@ -627,11 +652,19 @@ def coefficient_intervals(case, frame, inputs: Mapping, params: Mapping, binary:
         s = draws[:, j]
         low = float(np.quantile(s, alpha)) if len(s) >= 2 else None
         high = float(np.quantile(s, 1 - alpha)) if len(s) >= 2 else None
-        terms.append({'term': term, 'value': float(point[term]), 'low': low, 'high': high,
-                      'excludes_zero': bool(low is not None and (low > 0 or high < 0))})
+        value = float(point[term])
+        terms.append({'term': term, 'value': value, 'low': low, 'high': high,
+                      'excludes_zero': bool(low is not None and (low > 0 or high < 0)),
+                      'inside_interval': None if low is None else bool(low <= value <= high)})
     terms.sort(key=lambda t: (-abs(t['value']), t['term']))
+    largest = max(drift.values(), default=0.0)
+    consistent = not misaligned and largest <= POINT_TOLERANCE
     return {'terms': terms, 'n_rows': n, 'replicates': replicates - skipped, 'seed': seed,
             'level': level, 'skipped_replicates': skipped,
+            'point_check': {'consistent': consistent, 'max_difference': largest,
+                            'tolerance': POINT_TOLERANCE, 'misaligned_terms': misaligned,
+                            'note': POINT_CONSISTENT_NOTE if consistent
+                            else POINT_INCONSISTENT_NOTE},
             'method': 'percentile bootstrap: the model refitted on prepared rows drawn with '
                       'replacement (the preparation kept as fitted on every row)',
             'note': COEFFICIENT_NOTE}

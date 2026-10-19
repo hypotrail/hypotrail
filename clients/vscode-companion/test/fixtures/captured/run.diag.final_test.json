@@ -21,7 +21,7 @@
   "activity": "diag.final_test",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "1798c6125621325604bc456a78e4758e5e22150b1f7f30bd7aa48e5e4764a7af",
+  "result_id": "98424a4a1f326711532cb6c2fd1832cab5c804604520861569a8440c084982e9",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "bbc5b7408355e320104b40c0698191b3c5a331b6402bc07224cb34cd1645a48d",
+   "final_evaluation": "b1d8ae4ec9186ec980d2597511dd369d972ca58df38bbc293a3a70532fa72af9",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -144,12 +144,12 @@
         "share": 0.4,
         "capacity": 362,
         "selected": 362.0,
-        "true_positives": 59.0,
-        "false_positives": 303.0,
-        "recall": 0.5673076923076923,
-        "false_positive_rate": 0.37875,
-        "precision": 0.16298342541436464,
-        "lift": 1.4167020824479388
+        "true_positives": 58.0,
+        "false_positives": 304.0,
+        "recall": 0.5576923076923077,
+        "false_positive_rate": 0.38,
+        "precision": 0.16022099447513813,
+        "lift": 1.3926901827454314
        },
        {
         "share": 0.45,
@@ -177,12 +177,12 @@
         "share": 0.55,
         "capacity": 497,
         "selected": 497.0,
-        "true_positives": 73.0,
-        "false_positives": 424.0,
-        "recall": 0.7019230769230769,
-        "false_positive_rate": 0.53,
-        "precision": 0.14688128772635814,
-        "lift": 1.2767373471598824
+        "true_positives": 74.0,
+        "false_positives": 423.0,
+        "recall": 0.7115384615384616,
+        "false_positive_rate": 0.52875,
+        "precision": 0.1488933601609658,
+        "lift": 1.2942268998607027
        },
        {
         "share": 0.6,
@@ -286,8 +286,8 @@
       ],
       "definition": "For the top share of the rows by score: recall is the share of the positive rows found (the cumulative gain, and the true positive rate of the ROC curve); lift is the precision over the base rate; the false positive rate is the share of the negative rows selected."
      },
-     "roc_auc": 0.6518149038461538,
-     "average_precision": 0.2836253272353115,
+     "roc_auc": 0.6518629807692308,
+     "average_precision": 0.28416034626859954,
      "calibration": {
       "binning": "10 equal-count bins of the score, in score order",
       "bins": [
@@ -295,9 +295,9 @@
         "bin": 1,
         "n": 91,
         "n_positive": 4,
-        "score_min": 0.010988038195501001,
-        "score_max": 0.029191054148491137,
-        "mean_predicted": 0.02313853589941163,
+        "score_min": 0.01088588855966555,
+        "score_max": 0.0293692201009569,
+        "mean_predicted": 0.023080162472131543,
         "observed_rate": 0.04395604395604396,
         "low": 0.01722436644411733,
         "high": 0.10763093384266353,
@@ -307,9 +307,9 @@
         "bin": 2,
         "n": 90,
         "n_positive": 6,
-        "score_min": 0.029411147397988443,
-        "score_max": 0.041675917404781694,
-        "mean_predicted": 0.03504947710221173,
+        "score_min": 0.02943115098958867,
+        "score_max": 0.041437942480661294,
+        "mean_predicted": 0.03501968123890015,
         "observed_rate": 0.06666666666666667,
         "low": 0.030909927745827924,
         "high": 0.13790094774325526,
@@ -319,9 +319,9 @@
         "bin": 3,
         "n": 91,
         "n_positive": 6,
-        "score_min": 0.041685554576285144,
-        "score_max": 0.05747527271483175,
-        "mean_predicted": 0.048995594202253884,
+        "score_min": 0.04170212941758427,
+        "score_max": 0.05738822789996842,
+        "mean_predicted": 0.04887614613643311,
         "observed_rate": 0.06593406593406594,
         "low": 0.03056628647161548,
         "high": 0.13646466199411572,
@@ -331,9 +331,9 @@
         "bin": 4,
         "n": 90,
         "n_positive": 10,
-        "score_min": 0.05770626705076771,
-        "score_max": 0.07314326653696386,
-        "mean_predicted": 0.06653293134776485,
+        "score_min": 0.05741758493717682,
+        "score_max": 0.07283333002589401,
+        "mean_predicted": 0.0664800934237886,
         "observed_rate": 0.1111111111111111,
         "low": 0.06148319189297713,
         "high": 0.19257785021261037,
@@ -343,9 +343,9 @@
         "bin": 5,
         "n": 90,
         "n_positive": 9,
-        "score_min": 0.0731528133212864,
-        "score_max": 0.09220128424644529,
-        "mean_predicted": 0.08126595144879241,
+        "score_min": 0.07286077626283075,
+        "score_max": 0.0918929298301578,
+        "mean_predicted": 0.08116332520078334,
         "observed_rate": 0.1,
         "low": 0.05350675169712493,
         "high": 0.17924174875433652,
@@ -354,34 +354,34 @@
        {
         "bin": 6,
         "n": 91,
-        "n_positive": 10,
-        "score_min": 0.09234520078659472,
-        "score_max": 0.10827180931388367,
-        "mean_predicted": 0.09941881033667008,
-        "observed_rate": 0.10989010989010989,
-        "low": 0.06079473021268493,
-        "high": 0.19058751461094692,
+        "n_positive": 11,
+        "score_min": 0.09243552845133417,
+        "score_max": 0.10825156339491089,
+        "mean_predicted": 0.09939860950225785,
+        "observed_rate": 0.12087912087912088,
+        "low": 0.06885508485107264,
+        "high": 0.20361498406203435,
         "inside_interval": true
        },
        {
         "bin": 7,
         "n": 90,
-        "n_positive": 10,
-        "score_min": 0.1083926692161243,
-        "score_max": 0.13350662610733954,
-        "mean_predicted": 0.12192204943826908,
-        "observed_rate": 0.1111111111111111,
-        "low": 0.06148319189297713,
-        "high": 0.19257785021261037,
+        "n_positive": 9,
+        "score_min": 0.10833118980895226,
+        "score_max": 0.13347016439404366,
+        "mean_predicted": 0.12194580835051566,
+        "observed_rate": 0.1,
+        "low": 0.05350675169712493,
+        "high": 0.17924174875433652,
         "inside_interval": true
        },
        {
         "bin": 8,
         "n": 91,
         "n_positive": 11,
-        "score_min": 0.13357429371205898,
-        "score_max": 0.15793835266980236,
-        "mean_predicted": 0.1445611846822245,
+        "score_min": 0.13350478985878467,
+        "score_max": 0.15792827505481732,
+        "mean_predicted": 0.14458528420577305,
         "observed_rate": 0.12087912087912088,
         "low": 0.06885508485107264,
         "high": 0.20361498406203435,
@@ -391,9 +391,9 @@
         "bin": 9,
         "n": 90,
         "n_positive": 13,
-        "score_min": 0.15862842638038904,
-        "score_max": 0.21240675590323674,
-        "mean_predicted": 0.18241324840936707,
+        "score_min": 0.15808797833669697,
+        "score_max": 0.2120810814987746,
+        "mean_predicted": 0.18202766550050226,
         "observed_rate": 0.14444444444444443,
         "low": 0.08639988786660784,
         "high": 0.23159877920135785,
@@ -403,18 +403,18 @@
         "bin": 10,
         "n": 90,
         "n_positive": 25,
-        "score_min": 0.21546621117037806,
-        "score_max": 0.8309274119996174,
-        "mean_predicted": 0.41737478723137955,
+        "score_min": 0.21221756012439313,
+        "score_max": 0.8301295129800422,
+        "mean_predicted": 0.41723138680609456,
         "observed_rate": 0.2777777777777778,
         "low": 0.19579689194686647,
         "high": 0.3779522749706121,
         "inside_interval": false
        }
       ],
-      "brier": 0.09491278414602347,
+      "brier": 0.0949071265875692,
       "brier_base_rate": 0.10180906883859348,
-      "mean_absolute_gap": 0.03544392200488507,
+      "mean_absolute_gap": 0.037646816135031125,
       "bins_outside_interval": 1,
       "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
      },
@@ -614,11 +614,11 @@
          "value": "married",
          "n": 568,
          "n_positive": 51,
-         "selected": 34.0,
+         "selected": 33.0,
          "true_positives": 12.0,
-         "precision": 0.35294117647058826,
-         "precision_low": 0.21487920594879492,
-         "precision_high": 0.5208603688021826,
+         "precision": 0.36363636363636365,
+         "precision_low": 0.2218717823524236,
+         "precision_high": 0.5338382169773361,
          "recall": 0.23529411764705882,
          "recall_low": 0.14004948834462844,
          "recall_high": 0.3676222516016529,
@@ -628,11 +628,11 @@
          "value": "single",
          "n": 241,
          "n_positive": 40,
-         "selected": 35.0,
+         "selected": 36.0,
          "true_positives": 10.0,
-         "precision": 0.2857142857142857,
-         "precision_low": 0.16326536236434688,
-         "precision_high": 0.45054934863182616,
+         "precision": 0.2777777777777778,
+         "precision_low": 0.1584833794013461,
+         "precision_high": 0.43992489997397105,
          "recall": 0.25,
          "recall_low": 0.14187118639096302,
          "recall_high": 0.40193961420768026,
@@ -646,7 +646,7 @@
       "false_positives": [
        {
         "row_key": "L3646",
-        "score": 0.7919349098798769,
+        "score": 0.792472025888286,
         "values": {
          "age": "58",
          "job": "admin.",
@@ -664,7 +664,7 @@
        },
        {
         "row_key": "L1218",
-        "score": 0.7605169485347356,
+        "score": 0.7605341686644688,
         "values": {
          "age": "29",
          "job": "management",
@@ -682,7 +682,7 @@
        },
        {
         "row_key": "L1085",
-        "score": 0.737745007722838,
+        "score": 0.736384480793863,
         "values": {
          "age": "64",
          "job": "housemaid",
@@ -700,7 +700,7 @@
        },
        {
         "row_key": "L100",
-        "score": 0.7141341084309668,
+        "score": 0.7155398892172623,
         "values": {
          "age": "36",
          "job": "blue-collar",
@@ -718,7 +718,7 @@
        },
        {
         "row_key": "L2268",
-        "score": 0.711760528058916,
+        "score": 0.7123677365818354,
         "values": {
          "age": "55",
          "job": "admin.",
@@ -738,7 +738,7 @@
       "false_negatives": [
        {
         "row_key": "L4178",
-        "score": 0.022494378067417303,
+        "score": 0.022469038763755417,
         "values": {
          "age": "32",
          "job": "blue-collar",
@@ -756,7 +756,7 @@
        },
        {
         "row_key": "L2197",
-        "score": 0.026324445372141157,
+        "score": 0.026405624833978653,
         "values": {
          "age": "23",
          "job": "entrepreneur",
@@ -774,7 +774,7 @@
        },
        {
         "row_key": "L4063",
-        "score": 0.02652006017165089,
+        "score": 0.026572948275165324,
         "values": {
          "age": "28",
          "job": "blue-collar",
@@ -792,7 +792,7 @@
        },
        {
         "row_key": "L4238",
-        "score": 0.027029737965875586,
+        "score": 0.027086856226568926,
         "values": {
          "age": "31",
          "job": "blue-collar",
@@ -810,7 +810,7 @@
        },
        {
         "row_key": "L4127",
-        "score": 0.033332302420913826,
+        "score": 0.03313106583505048,
         "values": {
          "age": "30",
          "job": "technician",
@@ -843,7 +843,7 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "bbc5b7408355e320104b40c0698191b3c5a331b6402bc07224cb34cd1645a48d"
+     "predictions": "b1d8ae4ec9186ec980d2597511dd369d972ca58df38bbc293a3a70532fa72af9"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -853,13 +853,13 @@
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "1798c6125621325604bc456a78e4758e5e22150b1f7f30bd7aa48e5e4764a7af",
-   "input_key": "d4f4c4020087f325cca18d8a43eca1f022f9d1ee1e0e4158c951e403294510c8",
+   "result_id": "98424a4a1f326711532cb6c2fd1832cab5c804604520861569a8440c084982e9",
+   "input_key": "adc11ff5c8aefb48084f0b423dff6fabb2541b479001aad6b3e08adb94233e0d",
    "reason": null,
    "started_revision": 34,
    "invalidation": null,
    "exposure_ids": [
-    "x_5a6b665e1ac944cca5441a3f8e4fe3f3"
+    "x_5216ac903f4446c89f150705c72903d3"
    ],
    "registry_created": true,
    "nondeterministic": false

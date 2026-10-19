@@ -275,73 +275,73 @@
   },
   "results": {
    "eda.distribution:age": {
-    "result_id": "cdb8c70f30f1d94e45203e518ce9ee01f1ec2f0670e290fc2398341d16fa1075",
+    "result_id": "dcec95e29451d37a617633e2808098987c0af374aece5720f13807dcd7088a9c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "b2751aab59f8ebdc5fdd07c6a57efe0d6605d36e366971c6f69c3d592507a5a5",
+    "result_id": "f8a3e3a5c03a56ab730c899d6172c0ea9b1f5b2250275121e732ab88a1e05472",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "581488dfa67c6f51812a3501ee370a9c7c89778cb86402681bdbb8c015d5a2c6",
+    "result_id": "c0b5eca16095d918261cc0642b3cc59a4ca4e6939505083266e8c493545bef70",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "95809f5187ecba31b892ef9ce9b182579dad3e4208656e83be80930a423379bd",
+    "result_id": "4248017a882111dc5db46ba4b6520a4668b4ef176afcdaf7852b091fd4dd2d46",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "888f992e15e62c349d7287b2d213e70be0a08fe7f3c36bfbd27dec7e6770ad4a",
+    "result_id": "d361d7d3f37c3ce5be6c81b9fb5a8896a4ea3094a844fd244e691996f6f73934",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "ccbc6f433f21515f7aa236453589db4541c722dc948f950eee36ab8e842723b2",
+    "result_id": "797bdf0a247a8d408a73f35bb3ca44ea18cea22c6b850841f3d34da3df3cac54",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
+    "result_id": "83369a7ca2440858f0edd3e0b1d279c7e5084040b0f9c52ffabaa988f8abed03",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "2b631b03e9689b44015d9a77f6acc781c0e12a733f1f1561081c745bdda5a3fb",
+    "result_id": "5bb36d11bb5bae4744d78fc3224bd1c3c87dc285ce8de4fb586570e658420ce9",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "78fe902f97c07bcffd45c45610b1a9a008690d0124fd61b76b3e5db44d484caa",
+    "result_id": "435a01783bac15954df350f6cb1fbdcb6f3b29e9fa0d36b2634e3f2c8ece12b7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "a0a963e2f4ee59840015360a209837da3ec71a18dd930c134a7673958db0358b",
+    "result_id": "e32fdd67ab8ff42bfcbc3a5f867b8ea84755955aed2d0e59bc3832d3f95a95a5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "866aeaeb9dbff332dc4c8d126e66ecfd9eeb156aaf1f0cad5ba2525851ab63dd",
+    "result_id": "3b4b0d1cf741a2740ec94276ad3bf723a661e0051405bc517da4eeb6b2bfd4df",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
+    "result_id": "561687dec74a16a7b7265d0d494f4b12aace62e7888e009d9f581409101f5ece",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -432,7 +432,8 @@
    "schema_check": "pass",
    "opening": null,
    "post_final_test": false,
-   "changed_after": []
+   "changed_after": [],
+   "excluded_prior_exposed": 0
   },
   "criterion": {
    "decision_status": "confirmed",
@@ -449,20 +450,21 @@
    "rule": null,
    "result_id": null,
    "contradicts_verdict": false,
-   "final_test": null
+   "final_test": null,
+   "model": null
   },
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
-    "ccbc6f433f21515f7aa236453589db4541c722dc948f950eee36ab8e842723b2",
-    "888f992e15e62c349d7287b2d213e70be0a08fe7f3c36bfbd27dec7e6770ad4a",
-    "95809f5187ecba31b892ef9ce9b182579dad3e4208656e83be80930a423379bd"
+    "83369a7ca2440858f0edd3e0b1d279c7e5084040b0f9c52ffabaa988f8abed03",
+    "797bdf0a247a8d408a73f35bb3ca44ea18cea22c6b850841f3d34da3df3cac54",
+    "d361d7d3f37c3ce5be6c81b9fb5a8896a4ea3094a844fd244e691996f6f73934",
+    "4248017a882111dc5db46ba4b6520a4668b4ef176afcdaf7852b091fd4dd2d46"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 866aeaeb).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 3b4b0d1c).",
    "Now: Open the final test once; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."
@@ -508,6 +510,9 @@
   },
   "trials": {
    "count": 2
+  },
+  "scenario_defaults": {
+   "capacity_share": 0.1
   }
  }
 }
