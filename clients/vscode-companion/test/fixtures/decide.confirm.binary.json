@@ -34,7 +34,8 @@
    "basis": "explicit",
    "delegation_scope": null,
    "agent_concern": null,
-   "warnings": []
+   "warnings": [],
+   "mode": "guided"
   },
   "artifacts": {
    "report": {
