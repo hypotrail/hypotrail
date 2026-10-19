@@ -45,7 +45,10 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      # fold), the selection made on those predictions, and the one
                      # evaluation of the opened final test.
                      'cross_validated_fit', 'out_of_fold_evaluation',
-                     'out_of_fold_policy_selection', 'final_evaluation')
+                     'out_of_fold_policy_selection', 'final_evaluation',
+                     # WP-B4: the diagnostics of the development predictions (they read the
+                     # target and the features of the rows the models scored).
+                     'development_diagnostics')
 # Purposes that record rows set aside rather than looked at: not counted in rows_exposed.
 SEALED_PURPOSES = ('sealed',)
 EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', 'execution_id',

@@ -107,9 +107,14 @@ SIGNAL = 'eda.single_feature_signal'
 # v0.2b (WP-B1): the variant of the candidate, and the one evaluation of the final test.
 VARIANT = 'fit.variant'
 FINAL = 'final_test.evaluation'
+# v0.2b (WP-B4, R9): the model diagnostics of the development rows (one activity per task)
+# and of the final test (after its opening, both tasks).
+DIAG_BINARY = 'diag.binary'
+DIAG_REGRESSION = 'diag.regression'
+DIAG_FINAL = 'diag.final_test'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
               TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
-              SIGNAL, VARIANT, FINAL)
+              SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
     'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
@@ -120,12 +125,17 @@ TASK_ACTIVITIES = {
 SHARED_ACTIVITIES = (DISTRIBUTION, QUALITY, SIGNAL)
 # WP-B1: activities of every task in a study created since WP-B1.
 B1_ACTIVITIES = (VARIANT, FINAL)
+# WP-B4: the diagnostics of each task. ``diag.final_test`` needs a final test (WP-B1).
+DIAG_ACTIVITIES = {'binary': (DIAG_BINARY, DIAG_FINAL),
+                   'regression': (DIAG_REGRESSION, DIAG_FINAL)}
+DEVELOPMENT_DIAGNOSTICS = (DIAG_BINARY, DIAG_REGRESSION)
 
 
 def task_activities(task: str) -> tuple[str, ...]:
     """Every activity of a ``task`` study: its own, then the shared ones, then (WP-B1) the
-    variant and the final evaluation, which only a study with their decisions can run."""
-    return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES + B1_ACTIVITIES
+    variant and the final evaluation, which only a study with their decisions can run, then
+    (WP-B4) the diagnostics."""
+    return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES + B1_ACTIVITIES + DIAG_ACTIVITIES[task]
 ALIASES = {'policy.evaluate': POLICY}
 CLI_NAMES = ACTIVITIES + tuple(ALIASES)
 EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION, QUALITY,
@@ -163,6 +173,12 @@ MODULES = {
               'mlkit.classical', 'mlkit.study.governance'),
     FINAL: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.policy',
             'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance'),
+    DIAG_BINARY: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.fit', 'mlkit.study.metrics',
+                  'mlkit.study.policy', 'mlkit.classical', 'mlkit.study.governance'),
+    DIAG_REGRESSION: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.fit',
+                      'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance'),
+    DIAG_FINAL: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.metrics', 'mlkit.study.policy',
+                 'mlkit.study.regression'),
 }
 # The regression fit of the baseline also uses the error module.
 REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
@@ -365,7 +381,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                              details={'activities': list(task_activities(task)), 'task': task})
     options = normalize_options(activity, options)
     from . import state as st
-    if activity in B1_ACTIVITIES and not st.has_wp_b1_decisions(state):
+    if (activity in B1_ACTIVITIES or activity == DIAG_FINAL) \
+            and not st.has_wp_b1_decisions(state):
         raise CommandRefused('invalid_arguments',
                              f'{activity} is not an activity of this study: it was created before '
                              f'the variant and the final test existed.',
@@ -436,6 +453,10 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             expose('structural_inspection', _rows_partition(inputs), keys, read)
     elif activity == FINAL:
         _plan_final(store, state, case, inputs, params, exposures, expose)
+    elif activity == DIAG_FINAL:
+        params = _plan_final_diagnostics(store, state, case, inputs, expose)
+    elif activity in DEVELOPMENT_DIAGNOSTICS:
+        params = _plan_diagnostics(store, state, case, activity, inputs, expose)
     else:
         split_rid = state['current'][SPLIT]
         keys = split_keys(store, split_rid)
@@ -720,6 +741,100 @@ def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
         if exposures is not None else []
     expose('train_fit', partition.DEVELOPMENT, development, features + [target])
     expose('final_evaluation', partition.FINAL_TEST, final, features + [target])
+
+
+# --- WP-B4: diagnostics (no pandas) ---------------------------------------------------------
+
+def diagnostic_rule(state: Mapping, case: c.Case) -> tuple[str, str]:
+    """``(rule, source)`` of the binary diagnostics: the adopted rule, else the rule of the
+    latest open policy proposal, else the case's teaching share, else
+    :data:`mlkit.study.diagnostics.DEFAULT_RULE`."""
+    from . import diagnostics
+    adopted = adopted_rule(state)
+    if adopted is not None:
+        return adopted, 'adopted'
+    proposals = sorted((p for p in state['proposals'].values()
+                        if p['status'] == 'open' and p['decision_id'] == 'policy'),
+                       key=lambda p: (p['revision'], p['proposal_id']))
+    for p in reversed(proposals):
+        rule = rec.policy_rule(p['value'])
+        if rule is not None:
+            return rule, 'proposed'
+    share = ((case.scenario_defaults or {}).get('capacity_share') or {}).get('value')
+    if isinstance(share, (int, float)) and not isinstance(share, bool) and 0 < share <= 1:
+        return rec.canonical_rule(f'share:{share:g}') or f'share:{share:g}', 'scenario_default'
+    return diagnostics.DEFAULT_RULE, 'engine_default'
+
+
+def _plan_diagnostics(store, state: Mapping, case: c.Case, activity: str, inputs: dict,
+                      expose) -> dict:
+    """WP-B4: the identity and reads of ``diag.binary`` / ``diag.regression`` (inputs in
+    place); returns the params. The predictions of the candidate and the variant are read
+    back from their fits; the rows they scored are read for the segments, the examples and
+    the residuals by feature, and the rows their coefficients come from for the bootstrap."""
+    from . import diagnostics, state as st
+    task = st.task_of(state)
+    expected = DIAG_REGRESSION if task == st.REGRESSION else DIAG_BINARY
+    if activity != expected:
+        raise CommandRefused('invalid_arguments', f'{activity} is not an activity of a {task} '
+                                                  f'study; run {expected}.',
+                             details={'activities': list(task_activities(task)), 'task': task})
+    split_rid = state['current'][SPLIT]
+    keys = split_keys(store, split_rid)
+    cv = split_scheme(store, split_rid)
+    fits = FITS if task == st.BINARY else REGRESSION_FITS
+    models = [m for m in compared_models(state, fits) if m != BASELINE]
+    inputs['results'] = {SPLIT: split_rid, **{m: state['current'][m] for m in models}}
+    inputs['target'] = _target(case)
+    features: list[str] = []
+    for m in models:
+        for f in registry.get(store, state['current'][m])['inputs'].get('features') or []:
+            if f not in features:
+                features.append(f)
+    params: dict[str, Any] = {
+        'models': models, 'evaluation': 'out_of_fold' if cv else 'validation',
+        'coefficients': {'replicates': diagnostics.COEFFICIENT_REPLICATES,
+                         'seed': diagnostics.COEFFICIENT_SEED,
+                         'level': diagnostics.COEFFICIENT_LEVEL},
+        'segments': diagnostics.segment_columns(case, features)}
+    if task == st.BINARY:
+        rule, source = diagnostic_rule(state, case)
+        params.update(rule=rule, rule_source=source)
+    else:
+        params['residual_columns'] = diagnostics.residual_columns(case, features)
+    target = case.target_column
+    scored = partition.DEVELOPMENT if cv else 'validation'
+    expose(diagnostics.DEVELOPMENT_PURPOSE, scored, keys['validation'], features + [target])
+    if not cv:   # the coefficients come from the training rows
+        expose(diagnostics.DEVELOPMENT_PURPOSE, 'train', keys['train'], features + [target])
+    return params
+
+
+def _plan_final_diagnostics(store, state: Mapping, case: c.Case, inputs: dict,
+                            expose) -> dict:
+    """WP-B4: ``diag.final_test``, once the final test is opened: the predictions of its one
+    evaluation and the final-test rows (``final_evaluation``, partition ``final_test``)."""
+    from . import diagnostics, state as st
+    task = st.task_of(state)
+    rid = state['current'][FINAL]
+    entry = registry.get(store, rid)
+    values = entry['output']['values']
+    part = partition.of(state)
+    inputs['results'] = {FINAL: rid}
+    inputs['target'] = _target(case)
+    inputs['final_test'] = {'row_keys': part['final_test']['row_keys'],
+                            'n_rows': part['final_test']['n_rows']}
+    features = list(entry['inputs']['model_inputs'].get('features') or [])
+    params: dict[str, Any] = {'model': values['model'], 'evaluation': 'final_test',
+                              'segments': diagnostics.segment_columns(case, features)}
+    if task == st.BINARY:
+        params['rule'] = values.get('rule_final')
+    else:
+        params['residual_columns'] = diagnostics.residual_columns(case, features)
+    final = rec.parse_row_keys(store.read_blob(part['final_test']['row_keys']))
+    expose(diagnostics.FINAL_PURPOSE, partition.FINAL_TEST, final,
+           features + [case.target_column])
+    return params
 
 
 def evaluated_rules(state: Mapping, requested) -> list[str]:
@@ -1274,6 +1389,10 @@ def compute(store, plan_: Mapping) -> dict:
                            rows(dataset, keys['validation']), plan_['inputs'], plan_['params'])
     if activity == FINAL:
         return compute_final(store, plan_)
+    if activity in DEVELOPMENT_DIAGNOSTICS:
+        return compute_diagnostics(store, plan_)
+    if activity == DIAG_FINAL:
+        return compute_final_diagnostics(store, plan_)
     if activity == REGRESSION_EVALUATION:
         return compute_regression_evaluation(store, plan_)
     return compute_policy(store, plan_)
@@ -1478,3 +1597,120 @@ def compute_final(store, plan_: Mapping) -> dict:
                                             'recorded number of rows.')
     final = dt.load_final_test(case, final_keys)
     return fit.final_evaluation(case, development.frame, final.frame, inputs, params)
+
+
+# --- WP-B4: diagnostics -------------------------------------------------------------------
+
+def _model_inputs(entry: Mapping) -> dict:
+    keep = ('features', 'special_values', 'preprocessing')
+    return {k: entry['inputs'][k] for k in keep if k in entry['inputs']}
+
+
+def _regression_extras(case: c.Case, params: Mapping) -> dict:
+    from . import diagnostics as dg
+    return {'target': case.target_column, 'unit': case.target_unit,
+            'residual_columns': list(params['residual_columns']),
+            'residual_definition': 'residual = observed minus predicted',
+            'target_transform': None,
+            'smearing': {'applies': False, 'implemented': False, 'note': dg.SMEARING_NOTE},
+            'normality_note': dg.NORMALITY_NOTE}
+
+
+def compute_diagnostics(store, plan_: Mapping) -> dict:
+    """The development diagnostics of the candidate and the variant (WP-B4): read their
+    stored predictions back, and the rows those predictions describe; refit only for the
+    bootstrap of the coefficients."""
+    from . import diagnostics as dg
+    inputs, params = plan_['inputs'], plan_['params']
+    case, dataset = load(plan_, store)
+    results = inputs['results']
+    models = list(params['models'])
+    binary = case.task != 'regression'
+    preds = {m: read_predictions(store, results[m]) for m in models}
+    first = preds[models[0]]
+    for m in models[1:]:
+        if preds[m]['row_keys'] != first['row_keys'] or not (preds[m]['y'] == first['y']).all():
+            raise StudyError('integrity_error', 'The fits were not scored on the same rows; '
+                                                'their diagnostics cannot be compared.',
+                             details={'results': {m: results[m] for m in models}})
+    keys = first['row_keys']
+    y = first['y']
+    frame = rows(dataset, keys)
+    fitted_rows = rows(dataset, split_keys(store, results[SPLIT])['train'])
+    boot = params['coefficients']
+    out_models = {}
+    for m in models:
+        entry = registry.get(store, results[m])
+        features = list(entry['inputs'].get('features') or [])
+        if binary:
+            diag = dg.binary_model(y, preds[m]['score'], params['rule'], frame, keys,
+                                   params['segments'], features)
+        else:
+            diag = dg.regression_model(y, preds[m]['prediction'], frame, keys, case, features)
+        fitted = entry['output']['values']
+        diag['coefficients'] = dg.coefficient_intervals(
+            case, fitted_rows, _model_inputs(entry), entry['params'], binary,
+            fitted.get('coefficients') or {}, replicates=int(boot['replicates']),
+            seed=int(boot['seed']), level=float(boot['level']))
+        diag['coefficients']['scale'] = fitted.get('coefficient_scale')
+        diag['predictions'] = results[m]
+        out_models[m] = diag
+    cv = params['evaluation'] == 'out_of_fold'
+    values = {'question': dg.QUESTIONS[plan_['activity']], 'evidence': 'development',
+              'purpose': dg.DEVELOPMENT_PURPOSE,
+              'partition': partition.DEVELOPMENT if cv else 'validation',
+              'evaluation': params['evaluation'], 'n': len(y)}
+    if binary:
+        values.update(n_positive=int(y.sum()), base_rate=float(y.mean()) if len(y) else None,
+                      rule=params['rule'], rule_source=params['rule_source'],
+                      segment_columns=list(params['segments']), segment_rule=dg.SEGMENT_RULE)
+    else:
+        values.update(_regression_extras(case, params))
+    values['models'] = out_models
+    values['coefficient_rows'] = int(len(fitted_rows))
+    values['note'] = dg.DEVELOPMENT_NOTE if cv else dg.VALIDATION_NOTE
+    return {'values': values, 'blobs': {},
+            'partition': partition.DEVELOPMENT if cv else 'validation', 'n_rows': len(y)}
+
+
+def compute_final_diagnostics(store, plan_: Mapping) -> dict:
+    """The diagnostics of the chosen configuration on the final test (WP-B4), from the
+    predictions of its one evaluation; the final-test rows are read again (after the
+    opening only) for the segments, the examples and the residuals by feature."""
+    from . import data as dt
+    from . import diagnostics as dg
+    inputs, params = plan_['inputs'], plan_['params']
+    case, _ = load(plan_, store)
+    rid = inputs['results'][FINAL]
+    entry = registry.get(store, rid)
+    preds = read_predictions(store, rid)
+    final_keys = rec.parse_row_keys(store.read_blob(inputs['final_test']['row_keys']))
+    if sorted(final_keys) != sorted(preds['row_keys']):
+        raise StudyError('integrity_error', 'The final evaluation did not score the recorded '
+                                            'final-test rows.', details={'result_id': rid})
+    final = dt.load_final_test(case, final_keys)
+    keys = preds['row_keys']
+    frame = rows(final, keys)
+    y = preds['y']
+    model = params['model']
+    features = list(entry['inputs']['model_inputs'].get('features') or [])
+    binary = case.task != 'regression'
+    if binary:
+        diag = dg.binary_model(y, preds['score'], params['rule'], frame, keys,
+                               params['segments'], features)
+    else:
+        diag = dg.regression_model(y, preds['prediction'], frame, keys, case, features)
+    diag['predictions'] = rid
+    values = {'question': dg.QUESTIONS['final_binary' if binary else 'final_regression'],
+              'evidence': 'final', 'purpose': dg.FINAL_PURPOSE,
+              'partition': partition.FINAL_TEST, 'evaluation': 'final_test', 'n': len(y),
+              'model': model, 'final_evaluation': rid}
+    if binary:
+        values.update(n_positive=int(y.sum()), base_rate=float(y.mean()) if len(y) else None,
+                      rule=params['rule'], segment_columns=list(params['segments']),
+                      segment_rule=dg.SEGMENT_RULE)
+    else:
+        values.update(_regression_extras(case, params))
+    values['models'] = {model: diag}
+    values['note'] = dg.FINAL_NOTE
+    return {'values': values, 'blobs': {}, 'partition': partition.FINAL_TEST, 'n_rows': len(y)}
