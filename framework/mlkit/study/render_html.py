@@ -593,9 +593,9 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
     for key, item in rules.items():
         prefix = ['rules', key]
         tag = ''
-        if adopted['status'] == 'confirmed' and adopted['value'] == key:
+        if adopted['status'] == 'confirmed' and str(adopted['value']).partition('@')[0] == key:
             tag = _badge('confirmed', labels['adopted'])
-        elif key in proposed:
+        elif key in {str(p).partition('@')[0] for p in proposed}:
             tag = _badge('proposed', labels['proposed_rule'])
         models = item.get('models') if isinstance(item.get('models'), Mapping) else {}
         for model, mv in models.items():
@@ -640,15 +640,48 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
         pair_table = (f'<h3>{e(labels["paired_heading"])}</h3><div class="scroll"><table class="paired">'
                       '<thead><tr><th>Rule</th><th>Model</th><th>Metric</th><th>Difference</th>'
                       f'<th>Interval</th></tr></thead><tbody>{"".join(paired)}</tbody></table></div>')
+    comparisons = _comparison_rows(citer, rid, rules, metrics)
     population = ''
     if any(key.startswith('capacity:') for key in rules) and citer.has(rid, 'n'):
         # F2: a capacity is a count on these rows; say which population, and its rate.
         pop = labels['capacity_population']
         population = (f'<p class="notice" data-note="capacity_population">{e(pop["before"])} '
                       f'{citer.num(rid, "n", "int")} {e(pop["after"])}</p>')
-    return (head + f'<p class="notice">{e(labels["policy_note"])}{level}</p>{population}'
-            f'{table}{pair_table}'
+    note = labels['policy_note_oof'] if values.get('evaluation') == 'out_of_fold' \
+        else labels['policy_note']
+    return (head + f'<p class="notice">{e(note)}{level}</p>{population}'
+            f'{table}{pair_table}{comparisons}'
             f'{_figures(citer, rid, texts.activity("policy.evaluation"))}</section>')
+
+
+def _comparison_rows(citer: cite.Citer, rid: str, rules: Mapping | None, metrics) -> str:
+    """WP-B1: the variant against the candidate, paired on the same rows (cited)."""
+    labels = _labels()
+    rows = []
+    for key, item in (rules or {'': None}).items():
+        prefix = ['rules', key] if rules else []
+        source = item if rules else citer.results[rid].values
+        comparisons = source.get('comparisons') if isinstance(source, Mapping) else None
+        if not isinstance(comparisons, Mapping):
+            continue
+        for model in sorted(comparisons):
+            for m in metrics:
+                base = prefix + ['comparisons', str(model), m['key']]
+                point = cite.format_path(base + ['point'])
+                if not citer.has(rid, point):
+                    continue
+                fmt = m.get('fmt', 'auto')
+                rule = (f'<td>{lit("decision_value", rule_words(key))}</td>' if rules else '')
+                rows.append(f'<tr data-model="{e(model)}" data-metric="{e(m["key"])}">{rule}'
+                            f'<td>{e(m["label"])}</td><td>{citer.num(rid, point, fmt)}</td>'
+                            f'<td>{_interval(citer, rid, base, fmt)}</td></tr>')
+    if not rows:
+        return ''
+    rule_head = '<th>Rule</th>' if rules else ''
+    return (f'<h3>{e(labels["comparison_heading"])}</h3><div class="scroll">'
+            f'<table class="paired" id="variant-comparison"><thead><tr>{rule_head}'
+            '<th>Metric</th><th>Difference</th><th>Interval</th></tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>')
 
 
 def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
@@ -715,8 +748,11 @@ def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
                       '<table class="paired"><thead><tr><th>Model</th><th>Metric</th>'
                       '<th>Difference</th><th>Interval</th></tr></thead>'
                       f'<tbody>{"".join(paired)}</tbody></table></div>')
-    return (head + f'<p class="notice">{e(labels["model_note"])}{level}{unit_note}</p>'
-            f'{table}{pair_table}{_residuals(citer, rid, values)}'
+    note = labels['model_note_oof'] if values.get('evaluation') == 'out_of_fold' \
+        else labels['model_note']
+    return (head + f'<p class="notice">{e(note)}{level}{unit_note}</p>'
+            f'{table}{pair_table}{_comparison_rows(citer, rid, None, metrics)}'
+            f'{_residuals(citer, rid, values)}'
             f'{_figures(citer, rid, texts.activity("evaluate.regression"))}</section>')
 
 
@@ -878,12 +914,33 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
     if value is None:
         return ''
     if decision_id == 'policy':
-        return rule_words(value)
+        # WP-B1: a rule applied to the variant says so.
+        rule, sep, model = str(value).partition('@')
+        words = rule_words(rule)
+        return f'{words}, with the variant' if sep and model == 'fit.variant' else words
     if decision_id == 'model_choice':
         return {'fit.linear': 'Use the linear model',
+                'fit.variant': 'Use the variant of the linear model',
                 'fit.baseline': 'Keep predicting the training mean (the baseline)'}.get(
                     value, str(value))
     if isinstance(value, Mapping):
+        if decision_id == 'model_variant':
+            from .audience import variant_words
+            return 'Compare the model with a variant: ' + variant_words(value)
+        if decision_id == 'final_test':
+            model = _model_name(str(value.get('model')))
+            rule = value.get('rule')
+            return (f'Open the final test once for {model}'
+                    + (f', rule: {rule_words(rule)}' if rule else ''))
+        if decision_id == 'split' and value.get('method') in ('kfold_stratified', 'kfold_quantile',
+                                                               'temporal_folds'):
+            kind = {'kfold_stratified': 'stratified on the outcome',
+                    'kfold_quantile': 'stratified on target quantiles',
+                    'temporal_folds': 'blocks in time order'}[value['method']]
+            seed = (f' (seed {value["seed"]})' if value['method'] != 'temporal_folds'
+                    and 'seed' in value else '')
+            return (f'Cross-validation on the development rows: {value.get("folds")} folds, '
+                    f'{kind}{seed}; every row is predicted once by a model that did not see it')
         if decision_id == 'split':
             method = value.get('method')
             if method == 'ordinal_cutoff':
@@ -937,14 +994,15 @@ def _limits(view: Mapping, n: int = 3) -> list[str]:
     return out
 
 
-def _binary_figures(view: Mapping, citer: cite.Citer, rule: str | None) -> list[tuple[str, str]]:
+def _binary_figures(view: Mapping, citer: cite.Citer, rule: str | None,
+                    model: str = 'fit.logistic') -> list[tuple[str, str]]:
     rid = citer.slot_rid('policy.evaluation')
     if rid is None or rule is None:
         return []
-    m = cite.format_path(['rules', rule, 'models', 'fit.logistic'])
+    m = cite.format_path(['rules', rule, 'models', model])
     b = cite.format_path(['rules', rule, 'models', 'fit.baseline'])
-    d = cite.format_path(['rules', rule, 'deltas', 'fit.logistic', 'precision'])
-    iv = cite.format_path(['rules', rule, 'intervals', 'fit.logistic', 'precision'])
+    d = cite.format_path(['rules', rule, 'deltas', model, 'precision'])
+    iv = cite.format_path(['rules', rule, 'intervals', model, 'precision'])
     rows = []
 
     def opt(path: str, fmt: str, before: str = '', after: str = '') -> str:
@@ -978,12 +1036,12 @@ def _binary_figures(view: Mapping, citer: cite.Citer, rule: str | None) -> list[
     return rows
 
 
-def _regression_figures(citer: cite.Citer) -> list[tuple[str, str]]:
+def _regression_figures(citer: cite.Citer, chosen: str = 'fit.linear') -> list[tuple[str, str]]:
     rid = citer.slot_rid('evaluate.regression')
     if rid is None:
         return []
     rows = []
-    for model in ('fit.linear', 'fit.baseline'):
+    for model in ('fit.linear', 'fit.variant', 'fit.baseline'):
         path = cite.format_path(['models', model, 'mae'])
         if not citer.has(rid, path):
             continue
@@ -993,12 +1051,13 @@ def _regression_figures(citer: cite.Citer) -> list[tuple[str, str]]:
                     else '')
         rows.append((f'Mean absolute error, {_model_name(model).lower()}',
                      f'{citer.num(rid, path, "f2")}{interval}'))
-    d = cite.format_path(['deltas', 'fit.linear', 'mae'])
+    d = cite.format_path(['deltas', chosen, 'mae'])
     if citer.has(rid, d + '.point'):
         interval = (f' (interval {citer.num(rid, d + ".low", "f2")} to '
                     f'{citer.num(rid, d + ".high", "f2")})' if citer.has(rid, d + '.low')
                     else '')
-        rows.append(('Difference, linear minus baseline',
+        rows.append(('Difference, linear minus baseline' if chosen == 'fit.linear' else
+                     'Difference, variant minus baseline',
                      f'{citer.num(rid, d + ".point", "f2")}{interval}; negative means a '
                      f'smaller error'))
     return rows
@@ -1041,18 +1100,31 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
     else:
         rows.append((card['rule'], e(card['rule_none'])))
     if task == 'regression':
-        figures = _regression_figures(citer)
+        chosen = (criterion or {}).get('model') or 'fit.linear'
+        figures = _regression_figures(citer, chosen if chosen != 'fit.baseline'
+                                      else 'fit.linear')
     else:
         rule = (criterion or {}).get('rule')
+        model = (criterion or {}).get('model') or 'fit.logistic'
         if rule is None and adopted.get('status') == 'confirmed':
-            rule = adopted.get('value')
-        figures = _binary_figures(view, citer, rule)
+            rule = str(adopted.get('value')).partition('@')[0]
+            model = 'fit.variant' if '@fit.variant' in str(adopted.get('value')) \
+                else 'fit.logistic'
+        figures = _binary_figures(view, citer, rule, model)
         if figures and rule and not (adopted.get('status') == 'confirmed'
-                                     and adopted.get('value') == rule):
+                                     and str(adopted.get('value')).partition('@')[0] == rule):
             figures.insert(0, ('Rule of these figures', lit('decision_value', rule_words(rule))))
+    b1 = 'final_test' in view['decisions']
+    if figures and b1:
+        # WP-B1: the figures above are development evidence; the final test is apart.
+        figures.insert(0, (card['development'], e(card['development_note']
+                                                   if _out_of_fold(citer, task)
+                                                   else card['validation_note'])))
     rows += figures
     if not figures:
         rows.append((card['figures'], e(card['figures_none'])))
+    if b1:
+        rows += _final_rows(view, citer, task)
     parts.append('<dl class="facts">' + ''.join(f'<dt>{e(k)}</dt><dd>{v}</dd>'
                                                   for k, v in rows) + '</dl>')
     limits = _limits(view)
@@ -1062,6 +1134,69 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
                      + f'</ul><p class="small"><a href="#not-yet-defensible">'
                        f'{e(card["all_limits"])}</a></p>')
     return f'<section class="card verdict" id="verdict">{"".join(parts)}</section>'
+
+
+def _out_of_fold(citer: cite.Citer, task: str) -> bool:
+    rid = citer.slot_rid('evaluate.regression' if task == 'regression' else 'policy.evaluation')
+    if rid is None:
+        return False
+    values = citer.results[rid].values
+    return isinstance(values, Mapping) and values.get('evaluation') == 'out_of_fold'
+
+
+def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, str]]:
+    """WP-B1: the final-test part of the verdict card, apart from the development evidence:
+    sealed, or the one evaluation of the chosen configuration (cited), with the success
+    criterion judged on it, and a warning when something changed after the opening."""
+    card = _labels()['verdict_card']
+    final = view.get('final_test') or {}
+    status = final.get('status')
+    if status in (None, 'absent'):
+        return [(card['final'], e(card['final_absent']))]
+    if status == 'sealed':
+        rows = [(card['final'], e(card['final_sealed']))]
+    else:
+        rid = citer.slot_rid('final_test.evaluation')
+        if rid is None:
+            return [(card['final'], e(card['final_missing']))]
+        values = citer.results[rid].values
+        model = str(values.get('model'))
+        rows = [(card['final'], f'{e(card["final_opened"])} '
+                                f'{citer.num(rid, "n", "int")} {e(card["final_rows"])}')]
+        if task == 'regression':
+            for slot in (model, 'fit.baseline') if model != 'fit.baseline' else (model,):
+                path = cite.format_path(['models', slot, 'mae'])
+                if citer.has(rid, path):
+                    rows.append((f'{card["final_mae"]}, {_model_name(slot).lower()}',
+                                 citer.num(rid, path, 'f2')))
+        else:
+            rule = values.get('rule_final')
+            m = cite.format_path(['models', model])
+            if rule and citer.has(rid, f'{m}.true_positives') and citer.has(rid, f'{m}.selected'):
+                precision = (f' (precision {citer.num(rid, m + ".precision", "pct1")})'
+                             if citer.has(rid, m + '.precision') else '')
+                rows.append((card['final_found'],
+                             f'{citer.num(rid, m + ".true_positives", "auto")} among '
+                             f'{citer.num(rid, m + ".selected", "auto")} selected rows'
+                             f'{precision}; {lit("decision_value", rule_words(rule))}'))
+        crit = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
+        fmt = 'pts1' if task != 'regression' else 'pct1'
+        if crit.get('gain') is not None and citer.has(rid, 'criterion.gain'):
+            interval = ''
+            if citer.has(rid, 'criterion.low') and citer.has(rid, 'criterion.high'):
+                interval = (f', interval {citer.num(rid, "criterion.low", fmt)} to '
+                            f'{citer.num(rid, "criterion.high", fmt)}')
+            unit = ' percentage points' if task != 'regression' else ''
+            state = crit.get('status') or 'not_assessed'
+            rows.append((card['final_criterion'],
+                         f'{citer.num(rid, "criterion.gain", fmt)}{unit}{interval}. '
+                         f'{_badge(state, card["status"].get(state, state))}'))
+    if final.get('post_final_test'):
+        rows.append((card['final_after'], e(card['final_after_note'])))
+    trials = (view.get('trials') or {}).get('count')
+    if isinstance(trials, int) and trials:
+        rows.append((card['trials'], f'{lit("structure", trials)} {e(card["trials_note"])}'))
+    return rows
 
 
 # --- v0.2a (WP-A6): the objective and the data -----------------------------------------------

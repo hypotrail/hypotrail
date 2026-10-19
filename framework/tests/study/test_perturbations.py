@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from mlkit.study import case as c, cli, governance, read
+from mlkit.study import case as c, cli, governance, read, state as st
 
 import flowkit as fk
 
@@ -185,6 +185,11 @@ class Walk:
         self.run('eda.mean_by' if regression else 'eda.rate_by', '--column', by)
         self.run('fit.baseline')
         candidate = self.run('fit.linear' if regression else 'fit.logistic')
+        b1 = st.has_wp_b1_decisions(read.open(self.study).state)
+        if b1:
+            # WP-B1: the variant the choice compares, fitted under the same protocol.
+            self.decide('model_variant', dict(fk.VARIANT))
+            self.run('fit.variant')
         if regression:
             ev = self.run('evaluate.regression')['values']
             self.decide('model_choice', 'fit.baseline',
@@ -196,6 +201,11 @@ class Walk:
                           f'capacity:{capacity}')['values']
             self.decide('policy', f'capacity:{capacity}',
                         f'Yes, review the {capacity} highest scores.')
+        if b1:
+            # WP-B1: the final test, opened once on the chosen configuration.
+            self.decide('final_test', st.b1_default_value(read.open(self.study).state,
+                                                          'final_test'),
+                        'Yes, I open the final test now because the choice is fixed.')
         self.decide('conclusion', {'verdict': 'keep_baseline', 'text': CONCLUSION},
                     'Yes, I keep the baseline and record why.')
         check = self.call('check', 'check', '--study', self.study)

@@ -17,15 +17,15 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 32,
+  "revision": 36,
   "decision_id": "model_choice",
   "value": "fit.linear",
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the linear model. On the 96 validation rows its mean absolute error is 6.48 mpg against 10.27 for the training mean (paired difference -3.79, interval -4.38 to -3.16). These rows were used to choose, so the figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view (result c522e262).",
+  "rationale": "Chosen by the junior in the companion's What if? view (result 35f3af5f).",
   "evidence": {
-   "result_id": "c522e26258c46fc4589b011b19fd781aa0438ade5d89b84de4bb941d61e9503d",
+   "result_id": "35f3af5ff2fdc9516be01fc61a439801d7e078b7ca1de9d4c170a61a209c9591",
    "activity": "evaluate.regression",
    "figures": [
     {
@@ -60,7 +60,7 @@
     }
    ]
   },
-  "supersedes_proposal": "p_6",
+  "supersedes_proposal": "p_7",
   "recorded": false,
   "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
  }

@@ -57,7 +57,9 @@ CRITERION_STATUSES = ('met', 'not_met', 'uncertain', 'not_assessed')
 TARGET_ACTIVITIES = ('eda.target_rate', 'eda.target_summary', 'eda.special_values',
                      'eda.rate_by', 'eda.mean_by', 'eda.single_feature_signal',
                      'fit.baseline', 'fit.logistic', 'fit.linear', 'policy.evaluation',
-                     'evaluate.regression')
+                     'evaluate.regression',
+                     # WP-B1.
+                     'fit.variant', 'final_test.evaluation')
 EDA_PREFIX = 'eda.'
 
 
@@ -85,7 +87,8 @@ def uses_target(entry: Mapping, target: str | None = None) -> bool:
         return target is not None and params.get('column') == target
     if activity == 'split':
         decision = inputs.get('decision') or {}
-        return decision.get('method') == 'stratified_random'
+        return decision.get('method') in ('stratified_random', 'kfold_stratified',
+                                          'kfold_quantile')
     return False
 
 
@@ -275,16 +278,51 @@ def _citable(item) -> bool:
 
 
 def _rule(decisions: Mapping, proposals: list, evaluated: list[str],
-          canonical: Callable[[str], str]) -> str | None:
+          canonical: Callable[[str], str]) -> tuple[str | None, str]:
+    """``(rule, model)`` of the adopted policy, else of the open policy proposal, when it was
+    evaluated (WP-B1: a policy may apply its rule to the variant)."""
+    from .records import policy_model, policy_rule
     policy = decisions.get('policy') or {}
     candidates = []
     if policy.get('status') in ('confirmed', 'reconfirm_required'):
         candidates.append(policy.get('value'))
     candidates += [p['value'] for p in proposals if p.get('decision_id') == 'policy']
     for c in candidates:
-        if isinstance(c, str) and canonical(c) in evaluated:
-            return canonical(c)
-    return None
+        rule = policy_rule(c) if isinstance(c, str) else None
+        if rule is not None and canonical(rule) in evaluated:
+            return canonical(rule), policy_model(c)
+    return None, 'fit.logistic'
+
+
+def _regression_model(decisions: Mapping, proposals: list) -> str:
+    """The model the regression criterion judges: the chosen (or proposed) candidate or
+    variant (WP-B1), else the linear candidate."""
+    choice = decisions.get('model_choice') or {}
+    candidates = []
+    if choice.get('status') in ('confirmed', 'reconfirm_required'):
+        candidates.append(choice.get('value'))
+    candidates += [p['value'] for p in proposals if p.get('decision_id') == 'model_choice']
+    for c in candidates:
+        if c in ('fit.linear', 'fit.variant'):
+            return c
+    return 'fit.linear'
+
+
+def final_criterion(results: Mapping) -> dict | None:
+    """WP-B1: the success criterion judged on the final test (the ``criterion`` of the
+    current ``final_test.evaluation``, with its result id), or None before the opening."""
+    item = results.get('final_test.evaluation')
+    if not _citable(item):
+        return None
+    crit = item['values'].get('criterion')
+    if not isinstance(crit, Mapping):
+        return None
+    return {**{k: crit.get(k) for k in FINAL_CRITERION_KEYS if k != 'result_id'},
+            'result_id': item['result_id']}
+
+
+FINAL_CRITERION_KEYS = ('status', 'gain', 'low', 'high', 'minimum', 'unit',
+                        'interval_includes_zero', 'result_id')
 
 
 def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict | None:
@@ -309,7 +347,8 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
            'metric': CRITERION_METRICS[task], 'status': 'not_assessed', 'result_id': None,
            'rule': None, 'model': None, 'gain': None, 'low': None, 'high': None,
            'minimum': None, 'unit': 'percentage points' if task == 'binary' else 'share',
-           'interval_includes_zero': None, 'verdict': None, 'contradicts_verdict': False}
+           'interval_includes_zero': None, 'verdict': None, 'contradicts_verdict': False,
+           'final_test': None}
     conclusion = decisions.get('conclusion') or {}
     verdict = conclusion.get('value', {}).get('verdict') \
         if isinstance(conclusion.get('value'), Mapping) else None
@@ -321,12 +360,12 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
             if _citable(item):
                 rules = item['values'].get('rules') or {}
                 evaluated = {canonical(r): r for r in rules}
-                rule = _rule(decisions, view.get('open_proposals') or [], list(evaluated),
-                             canonical)
+                rule, model = _rule(decisions, view.get('open_proposals') or [],
+                                    list(evaluated), canonical)
                 delta = (((rules.get(evaluated.get(rule)) or {}).get('deltas') or {})
-                         .get('fit.logistic') or {}).get('precision') if rule else None
+                         .get(model) or {}).get('precision') if rule else None
                 if isinstance(delta, Mapping) and isinstance(delta.get('point'), (int, float)):
-                    out.update(result_id=item['result_id'], rule=rule, model='fit.logistic',
+                    out.update(result_id=item['result_id'], rule=rule, model=model,
                                gain=100 * delta['point'], minimum=value['min_points'],
                                low=100 * delta['low'] if delta.get('low') is not None else None,
                                high=100 * delta['high'] if delta.get('high') is not None else None)
@@ -334,11 +373,12 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
             item = results.get('evaluate.regression')
             if _citable(item):
                 vals = item['values']
+                model = _regression_model(decisions, view.get('open_proposals') or [])
                 base = ((vals.get('models') or {}).get('fit.baseline') or {}).get('mae')
-                delta = ((vals.get('deltas') or {}).get('fit.linear') or {}).get('mae')
+                delta = ((vals.get('deltas') or {}).get(model) or {}).get('mae')
                 if isinstance(base, (int, float)) and base > 0 and isinstance(delta, Mapping) \
                         and isinstance(delta.get('point'), (int, float)):
-                    out.update(result_id=item['result_id'], model='fit.linear',
+                    out.update(result_id=item['result_id'], model=model,
                                gain=-delta['point'] / base, minimum=value['min_share'],
                                low=-delta['high'] / base, high=-delta['low'] / base)
         if out['gain'] is not None:
@@ -349,4 +389,7 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
             out['status'] = 'not_met' if not reached else ('uncertain' if includes else 'met')
     out['contradicts_verdict'] = verdict in ADOPT_VERDICTS and out['status'] in ('not_met',
                                                                                  'uncertain')
+    # WP-B1 (additive, last): the criterion judged on the final test, shown apart from the
+    # development evidence above.
+    out['final_test'] = final_criterion(results) if isinstance(value, Mapping) else None
     return out

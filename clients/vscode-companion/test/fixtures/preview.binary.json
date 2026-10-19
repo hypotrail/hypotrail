@@ -33,6 +33,11 @@
     "result_id": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
     "current": true,
     "stale_reason": null
+   },
+   "fit.variant": {
+    "result_id": "7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f7a1f",
+    "current": true,
+    "stale_reason": null
    }
   },
   "evaluations": {
@@ -71,6 +76,28 @@
      "false_negatives": 120.0,
      "precision": 0.36,
      "recall": 0.23076923076923078,
+     "volume": 100.0,
+     "volume_rate": 0.07369196757553427,
+     "tied_at_cut": 0,
+     "cut": {
+      "score": null,
+      "n_tied": 0,
+      "fraction_selected": null
+     },
+     "selection": "exact"
+    },
+    "fit.variant": {
+     "rule": "capacity:100",
+     "kind": "capacity",
+     "parameter": 100,
+     "n": 1357,
+     "n_positive": 156,
+     "selected": 100.0,
+     "true_positives": 35.0,
+     "false_positives": 65.0,
+     "false_negatives": 121.0,
+     "precision": 0.35,
+     "recall": 0.22435897435897437,
      "volume": 100.0,
      "volume_rate": 0.07369196757553427,
      "tied_at_cut": 0,
@@ -125,6 +152,23 @@
        "high": 100.0,
        "undefined_replicates": 0
       }
+     },
+     "fit.variant": {
+      "precision": {
+       "low": 0.26,
+       "high": 0.47,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.1773049645390071,
+       "high": 0.2911588961396335,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 100.0,
+       "high": 100.0,
+       "undefined_replicates": 0
+      }
      }
     },
     "deltas": {
@@ -139,6 +183,49 @@
        "point": 0.15707726319369653,
        "low": 0.10361299696347283,
        "high": 0.21746692856409924,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     },
+     "fit.variant": {
+      "precision": {
+       "point": 0.235,
+       "low": 0.15651436993367723,
+       "high": 0.3447315770081061,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.15707726319369653,
+       "low": 0.10361299696347283,
+       "high": 0.21746692856409924,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     }
+    },
+    "comparisons": {
+     "fit.variant": {
+      "reference": "fit.logistic",
+      "precision": {
+       "point": -0.01,
+       "low": -0.05,
+       "high": 0.03,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": -0.0064,
+       "low": -0.03,
+       "high": 0.02,
        "undefined_replicates": 0
       },
       "volume": {

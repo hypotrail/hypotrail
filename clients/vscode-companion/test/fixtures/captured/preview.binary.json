@@ -18,19 +18,24 @@
   "schema": "hypotrail.preview/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 38,
+  "revision": 42,
   "kind": "policy",
   "rules": [
    "capacity:100"
   ],
   "models": {
    "fit.baseline": {
-    "result_id": "ffd0c4bfde485783fc2a8fde8ca93f7da495d9d0104c970b23b075dbda0ee457",
+    "result_id": "ef591bc81c93676be91598a2eeef5953797366ab0bd0d30bdccc5a4f63114341",
     "current": true,
     "stale_reason": null
    },
    "fit.logistic": {
-    "result_id": "8c6e100667c647469902db4ae09a5b242fe166ef8bd9d3e2188e8807092495af",
+    "result_id": "c44ba1d7ed4fe083ee01d17876f01a3bdee597cc78c81dac0ec53d94c432e931",
+    "current": true,
+    "stale_reason": null
+   },
+   "fit.variant": {
+    "result_id": "ab76173b4f53baa069a48b4b919dcf00b3e239fee69f330ff0bd47555c88475f",
     "current": true,
     "stale_reason": null
    }
@@ -71,6 +76,28 @@
      "false_negatives": 88.0,
      "precision": 0.37,
      "recall": 0.296,
+     "volume": 100.0,
+     "volume_rate": 0.09208103130755065,
+     "tied_at_cut": 0,
+     "cut": {
+      "score": null,
+      "n_tied": 0,
+      "fraction_selected": null
+     },
+     "selection": "exact"
+    },
+    "fit.variant": {
+     "rule": "capacity:100",
+     "kind": "capacity",
+     "parameter": 100,
+     "n": 1086,
+     "n_positive": 125,
+     "selected": 100.0,
+     "true_positives": 40.0,
+     "false_positives": 60.0,
+     "false_negatives": 85.0,
+     "precision": 0.4,
+     "recall": 0.32,
      "volume": 100.0,
      "volume_rate": 0.09208103130755065,
      "tied_at_cut": 0,
@@ -125,6 +152,23 @@
        "high": 100.0,
        "undefined_replicates": 0
       }
+     },
+     "fit.variant": {
+      "precision": {
+       "low": 0.29,
+       "high": 0.5,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.2463681849551415,
+       "high": 0.3888888888888889,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 100.0,
+       "high": 100.0,
+       "undefined_replicates": 0
+      }
      }
     },
     "deltas": {
@@ -139,6 +183,49 @@
        "point": 0.20391896869244935,
        "low": 0.13932392737013533,
        "high": 0.29074448952578263,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     },
+     "fit.variant": {
+      "precision": {
+       "point": 0.28489871086556173,
+       "low": 0.18147329650092084,
+       "high": 0.37308011049723744,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.22791896869244938,
+       "low": 0.15428715364759085,
+       "high": 0.29680785758133826,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     }
+    },
+    "comparisons": {
+     "fit.variant": {
+      "reference": "fit.logistic",
+      "precision": {
+       "point": 0.030000000000000027,
+       "low": -0.030000000000000027,
+       "high": 0.06,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.02400000000000002,
+       "low": -0.025215425153112103,
+       "high": 0.046153846153846156,
        "undefined_replicates": 0
       },
       "volume": {

@@ -205,8 +205,9 @@ def test_a_delegation_needs_no_reason(pause3):
 
 
 def test_reason_decisions_by_task():
-    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion'),
-                                   'regression': ('model_choice', 'conclusion')}
+    # WP-B1: the opening of the final test too.
+    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion', 'final_test'),
+                                   'regression': ('model_choice', 'conclusion', 'final_test')}
     assert not cf.has_reason('oui je confirme cela') and not cf.has_reason('I agree')
     assert cf.has_reason('je confirme car le service est limité')
     assert cf.has_reason('yes, since the baseline is weaker')

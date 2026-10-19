@@ -278,7 +278,10 @@ INTERNAL_SEGMENTS = frozenset({
     'null_band', 'undefined_replicates', 'replicates', 'seed', 'shuffles', 'max_groups',
     'min_group_rows', 'iterations', 'n_terms', 'coefficients', 'intercept', 'cut',
     'tied_at_cut', 'folds', 'rank', 'bin_width', 'n_bins', 'fitted', 'preprocessing',
-    'questions', 'co_occurrence'})
+    'questions', 'co_occurrence',
+    # WP-B1 (WP-A9 merge): per-fold metrics and fold sizes, the variant's penalty, the
+    # final test's refit details and rule parameters.
+    'per_fold', 'fold_rows', 'C', 'candidate_C', 'refit', 'parameter'})
 INTERNAL_BY_SLOT = {'eda.quality': frozenset({'ranges', 'rare', 'rare_rows'})}
 # WP-A9 (H2): words near a number that name what it measures, and the path segments a
 # matching registry value must contain ("précision ... 10 %" binds to a precision). A count

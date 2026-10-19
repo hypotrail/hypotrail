@@ -22,7 +22,9 @@ from mlkit.study import activities as act, dependencies as dep, read, view
 import flowkit as fk
 from flowkit import Flow
 
-DOWNSTREAM = ('eda.target_rate', 'fit.baseline', 'fit.logistic', 'policy.evaluation')
+# WP-B1: the variant the evaluation compares is downstream of the split too.
+DOWNSTREAM = ('eda.target_rate', 'fit.baseline', 'fit.logistic', 'fit.variant',
+              'policy.evaluation')
 
 
 @pytest.fixture(scope='module')
@@ -101,14 +103,15 @@ def test_a_changed_fit_flags_then_invalidates_the_policy(adopted, tmp_path):
     # the policy evaluation; state is untouched (status is read-only).
     _, status = hyp_with(engine, 'status', '--study', study, cwd=tmp_path)
     results = status['view']['results']
-    for slot in ('fit.baseline', 'fit.logistic', 'policy.evaluation'):
+    for slot in ('fit.baseline', 'fit.logistic', 'fit.variant', 'policy.evaluation'):
         assert results[slot]['current'] is False, slot
     assert results['fit.logistic']['stale_reason']['code_changed'] == ['mlkit.study.fit']
     assert results['policy.evaluation']['stale_reason']['upstream_not_current'] == [
-        results['fit.baseline']['result_id'], results['fit.logistic']['result_id']]
+        results['fit.baseline']['result_id'], results['fit.logistic']['result_id'],
+        results['fit.variant']['result_id']]
     assert results['split']['current'] is True and results['eda.target_rate']['current'] is True
     flagged = next(x for x in status['view']['not_yet_defensible'] if x['id'] == 'code_changed')
-    assert flagged['slots'] == ['fit.baseline', 'fit.logistic']
+    assert flagged['slots'] == ['fit.baseline', 'fit.logistic', 'fit.variant']
     # Rerunning the fit with the new code replaces it: the evaluation computed from the
     # old fit becomes stale and the adopted policy needs reconfirmation.
     old_eval = read.open(study).state['current']['policy.evaluation']

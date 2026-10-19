@@ -54,6 +54,7 @@ def _bank(study: Path) -> Path:
     f.run('eda.single_feature_signal')
     f.run('fit.baseline')
     f.run('fit.logistic')
+    f.variant()           # WP-B1: the variant the policy compares
     f.run('policy.evaluate', '--rule', 'capacity:100')
     f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
     f.decide('conclusion', {'verdict': 'adopt_policy',
@@ -77,6 +78,7 @@ def _auto(study: Path) -> Path:
     f.run('eda.single_feature_signal')
     f.run('fit.baseline')
     f.run('fit.linear')
+    f.variant()           # WP-B1: the variant the model choice compares
     f.run('evaluate.regression')
     f.decide('model_choice', 'fit.linear', 'Yes, adopt the linear model because it errs less')
     return study
@@ -321,3 +323,86 @@ def test_check_verifies_chart_labels_and_points(studies, tmp_path):
                   if f['code'] == 'value_mismatch']
     shown = {f['details']['shown'] for f in mismatches}
     assert '999' in ''.join(shown) and '0.3' in shown, mismatches
+
+
+# --- WP-B1: a cross-validated study, its variant, and its opened final test ---------------
+
+def _cv(study: Path, case_dir: Path, task: str) -> Path:
+    import json
+    f = fk.Flow(study, case_dir, prefix='b1')
+    f.init()
+    f.pauses(split=False)
+    f.decide('split', f.view()['next_action']['default_value'])
+    f.model_decisions()
+    f.run('split')
+    for a in (('eda.target_summary', 'eda.special_values') if task == 'regression'
+              else ('eda.target_rate', 'eda.special_values')):
+        f.run(a)
+    f.run('fit.baseline')
+    f.run('fit.linear' if task == 'regression' else 'fit.logistic')
+    f.variant()
+    if task == 'regression':
+        f.run('evaluate.regression')
+        f.decide('model_choice', 'fit.linear', 'Yes, adopt the linear model because it errs less')
+    else:
+        f.run('policy.evaluate', '--rule', 'capacity:100')
+        f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
+    value = f.view()['next_action']['default_value']
+    p = f.call('decide', 'propose', 'final_test', '--value-json', json.dumps(value),
+               '--restatement', 'You open the sealed final test once for the chosen configuration.',
+               '--rationale', 'The choice is fixed.', '--request-id', f.rid(),
+               '--expected-revision', f.rev(), '--study', f.study)
+    f.call('decide', 'confirm', p['result']['proposal_id'], '--user-words',
+           'Yes, I open it now because the choice is fixed', '--request-id', f.rid(),
+           '--expected-revision', f.rev(), '--study', f.study)
+    return study
+
+
+@pytest.fixture(scope='module')
+def cv_studies(tmp_path_factory) -> dict[str, Path]:
+    root = tmp_path_factory.mktemp('wp_b1')
+    return {'bank': _cv(root / 'bank', fk.BANK, 'binary'),
+            'auto': _cv(root / 'auto', AUTO, 'regression')}
+
+
+@pytest.mark.parametrize('name', ['bank', 'auto'])
+def test_cross_validated_recomputation_cells_refit_fold_by_fold(cv_studies, name):
+    """WP-B1: the split cell counts the folds, the model cell refits the candidate on the
+    other folds of each fold and recomputes its out-of-fold metric."""
+    study = cv_studies[name]
+    source = (study / rn.GENERATED).read_text(encoding='utf-8')
+    assert 'nv.folds(study, RESULT_IDS["split"])' in source
+    assert 'Out-of-fold' in source
+    run = _run_app(study / rn.GENERATED, study.parent)
+    assert run['code'] == 0, run['stderr']
+    out = run['out']
+    s = read.open(study)
+    if name == 'bank':
+        logistic = s.current('fit.logistic')['output']['values']
+        assert out['validation_auc'] == pytest.approx(logistic['validation']['roc_auc'],
+                                                      abs=code_cells.FIT_TOLERANCE)
+        at_rule = s.current('policy.evaluation')['output']['values']['rules']['capacity:100']
+        assert out['found'] == at_rule['models']['fit.logistic']['true_positives']
+    else:
+        evaluation = s.current('evaluate.regression')['output']['values']
+        assert out['validation_mae'] == pytest.approx(evaluation['models']['fit.linear']['mae'],
+                                                      abs=code_cells.FIT_TOLERANCE)
+        assert out['baseline_mae'] == pytest.approx(evaluation['models']['fit.baseline']['mae'])
+    assert set(out['development_keys']) == set(fk.partition_keys(study, 'development'))
+
+
+@pytest.mark.parametrize('name', ['bank', 'auto'])
+def test_the_verdict_card_separates_development_and_final_evidence(cv_studies, name):
+    study = cv_studies[name]
+    page = (study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    verdict = re.search(r'<section class="card verdict" id="verdict">.*?</section>', page,
+                        re.S).group(0)
+    assert 'Development evidence' in verdict and 'out-of-fold' in verdict
+    assert 'Final test' in verdict and 'Opened once, on' in verdict
+    assert 'Success criterion on the final test' in verdict
+    final = read.open(study).current('final_test.evaluation')['result_id']
+    assert f'data-result-id="{final}"' in verdict
+    assert 'Configurations compared' in verdict
+    assert 'id="variant-comparison"' in page
+    report = cmd_check.run_check(study)
+    assert report['clean'], report['findings']

@@ -2042,7 +2042,8 @@
     "upstream": {
      "fit.baseline": "148b20ff6b8ad1dd05c9a0e5259d63d2463b88aca0260981efecb308ac96c41a",
      "fit.linear": "e2fb692df878075e4c417702a123201226c5e353aa479172a91bef7d9a517c7c",
-     "split": "6e96c20fe6026d4dc33b7a4b70ede72858d12d2b33195cb10763fc11be19df88"
+     "split": "6e96c20fe6026d4dc33b7a4b70ede72858d12d2b33195cb10763fc11be19df88",
+     "fit.variant": "3dba08aad798ad0b76e1452aa4e6712afb3bcd6abf7e8327060d54189fdf640d"
     },
     "downstream": [],
     "created": "2026-10-18T22:31:47.418779+00:00",
@@ -2069,6 +2070,18 @@
         "low": -4.737915850416874,
         "point": -4.266314872752789
        }
+      },
+      "fit.variant": {
+       "mae": {
+        "point": -3.7635092079842165,
+        "low": -4.318230357129342,
+        "high": -3.182753899638755
+       },
+       "rmse": {
+        "point": -4.170384139553372,
+        "low": -4.660485375760737,
+        "high": -3.648570386778664
+       }
       }
      },
      "intervals": {
@@ -2091,6 +2104,16 @@
         "high": 8.306924218964754,
         "low": 6.685713460205095
        }
+      },
+      "fit.variant": {
+       "mae": {
+        "low": 5.700070241671318,
+        "high": 7.367522314327747
+       },
+       "rmse": {
+        "low": 6.833640498704084,
+        "high": 8.65974474375661
+       }
       }
      },
      "models": {
@@ -2109,13 +2132,22 @@
        "median_abs_residual": 5.385505011592155,
        "n": 118,
        "rmse": 7.513230061812575
+      },
+      "fit.variant": {
+       "n": 96,
+       "mae": 6.505297098322088,
+       "rmse": 7.754118337852464,
+       "mean_residual": 6.409752295558562,
+       "median_abs_residual": 5.673693089740421,
+       "max_abs_residual": 18.794732120875594
       }
      },
      "n": 118,
      "note": "The model is chosen on these validation rows: these errors are not independent evidence of future error. No model was refitted.",
      "predictions": {
       "fit.baseline": "148b20ff6b8ad1dd05c9a0e5259d63d2463b88aca0260981efecb308ac96c41a",
-      "fit.linear": "e2fb692df878075e4c417702a123201226c5e353aa479172a91bef7d9a517c7c"
+      "fit.linear": "e2fb692df878075e4c417702a123201226c5e353aa479172a91bef7d9a517c7c",
+      "fit.variant": "3dba08aad798ad0b76e1452aa4e6712afb3bcd6abf7e8327060d54189fdf640d"
      },
      "reference": "fit.baseline",
      "residual_definition": "residual = observed minus predicted; a positive residual means the model predicted too low; the mean residual is the bias",
@@ -2143,6 +2175,18 @@
        "q75": 8.815031474119564,
        "q95": 14.861844900635026,
        "sd": 4.276343264176679
+      },
+      "fit.variant": {
+       "n": 96,
+       "mean": 6.409752295558562,
+       "sd": 4.386554773122254,
+       "min": -2.0154747653481238,
+       "q05": 0.4804557357102279,
+       "q25": 3.3901253743852857,
+       "median": 5.673693089740421,
+       "q75": 9.178199377862295,
+       "q95": 15.431844902403551,
+       "max": 18.794732120875594
       }
      },
      "residuals_by": [
@@ -2160,6 +2204,10 @@
           "fit.linear": {
            "mae": 4.1580802644269275,
            "mean_residual": 4.042853350447878
+          },
+          "fit.variant": {
+           "mae": 3.924945436027481,
+           "mean_residual": 3.753553139485518
           }
          },
          "n_rows": 29,
@@ -2175,6 +2223,10 @@
           "fit.linear": {
            "mae": 8.402377244232804,
            "mean_residual": 8.214577459344293
+          },
+          "fit.variant": {
+           "mae": 3.924945436027481,
+           "mean_residual": 3.753553139485518
           }
          },
          "n_rows": 29,
@@ -2190,6 +2242,10 @@
           "fit.linear": {
            "mae": 5.760628404892748,
            "mean_residual": 5.581011579717216
+          },
+          "fit.variant": {
+           "mae": 3.924945436027481,
+           "mean_residual": 3.753553139485518
           }
          },
          "n_rows": 29,
@@ -2205,6 +2261,10 @@
           "fit.linear": {
            "mae": 6.874480187231553,
            "mean_residual": 6.874480187231553
+          },
+          "fit.variant": {
+           "mae": 3.924945436027481,
+           "mean_residual": 3.753553139485518
           }
          },
          "n_rows": 31,
@@ -2216,7 +2276,23 @@
       }
      ],
      "target": "mpg",
-     "unit": "mpg"
+     "unit": "mpg",
+     "comparisons": {
+      "fit.variant": {
+       "reference": "fit.linear",
+       "mae": {
+        "point": 0.028706715665814286,
+        "low": -0.04194178849329033,
+        "high": 0.09590339908292789
+       },
+       "rmse": {
+        "point": 0.08969855616630529,
+        "low": 0.021499179657065777,
+        "high": 0.15014827065407482
+       }
+      }
+     },
+     "evaluation": "validation"
     },
     "headline": {
      "segments": [
@@ -2456,6 +2532,9 @@
      "validation": {
       "structural_inspection": 318,
       "validation_model_evaluation": 118
+     },
+     "final_test": {
+      "sealed": 80
      }
     },
     "validation_rows_used_for_selection": 118,

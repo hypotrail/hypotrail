@@ -10,7 +10,7 @@
  "payload": {
   "schema": "hypotrail.handoff/1",
   "study": "<study>",
-  "revision": 38,
+  "revision": 42,
   "task": "binary",
   "case": {
    "id": "uci-bank-marketing-v1",
@@ -121,6 +121,21 @@
     "proposal_id": "p_5"
    },
    {
+    "decision_id": "model_variant",
+    "status": "confirmed",
+    "value": {
+     "kind": "regularisation",
+     "strength": "strong"
+    },
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "authenticated": false,
+    "proposal_id": "p_6"
+   },
+   {
     "decision_id": "policy",
     "status": "confirmed",
     "value": "threshold:0.2",
@@ -130,7 +145,19 @@
     "channel": "chat",
     "actor": "user",
     "authenticated": false,
-    "proposal_id": "p_6"
+    "proposal_id": "p_7"
+   },
+   {
+    "decision_id": "final_test",
+    "status": "open",
+    "value": null,
+    "user_words": null,
+    "basis": null,
+    "delegation_scope": null,
+    "channel": null,
+    "actor": null,
+    "authenticated": false,
+    "proposal_id": null
    },
    {
     "decision_id": "conclusion",
@@ -147,147 +174,147 @@
   ],
   "results_cited": [
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "e2c280e8c4ae18354ed9ec703eaa7acf79a9efcc26c64b7a93e75047ececd4c9",
+    "result_id": "06f4d88bf5fdf151b017594ced215db6be2b10f774182c9ba13ad7bf09cbc596",
     "activity": "eda.target_rate",
     "path": "rate",
     "value": 0.11536941920189649,
     "shown": "11.5%"
    },
    {
-    "result_id": "e2c280e8c4ae18354ed9ec703eaa7acf79a9efcc26c64b7a93e75047ececd4c9",
+    "result_id": "06f4d88bf5fdf151b017594ced215db6be2b10f774182c9ba13ad7bf09cbc596",
     "activity": "eda.target_rate",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "cb3572f62361ceb5e9f0a78cd32fc71473d44e6e58989c08e8e1bb7730cc3a73",
+    "result_id": "ee7ca263f803548e838162776ab5300837920f1652c16b8561e2b22d251a9da1",
     "activity": "eda.special_values",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "3440e2cb2f6eac5fc4139ecc5214a9723a4757628c833c9d7a7c12aa0740bdba",
+    "result_id": "85e85dd7bc4db0189220c03e5650e0faf27778fc414c8052e272ed6d9b8d59d2",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "3a32436e501daa0b013dc582a469feeb66e27be1477cfca7f49550142fc904b8",
+    "result_id": "62a6c6a77e62cc45e1e3170e5f5ef9668e8e76253e6ebee7016450def3ee6e41",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "5623db46e96f594bbeb2acd449682326a026cf4ef8fea269692647dd6d81860e",
+    "result_id": "f477588184fcd6488808058e230107e03e9c7fe4212d5d7783aaee66b1357fa8",
     "activity": "eda.rate_by",
     "path": "n_groups",
     "value": 12,
     "shown": "12"
    },
    {
-    "result_id": "5623db46e96f594bbeb2acd449682326a026cf4ef8fea269692647dd6d81860e",
+    "result_id": "f477588184fcd6488808058e230107e03e9c7fe4212d5d7783aaee66b1357fa8",
     "activity": "eda.rate_by",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "ffd0c4bfde485783fc2a8fde8ca93f7da495d9d0104c970b23b075dbda0ee457",
+    "result_id": "ef591bc81c93676be91598a2eeef5953797366ab0bd0d30bdccc5a4f63114341",
     "activity": "fit.baseline",
     "path": "validation.roc_auc",
     "value": 0.5,
     "shown": "0.500"
    },
    {
-    "result_id": "ffd0c4bfde485783fc2a8fde8ca93f7da495d9d0104c970b23b075dbda0ee457",
+    "result_id": "ef591bc81c93676be91598a2eeef5953797366ab0bd0d30bdccc5a4f63114341",
     "activity": "fit.baseline",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "8c6e100667c647469902db4ae09a5b242fe166ef8bd9d3e2188e8807092495af",
+    "result_id": "c44ba1d7ed4fe083ee01d17876f01a3bdee597cc78c81dac0ec53d94c432e931",
     "activity": "fit.logistic",
     "path": "validation.roc_auc",
     "value": 0.7348678459937565,
     "shown": "0.735"
    },
    {
-    "result_id": "8c6e100667c647469902db4ae09a5b242fe166ef8bd9d3e2188e8807092495af",
+    "result_id": "c44ba1d7ed4fe083ee01d17876f01a3bdee597cc78c81dac0ec53d94c432e931",
     "activity": "fit.logistic",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "69b67863c53a2956465011c993c6bdeb2d2102164141df9b77765ad23e3f1df0",
+    "result_id": "e303522fdb9ff494bea80d74ce508ec8de87b5bec9b190ef79db0ec6f134f663",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
     "value": 0.38144329896907214,
     "shown": "38.1%"
    },
    {
-    "result_id": "69b67863c53a2956465011c993c6bdeb2d2102164141df9b77765ad23e3f1df0",
+    "result_id": "e303522fdb9ff494bea80d74ce508ec8de87b5bec9b190ef79db0ec6f134f663",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
     "value": 0.296,
     "shown": "29.6%"
    },
    {
-    "result_id": "69b67863c53a2956465011c993c6bdeb2d2102164141df9b77765ad23e3f1df0",
+    "result_id": "e303522fdb9ff494bea80d74ce508ec8de87b5bec9b190ef79db0ec6f134f663",
     "activity": "policy.evaluation",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "n_rows",
     "value": 3617,
     "shown": "3,617"
    },
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
+    "result_id": "daa71ad3015112e3a3e5740aa675554d3d8660a44a99c492555604797aa7d706",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
@@ -296,7 +323,7 @@
   ],
   "exposure": {
    "summary": {
-    "records": 16,
+    "records": 18,
     "rows_exposed": 3617,
     "by_purpose": {
      "sealed": 904,
@@ -369,25 +396,27 @@
      "purpose": "train_fit",
      "partition": "train",
      "rows": 2531,
-     "records": 2,
+     "records": 3,
      "activities": [
       "fit.baseline",
-      "fit.logistic"
+      "fit.logistic",
+      "fit.variant"
      ],
      "first_revision": 28,
-     "last_revision": 30
+     "last_revision": 34
     },
     {
      "purpose": "validation_model_evaluation",
      "partition": "validation",
      "rows": 1086,
-     "records": 2,
+     "records": 3,
      "activities": [
       "fit.baseline",
-      "fit.logistic"
+      "fit.logistic",
+      "fit.variant"
      ],
      "first_revision": 28,
-     "last_revision": 30
+     "last_revision": 34
     },
     {
      "purpose": "validation_policy_selection",
@@ -397,8 +426,8 @@
      "activities": [
       "policy.evaluation"
      ],
-     "first_revision": 32,
-     "last_revision": 36
+     "first_revision": 36,
+     "last_revision": 40
     },
     {
      "purpose": "sealed",
@@ -416,7 +445,7 @@
   "not_yet_defensible": [
    {
     "id": "unconfirmed_decisions",
-    "text": "These decisions are not confirmed: conclusion."
+    "text": "These decisions are not confirmed: final_test, conclusion."
    },
    {
     "id": "validation_is_not_independent",
@@ -441,11 +470,15 @@
    {
     "id": "workbench_not_tracked",
     "text": "Experiments in the notebook workbench are not recorded and are not decisions."
+   },
+   {
+    "id": "final_test_sealed",
+    "text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
    }
   ],
   "open_items": {
    "proposals": [
-    "p_7"
+    "p_8"
    ],
    "holds": [],
    "executions": [],
@@ -468,6 +501,7 @@
    "hypotrail run eda.single_feature_signal --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run fit.baseline --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run fit.logistic --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run fit.variant --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run policy.evaluate --rule capacity:100 --rule threshold:0.2 --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail render --study <study>",
    "hypotrail check --study <study>"

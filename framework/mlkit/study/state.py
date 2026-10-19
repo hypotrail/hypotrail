@@ -58,7 +58,21 @@ FULL_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'spli
                                 SUCCESS_CRITERION, PREPROCESSING, 'model_choice', 'conclusion')
 DECISION_IDS_BY_TASK = {BINARY: DECISION_IDS, REGRESSION: REGRESSION_DECISION_IDS}
 FULL_DECISION_IDS_BY_TASK = {BINARY: FULL_DECISION_IDS, REGRESSION: FULL_REGRESSION_DECISION_IDS}
-ALL_DECISION_IDS = tuple(dict.fromkeys(FULL_DECISION_IDS + FULL_REGRESSION_DECISION_IDS))
+# v0.2b (WP-B1, ADR 0006 amendment): two more decisions. ``model_variant`` names the one
+# analytical variant of the candidate model the junior compares under the same evaluation
+# protocol (a regularisation strength or a feature group left out); ``final_test`` opens the
+# sealed final test once, in the junior's words, after the choice. A study created by
+# ``init`` since WP-B1 has the nine decisions; a study created before keeps its five or seven
+# (never migrated): :func:`decision_ids` reads which set a state holds.
+MODEL_VARIANT, FINAL_TEST = 'model_variant', 'final_test'
+WP_B1_DECISIONS = (MODEL_VARIANT, FINAL_TEST)
+B1_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
+                   PREPROCESSING, MODEL_VARIANT, 'policy', FINAL_TEST, 'conclusion')
+B1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split',
+                              SUCCESS_CRITERION, PREPROCESSING, MODEL_VARIANT, 'model_choice',
+                              FINAL_TEST, 'conclusion')
+B1_DECISION_IDS_BY_TASK = {BINARY: B1_DECISION_IDS, REGRESSION: B1_REGRESSION_DECISION_IDS}
+ALL_DECISION_IDS = tuple(dict.fromkeys(B1_DECISION_IDS + B1_REGRESSION_DECISION_IDS))
 # The decision of the third pause, per task (the choice made on validation results).
 CHOICE_DECISION = {BINARY: 'policy', REGRESSION: 'model_choice'}
 DECISION_STATUSES = ('open', 'proposed', 'confirmed', 'reconfirm_required', 'superseded')
@@ -164,6 +178,23 @@ FULL_REGRESSION_DEPENDS_ON = {
                    PREPROCESSING, 'model_choice'),
 }
 FULL_DEPENDS_ON_BY_TASK = {BINARY: FULL_DEPENDS_ON, REGRESSION: FULL_REGRESSION_DEPENDS_ON}
+# v0.2b (WP-B1): the variant rests on no decision (its value is checked against the case when
+# it is fitted); the choice rests on the variant (it compares it), the opening of the final
+# test on every decision before it, and the conclusion on every decision.
+_B1_COMMON = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
+              PREPROCESSING, MODEL_VARIANT)
+
+
+def _b1_depends(choice: str) -> dict:
+    return {'prediction_time': (), 'feature_availability': ('prediction_time',), 'split': (),
+            SUCCESS_CRITERION: (), PREPROCESSING: (), MODEL_VARIANT: (),
+            choice: ('prediction_time', 'feature_availability', 'split', PREPROCESSING,
+                     MODEL_VARIANT),
+            FINAL_TEST: _B1_COMMON + (choice,),
+            'conclusion': _B1_COMMON + (choice, FINAL_TEST)}
+
+
+B1_DEPENDS_ON_BY_TASK = {BINARY: _b1_depends('policy'), REGRESSION: _b1_depends('model_choice')}
 
 DEFAULT_SETTINGS = {'bootstrap': {'replicates': 2000, 'seed': 20261017, 'level': 0.95}}
 
@@ -334,6 +365,57 @@ FULL_REGRESSION_STEPS = (DISCOVER_STEP, REGRESSION_STEPS[0], REGRESSION_STEPS[1]
 FULL_STEPS_BY_TASK = {BINARY: FULL_STEPS, REGRESSION: FULL_REGRESSION_STEPS}
 FULL_STEP_IDS = tuple(s['id'] for s in FULL_STEPS)
 FULL_REGRESSION_STEP_IDS = tuple(s['id'] for s in FULL_REGRESSION_STEPS)
+
+# v0.2b (WP-B1). The variant follows the model fits: the junior names one variant of the
+# candidate, it is fitted under the same evaluation protocol, and the choice compares the
+# two (the trial count says how many configurations were evaluated). The opening of the
+# final test follows the choice; it is optional for the plan (a study that keeps the
+# baseline opens nothing), so a blocked opening never hides the conclusion
+# (:func:`next_action`).
+VARIANT_STEP = {
+    'id': MODEL_VARIANT, 'pause': 3, 'decision': MODEL_VARIANT, 'activities': ('fit.variant',),
+    'requires': ('models',),
+    'title': 'Choose one variant to compare',
+    'question': 'Which single variant of the candidate model should be compared with it under '
+                'the same evaluation: a stronger or weaker regularisation, or the model without '
+                'one group of variables?',
+    'expected_output': 'A confirmed variant and its out-of-fold predictions, evaluated like the '
+                       'candidate.',
+    'completion': 'Decision model_variant is confirmed and the variant fit is current.'}
+FINAL_TEST_STEP = {
+    'id': FINAL_TEST, 'pause': 3, 'decision': FINAL_TEST,
+    'activities': ('final_test.evaluation',), 'requires': (),
+    'title': 'Open the final test once',
+    'question': 'Now that the model and the rule are chosen, do you open the sealed final test, '
+                'once, to measure the chosen configuration on rows nothing has seen? After '
+                'this, any change is made after the final test.',
+    'expected_output': 'A confirmed opening in your own words, with a reason, and the one '
+                       'evaluation of the chosen configuration on the final test.',
+    'completion': 'Decision final_test is confirmed and the final evaluation is recorded.'}
+
+
+def _b1_steps(full: tuple, choice: str) -> tuple:
+    out = []
+    for step in full:
+        if step['id'] == choice:
+            out.append(VARIANT_STEP)
+            out.append(dict(step, requires=('models', MODEL_VARIANT)))
+            out.append(dict(FINAL_TEST_STEP, requires=(choice,)))
+        else:
+            out.append(step)
+    return tuple(out)
+
+
+B1_STEPS = _b1_steps(FULL_STEPS, 'policy')
+B1_REGRESSION_STEPS = _b1_steps(FULL_REGRESSION_STEPS, 'model_choice')
+B1_STEPS_BY_TASK = {BINARY: B1_STEPS, REGRESSION: B1_REGRESSION_STEPS}
+B1_STEP_IDS = tuple(s['id'] for s in B1_STEPS)
+B1_REGRESSION_STEP_IDS = tuple(s['id'] for s in B1_REGRESSION_STEPS)
+B1_ACTIVITY_SLOTS_BY_TASK = {task: tuple(a for s in steps_ for a in s['activities'])
+                             for task, steps_ in B1_STEPS_BY_TASK.items()}
+# The steps a blocked plan may skip: the opening of the final test (nothing to open while no
+# model or rule is chosen).
+OPTIONAL_STEPS = (FINAL_TEST,)
 # Optional slots outside the plan: ``eda.rate_by`` (binary) and ``eda.mean_by``
 # (regression) have one slot per column, ``eda.rate_by:<column>``
 # (``mlkit.study.activities.slot_of``). They are shown with the training EDA step and
@@ -398,6 +480,15 @@ def task_of(state: Mapping | str | None) -> str:
     return DEFAULT_TASK
 
 
+def has_wp_b1_decisions(state: Mapping | str | None) -> bool:
+    """Whether a study has the WP-B1 decisions (``model_variant``, ``final_test``). A state
+    answers by the decisions it holds (a study created before WP-B1 is never migrated); a
+    task name or ``None`` describes a new study, which has them."""
+    if isinstance(state, Mapping) and isinstance(state.get('decisions'), Mapping):
+        return all(d in state['decisions'] for d in WP_B1_DECISIONS)
+    return True
+
+
 def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
     """Whether a study has the WP-A4 decisions (``success_criterion``, ``preprocessing``).
 
@@ -411,11 +502,15 @@ def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
 
 def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
     """The decisions of a study (or of a task name, for a new study)."""
+    if has_wp_b1_decisions(state):
+        return B1_DECISION_IDS_BY_TASK[task_of(state)]
     table = FULL_DECISION_IDS_BY_TASK if has_wp_a4_decisions(state) else DECISION_IDS_BY_TASK
     return table[task_of(state)]
 
 
 def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]:
+    if has_wp_b1_decisions(state):
+        return B1_DEPENDS_ON_BY_TASK[task_of(state)][decision_id]
     table = FULL_DEPENDS_ON_BY_TASK if has_wp_a4_decisions(state) else DEPENDS_ON_BY_TASK
     return table[task_of(state)][decision_id]
 
@@ -423,6 +518,8 @@ def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]
 def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
     the data" and its own five decisions' steps (the models then need the split only)."""
+    if has_wp_b1_decisions(state):
+        return B1_STEPS_BY_TASK[task_of(state)]
     full = FULL_STEPS_BY_TASK[task_of(state)]
     if has_wp_a4_decisions(state):
         return full
@@ -440,6 +537,8 @@ def step_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
 
 
 def activity_slots(state: Mapping | str | None = None) -> tuple[str, ...]:
+    if has_wp_b1_decisions(state):
+        return B1_ACTIVITY_SLOTS_BY_TASK[task_of(state)]
     return ACTIVITY_SLOTS_BY_TASK[task_of(state)]
 
 
@@ -1012,6 +1111,10 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     for step in derive_plan(state):
         if step['status'] == 'done':
             continue
+        if step['id'] in OPTIONAL_STEPS and step['status'] == 'blocked':
+            # WP-B1: nothing to open while no model or rule is chosen; the conclusion (keep
+            # the baseline, inconclusive) does not wait for it.
+            continue
         if step['id'] == DISCOVER_DATA:
             # WP-A4 (R2): the junior sees the data before any proposal; nothing to confirm.
             return {'kind': 'show_data_card', 'step': DISCOVER_DATA,
@@ -1032,10 +1135,78 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                 # decision existed (results stay comparable).
                 from .governance import DEFAULT_PREPROCESSING
                 action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
+            default = b1_default_value(state, step['decision'])
+            if default is not None:
+                action['default_value'] = default
             return action
         return {'kind': 'run', 'step': step['id'], 'activity': step['missing_results'][0],
                 'message': step['question']}
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}
+
+
+# v0.2b (WP-B1): the evaluation schemes of the ``split`` decision (cross-validation on the
+# development rows), one per kind of study, and their defaults.
+CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds')
+CV_KEYS = ('method', 'folds', 'seed')
+DEFAULT_FOLDS = 5
+MIN_FOLDS, MAX_FOLDS = 3, 10
+DEFAULT_CV_SEED = 20261017
+# The variant of the candidate (decision ``model_variant``): one kind, one parameter.
+VARIANT_KINDS = ('regularisation', 'drop_group')
+VARIANT_STRENGTHS = ('weak', 'strong')
+DEFAULT_VARIANT = dict(kind='regularisation', strength='strong')
+
+
+def is_cv_split(value) -> bool:
+    """Whether a ``split`` value is a cross-validation scheme (WP-B1)."""
+    return isinstance(value, Mapping) and value.get('method') in CV_METHODS
+
+
+def cv_method(state: Mapping) -> str:
+    """The cross-validation method of a study: ``temporal_folds`` when its case declares a
+    time column or an order (folds follow time), ``kfold_stratified`` for a binary target,
+    ``kfold_quantile`` for a numeric one."""
+    structure = state.get('structure') or {}
+    time_column = ((structure.get('time_column') or {}).get('value'))
+    if time_column is not None or (state.get('partition') or {}).get('method') == 'temporal':
+        return 'temporal_folds'
+    return 'kfold_stratified' if task_of(state) == BINARY else 'kfold_quantile'
+
+
+def choice_config(state: Mapping) -> dict | None:
+    """The configuration the study chose (WP-B1): ``{model, rule}`` from the confirmed policy
+    (binary; ``rule`` is its canonical rule, ``model`` the candidate or the variant) or the
+    confirmed model choice (regression; ``rule`` is None); None when nothing is chosen."""
+    from . import records as rec
+    choice = choice_decision(state)
+    decision = state['decisions'].get(choice) or {}
+    if decision.get('status') != 'confirmed':
+        return None
+    value = decision.get('value')
+    if choice == 'policy':
+        rule = rec.policy_rule(value)
+        return None if rule is None else {'model': rec.policy_model(value), 'rule': rule}
+    return {'model': value, 'rule': None} if isinstance(value, str) else None
+
+
+def b1_default_value(state: Mapping, decision_id: str):
+    """The engine's drafted value of a WP-B1 study's decision for ``next_action``: the
+    cross-validation scheme of the split, the default variant, the configuration a final
+    test would open. None otherwise."""
+    if not has_wp_b1_decisions(state):
+        return None
+    if decision_id == 'split':
+        return {'method': cv_method(state), 'folds': DEFAULT_FOLDS, 'seed': DEFAULT_CV_SEED}
+    if decision_id == MODEL_VARIANT:
+        return dict(DEFAULT_VARIANT)
+    if decision_id == FINAL_TEST:
+        return choice_config(state)
+    return None
+
+
+def final_test_opened(state: Mapping) -> bool:
+    """Whether the study's final test was opened (WP-B1)."""
+    return (state.get('partition') or {}).get('status') == 'opened'
 
 
 def delegated_decisions(state: dict) -> list[str]:
@@ -1057,7 +1228,15 @@ def not_yet_defensible(state: dict) -> list[dict]:
     if unconfirmed:
         items.append({'id': 'unconfirmed_decisions', 'decisions': unconfirmed,
                       'text': 'These decisions are not confirmed: ' + ', '.join(unconfirmed) + '.'})
-    if task_of(state) == REGRESSION:
+    split_value = (state['decisions'].get('split') or {}).get('value')
+    if is_cv_split(split_value):
+        # WP-B1: out-of-fold predictions on the development rows are development evidence.
+        items.append({'id': 'validation_is_not_independent',
+                      'text': 'Out-of-fold predictions on the development rows are used to '
+                              'compare the models, the variant and the rule, so they are '
+                              'development evidence, not independent evidence of future '
+                              'performance. Only the sealed final test, opened once, is.'})
+    elif task_of(state) == REGRESSION:
         items.append({'id': 'validation_is_not_independent',
                       'text': 'Validation rows are used to compare the models and to choose '
                               'one, so validation errors are not independent evidence of '

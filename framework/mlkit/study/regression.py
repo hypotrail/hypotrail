@@ -76,12 +76,15 @@ def _interval(samples: np.ndarray, level: float) -> dict:
 
 
 def paired_bootstrap(y, predictions: Mapping[str, object], B: int, seed: int, *,
-                     level: float = 0.95, reference: str | None = None) -> dict:
+                     level: float = 0.95, reference: str | None = None, pairs=()) -> dict:
     """Percentile intervals of MAE and RMSE for every model, and of each model's
     difference with ``reference`` (the first model by default).
 
     Every replicate draws one resample of row positions and applies it to every model
     (paired). The result is a pure function of the inputs and ``seed``.
+
+    ``pairs`` (WP-B1): ``[(model, other)]``; ``comparisons[model]`` is then ``{reference:
+    other, mae, rmse}``, each ``{point, low, high}``: ``model - other`` on the same resamples.
     """
     y = np.asarray(y, dtype=float)
     names = list(predictions)
@@ -113,6 +116,14 @@ def paired_bootstrap(y, predictions: Mapping[str, object], B: int, seed: int, *,
         deltas[name] = {m: {'point': points[name][m] - points[reference][m],
                             **_interval(diff[:, i], level)}
                         for i, m in enumerate(METRICS)}
+    comparisons = {}
+    for name, other in pairs:
+        diff = samples[name] - samples[other]
+        comparisons[name] = {'reference': other,
+                             **{m: {'point': points[name][m] - points[other][m],
+                                    **_interval(diff[:, i], level)}
+                                for i, m in enumerate(METRICS)}}
     return {'replicates': B, 'seed': seed, 'level': level, 'reference': reference,
             'method': 'paired percentile bootstrap over validation rows',
-            'models': points, 'intervals': intervals, 'deltas': deltas}
+            'models': points, 'intervals': intervals, 'deltas': deltas,
+            'comparisons': comparisons}

@@ -13,7 +13,8 @@ registered result from the **development rows** (loaded with
   the same rows, whose floating-point sums may differ in the last digits).
 
 Covered: the split counts, the target rate (binary) or summary (regression), one rate or
-mean by group, the candidate model's validation metric with the confirmed preprocessing,
+mean by group, the candidate model's validation metric with the confirmed preprocessing
+(WP-B1: under cross-validation, its out-of-fold metric, refitted fold by fold),
 and, for a binary study, the policy at the adopted rule (selected rows, positive rows
 found, precision); for a regression study, the baseline's validation error.
 
@@ -76,11 +77,33 @@ def _positive_expr(frame: str, target: str, positive: Any) -> str:
     return f'({frame}[{q(target)}].astype(str) == {q(str(positive))})'
 
 
+def is_cv(view: Mapping) -> bool:
+    """WP-B1: whether the current split is a cross-validation (its result holds folds)."""
+    item = _current(view, 'split')
+    return bool(item) and 'folds' in (item.get('blobs') or {})
+
+
 def split_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     item = _current(view, 'split')
     # The registry entry must hold what the cell reads: the row keys of both partitions.
     if item is None or not {'train', 'validation'} <= set(item.get('blobs') or {}):
         return None
+    if is_cv(view):
+        code = f'''# The development rows only: the final test stays sealed and is never loaded.
+# Cross-validation: every development row is explored, and each fold is predicted by a
+# model fitted on the other folds. "folds" says which fold each row belongs to.
+development = nv.development_frame(study, RESULT_IDS["split"])
+split = nv.values(study, RESULT_IDS["split"])
+folds = nv.folds(study, RESULT_IDS["split"])
+train = development
+validation = development
+fold_counts = folds.value_counts().sort_index()
+print(fold_counts)
+
+assert len(development) == split["n_rows"]
+for _item in split["fold_rows"]:
+    assert fold_counts[_item["fold"]] == _item["n_rows"]'''
+        return 'recompute_split', code
     code = f'''# The development rows only: the final test stays sealed and is never loaded.
 # "partition" says whether each row trains the models or validates them.
 development = nv.development_frame(study, RESULT_IDS["split"])
@@ -241,6 +264,71 @@ def preparation_steps(values: Mapping) -> str | None:
     return '\n'.join(lines)
 
 
+CV_PIPELINE = '''def _prepare_columns(_X):
+    _numeric = _X.select_dtypes("number").columns.tolist()
+    _categorical = [_name for _name in _X.columns if _name not in _numeric]
+    return ColumnTransformer(
+        [
+            ("numeric", Pipeline([
+                ("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
+                ("scale", StandardScaler()),
+            ]), _numeric),
+            ("categorical", Pipeline([
+                ("impute", SimpleImputer(strategy="most_frequent", keep_empty_features=True)),
+                ("encode", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+            ]), _categorical),
+        ]
+    )'''
+
+
+def cv_fit_cell(view: Mapping, task: str, target: str, positive: Any,
+                slot: str, item: Mapping) -> tuple[str, str] | None:
+    """WP-B1: the candidate's out-of-fold metric, recomputed fold by fold: each fold is
+    predicted by a model fitted (with its preparation) on the other folds."""
+    head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
+# Cross-validation: each fold is predicted by a model fitted on the other folds, the
+# preparation of the variables learnt on those rows too. Every development row gets one
+# out-of-fold prediction.
+print(nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
+{CV_PIPELINE}
+'''
+    if task == 'regression':
+        code = head + f'''y_validation = pd.to_numeric(development[{q(target)}])
+prediction = np.zeros(len(development))
+for _fold in sorted(folds.unique()):
+    _held = (folds == _fold).to_numpy()
+    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], development[~_held],
+                                      development[_held])
+    _model = Pipeline([("prepare", _prepare_columns(_X_fit)), ("model", LinearRegression())])
+    _model.fit(_X_fit, y_validation[~_held])
+    prediction[_held] = _model.predict(_X_held)
+validation_mae = mean_absolute_error(y_validation, prediction)
+print(f"Out-of-fold mean absolute error: {{validation_mae:.4f}}")
+
+assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE'''
+        return 'recompute_model', code
+    seed = (item.get('params') or {}).get('seed')
+    if not isinstance(seed, int):
+        return None
+    code = head + f'''y_validation = {_positive_expr("development", target, positive)}.astype(int)
+score = np.zeros(len(development))
+for _fold in sorted(folds.unique()):
+    _held = (folds == _fold).to_numpy()
+    _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], development[~_held],
+                                      development[_held])
+    _model = Pipeline([
+        ("prepare", _prepare_columns(_X_fit)),
+        ("model", LogisticRegression(max_iter=1000, random_state={seed})),
+    ])
+    _model.fit(_X_fit, y_validation[~_held])
+    score[_held] = _model.predict_proba(_X_held)[:, 1]
+validation_auc = roc_auc_score(y_validation, score)
+print(f"Out-of-fold AUC: {{validation_auc:.4f}}")
+
+assert abs(validation_auc - candidate["validation"]["roc_auc"]) < FIT_TOLERANCE'''
+    return 'recompute_model', code
+
+
 def fit_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str, str] | None:
     slot = 'fit.linear' if task == 'regression' else 'fit.logistic'
     item = _current(view, slot)
@@ -248,6 +336,9 @@ def fit_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str,
     if item is None or not isinstance(inputs, Mapping) \
             or not {'features', 'special_values'} <= set(inputs):
         return None
+    if is_cv(view):
+        # Under cross-validation the preparation is learnt on each fold's training rows.
+        return cv_fit_cell(view, task, target, positive, slot, item)
     steps = preparation_steps(item['values'])
     if steps is None:
         head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
@@ -308,7 +399,11 @@ def _adopted_rule(view: Mapping) -> str | None:
     policy = view['decisions'].get('policy') or {}
     criterion = view.get('criterion') or {}
     if policy.get('status') == 'confirmed' and isinstance(policy.get('value'), str):
+        if '@' in policy['value']:
+            return None      # WP-B1: a rule of the variant; the cell recomputes the candidate
         return policy['value']
+    if criterion.get('model') not in (None, 'fit.logistic'):
+        return None
     return criterion.get('rule')
 
 
@@ -352,6 +447,19 @@ assert abs(precision - at_rule["precision"]) < TOLERANCE'''
 def baseline_error_cell(view: Mapping, target: str) -> tuple[str, str] | None:
     if _current(view, 'evaluate.regression') is None or _current(view, 'fit.linear') is None:
         return None
+    if is_cv(view):
+        code = '''evaluation = nv.values(study, RESULT_IDS["evaluate.regression"])
+# The baseline predicts, for each fold, the mean of the other folds.
+baseline_prediction = np.zeros(len(development))
+for _fold in sorted(folds.unique()):
+    _held = (folds == _fold).to_numpy()
+    baseline_prediction[_held] = y_validation[~_held].mean()
+baseline_mae = np.abs(y_validation.to_numpy() - baseline_prediction).mean()
+print(f"Baseline MAE {baseline_mae:.4f}, linear model MAE {validation_mae:.4f}")
+
+assert abs(baseline_mae - evaluation["models"]["fit.baseline"]["mae"]) < TOLERANCE
+assert abs(validation_mae - evaluation["models"]["fit.linear"]["mae"]) < FIT_TOLERANCE'''
+        return 'recompute_comparison', code
     code = '''evaluation = nv.values(study, RESULT_IDS["evaluate.regression"])
 # The baseline predicts the training mean for every validation row.
 baseline_mae = (y_validation - y_train.mean()).abs().mean()

@@ -322,3 +322,80 @@ def test_the_glossary_and_success_question_introduce_the_terms():
     q = step['question']
     assert q.index('Precision is') < q.index('How many percentage points')
     assert 'baseline' in q and 'rule' in q
+
+
+
+# --- WP-A9 merge with WP-B1 -----------------------------------------------------------------
+
+def test_residual_bins_read_in_words_and_name_their_rows():
+    import numpy as np
+    import pandas as pd
+    from mlkit.study import activities as act
+    values = pd.Series(np.arange(100, dtype=float) * 10 + 1500)
+    y = np.linspace(10, 40, 100)
+    out = act._residual_groups('weight', values, y, {'fit.linear': y + 1.0}, 'lb',
+                               'out-of-fold')
+    assert out['binned'] is True
+    assert out['binning'] == '5 out-of-fold quantile bins'
+    labels = [g['value'] for g in out['groups']]
+    assert labels[0] == '1500 to 1690 lb' and all(' to ' in v for v in labels)
+    tied = act._residual_groups('x', pd.Series([1.0] * 80 + list(range(2, 32))), np.zeros(110),
+                                {'fit.linear': np.zeros(110)})
+    assert tied['binning'].startswith(f'{len(tied["groups"])} validation quantile bins')
+    assert 'asked' in tied['binning']
+
+
+@pytest.fixture(scope='module')
+def cv_bank(tmp_path_factory):
+    """A Bank study with cross-validation, the variant, the policy and the final test
+    opened (WP-B1); the final test refuses an opening without a reason or off topic."""
+    from mlkit.study import state as st
+    study = tmp_path_factory.mktemp('a9cv') / 'bank'
+    f = Flow(study, fk.BANK, prefix='cv')
+    f.init()
+    f.decide('prediction_time', 'before the call')
+    f.decide('feature_availability', fk.availability(fk.BANK))
+    f.decide('split', f.view()['next_action']['default_value'])
+    f.model_decisions()
+    f.run('split')
+    f.run('eda.target_rate')
+    f.run('fit.baseline')
+    f.run('fit.logistic')
+    f.variant()
+    f.run('policy.evaluate', '--rule', 'capacity:100')
+    f.decide('policy', 'capacity:100', words='Yes, call the top 100 because the desk has 100 slots')
+    value = st.b1_default_value(f.state(), 'final_test')
+    p = f.call('decide', 'propose', 'final_test', '--value-json', json.dumps(value),
+               '--restatement', 'You open the sealed final test once.', '--rationale', 'r',
+               '--request-id', f.rid(), '--expected-revision', f.rev(), '--study', f.study)
+    pid = p['result']['proposal_id']
+    for words, code in (('ok, open the final test', 'reason_required'),
+                        ('oui, la pizza du client est bonne', 'ambiguous_confirmation')):
+        out = f.call('decide', 'confirm', pid, '--user-words', words, '--request-id', f.rid(),
+                     '--expected-revision', f.rev(), '--study', f.study, expect=2)
+        assert out['error']['code'] == code, (words, out['error'])
+    f.call('decide', 'confirm', pid, '--user-words',
+           'Yes, I open the final test now, because the model and the rule are fixed',
+           '--request-id', f.rid(), '--expected-revision', f.rev(), '--study', f.study)
+    return study
+
+
+def test_cv_and_final_test_internals_are_out_of_the_free_text_pool(cv_bank):
+    pool = cmd_check.Pool(view.build(read.open(cv_bank)))
+    paths = [i['path'] for i in pool.current]
+    assert not any('per_fold' in p or 'fold_rows' in p or p.startswith('refit') for p in paths)
+    assert not any(p.endswith('undefined_replicates') for p in paths)
+    assert _numbers(_check(cv_bank, 'La précision du modèle est de 10 %.')) == ['10 %']
+
+
+def test_cv_and_final_test_figures_still_trace(cv_bank):
+    s = read.open(cv_bank)
+    spread = s.current('fit.logistic')['output']['values']['cross_validation']['spread']['roc_auc']
+    final = s.current('final_test.evaluation')['output']['values']
+    precision = final['models']['fit.logistic']['precision']
+    text = (f'Out of fold, the AUC of the logistic model is {spread["mean"]:.2f} (from '
+            f'{spread["min"]:.2f} to {spread["max"]:.2f} across folds). On the {final["n"]} '
+            f'final-test rows, the precision of the logistic model at the top 100 is '
+            f'{100 * precision:.1f} %.')
+    out = _check(cv_bank, text)
+    assert out['clean'] is True, out['findings']

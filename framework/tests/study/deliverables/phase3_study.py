@@ -31,6 +31,7 @@ NOT_AVAILABLE = 'desk_followups'
 UNCERTAIN_INCLUDED = 'reminders_sent'
 POLICY_RULE = 'capacity:20'
 CRITERION_VALUE = {'metric': 'precision_gain', 'min_points': 5}
+VARIANT_VALUE = {'kind': 'regularisation', 'strength': 'strong'}
 
 # Canonical value shapes (CLI-CONTRACT.md section 8.5) that these fixtures follow.
 CANONICAL_SHAPES = {
@@ -314,6 +315,24 @@ def build(study: Path, case_dir: Path, upto: str = 'conclusion',
                 blobs={'predictions': predictions_blob(vkeys, ys,
                                                        [round(0.05 + (i % 17) / 20, 3)
                                                         for i in range(90)])})
+    if st.has_wp_b1_decisions(read.open(study).state):
+        # WP-B1: the variant the choice compares, named after the fits, before the choice.
+        b.decide('model_variant', VARIANT_VALUE,
+                 'Compare the model with a more strongly regularised variant of it.',
+                 'I confirm the stronger regularisation as the variant.')
+        b.put('fit.variant', {'model': 'logistic', 'features': used, 'variant': VARIANT_VALUE,
+                              'special_value_indicators': [], 'n_train': 210,
+                              'n_train_positive': 25, 'n_terms': len(used),
+                              'validation': {'n_rows': 90, 'n_positive': 11, 'roc_auc': 0.709,
+                                             'average_precision': 0.3},
+                              'predictions': _predictions_meta('logistic', used)},
+              params={'model': 'logistic', 'C': 0.1},
+              inputs={'results': {'split': split}, 'features': used,
+                      'variant': VARIANT_VALUE}, partition='validation',
+              purpose='validation_model_evaluation', keys=vkeys,
+              blobs={'predictions': predictions_blob(vkeys, ys,
+                                                     [round(0.06 + (i % 13) / 20, 3)
+                                                      for i in range(90)])})
     if upto == 'models':
         return b
     put_policy_evaluation(b)

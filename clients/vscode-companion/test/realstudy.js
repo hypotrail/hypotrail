@@ -131,6 +131,13 @@ class Study {
     this.decide('preprocessing', { missing: 'none', rare_category_min_rows: 0, caps: {}, log_transform: [] });
   }
 
+  /** WP-B1: the variant the choice compares, named in the chat and fitted like the candidate. */
+  variant() {
+    if (!this.view().decisions.model_variant) return;   // a study created before WP-B1
+    this.decide('model_variant', { kind: 'regularisation', strength: 'strong' });
+    this.run('fit.variant');
+  }
+
   /** The agent's walkthrough up to the fits (binary: and two policy evaluations). */
   walk() {
     this.pauses();
@@ -139,12 +146,14 @@ class Study {
       this.run('eda.rate_by', '--column=job');
       this.run('fit.baseline');
       this.run('fit.logistic');
+      this.variant();
       this.run('policy.evaluate', '--rule', 'capacity:100');
     } else {
       for (const a of ['split', 'eda.target_summary', 'eda.special_values']) this.run(a);
       this.run('eda.mean_by', '--column=model_year');
       this.run('fit.baseline');
       this.run('fit.linear');
+      this.variant();
       this.run('evaluate.regression');
     }
   }

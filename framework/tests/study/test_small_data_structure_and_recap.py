@@ -90,6 +90,8 @@ def _view_without_term_count(study):
     features can only be traced as the study's structure."""
     v = copy.deepcopy(view.build(study))
     v['results']['fit.logistic']['values']['n_terms'] = 999
+    if 'fit.variant' in v['results']:      # WP-B1: the variant has the same terms
+        v['results']['fit.variant']['values']['n_terms'] = 998
     return v
 
 
@@ -104,7 +106,10 @@ def test_a_count_of_the_study_s_structure_is_traced_both_ways(full_study):
     counts = {item['value'] for item in cmd_check.Pool(v).structure}
     assert k in counts
     word = WORDS[k]
-    other = WORDS[next(n for n in range(k + 1, 20) if n not in counts)]
+    # A count that is neither a structure count nor a figure of the results (WP-B1: the plan
+    # has twelve steps now, so the first free count can be a result figure; skip those).
+    other = WORDS[next(n for n in range(k + 1, 40) if n in WORDS and n not in counts
+                       and _errors(v, f'We could make {WORDS[n]} calls.')[0])]
     # The same count before a non-structural noun matches nothing: the pool has no k.
     errors, _ = _errors(v, f'We could make {word} calls.')
     assert [e['code'] for e in errors] == ['untraceable_number'], errors

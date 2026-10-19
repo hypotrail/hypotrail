@@ -463,10 +463,12 @@ def test_three_pauses_are_preconditions(study, work, features):
     out = confirm(study, work, pol, 'Yes, call the top hundred because the desk has that '
                   'capacity.', rid='p2', rev=rev + 3, expect=2)
     assert out['error']['code'] == 'precondition_missing'
-    # WP-A4: the success criterion and the preprocessing come first, then the evaluation.
+    # WP-A4: the success criterion and the preprocessing come first, then (WP-B1) the
+    # variant the policy compares, then the evaluation.
     missing = out['error']['details']['missing']
-    assert [m.get('decision') for m in missing[:2]] == ['success_criterion', 'preprocessing']
-    assert missing[2]['slot'] == 'policy.evaluation'
+    assert [m.get('decision') for m in missing[:3]] == ['success_criterion', 'preprocessing',
+                                                        'model_variant']
+    assert missing[3]['slot'] == 'policy.evaluation'
     concl = propose(study, work, 'conclusion', value_json={'verdict': 'adopt_policy',
                                                            'text': 'Adopt the model.'},
                     rid='c1', rev=rev + 3)['result']['proposal_id']
@@ -499,8 +501,10 @@ def test_precondition_functions_for_phase_2(study):
         'success_criterion', 'preprocessing'}
     for d in ('success_criterion', 'preprocessing'):
         state['decisions'][d]['status'] = 'confirmed'
-    assert [m['slot'] for m in pre.missing_for_activity(state, 'policy.evaluation')] == [
-        'fit.baseline', 'fit.logistic']
+    # WP-B1: and the variant the evaluation compares.
+    assert [m.get('slot') or m.get('decision')
+            for m in pre.missing_for_activity(state, 'policy.evaluation')] == [
+        'fit.baseline', 'fit.logistic', 'model_variant']
     assert pre.missing_for_decision(state, 'conclusion',
                                     {'verdict': 'keep_baseline', 'text': 'x'}) == []
     assert pre.evaluated_rules({'params': {'rules': ['capacity:100', 'threshold:0.5']}}) == [
@@ -664,7 +668,7 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
                 'recap_audience', 'recap_junior',
                 # v0.2a (WP-A7): the confirmation mode and the notebook launch commands.
-                'mode', 'deliverables')
+                'mode', 'deliverables', 'trials')
 
 
 def test_status_summary_is_compact_and_complete(study, work, features):

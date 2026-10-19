@@ -195,5 +195,7 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
     assert p['reconfirm_required'] == ['conclusion'] and p['stale_results'] == []
     assert {'fit.baseline', 'fit.linear', 'evaluate.regression'} <= set(p['kept_slots'])
     assert cc.r3_imported(flow.study, 'preview', 'effects', pid) == []
-    flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it, because it errs less')
-    assert len(flow.previews) == 8          # WP-A4: the success criterion and the preprocessing
+    flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it, '
+                      'because it errs less')
+    # WP-A4: the success criterion and the preprocessing; WP-B1: the variant.
+    assert len(flow.previews) == 9

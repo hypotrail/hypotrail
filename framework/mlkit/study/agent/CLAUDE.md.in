@@ -306,7 +306,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    the default as the exercise's assumption in words ("the exercise assumes the team can
    act on <p> of the rows"), not as a fact about the team, and say that keeping it is
    listed as "capacity assumed for the exercise" in what is not yet defensible. The rule
-   is `share:<p>` (`run policy.evaluate --rule share:<p>`). Without that default (a real
+   is `share:<p>` (`run policy.evaluate --rule share:<p>`); when the final test is
+   opened, the same rule acts on that share of the final-test rows. Without that default (a real
    case), a business capacity (the actions the team can take) is
    yours to translate, never the junior's: evaluate it as given, and when it is at least
    the number of validation rows, say in plain words that it selects every row and tests
@@ -432,6 +433,15 @@ value of the time column outside the training range is extrapolation. The split 
 keep a group's rows on one side (no grouped split in this version): name the groups the
 split result reports in both partitions, and do not claim the partitions are independent.
 <!-- hypotrail:end -->
+
+Since v0.2b a new study also has `model_variant` and `final_test`. Its `split` is the
+cross-validation `next_action.default_value` drafts (`{"method", "folds", "seed"}`): every
+figure is out of fold, development evidence. After the fits, the junior names one variant
+(`{"kind": "regularisation", "strength": "weak" | "strong"}` or `{"kind": "drop_group",
+"group": G}`), then `run fit.variant`; the choice may pick it (a choice value ending in
+`@fit.variant`, or `"fit.variant"`). After the choice, `final_test` (`{"model", "rule"}`,
+the drafted value) is confirmed in the junior's own words with a reason; confirming it
+scores the sealed final test once, and anything changed afterwards is after the final test.
 
 Deliverables, regenerated after every change: `reports/study.html` (the report; every
 number in it is cited from a result) and `notebooks/study_generated.py` (a Marimo notebook

@@ -40,8 +40,12 @@ A study created before ADR 0006 has no ``partition``: it loads and runs as befor
 every row is a development row, and surfaces show "no final test"
 (:func:`final_test_status`). Nothing is migrated.
 
-``status`` is ``sealed`` in v0.2a (:data:`STATUSES`). v0.2b adds ``opened`` and an
-optional ``opening`` record; the keys here do not change.
+``status`` is ``sealed`` in v0.2a (:data:`STATUSES`). v0.2b (WP-B1) adds ``opened`` and
+the optional ``opening`` record (:data:`OPENING_KEYS`): the final test is opened once, by the
+``final_test`` decision in the junior's words, and the one execution of
+``final_test.evaluation`` sets the status to ``opened`` when it is reserved, before any
+final-test row is read, so a crash can never let it be scored twice. The other keys do not
+change.
 """
 from __future__ import annotations
 
@@ -54,7 +58,18 @@ from .errors import StudyError
 
 SCHEMA = 'hypotrail.final-test/1'
 STATE_KEY = 'partition'
-STATUSES = ('sealed',)
+STATUSES = ('sealed', 'opened')
+OPENED = 'opened'
+# WP-B1: the opening record, written when the one final evaluation is reserved; its
+# ``result_id`` is set when that evaluation is promoted (null until then, or forever when
+# the execution was interrupted: the final test is consumed either way).
+OPENING_KEYS = ('revision', 'execution_id', 'proposal_id', 'user_words', 'model', 'rule',
+                'time', 'result_id')
+# Decisions whose confirmation after the opening makes a result "after the final test", and
+# the result slots whose recomputation after it does.
+AFTER_DECISIONS = ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+                   'preprocessing', 'model_variant', 'policy', 'model_choice')
+AFTER_SLOT_PREFIXES = ('split', 'fit.', 'policy.', 'evaluate.')
 STATUS_ABSENT = 'absent'
 METHODS = ('stratified', 'quantile_stratified', 'temporal')
 DEFAULT_FRACTION = 0.2
@@ -63,8 +78,9 @@ QUANTILE_BINS = 5
 RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on', 'bins',
                'order', 'dataset_sha256', 'n_rows', 'development', 'final_test',
                'schema_check', 'created', 'implementation')
-# v0.2b (WP-B3): present only when the case declares ``duplicates: {policy: group}``.
-OPTIONAL_RECORD_KEYS = ('groups',)
+# v0.2b: ``groups`` (WP-B3) only when the case declares ``duplicates: {policy: group}``;
+# ``opening`` (WP-B1) once the final test is opened.
+OPTIONAL_RECORD_KEYS = ('groups', 'opening')
 GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
 PART_KEYS = ('n_rows', 'row_keys')
 CHECK_KEYS = ('status', 'n_rows', 'checks', 'reveals')
@@ -377,17 +393,68 @@ def development_keys(read_blob: Callable[[str], bytes], development: Mapping | N
     return keys
 
 
-def final_test_status(state: Mapping) -> dict:
-    """``{status, rows, method, fraction, development_rows, schema_check}`` for surfaces;
-    ``status`` is ``absent`` (and the counts null) for a study without a final test."""
+STATUS_VIEW_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows', 'schema_check',
+                    # WP-B1: the opening, and what changed after it.
+                    'opening', 'post_final_test', 'changed_after')
+OPENING_VIEW_KEYS = ('revision', 'model', 'rule', 'result_id', 'user_words')
+
+
+def changed_after(state: Mapping, started: Mapping | None = None) -> list[str]:
+    """What changed after the final test was opened (WP-B1): the decisions of
+    :data:`AFTER_DECISIONS` confirmed again (or waiting to be) at a later revision, and the
+    current results of :data:`AFTER_SLOT_PREFIXES` computed later (``started``:
+    ``{slot: started_revision}`` of the current results, given by the view). Empty while
+    the final test is sealed."""
+    part = of(state)
+    opening = (part or {}).get('opening')
+    if not opening:
+        return []
+    since = opening['revision']
+    out = []
+    for d in AFTER_DECISIONS:
+        dec = (state.get('decisions') or {}).get(d)
+        if not dec:
+            continue
+        conf = dec.get('confirmation') or {}
+        later = isinstance(conf.get('revision'), int) and conf['revision'] > since
+        if dec.get('status') == 'reconfirm_required' or (dec.get('status') == 'confirmed'
+                                                          and later):
+            out.append(d)
+    for slot, revision in sorted((started or {}).items()):
+        if slot.startswith(AFTER_SLOT_PREFIXES) and isinstance(revision, int) \
+                and revision > since:
+            out.append(slot)
+    return out
+
+
+def final_test_status(state: Mapping, started: Mapping | None = None) -> dict:
+    """``{status, rows, method, fraction, development_rows, schema_check, opening,
+    post_final_test, changed_after}`` for surfaces; ``status`` is ``absent`` (and the counts
+    null) for a study without a final test. ``opening`` is null while the final test is
+    sealed; ``post_final_test`` says that something changed after the opening
+    (:func:`changed_after`), so the final test is no longer independent evidence of what the
+    study now holds."""
     part = of(state)
     if part is None:
         return {'status': STATUS_ABSENT, 'rows': None, 'method': None, 'fraction': None,
-                'development_rows': None, 'schema_check': None}
+                'development_rows': None, 'schema_check': None, 'opening': None,
+                'post_final_test': False, 'changed_after': []}
+    opening = part.get('opening')
+    after = changed_after(state, started)
     return {'status': part['status'], 'rows': part['final_test']['n_rows'],
             'method': part['method'], 'fraction': part['fraction'],
             'development_rows': part['development']['n_rows'],
-            'schema_check': part['schema_check']['status']}
+            'schema_check': part['schema_check']['status'],
+            'opening': ({k: opening.get(k) for k in OPENING_VIEW_KEYS} if opening else None),
+            'post_final_test': bool(after), 'changed_after': after}
+
+
+def open_record(*, revision: int, execution_id: str, proposal_id: str | None,
+                user_words: str | None, model: str, rule: str | None, time: str) -> dict:
+    """The ``opening`` record (WP-B1), its ``result_id`` null until the promotion."""
+    return {'revision': revision, 'execution_id': execution_id, 'proposal_id': proposal_id,
+            'user_words': user_words, 'model': model, 'rule': rule, 'time': time,
+            'result_id': None}
 
 
 def validate(part: Any) -> list[dict]:
@@ -420,6 +487,14 @@ def validate(part: Any) -> list[dict]:
             != part['n_rows']:
         problems.append({'path': f'{path}.n_rows',
                          'problem': 'must equal the development and final-test rows'})
+    opening = part.get('opening')
+    if part['status'] == OPENED and (not isinstance(opening, dict)
+                                     or set(opening) != set(OPENING_KEYS)):
+        problems.append({'path': f'{path}.opening',
+                         'problem': 'an opened final test has its opening record '
+                                    '{' + ', '.join(OPENING_KEYS) + '}'})
+    if part['status'] != OPENED and opening is not None:
+        problems.append({'path': f'{path}.opening', 'problem': 'a sealed final test has none'})
     if 'groups' in part and (not isinstance(part['groups'], dict)
                              or set(part['groups']) != set(GROUPS_KEYS)):
         problems.append({'path': f'{path}.groups',

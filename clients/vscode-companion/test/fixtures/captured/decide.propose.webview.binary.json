@@ -20,14 +20,14 @@
   "action": "decide.propose",
   "request_id": "b-web",
   "replayed": false,
-  "revision": 39,
+  "revision": 43,
   "result": {
-   "proposal_id": "p_8",
+   "proposal_id": "p_9",
    "decision_id": "policy",
    "status": "open",
    "decision_status": "confirmed",
    "superseded": [
-    "p_7"
+    "p_8"
    ],
    "restatement": "Call the 100 clients with the highest scores."
   },
@@ -35,16 +35,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 39,
-    "last_ok_revision": 39,
+    "revision": 43,
+    "last_ok_revision": 43,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 39,
-    "last_ok_revision": 39,
+    "revision": 43,
+    "last_ok_revision": 43,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

@@ -67,10 +67,18 @@ def test_initial_state_is_valid_and_takes_no_decision(state, synthetic_case):
     assert state['dataset']['row_key'] == {'rule': 'source_line', 'format': 'L<line>'}
     assert state['case']['sha256'] == c.sha256_file(synthetic_case.path)
     assert {f['status'] for f in state['facts'].values()} <= set(c.EPISTEMIC_STATUSES)
-    # WP-A4: the policy rests on the preprocessing too (its models are fitted with it).
+    # WP-A4: the policy rests on the preprocessing too (its models are fitted with it);
+    # WP-B1: and on the variant it compares.
     assert state['decisions']['policy']['depends_on'] == ['prediction_time',
                                                            'feature_availability', 'split',
-                                                           'preprocessing']
+                                                           'preprocessing', 'model_variant']
+    assert st.depends_on(_a4(state), 'policy') == (
+        'prediction_time', 'feature_availability', 'split', 'preprocessing')
+
+
+def _a4(state):
+    import flowkit
+    return flowkit.wp_a4_shape(copy.deepcopy(state))
 
 
 def test_bank_initial_state_carries_prior_exposure():
@@ -88,16 +96,29 @@ def test_auto_mpg_initial_state_is_a_regression_study():
     assert st.validate_state(auto) == []
     assert auto['task'] == 'regression' and st.task_of(auto) == 'regression'
     # WP-A4: a new study also fixes the success criterion and the preprocessing before
-    # the models (st.REGRESSION_DECISION_IDS stays the set of a study created before).
-    assert tuple(auto['decisions']) == st.FULL_REGRESSION_DECISION_IDS == (
+    # the models (st.REGRESSION_DECISION_IDS stays the set of a study created before);
+    # WP-B1: it names a variant before the choice and may open the final test after it
+    # (st.FULL_REGRESSION_DECISION_IDS stays the set of a study created before WP-B1).
+    assert tuple(auto['decisions']) == st.B1_REGRESSION_DECISION_IDS == (
+        'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'preprocessing', 'model_variant', 'model_choice', 'final_test', 'conclusion')
+    assert st.FULL_REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_choice', 'conclusion')
     assert st.REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'model_choice', 'conclusion')
     assert auto['decisions']['conclusion']['depends_on'] == [
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'preprocessing', 'model_variant', 'model_choice', 'final_test']
+    assert _a4(auto)['decisions']['conclusion']['depends_on'] == [
+        'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'preprocessing', 'model_choice']
-    assert [s['id'] for s in st.derive_plan(auto)] == list(st.FULL_REGRESSION_STEP_IDS) == [
+    assert [s['id'] for s in st.derive_plan(auto)] == list(st.B1_REGRESSION_STEP_IDS) == [
+        'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'train_eda', 'preprocessing', 'models', 'model_variant', 'model_choice', 'final_test',
+        'conclusion']
+    assert [s['id'] for s in st.derive_plan(_a4(auto))] == list(
+        st.FULL_REGRESSION_STEP_IDS) == [
         'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
         'train_eda', 'preprocessing', 'models', 'model_choice', 'conclusion']
     items = {x['id']: x for x in st.not_yet_defensible(auto)}
@@ -197,8 +218,10 @@ def _kinds(state):
 
 
 def test_plan_and_next_action_follow_the_three_pauses(state):
-    """The plan of a new study (WP-A4): step 0, then the three pauses, the success criterion
-    and the preprocessing at the split pause, before the models."""
+    """The plan of a study created by WP-A4 (v0.2a; a new study since WP-B1 has two more
+    decisions, tested below): step 0, then the three pauses, the success criterion and the
+    preprocessing at the split pause, before the models."""
+    state = _a4(state)
     plan = st.derive_plan(state)
     assert [s['id'] for s in plan] == list(st.FULL_STEP_IDS)
     assert [s['pause'] for s in plan] == [None, 1, 1, 2, 2, None, 2, None, 3, 3]
@@ -258,10 +281,61 @@ def test_plan_and_next_action_follow_the_three_pauses(state):
                                      'execution_id': 'e1'}
 
 
+def test_the_plan_of_a_new_study_names_a_variant_and_may_open_the_final_test(state):
+    """WP-B1: after the models, the variant (its fit is the step's activity), then the choice,
+    then the opening of the final test, optional: a blocked opening never hides the
+    conclusion, and once the choice is confirmed the engine drafts the opening."""
+    plan = st.derive_plan(state)
+    assert [s['id'] for s in plan] == list(st.B1_STEP_IDS)
+    by_id = {s['id']: s for s in plan}
+    assert by_id['model_variant']['activities'] == ['fit.variant']
+    assert by_id['model_variant']['requires'] == ['models']
+    assert by_id['policy']['requires'] == ['models', 'model_variant']
+    assert by_id['final_test']['requires'] == ['policy']
+    assert by_id['final_test']['activities'] == ['final_test.evaluation']
+    assert [s['pause'] for s in plan] == [None, 1, 1, 2, 2, None, 2, None, 3, 3, 3, 3]
+    _confirm(state, 'prediction_time', 'before the first reminder')
+    _confirm(state, 'feature_availability', {'holds_open': 'available_at_prediction'})
+    action = st.next_action(state)
+    assert action['decision'] == 'split' and action['default_value'] == {
+        'method': 'kfold_stratified', 'folds': 5, 'seed': st.DEFAULT_CV_SEED}
+    _confirm(state, 'split', action['default_value'])
+    _confirm(state, 'success_criterion', {'metric': 'precision_gain', 'min_points': 5})
+    _confirm(state, 'preprocessing', {'missing': 'none', 'rare_category_min_rows': 0,
+                                      'caps': {}, 'log_transform': []})
+    for slot in ('split', 'eda.target_rate', 'eda.special_values', 'fit.baseline',
+                 'fit.logistic'):
+        state['current'][slot] = f'r_{slot}'
+    action = st.next_action(state)
+    assert action == {**action, 'kind': 'propose', 'decision': 'model_variant',
+                      'default_value': {'kind': 'regularisation', 'strength': 'strong'}}
+    _confirm(state, 'model_variant', action['default_value'])
+    assert st.next_action(state)['activity'] == 'fit.variant'
+    state['current']['fit.variant'] = 'r_variant'
+    state['current']['policy.evaluation'] = 'r_policy'
+    assert st.next_action(state)['decision'] == 'policy'
+    # Before the choice, the opening is blocked and skipped: the conclusion comes next.
+    _confirm(state, 'conclusion', {'verdict': 'keep_baseline', 'text': 'Keep it.'})
+    assert st.next_action(state)['decision'] == 'policy'
+    state['decisions']['conclusion'] = st.empty_decision('conclusion')
+    _confirm(state, 'policy', 'capacity:100@fit.variant')
+    action = st.next_action(state)
+    assert action == {**action, 'kind': 'propose', 'decision': 'final_test',
+                      'default_value': {'model': 'fit.variant', 'rule': 'capacity:100'}}
+    assert st.validate_state(state) == []
+    without = copy.deepcopy(state)
+    without['decisions']['policy'] = st.empty_decision('policy')
+    without['decisions']['policy']['depends_on'] = list(st.depends_on(without, 'policy'))
+    assert st.next_action(without)['decision'] == 'policy'
+    _confirm(without, 'conclusion', {'verdict': 'keep_baseline', 'text': 'Keep it.'})
+    plan = {s['id']: s['status'] for s in st.derive_plan(without)}
+    assert plan['final_test'] == 'blocked'
+
+
 def test_a_state_written_before_wp_a4_keeps_its_plan(state):
     """A study created before WP-A4 holds the five v0.1 decisions: it stays valid, its plan
     is step 0 then the v0.1 steps, and its models need the split only."""
-    for d in st.WP_A4_DECISIONS:
+    for d in st.WP_A4_DECISIONS + st.WP_B1_DECISIONS:
         del state['decisions'][d]
     for d, dec in state['decisions'].items():
         dec['depends_on'] = list(st.DEPENDS_ON[d])

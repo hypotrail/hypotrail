@@ -33,7 +33,7 @@
       noPreview: 'Move the slider to compute a rule on the saved predictions.',
       metrics: { precision: 'Precision', recall: 'Recall' },
       metricAt: (metric, rule) => `${metric} at ${rule}, validation rows`,
-      fits: { 'fit.logistic': 'logistic model', 'fit.baseline': 'baseline' },
+      fits: { 'fit.logistic': 'logistic model', 'fit.variant': 'variant', 'fit.baseline': 'baseline' },
       notDefined: 'not defined (no row selected)',
       counts: (label, selected, truePositives) => `${label}: ${selected} selected, ${truePositives} true positives.`,
       tie: 'Ties at the cut counted pro rata.',

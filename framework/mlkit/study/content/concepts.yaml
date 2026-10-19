@@ -148,6 +148,15 @@ reason_domain:
   model_choice: [error*, erreur*, mae, accura*, precis*, better, mieux, simpl*, interpret*,
                  expla*, baseline, reference, gain*, reduc*, risk*, risque*, stabl*, robust*,
                  uncertain*, incertain*, interval*, intervalle*, cost*, cout*, maint*]
+  # WP-B1 decisions (WP-A9 merge): the opening of the final test and the model variant.
+  final_test: [open*, ouvr*, ouvert*, test*, final*, sealed, scell*, freez*, frozen, fig*,
+               gel*, evaluat*, evalu*, chosen, choisi*, choice, choix, once, une fois, model*,
+               modele*, rule*, regle*, evidence*, preuve*, ready, pret*, done, fini*, decid*,
+               decision*, unseen, jamais vu*, independ*, team*, equipe*, budget*, report*,
+               rapport*]
+  model_variant: [variant*, regulari*, penal*, weak, strong, faible*, fort*, drop*, group*,
+                  groupe*, simpl*, compar*, overfit*, surajust*, stabl*, robust*, error*,
+                  erreur*, precis*, auc, better, mieux, check*, verif*, test*]
   conclusion: [evidence*, preuve*, result*, gain*, precision, baseline, reference, criterion,
                critere*, interval*, intervalle*, uncertain*, incertain*, validation, test*,
                risk*, risque*, limit*, enough, assez, suffisant*, insuffisant*, sample*,

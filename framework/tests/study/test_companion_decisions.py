@@ -69,8 +69,9 @@ def test_history_proposals_and_delegation(bank):
     assert [h['current'] for h in policy] == [False, True]
     assert policy[0]['superseded_at'] == policy[1]['revision'] and policy[1]['superseded_at'] is None
     assert policy[1]['channel'] == 'webview' and policy[0]['channel'] == 'chat'
-    # WP-A4: the success criterion and the preprocessing are confirmed too.
-    assert sum(h['current'] for h in p['history']) == 6
+    # WP-A4: the success criterion and the preprocessing are confirmed too; WP-B1: and the
+    # variant the policy compares.
+    assert sum(h['current'] for h in p['history']) == 7
     split = next(h for h in p['history'] if h['decision_id'] == 'split')
     assert (split['basis'], split['delegation_scope']) == ('delegated_default', 'this_decision')
     assert split['user_words'] == DELEGATION_WORDS
@@ -154,9 +155,11 @@ def test_regression_decisions(tmp_path):
     p = cc.run('decisions', '--study', study)[1]
     assert p['task'] == 'regression'
     # WP-A4: the two decisions of the split pause before the models.
+    # WP-B1: the variant before the model choice, the final test after it.
     assert [d['decision_id'] for d in p['decisions']] == ['prediction_time',
                                                           'feature_availability', 'split',
                                                           'success_criterion', 'preprocessing',
-                                                          'model_choice', 'conclusion']
-    assert [d['pause'] for d in p['decisions']] == [1, 1, 2, 2, 2, 3, 3]
+                                                          'model_variant', 'model_choice',
+                                                          'final_test', 'conclusion']
+    assert [d['pause'] for d in p['decisions']] == [1, 1, 2, 2, 2, 3, 3, 3, 3]
     assert p['history'] == [] and p['proposals'] == []

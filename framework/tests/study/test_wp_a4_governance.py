@@ -43,6 +43,7 @@ def bank_fits(tmp_path_factory) -> Path:
     flow.run('split')
     flow.run('fit.baseline')
     flow.run('fit.logistic')
+    flow.variant()          # WP-B1: the variant the policy compares
     return study
 
 
@@ -137,7 +138,8 @@ def test_step_zero_shows_the_data_card_until_the_first_proposal(tmp_path):
     assert init['next_action']['kind'] == 'show_data_card'
     view = flow.view()
     assert view['current_step'] == 'discover_data'
-    assert [s['id'] for s in view['plan']] == list(st.FULL_STEP_IDS)
+    # WP-B1: a new study's plan (st.FULL_STEP_IDS stays the plan of a v0.2a study).
+    assert [s['id'] for s in view['plan']] == list(st.B1_STEP_IDS)
     nxt = view['next_action']
     assert nxt['audience'] == 'agent' and 'hypotrail data' in nxt['message']
     assert 'hypotrail' not in nxt['junior_message'] and 'Nothing is decided' in nxt['junior_message']
@@ -267,7 +269,8 @@ def test_a_changed_preprocessing_refits_the_candidate_and_keeps_the_exploration(
                     '--study', flow.study)
     inv = out['result']['invalidation']
     assert inv['mutation'] == 'preprocessing' and inv['row'] == 14
-    assert set(inv['stale_slots']) == {'fit.logistic', 'policy.evaluation'}
+    # WP-B1: the variant is the candidate with one change, so it is fitted again too.
+    assert set(inv['stale_slots']) == {'fit.logistic', 'fit.variant', 'policy.evaluation'}
     assert set(inv['reconfirm_required']) == {'policy'}
     view = flow.view()
     assert view['results']['fit.baseline']['current'] is True
@@ -423,8 +426,10 @@ def test_a_regression_criterion_is_a_relative_error_reduction(tmp_path):
     flow.decide('feature_availability', fk.availability(AUTO))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
     flow.model_decisions()
-    for a in ('split', 'fit.baseline', 'fit.linear', 'evaluate.regression'):
+    for a in ('split', 'fit.baseline', 'fit.linear'):
         flow.run(a)
+    flow.variant()          # WP-B1: the variant the model choice compares
+    flow.run('evaluate.regression')
     crit = flow.view()['criterion']
     ev = flow.view()['results']['evaluate.regression']['values']
     base = ev['models']['fit.baseline']['mae']
@@ -449,7 +454,7 @@ def test_a_regression_criterion_is_a_relative_error_reduction(tmp_path):
 def _pre_wp_a4_state(case_dir: Path) -> dict:
     """The state ``init`` wrote before WP-A4: the five v0.1 decisions and their depends_on."""
     state = st.initial_state(c.load_case(case_dir))
-    for d in st.WP_A4_DECISIONS:
+    for d in st.WP_A4_DECISIONS + st.WP_B1_DECISIONS:
         del state['decisions'][d]
     for d, dec in state['decisions'].items():
         dec['depends_on'] = list(st.DEPENDS_ON[d])

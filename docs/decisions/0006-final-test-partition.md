@@ -1,6 +1,6 @@
 # ADR 0006: A final test sealed at `init`
 
-- Status: accepted and implemented in v0.2a (WP-A3). The opening of the final test, cross-validation, and diagnostics are v0.2b (WP-B1, WP-B4).
+- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics are WP-B4.
 - Date: 19 October 2026
 - Sources: [V0.2-REVIEW-SYNTHESIS.md](../plans/V0.2-REVIEW-SYNTHESIS.md) §3 and §4 (owner decision 6, "holdout assigned and sealed at `init`"), [V0.2-IMPLEMENTATION-PLAN.md](../plans/V0.2-IMPLEMENTATION-PLAN.md) WP-A3
 - Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §4.1, [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md) §Order
@@ -46,3 +46,29 @@ The literature the synthesis reviewed (Ambroise & McLachlan 2002; Cawley & Talbo
 - **Cross-validation** (WP-B1): 5-fold CV on development rows, stratified or temporal as the final test, replacing the single validation split.
 - **Diagnostics** (WP-B4): on out-of-fold predictions before opening, on the final test after.
 - Optional case keys for the fraction or a grouped final test (once grouped splits exist) may follow; each needs this ADR amended.
+
+## Amendment (v0.2b, WP-B1): cross-validation, one variant, the opening ritual
+
+- Date: 19 October 2026
+- Sources: [V0.2-REVIEW-SYNTHESIS.md](../plans/V0.2-REVIEW-SYNTHESIS.md) §3 (out-of-fold numbers are development evidence, only the sealed holdout is final evidence) and §4 ("5-fold CV with one analytical variant chosen by the junior so selection has a purpose"), [V0.2-IMPLEMENTATION-PLAN.md](../plans/V0.2-IMPLEMENTATION-PLAN.md) WP-B1
+- Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §12
+
+### Context
+
+With a single validation split, every model and rule figure rests on one draw of about 30 % of the development rows, and the final test sealed at `init` had no way to be opened. Cross-validation uses every development row for both fitting and evaluation, and gives a spread across folds; but it is only meaningful when something is selected with it, so the junior names one variant to compare. The final test must then be opened once, after the choice, and anything changed afterwards must say so.
+
+### Decision
+
+1. **Generations.** A study created by `init` since WP-B1 has nine decisions: the seven of WP-A4, plus `model_variant` (before the choice) and `final_test` (after it). `state.decision_ids(state)` reads the set a state holds; v0.1 and v0.2a studies keep theirs and are never migrated.
+2. **The evaluation scheme.** In such a study the `split` decision may be a cross-validation of the development rows, `{method, folds, seed}`: `kfold_stratified` (binary target), `kfold_quantile` (5 target quantile bins), or `temporal_folds` (contiguous blocks in time order when the case declares a time column or an order; each block is predicted by a model fitted on the other blocks, later ones included, so it measures stability across periods, not a forecast). 5 folds by default (3 to 10 accepted), seed 20261017. It is the default the engine drafts (`next_action.default_value`); the train/validation split stays accepted.
+3. **Out-of-fold predictions.** Under cross-validation every development row is explored (the exploration's "training rows" are all development rows; target looks are still counted) and every fit predicts each fold with a model fitted, preprocessing included, on the other folds. Metrics are reported on the out-of-fold predictions of all rows with their per-fold spread; the policy and regression evaluations read those predictions, with paired bootstrap intervals over them. The binary baseline scores every row with the development positive rate (a per-fold rate would rank rows by fold); the regression baseline predicts each fold with the other folds' mean. A capacity is also expressed as a share of the rows it was chosen on.
+4. **One variant.** `model_variant` names one variant of the candidate, decided in the junior's words without a reason: `{kind: regularisation, strength: weak|strong}` (logistic C 10 or 0.1 against the candidate's 1; ridge alpha 1 or 10 against the unregularised linear model) or `{kind: drop_group, group}` (the candidate without the features of one case group). `fit.variant` fits it under the same protocol; the evaluations compare it with the candidate (`comparisons`, variant minus candidate, paired). The choice selects the winner: a binary policy may apply its rule to the variant (`capacity:100@fit.variant`), a regression `model_choice` may be `fit.variant`. `view.trials` counts the candidate and variant configurations evaluated so far (a disclosure).
+5. **The opening ritual.** `final_test` is decided in the junior's own words, with a reason, never by delegation, once the choice and the success criterion are confirmed, no fit or evaluation is stale and no decision waits for reconfirmation. Its value is the chosen configuration `{model, rule}`. Confirming it runs `final_test.evaluation` once: reserving it sets `partition.status` to `opened` with an `opening` record before any final-test row is read (so an interrupted run consumes the final test rather than allowing a second look), it refits the chosen configuration and the baseline on every development row, scores the final-test rows (`data.load_final_test`, the only reader of those rows), and evaluates the adopted rule (a capacity keeps its share of the rows) or the errors, with paired intervals, and the success criterion on the final test. Exposure: `train_fit` on the development rows and `final_evaluation` on partition `final_test`. A second opening is refused (`final_test_already_opened`).
+6. **After the opening.** The opening is never asked again. Any later confirmation of a decision the evaluation rests on, or any fit or evaluation computed later, is listed in `view.final_test.changed_after` with `post_final_test: true`; `not_yet_defensible` then says the final test no longer measures what the study holds (`changed_after_final_test`). Before the opening, `final_test_sealed` says every figure is development evidence.
+
+### Consequences
+
+- Development figures use every development row (Bank: 3,617 out-of-fold predictions instead of 1,086 validation rows), and the report separates development evidence from the final test.
+- The final test is consumed by its one evaluation, even an interrupted one: the price of never scoring it twice.
+- Temporal folds are not a forward backtest; the temporal final test (when declared) is the forward check.
+- A study keeps its variant's comparison and every configuration it fitted in the trial count; choosing among more configurations is disclosed, not corrected.

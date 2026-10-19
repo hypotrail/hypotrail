@@ -7,11 +7,11 @@
   "argv": [
    "decide",
    "withdraw",
-   "p_8",
+   "p_9",
    "--request-id",
    "b-wd",
    "--expected-revision",
-   "39",
+   "43",
    "--json"
   ],
   "note": ""
@@ -23,9 +23,9 @@
   "action": "decide.withdraw",
   "request_id": "b-wd",
   "replayed": false,
-  "revision": 40,
+  "revision": 44,
   "result": {
-   "proposal_id": "p_8",
+   "proposal_id": "p_9",
    "decision_id": "policy",
    "status": "withdrawn",
    "decision_status": "confirmed"
@@ -34,16 +34,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 40,
-    "last_ok_revision": 40,
+    "revision": 44,
+    "last_ok_revision": 44,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 40,
-    "last_ok_revision": 40,
+    "revision": 44,
+    "last_ok_revision": 44,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

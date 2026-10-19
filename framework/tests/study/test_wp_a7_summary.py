@@ -40,7 +40,8 @@ def _summary(flow, *extra):
 
 def test_the_summary_carries_the_mode_and_the_launch_argument_lists(binary):
     p = _summary(binary)
-    assert tuple(p)[-2:] == ('mode', 'deliverables')
+    # WP-B1: the trial count follows them.
+    assert tuple(p)[-3:] == ('mode', 'deliverables', 'trials')
     assert p['mode'] == 'guided'
     full = binary.view()['deliverables']
     for name in ('notebook', 'workbench'):
@@ -51,7 +52,7 @@ def test_the_summary_carries_the_mode_and_the_launch_argument_lists(binary):
     # The digest keys still follow, in their order.
     d = _summary(binary, '--digest')
     keys = tuple(d)
-    assert keys[keys.index('deliverables') + 1:] == view.DIGEST_SUMMARY_KEYS
+    assert keys[keys.index('trials') + 1:] == view.DIGEST_SUMMARY_KEYS      # WP-B1: trials
 
 
 def test_recap_junior_names_the_waiting_step_and_says_values_in_words(binary, tmp_path):

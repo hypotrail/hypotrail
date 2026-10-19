@@ -91,9 +91,13 @@ def test_sandbox_starts_at_the_proposed_rule_and_shows_the_experiment(open_panel
     cmp = page.locator('.ht-wi-comparison')
     assert cmp.get_attribute('data-experiment') is not None
     values = cmp.locator('.ht-bars .ht-value').all_text_contents()
-    assert values == ['36.0%', '11.5%', '23.1%', '7.4%']
+    # WP-B1: the fixture's study has a variant; the panel lists it as one more model (its
+    # dedicated view is WP-B5).
+    assert values == ['36.0%', '35.0%', '11.5%', '23.1%', '22.4%', '7.4%']
     assert cmp.locator('.ht-wi-counts li').all_inner_texts() == [
-        'logistic model: 100 selected, 36 true positives.', 'baseline: 100 selected, 11.5 true positives.']
+        'logistic model: 100 selected, 36 true positives.',
+        'variant: 100 selected, 35 true positives.',
+        'baseline: 100 selected, 11.5 true positives.']
     assert cmp.locator('[data-tie]').inner_text() == 'Ties at the cut counted pro rata.'
     assert cmp.locator('[data-delta-sentence="one_side"]').count() == 1
     assert cmp.locator('[data-bootstrap]').inner_text() == 'Paired bootstrap, 2,000 replicates, 95% level.'

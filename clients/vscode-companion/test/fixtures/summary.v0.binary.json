@@ -192,6 +192,29 @@
     "reason": null,
     "open_proposals": [],
     "feature_basis": null
+   },
+   "model_variant": {
+    "status": "confirmed",
+    "value": {
+     "kind": "regularisation",
+     "strength": "strong"
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "final_test": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
    }
   },
   "results": {
@@ -233,6 +256,12 @@
    },
    "split": {
     "result_id": "040ccd8142f7274087cd376cf1a907671dfe04f2d68a3cb14748f2c7df9e4b7a",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.variant": {
+    "result_id": "ddcbf654b0107f132937e89e10e630e299e21c9984eb79f92253c135c696b01a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -319,7 +348,10 @@
    "method": "stratified",
    "fraction": 0.2,
    "development_rows": 3617,
-   "schema_check": "pass"
+   "schema_check": "pass",
+   "opening": null,
+   "post_final_test": false,
+   "changed_after": []
   },
   "criterion": {
    "decision_status": "confirmed",
@@ -335,7 +367,8 @@
    "unit": "percentage points",
    "rule": "capacity:100",
    "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
-   "contradicts_verdict": false
+   "contradicts_verdict": false,
+   "final_test": null
   },
   "eda_looks": {
    "target_looks": 3,
@@ -390,6 +423,9 @@
      ]
     }
    }
+  },
+  "trials": {
+   "count": 2
   }
  }
 }

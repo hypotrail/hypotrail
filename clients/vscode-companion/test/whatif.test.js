@@ -73,7 +73,8 @@ test('WhatIfModel (regression): errors, paired difference, residuals, bias by gr
 test('PolicyPreviewModel: per rule and fit, intervals and deltas, the adopted rule', () => {
   const m = toPolicyPreviewModel(payload('preview.binary'));
   assert.deepEqual(m.rules, ['capacity:100']);
-  assert.deepEqual(m.fits, ['fit.logistic', 'fit.baseline']);
+  // WP-B1: the variant is previewed with the candidate it is compared with.
+  assert.deepEqual(m.fits, ['fit.logistic', 'fit.variant', 'fit.baseline']);
   const e = m.byRule['capacity:100'];
   assert.deepEqual(e.models['fit.logistic'], { selected: 100, truePositives: 36, precision: 0.36, recall: 0.23076923076923078,
     volume: 100, tiedAtCut: 0, n: 1357, nPositive: 156 });

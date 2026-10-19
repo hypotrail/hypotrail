@@ -7,7 +7,7 @@
   "argv": [
    "preview",
    "effects",
-   "p_6",
+   "p_7",
    "--json"
   ],
   "note": ""
@@ -16,8 +16,8 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 32,
-  "proposal_id": "p_6",
+  "revision": 36,
+  "proposal_id": "p_7",
   "decision_id": "model_choice",
   "value": "fit.linear",
   "previous": null,
@@ -36,6 +36,7 @@
    "eda.single_feature_signal",
    "fit.baseline",
    "fit.linear",
+   "fit.variant",
    "evaluate.regression"
   ],
   "refit": [],

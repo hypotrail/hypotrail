@@ -17,7 +17,7 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 38,
+  "revision": 42,
   "decision_id": "policy",
   "value": "capacity:150",
   "proposable": false,
@@ -30,7 +30,7 @@
   "restatement": null,
   "rationale": null,
   "evidence": null,
-  "supersedes_proposal": "p_7",
+  "supersedes_proposal": "p_8",
   "recorded": false,
   "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
  }

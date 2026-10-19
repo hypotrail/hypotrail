@@ -104,10 +104,11 @@ def test_bank_impact_of_a_feature_set_change(bank):
     assert {'fit.logistic', 'policy.evaluation'} <= set(impact['stale_slots'])
     assert 'fit.baseline' in impact['kept_slots'] and 'split' in impact['kept_slots']
     assert not set(impact['stale_slots']) & set(impact['kept_slots'])
-    assert impact['refit'] == ['fit.logistic'] and impact['reconfirm'] == ['policy']
+    # WP-B1: the variant is the candidate with one change, so it refits too.
+    assert impact['refit'] == ['fit.logistic', 'fit.variant'] and impact['reconfirm'] == ['policy']
     # Rows 1 to 6 of the binary table, each for a confirmed decision; WP-A4 adds the
-    # preprocessing (row 14) and the success criterion (row 16).
-    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 5, 6, 14, 16]
+    # preprocessing (row 14) and the success criterion (row 16); WP-B1 the variant (17).
+    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 5, 6, 14, 16, 17]
     split = next(i for i in p['impacts'] if i['mutation'] == 'split')
     assert 'fit.baseline' in split['stale_slots'] and split['kept_slots'] == []
     rule = next(i for i in p['impacts'] if i['mutation'] == 'policy.parameter')
@@ -120,7 +121,7 @@ def test_effects_for_mutation_is_pure(bank):
     before = copy.deepcopy(state)
     eff = dependencies.effects_for_mutation(state, 'feature_availability.feature_set')
     assert state == before
-    assert eff['stale_slots'] == ['fit.logistic', 'policy.evaluation']
+    assert eff['stale_slots'] == ['fit.logistic', 'fit.variant', 'policy.evaluation']
     assert eff['reconfirm'] == ['policy'] and 'fit.baseline' in eff['kept_slots']
     with pytest.raises(Exception) as refused:
         dependencies.effects_for_mutation(state, 'dataset')
@@ -225,7 +226,8 @@ def test_a_study_before_the_split_cannot_run_eda(tmp_path, synthetic_case_dir):
 def test_auto_mpg_evidence_holds_no_rule_vocabulary(auto):
     p = evidence(auto.study)
     assert p['task'] == 'regression'
-    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 13, 14, 16]       # WP-A4: 14, 16
+    # WP-A4: 14, 16; WP-B1: 17
+    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 13, 14, 16, 17]
     assert 'validation_policy_selection' not in [r['purpose'] for r in p['exposure']['ledger']]
     choice = next(i for i in p['impacts'] if i['mutation'] == 'model_choice')
     assert choice['stale_slots'] == [] and choice['refit'] == []

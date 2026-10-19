@@ -90,7 +90,8 @@ PARTIAL_SKIP = frozenset("""
     any aucun aucune
 """.split())
 # The decisions whose value has several parts a reply could accept separately.
-PARTIAL_DECISIONS = ('feature_availability', 'preprocessing', 'split')
+PARTIAL_DECISIONS = ('feature_availability', 'preprocessing', 'split', 'model_variant',
+                     'final_test')
 # The parts of a preprocessing value and the concept terms that name them
 # (``content/concepts.yaml``): a negated part is consistent when the value leaves it out.
 PREPROCESSING_PARTS = {'caps': 'caps', 'log_transform': 'log_transform',
@@ -129,8 +130,8 @@ REASON_CONNECTOR = re.compile(r"""
 """, re.IGNORECASE | re.VERBOSE)
 # The decisions that need a reason, per task: the choice of the third pause and the
 # conclusion (owner rule R1, "hybrid").
-REASON_DECISIONS = {st.BINARY: ('policy', 'conclusion'),
-                    st.REGRESSION: ('model_choice', 'conclusion')}
+REASON_DECISIONS = {st.BINARY: ('policy', 'conclusion', st.FINAL_TEST),
+                    st.REGRESSION: ('model_choice', 'conclusion', st.FINAL_TEST)}
 
 
 def _cmd():
