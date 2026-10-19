@@ -241,7 +241,7 @@
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
+    "result_id": "ce72261b554777048ecf5a4b52c60368b37d22443c86c9022db4f5ae975ca940",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -253,7 +253,7 @@
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "bce018d194ce90370e584aa3cf79b260b29aa50d503598c8ec01de3cf3d3391d",
+    "result_id": "35cb9714c1434ee12596b42e5a807b38724742f94f5784602ae0a9c5c86f77b7",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -360,7 +360,7 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
+   "result_id": "ce72261b554777048ecf5a4b52c60368b37d22443c86c9022db4f5ae975ca940",
    "contradicts_verdict": false
   },
   "eda_looks": {
@@ -374,7 +374,7 @@
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result 7b9c2c93); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result ce72261b); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],

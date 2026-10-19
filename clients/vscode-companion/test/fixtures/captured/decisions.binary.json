@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T09:50:26.890059+00:00",
+     "time": "2026-10-19T10:22:33.643901+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -76,7 +76,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T09:50:27.268139+00:00",
+     "time": "2026-10-19T10:22:33.929218+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -104,7 +104,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T09:50:27.536729+00:00",
+     "time": "2026-10-19T10:22:34.142367+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -131,7 +131,7 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-19T09:50:27.778120+00:00",
+     "time": "2026-10-19T10:22:34.363194+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -162,7 +162,7 @@
      "restatement": "You decide the preprocessing as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-19T09:50:28.169866+00:00",
+     "time": "2026-10-19T10:22:34.711093+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -191,7 +191,7 @@
      "restatement": "You decide the policy as stated.",
      "proposal_id": "p_6",
      "revision": 31,
-     "time": "2026-10-19T09:50:33.053537+00:00",
+     "time": "2026-10-19T10:22:38.578888+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -230,7 +230,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T09:50:26.289407+00:00",
+    "created": "2026-10-19T10:22:33.068064+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -262,7 +262,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T09:50:27.070865+00:00",
+    "created": "2026-10-19T10:22:33.801841+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -281,7 +281,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T09:50:27.402333+00:00",
+    "created": "2026-10-19T10:22:34.031917+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -299,7 +299,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-19T09:50:27.642261+00:00",
+    "created": "2026-10-19T10:22:34.255617+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -321,7 +321,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-19T09:50:27.917292+00:00",
+    "created": "2026-10-19T10:22:34.520400+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -336,7 +336,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 30,
-    "created": "2026-10-19T09:50:32.867313+00:00",
+    "created": "2026-10-19T10:22:38.437391+00:00",
     "closed_revision": 31,
     "closed_reason": "confirmed",
     "origin": {
@@ -351,7 +351,7 @@
     "rationale": "The team can make 100 calls per wave.",
     "status": "open",
     "revision": 34,
-    "created": "2026-10-19T09:50:33.944387+00:00",
+    "created": "2026-10-19T10:22:39.361190+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -362,7 +362,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T09:50:26.890120+00:00",
+    "time": "2026-10-19T10:22:33.643976+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "before the first contact of the campaign, from the client file",
@@ -376,7 +376,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T09:50:27.268641+00:00",
+    "time": "2026-10-19T10:22:33.929486+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -407,7 +407,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T09:50:27.536788+00:00",
+    "time": "2026-10-19T10:22:34.142440+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -425,7 +425,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-19T09:50:27.778196+00:00",
+    "time": "2026-10-19T10:22:34.363260+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -442,7 +442,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-19T09:50:28.170068+00:00",
+    "time": "2026-10-19T10:22:34.711182+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
@@ -463,7 +463,7 @@
    },
    {
     "revision": 31,
-    "time": "2026-10-19T09:50:33.053596+00:00",
+    "time": "2026-10-19T10:22:38.578951+00:00",
     "decision_id": "policy",
     "proposal_id": "p_6",
     "value": "threshold:0.2",

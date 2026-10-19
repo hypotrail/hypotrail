@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T09:50:36.948592+00:00",
+     "time": "2026-10-19T10:22:42.033241+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -66,7 +66,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T09:50:37.154121+00:00",
+     "time": "2026-10-19T10:22:42.251689+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -94,7 +94,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T09:50:37.348484+00:00",
+     "time": "2026-10-19T10:22:42.389258+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -121,7 +121,7 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-19T09:50:37.546323+00:00",
+     "time": "2026-10-19T10:22:42.569132+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -152,7 +152,7 @@
      "restatement": "You decide the preprocessing as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-19T09:50:37.782385+00:00",
+     "time": "2026-10-19T10:22:42.792440+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -208,7 +208,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T09:50:36.822409+00:00",
+    "created": "2026-10-19T10:22:41.930206+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -230,7 +230,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T09:50:37.060979+00:00",
+    "created": "2026-10-19T10:22:42.154155+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -249,7 +249,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T09:50:37.234224+00:00",
+    "created": "2026-10-19T10:22:42.321535+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -267,7 +267,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-19T09:50:37.468781+00:00",
+    "created": "2026-10-19T10:22:42.472650+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -289,7 +289,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-19T09:50:37.668242+00:00",
+    "created": "2026-10-19T10:22:42.694592+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -304,7 +304,7 @@
     "rationale": "Lower error on later years.",
     "status": "open",
     "revision": 28,
-    "created": "2026-10-19T09:50:39.874830+00:00",
+    "created": "2026-10-19T10:22:44.444535+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -315,7 +315,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T09:50:36.948643+00:00",
+    "time": "2026-10-19T10:22:42.033307+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -329,7 +329,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T09:50:37.154311+00:00",
+    "time": "2026-10-19T10:22:42.251832+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -350,7 +350,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T09:50:37.348568+00:00",
+    "time": "2026-10-19T10:22:42.389315+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -368,7 +368,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-19T09:50:37.546379+00:00",
+    "time": "2026-10-19T10:22:42.569199+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -385,7 +385,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-19T09:50:37.782451+00:00",
+    "time": "2026-10-19T10:22:42.792507+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
