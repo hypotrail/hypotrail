@@ -1,0 +1,62 @@
+{
+ "about": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "proposal",
+   "policy",
+   "--value=share:0.2",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.proposal_draft/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-cv",
+  "revision": 33,
+  "decision_id": "policy",
+  "value": "share:0.2",
+  "proposable": true,
+  "missing": [],
+  "restatement": "Adopt the rule share:0.2: act on the 20% highest-scored rows, 723 of the 3,617 validation rows. There the logistic model's selection had precision 25.2% against 11.5% for the baseline, and recall 43.6%. These validation rows were used to choose the rule, so these figures are optimistic.",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 72d3f6f2).",
+  "evidence": {
+   "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+   "activity": "policy.evaluation",
+   "figures": [
+    {
+     "path": "rules.[share:0.2].models.[fit.logistic].selected",
+     "value": 723.0,
+     "shown": "723"
+    },
+    {
+     "path": "n",
+     "value": 3617,
+     "shown": "3,617"
+    },
+    {
+     "path": "rules.[share:0.2].models.[fit.logistic].precision",
+     "value": 0.2517289073305671,
+     "shown": "25.2%"
+    },
+    {
+     "path": "rules.[share:0.2].models.[fit.baseline].precision",
+     "value": 0.11528891346419684,
+     "shown": "11.5%"
+    },
+    {
+     "path": "rules.[share:0.2].models.[fit.logistic].recall",
+     "value": 0.4364508393285372,
+     "shown": "43.6%"
+    }
+   ]
+  },
+  "supersedes_proposal": null,
+  "recorded": false,
+  "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
+ }
+}

@@ -1,0 +1,2778 @@
+{
+ "about": {
+  "schema": "hypotrail.evidence/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "evidence",
+   "--json"
+  ],
+  "note": "Bank, cross-validation, final test opened, then the calling rule changed after it."
+ },
+ "payload": {
+  "schema": "hypotrail.evidence/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-cv",
+  "revision": 35,
+  "task": "binary",
+  "results": [
+   {
+    "result_id": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+    "activity": "split",
+    "slot": "split",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {},
+    "upstream": {},
+    "downstream": [
+     "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5"
+    ],
+    "created": "2026-10-19T15:31:09.436274+00:00",
+    "started_revision": 12,
+    "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+    "exposure_id": "x_9d2a534505054a1db82e55a4e9c56e4c",
+    "values": {
+     "method": "kfold_stratified",
+     "folds": 5,
+     "seed": 20261017,
+     "stratified_on": "y",
+     "n_rows": 3617,
+     "scheme": "cross_validation",
+     "fold_rows": [
+      {
+       "fold": 1,
+       "n_rows": 724,
+       "n_positive": 84,
+       "rate": 0.11602209944751381
+      },
+      {
+       "fold": 2,
+       "n_rows": 724,
+       "n_positive": 84,
+       "rate": 0.11602209944751381
+      },
+      {
+       "fold": 3,
+       "n_rows": 723,
+       "n_positive": 83,
+       "rate": 0.11479944674965421
+      },
+      {
+       "fold": 4,
+       "n_rows": 723,
+       "n_positive": 83,
+       "rate": 0.11479944674965421
+      },
+      {
+       "fold": 5,
+       "n_rows": 723,
+       "n_positive": 83,
+       "rate": 0.11479944674965421
+      }
+     ],
+     "partitions": {
+      "train": {
+       "n_rows": 3617,
+       "n_positive": 417,
+       "rate": 0.11528891346419685
+      },
+      "validation": {
+       "n_rows": 3617,
+       "n_positive": 417,
+       "rate": 0.11528891346419685
+      }
+     },
+     "implementation": "sklearn.model_selection.StratifiedKFold (shuffled, seeded)",
+     "overlap": null,
+     "note": "Every development row is explored and predicted once, by a model fitted on the other folds; out-of-fold figures are development evidence.",
+     "groups": null
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "3,617",
+       "result_id": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+       "path": "partitions.train.n_rows",
+       "value": 3617,
+       "format": "int"
+      },
+      {
+       "text": " training rows / "
+      },
+      {
+       "text": "3,617",
+       "result_id": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+       "path": "partitions.validation.n_rows",
+       "value": 3617,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+    "activity": "eda.target_rate",
+    "slot": "eda.target_rate",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 3617,
+    "params": {},
+    "upstream": {
+     "split": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af"
+    },
+    "downstream": [],
+    "created": "2026-10-19T15:31:09.863592+00:00",
+    "started_revision": 14,
+    "execution_id": "e_2ab8c63a63b208bd8731b8b3",
+    "exposure_id": "x_4778384d79ec4e108b31b57737c361f1",
+    "values": {
+     "partition": "train",
+     "target": "y",
+     "positive_label": "yes",
+     "n_rows": 3617,
+     "n_positive": 417,
+     "n_negative": 3200,
+     "rate": 0.11528891346419685,
+     "interval": {
+      "low": 0.10528655805993653,
+      "high": 0.12610757182653984,
+      "level": 0.95,
+      "method": "wilson"
+     },
+     "question": "How often is the outcome positive among the training rows?"
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Positive rate "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+       "path": "rate",
+       "value": 0.11528891346419685,
+       "format": "pct1"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "3,617",
+       "result_id": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+       "path": "n_rows",
+       "value": 3617,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+    "activity": "fit.baseline",
+    "slot": "fit.baseline",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "model": "constant_prior"
+    },
+    "upstream": {
+     "split": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af"
+    },
+    "downstream": [
+     "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609"
+    ],
+    "created": "2026-10-19T15:31:10.261299+00:00",
+    "started_revision": 16,
+    "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+    "exposure_id": "x_916e85be94d541919c3402a11ecebeec",
+    "values": {
+     "model": "constant_prior",
+     "train_rate": 0.11528891346419685,
+     "n_train": 3617,
+     "n_train_positive": 417,
+     "features": [],
+     "validation": {
+      "n_rows": 3617,
+      "n_positive": 417,
+      "roc_auc": 0.5,
+      "average_precision": 0.11528891346419685
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,score",
+      "model": "constant_prior",
+      "partition": "development",
+      "positive_label": "yes",
+      "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed.",
+      "n": 3617,
+      "n_positive": 417,
+      "features": [],
+      "evaluation": "out_of_fold"
+     },
+     "note": "Every row receives the development positive rate: no ranking information.",
+     "evaluation": "out_of_fold",
+     "cross_validation": {
+      "method": "kfold_stratified",
+      "folds": 5,
+      "per_fold": [
+       {
+        "fold": 1,
+        "n_rows": 724,
+        "n_positive": 84,
+        "roc_auc": 0.5,
+        "average_precision": 0.11602209944751381
+       },
+       {
+        "fold": 2,
+        "n_rows": 724,
+        "n_positive": 84,
+        "roc_auc": 0.5,
+        "average_precision": 0.11602209944751381
+       },
+       {
+        "fold": 3,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.5,
+        "average_precision": 0.11479944674965421
+       },
+       {
+        "fold": 4,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.5,
+        "average_precision": 0.11479944674965421
+       },
+       {
+        "fold": 5,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.5,
+        "average_precision": 0.11479944674965421
+       }
+      ],
+      "spread": {
+       "roc_auc": {
+        "mean": 0.5,
+        "sd": 0.0,
+        "min": 0.5,
+        "max": 0.5
+       },
+       "average_precision": {
+        "mean": 0.11528850782879804,
+        "sd": 0.0006696744626122481,
+        "min": 0.11479944674965421,
+        "max": 0.11602209944751381
+       }
+      },
+      "note": "Every development row is predicted once, by a model fitted on the other folds (the preparation of the variables learnt on those rows too): out-of-fold figures are development evidence, not independent evidence."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "AUC "
+      },
+      {
+       "text": "0.500",
+       "result_id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+       "path": "validation.roc_auc",
+       "value": 0.5,
+       "format": "f3"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "3,617",
+       "result_id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+       "path": "validation.n_rows",
+       "value": 3617,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+    "activity": "fit.logistic",
+    "slot": "fit.logistic",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "implementation": "mlkit.classical.pipeline",
+     "max_iter": 1000,
+     "model": "logistic",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 20261017,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af"
+    },
+    "downstream": [
+     "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609"
+    ],
+    "created": "2026-10-19T15:31:12.987531+00:00",
+    "started_revision": 18,
+    "execution_id": "e_c4434080afdaeb4edd1ce5b5",
+    "exposure_id": "x_8fe7d297c2b44f558c9b755649d5e6b4",
+    "values": {
+     "model": "logistic",
+     "features": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome"
+     ],
+     "special_value_indicators": [
+      "pdays=-1"
+     ],
+     "n_train": 3617,
+     "n_train_positive": 417,
+     "n_terms": 37,
+     "intercept": -0.6267351806272979,
+     "coefficients": {
+      "num__age": 0.11017993918145644,
+      "num__balance": 0.013327420739127599,
+      "num__pdays": -0.017394120088682966,
+      "num__previous": 0.002113824732884696,
+      "num__pdays=-1": -0.23588158112266383,
+      "cat__job_admin.": 0.010625934425050707,
+      "cat__job_blue-collar": -0.3189464876201946,
+      "cat__job_entrepreneur": -0.4132308114383731,
+      "cat__job_housemaid": 0.2269587383527349,
+      "cat__job_management": -0.0012777850661032579,
+      "cat__job_retired": 0.5645006397251668,
+      "cat__job_self-employed": -0.03539424840408425,
+      "cat__job_services": -0.2662222088259588,
+      "cat__job_student": 0.5368238865569789,
+      "cat__job_technician": -0.32376171978261836,
+      "cat__job_unemployed": -0.36868814838147307,
+      "cat__job_unknown": -0.09154150223616074,
+      "cat__marital_divorced": 0.06286308737577631,
+      "cat__marital_married": -0.447033832898276,
+      "cat__marital_single": -0.09598296717253445,
+      "cat__education_primary": -0.1633320959425906,
+      "cat__education_secondary": 0.036818815947720164,
+      "cat__education_tertiary": 0.09889534731846174,
+      "cat__education_unknown": -0.452535780018625,
+      "cat__default_no": -0.45233864432280996,
+      "cat__default_yes": -0.02781506837222232,
+      "cat__housing_no": -0.04004118818117607,
+      "cat__housing_yes": -0.44011252451385696,
+      "cat__loan_no": 0.11788948185908837,
+      "cat__loan_yes": -0.5980431945541215,
+      "cat__contact_cellular": 0.2007550797365924,
+      "cat__contact_telephone": 0.06770409235117048,
+      "cat__contact_unknown": -0.7486128847827955,
+      "cat__poutcome_failure": -0.9640891977064188,
+      "cat__poutcome_other": -0.5069499230819352,
+      "cat__poutcome_success": 1.4749245665734745,
+      "cat__poutcome_unknown": -0.4840391584801423
+     },
+     "coefficient_scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects",
+     "iterations": 29,
+     "validation": {
+      "n_rows": 3617,
+      "n_positive": 417,
+      "roc_auc": 0.7152517985611511,
+      "average_precision": 0.32221465785588066
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,score",
+      "model": "logistic",
+      "partition": "development",
+      "positive_label": "yes",
+      "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed.",
+      "n": 3617,
+      "n_positive": 417,
+      "features": [
+       "age",
+       "job",
+       "marital",
+       "education",
+       "default",
+       "balance",
+       "housing",
+       "loan",
+       "contact",
+       "pdays",
+       "previous",
+       "poutcome"
+      ],
+      "evaluation": "out_of_fold"
+     },
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on the training rows of each fold and applied to its held-out rows; shown here as learnt on every development row."
+     },
+     "evaluation": "out_of_fold",
+     "cross_validation": {
+      "method": "kfold_stratified",
+      "folds": 5,
+      "per_fold": [
+       {
+        "fold": 1,
+        "n_rows": 724,
+        "n_positive": 84,
+        "roc_auc": 0.7369791666666666,
+        "average_precision": 0.3568481552531281
+       },
+       {
+        "fold": 2,
+        "n_rows": 724,
+        "n_positive": 84,
+        "roc_auc": 0.7411830357142857,
+        "average_precision": 0.3895238889517999
+       },
+       {
+        "fold": 3,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.6910956325301205,
+        "average_precision": 0.2746204507615786
+       },
+       {
+        "fold": 4,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.7055346385542168,
+        "average_precision": 0.3038872010862528
+       },
+       {
+        "fold": 5,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.703859186746988,
+        "average_precision": 0.32436214575009925
+       }
+      ],
+      "spread": {
+       "roc_auc": {
+        "mean": 0.7157303320424555,
+        "sd": 0.02208561620992451,
+        "min": 0.6910956325301205,
+        "max": 0.7411830357142857
+       },
+       "average_precision": {
+        "mean": 0.3298483683605717,
+        "sd": 0.04484517804952825,
+        "min": 0.2746204507615786,
+        "max": 0.3895238889517999
+       }
+      },
+      "note": "Every development row is predicted once, by a model fitted on the other folds (the preparation of the variables learnt on those rows too): out-of-fold figures are development evidence, not independent evidence."
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "AUC "
+      },
+      {
+       "text": "0.715",
+       "result_id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+       "path": "validation.roc_auc",
+       "value": 0.7152517985611511,
+       "format": "f3"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "3,617",
+       "result_id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+       "path": "validation.n_rows",
+       "value": 3617,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+    "activity": "fit.variant",
+    "slot": "fit.variant",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "C": 0.1,
+     "candidate_C": 1.0,
+     "implementation": "mlkit.classical.pipeline",
+     "max_iter": 1000,
+     "model": "logistic",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 20261017,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af"
+    },
+    "downstream": [
+     "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609"
+    ],
+    "created": "2026-10-19T15:31:14.505250+00:00",
+    "started_revision": 22,
+    "execution_id": "e_8b6b767c3df161e7401893c1",
+    "exposure_id": "x_0fd4e95e6f0043d6bd6e8a9e37240d9f",
+    "values": {
+     "model": "logistic",
+     "features": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome"
+     ],
+     "special_value_indicators": [
+      "pdays=-1"
+     ],
+     "n_train": 3617,
+     "n_train_positive": 417,
+     "n_terms": 37,
+     "intercept": -2.1736137668667115,
+     "coefficients": {
+      "num__age": 0.12727178588609683,
+      "num__balance": 0.01613738965778256,
+      "num__pdays": -0.04136079449173299,
+      "num__previous": 0.00967086857316037,
+      "num__pdays=-1": -0.3328242352792066,
+      "cat__job_admin.": 0.06581012150959566,
+      "cat__job_blue-collar": -0.2388552350774481,
+      "cat__job_entrepreneur": -0.20468591734644148,
+      "cat__job_housemaid": 0.12947342180767055,
+      "cat__job_management": 0.04241412772905559,
+      "cat__job_retired": 0.4336325617955048,
+      "cat__job_self-employed": -0.0077850009629520335,
+      "cat__job_services": -0.1476614925750029,
+      "cat__job_student": 0.3188304515351628,
+      "cat__job_technician": -0.20228537668487342,
+      "cat__job_unemployed": -0.15133387086443106,
+      "cat__job_unknown": -0.03770329892773388,
+      "cat__marital_divorced": 0.17747381052388195,
+      "cat__marital_married": -0.26046160344756236,
+      "cat__marital_single": 0.0828382848617885,
+      "cat__education_primary": -0.0627369385071957,
+      "cat__education_secondary": 0.09165015993144308,
+      "cat__education_tertiary": 0.15838574383025977,
+      "cat__education_unknown": -0.1874484733164011,
+      "cat__default_no": -0.10455422615483453,
+      "cat__default_yes": 0.10440471809294094,
+      "cat__housing_no": 0.2175924879102867,
+      "cat__housing_yes": -0.21774199597218025,
+      "cat__loan_no": 0.31406467833156987,
+      "cat__loan_yes": -0.3142141863934632,
+      "cat__contact_cellular": 0.33761061664319236,
+      "cat__contact_telephone": 0.16203841134664496,
+      "cat__contact_unknown": -0.4997985360517311,
+      "cat__poutcome_failure": -0.6909541853466677,
+      "cat__poutcome_other": -0.28187758893473996,
+      "cat__poutcome_success": 1.1009727010712498,
+      "cat__poutcome_unknown": -0.12829043485174424
+     },
+     "coefficient_scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects",
+     "iterations": 33,
+     "validation": {
+      "n_rows": 3617,
+      "n_positive": 417,
+      "roc_auc": 0.7172189748201439,
+      "average_precision": 0.3200220762336965
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,score",
+      "model": "logistic",
+      "partition": "development",
+      "positive_label": "yes",
+      "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed.",
+      "n": 3617,
+      "n_positive": 417,
+      "features": [
+       "age",
+       "job",
+       "marital",
+       "education",
+       "default",
+       "balance",
+       "housing",
+       "loan",
+       "contact",
+       "pdays",
+       "previous",
+       "poutcome"
+      ],
+      "evaluation": "out_of_fold"
+     },
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on the training rows of each fold and applied to its held-out rows; shown here as learnt on every development row."
+     },
+     "variant": {
+      "kind": "regularisation",
+      "strength": "strong"
+     },
+     "C": 0.1,
+     "candidate_C": 1.0,
+     "evaluation": "out_of_fold",
+     "cross_validation": {
+      "method": "kfold_stratified",
+      "folds": 5,
+      "per_fold": [
+       {
+        "fold": 1,
+        "n_rows": 724,
+        "n_positive": 84,
+        "roc_auc": 0.7341331845238095,
+        "average_precision": 0.35444210893183264
+       },
+       {
+        "fold": 2,
+        "n_rows": 724,
+        "n_positive": 84,
+        "roc_auc": 0.7416666666666667,
+        "average_precision": 0.3914262355812705
+       },
+       {
+        "fold": 3,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.6907567771084338,
+        "average_precision": 0.27302822241643393
+       },
+       {
+        "fold": 4,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.7086784638554217,
+        "average_precision": 0.3076788558966175
+       },
+       {
+        "fold": 5,
+        "n_rows": 723,
+        "n_positive": 83,
+        "roc_auc": 0.7115775602409639,
+        "average_precision": 0.32087239631462744
+       }
+      ],
+      "spread": {
+       "roc_auc": {
+        "mean": 0.7173625304790591,
+        "sd": 0.020546842087729947,
+        "min": 0.6907567771084338,
+        "max": 0.7416666666666667
+       },
+       "average_precision": {
+        "mean": 0.3294895638281564,
+        "sd": 0.04526761106311608,
+        "min": 0.27302822241643393,
+        "max": 0.3914262355812705
+       }
+      },
+      "note": "Every development row is predicted once, by a model fitted on the other folds (the preparation of the variables learnt on those rows too): out-of-fold figures are development evidence, not independent evidence."
+     }
+    },
+    "headline": null
+   },
+   {
+    "result_id": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+    "activity": "final_test.evaluation",
+    "slot": "final_test.evaluation",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "final_test",
+    "n_rows": 904,
+    "params": {
+     "capacity_share": 0.1,
+     "model": "fit.logistic",
+     "model_params": {
+      "implementation": "mlkit.classical.pipeline",
+      "max_iter": 1000,
+      "model": "logistic",
+      "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+      "seed": 20261017,
+      "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+     },
+     "reference": "fit.baseline",
+     "rule": "share:0.1",
+     "task": "binary"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-19T15:31:19.024021+00:00",
+    "started_revision": 30,
+    "execution_id": "e_19f83442137dc27c0170fa4d",
+    "exposure_id": "x_00a98fa7b186499ebdbb578d4563538c",
+    "values": {
+     "model": "fit.logistic",
+     "rule": "share:0.1",
+     "n": 904,
+     "refit": {
+      "n_rows": 3617,
+      "features": [
+       "age",
+       "job",
+       "marital",
+       "education",
+       "default",
+       "balance",
+       "housing",
+       "loan",
+       "contact",
+       "pdays",
+       "previous",
+       "poutcome"
+      ]
+     },
+     "evaluation": "final_test",
+     "rule_final": "share:0.1",
+     "capacity_share": 0.1,
+     "n_positive": 104,
+     "models": {
+      "fit.baseline": {
+       "rule": "share:0.1",
+       "kind": "share",
+       "parameter": 0.1,
+       "n": 904,
+       "n_positive": 104,
+       "selected": 90.0,
+       "true_positives": 10.353982300884956,
+       "false_positives": 79.64601769911505,
+       "false_negatives": 93.64601769911505,
+       "precision": 0.11504424778761063,
+       "recall": 0.09955752212389381,
+       "volume": 90.0,
+       "volume_rate": 0.09955752212389381,
+       "tied_at_cut": 904,
+       "cut": {
+        "score": 0.11528891346419685,
+        "n_tied": 904,
+        "fraction_selected": 0.09955752212389381
+       },
+       "selection": "expected",
+       "capacity": 90
+      },
+      "fit.logistic": {
+       "rule": "share:0.1",
+       "kind": "share",
+       "parameter": 0.1,
+       "n": 904,
+       "n_positive": 104,
+       "selected": 90.0,
+       "true_positives": 25.0,
+       "false_positives": 65.0,
+       "false_negatives": 79.0,
+       "precision": 0.2777777777777778,
+       "recall": 0.2403846153846154,
+       "volume": 90.0,
+       "volume_rate": 0.09955752212389381,
+       "tied_at_cut": 0,
+       "cut": {
+        "score": null,
+        "n_tied": 0,
+        "fraction_selected": null
+       },
+       "selection": "exact",
+       "capacity": 90
+      }
+     },
+     "intervals": {
+      "fit.baseline": {
+       "precision": {
+        "low": 0.09510508849557527,
+        "high": 0.13606194690265488,
+        "undefined_replicates": 0
+       },
+       "recall": {
+        "low": 0.0995575221238938,
+        "high": 0.09955752212389381,
+        "undefined_replicates": 0
+       },
+       "volume": {
+        "low": 90.0,
+        "high": 90.0,
+        "undefined_replicates": 0
+       }
+      },
+      "fit.logistic": {
+       "precision": {
+        "low": 0.18888888888888888,
+        "high": 0.37777777777777777,
+        "undefined_replicates": 0
+       },
+       "recall": {
+        "low": 0.17473617560151966,
+        "high": 0.3211091087811271,
+        "undefined_replicates": 0
+       },
+       "volume": {
+        "low": 90.0,
+        "high": 90.0,
+        "undefined_replicates": 0
+       }
+      }
+     },
+     "deltas": {
+      "fit.logistic": {
+       "precision": {
+        "point": 0.16273352999016716,
+        "low": 0.08274336283185842,
+        "high": 0.2594149459193707,
+        "undefined_replicates": 0
+       },
+       "recall": {
+        "point": 0.14082709326072157,
+        "low": 0.07517865347762588,
+        "high": 0.22155158665723332,
+        "undefined_replicates": 0
+       },
+       "volume": {
+        "point": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "undefined_replicates": 0
+       }
+      }
+     },
+     "ranking": {
+      "fit.baseline": {
+       "roc_auc": 0.5,
+       "average_precision": 0.11504424778761062
+      },
+      "fit.logistic": {
+       "roc_auc": 0.6518149038461538,
+       "average_precision": 0.2836253272353115
+      }
+     },
+     "criterion": {
+      "metric": "precision_gain",
+      "minimum": 5,
+      "unit": "percentage points",
+      "gain": 16.273352999016716,
+      "low": 8.274336283185841,
+      "high": 25.94149459193707,
+      "interval_includes_zero": false,
+      "status": "met"
+     },
+     "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261017,
+      "level": 0.95,
+      "method": "paired percentile bootstrap over the final-test rows"
+     },
+     "note": "Measured once on the sealed final-test rows, with the configuration chosen on the development rows refitted on all of them: this is the study's independent evidence. Any later change is made after the final test."
+    },
+    "headline": null
+   },
+   {
+    "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+    "activity": "policy.evaluation",
+    "slot": "policy.evaluation",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "evaluation": "out_of_fold",
+     "models": [
+      "fit.baseline",
+      "fit.logistic",
+      "fit.variant"
+     ],
+     "reference": "fit.baseline",
+     "rules": [
+      "share:0.1",
+      "share:0.2"
+     ]
+    },
+    "upstream": {
+     "fit.baseline": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "fit.logistic": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "fit.variant": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5"
+    },
+    "downstream": [],
+    "created": "2026-10-19T15:31:21.455241+00:00",
+    "started_revision": 32,
+    "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+    "exposure_id": "x_51bd45f5fc1042a4a6d9c40a167b2769",
+    "values": {
+     "rules": {
+      "share:0.1": {
+       "models": {
+        "fit.baseline": {
+         "rule": "share:0.1",
+         "kind": "share",
+         "parameter": 0.1,
+         "n": 3617,
+         "n_positive": 417,
+         "selected": 362.0,
+         "true_positives": 41.73458667403926,
+         "false_positives": 320.26541332596076,
+         "false_negatives": 375.26541332596076,
+         "precision": 0.11528891346419684,
+         "recall": 0.10008294166436273,
+         "volume": 362.0,
+         "volume_rate": 0.10008294166436273,
+         "tied_at_cut": 3617,
+         "cut": {
+          "score": 0.11528891346419685,
+          "n_tied": 3617,
+          "fraction_selected": 0.10008294166436273
+         },
+         "selection": "expected",
+         "capacity": 362
+        },
+        "fit.logistic": {
+         "rule": "share:0.1",
+         "kind": "share",
+         "parameter": 0.1,
+         "n": 3617,
+         "n_positive": 417,
+         "selected": 362.0,
+         "true_positives": 128.0,
+         "false_positives": 234.0,
+         "false_negatives": 289.0,
+         "precision": 0.35359116022099446,
+         "recall": 0.3069544364508393,
+         "volume": 362.0,
+         "volume_rate": 0.10008294166436273,
+         "tied_at_cut": 0,
+         "cut": {
+          "score": null,
+          "n_tied": 0,
+          "fraction_selected": null
+         },
+         "selection": "exact",
+         "capacity": 362
+        },
+        "fit.variant": {
+         "rule": "share:0.1",
+         "kind": "share",
+         "parameter": 0.1,
+         "n": 3617,
+         "n_positive": 417,
+         "selected": 362.0,
+         "true_positives": 134.0,
+         "false_positives": 228.0,
+         "false_negatives": 283.0,
+         "precision": 0.3701657458563536,
+         "recall": 0.3213429256594724,
+         "volume": 362.0,
+         "volume_rate": 0.10008294166436273,
+         "tied_at_cut": 0,
+         "cut": {
+          "score": null,
+          "n_tied": 0,
+          "fraction_selected": null
+         },
+         "selection": "exact",
+         "capacity": 362
+        }
+       },
+       "intervals": {
+        "fit.baseline": {
+         "precision": {
+          "low": 0.10505944152612662,
+          "high": 0.12580176942217303,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.10008294166436273,
+          "high": 0.10008294166436274,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 362.0,
+          "high": 362.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.logistic": {
+         "precision": {
+          "low": 0.3011049723756906,
+          "high": 0.40607734806629836,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.2677321874982601,
+          "high": 0.3477297573705741,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 362.0,
+          "high": 362.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "low": 0.31215469613259667,
+          "high": 0.4171961325966847,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.27844723219504053,
+          "high": 0.357969093034528,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 362.0,
+          "high": 362.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "deltas": {
+        "fit.logistic": {
+         "precision": {
+          "point": 0.23830224675679762,
+          "low": 0.19106897370764514,
+          "high": 0.28608852151518993,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.2068714947864766,
+          "low": 0.16764924583389737,
+          "high": 0.2476468157062114,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "point": 0.25487683239215675,
+          "low": 0.20128922354076892,
+          "high": 0.29796525614921554,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.2212599839951097,
+          "low": 0.17836429053067782,
+          "high": 0.25788615137016524,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "comparisons": {
+        "fit.variant": {
+         "reference": "fit.logistic",
+         "precision": {
+          "point": 0.01657458563535913,
+          "low": -0.008287292817679592,
+          "high": 0.03591160220994477,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.014388489208633115,
+          "low": -0.007614697562676815,
+          "high": 0.031114583333333293,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "capacity_share": 0.1
+      },
+      "share:0.2": {
+       "models": {
+        "fit.baseline": {
+         "rule": "share:0.2",
+         "kind": "share",
+         "parameter": 0.2,
+         "n": 3617,
+         "n_positive": 417,
+         "selected": 723.0,
+         "true_positives": 83.35388443461432,
+         "false_positives": 639.6461155653857,
+         "false_negatives": 333.6461155653857,
+         "precision": 0.11528891346419684,
+         "recall": 0.199889411114183,
+         "volume": 723.0,
+         "volume_rate": 0.199889411114183,
+         "tied_at_cut": 3617,
+         "cut": {
+          "score": 0.11528891346419685,
+          "n_tied": 3617,
+          "fraction_selected": 0.199889411114183
+         },
+         "selection": "expected",
+         "capacity": 723
+        },
+        "fit.logistic": {
+         "rule": "share:0.2",
+         "kind": "share",
+         "parameter": 0.2,
+         "n": 3617,
+         "n_positive": 417,
+         "selected": 723.0,
+         "true_positives": 182.0,
+         "false_positives": 541.0,
+         "false_negatives": 235.0,
+         "precision": 0.2517289073305671,
+         "recall": 0.4364508393285372,
+         "volume": 723.0,
+         "volume_rate": 0.199889411114183,
+         "tied_at_cut": 0,
+         "cut": {
+          "score": null,
+          "n_tied": 0,
+          "fraction_selected": null
+         },
+         "selection": "exact",
+         "capacity": 723
+        },
+        "fit.variant": {
+         "rule": "share:0.2",
+         "kind": "share",
+         "parameter": 0.2,
+         "n": 3617,
+         "n_positive": 417,
+         "selected": 723.0,
+         "true_positives": 182.0,
+         "false_positives": 541.0,
+         "false_negatives": 235.0,
+         "precision": 0.2517289073305671,
+         "recall": 0.4364508393285372,
+         "volume": 723.0,
+         "volume_rate": 0.199889411114183,
+         "tied_at_cut": 0,
+         "cut": {
+          "score": null,
+          "n_tied": 0,
+          "fraction_selected": null
+         },
+         "selection": "exact",
+         "capacity": 723
+        }
+       },
+       "intervals": {
+        "fit.baseline": {
+         "precision": {
+          "low": 0.10505944152612663,
+          "high": 0.12580176942217303,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.199889411114183,
+          "high": 0.19988941111418304,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 723.0,
+          "high": 723.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.logistic": {
+         "precision": {
+          "low": 0.21991701244813278,
+          "high": 0.28492392807745504,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.3931973158195317,
+          "high": 0.48292682926829267,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 723.0,
+          "high": 723.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "low": 0.21853388658367912,
+          "high": 0.2821576763485477,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.39174940328068664,
+          "high": 0.4791666666666667,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 723.0,
+          "high": 723.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "deltas": {
+        "fit.logistic": {
+         "precision": {
+          "point": 0.13643999386637023,
+          "low": 0.10961664431562804,
+          "high": 0.1641155699744291,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.23656142821435416,
+          "low": 0.1933079047053487,
+          "high": 0.28303741815410965,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "point": 0.13643999386637023,
+          "low": 0.10767078468779863,
+          "high": 0.16188620204803578,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.23656142821435416,
+          "low": 0.19185999216650357,
+          "high": 0.27927725555248367,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "comparisons": {
+        "fit.variant": {
+         "reference": "fit.logistic",
+         "precision": {
+          "point": 0.0,
+          "low": -0.013831258644536604,
+          "high": 0.008298755186722018,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.0,
+          "low": -0.022671456377375814,
+          "high": 0.015077280341099435,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "capacity_share": 0.2
+      }
+     },
+     "n": 3617,
+     "n_positive": 417,
+     "predictions": {
+      "fit.baseline": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+      "fit.logistic": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+      "fit.variant": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5"
+     },
+     "reference": "fit.baseline",
+     "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261017,
+      "level": 0.95,
+      "method": "paired percentile bootstrap over the out-of-fold predictions of the development rows"
+     },
+     "gain_points": {
+      "model": "fit.logistic",
+      "n": 3617,
+      "n_positive": 417,
+      "base_rate": 0.11528891346419685,
+      "points": [
+       {
+        "share": 0.05,
+        "rule": "share:0.05",
+        "capacity": 181,
+        "selected": 181.0,
+        "true_positives": 92.0,
+        "precision": 0.5082872928176796,
+        "gain_points": 39.29983793534827,
+        "lift": 4.408813280867019,
+        "recall": 0.22062350119904076
+       },
+       {
+        "share": 0.1,
+        "rule": "share:0.1",
+        "capacity": 362,
+        "selected": 362.0,
+        "true_positives": 128.0,
+        "precision": 0.35359116022099446,
+        "gain_points": 23.830224675679762,
+        "lift": 3.0670005432118392,
+        "recall": 0.3069544364508393
+       },
+       {
+        "share": 0.2,
+        "rule": "share:0.2",
+        "capacity": 723,
+        "selected": 723.0,
+        "true_positives": 182.0,
+        "precision": 0.2517289073305671,
+        "gain_points": 13.643999386637024,
+        "lift": 2.183461529531561,
+        "recall": 0.4364508393285372
+       }
+      ],
+      "definition": "gain_points is the precision of the top share minus the base rate, in percentage points; recall is the share of the positive rows found (the cumulative gain)."
+     },
+     "counts": "expected counts when a capacity cut splits a tie group (tied_at_cut)",
+     "note": "The rule and the model are chosen on out-of-fold predictions of the development rows: these figures are development evidence, not independent evidence of future performance. No model was refitted.",
+     "evaluation": "out_of_fold",
+     "ranking": {
+      "fit.baseline": {
+       "roc_auc": 0.5,
+       "average_precision": 0.11528891346419685
+      },
+      "fit.logistic": {
+       "roc_auc": 0.7152517985611511,
+       "average_precision": 0.32221465785588066
+      },
+      "fit.variant": {
+       "roc_auc": 0.7172189748201439,
+       "average_precision": 0.3200220762336965
+      }
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "share:0.2: precision "
+      },
+      {
+       "text": "25.2%",
+       "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+       "path": "rules.[share:0.2].models.[fit.logistic].precision",
+       "value": 0.2517289073305671,
+       "format": "pct1"
+      },
+      {
+       "text": ", recall "
+      },
+      {
+       "text": "43.6%",
+       "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+       "path": "rules.[share:0.2].models.[fit.logistic].recall",
+       "value": 0.4364508393285372,
+       "format": "pct1"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "3,617",
+       "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+       "path": "n",
+       "value": 3617,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+    "activity": "policy.evaluation",
+    "slot": "policy.evaluation",
+    "promoted": false,
+    "current": false,
+    "stale_reason": {
+     "reason": "not promoted in any slot",
+     "since": null
+    },
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "evaluation": "out_of_fold",
+     "models": [
+      "fit.baseline",
+      "fit.logistic",
+      "fit.variant"
+     ],
+     "reference": "fit.baseline",
+     "rules": [
+      "share:0.1",
+      "capacity:100"
+     ]
+    },
+    "upstream": {
+     "fit.baseline": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "fit.logistic": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "fit.variant": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5"
+    },
+    "downstream": [],
+    "created": "2026-10-19T15:31:17.039175+00:00",
+    "started_revision": 24,
+    "execution_id": "e_a633b01aa452bb85d7c21822",
+    "exposure_id": "x_f1f32108b47b401ba85036ca6ed86672",
+    "values": null,
+    "headline": null
+   }
+  ],
+  "truncated": false,
+  "lineage": {
+   "nodes": [
+    {
+     "id": "case",
+     "kind": "source",
+     "label": "case.yaml",
+     "status": "ok"
+    },
+    {
+     "id": "dataset",
+     "kind": "source",
+     "label": "bank.csv",
+     "status": "ok"
+    },
+    {
+     "id": "decision:prediction_time",
+     "kind": "decision",
+     "label": "prediction_time",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:feature_availability",
+     "kind": "decision",
+     "label": "feature_availability",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:split",
+     "kind": "decision",
+     "label": "split",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:success_criterion",
+     "kind": "decision",
+     "label": "success_criterion",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:preprocessing",
+     "kind": "decision",
+     "label": "preprocessing",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:model_variant",
+     "kind": "decision",
+     "label": "model_variant",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:policy",
+     "kind": "decision",
+     "label": "policy",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:final_test",
+     "kind": "decision",
+     "label": "final_test",
+     "status": "confirmed"
+    },
+    {
+     "id": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "kind": "result",
+     "label": "split",
+     "status": "current"
+    },
+    {
+     "id": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "kind": "result",
+     "label": "eda.target_rate",
+     "status": "current"
+    },
+    {
+     "id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "kind": "result",
+     "label": "fit.baseline",
+     "status": "current"
+    },
+    {
+     "id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "kind": "result",
+     "label": "fit.logistic",
+     "status": "current"
+    },
+    {
+     "id": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "kind": "result",
+     "label": "fit.variant",
+     "status": "current"
+    },
+    {
+     "id": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+     "kind": "result",
+     "label": "final_test.evaluation",
+     "status": "current"
+    },
+    {
+     "id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "kind": "result",
+     "label": "policy.evaluation",
+     "status": "current"
+    },
+    {
+     "id": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "kind": "result",
+     "label": "policy.evaluation",
+     "status": "stale"
+    },
+    {
+     "id": "artifact:report",
+     "kind": "artifact",
+     "label": "report",
+     "status": "ok"
+    },
+    {
+     "id": "artifact:notebook",
+     "kind": "artifact",
+     "label": "notebook",
+     "status": "ok"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dataset",
+     "to": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "role": "rows"
+    },
+    {
+     "from": "decision:split",
+     "to": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "role": "rows"
+    },
+    {
+     "from": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "to": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "role": "rows"
+    },
+    {
+     "from": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "to": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "role": "features"
+    },
+    {
+     "from": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "to": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "role": "features"
+    },
+    {
+     "from": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "to": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+     "role": "rows"
+    },
+    {
+     "from": "dataset",
+     "to": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "role": "rows"
+    },
+    {
+     "from": "decision:policy",
+     "to": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "role": "rule"
+    },
+    {
+     "from": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "to": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "to": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "role": "fit.logistic"
+    },
+    {
+     "from": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "to": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "role": "fit.variant"
+    },
+    {
+     "from": "dataset",
+     "to": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "role": "rows"
+    },
+    {
+     "from": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "to": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "to": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "role": "fit.logistic"
+    },
+    {
+     "from": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "to": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "role": "fit.variant"
+    },
+    {
+     "from": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    }
+   ]
+  },
+  "exposure": {
+   "summary": {
+    "records": 14,
+    "rows_exposed": 4521,
+    "by_purpose": {
+     "cross_validated_fit": 3617,
+     "final_evaluation": 904,
+     "out_of_fold_evaluation": 3617,
+     "out_of_fold_policy_selection": 3617,
+     "sealed": 904,
+     "structural_inspection": 3617,
+     "train_eda": 3617,
+     "train_fit": 3617
+    },
+    "by_partition": {
+     "development": {
+      "cross_validated_fit": 3617,
+      "out_of_fold_evaluation": 3617,
+      "out_of_fold_policy_selection": 3617,
+      "structural_inspection": 3617,
+      "train_eda": 3617,
+      "train_fit": 3617
+     },
+     "final_test": {
+      "final_evaluation": 904,
+      "sealed": 904
+     }
+    },
+    "validation_rows_used_for_selection": 3617,
+    "prior_exposure": [
+     {
+      "source": "Tutorial results published with the dataset",
+      "status": "observed",
+      "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     },
+     {
+      "source": "data/split.json",
+      "status": "observed",
+      "value": "data/split.json records the tutorial split (seed 20261017) whose validation metrics were published with this dataset. A study that reuses this seed has no unseen validation rows."
+     }
+    ]
+   },
+   "records": [
+    {
+     "exposure_id": "x_985ddd56b27d450b9840671fa96cb93a",
+     "revision": 1,
+     "time": "2026-10-19T15:31:06.423136+00:00",
+     "activity": "init.structure",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "day",
+      "month",
+      "duration",
+      "campaign",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_31c71debe30e4007859b16e62776249f",
+     "revision": 1,
+     "time": "2026-10-19T15:31:06.424575+00:00",
+     "activity": "init.final_test",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "sealed",
+     "partition": "final_test",
+     "n_rows": 904,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "day",
+      "month",
+      "duration",
+      "campaign",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_9d2a534505054a1db82e55a4e9c56e4c",
+     "revision": 12,
+     "time": "2026-10-19T15:31:09.439497+00:00",
+     "activity": "split",
+     "result_id": "c87a471111c89780ddfbf4ec46ce96b32d64712f6102a91884fba1a6d02b72af",
+     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_4778384d79ec4e108b31b57737c361f1",
+     "revision": 14,
+     "time": "2026-10-19T15:31:09.869024+00:00",
+     "activity": "eda.target_rate",
+     "result_id": "ccc4ca80be7ba95116c7a706bb8f41961dc763dd4c09479141c2ce836b3ca8e9",
+     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
+     "purpose": "train_eda",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_fbc052e038be417c8098e1e57fdfa1c2",
+     "revision": 16,
+     "time": "2026-10-19T15:31:10.265347+00:00",
+     "activity": "fit.baseline",
+     "result_id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_916e85be94d541919c3402a11ecebeec",
+     "revision": 16,
+     "time": "2026-10-19T15:31:10.267532+00:00",
+     "activity": "fit.baseline",
+     "result_id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_760bb7a12dc3404c85b9d962cf560b7c",
+     "revision": 18,
+     "time": "2026-10-19T15:31:12.996177+00:00",
+     "activity": "fit.logistic",
+     "result_id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_8fe7d297c2b44f558c9b755649d5e6b4",
+     "revision": 18,
+     "time": "2026-10-19T15:31:13.012045+00:00",
+     "activity": "fit.logistic",
+     "result_id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_3f92207e006444e3bbdd9981bd7d60b7",
+     "revision": 22,
+     "time": "2026-10-19T15:31:14.510030+00:00",
+     "activity": "fit.variant",
+     "result_id": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_0fd4e95e6f0043d6bd6e8a9e37240d9f",
+     "revision": 22,
+     "time": "2026-10-19T15:31:14.512796+00:00",
+     "activity": "fit.variant",
+     "result_id": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+     "execution_id": "e_8b6b767c3df161e7401893c1",
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_f1f32108b47b401ba85036ca6ed86672",
+     "revision": 24,
+     "time": "2026-10-19T15:31:17.043372+00:00",
+     "activity": "policy.evaluation",
+     "result_id": "1735ec17cc86107e1a03c7991112f2bb4d8792ec51fa29e4c432fc0117ccd89a",
+     "execution_id": "e_a633b01aa452bb85d7c21822",
+     "purpose": "out_of_fold_policy_selection",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_84ee29c137754f968b6033e5424c8291",
+     "revision": 30,
+     "time": "2026-10-19T15:31:19.028622+00:00",
+     "activity": "final_test.evaluation",
+     "result_id": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+     "execution_id": "e_19f83442137dc27c0170fa4d",
+     "purpose": "train_fit",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_00a98fa7b186499ebdbb578d4563538c",
+     "revision": 30,
+     "time": "2026-10-19T15:31:19.029750+00:00",
+     "activity": "final_test.evaluation",
+     "result_id": "b11c49bea4168e9ff2413cee622f271ebe69c61147649ffcd2d4171a730dc8eb",
+     "execution_id": "e_19f83442137dc27c0170fa4d",
+     "purpose": "final_evaluation",
+     "partition": "final_test",
+     "n_rows": 904,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_51bd45f5fc1042a4a6d9c40a167b2769",
+     "revision": 32,
+     "time": "2026-10-19T15:31:21.459290+00:00",
+     "activity": "policy.evaluation",
+     "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+     "execution_id": "e_0b8fc9580cdd4e33bc5c14db",
+     "purpose": "out_of_fold_policy_selection",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "y"
+     ]
+    }
+   ],
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "rows": 3617,
+     "records": 2,
+     "activities": [
+      "init.structure",
+      "split"
+     ],
+     "first_revision": 1,
+     "last_revision": 12
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "development",
+     "rows": 3617,
+     "records": 1,
+     "activities": [
+      "eda.target_rate"
+     ],
+     "first_revision": 14,
+     "last_revision": 14
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "development",
+     "rows": 3617,
+     "records": 1,
+     "activities": [
+      "final_test.evaluation"
+     ],
+     "first_revision": 30,
+     "last_revision": 30
+    },
+    {
+     "purpose": "sealed",
+     "partition": "final_test",
+     "rows": 904,
+     "records": 1,
+     "activities": [
+      "init.final_test"
+     ],
+     "first_revision": 1,
+     "last_revision": 1
+    },
+    {
+     "purpose": "cross_validated_fit",
+     "partition": "development",
+     "rows": 3617,
+     "records": 3,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic",
+      "fit.variant"
+     ],
+     "first_revision": 16,
+     "last_revision": 22
+    },
+    {
+     "purpose": "out_of_fold_evaluation",
+     "partition": "development",
+     "rows": 3617,
+     "records": 3,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic",
+      "fit.variant"
+     ],
+     "first_revision": 16,
+     "last_revision": 22
+    },
+    {
+     "purpose": "out_of_fold_policy_selection",
+     "partition": "development",
+     "rows": 3617,
+     "records": 2,
+     "activities": [
+      "policy.evaluation"
+     ],
+     "first_revision": 24,
+     "last_revision": 32
+    },
+    {
+     "purpose": "final_evaluation",
+     "partition": "final_test",
+     "rows": 904,
+     "records": 1,
+     "activities": [
+      "final_test.evaluation"
+     ],
+     "first_revision": 30,
+     "last_revision": 30
+    }
+   ],
+   "prior_exposure": [
+    {
+     "source": "Tutorial results published with the dataset",
+     "status": "observed",
+     "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+    },
+    {
+     "source": "data/split.json",
+     "status": "observed",
+     "value": "data/split.json records the tutorial split (seed 20261017) whose validation metrics were published with this dataset. A study that reuses this seed has no unseen validation rows."
+    }
+   ]
+  },
+  "impacts": [
+   {
+    "decision_id": "prediction_time",
+    "mutation": "prediction_time",
+    "row": 1,
+    "change": "a different prediction moment",
+    "stale_slots": [
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "final_test.evaluation"
+    ],
+    "refit": [
+     "fit.logistic",
+     "fit.variant"
+    ],
+    "reconfirm": [
+     "feature_availability",
+     "policy"
+    ],
+    "notes": [
+     "The logistic refit waits until feature availability is confirmed again."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.feature_set",
+    "row": 2,
+    "change": "a change that alters the set of usable features",
+    "stale_slots": [
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "final_test.evaluation"
+    ],
+    "refit": [
+     "fit.logistic",
+     "fit.variant"
+    ],
+    "reconfirm": [
+     "policy"
+    ],
+    "notes": [
+     "The constant baseline uses no feature and stays current."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.wording",
+    "row": 3,
+    "change": "a change of the variable descriptions that keeps the same usable features",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation",
+     "final_test.evaluation"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "The feature set is unchanged; only the dictionary text changes."
+    ]
+   },
+   {
+    "decision_id": "split",
+    "mutation": "split",
+    "row": 4,
+    "change": "a different split of the rows",
+    "stale_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation"
+    ],
+    "kept_slots": [
+     "final_test.evaluation"
+    ],
+    "refit": [
+     "fit.baseline",
+     "fit.logistic"
+    ],
+    "reconfirm": [
+     "policy"
+    ],
+    "notes": [
+     "Exposure is retained: rows explored under the old split are not unseen. The split activity reports the overlap (exposure.overlap) when it runs."
+    ]
+   },
+   {
+    "decision_id": "policy",
+    "mutation": "policy.parameter",
+    "row": 5,
+    "change": "a different threshold or capacity",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation",
+     "final_test.evaluation"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "No refit: predictions are reused. The previous policy confirmation is superseded."
+    ]
+   },
+   {
+    "decision_id": "policy",
+    "mutation": "policy.rule_type",
+    "row": 6,
+    "change": "a switch between a threshold rule and a capacity rule",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation",
+     "final_test.evaluation"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "No refit: predictions are reused."
+    ]
+   },
+   {
+    "decision_id": "preprocessing",
+    "mutation": "preprocessing",
+    "row": 14,
+    "change": "a different preparation of the variables",
+    "stale_slots": [
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "final_test.evaluation"
+    ],
+    "refit": [
+     "fit.logistic",
+     "fit.variant"
+    ],
+    "reconfirm": [
+     "policy"
+    ],
+    "notes": [
+     "The constant baseline uses no feature and stays current; the exploration is unchanged."
+    ]
+   },
+   {
+    "decision_id": "success_criterion",
+    "mutation": "success_criterion",
+    "row": 16,
+    "change": "a different success criterion",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "fit.logistic",
+     "fit.variant",
+     "policy.evaluation",
+     "final_test.evaluation"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "No result changes; the conclusion is judged against the new criterion."
+    ]
+   },
+   {
+    "decision_id": "model_variant",
+    "mutation": "model_variant",
+    "row": 17,
+    "change": "model_variant",
+    "stale_slots": [
+     "fit.variant",
+     "policy.evaluation"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_rate",
+     "fit.baseline",
+     "fit.logistic",
+     "final_test.evaluation"
+    ],
+    "refit": [
+     "fit.variant"
+    ],
+    "reconfirm": [
+     "policy"
+    ],
+    "notes": [
+     "The baseline and the candidate stay current; only the variant is fitted again. The trial count grows by one configuration."
+    ]
+   }
+  ],
+  "eda_catalog": {
+   "activities": [
+    {
+     "activity": "eda.target_rate",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.special_values",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.rate_by",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "age",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "job",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "marital",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "education",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "default",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "balance",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "housing",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "loan",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "contact",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "day",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "month",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "duration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "campaign",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "pdays",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "previous",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "poutcome",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.distribution",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "age",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "job",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "marital",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "education",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "default",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "balance",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "housing",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "loan",
+       "role": "feature",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "contact",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "day",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "month",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "duration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "campaign",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "pdays",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "previous",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "poutcome",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "y",
+       "role": "target",
+       "type": "binary",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": []
+    }
+   ]
+  },
+  "sources": {
+   "case": {
+    "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
+    "sha256": "f3d01dd64794e2cfd4b52a3a5b52e37d16b67193822d6e2655ef517400a28058",
+    "matches": true
+   },
+   "dataset": {
+    "path": "/hypotrail/use-cases/bank-marketing/data/bank.csv",
+    "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
+    "matches": true
+   }
+  },
+  "detail": null
+ }
+}
