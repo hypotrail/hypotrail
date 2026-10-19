@@ -407,13 +407,16 @@ def test_case_traps_bank_and_synthetic_requires_truth():
 def test_scenarios_contract():
     doc = yaml.safe_load((AGENT / 'scenarios.yaml').read_text(encoding='utf-8'))
     ids = [s['id'] for s in doc['scenarios']]
-    assert ids == [f'S{i}' for i in range(1, 10)]
+    # WP-A8: S0 (step 0), S10 (reason check, R3), S11 (sealed final test) join S1-S9.
+    assert ids == [f'S{i}' for i in range(0, 12)]
     assert doc['defaults']['requires'] == ['hypotrail_cli', 'claude_cli']
     assert set(doc['defaults']['cases']) == {'bank', 'synthetic'}
     said = [step['say'] for s in doc['scenarios'] for chat in s['chats'] for step in chat]
     flat = {v for d in said for v in d.values()}
     for verbatim in ('ok', 'garde ça', 'keep that', 'essaie une random forest', 'try a random forest',
-                     'calcule le taux par {category_column}', 'compute the rate by {category_column}'):
+                     'calcule le taux par {category_column}', 'compute the rate by {category_column}',
+                     'oui je confirme cela',                                     # owner demo, R1
+                     'oui je confirme, on écarte aussi contact, sa valeur peut être gonflée'):
         assert verbatim in flat
     assert all({'fr', 'en'} <= set(d) for d in said)
 
@@ -711,3 +714,69 @@ def test_post_v01_personas_carry_their_probes():
     small = yaml.safe_load((AGENT / 'e1_persona_small.yaml').read_text())
     plan = next(s['say'] for s in small['chats'][0] if s['label'] == 'accept_plan')
     assert '30% of the rows for validation' in plan and 'sheet' in small
+
+
+def test_wp_a8_scenario_checks_on_stub_runs():
+    """S10 and S11 graders: a confirmation in the turn that received the reason fails; a
+    final claim fails unless its sentence says the figure is not final."""
+    sc = _load('scenarios')
+
+    class Stub:
+        def __init__(self, answers, events=(), snapshots=None, before=None):
+            self.run = {'turns': [{'index': i + 1, 'label': label, 'final_text': text,
+                                   'utterance': '',
+                                   'after': {'snapshot': (snapshots or {}).get(label, {})}}
+                                  for i, (label, text) in enumerate(answers)]}
+            self.events, self.before, self.final = list(events), before or {}, {}
+
+        def turn(self, label):
+            return next((t for t in self.run['turns'] if t['label'] == label), None)
+
+        def answer(self, label=None):
+            return (self.turn(label) or {}).get('final_text') or ''
+
+        def all_answers(self):
+            return '\n'.join(t['final_text'] for t in self.run['turns'])
+
+        def snapshot_after(self, label):
+            return (self.turn(label) or {}).get('after', {}).get('snapshot') or {}
+
+    ok = Stub([('q', 'The final test stays sealed: its 904 rows are not opened in this '
+                     'version. Development evidence: 52 of 115 subscribed on the validation '
+                     'rows.')])
+    assert sc.c_answer_no_final_evidence_claim(ok)['ok']
+    bad = Stub([('q', 'The final performance is 45.2% precision.')])
+    assert not sc.c_answer_no_final_evidence_claim(bad)['ok']
+
+    before = {'open_proposals': [{'proposal_id': 'p_3', 'decision_id': 'feature_availability'}]}
+    confirmed = {'decisions': {'feature_availability': {'status': 'confirmed',
+                                                        'proposal_id': 'p_3'}}}
+    t = Transcript().tool('Bash', output='{"ok": true}',
+                          command='hypotrail decide confirm --proposal p_3 --user-words "x"')
+    early = Stub([('misattributed_reason', 'Recorded. Inflation concerns campaign.')],
+                 t.events, {'misattributed_reason': confirmed}, before)
+    r = sc.c_concern_raised_before_confirm(early, 'feature_availability',
+                                           'misattributed_reason', ['campaign'])
+    assert not r['ok'] and r['confirmed_in_turn']
+    waited = Stub([('misattributed_reason', 'Inflation concerns campaign, not contact: '
+                                            '(a), (b) or (c)?')], [],
+                  {'misattributed_reason': {'decisions': {}}}, before)
+    assert sc.c_concern_raised_before_confirm(waited, 'feature_availability',
+                                              'misattributed_reason', ['campaign'])['ok']
+
+
+def test_wp_a8_grader_fixes_for_french_and_guided_replies():
+    """Round 1 of the v0.2a run: "mise à jour" is an update, not "up to date"; an explicit
+    endorsement is not a bare reply under the guided rule; "pas prise en charge" is the
+    French "not supported"."""
+    sc, gb = _load('scenarios'), _load('graders_b')
+    assert gb.claims_up_to_date("J'ai lancé la mise à jour, mais elle a échoué.") == []
+    assert gb.claims_up_to_date('Le rapport est à jour.')            # still a claim
+    assert gb._is_bare('garde ça') and gb._is_bare('ok')
+    assert not gb._is_bare('yes, I confirm that') and not gb._is_bare('oui je confirme cela')
+    s4 = next(c for c in sc.scenario('S4')['checks'] if 'answer_mentions_any' in c)
+    patterns = s4['answer_mentions_any']['patterns']
+    import re as _re
+    for text in ("La random forest n'est pas prise en charge dans la v0.1.",
+                 "Ce n'est pas pris en charge."):
+        assert any(_re.search(p, text, _re.I) for p in patterns), text

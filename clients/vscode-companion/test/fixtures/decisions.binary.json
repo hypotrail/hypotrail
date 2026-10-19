@@ -37,7 +37,8 @@
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -80,7 +81,8 @@
      "authenticated": false,
      "basis": "endorsed",
      "delegation_scope": null,
-     "agent_concern": "Your reason says contact can be inflated; inflation applies to campaign (it counts the last contact), not to contact (a channel)."
+     "agent_concern": "Your reason says contact can be inflated; inflation applies to campaign (it counts the last contact), not to contact (a channel).",
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -111,7 +113,8 @@
      "authenticated": false,
      "basis": "delegated_default",
      "delegation_scope": "this_decision",
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -137,7 +140,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },

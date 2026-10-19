@@ -1,10 +1,10 @@
-# ADR 0005: Confirmation modes (guided now, training and express in v0.2b)
+# ADR 0005: Confirmation modes (guided, training, express)
 
-- Status: accepted; the `guided` mode is implemented in v0.2a (WP-A2). `training` and `express` are reserved values, refused by `mode set` until v0.2b.
+- Status: accepted; the `guided` mode is implemented in v0.2a (WP-A2), the `training` and `express` modes in v0.2b (WP-B2, decision 8 below). In v0.2a `mode set` refused them with `unsupported_capability` and `details.available_in: "v0.2b"`; it now accepts all three.
 - Date: 19 October 2026
 - Sources: owner remarks R1 and R3 of the first demo ([OWNER-DEMO-1-REMARKS.md](../acceptance/OWNER-DEMO-1-REMARKS.md)), the review synthesis ([V0.2-REVIEW-SYNTHESIS.md](../plans/V0.2-REVIEW-SYNTHESIS.md), "guided first"), and the plan ([V0.2-IMPLEMENTATION-PLAN.md](../plans/V0.2-IMPLEMENTATION-PLAN.md), WP-A2)
 - Builds on: the v0.1 confirmation rules (decisions P5.1 delegation, P5.5 and PV.1 reply classification, P5.9 standing delegation scope, in [V0.1-DECISIONS.md](../plans/V0.1-DECISIONS.md))
-- Contract: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §5, §5.1, §5.2
+- Contract: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §5, §5.1, §5.2, §5.3 (v0.2b)
 
 ## Context
 
@@ -16,7 +16,7 @@ The owner validated three modes: guided (default), training, and express. The en
 
 ## Decision
 
-1. **Modes.** `state.mode` is `guided`, `training`, or `express`. New studies are `guided`; a state without `mode` reads as guided. `hypotrail mode set MODE --user-words TEXT` goes through `apply_command` (revision, request id, idempotent replay) and records each change with the user's words in `mode_history`. In v0.2a only `guided` is accepted. `training` and `express` are refused with `unsupported_capability` and `details.available_in: "v0.2b"`. Words that are empty, negative, a question, conditional, or bare are refused as for a confirmation, so a mode never changes silently.
+1. **Modes.** `state.mode` is `guided`, `training`, or `express`. New studies are `guided`; a state without `mode` reads as guided. `hypotrail mode set MODE --user-words TEXT` goes through `apply_command` (revision, request id, idempotent replay) and records each change with the user's words in `mode_history`. In v0.2a only `guided` was accepted (`training` and `express` were refused with `unsupported_capability` and `details.available_in: "v0.2b"`); v0.2b accepts the three, with the strictness rule of decision 8. Words that are empty, negative, a question, conditional, or bare are refused as for a confirmation, so a mode never becomes less strict silently.
 
 2. **Guided rule.** A reply confirms when all of the following hold:
    - It is bound to a proposal: the positional `PROPOSAL`, or `--proposal`.
@@ -45,10 +45,16 @@ The owner validated three modes: guided (default), training, and express. The en
    - `decide note --about D --kind correction --user-words TEXT` attaches a later correction of a confirmed decision's reasoning, in the junior's words. It neither reconfirms nor blocks. Holds keep their semantics.
    - For `feature_availability` the engine checks words against the value mechanically. Suppose a variable is named in a clause with exclusion words while the value keeps it, or with keep words while the value excludes it. The confirm result then carries `warnings: [{code: words_contradict_value, variable, said, value, message}]`. This is a warning, never a refusal.
 
-7. **Behaviour by mode (to implement in v0.2b).**
+7. **Behaviour by mode (implemented in v0.2b, decision 8).**
    - Training: concept matching instead of token overlap (the `unrelated_reply` classifier is kept for it), and a mandatory stop on a contradiction or a misattributed reason.
    - Guided: one stop. The agent raises the concern before confirming, and the junior reformulates, confirms with new words, or keeps their words, recorded with `--agent-concern`.
    - Express: record only.
+
+8. **Training and express (v0.2b, WP-B2).** The checks of the guided mode that do not depend on the proposal (empty, negative, question, conditional, bare; the binding, hold, staleness, and delegation checks) apply in every mode. Then, for the junior's own words:
+   - **Training.** The reply restates the proposal **on its concepts**, not on shared tokens. `concepts.concept_map` builds a small concept map per decision from the value: the timing and the event of the prediction moment ("before the call" / "avant l'appel"), the excluded variables by name with an exclusion word ("exclude duration" / "retirer duration"), the share held apart for validation, the measure and minimum gain of the success criterion, each non-default preprocessing parameter, the rule and its number ("capacity 100" / "appeler les 100 meilleurs"), the chosen model, the verdict. A concept is said when the reply holds one of its English or French terms, listed as data in `content/concepts.yaml` (with translation groups for the words of a free-text moment, and the proposal's labels). A concept left unsaid is the refusal `paraphrase_required`, whose `details.missing` names each concept with a hint for the junior and whose `details.junior_message` can be shown as it is. "oui je confirme cela" is therefore refused in training. The trade-offs (`policy` or `model_choice`, and `conclusion`) also need a reason connector ("because", "parce que", "car", "since", ...): a restatement is already content, so a content word is no reason there (`reason_required`). Words that contradict a `feature_availability` value are the refusal `words_contradict_value`, not a warning. The recorded basis is `restated`.
+   - **Guided** is unchanged: the contradiction stays a warning.
+   - **Express.** The guided rules, plus a standing delegation that also covers the framing decisions that follow the split: `success_criterion` and `preprocessing` (`state.EXPRESS_STANDING_DELEGATION_DECISIONS`). A delegated decision is recorded as `delegated_default` with its scope and stays in `not_yet_defensible`. The policy, the model choice, the conclusion, and any later decision such as a final test are never covered by a standing delegation (R1 of v0.1 unchanged). A contradiction is a warning, recorded only.
+   - **Changing the mode.** The modes are ordered by strictness, express < guided < training. Lowering it needs the user's words, and they must name the mode asked for (`unrelated_reply` otherwise); raising it needs no words, so the agent may make a study stricter on its own. Keeping the same mode needs words. A mode change never touches a decision: past confirmations stay valid. Each confirmation records the mode in force (`confirmation.mode`, `result.mode`).
 
 ## Consequences
 
@@ -56,10 +62,13 @@ The owner validated three modes: guided (default), training, and express. The en
 - The policy and the conclusion keep a recorded reason in the junior's words. The heuristic accepts any content word as a reason, so a restatement of the rule ("oui, vingt appels") passes. The agent instructions ask for a real reason first.
 - The contradiction check is lexical (English and French word lists, clause cut on punctuation). It misses paraphrases and can warn on unusual phrasing; it never blocks.
 - Payloads gain additive keys: `agent_concern`, `warnings`, `labels`, `label`, `mode`, `language`, and the note `kind`. There is one new error code (`reason_required`) and two new `ambiguous_confirmation` reasons (`question_reply`, `conditional_reply`). Schema versions are unchanged.
+- v0.2b adds two error codes (`paraphrase_required`, `words_contradict_value`), the confirmation key `mode` (record, view, and confirm result), and `user_words: null` in `mode_history` for a raise. The concept matching is lexical: it misses paraphrases outside the lists, and it can accept a reply that names every concept without understanding it. It never replaces the agent's R3 stop on a misattributed reason, which it cannot see.
 - The companion's typed confirmation (W1) follows the same engine rule. The panel adds no rule of its own.
 
 ## Not decided here
 
-- The training and express modes (v0.2b), including when lowering the mode is allowed during a pause.
+- When lowering the mode is allowed during a pause (v0.2b allows it at any time, in the user's words naming the mode).
+- Whether delegation should be refused in the training mode (v0.2b keeps the guided delegation rules there).
+- Whether `--agent-concern` should be refused in the training mode, making the R3 stop mechanical (v0.2b records it, as in guided; the agent instructions ask for new words).
 - Whether `reason_required` should also apply to `feature_availability` exclusions.
 - A finer reason check (a clause that explains rather than restates).

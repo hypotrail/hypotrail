@@ -40,7 +40,7 @@ from .errors import StudyError
 EFFECT_KEYS = ('refit', 're_eda', 're_policy', 're_chart', 're_explain', 'reconfirm')
 META_KEYS = ('mutation', 'row', 'reason', 'recompute', 'blocked_until', 'scope', 'notes')
 USABLE_AVAILABILITY = ('available_at_prediction', 'uncertain_included')
-POLICY_RULES = ('threshold', 'capacity')
+POLICY_RULES = ('threshold', 'capacity', 'share')
 
 # Plan §3.7. ``refit``/``re_eda``/``re_policy``/``recompute`` name slots; the special
 # value ``'*'`` means every current slot of that kind.

@@ -352,6 +352,10 @@ def policy_cell(view: Mapping) -> tuple[str, str] | None:
     if not isinstance(entry, Mapping) or entry.get('tied_at_cut'):
         return None                    # a tie at the cut is counted pro rata by the engine
     kind, _, amount = rule.partition(':')
+    if kind == 'share':
+        # v0.2b: a share of the n validation rows is a capacity of round(p * n) rows.
+        amount = str(entry.get('capacity') or '')
+        kind = 'capacity' if amount.isdigit() else kind
     if kind == 'capacity':
         select = (f'''# The {amount} validation rows with the highest scores.
 order = np.argsort(-score, kind="stable")

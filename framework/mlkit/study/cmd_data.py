@@ -69,6 +69,22 @@ def _final_test_line(final: Mapping) -> dict:
     return {**final, 'line': text, 'audience': 'junior'}
 
 
+def _duplicates(case, dataset) -> dict:
+    """``{policy, n_groups, n_rows, n_extra_rows, definition, line}`` of the identical
+    records among the development rows (structural: content hashes, no value)."""
+    from . import data as dt
+    out = dt.duplicate_summary(case, dataset.index)
+    if not out['n_groups']:
+        line = 'No two development rows are identical.'
+    elif out['policy'] == dt.DUPLICATES_GROUP:
+        line = (f'{out["n_rows"]} development rows form {out["n_groups"]} groups of identical '
+                f'rows. Each group is treated as one entity: its rows always stay together on '
+                f'one side of every split.')
+    else:
+        line = f'{out["n_rows"]} development rows form {out["n_groups"]} groups of identical rows.'
+    return {**out, 'line': line, 'audience': 'junior'}
+
+
 def card(study_dir) -> dict:
     """The ``hypotrail.data/1`` payload of the study at ``study_dir``."""
     from . import case as c
@@ -80,7 +96,8 @@ def card(study_dir) -> dict:
     state = study.state
     case = c.case_of(state, verify_data=True)
     keys = partition.development_keys(study.blob, partition.inputs(state))
-    frame = dt.load_development(case, keys).frame
+    dataset = dt.load_development(case, keys)
+    frame = dataset.frame
     target = case.target_column
     na_values = case.dataset.get('na_values', ())
     availability = state['decisions']['feature_availability']
@@ -126,7 +143,9 @@ def card(study_dir) -> dict:
         'schema': SCHEMA, 'ok': True, 'study': str(study.study_dir), 'revision': study.revision,
         'observation_unit': _fact(state, 'observation_unit') or state['structure']['row_unit'],
         'development': {'rows': int(len(frame)), 'columns': len(case.column_names),
-                        'partition': 'development' if keys is not None else 'all'},
+                        'partition': 'development' if keys is not None else 'all',
+                        # v0.2b (WP-B3): groups of identical records and the case's policy.
+                        'duplicates': _duplicates(case, dataset)},
         'target': {'column': target, 'task': case.task,
                    'positive_label': target_doc.get('positive_label'),
                    'negative_label': target_doc.get('negative_label'),
@@ -152,7 +171,8 @@ def text(payload: Mapping) -> str:
     dev = payload['development']
     t = payload['target']
     lines = [f'One row: {unit.get("value") or "not stated by the case"}',
-             f'Development rows: {dev["rows"]}, columns: {dev["columns"]}']
+             f'Development rows: {dev["rows"]}, columns: {dev["columns"]}',
+             dev['duplicates']['line']]
     if t['task'] == 'binary':
         labels = ' / '.join(str(x) for x in (t['positive_label'], t['negative_label'])
                             if x is not None)

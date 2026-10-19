@@ -14,7 +14,10 @@ The ``source_line`` rule is insufficient when two records have the same content:
 they get different keys, but nothing says whether they are one entity recorded twice.
 A split could then put copies on both sides, and exposure tracking could not tell
 them apart. Such a dataset is refused (``unsupported_capability``) rather than
-deduplicated silently.
+deduplicated silently, unless the case declares ``duplicates: {policy: group}``
+(v0.2b, WP-B3): identical records are then one **entity group** (:func:`entity_groups`),
+kept whole on one side of the final test, the split, and the folds. Every record keeps its
+own row key, and exposure still counts rows.
 
 :func:`row_index` uses the standard library only. :func:`load_dataset` imports pandas
 when it is called, never at module import time.
@@ -123,7 +126,8 @@ def row_index(case: Case, *, verify: bool = True) -> RowIndex:
         raise CaseError('invalid_case', 'The row_key rule source_line needs exactly one record '
                                         'per physical line.', problems=problems)
     index = RowIndex(d['sha256'], tuple(keys), tuple(hashes))
-    _refuse_duplicates(index)
+    if case.duplicates_policy != DUPLICATES_GROUP:
+        _refuse_duplicates(index)
     return index
 
 
@@ -133,6 +137,31 @@ def content_duplicates(index: RowIndex) -> list[list[str]]:
     for key, digest in zip(index.keys, index.content_hashes):
         groups.setdefault(digest, []).append(key)
     return [keys for keys in groups.values() if len(keys) > 1]
+
+
+DUPLICATES_GROUP = 'group'
+
+
+def entity_groups(index: RowIndex) -> dict[str, str]:
+    """The entity group of every record (``duplicates: {policy: group}``): the row key of
+    the first record, in file order, with the same content. A record without a copy is its
+    own group."""
+    first: dict[str, str] = {}
+    out = {}
+    for key, digest in zip(index.keys, index.content_hashes):
+        out[key] = first.setdefault(digest, key)
+    return out
+
+
+def duplicate_summary(case: Case, index: RowIndex) -> dict:
+    """``{policy, n_groups, n_rows, n_extra_rows, definition}``: the groups of identical
+    records among the rows of ``index`` (every column, the target included), counted
+    structurally. ``policy`` is the case's (``group``) or None."""
+    groups = content_duplicates(index)
+    return {'policy': case.duplicates_policy, 'n_groups': len(groups),
+            'n_rows': sum(len(g) for g in groups),
+            'n_extra_rows': sum(len(g) - 1 for g in groups),
+            'definition': 'records identical on every column, the target included'}
 
 
 def _refuse_duplicates(index: RowIndex) -> None:
@@ -146,7 +175,8 @@ def _refuse_duplicates(index: RowIndex) -> None:
               'reason': f'{extra} records repeat the content of an earlier record. Row keys '
                         f'(source_line) cannot tell whether a copy is the same entity, so a '
                         f'split could place copies in both partitions. This version neither '
-                        f'deduplicates nor groups them silently.'}
+                        f'deduplicates nor groups them silently; a case may declare '
+                        f'duplicates: {{policy: group}} to keep each group of copies whole.'}
     raise CaseError('unsupported_capability',
                     f'This case needs a capability that is not available yet: '
                     f'{CAPABILITY_DUPLICATES}', details={'reasons': [reason]})

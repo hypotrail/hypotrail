@@ -62,8 +62,11 @@ def test_the_data_card_shows_development_rows_grouped_without_any_rate(tmp_path)
     card = flow.call('data', '--study', flow.study)
     assert card['schema'] == 'hypotrail.data/1' and card['ok'] is True
     final = flow.view()['final_test']
+    duplicates = card['development'].pop('duplicates')      # v0.2b (WP-B3), additive
     assert card['development'] == {'rows': final['development_rows'], 'columns': 17,
                                    'partition': 'development'}
+    assert duplicates['policy'] is None and duplicates['n_groups'] == 0
+    assert duplicates['line'] == 'No two development rows are identical.'
     assert card['final_test']['status'] == 'sealed' and card['final_test']['audience'] == 'junior'
     assert card['target']['positive_label'] == 'yes' and card['target']['negative_label'] == 'no'
     assert card['observation_unit']['value']
@@ -99,6 +102,32 @@ def test_the_data_card_is_never_session_logged(tmp_path, monkeypatch):
                           env=fk.env(), cwd=tmp_path)
     assert proc.returncode == 0 and proc.stdout.startswith('One row:')
     assert '## Client' in proc.stdout and 'fr: Âge du client' in proc.stdout
+
+
+
+def test_check_lets_a_text_repeat_the_data_card(tmp_path):
+    """WP-A8: at step 0 the agent shows the data card before any result exists; ``check``
+    traces its figures (counts and quoted cells) and the sealed rows, and still refuses a
+    number the card does not show, or a percentage made of a quoted cell."""
+    from mlkit.study import cmd_check
+    flow = Flow(tmp_path / 'study', fk.BANK)
+    flow.init()
+    card = flow.call('data', '--study', flow.study)
+    variables = {v['name']: v for g in card['groups'] for v in g['variables']}
+    sealed = flow.view()['final_test']['rows']
+    balance = next(x for x in variables['balance']['examples'] if abs(x) > 100)
+    text = (f"{card['development']['rows']:,} development rows and "
+            f"{card['development']['columns']} columns; {sealed} rows are sealed. "
+            f"{variables['pdays']['special_values'][0]['n_rows']} rows have pdays at -1, and "
+            f"one client has a balance of {balance}.")
+    out = cmd_check.run_check(flow.study, text)
+    assert out['clean'], out['findings']
+    sources = {t['text']: (t.get('source'), t.get('id')) for t in out['traced']}
+    assert sources[str(sealed)] == ('final_test', 'final_test.rows')
+    assert sources[str(balance)] == ('data_card', 'data.balance.examples')
+    refused = cmd_check.run_check(flow.study, 'About 98765 clients, and 1787% of them.')
+    assert [f['details']['number'] for f in refused['findings']
+            if f['code'] == 'untraceable_number'] == ['98765', '1787%']
 
 
 # --- step 0 ----------------------------------------------------------------------------
@@ -405,6 +434,11 @@ def test_a_regression_criterion_is_a_relative_error_reduction(tmp_path):
     assert crit['status'] in ('met', 'uncertain', 'not_met') and crit['rule'] is None
     signal = flow.run('eda.single_feature_signal')['values']
     assert signal['metric'] == 'r2' and signal['signals'][0]['score'] is not None
+    # WP-A8: a regression study's questions name the target, never an "outcome".
+    specials = flow.run('eda.special_values')['values']
+    for text in [signal['question'], specials['question'],
+                 *(q['text'] for q in signal['questions'])]:
+        assert 'outcome' not in text and 'target' in text, text
     band = flow.run('eda.mean_by', '--column', 'cylinders')['values']
     assert band['null_band']['shuffles'] == 19
     assert all(g['interval'] is None or g['interval']['low'] <= g['mean'] <= g['interval']['high']

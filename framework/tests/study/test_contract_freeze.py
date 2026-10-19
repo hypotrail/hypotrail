@@ -101,6 +101,8 @@ RESULT_KEYS_BY_ACTION = {
                        'actor', 'invalidation', 'basis', 'delegation_scope',
                        # ADR 0005 (R3): the agent's concern, and the contradiction warnings.
                        'agent_concern', 'warnings',
+                       # v0.2b (WP-B2): the confirmation mode in force.
+                       'mode',
                        # WP-B1: the opening of the final test that a final_test confirmation
                        # runs (null for any other decision).
                        'opening'),
@@ -143,6 +145,8 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'mode', 'language',
              # v0.2a (WP-A4): the success criterion assessment and the target-look ledger.
              'criterion', 'eda_looks',
+             # v0.2b (WP-B3, R6): the teaching scenario's defaults from the case, or null.
+             'scenario_defaults',
              # v0.2b (WP-B1): the configurations evaluated so far.
              'trials')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
@@ -152,14 +156,18 @@ DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
                           'revision', 'time', 'authenticated', 'basis', 'delegation_scope',
                           # ADR 0005 (R3).
-                          'agent_concern')
+                          'agent_concern',
+                          # v0.2b (WP-B2): the mode in force when the words were accepted.
+                          'mode')
 # Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
 # of own words of the guided mode; ``explicit`` stays readable and is the request default.
 CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
 REQUEST_BASES = ('explicit', 'delegated_default')
 # ADR 0005: confirmation modes, languages, the guided reply reasons and warnings.
 MODES = ('guided', 'training', 'express')
-SUPPORTED_MODES = ('guided',)
+# v0.2b (WP-B2): the three modes are implemented.
+SUPPORTED_MODES = ('guided', 'training', 'express')
+MODE_STRICTNESS = {'express': 0, 'guided': 1, 'training': 2}
 LANGUAGES = ('en', 'fr')
 MODE_CHANGE_KEYS = ('mode', 'previous', 'user_words', 'revision', 'time', 'request_id')
 WARNING_KEYS = ('code', 'variable', 'said', 'value', 'message')
@@ -167,6 +175,9 @@ WARNING_KEYS = ('code', 'variable', 'said', 'value', 'message')
 # policy or the conclusion.
 DELEGATION_SCOPES = ('this_decision', 'standing')
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
+# v0.2b (WP-B2): in the express mode, the framing decisions that follow the split too.
+EXPRESS_STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split',
+                                         'success_criterion', 'preprocessing')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: restatements per language, and the study-language one,
@@ -314,6 +325,9 @@ ERROR_CODES = {
     'export_target_exists',
     # ADR 0005: the policy, the model choice and the conclusion need a reason.
     'reason_required',
+    # v0.2b (WP-B2): the training mode, a paraphrase on the proposal's concepts, and a
+    # stop on words that contradict the value.
+    'paraphrase_required', 'words_contradict_value',
     # WP-B1: the final test is opened once.
     'final_test_already_opened'}
 RESERVED_CODES: set[str] = set()
@@ -684,11 +698,13 @@ def test_actions_and_their_parameters():
     assert cmd.DEFAULT_CHANNEL == 'chat' and st.CHANNELS == ('chat', 'cli', 'webview')
     assert st.CONFIRMATION_BASES == CONFIRMATION_BASES and cmd.DEFAULT_BASIS == 'explicit'
     assert st.REQUEST_BASES == REQUEST_BASES
-    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern')
+    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern',
+                                            'mode')
     assert {a: set(p) for a, p in cmd.OPTIONAL_PARAMS.items()} == OPTIONAL_ACTION_PARAMS
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DELEGATION_SCOPES == DELEGATION_SCOPES
     assert st.STANDING_DELEGATION_DECISIONS == STANDING_DELEGATION_DECISIONS
+    assert st.EXPRESS_STANDING_DELEGATION_DECISIONS == EXPRESS_STANDING_DELEGATION_DECISIONS
     assert not (set(DELEGATION_SCOPES) | {'delegation_scope'}) - DOC_TOKENS
     assert '--delegation-scope this_decision|standing' in DOC
     assert st.DECISION_IDS == ('prediction_time', 'feature_availability', 'split', 'policy',
@@ -847,6 +863,9 @@ def test_phase3_render_and_check_contract():
     assert [n for n, _ in _params(cmd_check.check_text)] == ['view', 'text', 'where',
                                                              'user_texts', 'result_ids']
     assert {'cmd_check.registry_ids', 'result_id'} <= DOC_TOKENS
+    # WP-A8: the data card's figures and the sealed counts are literals of a text check.
+    assert {'cmd_check.data_card_figures', 'data_card', 'final_test'} <= DOC_TOKENS
+    assert callable(cmd_check.data_card_figures)
     assert render_html.LITERAL_KINDS == LITERAL_KINDS
     assert cmd_render.FAULTS == ('render_html', 'render_notebook')
     assert (cmd_render.FAULT_ENV, cmd_render.HOOKS_ENV) == ('HYPOTRAIL_FAULT', 'HYPOTRAIL_TEST_HOOKS')
@@ -948,9 +967,10 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     from mlkit.study import exposure, partition
     assert exposure.PARTITIONS == EXPOSURE_PARTITIONS
     assert partition.RECORD_KEYS == PARTITION_RECORD_KEYS
-    # WP-B1: the final test is opened once (optional record key ``opening``).
+    # WP-B1: the final test is opened once (optional record key ``opening``); WP-B3: the
+    # optional ``groups`` of a case whose identical records are grouped.
     assert partition.STATUSES == ('sealed', 'opened') and partition.STATUS_ABSENT == 'absent'
-    assert partition.OPTIONAL_RECORD_KEYS == ('opening',)
+    assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening')
     assert partition.OPENING_KEYS == ('revision', 'execution_id', 'proposal_id', 'user_words',
                                       'model', 'rule', 'time', 'result_id')
     assert partition.METHODS == ('stratified', 'quantile_stratified', 'temporal')
@@ -970,7 +990,7 @@ def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_
     assert st.MODES == MODES and st.SUPPORTED_MODES == SUPPORTED_MODES
     assert st.DEFAULT_MODE == 'guided' and st.LANGUAGES == LANGUAGES
     assert st.DEFAULT_LANGUAGE == 'en' and st.MODE_CHANGE_KEYS == MODE_CHANGE_KEYS
-    assert st.MODES_AVAILABLE_IN == {'training': 'v0.2b', 'express': 'v0.2b'}
+    assert st.MODES_AVAILABLE_IN == {} and st.MODE_STRICTNESS == MODE_STRICTNESS
     # WP-B1: the opening of the final test needs a reason too.
     assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion', 'final_test'),
                                    'regression': ('model_choice', 'conclusion', 'final_test')}
@@ -983,9 +1003,16 @@ def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_
                                          'reason_required', 'question_reply',
                                          'conditional_reply', 'correction', 'recorded',
                                          'study.set_mode', 'available_in', 'confirm.ENDORSEMENT',
-                                         'confirm.availability_warnings', 'confirm.has_reason'})
+                                         'confirm.availability_warnings', 'confirm.has_reason',
+                                         # v0.2b (WP-B2).
+                                         'paraphrase_required', 'missing', 'junior_message',
+                                         'concepts.concept_map', 'concepts.check',
+                                         'concepts.has_reason_connector',
+                                         'concepts.mode_named', 'content/concepts.yaml',
+                                         'state.EXPRESS_STANDING_DELEGATION_DECISIONS',
+                                         'state.MODE_STRICTNESS'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
-    for line in ('hypotrail mode set guided|training|express --user-words TEXT',
+    for line in ('hypotrail mode set guided|training|express [--user-words TEXT]',
                  '[--agent-concern TEXT]', '--proposal PROPOSAL', '[--kind hold|correction]',
                  '[--restatement-fr TEXT]', 'hypotrail init --case CASE --study DIR [--lang en|fr]'):
         assert line in DOC, line

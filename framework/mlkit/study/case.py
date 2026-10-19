@@ -55,7 +55,18 @@ CAPABILITY_GROUPED_SPLIT = 'grouped split (v0.2)'
 
 TOP_REQUIRED = ('schema', 'id', 'title', 'description', 'provenance', 'dataset', 'target',
                 'row_key', 'facts', 'variables', 'special_values', 'structure', 'task')
-TOP_OPTIONAL = ('prior_exposure', 'migration', 'order')
+TOP_OPTIONAL = ('prior_exposure', 'migration', 'order', 'duplicates', 'scenario_defaults')
+# ``duplicates`` (v0.2b, WP-B3): how identical records are treated, ``{policy, status,
+# source}``. The only policy is ``group``: records with identical content are one entity
+# group, kept whole on one side of the final test, the split, and the folds. Without the
+# declaration, identical records are refused (``duplicate records (v0.2)``).
+DUPLICATES_KEYS = ('policy', 'status', 'source')
+DUPLICATE_POLICIES = ('group',)
+# ``scenario_defaults`` (v0.2b, WP-B3, remark R6): defaults of a teaching scenario, never a
+# decision. ``capacity_share`` is ``{value, status, source}``, the share of the scored rows
+# the exercise assumes can be acted on (0 < value <= 1); its status is
+# ``scenario_assumption`` and nothing else: a real business case states no default.
+SCENARIO_DEFAULT_KEYS = ('capacity_share',)
 # ``order`` (v0.2a, ADR 0006): the declared row order, ``{by, direction, status, source}``.
 # ``by`` is ``line`` (the physical order of the file) or a numeric or integer variable.
 # With it, the sealed final test is the last rows in that order (temporal); without it,
@@ -166,6 +177,17 @@ class Case:
     @property
     def time_column(self) -> str | None:
         return self.document['structure']['time_column']['value']
+
+    @property
+    def duplicates_policy(self) -> str | None:
+        """``group`` when the case declares that identical records form one entity group
+        (``duplicates.policy``), else None (identical records are refused)."""
+        return (self.document.get('duplicates') or {}).get('policy')
+
+    @property
+    def scenario_defaults(self) -> dict | None:
+        """The teaching scenario's defaults (``scenario_defaults``), or None."""
+        return self.document.get('scenario_defaults')
 
     @property
     def group_column(self) -> str | None:
@@ -452,6 +474,32 @@ def validate(document: Any) -> list[dict]:
                           + ' or '.join(ORDER_COLUMN_TYPES))
                 if variable['role'] == 'target':
                     p.add('order.by', 'the target cannot order the rows')
+    if 'duplicates' in document:
+        dup = document['duplicates']
+        if p.keys(dup, 'duplicates', DUPLICATES_KEYS):
+            if dup['policy'] not in DUPLICATE_POLICIES:
+                p.add('duplicates.policy', f'must be one of {", ".join(DUPLICATE_POLICIES)}')
+            p.status(dup['status'], 'duplicates.status')
+            p.text(dup['source'], 'duplicates.source')
+    if 'scenario_defaults' in document:
+        sd = document['scenario_defaults']
+        if p.keys(sd, 'scenario_defaults', (), SCENARIO_DEFAULT_KEYS):
+            if not sd:
+                p.add('scenario_defaults', 'must declare at least one default')
+            if 'capacity_share' in sd and p.keys(sd['capacity_share'],
+                                                 'scenario_defaults.capacity_share',
+                                                 STATEMENT_KEYS):
+                share = sd['capacity_share']
+                value = share['value']
+                if isinstance(value, bool) or not isinstance(value, (int, float)) \
+                        or not 0 < value <= 1:
+                    p.add('scenario_defaults.capacity_share.value',
+                          'must be a share of the scored rows, 0 < value <= 1')
+                if share['status'] != 'scenario_assumption':
+                    p.add('scenario_defaults.capacity_share.status',
+                          'must be "scenario_assumption": a default capacity is an assumption '
+                          'of the teaching scenario, never a fact about a business')
+                p.text(share['source'], 'scenario_defaults.capacity_share.source')
     if 'migration' in document:
         m = document['migration']
         if p.keys(m, 'migration', MIGRATION_REQUIRED, MIGRATION_OPTIONAL):

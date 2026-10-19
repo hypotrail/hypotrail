@@ -199,7 +199,7 @@ def _special_values_numeric(case: c.Case, train) -> dict:
             'unit': case.target_unit, 'special_values': items, 'co_occurrence': pairs,
             'note': 'Counts on training rows. A missing-value marker is imputed by the model, '
                     'with an indicator column for a numeric variable.',
-            'question': question('eda.special_values')}
+            'question': question('eda.special_values', task='regression')}
 
 
 def _bins(values, special_mask):
@@ -491,9 +491,18 @@ QUESTIONS = {
                                  'well that its availability at the prediction moment should be '
                                  'questioned?',
 }
+# A regression study speaks of its target, never of an "outcome" (WP-A8): the questions that
+# name it are worded for the numeric target.
+REGRESSION_QUESTIONS = {
+    'eda.special_values': 'How many training rows carry each special value, and how does the '
+                          'target look among them?',
+    'eda.single_feature_signal': 'Does any single feature, on its own, predict the target so '
+                                 'well that its availability at the prediction moment should be '
+                                 'questioned?',
+}
 
 
-def question(activity: str, column: str | None = None) -> str:
+def question(activity: str, column: str | None = None, task: str = 'binary') -> str:
     if activity == 'eda.rate_by':
         return (f'Does the positive rate differ across the groups of {column} by more than '
                 f'chance alone draws?')
@@ -502,6 +511,8 @@ def question(activity: str, column: str | None = None) -> str:
                 f'chance alone draws?')
     if activity == 'eda.distribution':
         return f'How are the values of {column} distributed among the training rows?'
+    if task == 'regression' and activity in REGRESSION_QUESTIONS:
+        return REGRESSION_QUESTIONS[activity]
     return QUESTIONS[activity]
 
 
@@ -661,12 +672,16 @@ def quality(case: c.Case, frame) -> dict:
 
 
 def single_feature_signal(case: c.Case, train, candidates: list, availability: Mapping,
-                          special: list) -> dict:
+                          special: list, groups: list | None = None) -> dict:
     """Out-of-fold signal of each candidate feature alone on the training rows (5 folds,
     fixed seed): the AUC of a one-feature logistic model (binary) or the R² of a one-feature
     linear model (regression). A feature whose signal reaches the level, or stands far above
     the others, raises a legitimacy question: is its value really known at the prediction
-    moment? It never selects or drops a feature."""
+    moment? It never selects or drops a feature.
+
+    ``groups`` (v0.2b, WP-B3, ``duplicates: {policy: group}``): the entity group of every
+    training row; the folds then keep each group of identical records whole
+    (``StratifiedGroupKFold`` or ``GroupKFold``)."""
     import numpy as np
     from sklearn.linear_model import LinearRegression
     from sklearn.model_selection import KFold, StratifiedKFold, cross_val_predict
@@ -682,6 +697,11 @@ def single_feature_signal(case: c.Case, train, candidates: list, availability: M
     else:
         y = numeric_target(case, train).to_numpy(dtype=float)
         folds = KFold(SIGNAL_FOLDS, shuffle=True, random_state=SIGNAL_SEED)
+    if groups is not None:
+        from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
+        folds = (StratifiedGroupKFold(SIGNAL_FOLDS, shuffle=True, random_state=SIGNAL_SEED)
+                 if binary else GroupKFold(SIGNAL_FOLDS))
+        folds = list(folds.split(np.zeros(len(y)), y, groups))
     signals = []
     for name in candidates:
         own = [s for s in special if s['column'] == name]
@@ -726,15 +746,19 @@ def single_feature_signal(case: c.Case, train, candidates: list, availability: M
             questions.append({
                 'feature': s['feature'], 'score': value, 'availability': s['availability'],
                 'text': f'{s["feature"]} {what}{why}. Is its value really known at the '
-                        f'prediction moment, or is it recorded at or after the outcome? '
+                        f'prediction moment, or is it recorded at or after the '
+                        f'{"outcome" if binary else "target"}? '
                         f'(availability decided: {status})'})
-    return {'partition': 'train', 'n_rows': int(len(train)), 'metric': metric,
+    out = {'partition': 'train', 'n_rows': int(len(train)), 'metric': metric,
             'folds': SIGNAL_FOLDS, 'seed': SIGNAL_SEED, 'signals': signals, 'median': median,
             'level': level, 'gap': gap, 'questions': questions,
-            'question': question('eda.single_feature_signal'),
+            'question': question('eda.single_feature_signal', task=case.task),
             'note': 'Each feature alone, scored out of fold on the training rows. A high value '
                     'only raises a question about when the value is known; it never keeps or '
                     'drops a feature, and a legitimate feature may score high.'}
+    if groups is not None:
+        out['grouped_folds'] = 'identical records kept in one fold (duplicates: group)'
+    return out
 
 
 def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
@@ -744,7 +768,8 @@ def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
                 'n_rows': int(len(train))}
     if activity == 'eda.single_feature_signal':
         values = single_feature_signal(case, train, params['candidates'],
-                                       params['availability'], params['special_values'])
+                                       params['availability'], params['special_values'],
+                                       params.get('groups'))
     elif activity == 'eda.distribution':
         values = distribution(case, train, params['column'],
                               params.get('max_groups', MAX_GROUPS))

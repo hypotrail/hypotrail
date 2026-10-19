@@ -35,6 +35,7 @@
    "delegation_scope": null,
    "agent_concern": null,
    "warnings": [],
+   "mode": "guided",
    "opening": null
   },
   "artifacts": {

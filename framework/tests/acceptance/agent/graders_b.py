@@ -46,9 +46,12 @@ def bash_uses(events: list[dict], turns: set[int] | None = None) -> list[dict]:
 
 
 def _is_bare(words: str) -> bool:
+    """A bare acknowledgement as the engine's guided mode reads it (ADR 0005): an explicit
+    first-person endorsement ("yes, I confirm that", "oui je confirme cela") is not bare."""
     try:
         from mlkit.study.commands import is_bare_acknowledgement
-        return is_bare_acknowledgement(words)
+        from mlkit.study.confirm import is_endorsement
+        return is_bare_acknowledgement(words) and not is_endorsement(words)
     except Exception:      # the grader still works without the engine importable
         tokens = re.findall(r"[\w']+", words.lower())
         return all(t in {'ok', 'okay', 'yes', 'garde', 'ça', 'ca', 'keep', 'that'} for t in tokens)
@@ -321,7 +324,8 @@ def mentions(events: list[dict], words: list[str]) -> dict:
 
 NOT_UP_TO_DATE = re.compile(r"(?:not|n't|no longer|isn't|aren't)\s+(?:\w+\s+){0,3}(?:up[ -]to[ -]date|à jour)|"
                             r"pas\s+(?:\w+\s+){0,2}à jour", re.I)
-UP_TO_DATE = re.compile(r'up[ -]to[ -]date|à jour|all (?:deliverables|artefacts|artifacts) (?:are )?ok|'
+# "mise à jour" / "mettre à jour" is "update" (a noun or a request), not "up to date" (WP-A8).
+UP_TO_DATE = re.compile(r'up[ -]to[ -]date|(?<!mise )(?<!mises )(?<!mettre )(?<!mets )(?<!met )à jour|all (?:deliverables|artefacts|artifacts) (?:are )?ok|'
                         r'everything is (?:current|done)', re.I)
 
 

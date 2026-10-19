@@ -11,6 +11,14 @@ A policy turns validation scores into actions. Two rule types exist in v0.1:
   of ``mlkit.decision.accept_weights`` applied to the negated score with
   ``rate = k / n``; :func:`capacity_weights` takes ``k`` itself so the selected count
   is exactly ``k`` without floating-point drift (equality is tested).
+* ``share:p`` (v0.2b, WP-B3, remark R6) is a capacity stated as a share of the rows
+  evaluated: ``capacity:k`` with ``k = share_capacity(p, n)``, ``floor(p * n + 0.5)``
+  rows and at least one, on the ``n`` rows scored. A bootstrap replicate has ``n`` rows
+  too, so it keeps the same ``k``.
+
+:func:`gain_points` (v0.2b) reports what acting on the top 5, 10 and 20 % of the
+scored rows would select: the capacity, the precision and its gain in points over the
+base rate, the lift, and the share of the positive rows found (the cumulative gain).
 
 :func:`evaluate` is a pure function of ``(y, score, rule)``: it reads no file and no
 state, and changing ``k`` or ``t`` never refits anything. ``hypotrail run
@@ -32,12 +40,14 @@ from typing import Mapping
 
 import numpy as np
 
-RULE_TYPES = ('threshold', 'capacity')
+RULE_TYPES = ('threshold', 'capacity', 'share')
+GAIN_SHARES = (0.05, 0.1, 0.2)
 METRICS = ('precision', 'recall', 'volume')
 
 
 def parse_rule(rule) -> tuple[str, float | int]:
-    """``("threshold", t)`` or ``("capacity", k)``; ``ValueError`` otherwise.
+    """``("threshold", t)``, ``("capacity", k)`` or ``("share", p)``; ``ValueError``
+    otherwise.
 
     Same grammar as ``mlkit.study.dependencies.parse_policy`` (checked by a test).
     """
@@ -45,9 +55,29 @@ def parse_rule(rule) -> tuple[str, float | int]:
 
     parsed = parse(rule)
     if parsed is None:
-        raise ValueError(f'a rule is "threshold:<t>" (0 <= t <= 1, decimal digits) or '
-                         f'"capacity:<k>" (an integer k >= 1, digits only), not {rule!r}')
+        raise ValueError(f'a rule is "threshold:<t>" (0 <= t <= 1, decimal digits), '
+                         f'"capacity:<k>" (an integer k >= 1, digits only), or "share:<p>" '
+                         f'(0 < p <= 1, decimal digits), not {rule!r}')
     return parsed
+
+
+def share_capacity(p: float, n: int) -> int:
+    """The capacity of ``share:p`` on ``n`` rows: ``floor(p * n + 0.5)``, at least 1 (when
+    ``n >= 1``) and at most ``n``."""
+    if n < 1:
+        return 0
+    return min(n, max(1, int(np.floor(float(p) * n + 0.5))))
+
+
+def _resolved(rule, n: int) -> tuple[str, float | int, int | None]:
+    """``(kind, amount, k)``: ``k`` is the capacity of a ``capacity`` or ``share`` rule on
+    ``n`` rows, None for a threshold."""
+    kind, amount = parse_rule(rule)
+    if kind == 'capacity':
+        return kind, amount, int(amount)
+    if kind == 'share':
+        return kind, amount, share_capacity(amount, n)
+    return kind, amount, None
 
 
 def capacity_weights(score, k: int) -> tuple[np.ndarray, dict]:
@@ -90,14 +120,14 @@ def _capacity_counts(y: np.ndarray, s: np.ndarray, k: int) -> tuple[float, float
 
 def weights(score, rule) -> tuple[np.ndarray, dict]:
     """Selection weights (1, 0, or a fraction) and the cut description of ``rule``."""
-    kind, amount = parse_rule(rule)
     s = np.asarray(score, dtype=float)
+    kind, amount, k = _resolved(rule, len(s))
     if kind == 'threshold':
         at = s == amount
         return (s >= amount).astype(float), {
             'score': float(amount), 'n_tied': int(at.sum()),
             'fraction_selected': 1.0 if at.any() else None}
-    return capacity_weights(s, amount)
+    return capacity_weights(s, k)
 
 
 def _counts(y: np.ndarray, w: np.ndarray) -> tuple[float, float, float]:
@@ -122,21 +152,54 @@ def evaluate(y, score, rule) -> dict:
     s = np.asarray(score, dtype=float)
     if y.shape != s.shape or y.ndim != 1:
         raise ValueError('y and score are one-dimensional arrays of the same length')
-    kind, amount = parse_rule(rule)
+    kind, amount, k = _resolved(rule, len(s))
     w, cut = weights(s, rule)
-    if kind == 'capacity':
-        selected, tp = _capacity_counts(y, s, amount)
+    if k is not None:
+        selected, tp = _capacity_counts(y, s, k)
         positives = float(y.sum())
     else:
         selected, tp, positives = _counts(y, w)
     n = len(y)
-    prorated = kind == 'capacity' and cut['n_tied'] > 0
-    return {'rule': rule, 'kind': kind, 'parameter': amount, 'n': n,
-            'n_positive': int(positives), 'selected': selected, 'true_positives': tp,
-            'false_positives': selected - tp, 'false_negatives': positives - tp,
-            **_ratios(selected, tp, positives, n),
-            'tied_at_cut': cut['n_tied'], 'cut': cut,
-            'selection': 'expected' if prorated else 'exact'}
+    prorated = k is not None and cut['n_tied'] > 0
+    out = {'rule': rule, 'kind': kind, 'parameter': amount, 'n': n,
+           'n_positive': int(positives), 'selected': selected, 'true_positives': tp,
+           'false_positives': selected - tp, 'false_negatives': positives - tp,
+           **_ratios(selected, tp, positives, n),
+           'tied_at_cut': cut['n_tied'], 'cut': cut,
+           'selection': 'expected' if prorated else 'exact'}
+    if kind == 'share':
+        out['capacity'] = k        # v0.2b: the rows a share selects on these n rows
+    return out
+
+
+def gain_points(y, score, shares=GAIN_SHARES) -> dict:
+    """What acting on the top ``shares`` of the scored rows selects (v0.2b, WP-B3, R6).
+
+    For each share ``p``: the capacity ``k`` (:func:`share_capacity`), the expected
+    selected and true-positive counts (ties at the cut pro rata, as ``capacity:k``), the
+    precision, its gain over the base rate in percentage points, the lift (precision over
+    base rate), and the share of the positive rows found (recall, the cumulative gain).
+    Pure; reads nothing else."""
+    y = np.asarray(y, dtype=float)
+    s = np.asarray(score, dtype=float)
+    n = len(y)
+    positives = float(y.sum())
+    base = positives / n if n else None
+    points = []
+    for p in shares:
+        k = share_capacity(p, n)
+        selected, tp = _capacity_counts(y, s, k) if n else (0.0, 0.0)
+        precision = tp / selected if selected > 0 else None
+        points.append({'share': float(p), 'rule': f'share:{p:g}', 'capacity': k,
+                       'selected': selected, 'true_positives': tp, 'precision': precision,
+                       'gain_points': (100 * (precision - base)
+                                       if precision is not None and base is not None else None),
+                       'lift': precision / base if precision is not None and base else None,
+                       'recall': tp / positives if positives > 0 else None})
+    return {'n': n, 'n_positive': int(positives), 'base_rate': base, 'points': points,
+            'definition': 'gain_points is the precision of the top share minus the base rate, '
+                          'in percentage points; recall is the share of the positive rows '
+                          'found (the cumulative gain).'}
 
 
 def _interval(samples: np.ndarray, level: float) -> dict:
@@ -153,7 +216,8 @@ def _replicate(y: np.ndarray, s: np.ndarray, kind: str, amount) -> tuple[float, 
     if kind == 'threshold':
         selected, tp, positives = _counts(y, (s >= amount).astype(float))
     else:
-        selected, tp = _capacity_counts(y, s, amount)
+        k = share_capacity(amount, len(s)) if kind == 'share' else amount
+        selected, tp = _capacity_counts(y, s, k)
         positives = float(y.sum())
     precision = tp / selected if selected > 0 else np.nan
     recall = tp / positives if positives > 0 else np.nan

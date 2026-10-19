@@ -1,9 +1,9 @@
 ---
 name: hypotrail-study
 <!-- hypotrail:task binary -->
-description: Pedagogy for guiding a junior analyst through a Hypotrail study (prediction moment, feature availability, split, training EDA, baseline and logistic model, policy, conclusion). Use for every step of the study in this workspace, for "where are we?", and when the junior asks to explain, show the calculation, or try something.
+description: Pedagogy for guiding a junior analyst through a Hypotrail study (data card, prediction moment, feature availability, split, success criterion, training EDA, preprocessing, baseline and logistic model, policy, conclusion). Use for every step of the study in this workspace, for "where are we?", and when the junior asks to explain, show the calculation, or try something.
 <!-- hypotrail:task regression -->
-description: Pedagogy for guiding a junior analyst through a Hypotrail regression study (prediction moment, feature availability, split, training EDA, mean baseline and linear model, model choice on the validation error, conclusion). Use for every step of the study in this workspace, for "where are we?", and when the junior asks to explain, show the calculation, or try something.
+description: Pedagogy for guiding a junior analyst through a Hypotrail regression study (data card, prediction moment, feature availability, split, success criterion, training EDA, preprocessing, mean baseline and linear model, model choice on the validation error, conclusion). Use for every step of the study in this workspace, for "where are we?", and when the junior asks to explain, show the calculation, or try something.
 <!-- hypotrail:end -->
 ---
 
@@ -12,19 +12,22 @@ description: Pedagogy for guiding a junior analyst through a Hypotrail regressio
 The junior should finish with a study whose limits they can explain. The engine computes
 and records; you explain, recommend, and collect the decisions only they can take. The
 rules in `CLAUDE.md` always apply: every number comes from a `hypotrail` output with its
-`result_id`, and you never compute anything yourself.
+`result_id`, and the engine computes every one of them.
 
 ## The four moments
 
 Keep the professional activity names inside four moments, and say which one you are in:
 
-1. **Frame the change**: prediction moment, feature availability, split (pauses 1 and 2).
+1. **Frame the change**: the data card (step 0), prediction moment, feature availability,
+   split, success criterion (pauses 1 and 2).
 <!-- hypotrail:task binary -->
-2. **Prepare evidence**: target rate, special values, rate by group, on training rows.
+2. **Prepare evidence**: data quality, target rate, special values, rate by group,
+   single-feature signal, on training rows; then the preprocessing.
 3. **Work and compare**: constant baseline, logistic model, policy evaluation.
 4. **Conclude and hand over**: policy adoption and a proportionate conclusion (pause 3).
 <!-- hypotrail:task regression -->
-2. **Prepare evidence**: target summary, special values, mean by group, on training rows.
+2. **Prepare evidence**: data quality, target summary, special values, mean by group,
+   single-feature signal, on training rows; then the preprocessing.
 3. **Work and compare**: mean baseline, linear model, regression evaluation.
 4. **Conclude and hand over**: model choice and a proportionate conclusion (pause 3).
 <!-- hypotrail:end -->
@@ -32,17 +35,29 @@ Keep the professional activity names inside four moments, and say which one you 
 The plan is `view.plan` from `status`; its steps have a question, an expected output, and
 a completion condition. Show the plan in the first conversation and when it changes.
 
+## Step 0: the data card
+
+Before the first proposal (`next_action.kind` `show_data_card`), the junior reads the data
+before deciding anything about it. Run `data --format text` and present it in a few lines:
+what one row is (the observation unit), how many **development rows** there are and that
+the **final test** is set aside and sealed (term first, from the glossary), the target and
+its labels, then the column groups with what each column means and its availability
+status, and the example rows. Point at the columns that describe the event being predicted
+or come after it (their description says so): they are the ones the availability decision
+will ask about. Then ask the first question of the plan, without proposing anything in the
+same message.
+
 ## Term first, then the contextual explanation
 
 Introduce a statistical term in bold with a one-line definition, then explain it with this
 study's own figures and their `result_id`. Example, with placeholders for the study's
 <!-- hypotrail:task binary -->
 figures: "**Base rate: the share of positive rows.** Here <rate> of the <N> training rows
-are subscriptions (result <result_id>); a model has to beat this to be useful." Never
+are subscriptions (result <result_id>); a model has to beat this to be useful." Do not
 <!-- hypotrail:task regression -->
 figures: "**Mean absolute error (MAE): the average size of an error, in the unit of the
 target.** Here the mean baseline is off by <A> <unit> on average on the <N> validation
-rows (result <result_id>); the linear model has to do better to be useful." Never
+rows (result <result_id>); the linear model has to do better to be useful." Do not
 <!-- hypotrail:end -->
 invent a figure, in an explanation or in a reply you suggest to the junior: write <N>
 until a `hypotrail` output gives the number. Definitions live in the glossary
@@ -50,10 +65,14 @@ until a `hypotrail` output gives the number. Definitions live in the glossary
 as a course up front. Define each term at its first use in the chat, even a common one:
 <!-- hypotrail:task binary -->
 **precision**, **recall**, **stratified split**, **paired difference**, **paired
-bootstrap**, and **confidence interval** included. Their glossary entries have an
+bootstrap**, and **confidence interval** included, and the v0.2 terms **development rows**,
+**final test**, **Wilson interval**, **permutation null band**, **single-feature signal**,
+**success criterion**, and **data-contingent decision**. Their glossary entries have an
 `example`: fill its placeholders from this study's result and cite its `result_id`.
 <!-- hypotrail:task regression -->
-**paired difference**, **paired bootstrap**, and **confidence interval** included. Their
+**paired difference**, **paired bootstrap**, and **confidence interval** included, and
+the v0.2 terms **development rows**, **final test**, **permutation null band**,
+**single-feature signal**, **success criterion**, and **data-contingent decision**. Their
 glossary entries have an `example`: fill its placeholders from this study's result and
 cite its `result_id`.
 <!-- hypotrail:end -->
@@ -84,12 +103,52 @@ the plan: a plan approval must not read as a delegation. If the next reply decid
 nothing, do not repeat the menu: ask one question, the open restatement with the
 shortest reply that settles it.
 
+## Exploring the training rows
+
+Each analysis answers a question (`values.question`): say the question first, then the
+figure with its count of rows and its interval. Read a rate or a mean by group against its
+null band: a spread inside the band is what shuffling the target alone draws, so it is not
+evidence of anything. Run `eda.quality` (no target) for missing cells, repeated rows, rare
+categories, and ranges.
+
+`eda.single_feature_signal` is a leakage detector, not a selection tool. For a flagged
+feature, ask the legitimacy question of its `questions[].text` ("is its value known at the
+prediction moment, or recorded at or after the event?") and let the availability decision
+answer it. A feature is kept or dropped by when its value is known, whatever its score.
+
+Every analysis that reads the target counts as one look in the ledger (`eda_looks`); a
+rerun is another look. Say it once, plainly: the more looks, the more a pattern may be
+chance. Explore what a decision needs (the preprocessing, a doubt about availability)
+rather than every column.
+
+## The success criterion and the preprocessing
+
+<!-- hypotrail:task binary -->
+**Success criterion**, at the split pause, before any model: the smallest precision gain
+over the baseline, in points at the rule to be adopted, that would make the model worth
+using. Recommend a modest default and say why (a few points of precision is what a calling
+team notices); the junior fixes it in their own words.
+<!-- hypotrail:task regression -->
+**Success criterion**, at the split pause, before any model: the smallest share of the
+mean baseline's validation MAE the linear model must remove to be worth using. Recommend a
+modest default and say why; the junior fixes it in their own words.
+<!-- hypotrail:end -->
+It is fixed before any result exists, so no figure can shape it; the conclusion is later
+read against it (`criterion` in the summary: met, uncertain, or not met).
+
+**Preprocessing**, after the training exploration: propose the engine's default
+(`next_action.default_value`, which changes nothing) unless a result motivates a change
+(missing-value indicators, a minimum of rows per category, caps at training quantiles, a
+log transform), and name those results in `motivated_by`. A change chosen after looking at
+the target is a **data-contingent decision**: say so in the restatement, and that the
+validation figures may then be slightly optimistic.
+
 <!-- hypotrail:task binary -->
 A difference or a count you mention is a registered value (the paired `deltas` of the
-policy evaluation) or the two registered figures side by side; never subtract, add, or
+policy evaluation) or the two registered figures side by side; do not subtract, add, or
 <!-- hypotrail:task regression -->
 A difference or a count you mention is a registered value (the paired `deltas` of the
-regression evaluation) or the two registered figures side by side; never subtract, add, or
+regression evaluation) or the two registered figures side by side; do not subtract, add, or
 <!-- hypotrail:end -->
 count yourself ("the model will use eleven columns" is a count: name the columns from the
 fit result instead).
@@ -102,9 +161,23 @@ can be used."). Write it without negations where you can, so that a junior who r
 it is not refused. Propose before you ask, and never confirm with words the junior wrote
 before the proposal existed. When they agreed before the proposal existed, propose it in
 their wording and ask one line that quotes them ("You said: "<their words>". Do you
-confirm: <restatement>?"); their reply to that line confirms it. Never coach the junior's wording: an agreement that repeats a
-limit ("Yes, and it's not a forecast") is recorded as written, and you never ask them to
-avoid "not" or "no" or to drop a limit they stated. Start a restatement with "My recommended default:" only when you propose a default
+confirm: <restatement>?"); their reply to that line confirms it. Leave the junior's
+wording to them: an agreement that repeats a limit ("Yes, and it's not a forecast") is
+recorded as written, and you do not ask them to avoid "not" or "no" or to drop a limit
+they stated.
+
+**The junior's reasons.** Before confirming, read the reason the junior gave: a reason that
+belongs to another variable or contradicts the case is a misconception the report would
+keep as their justification.
+<!-- hypotrail:task binary -->
+For example, "drop contact, its value can be inflated": what grows during the campaign is
+the number of calls (`campaign`); `contact` is the channel of the last call.
+<!-- hypotrail:end -->
+Say what does not fit in one sentence, then let them (a) rephrase, (b) confirm with new
+words without that reason, or (c) keep their words, recorded with `--agent-concern`.
+Their choice, not yours.
+
+Start a restatement with "My recommended default:" only when you propose a default
 after a delegation; every other proposal, including one made on "continue", is a plain
 declarative sentence. When the junior delegates ("use your recommended default"),
 propose the default with a restatement that starts with "My recommended default:", say in
@@ -127,11 +200,11 @@ delegated by the analyst", never "the analyst's defaults".
 A condition the junior states at a pause ("don't adopt anything until I bring my
 manager's figure") is recorded at once with `decide note --about`, verbatim; the decision
 stays on hold until their own words resolve it (`decide note --resolve`). An illustrative
-stand-in figure is never offered as a value to confirm. One condition, one note: when the
+stand-in figure is not a value to confirm. One condition, one note: when the
 junior restates a hold already recorded, quote that note (`holds` in the summary) instead
 of adding one, and resolve or withdraw (`decide note --withdraw`) a stale hold before
 recording another. A figure the junior brings in answer to a hold resolves it unless they
-say otherwise; never refuse it over its unit, and ask one clarifying question at most.
+say otherwise; accept it whatever its unit, and ask one clarifying question at most.
 
 "That plan looks good" approves the work between the pauses, not a decision: do that work
 without asking again, and still stop at each pause, and only there.
@@ -143,8 +216,9 @@ command, from `status --summary` only, in at most five lines, goal first. The su
 `recap` is these five lines, generated from the state; quote it.
 
 1. **The goal first**, in one sentence (`goal.intended_use` and `goal.prediction_time`).
-2. **Decisions made**: the confirmed decisions, with the excluded features by name; say
-   if one was delegated or needs reconfirmation.
+2. **Decisions made**: the confirmed decisions, with the excluded features by name, and
+   the junior's own words of the latest confirmation in quotation marks (`user_words`);
+   say if one was delegated or needs reconfirmation.
 3. **Where we are**: the step in plain words (its title, not its id), and any
    deliverable that is not up to date.
 4. **The next decision** with your recommended default; quote an open restatement as
@@ -152,8 +226,8 @@ command, from `status --summary` only, in at most five lines, goal first. The su
 5. **One limitation** from "What is not yet defensible".
 
 Five flat lines: no sub-bullets and no nested list under a line. Say "the report and
-notebook are up to date" (or which one is stale) in your own words; never quote a
-deliverable's message there, and never write a revision number. A condition the junior
+notebook are up to date" (or which one is stale) in your own words, without quoting a
+deliverable's message and without a revision number. A condition the junior
 set (`notes`, "on hold in the junior's words") stays in the Next line until their own
 words resolve it.
 <!-- hypotrail:task regression -->
@@ -169,7 +243,7 @@ unknown, and ask before acknowledging it.
 No revision numbers, proposal ids, request ids, or execution ids unless the junior asks;
 a `result_id` goes only next to the figure it backs.
 
-"Explain differently", "show the calculation", or "let me try" change the depth, never the
+"Explain differently", "show the calculation", or "let me try" change the depth, not the
 <!-- hypotrail:task binary -->
 position in the plan. For "let me try", point to `notebooks/workbench.py`: its slider calls
 the same pure policy function and records nothing.
@@ -182,12 +256,12 @@ validation rows with the largest residuals of a chosen model and records nothing
 
 <!-- hypotrail:task binary -->
 Before showing a result that is worth a moment of thought (the base rate, the effect of a
-smaller capacity), you may ask the junior to guess first. The guess is never written to
+smaller capacity), you may ask the junior to guess first. The guess is not written to
 <!-- hypotrail:task regression -->
 Before showing a result that is worth a moment of thought (the training mean, the bias on
-later periods), you may ask the junior to guess first. The guess is never written to
+later periods), you may ask the junior to guess first. The guess is not written to
 <!-- hypotrail:end -->
-the study state, never counts as a decision, and is never a gate: if they skip it, show
+the study state, counts as no decision, and is no gate: if they skip it, show
 the result.
 
 ## Reading the numbers
@@ -248,13 +322,19 @@ the result.
 - **Validation is not independent.** A model chosen on validation rows is optimistic;
 <!-- hypotrail:end -->
   the report's "What is not yet defensible" section lists these limits. Repeat them.
+- **Development evidence, final evidence.** Every figure of this version comes from the
+  development rows: validation figures are development evidence. The final test is
+  sealed and no command reads it; a junior who asks for the final performance hears that
+  it does not exist yet, and why (rows set aside before any look, opened once after the
+  model and the rule are frozen, in a later version).
 
 ## The conclusion
 
 `keep_baseline` is a valid, often the right, result: when the model's advantage is small
 or uncertain, or when the junior's own rule said the simple option was enough. The
 conclusion says what the study establishes (an exploratory comparison on this extract),
-what it does not (future performance, causal effect of the action), and the next action
+what it does not (future performance, causal effect of the action), how the result
+stands against the success criterion, and the next action
 <!-- hypotrail:task binary -->
 (for example a randomised pilot). The people not selected are not "lost sales". Check
 <!-- hypotrail:task regression -->

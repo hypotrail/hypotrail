@@ -37,7 +37,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -80,7 +81,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -111,7 +113,8 @@
      "authenticated": false,
      "basis": "delegated_default",
      "delegation_scope": "this_decision",
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -137,7 +140,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -163,7 +167,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    }

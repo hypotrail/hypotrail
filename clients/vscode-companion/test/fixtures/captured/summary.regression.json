@@ -254,67 +254,67 @@
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "49b6ad3cbf2158786c2e0e41468a903501255a02fa0dfa8a0960f1789d2f43f6",
+    "result_id": "6cdd871d009b93d3a305c4d44cf6ee23689181f6704393e59c298b64241d846d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "b60daca7696f59ef642454a79b8ccda8473bfb54edce9d27ad3d7ac7ff5f811f",
+    "result_id": "30f4dd184732433d4fbfe6a08c005291d9e28569e8141ff95cefd8a369a077e6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "ec7f9fcc98513ed4d650e4e472b2b21ff165f15b9a3e41e4982669a035d170bf",
+    "result_id": "c391e55d1c615b66fcb3a3a40d7ae0b696269a620eeba413b7f968fda07ae598",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "9713e65d2ebaa544ca578ce7f2b496ca750996c786970a04db0d8814ec35203d",
+    "result_id": "a865fd8729bbfde554fe80caeb90a62041a546202c50b19af1f320be85d0c051",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "2b31919cdceed63715304c70a656fa4973d9fa649fec1864bc7c2ca588a88718",
+    "result_id": "c024228b193aa2bfe75f0e56e2c92581c937e82179811b7ff00a62bac79752f0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "3641a59562157c97831c10ed4868e21967ea295990b7eb901fc50b213ebaae56",
+    "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "2cf5c98d9e4c223523d19c6b6dab7d5d4a7b25cdc286f29713df4f53c7596826",
+    "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "7d909cbdaeab88c8ade1f821f5f7c2943c71f6bcfd9d4faf3842036bcfd43be5",
+    "result_id": "c4704a54d010eb0569cbd419fe3f2476ba050f359a1efdd4b473b3f5c0e7990a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "52eb087ceceb3b9f67c8a4db1459ad4548846a6c72e137221edab7704d25a1cd",
+    "result_id": "a8c0556df9b89171a6c84ccb5f439e5f2cce6dff1f173bbe456a2b0c94b8115d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "3dba08aad798ad0b76e1452aa4e6712afb3bcd6abf7e8327060d54189fdf640d",
+    "result_id": "f068ce8d4886ffe4fe0e557be8b958b4b0c4a44d42d79ca376fef9b5291f2ef2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "70dbdb909ccab66df4fde38068c922c9f2625b121cd0a5f39190ac289abf9c91",
+    "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -419,23 +419,23 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "2cf5c98d9e4c223523d19c6b6dab7d5d4a7b25cdc286f29713df4f53c7596826",
+   "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
    "contradicts_verdict": false,
    "final_test": null
   },
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "3641a59562157c97831c10ed4868e21967ea295990b7eb901fc50b213ebaae56",
-    "2b31919cdceed63715304c70a656fa4973d9fa649fec1864bc7c2ca588a88718",
-    "9713e65d2ebaa544ca578ce7f2b496ca750996c786970a04db0d8814ec35203d",
-    "b60daca7696f59ef642454a79b8ccda8473bfb54edce9d27ad3d7ac7ff5f811f"
+    "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
+    "c024228b193aa2bfe75f0e56e2c92581c937e82179811b7ff00a62bac79752f0",
+    "a865fd8729bbfde554fe80caeb90a62041a546202c50b19af1f320be85d0c051",
+    "30f4dd184732433d4fbfe6a08c005291d9e28569e8141ff95cefd8a369a077e6"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 2cf5c98d); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result dd1aef40); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
@@ -562,7 +562,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-19T14:08:54.038114+00:00",
+   "boundary_time": "2026-10-19T14:50:35.272190+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -571,7 +571,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-19T14:08:54.093398+00:00",
+     "time": "2026-10-19T14:50:35.335746+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -594,7 +594,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-19T14:08:54.245799+00:00",
+     "time": "2026-10-19T14:50:35.560022+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -624,7 +624,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-19T14:08:54.397532+00:00",
+     "time": "2026-10-19T14:50:35.819348+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -647,7 +647,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-19T14:08:54.540349+00:00",
+     "time": "2026-10-19T14:50:36.046351+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -677,7 +677,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-19T14:08:54.669752+00:00",
+     "time": "2026-10-19T14:50:36.202868+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -700,7 +700,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-19T14:08:54.792828+00:00",
+     "time": "2026-10-19T14:50:36.342337+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -730,7 +730,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-19T14:08:54.917022+00:00",
+     "time": "2026-10-19T14:50:36.502989+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -753,7 +753,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-19T14:08:55.032860+00:00",
+     "time": "2026-10-19T14:50:36.653444+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -783,7 +783,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-19T14:08:55.192255+00:00",
+     "time": "2026-10-19T14:50:36.832232+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -806,7 +806,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-19T14:08:55.334933+00:00",
+     "time": "2026-10-19T14:50:36.995106+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -836,7 +836,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-19T14:08:55.579059+00:00",
+     "time": "2026-10-19T14:50:37.235100+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -844,7 +844,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "70dbdb909ccab66df4fde38068c922c9f2625b121cd0a5f39190ac289abf9c91",
+     "result_id": "66f1e232d0001fe39a2b9935fb4a1a48b617fe72d0d33ec4fffab42bafed1e78",
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
      "rules": null,
      "column": null,
@@ -859,7 +859,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-19T14:08:55.809735+00:00",
+     "time": "2026-10-19T14:50:37.507778+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -867,7 +867,7 @@
      "note_id": null,
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
-     "result_id": "3641a59562157c97831c10ed4868e21967ea295990b7eb901fc50b213ebaae56",
+     "result_id": "850c9e732860d09e1b9a289bca3886cc886f9206c71a5d99f42c5cea1448e590",
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
      "rules": null,
      "column": null,
@@ -882,7 +882,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-19T14:08:56.116746+00:00",
+     "time": "2026-10-19T14:50:37.771335+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -890,7 +890,7 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "2b31919cdceed63715304c70a656fa4973d9fa649fec1864bc7c2ca588a88718",
+     "result_id": "c024228b193aa2bfe75f0e56e2c92581c937e82179811b7ff00a62bac79752f0",
      "execution_id": "e_305370681065d9971a93f227",
      "rules": null,
      "column": null,
@@ -905,7 +905,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-19T14:08:56.454086+00:00",
+     "time": "2026-10-19T14:50:38.052545+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -913,7 +913,7 @@
      "note_id": null,
      "activity": "eda.quality",
      "slot": "eda.quality",
-     "result_id": "ec7f9fcc98513ed4d650e4e472b2b21ff165f15b9a3e41e4982669a035d170bf",
+     "result_id": "c391e55d1c615b66fcb3a3a40d7ae0b696269a620eeba413b7f968fda07ae598",
      "execution_id": "e_808e66ec55e19cf01a72e71c",
      "rules": null,
      "column": null,
@@ -928,7 +928,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-19T14:08:57.100545+00:00",
+     "time": "2026-10-19T14:50:38.895594+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -936,7 +936,7 @@
      "note_id": null,
      "activity": "eda.single_feature_signal",
      "slot": "eda.single_feature_signal",
-     "result_id": "9713e65d2ebaa544ca578ce7f2b496ca750996c786970a04db0d8814ec35203d",
+     "result_id": "a865fd8729bbfde554fe80caeb90a62041a546202c50b19af1f320be85d0c051",
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
      "rules": null,
      "column": null,
@@ -951,7 +951,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-19T14:08:57.422633+00:00",
+     "time": "2026-10-19T14:50:39.249237+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -959,7 +959,7 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:model_year",
-     "result_id": "b60daca7696f59ef642454a79b8ccda8473bfb54edce9d27ad3d7ac7ff5f811f",
+     "result_id": "30f4dd184732433d4fbfe6a08c005291d9e28569e8141ff95cefd8a369a077e6",
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
      "rules": null,
      "column": "model_year",
@@ -974,7 +974,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-19T14:08:57.699496+00:00",
+     "time": "2026-10-19T14:50:39.524785+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -982,7 +982,7 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:weight",
-     "result_id": "49b6ad3cbf2158786c2e0e41468a903501255a02fa0dfa8a0960f1789d2f43f6",
+     "result_id": "6cdd871d009b93d3a305c4d44cf6ee23689181f6704393e59c298b64241d846d",
      "execution_id": "e_622dd0c704d6af123eea761a",
      "rules": null,
      "column": "weight",
@@ -997,7 +997,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-19T14:08:58.000784+00:00",
+     "time": "2026-10-19T14:50:39.828776+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1005,7 +1005,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "7d909cbdaeab88c8ade1f821f5f7c2943c71f6bcfd9d4faf3842036bcfd43be5",
+     "result_id": "c4704a54d010eb0569cbd419fe3f2476ba050f359a1efdd4b473b3f5c0e7990a",
      "execution_id": "e_284db43c31758f9aef75cd0b",
      "rules": null,
      "column": null,
@@ -1020,7 +1020,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-19T14:08:58.272949+00:00",
+     "time": "2026-10-19T14:50:40.141763+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1028,7 +1028,7 @@
      "note_id": null,
      "activity": "fit.linear",
      "slot": "fit.linear",
-     "result_id": "52eb087ceceb3b9f67c8a4db1459ad4548846a6c72e137221edab7704d25a1cd",
+     "result_id": "a8c0556df9b89171a6c84ccb5f439e5f2cce6dff1f173bbe456a2b0c94b8115d",
      "execution_id": "e_aa1477c41bc44c975f9888ce",
      "rules": null,
      "column": null,
@@ -1043,7 +1043,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-19T14:08:58.477347+00:00",
+     "time": "2026-10-19T14:50:40.346762+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1066,7 +1066,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-19T14:08:58.624027+00:00",
+     "time": "2026-10-19T14:50:40.522358+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1099,7 +1099,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-19T14:08:58.910778+00:00",
+     "time": "2026-10-19T14:50:40.888842+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1107,7 +1107,7 @@
      "note_id": null,
      "activity": "fit.variant",
      "slot": "fit.variant",
-     "result_id": "3dba08aad798ad0b76e1452aa4e6712afb3bcd6abf7e8327060d54189fdf640d",
+     "result_id": "f068ce8d4886ffe4fe0e557be8b958b4b0c4a44d42d79ca376fef9b5291f2ef2",
      "execution_id": "e_e2a8db59374ecd02f11773fa",
      "rules": null,
      "column": null,
@@ -1122,7 +1122,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-19T14:08:59.247575+00:00",
+     "time": "2026-10-19T14:50:41.254625+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1130,7 +1130,7 @@
      "note_id": null,
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
-     "result_id": "2cf5c98d9e4c223523d19c6b6dab7d5d4a7b25cdc286f29713df4f53c7596826",
+     "result_id": "dd1aef4022057e03299f6c0206bb29dd3d7d792060458a931c08d0969b2d69f1",
      "execution_id": "e_9ef87905207eafeced71da38",
      "rules": null,
      "column": null,
@@ -1145,7 +1145,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-19T14:08:59.482015+00:00",
+     "time": "2026-10-19T14:50:41.485560+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1182,6 +1182,6 @@
    }
   },
   "task": "regression",
-  "currency": "da5806bbe324f9eb"
+  "currency": "167472cca02ac126"
  }
 }

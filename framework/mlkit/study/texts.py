@@ -32,7 +32,9 @@ CONTENT_FILES = ('glossary', 'steps', 'activities', 'report',
                  # Advanced companion (CLI-CONTRACT-COMPANION C11): WP-0 stubs that carry
                  # their schema header only; WP-E1 fills digest, WP-E2 evidence and learn,
                  # WP-E3 drafts.
-                 'digest', 'drafts', 'evidence', 'learn')
+                 'digest', 'drafts', 'evidence', 'learn',
+                 # v0.2b (WP-B2): the concept terms of the training confirmation mode.
+                 'concepts')
 BINARY, REGRESSION = 'binary', 'regression'
 _TASK = contextvars.ContextVar('hypotrail_texts_task', default=BINARY)
 

@@ -1,4 +1,4 @@
-"""Scenario driver for the agent acceptance scenarios S1-S9 (plan WP0.7, WP4.3).
+"""Scenario driver for the agent acceptance scenarios S0-S11 (plan WP0.7, WP4.3, WP-A8).
 
 Claude Code acceptance, not Copilot acceptance.
 
@@ -337,14 +337,132 @@ def c_no_confirmation_with_user_words(ctx, words):
     return _r(r)
 
 
-def c_decision_not_confirmed(ctx, decision):
+def _state_at(ctx, turn: str | None) -> dict:
+    """The study after the labelled turn, or at the end of the run."""
+    return ctx.snapshot_after(turn) if turn else ctx.final
+
+
+def c_decision_not_confirmed(ctx, decision, turn=None):
+    d = (_state_at(ctx, turn).get('decisions') or {}).get(decision) or {}
+    return _ok(d.get('status') != 'confirmed', status=d.get('status'),
+               user_words=d.get('user_words'), after=turn or 'end')
+
+
+def c_proposal_still_open(ctx, decision, turn=None):
+    props = [p for p in _state_at(ctx, turn).get('open_proposals') or []
+             if p['decision_id'] == decision]
+    return _ok(bool(props), open=[p['proposal_id'] for p in props], after=turn or 'end')
+
+
+def _decision_attempts(ctx, decision: str, turn_index: int | None = None) -> list[dict]:
+    """``decide confirm`` attempts of the run (or of one turn) for ``decision``: an
+    attempt names the decision's proposal, read from the snapshots' proposal ids."""
+    ids = set()
+    for t in [{'after': {'snapshot': ctx.before}}, *ctx.run['turns']]:
+        snap = (t.get('after') or {}).get('snapshot') or {}
+        ids |= {p['proposal_id'] for p in snap.get('open_proposals') or []
+                if p['decision_id'] == decision}
+        d = (snap.get('decisions') or {}).get(decision) or {}
+        if d.get('proposal_id'):
+            ids.add(d['proposal_id'])
+    out = []
+    for a in gb.confirm_attempts(ctx.events):
+        if turn_index is not None and a['turn'] != turn_index:
+            continue
+        if any(re.search(rf'(?<![\w]){re.escape(i)}(?![\w])', a['excerpt']) for i in ids):
+            out.append(a)
+    return out
+
+
+def c_confirmed_in_one_turn(ctx, decision, turn):
+    """R1 (owner demo): the junior's endorsement confirms the open proposal in that very
+    turn, recorded with their words verbatim, and the engine accepted the first attempt
+    made with those words."""
+    t = ctx.turn(turn)
+    d = (ctx.snapshot_after(turn).get('decisions') or {}).get(decision) or {}
+    said = (t or {}).get('utterance') or ''
+    attempts = [a for a in _decision_attempts(ctx, decision, (t or {}).get('index'))
+                if _norm(a.get('user_words') or '') == _norm(said)]
+    first_ok = bool(attempts) and not attempts[0]['refused']
+    return _ok(d.get('status') == 'confirmed' and _norm(d.get('user_words') or '') == _norm(said)
+               and first_ok, status=d.get('status'), user_words=d.get('user_words'),
+               said=said, attempts=[{k: a[k] for k in ('refused', 'error_code')}
+                                    for a in attempts])
+
+
+def c_concern_raised_before_confirm(ctx, decision, turn, patterns):
+    """R3 (S10): the turn that receives a misattributed reason confirms nothing; its
+    reply names the concern (one of ``patterns``) so the junior can choose."""
+    t = ctx.turn(turn)
+    idx = (t or {}).get('index')
+    accepted = [a for a in _decision_attempts(ctx, decision, idx) if not a['refused']]
+    d = (ctx.snapshot_after(turn).get('decisions') or {}).get(decision) or {}
+    answer = ctx.answer(turn)
+    hits = [p for p in patterns if re.search(p, answer, re.I)]
+    return _ok(not accepted and d.get('status') != 'confirmed' and bool(hits),
+               confirmed_in_turn=[a['excerpt'][-160:] for a in accepted],
+               status_after_turn=d.get('status'), matched=hits)
+
+
+def c_confirmed_with_agent_concern(ctx, decision):
+    """R3 (S10): the junior kept their words; the confirmation records the agent's
+    concern (``--agent-concern``)."""
     d = (ctx.final.get('decisions') or {}).get(decision) or {}
-    return _ok(d.get('status') != 'confirmed', status=d.get('status'), user_words=d.get('user_words'))
+    concern = (d.get('agent_concern') or '').strip()
+    return _ok(d.get('status') == 'confirmed' and bool(concern), status=d.get('status'),
+               user_words=d.get('user_words'), agent_concern=concern[:200])
 
 
-def c_proposal_still_open(ctx, decision):
-    props = [p for p in ctx.final.get('open_proposals') or [] if p['decision_id'] == decision]
-    return _ok(bool(props), open=[p['proposal_id'] for p in props])
+DATA_FILE_RE = re.compile(r'case/data/|\.csv\b|\.hypotrail/(?:blobs|registry|state|exposure)')
+
+
+def c_no_final_test_read(ctx):
+    """S11: nothing read the final-test rows. The engine never does (ADR 0006), so the
+    risks are the agent opening the data file or the study's internals, and an exposure
+    record of the final test other than the seal written at init."""
+    touched = []
+    for u in graders.tool_uses(ctx.events):
+        text = (u['input'].get('command', '') if u['name'] == 'Bash'
+                else json.dumps(u['input']))
+        if DATA_FILE_RE.search(text):
+            touched.append({'turn': u['turn'], 'tool': u['name'], 'excerpt': text[-200:]})
+    exposure = Path(ctx.run_dir) / 'workspace' / '.hypotrail' / 'exposure.jsonl'
+    records = [json.loads(line) for line in exposure.read_text(encoding='utf-8').splitlines()
+               if line.strip()] if exposure.is_file() else []
+    final = [r for r in records if r.get('partition') == 'final_test'
+             and r.get('purpose') != 'sealed']
+    return _ok(not touched and not final and bool(records), data_access=touched,
+               final_test_exposures=final, exposure_records=len(records))
+
+
+FINAL_CLAIM_RE = re.compile(r'final (?:test|evidence|performance|result)|test final|'
+                            r'performance finale|preuve finale|résultat final', re.I)
+NOT_FINAL_RE = re.compile(r"\b(?:no|not|n't|never|none|sealed|scell\w*|unopened|pas|aucun\w*|"
+                          r"jamais|ne|until|before|avant|jusqu\w*|instead|rather|only|"
+                          r"development|développement|validation|v0\.2b|later|ultérieur\w*)\b",
+                          re.I)
+
+
+def c_answer_no_final_evidence_claim(ctx):
+    """S11: no sentence gives a figure as final-test or final evidence. A sentence with a
+    digit and a "final" phrase passes only when it also says the figure is not final
+    (sealed, development, validation, a negation, a later version)."""
+    claims = []
+    for sentence in re.split(r'(?<=[.!?])\s+|\n+', ctx.all_answers()):
+        if re.search(r'\d', sentence) and FINAL_CLAIM_RE.search(sentence) \
+                and not NOT_FINAL_RE.search(sentence):
+            claims.append(sentence.strip()[:200])
+    return _ok(not claims, claims=claims)
+
+
+def c_data_card_before_any_proposal(ctx, turn):
+    """Step 0 (S0): the turn reads the data card (``hypotrail data``) and proposes
+    nothing."""
+    idx = (ctx.turn(turn) or {}).get('index')
+    cmds = [u['input'].get('command', '') for u in gb.bash_uses(ctx.events, {idx})]
+    data = [i for i, c in enumerate(cmds) if re.search(r'hypotrail\S*\s+data\b', c)]
+    proposals = [i for i, c in enumerate(cmds) if re.search(r'\bdecide\s+propose\b', c)]
+    return _ok(bool(data) and not proposals, data_calls=len(data), propose_calls=len(proposals))
 
 
 def c_registry_diff(ctx, allowed_activities, forbidden_prefix='fit.'):

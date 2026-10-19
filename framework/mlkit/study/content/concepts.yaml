@@ -1,0 +1,182 @@
+# Concept terms of the training confirmation mode (ADR 0005, v0.2b, WP-B2).
+#
+# In the training mode a confirmation must restate the proposal on its concepts, not on
+# shared tokens: each decision has a small concept map built by ``mlkit.study.concepts``
+# from the proposal's value (the moment and its event, the excluded variables, the share
+# held apart, the rule and its number, ...). A concept is said when the reply holds one of
+# its terms, in English or French. These lists are data, not code; extend them here.
+#
+# Matching (``concepts.term_said``): the reply and each term are folded (lower case, no
+# accents, plain apostrophes) and cut into words. A one-word term matches a word of the
+# reply that is equal to it (a final "s" aside) or, when both have at least five letters,
+# that shares its first five letters ("capacite" and "capacity"); a term ending with "*"
+# matches every word that starts with it. A term of several words matches the same words
+# in a row. Endorsement words ("je confirme", "je valide") are removed from the reply first.
+#
+# Numbers are never written here: a number a reply must state comes from the proposal's
+# value (the share held apart, the capacity, the threshold, the minimum gain).
+schema: hypotrail.content.concepts/1
+
+# The concepts. ``hint`` says, for the junior, what the reply does not say yet; it is
+# returned in ``details.missing[].hint`` of a ``paraphrase_required`` refusal.
+concepts:
+  timing_before:
+    hint: when the score is computed, relative to the event (before it)
+    terms: [before, prior, ahead, earlier, beforehand, avant, auparavant, prealable*, en amont, en avance]
+  timing_after:
+    hint: when the score is computed, relative to the event (after it)
+    terms: [after, once, following, afterwards, apres, une fois, suite, a la suite, des que]
+  timing_at:
+    hint: when the score is computed, relative to the event (at its moment)
+    terms: [at the time, at the moment, when, during, moment, lors, pendant, quand, au moment]
+  event:
+    hint: the event the prediction moment refers to
+    terms: []
+  exclude:
+    hint: that some variables are left out of the model (excluded)
+    terms: [exclu*, exclud*, ecart*, retir*, enlev*, supprim*, drop*, remov*, without, sans, omit*,
+            jett*, leave out, left out, set aside, mis de cote, not available, unavailable,
+            pas disponible, indisponible, not known, unknown, pas connu, inconnu, only after,
+            qu apres, seulement apres, leak*, fuite]
+  keep_all:
+    hint: that every candidate variable is kept
+    terms: [all, every, each, tout, toutes, tous, chaque, keep*, kept, gard*, conserv*, inclu*,
+            includ*, nothing excluded, aucune exclue, aucun exclu]
+  validation:
+    hint: which rows are held apart to validate the models
+    terms: [validation, validat*, held out, hold out, holdout, held apart, aside, apart, cote,
+            a part, reserv*, test*, evaluat*, evaluer, evaluation, compar*]
+  random:
+    hint: how the rows are divided (at random)
+    terms: [random*, aleatoire*, hasard, shuffle*, melang*, stratif*, tirage, tire*, drawn, draw]
+  later_rows:
+    hint: that the later rows (from the cutoff on) are the validation rows
+    terms: [later, latest, recent*, after, from, onward*, onwards, since, apres, a partir, depuis,
+            plus tard, ulterieur*, posterieur*, suivant*, cutoff, cut off, coupure, seuil]
+  proportion:
+    hint: the share of the rows held apart (the number of the proposal)
+    terms: []
+  precision:
+    hint: the measure the criterion is about (the precision of the rule)
+    terms: [precision, hit rate, taux de reussite, reussite, success rate, taux de succes,
+            share positive, part de positifs, correct*, justes, bons]
+  error:
+    hint: the measure the criterion is about (the error of the predictions)
+    terms: [error*, erreur*, mae, absolute, absolue, ecart*, off by, deviation]
+  reduction:
+    hint: that the model must reduce that error compared with the baseline
+    terms: [reduc*, reduit*, reduire, lower*, cut*, decreas*, smaller, less, fewer, baisse*,
+            diminu*, moins, improv*, amelior*, better, mieux, gain*, beat*, battre, bat]
+  min_gain:
+    hint: the minimum gain over the baseline (the number of the proposal)
+    terms: []
+  missing_indicator:
+    hint: what is done with missing values (an indicator)
+    terms: [missing, manquant*, absent*, indicator*, indicateur*, vide*, empty, blank, nan, na,
+            "null", flag*, signal*, drapeau*]
+  rare_categories:
+    hint: what is done with rare categories (grouped)
+    terms: [rare*, regroup*, group*, merge*, fusion*, small categor*, petites categor*, peu frequent*,
+            infrequent]
+  caps:
+    hint: what is done with extreme values (capped)
+    terms: [cap, caps, capped, capping, plafon*, ecret*, clip*, extreme*, outlier*, aberrant*,
+            winsor*, borne*, limit*, tronq*, truncat*, quantile*]
+  log_transform:
+    hint: which skewed variables are put on a log scale
+    terms: [log, logs, logarithm*, logarithme*, log1p]
+  no_preprocessing:
+    hint: that the variables are used as they are (the default preparation)
+    terms: [default, defaut, nothing, rien, aucun*, none, as is, as they are, tel quel*, telles quelles,
+            unchanged, inchange*, raw, brut*, no change, no preparation, sans preparation,
+            sans transformation, without transformation, standard]
+  capacity:
+    hint: the rule (a fixed number of the highest-scored rows)
+    terms: [capacit*, top, best, highest, meilleur*, premier*, first, call*, appel*, contact*,
+            act on, cibl*, target*, list*, quota, fixed number, nombre fixe, rows, lignes, clients,
+            customers, members, membres]
+  threshold:
+    hint: the rule (a threshold on the score)
+    terms: [threshold*, seuil*, cut off, cutoff, above, au dessus, at least, au moins, superieur*,
+            higher than, plus de, score*, minimum]
+  rule_number:
+    hint: the number of the rule (the capacity or the threshold of the proposal)
+    terms: []
+  linear_model:
+    hint: which model is chosen (the linear model)
+    terms: [linear*, lineaire*, regression lineaire, candidate, candidat, droite, line]
+  baseline_model:
+    hint: which model is chosen (the mean baseline)
+    terms: [baseline, mean, average, moyenne, reference, de base, constant*, simple, naive]
+  adopt:
+    hint: the verdict (adopt it)
+    terms: [adopt*, use, using, deploy*, apply*, roll out, adopter, adopte, utilis*, appliqu*, deploy*,
+            deploie*, retenir, retien*, retenu*, go ahead, put in place, mettre en place, en place,
+            worth, vaut, recommend*, recommand*]
+  keep_baseline:
+    hint: the verdict (keep the baseline, adopt nothing)
+    terms: [baseline, reference, de base, keep the current, garder l actuel, statu quo, status quo,
+            no model, sans modele, aucun modele, not adopt, pas adopter, n adopte, rien adopter,
+            not worth, ne vaut pas, keep doing, continuer]
+  inconclusive:
+    hint: the verdict (inconclusive, the evidence does not settle it)
+    terms: [inconclusive, inconclusif*, not conclusive, pas concluant, non concluant, conclu*,
+            undecided, indecis, not enough, pas assez, insuffisant*, insufficient, unclear,
+            incertain*, uncertain*, indetermin*, cannot tell, can t tell, ne permet pas,
+            impossible de]
+  reason:
+    hint: why it fits the situation (a reason)
+    terms: []
+  restatement:
+    hint: what is decided, in your own words
+    terms: []
+
+# Translation groups for the words of a free-text value (the prediction moment): a word of
+# the value also matches the other words of its group. Generic event words only.
+synonyms:
+  - [call, calls, appel, appels, appeler, phone, telephone]
+  - [first, premier, premiere]
+  - [last, dernier, derniere]
+  - [next, prochain, prochaine, suivant, suivante]
+  - [campaign, campagne]
+  - [contact, contacts, contacter]
+  - [renewal, renew, renouvellement, renouveler, reconduction]
+  - [client, clients, customer, customers]
+  - [member, members, membre, membres, adherent, adherents]
+  - [visit, visite, venue]
+  - [session, sessions, connexion, visite]
+  - [purchase, buy, buying, achat, acheter, commande, order]
+  - [application, demande, candidature, dossier]
+  - [loan, pret, credit]
+  - [sale, sales, vente, ventes]
+  - [registration, signup, inscription, enrolment, enrollment]
+  - [start, beginning, debut, commencement, ouverture, opening]
+  - [end, fin, cloture, closing]
+  - [year, years, annee, annees]
+  - [month, months, mois]
+  - [week, weeks, semaine, semaines]
+  - [day, days, jour, jours, journee]
+  - [design, conception]
+  - [production, fabrication, manufacturing]
+  - [car, cars, voiture, voitures, vehicle, vehicule]
+  - [offer, offre, proposal]
+  - [meeting, rendez, entretien, appointment]
+  - [mail, email, courrier, message]
+  - [delivery, livraison]
+  - [payment, paiement, versement]
+  - [arrival, arrivee]
+  - [departure, depart]
+
+# Words of the framing that never count as the event of a prediction moment ("you
+# predict", "the model scores").
+framing:
+  [predict*, predi*, prevoi*, prevision*, forecast*, score*, model*, modele*, compute*, calcul*,
+   you, vous, we, nous, moment, time, temps, known, connu*, only, seul*, information*]
+
+# Words that name a confirmation mode in a ``mode set`` request that lowers the strictness:
+# the user's words must name the mode they ask for.
+modes:
+  guided: [guided, guide, guidee, standard, normal, default, defaut, usual, habituel]
+  training: [training, entrainement, formation, apprentissage, exercise, exercice, practice,
+             pratique, strict*]
+  express: [express, rapide, quick*, fast*, faster, vite, accelere*, speed*, short*, court*]

@@ -108,19 +108,29 @@ DEFAULT_BASIS = EXPLICIT
 THIS_DECISION, STANDING = 'this_decision', 'standing'
 DELEGATION_SCOPES = (THIS_DECISION, STANDING)
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
+# v0.2b (WP-B2, ADR 0005): in the ``express`` mode a standing delegation also covers the two
+# framing decisions that follow the split. The choice of the third pause, the conclusion
+# (and any decision added later) are never covered by a standing delegation (R1 of v0.1).
+EXPRESS_STANDING_DELEGATION_DECISIONS = STANDING_DELEGATION_DECISIONS + (
+    'success_criterion', 'preprocessing')
 # ``agent_concern`` (R3, ADR 0005): a point the agent raised about the junior's words before
 # confirming, kept by the junior; ``null`` when none was raised. Written by every v0.2a
-# confirmation; a confirmation recorded before has none.
-CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern')
+# confirmation; a confirmation recorded before has none. ``mode`` (v0.2b, WP-B2): the
+# confirmation mode in force when the words were accepted; a confirmation recorded before
+# has none (it was guided, or v0.1 rules).
+CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mode')
 
-# Confirmation modes (ADR 0005). ``guided`` is the only mode implemented in v0.2a and the
-# default; ``training`` and ``express`` are reserved (accepted in the schema, refused by
-# ``mode set`` with ``unsupported_capability`` until v0.2b).
+# Confirmation modes (ADR 0005). ``guided`` is the default (v0.2a); ``training`` and
+# ``express`` are implemented in v0.2b (WP-B2). ``MODE_STRICTNESS`` orders them: lowering the
+# strictness (training to guided to express) needs the user's words; raising it does not.
 GUIDED, TRAINING, EXPRESS = 'guided', 'training', 'express'
 MODES = (GUIDED, TRAINING, EXPRESS)
-SUPPORTED_MODES = (GUIDED,)
+SUPPORTED_MODES = MODES
 DEFAULT_MODE = GUIDED
-MODES_AVAILABLE_IN = {TRAINING: 'v0.2b', EXPRESS: 'v0.2b'}
+# Modes refused by ``mode set`` with ``unsupported_capability`` and the version that brings
+# them (v0.2a refused training and express with ``available_in: v0.2b``; none is left).
+MODES_AVAILABLE_IN: dict[str, str] = {}
+MODE_STRICTNESS = {EXPRESS: 0, GUIDED: 1, TRAINING: 2}
 MODE_CHANGE_KEYS = ('mode', 'previous', 'user_words', 'revision', 'time', 'request_id')
 # The study language (``init --lang``): proposals may carry a restatement per language
 # (``labels``) and surfaces show the one of the study language.
@@ -538,6 +548,26 @@ def mode_of(state: Mapping | None) -> str:
     return state.get('mode', DEFAULT_MODE) if isinstance(state, Mapping) else DEFAULT_MODE
 
 
+def raises_strictness(previous: str, mode: str) -> bool:
+    """A change from ``previous`` to ``mode`` that makes confirmations stricter (express to
+    guided, guided to training); it needs no user words (ADR 0005, v0.2b)."""
+    return MODE_STRICTNESS.get(mode, -1) > MODE_STRICTNESS.get(previous, 99)
+
+
+def lowers_strictness(previous: str, mode: str) -> bool:
+    """A change that makes confirmations less strict (training to guided, guided to
+    express); it needs the user's words, naming the mode."""
+    return MODE_STRICTNESS.get(mode, 99) < MODE_STRICTNESS.get(previous, -1)
+
+
+def standing_delegation_decisions(state: Mapping | None) -> tuple[str, ...]:
+    """The decisions a standing delegation covers in the study's mode (WP-B2): the three
+    framing decisions, and in ``express`` also the success criterion and the preprocessing."""
+    if mode_of(state) == EXPRESS:
+        return EXPRESS_STANDING_DELEGATION_DECISIONS
+    return STANDING_DELEGATION_DECISIONS
+
+
 def language_of(state: Mapping | None) -> str:
     """The study language (``en`` when the state predates it)."""
     return state.get('language', DEFAULT_LANGUAGE) if isinstance(state, Mapping) \
@@ -600,7 +630,8 @@ def _sha256_file(path) -> str:
 
 def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
                  time: str | None = None, basis: str = DEFAULT_BASIS,
-                 delegation_scope: str | None = None, agent_concern: str | None = None) -> dict:
+                 delegation_scope: str | None = None, agent_concern: str | None = None,
+                 mode: str | None = None) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
@@ -609,12 +640,15 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
     ``delegation_scope`` is ``None`` for an explicit confirmation, else ``this_decision``,
     ``standing``, or ``None`` when the delegation did not state it (:data:`DELEGATION_SCOPES`).
     ``agent_concern`` is the point the agent raised before the junior confirmed (R3), or None.
+    ``mode`` is the confirmation mode in force (v0.2b); the record omits it when None.
     """
     record = {'user_words': user_words, 'proposal_id': proposal['proposal_id'],
               'restatement': proposal['restatement'], 'authenticated': False,
               'channel': channel, 'actor': actor, 'revision': revision, 'time': time or now(),
               'basis': basis, 'delegation_scope': delegation_scope,
               'agent_concern': agent_concern}
+    if mode is not None:
+        record['mode'] = mode
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -664,6 +698,8 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
     if 'basis' in present and c['basis'] not in CONFIRMATION_BASES:
         problems.append({'path': f'{path}.basis',
                          'problem': f'must be one of {", ".join(CONFIRMATION_BASES)}'})
+    if 'mode' in present and c['mode'] not in MODES:
+        problems.append({'path': f'{path}.mode', 'problem': f'must be one of {", ".join(MODES)}'})
     if 'agent_concern' in present and c['agent_concern'] is not None \
             and not _text(c['agent_concern']):
         problems.append({'path': f'{path}.agent_concern',
@@ -816,9 +852,15 @@ def validate_state(state: Any) -> list[dict]:
         else:
             for i, change in enumerate(history):
                 if _keys(change, f'mode_history.{i}', MODE_CHANGE_KEYS, problems) \
-                        and (change['mode'] not in MODES or not _text(change['user_words'])):
+                        and (change['mode'] not in MODES or change['previous'] not in MODES
+                             or not (_text(change['user_words'])
+                                     or (change['user_words'] is None
+                                         and raises_strictness(change['previous'],
+                                                               change['mode'])))):
                     problems.append({'path': f'mode_history.{i}',
-                                     'problem': "needs a known mode and the user's words"})
+                                     'problem': "needs a known mode and the user's words "
+                                                "(optional only when the change raises the "
+                                                "strictness)"})
     if state['schema'] != SCHEMA:
         problems.append({'path': 'schema', 'problem': f'must be "{SCHEMA}"'})
     if type(state['revision']) is not int or state['revision'] < 0:

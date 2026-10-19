@@ -29,6 +29,13 @@ parse, the target holds only allowed labels, no target is missing. It reports co
 only, never a value, a label, or a row key, and a failure refuses ``init``
 (``invalid_case`` or ``unsupported_capability``) with those counts.
 
+With ``duplicates: {policy: group}`` (v0.2b, WP-B3), identical records are one entity
+group (:func:`mlkit.study.data.entity_groups`) and a group is never divided: a
+stratified assignment draws whole groups (:func:`grouped_stratified`; identical records
+share their target, hence their stratum), and a temporal assignment moves every copy to the
+side of the group's earliest record. The record then holds ``groups`` (an optional key,
+:data:`GROUPS_KEYS`); without the declaration nothing changes.
+
 A study created before ADR 0006 has no ``partition``: it loads and runs as before,
 every row is a development row, and surfaces show "no final test"
 (:func:`final_test_status`). Nothing is migrated.
@@ -56,7 +63,6 @@ OPENED = 'opened'
 # WP-B1: the opening record, written when the one final evaluation is reserved; its
 # ``result_id`` is set when that evaluation is promoted (null until then, or forever when
 # the execution was interrupted: the final test is consumed either way).
-OPTIONAL_RECORD_KEYS = ('opening',)
 OPENING_KEYS = ('revision', 'execution_id', 'proposal_id', 'user_words', 'model', 'rule',
                 'time', 'result_id')
 # Decisions whose confirmation after the opening makes a result "after the final test", and
@@ -72,6 +78,10 @@ QUANTILE_BINS = 5
 RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on', 'bins',
                'order', 'dataset_sha256', 'n_rows', 'development', 'final_test',
                'schema_check', 'created', 'implementation')
+# v0.2b: ``groups`` (WP-B3) only when the case declares ``duplicates: {policy: group}``;
+# ``opening`` (WP-B1) once the final test is opened.
+OPTIONAL_RECORD_KEYS = ('groups', 'opening')
+GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
 PART_KEYS = ('n_rows', 'row_keys')
 CHECK_KEYS = ('status', 'n_rows', 'checks', 'reveals')
 CHECK_ITEM_KEYS = ('check', 'column', 'failing_rows')
@@ -112,6 +122,68 @@ def _stratified(keys: list[str], strata: list[str], fraction: float, seed: int) 
     return final
 
 
+def grouped_stratified(keys: list[str], strata: list[str], groups: Mapping[str, str],
+                       fraction: float, seed: int) -> list[str]:
+    """The rows drawn by a stratified assignment that never divides an entity group.
+
+    In each stratum (sorted, as :func:`_stratified`), the groups are listed in order of
+    their first row and permuted with ``numpy.random.default_rng(seed)``; a group is drawn
+    when its rows still fit in ``floor(n * fraction + 0.5)``. When every group is one row,
+    this draws exactly the rows :func:`_stratified` draws. A group's rows share one stratum
+    (identical records share their target); a group spread over strata is an
+    ``integrity_error``."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    stratum_of: dict[str, str] = {}
+    members: dict[str, list[str]] = {}
+    for k, s_ in zip(keys, strata):
+        g = groups.get(k, k)
+        if stratum_of.setdefault(g, s_) != s_:
+            raise StudyError('integrity_error', 'Identical records fall in different strata.',
+                             details={'group': g})
+        members.setdefault(g, []).append(k)
+    final: list[str] = []
+    for stratum in sorted(set(strata)):
+        units = [g for g in members if stratum_of[g] == stratum]
+        size = sum(len(members[g]) for g in units)
+        target = _round(size, fraction)
+        taken = 0
+        for i in rng.permutation(len(units)):
+            group = members[units[i]]
+            if taken + len(group) <= target:
+                final += group
+                taken += len(group)
+    return final
+
+
+def _whole_groups(keys: list[str], final: list[str], groups: Mapping[str, str]
+                  ) -> tuple[list[str], int]:
+    """``final`` with every divided group moved to the side of its earliest row (in
+    ``keys`` order); the number of rows moved."""
+    chosen = set(final)
+    side: dict[str, bool] = {}
+    for k in keys:
+        side.setdefault(groups.get(k, k), k in chosen)
+    out = [k for k in keys if side[groups.get(k, k)]]
+    moved = len(set(out) ^ chosen)
+    return out, moved
+
+
+def _ranked_keys(case: Case, frame, keys: list[str]) -> list[str]:
+    """``keys`` from the earliest to the latest in the declared order."""
+    import pandas as pd
+    order = case.order
+    line = [int(k[1:]) for k in keys]
+    if order['by'] == 'line':
+        ranked = sorted(range(len(keys)), key=lambda i: line[i])
+    else:
+        v = pd.to_numeric(frame[order['by']], errors='coerce').to_numpy()
+        ranked = sorted(range(len(keys)), key=lambda i: (v[i], line[i]))
+    if order['direction'] == 'descending':
+        ranked.reverse()
+    return [keys[i] for i in ranked]
+
+
 def _temporal(case: Case, frame, keys: list[str], fraction: float) -> tuple[list[str], dict]:
     import pandas as pd
     order = case.order
@@ -146,14 +218,24 @@ def assign(case: Case, index, frame, *, fraction: float = DEFAULT_FRACTION,
     """``{record, development, final_test}``: the partition of every row of ``frame``
     (indexed by row key, all records of ``index``). ``record`` lacks the blob digests,
     the schema check, and ``created``; :func:`seal` completes it."""
+    from .data import DUPLICATES_GROUP, duplicate_summary, entity_groups
     keys = list(index.keys)
     order = case.order
+    grouped = case.duplicates_policy == DUPLICATES_GROUP
+    groups = entity_groups(index) if grouped else None
+    moved = 0
     if order:
-        final, extra = _temporal(case, frame, keys, fraction)
+        ranked_keys, extra = _temporal(case, frame, keys, fraction)
+        final = ranked_keys
+        if grouped:
+            ranked = _ranked_keys(case, frame, keys)
+            final, moved = _whole_groups(ranked, final, groups)
         method, stratified_on, bins, used_seed = 'temporal', None, None, None
         order_out = {'by': order['by'], 'direction': order['direction'], **extra}
     else:
-        final = _stratified(keys, _strata(case, frame), fraction, seed)
+        strata = _strata(case, frame)
+        final = (grouped_stratified(keys, strata, groups, fraction, seed) if grouped
+                 else _stratified(keys, strata, fraction, seed))
         method = 'stratified' if case.task == 'binary' else 'quantile_stratified'
         stratified_on = case.target_column
         bins = None if case.task == 'binary' else QUANTILE_BINS
@@ -166,10 +248,17 @@ def assign(case: Case, index, frame, *, fraction: float = DEFAULT_FRACTION,
     implementation = ('mlkit.study.partition (last rows in the declared order)' if order else
                       'mlkit.study.partition (per-stratum permutation from '
                       'numpy.random.default_rng(seed))')
+    if grouped:
+        implementation += ('; identical records kept together as one entity group '
+                           '(duplicates: group)')
     record = {'schema': SCHEMA, 'status': 'sealed', 'method': method, 'fraction': fraction,
               'seed': used_seed, 'stratified_on': stratified_on, 'bins': bins,
               'order': order_out, 'dataset_sha256': index.dataset_sha256, 'n_rows': len(keys),
               'implementation': implementation}
+    if grouped:
+        summary = duplicate_summary(case, index)
+        record['groups'] = {'policy': DUPLICATES_GROUP, 'n_groups': summary['n_groups'],
+                            'n_rows': summary['n_rows'], 'moved_rows': moved}
     return {'record': record, 'development': development, 'final_test': final}
 
 
@@ -269,7 +358,7 @@ def seal(record: Mapping, *, development_sha: str, n_development: int, final_sha
     out.update(development={'n_rows': n_development, 'row_keys': development_sha},
                final_test={'n_rows': n_final, 'row_keys': final_sha},
                schema_check=dict(check), created=created)
-    return {k: out[k] for k in RECORD_KEYS}
+    return {k: out[k] for k in RECORD_KEYS + OPTIONAL_RECORD_KEYS if k in out}
 
 
 # --- reading -----------------------------------------------------------------------------
@@ -406,6 +495,10 @@ def validate(part: Any) -> list[dict]:
                                     '{' + ', '.join(OPENING_KEYS) + '}'})
     if part['status'] != OPENED and opening is not None:
         problems.append({'path': f'{path}.opening', 'problem': 'a sealed final test has none'})
+    if 'groups' in part and (not isinstance(part['groups'], dict)
+                             or set(part['groups']) != set(GROUPS_KEYS)):
+        problems.append({'path': f'{path}.groups',
+                         'problem': 'must be {policy, n_groups, n_rows, moved_rows}'})
     check = part['schema_check']
     if not isinstance(check, dict) or set(check) != set(CHECK_KEYS) \
             or check.get('status') not in CHECK_STATUSES:

@@ -37,7 +37,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -68,7 +69,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },
@@ -96,7 +98,8 @@
      "authenticated": false,
      "basis": "explicit",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": null,
+     "mode": "guided"
     },
     "open_proposals": []
    },

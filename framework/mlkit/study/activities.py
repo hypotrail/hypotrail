@@ -81,6 +81,7 @@ from typing import Any, Mapping
 from mlkit.reliability import CommandRefused
 
 from . import case as c
+from . import data as dt
 from . import preconditions as pre
 from . import records as rec
 from . import partition
@@ -266,7 +267,8 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
         rules = options.get('rules') or []
         if isinstance(rules, str) or not rules:
             raise CommandRefused('invalid_arguments', 'policy.evaluation needs at least one '
-                                                      '--rule (threshold:t or capacity:k).')
+                                                      '--rule (threshold:t, capacity:k, '
+                                                      'or share:p).')
         canonical = []
         for rule in rules:
             try:
@@ -389,6 +391,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         columns = [v['name'] for v in case.document['variables'] if v['name'] != target]
         params['partition'] = _rows_partition(inputs)
         inputs['columns'] = columns
+        if case.duplicates_policy:
+            inputs['duplicates'] = case.duplicates_policy   # record groups reported (WP-B3)
         if with_exposure:
             keys = partition.development_keys(store.read_blob, inputs.get('development'))
             if keys is None:
@@ -418,6 +422,10 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         if case.group_column:
             read.append(case.group_column)
             inputs['group_column'] = case.group_column
+        if case.duplicates_policy:
+            # v0.2b (WP-B3): identical records stay together (no key otherwise, so earlier
+            # identities are unchanged).
+            inputs['duplicates'] = case.duplicates_policy
         if with_exposure:
             # The stratification reads the development rows only (ADR 0006); a legacy
             # study without a final test reads every row.
@@ -466,6 +474,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             from . import eda
             params = {'folds': eda.SIGNAL_FOLDS, 'seed': eda.SIGNAL_SEED,
                       'metric': 'roc_auc' if task == 'binary' else 'r2'}
+            if case.duplicates_policy:
+                inputs['duplicates'] = case.duplicates_policy   # grouped folds (WP-B3)
             expose('train_eda', eda_partition, keys['train'], candidates + [target])
         elif activity in EDA:
             inputs['target'] = _target(case)
@@ -695,12 +705,14 @@ def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
     inputs['criterion'] = criterion
     params.update(model=model, rule=config.get('rule'), model_params=model_params,
                   reference=BASELINE, task=task)
-    k = rec.capacity_of(config.get('rule'))
-    if k is not None:
+    if rec.capacity_of(config.get('rule')) is not None:
         # The capacity was chosen on the rows the policy evaluation scored (every development
         # row out of fold, or the validation rows); on the final test it keeps its share.
         chosen_on = registry.get(store, state['current'][POLICY])['output']['values']['n']
-        params['capacity_share'] = k / chosen_on
+        params['capacity_share'] = rec.capacity_share(config.get('rule'), chosen_on)
+    elif rec.share_of(config.get('rule')) is not None:
+        # v0.2b (WP-B3): a share is already a share; the rule is applied as it is.
+        params['capacity_share'] = rec.share_of(config.get('rule'))
     features = list(model_inputs['features'])
     target = case.target_column
     development = partition.development_keys(store.read_blob, inputs.get('development'))
@@ -822,12 +834,18 @@ def compute_split(store, plan_: Mapping) -> dict:
                              'reason': 'A stratified split keeps the outcome share in both '
                                        'partitions, which needs at least two rows of each '
                                        'class; a class with fewer rows cannot be validated.'}]})
-    try:
-        train, validation = classical.split(frame, y, spec)
-    except ValueError as exc:
-        raise _split_refusal(exc) from exc
     keys = np.asarray(frame.index)
-    parts = {'train': sorted(keys[train], key=_line), 'validation': sorted(keys[validation], key=_line)}
+    if plan_['inputs'].get('duplicates'):
+        parts = _grouped_parts(dataset, [str(v) for v in y], decision)
+        train = np.flatnonzero(frame.index.isin(parts['train']))
+        validation = np.flatnonzero(frame.index.isin(parts['validation']))
+    else:
+        try:
+            train, validation = classical.split(frame, y, spec)
+        except ValueError as exc:
+            raise _split_refusal(exc) from exc
+        parts = {'train': sorted(keys[train], key=_line),
+                 'validation': sorted(keys[validation], key=_line)}
     blobs = {part: rec.row_keys_bytes(parts[part]) for part in SPLIT_BLOBS}
     positives = {'train': int(y.iloc[train].sum()), 'validation': int(y.iloc[validation].sum())}
     # The positive counts per partition come from the stratification read of the target
@@ -843,12 +861,52 @@ def compute_split(store, plan_: Mapping) -> dict:
     group = plan_['inputs'].get('group_column')
     if group:
         values['groups'] = group_overlap(frame, group, parts)
+    if plan_['inputs'].get('duplicates'):
+        values['implementation'] = GROUPED_SPLIT_IMPLEMENTATION
+        values['duplicates'] = _duplicates_across(dataset, parts)
     previous = plan_['inputs'].get('results', {}).get('previous_split')
     if previous:
         values['overlap'] = _overlap(store, previous,
                                      plan_['inputs'].get('previous_split_stale_since'), parts)
     return {'values': values, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
             'n_rows': len(frame)}
+
+
+GROUPED_SPLIT_IMPLEMENTATION = ('mlkit.study.partition.grouped_stratified (whole groups of '
+                                'identical records, per-stratum permutation from '
+                                'numpy.random.default_rng(seed))')
+
+
+def _grouped_parts(dataset, strata: list[str], decision: Mapping) -> dict[str, list[str]]:
+    """Training and validation rows that never divide a group of identical records
+    (``duplicates: {policy: group}``, v0.2b WP-B3): whole groups are drawn for validation,
+    stratum by stratum, as the final test is (:func:`partition.grouped_stratified`)."""
+    keys = list(dataset.frame.index)
+    groups = dt.entity_groups(dataset.index)
+    validation = set(partition.grouped_stratified(keys, strata, groups,
+                                                  float(decision['validation_fraction']),
+                                                  int(decision['seed'])))
+    if not validation or len(validation) == len(keys):
+        raise StudyError('invalid_value', 'The validation share leaves a partition empty.',
+                         details={'validation_fraction': decision['validation_fraction']})
+    return {'train': sorted((k for k in keys if k not in validation), key=_line),
+            'validation': sorted(validation, key=_line)}
+
+
+def _duplicates_across(dataset, parts: Mapping) -> dict:
+    """``{policy, n_groups, n_rows, divided_groups}`` of the identical records of the
+    development rows: ``divided_groups`` counts the groups with rows in more than one
+    partition (the two of a split, or the folds of a cross-validation; 0 by construction
+    under the ``group`` policy)."""
+    groups = dt.entity_groups(dataset.index)
+    side = {k: p for p, part_keys in parts.items() for k in part_keys}
+    seen: dict[str, set] = {}
+    for k, g in groups.items():
+        seen.setdefault(g, set()).add(side.get(k))
+    summary = dt.duplicate_summary(dataset.case, dataset.index)
+    return {'policy': summary['policy'], 'n_groups': summary['n_groups'],
+            'n_rows': summary['n_rows'],
+            'divided_groups': sum(1 for sides in seen.values() if len(sides) > 1)}
 
 
 def _split_refusal(exc: ValueError) -> StudyError:
@@ -945,12 +1003,15 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
                 'split': {'kind': 'random', 'test_size': decision['validation_fraction'],
                           'seed': decision['seed']},
                 'task': {'kind': 'regression'}}
-        try:
-            train, validation = classical.split(frame, frame.index.to_series(), spec)
-        except ValueError as exc:
-            raise _split_refusal(exc) from exc
-        parts = {'train': sorted(keys[train], key=_line),
-                 'validation': sorted(keys[validation], key=_line)}
+        if plan_['inputs'].get('duplicates'):
+            parts = _grouped_parts(dataset, ['all'] * len(frame), decision)
+        else:
+            try:
+                train, validation = classical.split(frame, frame.index.to_series(), spec)
+            except ValueError as exc:
+                raise _split_refusal(exc) from exc
+            parts = {'train': sorted(keys[train], key=_line),
+                     'validation': sorted(keys[validation], key=_line)}
         values_out = {'method': 'random', 'validation_fraction': decision['validation_fraction'],
                       'seed': decision['seed'], 'stratified_on': None, 'n_rows': len(frame),
                       'partitions': {p: {'n_rows': len(parts[p])} for p in SPLIT_BLOBS},
@@ -958,6 +1019,10 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
                                         'stratified)'}
     group = plan_['inputs'].get('group_column')
     values_out['groups'] = group_overlap(frame, group, parts) if group else None
+    if plan_['inputs'].get('duplicates'):
+        if decision['method'] != 'ordinal_cutoff':
+            values_out['implementation'] = GROUPED_SPLIT_IMPLEMENTATION
+        values_out['duplicates'] = _duplicates_across(dataset, parts)
     values_out['overlap'] = None
     previous = plan_['inputs'].get('results', {}).get('previous_split')
     if previous:
@@ -1022,7 +1087,11 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
         strata = pd.qcut(y, partition.QUANTILE_BINS, labels=False, duplicates='drop').to_numpy()
         stratified_on = case.target_column
         extra['bins'] = partition.QUANTILE_BINS
-    fold = assign_folds(n, k, seed=seed, strata=strata, order=order)
+    # v0.2b (WP-B3): identical records (``duplicates: {policy: group}``) stay in one fold.
+    grouped = bool(plan_['inputs'].get('duplicates'))
+    entity = dt.entity_groups(dataset.index) if grouped else None
+    groups = [entity[key] for key in keys] if grouped else None
+    fold = assign_folds(n, k, seed=seed, strata=strata, order=order, groups=groups)
     if method == 'temporal_folds' and extra['order_column'] != 'line':
         values = pd.to_numeric(frame[extra['order_column']], errors='coerce').to_numpy(dtype=float)
         extra['fold_ranges'] = [{'fold': i, 'min': float(values[fold == i].min()),
@@ -1046,6 +1115,9 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
     implementation = ('mlkit.study.activities (contiguous blocks in time order)'
                       if method == 'temporal_folds' else
                       'sklearn.model_selection.StratifiedKFold (shuffled, seeded)')
+    if grouped:
+        implementation = (GROUPED_TEMPORAL_FOLDS_IMPLEMENTATION if method == 'temporal_folds'
+                          else GROUPED_FOLDS_IMPLEMENTATION)
     values = {'method': method, 'folds': k,
               'seed': seed if method != 'temporal_folds' else None,
               'stratified_on': stratified_on, 'n_rows': n, 'scheme': 'cross_validation',
@@ -1058,6 +1130,8 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
     group = plan_['inputs'].get('group_column')
     parts = {f'fold_{i}': [key for key, f in zip(keys, fold) if f == i] for i in range(1, k + 1)}
     values['groups'] = _fold_groups(frame, group, parts) if group else None
+    if grouped:
+        values['duplicates'] = _duplicates_across(dataset, parts)
     previous = plan_['inputs'].get('results', {}).get('previous_split')
     if previous:
         values['overlap'] = _overlap(store, previous,
@@ -1066,10 +1140,19 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
             'n_rows': n}
 
 
+GROUPED_FOLDS_IMPLEMENTATION = ('sklearn.model_selection.StratifiedGroupKFold (shuffled, '
+                                'seeded; whole groups of identical records)')
+GROUPED_TEMPORAL_FOLDS_IMPLEMENTATION = ('mlkit.study.activities (contiguous blocks in time '
+                                         'order; a divided group of identical records moves '
+                                         'to the fold of its earliest record)')
+
+
 def assign_folds(n: int, k: int, *, seed=None, strata=None, order=None, groups=None):
     """The fold (1 to ``k``) of each of ``n`` rows: the one place folds are built (WP-B1).
 
     * ``order`` (row positions in time order): contiguous blocks, fold 1 the earliest;
+      with ``groups``, every row of a group moves to the fold of its earliest row (as the
+      temporal final test moves a divided group, :mod:`partition`);
     * else ``strata``: ``StratifiedKFold`` (shuffled with ``seed``), each fold keeping the
       share of every stratum; with ``groups`` (one value per row; rows of a group stay in
       one fold), ``StratifiedGroupKFold`` instead;
@@ -1083,6 +1166,11 @@ def assign_folds(n: int, k: int, *, seed=None, strata=None, order=None, groups=N
     if order is not None:
         for i, block in enumerate(np.array_split(np.asarray(order), k), start=1):
             fold[block] = i
+        if groups is not None:
+            first: dict = {}
+            for position in np.asarray(order):
+                first.setdefault(groups[position], fold[position])
+            fold = np.array([first[g] for g in groups], dtype=int)
         return fold
     from sklearn import model_selection as ms
     if strata is not None:
@@ -1152,7 +1240,12 @@ def compute(store, plan_: Mapping) -> dict:
         from . import eda
         case, dataset = load(plan_, store)
         frame = dataset.frame[plan_['inputs']['columns']]     # never the target
-        return eda.compute(activity, case, frame, plan_['params'])
+        out = eda.compute(activity, case, frame, plan_['params'])
+        if plan_['inputs'].get('duplicates'):
+            # v0.2b (WP-B3): the groups of identical records (content hashes of the
+            # development rows; no value is read).
+            out['values']['duplicates']['records'] = dt.duplicate_summary(case, dataset.index)
+        return out
     if activity in EDA:
         from . import eda
         case, dataset = load(plan_, store)
@@ -1164,6 +1257,9 @@ def compute(store, plan_: Mapping) -> dict:
             params = {**params, 'candidates': plan_['inputs']['candidates'],
                       'availability': plan_['inputs']['availability'],
                       'special_values': plan_['inputs']['special_values']}
+            if plan_['inputs'].get('duplicates'):
+                groups = dt.entity_groups(dataset.index)
+                params['groups'] = [groups[k] for k in train.index]
         return eda.compute(activity, case, train, params)
     if activity in MODEL_FITS:
         from . import fit
@@ -1300,6 +1396,9 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
             'n_rows': len(y)}
 
 
+CANDIDATE_GAIN_MODEL = 'fit.logistic'
+
+
 def compute_policy(store, plan_: Mapping) -> dict:
 
     from . import policy
@@ -1331,13 +1430,15 @@ def compute_policy(store, plan_: Mapping) -> dict:
             # WP-B1 (additive): the variant against the candidate; a capacity as a share of
             # the rows it was chosen on.
             out[rule]['comparisons'] = paired['comparisons']
-            k = rec.capacity_of(rule)
-            out[rule]['capacity_share'] = k / len(y) if k is not None else None
+            out[rule]['capacity_share'] = rec.capacity_share(rule, len(y))
     values = {'rules': out, 'n': len(y), 'n_positive': int(y.sum()),
               'predictions': dict(fits), 'reference': plan_['params']['reference'],
               'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
                             'level': float(boot['level']),
                             'method': 'paired percentile bootstrap over validation rows'},
+              # v0.2b (WP-B3, R6): the top 5, 10 and 20 % of the scored rows.
+              'gain_points': {'model': CANDIDATE_GAIN_MODEL,
+                              **policy.gain_points(y, preds[CANDIDATE_GAIN_MODEL]['score'])},
               'counts': 'expected counts when a capacity cut splits a tie group (tied_at_cut)',
               'note': 'The rule is chosen on validation rows: these figures are not independent '
                       'evidence of future performance. No model was refitted.'}
