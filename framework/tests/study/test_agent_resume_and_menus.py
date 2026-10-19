@@ -10,8 +10,15 @@ SKILL = (af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md').read_text()
 RESUME = (af.SOURCE / 'dot-claude/commands/hypotrail-resume.md').read_text()
 
 
-def _rule(text: str, n: int) -> str:
-    return text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0]
+class Flat(str):
+    """Template text whose ``in`` ignores line wrapping (WP-A8)."""
+
+    def __contains__(self, phrase) -> bool:
+        return ' '.join(str(phrase).split()) in ' '.join(self.split())
+
+
+def _rule(text: str, n: int) -> Flat:
+    return Flat(text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0])
 
 
 def _items(text: str) -> list[str]:

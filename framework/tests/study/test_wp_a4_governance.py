@@ -400,6 +400,11 @@ def test_a_regression_criterion_is_a_relative_error_reduction(tmp_path):
     assert crit['status'] in ('met', 'uncertain', 'not_met') and crit['rule'] is None
     signal = flow.run('eda.single_feature_signal')['values']
     assert signal['metric'] == 'r2' and signal['signals'][0]['score'] is not None
+    # WP-A8: a regression study's questions name the target, never an "outcome".
+    specials = flow.run('eda.special_values')['values']
+    for text in [signal['question'], specials['question'],
+                 *(q['text'] for q in signal['questions'])]:
+        assert 'outcome' not in text and 'target' in text, text
     band = flow.run('eda.mean_by', '--column', 'cylinders')['values']
     assert band['null_band']['shuffles'] == 19
     assert all(g['interval'] is None or g['interval']['low'] <= g['mean'] <= g['interval']['high']

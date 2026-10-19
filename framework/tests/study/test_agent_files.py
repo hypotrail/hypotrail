@@ -20,9 +20,17 @@ COPILOT_TARGETS = {'.github/copilot-instructions.md', '.github/skills/hypotrail-
                    '.github/prompts/hypotrail-resume.prompt.md'}
 
 
-def _binary(rel: str) -> str:
+class Flat(str):
+    """Template text whose ``in`` ignores line wrapping (WP-A8): a pinned phrase must hold
+    the same words in the same order, wherever the template breaks its lines."""
+
+    def __contains__(self, phrase) -> bool:
+        return ' '.join(str(phrase).split()) in ' '.join(self.split())
+
+
+def _binary(rel: str) -> Flat:
     """A template as a binary study receives it (M3: task blocks selected, markers dropped)."""
-    return af.select_task((af.SOURCE / rel).read_text(), 'binary')
+    return Flat(af.select_task((af.SOURCE / rel).read_text(), 'binary'))
 
 
 def test_no_template_is_stored_under_a_name_an_agent_loads():
@@ -167,9 +175,9 @@ def test_instructions_carry_the_acceptance_fixes():
     assert '{{GLOSSARY}}' in skill and '--basis delegated_default' in skill
 
 
-def _rule(text: str, n: int) -> str:
+def _rule(text: str, n: int) -> Flat:
     """Rule ``n`` of the non-negotiable rules of ``CLAUDE.md.in``."""
-    return text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0]
+    return Flat(text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0])
 
 
 def test_instructions_carry_the_rerun_fixes():
@@ -333,3 +341,57 @@ def test_instructions_carry_the_p_fix_defects():
     regression = af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
                                 .read_text(), 'regression')
     assert '**precision**' not in regression and '**paired difference**' in regression
+
+
+def test_instructions_carry_the_v0_2a_rules():
+    """WP-A8: step 0, the guided rule and its refusals, the reason check before confirming
+    (R3), the success criterion and preprocessing pauses, EDA governance, the sealed final
+    test, the audience of engine texts, and the junior's language. Each phrase names a
+    real flag, code, or field of the engine."""
+    from mlkit.study import audience, confirm, state as st, view
+    import re
+    for task in ('binary', 'regression'):
+        text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
+        rule3, rule4 = _rule(text, 3), _rule(text, 4)
+        # step 0: the data card before any proposal
+        for phrase in ('`show_data_card`', 'data --format text', '**development rows**',
+                       '**final test**', 'make no proposal in the same message'):
+            assert phrase in rule3, (task, phrase)
+        # the new pauses and EDA governance
+        for phrase in ('**success criterion**', 'before any model is fitted',
+                       '**preprocessing**', '`next_action.default_value`', '`motivated_by`',
+                       '`data_contingent`', '`values.question`', '`null_band`',
+                       '`eda.single_feature_signal` only raises a legitimacy question',
+                       'its score keeps or drops no feature', '(`eda_looks`)'):
+            assert phrase in rule3, (task, phrase)
+        # guided confirmation: --proposal, the refusal reasons, an answer for each
+        for phrase in ('--proposal PROPOSAL_ID', '"oui je confirme cela"',
+                       '`unrelated_reply`', '`conditional_reply`', '`question_reply`',
+                       '`negative_reply`', '`reason_required`',
+                       'explain it in one sentence in the junior\'s language'):
+            assert phrase in rule4, (task, phrase)
+        # R3: the reason is checked before confirming, with three choices
+        check = rule4.split('**Check the reason before you confirm** (R3)', 1)[1]
+        for phrase in ('Before `decide confirm`', '(a) rephrase', '(b) confirm with new words',
+                       '(c) keep their words', 'Confirm only after their answer',
+                       '--agent-concern "<the point you raised>"',
+                       '`words_contradict_value`',
+                       'decide note --about DECISION --kind correction'):
+            assert phrase in check, (task, phrase)
+        # the final test, the audience of engine texts, the language
+        rule10, rule11 = _rule(text, 10), _rule(text, 11)
+        for phrase in ('`final_test` in `status --summary`', '`sealed`', '"development evidence"',
+                       'no final evidence', 'nothing you do should try'):
+            assert phrase in rule10, (task, phrase)
+        assert '**development evidence**' in _rule(text, 9)
+        for phrase in ('Answer in the junior\'s language', '`junior_message`', '`junior_text`',
+                       '`recap_junior`', '`audience: agent`', '--restatement-fr'):
+            assert phrase in rule11, (task, phrase)
+        # fewer prohibitions than the 36 "never" of v0.1, and none of the dropped ones
+        assert len(re.findall(r'\bnever\b', text, re.I)) <= 16, task
+    assert (confirm.QUESTION_REPLY, confirm.CONDITIONAL_REPLY) == ('question_reply',
+                                                                  'conditional_reply')
+    assert 'unrelated_reply' in cmd.REPLY_MESSAGES
+    assert confirm.REASON_REQUIRED == 'reason_required'
+    assert st.SUCCESS_CRITERION == 'success_criterion' and st.PREPROCESSING == 'preprocessing'
+    assert 'final_test' in view.SUMMARY_KEYS and audience.AGENT == 'agent'
