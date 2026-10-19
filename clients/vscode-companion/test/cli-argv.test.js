@@ -30,6 +30,8 @@ test('reads: exact argv (§5)', () => {
   assert.deepEqual(cli.checkArgv(AGENT), [...A, 'check', ...T]);
   assert.deepEqual(cli.explainArgv(AGENT), [...A, 'explain', ...T]);
   assert.deepEqual(cli.sessionReportArgv(AGENT), [...A, 'session-report', ...T]);
+  // WP-A7: the data card of the Data & EDA tab, a read like the others.
+  assert.deepEqual(cli.dataArgv(AGENT), [...A, 'data', ...T]);
   for (const bad of [() => cli.previewEffectsArgv(AGENT, { proposalId: 'p_1; rm' }),
     () => cli.evidenceArgv(AGENT, { resultId: 'ABC' }), () => cli.previewPolicyArgv(AGENT, { rules: [] }),
     () => cli.previewPolicyArgv(AGENT, { rules: ['capacity:0'] }), () => cli.statusArgv(AGENT, { digest: true, since: -1 }),

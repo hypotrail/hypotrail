@@ -16,7 +16,7 @@
   "schema": "hypotrail.evidence/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 34,
+  "revision": 38,
   "task": "binary",
   "results": [
    {
@@ -34,16 +34,17 @@
     "downstream": [
      "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
      "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
+     "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
      "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942",
      "7893f97e971f969bf89e6b8107583c51584e693768a563f2b260a0d4a0087261",
      "cd380c52dc253eeb8b9feafdd3f016e5c3313843b64dad1994d2fb0ac1821d32",
      "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
      "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4"
     ],
-    "created": "2026-10-19T10:22:35.775566+00:00",
+    "created": "2026-10-19T10:52:16.515434+00:00",
     "started_revision": 12,
     "execution_id": "e_8101d16893f3425fbb4ff727",
-    "exposure_id": "x_3f2da5678cdc476ea983785bab9491d5",
+    "exposure_id": "x_294999cbe728494fb61e1c9190fe7ff7",
     "values": {
      "method": "stratified_random",
      "validation_fraction": 0.3,
@@ -105,10 +106,10 @@
      "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:36.092146+00:00",
+    "created": "2026-10-19T10:52:16.863695+00:00",
     "started_revision": 14,
     "execution_id": "e_8651b2bcef1776e9ebffd170",
-    "exposure_id": "x_a109495b326f4b688e1932c3ffdfe9c4",
+    "exposure_id": "x_76444fb8e87a4f958cccead5f653ba40",
     "values": {
      "partition": "train",
      "target": "y",
@@ -168,10 +169,10 @@
      "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:36.358318+00:00",
+    "created": "2026-10-19T10:52:17.163619+00:00",
     "started_revision": 16,
     "execution_id": "e_76bdb563530c997e6fdf55cc",
-    "exposure_id": "x_80fe6022818e4003adb4ab0b2e929752",
+    "exposure_id": "x_6b3a81275c184009865c1bbcb577b448",
     "values": {
      "partition": "train",
      "n_rows": 2531,
@@ -436,6 +437,425 @@
     }
    },
    {
+    "result_id": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+    "activity": "eda.quality",
+    "slot": "eda.quality",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "partition": "development"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-19T10:52:17.486073+00:00",
+    "started_revision": 18,
+    "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+    "exposure_id": "x_caca6051e2664788b3160e109cbed33f",
+    "values": {
+     "partition": "development",
+     "n_rows": 3617,
+     "n_columns": 16,
+     "target_read": false,
+     "missing": [
+      {
+       "column": "age",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "job",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "marital",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "education",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "default",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "balance",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "housing",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "loan",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "contact",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "day",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "month",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "duration",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "campaign",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "pdays",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "previous",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "poutcome",
+       "n_missing": 0,
+       "share": 0.0
+      }
+     ],
+     "n_rows_with_missing": 0,
+     "co_missing": [],
+     "duplicates": {
+      "n_rows": 0,
+      "n_groups": 0,
+      "definition": "rows identical on every column except the target"
+     },
+     "cardinality": [
+      {
+       "column": "job",
+       "type": "category",
+       "n_distinct": 11,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "marital",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "education",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "default",
+       "type": "binary",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "housing",
+       "type": "binary",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "loan",
+       "type": "binary",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "contact",
+       "type": "category",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "month",
+       "type": "category",
+       "n_distinct": 12,
+       "rare": [
+        {
+         "value": "dec",
+         "n_rows": 14
+        }
+       ],
+       "rare_rows": 30
+      },
+      {
+       "column": "poutcome",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      }
+     ],
+     "ranges": [
+      {
+       "column": "age",
+       "type": "integer",
+       "min": 19,
+       "max": 87,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "balance",
+       "type": "numeric",
+       "min": -3313,
+       "max": 71188,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "day",
+       "type": "integer",
+       "min": 1,
+       "max": 31,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "duration",
+       "type": "numeric",
+       "min": 4,
+       "max": 3025,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "campaign",
+       "type": "integer",
+       "min": 1,
+       "max": 50,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "pdays",
+       "type": "integer",
+       "min": 1,
+       "max": 871,
+       "n_special": 2962,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "previous",
+       "type": "integer",
+       "min": 0,
+       "max": 25,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      }
+     ],
+     "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+     "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
+    },
+    "headline": null
+   },
+   {
+    "result_id": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+    "activity": "eda.single_feature_signal",
+    "slot": "eda.single_feature_signal",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 2531,
+    "params": {
+     "folds": 5,
+     "metric": "roc_auc",
+     "seed": 20261019
+    },
+    "upstream": {
+     "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
+    },
+    "downstream": [],
+    "created": "2026-10-19T10:52:19.028859+00:00",
+    "started_revision": 20,
+    "execution_id": "e_40d674998c07527b12a31e29",
+    "exposure_id": "x_60e3c213dd37461fbc3bf8bd78830ac3",
+    "values": {
+     "partition": "train",
+     "n_rows": 2531,
+     "metric": "roc_auc",
+     "folds": 5,
+     "seed": 20261019,
+     "signals": [
+      {
+       "feature": "duration",
+       "availability": "not_available",
+       "score": 0.8124392004747716,
+       "rank": 1,
+       "flag": true
+      },
+      {
+       "feature": "month",
+       "availability": "not_available",
+       "score": 0.6436826616579074,
+       "rank": 2,
+       "flag": false
+      },
+      {
+       "feature": "contact",
+       "availability": "uncertain_included",
+       "score": 0.5935578505570613,
+       "rank": 3,
+       "flag": false
+      },
+      {
+       "feature": "job",
+       "availability": "available_at_prediction",
+       "score": 0.5898792880872699,
+       "rank": 4,
+       "flag": false
+      },
+      {
+       "feature": "poutcome",
+       "availability": "available_at_prediction",
+       "score": 0.576367262782431,
+       "rank": 5,
+       "flag": false
+      },
+      {
+       "feature": "previous",
+       "availability": "available_at_prediction",
+       "score": 0.5719430457579521,
+       "rank": 6,
+       "flag": false
+      },
+      {
+       "feature": "housing",
+       "availability": "available_at_prediction",
+       "score": 0.5714444131736893,
+       "rank": 7,
+       "flag": false
+      },
+      {
+       "feature": "pdays",
+       "availability": "available_at_prediction",
+       "score": 0.5631550288472716,
+       "rank": 8,
+       "flag": false
+      },
+      {
+       "feature": "balance",
+       "availability": "available_at_prediction",
+       "score": 0.561893916682472,
+       "rank": 9,
+       "flag": false
+      },
+      {
+       "feature": "campaign",
+       "availability": "not_available",
+       "score": 0.5582375326558456,
+       "rank": 10,
+       "flag": false
+      },
+      {
+       "feature": "loan",
+       "availability": "available_at_prediction",
+       "score": 0.5253446071203509,
+       "rank": 11,
+       "flag": false
+      },
+      {
+       "feature": "education",
+       "availability": "available_at_prediction",
+       "score": 0.5208767979834442,
+       "rank": 12,
+       "flag": false
+      },
+      {
+       "feature": "age",
+       "availability": "available_at_prediction",
+       "score": 0.5178322330786126,
+       "rank": 13,
+       "flag": false
+      },
+      {
+       "feature": "marital",
+       "availability": "available_at_prediction",
+       "score": 0.5079161746621229,
+       "rank": 14,
+       "flag": false
+      },
+      {
+       "feature": "default",
+       "availability": "available_at_prediction",
+       "score": 0.49865017406254014,
+       "rank": 15,
+       "flag": false
+      },
+      {
+       "feature": "day",
+       "availability": "not_available",
+       "score": 0.4527163239459886,
+       "rank": 16,
+       "flag": false
+      }
+     ],
+     "median": 0.5625244727648718,
+     "level": 0.75,
+     "gap": 0.15,
+     "questions": [
+      {
+       "feature": "duration",
+       "score": 0.8124392004747716,
+       "availability": "not_available",
+       "text": "duration ranks the training rows with an out-of-fold AUC of 0.81 on its own, far above the other features (median 0.56). Is its value really known at the prediction moment, or is it recorded at or after the outcome? (availability decided: not_available)"
+      }
+     ],
+     "question": "Does any single feature, on its own, predict the outcome so well that its availability at the prediction moment should be questioned?",
+     "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high."
+    },
+    "headline": null
+   },
+   {
     "result_id": "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942",
     "activity": "eda.rate_by",
     "slot": "eda.rate_by:job",
@@ -452,10 +872,10 @@
      "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:36.633267+00:00",
-    "started_revision": 18,
-    "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-    "exposure_id": "x_0177c5bc1c474678a775519673becbd1",
+    "created": "2026-10-19T10:52:19.320939+00:00",
+    "started_revision": 22,
+    "execution_id": "e_3b7e9da2df5de95232824246",
+    "exposure_id": "x_fbdba68ba7fe4e3e973b34ae89724c6a",
     "values": {
      "partition": "train",
      "column": "job",
@@ -733,10 +1153,10 @@
      "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:36.915825+00:00",
-    "started_revision": 20,
-    "execution_id": "e_40d674998c07527b12a31e29",
-    "exposure_id": "x_e19cb32cac6f467a97ccfd6322db7726",
+    "created": "2026-10-19T10:52:19.722371+00:00",
+    "started_revision": 24,
+    "execution_id": "e_17bb42fe2af6771b4815132d",
+    "exposure_id": "x_c62772f61e8c43e8b45ea24fe90da6b3",
     "values": {
      "partition": "train",
      "column": "age",
@@ -874,10 +1294,10 @@
      "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:37.185049+00:00",
-    "started_revision": 22,
-    "execution_id": "e_3b7e9da2df5de95232824246",
-    "exposure_id": "x_0470f2bc616b4b358722969f70746ab4",
+    "created": "2026-10-19T10:52:20.078720+00:00",
+    "started_revision": 26,
+    "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
+    "exposure_id": "x_9c44e75080764e1a9df92168331bfe5a",
     "values": {
      "partition": "train",
      "column": "job",
@@ -1009,10 +1429,10 @@
      "a8c1165d01a158074ded10366c8e1e5a81d7ca1cfe64feeac31f316930ef3a4f",
      "8ad398529cf5afb2d823f7166e3102bafca6b63febe51bb9f8cd04ddcd5c28b7"
     ],
-    "created": "2026-10-19T10:22:37.528211+00:00",
-    "started_revision": 24,
-    "execution_id": "e_17bb42fe2af6771b4815132d",
-    "exposure_id": "x_23d74977377241b695c27a3643572296",
+    "created": "2026-10-19T10:52:20.398235+00:00",
+    "started_revision": 28,
+    "execution_id": "e_9bfea10e1d03fc0af5aa162b",
+    "exposure_id": "x_7b321c8c151847a2a6da71c0ffa482d4",
     "values": {
      "model": "constant_prior",
      "train_rate": 0.11536941920189649,
@@ -1091,10 +1511,10 @@
      "a8c1165d01a158074ded10366c8e1e5a81d7ca1cfe64feeac31f316930ef3a4f",
      "8ad398529cf5afb2d823f7166e3102bafca6b63febe51bb9f8cd04ddcd5c28b7"
     ],
-    "created": "2026-10-19T10:22:37.960272+00:00",
-    "started_revision": 26,
-    "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-    "exposure_id": "x_4359f28187cd41b9a79bd40ce1c5378b",
+    "created": "2026-10-19T10:52:20.807310+00:00",
+    "started_revision": 30,
+    "execution_id": "e_dc60c4ca476066179e139318",
+    "exposure_id": "x_e61b6440025a44239e6c589d69525947",
     "values": {
      "model": "logistic",
      "features": [
@@ -1260,10 +1680,10 @@
      "fit.logistic": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:39.179975+00:00",
-    "started_revision": 32,
-    "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
-    "exposure_id": "x_a71c05f76e1841d5a790fc9e58944edd",
+    "created": "2026-10-19T10:52:22.159365+00:00",
+    "started_revision": 36,
+    "execution_id": "e_61bc0c8f43a828a9a0633249",
+    "exposure_id": "x_6f3eba903a65408786ca0b54db2d2b3c",
     "values": {
      "rules": {
       "capacity:100": {
@@ -1561,10 +1981,10 @@
      "fit.logistic": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4"
     },
     "downstream": [],
-    "created": "2026-10-19T10:22:38.232096+00:00",
-    "started_revision": 28,
-    "execution_id": "e_9bfea10e1d03fc0af5aa162b",
-    "exposure_id": "x_dc88302366e5485192ba05baeee559ee",
+    "created": "2026-10-19T10:52:21.148242+00:00",
+    "started_revision": 32,
+    "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
+    "exposure_id": "x_fac472c6f7af42f893d09aab1e94a883",
     "values": null,
     "headline": null
    }
@@ -1636,6 +2056,18 @@
      "id": "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
      "kind": "result",
      "label": "eda.special_values",
+     "status": "current"
+    },
+    {
+     "id": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+     "kind": "result",
+     "label": "eda.quality",
+     "status": "current"
+    },
+    {
+     "id": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+     "kind": "result",
+     "label": "eda.single_feature_signal",
      "status": "current"
     },
     {
@@ -1722,6 +2154,21 @@
     {
      "from": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
      "to": "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+     "role": "rows"
+    },
+    {
+     "from": "dataset",
+     "to": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+     "role": "rows"
+    },
+    {
+     "from": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
+     "to": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
      "role": "split"
     },
     {
@@ -1850,6 +2297,26 @@
      "role": "consumed"
     },
     {
+     "from": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
      "from": "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942",
      "to": "artifact:report",
      "role": "consumed"
@@ -1913,7 +2380,7 @@
   },
   "exposure": {
    "summary": {
-    "records": 14,
+    "records": 16,
     "rows_exposed": 3617,
     "by_purpose": {
      "sealed": 904,
@@ -1955,9 +2422,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_466f967b70bf4330a1bd954eea631c87",
+     "exposure_id": "x_e745c019fa5d404287bba0bb317cd372",
      "revision": 1,
-     "time": "2026-10-19T10:22:33.005223+00:00",
+     "time": "2026-10-19T10:52:13.957248+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -1985,9 +2452,9 @@
      ]
     },
     {
-     "exposure_id": "x_359f786459fa428eb3061db1c4a6ef39",
+     "exposure_id": "x_18b4abc9b8604c74850cadab87e3cbfc",
      "revision": 1,
-     "time": "2026-10-19T10:22:33.006572+00:00",
+     "time": "2026-10-19T10:52:13.958635+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -2015,9 +2482,9 @@
      ]
     },
     {
-     "exposure_id": "x_3f2da5678cdc476ea983785bab9491d5",
+     "exposure_id": "x_294999cbe728494fb61e1c9190fe7ff7",
      "revision": 12,
-     "time": "2026-10-19T10:22:35.779163+00:00",
+     "time": "2026-10-19T10:52:16.520440+00:00",
      "activity": "split",
      "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
      "execution_id": "e_8101d16893f3425fbb4ff727",
@@ -2029,9 +2496,9 @@
      ]
     },
     {
-     "exposure_id": "x_a109495b326f4b688e1932c3ffdfe9c4",
+     "exposure_id": "x_76444fb8e87a4f958cccead5f653ba40",
      "revision": 14,
-     "time": "2026-10-19T10:22:36.096020+00:00",
+     "time": "2026-10-19T10:52:16.869360+00:00",
      "activity": "eda.target_rate",
      "result_id": "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
      "execution_id": "e_8651b2bcef1776e9ebffd170",
@@ -2043,9 +2510,9 @@
      ]
     },
     {
-     "exposure_id": "x_80fe6022818e4003adb4ab0b2e929752",
+     "exposure_id": "x_6b3a81275c184009865c1bbcb577b448",
      "revision": 16,
-     "time": "2026-10-19T10:22:36.361571+00:00",
+     "time": "2026-10-19T10:52:17.167219+00:00",
      "activity": "eda.special_values",
      "result_id": "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
      "execution_id": "e_76bdb563530c997e6fdf55cc",
@@ -2062,12 +2529,71 @@
      ]
     },
     {
-     "exposure_id": "x_0177c5bc1c474678a775519673becbd1",
+     "exposure_id": "x_caca6051e2664788b3160e109cbed33f",
      "revision": 18,
-     "time": "2026-10-19T10:22:36.636632+00:00",
+     "time": "2026-10-19T10:52:17.492109+00:00",
+     "activity": "eda.quality",
+     "result_id": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+     "purpose": "structural_inspection",
+     "partition": "development",
+     "n_rows": 3617,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "day",
+      "month",
+      "duration",
+      "campaign",
+      "pdays",
+      "previous",
+      "poutcome"
+     ]
+    },
+    {
+     "exposure_id": "x_60e3c213dd37461fbc3bf8bd78830ac3",
+     "revision": 20,
+     "time": "2026-10-19T10:52:19.032786+00:00",
+     "activity": "eda.single_feature_signal",
+     "result_id": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+     "execution_id": "e_40d674998c07527b12a31e29",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 2531,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "day",
+      "month",
+      "duration",
+      "campaign",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_fbdba68ba7fe4e3e973b34ae89724c6a",
+     "revision": 22,
+     "time": "2026-10-19T10:52:19.325601+00:00",
      "activity": "eda.rate_by",
      "result_id": "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942",
-     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+     "execution_id": "e_3b7e9da2df5de95232824246",
      "purpose": "train_eda",
      "partition": "train",
      "n_rows": 2531,
@@ -2077,12 +2603,12 @@
      ]
     },
     {
-     "exposure_id": "x_e19cb32cac6f467a97ccfd6322db7726",
-     "revision": 20,
-     "time": "2026-10-19T10:22:36.919520+00:00",
+     "exposure_id": "x_c62772f61e8c43e8b45ea24fe90da6b3",
+     "revision": 24,
+     "time": "2026-10-19T10:52:19.726643+00:00",
      "activity": "eda.distribution",
      "result_id": "7893f97e971f969bf89e6b8107583c51584e693768a563f2b260a0d4a0087261",
-     "execution_id": "e_40d674998c07527b12a31e29",
+     "execution_id": "e_17bb42fe2af6771b4815132d",
      "purpose": "train_eda",
      "partition": "train",
      "n_rows": 2531,
@@ -2091,12 +2617,12 @@
      ]
     },
     {
-     "exposure_id": "x_0470f2bc616b4b358722969f70746ab4",
-     "revision": 22,
-     "time": "2026-10-19T10:22:37.188380+00:00",
+     "exposure_id": "x_9c44e75080764e1a9df92168331bfe5a",
+     "revision": 26,
+     "time": "2026-10-19T10:52:20.082787+00:00",
      "activity": "eda.distribution",
      "result_id": "cd380c52dc253eeb8b9feafdd3f016e5c3313843b64dad1994d2fb0ac1821d32",
-     "execution_id": "e_3b7e9da2df5de95232824246",
+     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
      "purpose": "train_eda",
      "partition": "train",
      "n_rows": 2531,
@@ -2105,92 +2631,92 @@
      ]
     },
     {
-     "exposure_id": "x_7ba752827f2748a0a99a4caeb58ed228",
-     "revision": 24,
-     "time": "2026-10-19T10:22:37.534592+00:00",
-     "activity": "fit.baseline",
-     "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
-     "execution_id": "e_17bb42fe2af6771b4815132d",
-     "purpose": "train_fit",
-     "partition": "train",
-     "n_rows": 2531,
-     "columns": [
-      "y"
-     ]
-    },
-    {
-     "exposure_id": "x_23d74977377241b695c27a3643572296",
-     "revision": 24,
-     "time": "2026-10-19T10:22:37.538222+00:00",
-     "activity": "fit.baseline",
-     "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
-     "execution_id": "e_17bb42fe2af6771b4815132d",
-     "purpose": "validation_model_evaluation",
-     "partition": "validation",
-     "n_rows": 1086,
-     "columns": [
-      "y"
-     ]
-    },
-    {
-     "exposure_id": "x_999c145358cd41d1a75c4d67122f7b6e",
-     "revision": 26,
-     "time": "2026-10-19T10:22:37.963972+00:00",
-     "activity": "fit.logistic",
-     "result_id": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4",
-     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "purpose": "train_fit",
-     "partition": "train",
-     "n_rows": 2531,
-     "columns": [
-      "age",
-      "job",
-      "marital",
-      "education",
-      "default",
-      "balance",
-      "housing",
-      "loan",
-      "contact",
-      "pdays",
-      "previous",
-      "poutcome",
-      "y"
-     ]
-    },
-    {
-     "exposure_id": "x_4359f28187cd41b9a79bd40ce1c5378b",
-     "revision": 26,
-     "time": "2026-10-19T10:22:37.965238+00:00",
-     "activity": "fit.logistic",
-     "result_id": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4",
-     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "purpose": "validation_model_evaluation",
-     "partition": "validation",
-     "n_rows": 1086,
-     "columns": [
-      "age",
-      "job",
-      "marital",
-      "education",
-      "default",
-      "balance",
-      "housing",
-      "loan",
-      "contact",
-      "pdays",
-      "previous",
-      "poutcome",
-      "y"
-     ]
-    },
-    {
-     "exposure_id": "x_dc88302366e5485192ba05baeee559ee",
+     "exposure_id": "x_988b00b341e145bca37576093a01cedb",
      "revision": 28,
-     "time": "2026-10-19T10:22:38.235367+00:00",
+     "time": "2026-10-19T10:52:20.401238+00:00",
+     "activity": "fit.baseline",
+     "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
+     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 2531,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_7b321c8c151847a2a6da71c0ffa482d4",
+     "revision": 28,
+     "time": "2026-10-19T10:52:20.402528+00:00",
+     "activity": "fit.baseline",
+     "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
+     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 1086,
+     "columns": [
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_e0a3f1e05ef3496fb14cc53e53fcf1c0",
+     "revision": 30,
+     "time": "2026-10-19T10:52:20.811179+00:00",
+     "activity": "fit.logistic",
+     "result_id": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4",
+     "execution_id": "e_dc60c4ca476066179e139318",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 2531,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_e61b6440025a44239e6c589d69525947",
+     "revision": 30,
+     "time": "2026-10-19T10:52:20.812583+00:00",
+     "activity": "fit.logistic",
+     "result_id": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4",
+     "execution_id": "e_dc60c4ca476066179e139318",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 1086,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_fac472c6f7af42f893d09aab1e94a883",
+     "revision": 32,
+     "time": "2026-10-19T10:52:21.151993+00:00",
      "activity": "policy.evaluation",
      "result_id": "a8c1165d01a158074ded10366c8e1e5a81d7ca1cfe64feeac31f316930ef3a4f",
-     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
+     "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
      "purpose": "validation_policy_selection",
      "partition": "validation",
      "n_rows": 1086,
@@ -2199,12 +2725,12 @@
      ]
     },
     {
-     "exposure_id": "x_a71c05f76e1841d5a790fc9e58944edd",
-     "revision": 32,
-     "time": "2026-10-19T10:22:39.184622+00:00",
+     "exposure_id": "x_6f3eba903a65408786ca0b54db2d2b3c",
+     "revision": 36,
+     "time": "2026-10-19T10:52:22.162980+00:00",
      "activity": "policy.evaluation",
      "result_id": "8ad398529cf5afb2d823f7166e3102bafca6b63febe51bb9f8cd04ddcd5c28b7",
-     "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
+     "execution_id": "e_61bc0c8f43a828a9a0633249",
      "purpose": "validation_policy_selection",
      "partition": "validation",
      "n_rows": 1086,
@@ -2218,27 +2744,29 @@
      "purpose": "structural_inspection",
      "partition": "development",
      "rows": 3617,
-     "records": 2,
+     "records": 3,
      "activities": [
       "init.structure",
-      "split"
+      "split",
+      "eda.quality"
      ],
      "first_revision": 1,
-     "last_revision": 12
+     "last_revision": 18
     },
     {
      "purpose": "train_eda",
      "partition": "train",
      "rows": 2531,
-     "records": 5,
+     "records": 6,
      "activities": [
       "eda.target_rate",
       "eda.special_values",
+      "eda.single_feature_signal",
       "eda.rate_by",
       "eda.distribution"
      ],
      "first_revision": 14,
-     "last_revision": 22
+     "last_revision": 26
     },
     {
      "purpose": "train_fit",
@@ -2249,8 +2777,8 @@
       "fit.baseline",
       "fit.logistic"
      ],
-     "first_revision": 24,
-     "last_revision": 26
+     "first_revision": 28,
+     "last_revision": 30
     },
     {
      "purpose": "validation_model_evaluation",
@@ -2261,8 +2789,8 @@
       "fit.baseline",
       "fit.logistic"
      ],
-     "first_revision": 24,
-     "last_revision": 26
+     "first_revision": 28,
+     "last_revision": 30
     },
     {
      "purpose": "validation_policy_selection",
@@ -2272,8 +2800,8 @@
      "activities": [
       "policy.evaluation"
      ],
-     "first_revision": 28,
-     "last_revision": 32
+     "first_revision": 32,
+     "last_revision": 36
     },
     {
      "purpose": "sealed",
@@ -2316,7 +2844,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline"
     ],
     "refit": [
@@ -2345,7 +2875,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline"
     ],
     "refit": [
@@ -2370,7 +2902,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline",
      "fit.logistic",
      "policy.evaluation"
@@ -2392,7 +2926,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline",
      "fit.logistic",
      "policy.evaluation"
@@ -2421,7 +2957,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline",
      "fit.logistic",
      "policy.evaluation"
@@ -2444,7 +2982,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline",
      "fit.logistic",
      "policy.evaluation"
@@ -2470,7 +3010,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline"
     ],
     "refit": [
@@ -2495,7 +3037,9 @@
      "eda.special_values",
      "eda.distribution:age",
      "eda.distribution:job",
+     "eda.quality",
      "eda.rate_by:job",
+     "eda.single_feature_signal",
      "fit.baseline",
      "fit.logistic",
      "policy.evaluation"
@@ -2774,12 +3318,12 @@
   },
   "sources": {
    "case": {
-    "path": "/home/user/hypotrail/use-cases/bank-marketing/case.yaml",
+    "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
     "sha256": "f3d01dd64794e2cfd4b52a3a5b52e37d16b67193822d6e2655ef517400a28058",
     "matches": true
    },
    "dataset": {
-    "path": "/home/user/hypotrail/use-cases/bank-marketing/data/bank.csv",
+    "path": "/hypotrail/use-cases/bank-marketing/data/bank.csv",
     "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
     "matches": true
    }
@@ -3003,12 +3547,12 @@
     "predictions"
    ],
    "exposure": {
-    "exposure_id": "x_4359f28187cd41b9a79bd40ce1c5378b",
-    "revision": 26,
-    "time": "2026-10-19T10:22:37.965238+00:00",
+    "exposure_id": "x_e61b6440025a44239e6c589d69525947",
+    "revision": 30,
+    "time": "2026-10-19T10:52:20.812583+00:00",
     "activity": "fit.logistic",
     "result_id": "2d23b345967e3aa3cc4cbaa28570e76a5def9a7be6ca9f7576a0bb456c1692b4",
-    "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
+    "execution_id": "e_dc60c4ca476066179e139318",
     "purpose": "validation_model_evaluation",
     "partition": "validation",
     "n_rows": 1086,

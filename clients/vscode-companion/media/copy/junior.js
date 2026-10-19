@@ -267,6 +267,8 @@
     'eda.mean_by': 'A target mean by group', 'eda.distribution': 'A distribution', 'fit.baseline': 'The baseline model',
     'fit.logistic': 'The logistic model', 'fit.linear': 'The linear model', 'policy.evaluate': 'The calling-rule evaluation',
     'evaluate.regression': 'The model comparison',
+    // WP-A7: the quality check (development rows) and the leakage detector.
+    'eda.quality': 'The data quality check', 'eda.single_feature_signal': 'The single-feature signal check',
   };
   ACTIVITY['policy.evaluation'] = ACTIVITY['policy.evaluate'];
   const activity = (a, task) => {
@@ -319,6 +321,7 @@
     decisionName, why, value, availability, modelName, nextMove,
     SEVERITY, SEVERITY_ORDER, severityLabel, limitText, limitFallback,
     GROUP_OF_KIND, groups, GROUP_ORDER, digestText,
+    digestFallback: 'The study changed.',
     deliverablesUpToDate: 'The report and notebook are up to date.',
     deliverablesBehind: 'The report or notebook is behind the study.',
   };

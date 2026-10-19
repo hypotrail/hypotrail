@@ -109,6 +109,7 @@ A list of three items `{pause, decisions, status, confirmed}`:
 | `superseded` | Proposal ids that a `proposed` item superseded |
 | `invalidation` | `null`, or `{mutation, row, stale_slots, reconfirm_required, refit, kept_fits}`. `refit` and `kept_fits` are computed from the invalidation's `effects`: `kept_fits` lists the `fit.*` slots that were current before and are still current |
 | `text` | One flat English sentence from `content/digest.yaml` (below) |
+| `audience`, `junior_text` | v0.2a (WP-A7, CLI-CONTRACT §3.3; additive, last): `audience` is `junior` when `text` may be shown to the junior as it is, else `agent` (it speaks of "the junior", names a channel, a rule or a model token, or an activity id); `junior_text` is then the junior variant (the `junior_templates` and `junior_causes` of `content/digest.yaml`: the second person, a rule or a model in words, no channel), and `null` when `audience` is `junior` |
 
 **`run.reserve`.** These records produce no item. Each one is counted in `counts.runs_started`.
 
@@ -120,6 +121,8 @@ A list of three items `{pause, decisions, status, confirmed}`:
 - "Hold recorded on the policy: \"don't adopt anything until I bring my manager's figure\"."
 
 A regression study's texts never use the vocabulary of a decision rule (CLI-CONTRACT §4 recap rule): its sentences come from the template's `regression` overlay.
+
+**`junior_text`** (WP-A7). The same sentence written for the junior: "You confirmed the policy in your own words.", "The policy evaluation was replaced for: call the top 20 by score; call the top 30 by score. Models unchanged, nothing refitted.", "You put the policy on hold: \"...\". The policy needs confirmation again: you put the policy on hold." It holds no rule or model token, no channel, no activity id, and never "the junior".
 
 **`counts`.** `{proposed, confirmed, withdrawn, holds_recorded, holds_resolved, results_added, results_replaced, runs_started, runs_failed, invalidations}`.
 

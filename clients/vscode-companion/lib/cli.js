@@ -119,10 +119,18 @@ function viewArgv(agent) {
   return [...agent.argv, 'status', ...tail(agent)];
 }
 
+/**
+ * `data --json --study S`: the data card of the development rows (CLI-CONTRACT §11.1; WP-A7,
+ * the Data & EDA tab). Read-only: the engine records no exposure and logs no session line.
+ */
+function dataArgv(agent) {
+  return [...agent.argv, 'data', ...tail(agent)];
+}
+
 const READS = Object.freeze({
   summary: statusArgv, decisions: decisionsArgv, effects: previewEffectsArgv, evidence: evidenceArgv,
   preview: previewPolicyArgv, draft: previewProposalArgv, check: checkArgv, explain: explainArgv,
-  session_report: sessionReportArgv, view: viewArgv,
+  session_report: sessionReportArgv, view: viewArgv, data: dataArgv,
 });
 
 // --- writes W1-W7 (COMPANION-ADVANCED §7) ---------------------------------------------------
@@ -227,6 +235,6 @@ module.exports = {
   run, READS, WRITES, TIMEOUTS, MAX_BUFFER, READ_TIMEOUT_MS, WRITE_TIMEOUT_MS, EDA_TIMEOUT_MS, MAX_WORDS,
   ArgvError, TOO_LARGE,
   statusArgv, decisionsArgv, previewEffectsArgv, evidenceArgv, previewPolicyArgv, previewProposalArgv,
-  checkArgv, explainArgv, sessionReportArgv, viewArgv,
+  checkArgv, explainArgv, sessionReportArgv, viewArgv, dataArgv,
   confirmArgv, withdrawArgv, proposeArgv, runEdaArgv, renderArgv, acknowledgeArgv, exportArgv,
 };

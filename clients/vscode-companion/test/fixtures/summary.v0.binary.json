@@ -319,7 +319,22 @@
    "development_rows": 3617,
    "schema_check": "pass"
   },
-  "criterion": null,
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "precision_gain",
+    "min_points": 5
+   },
+   "status": "met",
+   "gain": 30.5,
+   "low": 21.4,
+   "high": 40.2,
+   "minimum": 5,
+   "unit": "percentage points",
+   "rule": "capacity:100",
+   "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+   "contradicts_verdict": false
+  },
   "eda_looks": {
    "target_looks": 3,
    "results": [
@@ -342,6 +357,37 @@
    "Now: Conclude proportionately; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."
-  ]
+  ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/bank marketing \"demo\"/notebooks/study_generated.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/bank marketing \"demo\"/notebooks/workbench.py"
+     ]
+    }
+   }
+  }
  }
 }

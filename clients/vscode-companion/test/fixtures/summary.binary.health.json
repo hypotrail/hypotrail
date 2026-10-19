@@ -357,7 +357,22 @@
    "development_rows": 3617,
    "schema_check": "pass"
   },
-  "criterion": null,
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "precision_gain",
+    "min_points": 5
+   },
+   "status": "met",
+   "gain": 30.5,
+   "low": 21.4,
+   "high": 40.2,
+   "minimum": 5,
+   "unit": "percentage points",
+   "rule": "capacity:100",
+   "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+   "contradicts_verdict": false
+  },
   "eda_looks": {
    "target_looks": 3,
    "results": [
@@ -381,6 +396,37 @@
    "Next: A run stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted.",
    "Limit: An execution has an unknown outcome."
   ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/bank marketing \"demo\"/notebooks/study_generated.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/bank marketing \"demo\"/notebooks/workbench.py"
+     ]
+    }
+   }
+  },
   "moments": [
    {
     "id": "frame",
@@ -477,7 +523,9 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The hold on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in the junior's words: \"my manager says the team can make 100 calls per wave\"."
+     "text": "The hold on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in the junior's words: \"my manager says the team can make 100 calls per wave\".",
+     "audience": "agent",
+     "junior_text": "Your hold on the policy, \"don't adopt anything until I bring my manager's figure\", was resolved in your words: \"my manager says the team can make 100 calls per wave\"."
     },
     {
      "revision": 25,
@@ -512,7 +560,9 @@
        "fit.logistic"
       ]
      },
-     "text": "The policy evaluation was replaced: capacity:100 evaluated. Models unchanged, nothing refitted."
+     "text": "The policy evaluation was replaced: capacity:100 evaluated. Models unchanged, nothing refitted.",
+     "audience": "agent",
+     "junior_text": "The policy evaluation was replaced for: call the top 100 by score. Models unchanged, nothing refitted."
     },
     {
      "revision": 25,
@@ -533,7 +583,9 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The policy needs confirmation again: its evaluation changed."
+     "text": "The policy needs confirmation again: its evaluation changed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 26,
@@ -554,7 +606,9 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "The policy was proposed: capacity:100."
+     "text": "The policy was proposed: capacity:100.",
+     "audience": "agent",
+     "junior_text": "The policy was proposed: call the top 100 by score."
     }
    ],
    "truncated": false,

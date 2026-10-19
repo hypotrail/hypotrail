@@ -101,6 +101,8 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .ht-fill-link { fill: var(--ht-link); } .ht-stroke-link { stroke: var(--ht-link); }
 .ht-fill-none { fill: none; } .ht-stroke-none { stroke: none; }
 data[data-result-id] { text-decoration: underline dotted; }
+/* WP-A7: the shuffled-outcome band behind a bar (bars.js), a reference in grey. */
+.ht-chart .ht-band { opacity: 0.35; }
 
 /* WP-A5: status chips of one vocabulary (ok, needs you, sealed, error, stale) and severity
    chips of the limits. The colour is a border and a tint; the text stays the foreground. */

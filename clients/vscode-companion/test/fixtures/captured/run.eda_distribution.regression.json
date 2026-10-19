@@ -16,11 +16,11 @@
   "ok": true,
   "study": "/studies/auto mpg",
   "action": "run",
-  "request_id": "a15",
+  "request_id": "a17",
   "replayed": false,
-  "revision": 21,
+  "revision": 25,
   "activity": "eda.distribution",
-  "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+  "execution_id": "e_622dd0c704d6af123eea761a",
   "status": "promoted",
   "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
   "values": {
@@ -126,17 +126,17 @@
    "question": "How are the values of weight distributed among the training rows?"
   },
   "result": {
-   "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+   "execution_id": "e_622dd0c704d6af123eea761a",
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
    "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
    "input_key": "5ab6d31e41971b299f255fe45014ba01274ceb2a3e926166852c5d9942a3dfd9",
    "reason": null,
-   "started_revision": 20,
+   "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_f7f990e9d78941229e6f77fe588fd4e5"
+    "x_63016eed3f5340ef8b5b941d864cf461"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -145,16 +145,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 21,
-    "last_ok_revision": 21,
+    "revision": 25,
+    "last_ok_revision": 25,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 21,
-    "last_ok_revision": 21,
+    "revision": 25,
+    "last_ok_revision": 25,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

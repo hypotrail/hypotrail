@@ -12,7 +12,7 @@
    "--request-id",
    "b-ack",
    "--expected-revision",
-   "35",
+   "39",
    "--json"
   ],
   "note": ""
@@ -24,7 +24,7 @@
   "action": "run.acknowledge",
   "request_id": "b-ack",
   "replayed": false,
-  "revision": 37,
+  "revision": 41,
   "activity": "eda.distribution",
   "execution_id": "e_c8ad594ad0d129d72cb0f1e2",
   "status": "acknowledged",
@@ -35,7 +35,7 @@
    "activity": "eda.distribution",
    "status": "acknowledged",
    "restarted": false,
-   "started_revision": 35,
+   "started_revision": 39,
    "user_words": "I know this run stopped and its outcome is unknown",
    "note": "Acknowledged without restarting. Run the activity again with a new request id only if the junior asks for it."
   },
@@ -43,16 +43,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 37,
-    "last_ok_revision": 37,
+    "revision": 41,
+    "last_ok_revision": 41,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 37,
-    "last_ok_revision": 37,
+    "revision": 41,
+    "last_ok_revision": 41,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

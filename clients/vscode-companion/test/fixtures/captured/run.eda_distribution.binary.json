@@ -16,11 +16,11 @@
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
   "action": "run",
-  "request_id": "b15",
+  "request_id": "b17",
   "replayed": false,
-  "revision": 21,
+  "revision": 25,
   "activity": "eda.distribution",
-  "execution_id": "e_40d674998c07527b12a31e29",
+  "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
   "result_id": "7893f97e971f969bf89e6b8107583c51584e693768a563f2b260a0d4a0087261",
   "values": {
@@ -126,17 +126,17 @@
    "question": "How are the values of age distributed among the training rows?"
   },
   "result": {
-   "execution_id": "e_40d674998c07527b12a31e29",
+   "execution_id": "e_17bb42fe2af6771b4815132d",
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
    "result_id": "7893f97e971f969bf89e6b8107583c51584e693768a563f2b260a0d4a0087261",
    "input_key": "ccb464295d5a495ef8b644889267df2b099b8155ec50c405087d05f714ef7f5b",
    "reason": null,
-   "started_revision": 20,
+   "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_e19cb32cac6f467a97ccfd6322db7726"
+    "x_c62772f61e8c43e8b45ea24fe90da6b3"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -145,16 +145,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 21,
-    "last_ok_revision": 21,
+    "revision": 25,
+    "last_ok_revision": 25,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 21,
-    "last_ok_revision": 21,
+    "revision": 25,
+    "last_ok_revision": 25,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

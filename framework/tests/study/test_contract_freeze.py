@@ -43,7 +43,10 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
                         'recap',
                         # v0.2a (WP-A1): who the recap is for, and its junior variant.
-                        'recap_audience', 'recap_junior')
+                        'recap_audience', 'recap_junior',
+                        # v0.2a (WP-A7, companion requests): the confirmation mode and the
+                        # view's ``deliverables``.
+                        'mode', 'deliverables')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
@@ -440,6 +443,12 @@ def test_status_summary_keys(flow):
     assert payload['recap_audience'] == 'agent' and len(payload['recap_junior']) == len(RECAP_LABELS)
     assert [line.split(':', 1)[0] for line in payload['recap_junior']] == list(RECAP_LABELS)
     assert {'audience', 'junior_message'} <= set(payload['next_action'])
+    # WP-A7: the mode, and each launch's argument list (no interpreter, no shell form).
+    assert payload['mode'] == 'guided'
+    assert tuple(payload['deliverables']) == view.SUMMARY_DELIVERABLES_KEYS == ('launch',)
+    assert tuple(payload['deliverables']['launch']) == ('notebook', 'workbench')
+    assert all(tuple(x) == view.SUMMARY_LAUNCH_KEYS == ('mode', 'path', 'argv')
+               for x in payload['deliverables']['launch'].values())
     assert view.SUMMARY_NOTE_KEYS == SUMMARY_NOTE_KEYS
     assert view.SUMMARY_HOLD_KEYS == SUMMARY_HOLD_KEYS and payload['holds'] == []
     keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)

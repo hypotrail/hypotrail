@@ -41,14 +41,17 @@ test('EdaModel: keys, gallery order, and the catalog of both fixtures', () => {
   }
   const b = toEdaModel(payload('evidence.binary'));
   assert.equal(b.task, 'binary');
-  assert.deepEqual(b.cards.map(c => c.slot), ['eda.target_rate', 'eda.special_values', 'eda.rate_by:job', 'eda.distribution:age']);
-  assert.deepEqual(b.cards.map(c => c.kind), ['target_rate', 'special_values', 'rate_by', 'distribution']);
+  // WP-A7: the fixture gained the single-feature signal and the quality check (captured);
+  // the signal follows the special values, the quality check (development rows) comes last.
+  assert.deepEqual(b.cards.map(c => c.slot), ['eda.target_rate', 'eda.special_values', 'eda.single_feature_signal',
+    'eda.rate_by:job', 'eda.distribution:age', 'eda.quality']);
+  assert.deepEqual(b.cards.map(c => c.kind), ['target_rate', 'special_values', 'signal', 'rate_by', 'distribution', 'quality']);
   assert.deepEqual(b.catalog.map(a => [a.activity, a.perColumn, a.runnable]), [['eda.target_rate', false, true],
     ['eda.special_values', false, true], ['eda.rate_by', true, true], ['eda.distribution', true, true]]);
   assert.deepEqual(b.rowsSeen, { trainEda: 3164, validationEda: 0, validationModels: 1357 });
   const r = toEdaModel(payload('evidence.regression'));
   assert.equal(r.task, 'regression');
-  assert.deepEqual(r.cards.map(c => c.kind), ['target_summary', 'special_values', 'mean_by', 'distribution']);
+  assert.deepEqual(r.cards.map(c => c.kind), ['target_summary', 'special_values', 'signal', 'mean_by', 'distribution', 'quality']);
   assert.deepEqual(r.rowsSeen, { trainEda: 280, validationEda: 0, validationModels: 118 });
   assert.throws(() => toEdaModel(payload('decisions.binary')), ModelError);
   assert.throws(() => toEdaModel({ schema: 'hypotrail.evidence/1', ok: false }), ModelError);
@@ -85,7 +88,7 @@ test('EdaModel: a stale or unverified result carries no figure; an unpromoted on
   dist.integrity = 'integrity_error';
   p.results.push({ ...clone(dist), result_id: 'f'.repeat(64), promoted: false, slot: null });
   const m = toEdaModel(p);
-  assert.equal(m.cards.length, 4);
+  assert.equal(m.cards.length, 6);   // WP-A7: the signal and quality results of the fixture
   for (const slot of ['eda.rate_by:job', 'eda.distribution:age']) {
     const card = m.cards.find(c => c.slot === slot);
     assert.equal(card.current, false);
@@ -277,14 +280,14 @@ test('ED-2: after a successful run, the reread gallery holds the new card and th
   const { c, last } = make({ route });
   await c.handle({ v: 2, type: 'ready' });
   await c.handle({ v: 2, type: 'load', view: 'eda' });
-  assert.equal(last('view_data').model.cards.length, 4);
+  assert.equal(last('view_data').model.cards.length, 6);   // WP-A7: with the signal and quality cards
   await c.handle({ v: 2, type: 'run_eda', activity: 'eda.distribution', column: 'balance', revision: 27 });
   assert.equal(last('snapshot').revision, 28);
   await c.handle({ v: 2, type: 'load', view: 'eda' });
   const m = last('view_data').model;
   assert.equal(last('view_data').revision, 28);
-  assert.deepEqual(m.cards.map(x => x.slot), ['eda.target_rate', 'eda.special_values', 'eda.rate_by:job', 'eda.distribution:age',
-    'eda.distribution:balance']);
+  assert.deepEqual(m.cards.map(x => x.slot), ['eda.target_rate', 'eda.special_values', 'eda.single_feature_signal', 'eda.rate_by:job',
+    'eda.distribution:age', 'eda.distribution:balance', 'eda.quality']);
   assert.equal(m.rowsSeen.trainEda, after.exposure.ledger.find(x => x.purpose === 'train_eda' && x.partition === 'train').rows);
   assert.equal(m.rowsSeen.validationEda, 0);
 });

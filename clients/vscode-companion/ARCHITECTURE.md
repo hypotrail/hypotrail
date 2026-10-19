@@ -18,6 +18,7 @@ lib/controller.js       router: validation, stage gate, reviewer refusal, summar
 lib/cache.js            CLI payloads per read key and version (<revision>:<currency>, CR.1); preview:* keys in a bounded list
 lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group
 lib/models/<view>.js    pure payload -> model functions (to<Name>Model) + FIXTURES
+                        (WP-A7: lib/models/data.js, the data card of the Data & EDA tab, read with `data`)
 lib/refusals.js         refusal explanations (never suggest words)
 lib/uri.js              deep-link parsing (a decoded query: study=<path as is>, CR.11) and result-id input (WP-U3)
 lib/bridge.js           the agent bridge's template, clipboard, guarded chat command (WP-U5)

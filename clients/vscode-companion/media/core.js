@@ -383,6 +383,31 @@
     return parts[parts.length - 1] || '';
   }
 
+  /**
+   * WP-A7: the final-test chip of the header (ADR 0006), on every tab: sealed with its row
+   * count (the engine's count), opened, or "No final test" for a study created before the
+   * seal. An engine without `final_test` gives no chip.
+   */
+  function finalTestChip(snap) {
+    const ft = snap && snap.finalTest;
+    if (!ft || !ft.status) return null;
+    const c = C().finalTest;
+    const rows = Number.isInteger(ft.rows) ? HT.format.number(ft.rows, 'int') : null;
+    if (ft.status === 'sealed' && rows) {
+      return el('span', { className: 'ht-status ht-st-sealed ht-seal', 'data-final-test': 'sealed', title: c.sealedTitle,
+        text: c.sealed(rows) });
+    }
+    if (ft.status === 'opened' && rows) {
+      return el('span', { className: 'ht-status ht-st-neutral ht-seal', 'data-final-test': 'opened', title: c.openedTitle,
+        text: c.opened(rows) });
+    }
+    if (ft.status === 'absent') {
+      return el('span', { className: 'ht-status ht-st-stale ht-seal', 'data-final-test': 'absent', title: c.absentTitle,
+        text: c.absent });
+    }
+    return null;
+  }
+
   function header() {
     const c = C();
     const snap = state.snapshot;
@@ -394,6 +419,7 @@
         el('span', { className: 'ht-name', text: snap ? `${c.product} · ${name}` : c.product }),
         state.init.task === 'regression' || (snap && snap.task === 'regression')
           ? el('span', { className: 'ht-badge', text: c.regression }) : null,
+        finalTestChip(snap),
         el('span', { className: 'ht-badge', text: c.experimental }),
         state.init.reviewer ? el('span', { className: 'ht-badge ht-badge-reviewer', 'data-reviewer': true, text: c.reviewer }) : null,
       ]),

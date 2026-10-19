@@ -31,8 +31,11 @@ BINARY_WORDS = re.compile(r'\b(outcome|positive|imbalance|base rate)\b', re.I)
 SUMMARY = {'binary': 'summary.binary', 'regression': 'summary.regression'}
 EVIDENCE = {'binary': 'evidence.binary', 'regression': 'evidence.regression'}
 ORDER = {
-    'binary': ['eda.target_rate', 'eda.special_values', 'eda.rate_by:job', 'eda.distribution:age'],
-    'regression': ['eda.target_summary', 'eda.special_values', 'eda.mean_by:model_year', 'eda.distribution:model_year'],
+    # WP-A7: the single-feature signal (leakage detector) follows the special values; the
+    # quality check of the development rows sits with the data card, outside the gallery.
+    'binary': ['eda.target_rate', 'eda.special_values', 'eda.single_feature_signal', 'eda.rate_by:job', 'eda.distribution:age'],
+    'regression': ['eda.target_summary', 'eda.special_values', 'eda.single_feature_signal', 'eda.mean_by:model_year',
+                   'eda.distribution:model_year'],
 }
 NON_CAUSAL = {
     'binary': 'This describes who had the outcome in the training sample. It does not say that {c} causes it, '
@@ -96,10 +99,11 @@ def test_gallery_shows_the_registered_eda_results_in_order(open_panel, model, ta
     page = panel.page
     slots = page.locator('[data-eda-card]').evaluate_all('cs => cs.map(c => c.dataset.edaCard)')
     assert slots == ORDER[task]
-    assert [c['slot'] for c in eda['cards']] == ORDER[task]
+    assert [c['slot'] for c in eda['cards'] if c['kind'] != 'quality'] == ORDER[task]
     # Each card names its activity and result id; the chip opens Evidence.
     for card in eda['cards']:
-        chip = page.locator(f'[data-eda-card="{card["slot"]}"] [data-chip]')
+        hook = "data-quality-card" if card["kind"] == "quality" else "data-eda-card"
+        chip = page.locator(f'[{hook}="{card["slot"]}"] [data-chip]')
         assert chip.get_attribute('data-chip') == card['resultId']
         assert card['resultId'][:8] in chip.inner_text()
     assert page.locator('#panel-eda [data-placeholder]').count() == 0
@@ -139,7 +143,8 @@ def test_ed4_every_number_is_the_engine_value_cited_with_its_result_and_precisio
     # A rate or a mean is shown with its denominator (the rows of its group).
     bar = 'eda.rate_by:job' if task == 'binary' else 'eda.mean_by:model_year'
     texts = panel.page.locator(f'[data-eda-card="{bar}"] svg text[data-result-id]').evaluate_all('ns => ns.map(n => n.textContent)')
-    pattern = r'^\S+ of [\d,]+$' if task == 'binary' else r'^\S+ · [\d,]+ rows$'
+    # WP-A7: the confidence interval follows the value, in brackets.
+    pattern = r'^\S+ \[\S+\] of [\d,]+$' if task == 'binary' else r'^\S+ \[\S+\] · [\d,]+ rows$'
     assert texts and all(re.match(pattern, t) for t in texts), texts
 
 
@@ -170,8 +175,9 @@ def test_ed3_small_groups_are_hatched_and_say_small(open_panel, model, payload, 
         bars = card.locator('svg [data-small="true"]')
         assert bars.count() == len(small), entry['slot']
         for i in range(bars.count()):
-            assert bars.nth(i).locator('rect').get_attribute('data-hatched') == 'true'
-            assert bars.nth(i).locator('rect').get_attribute('fill').startswith('url(#ht-hatch-')
+            # WP-A7: the bar's own rect, not the shuffled-outcome band behind it.
+            assert bars.nth(i).locator('rect:not([data-band])').get_attribute('data-hatched') == 'true'
+            assert bars.nth(i).locator('rect:not([data-band])').get_attribute('fill').startswith('url(#ht-hatch-')
             assert '(small)' in bars.nth(i).locator('text').first.text_content()
         caption = card.locator('[data-hatch-caption]').inner_text()
         assert f"fewer than {entry['values']['min_group_rows']} rows" in caption
@@ -204,7 +210,8 @@ def test_ed6_regression_cards_and_no_decision_rule_or_binary_vocabulary(open_pan
     # table cells of meanings and labels) are task-aware already and shown verbatim.
     own = page.evaluate("""() => {
       const panel = document.getElementById('panel-eda').cloneNode(true);
-      for (const n of panel.querySelectorAll('[data-note], [data-warnings], td')) n.remove();
+      // WP-A7: a card's title is the engine's question (engine text, shown as it is).
+      for (const n of panel.querySelectorAll('[data-note], [data-warnings], td, [data-question]')) n.remove();
       return panel.textContent;
     }""")
     assert not BINARY_WORDS.search(own), BINARY_WORDS.search(own).group(0)

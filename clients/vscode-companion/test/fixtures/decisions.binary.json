@@ -8,7 +8,7 @@
    "decisions",
    "--json"
   ],
-  "note": "Mockup Decision history: delegated split, superseded threshold policy, policy confirmed from the panel."
+  "note": "Mockup Decision history: delegated split, superseded threshold policy, policy confirmed from the panel. WP-A7: restated and endorsed bases, an agent concern kept on the availability, and a later correction in the junior's words."
  },
  "payload": {
   "schema": "hypotrail.decisions/1",
@@ -35,7 +35,7 @@
      "revision": 3,
      "time": "2026-10-18T09:00:00+00:00",
      "authenticated": false,
-     "basis": "explicit",
+     "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null
     },
@@ -78,9 +78,9 @@
      "revision": 5,
      "time": "2026-10-18T09:00:00+00:00",
      "authenticated": false,
-     "basis": "explicit",
+     "basis": "endorsed",
      "delegation_scope": null,
-     "agent_concern": null
+     "agent_concern": "Your reason says contact can be inflated; inflation applies to campaign (it counts the last contact), not to contact (a channel)."
     },
     "open_proposals": []
    },
@@ -277,7 +277,7 @@
     "proposal_id": "p_1",
     "value": "before the first contact of the campaign, from the client file",
     "user_words": "Before the call: we only know the client and past campaigns.",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -308,7 +308,7 @@
      "previous": "available_at_prediction"
     },
     "user_words": "Remove duration, day, month and campaign; keep contact as uncertain.",
-    "basis": "explicit",
+    "basis": "endorsed",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -377,6 +377,15 @@
      "time": "2026-10-19T08:27:10.120000+00:00",
      "request_id": "chat-24"
     }
+   },
+   {
+    "note_id": "n_2",
+    "decision_id": "feature_availability",
+    "kind": "correction",
+    "user_words": "My reason about contact was wrong: the inflated count is campaign, which I already excluded.",
+    "status": "recorded",
+    "revision": 6,
+    "resolution": null
    }
   ]
  }

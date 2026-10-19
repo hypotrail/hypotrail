@@ -10,7 +10,7 @@
  "payload": {
   "schema": "hypotrail.handoff/1",
   "study": "<study>",
-  "revision": 34,
+  "revision": 38,
   "task": "binary",
   "case": {
    "id": "uci-bank-marketing-v1",
@@ -295,7 +295,7 @@
   ],
   "exposure": {
    "summary": {
-    "records": 14,
+    "records": 16,
     "rows_exposed": 3617,
     "by_purpose": {
      "sealed": 904,
@@ -340,27 +340,29 @@
      "purpose": "structural_inspection",
      "partition": "development",
      "rows": 3617,
-     "records": 2,
+     "records": 3,
      "activities": [
       "init.structure",
-      "split"
+      "split",
+      "eda.quality"
      ],
      "first_revision": 1,
-     "last_revision": 12
+     "last_revision": 18
     },
     {
      "purpose": "train_eda",
      "partition": "train",
      "rows": 2531,
-     "records": 5,
+     "records": 6,
      "activities": [
       "eda.target_rate",
       "eda.special_values",
+      "eda.single_feature_signal",
       "eda.rate_by",
       "eda.distribution"
      ],
      "first_revision": 14,
-     "last_revision": 22
+     "last_revision": 26
     },
     {
      "purpose": "train_fit",
@@ -371,8 +373,8 @@
       "fit.baseline",
       "fit.logistic"
      ],
-     "first_revision": 24,
-     "last_revision": 26
+     "first_revision": 28,
+     "last_revision": 30
     },
     {
      "purpose": "validation_model_evaluation",
@@ -383,8 +385,8 @@
       "fit.baseline",
       "fit.logistic"
      ],
-     "first_revision": 24,
-     "last_revision": 26
+     "first_revision": 28,
+     "last_revision": 30
     },
     {
      "purpose": "validation_policy_selection",
@@ -394,8 +396,8 @@
      "activities": [
       "policy.evaluation"
      ],
-     "first_revision": 28,
-     "last_revision": 32
+     "first_revision": 32,
+     "last_revision": 36
     },
     {
      "purpose": "sealed",
@@ -460,7 +462,9 @@
    "hypotrail run eda.special_values --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run eda.distribution --column age --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run eda.distribution --column job --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.quality --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run eda.rate_by --column job --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.single_feature_signal --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run fit.baseline --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run fit.logistic --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run policy.evaluate --rule capacity:100 --rule threshold:0.2 --request-id <new id> --expected-revision <revision> --study <study>",

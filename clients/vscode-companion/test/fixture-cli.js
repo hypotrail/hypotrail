@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DIR = path.join(__dirname, 'fixtures');
-const COMMANDS = ['status', 'decisions', 'evidence', 'explain', 'check', 'session-report', 'render', 'export', 'preview',
+const COMMANDS = ['data', 'status', 'decisions', 'evidence', 'explain', 'check', 'session-report', 'render', 'export', 'preview',
   'decide', 'run', 'init', 'plan'];
 
 function fixture(name) {
@@ -34,6 +34,7 @@ function defaultRoute(tail, task = 'binary') {
   const b = task === 'binary';
   if (command === 'status') return tail.includes('--digest') ? (b ? 'summary.binary' : 'summary.regression') : (b ? 'summary.v0.binary' : 'summary.v0.regression');
   if (command === 'decisions') return b ? 'decisions.binary' : 'decisions.regression';
+  if (command === 'data') return b ? 'data.binary' : 'data.regression';
   if (command === 'evidence') return tail.includes('--result') ? 'evidence.binary.detail' : (b ? 'evidence.binary' : 'evidence.regression');
   if (command === 'explain') return b ? 'explain.binary' : 'explain.regression';
   if (command === 'check') return 'check.binary';

@@ -74,6 +74,9 @@ class Capture:
         for t, placeholder in STUDY_PLACEHOLDER.items():
             text = text.replace(json.dumps(str(self.root / t))[1:-1], json.dumps(placeholder)[1:-1])
         text = text.replace(json.dumps(str(self.root))[1:-1], '/tmp/capture')
+        # WP-A7: the engine's checkout (case files, the notebooks' launch commands) reads
+        # the same in every checkout.
+        text = text.replace(json.dumps(str(REPO))[1:-1], '/hypotrail')
         payload = json.loads(text)
         self.items[name] = {'about': {'schema': payload.get('schema'), 'task': task, 'exit_code': code,
                                       'source': 'captured', 'argv': [str(a) for a in argv
@@ -97,7 +100,9 @@ def binary(cap: Capture) -> None:
                                                          contact='uncertain_included'))
     flow.decide('split', fk.SPLIT)
     flow.model_decisions()          # WP-A4: success criterion and default preprocessing
-    for activity in ('split', 'eda.target_rate', 'eda.special_values'):
+    # WP-A7: the structural quality check and the single-feature signal (leakage detector).
+    for activity in ('split', 'eda.target_rate', 'eda.special_values', 'eda.quality',
+                     'eda.single_feature_signal'):
         flow.run(activity)
     cap.save('run.rate_by.binary', 'binary', ['run', 'eda.rate_by', '--column=job'], 0,
              flow.run('eda.rate_by', '--column=job'))
@@ -116,6 +121,8 @@ def binary(cap: Capture) -> None:
     cap.save('decide.propose.binary', 'binary', ['decide', 'propose', 'policy'], code, out)
     pid = out['result']['proposal_id']
     cap.read('summary.v0.binary', 'binary', study, 'status', '--summary', '--json')
+    # WP-A7: the data card (a read of the Data & EDA tab).
+    cap.read('data.binary', 'binary', study, 'data', '--json')
     cap.read('summary.binary', 'binary', study, 'status', '--summary', '--digest', '--json')
     cap.read('decisions.binary', 'binary', study, 'decisions', '--json')
     cap.read('preview_effects.binary', 'binary', study, 'preview', 'effects', pid, '--json')
@@ -203,7 +210,8 @@ def regression(cap: Capture) -> None:
     flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
     flow.model_decisions()          # WP-A4: success criterion and default preprocessing
-    for activity in ('split', 'eda.target_summary', 'eda.special_values'):
+    for activity in ('split', 'eda.target_summary', 'eda.special_values', 'eda.quality',
+                     'eda.single_feature_signal'):
         flow.run(activity)
     flow.run('eda.mean_by', '--column=model_year')
     cap.save('run.eda_distribution.regression', 'regression', ['run', 'eda.distribution', '--column=weight'], 0,
@@ -217,6 +225,7 @@ def regression(cap: Capture) -> None:
     assert code == 0, out
     pid = out['result']['proposal_id']
     cap.read('summary.v0.regression', 'regression', study, 'status', '--summary', '--json')
+    cap.read('data.regression', 'regression', study, 'data', '--json')
     cap.read('summary.regression', 'regression', study, 'status', '--summary', '--digest', '--json')
     cap.read('decisions.regression', 'regression', study, 'decisions', '--json')
     cap.read('preview_effects.regression', 'regression', study, 'preview', 'effects', pid, '--json')

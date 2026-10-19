@@ -53,6 +53,9 @@
       prediction_time: 'the prediction moment',
       feature_availability: 'the available variables',
       split: 'the split',
+      // WP-A7: the two decisions of WP-A4, in the words of media/copy/junior.js.
+      success_criterion: 'the success criterion',
+      preprocessing: 'the data preparation',
       policy: regression(task) ? 'the third decision' : 'the calling rule',
       model_choice: 'the model choice',
       conclusion: 'the conclusion',
@@ -95,6 +98,35 @@
       ? (scope === 'standing' ? 'delegated (standing)' : scope === 'this_decision' ? 'delegated (this decision)' : 'delegated')
       : basis === 'explicit' ? 'explicit' : basis),
     basisChannel: (basisText, channel) => `${basisText} · ${channel}`,
+    // WP-A7 (ADR 0005): the basis of a confirmation as a chip, with what it means in a hover.
+    basisChip: {
+      restated: 'restated', endorsed: 'endorsed', delegated_default: 'delegated', explicit: 'your words',
+    },
+    basisHelp: {
+      restated: 'Your words repeat what the proposal says: you restated it.',
+      endorsed: 'Your words agree with the proposal without repeating it: you endorsed it.',
+      delegated_default: 'You handed this choice to the assistant\'s recommended default, in the chat.',
+      explicit: 'Recorded in your own words before the guided rule named the kinds of answer.',
+    },
+    channelWords: channel => (channel === 'webview' ? 'in this panel' : channel === 'chat' ? 'in the chat' : channel),
+    concern: 'Point raised by the agent before you confirmed, kept by you: ',
+    correction: 'Your later correction, in your words: ',
+    corrections: 'Corrections in your words',
+    // WP-A7 (ADR 0005): the confirmation mode, read only (it changes in the chat, in words).
+    modeTitle: 'What counts as your answer',
+    modeLine: mode => `This study uses the ${mode} mode.`,
+    modeNames: { guided: 'guided', training: 'training', express: 'express' },
+    modeRules: task => [
+      'An answer is a reply to the open proposal, in your own words, that agrees with it.',
+      'It is not an answer when it is only "ok", asks a question, or keeps a condition such as "yes, but" or "unless".',
+      `For ${regression(task) ? 'the model choice' : 'the calling rule'} and the conclusion, also give your reason: why it fits your situation.`,
+      'When the assistant raises a point about your reason, you may keep your words; the point is recorded next to them.',
+    ],
+    modeOther: 'This mode is described in the chat; the panel shows its name only.',
+    modeChange: 'The mode changes only in the chat, in your own words; this panel cannot change it.',
+    // WP-A7: the reason the guided rule asks for at a trade-off, said before typing.
+    reasonHint: 'This decision is a trade-off: say why it fits your situation, not only that you agree.',
+    reasonDecisions: ['policy', 'model_choice', 'conclusion'],
     atRevision: rev => `revision ${rev}`,
     supersededAt: rev => (rev === null || rev === undefined ? 'superseded' : `superseded at revision ${rev}`),
     noHistory: 'No confirmation is recorded yet.',

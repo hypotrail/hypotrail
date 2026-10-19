@@ -300,7 +300,22 @@
    "development_rows": 318,
    "schema_check": "pass"
   },
-  "criterion": null,
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "mae_reduction",
+    "min_share": 0.1
+   },
+   "status": "not_assessed",
+   "gain": null,
+   "low": null,
+   "high": null,
+   "minimum": null,
+   "unit": "share",
+   "rule": null,
+   "result_id": null,
+   "contradicts_verdict": false
+  },
   "eda_looks": {
    "target_looks": 3,
    "results": [
@@ -324,6 +339,37 @@
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/auto mpg/notebooks/study_generated.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/auto mpg/notebooks/workbench.py"
+     ]
+    }
+   }
+  },
   "moments": [
    {
     "id": "frame",
@@ -418,7 +464,9 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The regression evaluation was added: the linear model and the training mean compared on the validation rows."
+     "text": "The regression evaluation was added: the linear model and the training mean compared on the validation rows.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 22,
@@ -439,7 +487,9 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "The model choice was proposed from the companion: fit.linear."
+     "text": "The model choice was proposed from the companion: fit.linear.",
+     "audience": "agent",
+     "junior_text": "The model choice was proposed: the linear model."
     }
    ],
    "truncated": true,

@@ -30,7 +30,13 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   'nextAction', 'artifacts', 'artifactsStatus', 'proposals', 'holds', 'notes', 'decisions', 'executions',
   'notYetDefensible', 'alerts', 'digest', 'waitingCount', 'regenerate', 'currency',
   // WP-A5 (two-layer copy, CLI-CONTRACT §3.3): the junior variants of the engine's texts.
-  'recapJunior', 'recapAudience', 'finalTest', 'deliverables'];
+  'recapJunior', 'recapAudience', 'finalTest', 'deliverables',
+  // WP-A7: the success criterion against the evaluation, the count of looks at the outcome,
+  // and the confirmation mode (CLI-CONTRACT §3, §11.2, §11.4, §5.2).
+  'criterion', 'edaLooks', 'mode'];
+// The statuses of the success criterion (CLI-CONTRACT §11.4).
+const CRITERION_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
+const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
 // The audiences of an engine text (CLI-CONTRACT §3.3).
 const AUDIENCES = ['junior', 'agent'];
 // The engine's currency digest (CR.1): a short lowercase hexadecimal string.
@@ -67,6 +73,21 @@ function deliverablesModel(raw) {
   return { interpreter: strOrNull(raw.interpreter), launch: out };
 }
 
+/**
+ * The success criterion of the summary (CLI-CONTRACT §11.4, `summary.criterion`), or null.
+ * Its figures are the engine's: the gain over the baseline at the adopted rule (points) or
+ * the error reduction (a share), its paired interval, and the result it was read from.
+ */
+function criterionModel(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const status = CRITERION_STATUSES.includes(raw.status) ? raw.status : 'not_assessed';
+  return {
+    decisionStatus: strOrNull(raw.decision_status), value: raw.value && typeof raw.value === 'object' ? showValue(raw.value) : null,
+    status, gain: num(raw.gain), low: num(raw.low), high: num(raw.high), minimum: num(raw.minimum), unit: strOrNull(raw.unit),
+    rule: strOrNull(raw.rule), resultId: strOrNull(raw.result_id), contradictsVerdict: raw.contradicts_verdict === true,
+  };
+}
+
 function taskOf(summary, plan) {
   if (summary.task === 'binary' || summary.task === 'regression') return summary.task;
   if (plan.some(s => s.id === 'model_choice')) return 'regression';
@@ -92,6 +113,8 @@ function digestModel(raw, lastSession) {
       const inv = i && i.invalidation && typeof i.invalidation === 'object' ? i.invalidation : null;
       return {
         revision: int(i && i.revision), time: strOrNull(i && i.time), kind: str(i && i.kind), text: str(i && i.text),
+        // WP-A7: the engine's audience of `text` and its junior variant (CLI-CONTRACT §3.3).
+        audience: audienceOf(i && i.audience), juniorText: juniorOf(i && i.text, i && i.audience, i && i.junior_text),
         decisionId: strOrNull(i && i.decision_id), proposalId: strOrNull(i && i.proposal_id), noteId: strOrNull(i && i.note_id),
         basis: strOrNull(i && i.basis), channel: strOrNull(i && i.channel), activity: strOrNull(i && i.activity),
         column: strOrNull(i && i.column),
@@ -261,6 +284,10 @@ function toSummaryModel(summary) {
       developmentRows: int(summary.final_test.development_rows),
     } : null,
     deliverables: deliverablesModel(summary.deliverables),
+    criterion: criterionModel(summary.criterion),
+    edaLooks: summary.eda_looks && typeof summary.eda_looks === 'object'
+      ? { targetLooks: int(summary.eda_looks.target_looks), results: list(summary.eda_looks.results).map(str) } : null,
+    mode: strOrNull(summary.mode),
   };
 }
 
@@ -269,5 +296,5 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, CRITERION_STATUSES, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

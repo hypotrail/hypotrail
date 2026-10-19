@@ -33,7 +33,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2a (WP-A4): the success criterion and the target-look count.
                 'criterion', 'eda_looks', 'recap',
                 # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
-                'recap_audience', 'recap_junior')
+                'recap_audience', 'recap_junior',
+                # v0.2a (WP-A7): the confirmation mode and the notebook launch commands.
+                'mode', 'deliverables')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.
@@ -60,7 +62,9 @@ LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
 DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts')
 DIGEST_ITEM_KEYS = ('revision', 'time', 'action', 'kind', 'decision_id', 'proposal_id', 'note_id',
                     'activity', 'slot', 'result_id', 'execution_id', 'rules', 'column', 'channel',
-                    'basis', 'delegation_scope', 'superseded', 'invalidation', 'text')
+                    'basis', 'delegation_scope', 'superseded', 'invalidation', 'text',
+                    # v0.2a (WP-A7): the audience of ``text`` and its junior variant.
+                    'audience', 'junior_text')
 DIGEST_KINDS = ('proposed', 'confirmed', 'withdrawn', 'hold_recorded', 'hold_resolved',
                 'result_added', 'result_replaced', 'run_failed', 'run_interrupted',
                 'interruption_acknowledged', 'other')
@@ -320,7 +324,11 @@ def summary_golden_text(study: Path) -> str:
                            '--json', '--study', str(study)], capture_output=True, text=True,
                           cwd=Path(study).parent, env=fk.env(), timeout=120)
     assert proc.returncode == 0 and proc.stderr == '', proc.stderr
-    return proc.stdout.replace(json.dumps(str(study))[1:-1], '<study>')
+    # WP-A7: the summary's ``deliverables`` name the engine's checkout (its Python and its
+    # uv project), which differs between checkouts: it reads ``<engine>``.
+    from mlkit.study import launch
+    engine = json.dumps(str(launch.framework_dir().parent))[1:-1]
+    return proc.stdout.replace(json.dumps(str(study))[1:-1], '<study>').replace(engine, '<engine>')
 
 
 

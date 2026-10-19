@@ -14,7 +14,7 @@
    "--request-id",
    "b-ok",
    "--expected-revision",
-   "34",
+   "38",
    "--json"
   ],
   "note": ""

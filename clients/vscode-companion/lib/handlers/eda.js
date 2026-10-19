@@ -1,6 +1,7 @@
 'use strict';
 // Eda handler (COMPANION-ADVANCED §6.3, §7 W4). Owned by WP-U4.
 //
+//   load: data  the DataModel of the `data` read (lib/models/data.js; WP-A7, the data card);
 //   load: eda   the EdaModel of the `evidence` read (lib/models/eda.js);
 //   run_eda     W4 `run <eda.activity> --column=<c>` after the catalog check of §7: the
 //               activity is a per-column, runnable entry of `eda_catalog` in the evidence
@@ -12,6 +13,7 @@
 // controller caches the payload and projects it with toEdaModel (COMPANION-ADVANCED §5).
 
 const { toEdaModel, requestable } = require('../models/eda');
+const { toDataModel } = require('../models/data');
 
 const KEY = 'evidence';
 const MESSAGES = Object.freeze({
@@ -62,6 +64,9 @@ module.exports = {
   types: { run_eda: runEda },
   loads: {
     eda: { stage: 'v2', key: () => KEY, argv: (cli, agent) => cli.evidenceArgv(agent), model: toEdaModel },
+    // WP-A7: the data card at the top of the Data & EDA tab (`hypotrail data`, development
+    // rows only; the engine records no exposure for it).
+    data: { stage: 'v2', key: () => 'data', argv: (cli, agent) => cli.dataArgv(agent), model: toDataModel },
   },
   KEY, MESSAGES,
 };

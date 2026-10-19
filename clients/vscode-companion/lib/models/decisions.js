@@ -49,6 +49,8 @@ function toDecisionsModel(payload) {
         userWords: str(c.user_words), basis: str(c.basis) || 'explicit', scope: strOrNull(c.delegation_scope),
         channel: str(c.channel) || 'chat', actor: strOrNull(c.actor), proposalId: strOrNull(c.proposal_id),
         revision: int(c.revision), time: strOrNull(c.time),
+        // ADR 0005 (R3; WP-A7 shows it): the point the agent raised and the junior kept, verbatim.
+        agentConcern: strOrNull(c.agent_concern),
       } : null,
       openProposals: list(d && d.open_proposals).map(x => (typeof x === 'string' ? x : str(x && x.proposal_id))).filter(Boolean),
     };
@@ -66,7 +68,15 @@ function toDecisionsModel(payload) {
     channel: str(h && h.channel) || 'chat', actor: strOrNull(h && h.actor),
     revision: int(h && h.revision), time: strOrNull(h && h.time),
     current: bool(h && h.current), supersededAt: int(h && h.superseded_at), index,
+    agentConcern: null,
   }));
+  // WP-A7: the agent's concern belongs to the confirmation the decision holds now (the
+  // history records carry none): the current row of that confirmation shows it.
+  for (const h of history) {
+    const d = decisions.find(x => x.decisionId === h.decisionId);
+    const c = d && d.confirmation;
+    if (h.current && c && c.agentConcern && c.revision === h.revision) h.agentConcern = c.agentConcern;
+  }
   // Grouped by decision in plan order; newest first within a group (§6.2.3).
   history.sort((a, b) => rank(a.decisionId) - rank(b.decisionId) || (b.revision || 0) - (a.revision || 0) || b.index - a.index);
   for (const h of history) delete h.index;
@@ -91,8 +101,10 @@ function toDecisionsModel(payload) {
 
   const notes = list(p.notes).map(n => {
     const res = n && n.resolution && typeof n.resolution === 'object' ? n.resolution : null;
+    // WP-A7: `kind` is `hold` or `correction` (ADR 0005, R3; a note without it is a hold).
     return { noteId: str(n && n.note_id), decisionId: str(n && n.decision_id), status: str(n && n.status),
-      userWords: str(n && n.user_words), resolutionWords: res ? strOrNull(res.user_words) : null };
+      kind: str(n && n.kind) || 'hold', userWords: str(n && n.user_words), resolutionWords: res ? strOrNull(res.user_words) : null,
+      revision: int(n && n.revision) };
   });
 
   return {

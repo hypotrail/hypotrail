@@ -18,7 +18,7 @@
   "schema": "hypotrail.preview/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 34,
+  "revision": 38,
   "kind": "policy",
   "rules": [
    "capacity:100"

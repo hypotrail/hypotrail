@@ -518,14 +518,18 @@ def test_dh1_history_basis_channel_superseded_and_unconfirmed(open_panel, binary
         ['Decision', 'Your words', 'How', 'When']
     split = page.locator('[data-history-row="split:7"]')
     basis = split.locator('[data-basis]')
-    assert basis.inner_text() == 'delegated (this decision) · chat'
+    # WP-A7: the basis is a chip of one vocabulary, the channel in words beside it.
+    assert basis.inner_text() == 'delegated (this decision)'
+    assert split.locator('[data-basis-cell]').inner_text() == 'delegated (this decision) in the chat'
     assert 'dc-delegated' in basis.get_attribute('class')
     tone = basis.evaluate('b => [getComputedStyle(b).color, getComputedStyle(b).backgroundColor]')
     warn = page.evaluate("""() => { const p = document.createElement('span'); p.className = 'hold'; document.body.appendChild(p);
         const c = getComputedStyle(p).color; p.remove(); return c; }""")
     assert tone[0] == warn, 'the delegated basis uses the warning tone'
-    assert page.locator('[data-history-row="prediction_time:3"] [data-basis]').inner_text() == 'explicit · chat'
-    assert page.locator('[data-history-row="policy:27"] [data-basis]').inner_text() == 'explicit · webview'
+    # WP-A7: the fixture's prediction moment is restated (ADR 0005); a confirmation recorded
+    # before the guided rule (explicit) reads "your words".
+    assert page.locator('[data-history-row="prediction_time:3"] [data-basis-cell]').inner_text() == 'restated in the chat'
+    assert page.locator('[data-history-row="policy:27"] [data-basis-cell]').inner_text() == 'your words in this panel'
     old = page.locator('[data-history-row="policy:23"]')
     assert old.get_attribute('data-current') == 'false'
     assert 'muted' in old.get_attribute('class')
