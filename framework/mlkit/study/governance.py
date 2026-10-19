@@ -69,15 +69,16 @@ class ValueProblem(ValueError):
 
 # --- target use and the ledger of looks -----------------------------------------------
 
-def uses_target(entry: Mapping) -> bool:
-    """Whether the registry entry ``entry`` read the target column."""
+def uses_target(entry: Mapping, target: str | None = None) -> bool:
+    """Whether the registry entry ``entry`` read the target column ``target`` (the study's
+    target; a distribution records no target in its inputs, so it is needed there)."""
     activity = entry.get('activity')
     inputs = entry.get('inputs') or {}
     params = entry.get('params') or {}
     if activity in TARGET_ACTIVITIES:
         return True
     if activity == 'eda.distribution':
-        target = (inputs.get('target') or {}).get('column') or entry.get('_target_column')
+        target = target or (inputs.get('target') or {}).get('column')
         return target is not None and params.get('column') == target
     if activity == 'split':
         decision = inputs.get('decision') or {}
@@ -175,7 +176,8 @@ def check_preprocessing(value: Any, case) -> None:
                            field='data_contingent')
 
 
-def normalize_preprocessing(value: Mapping, lookup: Callable[[str], Mapping | None]) -> dict:
+def normalize_preprocessing(value: Mapping, lookup: Callable[[str], Mapping | None],
+                            target: str | None = None) -> dict:
     """The value recorded for a proposal: ``motivated_by`` (``[]`` when absent, in the given
     order) and ``data_contingent`` computed from the motivating results. ``lookup(rid)``
     returns the registry entry of a result id, or None when the study has no such result
@@ -189,7 +191,7 @@ def normalize_preprocessing(value: Mapping, lookup: Callable[[str], Mapping | No
     if unknown:
         raise ValueProblem('motivated_by names results this study does not have.',
                            field='motivated_by', unknown_results=unknown)
-    contingent = any(uses_target(e) for e in entries)
+    contingent = any(uses_target(e, target) for e in entries)
     if 'data_contingent' in value and value['data_contingent'] != contingent:
         raise ValueProblem('data_contingent is computed by the engine from motivated_by: '
                            f'{str(contingent).lower()} here.', field='data_contingent',

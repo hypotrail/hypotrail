@@ -946,7 +946,8 @@ def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
         except StudyError:
             return None
     try:
-        return governance.normalize_preprocessing(value, lookup)
+        return governance.normalize_preprocessing(value, lookup,
+                                                  case_of(state).target_column)
     except governance.ValueProblem as exc:
         raise _invalid(exc.message, **exc.details) from None
 

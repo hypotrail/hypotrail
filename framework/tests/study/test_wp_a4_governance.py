@@ -474,3 +474,86 @@ def test_a_declared_range_is_checked_by_the_quality_overview(tmp_path):
     assert ranges['age']['declared'] == {'min': 18, 'max': 70}
     assert ranges['age']['n_below'] == 0 and ranges['age']['n_above'] > 0
     assert ranges['balance']['declared'] is None and ranges['balance']['n_above'] is None
+
+
+# --- pure governance functions ---------------------------------------------------------
+
+def _view(task, criterion, results, verdict=None, policy='capacity:10'):
+    decisions = {'success_criterion': {'status': 'confirmed', 'value': criterion}}
+    if task == 'binary':
+        decisions['policy'] = {'status': 'confirmed', 'value': policy}
+    if verdict:
+        decisions['conclusion'] = {'status': 'confirmed', 'value': {'verdict': verdict,
+                                                                    'text': 'x'}}
+    return {'task': task, 'decisions': decisions, 'results': results, 'open_proposals': []}
+
+
+def _policy(point, low, high):
+    return {'policy.evaluation': {'current': True, 'integrity': 'ok', 'result_id': 'r_pol',
+                                  'values': {'rules': {'capacity:10': {'deltas': {
+                                      'fit.logistic': {'precision': {'point': point, 'low': low,
+                                                                     'high': high}}}}}}}}
+
+
+@pytest.mark.parametrize('point, low, high, verdict, status, contradicts', [
+    (0.10, 0.04, 0.16, 'adopt_policy', 'met', False),
+    (0.10, -0.02, 0.22, 'adopt_policy', 'uncertain', True),
+    (0.03, 0.01, 0.05, 'adopt_policy', 'not_met', True),
+    (0.03, 0.01, 0.05, 'keep_baseline', 'not_met', False),
+])
+def test_the_binary_criterion_reads_the_paired_precision_gain(point, low, high, verdict, status,
+                                                               contradicts):
+    out = governance.assess(_view('binary', {'metric': 'precision_gain', 'min_points': 5},
+                                  _policy(point, low, high), verdict))
+    assert out['status'] == status and out['contradicts_verdict'] is contradicts
+    assert out['gain'] == pytest.approx(100 * point) and out['rule'] == 'capacity:10'
+    assert out['low'] == pytest.approx(100 * low) and out['result_id'] == 'r_pol'
+
+
+def test_the_regression_criterion_is_a_share_of_the_baseline_error():
+    results = {'evaluate.regression': {'current': True, 'integrity': 'ok', 'result_id': 'r_ev',
+                                       'values': {'models': {'fit.baseline': {'mae': 5.0}},
+                                                  'deltas': {'fit.linear': {'mae': {
+                                                      'point': -1.0, 'low': -1.5,
+                                                      'high': -0.5}}}}}}
+    criterion = {'metric': 'mae_reduction', 'min_share': 0.1}
+    out = governance.assess(_view('regression', criterion, results, 'adopt_model'))
+    assert out['gain'] == pytest.approx(0.2)
+    assert (out['low'], out['high']) == pytest.approx((0.1, 0.3))
+    assert out['status'] == 'met' and out['contradicts_verdict'] is False
+    stale = {k: {**v, 'current': False} for k, v in results.items()}
+    assert governance.assess(_view('regression', criterion, stale,
+                                   'adopt_model'))['status'] == 'not_assessed'
+    assert governance.assess({'decisions': {}, 'task': 'binary'}) is None
+
+
+def test_the_ledger_counts_every_exploration_that_read_the_target():
+    records = [
+        {'purpose': 'structural_inspection', 'activity': 'eda.quality', 'columns': ['a'],
+         'result_id': 'q'},
+        {'purpose': 'train_eda', 'activity': 'eda.distribution', 'columns': ['a'],
+         'result_id': 'd1'},
+        {'purpose': 'train_eda', 'activity': 'eda.distribution', 'columns': ['y'],
+         'result_id': 'd2'},
+        {'purpose': 'train_eda', 'activity': 'eda.rate_by', 'columns': ['y', 'a'],
+         'result_id': 'r1'},
+        {'purpose': 'train_eda', 'activity': 'eda.rate_by', 'columns': ['y', 'a'],
+         'result_id': 'r1'},
+        {'purpose': 'train_fit', 'activity': 'fit.logistic', 'columns': ['y', 'a'],
+         'result_id': 'f'},
+    ]
+    out = governance.ledger(records, 'y')
+    assert out['target_looks'] == 3 and out['results'] == ['d2', 'r1']
+    assert out['by_activity'] == {'eda.distribution': 1, 'eda.rate_by': 2}
+
+
+def test_uses_target_names_the_target_reading_results():
+    assert governance.uses_target({'activity': 'eda.rate_by'})
+    assert not governance.uses_target({'activity': 'eda.quality'})
+    distribution = {'activity': 'eda.distribution', 'params': {'column': 'y'}, 'inputs': {}}
+    assert governance.uses_target(distribution, 'y')
+    assert not governance.uses_target(distribution, 'age')
+    assert governance.uses_target({'activity': 'split',
+                                   'inputs': {'decision': {'method': 'stratified_random'}}})
+    assert not governance.uses_target({'activity': 'split',
+                                       'inputs': {'decision': {'method': 'random'}}})
