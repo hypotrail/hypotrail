@@ -1308,6 +1308,11 @@ def init(case_path, study_dir) -> Outcome:
                                  row_keys=index.keys, dataset_sha256=index.dataset_sha256,
                                  columns=case.column_names)
     agent = _copy_agent_templates(study_dir, case.task)
+    # R7 (v0.2a, WP-A1): the editor's Python for the notebooks, and Marimo's cache ignored.
+    from . import audience, launch
+
+    notices = [n for n in (launch.install_settings(study_dir),) if n is not None]
+    launch.install_gitignore(study_dir)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
     return Outcome({'schema': SCHEMAS['init'], 'ok': True, 'study': str(study_dir),
@@ -1315,11 +1320,14 @@ def init(case_path, study_dir) -> Outcome:
                     'dataset': snapshot['dataset'],
                     'structural_exposure': {'exposure_id': record['exposure_id'],
                                             'n_rows': record['n_rows']},
-                    'plan': st.derive_plan(snapshot), 'next_action': st.next_action(snapshot),
+                    'plan': st.derive_plan(snapshot),
+                    'next_action': audience.next_action(st.next_action(snapshot)),
                     'agent_instructions': agent,
                     'ignored_sources': ignored,
                     'note': 'Companion files next to the case are not read: their statuses are '
-                            'tutorial choices, not decisions. Every decision starts open.'})
+                            'tutorial choices, not decisions. Every decision starts open.',
+                    'notices': notices,
+                    'deliverables': launch.deliverables(study_dir)})
 
 
 def status(study_dir, since: int | None = None, summary: bool = False,
@@ -1350,13 +1358,15 @@ def status(study_dir, since: int | None = None, summary: bool = False,
 
 
 def plan(study_dir) -> Outcome:
+    from . import audience
+
     study = read.open(study_dir)
     state = study.state
     steps = st.derive_plan(state)
     return Outcome({'schema': SCHEMAS['plan'], 'ok': True, 'study': str(study.study_dir),
                     'revision': study.revision, 'steps': steps,
                     'current_step': next((s['id'] for s in steps if s['current']), None),
-                    'next_action': st.next_action(state)})
+                    'next_action': audience.next_action(st.next_action(state))})
 
 
 def apply(study_dir, *, action: str, params: dict, request_id: str, expected_revision: int,

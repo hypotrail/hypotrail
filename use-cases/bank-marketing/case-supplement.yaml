@@ -154,8 +154,8 @@ structure:
     source: 'Structural inspection of data/bank.csv: no exact duplicate rows'
 prior_exposure:
   - value: >-
-      data/split.json records the companion split (seed 20261017) whose validation metrics are
-      published in results.json. A study that reuses this seed has no unseen validation rows.
+      data/split.json records the tutorial split (seed 20261017) whose validation metrics were
+      published with this dataset. A study that reuses this seed has no unseen validation rows.
     status: observed
     source: data/split.json
 notes:

@@ -69,6 +69,10 @@ SUPPLEMENT_KEYS = ('schema', 'purpose', 'dataset', 'target', 'facts', 'variables
                    'prior_exposure', 'notes')
 SUPPLEMENT_DATASET_KEYS = ('sep', 'header', 'quotechar', 'na_values', 'encoding', 'decimal',
                            'column_names')
+# v0.2a (WP-A1): statements a surface shows the junior name no tutorial file; the migration
+# record (``migration.rules``) keeps where each one came from.
+SCENARIO_SOURCE = 'Teaching scenario assumption'
+NOT_DOCUMENTED_AVAILABILITY = 'Availability at prediction time is not documented'
 CITATION = re.compile(r'([\w][\w./-]*):(\d+)')
 TEMPLATE = re.compile(r'\{\{.*?\}\}')
 
@@ -129,16 +133,15 @@ def _availability(value: str, path: str, log: _Log) -> dict:
     if value == 'yes':
         log(path, 'companion "yes" -> available_at_prediction, scenario_assumption')
         return {'value': 'available_at_prediction', 'status': 'scenario_assumption',
-                'source': 'Companion tutorial (project.json); the dataset documentation does '
-                          'not establish availability at prediction time'}
+                'source': SCENARIO_SOURCE + '; the dataset documentation does not establish '
+                                            'availability at prediction time'}
     if value == 'no':
         log(path, 'companion "no" -> not_available, scenario_assumption')
         return {'value': 'not_available', 'status': 'scenario_assumption',
-                'source': 'Companion tutorial (project.json); not established by the dataset '
-                          'documentation'}
+                'source': SCENARIO_SOURCE + '; not established by the dataset documentation'}
     if value == 'unknown':
         return {'value': 'unknown', 'status': 'unknown',
-                'source': 'Companion tutorial (project.json): availability unknown'}
+                'source': NOT_DOCUMENTED_AVAILABILITY}
     raise MigrationError(f'{path}: unknown companion availability {value!r}')
 
 
@@ -292,11 +295,10 @@ def from_companion_project(path, *, supplement=None) -> dict:
         else:
             log(p, 'not described in project.json: status and availability unknown')
             entry = {'name': name, 'type': _inferred_type(dataset_path, read, name, columns),
-                     'role': 'feature', 'description': 'Not described in project.json.',
-                     'status': 'unknown', 'source': 'Not described in project.json',
+                     'role': 'feature', 'description': 'Not described by the documentation.',
+                     'status': 'unknown', 'source': 'Not documented',
                      'availability': {'value': 'unknown', 'status': 'unknown',
-                                      'source': 'Not described in project.json; availability at '
-                                                'prediction time is not documented'},
+                                      'source': NOT_DOCUMENTED_AVAILABILITY},
                      'special_values': []}
         if name in overrides:
             changed = sorted(overrides[name])
@@ -355,11 +357,11 @@ def from_companion_project(path, *, supplement=None) -> dict:
         'group_column': ({'value': groups[0], 'status': by_name[groups[0]]['status'],
                           'source': by_name[groups[0]]['source']} if groups else
                          {'value': None, 'status': 'unknown',
-                          'source': 'No group column declared in project.json'}),
+                          'source': 'No group column declared'}),
         'time_column': ({'value': times[0], 'status': by_name[times[0]]['status'],
                          'source': by_name[times[0]]['source']} if times else
                         {'value': None, 'status': 'unknown',
-                         'source': 'No time column declared in project.json'}),
+                         'source': 'No time column declared'}),
         'duplicates': {'value': None, 'status': 'unknown', 'source': 'Not documented'},
     }
     for key, value in sup.get('structure', {}).items():
@@ -373,14 +375,17 @@ def from_companion_project(path, *, supplement=None) -> dict:
     results_path = folder / RESULTS_FILE
     if results_path.is_file():
         results = json.loads(results_path.read_text(encoding='utf-8'))
+        # v0.2a (WP-A1): the junior reads these statements; the file digest stays in the
+        # migration record, not in the statement.
+        log('prior_exposure', f'{RESULTS_FILE} sha256 {_sha(results_path)}')
         for protocol in results.get('protocols', []):
             prior.append({
                 'value': f'Tutorial outputs for protocol "{protocol["id"]}" ({protocol["label"]}. '
-                         f'{protocol["description"]}) are published in results.json. The rows '
-                         f'used there are not unseen, and its validation is not independent '
+                         f'{protocol["description"]}) were published with this dataset. The rows '
+                         f'used there are not unseen, and that validation is not independent '
                          f'evidence.',
                 'status': 'observed',
-                'source': f'results.json (sha256 {_sha(results_path)})'})
+                'source': 'Tutorial results published with the dataset'})
     prior += copy.deepcopy(sup.get('prior_exposure', []))
 
     for item in ds.get('transformations', []):

@@ -186,8 +186,10 @@ INLINE_CODE = re.compile(r'`[^`\n]*`')
 HANDOFF_DIR = 'handoff'
 SCRIPT_SUFFIXES = {'.py', '.ipynb', '.r', '.sql', '.csv', '.parquet', '.xlsx', '.json', '.pkl'}
 OWN_NOTEBOOKS = re.compile(r'^notebooks/(study_generated(\.user-edits-[^/]+)?|workbench(\.candidate)?)\.py$')
+# ``__marimo__`` is Marimo's cache and ``.vscode`` holds the editor settings ``init`` writes
+# (R7, v0.2a): neither is a computation outside hypotrail.
 IGNORED_DIRS = {'.hypotrail', '__marimo__', '__pycache__', '.claude', '.github', '.git',
-                'reports', '.venv'}
+                'reports', '.venv', '.vscode'}
 
 
 def finding(code: str, where: str, message: str, *, location: dict | None = None,

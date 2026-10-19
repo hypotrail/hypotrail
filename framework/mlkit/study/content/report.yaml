@@ -48,6 +48,17 @@ availability:
   uncertain_excluded: Uncertain, excluded
   uncertain_included: Uncertain, included and listed as a limit
   missing: No status
+# v0.2a (WP-A1): who decided each feature's status. A feature the junior did not name is
+# never shown as their decision.
+availability_head:
+  status: Status used
+  basis: Who decided
+  case: What the case states
+availability_basis:
+  discussed: Your decision (named in your words)
+  default_from_case: From the case, not discussed
+availability_basis_open: Proposed, not confirmed
+availability_not_stated: availability at prediction time not documented
 verdict:
   adopt_policy: Adopt the policy
   keep_baseline: Keep the baseline
