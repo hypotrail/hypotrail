@@ -79,6 +79,8 @@ WP_B1_REQUIRES = {
 }
 FINAL_TEST_EVALUATION = 'final_test.evaluation'
 VARIANT_FIT = 'fit.variant'
+# WP-B4: the diagnostics of the final test.
+FINAL_DIAGNOSTICS = 'diag.final_test'
 
 
 def decision_requires(state: Mapping, decision_id: str) -> tuple[str, ...]:
@@ -193,8 +195,9 @@ def final_test_missing(state: Mapping, value: Any = None) -> list[dict]:
                         'chosen': chosen,
                         'detail': 'The final test opens the configuration the study chose; '
                                   'propose it as chosen.'})
+    # WP-B4: stale diagnostics describe the choice, they do not make it: they never block.
     stale = sorted(slot for slot, rid in state['current'].items()
-                   if rid in state['stale'] and not slot.startswith('eda.'))
+                   if rid in state['stale'] and not slot.startswith(('eda.', 'diag.')))
     if stale:
         missing.append({'requirement': 'nothing_stale', 'slots': stale,
                         'detail': 'Some results are stale: run them again before opening the '
@@ -234,8 +237,20 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
         missing = [] if _confirmed(state, st.FINAL_TEST) else [_need_decision(state,
                                                                               st.FINAL_TEST)]
         return missing
+    if activity == FINAL_DIAGNOSTICS:
+        # WP-B4: the final test's diagnostics read its rows, so only once it was opened and
+        # its one evaluation is recorded; before that, nothing is read.
+        if not st.final_test_opened(state):
+            return [{'requirement': 'final_test_opened',
+                     'detail': 'The final test is sealed: its diagnostics exist only after the '
+                               'junior opened it and its one evaluation is recorded.'}]
+        if FINAL_TEST_EVALUATION not in state['current']:
+            return [{'requirement': 'result_current', 'slot': FINAL_TEST_EVALUATION,
+                     'detail': 'The final test was opened without a recorded evaluation.'}]
+        return []
     missing = [_need_decision(state, d) for d in ACTIVITY_DECISIONS if not _confirmed(state, d)]
-    if activity.startswith(('fit.', 'policy.', 'evaluate.')) and st.has_wp_a4_decisions(state):
+    if activity.startswith(('fit.', 'policy.', 'evaluate.', 'diag.')) \
+            and st.has_wp_a4_decisions(state):
         missing += [{**_need_decision(state, d),
                      'detail': 'Fix the success criterion and the preprocessing before fitting '
                                'any model.'}
@@ -249,7 +264,8 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
             and not _confirmed(state, st.MODEL_VARIANT):
         missing.append({**_need_decision(state, st.MODEL_VARIANT),
                         'detail': 'Name the variant to compare before fitting it.'})
-    if activity.startswith('policy.') or activity.startswith('evaluate.'):
+    if activity.startswith(('policy.', 'evaluate.', 'diag.')):
+        # WP-B4: the diagnostics read the predictions the evaluation reads.
         for slot in FIT_SLOTS[st.task_of(state)]:
             if not st.is_current(state, slot):
                 missing.append({'requirement': 'result_current', 'slot': slot})

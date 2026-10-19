@@ -270,6 +270,31 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
     has no effect). For ``code_fingerprint``, ``old`` and ``new`` are
     ``{"activity", "fingerprint"}``. Pure: ``old_state`` is only read.
     """
+    return _diagnostics_follow_the_rule(old_state, decision_id, old, new,
+                                        _effects(old_state, decision_id, old, new))
+
+
+# WP-B4: the binary diagnostics are computed at one rule (the adopted one when there is one).
+DIAG_BINARY_SLOT = 'diag.binary'
+
+
+def _diagnostics_follow_the_rule(old_state: Mapping, decision_id: str, old: Any, new: Any,
+                                 out: dict) -> dict:
+    """A policy confirmed with another rule (a first adoption included) makes the current
+    binary diagnostics stale: they were computed at another rule, or at a proposed one."""
+    if decision_id != 'policy' or DIAG_BINARY_SLOT not in old_state.get('current', {}):
+        return out
+    if rec.policy_rule(old) == rec.policy_rule(new) and old is not None:
+        return out
+    if DIAG_BINARY_SLOT not in out['recompute']:
+        out['recompute'] = sorted(set(out['recompute']) | {DIAG_BINARY_SLOT})
+        out['re_chart'] = sorted(set(out['re_chart']) | {DIAG_BINARY_SLOT})
+        out['notes'] = list(out['notes']) + ['The diagnostics are computed at the adopted rule: '
+                                             'they are run again at the new one.']
+    return out
+
+
+def _effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
     decisions = st.decision_ids(old_state)
     if old is None and decision_id in decisions:
         return no_effects('first_confirmation', f'{decision_id} confirmed for the first time')

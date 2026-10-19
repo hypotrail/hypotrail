@@ -124,7 +124,7 @@ terms:
     definition: The precision of the rows acted on divided by the base rate. A lift above one means the rule finds positive rows more often than acting at random would. For example, if the clients called first subscribe twice as often as the clients in general, the lift of that call list is two.
   calibration:
     term: Calibration
-    definition: Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated, and this study does not assess calibration. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.
+    definition: Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated; the model diagnostics compare the mean score with the observed rate in bins of rows sorted by score. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.
   overfitting:
     term: Overfitting
     definition: A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.
@@ -164,9 +164,31 @@ terms:
   single_feature_signal:
     term: Single-feature signal
     definition: How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.
+  # v0.2b (WP-B4, R9): the terms of the model diagnostics.
+  confusion_matrix:
+    term: Confusion matrix
+    definition: The four counts of a decision rule against the outcome, selected positive rows, selected negative rows, missed positive rows and correctly left-out negative rows. Precision and recall are read from it. For example, of the clients a call list selects, some subscribe and some do not, and some subscribers are never called; the matrix counts each case.
+  gain_curve:
+    term: Gain curve
+    definition: The share of all positive rows found when acting on the top share of the rows ranked by score, for every share from the top of the list to all of it. A curve above the diagonal finds positive rows faster than acting at random. For example, it tells how many of all subscribers a campaign would reach by calling only the best-ranked tenth, fifth, or half of the clients.
+  roc_curve:
+    term: ROC curve
+    definition: The share of positive rows found against the share of negative rows selected, as the cut-off moves down the ranked list. The area under it is the AUC. For example, it shows how many non-subscribers a call list must also call to reach a given share of the subscribers.
+  brier_score:
+    term: Brier score
+    definition: The mean squared difference between a score and the outcome counted as zero or one. Lower is better; giving every row the base rate is the reference to beat, and a model that ranks well can still score worse than it when its scores are not probabilities. For example, scoring every client with the average subscription rate gives the Brier score a model of the clients must improve on.
+  heteroscedasticity:
+    term: Heteroscedasticity
+    definition: Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of client deposits errs more for the clients it ranks highest, its errors are heteroscedastic.
+  qq_plot:
+    term: Quantile-quantile plot
+    definition: The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few clients with very large errors bend the ends of the plot away from the diagonal.
+  example_errors:
+    term: Example errors
+    definition: A few rows where the decision and the outcome disagree, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the called clients with the highest scores who did not subscribe can reveal a variable the model reads too much.
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
-binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval]
+binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval, confusion_matrix, gain_curve, roc_curve, brier_score]
 regression_terms:
   success_criterion:
     term: Success criterion
@@ -267,3 +289,16 @@ regression_terms:
   development_rows:
     term: Development rows
     definition: Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.
+  # v0.2b (WP-B4, R9): the terms of the regression diagnostics.
+  heteroscedasticity:
+    term: Heteroscedasticity
+    definition: Errors whose size changes with the prediction or across groups instead of staying about the same. The mean error stays a fair summary, but one interval width for every row would be wrong. For example, if a model of fuel efficiency errs more for the cars it predicts most efficient, its errors are heteroscedastic.
+  qq_plot:
+    term: Quantile-quantile plot
+    definition: The quantiles of the residuals, rescaled, plotted against the same quantiles of a normal distribution; points on the diagonal mean normal residuals. Normality is a question about the residuals after the fit, never about the raw variables, and it matters for prediction intervals rather than for the mean error. For example, a few cars with very large errors bend the ends of the plot away from the diagonal.
+  example_errors:
+    term: Example errors
+    definition: The rows with the largest errors, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the cars the model predicts worst can reveal a group of cars it was not fitted to describe.
+  smearing:
+    term: Retransformation (smearing)
+    definition: When a model predicts the logarithm of the target, turning its predictions back to the original unit underestimates the mean, and a correction such as Duan's smearing is needed. For example, a model of the log of fuel efficiency would need it; this engine does not transform the target, so it does not apply here.

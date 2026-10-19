@@ -156,6 +156,10 @@ def binary(cap: Capture) -> None:
     cap.read('error.export_target_exists', 'binary', study, 'export', 'handoff', f'--out={pack}', '--json',
              expect=(2,))
     assert out['ok'] is True
+    # WP-B4: the development diagnostics (on a clone, so the payloads above are unchanged).
+    diag = fk.clone(study, cap.root / 'binary-diag')
+    cap.save('run.diag.binary', 'binary', ['run', 'diag.binary'], 0,
+             fk.Flow(diag, BANK, prefix='bd').run('diag.binary'))
     # A webview proposal (C9), then its withdrawal and a confirmation on clones.
     web = fk.clone(study, cap.root / 'binary-web')
     code, out = run('decide', 'propose', 'policy', '--value', 'capacity:100', '--restatement',
@@ -234,6 +238,9 @@ def regression(cap: Capture) -> None:
     cap.read('evidence.regression', 'regression', study, 'evidence', '--json')
     cap.read('explain.regression', 'regression', study, 'explain', '--json')
     cap.read('session_report.regression', 'regression', study, 'session-report', '--json')
+    # WP-B4: the development diagnostics.
+    cap.save('run.diag.regression', 'regression', ['run', 'diag.regression'], 0,
+             flow.run('diag.regression'))
 
 
 def capture(root: Path) -> dict[str, dict]:

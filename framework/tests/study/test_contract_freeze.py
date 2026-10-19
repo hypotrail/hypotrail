@@ -356,7 +356,9 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      # v0.2b (WP-B1): cross-validation, the selection on out-of-fold
                      # predictions, the one evaluation of the final test.
                      'cross_validated_fit', 'out_of_fold_evaluation',
-                     'out_of_fold_policy_selection', 'final_evaluation')
+                     'out_of_fold_policy_selection', 'final_evaluation',
+                     # v0.2b (WP-B4): the diagnostics of the development predictions.
+                     'development_diagnostics')
 EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
 FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
                           'schema_check',
@@ -1055,3 +1057,49 @@ def test_wp_b1_contract_constants():
                'data.load_final_test', 'activities.CAPABILITY_FOLDS'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
     assert f'`{act.CAPABILITY_FOLDS}`' in DOC
+
+
+def test_wp_b4_contract_constants():
+    """v0.2b (WP-B4, R9): the diagnostics activities, their value shapes, their exposure, and
+    the rule they follow; every name is documented in CLI-CONTRACT.md §13."""
+    from mlkit.study import activities as act, diagnostics as dg, governance
+    from mlkit.study import preconditions as pre
+    assert act.DIAG_ACTIVITIES == {'binary': ('diag.binary', 'diag.final_test'),
+                                   'regression': ('diag.regression', 'diag.final_test')}
+    assert act.DEVELOPMENT_DIAGNOSTICS == ('diag.binary', 'diag.regression')
+    for task in ('binary', 'regression'):
+        assert act.task_activities(task)[-2:] == act.DIAG_ACTIVITIES[task]
+    assert dg.DEVELOPMENT_PURPOSE == 'development_diagnostics' and \
+        dg.FINAL_PURPOSE == 'final_evaluation'
+    assert dg.EVIDENCE == ('development', 'final')
+    assert dg.RULE_SOURCES == ('adopted', 'proposed', 'scenario_default', 'engine_default')
+    assert dg.DEFAULT_RULE == 'share:0.1' and len(dg.CURVE_SHARES) == 20
+    assert (dg.CALIBRATION_BINS, dg.MAX_SEGMENT_COLUMNS, dg.MAX_EXAMPLES,
+            dg.COEFFICIENT_REPLICATES, dg.SCATTER_POINTS) == (10, 2, 5, 100, 150)
+    assert dg.BINARY_KEYS == ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n',
+                              'n_positive', 'base_rate', 'rule', 'rule_source',
+                              'segment_columns', 'segment_rule', 'models', 'coefficient_rows',
+                              'note')
+    assert dg.REGRESSION_KEYS == ('question', 'evidence', 'purpose', 'partition', 'evaluation',
+                                  'n', 'target', 'unit', 'residual_columns',
+                                  'residual_definition', 'target_transform', 'smearing',
+                                  'normality_note', 'models', 'coefficient_rows', 'note')
+    assert dg.BINARY_MODEL_KEYS == ('confusion', 'curve', 'roc_auc', 'average_precision',
+                                    'calibration', 'segments', 'examples', 'coefficients',
+                                    'predictions')
+    assert dg.REGRESSION_MODEL_KEYS == ('errors', 'residuals', 'qq', 'by_prediction',
+                                        'heteroscedasticity', 'by_feature', 'scatter',
+                                        'examples', 'coefficients', 'predictions')
+    assert pre.FINAL_DIAGNOSTICS == 'diag.final_test'
+    assert set(act.DIAG_ACTIVITIES['binary'] + act.DIAG_ACTIVITIES['regression']) \
+        <= set(governance.TARGET_ACTIVITIES)
+    keys = (set(dg.BINARY_KEYS) | set(dg.REGRESSION_KEYS) | set(dg.FINAL_BINARY_KEYS)
+            | set(dg.FINAL_REGRESSION_KEYS) | set(dg.BINARY_MODEL_KEYS)
+            | set(dg.REGRESSION_MODEL_KEYS) | set(dg.RULE_SOURCES) | set(dg.EVIDENCE)
+            | {'diag.binary', 'diag.regression', 'diag.final_test', 'development_diagnostics',
+               'final_test_opened', 'activities.diagnostic_rule', 'diagnostics.DEFAULT_RULE',
+               'diagnostics.calibration_bins', 'diagnostics.segment_columns',
+               'diagnostics.residual_columns', 'code_cells.diagnostics_cell',
+               'render_diagnostics.section', 'render_html.ANNEX_SKIPPED',
+               'recompute_dev_diagnostics', 'recompute_final_diagnostics'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
