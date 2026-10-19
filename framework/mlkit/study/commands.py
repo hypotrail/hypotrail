@@ -1101,6 +1101,18 @@ def _confirm(ctx: Context) -> Handler:
         if proposal.get('request_id') == ctx.request_id or proposal['revision'] > state['revision']:
             raise _ambiguous('same_request', 'A proposal is confirmed by a later request than the '
                                              'one that created it.', proposal_id=pid)
+        if proposal['decision_id'] == st.FINAL_TEST:
+            decision_id = proposal['decision_id']
+            if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+                raise final_test_opened_refusal(state)
+            if decision_id == st.FINAL_TEST and params['basis'] == st.DELEGATED_DEFAULT:
+                # WP-B1: the opening is the junior's own act, with a reason; never delegated.
+                raise CommandRefused('reason_required',
+                                     'The final test is opened only in the junior\'s own words, '
+                                     'with a reason ("because ..."); it cannot be delegated.',
+                                     details={'decision_id': decision_id, 'proposal_id': pid,
+                                              'user_words': params['user_words'],
+                                              'mode': st.mode_of(state)})
         if params['basis'] == st.DELEGATED_DEFAULT and not states_default(proposal['restatement']):
             raise _ambiguous('restatement_not_default',
                              f'Proposal {pid} does not say it is the assistant\'s recommended '
@@ -1108,16 +1120,6 @@ def _confirm(ctx: Context) -> Handler:
                              f'restatement that states the recommended default.',
                              proposal_id=pid, restatement=proposal['restatement'])
         decision_id, value = proposal['decision_id'], proposal['value']
-        if decision_id == st.FINAL_TEST and st.final_test_opened(state):
-            raise final_test_opened_refusal(state)
-        if decision_id == st.FINAL_TEST and params['basis'] == st.DELEGATED_DEFAULT:
-            # WP-B1: the opening is the junior's own act, with a reason; never delegated.
-            raise CommandRefused('reason_required',
-                                 'The final test is opened only in the junior\'s own words, '
-                                 'with a reason ("because ..."); it cannot be delegated.',
-                                 details={'decision_id': decision_id, 'proposal_id': pid,
-                                          'user_words': params['user_words'],
-                                          'mode': st.mode_of(state)})
         hold = _hold_refusal(state, decision_id, pid)
         if hold is not None:
             raise hold

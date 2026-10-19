@@ -18,6 +18,7 @@ activities:
       - {path: partitions.train.rate, label: Positive share in training, fmt: pct1}
       - {path: partitions.validation.rate, label: Positive share in validation, fmt: pct1}
       - {path: validation_fraction, label: Validation fraction (decided), fmt: pct0}
+      - {path: folds, label: Cross-validation folds (each row validated once), fmt: int}
       - {path: overlap.moved, label: Rows that changed partition since the previous split, fmt: int}
       - {path: overlap.previously_exposed.validation.train_eda, label: Validation rows already explored during EDA, fmt: int}
   eda.target_rate:
@@ -124,6 +125,26 @@ activities:
       - {path: validation.n_rows, label: Validation rows scored, fmt: int}
       - {path: validation.n_positive, label: Positive rows in validation, fmt: int}
       - {path: n_terms, label: Model terms after encoding, fmt: int}
+      - {path: cross_validation.spread.roc_auc.sd, label: Spread of the AUC across folds (standard deviation), fmt: f3}
+      - {path: cross_validation.spread.roc_auc.min, label: Lowest fold AUC, fmt: f3}
+      - {path: cross_validation.spread.roc_auc.max, label: Highest fold AUC, fmt: f3}
+  fit.variant:
+    label: Variant of the logistic model
+    glossary: regularisation
+    highlights:
+      - {path: validation.roc_auc, label: Ranking quality out of fold or on validation (AUC), fmt: f3}
+      - {path: validation.average_precision, label: Average precision, fmt: f3}
+      - {path: C, label: Regularisation parameter C (the candidate has 1), fmt: auto}
+      - {path: cross_validation.spread.roc_auc.sd, label: Spread of the AUC across folds (standard deviation), fmt: f3}
+      - {path: n_terms, label: Model terms after encoding, fmt: int}
+  final_test.evaluation:
+    label: The final test, opened once
+    glossary: final_test
+    highlights:
+      - {path: n, label: Final-test rows scored once, fmt: int}
+      - {path: n_positive, label: Positive rows in the final test, fmt: int}
+      - {path: refit.n_rows, label: Development rows the chosen configuration was refitted on, fmt: int}
+      - {path: criterion.gain, label: Precision gain over the baseline on the final test (points), fmt: f1}
   policy.evaluation:
     label: Policy evaluation on validation rows
     glossary: policy
@@ -236,6 +257,21 @@ regression_activities:
       - {path: n_train, label: Training rows fitted, fmt: int}
       - {path: validation.n_rows, label: Validation rows predicted, fmt: int}
       - {path: n_terms, label: Model terms after encoding, fmt: int}
+  fit.variant:
+    label: Variant of the linear model
+    glossary: regularisation
+    highlights:
+      - {path: validation.mae, label: Mean absolute error out of fold or on validation, fmt: f2}
+      - {path: validation.rmse, label: Root mean squared error, fmt: f2}
+      - {path: alpha, label: Ridge penalty alpha (the candidate has none), fmt: auto}
+      - {path: cross_validation.spread.mae.sd, label: Spread of the MAE across folds (standard deviation), fmt: f2}
+  final_test.evaluation:
+    label: The final test, opened once
+    glossary: final_test
+    highlights:
+      - {path: n, label: Final-test rows scored once, fmt: int}
+      - {path: refit.n_rows, label: Development rows the chosen model was refitted on, fmt: int}
+      - {path: criterion.gain, label: Reduction of the baseline error on the final test, fmt: pct1}
   evaluate.regression:
     label: Model comparison on validation rows
     glossary: mae

@@ -31,6 +31,7 @@ NOT_AVAILABLE = 'desk_followups'
 UNCERTAIN_INCLUDED = 'reminders_sent'
 POLICY_RULE = 'capacity:20'
 CRITERION_VALUE = {'metric': 'precision_gain', 'min_points': 5}
+VARIANT_VALUE = {'kind': 'regularisation', 'strength': 'strong'}
 
 # Canonical value shapes (CLI-CONTRACT.md section 8.5) that these fixtures follow.
 CANONICAL_SHAPES = {
@@ -316,6 +317,11 @@ def build(study: Path, case_dir: Path, upto: str = 'conclusion',
                                                         for i in range(90)])})
     if upto == 'models':
         return b
+    if st.has_wp_b1_decisions(read.open(study).state):
+        # WP-B1: the variant the choice compares, named before the choice.
+        b.decide('model_variant', VARIANT_VALUE,
+                 'Compare the model with a more strongly regularised variant of it.',
+                 'I confirm the stronger regularisation as the variant.')
     put_policy_evaluation(b)
     b.decide('policy', POLICY_RULE, 'Call the 20 highest-scored members.',
              'Yes, twenty calls is what the desk can handle.')

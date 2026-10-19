@@ -24,6 +24,8 @@ REPO = FRAMEWORK.parent
 TESTS = FRAMEWORK / 'tests'
 BANK = REPO / 'use-cases' / 'bank-marketing'
 SPLIT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
+# WP-B1: the variant of a test study (a test choice, not a recommendation).
+VARIANT = {'kind': 'regularisation', 'strength': 'strong'}
 
 _spec = importlib.util.spec_from_file_location('synthetic_make_case_for_flowkit',
                                                TESTS / 'fixtures/synthetic/make_case.py')
@@ -87,6 +89,18 @@ def criterion(state) -> dict:
     if st.task_of(state) == st.REGRESSION:
         return {'metric': 'mae_reduction', 'min_share': 0.1}
     return {'metric': 'precision_gain', 'min_points': 5}
+
+
+def wp_a4_shape(state: dict) -> dict:
+    """``state`` (a new study's initial state) in the shape of a study created before WP-B1
+    (v0.2a: seven decisions, never migrated), so the tests of that generation run on it."""
+    from mlkit.study import state as st
+    task = st.task_of(state)
+    for d in st.WP_B1_DECISIONS:
+        state['decisions'].pop(d, None)
+    for d, dec in state['decisions'].items():
+        dec['depends_on'] = list(st.FULL_DEPENDS_ON_BY_TASK[task][d])
+    return state
 
 
 def availability(case_dir, **overrides) -> dict:
@@ -159,6 +173,18 @@ class Flow:
         if decisions['preprocessing']['status'] != 'confirmed':
             self.decide('preprocessing', preprocessing or dict(governance.DEFAULT_PREPROCESSING))
 
+    def variant(self, value=None, run=True):
+        """WP-B1: name the variant the choice compares (the default stronger regularisation
+        unless given) and fit it, in a study that has the decision."""
+        from mlkit.study import state as st
+        state = self.state()
+        if not st.has_wp_b1_decisions(state):
+            return
+        if state['decisions']['model_variant']['status'] != 'confirmed':
+            self.decide('model_variant', value or dict(VARIANT))
+        if run:
+            self.run('fit.variant')
+
     def run(self, activity, *options, expect=0, request_id=None):
         return self.call('run', activity, *options, '--request-id', request_id or self.rid(),
                          '--expected-revision', self.rev(), '--study', self.study, expect=expect)
@@ -183,6 +209,7 @@ def prepare(case_dir: Path, study: Path, upto: str = 'fits') -> Path:
         return study
     flow.run('fit.baseline')
     flow.run('fit.logistic')
+    flow.variant()
     return study
 
 
