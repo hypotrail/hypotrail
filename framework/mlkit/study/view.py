@@ -18,6 +18,7 @@ import copy
 from pathlib import Path
 
 from . import currency
+from . import partition
 from . import read
 from . import records as rec
 from . import state as st
@@ -30,7 +31,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'structure', 'results', 'stale', 'invalidations', 'executions', 'artifacts',
              'exposure', 'not_yet_defensible', 'settings', 'task',
              # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
-             'notes')
+             'notes',
+             # v0.2a (ADR 0006): the sealed final test, or ``status: absent``.
+             'final_test')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -56,7 +59,9 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # Post-v0.1 fixes (D5): the open holds grouped by decision.
                 'holds',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
-                'recap')
+                'recap',
+                # v0.2a (ADR 0006): the sealed final test, or ``status: absent``.
+                'final_test')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
@@ -358,7 +363,7 @@ def summary(view: dict) -> dict:
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
            'executions': executions, 'not_yet_defensible': defensible, 'notes': notes,
-           'holds': _holds(notes, decisions)}
+           'holds': _holds(notes, decisions), 'final_test': view['final_test']}
     out['recap'] = recap(out, view)
     return {k: out[k] for k in SUMMARY_KEYS}
 
@@ -691,6 +696,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'settings': state['settings'],
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
+        'final_test': partition.final_test_status(state),
     }
 
 
