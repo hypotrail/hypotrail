@@ -2,8 +2,9 @@
 
 The report is read-only and content-free; the log records only when enabled
 (``HYPOTRAIL_SESSION_LOG=1`` once, then while the file exists), never in a read-only
-process, and never the junior's words, a restatement, a rationale, a value, or checked
-text. Studies live in temporary directories.
+process, never a read-only command (review fix: reads write nothing; ``export`` leaves the
+study tree byte-identical), and never the junior's words, a restatement, a rationale, a
+value, or checked text. Studies live in temporary directories.
 """
 from __future__ import annotations
 
@@ -48,7 +49,8 @@ def logged(tmp_path, synthetic_case_dir, monkeypatch):
     monkeypatch.setenv(sessionlog.ENV, '1')
     _call('status', '--summary', '--study', study, expect=0)
     monkeypatch.delenv(sessionlog.ENV)
-    assert sessionlog.path(study).is_file()
+    assert sessionlog.path(study).is_file()                    # the opt-in: an empty log
+    assert sessionlog.path(study).read_bytes() == b''
     p = _call('decide', 'propose', 'prediction_time', '--value', 'before the reminder',
               '--restatement', RESTATEMENT, '--rationale', RATIONALE, '--request-id', 'a',
               '--expected-revision', 1, '--study', study)['result']['proposal_id']
@@ -82,14 +84,14 @@ def test_the_log_is_off_by_default_and_the_report_says_so(tmp_path, synthetic_ca
     assert [d['outcome'] for d in out['decisions']] == ['confirmed'] * 3
 
 
-def test_the_log_records_refusals_checks_and_reads(logged):
+def test_the_log_records_mutations_and_their_refusals_never_reads(logged):
     lines = [json.loads(x) for x in sessionlog.path(logged).read_text().splitlines()]
     assert {x['schema'] for x in lines} == {sessionlog.SCHEMA}
     assert [(x['command'], x['verb'], x['exit_code']) for x in lines] == [
-        ('status', None, 0), ('decide', 'propose', 0), ('decide', 'confirm', 2),
-        ('decide', 'confirm', 0), ('check', None, 0), ('run', None, 2)]
+        ('decide', 'propose', 0), ('decide', 'confirm', 2), ('decide', 'confirm', 0),
+        ('run', None, 2)]
     out = rep.report(logged)
-    assert out['sources']['session_log'] == {'enabled': True, 'entries': 6,
+    assert out['sources']['session_log'] == {'enabled': True, 'entries': 4,
                                              'path': '.hypotrail/session-log.jsonl',
                                              'note': None}
     assert [(r['command'], r['code'], r['reason']) for r in out['refusals']] == [
@@ -100,11 +102,8 @@ def test_the_log_records_refusals_checks_and_reads(logged):
     assert decision['refused_confirmations'] == 1
     assert decision['refusal_reasons'] == {'bare_acknowledgement': 1}
     assert decision['seconds_open'] >= 0 and decision['basis'] == 'explicit'
-    [check] = out['checks']
-    assert check['target'] == 'text' and check['clean'] is False
-    assert check['codes'] == {'untraceable_number': 1}
-    assert out['commands'] == {'check': 1, 'decide confirm': 2, 'decide propose': 1, 'run': 1,
-                               'status': 1}
+    assert out['checks'] == []                                  # a check is a read
+    assert out['commands'] == {'decide confirm': 2, 'decide propose': 1, 'run': 1}
     assert out['pauses'][0]['refused_confirmations'] == 1
     assert out['pauses'][0]['closed_at'] is None               # availability still open
     sources = {x['source'] for x in out['timeline']}
@@ -133,8 +132,47 @@ def test_disable_and_read_only_processes_write_nothing(logged, monkeypatch):
     _call('status', '--study', logged, expect=0)
     monkeypatch.delenv('HYPOTRAIL_READ_ONLY')
     assert sessionlog.path(logged).read_text() == before
-    _call('plan', '--study', logged, expect=0)                  # the file keeps it on
+    _call('plan', '--study', logged, expect=0)                  # a read: never a line
+    assert sessionlog.path(logged).read_text() == before
+    _call('run', 'split', '--request-id', 'e', '--expected-revision', 3, '--study', logged,
+          expect=2)                                             # the file keeps it on
     assert sessionlog.path(logged).read_text() != before
+
+
+def test_reads_and_the_export_leave_the_study_tree_byte_identical(logged, tmp_path,
+                                                                  monkeypatch):
+    """Review fix: with the log on, a client polling reads and exporting writes nothing."""
+    monkeypatch.setenv(sessionlog.ENV, '1')
+    before = _snapshot(logged)
+    reads = [('status',), ('status', '--summary'), ('status', '--summary', '--digest'),
+             ('plan',), ('decisions',), ('evidence',), ('explain',), ('check',),
+             ('preview', 'proposal', 'prediction_time', '--value', 'at signup'),
+             ('preview', 'policy', '--rule', 'capacity:10'),        # refused: still a read
+             ('session-report',)]
+    for args in reads:
+        cli.run([*args, '--study', str(logged)])
+    for _ in range(20):
+        cli.run(['preview', 'proposal', 'prediction_time', '--value', 'at signup',
+                 '--study', str(logged)])
+    assert _snapshot(logged) == before
+    out = tmp_path / 'pack'
+    outcome = cli.run(['export', 'handoff', '--out', str(out), '--study', str(logged)])
+    assert outcome.payload['ok'] is True, outcome.payload
+    assert _snapshot(logged) == before
+    assert set(sessionlog.READ_COMMANDS) | set(sessionlog.UNLOGGED) >= {
+        a[0] for a in reads} | {'export'}
+
+
+def test_the_opt_in_on_a_read_creates_the_empty_log_only(tmp_path, synthetic_case_dir,
+                                                         monkeypatch):
+    monkeypatch.delenv(sessionlog.ENV, raising=False)
+    study = tmp_path / 'study'
+    _call('init', '--case', synthetic_case_dir, '--study', study, expect=0)
+    monkeypatch.setenv(sessionlog.ENV, '1')
+    _call('export', 'handoff', '--out', tmp_path / 'pack', '--study', study)
+    assert not sessionlog.path(study).exists()                 # an export never touches it
+    _call('evidence', '--study', study, expect=0)
+    assert sessionlog.path(study).read_bytes() == b''
 
 
 def test_the_report_is_read_only_and_never_logged(logged):

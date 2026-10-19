@@ -9,10 +9,11 @@ after the session, and is never logged itself. It joins three records:
 
 * ``revisions.jsonl``: every committed change (always present);
 * ``events.jsonl``: operational events (interrupted executions, failed renders, ...);
-* ``session-log.jsonl``: the opt-in log of every CLI invocation, refusals and read-only
-  commands included (:mod:`mlkit.study.sessionlog`); absent unless enabled, and the
-  report then says that refusals, ``status`` reads, ``check`` runs and previews were not
-  recorded.
+* ``session-log.jsonl``: the opt-in log of every invocation of a mutating command,
+  refusals included (:mod:`mlkit.study.sessionlog`); absent unless enabled, and the report
+  then says that refused commands were not recorded. Read-only commands are never logged
+  (review fix: reads write nothing), so ``checks`` lists only lines written by an earlier
+  version.
 
 Privacy: the report holds no conversation content. From the revision records it keeps
 only identifiers (action, decision and proposal ids, basis, delegation scope, activity,
@@ -267,9 +268,9 @@ def report(study_dir, since: int | None = None,
                     'session_log': {'enabled': log_enabled, 'entries': len(log),
                                     'path': f'{read.HOME}/{sessionlog.LOG_FILE}',
                                     'note': None if log_enabled else
-                                    'The session log is off: refusals, status reads, check '
-                                    'runs, and previews were not recorded. Enable it before '
-                                    'a session with HYPOTRAIL_SESSION_LOG=1.'},
+                                    'The session log is off: refused commands were not '
+                                    'recorded. Enable it before a session with '
+                                    'HYPOTRAIL_SESSION_LOG=1.'},
                     'artifacts_status': manifest.get('status')
                     if isinstance(manifest, Mapping) else None},
         'span': span,
