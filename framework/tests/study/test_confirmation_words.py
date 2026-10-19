@@ -71,6 +71,9 @@ def test_a_content_free_reply_never_confirms(flow, words):
 @pytest.mark.parametrize('words', ('yes, I like pizza', 'sounds great, ship it tomorrow',
                                    'oui, très clair'))
 def test_a_reply_unrelated_to_the_proposal_never_confirms(flow, words):
+    """Kept in the guided mode (ADR 0005): a bare agreement word followed by content
+    unrelated to the proposal is no decision; only an explicit endorsement expression or a
+    reply that repeats the proposal confirms."""
     pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
     out = _confirm(flow, pid, words, expect=2)
     assert out['error']['details']['reason'] == 'unrelated_reply', words

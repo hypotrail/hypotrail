@@ -81,7 +81,8 @@ test('W1: a bare "ok" is refused verbatim; a hold blocks with effects.blocked; t
   assert.equal(ok.kind, 'ok', JSON.stringify(ok));
   assert.deepEqual([ok.recorded.userWords, ok.recorded.channel, ok.recorded.decisionId], [WORDS, 'webview', 'prediction_time']);
   const conf = bank.view().decisions.prediction_time.confirmation;
-  assert.deepEqual([conf.user_words, conf.channel, conf.actor, conf.basis], [WORDS, 'webview', 'user', 'explicit']);
+  // ADR 0005: own words that repeat the proposal are recorded as restated (was explicit).
+  assert.deepEqual([conf.user_words, conf.channel, conf.actor, conf.basis], [WORDS, 'webview', 'user', 'restated']);
 });
 
 test('W2: withdraw after the modal; the proposal is withdrawn in the state', { skip }, async () => {

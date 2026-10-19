@@ -68,6 +68,9 @@ PURPOSE_LABELS = {'structural_inspection': 'Structural inspection',
                   'validation_policy_selection': 'Rule selection',
                   'sealed': 'Final test set aside, sealed (schema check only)'}
 BASIS_WORDS = {st.EXPLICIT: "the junior's own decision",
+               # ADR 0005: the two kinds of own words of the guided mode.
+               st.ENDORSED: "the junior's own decision (an explicit endorsement)",
+               st.RESTATED: "the junior's own decision (restated in their words)",
                st.DELEGATED_DEFAULT: "delegated by the junior to the assistant's recommended "
                                      'default'}
 NOT_AUTHENTICATED = 'Recorded words, not an authenticated signature.'
@@ -158,6 +161,9 @@ def _decisions(view: Mapping) -> tuple[list[dict], list[str]]:
             if conf.get('delegation_scope'):
                 basis += f' (scope: {" ".join(conf["delegation_scope"].split("_"))})'
             lines.append(f'- Basis: {basis}')
+            if conf.get('agent_concern'):          # R3 (ADR 0005)
+                lines.append(f'- Point raised by the agent, kept by the junior: '
+                             f'"{conf["agent_concern"]}"')
             lines.append(f'- Channel: {conf["channel"]}')
             lines.append(f'- {NOT_AUTHENTICATED}')
         if dec['status'] == 'reconfirm_required' and dec.get('reason'):

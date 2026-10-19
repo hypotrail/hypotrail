@@ -26,6 +26,9 @@ const BY_REASON = {
   not_a_delegation: 'The engine did not read this reply as a delegation.',
   restatement_not_default: 'The proposal does not state that it is the assistant\'s recommended default.',
   delegation_not_given_at_this_pause: 'This decision needs your own words or a delegation given at this pause, in the chat.',
+  // ADR 0005 (guided confirmation).
+  question_reply: 'Your reply asks a question, so it was not taken as a confirmation. Ask it in the chat first.',
+  conditional_reply: 'Your reply sets a condition or keeps a reservation, so it was not taken as a confirmation. Settle the condition in the chat first.',
   // CLI-CONTRACT-COMPANION §13 (WP-0): a reserved command of an engine that predates it.
   not_implemented: 'The study engine in this environment does not have this command yet.',
 };
@@ -57,6 +60,8 @@ const BY_CODE = {
   unknown_execution: 'The engine does not list this execution as interrupted any more.',
   invalid_request: 'The engine refused the form of this request.',
   invalid_command: 'The engine does not accept this request.',
+  // ADR 0005: the policy, the model choice and the conclusion need a reason.
+  reason_required: 'This decision is a trade-off, so the engine records it only with your reason, in your own words.',
 };
 
 // Explanations that depend on the write that was refused (the payload's `command`). A

@@ -145,7 +145,8 @@ def test_c2_decisions_keys(binary):
     for h in p['history']:
         assert tuple(h) == cc.DECISIONS_HISTORY_KEYS
         assert h['current'] is True and h['superseded_at'] is None
-        assert h['basis'] == 'explicit' and h['channel'] == 'chat'
+        # ADR 0005: own words repeating the proposal are recorded as restated (was explicit).
+        assert h['basis'] == 'restated' and h['channel'] == 'chat'
     assert p['reconfirm_queue'] == []
     assert p['notes'] == []
 

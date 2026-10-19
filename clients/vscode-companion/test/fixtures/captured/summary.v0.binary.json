@@ -96,7 +96,7 @@
    "prediction_time": {
     "status": "confirmed",
     "value": "before the first contact of the campaign, from the client file",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
     "reason": null,
@@ -129,7 +129,7 @@
       "contact"
      ]
     },
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
     "reason": null,
@@ -162,7 +162,7 @@
      "seed": 20261017,
      "validation_fraction": 0.3
     },
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, I want the split exactly as you stated it",
     "reason": null,
@@ -172,7 +172,7 @@
    "policy": {
     "status": "confirmed",
     "value": "threshold:0.2",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, call everyone scored at 0.2 or more",
     "reason": null,

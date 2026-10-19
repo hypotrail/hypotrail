@@ -448,7 +448,9 @@ def outdates_conclusion(state: Mapping, decision_id: str, *, was_confirmed: bool
         what = 'it was confirmed after the conclusion'
     elif rec.canonical(old) != rec.canonical(new):
         what = 'its value changed after the conclusion was confirmed'
-    elif old_basis != new_basis:
+    elif st.basis_class(old_basis) != st.basis_class(new_basis):
+        # ADR 0005: ``explicit``, ``endorsed`` and ``restated`` are all the junior's own
+        # words; only a change between them and a delegation changes the credit line.
         what = (f'it was confirmed again with basis {new_basis} (was {old_basis}) after the '
                 'conclusion was confirmed')
     else:

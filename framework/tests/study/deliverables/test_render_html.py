@@ -228,7 +228,9 @@ def test_a_delegated_decision_is_shown_as_delegated(tmp_path, synthetic_case_dir
     cmd_render.render_all(b.study)
     v = view.build(b.study)
     assert v['decisions']['feature_availability']['confirmation']['basis'] == 'delegated_default'
-    assert v['decisions']['prediction_time']['confirmation']['basis'] == 'explicit'
+    # ADR 0005: own words repeating the proposal ("at expiry, before the first reminder") are
+    # recorded as restated (was explicit); the report still marks them as the junior's own.
+    assert v['decisions']['prediction_time']['confirmation']['basis'] == 'restated'
     page = (b.study / 'reports' / 'study.html').read_text()
     article = page[page.index('data-decision="feature_availability"'):]
     article = article[:article.index('</article>')]

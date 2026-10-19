@@ -33,10 +33,11 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T08:29:32.952517+00:00",
+     "time": "2026-10-19T08:50:27.649537+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -75,10 +76,11 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T08:29:33.159197+00:00",
+     "time": "2026-10-19T08:50:27.854371+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -102,10 +104,11 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T08:29:33.299220+00:00",
+     "time": "2026-10-19T08:50:27.969587+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -129,10 +132,11 @@
      "restatement": "You decide the policy as stated.",
      "proposal_id": "p_4",
      "revision": 27,
-     "time": "2026-10-19T08:29:36.929251+00:00",
+     "time": "2026-10-19T08:50:31.977584+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": [
      "p_5"
@@ -165,7 +169,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T08:29:32.408689+00:00",
+    "created": "2026-10-19T08:50:27.140099+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -197,7 +201,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T08:29:33.058080+00:00",
+    "created": "2026-10-19T08:50:27.765241+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -216,7 +220,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T08:29:33.230715+00:00",
+    "created": "2026-10-19T08:50:27.910690+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -231,7 +235,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 26,
-    "created": "2026-10-19T08:29:36.819308+00:00",
+    "created": "2026-10-19T08:50:31.894558+00:00",
     "closed_revision": 27,
     "closed_reason": "confirmed",
     "origin": {
@@ -246,7 +250,7 @@
     "rationale": "The team can make 100 calls per wave.",
     "status": "open",
     "revision": 30,
-    "created": "2026-10-19T08:29:37.542362+00:00",
+    "created": "2026-10-19T08:50:32.878822+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -257,12 +261,12 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T08:29:32.952596+00:00",
+    "time": "2026-10-19T08:50:27.649598+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "before the first contact of the campaign, from the client file",
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -271,7 +275,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T08:29:33.159299+00:00",
+    "time": "2026-10-19T08:50:27.854684+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -293,7 +297,7 @@
      "previous": "available_at_prediction"
     },
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -302,7 +306,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T08:29:33.299310+00:00",
+    "time": "2026-10-19T08:50:27.969644+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -311,7 +315,7 @@
      "validation_fraction": 0.3
     },
     "user_words": "Yes, I want the split exactly as you stated it",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -320,12 +324,12 @@
    },
    {
     "revision": 27,
-    "time": "2026-10-19T08:29:36.929311+00:00",
+    "time": "2026-10-19T08:50:31.977646+00:00",
     "decision_id": "policy",
     "proposal_id": "p_4",
     "value": "threshold:0.2",
     "user_words": "Yes, call everyone scored at 0.2 or more",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",

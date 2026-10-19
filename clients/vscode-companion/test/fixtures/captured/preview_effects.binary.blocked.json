@@ -23,7 +23,7 @@
   "previous": {
    "value": "threshold:0.2",
    "user_words": "Yes, call everyone scored at 0.2 or more",
-   "basis": "explicit",
+   "basis": "restated",
    "channel": "chat",
    "revision": 27,
    "proposal_id": "p_4"

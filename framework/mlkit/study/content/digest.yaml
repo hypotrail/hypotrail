@@ -35,6 +35,7 @@ templates:
   confirmed_delegated: "{Decision} was confirmed by delegation to the assistant's recommended default (channel {channel})."
   withdrawn: "The proposal for {decision} was withdrawn."
   hold_recorded: "Hold recorded on {decision}: \"{words}\"."
+  correction_recorded: "Correction recorded on {decision} in the junior's words: \"{words}\"."
   hold_resolved: "The hold on {decision}, \"{hold}\", was resolved in the junior's words: \"{words}\"."
   hold_withdrawn: "The hold on {decision}, \"{hold}\", was withdrawn in the junior's words: \"{words}\"."
   result_added: "{Activity} was computed."

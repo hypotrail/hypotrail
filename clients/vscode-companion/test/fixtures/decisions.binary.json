@@ -36,7 +36,8 @@
      "time": "2026-10-18T09:00:00+00:00",
      "authenticated": false,
      "basis": "explicit",
-     "delegation_scope": null
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -78,7 +79,8 @@
      "time": "2026-10-18T09:00:00+00:00",
      "authenticated": false,
      "basis": "explicit",
-     "delegation_scope": null
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -108,7 +110,8 @@
      "time": "2026-10-18T09:00:00+00:00",
      "authenticated": false,
      "basis": "delegated_default",
-     "delegation_scope": "this_decision"
+     "delegation_scope": "this_decision",
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -133,7 +136,8 @@
      "time": "2026-10-18T09:00:00+00:00",
      "authenticated": false,
      "basis": "explicit",
-     "delegation_scope": null
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },

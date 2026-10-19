@@ -19,12 +19,17 @@ Decision actions:
 * ``decide.confirm``: needs the user's verbatim words in reply to the restatement,
   and an open proposal created by an earlier request whose basis (the confirmed
   decisions it rests on) is unchanged. Otherwise it refuses with
-  ``ambiguous_confirmation``. It checks the three-pause preconditions, applies the
-  §3.7 dependency table, and records the invalidation. Its ``basis`` says how the
-  user decided: ``explicit`` (their own reply to the restatement, the default) or
+  ``ambiguous_confirmation``. The words follow the rules of the study's confirmation mode
+  (ADR 0005, :mod:`mlkit.study.confirm`; ``guided`` in v0.2a), and the policy, the model
+  choice and the conclusion need a reason (``reason_required``). It checks the three-pause
+  preconditions, applies the §3.7 dependency table, and records the invalidation. Its
+  request ``basis`` says how the user decided: ``explicit`` (their own reply to the
+  restatement, the default; recorded as ``endorsed`` or ``restated``) or
   ``delegated_default`` (they explicitly delegated to the assistant's recommended
   default, which the restatement must state; the decision is then listed in
-  ``not_yet_defensible``). A delegation's ``delegation_scope`` is ``this_decision`` (given
+  ``not_yet_defensible``). ``agent_concern`` records a point the agent raised before the
+  junior confirmed (R3); ``feature_availability`` words that contradict the value are
+  returned as ``warnings``. A delegation's ``delegation_scope`` is ``this_decision`` (given
   at this pause) or ``standing`` (an earlier "for questions I can't answer, use your
   recommended default"); a standing delegation covers only the prediction moment, the
   feature availability and the split, so the policy and the conclusion are delegated only
@@ -32,7 +37,10 @@ Decision actions:
 * ``decide.withdraw``: closes an open proposal.
 * ``decide.note``, ``decide.resolve_note``, ``decide.withdraw_note``: a condition or hold
   the junior states on a decision, verbatim, and its resolution or withdrawal in their
-  words (post-v0.1, P2 and D5). A hold on a confirmed decision asks for it again (D1).
+  words (post-v0.1, P2 and D5). A hold on a confirmed decision asks for it again (D1). A
+  note of kind ``correction`` (R3) corrects a confirmed decision's reasoning later, without
+  asking for it again.
+* ``study.set_mode``: the confirmation mode, in the user's words (ADR 0005).
 
 pandas is never imported here, so ``status`` and ``plan`` stay fast.
 """
@@ -49,6 +57,7 @@ from typing import Any, Callable, Mapping
 from mlkit.reliability import CommandRefused, Handler
 
 from . import case as c
+from . import confirm as cf
 from . import data as dt
 from . import dependencies as dep
 from . import exposure, guard, lock, partition, preconditions, read, view
@@ -78,16 +87,24 @@ ACTION_NOTE = 'decide.note'
 ACTION_RESOLVE_NOTE = 'decide.resolve_note'
 # Post-v0.1 fixes (D5): the junior withdraws a hold that no longer applies, in their words.
 ACTION_WITHDRAW_NOTE = 'decide.withdraw_note'
+# ADR 0005: the confirmation mode of the study, set in the user's words.
+ACTION_SET_MODE = 'study.set_mode'
+SET_MODE_PARAMS = frozenset({'mode', 'user_words'})
 PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
 # Parameters an action accepts when present (CLI-CONTRACT-COMPANION §9, C9): a propose
 # request carries ``channel`` only when it is not ``chat``, so every request recorded
 # before C9 keeps its signature and a replay stays a replay. :func:`apply` widens the
 # handler's exact parameter set with the optional ones the request carries.
-OPTIONAL_PARAMS = {'decide.propose': frozenset({'channel'})}
+# ADR 0005 adds ``labels`` (a restatement per language) to a proposal, ``agent_concern`` to a
+# confirmation, and ``kind`` (``correction``) to a note, on the same terms.
+OPTIONAL_PARAMS = {'decide.propose': frozenset({'channel', 'labels'}),
+                   'decide.confirm': frozenset({'agent_concern'}),
+                   'decide.note': frozenset({'kind'})}
 CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                             'delegation_scope'})
 WITHDRAW_PARAMS = frozenset({'proposal_id', 'reason'})
 NOTE_PARAMS = frozenset({'decision_id', 'user_words'})
+NOTE_KIND_PARAM = 'kind'
 RESOLVE_NOTE_PARAMS = frozenset({'note_id', 'user_words'})
 WITHDRAW_NOTE_PARAMS = frozenset({'note_id', 'user_words'})
 DEFAULT_CHANNEL = 'chat'
@@ -741,6 +758,12 @@ REPLY_MESSAGES = {
     'unrelated_reply': 'These words share nothing with the proposal (no word or number of its '
                        'value or restatement). Restate the proposal and ask the user to answer '
                        'it in their own words.',
+    # ADR 0005 (guided mode).
+    'question_reply': 'These words ask a question: nothing is confirmed. Answer it, restate the '
+                      'proposal, and ask again.',
+    'conditional_reply': 'These words set a condition or hesitate ("yes but", "unless", "oui '
+                         'mais"): nothing is confirmed. Ask what the condition is; record it as '
+                         'a hold, or propose again.',
 }
 
 
@@ -806,6 +829,17 @@ def check_channel(channel: Any) -> None:
                        channels=list(st.CHANNELS))
 
 
+def check_labels(labels: Any) -> None:
+    """ADR 0005: ``labels`` maps a language of :data:`state.LANGUAGES` to a non-empty
+    restatement in that language (``invalid_value``, ``details.field`` ``labels``)."""
+    if not isinstance(labels, Mapping) or not labels or any(
+            k not in st.LANGUAGES or not isinstance(v, str) or not v.strip()
+            for k, v in labels.items()):
+        raise _invalid(f'labels maps a language ({", ".join(st.LANGUAGES)}) to a non-empty '
+                       f'restatement in that language.', field='labels',
+                       languages=list(st.LANGUAGES))
+
+
 def _ambiguous(reason: str, message: str, **details) -> CommandRefused:
     return CommandRefused('ambiguous_confirmation', message, details={'reason': reason, **details})
 
@@ -828,6 +862,8 @@ def _propose(ctx: Context) -> Handler:
             if not isinstance(params[key], str) or not params[key].strip():
                 raise _invalid(f'{key} is a non-empty string.', field=key)
         check_channel(params.get('channel', DEFAULT_CHANNEL))
+        if 'labels' in params:
+            check_labels(params['labels'])
 
     def run(state, params):
         decision_id, value = params['decision_id'], params['value']
@@ -846,11 +882,14 @@ def _propose(ctx: Context) -> Handler:
             check_conclusion(ctx.store, state, value, params['restatement'],
                              params['rationale'])
         pool = None
-        for key in ('restatement', 'rationale'):
-            if not literal_numbers(params[key], value):
+        labels = dict(params.get('labels') or {})
+        texts = [('restatement', params['restatement']), ('rationale', params['rationale'])]
+        texts += [(f'labels.{lang}', text) for lang, text in sorted(labels.items())]
+        for key, text in texts:
+            if not literal_numbers(text, value):
                 continue
             pool = pool or current_results_pool(ctx.store, state)
-            found = literal_numbers(params[key], value, pool)
+            found = literal_numbers(text, value, pool)
             if found:
                 raise CommandRefused('literal_number_in_text',
                                      f'The {key} contains numbers that are neither part of the '
@@ -872,6 +911,8 @@ def _propose(ctx: Context) -> Handler:
             'request_id': ctx.request_id, 'basis': basis(state, decision_id),
             # C9: where the proposal came from. The channel changes no rule.
             'origin': {'channel': channel}}
+        if labels:
+            state['proposals'][pid]['labels'] = labels
         decision = state['decisions'][decision_id]
         if decision['status'] in ('open', 'proposed'):
             decision.update(status='proposed', value=copy.deepcopy(value), proposal_id=pid,
@@ -885,15 +926,24 @@ def _propose(ctx: Context) -> Handler:
 def _confirm(ctx: Context) -> Handler:
     def check(params):
         words = params['user_words']
-        reason = reply_problem(words)
+        # ADR 0005: the guided rules (the only mode of v0.2a; ``mode set`` refuses the others).
+        reason = cf.reply_problem(words)
         if reason == 'missing_user_words':
             raise _ambiguous('missing_user_words', REPLY_MESSAGES[reason])
         if reason == 'negative_reply':
             raise _ambiguous('negative_reply', REPLY_MESSAGES[reason], user_words=words)
+        if reason == 'question_reply':
+            raise _ambiguous('question_reply', REPLY_MESSAGES[reason], user_words=words)
+        if reason == 'conditional_reply':
+            raise _ambiguous('conditional_reply', REPLY_MESSAGES[reason], user_words=words)
         if reason == 'bare_acknowledgement':
             raise _ambiguous('bare_acknowledgement', REPLY_MESSAGES[reason], user_words=words)
-        if params['basis'] not in st.CONFIRMATION_BASES:
-            raise _invalid(f'basis is one of {", ".join(st.CONFIRMATION_BASES)}.')
+        concern = params.get('agent_concern')
+        if concern is not None and (not isinstance(concern, str) or not concern.strip()):
+            raise _invalid('agent_concern is a non-empty string: the point you raised with the '
+                           'junior before they confirmed.', field='agent_concern')
+        if params['basis'] not in st.REQUEST_BASES:
+            raise _invalid(f'basis is one of {", ".join(st.REQUEST_BASES)}.')
         scope = params['delegation_scope']
         if scope is not None and scope not in st.DELEGATION_SCOPES:
             raise _invalid(f'delegation_scope is one of {", ".join(st.DELEGATION_SCOPES)}.',
@@ -958,26 +1008,54 @@ def _confirm(ctx: Context) -> Handler:
         stale = _stale_refusal(state, proposal)
         if stale is not None:
             raise stale
-        if reply_problem(params['user_words'], value=value, restatement=proposal['restatement'],
-                         delegated=params['basis'] == st.DELEGATED_DEFAULT) == 'unrelated_reply':
-            raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
-                             proposal_id=pid, user_words=params['user_words'],
-                             restatement=proposal['restatement'])
+        words = params['user_words']
+        others = [p['proposal_id'] for p in st.open_proposals(state)
+                  if p['decision_id'] == decision_id and p['proposal_id'] != pid]
+        if others:   # never reached while proposing supersedes; kept as the guided invariant
+            raise _ambiguous('proposal_superseded', f'Proposal {pid} is not the single open '
+                                                    f'proposal of {decision_id}.',
+                             proposal_id=pid, open_proposals=others)
+        delegated = params['basis'] == st.DELEGATED_DEFAULT
+        if delegated:
+            basis_recorded = st.DELEGATED_DEFAULT
+        else:
+            # Guided rule (ADR 0005, integrator fix): an explicit endorsement expression, or
+            # a reply that repeats the proposal; "yes, I like pizza" is never a decision.
+            if not cf.is_endorsement(words) and not cf.restates(
+                    words, value=value, texts=(proposal['restatement'],
+                                               *(proposal.get('labels') or {}).values())):
+                raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
+                                 proposal_id=pid, user_words=words,
+                                 restatement=proposal['restatement'])
+            if cf.needs_reason(state, decision_id) and not cf.has_reason(words):
+                raise CommandRefused(
+                    'reason_required',
+                    f'The {decision_id} is a trade-off: an endorsement alone does not record '
+                    f'why. Ask the junior for one reason in their own words ("because ...", '
+                    f'"parce que ...") and confirm with that reply.',
+                    details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
+                             'mode': st.mode_of(state)})
+            basis_recorded = cf.recorded_basis(words, proposal)
         # C3: the part of a confirmation that does not depend on the words is one function,
         # shared with ``preview effects``: the refusals left (changed sources, value,
         # preconditions, in that order) and the effects to apply.
-        plan = confirmation_plan(state, ctx.store, pid, basis=params['basis'])
+        plan = confirmation_plan(state, ctx.store, pid, basis=basis_recorded)
         if plan['refusals']:
             raise plan['refusals'][0]
+        concern = params.get('agent_concern')
         record = _apply_confirmation(state, plan, pid, store=ctx.store,
-                                     user_words=params['user_words'], channel=params['channel'],
-                                     actor=params['actor'], basis=params['basis'],
-                                     delegation_scope=params['delegation_scope'])
+                                     user_words=words, channel=params['channel'],
+                                     actor=params['actor'], basis=basis_recorded,
+                                     delegation_scope=params['delegation_scope'],
+                                     agent_concern=concern)
+        warnings = cf.availability_warnings(words, value) \
+            if decision_id == 'feature_availability' else []
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
-                'value': copy.deepcopy(value), 'user_words': params['user_words'],
+                'value': copy.deepcopy(value), 'user_words': words,
                 'channel': params['channel'], 'actor': params['actor'],
                 'invalidation': {k: record[k] for k in INVALIDATION_RESULT_KEYS},
-                'basis': params['basis'], 'delegation_scope': params['delegation_scope']}
+                'basis': basis_recorded, 'delegation_scope': params['delegation_scope'],
+                'agent_concern': concern, 'warnings': warnings}
     return Handler(CONFIRM_PARAMS, run, check)
 
 
@@ -1099,7 +1177,7 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
 
 def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, user_words: str,
                         channel: str, actor: str, basis: str, delegation_scope: str | None,
-                        time: str | None = None) -> dict:
+                        time: str | None = None, agent_concern: str | None = None) -> dict:
     """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
     decision_id, value = plan['decision_id'], plan['value']
     proposal = state['proposals'][proposal_id]
@@ -1111,7 +1189,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
             closed_reason=f'replaced by {proposal_id}')
     confirmation = st.confirmation(user_words=user_words, proposal=proposal, channel=channel,
                                    actor=actor, revision=revision, time=time, basis=basis,
-                                   delegation_scope=delegation_scope)
+                                   delegation_scope=delegation_scope,
+                                   agent_concern=agent_concern)
     proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
     decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
                     confirmation=confirmation, revision=revision, reason=None)
@@ -1157,29 +1236,46 @@ def _note(ctx: Context) -> Handler:
     so the study never shows a decision as both confirmed and on hold."""
     def check(params):
         words = params['user_words']
+        kind = params.get(NOTE_KIND_PARAM, st.HOLD)
+        if kind not in st.NOTE_KINDS:
+            raise _invalid(f'kind is one of {", ".join(st.NOTE_KINDS)}.', field='kind',
+                           kinds=list(st.NOTE_KINDS))
         if not isinstance(words, str) or not words.strip():
             raise _invalid("A note holds the junior's own words.", field='user_words')
         if is_bare_acknowledgement(words):
             raise _invalid('These words state no condition: record what the junior asked to '
-                           'wait for, verbatim.', field='user_words', user_words=words)
+                           'wait for, verbatim.' if kind == st.HOLD else
+                           'These words correct nothing: record the junior\'s corrected '
+                           'reasoning, verbatim.', field='user_words', user_words=words)
 
     def run(state, params):
         decision_id = params['decision_id']
+        kind = params.get(NOTE_KIND_PARAM, st.HOLD)
         if decision_id not in st.decision_ids(state):
             raise CommandRefused('unknown_decision',
                                  f'Decision {decision_id!r} is not part of a {st.task_of(state)} '
                                  f'study.', details={'decisions': list(st.decision_ids(state))})
+        decision = state['decisions'][decision_id]
+        if kind == st.CORRECTION and decision['confirmation'] is None:
+            raise _invalid(f'A correction is about a decision already confirmed; the '
+                           f'{decision_id} is {decision["status"]}. Before a confirmation, the '
+                           f'junior answers the proposal in the words they mean.',
+                           field='kind', decision_id=decision_id, status=decision['status'])
         revision = state['revision'] + 1
         notes = state.setdefault('notes', {})
         nid = f'n_{len(notes) + 1}'
-        notes[nid] = {'note_id': nid, 'decision_id': decision_id, 'kind': 'hold',
-                      'user_words': params['user_words'], 'status': 'open', 'created': st.now(),
+        status = 'recorded' if kind == st.CORRECTION else 'open'
+        notes[nid] = {'note_id': nid, 'decision_id': decision_id, 'kind': kind,
+                      'user_words': params['user_words'], 'status': status, 'created': st.now(),
                       'revision': revision, 'request_id': ctx.request_id, 'resolution': None}
-        record = dep.apply_hold(state, decision_id, nid, revision=revision)
-        return {'note_id': nid, 'decision_id': decision_id, 'status': 'open',
+        # R3: a correction changes the recorded reasoning only; it asks for nothing again.
+        record = dep.apply_hold(state, decision_id, nid, revision=revision) \
+            if kind == st.HOLD else None
+        return {'note_id': nid, 'decision_id': decision_id, 'status': status,
                 'user_words': params['user_words'],
                 'open_holds': [n['note_id'] for n in st.open_holds(state, decision_id)],
-                'reconfirm_required': list(record['reconfirm_required']) if record else []}
+                'reconfirm_required': list(record['reconfirm_required']) if record else [],
+                'kind': kind}
     return Handler(NOTE_PARAMS, run, check)
 
 
@@ -1264,12 +1360,51 @@ def _withdraw_note(ctx: Context) -> Handler:
     return Handler(WITHDRAW_NOTE_PARAMS, run, check)
 
 
+def _set_mode(ctx: Context) -> Handler:
+    """``study.set_mode`` (ADR 0005): the confirmation mode, in the user's own words.
+
+    ``guided`` is the only mode of v0.2a; ``training`` and ``express`` are reserved and
+    refused with ``unsupported_capability`` (``details.available_in``). A change is never
+    made without the user's words: empty words, a refusal, a question, a condition, or a
+    bare acknowledgement are refused as for a confirmation (``ambiguous_confirmation``).
+    The change is recorded in ``mode_history`` with the words."""
+    def check(params):
+        mode = params['mode']
+        if mode not in st.MODES:
+            raise _invalid(f'mode is one of {", ".join(st.MODES)}.', field='mode',
+                           modes=list(st.MODES))
+        if mode not in st.SUPPORTED_MODES:
+            raise CommandRefused('unsupported_capability',
+                                 f'The {mode} mode is planned for '
+                                 f'{st.MODES_AVAILABLE_IN[mode]}; this version supports '
+                                 f'{", ".join(st.SUPPORTED_MODES)} only.',
+                                 details={'mode': mode,
+                                          'available_in': st.MODES_AVAILABLE_IN[mode],
+                                          'supported': list(st.SUPPORTED_MODES)})
+        words = params['user_words']
+        reason = cf.reply_problem(words)
+        if reason is not None:
+            raise _ambiguous(reason, REPLY_MESSAGES[reason], user_words=words)
+
+    def run(state, params):
+        previous = st.mode_of(state)
+        revision = state['revision'] + 1
+        state['mode'] = params['mode']
+        state.setdefault('mode_history', []).append(
+            {'mode': params['mode'], 'previous': previous, 'user_words': params['user_words'],
+             'revision': revision, 'time': st.now(), 'request_id': ctx.request_id})
+        return {'mode': params['mode'], 'previous': previous,
+                'user_words': params['user_words'], 'changed': previous != params['mode']}
+    return Handler(SET_MODE_PARAMS, run, check)
+
+
 register_action(ACTION_PROPOSE, _propose)
 register_action(ACTION_CONFIRM, _confirm)
 register_action(ACTION_WITHDRAW, _withdraw)
 register_action(ACTION_NOTE, _note)
 register_action(ACTION_RESOLVE_NOTE, _resolve_note)
 register_action(ACTION_WITHDRAW_NOTE, _withdraw_note)
+register_action(ACTION_SET_MODE, _set_mode)
 
 
 # --- commands ---------------------------------------------------------------------------
@@ -1286,8 +1421,9 @@ def _copy_agent_templates(study_dir: Path, task: str = st.DEFAULT_TASK) -> dict:
     return agent_files.install(study_dir, task=task)
 
 
-def init(case_path, study_dir) -> Outcome:
-    """Create a study on a case (revision 1). Never overwrites an existing study."""
+def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
+    """Create a study on a case (revision 1). Never overwrites an existing study.
+    ``language`` is the study language (ADR 0005, ``init --lang``)."""
     guard.assert_writable()
     lock.require_posix()
     study_dir = Path(study_dir).resolve()
@@ -1301,6 +1437,8 @@ def init(case_path, study_dir) -> Outcome:
     # target (or the declared order); values that would silently change meaning
     # (``data.check_values``) are then inspected on the development rows only, and the
     # final test gets a counts-only schema check (``partition.schema_check``).
+    if language not in st.LANGUAGES:
+        raise StudyError('invalid_arguments', f'language is one of {", ".join(st.LANGUAGES)}.')
     index = dt.row_index(case)
     frame = dt.read_frame(case, index)
     assigned = partition.assign(case, index, frame)
@@ -1312,7 +1450,7 @@ def init(case_path, study_dir) -> Outcome:
     except c.CaseError as exc:
         raise partition.with_final_test_counts(exc, check)
     partition.refuse_failed_check(case, check)
-    state = st.initial_state(case)
+    state = st.initial_state(case, language=language)
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))

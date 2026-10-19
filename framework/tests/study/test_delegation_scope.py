@@ -111,7 +111,8 @@ def test_the_junior_s_own_words_confirm_the_policy(pause):
                    'Yes, twenty calls is what the desk can handle.')
     assert out.exit_code == 0, out.payload
     conf = _state(pause)['decisions']['policy']['confirmation']
-    assert conf['basis'] == st.EXPLICIT and conf['delegation_scope'] is None
+    # ADR 0005: own words that repeat the value ("twenty") are recorded as restated (was explicit).
+    assert conf['basis'] == st.RESTATED and conf['delegation_scope'] is None
 
 
 def test_the_conclusion_needs_a_delegation_given_at_that_pause(pause):

@@ -33,10 +33,11 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T08:29:39.203741+00:00",
+     "time": "2026-10-19T08:50:34.546534+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -65,10 +66,11 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T08:29:39.316910+00:00",
+     "time": "2026-10-19T08:50:34.754143+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -92,10 +94,11 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T08:29:39.391019+00:00",
+     "time": "2026-10-19T08:50:34.837174+00:00",
      "authenticated": false,
-     "basis": "explicit",
-     "delegation_scope": null
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -144,7 +147,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T08:29:39.155343+00:00",
+    "created": "2026-10-19T08:50:34.496736+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -166,7 +169,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T08:29:39.266736+00:00",
+    "created": "2026-10-19T08:50:34.694198+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -185,7 +188,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T08:29:39.353487+00:00",
+    "created": "2026-10-19T08:50:34.794753+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -200,7 +203,7 @@
     "rationale": "Lower error on later years.",
     "status": "open",
     "revision": 24,
-    "created": "2026-10-19T08:29:40.888513+00:00",
+    "created": "2026-10-19T08:50:36.329425+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -211,12 +214,12 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T08:29:39.203794+00:00",
+    "time": "2026-10-19T08:50:34.546584+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -225,7 +228,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T08:29:39.316971+00:00",
+    "time": "2026-10-19T08:50:34.754290+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -237,7 +240,7 @@
      "weight": "available_at_prediction"
     },
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",
@@ -246,7 +249,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T08:29:39.391074+00:00",
+    "time": "2026-10-19T08:50:34.837233+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -255,7 +258,7 @@
      "method": "ordinal_cutoff"
     },
     "user_words": "Yes, I want the split exactly as you stated it",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "channel": "chat",
     "actor": "user",

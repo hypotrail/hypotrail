@@ -39,7 +39,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'final_test',
              # v0.2a (WP-A1, R7): the engine's Python and the commands that open the
              # notebooks with it.
-             'deliverables')
+             'deliverables',
+             # ADR 0005 (v0.2a): the confirmation mode and the study language.
+             'mode', 'language')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -47,9 +49,15 @@ DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
                       'feature_basis')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
+                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope',
+                          # ADR 0005 (R3): the point the agent raised, kept by the junior.
+                          'agent_concern')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
+                      # ADR 0005: the restatement per language (``null`` when none was
+                      # given), and ``label``, the restatement in the study language. Before
+                      # ``origin``, which stays the last key (decision CI.6).
+                      'labels', 'label',
                       # Advanced companion (C9, decision CI.6): the stored origin, ``null``
                       # for a proposal recorded before C9. The report reads it.
                       'origin')
@@ -764,8 +772,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
         'next_action': audience.next_action(st.next_action(state, suspected)),
-        'open_proposals': [{k: copy.deepcopy(p.get(k)) if k == 'origin' else p[k]
-                            for k in PROPOSAL_VIEW_KEYS}
+        'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
         'decisions': _decisions(state),
@@ -783,7 +790,21 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
         'final_test': partition.final_test_status(state),
         'deliverables': launch.deliverables(study.study_dir),
+        'mode': st.mode_of(state),
+        'language': st.language_of(state),
     }
+
+
+def _proposal_view(p: dict, language: str) -> dict:
+    out = {}
+    for k in PROPOSAL_VIEW_KEYS:
+        if k in ('origin', 'labels'):
+            out[k] = copy.deepcopy(p.get(k))
+        elif k == 'label':
+            out[k] = st.label_of(p, language)
+        else:
+            out[k] = p[k]
+    return out
 
 
 # --- the digest of the advanced companion (CLI-CONTRACT-COMPANION §1, C1) -------------
@@ -993,6 +1014,9 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
         main = t.template('withdrawn', **fields)
     elif kind == 'hold_recorded':
         main = t.template('hold_recorded', words=params.get('user_words'), **fields)
+    elif action == 'decide.note':
+        # ADR 0005 (R3): a correction note is listed as ``other``, not as a hold.
+        main = t.template('correction_recorded', words=params.get('user_words'), **fields)
     elif kind == 'hold_resolved':
         note = (state.get('notes') or {}).get(item['note_id']) or {}
         name = 'hold_withdrawn' if action == 'decide.withdraw_note' else 'hold_resolved'
@@ -1053,6 +1077,8 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
             continue
         kept = [s for s in sorted(occupant) if s.startswith('fit.') and occupant[s] not in stale]
         kind = _KIND_OF_ACTION.get(action, 'other')
+        if action == 'decide.note' and result.get('kind') == st.CORRECTION:
+            kind = 'other'                       # ADR 0005: a correction is not a hold
         promoted = action == _PROMOTE and result.get('status') == 'promoted'
         if promoted:
             kind = 'result_replaced' if result.get('slot') in occupant else 'result_added'

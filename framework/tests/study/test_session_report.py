@@ -102,7 +102,8 @@ def test_the_log_records_mutations_refusals_status_and_checks(logged):
     assert decision['decision_id'] == 'prediction_time' and decision['outcome'] == 'confirmed'
     assert decision['refused_confirmations'] == 1
     assert decision['refusal_reasons'] == {'bare_acknowledgement': 1}
-    assert decision['seconds_open'] >= 0 and decision['basis'] == 'explicit'
+    # ADR 0005: own words repeating the proposal are recorded as restated (was explicit).
+    assert decision['seconds_open'] >= 0 and decision['basis'] == 'restated'
     [check] = out['checks']                                     # a logged read
     assert check['target'] == 'text' and check['clean'] is False
     assert check['codes'] == {'untraceable_number': 1}

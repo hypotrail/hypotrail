@@ -36,7 +36,8 @@
      "time": "2026-10-18T22:31:46.258576+00:00",
      "authenticated": false,
      "basis": "explicit",
-     "delegation_scope": null
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -66,7 +67,8 @@
      "time": "2026-10-18T22:31:46.390635+00:00",
      "authenticated": false,
      "basis": "explicit",
-     "delegation_scope": null
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },
@@ -93,7 +95,8 @@
      "time": "2026-10-18T22:31:46.462543+00:00",
      "authenticated": false,
      "basis": "explicit",
-     "delegation_scope": null
+     "delegation_scope": null,
+     "agent_concern": null
     },
     "open_proposals": []
    },

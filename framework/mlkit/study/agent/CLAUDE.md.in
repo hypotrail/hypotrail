@@ -97,18 +97,41 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    restatement. Any other proposal, including one you make on "continue", is a plain
    declarative restatement without that prefix. If the junior answers a "My recommended
    default:" proposal in their own words instead of delegating, confirm it as explicit.
-   - **Explicit** (the default `--basis explicit`): a reply that restates or affirms the
-     specific restatement in the junior's own words, such as "yes, before the first
+   - **Explicit** (the default `--basis explicit`; guided mode, ADR 0005): a reply bound
+     to the open proposal with `--proposal PROPOSAL_ID` that endorses or restates it in the
+     junior's own words, such as "oui je confirme cela", "yes, before the first
 <!-- hypotrail:task binary -->
      call" or "I confirm the threshold rule". The engine refuses a reply made only of
 <!-- hypotrail:task regression -->
      call" or "I choose the linear model". The engine refuses a reply made only of
 <!-- hypotrail:end -->
      acknowledgement words (`commands.is_bare_acknowledgement`): "ok", "yes", "garde ça",
-     "keep that", "continue", "d'accord", "sure, sounds good to me"; a refusal or a
+     "keep that", "continue", "d'accord", "sure, sounds good to me" (an explicit
+     endorsement such as "je confirme" or "I agree" is accepted); a refusal or a
      hesitation ("no", "wait", "not yet", "not that", "pas d'accord", "I don't agree":
-     `negative_reply`); and a reply that shares no word or number with the proposal
-     (`unrelated_reply`). An agreement that repeats a limit ("Yes, and it's not a
+     `negative_reply`); a question (`question_reply`); and a conditional agreement ("oui
+     mais je veux réfléchir", "d'accord sauf ...", "yes but", "unless":
+     `conditional_reply`); and a reply with no endorsement expression that shares no
+     word or number with the proposal (`unrelated_reply`, "yes, I like pizza"). The engine records an endorsement as `endorsed` and a reply
+     that repeats the proposal as `restated`.
+<!-- hypotrail:task binary -->
+     **The policy and the conclusion need one reason** in the junior's words ("because
+     ...", "parce que ..."): an endorsement alone is refused with `reason_required`; ask
+     the junior why, then confirm with that reply.
+<!-- hypotrail:task regression -->
+     **The model choice and the conclusion need one reason** in the junior's words
+     ("because ...", "parce que ..."): an endorsement alone is refused with
+     `reason_required`; ask the junior why, then confirm with that reply.
+<!-- hypotrail:end -->
+     **Check the reason before you confirm** (R3). If the junior's reason is wrong (a
+     variable excluded for a reason that belongs to another one), say so once, before
+     confirming, and let them choose: reformulate, confirm with new words, or keep their
+     words. If they keep them, confirm with `--agent-concern "<the point you raised>"`
+     so the report shows it. A `feature_availability` confirmation may return
+     `warnings` (`words_contradict_value`: the words exclude a variable the value keeps,
+     or the reverse): tell the junior, and record their later correction with
+     `decide note --about DECISION --kind correction --text "<their words>"` (it does
+     not ask for the decision again) or propose again. An agreement that repeats a limit ("Yes, and it's not a
      forecast", "agreed, never an input") is an agreement: record it verbatim, limits
      included. Then restate and ask again; after a refusal, ask what the junior wants
      instead. **Never coach the junior's wording**: never ask them to avoid words ("not",
@@ -272,9 +295,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} status --json --study {{STUDY}}
 {{HYPOTRAIL}} plan --study {{STUDY}}
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide confirm PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--agent-concern "<the point you raised, kept by the junior>"] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note --about DECISION --text "<the junior's condition, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide note --about DECISION --kind correction --text "<the junior's corrected reasoning, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note --resolve NOTE_ID --text "<the junior's words that resolve it, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
 {{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] [--rule threshold:T --rule capacity:K] --request-id ID --expected-revision REV --study {{STUDY}}

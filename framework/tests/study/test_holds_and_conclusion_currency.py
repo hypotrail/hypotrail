@@ -203,9 +203,10 @@ def test_a_delegated_decision_confirmed_again_in_own_words_outdates_the_conclusi
     b.decide('split', split, 'Stratified split with 30% validation and seed 20261017.',
              'Yes, I choose that split myself: 30% validation, stratified.')
     state = _state(b)
-    assert state['decisions']['split']['confirmation']['basis'] == 'explicit'
+    # ADR 0005: own words repeating the proposal are recorded as restated (was explicit).
+    assert state['decisions']['split']['confirmation']['basis'] == 'restated'
     assert state['decisions']['conclusion']['status'] == 'reconfirm_required'
-    assert 'basis explicit (was delegated_default)' in state['decisions']['conclusion']['reason']
+    assert 'basis restated (was delegated_default)' in state['decisions']['conclusion']['reason']
     assert state['decisions']['policy']['status'] == 'confirmed'      # values unchanged
     assert state['invalidations'][-1]['mutation'] == 'unchanged_value'
 
