@@ -234,7 +234,13 @@ def test_online_shoppers_end_to_end_with_grouped_folds_a_share_and_the_opening(t
     for rule, p in (('share:0.1', 0.1), ('share:0.2', 0.2)):
         entry = out['rules'][rule]
         assert entry['capacity_share'] == p
-        assert entry['models']['fit.logistic']['capacity'] == policy.share_capacity(p, n_dev)
+        # B6c (H3): the share is applied within each fold; the capacity is their sum.
+        sizes = {}
+        for fold in folds.values():
+            sizes[fold] = sizes.get(fold, 0) + 1
+        assert entry['models']['fit.logistic']['capacity'] == sum(
+            policy.share_capacity(p, m) for m in sizes.values())
+        assert entry['models']['fit.logistic']['selection_scope'] == 'within_fold'
         assert entry['comparisons']['fit.variant']['reference'] == 'fit.logistic'
     # The gain points are computed on the out-of-fold predictions of every development row.
     gain = out['gain_points']
