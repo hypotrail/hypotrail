@@ -127,8 +127,10 @@
     "reason": null,
     "open_proposals": [],
     "feature_basis": {
+     "proposed_not_discussed": [
+      "acceleration"
+     ],
      "default_from_case": [
-      "acceleration",
       "cylinders",
       "displacement",
       "horsepower",

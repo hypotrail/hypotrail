@@ -38,7 +38,8 @@
      "basis": "explicit",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -82,7 +83,8 @@
      "basis": "explicit",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -114,7 +116,8 @@
      "basis": "delegated_default",
      "delegation_scope": "this_decision",
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -141,7 +144,8 @@
      "basis": "explicit",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },

@@ -62,6 +62,7 @@ availability_head:
 availability_basis:
   discussed: Your decision (named in your words)
   default_from_case: From the case, not discussed
+  proposed_not_discussed: Proposed by the assistant, not discussed
 availability_basis_open: Proposed, not confirmed
 availability_not_stated: availability at prediction time not documented
 verdict:
@@ -86,6 +87,24 @@ hold_withdrawn: Condition withdrawn
 hold_withdrawn_by: Withdrawn in your words
 agent_concern: Point raised by the agent
 agent_concern_kept: kept by the user, who confirmed these words
+# WP-A9 (M6): the case's structure statements in words (never the raw keys).
+structure_words:
+  time_column: time column
+  group_column: entity identifier (a column that names who or what repeats)
+  row_unit: what one row describes
+  duplicates: duplicate rows
+# WP-A9 (M1): what motivated the preparation of the variables.
+motivation:
+  questions: "Questions behind this preparation:"
+  not_current: An earlier analysis that is no longer current.
+  contingent: Chosen after looking at the outcome on training rows, so the validation figures may be slightly optimistic.
+  looks: "The study had {n} look{s} at the outcome before this proposal."
+  not_contingent: Chosen before any look at the outcome on training rows.
+# WP-A9 (H3): a words_contradict_value warning kept on the confirmation.
+contradiction:
+  title: Words and value disagree
+  exclude: Your words exclude {variable}, but the value keeps it.
+  keep: Your words keep {variable}, but the value excludes it.
 correction: Correction in your words
 correction_note: Recorded after the confirmation; the decision was not asked again.
 credit_heading: Who decided what
@@ -95,7 +114,7 @@ policy_note: Figures are computed on validation rows after a choice made on them
 policy_missing: No current policy evaluation yet.
 capacity_population:
   before: A capacity rule here selects that many of the
-  after: validation rows, which stand for a share of the contacts, not for a whole campaign. Read its volume share as the rate to carry over; apply that rate to another population before quoting a count for it.
+  after: validation rows, which stand for a share of the scored rows, not for a whole population. Read its volume share as the rate to carry over (a share rule states that rate directly); apply that rate to another population before quoting a count for it.
 paired_heading: Paired differences, model minus baseline (paired bootstrap on the same validation rows)
 policy_note_oof: Figures are out-of-fold predictions of the development rows, after a choice made on them. They are development evidence, optimistic, and not a forecast of a future campaign; only the final test, opened once, is independent.
 comparison_heading: The variant against the candidate model (variant minus candidate, paired bootstrap on the same rows)
@@ -169,6 +188,7 @@ data_section:
   rows_missing: The example rows could not be read.
   ungrouped: Other columns
   missing: Missing in development rows
+  scroll_hint: On a narrow screen, scroll each table sideways to see every column.
   head:
     name: Column
     meaning: Meaning

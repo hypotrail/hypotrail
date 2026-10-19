@@ -258,7 +258,11 @@ def test_a_changed_preprocessing_refits_the_candidate_and_keeps_the_exploration(
                   '--request-id', flow.rid(), '--expected-revision', flow.rev(),
                   '--study', flow.study)
     proposed = flow.state()['proposals'][p['result']['proposal_id']]['value']
-    assert proposed['data_contingent'] is False and proposed['motivated_by'] == [quality['result_id']]
+    # WP-A9 (M1): the study looked at the outcome before (the rates by poutcome, the
+    # training EDA), so the value is data-contingent even though its motivation is the
+    # structural quality overview.
+    assert proposed['motivated_by'] == [quality['result_id']]
+    assert proposed['target_looks_before'] >= 1 and proposed['data_contingent'] is True
     out = flow.call('decide', 'confirm', p['result']['proposal_id'], '--user-words',
                     'Yes, cap and log the balance and group the rare categories',
                     '--request-id', flow.rid(), '--expected-revision', flow.rev(),

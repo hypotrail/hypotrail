@@ -176,7 +176,7 @@ def test_c3_preview_effects_keys_and_equality_with_the_confirmation(clone):
     assert {'fit.baseline', 'fit.logistic'} <= set(p['kept_slots'])
     rev = clone.rev()
     code, confirmed = cc.run('decide', 'confirm', pid, '--user-words',
-                             'Yes, I want the policy exactly as you stated it',
+                             'Yes, I want the policy exactly as you stated it, because it fits our situation',
                              '--request-id', 'cc-confirm', '--expected-revision', rev,
                              '--study', clone.study)
     assert code in (0, 3), confirmed

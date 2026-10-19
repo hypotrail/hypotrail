@@ -129,7 +129,9 @@ def card(study_dir) -> dict:
                 'decided': ({'status': availability['status'], 'value': decided.get(name)}
                             if name in decided else None),
                 'special_values': specials, 'n_missing': int(values.isna().sum()),
-                'n_distinct': int(values.nunique(dropna=True)), 'examples': examples}
+                # WP-A9 (M4): distinct ordinary values, special values and missing cells
+                # apart, as ``eda.quality`` counts them (``cardinality.n_distinct``).
+                'n_distinct': int(ordinary.nunique(dropna=True)), 'examples': examples}
         groups.setdefault(v.get('group') or UNGROUPED, []).append(item)
     order = sorted(frame.index, key=lambda k: int(str(k)[1:]))[:N_ROWS]
     columns = [target] + [n for n in case.column_names if n != target]

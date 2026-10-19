@@ -1430,18 +1430,20 @@ def read_predictions(store, rid: str) -> dict:
     return {'row_keys': keys, 'y': np.asarray(y, dtype=float), 'score': np.asarray(score)}
 
 
-def _residual_groups(column: str, values, y, preds: Mapping) -> dict:
-    """Residuals by value of ``column`` on validation rows (training-free bins)."""
-    import numpy as np
+def _residual_groups(column: str, values, y, preds: Mapping, unit: str | None = None,
+                     rows_word: str = 'validation') -> dict:
+    """Residuals by value of ``column`` on the evaluated rows (validation rows, or the
+    out-of-fold development rows under cross-validation; training-free bins). WP-A9: a
+    numeric column is cut into quantile bins labelled by their smallest and largest values
+    ("70 to 75"), and ``binning`` says how many bins were made and on which rows."""
+    import pandas as pd
     from . import eda, regression
     labels = values.astype(str).to_numpy()
     distinct = sorted(set(values.dropna().tolist()), key=lambda v: (str(type(v)), v))
     binned = len(distinct) > eda.MAX_DISTINCT_BEFORE_BINNING
     if binned:
-        import pandas as pd
-        cut = pd.qcut(values, eda.QUANTILE_BINS, duplicates='drop')
-        labels = cut.astype(str).to_numpy()
-        order = [str(i) for i in cut.cat.categories]
+        bin_labels, order = eda._bins(values, pd.Series(False, index=values.index), unit)
+        labels = bin_labels.reindex(values.index).astype(str).to_numpy()
     else:
         order = [str(v) for v in distinct]
     groups = []
@@ -1455,7 +1457,7 @@ def _residual_groups(column: str, values, y, preds: Mapping) -> dict:
                            y[mask], p[mask]).items() if k in ('mae', 'mean_residual')}
                                   for slot, p in preds.items()}})
     return {'column': column, 'binned': bool(binned),
-            'binning': (f'{eda.QUANTILE_BINS} validation quantile bins' if binned else None),
+            'binning': eda.binning_words(len(order), rows_word) if binned else None,
             'groups': groups, 'min_group_rows': eda.MIN_GROUP_ROWS}
 
 
@@ -1484,7 +1486,10 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
                                          reference=plan_['params']['reference'], pairs=pairs)
     case, dataset = load(plan_, store)
     frame = rows(dataset, first['row_keys'])
-    by = [_residual_groups(column, frame[column], y, predictions)
+    rows_word = ('out-of-fold' if plan_['params'].get('evaluation') == 'out_of_fold'
+                 else 'validation')
+    by = [_residual_groups(column, frame[column], y, predictions,
+                           (case.variables.get(column) or {}).get('unit'), rows_word)
           for column in plan_['inputs']['residual_columns']]
 
     values = {'n': len(y), 'target': case.target_column, 'unit': case.target_unit,

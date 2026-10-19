@@ -156,6 +156,7 @@ def test_another_share_is_not_the_exercise_assumption(share_study, tmp_path):
 
 
 def test_a_case_without_defaults_shows_none(tmp_path):
-    flow = Flow(tmp_path / 'study', fk.BANK)
+    # WP-A9 (R6): Bank Marketing now declares the teaching default; Auto MPG declares none.
+    flow = Flow(tmp_path / 'study', fk.REPO / 'use-cases' / 'auto-mpg')
     flow.init()
     assert flow.view()['scenario_defaults'] is None

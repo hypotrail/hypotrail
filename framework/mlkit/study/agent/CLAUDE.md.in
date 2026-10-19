@@ -132,18 +132,22 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      (`commands.is_bare_acknowledgement`: "ok", "yes", "garde ça", "keep that",
      "continue", "d'accord"); a refusal or a hesitation (`negative_reply`: "no", "wait",
      "not yet", "pas d'accord"); a question (`question_reply`); a conditional agreement
-     (`conditional_reply`: "oui mais je veux réfléchir", "d'accord sauf ...", "yes but");
-     and a reply that neither endorses nor names anything of the proposal
-     (`unrelated_reply`, "yes, I like pizza"). Send no reply you can see is one of these
-     (acknowledgement words only, a question, a condition): answer it as below instead.
-     Send any other reply as it is, once.
+     (`conditional_reply`: "oui mais je veux réfléchir", "d'accord sauf ...", "yes but"),
+     including a partial acceptance ("ok pour le plafonnement, pas pour le log", "yes for
+     the caps, not for the log": propose again with the parts they want); and a reply that
+     neither endorses nor is about the proposal (`unrelated_reply`, "yes, I like pizza",
+     "oui, la pizza du client est bonne": one shared word is not an answer). Send no reply
+     you can see is one of these (acknowledgement words only, a question, a condition, a
+     partial acceptance): answer it as below instead. Send any other reply as it is, once.
 <!-- hypotrail:task binary -->
      **The policy and the conclusion need one reason** in the junior's words ("because
-     ...", "parce que ..."): an endorsement alone is refused with `reason_required`.
+     ...", "parce que ...", or a clause about the team, the budget, the evidence): an
+     endorsement or a repetition of the value ("ok, 10 %") is refused with
+     `reason_required`.
 <!-- hypotrail:task regression -->
      **The model choice and the conclusion need one reason** in the junior's words
-     ("because ...", "parce que ..."): an endorsement alone is refused with
-     `reason_required`.
+     ("because ...", "parce que ...", or a clause about the errors, the evidence): an
+     endorsement or a repetition of the value is refused with `reason_required`.
 <!-- hypotrail:end -->
    - **After a refusal**, explain it in one sentence in the junior's language, without
      codes or flags, then ask one question: for `conditional_reply`, what they want
@@ -165,9 +169,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      they are. Confirm only after their answer: with their new words for (a) and (b);
      for (c), with their original reply and `--agent-concern "<the point you raised>"`,
      so the report shows it. A reason you would only have worded differently is theirs:
-     confirm it. A `feature_availability` confirmation may return `warnings`
-     (`words_contradict_value`: the words exclude a variable the value keeps, or the
-     reverse): tell the junior and propose again if the value is wrong. A correction of a
+     confirm it. Words that exclude a variable the value keeps, or the reverse, are
+     refused in `guided` with `words_contradict_value` until you raise the point: say what
+     the value says, then (a) propose again with the value they mean, (b) confirm with new
+     words, or (c) keep their words with `--agent-concern "<the point you raised>"`; the
+     confirmation then keeps the `warnings`, and the report shows them. A correction of a
      confirmed decision's reasoning, later, is
      `decide note --about DECISION --kind correction --text "<their words>"` (it does
      not ask for the decision again).
@@ -283,22 +289,33 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    past rows, not effects. Validation figures are **development evidence**, not final
    evidence and not forecasts: write "on the validation
 <!-- hypotrail:task binary -->
-   rows, the <K> highest scores held <N> subscribers", not "we will get <N>". When a
+   rows, the <K> highest scores held <N> positive rows", not "we will get <N>". When a
    capacity or a threshold changes, say explicitly that the model and its predictions are
    unchanged: only the selection rule changes, nothing was refitted, and the fit results
    are the same (cite their `result_id`s, unchanged). When you apply a capacity, state
    the population it applies to: the evaluation selects K of the <N> validation rows
-   (cite `n` of the policy evaluation), which stand for a share of the contacts, not a
-   whole campaign. Give the selection as a rate of those rows (the registered
+   (cite `n` of the policy evaluation), which stand for a share of the scored rows, not a
+   whole population. Give the selection as a rate of those rows (the registered
    `volume_rate`) before any extrapolation, and promise no scaling that no activity
-   does. A business capacity (the calls the team can make in a campaign) is
+   does. **Capacity as a share.** When the case sets `scenario_defaults.capacity_share`
+   (`status --json`; the policy's `next_action.default_value` is then `share:<p>`), ask the
+   capacity as one question, as a share of the scored rows (what share of them the team
+   can act on), not as counts. Before you recommend a share, show what 5, 10 and 20 % of
+   the rows would give: the gain in points over the baseline at each share
+   (`gain_points.points` of the policy evaluation, cited with its `result_id`). Present
+   the default as the exercise's assumption in words ("the exercise assumes the team can
+   act on <p> of the rows"), not as a fact about the team, and say that keeping it is
+   listed as "capacity assumed for the exercise" in what is not yet defensible. The rule
+   is `share:<p>` (`run policy.evaluate --rule share:<p>`); when the final test is
+   opened, the same rule acts on that share of the final-test rows. Without that default (a real
+   case), a business capacity (the actions the team can take) is
    yours to translate, never the junior's: evaluate it as given, and when it is at least
    the number of validation rows, say in plain words that it selects every row and tests
-   no ranking. To test the ranking at the team's share of contacts, ask only for business
-   figures (how many contacts the campaign covers), choose the capacity K on the
+   no ranking. To test the ranking at the team's share of the rows, ask only for business
+   figures (how many rows the team's population covers), choose the capacity K on the
    validation rows yourself, evaluate it, and cite its registered `volume_rate` next to
-   the junior's own figures. Never ask the junior for a number of validation rows, a
-   share, or a conversion. Before you
+   the junior's own figures. Never ask the junior for a number of validation rows or a
+   conversion; a share is asked only as the capacity question above. Before you
 <!-- hypotrail:task regression -->
    rows, the linear model was off by <A> <unit> on average (MAE)", not "the model will
    be off by <A>". Report errors in the unit of the target: the MAE first (the typical

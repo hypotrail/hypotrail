@@ -390,22 +390,28 @@ structure:
     source: 'Structural inspection of data/bank.csv: no exact duplicate rows'
 task: binary
 prior_exposure:
-- value: Tutorial outputs for protocol "stratified-70-30" (Stratified random 70/30 split. 3164 training
-    rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.)
-    were published with this dataset. The rows used there are not unseen, and that validation is not independent
-    evidence.
+- value: 'Outputs of an earlier analysis (protocol "stratified-70-30": Stratified random 70/30 split.
+    3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training
+    data only.) were published with this dataset. The rows used there are not unseen, and that validation
+    is not independent evidence.'
   status: observed
-  source: Tutorial results published with the dataset
+  source: Results of an earlier analysis published with the dataset
 - value: data/split.json records the tutorial split (seed 20261017) whose validation metrics were published
     with this dataset. A study that reuses this seed has no unseen validation rows.
   status: observed
   source: data/split.json
+scenario_defaults:
+  capacity_share:
+    value: 0.1
+    status: scenario_assumption
+    source: 'Teaching scenario: the call team can contact one client in ten. A real team would give its
+      own figure.'
 migration:
   from: project.json
   from_schema: hypotrail.project/1
   from_sha256: 4315d760f7a192ba8cceb034c486c5ab2ae4f0b31fa23a809e776edf3da5b973
   supplement: case-supplement.yaml
-  supplement_sha256: 2b67659620700ff7a1c04f30dbcedc309ff3d3901a350f8c943917f3779e366a
+  supplement_sha256: bf91e0a3bc517233dae528c02ec125a006d9f08e710ab7865843f740e23c864c
   tool: mlkit.study.migrate
   tool_version: 1
   rules:

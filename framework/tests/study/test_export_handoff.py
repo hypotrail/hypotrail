@@ -224,7 +224,7 @@ def test_an_auto_mpg_pack_holds_no_rule_vocabulary(tmp_path):
     for activity in ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)
-    flow.decide('model_choice', 'fit.linear', 'Yes, the linear model.')
+    flow.decide('model_choice', 'fit.linear', 'Yes, the linear model, because it errs less.')
     flow.call('render', '--study', flow.study)
     out = tmp_path / 'pack'
     export(flow.study, '--out', out, code=0)

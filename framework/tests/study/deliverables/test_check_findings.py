@@ -363,7 +363,8 @@ def test_conclusion_text_is_checked(tmp_path, synthetic_case_dir, monkeypatch):
     # ... and check still reports one recorded by a study written before that fix.
     monkeypatch.setattr(cmd, 'check_conclusion', lambda *a, **k: None)
     b.decide('conclusion', {'verdict': 'adopt_policy', 'text': text},
-             'You adopt the policy.', 'I adopt the capacity rule as written.')
+             'You adopt the policy.',
+             'I adopt the capacity rule as written, because it ranks better.')
     result = cmd_check.run_check(b.study)
     where = {(f['code'], f['where']) for f in result['findings']}
     assert ('untraceable_number', 'decision:conclusion') in where

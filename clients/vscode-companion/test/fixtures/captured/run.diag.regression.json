@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_952532c3c79c0a600a6ca16b",
   "status": "promoted",
-  "result_id": "4b328ef521f284966c523592d0a28b023cc84bf957c718b44ec740f95b524c96",
+  "result_id": "01beec18ba13ab7c392abc118a5ea021ddd11ab1333c4d3591c49639d383c7e0",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1238,7 +1238,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "f38462465ce8cedd7dbaa2cde5e55914264747ca866cb422ef4229c41a5dc536"
+     "predictions": "61a7dab56b65b90f992259d9dba5b303f2c111d42ae715c0b609a96086330a5f"
     },
     "fit.variant": {
      "errors": {
@@ -2431,7 +2431,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "a1a11892800487f64941705373fa4f2cfe93fbb4623bf7e8b8b5367cf17c0be8"
+     "predictions": "747f19138d91dcc7906977b1ad2e39c133f6567effd0fd123ab1c784dfe48455"
     }
    },
    "coefficient_rows": 222,
@@ -2442,14 +2442,14 @@
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "4b328ef521f284966c523592d0a28b023cc84bf957c718b44ec740f95b524c96",
-   "input_key": "33132b3c0b6c9306916ac0dcd4c99b5ee903e62e9183d68c8e2d083bed3813c9",
+   "result_id": "01beec18ba13ab7c392abc118a5ea021ddd11ab1333c4d3591c49639d383c7e0",
+   "input_key": "bf748323d720aa15e5bb77dc237c4d2ce8a611d34321bd255ebed31f5942a473",
    "reason": null,
    "started_revision": 37,
    "invalidation": null,
    "exposure_ids": [
-    "x_7ef9f83226294b01b6e1140b587b21a3",
-    "x_ea449ac2e83e4029a0dbec19c84ef9e7"
+    "x_70f63960d0754290b83a32d7a5b88eaf",
+    "x_3b726967d7854f36a466e6c1d4ccb4ee"
    ],
    "registry_created": true,
    "nondeterministic": false

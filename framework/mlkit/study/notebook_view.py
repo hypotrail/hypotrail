@@ -236,11 +236,28 @@ def model_inputs(study: read.Study, rid: str, train, validation):
     return X_train, X_val
 
 
+def design_inputs(study: read.Study, rid: str, train, validation):
+    """``(X_train, X_validation)`` of the fit ``rid`` before its preparation: its features
+    and its special values as indicator columns (:func:`mlkit.study.fit.design`). The
+    generated notebook then applies the confirmed preparation as readable pandas steps
+    (WP-A9, M3)."""
+    from . import case as c, fit
+
+    inputs = study.result(rid)['inputs']
+    case = c.case_of(study.state)
+    features, special = list(inputs['features']), list(inputs['special_values'])
+    train = train.drop(columns=['partition'], errors='ignore')
+    validation = validation.drop(columns=['partition'], errors='ignore')
+    X_train, _ = fit.design(train, features, special, case)
+    X_val, _ = fit.design(validation, features, special, case)
+    return X_train, X_val
+
+
 def preprocessing_words(study: read.Study, rid: str) -> str:
     """The preparation of fit ``rid`` in words (as the report writes it)."""
     value = study.result(rid)['inputs'].get('preprocessing')
     if value is None:
-        return 'none recorded (a study created before the preprocessing decision)'
+        return 'Preparation: none recorded (a study created before the preprocessing decision)'
     return render_html.value_words('preprocessing', value, None)
 
 

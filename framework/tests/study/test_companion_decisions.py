@@ -110,7 +110,7 @@ def test_reconfirm_queue_after_a_split_change(bank, tmp_path):
     flow.run('policy.evaluate', '--rule', 'capacity:100')
     pid = _propose(flow, 'policy', 'capacity:100')
     assert _decisions(flow)['reconfirm_queue'][0]['open_proposal'] == pid
-    _confirm(flow, pid, 'Yes, I want the policy exactly as you stated it')
+    _confirm(flow, pid, 'Yes, I want the policy exactly as you stated it, because it fits our situation')
     assert _decisions(flow)['reconfirm_queue'] == []
 
 

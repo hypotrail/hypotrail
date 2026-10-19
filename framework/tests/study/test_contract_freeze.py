@@ -158,7 +158,9 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           # ADR 0005 (R3).
                           'agent_concern',
                           # v0.2b (WP-B2): the mode in force when the words were accepted.
-                          'mode')
+                          'mode',
+                          # WP-A9 (H3): the words_contradict_value warnings kept.
+                          'warnings')
 # Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
 # of own words of the guided mode; ``explicit`` stays readable and is the request default.
 CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
@@ -701,7 +703,7 @@ def test_actions_and_their_parameters():
     assert st.CONFIRMATION_BASES == CONFIRMATION_BASES and cmd.DEFAULT_BASIS == 'explicit'
     assert st.REQUEST_BASES == REQUEST_BASES
     assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern',
-                                            'mode')
+                                            'mode', 'warnings')
     assert {a: set(p) for a, p in cmd.OPTIONAL_PARAMS.items()} == OPTIONAL_ACTION_PARAMS
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DELEGATION_SCOPES == DELEGATION_SCOPES

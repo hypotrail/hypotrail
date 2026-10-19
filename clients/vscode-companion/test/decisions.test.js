@@ -379,6 +379,6 @@ test('training mode refusals (ADR 0005, WP-B2): paraphrase_required names what i
   const contra = refusals.describe(error('decide confirm', 'words_contradict_value', 'In the training mode ...', {
     warnings: [{ code: 'words_contradict_value', variable: 'contact', said: 'exclude', value: 'available_at_prediction' }],
   }));
-  assert.match(contra.human, /training mode stopped the confirmation/);
+  assert.match(contra.human, /the engine stopped the confirmation/);
   assert.deepEqual(contra.details, ['Your words and the proposal disagree about contact']);
 });

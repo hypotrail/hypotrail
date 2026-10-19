@@ -139,20 +139,22 @@
     "reason": null,
     "open_proposals": [],
     "feature_basis": {
-     "default_from_case": [
+     "proposed_not_discussed": [
       "age",
-      "balance",
       "campaign",
       "contact",
       "day",
       "default",
-      "duration",
       "education",
       "housing",
       "job",
       "loan",
       "marital",
-      "month",
+      "month"
+     ],
+     "default_from_case": [
+      "balance",
+      "duration",
       "pdays",
       "poutcome",
       "previous"

@@ -25,17 +25,17 @@
   ],
   "models": {
    "fit.baseline": {
-    "result_id": "6aecc2a0c915c4d076b4d72332fd8adb36a45139f85f5d62af967dc260dc53a6",
+    "result_id": "2b631b03e9689b44015d9a77f6acc781c0e12a733f1f1561081c745bdda5a3fb",
     "current": true,
     "stale_reason": null
    },
    "fit.logistic": {
-    "result_id": "ec6eb18d3876b76fbd2efc1d5af0d6dac71a7717fdf3605c9f1ffd2a18f0b0ee",
+    "result_id": "78fe902f97c07bcffd45c45610b1a9a008690d0124fd61b76b3e5db44d484caa",
     "current": true,
     "stale_reason": null
    },
    "fit.variant": {
-    "result_id": "189b04fb6c9094abd7e2d2786dd19a36c71c203bf3394753881fd662c8b7264f",
+    "result_id": "a0a963e2f4ee59840015360a209837da3ec71a18dd930c134a7673958db0358b",
     "current": true,
     "stale_reason": null
    }

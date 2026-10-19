@@ -15,7 +15,7 @@ const BY_REASON = {
   missing_user_words: 'Your reply was empty.',
   bare_acknowledgement: 'Your reply only acknowledged the proposal; it did not say, in your words, what you are deciding.',
   negative_reply: 'Your reply reads as a refusal, a hesitation, or a reservation, so it was not taken as a confirmation. If you disagree, say so in the chat or withdraw the proposal.',
-  unrelated_reply: 'Your reply shares no word or number with the proposal, so it cannot be read as an answer to it.',
+  unrelated_reply: 'Your reply does not read as an answer to this proposal: it does not agree with it while talking about it.',
   proposal_not_found: 'This proposal does not exist any more.',
   proposal_withdrawn: 'This proposal was withdrawn.',
   proposal_superseded: 'A newer proposal replaced this one.',
@@ -28,7 +28,7 @@ const BY_REASON = {
   delegation_not_given_at_this_pause: 'This decision needs your own words or a delegation given at this pause, in the chat.',
   // ADR 0005 (guided confirmation).
   question_reply: 'Your reply asks a question, so it was not taken as a confirmation. Ask it in the chat first.',
-  conditional_reply: 'Your reply sets a condition or keeps a reservation, so it was not taken as a confirmation. Settle the condition in the chat first.',
+  conditional_reply: 'Your reply sets a condition, keeps a reservation, or accepts only part of the proposal, so it was not taken as a confirmation. Settle it in the chat first.',
   // CLI-CONTRACT-COMPANION §13 (WP-0): a reserved command of an engine that predates it.
   not_implemented: 'The study engine in this environment does not have this command yet.',
 };
@@ -64,7 +64,8 @@ const BY_CODE = {
   reason_required: 'This decision is a trade-off, so the engine records it only with your reason, in your own words.',
   // ADR 0005, v0.2b (WP-B2): the training mode.
   paraphrase_required: 'In the training mode, a confirmation says in your own words what the proposal decides, not only that you agree. The lines below name what your reply does not say yet.',
-  words_contradict_value: 'Your words and the proposal disagree about a variable, so the training mode stopped the confirmation. Settle which one you mean in the chat.',
+  // WP-A9 (H3): also a stop in the guided mode until the point is raised in the chat.
+  words_contradict_value: 'Your words and the proposal disagree about a variable, so the engine stopped the confirmation. Settle which one you mean in the chat.',
 };
 
 // Explanations that depend on the write that was refused (the payload's `command`). A

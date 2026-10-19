@@ -230,8 +230,17 @@ def test_undiscussed_features_are_never_the_juniors_decision(flow, synthetic_cas
     assert set(basis) == set(value)
     assert {f for f, b in basis.items() if b == 'discussed'} == {'reminders_sent',
                                                                  'fines_outstanding'}
-    assert all(b == 'default_from_case' for f, b in basis.items()
-               if f not in ('reminders_sent', 'fines_outstanding'))
+    # WP-A9 (H3): an undiscussed status is the case's only when the case states it;
+    # otherwise the assistant proposed it.
+    from mlkit.study import case as c
+    stated = {v['name']: v['availability']['value']
+              for v in c.load_case(synthetic_case_dir, verify_data=False).document['variables']
+              if v['role'] == 'feature'}
+    for f, b in basis.items():
+        if f in ('reminders_sent', 'fines_outstanding'):
+            continue
+        assert b == ('default_from_case' if stated[f] == value[f] else 'proposed_not_discussed'), f
+    assert {'default_from_case', 'proposed_not_discussed'} <= set(basis.values())
     summary = flow.call('status', '--summary', '--study', flow.study)
     grouped = summary['decisions']['feature_availability']['feature_basis']
     assert sorted(grouped['discussed']) == ['fines_outstanding', 'reminders_sent']
@@ -243,7 +252,10 @@ def test_undiscussed_features_are_never_the_juniors_decision(flow, synthetic_cas
     for name, b, row in rows:
         mine = labels['availability_basis']['discussed']
         case = labels['availability_basis']['default_from_case']
-        assert (mine in row) == (b == 'discussed') and (case in row) == (b != 'discussed'), row
+        assistant = labels['availability_basis']['proposed_not_discussed']
+        assert (mine in row) == (b == 'discussed'), row
+        assert (case in row) == (b == 'default_from_case'), row
+        assert (assistant in row) == (b == 'proposed_not_discussed'), row
     assert 'Your decision</th>' not in page
     # Doubled or raw labels of the case statement are gone.
     assert 'Unknown unknown' not in page and not re.search(

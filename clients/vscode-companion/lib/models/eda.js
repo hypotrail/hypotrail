@@ -270,6 +270,9 @@ function missingText(m) {
 function catalogOf(payload) {
   return list(obj(payload.eda_catalog).activities).filter(a => a && typeof a.activity === 'string').map(a => ({
     activity: a.activity, label: a.activity, perColumn: bool(a.per_column), runnable: bool(a.runnable),
+    // WP-A9 (M5): the rows the activity reads; the panel runs training-row charts only.
+    // An engine before WP-A9 lists training-row activities only (no `partition`).
+    partition: typeof a.partition === 'string' ? a.partition : 'train',
     missing: list(a.missing).map(missingText).filter(Boolean),
     columns: list(a.columns).filter(c => c && typeof c.name === 'string' && c.name).map(c => ({
       name: c.name, role: str(c.role), type: str(c.type), slot: strOrNull(c.slot), resultId: strOrNull(c.result_id),
@@ -304,7 +307,8 @@ function toEdaModel(payload) {
 
 /** The catalog entry that lets the panel request `activity` on `column` (§7 W4), or null. */
 function requestable(model, activity, column) {
-  const a = list(model && model.catalog).find(x => x.activity === activity && x.perColumn && x.runnable);
+  const a = list(model && model.catalog).find(x => x.activity === activity && x.perColumn && x.runnable
+    && x.partition === 'train');
   if (!a) return null;
   return a.columns.find(c => c.name === column) || null;
 }

@@ -148,8 +148,10 @@
     "reason": null,
     "open_proposals": [],
     "feature_basis": {
+     "proposed_not_discussed": [
+      "acceleration"
+     ],
      "default_from_case": [
-      "acceleration",
       "cylinders",
       "displacement",
       "horsepower",
@@ -193,7 +195,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "basis": "restated",
     "delegation_scope": null,
@@ -250,67 +253,67 @@
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "7685b06364262b98c1a79e57ed5e15f06c4425e9410a858c34a18a6508314e26",
+    "result_id": "95b681b1a2cb1150c34736c0f8c4f34f4b83250fc7622cc673841169a07fd039",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "30eb23c2cce0d1520d224705903f83a112bed695855440d1204cd0276d355127",
+    "result_id": "c47c4e629eded878df2092533df173f9a0f80a82051357f9f286d0dd56c8e745",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "0cb698669776b645d3f1d398fe80547ad89406f6291be5be78a05716cdf401dd",
+    "result_id": "6d9fae3e5aa2b1a5d5f6cb6acb570425873ea152b74b64d6d6b9dcaaed5c656c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "6c291837defc93164c88b2178447491b3ef5bdbdcda960cf2f7dc6920b147c9f",
+    "result_id": "ed02b4b0f3cf60bef08d8ebaafd354d9bc7f6b7a8987070c297c236baaeefc95",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "936a0fd4e993b9fd291be5d9b41ea86f80d894613c7927bf6290c7a4ebaffe65",
+    "result_id": "76026a44a97a606bbe016495286e67548d44a95308c58537c0977603ce4a3707",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
+    "result_id": "898d895c0a2734cfc8f941c1613172d461821a305f39b04de15e70b58e0f8eca",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
+    "result_id": "d7b12dbfbf37313aa801a231d679e51940ba9039bd0eda73ae6f4017ced3a076",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "0b634412b2558231e3f87324f5b5a7a0f2bb4b56c534eb6aef0a0c38b6681f2c",
+    "result_id": "03c6ce3a65938aa50b83376fcb1d49407f757bdced946692163db76836e9d6a3",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "f38462465ce8cedd7dbaa2cde5e55914264747ca866cb422ef4229c41a5dc536",
+    "result_id": "61a7dab56b65b90f992259d9dba5b303f2c111d42ae715c0b609a96086330a5f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "a1a11892800487f64941705373fa4f2cfe93fbb4623bf7e8b8b5367cf17c0be8",
+    "result_id": "747f19138d91dcc7906977b1ad2e39c133f6567effd0fd123ab1c784dfe48455",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "75ebb4274891122fed6bee478140f98907db83f7541fd5b3230feb5deac13853",
+    "result_id": "7e17a53989318d06edd44fb1ccfce5df4074a0493bf230f40d21581a56571558",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -415,23 +418,23 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "408ad9b8c2036a8668ce1f05a8192c73fafe4a48cdcd31be62c84138d8e07e3d",
+   "result_id": "d7b12dbfbf37313aa801a231d679e51940ba9039bd0eda73ae6f4017ced3a076",
    "contradicts_verdict": false,
    "final_test": null
   },
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "f15fc707322b0cfdc67f521ee00d0b540e9b3c96b89638ff201145335ab6d40f",
-    "936a0fd4e993b9fd291be5d9b41ea86f80d894613c7927bf6290c7a4ebaffe65",
-    "6c291837defc93164c88b2178447491b3ef5bdbdcda960cf2f7dc6920b147c9f",
-    "30eb23c2cce0d1520d224705903f83a112bed695855440d1204cd0276d355127"
+    "898d895c0a2734cfc8f941c1613172d461821a305f39b04de15e70b58e0f8eca",
+    "76026a44a97a606bbe016495286e67548d44a95308c58537c0977603ce4a3707",
+    "ed02b4b0f3cf60bef08d8ebaafd354d9bc7f6b7a8987070c297c236baaeefc95",
+    "c47c4e629eded878df2092533df173f9a0f80a82051357f9f286d0dd56c8e745"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 408ad9b8); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result d7b12dbf); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],

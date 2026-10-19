@@ -110,7 +110,7 @@
        }
       ],
       "n_missing": 0,
-      "n_distinct": 12,
+      "n_distinct": 11,
       "examples": [
        "unemployed",
        "services",
@@ -167,7 +167,7 @@
        }
       ],
       "n_missing": 0,
-      "n_distinct": 4,
+      "n_distinct": 3,
       "examples": [
        "primary",
        "secondary",
@@ -301,7 +301,7 @@
        }
       ],
       "n_missing": 0,
-      "n_distinct": 3,
+      "n_distinct": 2,
       "examples": [
        "cellular",
        "telephone"
@@ -437,7 +437,7 @@
        }
       ],
       "n_missing": 0,
-      "n_distinct": 272,
+      "n_distinct": 271,
       "examples": [
        339,
        330,
@@ -494,7 +494,7 @@
        }
       ],
       "n_missing": 0,
-      "n_distinct": 4,
+      "n_distinct": 3,
       "examples": [
        "failure",
        "other",

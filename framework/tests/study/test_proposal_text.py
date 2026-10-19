@@ -56,11 +56,11 @@ def test_the_reviewers_conclusion_is_refused_at_propose(flow):
                    'Adopt the policy.', 'Strong.', expect=2)
     assert out['error']['code'] == 'literal_number_in_text'
     assert out['error']['details']['field'] == 'value.text'
-    # "4000" is no registered figure. "95%" passes the number check only because the
-    # matcher traces values, not meanings: it equals the registered bootstrap level
-    # (0.95); the causal clause is refused on its own below.
-    assert out['error']['details']['numbers'] == ['4000']
-    fixed = REVIEWER_TEXT.replace(' on 4000 future clients', '')
+    # "4000" is no registered figure. WP-A9 (H2): "95%" named a precision, and no
+    # precision is 0.95; before, it was traced to the bootstrap level (0.95). The causal
+    # clause is refused on its own below.
+    assert out['error']['details']['numbers'] == ['4000', '95%']
+    fixed = REVIEWER_TEXT.replace(' 95% precision on 4000 future clients', ' a good ranking')
     out = _propose(flow, 'conclusion', {'verdict': 'adopt_policy', 'text': fixed},
                    'Adopt the policy.', 'Strong.', expect=2)
     assert out['error']['code'] == 'causal_or_forecast_wording'

@@ -282,9 +282,9 @@ def test_instructions_carry_the_closure_fixes():
     # F2: state the population of a capacity and give it as a rate first.
     rule9 = _rule(text, 9)
     for phrase in ('state\n   the population it applies to', 'validation rows',
-                   'share of the contacts', '`volume_rate`', 'before any extrapolation'):
+                   'share of the scored rows', '`volume_rate`', 'before any extrapolation'):
         assert phrase in rule9, phrase
-    assert 'share of the contacts' in skill and '`volume_rate`' in skill
+    assert 'share of the scored rows' in skill and '`volume_rate`' in skill
     # F4: the prefix is reserved for a default proposed after a delegation.
     rule4 = _rule(text, 4)
     for phrase in ('reserved for a default you propose **after\n   a delegation**',
@@ -304,8 +304,9 @@ def test_instructions_carry_the_p_fix_defects():
     rule4, rule9 = _rule(text, 4), _rule(text, 9)
     # D3: a business capacity is the agent's to translate; never ask for validation rows.
     for phrase in ('is\n   yours to translate, never the junior\'s', '`volume_rate`',
-                   'Never ask the junior for a number of validation rows, a\n   share, or a '
-                   'conversion', 'selects every row and tests\n   no ranking'):
+                   # WP-A9 (H4): a share is asked only as the capacity question.
+                   'Never ask the junior for a number of validation rows or a\n   conversion',
+                   'selects every row and tests\n   no ranking'):
         assert phrase in rule9, phrase
     assert "Translating the team's capacity into\n  validation rows is your job" in skill
     # D3, D5: holds.

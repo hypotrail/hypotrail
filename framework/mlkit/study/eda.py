@@ -202,12 +202,45 @@ def _special_values_numeric(case: c.Case, train) -> dict:
             'question': question('eda.special_values', task='regression')}
 
 
-def _bins(values, special_mask):
-    """Training quantile bins of the ordinary (non-special, non-missing) values."""
+def _number_words(value: float) -> str:
+    """A bin bound for a reader: a whole number as such, else three significant digits."""
+    value = float(value)
+    if value.is_integer():
+        return f'{int(value):d}'
+    return f'{value:.3g}' if abs(value) < 1000 else f'{value:.0f}'
+
+
+def _bins(values, special_mask, unit: str | None = None):
+    """Training quantile bins of the ordinary (non-special, non-missing) values.
+
+    WP-A9 (M4, M6): each bin is labelled by the smallest and largest training values it
+    holds ("19 to 32 years", "0 to 0.007"), not by a pandas interval; tied values can merge
+    bins, so there may be fewer than :data:`QUANTILE_BINS` (:func:`binning_words`). When two
+    labels would read the same at that precision, the pandas intervals are kept."""
     import pandas as pd
     ordinary = values[~special_mask & values.notna()]
     binned = pd.qcut(ordinary, QUANTILE_BINS, duplicates='drop')
-    return binned.astype(str), [str(i) for i in binned.cat.categories]
+    suffix = f' {unit}' if unit else ''
+    words = {}
+    for interval in binned.cat.categories:
+        inside = ordinary[binned == interval]
+        if len(inside):
+            words[interval] = (f'{_number_words(inside.min())} to '
+                               f'{_number_words(inside.max())}{suffix}')
+        else:
+            words[interval] = str(interval)
+    if len(set(words.values())) < len(words):
+        return binned.astype(str), [str(i) for i in binned.cat.categories]
+    labels = binned.map(words).astype(str)
+    return labels, [words[i] for i in binned.cat.categories]
+
+
+def binning_words(n_bins: int, partition: str = 'training') -> str:
+    """WP-A9 (M4): the binning as done, with the number of bins actually made."""
+    if n_bins < QUANTILE_BINS:
+        return (f'{n_bins} {partition} quantile bins ({QUANTILE_BINS} asked; tied values '
+                f'merged the others)')
+    return f'{n_bins} {partition} quantile bins'
 
 
 def _groups(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS):
@@ -239,9 +272,11 @@ def _groups(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS):
     distinct = values[rest].nunique()
     binned = is_numeric_dtype(values) and distinct > MAX_DISTINCT_BEFORE_BINNING
     if binned:
-        bin_labels, bin_order = _bins(values, special_mask)
+        unit = (case.variables.get(column) or {}).get('unit')
+        bin_labels, bin_order = _bins(values, special_mask, unit)
         labels[bin_labels.index] = bin_labels
         order = bin_order + order
+        binned = len(bin_order)
     folded = None
     if not binned:
         ordinary = sorted(values[rest].unique().tolist(), key=lambda v: (str(type(v)), v))
@@ -299,7 +334,7 @@ def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
     overall = target_rate(case, train)
     out = {'partition': 'train', 'column': column, 'n_rows': int(len(train)),
            'overall_rate': overall['rate'], 'binned': bool(binned),
-           'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
+           'binning': binning_words(binned) if binned else None,
            'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
            'max_groups': max_groups, 'other': other,
@@ -334,7 +369,7 @@ def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
     out = {'partition': 'train', 'column': column, 'target': case.target_column,
            'unit': case.target_unit, 'n_rows': int(len(train)),
            'overall_mean': _mean(y.dropna()), 'binned': bool(binned),
-           'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
+           'binning': binning_words(binned) if binned else None,
            'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
            'max_groups': max_groups, 'other': other,

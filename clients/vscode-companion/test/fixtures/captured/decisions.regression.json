@@ -33,12 +33,13 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T16:07:58.504370+00:00",
+     "time": "2026-10-19T17:13:17.922457+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -67,12 +68,13 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T16:07:59.004114+00:00",
+     "time": "2026-10-19T17:13:18.299686+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -96,12 +98,13 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T16:07:59.465725+00:00",
+     "time": "2026-10-19T17:13:18.730237+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -124,12 +127,13 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-19T16:07:59.999003+00:00",
+     "time": "2026-10-19T17:13:19.183325+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -145,7 +149,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "depends_on": [],
     "reason": null,
@@ -156,12 +161,13 @@
      "restatement": "You decide the preprocessing as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-19T16:08:00.441136+00:00",
+     "time": "2026-10-19T17:13:19.654610+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -184,12 +190,13 @@
      "restatement": "You decide the model_variant as stated.",
      "proposal_id": "p_6",
      "revision": 31,
-     "time": "2026-10-19T16:08:06.003572+00:00",
+     "time": "2026-10-19T17:13:23.707156+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -264,7 +271,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T16:07:58.170230+00:00",
+    "created": "2026-10-19T17:13:17.767617+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -286,7 +293,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T16:07:58.753547+00:00",
+    "created": "2026-10-19T17:13:18.127269+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -305,7 +312,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T16:07:59.277613+00:00",
+    "created": "2026-10-19T17:13:18.521776+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -323,7 +330,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-19T16:07:59.778342+00:00",
+    "created": "2026-10-19T17:13:18.951519+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -339,13 +346,14 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "restatement": "You decide the preprocessing as stated.",
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-19T16:08:00.241388+00:00",
+    "created": "2026-10-19T17:13:19.423824+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -363,7 +371,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 30,
-    "created": "2026-10-19T16:08:05.614710+00:00",
+    "created": "2026-10-19T17:13:23.471096+00:00",
     "closed_revision": 31,
     "closed_reason": "confirmed",
     "origin": {
@@ -378,7 +386,7 @@
     "rationale": "Lower error on later years.",
     "status": "open",
     "revision": 36,
-    "created": "2026-10-19T16:08:06.914004+00:00",
+    "created": "2026-10-19T17:13:24.732438+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -389,7 +397,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T16:07:58.504423+00:00",
+    "time": "2026-10-19T17:13:17.922511+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -403,7 +411,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T16:07:59.004295+00:00",
+    "time": "2026-10-19T17:13:18.299769+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -424,7 +432,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T16:07:59.465815+00:00",
+    "time": "2026-10-19T17:13:18.730291+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -442,7 +450,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-19T16:07:59.999061+00:00",
+    "time": "2026-10-19T17:13:19.183393+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -459,7 +467,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-19T16:08:00.441223+00:00",
+    "time": "2026-10-19T17:13:19.654751+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
@@ -468,7 +476,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "user_words": "Yes, I want the preprocessing exactly as you stated it",
     "basis": "restated",
@@ -480,7 +489,7 @@
    },
    {
     "revision": 31,
-    "time": "2026-10-19T16:08:06.003635+00:00",
+    "time": "2026-10-19T17:13:23.707223+00:00",
     "decision_id": "model_variant",
     "proposal_id": "p_6",
     "value": {

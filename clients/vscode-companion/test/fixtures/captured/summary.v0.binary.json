@@ -160,20 +160,22 @@
     "reason": null,
     "open_proposals": [],
     "feature_basis": {
-     "default_from_case": [
+     "proposed_not_discussed": [
       "age",
-      "balance",
       "campaign",
       "contact",
       "day",
       "default",
-      "duration",
       "education",
       "housing",
       "job",
       "loan",
       "marital",
-      "month",
+      "month"
+     ],
+     "default_from_case": [
+      "balance",
+      "duration",
       "pdays",
       "poutcome",
       "previous"
@@ -215,7 +217,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "basis": "restated",
     "delegation_scope": null,
@@ -272,73 +275,73 @@
   },
   "results": {
    "eda.distribution:age": {
-    "result_id": "a083b5c903b0367f326e0a6e83f81fcf763a8666b840159dda722bfa6391da8f",
+    "result_id": "cdb8c70f30f1d94e45203e518ce9ee01f1ec2f0670e290fc2398341d16fa1075",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "3bb70eef73ae372bc190d04175f17873fc36b8e72b79acc51ae83978b57ba588",
+    "result_id": "b2751aab59f8ebdc5fdd07c6a57efe0d6605d36e366971c6f69c3d592507a5a5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "8f8c42dcf6bad1700ca5b6324e6b0425049216c789d1add4baea09f1c18a15f0",
+    "result_id": "581488dfa67c6f51812a3501ee370a9c7c89778cb86402681bdbb8c015d5a2c6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "46725986f0dc5d20034d41b7cdd5855f77a7e37a33e8be2776b375e2a74edc9f",
+    "result_id": "95809f5187ecba31b892ef9ce9b182579dad3e4208656e83be80930a423379bd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "0010dfc138e404d500634ffdc6ff4a3f88a6b1bcdc84b30b577128a33c30dd42",
+    "result_id": "888f992e15e62c349d7287b2d213e70be0a08fe7f3c36bfbd27dec7e6770ad4a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "b97788a50a10d6f07438aec061b3f851fcd83725b2819e720050745e252a8f8d",
+    "result_id": "ccbc6f433f21515f7aa236453589db4541c722dc948f950eee36ab8e842723b2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "ef342aaf9092f5f54915a234332ff5324e1becd31a8e3ee09be0af94035a256f",
+    "result_id": "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "6aecc2a0c915c4d076b4d72332fd8adb36a45139f85f5d62af967dc260dc53a6",
+    "result_id": "2b631b03e9689b44015d9a77f6acc781c0e12a733f1f1561081c745bdda5a3fb",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "ec6eb18d3876b76fbd2efc1d5af0d6dac71a7717fdf3605c9f1ffd2a18f0b0ee",
+    "result_id": "78fe902f97c07bcffd45c45610b1a9a008690d0124fd61b76b3e5db44d484caa",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "189b04fb6c9094abd7e2d2786dd19a36c71c203bf3394753881fd662c8b7264f",
+    "result_id": "a0a963e2f4ee59840015360a209837da3ec71a18dd930c134a7673958db0358b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "6bc8d3ab8be636e8c91ae58fd7da48ec36382cae0fa73a0b13c252f3ad452570",
+    "result_id": "866aeaeb9dbff332dc4c8d126e66ecfd9eeb156aaf1f0cad5ba2525851ab63dd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "105f0bd561277339a83fe42a3e8db9993376f5486f2e7577df180b5472e0c968",
+    "result_id": "1d62ac6149fab583e69a36eed96bef0ae6b70343a184aaac9796b8ad47c23086",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -451,15 +454,15 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "ef342aaf9092f5f54915a234332ff5324e1becd31a8e3ee09be0af94035a256f",
-    "b97788a50a10d6f07438aec061b3f851fcd83725b2819e720050745e252a8f8d",
-    "0010dfc138e404d500634ffdc6ff4a3f88a6b1bcdc84b30b577128a33c30dd42",
-    "46725986f0dc5d20034d41b7cdd5855f77a7e37a33e8be2776b375e2a74edc9f"
+    "815641e489faf5983162ab85df6ccfc0b1dd5b05035df07e291f300eb418a1d6",
+    "ccbc6f433f21515f7aa236453589db4541c722dc948f950eee36ab8e842723b2",
+    "888f992e15e62c349d7287b2d213e70be0a08fe7f3c36bfbd27dec7e6770ad4a",
+    "95809f5187ecba31b892ef9ce9b182579dad3e4208656e83be80930a423379bd"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1086 validation rows: precision 38.1%, recall 29.6%, result 6bc8d3ab).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 866aeaeb).",
    "Now: Open the final test once; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."
@@ -467,7 +470,7 @@
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept with a doubt contact); the split (stratified random, 30% for validation); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the decision policy: call everyone scored 0.2 or more (the logistic model, call everyone scored 0.2 or more, on the 1086 validation rows: precision 38.1%, recall 29.6%).",
+   "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (stratified random, 30% for validation); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the decision policy: call everyone scored 0.2 or more (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%).",
    "Now: Choose a decision policy, waiting for your answer; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."

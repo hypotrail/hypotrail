@@ -59,7 +59,8 @@ def configure(parser: argparse.ArgumentParser) -> None:
                         help='eda.rate_by / eda.mean_by: show this many largest groups and fold '
                              'the other values into one group (default 20)')
     parser.add_argument('--rule', action='append', default=None,
-                        help='policy rule: threshold:t or capacity:k (repeatable)')
+                        help='policy rule: threshold:t, capacity:k, or share:p (the top share '
+                             'p of the scored rows, 0 < p < 1) (repeatable)')
     parser.add_argument('--acknowledge-interruption', dest='acknowledge', default=None,
                         metavar='EXECUTION_ID',
                         help='acknowledge an execution with an unknown outcome (no restart)')

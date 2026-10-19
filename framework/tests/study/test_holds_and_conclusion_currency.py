@@ -280,7 +280,8 @@ def test_inconclusive_needs_no_adopted_policy_and_is_named(evaluated):
     _note(b.study, 'h1', '--about', 'policy', '--text', HOLD)
     with pytest.raises(CommandRefused) as exc:
         b.decide('conclusion', {'verdict': 'adopt_policy', 'text': 'Adopt the call rule.'},
-                 'You adopt the call rule.', 'I adopt the call rule.')
+                 'You adopt the call rule.',
+                 'I adopt the call rule because it ranks better than the baseline.')
     assert exc.value.code == 'precondition_missing'
     assert exc.value.details['missing'][0]['decision'] == 'policy'
     value = {'verdict': 'inconclusive',

@@ -214,3 +214,11 @@ notes:
     The UCI "bank-additional" documentation warns that duration is not known before a call;
     data/bank-names.txt, shipped here, does not contain that warning. The not_available
     status relies on lines 56 and 60 only.
+# WP-A9 (owner remark R6): the teaching scenario's capacity, asked as a share of the scored
+# clients. A scenario assumption only; a real team gives its own figure.
+scenario_defaults:
+  capacity_share:
+    value: 0.1
+    status: scenario_assumption
+    source: 'Teaching scenario: the call team can contact one client in ten. A real team would give
+      its own figure.'

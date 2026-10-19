@@ -52,7 +52,7 @@ CHART_CSS = '''
 svg.chart{display:block;width:100%;min-width:520px;max-width:680px;height:auto;overflow:visible}
 svg.chart text{font-size:12px;fill:var(--ink);font-family:inherit}
 svg.chart text.axis,svg.chart text.note{fill:var(--muted);font-size:11px}
-svg.chart text.val{font-variant-numeric:tabular-nums;font-weight:650}
+svg.chart text.val{font-variant-numeric:tabular-nums;font-weight:650;paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round}
 svg.chart text.flag{fill:var(--amber);font-weight:700}
 svg.chart line.grid{stroke:var(--line);stroke-width:1}
 svg.chart line.ref{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3}
@@ -186,7 +186,8 @@ def target_balance(citer: cite.Citer, rid: str, values: Mapping) -> str:
                     f'rx="4"><title>{e(name)}</title></rect>')
         body.append(citer.svg_num(rid, path, 'int', x=LEFT + w + 6, y=y + 15))
         y += ROW + 6
-    body.append(scale.axis(TOP - 6, y + 2))
+    # WP-A9 (M6): the grid is drawn first, under the bars and their labels.
+    body.insert(0, scale.axis(TOP - 6, y + 2))
     svg = _svg(y + AXIS, ''.join(body), 'Training rows by outcome')
     rate = citer.num(rid, 'rate', 'pct1')
     interval = ''
@@ -338,12 +339,13 @@ def signal(citer: cite.Citer, rid: str, values: Mapping) -> str:
         body.append(f'<rect class="{cls}" x="{x0:.1f}" y="{y + 3}" width="{w:.1f}" height="16" '
                     f'rx="4"><title>{e(str(s.get("feature", "")))}</title></rect>')
         body.append(citer.svg_num(rid, f'signals.{i}.score', 'f2', x=max(xc, x1) + 6, y=y + 15))
-        if s.get('flag'):
-            body.append(f'<text x="{WIDTH - 4}" y="{y + 15}" text-anchor="end" class="flag">'
-                        f'Check legitimacy</text>')
-        elif not used:
+        if not used:
+            # WP-A9 (M6): an excluded feature says so even when its signal is strong.
             body.append(f'<text x="{WIDTH - 4}" y="{y + 15}" text-anchor="end" class="note">'
                         f'Not used by the model</text>')
+        elif s.get('flag'):
+            body.append(f'<text x="{WIDTH - 4}" y="{y + 15}" text-anchor="end" class="flag">'
+                        f'Check legitimacy</text>')
         y += ROW - 4
     body.append(f'<line class="ref" x1="{xc:.1f}" y1="{TOP - 6}" x2="{xc:.1f}" y2="{y + 2}"/>')
     body.append(f'<text x="{xc:.1f}" y="{TOP - 12}" text-anchor="middle" class="note">'

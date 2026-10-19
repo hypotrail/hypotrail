@@ -359,15 +359,16 @@ A **segment** (also used by C6) is `{text}`, or `{text, result_id, path, value, 
 
 **`eda_catalog`.** `{activities}`. One item per EDA activity of the task:
 
-- binary: `eda.target_rate`, `eda.special_values`, `eda.rate_by`, `eda.distribution`;
-- regression: `eda.target_summary`, `eda.special_values`, `eda.mean_by`, `eda.distribution`.
+- binary: `eda.target_rate`, `eda.special_values`, `eda.rate_by`, `eda.distribution`, `eda.quality`, `eda.single_feature_signal`;
+- regression: `eda.target_summary`, `eda.special_values`, `eda.mean_by`, `eda.distribution`, `eda.quality`, `eda.single_feature_signal`.
 
-Each item is `{activity, per_column, columns, runnable, missing}`:
+WP-A9 (M5) added the last two, the structural quality overview and the single-feature signal (before, the catalog left them out), and the item key `partition`. Each item is `{activity, per_column, columns, runnable, missing, partition}`:
 
 - `columns` lists `{name, role, type, slot, result_id}`, with the slot and result id of the current result for that column or `null`. It holds the columns the activity accepts, as `plan` would accept them: `eda.rate_by`, features; `eda.mean_by`, features and the time column; `eda.distribution`, features, the time column, and the target.
 - `runnable` and `missing` come from `preconditions.missing_for_activity`.
+- `partition` is the rows the activity reads: `development` for `eda.quality` (structure only, no target), `train` for every other one.
 
-This list is the **only** source of the columns the companion may request.
+This list is the **only** source of the columns the companion may request. The panel requests only per-column activities whose `partition` is `train` (W4, training-row charts); an item without `partition` (an engine before WP-A9) reads as `train`.
 
 **`sources`.** `{case: {path, sha256, matches}, dataset: {path, sha256, matches}}`.
 

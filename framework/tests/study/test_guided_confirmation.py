@@ -244,16 +244,45 @@ def test_owner_availability_sentence_confirms_and_records_the_concern(bank):
     assert 'Point raised by the agent' in html and 'kept by the user' in html
 
 
-def test_words_that_contradict_the_value_return_a_warning_not_a_refusal(bank):
+def test_words_that_contradict_the_value_stop_until_the_agent_raises_them(bank):
+    """WP-A9 (H3): in the guided mode a contradiction is the one stop of R3. Without
+    ``--agent-concern`` it is refused (``words_contradict_value``); once the agent raised it
+    and the junior kept their words, it is confirmed and the warning is kept on the record,
+    in the view, ``decisions``, and the report."""
     bank.decide('prediction_time', 'avant le premier appel de la campagne',
                 words='oui, avant le premier appel')
     value = _bank_availability(duration='not_available', contact='available_at_prediction')
     pid = _propose(bank, 'feature_availability', value,
                    'You exclude duration; contact and the others are known then.')
-    done = _confirm(bank, pid, OWNER_FA)
+    rev = bank.rev()
+    refused = _confirm(bank, pid, OWNER_FA, expect=2)
+    assert refused['error']['code'] == 'words_contradict_value'
+    assert refused['error']['details']['mode'] == 'guided'
+    assert [w['variable'] for w in refused['error']['details']['warnings']] == ['contact']
+    assert bank.rev() == rev
+    done = _confirm(bank, pid, OWNER_FA, '--agent-concern',
+                    'The value keeps contact although your words exclude it; you kept them.')
     assert done['result']['status'] == 'confirmed'
     assert [(w['code'], w['variable'], w['said'], w['value']) for w in done['result']['warnings']] \
         == [('words_contradict_value', 'contact', 'exclude', 'available_at_prediction')]
+    record = bank.state()['decisions']['feature_availability']['confirmation']
+    assert [w['variable'] for w in record['warnings']] == ['contact']
+    conf = bank.view()['decisions']['feature_availability']['confirmation']
+    assert [w['variable'] for w in conf['warnings']] == ['contact']
+    decisions = bank.call('decisions', '--study', bank.study)
+    item = next(d for d in decisions['decisions'] if d['decision_id'] == 'feature_availability')
+    assert [w['variable'] for w in item['confirmation']['warnings']] == ['contact']
+    html = (bank.study / 'reports' / 'study.html').read_text(encoding='utf-8')
+    assert 'data-warning="words_contradict_value"' in html
+    assert 'Your words exclude contact, but the value keeps it' in html
+
+
+def test_a_confirmation_without_contradiction_records_no_warnings(bank):
+    bank.decide('prediction_time', 'avant le premier appel de la campagne',
+                words='oui, avant le premier appel')
+    state = bank.state()
+    assert 'warnings' not in state['decisions']['prediction_time']['confirmation']
+    assert bank.view()['decisions']['prediction_time']['confirmation']['warnings'] == []
 
 
 def test_contradiction_check_is_a_pure_function():

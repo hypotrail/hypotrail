@@ -192,7 +192,8 @@ class Walk:
             self.run('fit.variant')
         if regression:
             ev = self.run('evaluate.regression')['values']
-            self.decide('model_choice', 'fit.baseline', 'Yes, keep the mean baseline.')
+            self.decide('model_choice', 'fit.baseline',
+                        'Yes, keep the mean baseline because it is simpler.')
         else:
             n_val = parts['partitions']['validation']['n_rows']
             capacity = capacity or max(1, n_val // 3)
