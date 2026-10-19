@@ -24,7 +24,6 @@ const DECISION_OF_TASK = { binary: 'policy', regression: 'model_choice' };
 const NOTHING = 'Nothing was recorded.';
 
 const sliders = new WeakMap();   // ctx -> {timer, latest (debouncing), queued (due), running}
-let fresh = 0;                   // makes the pre-W3 draft read bypass the cache
 
 function slider(ctx) {
   if (!sliders.has(ctx)) sliders.set(ctx, { timer: null, latest: null, queued: null, running: null });
@@ -50,7 +49,8 @@ async function pump(ctx, s) {
       ctx.post({ type: 'notice', politeness: 'assertive', text: `The preview could not be computed: ${out.message}` });
       continue;
     }
-    ctx.post({ type: 'preview_policy_result', seq: m.seq, revision: out.revision, model: out.model });
+    ctx.post({ type: 'preview_policy_result', seq: m.seq, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
+      model: out.model });
   }
 }
 
@@ -88,14 +88,15 @@ function valueOk(decisionId, value) {
   return decisionId === 'policy' ? RULE.test(value) : FIT_SLOT.test(value);
 }
 
-async function readDraft(ctx, decisionId, value, key) {
+/** `preview proposal`; `fresh` (the read before W3) neither reads nor fills the cache. */
+async function readDraft(ctx, decisionId, value, { fresh = false } = {}) {
   let argv;
   try {
     argv = ctx.cli.previewProposalArgv(ctx.agent, { decisionId, value });
   } catch (e) {
     return { ok: false, message: e.message };
   }
-  return ctx.read(key, argv, toDraftModel);
+  return ctx.read(`draft:${decisionId}:${value}`, argv, toDraftModel, fresh ? { cache: false } : {});
 }
 
 async function draft(message, ctx) {
@@ -104,16 +105,18 @@ async function draft(message, ctx) {
     ctx.post({ type: 'notice', politeness: 'assertive', text: `${value} is not a value the panel can draft. ${NOTHING}` });
     return;
   }
-  const out = await readDraft(ctx, decisionId, value, `draft:${decisionId}:${value}`);
+  const out = await readDraft(ctx, decisionId, value);
   if (!out.ok) {
     ctx.post({ type: 'notice', politeness: 'assertive', text: `The draft could not be read: ${out.message}` });
     return;
   }
-  ctx.post({ type: 'draft_result', decisionId, value, revision: out.revision, model: out.model });
+  ctx.post({ type: 'draft_result', decisionId, value, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
+    model: out.model });
 }
 
-function modalText(decisionId, value, model) {
-  const title = decisionId.replace(/_/g, ' ');
+/** §7 W3: the decision is named by its plan title (CR.9), else by its id in words. */
+function modalText(decisionId, value, model, planTitle = null) {
+  const title = planTitle ? `"${planTitle}"` : decisionId.replace(/_/g, ' ');
   const replaces = model.supersedesProposal ? ` It replaces the open proposal ${model.supersedesProposal}.` : '';
   return `Create a proposal for ${title}: ${value}? It is not a decision. You will confirm it in your own words in Decisions.${replaces}`;
 }
@@ -135,8 +138,7 @@ async function propose(message, ctx) {
     await ctx.refresh();
     return;
   }
-  fresh += 1;
-  const out = await readDraft(ctx, decisionId, value, `draft:${decisionId}:${value}:fresh:${fresh}`);
+  const out = await readDraft(ctx, decisionId, value, { fresh: true });
   if (!out.ok) {
     ctx.invalid('W3', `The draft could not be read: ${out.message} ${NOTHING}`, decisionId);
     return;
@@ -152,7 +154,8 @@ async function propose(message, ctx) {
     return;
   }
   const ask = ctx.host && typeof ctx.host.confirmModal === 'function' ? ctx.host.confirmModal : null;
-  if (!ask || !(await ask(modalText(decisionId, value, model), 'Propose'))) {
+  const step = (snapshot.plan || []).find(s => s.id === decisionId);
+  if (!ask || !(await ask(modalText(decisionId, value, model, step && step.title ? step.title : null), 'Propose'))) {
     ctx.post({ type: 'outcome', op: 'W3', kind: 'cancelled', target: decisionId, message: NOTHING });
     return;
   }

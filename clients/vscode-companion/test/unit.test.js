@@ -213,7 +213,21 @@ test('webview document: strict CSP with a nonce, scripts enabled, no remote reso
   assert.doesNotMatch(html, /\son[a-z]+=/i, 'no inline handler');
 });
 
-test('refresh on change: a write to state.json or revisions.jsonl refreshes once, other files do not', async () => {
+/** Resolve once `cond()` holds, polling on the event loop (no fixed sleep); fail after 5 s. */
+async function until(cond, what = 'the condition') {
+  const deadline = Date.now() + 5000;
+  while (!cond()) {
+    if (Date.now() > deadline) assert.fail(`timed out waiting for ${what}`);
+    await new Promise(r => setImmediate(r));
+  }
+}
+
+/** Let pending callbacks and promise jobs run (a few turns of the event loop). */
+async function flush(turns = 20) {
+  for (let i = 0; i < turns; i += 1) await new Promise(r => setImmediate(r));
+}
+
+test('refresh on change: the panel\'s watcher is wired to the real folder; closing the panel closes it', async t => {
   process.env.HYPOTRAIL_COMPANION = '1';
   const dir = makeStudy(tmp(), 'study');
   const calls = fakeCli(() => ({ payload: summary(dir) }));
@@ -221,18 +235,49 @@ test('refresh on change: a write to state.json or revisions.jsonl refreshes once
   const { opened } = await openWith(fake);
   await opened.controller.handle({ v: 2, type: 'ready' });
   const before = calls.length;
-  fs.writeFileSync(path.join(dir, '.hypotrail', 'unrelated.tmp'), 'x');
-  await new Promise(r => setTimeout(r, 500));
-  assert.equal(calls.length, before, 'an unrelated file does not refresh');
   fs.writeFileSync(path.join(dir, '.hypotrail', 'state.json'), '{}');
-  fs.appendFileSync(path.join(dir, '.hypotrail', 'revisions.jsonl'), '{}\n');
-  fs.appendFileSync(path.join(dir, '.hypotrail', 'revisions.jsonl'), '{}\n');
-  await new Promise(r => setTimeout(r, 700));
-  assert.equal(calls.length, before + 1, 'one refresh per burst (debounced)');
+  await until(() => calls.length === before + 1, 'the refresh after a write to state.json');
+  const watcher = opened.watcher;
   fake.calls.panels[0].dispose();
+  assert.equal(opened.watcher, null);
+  // Closed: neither a reported change nor a late event of the real folder refreshes.
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  watcher.trigger('change', 'state.json');
   fs.writeFileSync(path.join(dir, '.hypotrail', 'state.json'), '{"x":1}');
-  await new Promise(r => setTimeout(r, 500));
+  await flush();
+  t.mock.timers.tick(10000);
+  await flush();
   assert.equal(calls.length, before + 1, 'no refresh after the panel is closed');
+});
+
+test('watchStudy: one call per burst of the watched files, after the debounce; other files are ignored (fake timers)', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const { watchStudy, WATCHED, DEBOUNCE_MS } = require('../lib/watch');
+  let handler = null;
+  let closed = false;
+  const fsImpl = { watch: (dir, options, fn) => { handler = fn; return { on() {}, close() { closed = true; } }; } };
+  let changes = 0;
+  const w = watchStudy('/studies/s', () => { changes += 1; }, { fsImpl });
+  assert.deepEqual([...WATCHED].sort(), ['artifacts.json', 'revisions.jsonl', 'state.json', 'state.sha256']);
+  handler('change', 'unrelated.tmp');
+  t.mock.timers.tick(DEBOUNCE_MS * 4);
+  assert.equal(changes, 0, 'an unrelated file does not refresh');
+  handler('change', 'state.json');
+  t.mock.timers.tick(DEBOUNCE_MS - 1);
+  handler('rename', 'revisions.jsonl');
+  t.mock.timers.tick(DEBOUNCE_MS - 1);
+  handler('change', 'revisions.jsonl');
+  assert.equal(changes, 0, 'still inside the burst');
+  t.mock.timers.tick(DEBOUNCE_MS);
+  assert.equal(changes, 1, 'one refresh per burst (debounced)');
+  handler('change', null);
+  t.mock.timers.tick(DEBOUNCE_MS);
+  assert.equal(changes, 2, 'no filename reported: refresh anyway');
+  w.dispose();
+  assert.equal(closed, true);
+  handler('change', 'state.json');
+  t.mock.timers.tick(DEBOUNCE_MS * 4);
+  assert.equal(changes, 2, 'nothing after dispose');
 });
 
 test('panel becoming visible refreshes; messages go through onDidReceiveMessage', async () => {
@@ -243,10 +288,12 @@ test('panel becoming visible refreshes; messages go through onDidReceiveMessage'
   await openWith(fake);
   const panel = fake.calls.panels[0];
   panel.receive({ v: 2, type: 'ready' });
-  await new Promise(r => setTimeout(r, 50));
+  await until(() => calls.length === 1, 'the summary read of ready');
+  await until(() => panel.posted.some(m => m.type === 'snapshot'), 'the snapshot');
   assert.equal(calls.length, 1);
   panel.setVisible(true);
-  await new Promise(r => setTimeout(r, 50));
+  await until(() => calls.length === 2, 'the refresh on visible');
+  await until(() => panel.posted.filter(m => m.type === 'snapshot').length === 2, 'the second snapshot');
   assert.equal(calls.length, 2);
 });
 

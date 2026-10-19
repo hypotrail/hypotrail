@@ -183,7 +183,9 @@ test('HO-1: export runs the exact argv of W7 into <chosen>/revision-<R>; files a
   await c.handle({ v: 2, type: 'export_handoff', revision: 26 });
   assert.deepEqual(picked, [path.join(AGENT.studyDir, 'handoff')], 'the default parent is <study>/handoff/');
   const call = runCli.calls.find(x => x.tail[0] === 'export');
-  assert.deepEqual(call.argv, [...AGENT.argv, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--json', '--study', AGENT.studyDir]);
+  assert.deepEqual(call.argv, [...AGENT.argv, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--expected-revision', '26',
+    '--json', '--study', AGENT.studyDir]);
+  assert.equal(runCli.calls.filter(x => x.tail[0] === 'export').length, 1, 'no second run with an engine that knows the option');
   assert.equal(call.options.timeoutMs, 120000);
   const o = posted.find(m => m.type === 'outcome');
   assert.equal(o.op, 'W7');
@@ -224,6 +226,32 @@ test('HO-1: a non-empty target gives export_target_exists verbatim; exit 3 is su
   assert.equal(s.exitCode, 3);
   assert.ok(!s.recorded.files.some(f => f.path === 'study.html'));
   assert.ok(s.recorded.warnings.includes('the report was not current, so it is not in the pack'));
+});
+
+test('CR.6: an engine without `export --expected-revision` refuses the option; the export runs once more without it', async () => {
+  const host = { pickFolder: async () => '/tmp/packs' };
+  const unknown = { payload: { schema: 'hypotrail.error/1', ok: false, command: 'export',
+    error: { code: 'invalid_arguments', message: 'unrecognized arguments: --expected-revision 26' } }, exitCode: 2 };
+  const { c, runCli, posted } = make({ host, route: t => (t[0] === 'export' && t.includes('--expected-revision') ? unknown : undefined) });
+  await c.handle({ v: 2, type: 'ready' });
+  await c.handle({ v: 2, type: 'export_handoff', revision: 26 });
+  const runs = runCli.calls.filter(x => x.tail[0] === 'export');
+  assert.equal(runs.length, 2);
+  assert.ok(runs[0].tail.includes('--expected-revision') && !runs[1].tail.includes('--expected-revision'));
+  const outcomes = posted.filter(m => m.type === 'outcome');
+  assert.equal(outcomes.length, 1, 'one outcome: the second run\'s');
+  assert.equal(outcomes[0].kind, 'ok');
+  assert.equal(outcomes[0].recorded.out, payload('export.binary').out, 'the folder the engine answered');
+});
+
+test('CR.6: an engine that knows the option and refuses a stale revision: the refusal verbatim, no second run', async () => {
+  const host = { pickFolder: async () => '/tmp/packs' };
+  const { c, runCli, last } = make({ host, route: t => (t[0] === 'export' ? 'error.stale_revision' : undefined) });
+  await c.handle({ v: 2, type: 'ready' });
+  await c.handle({ v: 2, type: 'export_handoff', revision: 26 });
+  assert.equal(runCli.calls.filter(x => x.tail[0] === 'export').length, 1);
+  assert.equal(last('outcome').kind, 'refused');
+  assert.equal(last('outcome').refusal.code, 'stale_revision');
 });
 
 test('W7 pre-checks: a cancelled dialog, a stale revision, or a folder inside .hypotrail runs nothing', async () => {
@@ -338,7 +366,8 @@ test('LE-1, LE-2, HO-1 through the extension: context.globalState, showOpenDialo
   await opened.controller.handle({ v: 2, type: 'export_handoff', revision: 26 });
   assert.equal(fake.calls.openDialog.at(-1).canSelectFolders, true);
   assert.equal(fake.calls.openDialog.at(-1).defaultUri.fsPath, path.join(dir, 'handoff'));
-  assert.deepEqual(exec.find(t => t[0] === 'export'), ['export', 'handoff', '--out=/tmp/packs/revision-26', '--json', '--study', dir]);
+  assert.deepEqual(exec.find(t => t[0] === 'export'), ['export', 'handoff', '--out=/tmp/packs/revision-26', '--expected-revision', '26',
+    '--json', '--study', dir]);
   const out = fake.calls.panels[0].posted.find(m => m.type === 'outcome').recorded.out;
   await opened.controller.handle({ v: 2, type: 'navigate_external', kind: 'reveal_export', path: out });
   assert.deepEqual(fake.calls.executed.filter(x => x.id === 'revealFileInOS').map(x => x.args[0].fsPath), [out]);

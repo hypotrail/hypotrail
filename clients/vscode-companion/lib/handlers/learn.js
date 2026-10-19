@@ -92,6 +92,16 @@ async function learnSet(message, ctx) {
   postState(ctx, await store.setPrediction(message.id, message.value));
 }
 
+/** The engine's refusal of an unknown `--expected-revision` option (an older engine). */
+function unknownOption(res) {
+  const e = res && res.payload && res.payload.ok === false && res.payload.error;
+  return Boolean(e) && e.code === 'invalid_arguments' && /--expected-revision/.test(String(e.message || ''));
+}
+
+/**
+ * W7. The outcome's `out` and "Open folder" are the folder the engine answered, never one
+ * the panel computed (review finding; the engine's `out`).
+ */
 async function exportHandoff(message, ctx) {
   const snapshot = ctx.snapshot();
   if (!snapshot || snapshot.revision !== message.revision) return ctx.invalid('W7', STALE, 'handoff');
@@ -104,6 +114,9 @@ async function exportHandoff(message, ctx) {
   const outcome = await ctx.write('W7', {
     target: 'handoff',
     argv: () => ctx.cli.WRITES.W7(ctx.agent, { parent, revision: message.revision }),
+    // An engine without `export --expected-revision` (CR.6) refuses the option itself; the
+    // panel checked the revision against its snapshot above, so it exports without it.
+    retry: res => (unknownOption(res) ? ctx.cli.WRITES.W7(ctx.agent, { parent, revision: message.revision, legacy: true }) : null),
     record: payload => {
       const codes = Array.isArray(payload.warnings) ? payload.warnings.filter(w => typeof w === 'string') : [];
       const files = (Array.isArray(payload.files) ? payload.files : [])

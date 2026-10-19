@@ -22,7 +22,8 @@ test('the authority is <publisher>.<name> of package.json', () => {
 
 test('parseDeepLink: result, decision, and proposal links, with an optional absolute study', () => {
   assert.deepEqual(parseDeepLink({ path: `/result/${RID}`, query: '' }), { tab: 'evidence', kind: 'result', id: RID, study: null });
-  assert.deepEqual(parseDeepLink({ authority: AUTHORITY, path: `/result/${RID}`, query: 'study=%2Fstudies%2Fbank%20marketing' }),
+  // VS Code hands the handler a decoded query (vscode.Uri.query): the path is taken as is.
+  assert.deepEqual(parseDeepLink({ authority: AUTHORITY, path: `/result/${RID}`, query: 'study=/studies/bank marketing' }),
     { tab: 'evidence', kind: 'result', id: RID, study: '/studies/bank marketing' });
   for (const id of ['prediction_time', 'feature_availability', 'split', 'policy', 'model_choice', 'conclusion']) {
     assert.deepEqual(parseDeepLink({ path: `/decision/${id}`, query: '' }), { tab: 'decisions', kind: 'decision', id, study: null });
@@ -38,11 +39,23 @@ test('parseDeepLink: anything else is not a link (EV-3)', () => {
     { path: `/results/${RID}` }, { path: '/decision/budget' }, { path: '/decision/Policy' }, { path: '/proposal/p_' },
     { path: '/proposal/p_1x' }, { path: '/proposal/7' }, { path: '/run/eda.rate_by' },
     { path: `/result/${RID}`, query: 'study=relative/path' }, { path: `/result/${RID}`, query: 'study=' },
-    { path: `/result/${RID}`, query: 'study=/a&study=/b' }, { path: `/result/${RID}`, query: 'study=/a&run=1' },
-    { path: `/result/${RID}`, query: 'confirm=yes' }, { path: `/result/${RID}`, query: 'study=/a%00b' },
+    { path: `/result/${RID}`, query: 'confirm=yes' }, { path: `/result/${RID}`, query: 'run=1&study=/a' },
+    { path: `/result/${RID}`, query: 'study=/a\u0000b' }, { path: `/result/${RID}`, query: 'Study=/a' },
     { path: `/result/${RID}`, fragment: 'x' }, { authority: 'someone.else', path: `/result/${RID}` },
   ];
   for (const uri of bad) assert.equal(parseDeepLink(uri), null, JSON.stringify(uri));
+});
+
+test('parseDeepLink: `+`, `&`, `=`, `%` and spaces of the decoded query are part of the study path (review finding)', () => {
+  // URLSearchParams would read `+` as a space and `&` as a separator; the study path is
+  // the whole rest of the query after `study=`, exactly as VS Code decoded it.
+  for (const study of ['/studies/a+b', '/studies/r&d', '/studies/x=1&y=2', '/studies/100% sure', '/studies/a b+c&d']) {
+    assert.deepEqual(parseDeepLink({ path: '/proposal/p_3', query: `study=${study}` }),
+      { tab: 'decisions', kind: 'proposal', id: 'p_3', study }, study);
+  }
+  // Another parameter is not a separate option: it is part of the path, which must then be
+  // a discovered study (or the quick pick asks); a link never carries anything else.
+  assert.equal(parseDeepLink({ path: '/proposal/p_3', query: 'study=/a&run=1' }).study, '/a&run=1');
 });
 
 test('resultIdInput: a hex prefix of 8 to 64 characters, as the report shows it', () => {
@@ -104,6 +117,21 @@ test('EV-3: a result link opens the panel on Evidence with that result; an inval
   assert.equal(await fake.uriHandlers[0].handleUri({ path: `/result/${RID.slice(0, 63)}g`, query: '' }), null);
   assert.deepEqual(fake.calls.info, [INVALID_LINK]);
   assert.equal(fake.calls.panels.length, 0);
+});
+
+test('a link built with encodeURIComponent for a study path with `+` and `&` opens that study, through vscode.Uri.parse', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  fakeExec();
+  const plain = makeStudy('plain');
+  const odd = makeStudy('r&d+ops 100%');
+  const fake = createFake({ folders: [plain, odd], answers: { quickPick: items => items[0] } });
+  const { extension, context } = load(fake);
+  extension.activate(context);
+  const link = fake.Uri.parse(`vscode://${AUTHORITY}/proposal/p_5?study=${encodeURIComponent(odd)}`);
+  assert.equal(link.query, `study=${odd}`, 'the fake, like VS Code, decodes the query');
+  const opened = await fake.uriHandlers[0].handleUri(link);
+  assert.equal(opened.agent.studyDir, odd);
+  assert.equal(fake.calls.quickPick.length, 0, 'a discovered study: no quick pick');
 });
 
 test('go to a result: a pasted prefix is resolved through evidence and navigates', async () => {

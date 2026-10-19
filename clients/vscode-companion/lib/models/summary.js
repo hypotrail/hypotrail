@@ -10,6 +10,7 @@
 // for), `digest.boundary` (the last-session boundary revision), and `regenerate`
 // (whether "Regenerate" is offered, §6.1.4).
 
+const crypto = require('crypto');
 const { ModelError, str, strOrNull, list, obj, int, showValue } = require('./common');
 
 const SUMMARY_SCHEMA = 'hypotrail.summary/1';
@@ -27,7 +28,9 @@ const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrit
 const DECISION_PAUSE = { prediction_time: 1, feature_availability: 1, split: 2, policy: 3, model_choice: 3, conclusion: 3 };
 const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep', 'plan', 'moments', 'pauses',
   'nextAction', 'artifacts', 'artifactsStatus', 'proposals', 'holds', 'notes', 'decisions', 'executions',
-  'notYetDefensible', 'alerts', 'digest', 'waitingCount', 'regenerate'];
+  'notYetDefensible', 'alerts', 'digest', 'waitingCount', 'regenerate', 'currency'];
+// The engine's currency digest (CR.1): a short lowercase hexadecimal string.
+const CURRENCY = /^[0-9a-f]{1,64}$/;
 // Generated deliverables: the workbench is the junior's own file and is never regenerated.
 const GENERATED = ['report', 'notebook'];
 
@@ -66,6 +69,37 @@ function digestModel(raw, lastSession) {
     truncated: raw.truncated === true,
     counts: obj(raw.counts),
   };
+}
+
+/**
+ * The currency of a summary (decision CR.1): what, besides the revision, says whether a
+ * cached read is still current. The engine's root field `currency` when it sends a valid
+ * one; otherwise (an engine without it) the first 16 hexadecimal characters of the SHA-256
+ * of the summary fields that carry currency: the artefacts' statuses and messages, the
+ * not-yet-defensible items (the dataset-changed and integrity alerts are among them),
+ * `sources_changed`, and each result slot's id, current flag, integrity, and stale reason.
+ * A dataset edit, a deleted or edited deliverable, or a result that stops being current
+ * changes it without a new revision.
+ */
+function currencyOf(summary) {
+  const s = obj(summary);
+  if (typeof s.currency === 'string' && CURRENCY.test(s.currency)) return s.currency;
+  const items = obj(s.artifacts && s.artifacts.items);
+  const results = obj(s.results);
+  const nyd = obj(s.not_yet_defensible);
+  const basis = {
+    engine: typeof s.currency === 'string' ? s.currency : null,
+    artifacts: [str(s.artifacts && s.artifacts.status), ...Object.keys(items).sort().map(k =>
+      [k, str(items[k] && items[k].status), str(items[k] && items[k].message), int(items[k] && items[k].revision)])],
+    alerts: list(nyd.top).map(i => [str(i && i.id), str(i && i.text)]),
+    more: list(nyd.more).map(str),
+    sourcesChanged: s.sources_changed === undefined ? null : s.sources_changed,
+    results: Object.keys(results).sort().map(k => {
+      const r = obj(results[k]);
+      return [k, str(r.result_id), r.current === true, str(r.integrity), str(r.stale_reason)];
+    }),
+  };
+  return crypto.createHash('sha256').update(JSON.stringify(basis)).digest('hex').slice(0, 16);
 }
 
 function toSummaryModel(summary) {
@@ -173,6 +207,7 @@ function toSummaryModel(summary) {
     // was rendered yet (COMPANION-ADVANCED §6.1.4, OV-7).
     regenerate: str(summary.artifacts && summary.artifacts.status) === 'not_rendered' ||
       artifacts.some(a => GENERATED.includes(a.name) && (a.status === 'stale' || a.status === 'failed')),
+    currency: currencyOf(summary),
   };
 }
 
@@ -181,5 +216,5 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };

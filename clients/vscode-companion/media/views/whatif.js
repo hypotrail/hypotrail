@@ -15,7 +15,7 @@
   const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6})$/;
   const S = {
     kind: null, value: null, rule: null, seq: 0, sent: {}, preview: null, pending: false,
-    drafts: {}, asked: {}, draftRevision: null, fit: null, nodes: {}, started: null,
+    drafts: {}, asked: {}, draftRevision: null, draftVersion: null, fit: null, nodes: {}, started: null,
   };
 
   const C = () => HT.copy.whatif;
@@ -67,10 +67,13 @@
     ctx.send({ type: 'preview_policy', rules: [S.rule], intervals, seq: S.seq });
   }
 
-  // Drafts are kept for the snapshot revision they were asked at; a new revision drops them.
+  // Drafts are kept for the snapshot version they were asked at (revision, currency, and
+  // Refresh epoch; CR.1); a new version drops them. The message carries the revision.
   function drafts(ctx) {
     const revision = ctx.snapshot ? ctx.snapshot.revision : 0;
-    if (S.draftRevision !== revision) {
+    const version = ctx.version();
+    if (S.draftVersion !== version) {
+      S.draftVersion = version;
       S.draftRevision = revision;
       S.drafts = {};
       S.asked = {};
@@ -362,7 +365,7 @@
   }
 
   function renderBinary(ctx, model) {
-    const key = `${model.revision}`;
+    const key = ctx.version();
     if (S.kind === null) startPosition(ctx, model);
     if (S.started !== key) {
       // First view of this revision: compute the current position with its intervals.
@@ -519,14 +522,14 @@
       root.appendChild(ctx.el('div', { className: 'card alert', role: 'alert', 'data-whatif-error': true }, [
         ctx.el('p', { className: 'title', text: common.loadError }), ctx.el('p', { text: error.message }),
         error.detail ? ctx.el('pre', { text: error.detail }) : null,
-        ctx.el('button', { type: 'button', className: 'secondary', text: common.retry, onclick: () => ctx.load('whatif') }),
+        ctx.el('button', { type: 'button', className: 'secondary', text: common.retry, onclick: () => { ctx.retry('whatif'); ctx.load('whatif'); } }),
       ]));
     }
     if (!d) {
       if (!error) root.appendChild(ctx.el('p', { className: 'muted', 'aria-busy': 'true', 'data-loading': 'whatif', text: common.reading }));
       return root;
     }
-    if (summary && d.revision < summary.revision) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: common.updating }));
+    if (summary && !ctx.fresh(d)) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: common.updating }));
     const model = d.model;
     const parts = model.task === 'regression' ? renderRegression(ctx, model) : renderBinary(ctx, model);
     root.appendChild(ctx.el('div', { className: 'ht-wi-body', 'data-whatif': model.task }, parts));

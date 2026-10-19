@@ -22,6 +22,9 @@ function protocolFactory() {
   const MAX_WORDS = 4000;
   const PROPOSAL_ID = '^p_[0-9]+$';
   const RESULT_ID = '^[0-9a-f]{64}$';
+  // The summary's currency (decision CR.1) and the study key of `init` (decision CR.2).
+  const CURRENCY = '^[0-9a-f]{1,64}$';
+  const STUDY_KEY = '^[0-9a-f]{16}$';
   const RULE = '^(threshold:(0(\\.[0-9]+)?|1(\\.0+)?)|capacity:[1-9][0-9]{0,6})$';
 
   // Field specs: {t: 'str'|'int'|'bool'|'enum'|'obj'|'arr'|'any', opt?, nullable?, ...}.
@@ -123,17 +126,23 @@ function protocolFactory() {
   };
 
   const model = { t: 'obj' };
+  const currency = { t: 'str', re: CURRENCY, opt: true };
   // Extension -> webview (§8.2).
   const TO_WEBVIEW = {
     init: {
       fields: {
         stage: { t: 'enum', values: STAGES }, reviewer: { t: 'bool' }, learningLayer: { t: 'bool' },
         chatInsert: { t: 'bool' }, task: { t: 'enum', values: ['binary', 'regression'], nullable: true },
+        // CR.2: the study the panel shows (lib/localstore.js studyKey, never the path). The
+        // webview keeps the junior's draft words for this study only.
+        study: { t: 'str', re: STUDY_KEY, opt: true },
       },
     },
-    snapshot: { fields: { revision: { t: 'int', min: 0 }, model } },
+    // CR.1: `currency` is the version, with the revision, a model was read at.
+    snapshot: { fields: { revision: { t: 'int', min: 0 }, currency, model } },
     view_data: {
-      fields: { view: { t: 'enum', values: VIEWS }, revision: { t: 'int', min: 0 }, model, resultId: { t: 'str', re: RESULT_ID, opt: true } },
+      fields: { view: { t: 'enum', values: VIEWS }, revision: { t: 'int', min: 0 }, currency, model,
+        resultId: { t: 'str', re: RESULT_ID, opt: true } },
     },
     load_error: {
       fields: { view: { t: 'enum', values: VIEWS, nullable: true }, message: { t: 'str' }, detail: { t: 'str' } },
@@ -174,10 +183,11 @@ function protocolFactory() {
         message: { t: 'str', opt: true },
       },
     },
-    preview_policy_result: { fields: { seq: { t: 'int', min: 0 }, revision: { t: 'int', min: 0 }, model } },
-    effects: { fields: { proposalId: pid, revision: { t: 'int', min: 0 }, model } },
+    preview_policy_result: { fields: { seq: { t: 'int', min: 0 }, revision: { t: 'int', min: 0 }, currency, model } },
+    effects: { fields: { proposalId: pid, revision: { t: 'int', min: 0 }, currency, model } },
     draft_result: {
-      fields: { decisionId: { t: 'enum', values: ['policy', 'model_choice'] }, value: { t: 'str' }, revision: { t: 'int', min: 0 }, model },
+      fields: { decisionId: { t: 'enum', values: ['policy', 'model_choice'] }, value: { t: 'str' }, revision: { t: 'int', min: 0 },
+        currency, model },
     },
     learn_state: { fields: { prefs: { t: 'obj' }, seen: { t: 'obj' }, predictions: { t: 'obj' } } },
     navigate: { fields: { tab: { t: 'enum', values: TABS }, kind: { t: 'enum', values: NAV_KINDS }, id: { t: 'str', min: 1, max: 100 } } },

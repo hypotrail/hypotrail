@@ -298,7 +298,8 @@ def test_he1_he2_execution_cards_empty_reply_disabled_until_typed_and_no_rerun(o
     words = 'I know the policy run was cut off and nobody knows what it did.'
     area.fill(words)
     assert button.is_enabled()
-    assert panel.state()['ackDrafts'] == {INTERRUPTED: words}, 'the junior\'s own draft only'
+    # CR.3: a draft is the junior's words and the revision at which they started typing.
+    assert panel.state()['ackDrafts'] == {INTERRUPTED: {'text': words, 'revision': health['revision']}}, 'the junior\'s own draft only'
     button.click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'acknowledge', 'executionId': INTERRUPTED, 'words': words,
                                   'revision': 26}

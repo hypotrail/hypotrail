@@ -37,14 +37,14 @@
     return FILTERS.includes(f) ? f : 'current';
   }
 
-  /** Ask for the evidence (with the chosen result) once per revision and choice. */
+  /** Ask for the evidence (with the chosen result) once per version and choice (CR.1). */
   function ensureLoad(ctx) {
     const snap = ctx.snapshot;
     if (!snap) return;
     const sel = selected(ctx);
     const d = ctx.data('evidence');
-    if (d && d.revision >= snap.revision && (d.resultId || null) === sel) return;
-    const key = `${snap.revision}|${sel || ''}`;
+    if (ctx.fresh(d) && (d.resultId || null) === sel) return;
+    const key = `${ctx.version()}|${sel || ''}`;
     if (requested[key]) return;
     requested[key] = true;
     ctx.load('evidence', sel ? { resultId: sel } : undefined);
@@ -52,7 +52,7 @@
 
   function choose(ctx, id) {
     // A choice after a load error asks again (the earlier answer for it may have failed).
-    if (ctx.error('evidence') && ctx.snapshot) delete requested[`${ctx.snapshot.revision}|${id || ''}`];
+    if (ctx.error('evidence') && ctx.snapshot) delete requested[`${ctx.version()}|${id || ''}`];
     ctx.ui.set('selectedResult', id || undefined);
     ctx.rerender();
   }
@@ -410,7 +410,7 @@
     }
     const model = d.model;
     const task = model.task || (summary && summary.task) || 'binary';
-    const stale = summary && d.revision < summary.revision;
+    const stale = summary && !ctx.fresh(d);
     if (stale) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: c.updating }));
     root.appendChild(ctx.el('div', { className: `ht-ev-grid${stale ? ' ht-pending' : ''}` }, [
       registry(ctx, model, sel),

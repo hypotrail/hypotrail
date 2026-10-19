@@ -50,12 +50,24 @@ function availability(task) {
   return JSON.parse(execFileSync(PYTHON, ['-c', code, CASES[task], JSON.stringify(over)], { encoding: 'utf8', cwd: os.tmpdir() }));
 }
 
+/** A copy of a committed case (case.yaml, case-*, data/) under `root`, so a test may edit its data. */
+function copyCase(task, root) {
+  const src = CASES[task];
+  const dir = path.join(root, 'case');
+  fs.mkdirSync(dir);
+  for (const f of fs.readdirSync(src)) if (f === 'case.yaml' || f.startsWith('case-')) fs.copyFileSync(path.join(src, f), path.join(dir, f));
+  fs.cpSync(path.join(src, 'data'), path.join(dir, 'data'), { recursive: true });
+  return dir;
+}
+
 class Study {
-  constructor(task, name) {
+  /** `copy: true` initialises the study on a copy of the case (`this.caseDir`), never on use-cases/. */
+  constructor(task, name, { copy = false } = {}) {
     this.task = task;
     this.root = fs.mkdtempSync(path.join(os.tmpdir(), `hypotrail ${name} 'it' "q" `));
     this.studyDir = path.join(this.root, `${name} "study" here`);
-    const init = JSON.parse(execFileSync(PYTHON, ['-m', 'mlkit.study.cli', 'init', '--case', path.join(CASES[task], 'case.yaml'),
+    this.caseDir = copy ? copyCase(task, this.root) : CASES[task];
+    const init = JSON.parse(execFileSync(PYTHON, ['-m', 'mlkit.study.cli', 'init', '--case', path.join(this.caseDir, 'case.yaml'),
       '--study', this.studyDir], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], cwd: os.tmpdir() }));
     assert.equal(init.ok, true, JSON.stringify(init));
     this.agent = readAgent(this.studyDir);

@@ -1,11 +1,14 @@
 'use strict';
 // Read cache of the controller (COMPANION-ADVANCED §11): one entry per data key and
-// revision. Entries of older revisions are dropped when a newer summary arrives, except
-// `preview:*` keys, which are kept in a bounded most-recently-used list (64). The cache
-// holds the CLI payloads (successful reads only); the controller projects them per view
-// model on each hit. It is never written to disk.
+// version. The controller's version is `<revision>:<currency>` of the last summary
+// (decision CR.1), so a dataset edit or a deleted deliverable, which changes the currency
+// without a new revision, is a new key. Entries of another version are dropped when a new
+// summary arrives (`prune`), and every non-preview entry on an explicit Refresh and after
+// each write (`clearData`), except `preview:*` keys, which are kept in a bounded
+// most-recently-used list (64). The cache holds the CLI payloads (successful reads only);
+// the controller projects them per view model on each hit. It is never written to disk.
 //
-// Frozen by WP-0.
+// Frozen by WP-0; `clearData` and versions other than a revision added by CR.1.
 
 const PREVIEW_PREFIX = 'preview:';
 const PREVIEW_LIMIT = 64;
@@ -38,9 +41,14 @@ function createCache({ previewLimit = PREVIEW_LIMIT } = {}) {
     entries.set(key, { revision, value });
   }
 
-  /** Drop the non-preview entries read at a revision below `revision`. */
-  function prune(revision) {
-    for (const [key, entry] of entries) if (entry.revision < revision) entries.delete(key);
+  /** Drop the non-preview entries read at another version than `version`. */
+  function prune(version) {
+    for (const [key, entry] of entries) if (entry.revision !== version) entries.delete(key);
+  }
+
+  /** Drop every non-preview entry (the explicit Refresh, after a write). */
+  function clearData() {
+    entries.clear();
   }
 
   function clear() {
@@ -48,7 +56,7 @@ function createCache({ previewLimit = PREVIEW_LIMIT } = {}) {
     previews.clear();
   }
 
-  return { get, set, prune, clear, size: () => entries.size + previews.size };
+  return { get, set, prune, clear, clearData, size: () => entries.size + previews.size };
 }
 
 module.exports = { createCache, PREVIEW_PREFIX, PREVIEW_LIMIT };

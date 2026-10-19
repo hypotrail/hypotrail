@@ -144,13 +144,53 @@ test('URI handler (WP-I): a valid link opens the panel and navigates; its study 
   assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: rid });
   // A discovered study in the link: opened in the same panel, without a quick pick.
   const picks = fake.calls.quickPick.length;
-  const again = await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${encodeURIComponent(b)}` });
+  // vscode.Uri.query is decoded: the handler gets the path as is.
+  const again = await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${b}` });
   assert.equal(again.agent.studyDir, b);
   assert.equal(fake.calls.quickPick.length, picks, 'no quick pick for a discovered study');
   assert.equal(fake.calls.panels.length, 1);
   assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'decisions', kind: 'proposal', id: 'p_5' });
   // An unknown study in the link: the quick pick asks.
-  await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${encodeURIComponent(path.join(os.tmpdir(), 'elsewhere'))}` });
+  await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${path.join(os.tmpdir(), 'elsewhere')}` });
   assert.equal(fake.calls.quickPick.length, picks + 1);
   assert.equal(api.current().agent.studyDir, a, 'the junior chose a study in the quick pick');
+});
+
+test('M2, INV-10: turning the master flag off while the panel is open disposes the panel, its controller and its watcher', async () => {
+  const calls = fakeExec();
+  const dir = makeStudy('flag-off');
+  const fake = createFake({ folders: [dir], settings: { 'hypotrail.companion.enabled': true } });
+  const { api } = await activate(fake);
+  const opened = await fake.commands.executeCommand('hypotrail.companion.open');
+  await opened.controller.handle({ v: 2, type: 'ready' });
+  const panel = fake.calls.panels[0];
+  const controller = opened.controller;
+  // Another setting: the panel stays.
+  fake.changeSettings({ 'hypotrail.companion.stage': 'v1' });
+  assert.equal(panel.disposed, false);
+  fake.changeSettings({ 'hypotrail.companion.enabled': false });
+  assert.equal(panel.disposed, true, 'the panel is closed');
+  assert.equal(api.current(), null);
+  assert.equal(opened.watcher, null, 'the watcher is disposed');
+  assert.equal(opened.controller, null, 'the controller is detached');
+  const before = calls.length;
+  const posted = panel.posted.length;
+  await controller.refresh();
+  assert.equal(calls.length, before, 'no process starts after the flag is off');
+  assert.equal(panel.posted.length, posted);
+  // The command now says the companion is disabled, and opens nothing.
+  await fake.commands.executeCommand('hypotrail.companion.open');
+  assert.equal(fake.calls.panels.length, 1);
+  assert.match(fake.calls.info.at(-1), /Companion disabled \(feature flag\)/);
+});
+
+test('M2: the environment override keeps the companion on when the setting is turned off', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  fakeExec();
+  const dir = makeStudy('flag-env');
+  const fake = createFake({ folders: [dir], settings: { 'hypotrail.companion.enabled': true } });
+  await activate(fake);
+  await fake.commands.executeCommand('hypotrail.companion.open');
+  fake.changeSettings({ 'hypotrail.companion.enabled': false });
+  assert.equal(fake.calls.panels[0].disposed, false);
 });

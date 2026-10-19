@@ -48,8 +48,10 @@ function createFake({ folders = [], trusted = true, settings = {}, answers = {},
     file: p => fileUri(p),
     parse: text => {
       const m = /^([a-z]+):\/\/([^/?#]*)([^?#]*)(\?[^#]*)?(#.*)?$/.exec(String(text));
-      return m ? { scheme: m[1], authority: m[2], path: m[3], query: (m[4] || '').slice(1), fragment: (m[5] || '').slice(1),
-        toString: () => String(text) } : null;
+      // As vscode.Uri.parse: the components are percent-decoded (`+` stays `+`).
+      const decode = x => x.replace(/(%[0-9A-Fa-f]{2})+/g, s => { try { return decodeURIComponent(s); } catch (_) { return s; } });
+      return m ? { scheme: m[1], authority: m[2], path: decode(m[3]), query: decode((m[4] || '').slice(1)),
+        fragment: decode((m[5] || '').slice(1)), toString: () => String(text) } : null;
     },
   };
   const fake = {

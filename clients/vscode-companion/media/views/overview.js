@@ -27,9 +27,9 @@
       [el('h2', { id, text: title }), ...children]);
   }
 
-  /** Ask once per (view, revision, variant) for a data view. */
-  function askOnce(ctx, view, revision, extra) {
-    const key = `${view}@${revision}@${extra ? JSON.stringify(extra) : ''}`;
+  /** Ask once per (view, version, variant) for a data view (CR.1: revision, currency, epoch). */
+  function askOnce(ctx, view, extra) {
+    const key = `${view}@${ctx.version()}@${extra ? JSON.stringify(extra) : ''}`;
     if (local.asked[key]) return;
     local.asked[key] = true;
     ctx.load(view, extra);
@@ -188,10 +188,10 @@
     if (wanted !== null) {
       const got = ctx.data('summary');
       const m = got && got.model && got.model.digest;
-      if (got && got.revision >= model.revision && m && m.since === wanted) digest = m;
+      if (ctx.fresh(got) && m && m.since === wanted) digest = m;
       else {
         updating = true;
-        askOnce(ctx, 'summary', model.revision, { since: wanted });
+        askOnce(ctx, 'summary', { since: wanted });
       }
     }
     const header = wanted !== null ? c.sinceStart
@@ -384,14 +384,14 @@
     const error = ctx.error('check');
     const body = [];
     if (local.checksOpen) {
-      const fresh = got && got.revision >= model.revision;
-      if (!fresh && !error) askOnce(ctx, 'check', model.revision);
+      const fresh = ctx.fresh(got);
+      if (!fresh) askOnce(ctx, 'check');
       if (error && !fresh) {
         body.push(el('div', { className: 'card alert', role: 'alert', 'data-check-error': true }, [
           el('p', { className: 'title', text: c.checksFailed }),
           el('p', { text: str(error.message) }),
           error.detail ? el('pre', { text: str(error.detail) }) : null,
-          el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => ctx.load('check') }),
+          el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => { ctx.retry('check'); ctx.load('check'); } }),
         ]));
       } else if (!got) {
         body.push(el('p', { className: 'muted', 'aria-busy': 'true', 'data-check-loading': true, text: c.checksRunning }));

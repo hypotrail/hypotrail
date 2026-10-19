@@ -208,7 +208,7 @@ def test_select_the_id_selects_the_full_id_and_never_writes_the_clipboard(open_p
     page.get_by_role('button', name='Select the id').click()
     assert page.evaluate('() => String(window.getSelection())') == LOGISTIC
     assert page.locator('details.ht-ev-fullid').evaluate('d => d.open')
-    assert page.locator('[data-select-note]').inner_text() == 'The id is selected: copy it with the keyboard.'
+    assert page.locator('[data-select-note]').inner_text() == 'The id is highlighted: copy it with the keyboard.'
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 

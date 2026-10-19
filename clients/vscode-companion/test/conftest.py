@@ -36,6 +36,8 @@ HERE = Path(__file__).resolve().parent
 CLIENT = HERE.parent
 FIXTURES = HERE / 'fixtures'
 NONCE = 'testNonce0123456789abcdef'
+# The study key of `init` in these tests (decision CR.2): one study unless a test names another.
+STUDY_KEY = '0123456789abcdef'
 NODE = shutil.which('node')
 
 try:
@@ -144,6 +146,7 @@ def browser():
 class Panel:
     def __init__(self, context, page, requests, errors, csp):
         self.context, self.page, self.requests, self.errors, self.csp = context, page, requests, errors, csp
+        self.currency = None
 
     def send(self, message: dict) -> None:
         # Delivered synchronously: the `message` listeners (core.js) have run when this
@@ -154,16 +157,31 @@ class Panel:
         self.page.evaluate('m => window.dispatchEvent(new MessageEvent("message", {data: m}))',
                            {'v': 2, **message})
 
-    def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None):  # noqa: N803
-        self.send({'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
-                   'chatInsert': chatInsert, 'task': task})
+    def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None, study=STUDY_KEY):  # noqa: N803
+        # `study`: the study key the controller sends (decision CR.2); None leaves it out.
+        message = {'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
+                   'chatInsert': chatInsert, 'task': task}
+        if study is not None:
+            message['study'] = study
+        self.send(message)
 
     def snapshot(self, model: dict) -> None:
-        self.send({'type': 'snapshot', 'revision': model['revision'], 'model': model})
+        # As the controller: the snapshot carries the model's currency (decision CR.1).
+        self.currency = model.get('currency')
+        message = {'type': 'snapshot', 'revision': model['revision'], 'model': model}
+        if self.currency:
+            message['currency'] = self.currency
+        self.send(message)
 
-    def view_data(self, view: str, model: dict, revision=None) -> None:
-        self.send({'type': 'view_data', 'view': view,
-                   'revision': model.get('revision', 0) if revision is None else revision, 'model': model})
+    def view_data(self, view: str, model: dict, revision=None, currency=None) -> None:
+        # As the controller: a read carries the currency of the snapshot it was read at,
+        # unless the test names another one.
+        message = {'type': 'view_data', 'view': view,
+                   'revision': model.get('revision', 0) if revision is None else revision, 'model': model}
+        currency = self.currency if currency is None else currency
+        if currency:
+            message['currency'] = currency
+        self.send(message)
 
     def posted(self) -> list:
         return self.page.evaluate('window.__posted')

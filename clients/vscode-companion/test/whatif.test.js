@@ -239,7 +239,8 @@ test('WI-3: propose re-reads the draft, asks the modal, then runs exactly W3 wit
   assert.ok(argv.includes(`--restatement=${draft.restatement}`) && argv.includes(`--rationale=${draft.rationale}`), 'byte for byte');
   assert.deepEqual(argv.slice(AGENT.argv.length + 6, AGENT.argv.length + 8), ['--channel', 'webview']);
   assert.ok(!argv.some(a => /^--basis|^--delegation-scope|^--user-words/.test(a)));
-  assert.deepEqual(asked, [['Create a proposal for policy: capacity:100? It is not a decision. You will confirm it in your own words in Decisions. It replaces the open proposal p_5.', 'Propose']]);
+  // §7 W3: the modal names the decision by its plan title (review finding; decision CR.9).
+  assert.deepEqual(asked, [['Create a proposal for "Choose a decision policy": capacity:100? It is not a decision. You will confirm it in your own words in Decisions. It replaces the open proposal p_5.', 'Propose']]);
   const outcome = of('outcome').at(-1);
   assert.equal(outcome.op, 'W3');
   assert.equal(outcome.kind, 'ok');
@@ -248,6 +249,17 @@ test('WI-3: propose re-reads the draft, asks the modal, then runs exactly W3 wit
   // A second propose reads the draft again: never from the cache.
   await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 });
   assert.equal(runCli.calls.filter(x => x.tail[0] === 'preview' && x.tail[1] === 'proposal').length, 3);
+});
+
+test('the draft read before W3 neither reads nor fills the cache: no draft:...:fresh:N entry accumulates (review finding)', async () => {
+  const { c, runCli } = make({ host: { confirmModal: async () => false } });
+  await c.handle({ v: 2, type: 'ready' });
+  const size = c.cacheSize();
+  for (let i = 0; i < 5; i += 1) {
+    await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 });
+  }
+  assert.equal(runCli.calls.filter(x => x.tail[0] === 'preview' && x.tail[1] === 'proposal').length, 5, 'one fresh read each time');
+  assert.equal(c.cacheSize(), size, 'the cache did not grow');
 });
 
 test('WI-3: no W3 for an unevaluated rule, another decision, a moved revision, a cancelled modal, or a reviewer', async () => {
@@ -292,6 +304,9 @@ test('WI-3 (regression): "Propose this model choice" proposes model_choice with 
 
 test('modal text: without an open proposal there is no "replaces" sentence', () => {
   assert.equal(whatif.modalText('model_choice', 'fit.linear', { supersedesProposal: null }),
-    'Create a proposal for model choice: fit.linear? It is not a decision. You will confirm it in your own words in Decisions.');
+    'Create a proposal for model choice: fit.linear? It is not a decision. You will confirm it in your own words in Decisions.',
+    'without a plan title, the decision id in words');
+  assert.equal(whatif.modalText('model_choice', 'fit.linear', { supersedesProposal: null }, 'Choose the model'),
+    'Create a proposal for "Choose the model": fit.linear? It is not a decision. You will confirm it in your own words in Decisions.');
   assert.equal(whatif.previewKey(['capacity:100'], true), 'preview:capacity:100:intervals');
 });

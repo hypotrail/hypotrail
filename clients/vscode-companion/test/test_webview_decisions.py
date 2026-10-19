@@ -322,23 +322,36 @@ def test_availability_is_shown_as_status_groups(open_panel, binary, model, paylo
 # --- stale revision while typing, refusals, outcome unknown, withdraw --------------------------------
 
 def test_a_revision_that_moves_while_typing_warns_and_keeps_the_text(open_panel, binary):
+    # Decision CR.3 (review finding M1): the draft keeps the revision at which the junior
+    # started typing; Confirm sends it, so the engine's stale_revision guard sees the
+    # change. The warning stays, typing more does not hide it, until the junior says they
+    # read the proposal again.
     panel = opened(open_panel, binary)
     page = panel.page
     area(panel).fill('Yes, the 100 best-scored')
     panel.snapshot({**binary, 'revision': 27})
     warning = card(panel).locator('[data-typing-warning="p_5"]')
-    assert warning.inner_text() == ('The study changed while you were typing (revision 26 to 27). '
-                                    'Read the proposal again before you answer.')
+    assert warning.locator('[data-typing-text]').inner_text() == (
+        'The study changed while you were typing (revision 26 to 27). Read the proposal again before you answer. '
+        'A confirmation now names revision 26, so the engine refuses it.')
     assert warning.get_attribute('role') == 'status'
     assert area(panel).input_value() == 'Yes, the 100 best-scored'
     # One warning only, the card's (WP-I, decision CI.4: the frame's duplicate is gone).
     assert page.locator('[data-notice]').count() == 0
-    # The answer then carries the revision the junior now sees.
     area(panel).press('End')
     area(panel).type(' clients.')
+    assert card(panel).locator('[data-typing-warning]').count() == 1, 'typing more does not hide it'
+    card(panel).locator('button[data-action="confirm"]').click()
+    assert panel.posted()[-1]['type'] == 'confirm'
+    assert panel.posted()[-1]['revision'] == 26, 'the revision the junior started typing at'
+    reread = warning.locator('button[data-reread="p_5"]')
+    assert reread.inner_text() == 'I read the proposal again at revision 27'
+    reread.click()
     assert card(panel).locator('[data-typing-warning]').count() == 0
+    assert area(panel).input_value() == 'Yes, the 100 best-scored clients.'
     card(panel).locator('button[data-action="confirm"]').click()
     assert panel.posted()[-1]['revision'] == 27
+    assert panel.state()['drafts']['p_5'] == {'text': 'Yes, the 100 best-scored clients.', 'revision': 27}
     assert_clean(panel)
 
 

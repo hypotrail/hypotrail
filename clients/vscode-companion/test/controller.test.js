@@ -11,6 +11,7 @@ const flag = require('../lib/flag');
 const { createCache } = require('../lib/cache');
 const { createFake } = require('./fake-vscode');
 const { fakeCli } = require('./fixture-cli');
+const { studyKey } = require('../lib/localstore');
 
 const AGENT = { argv: ['/opt/py/bin/python', '-m', 'mlkit.study.cli'], studyDir: '/studies/bank marketing "demo"' };
 
@@ -27,7 +28,8 @@ test('ready: init, then the summary; v0 reads without --digest, v1 with it', asy
     const { c, posted, runCli } = make({ settings: { stage } });
     await c.handle({ v: 2, type: 'ready' });
     assert.equal(posted[0].type, 'init');
-    assert.deepEqual(posted[0], { v: 2, type: 'init', stage, reviewer: false, learningLayer: true, chatInsert: false, task: null });
+    assert.deepEqual(posted[0], { v: 2, type: 'init', stage, reviewer: false, learningLayer: true, chatInsert: false, task: null,
+      study: studyKey(AGENT.studyDir) });
     assert.equal(runCli.calls[0].tail.includes('--digest'), digest);
     const snap = posted.find(m => m.type === 'snapshot');
     assert.equal(snap.revision, revision);
@@ -83,7 +85,9 @@ test('load: a view without a loader answers "Not available in this stage."; a lo
   assert.equal(runCli.calls.filter(x => x.tail[0] === 'decisions').length, 1, 'coalesced, then cached');
   const data = posted.filter(m => m.type === 'view_data');
   assert.equal(data.length, 3);
-  assert.deepEqual(data[0], { v: 2, type: 'view_data', view: 'decisions', revision: 27, model: { revision: 27, n: 5 } });
+  assert.deepEqual(data[0], { v: 2, type: 'view_data', view: 'decisions', revision: 27, currency: c.snapshot().currency,
+    model: { revision: 27, n: 5 } });
+  assert.match(c.snapshot().currency, /^[0-9a-f]{16}$/, 'the read carries the version it was read at (CR.1)');
   // WP-I: the cache holds the payload of the read, and each answer projects it with its
   // loader's model (shared reads, below), so the model runs once per answer, the CLI once.
   assert.deepEqual(seen, [27, 27, 27]);
@@ -236,7 +240,8 @@ test('handler registry: a type or a view claimed twice, or a core type, is refus
 test('settings: updateSettings posts init again; navigate validates its target', async () => {
   const { c, posted } = make({ settings: { stage: 'v1' } });
   c.updateSettings({ stage: 'v2', chatInsert: true });
-  assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null });
+  assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null,
+    study: studyKey(AGENT.studyDir) });
   assert.equal(c.navigate({ tab: 'evidence', kind: 'result', id: 'a'.repeat(64) }), true);
   assert.equal(c.navigate({ tab: 'nowhere', kind: 'result', id: 'x' }), false);
   assert.equal(await c.command('go_to_result', {}), undefined, 'no handler registers it in WP-0');
@@ -252,7 +257,11 @@ test('flag: stage, learning layer, reviewer, chatInsert and their overrides', ()
   assert.equal(flag.learningLayer(fake({ 'hypotrail.companion.learningLayer': false }), {}), false);
   assert.equal(flag.learningLayer(fake(), { HYPOTRAIL_COMPANION_LEARNING: '0' }), false);
   assert.equal(flag.reviewer(fake(), { HYPOTRAIL_COMPANION_REVIEWER: '1' }), true);
-  assert.equal(flag.chatInsert(fake({ 'hypotrail.companion.chatInsert': true })), true);
+  // Forced off until a real VS Code session verifies that the insertion does not send
+  // (decision CR.8): the setting is ignored.
+  assert.equal(flag.chatInsert(fake({ 'hypotrail.companion.chatInsert': true })), false);
+  assert.equal(flag.settings(fake({ 'hypotrail.companion.chatInsert': true }), {}).chatInsert, false);
+  assert.equal(flag.CHAT_INSERT_VERIFIED, false);
   assert.equal(flag.settings(fake(), { HYPOTRAIL_COMPANION_CHAT_INSERT: '1' }).chatInsert, false, 'no environment override');
   assert.equal(flag.settings(fake(), {}, { forceReviewer: true }).reviewer, true);
   assert.ok(flag.stageAtLeast('v2', 'v1') && !flag.stageAtLeast('v1', 'v2'));
@@ -272,4 +281,13 @@ test('cache: per key and revision; previews kept in a bounded list', () => {
   cache.prune(4);
   assert.equal(cache.get('decisions', 3), undefined);
   assert.equal(cache.get('preview:capacity:3', 3), 3, 'previews survive a newer revision');
+});
+
+test('CR.2: init names the study by its key (16 hex of the path\'s SHA-256), never by its path; another study, another key', async () => {
+  const { c, posted } = make({ settings: { stage: 'v1' } });
+  await c.handle({ v: 2, type: 'ready' });
+  const init = posted.find(m => m.type === 'init');
+  assert.match(init.study, /^[0-9a-f]{16}$/);
+  assert.ok(!JSON.stringify(init).includes(AGENT.studyDir), 'the path is never sent in init');
+  assert.notEqual(studyKey('/studies/another one'), init.study);
 });
