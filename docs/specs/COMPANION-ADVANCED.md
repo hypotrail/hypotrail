@@ -2,6 +2,8 @@
 
 Status: **implemented behind the flag** (stages v0 to v3; WP-0, WP-E1 to E3, WP-U1 to U5, integrated by WP-I with decisions CI.1 to CI.17 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)). Tested in Node, an offline browser, and on the real CLI; **not run inside a real VS Code** ([manual checklist](../../clients/vscode-companion/MANUAL-TEST.md)). The default stage stays `v0`. The scope and the staging are in [ADR 0004](../decisions/0004-companion-advanced.md). The engine interfaces are in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), cited below as **CC §n**. The work packages and file ownership are in [COMPANION-ADVANCED-PLAN.md](../plans/COMPANION-ADVANCED-PLAN.md). The code base is `clients/vscode-companion/`, which is v0 ([ADR 0003](../decisions/0003-companion-webview-v0.md), decisions CW.1 to CW.12).
 
+**Amended by WP-A5 (v0.2a, 2026-10-19).** The panel speaks to the junior, not to the agent: the "verbatim" rule of engine texts becomes the **two-layer copy contract** of §15.1 (INV-16); every stage opens on "Your next move" (§6.1.0); the journey marks the step that waits for the junior (§6.1.2); decision values are shown in words with the recorded value in a hover and under "Details"; limits carry a severity and are listed once (§6.1.5); "Since your last session" is grouped (§6.1.3); a load error replaces the content (§3.3); Health appears only when something is wrong; the deliverables offer "Open file" and the two Marimo launches of ADR 0004 "local launch" (§6.1.4); the theming, high-contrast, and narrow-width rules of §13 are extended. Where this amendment and an earlier paragraph differ, the amendment wins. Mockups: `docs/design/companion-v0.2-mockups/` (overview, decisions, deliverables).
+
 Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
 
 ## 1. Purpose
@@ -31,6 +33,7 @@ These hold in every stage, view, and state. The plan's `test/invariants.test.js`
 | INV-13 | The companion never fits a model, runs `split`, `policy.evaluate`, or `evaluate.regression`, records or resolves a note, edits a notebook, or runs "validate all". From the webview, EDA requests reach only the `eda.*` activities that `evidence.eda_catalog` lists | owner's feature list |
 | INV-14 | No figure is computed by the companion. Bar lengths and axis positions are geometry derived from engine values. They are never displayed as numbers that the engine did not emit, except axis tick labels, which are rounded positions of an axis, are marked `aria-hidden`, and carry `data-literal="axis"` | INV-7 |
 | INV-15 | Precomputed tutorial outputs (`use-cases/*/results.json`, `project.json`) are never read | AGENTS.md |
+| INV-16 | Two-layer copy (§15.1, WP-A5). An engine text whose `audience` is `agent` (CLI-CONTRACT §3.3) is **never** primary content: the panel shows the engine's junior variant (`next_action.junior_message`, `not_yet_defensible.top[].junior_text`, `recap_junior`, `artifacts.items.*.junior_message`) or its own copy keyed by the engine's `kind`, `code`, or id; the engine text stays available under a "Details" disclosure (or a hover). Raw tokens (`capacity:100`, `p_5`, result ids, decision ids, slot names) are not primary content either: they go to a hover (`title`) or "Details". Refusals keep INV-8 (the engine message verbatim, it answers the junior's own action) | v0.2 synthesis §1 item 5 |
 
 ## 3. Activation, flags, stages, modes
 
@@ -76,8 +79,8 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 | No study | No folder found (§6.1.6) | A folder dialog (v0). If it is cancelled, nothing happens |
 | Moved study | `agent.json.study` differs from the folder | The `study_moved` message of v0 |
 | Loading | The first `status` call has not answered | The header shows "Reading the study..."; tabs are skeletons with `aria-busy="true"`; no control is enabled |
-| Load error | The CLI cannot start, prints no JSON, or refuses | A `role="alert"` banner with the message and the CLI's stderr in a collapsed `<details>`; a "Retry" button; the last good snapshot is **not** shown as current. If one exists, it is shown greyed with "Last read at revision N; the study could not be read now" |
-| Stale view | A watch event or a write moved the version while a tab shows older data | Each tab's data carries the version it was read at: the revision and the summary's `currency` (decision CR.1, §5). A tab whose data is not at the snapshot's version (an older revision, or the same revision under another currency: a dataset edit, a deleted or edited deliverable) shows "Updating..." and reloads (§11). A textarea with text keeps the text and shows the warning of §6.2.1 "Answer" (CW.9, decision CR.3) |
+| Load error | The CLI cannot start, prints no JSON, or refuses | (WP-A5) The error **replaces the content**: no tab content, alert strip, or recap strip is rendered. A `role="alert"` card says what happened, gives the next step ("Press Retry. If it fails again, ask the assistant in the chat to run the study status ..."), says "Last read at revision N; the study could not be read now" when a snapshot existed, and keeps the CLI's message and stderr under "Details from the CLI". "Retry" reads again; the content comes back with the next snapshot |
+| Stale view | A watch event or a write moved the version while a tab shows older data | Each tab's data carries the version it was read at: the revision and the summary's `currency` (decision CR.1, §5). A tab whose data is not at the snapshot's version (an older revision, or the same revision under another currency: a dataset edit, a deleted or edited deliverable) reloads (§11); its older content is marked busy (and dimmed where the view keeps it visible); "Updating..." is never shown next to content that is current (WP-A5). A textarea with text keeps the text and shows the warning of §6.2.1 "Answer" (CW.9, decision CR.3) |
 | Reviewer | `reviewer` setting or command | The header shows a badge "Reviewer, read-only". **No** element with `data-write` is rendered except Export: no textarea for words, no Confirm, Withdraw, Propose, Run, Regenerate, or Acknowledge. The controller refuses every write message of the study (W1 to W6) with `kind: "invalid"` and "Read-only reviewer mode." (RV-2). The handoff export (W7) writes no study state, so a reviewer may run it (decision CA.9). Reads, navigation, Open, Show in report, and the agent bridge stay |
 | Read-only process | `HYPOTRAIL_READ_ONLY=1` in the extension host | Writes are refused by the engine (`read_only`) and shown as refusals. Nothing special is done in the client |
 | Busy | One write is running | Every `data-write` control is disabled, and the busy control shows `aria-busy="true"` and "Working..." |
@@ -90,9 +93,9 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 ┌ header: logo · "Hypotrail · <case id>" · [regression] · badge "Experimental · feature flag on"
 │         [Reviewer, read-only] · study switcher (v1) · "revision N" · "read from CLI · <age>" · [Refresh]
 ├ tabs:   Overview · EDA (v2) · Decisions [count] · Evidence (v2) · What if? (v2) · Learn & hand off (v3)
-├ alert strip (only when present): sources changed · execution with unknown outcome · integrity error
+├ alert strip (only when present, every tab except Overview; WP-A5): sources changed · execution with unknown outcome · integrity error
 ├ recap strip (every tab except Overview, collapsible, remembered per panel in vscode.setState):
-│         Goal / Decided / Now / Next / Limit, the five summary.recap lines verbatim
+│         Goal / Decided / Now / Next / Limit: summary.recap_junior (WP-A5), its Decided line in the panel's words
 ├ main: the tab
 └ footer: "Reads the hypotrail CLI only · no state of its own · the chat, report and notebook stay complete without it."
 ```
@@ -110,7 +113,7 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 - the `sources_changed`, `interrupted_executions`, and `result_integrity` items of `summary.not_yet_defensible.top` (their `text` verbatim);
 - `next_action.kind == "outcome_unknown"` (its `message` verbatim).
 
-Each alert links to the Overview Health section.
+Each alert links to the Overview's "Needs attention" section. (WP-A5) The text is the item's junior variant, or the panel's words for its id (§15.1), never an `agent` text; an unknown outcome is one alert (the matching `interrupted_executions` item is not repeated); the strip is not shown on the Overview, whose first block already says what waits.
 
 ### 4.2 Navigation targets
 
@@ -145,16 +148,30 @@ Every view below lists its sources, its components, its states, its interactions
 
 ### 6.1 Overview (stage v1; v0 shows its v0 subset)
 
-Mockup: `Main.dc.html`.
+Mockup: `Main.dc.html`; WP-A5: `docs/design/companion-v0.2-mockups/overview.html`, `deliverables.html`.
+
+Order (WP-A5). Stage v0: Your next move, the plan (§6.1.2 as one list), Where we are, What you cannot claim yet, Deliverables. Stage v1 and later: Your next move, Needs attention (only when something is wrong), Study map, Since your last session next to What you cannot claim yet, Where we are, Deliverables (with the checks).
+
+#### 6.1.0 Your next move (WP-A5, every stage)
+
+The first block of the Overview at every stage, v0 included (`data-ov="hero"`). Keyed by `next_action.kind` (copy in `media/copy/junior.js`):
+
+- an eyebrow "Your next move" and, for a decision, its pause ("Pause 3 · business trade-off");
+- a title in the panel's words: "Answer the proposal on <decision>" (`await_user_words`), "Confirm <decision> again" (`reconfirm`), "A run stopped before it finished" (`outcome_unknown`, `acknowledge_interruption`), "Next step: <step title>" (`propose`, `run`, `blocked`), "Every step is done" (`done`);
+- one lead sentence of the panel, and for an open proposal its restatement (quoted) and "In short: <value in words>" (the recorded value in the hover);
+- "Why it matters": the term first, then its use in the case (per decision id);
+- what supports it, in business words, when the evidence read is at hand (stage v2, a cited figure of the current evaluation of that proposal: the share of successes among the cases the rule picks, with its interval, against the baseline; or the average error of the chosen model against the other);
+- one action that goes where the junior answers: "Answer in Decisions" (the proposal's card), "Open in Decisions" (the decision), "Go to the run" (the execution card, v1); at v0 an execution sends the junior to the chat;
+- "Details": the engine's `junior_message` when it differs from the lead, the engine's `message` labelled as the instruction to the assistant when its audience is `agent`, and the recorded value with the proposal id.
+
+- OV-0. On every captured payload, at 900 and 420 px and in Light+, Dark+ and High Contrast, the first 400 px of the Overview hold the next move and no raw result id, proposal id, or rule token (`test_webview_themes.py`).
 
 #### 6.1.1 Where we are (A)
 
-The five `summary.recap` lines are rendered as a `<dl>` with the labels Goal, Decided, Now, Next, and Limit. The label is the text before the first ":" of each line, which matches `view.RECAP_LABELS`. Each line is rendered verbatim.
+(Amended by WP-A5.) A `<dl>` with **Goal** (the `Goal` line of `summary.recap_junior`, or of `recap` from an engine without audience keys) and **Decided** (one line per confirmed or to-reconfirm decision in plan order: its name and its value in words, `media/copy/junior.js` `value`, the recorded value in the hover; "to confirm again" or "left to the assistant" as a status tag). The five lines of `recap_junior` follow, byte for byte, under "Details: the engine's recap". The agent recap (`recap`, `recap_audience: agent`) is never rendered. "Next" and "Limit" are not repeated here: the next move (§6.1.0) and the limits (§6.1.5) say them.
 
-In the `Next` line, when `next_action.kind` is `await_user_words` or `reconfirm`, the panel adds a link "Open in Decisions" after the text. The recap text itself is never edited.
-
-- OV-1. The five lines equal `summary.recap`, byte for byte.
-- OV-2. Without a recap (an empty list), the section reads "No recap yet."
+- OV-1. The Details hold `summary.recap_junior`, byte for byte; no line of the agent recap that differs from it appears in the Overview.
+- OV-2. Without a recap, there is no Details disclosure and no Goal line; Decided still lists the decisions.
 
 #### 6.1.2 Study map (A)
 
@@ -170,37 +187,47 @@ Four columns, from `summary.moments` (CC §1.1). Each column holds the plan step
 
 The pause number comes from `summary.pauses`. The sub-labels are the only text the panel adds. The current step carries `aria-current="step"`.
 
+**Blocker-aware (WP-A5).** The current step is the one that waits for the junior: the decision of `next_action` when its kind is `await_user_words` or `reconfirm`, else the first step `awaiting_confirmation` or `needs_reconfirmation`, else the engine's `current_step`. A `done` step whose decision has an open proposal is shown **reopened** (mark ↺, accessible text "reopened, waiting for you", sub-label "pause P · new proposal, waiting for you"), so a reconfirmation is visible on the map. At stage v0 the same steps are one list ("The plan").
+
 - OV-3. The map has 4 columns with the CC §1.1 titles. Every step appears once. The current step has `aria-current="step"`.
 - OV-4. The mark is never the only signal: each mark has an accessible text ("done", "waiting for you", "confirm again", "ready", "blocked").
 
 #### 6.1.3 Since your last session (A)
 
-The items come from `summary.digest.items` (CC §1.4):
+The items come from `summary.digest.items` (CC §1.4). (Amended by WP-A5.) The engine's digest texts speak of the junior in the third person, so:
 
-- each item's `text`, newest last;
+- each item is written in the panel's words, keyed by its `kind` (and its decision, activity, slot, or note: a hold quotes the junior's words from `summary.notes`); an item the panel has no words for (`other`) keeps the engine text;
+- items are grouped, each with a tag of one vocabulary: **needs you** (a proposal still open, a hold, a failed or interrupted run), **re-evaluated** (a result added or replaced), **resolved** (a confirmation, a withdrawal, a resolved hold, an acknowledgement, a proposal no longer open), **other**; plus one **deliverables** line from the summary's artefacts; needs you first, newest first inside a group;
+- the first four items are shown; the rest are under a collapsed "Show all N changes";
 - an item with `invalidation.refit == []` and a non-empty `kept_fits` adds the bold sentence "Models unchanged, nothing refitted.";
+- the engine texts, verbatim and in order, are under "Details: the engine's record of these changes";
 - a header line reads "Since <boundary_time, as a local date and time>"; when `gap_minutes` is null it reads "This session";
 - when `truncated` is true, a final line reads "Older changes are not listed. The Decisions tab has the full history.";
 - with no items, the section reads "Nothing has changed since then.";
 - a `<select>` labelled "Show changes since" offers the boundary revision and "the start of the study" (revision 1); choosing one re-reads `summary` with `--since`.
 
-- OV-5. With the Bank fixture after a capacity change, the list holds the re-evaluation sentence with "Models unchanged, nothing refitted.", the reconfirmation sentence, and the resolved hold, quoted verbatim.
+- OV-5. With the Bank fixture after a capacity change, the groups read needs you, re-evaluated (with "Models unchanged, nothing refitted."), resolved (the hold, in the junior's words), other; the engine texts are under Details, verbatim; beyond four items the rest is collapsed.
 - OV-6. The texts hold no revision number. The test asserts no `/revision \d/` in the section's text, outside the select's option labels.
 
 #### 6.1.4 Deliverables (F)
 
-One row per item of `summary.artifacts.items`, in the order `report`, `notebook`, `workbench`:
+(Amended by WP-A5; stage v0 and later.) Titled "Your deliverables". One row per item of `summary.artifacts.items`, in the order `report`, `notebook`, `workbench`:
 
-- the label and the path ("Report · study.html");
-- the status line, which is the item's `message` verbatim;
-- an "Open" button, as in v0: the report in the browser, the others in the editor.
+- the label and the file ("Report · study.html"), the study-relative path, and one sentence of what it is;
+- a status tag of one vocabulary (current, out of date, failed, missing, edited; "yours" for the workbench) and the item's `junior_message` (the engine `message`, which names paths for the agent, in the hover);
+- the report: "Open in browser"; the generated notebook: **"Open in Marimo (read)"** (`marimo run`) and "Open file"; the workbench: **"Open in Marimo (edit)"** (`marimo edit`) and "Open file". In reviewer mode the workbench has no Marimo edit;
+- a box "What "Open in Marimo" does": the two commands with study-relative files (`init.marimo`, display only) and the kernel line "Kernel: the engine environment <path>. Stop it with Ctrl+C in that terminal; the panel owns no process."
 
-A "Regenerate the report and notebook" button (`data-write="render"`) is shown when any generated artefact has status `stale` or `failed`, or the manifest is `not_rendered` (§7, W5). The button is absent in reviewer mode.
+**Local launch (ADR 0004 amendment).** "Open in Marimo" sends `open_marimo {artifact}` (§8.1). The extension reads `status --json` once (never cached) and takes `view.deliverables.launch.<name>.argv` (CLI-CONTRACT §3, R7) when it has exactly the form `uv run --project <abs dir> marimo <mode> <file>` or `<abs python> -m marimo <mode> <file>`, with the notebook's mode and absolute path; otherwise it builds the same from the study's recorded CLI argv (`.hypotrail/agent.json`: `uv run --project <engine>/framework …`, or `<python> -m …`); otherwise nothing starts and a notice says so. The argv is started with `vscode.window.createTerminal({name, shellPath, shellArgs, cwd: S})`, an argument list, never a shell string and never typed into a terminal; the terminal is named "Hypotrail · marimo <mode> <file>" and is reused (shown again) while it is open for the same file. Nothing is written to the study. `lib/launch.js` holds the two launches; `scripts/check_layout.py` refuses any other terminal.
 
-- OV-7. Each message is shown verbatim. "Regenerate" is shown only under those conditions.
+A "Regenerate the report and notebook" button (`data-write="render"`, v1) is shown when any generated artefact has status `stale` or `failed`, or the manifest is `not_rendered` (§7, W5). The button is absent in reviewer mode. "Checks of the deliverables" (§6.1.5) is a collapsed `<details>` at the end of this section (v1).
+
+- OV-7. Each row shows its junior message (the engine message in the hover); "Open in Marimo (read)" and "(edit)" send `open_marimo` for the notebook and the workbench; the extension starts exactly `marimo run` / `marimo edit` in a named terminal with an argument list and reuses it (`extension.test.js`, `launch.test.js`). "Regenerate" is shown only under the conditions above.
 - OV-8. After "Regenerate", the outcome lists each artefact's message from `render.artifacts`. Exit 3 is shown as "Regenerated with problems", not as a failure of the command.
 
 #### 6.1.5 Health (F)
+
+(Amended by WP-A5.) **Needs attention** (the former Health section) is rendered only when something is wrong: an interrupted, suspected, or late execution, an acknowledgement just made, or an alert (`sources_changed`, `result_integrity`). It shows nothing otherwise. The checks of the deliverables move to the Deliverables section. "Not yet defensible" becomes its own section, **What you cannot claim yet**: every `top` item and every `more` id **once**, each with a severity tag of one vocabulary (blocking, caveat, not final, context; `media/copy/junior.js` `SEVERITY`), blocking first; the text is the item's junior variant, or the panel's words for its id (the `more` ids have no text in the summary); the engine texts that differ are under "Details: the engine's wording". The execution card keeps the engine's `reason` under "Details". The rest of this section describes the parts as before.
 
 - **Executions.**
   - Each `summary.executions.interrupted` and `suspected_interrupted` item is one card: "<activity>: the outcome is unknown. Nothing will be restarted."
@@ -243,7 +270,7 @@ Mockup: `Decision.dc.html`.
 There is one card per `summary.open_proposals` item, oldest first. Each card holds:
 
 - **Head.** A pill "Pause P · <pause label>", where the pause labels are 1 "framing", 2 "evaluation design", and 3 "business trade-off" (binary) or "model choice" (regression). Then the plan step title as `h2`, and on the right "proposal by the agent · not a decision yet", or "proposal from this panel · not a decision yet" when `origin.channel == "webview"` (CC §9). Below, "Proposal p_N, made at revision R".
-- **Restatement.** In a blockquote, verbatim. Then "Proposed value:" in `<code>`, which is `showValue` of v0; availability is shown as status groups.
+- **Restatement.** In a blockquote, verbatim. Then (WP-A5) "In short: <the value in words>" (`media/copy/junior.js` `value`: "Call the top 100 by score", "Stratified random split, 30% of the rows for validation", "Adopt the linear model"), the recorded value in the hover and, with the proposal id, under "Details"; availability is shown as status groups. The head reads "Proposed at revision R" with the proposal id in the hover; evidence chips name the result in words ("See the calling-rule evaluation →") with the activity and the result id in the hover; slot names in "If you confirm" are in words; the preview's `note` is under "Details". The history shows each value in words (the recorded value or the availability groups in the hover) under the columns Decision, Your words, How, When.
 - **Evidence** (v2). Chips for each evidence link:
   - for a policy or model choice, the current `policy.evaluation` or `evaluate.regression` result (`<activity> · <rid8>…`), opening Evidence;
   - for a policy, the paired difference of the proposed rule with its interval, as a cited value from `evidence`;
@@ -678,6 +705,7 @@ A unit test enumerates the argv builder module and asserts that exactly these se
 | `run_eda` | `activity` (`^eda\.[a-z_]+$`), `column` (string, 1–200 characters), `revision` | v2 |
 | `render` | — | v1 |
 | `acknowledge` | `executionId` (string, 1–100 characters, `^[A-Za-z0-9_.-]+$`), `words`, `revision` | v1 |
+| `open_marimo` | `artifact` ∈ `notebook`, `workbench` (WP-A5, ADR 0004 "local launch": `marimo run` of the generated notebook, `marimo edit` of the workbench, in a VS Code terminal; not a write; in reviewer mode the workbench is refused with a notice) | v0 |
 | `open_artifact` | `artifact` ∈ `report`, `notebook`, `workbench`; `resultId?` (the report at `#r-<rid>`, or the notebook at the line that names the result; not the workbench); `line?` (int ≥ 1, an editor deliverable at a check finding's line; not the report; not with `resultId`) | v0 (+ `resultId` and `line` v1, decision CI.3) |
 | `navigate_external` | `kind` ∈ `reveal_export`; `path` (string, must equal the last export's `out`) | v3 |
 | `ask_agent` | `about: {kind ∈ result, decision, proposal, step, limit, execution, term; id (string ≤ 100)}`, `question` (string ≤ 2000), `mode` ∈ `copy`, `insert` | v2 |
@@ -689,7 +717,7 @@ A unit test enumerates the argv builder module and asserts that exactly these se
 
 | `type` | Fields | Notes |
 |---|---|---|
-| `init` | `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`), `study?` (the study key of §10, 16 hex; never the path; CR.2) | sent once after `ready`, and again when a setting changes |
+| `init` | `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`), `study?` (the study key of §10, 16 hex; never the path; CR.2), `marimo?` (`{kernel, notebook, workbench}`: the engine environment and the two launch commands with study-relative files, display only; WP-A5) | sent once after `ready`, and again when a setting changes |
 | `snapshot` | `revision`, `currency?` (CR.1), `model: SummaryModel` | after every summary read |
 | `view_data` | `view`, `revision`, `currency?` (the version the model was read at, CR.1), `model` (the model of §9 for that view), `resultId?` | |
 | `load_error` | `view` (or `null` for the summary), `message`, `detail` | |
@@ -805,6 +833,20 @@ The v0 rules still apply: CSP, nonce, no command URIs, no local resource roots, 
 
 No remote font is loaded: the mockup's IBM Plex is replaced by the VS Code fonts.
 
+**WP-A5 additions.**
+
+| Token | VS Code variable | Use |
+|---|---|---|
+| `--ht-st-ok`, `--ht-st-needs`, `--ht-st-sealed`, `--ht-st-error`, `--ht-st-stale` | `--vscode-charts-green`, `-blue`, `-purple`, `-red`, `-yellow` | the one status vocabulary (ok, needs you, sealed, error, stale): a border and a tint, never the text colour |
+| `--ht-chart-model`, `--ht-chart-baseline`, `--ht-chart-text` | `--vscode-charts-blue`, `--vscode-charts-lines`, `--vscode-charts-foreground` | the model in the accent, the baseline (or any reference) in grey, chart text |
+| `--ht-button-border`, `--ht-button2-border`, `--ht-card-border` | `--vscode-button-border`, then `--vscode-contrastBorder` | every button and card has a visible border in High Contrast |
+
+- A disabled control is not marked by opacity alone: no fill, a dashed border, muted text.
+- `@media (forced-colors: active)`: buttons, tags, cards, steps keep a border in system colours; chart marks use `CanvasText` and `GrayText`; the current step and the selected tab use `Highlight`.
+- Charts are drawn at their viewBox size (one SVG unit per CSS pixel): chart text is 11 px and never scaled up; a narrow panel scrolls a chart sideways. Intervals sit on a drawn axis, with 0 marked and labelled when the chart compares to 0.
+- Below 600 px every table becomes a list of cards (each cell labelled by its column); the tab bar scrolls sideways instead of wrapping; the page never scrolls sideways at 420 px.
+- A11Y-3. `test_webview_themes.py` runs the views on the captured payloads under the Light+, Dark+ and High Contrast variable sets (`test/themes.py`) at 900 and 420 px: chart text ≤ body text + 2 px; primary buttons have a visible border in High Contrast and under forced colours; no sideways scroll at 420 px; no `agent` text visible in any tab.
+
 - A11Y-1. axe-core is **not** added, because it would be a dependency. Instead, a Playwright test asserts that every interactive element has an accessible name, every `img`-like SVG has `role="img"` and a name, there is no positive `tabindex`, and focus is visible (outline present) for each control.
 - A11Y-2. Computed contrast of text tokens against `--ht-bg` is at least 4.5:1 in both fallback themes. This is tested by computing WCAG contrast in the test.
 
@@ -831,6 +873,15 @@ All panel-owned strings live in `media/copy.js` (webview) and `lib/refusals.js` 
 - they are plain sentences, with no exclamation marks;
 - they name the engine's terms (proposal, decision, result, revision);
 - they say "nothing was recorded" after any refusal or cancelled action.
+
+### 15.1 Two-layer copy (WP-A5)
+
+This replaces the "verbatim" rule for engine texts shown as content (the refusals of INV-8 keep theirs).
+
+1. **Layer 1, primary content**: the panel's own sentences, in `media/copy/*.js` (the junior-facing table is `media/copy/junior.js`), keyed by the engine's stable identifiers: `next_action.kind`, decision ids, `not_yet_defensible` ids, digest kinds, artefact names and statuses, activity and slot names. They are written for the junior: second person, plain business words, the statistical term first and then its use in the case, no command, flag, id, or field name. They follow the rules of §15 (no digit outside placeholders filled from engine values, no decision-rule vocabulary in a regression study).
+2. **Engine junior texts** (`audience: junior`, or the `junior_*` variants of CLI-CONTRACT §3.3) may be shown as primary content as they are.
+3. **Layer 2, engine text**: an `audience: agent` text is shown only inside a "Details" disclosure or a hover, labelled when it is an instruction to the assistant. Raw identifiers and recorded tokens are layer 2 as well.
+4. A text without an audience (an engine before v0.2a) is shown as before.
 
 ## 16. Stable test hooks
 

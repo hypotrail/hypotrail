@@ -1,4 +1,4 @@
-"""Browser gates of WP-A5 (scope S, simulated browser): the panel under the variable sets
+"""Browser gates of WP-A5, INV-16 and A11Y-3 (scope S, simulated browser): the panel under the variable sets
 of VS Code's Light+, Dark+ and High Contrast themes (``themes.py``), at 900 and 420 px,
 on the **captured** payloads of the real engine (``test/fixtures/captured``), not only the
 hand-written fixtures.
