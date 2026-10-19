@@ -14,8 +14,9 @@ revision, and it is not:
   unless it is an explicit first-person endorsement ("je confirme", "I agree",
   :data:`ENDORSEMENT`).
 
-Unlike v0.1, the guided mode asks for no word shared with the proposal: an explicit
-endorsement bound to the proposal is the junior's decision. The recorded basis says which
+Then the reply must hold an explicit endorsement expression (:data:`ENDORSEMENT`) or
+repeat content of the proposal (:func:`restates`); otherwise ``unrelated_reply``: a bare
+agreement word followed by unrelated content ("yes, I like pizza") is never a decision. The recorded basis says which
 kind of reply it was: ``restated`` when the reply repeats content of the proposal's value,
 restatement or labels (:func:`restates`), else ``endorsed``.
 
@@ -49,11 +50,13 @@ WORDS_CONTRADICT_VALUE = 'words_contradict_value'
 # ("oui je confirme cela", "I agree", "je suis d'accord", "je valide").
 ENDORSEMENT = re.compile(r"""
     \b(?:i|we)\s+(?:do\s+|really\s+|fully\s+|hereby\s+)?
-        (?:confirm|agree|approve|validate|accept|endorse)\b
+        (?:confirm|agree|approve|validate|accept|endorse|adopt)\b
   | \bje\s+(?:le\s+|la\s+|les\s+)?(?:confirme|valide|approuve|accepte|adopte)\b
   | \bj'?\s*(?:approuve|accepte|adopte)\b
   | \bje\s+suis\s+d'?\s*accord\b
   | \b(?:nous|on)\s+(?:le\s+|la\s+)?(?:confirm|valid)\w*\b
+  | \bd'?\s*accord\s+pour\s+moi\b | \bca\s+me\s+va\b | \bc'?\s*est\s+bon\s+pour\s+moi\b
+  | \bagreed\b | \bthat\s+works\s+for\s+me\b
 """, re.IGNORECASE | re.VERBOSE)
 # Words of an endorsement, and intensifiers: they are not a reason and do not restate.
 ENDORSEMENT_TOKENS = frozenset("""

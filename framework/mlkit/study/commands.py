@@ -1018,6 +1018,14 @@ def _confirm(ctx: Context) -> Handler:
         if delegated:
             basis_recorded = st.DELEGATED_DEFAULT
         else:
+            # Guided rule (ADR 0005, integrator fix): an explicit endorsement expression, or
+            # a reply that repeats the proposal; "yes, I like pizza" is never a decision.
+            if not cf.is_endorsement(words) and not cf.restates(
+                    words, value=value, texts=(proposal['restatement'],
+                                               *(proposal.get('labels') or {}).values())):
+                raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
+                                 proposal_id=pid, user_words=words,
+                                 restatement=proposal['restatement'])
             if cf.needs_reason(state, decision_id) and not cf.has_reason(words):
                 raise CommandRefused(
                     'reason_required',

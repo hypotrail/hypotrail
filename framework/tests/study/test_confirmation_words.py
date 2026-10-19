@@ -70,17 +70,13 @@ def test_a_content_free_reply_never_confirms(flow, words):
 
 @pytest.mark.parametrize('words', ('yes, I like pizza', 'sounds great, ship it tomorrow',
                                    'oui, très clair'))
-def test_a_reply_sharing_no_word_is_an_endorsement_in_guided_mode(flow, words):
-    """ADR 0005 (owner remark R1) changed this expectation: until v0.2a these replies were
-    refused with ``unrelated_reply`` (no word shared with the proposal). In the guided mode a
-    non-bare, non-negative, unconditional reply bound to the single open proposal confirms
-    it, recorded as ``endorsed`` (not ``restated``). The token-overlap classifier itself is
-    unchanged (``reply_problem`` with a value, used to resolve a hold, and kept for the
-    training mode of v0.2b)."""
+def test_a_reply_unrelated_to_the_proposal_never_confirms(flow, words):
+    """Kept in the guided mode (ADR 0005): a bare agreement word followed by content
+    unrelated to the proposal is no decision; only an explicit endorsement expression or a
+    reply that repeats the proposal confirms."""
     pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
-    done = _confirm(flow, pid, words)
-    assert done['result']['basis'] == 'endorsed', words
-    assert cmd.reply_problem(words, value=PT, restatement=PT_RESTATEMENT) == 'unrelated_reply'
+    out = _confirm(flow, pid, words, expect=2)
+    assert out['error']['details']['reason'] == 'unrelated_reply', words
 
 
 @pytest.mark.parametrize('words', ('Yes, use prediction before the call',

@@ -26,7 +26,9 @@ The owner validated three modes: guided (default), training, and express. The en
    - It is not conditional (`conditional_reply`). This covers "unless", "sauf si", "only if", "à condition", and hesitations such as "réfléchir" or "let me think". It also covers "but", "mais", "sauf", or "except" right after the endorsement, as in "oui mais", "d'accord sauf", or "yes but".
    - It is not bare (`bare_acknowledgement`). An explicit first-person endorsement is not bare: "je confirme", "I agree", "je suis d'accord", "je valide".
 
-   No word needs to be shared with the proposal. "oui je confirme cela" confirms; "ok" and "oui" do not; "oui mais je veux réfléchir" does not.
+   - It holds an explicit endorsement expression ("je confirme", "je valide", "je suis d'accord", "d'accord pour moi", "ça me va", "c'est bon pour moi", "I confirm", "I agree", "agreed", "that works for me"), or it repeats a word or a number of the value, the restatement, or a label. Otherwise it is `unrelated_reply`: a bare agreement word followed by unrelated content ("yes, I like pizza") never becomes a decision (integrator decision on WP-A2).
+
+   "oui je confirme cela" confirms; "ok" and "oui" do not; "oui mais je veux réfléchir" does not.
 
 3. **Reason for the trade-offs.** In the junior's own words, the choice of the third pause and the conclusion need one reason. The choice is `policy` (binary) or `model_choice` (regression). A reason is a clause beyond the endorsement: a connector ("parce que", "car", "because", "since", "puisque", "vu que", "given") or any content word that is not an endorsement word or an intensifier. Otherwise the refusal is `reason_required`, a new error code. Delegations are unchanged (D1, R1 scope) and need no reason: the restatement states the recommended default.
 

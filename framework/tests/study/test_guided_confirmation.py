@@ -107,6 +107,23 @@ def test_endorsed_and_restated_bases(flow, words, basis):
     assert _confirm(flow, pid, words)['result']['basis'] == basis, words
 
 
+@pytest.mark.parametrize('words', ("d'accord pour moi", 'ça me va', "c'est bon pour moi",
+                                   'agreed', 'that works for me', 'I confirm'))
+def test_agreement_phrases_are_endorsements(flow, words):
+    pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
+    assert _confirm(flow, pid, words)['result']['basis'] == st.ENDORSED, words
+
+
+@pytest.mark.parametrize('words', ('yes, I like pizza', 'oui, très clair', 'ok, ship it tomorrow',
+                                   'sure, the weather is nice'))
+def test_a_bare_agreement_word_with_unrelated_content_is_refused(flow, words):
+    """Integrator fix: an off-topic reply never becomes a decision (``unrelated_reply``)."""
+    pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
+    out = _confirm(flow, pid, words, expect=2)
+    assert out['error']['details']['reason'] == 'unrelated_reply', words
+    assert flow.state()['decisions']['prediction_time']['status'] == 'proposed'
+
+
 def test_the_proposal_flag_binds_the_reply(flow):
     pid = _propose(flow, 'prediction_time', PT, PT_RESTATEMENT)
     out = flow.call('decide', 'confirm', '--proposal', pid, '--user-words', OWNER_PT,
@@ -173,7 +190,7 @@ def test_the_policy_needs_a_reason(pause3, words):
 
 @pytest.mark.parametrize('words', ('je confirme parce que le centre a cette capacité',
                                    'I agree because the desk handles twenty calls',
-                                   'oui, le service ne peut pas en appeler davantage'))
+                                   'oui, vingt appels car le service ne peut pas en faire davantage'))
 def test_a_reason_confirms_the_policy(pause3, words):
     pid = _propose(pause3, 'policy', 'capacity:20', 'You call the 20 highest-scored members.')
     assert _confirm(pause3, pid, words)['result']['status'] == 'confirmed', words

@@ -111,7 +111,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      hesitation ("no", "wait", "not yet", "not that", "pas d'accord", "I don't agree":
      `negative_reply`); a question (`question_reply`); and a conditional agreement ("oui
      mais je veux réfléchir", "d'accord sauf ...", "yes but", "unless":
-     `conditional_reply`). The engine records an endorsement as `endorsed` and a reply
+     `conditional_reply`); and a reply with no endorsement expression that shares no
+     word or number with the proposal (`unrelated_reply`, "yes, I like pizza"). The engine records an endorsement as `endorsed` and a reply
      that repeats the proposal as `restated`.
 <!-- hypotrail:task binary -->
      **The policy and the conclusion need one reason** in the junior's words ("because
