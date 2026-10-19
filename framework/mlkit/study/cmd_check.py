@@ -10,9 +10,11 @@ code                       severity  meaning
 =========================  ========  ==============================================
 ``number_outside_result``  error     a number in a text node of the HTML report or of
                                      a notebook Markdown cell that is not a cited
-                                     ``<data data-result-id>`` value (revisions, step
+                                     ``<data data-result-id>`` value or SVG ``<text
+                                     data-result-id>`` label (revisions, step
                                      ordinals and other recorded literals, marked
-                                     ``data-literal``, are exempt)
+                                     ``data-literal``, are exempt; an axis tick,
+                                     ``data-literal="axis"``, only inside ``<svg>``)
 ``unknown_result_id``      error     a cited result id that the registry does not hold
 ``value_mismatch``         error     a cited value or its displayed text differs from
                                      the registry value at that path
@@ -679,7 +681,9 @@ class _Report(HTMLParser):
         if tag in VOID_TAGS:
             return
         self.stack.append((tag, attrs))
-        if tag == 'data':
+        # A cited number is a ``<data>`` element, or (WP-A6) an SVG ``<text>`` value label
+        # carrying the same attributes.
+        if tag == 'data' or 'data-result-id' in attrs:
             anchor, line = self._place()
             self.data.append({'attrs': attrs, 'text': '', 'anchor': anchor, 'line': line})
 
@@ -695,8 +699,11 @@ class _Report(HTMLParser):
         tags = [t for t, _ in self.stack]
         if any(t in SKIP_TAGS for t in tags):
             return
-        in_data = any(t == 'data' and 'data-result-id' in a for t, a in self.stack)
-        literal = any('data-literal' in a for _, a in self.stack)
+        in_data = any('data-result-id' in a for _, a in self.stack)
+        # An axis tick (``data-literal="axis"``) is exempt only inside an inline SVG chart.
+        in_svg = any(t == 'svg' for t in tags)
+        literal = any('data-literal' in a and (a['data-literal'] != 'axis' or in_svg)
+                      for _, a in self.stack)
         if in_data and self.data:
             self.data[-1]['text'] += data
             self._block.append('\x00num')
@@ -715,7 +722,7 @@ def _result_lookup(view: Mapping, study: read.Study) -> dict:
 
 
 def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str | None,
-                 shown: str, where: str) -> list[dict]:
+                 shown: str, where: str, scale: str | None = None) -> list[dict]:
     by_id = _result_lookup(view, study)
     if rid not in by_id:
         try:
@@ -737,9 +744,12 @@ def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str
     toks = cite.parse_numbers(shown)
     try:
         attr_ok = raw is not None and float(raw) == float(value)
+        factor = 1.0 if scale is None else float(scale)
     except (TypeError, ValueError):
+        attr_ok, factor = False, 1.0
+    if factor not in (1.0, 100.0):          # only the points format scales (cite.pts*)
         attr_ok = False
-    if not attr_ok or len(toks) != 1 or not cite.shown_matches(toks[0], value):
+    if not attr_ok or len(toks) != 1 or not cite.shown_matches(toks[0], value, factor):
         return [finding('value_mismatch', where,
                         f'The cited value {shown!r} differs from the registry value at {path!r}.',
                         result_id=rid, path=path, shown=shown, attribute=raw, registry=value)]
@@ -768,8 +778,9 @@ def check_html(view: Mapping, study: read.Study, page: str, where: str) -> list[
         at = location(where, d['anchor'], d['line'])
         findings += [{**f, 'location': at}
                      for f in _check_cited(view, study, a['data-result-id'],
-                                           a.get('data-path', ''), a.get('value'), d['text'],
-                                           where)]
+                                           a.get('data-path', ''),
+                                           a.get('value', a.get('data-value')), d['text'],
+                                           where, a.get('data-scale'))]
     for block, (anchor, line) in zip(parser.blocks, parser.block_places):
         findings += wording(block, where, lambda _offset, a=anchor, n=line: location(where, a, n))
     return findings

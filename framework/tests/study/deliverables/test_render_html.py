@@ -50,14 +50,29 @@ def test_report_is_deterministic_and_cites_only_current_results(full_view):
 def test_every_cited_value_equals_the_registry_value(full_view):
     page, _ = render_html.build(full_view)
     by_id = {r['result_id']: r for r in full_view['results'].values()}
+    # WP-A6: a value in percentage points carries data-scale="100" (cite.pts*).
+    seen = 0
     for m in re.finditer(r'<data value="([^"]+)" data-result-id="([0-9a-f]+)" data-path="([^"]+)"'
-                         r'[^>]*>([^<]+)</data>', page):
-        raw, rid, path, shown = m.groups()
+                         r'( data-scale="100")?[^>]*>([^<]+)</data>', page):
+        raw, rid, path, scaled, shown = m.groups()
         item = by_id[rid]
         value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
                              n_rows=item['n_rows'])
         assert float(raw) == float(value)
-        assert cite.shown_matches(cite.parse_numbers(shown)[0], value), (shown, value)
+        assert cite.shown_matches(cite.parse_numbers(shown)[0], value, 100 if scaled else 1), \
+            (shown, value)
+        seen += 1
+    # and every chart value label (an SVG <text> with the same attributes)
+    for m in re.finditer(r'<text [^>]*data-value="([^"]+)" data-result-id="([0-9a-f]+)" '
+                         r'data-path="([^"]+)"[^>]*>(.*?)</text>', page):
+        raw, rid, path, inner = m.groups()
+        item = by_id[rid]
+        value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
+                             n_rows=item['n_rows'])
+        [tok] = cite.parse_numbers(re.sub(r'<[^>]+>', '', inner))
+        assert float(raw) == float(value) and cite.shown_matches(tok, value), (inner, value)
+        seen += 1
+    assert seen > 50
 
 
 def test_no_fake_decision_controls_and_offline(full_view):
@@ -186,6 +201,20 @@ def test_paths_formats_and_number_parsing():
         (3164.0, 0, False), (11.5, 1, True), (0.115, 3, False), (1357.0, 0, False)]
     assert cite.shown_matches(cite.parse_numbers('11.5%')[0], 0.11534)
     assert not cite.shown_matches(cite.parse_numbers('11.6%')[0], 0.11534)
+
+
+def test_thousands_with_decimals_parse_as_one_number():
+    # WP-A6: ``fmt_number`` writes a value of 1,000 or more as "3,842.8" (auto format);
+    # the parser used to read "3,842" and drop ".8", so ``check`` reported value_mismatch
+    # for every cited number of 1,000 or more with decimals (Auto MPG weight).
+    for value in (3842.75, 1965.7, -1234.56, 1000.04, 123456.7):
+        shown = cite.fmt_number(value, 'auto')
+        [tok] = cite.parse_numbers(shown)
+        assert tok.decimals == 1 and cite.shown_matches(tok, value), (shown, tok)
+    [tok] = cite.parse_numbers('a weight of 3,842.75 lb.')
+    assert (tok.value, tok.decimals, tok.text) == (3842.75, 2, '3,842.75')
+    assert [t.value for t in cite.parse_numbers('1,000.')] == [1000.0]
+    assert not cite.shown_matches(cite.parse_numbers('3,842.8')[0], 3842.0)
 
 
 def test_teaching_texts_are_data_without_digits():

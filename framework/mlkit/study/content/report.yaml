@@ -7,6 +7,10 @@ authority: This page does not update itself. The study state, read with hypotrai
 no_controls: There are no decision controls on this page. Decisions are made in the chat or with hypotrail decide, in your own words.
 theme_toggle: Switch theme
 sections:
+  verdict: Verdict
+  objective: The objective
+  data: The data
+  charts: What the results show
   revision: Revision and surfaces
   plan: Where the study stands
   decisions: Decisions
@@ -116,10 +120,79 @@ notebook:
   read_only: Read-only. Write your notes in workbench.py; edits to this file are preserved as a copy and then regenerated.
   source_label: Activity source (displayed, not executed)
   source_changed: The module changed after this result was computed; the code shown is not what ran.
+# v0.2a (WP-A6): the verdict card, the data section, the charts, decision chips.
+verdict_card:
+  not_concluded: Not concluded yet.
+  proposed: A conclusion is proposed and waits for your own words.
+  criterion: Success criterion
+  criterion_none: No success criterion fixed yet.
+  rule: Adopted rule
+  rule_none: No rule adopted yet.
+  figures: Key figures
+  figures_none: No current evaluation to quote yet.
+  limits: Main limits
+  all_limits: All the limits of this study
+  status:
+    met: Met
+    uncertain: Uncertain, the interval includes zero
+    not_met: Not met
+    not_assessed: Not assessed yet
+data_section:
+  unit: One row
+  development: Development rows
+  columns: Columns
+  final_test_sealed: rows are set aside as the final test and stay sealed; nothing in this report reads them.
+  final_test_absent: This study has no final test. It was created before the final test existed, so every row is a development row.
+  target: Target
+  dictionary: Columns by group
+  rows: The first development rows, target first
+  rows_note: Fixed rows (the first by position in the file), shown to make the columns concrete. They are development rows only.
+  rows_missing: The example rows could not be read.
+  ungrouped: Other columns
+  missing: Missing in development rows
+  head:
+    name: Column
+    meaning: Meaning
+    type: Type and unit
+# Titles of the result slots that activities.yaml does not describe (WP-A4 slots).
+slot_labels:
+  eda.quality: Quality of the development rows (no target read)
+  eda.single_feature_signal: Signal of each feature alone on training rows
+roles:
+  target: The target
+  time: Time column, orders the split
+  group_id: Group identifier, not a model input
+  id: Row identifier, not a model input
+charts_intro: Each chart answers one question and is drawn from registered results only. Training rows are explored; validation rows only compare and choose.
+charts_none: No result to chart yet.
+basis:
+  explicit: Your own words
+  restated: Restated in your words
+  endorsed: Endorsed in your words
+  delegated_default: Delegated to the assistant
+recorded_at: Recorded at revision
+looks:
+  summary: Looks at the outcome on training rows
+  note: Each exploration that read the target on training rows counts as one look. The more looks, the more a pattern found among them can be chance.
+  count: looks so far
+model_names:
+  fit.logistic: Model (logistic regression)
+  fit.baseline: Baseline (no ranking)
+  fit.linear: Linear model
+rows_label:
+  train: training rows
+  validation: validation rows
+  development: development rows
+  all: all rows
 # Regression study (M3): labels merged over the ones above (mlkit.study.texts.report).
 regression:
   sections:
     policy: Model comparison
+  model_names:
+    fit.baseline: Mean baseline
+  verdict_card:
+    rule: Chosen model
+    rule_none: No model chosen yet.
   verdict:
     adopt_model: Adopt the linear model
     keep_baseline: Keep the mean baseline

@@ -22,8 +22,14 @@ Free-text templates (content files and rendered explanations)::
     {{slot:<slot>:<path>|<fmt>}}     the current result of a slot (eda.rate_by:<column> too)
     {{fact:<fact id>|<fallback>}}    a case statement, quoted as recorded
 
-Formats: ``int``, ``pct0``-``pct2`` (a fraction shown as a percentage), ``f1``-``f4``,
-``auto``. :func:`parse_numbers` reads numbers back from text for ``check``.
+Formats: ``int``, ``pct0``-``pct2`` (a fraction shown as a percentage), ``pts0``-``pts2``
+(a difference of fractions shown in percentage points), ``f1``-``f4``, ``auto``.
+
+Charts (WP-A6): a value label inside an inline SVG is a ``<text>`` element with the same
+``data-result-id``, ``data-path`` and ``data-value`` attributes (:meth:`Citer.svg_num`).
+An axis tick is a drawing scale, not a result: it is a ``<text data-literal="axis">``
+element, and ``check`` accepts that exemption only inside an ``<svg>`` element.
+:func:`parse_numbers` reads numbers back from text for ``check``.
 
 Pure: no file I/O, no pandas, numpy, or scikit-learn.
 """
@@ -39,16 +45,24 @@ from typing import Any, Iterator, Mapping
 from .errors import StudyError
 
 FORMATS = ('int', 'pct0', 'pct1', 'pct2', 'f1', 'f2', 'f3', 'f4', 'auto')
+# ``pts<d>`` (WP-A6, the HTML report only; the companion mirrors :data:`FORMATS`): a
+# difference of two fractions shown in percentage points, without a percent sign ("29.5"
+# points for 0.295). The element carries ``data-scale="100"`` so ``check`` compares the
+# shown text with the registry value times 100.
+SCALED_FORMATS = {'pts0': 100, 'pts1': 100, 'pts2': 100}
+REPORT_FORMATS = FORMATS + tuple(SCALED_FORMATS)
 META_PATHS = ('@n_rows',)
 TEMPLATE = re.compile(r'\{\{(r|slot|fact):([^{}|]+?)(?:\|([^{}]*))?\}\}')
 _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 
-# A number in prose: thousands with comma groups ("3,164"), a decimal with a dot or a
+# A number in prose: thousands with comma groups ("3,164", and with decimals "3,842.8", as
+# :func:`fmt_number` writes a value of 1,000 or more), a decimal with a dot or a
 # comma ("0.115", "0,115"), an integer; an optional percent sign. A number glued to a
 # letter or an underscore ("pct1", "x_2", "3f9a") is part of a word, not a number. A minus
 # sign glued to the digits makes the number negative ("-1", a sentinel); "10-18" is two numbers.
 # The minus may be the hyphen-minus or the Unicode minus sign U+2212 ("−0.99").
-NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+|\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
+NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)'
+                    r'(?![\w])(\s?%)?')
 
 
 def untraceable(message: str, **details) -> StudyError:
@@ -127,12 +141,15 @@ def leaves(values: Any, prefix: tuple = ()) -> Iterator[tuple[tuple, float]]:
 # --- formatting -------------------------------------------------------------------------
 
 def fmt_number(value: float, fmt: str = 'auto') -> str:
-    if fmt not in FORMATS:
-        raise untraceable(f'Unknown number format {fmt!r}.', fmt=fmt, formats=list(FORMATS))
+    if fmt not in REPORT_FORMATS:
+        raise untraceable(f'Unknown number format {fmt!r}.', fmt=fmt,
+                          formats=list(REPORT_FORMATS))
     if fmt == 'int':
         return f'{round(value):,}'
     if fmt.startswith('pct'):
         return f'{100 * value:.{int(fmt[3:])}f}%'
+    if fmt.startswith('pts'):
+        return f'{100 * value:.{int(fmt[3:])}f}'
     if fmt.startswith('f'):
         return f'{value:.{int(fmt[1:])}f}'
     if float(value).is_integer():
@@ -160,8 +177,10 @@ def parse_numbers(text: str) -> list[Token]:
     out = []
     for m in NUMBER.finditer(text):
         sign, body, pct = (-1.0 if m.group(1) else 1.0), m.group(2), bool(m.group(3))
-        if re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+", body):
-            value, decimals = float(body.replace(',', '')), 0
+        grouped = re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+(?:\.(\d+))?", body)
+        if grouped:
+            value = float(body.replace(',', ''))
+            decimals = len(grouped.group(1) or '')
         else:
             norm = body.replace(',', '.')
             value = float(norm)
@@ -171,10 +190,11 @@ def parse_numbers(text: str) -> list[Token]:
     return out
 
 
-def shown_matches(token: Token, value: float) -> bool:
-    """True when ``token`` is ``value`` written at the token's precision."""
+def shown_matches(token: Token, value: float, scale: float = 1) -> bool:
+    """True when ``token`` is ``value`` (times ``scale``) written at the token's precision."""
     if not is_number(value):
         return False
+    value = value * scale
     scaled = 100 * value if token.percent else value
     return abs(round(scaled, token.decimals) - token.value) < 10 ** -(token.decimals + 6) \
         or abs(scaled - token.value) <= 0.5 * 10 ** -token.decimals + 1e-12
@@ -250,9 +270,31 @@ class Citer:
         value = self.lookup(rid, path)
         text = fmt_number(value, fmt)
         self.cited.append({'result_id': rid, 'path': path, 'value': value, 'text': text})
+        scale = (f' data-scale="{SCALED_FORMATS[fmt]}"' if fmt in SCALED_FORMATS else '')
         return (f'<data value="{html.escape(json.dumps(value))}" '
-                f'data-result-id="{html.escape(rid)}" data-path="{html.escape(path)}" '
+                f'data-result-id="{html.escape(rid)}" data-path="{html.escape(path)}"{scale} '
                 f'title="result {html.escape(rid)} · {html.escape(path)}">{html.escape(text)}</data>')
+
+    def value(self, rid: str, path: str) -> float:
+        """The number at ``path`` (for drawing a mark; a shown number goes through
+        :meth:`num` or :meth:`svg_num`)."""
+        return self.lookup(rid, path)
+
+    def svg_num(self, rid: str, path: str, fmt: str = 'auto', *, x: float, y: float,
+                anchor: str = 'start', cls: str = 'val', prefix: str = '',
+                suffix: str = '') -> str:
+        """A cited value label of an inline SVG chart: a ``<text>`` element with
+        ``data-result-id``, ``data-path`` and ``data-value``. ``prefix`` and ``suffix`` are
+        words without digits."""
+        value = self.lookup(rid, path)
+        text = fmt_number(value, fmt)
+        self.cited.append({'result_id': rid, 'path': path, 'value': value, 'text': text})
+        scale = (f' data-scale="{SCALED_FORMATS[fmt]}"' if fmt in SCALED_FORMATS else '')
+        return (f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" class="{cls}" '
+                f'data-value="{html.escape(json.dumps(value))}" '
+                f'data-result-id="{html.escape(rid)}" data-path="{html.escape(path)}"{scale}>'
+                f'{html.escape(prefix)}<tspan>{html.escape(text)}</tspan>'
+                f'{html.escape(suffix)}</text>')
 
     def fact(self, fact_id: str, fallback: str) -> str:
         value = self.facts.get(fact_id)
