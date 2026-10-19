@@ -231,3 +231,77 @@ def test_an_auto_mpg_pack_holds_no_rule_vocabulary(tmp_path):
         assert found == [], (name, found)
     assert 'the linear model' in (out / 'handoff.md').read_text()
     assert check_text(flow.study, out / 'handoff.md')['clean']
+
+
+# --- review fixes: no absolute path in handoff.json; the revision the client showed --------
+
+def _strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            yield from _strings(k)
+            yield from _strings(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _strings(v)
+
+
+def test_handoff_json_holds_no_absolute_path(study, rendered, tmp_path):
+    out = tmp_path / 'pack'
+    export(study, '--out', out, code=0)
+    raw = (out / 'handoff.json').read_text(encoding='utf-8')
+    handoff = json.loads(raw)
+    assert handoff['study'] == cmd_export.STUDY == '<study>'
+    absolute = [s for s in _strings(handoff) if s.startswith('/') or re.match(r'[A-Za-z]:\\', s)]
+    assert absolute == []
+    for folder in (study, rendered.case_dir, tmp_path):
+        assert str(folder) not in raw, folder
+    state = read.open(study).state
+    case_dir = fk.Path(state['case']['path']).parent             # outside the study folder
+    assert handoff['case']['path'] == '<case>/case.yaml'
+    for label in ('case', 'dataset'):
+        path = handoff[label]['path']
+        assert path.startswith('<case>/'), path
+        assert (case_dir / path[len('<case>/'):]).resolve() == \
+            fk.Path(state[label]['path']).resolve()
+    md = (out / 'handoff.md').read_text(encoding='utf-8')
+    assert str(rendered.case_dir) not in md and str(tmp_path) not in md
+
+
+def test_study_path_rules(tmp_path):
+    study, case = tmp_path / 'study', tmp_path / 'cases' / 'bank'
+    assert cmd_export.study_path(study, str(study / 'case' / 'case.yaml'), case) == \
+        '<study>/case/case.yaml'
+    assert cmd_export.study_path(study, str(study)) == '<study>'
+    assert cmd_export.study_path(study, str(case / 'data' / 'bank.csv'), case) == \
+        '<case>/data/bank.csv'
+    assert cmd_export.study_path(study, str(tmp_path / 'elsewhere' / 'x.csv'), case) == \
+        '<external>/x.csv'
+    assert cmd_export.study_path(study, str(study.parent / 'study-2' / 'a')) == \
+        '<external>/a'                                          # a sibling is not inside
+    assert cmd_export.study_path(study, 'data/bank.csv') == 'data/bank.csv'
+    assert cmd_export.study_path(study, None) is None
+
+
+def test_the_expected_revision_names_the_folder_or_refuses(study):
+    revision = read.open(study).revision
+    before = cc.study_tree_digest(study)
+    code, stale = export(study, '--expected-revision', revision - 1, code=2)
+    assert stale['error']['code'] == 'stale_revision'
+    details = stale['error']['details']
+    assert details['expected_revision'] == revision - 1
+    assert details['current_revision'] == revision
+    assert [r['revision'] for r in details['changes_since']] == [revision]
+    code, ahead = export(study, '--expected-revision', revision + 5, code=2)
+    assert ahead['error']['code'] == 'stale_revision'
+    assert ahead['error']['details']['changes_since'] == []
+    code, bad = export(study, '--expected-revision', -1, code=2)
+    assert bad['error']['code'] == 'invalid_arguments'
+    assert cc.study_tree_digest(study) == before                 # nothing was written
+    code, p = export(study, '--expected-revision', revision, code=0)
+    assert p['revision'] == revision
+    assert p['out'] == str(study / 'handoff' / f'revision-{revision}')
+    handoff = json.loads((study / 'handoff' / f'revision-{revision}' / 'handoff.json')
+                         .read_text(encoding='utf-8'))
+    assert handoff['revision'] == revision

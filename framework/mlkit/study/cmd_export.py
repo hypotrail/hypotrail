@@ -1,6 +1,6 @@
 """``hypotrail export handoff``: a reviewer's pack written under ``--out`` only.
 
-    hypotrail export handoff --study DIR [--out DIR] [--json]
+    hypotrail export handoff --study DIR [--out DIR] [--expected-revision REV] [--json]
 
 CLI-CONTRACT-COMPANION §7 (C7), payloads ``hypotrail.export/1`` (stdout) and
 ``hypotrail.handoff/1`` (``handoff.json``).
@@ -10,7 +10,10 @@ artefact, manifest, event, or lock; it does not render; it reads the view the wa
 ``status`` does. It writes files only under ``--out`` (default
 ``<study>/handoff/revision-<n>/``), which must be a new or empty folder outside
 ``.hypotrail/``, ``reports/``, and ``notebooks/``, and never overwrites a file. It reads no
-clock: one study content and one ``--out`` give the same bytes.
+clock: one study content and one ``--out`` give the same bytes. The default folder is named
+after the revision the engine read, which the payload reports as ``revision``; with
+``--expected-revision`` (review fix), a study at another revision is refused with
+``stale_revision`` and nothing is written, so a client exports the revision it showed.
 
 Files: ``handoff.md`` (a human summary; ``hypotrail check --text handoff.md`` reports it
 clean, and the export refuses with ``untraceable_number``, writing nothing, when it would
@@ -55,6 +58,9 @@ DEFAULT_PARENT = 'handoff'
 # ``--out`` may not be inside these study folders (the engine's own files and deliverables).
 FORBIDDEN = ('.hypotrail', 'reports', 'notebooks')
 STUDY = '<study>'
+# handoff.json anchors of a path outside the study folder (review fix: no absolute path).
+CASE = '<case>'
+EXTERNAL = '<external>'
 RID = 8
 PURPOSE_LABELS = {'structural_inspection': 'Structural inspection',
                   'train_eda': 'Exploration of training rows', 'train_fit': 'Model fitting',
@@ -73,6 +79,8 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('kind', choices=KINDS)
     parser.add_argument('--out', default=None, metavar='DIR',
                         help='a new or empty folder (default <study>/handoff/revision-<n>/)')
+    parser.add_argument('--expected-revision', default=None, type=int, metavar='REV',
+                        help='refuse with stale_revision unless the study is at REV')
 
 
 # --- the target folder -----------------------------------------------------------------
@@ -349,6 +357,38 @@ def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _under(path: str, folder) -> str | None:
+    """The POSIX path of ``path`` relative to ``folder`` when it is inside it, else None."""
+    real, base = Path(os.path.realpath(path)), Path(os.path.realpath(folder))
+    if real == base:
+        return ''
+    return real.relative_to(base).as_posix() if base in real.parents else None
+
+
+def study_path(study_dir: Path, path, case_dir=None) -> str | None:
+    """``path`` as the pack writes it (review fix): never an absolute path, and nothing of
+    the folders around the study. Inside the study folder, ``<study>/<relative path>``;
+    else inside the case's folder ``case_dir``, ``<case>/<relative path>``; else
+    ``<external>/<file name>``. A relative path is kept as it is."""
+    if not isinstance(path, str):
+        return path
+    if not os.path.isabs(path):
+        return Path(path).as_posix()
+    for anchor, folder in ((STUDY, study_dir), (CASE, case_dir)):
+        rel = _under(path, folder) if folder is not None else None
+        if rel is not None:
+            return f'{anchor}/{rel}' if rel else anchor
+    return f'{EXTERNAL}/{Path(path).name}'
+
+
+def _relative(study_dir: Path, record: Mapping, case_dir) -> dict:
+    """A copy of a ``case`` or ``dataset`` record whose ``path`` is :func:`study_path`."""
+    out = dict(record)
+    if 'path' in out:
+        out['path'] = study_path(study_dir, out['path'], case_dir)
+    return out
+
+
 def build(study_dir) -> tuple[read.Study, dict, dict[str, bytes], bool]:
     """``(study, view, {file: bytes}, included_report)`` of the pack, built in memory.
 
@@ -380,9 +420,13 @@ def build(study_dir) -> tuple[read.Study, dict, dict[str, bytes], bool]:
                          'The handoff summary would hold a number that cannot be traced to a '
                          'current result; nothing was written.',
                          details={'findings': errors})
+    case_path = view['case'].get('path')
+    case_dir = os.path.dirname(case_path) if isinstance(case_path, str) \
+        and os.path.isabs(case_path) else None
     handoff = {
-        'schema': HANDOFF_SCHEMA, 'study': str(study.study_dir), 'revision': view['revision'],
-        'task': task, 'case': dict(view['case']), 'dataset': dict(view['dataset']),
+        'schema': HANDOFF_SCHEMA, 'study': STUDY, 'revision': view['revision'],
+        'task': task, 'case': _relative(study.study_dir, view['case'], case_dir),
+        'dataset': _relative(study.study_dir, view['dataset'], case_dir),
         'goal': _goal(summary), 'decisions': decisions,
         'results_cited': [{k: c[k] for k in CITED_KEYS} for c in results_cited],
         'exposure': {'summary': exposure['summary'], 'ledger': exposure['ledger']},
@@ -402,14 +446,34 @@ def build(study_dir) -> tuple[read.Study, dict, dict[str, bytes], bool]:
     return study, view, files, included
 
 
-def export_handoff(study_dir, *, out=None) -> tuple[dict, int]:
+def _expected(study: read.Study, view: Mapping, expected_revision) -> None:
+    """``stale_revision`` (CLI-CONTRACT §7 details) unless the pack's revision is
+    ``expected_revision``; nothing is written."""
+    if expected_revision is None or expected_revision == view['revision']:
+        return
+    raise StudyError('stale_revision',
+                     f'The study is at revision {view["revision"]}, not '
+                     f'{expected_revision}: read the study again before exporting; nothing '
+                     'was written.',
+                     details={'expected_revision': expected_revision,
+                              'current_revision': view['revision'],
+                              'changes_since': study.revisions(expected_revision)
+                              if expected_revision < view['revision'] else []})
+
+
+def export_handoff(study_dir, *, out=None, expected_revision=None) -> tuple[dict, int]:
     """``(hypotrail.export/1 payload, exit code)``: 0, or 3 when the report is not
     current (the pack is written without it)."""
     if guard.read_only():
         raise StudyError('read_only', f'{guard.ENV}=1: a read-only process writes no file, so '
                                       'it cannot export a handoff pack.',
                          details={'variable': guard.ENV})
+    if expected_revision is not None and (type(expected_revision) is not int
+                                          or expected_revision < 0):
+        raise StudyError('invalid_arguments', '--expected-revision must be a revision number.',
+                         details={'field': 'expected_revision'})
     study, view, files, included = build(study_dir)
+    _expected(study, view, expected_revision)
     target = _target(study.study_dir, out, view['revision'])
     target.mkdir(parents=True, exist_ok=True)
     listed = []
@@ -428,5 +492,6 @@ def export_handoff(study_dir, *, out=None) -> tuple[dict, int]:
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
-    payload, code = export_handoff(args.study, out=args.out)
+    payload, code = export_handoff(args.study, out=args.out,
+                                   expected_revision=args.expected_revision)
     return cmd.Outcome(payload, code)

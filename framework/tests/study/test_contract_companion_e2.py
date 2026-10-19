@@ -181,6 +181,33 @@ def test_c7_export_refusals(clone, tmp_path):
     assert not (tmp_path / 'ro').exists()
 
 
+def test_c7_review_fixes_portable_pack_and_expected_revision(clone, tmp_path):
+    """Review fixes (CC §7): handoff.json holds no absolute path; ``--expected-revision``."""
+    import inspect
+
+    from mlkit.study import cmd_export
+    params = inspect.signature(cmd_export.export_handoff).parameters
+    assert list(params) == ['study_dir', 'out', 'expected_revision']
+    assert params['expected_revision'].kind.name == 'KEYWORD_ONLY'
+    doc = (fk.REPO / 'docs/specs/CLI-CONTRACT-COMPANION.md').read_text(encoding='utf-8')
+    assert '[--expected-revision REV]' in doc and '**no absolute path**' in doc
+    assert '`cmd_export.study_path`' in doc
+    revision = read.open(clone.study).revision
+    code, p = cc.run('export', 'handoff', '--out', tmp_path / 'stale', '--expected-revision',
+                     revision - 1, '--study', clone.study)
+    assert code == 2 and cc.refusal(p)[0] == 'stale_revision', p
+    assert not (tmp_path / 'stale').exists()
+    out = tmp_path / 'pack'
+    code, p = cc.run('export', 'handoff', '--out', out, '--expected-revision', revision,
+                     '--study', clone.study)
+    assert code in (0, 3) and p['revision'] == revision, p
+    handoff = json.loads((out / 'handoff.json').read_text(encoding='utf-8'))
+    assert handoff['study'] == '<study>'
+    for label in ('case', 'dataset'):
+        assert handoff[label]['path'].split('/')[0] in ('<study>', '<case>', '<external>')
+    assert str(clone.study) not in json.dumps(handoff)
+
+
 # --- C10 locations -------------------------------------------------------------------------
 
 def test_c10_check_findings_carry_a_location(clone):

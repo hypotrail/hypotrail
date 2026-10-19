@@ -26,8 +26,8 @@
    },
    {
     "path": "handoff.json",
-    "sha256": "1a49f1018941ebd3860733625b4658398cd3098761c1a6b1211d56ceb0f9e8cc",
-    "bytes": 13785
+    "sha256": "275e28a51fd143bd8463eaa85633297ce97edaf0fb12993f4da59ab8aafd091e",
+    "bytes": 13586
    },
    {
     "path": "study.html",
@@ -36,7 +36,7 @@
    },
    {
     "path": "SHA256SUMS",
-    "sha256": "3a96e9bfecf53f7af499e71bcc143d9081032a85336fc7e258f995d759f441ff",
+    "sha256": "7843cd7efc5030ac43a05b504c25ece623c7b1f060ee74985bfa959548d24e5b",
     "bytes": 233
    }
   ],

@@ -9,16 +9,16 @@
  },
  "payload": {
   "schema": "hypotrail.handoff/1",
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "<study>",
   "revision": 26,
   "task": "binary",
   "case": {
    "id": "bank-marketing",
-   "path": "/studies/cases/bank-marketing/case.yaml",
+   "path": "<case>/case.yaml",
    "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929"
   },
   "dataset": {
-   "path": "data/bank.csv",
+   "path": "<case>/data/bank.csv",
    "row_key": {
     "format": "L<line>",
     "rule": "source_line"

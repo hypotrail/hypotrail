@@ -442,7 +442,7 @@ The question texts hold no digit. A test asserts that `learn.yaml`, `glossary.ya
 ## 7. C7: `export handoff`
 
 ```text
-hypotrail export handoff --study DIR [--out DIR] [--json]
+hypotrail export handoff --study DIR [--out DIR] [--expected-revision REV] [--json]
 ```
 
 This command writes a reviewer's pack. It **never changes the study**:
@@ -453,7 +453,8 @@ This command writes a reviewer's pack. It **never changes the study**:
 
 It writes files only under `--out`.
 
-- **Default `--out`.** `<study>/handoff/revision-<n>/`, where `<n>` is the current revision, created with parents.
+- **Default `--out`.** `<study>/handoff/revision-<n>/`, where `<n>` is the revision the engine read for the pack (the payload's `revision`), created with parents.
+- **`--expected-revision REV`** (review fix, optional). When given, a study that is not at revision `REV` is refused with `stale_revision` (CLI-CONTRACT §7: `details.expected_revision`, `current_revision`, `changes_since`, the latter empty when `REV` is ahead), and nothing is written; a negative `REV` is `invalid_arguments` (`details.field` `expected_revision`). A client passes the revision it showed, so the pack, its folder name, and its content are those of what the junior saw. It is not a mutation: it takes no request id and no lock.
 - **Rules on `--out`.** It must not be inside `<study>/.hypotrail/`, `reports/`, or `notebooks/`; otherwise the command fails with `invalid_arguments`, `details.field` `out`. It must not exist, or must be an empty directory; otherwise the command fails with `export_target_exists`, a new code (`details.path`). A file is never overwritten.
 - **Read-only processes.** It is refused under `HYPOTRAIL_READ_ONLY=1` (`read_only`), because a read-only process writes no file.
 - **Determinism.** It reads no clock. Its outputs are byte-identical for one study content and one `--out`.
@@ -463,7 +464,7 @@ Files written:
 | File | Content |
 |---|---|
 | `handoff.md` | A human summary in English. Its sections are:<ul><li>the goal (the recap's `Goal`);</li><li>the decisions, each with its value, the junior's words, its basis and scope, its channel, and "words, not an authenticated signature";</li><li>the cited results, each number with `(result <first 8 characters>)`;</li><li>the exposure ledger;</li><li>the complete "not yet defensible" list;</li><li>the open items (proposals, holds, interrupted or unknown-outcome executions, stale deliverables);</li><li>how to reproduce: the exact CLI commands with `<study>` and the environment packages;</li><li>a closing statement that the pack does not authorise production use.</li></ul>Every number comes from a current, verified result or is a recorded literal. `hypotrail check --text handoff.md` must report it clean |
-| `handoff.json` | `hypotrail.handoff/1`, keys: `schema`, `study`, `revision`, `task`, `case`, `dataset`, `goal`, `decisions`, `results_cited`, `exposure`, `not_yet_defensible`, `open_items`, `deliverables`, `reproduce`, `environment`. `results_cited` holds `{result_id, activity, path, value, shown}` |
+| `handoff.json` | `hypotrail.handoff/1`, keys: `schema`, `study`, `revision`, `task`, `case`, `dataset`, `goal`, `decisions`, `results_cited`, `exposure`, `not_yet_defensible`, `open_items`, `deliverables`, `reproduce`, `environment`. `results_cited` holds `{result_id, activity, path, value, shown}`. It holds **no absolute path** (review fix), like `handoff.md`: `study` is the literal `<study>`, and an absolute `case.path` or `dataset.path` is written relative to an anchor (`cmd_export.study_path`): `<study>/<relative path>` inside the study folder, else `<case>/<relative path>` inside the folder that holds the case file (`<case>/case.yaml`, `<case>/data/bank.csv`), else `<external>/<file name>`; nothing of the folders around the study is written |
 | `study.html` | A byte copy of `reports/study.html`, **only** when the report is current (effective status `ok`); otherwise it is omitted, and `handoff.md` says so |
 | `SHA256SUMS` | `<sha256>  <file>`, one line for each of the other files |
 
@@ -638,7 +639,7 @@ with exit code 2. It reuses the existing code `unsupported_capability` (CLI-CONT
 
 What WP-0 registers:
 
-- `cli.EXTENSIONS` gains `decisions` → `mlkit.study.cmd_decisions`, `evidence` → `mlkit.study.cmd_evidence`, `explain` → `mlkit.study.cmd_explain`, and `export` → `mlkit.study.cmd_export`. Each module parses the arguments of this document (`configure`) and exposes the frozen function its WP implements: `cmd_decisions.decisions(study_dir) -> dict`, `cmd_evidence.evidence(study_dir, *, result_id=None, limit=200) -> dict`, `cmd_explain.explain(study_dir, *, term=None) -> dict`, `cmd_export.export_handoff(study_dir, *, out=None) -> (dict, exit_code)`.
+- `cli.EXTENSIONS` gains `decisions` → `mlkit.study.cmd_decisions`, `evidence` → `mlkit.study.cmd_evidence`, `explain` → `mlkit.study.cmd_explain`, and `export` → `mlkit.study.cmd_export`. Each module parses the arguments of this document (`configure`) and exposes the frozen function its WP implements: `cmd_decisions.decisions(study_dir) -> dict`, `cmd_evidence.evidence(study_dir, *, result_id=None, limit=200) -> dict`, `cmd_explain.explain(study_dir, *, term=None) -> dict`, `cmd_export.export_handoff(study_dir, *, out=None) -> (dict, exit_code)` (the review fix adds the keyword `expected_revision=None`, §7).
 - `cmd_preview` takes `kind` ∈ `policy`, `effects`, `proposal`, an optional positional `TARGET`, `--rule` (repeatable), `--intervals`, and `--value`. It checks the per-kind rules (`--rule` is required for `policy` only; `TARGET` for `effects` and `proposal` only; `--value` for `proposal` only; anything else is `invalid_arguments`), then calls `preview_effects.preview_effects(study_dir, proposal_id) -> dict` or `preview_proposal.preview_proposal(study_dir, decision_id, value) -> dict`.
 - `status` parses `--digest`: without `--summary` it is `invalid_arguments` (final behaviour); with it, the stub refusal above.
 - `decide propose` parses `--channel` (no choices: WP-E1 validates against `state.CHANNELS` with `invalid_value`, `details.field: "channel"`). `chat`, or no option, proposes exactly as before and passes no `channel` parameter.
