@@ -31,7 +31,8 @@
     idLine: (rid8, current) => `${rid8}… · ${current ? 'current' : 'stale'}`,
     fullId: 'Full id',
     copyId: 'Select the id',
-    copyFallback: 'The id is selected: copy it with the keyboard.',
+    // Not "selected" (INV-12: a word of a decision rule; review finding M3).
+    copyFallback: 'The id is highlighted: copy it with the keyboard.',
     facts: {
       evaluatedOn: 'Evaluated on',
       headline: 'Result',
