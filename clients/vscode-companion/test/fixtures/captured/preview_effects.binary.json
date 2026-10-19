@@ -16,7 +16,7 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 34,
+  "revision": 38,
   "proposal_id": "p_7",
   "decision_id": "policy",
   "value": "capacity:100",
@@ -25,7 +25,7 @@
    "user_words": "Yes, call everyone scored at 0.2 or more",
    "basis": "restated",
    "channel": "chat",
-   "revision": 31,
+   "revision": 35,
    "proposal_id": "p_6"
   },
   "mutation": "policy.rule_type",
@@ -39,7 +39,9 @@
    "eda.special_values",
    "eda.distribution:age",
    "eda.distribution:job",
+   "eda.quality",
    "eda.rate_by:job",
+   "eda.single_feature_signal",
    "fit.baseline",
    "fit.logistic",
    "policy.evaluation"

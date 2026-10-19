@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 28,
+  "revision": 32,
   "since": null,
   "changed": null,
   "goal": {
@@ -105,7 +105,7 @@
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 28,
+    "revision": 32,
     "origin": {
      "channel": "chat"
     }
@@ -232,6 +232,18 @@
     "stale_reason": null,
     "integrity": "ok"
    },
+   "eda.quality": {
+    "result_id": "679d634dd22e870c564343e45f8c413c00404b5048e91ddd420c5a429778a7a6",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.single_feature_signal": {
+    "result_id": "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
    "eda.special_values": {
     "result_id": "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
     "current": true,
@@ -274,16 +286,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 28,
-     "last_ok_revision": 28,
+     "revision": 32,
+     "last_ok_revision": 32,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 28,
-     "last_ok_revision": 28,
+     "revision": 32,
+     "last_ok_revision": 32,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -368,10 +380,11 @@
    "contradicts_verdict": false
   },
   "eda_looks": {
-   "target_looks": 3,
+   "target_looks": 4,
    "results": [
     "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
     "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
+    "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
     "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a"
    ]
   },
@@ -385,11 +398,42 @@
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg); the report and notebook are up to date.",
+   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform).",
+   "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/auto mpg/notebooks/study_generated.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/auto mpg/notebooks/workbench.py"
+     ]
+    }
+   }
+  },
   "moments": [
    {
     "id": "frame",
@@ -465,16 +509,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-19T10:22:41.875876+00:00",
+   "boundary_time": "2026-10-19T10:52:24.809396+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 28,
+   "until": 32,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-19T10:22:41.930238+00:00",
+     "time": "2026-10-19T10:52:24.857107+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -491,11 +535,13 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "The prediction moment was proposed."
+     "text": "The prediction moment was proposed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 3,
-     "time": "2026-10-19T10:22:42.033307+00:00",
+     "time": "2026-10-19T10:52:24.942475+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -519,11 +565,13 @@
       "refit": [],
       "kept_fits": []
      },
-     "text": "The prediction moment was confirmed in the junior's words (channel chat)."
+     "text": "The prediction moment was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the prediction moment in your own words."
     },
     {
      "revision": 4,
-     "time": "2026-10-19T10:22:42.154192+00:00",
+     "time": "2026-10-19T10:52:25.053006+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -540,11 +588,13 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "The feature availability was proposed."
+     "text": "The feature availability was proposed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 5,
-     "time": "2026-10-19T10:22:42.251832+00:00",
+     "time": "2026-10-19T10:52:25.147106+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -568,11 +618,13 @@
       "refit": [],
       "kept_fits": []
      },
-     "text": "The feature availability was confirmed in the junior's words (channel chat)."
+     "text": "The feature availability was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the feature availability in your own words."
     },
     {
      "revision": 6,
-     "time": "2026-10-19T10:22:42.321562+00:00",
+     "time": "2026-10-19T10:52:25.233306+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -589,11 +641,13 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "The split was proposed."
+     "text": "The split was proposed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 7,
-     "time": "2026-10-19T10:22:42.389315+00:00",
+     "time": "2026-10-19T10:52:25.319375+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -617,11 +671,13 @@
       "refit": [],
       "kept_fits": []
      },
-     "text": "The split was confirmed in the junior's words (channel chat)."
+     "text": "The split was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the split in your own words."
     },
     {
      "revision": 8,
-     "time": "2026-10-19T10:22:42.472710+00:00",
+     "time": "2026-10-19T10:52:25.397605+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -638,11 +694,13 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "Success criterion was proposed."
+     "text": "The success criterion was proposed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 9,
-     "time": "2026-10-19T10:22:42.569199+00:00",
+     "time": "2026-10-19T10:52:25.472636+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -666,11 +724,13 @@
       "refit": [],
       "kept_fits": []
      },
-     "text": "Success criterion was confirmed in the junior's words (channel chat)."
+     "text": "The success criterion was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the success criterion in your own words."
     },
     {
      "revision": 10,
-     "time": "2026-10-19T10:22:42.694629+00:00",
+     "time": "2026-10-19T10:52:25.585863+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -687,11 +747,13 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "Preprocessing was proposed."
+     "text": "The preparation of the variables was proposed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 11,
-     "time": "2026-10-19T10:22:42.792507+00:00",
+     "time": "2026-10-19T10:52:25.685974+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -715,11 +777,13 @@
       "refit": [],
       "kept_fits": []
      },
-     "text": "Preprocessing was confirmed in the junior's words (channel chat)."
+     "text": "The preparation of the variables was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the preparation of the variables in your own words."
     },
     {
      "revision": 13,
-     "time": "2026-10-19T10:22:42.960213+00:00",
+     "time": "2026-10-19T10:52:25.841596+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -736,11 +800,13 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The split was computed."
+     "text": "The split was computed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 15,
-     "time": "2026-10-19T10:22:43.123229+00:00",
+     "time": "2026-10-19T10:52:26.054699+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -757,11 +823,13 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The target summary was computed."
+     "text": "The target summary was computed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 17,
-     "time": "2026-10-19T10:22:43.304382+00:00",
+     "time": "2026-10-19T10:52:26.225574+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -778,11 +846,59 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The special-value check was computed."
+     "text": "The special-value check was computed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "revision": 19,
-     "time": "2026-10-19T10:22:43.517555+00:00",
+     "time": "2026-10-19T10:52:26.389471+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.quality",
+     "slot": "eda.quality",
+     "result_id": "679d634dd22e870c564343e45f8c413c00404b5048e91ddd420c5a429778a7a6",
+     "execution_id": "e_808e66ec55e19cf01a72e71c",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The data quality check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 21,
+     "time": "2026-10-19T10:52:26.862103+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.single_feature_signal",
+     "slot": "eda.single_feature_signal",
+     "result_id": "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
+     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The single-feature signal check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 23,
+     "time": "2026-10-19T10:52:27.105651+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -791,7 +907,7 @@
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:model_year",
      "result_id": "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a",
-     "execution_id": "e_808e66ec55e19cf01a72e71c",
+     "execution_id": "e_5f95a7d242e4ea751ed82afb",
      "rules": null,
      "column": "model_year",
      "channel": null,
@@ -799,11 +915,13 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The target mean by group of model_year was computed."
+     "text": "The target mean by group of model_year was computed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
-     "revision": 21,
-     "time": "2026-10-19T10:22:43.730609+00:00",
+     "revision": 25,
+     "time": "2026-10-19T10:52:27.331538+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -812,7 +930,7 @@
      "activity": "eda.distribution",
      "slot": "eda.distribution:weight",
      "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
-     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+     "execution_id": "e_622dd0c704d6af123eea761a",
      "rules": null,
      "column": "weight",
      "channel": null,
@@ -820,11 +938,13 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The distribution of weight was computed."
+     "text": "The distribution of weight was computed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
-     "revision": 23,
-     "time": "2026-10-19T10:22:43.909862+00:00",
+     "revision": 27,
+     "time": "2026-10-19T10:52:27.554615+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -833,48 +953,6 @@
      "activity": "fit.baseline",
      "slot": "fit.baseline",
      "result_id": "3640bf3a10283abb1f889c39f4b5d381b052c66eef274234626669ee25aa02ff",
-     "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "rules": null,
-     "column": null,
-     "channel": null,
-     "basis": null,
-     "delegation_scope": null,
-     "superseded": null,
-     "invalidation": null,
-     "text": "The training mean baseline was computed."
-    },
-    {
-     "revision": 25,
-     "time": "2026-10-19T10:22:44.101943+00:00",
-     "action": "run.promote",
-     "kind": "result_added",
-     "decision_id": null,
-     "proposal_id": null,
-     "note_id": null,
-     "activity": "fit.linear",
-     "slot": "fit.linear",
-     "result_id": "35cb9714c1434ee12596b42e5a807b38724742f94f5784602ae0a9c5c86f77b7",
-     "execution_id": "e_622dd0c704d6af123eea761a",
-     "rules": null,
-     "column": null,
-     "channel": null,
-     "basis": null,
-     "delegation_scope": null,
-     "superseded": null,
-     "invalidation": null,
-     "text": "The linear model was computed."
-    },
-    {
-     "revision": 27,
-     "time": "2026-10-19T10:22:44.332333+00:00",
-     "action": "run.promote",
-     "kind": "result_added",
-     "decision_id": null,
-     "proposal_id": null,
-     "note_id": null,
-     "activity": "evaluate.regression",
-     "slot": "evaluate.regression",
-     "result_id": "ce72261b554777048ecf5a4b52c60368b37d22443c86c9022db4f5ae975ca940",
      "execution_id": "e_284db43c31758f9aef75cd0b",
      "rules": null,
      "column": null,
@@ -883,11 +961,59 @@
      "delegation_scope": null,
      "superseded": null,
      "invalidation": null,
-     "text": "The model evaluation was computed."
+     "text": "The training mean baseline was computed.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
-     "revision": 28,
-     "time": "2026-10-19T10:22:44.444564+00:00",
+     "revision": 29,
+     "time": "2026-10-19T10:52:27.817463+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.linear",
+     "slot": "fit.linear",
+     "result_id": "35cb9714c1434ee12596b42e5a807b38724742f94f5784602ae0a9c5c86f77b7",
+     "execution_id": "e_aa1477c41bc44c975f9888ce",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The linear model was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 31,
+     "time": "2026-10-19T10:52:28.091964+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "evaluate.regression",
+     "slot": "evaluate.regression",
+     "result_id": "ce72261b554777048ecf5a4b52c60368b37d22443c86c9022db4f5ae975ca940",
+     "execution_id": "e_2033db067e905124ef78ea82",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The model evaluation was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 32,
+     "time": "2026-10-19T10:52:28.215919+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -904,7 +1030,9 @@
      "delegation_scope": null,
      "superseded": [],
      "invalidation": null,
-     "text": "The model choice was proposed: fit.linear."
+     "text": "The model choice was proposed: fit.linear.",
+     "audience": "agent",
+     "junior_text": "The model choice was proposed: the linear model."
     }
    ],
    "truncated": false,
@@ -914,14 +1042,14 @@
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
-    "results_added": 8,
+    "results_added": 10,
     "results_replaced": 0,
-    "runs_started": 8,
+    "runs_started": 10,
     "runs_failed": 0,
     "invalidations": 0
    }
   },
   "task": "regression",
-  "currency": "67bb438065bbf3d0"
+  "currency": "29372e5b6dc9ea0e"
  }
 }

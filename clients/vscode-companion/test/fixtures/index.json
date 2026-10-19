@@ -543,5 +543,27 @@
    "--json"
   ],
   "note": "Auto MPG with the model choice proposed; the session log on (INV-12: no decision-rule vocabulary)."
+ },
+ "data.binary": {
+  "schema": "hypotrail.data/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "data",
+   "--json"
+  ],
+  "note": "The data card of the development rows (WP-A7: the Data & EDA tab), captured with the availability decision recorded."
+ },
+ "data.regression": {
+  "schema": "hypotrail.data/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "data",
+   "--json"
+  ],
+  "note": "The data card of the development rows (WP-A7: the Data & EDA tab), captured with the availability decision recorded."
  }
 }

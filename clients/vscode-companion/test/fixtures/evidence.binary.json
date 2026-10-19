@@ -416,6 +416,425 @@
     "headline": null
    },
    {
+    "result_id": "770728df0eb075a82a317a78ca7e8d2a81eb0c1970543250ecbc4283503cdaa2",
+    "activity": "eda.quality",
+    "slot": "eda.quality",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 3617,
+    "params": {
+     "partition": "development"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-19T10:52:17.486073+00:00",
+    "started_revision": 18,
+    "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+    "exposure_id": "x_caca6051e2664788b3160e109cbed33f",
+    "values": {
+     "partition": "development",
+     "n_rows": 3617,
+     "n_columns": 16,
+     "target_read": false,
+     "missing": [
+      {
+       "column": "age",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "job",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "marital",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "education",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "default",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "balance",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "housing",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "loan",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "contact",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "day",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "month",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "duration",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "campaign",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "pdays",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "previous",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "poutcome",
+       "n_missing": 0,
+       "share": 0.0
+      }
+     ],
+     "n_rows_with_missing": 0,
+     "co_missing": [],
+     "duplicates": {
+      "n_rows": 0,
+      "n_groups": 0,
+      "definition": "rows identical on every column except the target"
+     },
+     "cardinality": [
+      {
+       "column": "job",
+       "type": "category",
+       "n_distinct": 11,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "marital",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "education",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "default",
+       "type": "binary",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "housing",
+       "type": "binary",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "loan",
+       "type": "binary",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "contact",
+       "type": "category",
+       "n_distinct": 2,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "month",
+       "type": "category",
+       "n_distinct": 12,
+       "rare": [
+        {
+         "value": "dec",
+         "n_rows": 14
+        }
+       ],
+       "rare_rows": 30
+      },
+      {
+       "column": "poutcome",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      }
+     ],
+     "ranges": [
+      {
+       "column": "age",
+       "type": "integer",
+       "min": 19,
+       "max": 87,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "balance",
+       "type": "numeric",
+       "min": -3313,
+       "max": 71188,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "day",
+       "type": "integer",
+       "min": 1,
+       "max": 31,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "duration",
+       "type": "numeric",
+       "min": 4,
+       "max": 3025,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "campaign",
+       "type": "integer",
+       "min": 1,
+       "max": 50,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "pdays",
+       "type": "integer",
+       "min": 1,
+       "max": 871,
+       "n_special": 2962,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "previous",
+       "type": "integer",
+       "min": 0,
+       "max": 25,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      }
+     ],
+     "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+     "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
+    },
+    "headline": null
+   },
+   {
+    "result_id": "39ab516d35eec3194bb6e38aade45f9dfd92bfdfb7767b8e1351b42b8a33f259",
+    "activity": "eda.single_feature_signal",
+    "slot": "eda.single_feature_signal",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 2531,
+    "params": {
+     "folds": 5,
+     "metric": "roc_auc",
+     "seed": 20261019
+    },
+    "upstream": {
+     "split": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe"
+    },
+    "downstream": [],
+    "created": "2026-10-19T10:52:19.028859+00:00",
+    "started_revision": 20,
+    "execution_id": "e_40d674998c07527b12a31e29",
+    "exposure_id": "x_60e3c213dd37461fbc3bf8bd78830ac3",
+    "values": {
+     "partition": "train",
+     "n_rows": 2531,
+     "metric": "roc_auc",
+     "folds": 5,
+     "seed": 20261019,
+     "signals": [
+      {
+       "feature": "duration",
+       "availability": "not_available",
+       "score": 0.8124392004747716,
+       "rank": 1,
+       "flag": true
+      },
+      {
+       "feature": "month",
+       "availability": "not_available",
+       "score": 0.6436826616579074,
+       "rank": 2,
+       "flag": false
+      },
+      {
+       "feature": "contact",
+       "availability": "uncertain_included",
+       "score": 0.5935578505570613,
+       "rank": 3,
+       "flag": false
+      },
+      {
+       "feature": "job",
+       "availability": "available_at_prediction",
+       "score": 0.5898792880872699,
+       "rank": 4,
+       "flag": false
+      },
+      {
+       "feature": "poutcome",
+       "availability": "available_at_prediction",
+       "score": 0.576367262782431,
+       "rank": 5,
+       "flag": false
+      },
+      {
+       "feature": "previous",
+       "availability": "available_at_prediction",
+       "score": 0.5719430457579521,
+       "rank": 6,
+       "flag": false
+      },
+      {
+       "feature": "housing",
+       "availability": "available_at_prediction",
+       "score": 0.5714444131736893,
+       "rank": 7,
+       "flag": false
+      },
+      {
+       "feature": "pdays",
+       "availability": "available_at_prediction",
+       "score": 0.5631550288472716,
+       "rank": 8,
+       "flag": false
+      },
+      {
+       "feature": "balance",
+       "availability": "available_at_prediction",
+       "score": 0.561893916682472,
+       "rank": 9,
+       "flag": false
+      },
+      {
+       "feature": "campaign",
+       "availability": "not_available",
+       "score": 0.5582375326558456,
+       "rank": 10,
+       "flag": false
+      },
+      {
+       "feature": "loan",
+       "availability": "available_at_prediction",
+       "score": 0.5253446071203509,
+       "rank": 11,
+       "flag": false
+      },
+      {
+       "feature": "education",
+       "availability": "available_at_prediction",
+       "score": 0.5208767979834442,
+       "rank": 12,
+       "flag": false
+      },
+      {
+       "feature": "age",
+       "availability": "available_at_prediction",
+       "score": 0.5178322330786126,
+       "rank": 13,
+       "flag": false
+      },
+      {
+       "feature": "marital",
+       "availability": "available_at_prediction",
+       "score": 0.5079161746621229,
+       "rank": 14,
+       "flag": false
+      },
+      {
+       "feature": "default",
+       "availability": "available_at_prediction",
+       "score": 0.49865017406254014,
+       "rank": 15,
+       "flag": false
+      },
+      {
+       "feature": "day",
+       "availability": "not_available",
+       "score": 0.4527163239459886,
+       "rank": 16,
+       "flag": false
+      }
+     ],
+     "median": 0.5625244727648718,
+     "level": 0.75,
+     "gap": 0.15,
+     "questions": [
+      {
+       "feature": "duration",
+       "score": 0.8124392004747716,
+       "availability": "not_available",
+       "text": "duration ranks the training rows with an out-of-fold AUC of 0.81 on its own, far above the other features (median 0.56). Is its value really known at the prediction moment, or is it recorded at or after the outcome? (availability decided: not_available)"
+      }
+     ],
+     "question": "Does any single feature, on its own, predict the outcome so well that its availability at the prediction moment should be questioned?",
+     "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high."
+    },
+    "headline": null
+   },
+   {
     "result_id": "6f8a27e91066680ada2fbf88277faca7c068704aaedbfa28e53d90cf0b09ae18",
     "activity": "eda.rate_by",
     "slot": "eda.rate_by:job",

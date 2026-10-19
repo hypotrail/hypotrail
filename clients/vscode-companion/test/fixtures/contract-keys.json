@@ -26,7 +26,9 @@
     "eda_looks",
     "recap",
     "recap_audience",
-    "recap_junior"
+    "recap_junior",
+    "mode",
+    "deliverables"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -55,6 +57,8 @@
     "recap",
     "recap_audience",
     "recap_junior",
+    "mode",
+    "deliverables",
     "moments",
     "pauses",
     "last_session",
@@ -104,7 +108,9 @@
     "delegation_scope",
     "superseded",
     "invalidation",
-    "text"
+    "text",
+    "audience",
+    "junior_text"
    ],
    "digest.items[].invalidation": [
     "mutation",
@@ -596,6 +602,35 @@
     "gaps",
     "timeline",
     "privacy"
+   ]
+  },
+  "hypotrail.data/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "observation_unit",
+    "development",
+    "target",
+    "final_test",
+    "groups",
+    "rows",
+    "note"
+   ],
+   "groups[].variables[]": [
+    "name",
+    "role",
+    "type",
+    "unit",
+    "description",
+    "description_fr",
+    "availability",
+    "decided",
+    "special_values",
+    "n_missing",
+    "n_distinct",
+    "examples"
    ]
   }
  },

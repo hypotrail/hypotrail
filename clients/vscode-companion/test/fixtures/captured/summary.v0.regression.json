@@ -15,7 +15,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 28,
+  "revision": 32,
   "since": null,
   "changed": null,
   "goal": {
@@ -104,7 +104,7 @@
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 28
+    "revision": 32
    }
   ],
   "decisions": {
@@ -228,6 +228,18 @@
     "stale_reason": null,
     "integrity": "ok"
    },
+   "eda.quality": {
+    "result_id": "679d634dd22e870c564343e45f8c413c00404b5048e91ddd420c5a429778a7a6",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.single_feature_signal": {
+    "result_id": "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
    "eda.special_values": {
     "result_id": "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
     "current": true,
@@ -270,16 +282,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 28,
-     "last_ok_revision": 28,
+     "revision": 32,
+     "last_ok_revision": 32,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 28,
-     "last_ok_revision": 28,
+     "revision": 32,
+     "last_ok_revision": 32,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -364,10 +376,11 @@
    "contradicts_verdict": false
   },
   "eda_looks": {
-   "target_looks": 3,
+   "target_looks": 4,
    "results": [
     "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
     "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
+    "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
     "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a"
    ]
   },
@@ -381,10 +394,41 @@
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg); the report and notebook are up to date.",
+   "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform).",
+   "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
-  ]
+  ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/auto mpg/notebooks/study_generated.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/auto mpg/notebooks/workbench.py"
+     ]
+    }
+   }
+  }
  }
 }

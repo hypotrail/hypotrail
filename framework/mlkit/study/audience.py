@@ -37,6 +37,53 @@ def decision_words(decision_id) -> str:
         or ' '.join(str(decision_id).split('_'))
 
 
+# v0.2a (WP-A7): activities in words, for the junior (an activity id is a raw token). A
+# regression study never runs ``policy.*``, so no word here names a decision rule there.
+ACTIVITY_WORDS = {'split': 'the split', 'eda.target_rate': 'the outcome rate',
+                  'eda.target_summary': 'the target summary',
+                  'eda.special_values': 'the special-value check',
+                  'eda.rate_by': 'an outcome rate by group',
+                  'eda.mean_by': 'a target mean by group',
+                  'eda.distribution': 'the distribution of a column',
+                  'eda.quality': 'the data quality check',
+                  'eda.single_feature_signal': 'the single-feature signal check',
+                  'fit.baseline': 'the baseline model', 'fit.logistic': 'the logistic model',
+                  'fit.linear': 'the linear model', 'policy.evaluate': 'the policy evaluation',
+                  'policy.evaluation': 'the policy evaluation',
+                  'evaluate.regression': 'the model comparison'}
+
+
+def activity_words(activity) -> str:
+    """An activity id (or a slot, ``eda.rate_by:job``) in words: "an outcome rate by group
+    (job)"; an unknown activity reads "an analysis"."""
+    base, sep, column = str(activity or '').partition(':')
+    words = ACTIVITY_WORDS.get(base, 'an analysis')
+    return f'{words} ({column})' if sep and column else words
+
+
+# Recorded values in words (v0.2a, WP-A7): a rule, a model slot, a verdict. The numbers are
+# the value's own; nothing is computed.
+MODEL_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
+               'fit.logistic': 'the logistic model'}
+VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the chosen model',
+                 'keep_baseline': 'keep the baseline', 'inconclusive': 'inconclusive'}
+
+
+def rule_words(rule) -> str:
+    """``capacity:100`` as "call the top 100 by score", ``threshold:0.2`` as "call everyone
+    scored 0.2 or more"; anything else as it is."""
+    kind, _, k = str(rule).partition(':')
+    if kind == 'capacity' and k:
+        return f'call the top {k} by score'
+    if kind == 'threshold' and k:
+        return f'call everyone scored {k} or more'
+    return str(rule)
+
+
+def model_words(slot) -> str:
+    return MODEL_WORDS.get(str(slot), ' '.join(str(slot).replace('fit.', '').split('_')))
+
+
 def join(words) -> str:
     words = list(words)
     if not words:
@@ -55,12 +102,17 @@ def _junior_next(action: Mapping) -> tuple[str, str]:
     kind = action.get('kind')
     message = str(action.get('message') or '')
     if kind == 'outcome_unknown':
-        return AGENT, ('A run stopped before it finished, and its outcome is unknown. It is '
-                       'not in progress and does not restart by itself; you will be asked '
-                       'before it is recorded as interrupted.')
+        # WP-A7: the run is named in words (the activity id is a raw token).
+        return AGENT, (f'A run of {activity_words(action.get("activity"))} stopped before it '
+                       'finished, and its outcome is unknown. It is not in progress and does '
+                       'not restart by itself; you will be asked before it is recorded as '
+                       'interrupted.')
     if kind == 'acknowledge_interruption':
-        return AGENT, ('A run was interrupted and its outcome is unknown. It does not restart '
-                       'by itself; you will be asked before it is recorded as interrupted.')
+        named = (f'A run of {activity_words(action["activity"])}' if action.get('activity')
+                 else 'A run')
+        return AGENT, (f'{named} was interrupted and its outcome is unknown. It does not '
+                       'restart by itself; you will be asked before it is recorded as '
+                       'interrupted.')
     if kind == 'reconfirm':
         return AGENT, (f'Your answer on {decision_words(action.get("decision"))} must be '
                        'confirmed again: something it depends on changed after you confirmed '
@@ -182,4 +234,5 @@ def annotate_view(view: dict) -> dict:
 
 
 __all__ = ['JUNIOR', 'AGENT', 'AUDIENCES', 'next_action', 'limit', 'junior_text', 'artifact',
-           'annotate_view', 'decision_words', 'join']
+           'annotate_view', 'decision_words', 'join', 'activity_words', 'rule_words',
+           'model_words', 'VERDICT_WORDS']

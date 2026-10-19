@@ -85,7 +85,11 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap',
                 # v0.2a (WP-A1): who the recap is written for, and its junior variant.
-                'recap_audience', 'recap_junior')
+                'recap_audience', 'recap_junior',
+                # v0.2a (WP-A7, companion requests): the confirmation mode (ADR 0005) and the
+                # commands that open the notebooks (the view's ``deliverables``), so a
+                # surface needs no full view for them.
+                'mode', 'deliverables')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
@@ -437,7 +441,22 @@ def summary(view: dict) -> dict:
     out['recap'] = recap(out, view)
     out['recap_audience'] = audience.AGENT
     out['recap_junior'] = recap(out, view, junior=True)
+    out['mode'] = view.get('mode')
+    out['deliverables'] = _compact_deliverables(view.get('deliverables'))
     return {k: out[k] for k in SUMMARY_KEYS}
+
+
+# WP-A7: the summary keeps each launch's argument list only (the full view also has the
+# interpreter and the shell form), so the summary stays compact.
+SUMMARY_DELIVERABLES_KEYS = ('launch',)
+SUMMARY_LAUNCH_KEYS = ('mode', 'path', 'argv')
+
+
+def _compact_deliverables(deliverables):
+    if not isinstance(deliverables, dict):
+        return None
+    return {'launch': {name: {k: item.get(k) for k in SUMMARY_LAUNCH_KEYS}
+                       for name, item in (deliverables.get('launch') or {}).items()}}
 
 
 SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', 'high',
@@ -536,13 +555,16 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
                                                                   rec.canonical_rule(rule) or rule),
             'text': f'the logistic model at {rule}{rows}: {figures}, result '
                     f'{item["result_id"][:RECAP_RID]}',
-            # v0.2a (WP-A1): the junior recap names no result id.
-            'junior_text': f'the logistic model at {rule}{rows}: {figures}'}
+            # v0.2a (WP-A1): the junior recap names no result id; WP-A7: nor the rule's
+            # token, which it says in words.
+            'junior_text': f'the logistic model, {audience.rule_words(rule)},{rows}: {figures}'}
 
 
 def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
                     headline: dict | None = None, junior: bool = False) -> str:
-    label = DECISION_LABELS[decision_id]
+    # v0.2a (WP-A7): the junior recap names each decision and its value in words, never a
+    # recorded token (a rule, a model slot, a verdict id).
+    label = audience.decision_words(decision_id) if junior else DECISION_LABELS[decision_id]
     value = d['value']
     if decision_id == 'feature_availability' and isinstance(value, dict):
         parts = []
@@ -562,7 +584,7 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
             share = f' on {value["column"]}, validation from {value.get("cutoff")}'
         text = f'{label} ({method}{share})'
     elif decision_id in ('policy',) and isinstance(value, str):
-        text = f'{label} {value}'
+        text = f'{label}: {audience.rule_words(value)}' if junior else f'{label} {value}'
         if headline and headline['adopted']:
             text += f' ({headline["junior_text" if junior else "text"]})'
     elif decision_id == 'model_choice' and isinstance(value, str):
@@ -573,7 +595,9 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
                      f' (validation MAE {mae} {errors["unit"]}, result '
                      f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
-        text = f'{label} {_spaced(value.get("verdict", ""))}'.strip()
+        verdict = value.get('verdict', '')
+        text = (f'{label}: {audience.VERDICT_WORDS.get(verdict, _spaced(verdict))}' if junior
+                else f'{label} {_spaced(verdict)}'.strip())
     elif decision_id == 'success_criterion' and isinstance(value, dict):
         if 'min_points' in value:
             text = (f'{label} (precision gain over the baseline of at least '
@@ -646,6 +670,30 @@ def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
     return 'nothing left in the plan; review what is not yet defensible.'
 
 
+def _junior_now(summary_out: dict, titles: dict, step: str) -> str:
+    """The ``Now`` line's step for the junior (v0.2a, WP-A7): the step that waits for them.
+
+    An open proposal or a reconfirmation names its decision's step, which may come before
+    the engine's current step (a confirmed decision reopened by a new proposal); a run with
+    an unknown outcome is named in words. Otherwise the current step, as for the agent."""
+    nxt = summary_out['next_action'] or {}
+    kind = nxt.get('kind')
+    if kind in ('await_user_words', 'reconfirm'):
+        decision = nxt.get('decision')
+        title = titles.get(decision) or _capital_first(audience.decision_words(decision))
+        return (f'{title}, waiting for your answer' if kind == 'await_user_words'
+                else f'{title}, waiting for you to confirm it again')
+    if kind in ('outcome_unknown', 'acknowledge_interruption'):
+        named = (f'a run of {audience.activity_words(nxt["activity"])}' if nxt.get('activity')
+                 else 'a run')
+        return f'{named} stopped and its outcome is unknown, waiting for your acknowledgement'
+    return step
+
+
+def _capital_first(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
 def _deliverables_line(items: dict) -> str:
     """The deliverables part of the ``Now`` line: what is not up to date, and what has not
     been rendered yet (v0.2a, WP-A1: never "up to date" before a first render)."""
@@ -702,6 +750,8 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
     titles = {s['id']: s['title'] for s in summary_out['plan']}
     step = titles.get(summary_out['current_step'], 'every step is done') \
         if summary_out['current_step'] else 'every step is done'
+    if junior:
+        step = _junior_now(summary_out, titles, step)
     deliverables = _deliverables_line(summary_out['artifacts']['items'])
     chosen = summary_out['decisions'].get('model_choice') or {}
     if errors and chosen.get('status') not in ('confirmed', 'reconfirm_required'):
@@ -918,7 +968,10 @@ LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
 DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts')
 DIGEST_ITEM_KEYS = ('revision', 'time', 'action', 'kind', 'decision_id', 'proposal_id', 'note_id',
                     'activity', 'slot', 'result_id', 'execution_id', 'rules', 'column', 'channel',
-                    'basis', 'delegation_scope', 'superseded', 'invalidation', 'text')
+                    'basis', 'delegation_scope', 'superseded', 'invalidation', 'text',
+                    # v0.2a (WP-A7, CLI-CONTRACT §3.3): who ``text`` is written for, and its
+                    # junior variant (null when ``text`` is already written for the junior).
+                    'audience', 'junior_text')
 DIGEST_KINDS = ('proposed', 'confirmed', 'withdrawn', 'hold_recorded', 'hold_resolved',
                 'result_added', 'result_replaced', 'run_failed', 'run_interrupted',
                 'interruption_acknowledged', 'other')
@@ -1022,10 +1075,11 @@ class _Texts:
     def decision(self, decision_id) -> str:
         return self.data['decisions'].get(decision_id, ' '.join(str(decision_id).split('_')))
 
-    def slot(self, slot) -> str:
+    def slot(self, slot, junior: bool = False) -> str:
         base, sep, column = str(slot).partition(':')
-        label = self.data['activities'].get(base) or self.data['activity_fallback'].format(
-            activity=base)
+        label = self.data['activities'].get(base) or (
+            audience.activity_words(base) if junior   # WP-A7: no activity id for the junior
+            else self.data['activity_fallback'].format(activity=base))
         return self.data['slot_with_column'].format(label=label, column=column) if sep else label
 
     @staticmethod
@@ -1033,8 +1087,13 @@ class _Texts:
         labels = list(labels)
         return labels[0] if len(labels) == 1 else ', '.join(labels[:-1]) + ' and ' + labels[-1]
 
-    def template(self, name: str, **fields) -> str:
-        return self.data['templates'][name].format(**fields)
+    def template(self, name: str, junior: bool = False, **fields) -> str:
+        own = self.data.get('junior_templates', {}).get(name) if junior else None
+        return (own or self.data['templates'][name]).format(**fields)
+
+    def cause(self, name: str, junior: bool = False, **fields) -> str:
+        own = self.data.get('junior_causes', {}).get(name) if junior else None
+        return (own or self.data['causes'][name]).format(**fields)
 
 
 def _cap(text: str) -> str:
@@ -1058,7 +1117,8 @@ def _invalidation(result: dict, full: dict | None, kept_fits: list[str]) -> dict
             'kept_fits': [s for s in kept_fits if s not in stale_slots]}
 
 
-def _effect_sentences(t: _Texts, item: dict, full: dict | None, kept: list[str]) -> list[str]:
+def _effect_sentences(t: _Texts, item: dict, full: dict | None, kept: list[str],
+                      junior: bool = False) -> list[str]:
     inv = item['invalidation']
     if inv is None:
         # A replaced result that invalidated nothing (a re-evaluated policy): say that the
@@ -1069,23 +1129,23 @@ def _effect_sentences(t: _Texts, item: dict, full: dict | None, kept: list[str])
     if inv['mutation'] not in ('first_confirmation', 'unchanged_value', 'hold_added'):
         if inv['refit']:
             out.append(t.data['effects']['refit'].format(
-                slots=t.join(t.slot(s) for s in inv['refit'])))
+                slots=t.join(t.slot(s, junior) for s in inv['refit'])))
         elif inv['kept_fits']:
             out.append(t.data['effects']['nothing_refitted'])
         others = [s for s in inv['stale_slots'] if s not in inv['refit']]
         if others:
-            out.append(t.data['effects']['stale'].format(slots=t.join(t.slot(s) for s in others)))
+            out.append(t.data['effects']['stale'].format(
+                slots=t.join(t.slot(s, junior) for s in others)))
     again = inv['reconfirm_required']
     if again:
-        causes = t.data['causes']
         if inv['mutation'] == 'result_replaced':
-            cause = causes['result_replaced'].format(
-                activity=t.slot(item['slot'] or (full or {}).get('decision_id')))
+            cause = t.cause('result_replaced', junior, activity=t.slot(
+                item['slot'] or (full or {}).get('decision_id'), junior))
         elif inv['mutation'] == 'hold_added':
-            cause = causes['hold_added'].format(decision=t.decision(item['decision_id']))
+            cause = t.cause('hold_added', junior, decision=t.decision(item['decision_id']))
         else:
-            cause = causes['decision'].format(
-                decision=t.decision((full or {}).get('decision_id') or item['decision_id']))
+            cause = t.cause('decision', junior, decision=t.decision(
+                (full or {}).get('decision_id') or item['decision_id']))
         name = 'reconfirm_one' if len(again) == 1 else 'reconfirm_many'
         out.append(t.data['effects'][name].format(
             Decisions=_cap(t.join(t.decision(d) for d in again)), cause=cause))
@@ -1093,54 +1153,63 @@ def _effect_sentences(t: _Texts, item: dict, full: dict | None, kept: list[str])
 
 
 def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
-          record: dict, kept: list[str]) -> str:
+          record: dict, kept: list[str], junior: bool = False) -> str:
+    """The digest sentence of ``item``; ``junior`` (WP-A7) its variant for the junior: the
+    second person, a rule or a model in words, no channel and no activity id."""
     kind, action = item['kind'], item['action']
     params = record.get('params') or {}
     decision = t.decision(item['decision_id']) if item['decision_id'] else ''
     fields = {'decision': decision, 'Decision': _cap(decision)}
+
+    def template(name, **more):
+        return t.template(name, junior, **fields, **more)
+
     if kind == 'proposed':
         value = params.get('value')
         # Only a rule identifier or a model slot is quoted: other values are free text.
         identifier = item['decision_id'] in st.CHOICE_DECISION.values() and isinstance(value, str)
-        main = (t.template('proposed_value', value=value, **fields) if identifier
-                else t.template('proposed', **fields))
+        if identifier and junior:
+            value = (audience.model_words(value) if item['decision_id'] == 'model_choice'
+                     else audience.rule_words(value))
+        main = template('proposed_value', value=value) if identifier else template('proposed')
         if item['superseded']:
             main += ' ' + t.data['templates']['superseding']
     elif kind == 'confirmed':
         name = ('confirmed_delegated' if item['basis'] == st.DELEGATED_DEFAULT
                 else 'confirmed_again' if again else 'confirmed')
-        main = t.template(name, channel=item['channel'], **fields)
+        main = template(name, channel=item['channel'])
     elif kind == 'withdrawn':
-        main = t.template('withdrawn', **fields)
+        main = template('withdrawn')
     elif kind == 'hold_recorded':
-        main = t.template('hold_recorded', words=params.get('user_words'), **fields)
+        main = template('hold_recorded', words=params.get('user_words'))
     elif action == 'decide.note':
         # ADR 0005 (R3): a correction note is listed as ``other``, not as a hold.
-        main = t.template('correction_recorded', words=params.get('user_words'), **fields)
+        main = template('correction_recorded', words=params.get('user_words'))
     elif kind == 'hold_resolved':
         note = (state.get('notes') or {}).get(item['note_id']) or {}
         name = 'hold_withdrawn' if action == 'decide.withdraw_note' else 'hold_resolved'
-        main = t.template(name, hold=note.get('user_words'), words=params.get('user_words'),
-                          **fields)
+        main = template(name, hold=note.get('user_words'), words=params.get('user_words'))
     elif item['activity'] is not None or item['slot'] is not None:
-        activity = t.slot(item['slot'] or item['activity'])
+        activity = t.slot(item['slot'] or item['activity'], junior)
         act = {'activity': activity, 'Activity': _cap(activity)}
         if kind in ('result_added', 'result_replaced'):
             if item['rules']:
-                main = t.template(f'{kind}_rules', rules=', '.join(item['rules']), **act)
+                rules = ('; '.join(audience.rule_words(r) for r in item['rules']) if junior
+                         else ', '.join(item['rules']))
+                main = t.template(f'{kind}_rules', junior, rules=rules, **act)
             elif item['column'] and ':' not in str(item['slot']):
-                main = t.template(f'{kind}_column', column=item['column'], **act)
+                main = t.template(f'{kind}_column', junior, column=item['column'], **act)
             else:
-                main = t.template(kind, **act)
+                main = t.template(kind, junior, **act)
         elif action == _PROMOTE:
-            main = t.template('run_late', **act)
+            main = t.template('run_late', junior, **act)
         else:
-            main = t.template(kind, **act)
+            main = t.template(kind, junior, **act)
     elif action == 'init':
-        main = t.template('created')
+        main = template('created')
     else:
-        main = t.template('other', action=action)
-    return ' '.join([main, *_effect_sentences(t, item, full, kept)])
+        main = template('other', action=action)
+    return ' '.join([main, *_effect_sentences(t, item, full, kept, junior)])
 
 
 def digest(study: read.Study, state: dict, *, since: int) -> dict:
@@ -1221,6 +1290,11 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
             continue
         item['text'] = _text(t, item, again=again, state=state, full=own, record=record,
                              kept=kept)
+        junior = _text(t, item, again=again, state=state, full=own, record=record, kept=kept,
+                       junior=True)
+        # WP-A7: ``junior_text`` only when the sentence differs (the summary stays compact).
+        item['audience'] = audience.JUNIOR if junior == item['text'] else audience.AGENT
+        item['junior_text'] = None if junior == item['text'] else junior
         if kind in _COUNT_OF_KIND:
             counts[_COUNT_OF_KIND[kind]] += 1
         inv = item['invalidation']

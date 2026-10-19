@@ -15,6 +15,7 @@ REPO = HERE.parents[2]
 sys.path.insert(0, str(REPO / 'framework' / 'tests' / 'study'))
 
 import companion_contract as cc  # noqa: E402
+import test_contract_freeze as freeze  # noqa: E402  (WP-A7: the data card's frozen keys)
 
 CONTRACT = json.loads((HERE / 'fixtures' / 'contract-keys.json').read_text(encoding='utf-8'))
 
@@ -32,6 +33,8 @@ EXPECTED = {
     'hypotrail.export/1': {'': cc.EXPORT_KEYS},
     'hypotrail.handoff/1': {'': cc.HANDOFF_KEYS},
     'hypotrail.check/1': {'findings[].location': cc.CHECK_LOCATION_KEYS},
+    # WP-A7: the data card is a read of the Data & EDA tab (CLI-CONTRACT §11.1).
+    'hypotrail.data/1': {'': freeze.DATA_PAYLOAD_KEYS, 'groups[].variables[]': freeze.DATA_VARIABLE_KEYS},
 }
 
 

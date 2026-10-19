@@ -659,7 +659,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2a (WP-A4): the success criterion and the target-look count.
                 'criterion', 'eda_looks', 'recap',
                 # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
-                'recap_audience', 'recap_junior')
+                'recap_audience', 'recap_junior',
+                # v0.2a (WP-A7): the confirmation mode and the notebook launch commands.
+                'mode', 'deliverables')
 
 
 def test_status_summary_is_compact_and_complete(study, work, features):

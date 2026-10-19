@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 34,
+  "revision": 38,
   "task": "binary",
   "terms": [
    {

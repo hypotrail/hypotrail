@@ -213,6 +213,1269 @@
     "headline": null
    },
    {
+    "result_id": "679d634dd22e870c564343e45f8c413c00404b5048e91ddd420c5a429778a7a6",
+    "activity": "eda.quality",
+    "slot": "eda.quality",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "development",
+    "n_rows": 318,
+    "params": {
+     "partition": "development"
+    },
+    "upstream": {},
+    "downstream": [],
+    "created": "2026-10-19T10:52:26.368689+00:00",
+    "started_revision": 18,
+    "execution_id": "e_808e66ec55e19cf01a72e71c",
+    "exposure_id": "x_48f86c0ac9204135bf11249f375aa722",
+    "values": {
+     "partition": "development",
+     "n_rows": 318,
+     "n_columns": 8,
+     "target_read": false,
+     "missing": [
+      {
+       "column": "cylinders",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "displacement",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "horsepower",
+       "n_missing": 6,
+       "share": 0.018867924528301886
+      },
+      {
+       "column": "weight",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "acceleration",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "model_year",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "origin",
+       "n_missing": 0,
+       "share": 0.0
+      },
+      {
+       "column": "car_name",
+       "n_missing": 0,
+       "share": 0.0
+      }
+     ],
+     "n_rows_with_missing": 6,
+     "co_missing": [
+      {
+       "columns": [
+        "horsepower"
+       ],
+       "n_rows": 6,
+       "share": 0.018867924528301886
+      }
+     ],
+     "duplicates": {
+      "n_rows": 0,
+      "n_groups": 0,
+      "definition": "rows identical on every column except the target"
+     },
+     "cardinality": [
+      {
+       "column": "origin",
+       "type": "category",
+       "n_distinct": 3,
+       "rare": [],
+       "rare_rows": 30
+      },
+      {
+       "column": "car_name",
+       "type": "string",
+       "n_distinct": 254,
+       "rare": [
+        {
+         "value": "amc ambassador brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "amc ambassador dpl",
+         "n_rows": 1
+        },
+        {
+         "value": "amc ambassador sst",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord d/l",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord dl",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord dl 6",
+         "n_rows": 1
+        },
+        {
+         "value": "amc hornet sportabout (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "amc pacer",
+         "n_rows": 1
+        },
+        {
+         "value": "amc pacer d/l",
+         "n_rows": 1
+        },
+        {
+         "value": "amc rebel sst",
+         "n_rows": 1
+        },
+        {
+         "value": "amc spirit dl",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 100 ls",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 4000",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 5000",
+         "n_rows": 1
+        },
+        {
+         "value": "audi 5000s (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "bmw 2002",
+         "n_rows": 1
+        },
+        {
+         "value": "bmw 320i",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century 350",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century limited",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century luxus (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "buick century special",
+         "n_rows": 1
+        },
+        {
+         "value": "buick electra 225 custom",
+         "n_rows": 1
+        },
+        {
+         "value": "buick lesabre custom",
+         "n_rows": 1
+        },
+        {
+         "value": "buick opel isuzu deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "buick regal sport coupe (turbo)",
+         "n_rows": 1
+        },
+        {
+         "value": "buick skylark 320",
+         "n_rows": 1
+        },
+        {
+         "value": "buick skylark limited",
+         "n_rows": 1
+        },
+        {
+         "value": "cadillac eldorado",
+         "n_rows": 1
+        },
+        {
+         "value": "cadillac seville",
+         "n_rows": 1
+        },
+        {
+         "value": "capri ii",
+         "n_rows": 1
+        },
+        {
+         "value": "chevroelt chevelle malibu",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet bel air",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier 2-door",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet cavalier wagon",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle concours (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle malibu",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet chevelle malibu classic",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet concours",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet malibu classic (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet monza 2+2",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet nova custom",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet vega (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "chevrolet vega 2300",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy c10",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy c20",
+         "n_rows": 1
+        },
+        {
+         "value": "chevy s-10",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler cordoba",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler lebaron medallion",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler lebaron salon",
+         "n_rows": 1
+        },
+        {
+         "value": "chrysler newport royal",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 1200",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 200-sx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 200sx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 210 mpg",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 280-zx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 310",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 310 gx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 510 hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 610",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 810",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun 810 maxima",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun b-210",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun b210 gx",
+         "n_rows": 1
+        },
+        {
+         "value": "datsun f-10 hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aries se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aries wagon (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aspen 6",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge aspen se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge challenger se",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt hardtop",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt hatchback custom",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge colt m/m",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge coronet custom (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge d100",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge dart custom",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge diplomat",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge monaco brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge omni",
+         "n_rows": 1
+        },
+        {
+         "value": "dodge rampage",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 124 sport coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 124 tc",
+         "n_rows": 1
+        },
+        {
+         "value": "fiat 131",
+         "n_rows": 1
+        },
+        {
+         "value": "ford country",
+         "n_rows": 1
+        },
+        {
+         "value": "ford escort 2h",
+         "n_rows": 1
+        },
+        {
+         "value": "ford f108",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont (auto)",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont 4",
+         "n_rows": 1
+        },
+        {
+         "value": "ford fairmont futura",
+         "n_rows": 1
+        },
+        {
+         "value": "ford futura",
+         "n_rows": 1
+        },
+        {
+         "value": "ford granada",
+         "n_rows": 1
+        },
+        {
+         "value": "ford granada ghia",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ltd",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ltd landau",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang cobra",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang gl",
+         "n_rows": 1
+        },
+        {
+         "value": "ford mustang ii 2+2",
+         "n_rows": 1
+        },
+        {
+         "value": "ford pinto (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "ford ranger",
+         "n_rows": 1
+        },
+        {
+         "value": "ford thunderbird",
+         "n_rows": 1
+        },
+        {
+         "value": "ford torino",
+         "n_rows": 1
+        },
+        {
+         "value": "hi 1200d",
+         "n_rows": 1
+        },
+        {
+         "value": "honda accord",
+         "n_rows": 1
+        },
+        {
+         "value": "honda accord cvcc",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic (auto)",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic 1500 gl",
+         "n_rows": 1
+        },
+        {
+         "value": "honda civic cvcc",
+         "n_rows": 1
+        },
+        {
+         "value": "honda prelude",
+         "n_rows": 1
+        },
+        {
+         "value": "maxda rx3",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc 4",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc custom",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc custom l",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda glc deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda rx-4",
+         "n_rows": 1
+        },
+        {
+         "value": "mazda rx2 coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes benz 300d",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes-benz 240d",
+         "n_rows": 1
+        },
+        {
+         "value": "mercedes-benz 280s",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury capri 2000",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury capri v6",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury lynx l",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury marquis brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury monarch ghia",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury zephyr",
+         "n_rows": 1
+        },
+        {
+         "value": "mercury zephyr 6",
+         "n_rows": 1
+        },
+        {
+         "value": "nissan stanza xe",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass ciera (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass ls",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass salon brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile cutlass supreme",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile delta 88 royale",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile omega",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile omega brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile starfire sx",
+         "n_rows": 1
+        },
+        {
+         "value": "oldsmobile vista cruiser",
+         "n_rows": 1
+        },
+        {
+         "value": "opel 1900",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 304",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 505s turbo diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "peugeot 604sl",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth arrow gs",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth champ",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth cricket",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth custom suburb",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth duster",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth fury",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth fury gran sedan",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth grand fury",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth horizon tc3",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth sapporo",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth satellite custom (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth valiant custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth volare custom",
+         "n_rows": 1
+        },
+        {
+         "value": "plymouth volare premier v8",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac astro",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac catalina brougham",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac firebird",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac grand prix",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac grand prix lj",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac j2000 se hatchback",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac lemans v6",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac phoenix",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac phoenix lj",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac safari (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac sunbird coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "pontiac ventura sj",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 12 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 12tl",
+         "n_rows": 1
+        },
+        {
+         "value": "renault 18i",
+         "n_rows": 1
+        },
+        {
+         "value": "renault lecar deluxe",
+         "n_rows": 1
+        },
+        {
+         "value": "saab 99e",
+         "n_rows": 1
+        },
+        {
+         "value": "saab 99gle",
+         "n_rows": 1
+        },
+        {
+         "value": "subaru dl",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota carina",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota celica gt",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota celica gt liftback",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla 1200",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla 1600 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla liftback",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corolla tercel",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota corona hardtop",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota cressida",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota starlet",
+         "n_rows": 1
+        },
+        {
+         "value": "toyota tercel",
+         "n_rows": 1
+        },
+        {
+         "value": "toyouta corona mark ii (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "triumph tr7 coupe",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen 1131 deluxe sedan",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen 411 (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen jetta",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen model 111",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit custom",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit custom diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen rabbit l",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen scirocco",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen super beetle",
+         "n_rows": 1
+        },
+        {
+         "value": "volkswagen type 3",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 144ea",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 145e (sw)",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 244dl",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo 264gl",
+         "n_rows": 1
+        },
+        {
+         "value": "volvo diesel",
+         "n_rows": 1
+        },
+        {
+         "value": "vw pickup",
+         "n_rows": 1
+        },
+        {
+         "value": "vw rabbit c (diesel)",
+         "n_rows": 1
+        },
+        {
+         "value": "vw rabbit custom",
+         "n_rows": 1
+        },
+        {
+         "value": "amc concord",
+         "n_rows": 2
+        },
+        {
+         "value": "amc matador (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "audi 100ls",
+         "n_rows": 2
+        },
+        {
+         "value": "buick century",
+         "n_rows": 2
+        },
+        {
+         "value": "buick estate wagon (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "buick skylark",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet caprice classic",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet malibu",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet monte carlo landau",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet nova",
+         "n_rows": 2
+        },
+        {
+         "value": "chevrolet vega",
+         "n_rows": 2
+        },
+        {
+         "value": "datsun 210",
+         "n_rows": 2
+        },
+        {
+         "value": "datsun 710",
+         "n_rows": 2
+        },
+        {
+         "value": "dodge aspen",
+         "n_rows": 2
+        },
+        {
+         "value": "fiat 128",
+         "n_rows": 2
+        },
+        {
+         "value": "ford country squire (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "ford gran torino (sw)",
+         "n_rows": 2
+        },
+        {
+         "value": "mazda 626",
+         "n_rows": 2
+        },
+        {
+         "value": "opel manta",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth fury iii",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth reliant",
+         "n_rows": 2
+        },
+        {
+         "value": "plymouth valiant",
+         "n_rows": 2
+        },
+        {
+         "value": "pontiac catalina",
+         "n_rows": 2
+        },
+        {
+         "value": "saab 99le",
+         "n_rows": 2
+        },
+        {
+         "value": "subaru",
+         "n_rows": 2
+        },
+        {
+         "value": "volkswagen dasher",
+         "n_rows": 2
+        },
+        {
+         "value": "volkswagen rabbit",
+         "n_rows": 2
+        },
+        {
+         "value": "vw rabbit",
+         "n_rows": 2
+        },
+        {
+         "value": "amc gremlin",
+         "n_rows": 3
+        },
+        {
+         "value": "amc hornet",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet chevette",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet citation",
+         "n_rows": 3
+        },
+        {
+         "value": "chevrolet impala",
+         "n_rows": 3
+        },
+        {
+         "value": "dodge colt",
+         "n_rows": 3
+        },
+        {
+         "value": "ford galaxie 500",
+         "n_rows": 3
+        },
+        {
+         "value": "ford gran torino",
+         "n_rows": 3
+        },
+        {
+         "value": "ford maverick",
+         "n_rows": 3
+        },
+        {
+         "value": "honda civic",
+         "n_rows": 3
+        },
+        {
+         "value": "peugeot 504",
+         "n_rows": 3
+        },
+        {
+         "value": "toyota corolla",
+         "n_rows": 4
+        },
+        {
+         "value": "toyota corona",
+         "n_rows": 4
+        },
+        {
+         "value": "amc matador",
+         "n_rows": 5
+        },
+        {
+         "value": "ford pinto",
+         "n_rows": 5
+        }
+       ],
+       "rare_rows": 30
+      }
+     ],
+     "ranges": [
+      {
+       "column": "cylinders",
+       "type": "integer",
+       "min": 3,
+       "max": 8,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "displacement",
+       "type": "numeric",
+       "min": 68,
+       "max": 455,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "horsepower",
+       "type": "numeric",
+       "min": 46,
+       "max": 230,
+       "n_special": 6,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "weight",
+       "type": "numeric",
+       "min": 1613,
+       "max": 5140,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "acceleration",
+       "type": "numeric",
+       "min": 8.5,
+       "max": 24.8,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      },
+      {
+       "column": "model_year",
+       "type": "integer",
+       "min": 70,
+       "max": 82,
+       "n_special": 0,
+       "declared": null,
+       "n_below": null,
+       "n_above": null
+      }
+     ],
+     "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+     "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
+    },
+    "headline": null
+   },
+   {
+    "result_id": "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
+    "activity": "eda.single_feature_signal",
+    "slot": "eda.single_feature_signal",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 222,
+    "params": {
+     "folds": 5,
+     "metric": "r2",
+     "seed": 20261019
+    },
+    "upstream": {
+     "split": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a"
+    },
+    "downstream": [],
+    "created": "2026-10-19T10:52:26.837657+00:00",
+    "started_revision": 20,
+    "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+    "exposure_id": "x_1fa844564a6843d6889a2a99cb8027bb",
+    "values": {
+     "partition": "train",
+     "n_rows": 222,
+     "metric": "r2",
+     "folds": 5,
+     "seed": 20261019,
+     "signals": [
+      {
+       "feature": "weight",
+       "availability": "available_at_prediction",
+       "score": 0.7713111621467463,
+       "rank": 1,
+       "flag": false
+      },
+      {
+       "feature": "displacement",
+       "availability": "available_at_prediction",
+       "score": 0.7057985980427371,
+       "rank": 2,
+       "flag": false
+      },
+      {
+       "feature": "cylinders",
+       "availability": "available_at_prediction",
+       "score": 0.6648927939010156,
+       "rank": 3,
+       "flag": false
+      },
+      {
+       "feature": "horsepower",
+       "availability": "available_at_prediction",
+       "score": 0.6239501978472506,
+       "rank": 4,
+       "flag": false
+      },
+      {
+       "feature": "origin",
+       "availability": "available_at_prediction",
+       "score": 0.3449029817324962,
+       "rank": 5,
+       "flag": false
+      },
+      {
+       "feature": "acceleration",
+       "availability": "uncertain_excluded",
+       "score": 0.2020734269265655,
+       "rank": 6,
+       "flag": false
+      }
+     ],
+     "median": 0.6444214958741331,
+     "level": 0.8,
+     "gap": 0.4,
+     "questions": [],
+     "question": "Does any single feature, on its own, predict the outcome so well that its availability at the prediction moment should be questioned?",
+     "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high."
+    },
+    "headline": null
+   },
+   {
     "result_id": "49cddc6cff8134ce50749f83219d748241878a1fc340404bce011dfa513d7b92",
     "activity": "eda.mean_by",
     "slot": "eda.mean_by:model_year",

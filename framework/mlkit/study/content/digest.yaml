@@ -15,12 +15,16 @@ decisions:
   policy: the policy
   conclusion: the conclusion
   model_choice: the model choice
+  success_criterion: the success criterion
+  preprocessing: the preparation of the variables
 activities:
   split: the split
   eda.target_rate: the target rate
   eda.special_values: the special-value check
   eda.rate_by: the target rate by group
   eda.distribution: the distribution
+  eda.quality: the data quality check
+  eda.single_feature_signal: the single-feature signal check
   fit.baseline: the baseline model
   fit.logistic: the logistic model
   policy.evaluation: the policy evaluation
@@ -50,6 +54,23 @@ templates:
   interruption_acknowledged: "The junior acknowledged that {activity} was interrupted, without restarting it."
   created: "The study was created."
   other: "The study changed ({action})."
+# v0.2a (WP-A7): the junior variant of each sentence (``junior_text``), in the second
+# person and without a recorded token: {value} and {rules} are filled with the rule or the
+# model in words. A template missing here is the same for the junior.
+junior_templates:
+  confirmed: "You confirmed {decision} in your own words."
+  confirmed_again: "You confirmed {decision} again in your own words."
+  confirmed_delegated: "{Decision} was left to the assistant's recommended default, as you asked."
+  hold_recorded: "You put {decision} on hold: \"{words}\"."
+  correction_recorded: "You recorded a correction on {decision}: \"{words}\"."
+  hold_resolved: "Your hold on {decision}, \"{hold}\", was resolved in your words: \"{words}\"."
+  hold_withdrawn: "Your hold on {decision}, \"{hold}\", was withdrawn in your words: \"{words}\"."
+  result_added_rules: "{Activity} was computed for: {rules}."
+  result_replaced_rules: "{Activity} was replaced for: {rules}."
+  interruption_acknowledged: "You acknowledged that {activity} was interrupted, without restarting it."
+  other: "The study changed."
+junior_causes:
+  hold_added: "you put {decision} on hold"
 effects:
   nothing_refitted: "Models unchanged, nothing refitted."
   refit: "To refit: {slots}."

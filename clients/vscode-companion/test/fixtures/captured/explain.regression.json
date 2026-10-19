@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 28,
+  "revision": 32,
   "task": "regression",
   "terms": [
    {
