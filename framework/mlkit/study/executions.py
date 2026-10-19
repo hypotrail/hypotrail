@@ -55,7 +55,7 @@ from mlkit.reliability import CommandRefused, Handler
 from . import activities as act
 from . import commands as cmd
 from . import dependencies as dep
-from . import exposure, guard, lock, registry
+from . import exposure, guard, lock, partition, registry
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -141,6 +141,18 @@ def _reserve(ctx: cmd.Context) -> Handler:
                                               'activity': running['activity'],
                                               'started_revision': running['started_revision']})
         revision = state['revision'] + 1
+        if activity == act.FINAL:
+            # WP-B1: the final test is opened here, before any of its rows is read, so the
+            # one evaluation can never be scored twice (an interrupted one consumes it too).
+            if st.final_test_opened(state):
+                raise cmd.final_test_opened_refusal(state)
+            config = state['decisions'][st.FINAL_TEST]['value'] or {}
+            conf = state['decisions'][st.FINAL_TEST]['confirmation'] or {}
+            state['partition']['status'] = partition.OPENED
+            state['partition']['opening'] = partition.open_record(
+                revision=revision, execution_id=eid, proposal_id=conf.get('proposal_id'),
+                user_words=conf.get('user_words'), model=config.get('model'),
+                rule=config.get('rule'), time=st.now())
         record = {'execution_id': eid, 'activity': activity, 'slot': plan['slot'],
                   'options': plan['options'], 'request_id': ctx.request_id, 'status': 'running',
                   'started_revision': revision, 'started': st.now(),
@@ -171,6 +183,10 @@ def _promote(ctx: cmd.Context) -> Handler:
                       'or code)')
         done = {**record, 'result_id': rid, 'finished': st.now(),
                 'finished_revision': state['revision'] + 1}
+        opening = (state.get('partition') or {}).get('opening')
+        if record['activity'] == act.FINAL and opening \
+                and opening.get('execution_id') == eid:
+            opening['result_id'] = rid      # WP-B1: the one evaluation of the final test
         if reason is None:
             slot = record['slot']
             previous = state['current'].get(slot)
@@ -412,11 +428,13 @@ Hook = Callable[[dict], None]
 
 
 def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
-        expected_revision: int, hooks: Mapping[str, Hook] | None = None) -> cmd.Outcome:
+        expected_revision: int, hooks: Mapping[str, Hook] | None = None,
+        render: bool = True) -> cmd.Outcome:
     """Run one activity (reserve, compute, promote) and describe the outcome.
 
     ``hooks`` (tests only) maps ``after_reserve`` and ``before_promote`` to callables
-    that receive the plan.
+    that receive the plan. ``render`` False leaves the deliverables to the caller (the
+    opening of the final test renders once, after the confirmation it follows).
     """
     act.guard_read_only()
     hooks = dict(hooks or {})
@@ -483,7 +501,7 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         payload = _payload(store, action='run', request_id=request_id, replayed=False,
                            revision=state['revision'], activity=activity, eid=eid,
                            status=result['status'], result_id=put['result_id'], result=result)
-    return _outcome(store, payload, render=True)
+    return _outcome(store, payload, render=render)
 
 
 def plan_summary(plan: Mapping, eid: str) -> dict:

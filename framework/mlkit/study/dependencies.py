@@ -106,6 +106,14 @@ MUTATIONS: tuple[dict, ...] = (
     {'row': 16, 'mutation': 'success_criterion', 'refit': (), 're_eda': (), 're_policy': (),
      'recompute': (), 'reconfirm': ('conclusion',), 'blocked_until': (),
      'notes': ('No result changes; the conclusion is judged against the new criterion.',)},
+    # v0.2b (WP-B1). Row 17: the variant changed; the variant is fitted again, the evaluation
+    # follows, and the choice and the conclusion are asked again. The candidate and the
+    # baseline stay current.
+    {'row': 17, 'mutation': 'model_variant', 'refit': ('fit.variant',), 're_eda': (),
+     're_policy': ('policy.evaluation',), 'recompute': (), 'reconfirm': ('policy', 'conclusion'),
+     'blocked_until': (),
+     'notes': ('The baseline and the candidate stay current; only the variant is fitted again. '
+               'The trial count grows by one configuration.',)},
     {'row': '*', 'mutation': 'unknown', 'refit': ('*',), 're_eda': ('*',), 're_policy': ('*',),
      'recompute': ('*',), 'reconfirm': ('*',), 'blocked_until': (),
      'notes': ('Unknown mutation: every current result is stale and every confirmed '
@@ -150,6 +158,10 @@ REGRESSION_MUTATIONS: tuple[dict, ...] = (
      'notes': ('The mean baseline uses no feature and stays current; the exploration is '
                'unchanged.',)},
     BY_MUTATION['preprocessing.motivation'], BY_MUTATION['success_criterion'],
+    {'row': 17, 'mutation': 'model_variant', 'refit': ('fit.variant',), 're_eda': (),
+     're_policy': ('evaluate.regression',), 'recompute': (),
+     'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
+     'notes': BY_MUTATION['model_variant']['notes']},
     BY_MUTATION['unknown'],
 )
 REGRESSION_BY_MUTATION = {m['mutation']: m for m in REGRESSION_MUTATIONS}
@@ -167,9 +179,10 @@ canonical_rule = rec.canonical_rule
 
 def parse_policy(value: Any) -> tuple[str, float] | None:
     """``("threshold", t)`` or ``("capacity", k)`` from ``"threshold:0.3"`` /
-    ``"capacity:100"``; None when the value is not a policy rule
-    (:func:`mlkit.study.records.canonical_rule` is the grammar)."""
-    return rec.parse_rule(value)
+    ``"capacity:100"`` (WP-B1: or ``"capacity:100@fit.variant"``, the rule of the variant);
+    None when the value is not a policy (:func:`mlkit.study.records.canonical_rule` is the
+    grammar of the rule)."""
+    return rec.parse_rule(rec.policy_rule(value))
 
 
 def feature_set(value: Any) -> frozenset | None:
@@ -207,6 +220,10 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
         before, after = parse_policy(old), parse_policy(new)
         if before is None or after is None:
             return 'unknown'
+        if rec.policy_model(old) != rec.policy_model(new):
+            # WP-B1: the rule moves to the other model (candidate or variant): no refit, the
+            # stored predictions of both are reused, as for a new rule type.
+            return 'policy.rule_type'
         return 'policy.parameter' if before[0] == after[0] else 'policy.rule_type'
     if decision_id == 'model_choice':
         return 'model_choice' if isinstance(old, str) and isinstance(new, str) else 'unknown'
@@ -219,6 +236,9 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
                 else 'preprocessing.motivation')
     if decision_id == 'success_criterion':
         return 'success_criterion' if isinstance(old, Mapping) and isinstance(new, Mapping) \
+            else 'unknown'
+    if decision_id == 'model_variant':
+        return 'model_variant' if isinstance(old, Mapping) and isinstance(new, Mapping) \
             else 'unknown'
     if decision_id in ('settings.bootstrap', 'usage_label', 'eda_added', 'conclusion',
                        'code_fingerprint'):
@@ -293,6 +313,12 @@ def _table_effects(old_state: Mapping, decision_id: str, mutation: str, spec: Ma
         reconfirm = [d for d in decisions if d != decision_id]
     else:
         reconfirm = [d for d in spec['reconfirm'] if d != decision_id]
+    # WP-B1: the opening of the final test is a one-time act; it is never asked again (a
+    # later change is shown as made after the final test instead).
+    reconfirm = [d for d in reconfirm if d != st.FINAL_TEST]
+    if st.has_wp_b1_decisions(old_state) and mutation in VARIANT_REFITS:
+        # The variant is the candidate with one change: what refits the candidate refits it.
+        out['refit'] = sorted(set(out['refit']) | {VARIANT_SLOT})
     explain = list(spec.get('re_explain', ())) + reconfirm
     if decision_id in decisions and decision_id not in explain:
         explain.insert(0, decision_id)
@@ -304,6 +330,11 @@ def _table_effects(old_state: Mapping, decision_id: str, mutation: str, spec: Ma
     return out
 
 
+VARIANT_SLOT = 'fit.variant'
+# The mutations that refit the candidate model, so the variant too (WP-B1).
+VARIANT_REFITS = ('prediction_time', 'feature_availability.feature_set', 'preprocessing')
+
+
 # The decision a row of the table changes (advanced companion, CLI-CONTRACT-COMPANION §5).
 DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
                         'feature_availability.feature_set': 'feature_availability',
@@ -311,16 +342,18 @@ DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
                         'split': 'split', 'policy.parameter': 'policy',
                         'policy.rule_type': 'policy', 'model_choice': 'model_choice',
                         'preprocessing': 'preprocessing',
-                        'success_criterion': 'success_criterion'}
+                        'success_criterion': 'success_criterion',
+                        # WP-B1.
+                        'model_variant': 'model_variant'}
 # The rows whose mutation can change a confirmed decision, by task (CC §5 ``impacts``):
 # rows 1 to 6 for a binary study, rows 1 to 4 and 13 for a regression study.
 DECISION_MUTATIONS = {
     st.BINARY: ('prediction_time', 'feature_availability.feature_set',
                 'feature_availability.wording', 'split', 'policy.parameter',
-                'policy.rule_type', 'preprocessing', 'success_criterion'),
+                'policy.rule_type', 'preprocessing', 'success_criterion', 'model_variant'),
     st.REGRESSION: ('prediction_time', 'feature_availability.feature_set',
                     'feature_availability.wording', 'split', 'model_choice', 'preprocessing',
-                    'success_criterion'),
+                    'success_criterion', 'model_variant'),
 }
 
 
@@ -428,6 +461,8 @@ def apply_effects(state: dict, eff: Mapping, *, revision: int, decision_id: str,
         state['stale'][rid] = {'reason': reason, 'since': revision}
     reconfirmed = []
     for d in eff['reconfirm']:
+        if d == st.FINAL_TEST:
+            continue        # WP-B1: the opening is never asked again
         decision = state['decisions'][d]
         if decision['status'] == 'confirmed':
             decision.update(status='reconfirm_required', reason=reason)
@@ -516,11 +551,14 @@ def apply_hold(state: dict, decision_id: str, note_id: str, *, revision: int) ->
 # Decisions resting on the figures of a slot's result: an adopted policy and the
 # conclusion were confirmed on evaluations computed from the split and the fits.
 RESTS_ON = {'split': ('policy', 'conclusion'), 'fit.baseline': ('policy', 'conclusion'),
-            'fit.logistic': ('policy', 'conclusion')}
+            'fit.logistic': ('policy', 'conclusion'),
+            # WP-B1: the choice compares the variant too.
+            'fit.variant': ('policy', 'conclusion')}
 # In a regression study the model choice and the conclusion rest on the split and the fits.
 REGRESSION_RESTS_ON = {'split': ('model_choice', 'conclusion'),
                        'fit.baseline': ('model_choice', 'conclusion'),
-                       'fit.linear': ('model_choice', 'conclusion')}
+                       'fit.linear': ('model_choice', 'conclusion'),
+                       'fit.variant': ('model_choice', 'conclusion')}
 RESTS_ON_BY_TASK = {st.BINARY: RESTS_ON, st.REGRESSION: REGRESSION_RESTS_ON}
 
 

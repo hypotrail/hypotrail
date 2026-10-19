@@ -87,8 +87,8 @@ REASON_CONNECTOR = re.compile(r"""
 """, re.IGNORECASE | re.VERBOSE)
 # The decisions that need a reason, per task: the choice of the third pause and the
 # conclusion (owner rule R1, "hybrid").
-REASON_DECISIONS = {st.BINARY: ('policy', 'conclusion'),
-                    st.REGRESSION: ('model_choice', 'conclusion')}
+REASON_DECISIONS = {st.BINARY: ('policy', 'conclusion', st.FINAL_TEST),
+                    st.REGRESSION: ('model_choice', 'conclusion', st.FINAL_TEST)}
 
 
 def _cmd():

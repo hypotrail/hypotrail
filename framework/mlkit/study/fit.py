@@ -194,42 +194,84 @@ def _preprocessing_values(inputs: Mapping, fitted) -> dict:
                                       'unchanged to validation rows.'}}
 
 
+def _fit_predict(case: c.Case, train, test, inputs: Mapping, params: Mapping, binary: bool):
+    """Fit the model of ``params`` on ``train`` with the model ``inputs`` (features, special
+    values, preprocessing), and predict ``test``: ``(prediction, model, indicators,
+    fitted, in_sample)`` (``in_sample``: the prediction of ``train`` itself). A binary model scores the positive class; a regression model predicts the
+    target. Shared by the train/validation fits, the cross-validated fits (one call per
+    fold), and the final evaluation (WP-B1); the candidate's own parameters are unchanged
+    since v0.1, the variant's (``C``, ``alpha``) come from :data:`activities.VARIANT_C` and
+    :data:`activities.VARIANT_ALPHA`."""
+    from .activities import positive
+    from mlkit import classical
+    features, special = list(inputs['features']), list(inputs['special_values'])
+    X_train, indicators = design(train, features, special, case)
+    X_test, _ = design(test, features, special, case)
+    X_train, X_test, fitted = prepare(case, train, test, X_train, X_test, features,
+                                      inputs.get('preprocessing'), special)
+    if binary:
+        y_train = positive(train, case)
+        spec = {'task': {'kind': 'binary'}, 'model_options': {}}
+        model = classical.pipeline('logistic', X_train, spec, params['seed'])
+        if params.get('C') is not None:
+            model.set_params(model__C=float(params['C']))
+        model.fit(X_train, y_train.to_numpy())
+        classes = list(model.classes_)
+        return (model.predict_proba(X_test)[:, classes.index(1)], model, indicators, fitted,
+                None)
+    from sklearn.linear_model import LinearRegression, Ridge
+    y_train = _target(case, train, 'training')
+    spec = {'task': {'kind': 'regression'}, 'model_options': {}}
+    model = classical.pipeline('ridge', X_train, spec, params['seed'])
+    if params.get('alpha') is not None:
+        model.set_params(model=Ridge(alpha=float(params['alpha'])))
+    else:
+        model.set_params(model=LinearRegression())
+    model.fit(X_train, y_train)
+    return model.predict(X_test), model, indicators, fitted, model.predict(X_train)
+
+
+def _variant_values(inputs: Mapping, params: Mapping) -> dict:
+    """WP-B1: what makes a variant (additive keys of ``fit.variant``'s values)."""
+    if 'variant' not in inputs:
+        return {}
+    out = {'variant': dict(inputs['variant'])}
+    for key in ('C', 'candidate_C', 'alpha', 'dropped_group'):
+        if key in params:
+            out[key] = params[key]
+    return out
+
+
+def _logistic_values(case, frame, model, indicators, features, n_positive) -> dict:
+    names = [str(n) for n in model['preprocess'].get_feature_names_out()]
+    coef = model['model'].coef_[0]
+    return {'model': 'logistic', 'features': features, 'special_value_indicators': indicators,
+            'n_train': int(len(frame)), 'n_train_positive': int(n_positive),
+            'n_terms': len(names), 'intercept': float(model['model'].intercept_[0]),
+            'coefficients': {n: float(v) for n, v in zip(names, coef)},
+            'coefficient_scale': 'per standard deviation of the training rows (numeric) or '
+                                 'per category (one-hot); associations, not effects',
+            'iterations': int(model['model'].n_iter_[0])}
+
+
 def logistic(case: c.Case, train, validation, inputs: Mapping, params: Mapping) -> dict:
     from .activities import guard_read_only, positive
     guard_read_only()
-    from mlkit import classical
 
     train, validation = _ordered(train), _ordered(validation)
-    features, special = list(inputs['features']), list(inputs['special_values'])
-    X_train, indicators = design(train, features, special, case)
-    X_val, _ = design(validation, features, special, case)
-    X_train, X_val, fitted = prepare(case, train, validation, X_train, X_val, features,
-                                     inputs.get('preprocessing'), special)
+    features = list(inputs['features'])
+    score, model, indicators, fitted, _ = _fit_predict(case, train, validation, inputs,
+                                                       params, binary=True)
     y_train = positive(train, case)
-    spec = {'task': {'kind': 'binary'}, 'model_options': {}}
-    model = classical.pipeline('logistic', X_train, spec, params['seed'])
-    model.fit(X_train, y_train.to_numpy())
-    classes = list(model.classes_)
-    score = model.predict_proba(X_val)[:, classes.index(1)]
     y_val = positive(validation, case).to_numpy()
-    names = [str(n) for n in model['preprocess'].get_feature_names_out()]
-    coef = model['model'].coef_[0]
-    values = {'model': 'logistic', 'features': features, 'special_value_indicators': indicators,
-              'n_train': int(len(train)), 'n_train_positive': int(y_train.sum()),
-              'n_terms': len(names), 'intercept': float(model['model'].intercept_[0]),
-              'coefficients': {n: float(v) for n, v in zip(names, coef)},
-              'coefficient_scale': 'per standard deviation of the training rows (numeric) or '
-                                   'per category (one-hot); associations, not effects',
-              'iterations': int(model['model'].n_iter_[0]),
+    values = {**_logistic_values(case, train, model, indicators, features, y_train.sum()),
               'validation': _validation_summary(y_val, score),
               'predictions': _predictions_meta(case, 'logistic', features, y_val),
-              **_preprocessing_values(inputs, fitted)}
+              **_preprocessing_values(inputs, fitted), **_variant_values(inputs, params)}
     return {'values': values,
             'blobs': {'predictions': predictions_blob(validation.index, y_val, score)},
             'partition': 'validation', 'n_rows': int(len(validation))}
 
-
-# --- regression ---------------------------------------------------------------------------
 
 PREDICTION_SEMANTICS = 'A prediction of the target, in its unit.'
 
@@ -292,39 +334,36 @@ def mean_baseline(case: c.Case, train, validation) -> dict:
             'partition': 'validation', 'n_rows': int(len(validation))}
 
 
+
+def _linear_values(case, train, model, indicators, features, params) -> dict:
+    names = [str(n) for n in model['preprocess'].get_feature_names_out()]
+    coef = model['model'].coef_
+    return {'model': 'ridge' if params.get('alpha') is not None else 'linear',
+            'target': case.target_column, 'unit': case.target_unit,
+            'features': features, 'special_value_indicators': indicators,
+            'n_train': int(len(train)), 'n_terms': len(names),
+            'intercept': float(model['model'].intercept_),
+            'coefficients': {n: float(v) for n, v in zip(names, coef)},
+            'coefficient_scale': 'target units per standard deviation of the training rows '
+                                 '(numeric) or per category (one-hot, not identifiable one by '
+                                 'one); associations, not effects'}
+
+
 def linear(case: c.Case, train, validation, inputs: Mapping, params: Mapping) -> dict:
     from .activities import guard_read_only
     guard_read_only()
-    from sklearn.linear_model import LinearRegression
-    from mlkit import classical
 
     train, validation = _ordered(train), _ordered(validation)
-    features, special = list(inputs['features']), list(inputs['special_values'])
-    X_train, indicators = design(train, features, special, case)
-    X_val, _ = design(validation, features, special, case)
-    X_train, X_val, fitted = prepare(case, train, validation, X_train, X_val, features,
-                                     inputs.get('preprocessing'), special)
+    features = list(inputs['features'])
+    prediction, model, indicators, fitted, in_sample = _fit_predict(
+        case, train, validation, inputs, params, binary=False)
     y_train = _target(case, train, 'training')
     y_val = _target(case, validation, 'validation')
-    spec = {'task': {'kind': 'regression'}, 'model_options': {}}
-    model = classical.pipeline('ridge', X_train, spec, params['seed'])
-    model.set_params(model=LinearRegression())
-    model.fit(X_train, y_train)
-    prediction = model.predict(X_val)
-    names = [str(n) for n in model['preprocess'].get_feature_names_out()]
-    coef = model['model'].coef_
-    values = {'model': 'linear', 'target': case.target_column, 'unit': case.target_unit,
-              'features': features, 'special_value_indicators': indicators,
-              'n_train': int(len(train)), 'n_terms': len(names),
-              'intercept': float(model['model'].intercept_),
-              'coefficients': {n: float(v) for n, v in zip(names, coef)},
-              'coefficient_scale': 'target units per standard deviation of the training rows '
-                                   '(numeric) or per category (one-hot, not identifiable one by '
-                                   'one); associations, not effects',
-              'train': _errors(y_train, model.predict(X_train)),
+    values = {**_linear_values(case, train, model, indicators, features, params),
+              'train': _errors(y_train, in_sample),
               'validation': _errors(y_val, prediction),
               'predictions': _regression_meta(case, 'linear', features, y_val),
-              **_preprocessing_values(inputs, fitted)}
+              **_preprocessing_values(inputs, fitted), **_variant_values(inputs, params)}
     return {'values': values,
             'blobs': {'predictions': regression_blob(validation.index, y_val, prediction)},
             'partition': 'validation', 'n_rows': int(len(validation))}
@@ -339,3 +378,237 @@ def compute(activity: str, case: c.Case, train, validation, inputs: Mapping,
     if activity == 'fit.baseline':
         return baseline(case, train, validation)
     return logistic(case, train, validation, inputs, params)
+
+
+# --- cross-validation on the development rows (WP-B1) ------------------------------------
+
+CV_NOTE = ('Every development row is predicted once, by a model fitted on the other folds '
+           '(the preparation of the variables learnt on those rows too): out-of-fold figures '
+           'are development evidence, not independent evidence.')
+SPREAD_KEYS = ('mean', 'sd', 'min', 'max')
+
+
+def _spread(values) -> dict:
+    """Mean, standard deviation (n - 1), minimum and maximum of the per-fold figures (the
+    folds that have one)."""
+    import numpy as np
+    v = np.array([x for x in values if x is not None], dtype=float)
+    if not len(v):
+        return {k: None for k in SPREAD_KEYS}
+    return {'mean': float(v.mean()), 'sd': float(v.std(ddof=1)) if len(v) > 1 else None,
+            'min': float(v.min()), 'max': float(v.max())}
+
+
+def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mapping,
+               params: Mapping) -> dict:
+    """Out-of-fold predictions of every development row (WP-B1).
+
+    For each fold, the model (and the preparation of its variables) is fitted on the rows of
+    the other folds and predicts the fold's rows. The figures of ``validation`` are those of
+    the out-of-fold predictions (all rows), ``cross_validation`` gives them per fold with
+    their spread, and the coefficients come from one more fit on every development row (the
+    model a final test would measure). The binary baseline scores every row with the
+    development positive rate: a constant has no ranking information, and a per-fold rate
+    would rank the rows by fold. The regression baseline predicts each fold with the mean of
+    the other folds."""
+    import numpy as np
+    from .activities import guard_read_only, positive
+    guard_read_only()
+
+    frame = _ordered(frame)
+    keys = list(frame.index)
+    fold = np.array([int(folds[k]) for k in keys])
+    k = int(fold.max())
+    binary = case.task == 'binary'
+    features = list(inputs.get('features') or [])
+    n = len(keys)
+    if binary:
+        y = positive(frame, case).to_numpy()
+    else:
+        y = _target(case, frame, 'development')
+    oof = np.zeros(n, dtype=float)
+    candidate = activity != 'fit.baseline'
+    for i in range(1, k + 1):
+        test = fold == i
+        if not candidate:
+            oof[test] = y.mean() if binary else y[~test].mean()
+            continue
+        pred = _fit_predict(case, frame.loc[[kk for kk, t in zip(keys, ~test) if t]],
+                                     frame.loc[[kk for kk, t in zip(keys, test) if t]],
+                                     inputs, params, binary)[0]
+        oof[test] = pred
+    per_fold = []
+    for i in range(1, k + 1):
+        test = fold == i
+        item = {'fold': i, 'n_rows': int(test.sum())}
+        if binary:
+            item.update(n_positive=int(y[test].sum()),
+                        roc_auc=metrics.roc_auc(y[test], oof[test]),
+                        average_precision=metrics.average_precision(y[test], oof[test]))
+        else:
+            e = _errors(y[test], oof[test])
+            item.update(mae=e['mae'], rmse=e['rmse'])
+        per_fold.append(item)
+    names = ('roc_auc', 'average_precision') if binary else ('mae', 'rmse')
+    cv = {'method': inputs.get('evaluation', {}).get('method'), 'folds': k,
+          'per_fold': per_fold,
+          'spread': {m: _spread(f[m] for f in per_fold) for m in names},
+          'note': CV_NOTE}
+    common = {'evaluation': 'out_of_fold', 'cross_validation': cv}
+    if not candidate:
+        if binary:
+            values = {'model': 'constant_prior', 'train_rate': float(y.mean()), 'n_train': n,
+                      'n_train_positive': int(y.sum()), 'features': [],
+                      'validation': _validation_summary(y, oof),
+                      'predictions': _cv_meta(_predictions_meta(case, 'constant_prior', [], y)),
+                      'note': 'Every row receives the development positive rate: no ranking '
+                              'information.', **common}
+            blob = predictions_blob(keys, y, oof)
+        else:
+            mean = float(y.mean())
+            values = {'model': 'train_mean', 'target': case.target_column,
+                      'unit': case.target_unit, 'train_mean': mean,
+                      'train_median': float(np.median(y)), 'n_train': n, 'features': [],
+                      'train': _errors(y, np.full(n, mean)),
+                      'validation': _errors(y, oof),
+                      'predictions': _cv_meta(_regression_meta(case, 'train_mean', [], y)),
+                      'note': 'Each fold receives the mean of the other folds: the reference a '
+                              'model must beat.', **common}
+            blob = regression_blob(keys, y, oof)
+        return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'development',
+                'n_rows': n}
+    # One more fit on every development row: its coefficients and preparation are shown.
+    _, model, indicators, fitted, in_sample = _fit_predict(case, frame, frame, inputs, params,
+                                                           binary)
+    if binary:
+        values = {**_logistic_values(case, frame, model, indicators, features, y.sum()),
+                  'validation': _validation_summary(y, oof),
+                  'predictions': _cv_meta(_predictions_meta(case, 'logistic', features, y))}
+        blob = predictions_blob(keys, y, oof)
+    else:
+        values = {**_linear_values(case, frame, model, indicators, features, params),
+                  'train': _errors(y, in_sample), 'validation': _errors(y, oof),
+                  'predictions': _cv_meta(_regression_meta(case, 'linear', features, y))}
+        blob = regression_blob(keys, y, oof)
+    pre = _preprocessing_values(inputs, fitted)
+    if pre:
+        pre['preprocessing']['note'] = ('Parameters learnt on the training rows of each fold and '
+                                        'applied to its held-out rows; shown here as learnt on '
+                                        'every development row.')
+    values.update(pre)
+    values.update(_variant_values(inputs, params))
+    values.update(common)
+    return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'development',
+            'n_rows': n}
+
+
+def _cv_meta(meta: dict) -> dict:
+    return {**meta, 'partition': 'development', 'evaluation': 'out_of_fold'}
+
+
+# --- the final test, scored once (WP-B1) --------------------------------------------------
+
+def criterion_status(gain, low, high, minimum) -> tuple[str, bool | None]:
+    """``(status, interval_includes_zero)`` of a gain against the success criterion's
+    minimum, as ``governance.assess`` judges it: ``met`` (the gain reaches the minimum and
+    its interval excludes 0), ``uncertain`` (it reaches it, the interval includes 0),
+    ``not_met``; ``not_assessed`` without a gain."""
+    if gain is None or minimum is None:
+        return 'not_assessed', None
+    includes = low is not None and high is not None and low <= 0 <= high
+    if gain < minimum - 1e-12:
+        return 'not_met', includes
+    return ('uncertain' if includes else 'met'), includes
+
+
+FINAL_NOTE = ('Measured once on the sealed final-test rows, with the configuration chosen on '
+              'the development rows refitted on all of them: this is the study\'s independent '
+              'evidence. Any later change is made after the final test.')
+
+
+def final_evaluation(case: c.Case, development, final, inputs: Mapping,
+                     params: Mapping) -> dict:
+    """The chosen configuration on the final test (WP-B1): refit on every development row,
+    score the final-test rows once, compare with the baseline refitted the same way, and
+    judge the success criterion on them."""
+    import numpy as np
+    from . import policy, regression
+    from .activities import guard_read_only, positive
+    guard_read_only()
+
+    development, final = _ordered(development), _ordered(final)
+    binary = case.task == 'binary'
+    chosen = params['model']
+    model_inputs, model_params = inputs['model_inputs'], params['model_params']
+    boot = inputs['bootstrap']
+    B, seed, level = int(boot['replicates']), int(boot['seed']), float(boot['level'])
+    criterion = inputs.get('criterion') or {}
+    n = len(final)
+    values = {'model': chosen, 'rule': params.get('rule'), 'n': n,
+              'refit': {'n_rows': int(len(development)),
+                        'features': list(model_inputs.get('features') or [])},
+              'evaluation': 'final_test'}
+    if binary:
+        y_dev = positive(development, case).to_numpy()
+        y = positive(final, case).to_numpy()
+        base = np.full(n, float(y_dev.mean()))
+        score = base if chosen == 'fit.baseline' else _fit_predict(
+            case, development, final, model_inputs, model_params, True)[0]
+        rule = params['rule']
+        if rule and rule.startswith('capacity:') and params.get('capacity_share') is not None:
+            k = max(1, int(np.floor(params['capacity_share'] * n + 0.5)))
+            rule_final = f'capacity:{k}'
+        else:
+            rule_final = rule
+        scores = {'fit.baseline': base, chosen: score}
+        paired = policy.paired_bootstrap(y, scores, rule_final, B, seed, level=level,
+                                         reference='fit.baseline')
+        delta = paired['deltas'].get(chosen, {}).get('precision') or {}
+        gain = 100 * delta['point'] if delta.get('point') is not None else None
+        low = 100 * delta['low'] if delta.get('low') is not None else None
+        high = 100 * delta['high'] if delta.get('high') is not None else None
+        minimum = criterion.get('min_points')
+        unit = 'percentage points'
+        values.update(rule_final=rule_final, capacity_share=params.get('capacity_share'),
+                      n_positive=int(y.sum()),
+                      models={s: policy.evaluate(y, v, rule_final) for s, v in scores.items()},
+                      intervals=paired['intervals'], deltas=paired['deltas'],
+                      ranking={s: {'roc_auc': metrics.roc_auc(y, v),
+                                   'average_precision': metrics.average_precision(y, v)}
+                               for s, v in scores.items()})
+        blob = predictions_blob(final.index, y, score)
+    else:
+        y_dev = _target(case, development, 'development')
+        y = _target(case, final, 'final test')
+        base = np.full(n, float(y_dev.mean()))
+        pred = base if chosen == 'fit.baseline' else _fit_predict(
+            case, development, final, model_inputs, model_params, False)[0]
+        predictions = {'fit.baseline': base}
+        if chosen != 'fit.baseline':
+            predictions[chosen] = pred
+        paired = regression.paired_bootstrap(y, predictions, B, seed, level=level,
+                                             reference='fit.baseline')
+        base_mae = paired['models']['fit.baseline']['mae']
+        delta = paired['deltas'].get(chosen, {}).get('mae')
+        if delta and base_mae > 0:
+            gain, low, high = (-delta['point'] / base_mae, -delta['high'] / base_mae,
+                               -delta['low'] / base_mae)
+        else:
+            gain = low = high = None
+        minimum = criterion.get('min_share')
+        unit = 'share'
+        values.update(target=case.target_column, unit=case.target_unit,
+                      models=paired['models'], intervals=paired['intervals'],
+                      deltas=paired['deltas'],
+                      residuals={s: regression.residual_summary(y, p)
+                                 for s, p in predictions.items()})
+        blob = regression_blob(final.index, y, pred)
+    status, includes = criterion_status(gain, low, high, minimum)
+    values['criterion'] = {'metric': criterion.get('metric'), 'minimum': minimum,
+                           'unit': unit, 'gain': gain, 'low': low, 'high': high,
+                           'interval_includes_zero': includes, 'status': status}
+    values['bootstrap'] = {'replicates': B, 'seed': seed, 'level': level,
+                           'method': 'paired percentile bootstrap over the final-test rows'}
+    values['note'] = FINAL_NOTE
+    return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'final_test',
+            'n_rows': n}

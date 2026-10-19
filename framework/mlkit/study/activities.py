@@ -35,6 +35,34 @@ fit.*               training rows, then validation ``train_fit``, ``validation_m
 policy.evaluation   validation predictions         ``validation_policy_selection``
 ==================  =============================  ===========================================
 
+v0.2b (WP-B1, ADR 0006 amendment). A study whose ``split`` decision is a cross-validation
+scheme (``kfold_stratified``, ``kfold_quantile``, ``temporal_folds``; ``state.CV_METHODS``)
+assigns every development row to one of ``folds`` folds. Its "training rows" for the
+exploration are every development row (the target looks are still counted); each fit is
+fitted on the other folds and predicts the rows of each fold, so every development row gets
+one out-of-fold prediction (the preprocessing is learnt on each fold's training rows), and
+the evaluations read those predictions:
+
+==================  =============================  ===========================================
+activity            rows read                      exposure purpose
+==================  =============================  ===========================================
+split (CV)          the target (or time) column    ``structural_inspection``
+eda.*               every development row          ``train_eda`` (partition ``development``)
+fit.* (CV)          every development row          ``cross_validated_fit``,
+                                                   ``out_of_fold_evaluation``
+policy.evaluation   out-of-fold predictions        ``out_of_fold_policy_selection``
+evaluate.regression out-of-fold predictions        ``out_of_fold_evaluation``
+final_test          development rows (refit), then ``train_fit`` (development),
+.evaluation         the final-test rows, once      ``final_evaluation`` (``final_test``)
+==================  =============================  ===========================================
+
+``fit.variant`` fits the variant the junior named (``model_variant``: a regularisation
+strength, or the candidate without one group of variables) under the same protocol as the
+candidate; the evaluations compare it with the candidate (``comparisons``).
+``final_test.evaluation`` runs once, after the ``final_test`` decision: it refits the chosen
+configuration on every development row and scores the sealed rows; reserving it marks the
+final test ``opened`` (:mod:`mlkit.study.partition`).
+
 A regression study (M3) has its own activities, chosen by the task of the study:
 ``split`` (``random`` or ``ordinal_cutoff``), ``eda.target_summary``,
 ``eda.special_values``, ``eda.mean_by:<column>``, ``fit.baseline`` (the training mean),
@@ -75,9 +103,12 @@ DISTRIBUTION = 'eda.distribution'
 # single-feature signal (a legitimacy question), in both tasks.
 QUALITY = 'eda.quality'
 SIGNAL = 'eda.single_feature_signal'
+# v0.2b (WP-B1): the variant of the candidate, and the one evaluation of the final test.
+VARIANT = 'fit.variant'
+FINAL = 'final_test.evaluation'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
               TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
-              SIGNAL)
+              SIGNAL, VARIANT, FINAL)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
     'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
@@ -86,11 +117,14 @@ TASK_ACTIVITIES = {
 # C8: activities of every task. ``TASK_ACTIVITIES`` is frozen by test_contract_freeze.py,
 # so the shared ones are listed here and added by :func:`task_activities`.
 SHARED_ACTIVITIES = (DISTRIBUTION, QUALITY, SIGNAL)
+# WP-B1: activities of every task in a study created since WP-B1.
+B1_ACTIVITIES = (VARIANT, FINAL)
 
 
 def task_activities(task: str) -> tuple[str, ...]:
-    """Every activity of a ``task`` study: its own, then the shared ones."""
-    return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES
+    """Every activity of a ``task`` study: its own, then the shared ones, then (WP-B1) the
+    variant and the final evaluation, which only a study with their decisions can run."""
+    return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES + B1_ACTIVITIES
 ALIASES = {'policy.evaluate': POLICY}
 CLI_NAMES = ACTIVITIES + tuple(ALIASES)
 EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION, QUALITY,
@@ -101,6 +135,8 @@ DISTRIBUTION_ROLES = ('feature', 'time', 'target')
 FITS = (BASELINE, LOGISTIC)
 REGRESSION_FITS = (BASELINE, LINEAR)
 CANDIDATE_FITS = (LOGISTIC, LINEAR)
+# Every fit that produces out-of-fold (or validation) predictions of a model.
+MODEL_FITS = (BASELINE, LOGISTIC, LINEAR, VARIANT)
 
 # Modules whose source defines each result (registry code fingerprint, plan §3.3).
 _BASE = 'mlkit.study.activities'
@@ -122,6 +158,10 @@ MODULES = {
     QUALITY: (_BASE, 'mlkit.study.eda'),
     SIGNAL: (_BASE, 'mlkit.study.eda', 'mlkit.study.fit', 'mlkit.study.metrics',
              'mlkit.classical'),
+    VARIANT: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.regression',
+              'mlkit.classical', 'mlkit.study.governance'),
+    FINAL: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.policy',
+            'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance'),
 }
 # The regression fit of the baseline also uses the error module.
 REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
@@ -145,6 +185,17 @@ MIN_PARTITION_ROWS = 5
 # Named refusals of a split (``details.reasons[].capability``).
 CAPABILITY_STRATIFY = 'stratified split with fewer than two rows of each class'
 CAPABILITY_SPLIT_PARAMETERS = 'random split of these rows with these parameters'
+# WP-B1: a cross-validation needs at least ``folds`` rows in each stratum it keeps.
+CAPABILITY_FOLDS = 'cross-validation folds with fewer rows of a stratum than folds'
+FOLDS_BLOB = 'folds'
+# WP-B1: the variant's regularisation (decision ``model_variant``). The candidate logistic
+# model has C = 1 (scikit-learn's default); a weaker regularisation is C = 10, a stronger one
+# C = 0.1. The candidate linear model is unregularised (ordinary least squares); its
+# regularised variants are ridge regressions with alpha = 1 (weak) or 10 (strong), on the
+# standardised features.
+VARIANT_C = {'weak': 10.0, 'strong': 0.1}
+CANDIDATE_C = 1.0
+VARIANT_ALPHA = {'weak': 1.0, 'strong': 10.0}
 
 
 def slot_of(activity: str, options: Mapping | None = None) -> str:
@@ -311,6 +362,13 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                              f'{activity} is not an activity of a {task} study.',
                              details={'activities': list(task_activities(task)), 'task': task})
     options = normalize_options(activity, options)
+    from . import state as st
+    if activity in B1_ACTIVITIES and not st.has_wp_b1_decisions(state):
+        raise CommandRefused('invalid_arguments',
+                             f'{activity} is not an activity of this study: it was created before '
+                             f'the variant and the final test existed.',
+                             details={'activities': [a for a in task_activities(task)
+                                                     if a not in B1_ACTIVITIES], 'task': task})
     pre.require_activity(state, activity)
     case = case_of(state)
     inputs = _base_inputs(state)
@@ -347,8 +405,14 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         # A stratified split reads the target; a random or ordinal split reads no target,
         # only the time column it cuts on. Each reads the declared group column, whose
         # overlap between partitions it reports.
-        if decision.get('method') == 'stratified_random':
+        if decision.get('method') in ('stratified_random', 'kfold_stratified',
+                                      'kfold_quantile'):
             read = [target]
+        elif decision.get('method') == 'temporal_folds':
+            # WP-B1: blocks in time order, by the time column (else the declared order).
+            column = time_order_column(case)
+            inputs['order_column'] = column
+            read = [column] if column != 'line' else []
         else:
             read = [decision['column']] if decision.get('method') == 'ordinal_cutoff' else []
         if case.group_column:
@@ -362,10 +426,15 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                 from . import data as dt
                 keys = dt.row_index(case).keys
             expose('structural_inspection', _rows_partition(inputs), keys, read)
+    elif activity == FINAL:
+        _plan_final(store, state, case, inputs, params, exposures, expose)
     else:
         split_rid = state['current'][SPLIT]
         keys = split_keys(store, split_rid)
         inputs['results'] = {SPLIT: split_rid}
+        cv = split_scheme(store, split_rid)
+        # WP-B1: under cross-validation the exploration reads every development row.
+        eda_partition = partition.DEVELOPMENT if cv else 'train'
         if activity == DISTRIBUTION:
             # C8: one column of the training rows, never the outcome (unless the column
             # is the target itself); no target in the inputs, the result does not depend
@@ -383,7 +452,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             if 'max_groups' in options:
                 params['max_groups'] = options['max_groups']
             inputs['special_values'] = feature_special_values(case, [column])
-            expose('train_eda', 'train', keys['train'], [column])
+            expose('train_eda', eda_partition, keys['train'], [column])
         elif activity == SIGNAL:
             # WP-A4: every candidate feature alone, out of fold, on training rows; the
             # availability decision is shown next to each signal, never acted upon.
@@ -397,7 +466,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             from . import eda
             params = {'folds': eda.SIGNAL_FOLDS, 'seed': eda.SIGNAL_SEED,
                       'metric': 'roc_auc' if task == 'binary' else 'r2'}
-            expose('train_eda', 'train', keys['train'], candidates + [target])
+            expose('train_eda', eda_partition, keys['train'], candidates + [target])
         elif activity in EDA:
             inputs['target'] = _target(case)
             columns = [target]
@@ -422,63 +491,60 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                     params['max_groups'] = options['max_groups']   # keeps earlier identities
                 inputs['special_values'] = feature_special_values(case, [column])
                 columns.append(column)
-            expose('train_eda', 'train', keys['train'], columns)
-        elif activity in FITS or activity == LINEAR:
+            expose('train_eda', eda_partition, keys['train'], columns)
+        elif activity in MODEL_FITS:
             inputs['target'] = _target(case)
             features: list[str] = []
-            if activity in CANDIDATE_FITS:
-                availability = state['decisions']['feature_availability']['value'] or {}
-                candidates = [v['name'] for v in case.document['variables']
-                              if v['role'] == 'feature']
-                missing = [f for f in candidates if f not in availability]
-                _refuse([{'requirement': 'availability_decision', 'feature': f,
-                          'detail': 'Every candidate feature needs an availability decision '
-                                    'before a model may use or ignore it.'} for f in missing],
-                        f'Running {activity}')
-                features, _ = used_features(case, availability)
-                _refuse([] if features else [{'requirement': 'usable_feature',
-                                              'detail': 'No feature is available_at_prediction '
-                                                        'or uncertain_included.'}],
-                        f'Running {activity}')
-                inputs['features'] = features
-                inputs['special_values'] = feature_special_values(case, features)
-                # WP-A4: the confirmed preprocessing, in a study that has the decision (an
-                # earlier study keeps its identities: no key).
-                from . import governance
-                preprocessing = governance.effective_preprocessing(state)
-                if preprocessing is not None:
-                    inputs['preprocessing'] = preprocessing
-                if activity == LINEAR:
-                    params = dict(LINEAR_PARAMS, seed=0)
-                else:
-                    params = dict(LOGISTIC_PARAMS,
-                                  seed=state['decisions']['split']['value']['seed'])
+            if activity in CANDIDATE_FITS or activity == VARIANT:
+                model_inputs, params = model_plan(state, case, activity)
+                inputs.update(model_inputs)
+                features = list(inputs['features'])
             elif task == 'regression':
                 params = {'model': 'train_mean'}
             else:
                 params = {'model': 'constant_prior'}
-            expose('train_fit', 'train', keys['train'], features + [target])
-            expose('validation_model_evaluation', 'validation', keys['validation'],
-                   features + [target])
+            if cv:
+                # WP-B1: each fold fitted on the other folds; every development row predicted
+                # once, out of fold.
+                inputs['evaluation'] = dict(cv)
+                expose('cross_validated_fit', partition.DEVELOPMENT, keys['train'],
+                       features + [target])
+                expose('out_of_fold_evaluation', partition.DEVELOPMENT, keys['validation'],
+                       features + [target])
+            else:
+                expose('train_fit', 'train', keys['train'], features + [target])
+                expose('validation_model_evaluation', 'validation', keys['validation'],
+                       features + [target])
         elif activity == REGRESSION_EVALUATION:
             # Current fits are a precondition (require_activity). The time column, when the
             # case declares one, breaks the residuals down by period.
-            inputs['results'] = {SPLIT: split_rid,
-                                 **{s: state['current'][s] for s in REGRESSION_FITS}}
+            models = compared_models(state, REGRESSION_FITS)
+            inputs['results'] = {SPLIT: split_rid, **{s: state['current'][s] for s in models}}
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
             inputs['target'] = _target(case)
             columns = [case.time_column] if case.time_column else []
             inputs['residual_columns'] = columns
-            params = {'models': list(REGRESSION_FITS), 'reference': BASELINE,
+            params = {'models': models, 'reference': BASELINE,
                       'candidate': LINEAR, 'metrics': ['mae', 'rmse']}
-            expose('validation_model_evaluation', 'validation', keys['validation'],
-                   [target] + columns)
+            if cv:
+                params['evaluation'] = 'out_of_fold'
+                expose('out_of_fold_evaluation', partition.DEVELOPMENT, keys['validation'],
+                       [target] + columns)
+            else:
+                expose('validation_model_evaluation', 'validation', keys['validation'],
+                       [target] + columns)
         else:   # policy evaluation; current fits are a precondition (require_activity)
-            inputs['results'] = {s: state['current'][s] for s in FITS}
+            models = compared_models(state, FITS)
+            inputs['results'] = {s: state['current'][s] for s in models}
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
-            params = {'rules': evaluated_rules(state, options['rules']), 'models': list(FITS),
+            params = {'rules': evaluated_rules(state, options['rules']), 'models': models,
                       'reference': BASELINE}
-            expose('validation_policy_selection', 'validation', keys['validation'], [target])
+            if cv:
+                params['evaluation'] = 'out_of_fold'
+                expose('out_of_fold_policy_selection', partition.DEVELOPMENT, keys['validation'],
+                       [target])
+            else:
+                expose('validation_policy_selection', 'validation', keys['validation'], [target])
     modules = (REGRESSION_MODULES.get(activity, MODULES[activity]) if task == 'regression'
                else MODULES[activity])
     code = registry.code_fingerprint(modules)
@@ -490,12 +556,157 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
 
 
 def adopted_rule(state: Mapping) -> str | None:
-    """The policy rule currently adopted (confirmed, or awaiting reconfirmation), if any."""
+    """The policy rule currently adopted (confirmed, or awaiting reconfirmation), if any
+    (WP-B1: the rule part of a value that names the variant)."""
     decision = state['decisions']['policy']
     value = decision['value']
     if decision['status'] in ('confirmed', 'reconfirm_required') and isinstance(value, str):
-        return rec.canonical_rule(value) or value
+        return rec.policy_rule(value) or value
     return None
+
+
+# --- WP-B1: models, folds, variant, final test (no pandas) -------------------------------
+
+def time_order_column(case: c.Case) -> str:
+    """The column temporal folds follow: the time column, else the declared order's column
+    (``line`` for the file order)."""
+    if case.time_column:
+        return case.time_column
+    order = case.order or {}
+    return order.get('by') or 'line'
+
+
+def split_scheme(store, split_rid: str) -> dict | None:
+    """``{scheme, method, folds}`` of a cross-validation split result, else None."""
+    entry = registry.get(store, split_rid)
+    values = entry['output']['values']
+    from . import state as st
+    if values.get('method') in st.CV_METHODS:
+        return {'scheme': 'cross_validation', 'method': values['method'],
+                'folds': values['folds']}
+    return None
+
+
+def fold_assignment(store, split_rid: str) -> dict[str, int] | None:
+    """``{row_key: fold}`` of a cross-validation split result (folds numbered from 1), or
+    None for a train/validation split."""
+    entry = registry.get(store, split_rid)
+    sha = entry['blobs'].get(FOLDS_BLOB)
+    if sha is None:
+        return None
+    out = {}
+    for line in store.read_blob(sha).decode('utf-8').splitlines()[1:]:
+        key, _, fold = line.partition(',')
+        out[key] = int(fold)
+    return out
+
+
+def compared_models(state: Mapping, fits: tuple) -> list[str]:
+    """The model slots an evaluation compares: the baseline and the candidate, and (WP-B1)
+    the variant once the junior named it."""
+    from . import state as st
+    models = list(fits)
+    if st.has_wp_b1_decisions(state) and \
+            state['decisions'][st.MODEL_VARIANT]['status'] == 'confirmed':
+        models.append(VARIANT)
+    return models
+
+
+def model_plan(state: Mapping, case: c.Case, activity: str,
+               variant: Mapping | None = None) -> tuple[dict, dict]:
+    """``(inputs, params)`` of a model fit: the candidate (``fit.logistic`` or
+    ``fit.linear``) or the variant (``fit.variant``, from the confirmed ``model_variant``,
+    or ``variant``). Refusals: ``precondition_missing`` (a feature without an availability
+    decision, no usable feature, a variant that removes every feature or none)."""
+    from . import governance, state as st
+    task = st.task_of(state)
+    availability = state['decisions']['feature_availability']['value'] or {}
+    candidates = [v['name'] for v in case.document['variables'] if v['role'] == 'feature']
+    missing = [f for f in candidates if f not in availability]
+    _refuse([{'requirement': 'availability_decision', 'feature': f,
+              'detail': 'Every candidate feature needs an availability decision '
+                        'before a model may use or ignore it.'} for f in missing],
+            f'Running {activity}')
+    features, _ = used_features(case, availability)
+    _refuse([] if features else [{'requirement': 'usable_feature',
+                                  'detail': 'No feature is available_at_prediction '
+                                            'or uncertain_included.'}],
+            f'Running {activity}')
+    if activity == VARIANT:
+        variant = dict(variant if variant is not None
+                       else state['decisions'][st.MODEL_VARIANT]['value'])
+        if variant.get('kind') == 'drop_group':
+            group = {v['name'] for v in case.document['variables']
+                     if v['role'] == 'feature' and v.get('group') == variant['group']}
+            kept = [f for f in features if f not in group]
+            dropped = [f for f in features if f in group]
+            _refuse([] if kept and dropped else [{
+                'requirement': 'variant_changes_model', 'group': variant['group'],
+                'detail': ('Leaving out this group removes no feature the candidate uses.'
+                           if not dropped else 'Leaving out this group leaves no feature.')}],
+                f'Running {activity}')
+            features = kept
+    inputs = {'features': features, 'special_values': feature_special_values(case, features)}
+    # WP-A4: the confirmed preprocessing, in a study that has the decision (an earlier study
+    # keeps its identities: no key).
+    preprocessing = governance.effective_preprocessing(state)
+    if preprocessing is not None:
+        inputs['preprocessing'] = preprocessing
+    seed = state['decisions']['split']['value'].get('seed') or 0
+    if task == st.REGRESSION:
+        params = dict(LINEAR_PARAMS, seed=0)
+    else:
+        params = dict(LOGISTIC_PARAMS, seed=seed)
+    if activity == VARIANT:
+        inputs['variant'] = variant
+        if variant.get('kind') == 'regularisation':
+            if task == st.REGRESSION:
+                params.update(model='ridge', estimator='sklearn.linear_model.Ridge',
+                              alpha=VARIANT_ALPHA[variant['strength']])
+            else:
+                params.update(C=VARIANT_C[variant['strength']], candidate_C=CANDIDATE_C)
+        else:
+            params['dropped_group'] = variant['group']
+    return inputs, params
+
+
+def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
+                exposures: list, expose) -> None:
+    """WP-B1: the identity and reads of ``final_test.evaluation`` (in place). The chosen
+    configuration (the ``final_test`` decision's value), its model inputs, the bootstrap,
+    the criterion, and the two row sets; no upstream result (the evaluation stays the record
+    of what was measured, whatever changes after it)."""
+    from . import state as st
+    task = st.task_of(state)
+    config = dict(state['decisions'][st.FINAL_TEST]['value'])
+    part = partition.of(state)
+    model = config['model']
+    inputs['target'] = _target(case)
+    inputs['configuration'] = config
+    if model in CANDIDATE_FITS or model == VARIANT:
+        model_inputs, model_params = model_plan(state, case, model)
+    else:   # the baseline was chosen (regression)
+        model_inputs, model_params = {'features': [], 'special_values': []}, {}
+    inputs['model_inputs'] = model_inputs
+    inputs['final_test'] = {'row_keys': part['final_test']['row_keys'],
+                            'n_rows': part['final_test']['n_rows']}
+    inputs['bootstrap'] = dict(state['settings']['bootstrap'])
+    criterion = state['decisions'][st.SUCCESS_CRITERION]['value']
+    inputs['criterion'] = criterion
+    params.update(model=model, rule=config.get('rule'), model_params=model_params,
+                  reference=BASELINE, task=task)
+    rule = config.get('rule')
+    if rule and rule.startswith('capacity:'):
+        # The capacity was chosen on the development rows; on the final test it keeps its
+        # share of the rows (k / development rows).
+        params['capacity_share'] = int(rule.partition(':')[2]) / part['development']['n_rows']
+    features = list(model_inputs['features'])
+    target = case.target_column
+    development = partition.development_keys(store.read_blob, inputs.get('development'))
+    final = rec.parse_row_keys(store.read_blob(part['final_test']['row_keys'])) \
+        if exposures is not None else []
+    expose('train_fit', partition.DEVELOPMENT, development, features + [target])
+    expose('final_evaluation', partition.FINAL_TEST, final, features + [target])
 
 
 def evaluated_rules(state: Mapping, requested) -> list[str]:
@@ -586,6 +797,9 @@ def compute_split(store, plan_: Mapping) -> dict:
 
     case, dataset = load(plan_, store)
     decision = plan_['inputs']['decision']
+    from . import state as st
+    if decision['method'] in st.CV_METHODS:
+        return compute_cv_split(store, plan_, case, dataset)
     if decision['method'] != 'stratified_random':
         return compute_unstratified_split(store, plan_, case, dataset)
     frame = dataset.frame
@@ -753,6 +967,139 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
             'n_rows': len(frame)}
 
 
+def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
+    """WP-B1: assign every development row to one of ``folds`` folds.
+
+    * ``kfold_stratified``: ``sklearn.model_selection.StratifiedKFold`` (shuffled with the
+      seed) on the binary target, so each fold keeps the outcome share;
+    * ``kfold_quantile``: the same on :data:`partition.QUANTILE_BINS` quantile bins of a
+      numeric target;
+    * ``temporal_folds``: contiguous blocks in time order (the time column, else the
+      declared order; ties broken by file line), fold 1 the earliest. Each block is
+      predicted by a model fitted on the other blocks, later ones included: it measures how
+      the model holds across periods, not a forecast; the final test (temporal when the case
+      declares an order) is the forward check.
+
+    The ``train`` and ``validation`` blobs both hold every development row (the exploration
+    reads them all, and every row is predicted once, out of fold); the ``folds`` blob is the
+    assignment, ``row_key,fold`` per line in file order."""
+    import numpy as np
+    import pandas as pd
+
+    decision = plan_['inputs']['decision']
+    method, k, seed = decision['method'], decision['folds'], decision['seed']
+    frame = dataset.frame
+    keys = sorted(frame.index, key=_line)
+    frame = frame.loc[keys]
+    n = len(keys)
+    if n < 2 * k:
+        raise StudyError('unsupported_capability', f'The folds cannot be made: {CAPABILITY_FOLDS}.',
+                         details={'reasons': [{'code': 'unsupported_capability',
+                                               'capability': CAPABILITY_FOLDS,
+                                               'path': 'decisions.split', 'rows': n, 'folds': k,
+                                               'reason': 'Each fold needs at least two rows.'}]})
+    fold = np.zeros(n, dtype=int)
+    stratified_on, extra = None, {}
+    if method == 'temporal_folds':
+        column = plan_['inputs'].get('order_column') or time_order_column(case)
+        lines = np.array([_line(key) for key in keys])
+        if column == 'line':
+            order = np.argsort(lines, kind='mergesort')
+        else:
+            values = pd.to_numeric(frame[column], errors='coerce').to_numpy(dtype=float)
+            if np.isnan(values).any():
+                raise StudyError('invalid_value', f'The time column {column!r} must hold a number '
+                                                  f'on every row to make temporal folds.',
+                                 details={'column': column})
+            order = np.lexsort((lines, values))
+        for i, block in enumerate(np.array_split(order, k), start=1):
+            fold[block] = i
+        extra['order_column'] = column
+        if column != 'line':
+            values = pd.to_numeric(frame[column], errors='coerce').to_numpy(dtype=float)
+            extra['fold_ranges'] = [{'fold': i, 'min': float(values[fold == i].min()),
+                                     'max': float(values[fold == i].max())}
+                                    for i in range(1, k + 1)]
+    else:
+        from sklearn.model_selection import StratifiedKFold
+        if method == 'kfold_stratified':
+            strata = positive(frame, case).to_numpy()
+            stratified_on = case.target_column
+        else:
+            from .eda import numeric_target
+            y = numeric_target(case, frame)
+            strata = pd.qcut(y, partition.QUANTILE_BINS, labels=False,
+                             duplicates='drop').to_numpy()
+            stratified_on = case.target_column
+            extra['bins'] = partition.QUANTILE_BINS
+        counts = pd.Series(strata).value_counts()
+        if counts.min() < k:
+            raise StudyError('unsupported_capability',
+                             f'The folds cannot be made: {CAPABILITY_FOLDS}.',
+                             details={'reasons': [{
+                                 'code': 'unsupported_capability', 'capability': CAPABILITY_FOLDS,
+                                 'path': 'decisions.split', 'folds': k,
+                                 'smallest_stratum_rows': int(counts.min()),
+                                 'reason': 'Each fold keeps every stratum, which needs at least '
+                                           'as many rows of each stratum as folds.'}]})
+        splitter = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)
+        for i, (_, test) in enumerate(splitter.split(np.zeros(n), strata), start=1):
+            fold[test] = i
+    lines_out = ['row_key,fold'] + [f'{key},{int(f)}' for key, f in zip(keys, fold)]
+    blobs = {'train': rec.row_keys_bytes(keys), 'validation': rec.row_keys_bytes(keys),
+             FOLDS_BLOB: ('\n'.join(lines_out) + '\n').encode('utf-8')}
+    binary = case.task == 'binary'
+    y = positive(frame, case).to_numpy() if binary else None
+    fold_rows = []
+    for i in range(1, k + 1):
+        mask = fold == i
+        item = {'fold': i, 'n_rows': int(mask.sum())}
+        if binary:
+            item.update(n_positive=int(y[mask].sum()), rate=float(y[mask].mean()))
+        fold_rows.append(item)
+    every = {'n_rows': n}
+    if binary:
+        every.update(n_positive=int(y.sum()), rate=float(y.mean()))
+    implementation = ('mlkit.study.activities (contiguous blocks in time order)'
+                      if method == 'temporal_folds' else
+                      'sklearn.model_selection.StratifiedKFold (shuffled, seeded)')
+    values = {'method': method, 'folds': k,
+              'seed': seed if method != 'temporal_folds' else None,
+              'stratified_on': stratified_on, 'n_rows': n, 'scheme': 'cross_validation',
+              'fold_rows': fold_rows, **extra,
+              # Every development row is in the exploration and is predicted once out of fold.
+              'partitions': {'train': dict(every), 'validation': dict(every)},
+              'implementation': implementation, 'overlap': None,
+              'note': 'Every development row is explored and predicted once, by a model fitted '
+                      'on the other folds; out-of-fold figures are development evidence.'}
+    group = plan_['inputs'].get('group_column')
+    parts = {f'fold_{i}': [key for key, f in zip(keys, fold) if f == i] for i in range(1, k + 1)}
+    values['groups'] = _fold_groups(frame, group, parts) if group else None
+    previous = plan_['inputs'].get('results', {}).get('previous_split')
+    if previous:
+        values['overlap'] = _overlap(store, previous,
+                                     plan_['inputs'].get('previous_split_stale_since'), parts)
+    return {'values': values, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
+            'n_rows': n}
+
+
+def _fold_groups(frame, column: str, parts: Mapping) -> dict:
+    """How many values of the group column fall in more than one fold (WP-B1): rows of one
+    entity in two folds are predicted by a model that saw that entity."""
+    seen: dict[str, set] = {}
+    for part, keys in parts.items():
+        for value in frame.loc[list(keys), column].astype(str):
+            seen.setdefault(value, set()).add(part)
+    shared = sorted(v for v, folds in seen.items() if len(folds) > 1)
+    values = frame[column].astype(str)
+    rows = int(values.isin(shared).sum())
+    return {'column': column, 'n_groups': len(seen), 'groups_in_several_folds': len(shared),
+            'rows_in_shared_groups': rows, 'examples': shared[:MAX_GROUP_EXAMPLES],
+            'capability': c.CAPABILITY_GROUPED_SPLIT,
+            'note': 'Grouped folds are not available in this version: a row whose group is in '
+                    'another fold is predicted by a model that saw that group.'}
+
+
 def _overlap(store, previous: str, since: int | None, parts: Mapping) -> dict:
     """Overlap with the previous split, with the exposure recorded up to revision
     ``since`` (when that split became stale). Explored rows are never unseen."""
@@ -792,12 +1139,19 @@ def compute(store, plan_: Mapping) -> dict:
                       'availability': plan_['inputs']['availability'],
                       'special_values': plan_['inputs']['special_values']}
         return eda.compute(activity, case, train, params)
-    if activity in FITS or activity == LINEAR:
+    if activity in MODEL_FITS:
         from . import fit
         case, dataset = load(plan_, store)
-        keys = split_keys(store, plan_['inputs']['results'][SPLIT])
+        split_rid = plan_['inputs']['results'][SPLIT]
+        keys = split_keys(store, split_rid)
+        folds = fold_assignment(store, split_rid)
+        if folds is not None:      # WP-B1: out-of-fold predictions of every development row
+            return fit.compute_cv(activity, case, rows(dataset, keys['train']), folds,
+                                  plan_['inputs'], plan_['params'])
         return fit.compute(activity, case, rows(dataset, keys['train']),
                            rows(dataset, keys['validation']), plan_['inputs'], plan_['params'])
+    if activity == FINAL:
+        return compute_final(store, plan_)
     if activity == REGRESSION_EVALUATION:
         return compute_regression_evaluation(store, plan_)
     return compute_policy(store, plan_)
@@ -871,20 +1225,22 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
     from . import regression
 
     results = plan_['inputs']['results']
-    preds = {slot: read_predictions(store, results[slot]) for slot in REGRESSION_FITS}
-    first = preds[REGRESSION_FITS[0]]
-    for slot in REGRESSION_FITS[1:]:
+    models = list(plan_['params'].get('models') or REGRESSION_FITS)
+    preds = {slot: read_predictions(store, results[slot]) for slot in models}
+    first = preds[models[0]]
+    for slot in models[1:]:
         if preds[slot]['row_keys'] != first['row_keys'] or \
                 not (preds[slot]['y'] == first['y']).all():
             raise StudyError('integrity_error', 'The fits were not scored on the same validation '
                                                 'rows; their errors cannot be compared.',
-                             details={'results': {s: results[s] for s in REGRESSION_FITS}})
+                             details={'results': {s: results[s] for s in models}})
     y = first['y']
-    predictions = {slot: preds[slot]['prediction'] for slot in REGRESSION_FITS}
+    predictions = {slot: preds[slot]['prediction'] for slot in models}
     boot = plan_['inputs']['bootstrap']
+    pairs = [(VARIANT, LINEAR)] if VARIANT in models else []
     paired = regression.paired_bootstrap(y, predictions, int(boot['replicates']),
                                          int(boot['seed']), level=float(boot['level']),
-                                         reference=plan_['params']['reference'])
+                                         reference=plan_['params']['reference'], pairs=pairs)
     case, dataset = load(plan_, store)
     frame = rows(dataset, first['row_keys'])
     by = [_residual_groups(column, frame[column], y, predictions)
@@ -896,7 +1252,7 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
               'residuals': {slot: regression.residual_summary(y, p)
                             for slot, p in predictions.items()},
               'residuals_by': by,
-              'predictions': {slot: results[slot] for slot in REGRESSION_FITS},
+              'predictions': {slot: results[slot] for slot in models},
               'reference': plan_['params']['reference'],
               'candidate': plan_['params']['candidate'],
               'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
@@ -904,7 +1260,18 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
               'residual_definition': regression.RESIDUAL_DEFINITION,
               'note': 'The model is chosen on these validation rows: these errors are not '
                       'independent evidence of future error. No model was refitted.'}
-    return {'values': values, 'blobs': {}, 'partition': 'validation', 'n_rows': len(y)}
+    out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
+    if pairs or out_of_fold:
+        # WP-B1 (additive): the variant against the candidate, and the evaluation scheme.
+        values['comparisons'] = paired['comparisons']
+        values['evaluation'] = 'out_of_fold' if out_of_fold else 'validation'
+        if out_of_fold:
+            values['note'] = ('The model is chosen on these out-of-fold predictions of the '
+                              'development rows: these errors are development evidence, not '
+                              'independent evidence of future error. No model was refitted.')
+    return {'values': values, 'blobs': {},
+            'partition': partition.DEVELOPMENT if out_of_fold else 'validation',
+            'n_rows': len(y)}
 
 
 def compute_policy(store, plan_: Mapping) -> dict:
@@ -912,9 +1279,10 @@ def compute_policy(store, plan_: Mapping) -> dict:
     from . import policy
 
     fits = plan_['inputs']['results']
-    preds = {slot: read_predictions(store, fits[slot]) for slot in FITS}
-    first = preds[FITS[0]]
-    for slot in FITS[1:]:
+    models = list(plan_['params'].get('models') or FITS)
+    preds = {slot: read_predictions(store, fits[slot]) for slot in models}
+    first = preds[models[0]]
+    for slot in models[1:]:
         if preds[slot]['row_keys'] != first['row_keys'] or \
                 not (preds[slot]['y'] == first['y']).all():
             raise StudyError('integrity_error', 'The fits were not scored on the same validation '
@@ -922,15 +1290,23 @@ def compute_policy(store, plan_: Mapping) -> dict:
                              details={'results': dict(fits)})
     boot = plan_['inputs']['bootstrap']
     y = first['y']
+    out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
+    pairs = [(VARIANT, LOGISTIC)] if VARIANT in models else []
     out = {}
     for rule in plan_['params']['rules']:
-        points = {slot: policy.evaluate(y, preds[slot]['score'], rule) for slot in FITS}
-        paired = policy.paired_bootstrap(y, {s: preds[s]['score'] for s in FITS}, rule,
+        points = {slot: policy.evaluate(y, preds[slot]['score'], rule) for slot in models}
+        paired = policy.paired_bootstrap(y, {s: preds[s]['score'] for s in models}, rule,
                                          int(boot['replicates']), int(boot['seed']),
                                          level=float(boot['level']),
-                                         reference=plan_['params']['reference'])
+                                         reference=plan_['params']['reference'], pairs=pairs)
         out[rule] = {'models': points, 'intervals': paired['intervals'],
                      'deltas': paired['deltas']}
+        if pairs or out_of_fold:
+            # WP-B1 (additive): the variant against the candidate; a capacity as a share of
+            # the rows it was chosen on.
+            out[rule]['comparisons'] = paired['comparisons']
+            kind, _, k = rule.partition(':')
+            out[rule]['capacity_share'] = int(k) / len(y) if kind == 'capacity' else None
     values = {'rules': out, 'n': len(y), 'n_positive': int(y.sum()),
               'predictions': dict(fits), 'reference': plan_['params']['reference'],
               'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
@@ -939,4 +1315,39 @@ def compute_policy(store, plan_: Mapping) -> dict:
               'counts': 'expected counts when a capacity cut splits a tie group (tied_at_cut)',
               'note': 'The rule is chosen on validation rows: these figures are not independent '
                       'evidence of future performance. No model was refitted.'}
-    return {'values': values, 'blobs': {}, 'partition': 'validation', 'n_rows': len(y)}
+    if pairs or out_of_fold:
+        from . import metrics
+        values['evaluation'] = 'out_of_fold' if out_of_fold else 'validation'
+        values['ranking'] = {slot: {'roc_auc': metrics.roc_auc(y, preds[slot]['score']),
+                                    'average_precision': metrics.average_precision(
+                                        y, preds[slot]['score'])} for slot in models}
+        if out_of_fold:
+            values['bootstrap']['method'] = ('paired percentile bootstrap over the out-of-fold '
+                                             'predictions of the development rows')
+            values['note'] = ('The rule and the model are chosen on out-of-fold predictions of '
+                              'the development rows: these figures are development evidence, '
+                              'not independent evidence of future performance. No model was '
+                              'refitted.')
+    return {'values': values, 'blobs': {},
+            'partition': partition.DEVELOPMENT if out_of_fold else 'validation',
+            'n_rows': len(y)}
+
+
+# --- WP-B1: the one evaluation of the final test -----------------------------------------
+
+def compute_final(store, plan_: Mapping) -> dict:
+    """Refit the chosen configuration (and the baseline) on every development row, score the
+    final-test rows once, and evaluate: the adopted rule (a capacity keeps its share of the
+    rows) or the errors, with paired bootstrap intervals against the baseline, and the
+    success criterion on the final test. The final-test rows are read here only, through
+    :func:`mlkit.study.data.load_final_test`."""
+    from . import data as dt
+    from . import fit
+    inputs, params = plan_['inputs'], plan_['params']
+    case, development = load(plan_, store)
+    final_keys = rec.parse_row_keys(store.read_blob(inputs['final_test']['row_keys']))
+    if len(final_keys) != inputs['final_test']['n_rows']:
+        raise StudyError('integrity_error', 'The final-test rows blob does not hold the '
+                                            'recorded number of rows.')
+    final = dt.load_final_test(case, final_keys)
+    return fit.final_evaluation(case, development.frame, final.frame, inputs, params)

@@ -234,6 +234,16 @@ def load_development(case: Case, development) -> Dataset:
     return load_dataset(case, rows=development)
 
 
+def load_final_test(case: Case, final_test) -> Dataset:
+    """The final-test rows of a study (WP-B1), read by one activity only:
+    ``final_test.evaluation``, once, after the junior opened the final test in their words.
+    Every other read goes through :func:`load_development`."""
+    if final_test is None:
+        from .errors import StudyError
+        raise StudyError('integrity_error', 'This study has no final test to read.')
+    return load_dataset(case, rows=final_test)
+
+
 NUMBER_TYPES = ('numeric', 'integer')
 CAPABILITY_MISSING_TARGET = 'missing target values (v0.2)'
 MAX_EXAMPLES = 5

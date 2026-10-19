@@ -26,7 +26,10 @@ DECISION_WORDS = {'prediction_time': 'the prediction moment',
                   'conclusion': 'the conclusion',
                   # v0.2a (WP-A4)
                   'success_criterion': 'the success criterion',
-                  'preprocessing': 'the preparation of the variables'}
+                  'preprocessing': 'the preparation of the variables',
+                  # v0.2b (WP-B1)
+                  'model_variant': 'the variant to compare',
+                  'final_test': 'the opening of the final test'}
 # Plan steps in words (the steps without a decision of their own).
 STEP_WORDS = {'train_eda': 'the exploration of the training rows', 'models': 'the model fits',
               'discover_data': 'the discovery of the data'}
@@ -50,7 +53,10 @@ ACTIVITY_WORDS = {'split': 'the split', 'eda.target_rate': 'the outcome rate',
                   'fit.baseline': 'the baseline model', 'fit.logistic': 'the logistic model',
                   'fit.linear': 'the linear model', 'policy.evaluate': 'the policy evaluation',
                   'policy.evaluation': 'the policy evaluation',
-                  'evaluate.regression': 'the model comparison'}
+                  'evaluate.regression': 'the model comparison',
+                  # v0.2b (WP-B1)
+                  'fit.variant': 'the variant model',
+                  'final_test.evaluation': 'the final test evaluation'}
 
 
 def activity_words(activity) -> str:
@@ -64,7 +70,7 @@ def activity_words(activity) -> str:
 # Recorded values in words (v0.2a, WP-A7): a rule, a model slot, a verdict. The numbers are
 # the value's own; nothing is computed.
 MODEL_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
-               'fit.logistic': 'the logistic model'}
+               'fit.logistic': 'the logistic model', 'fit.variant': 'the variant'}
 VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the chosen model',
                  'keep_baseline': 'keep the baseline', 'inconclusive': 'inconclusive'}
 
@@ -78,6 +84,26 @@ def rule_words(rule) -> str:
     if kind == 'threshold' and k:
         return f'call everyone scored {k} or more'
     return str(rule)
+
+
+def policy_words(value) -> str:
+    """A policy value in words (WP-B1: with the model its rule applies to when it is the
+    variant): "call the top 100 by score, with the variant"."""
+    rule, sep, model = str(value).partition('@')
+    words = rule_words(rule)
+    return f'{words}, with {model_words(model)}' if sep and model else words
+
+
+def variant_words(value) -> str:
+    """A ``model_variant`` value in words (WP-B1)."""
+    if not isinstance(value, Mapping):
+        return str(value)
+    if value.get('kind') == 'regularisation':
+        return {'weak': 'weaker regularisation', 'strong': 'stronger regularisation'}.get(
+            value.get('strength'), 'another regularisation')
+    if value.get('kind') == 'drop_group':
+        return f'without the group "{value.get("group")}"'
+    return str(value.get('kind'))
 
 
 def model_words(slot) -> str:
@@ -235,4 +261,4 @@ def annotate_view(view: dict) -> dict:
 
 __all__ = ['JUNIOR', 'AGENT', 'AUDIENCES', 'next_action', 'limit', 'junior_text', 'artifact',
            'annotate_view', 'decision_words', 'join', 'activity_words', 'rule_words',
-           'model_words', 'VERDICT_WORDS']
+           'model_words', 'VERDICT_WORDS', 'policy_words', 'variant_words']
