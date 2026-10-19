@@ -216,8 +216,9 @@ command, from `status --summary` only, in at most five lines, goal first. The su
 `recap` is these five lines, generated from the state; quote it.
 
 1. **The goal first**, in one sentence (`goal.intended_use` and `goal.prediction_time`).
-2. **Decisions made**: the confirmed decisions, with the excluded features by name; say
-   if one was delegated or needs reconfirmation.
+2. **Decisions made**: the confirmed decisions, with the excluded features by name, and
+   the junior's own words of the latest confirmation in quotation marks (`user_words`);
+   say if one was delegated or needs reconfirmation.
 3. **Where we are**: the step in plain words (its title, not its id), and any
    deliverable that is not up to date.
 4. **The next decision** with your recommended default; quote an open restatement as

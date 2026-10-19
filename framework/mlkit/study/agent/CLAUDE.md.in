@@ -134,8 +134,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      "not yet", "pas d'accord"); a question (`question_reply`); a conditional agreement
      (`conditional_reply`: "oui mais je veux réfléchir", "d'accord sauf ...", "yes but");
      and a reply that neither endorses nor names anything of the proposal
-     (`unrelated_reply`, "yes, I like pizza"). Pass the junior's words as they are, and
-     try each reply once.
+     (`unrelated_reply`, "yes, I like pizza"). Send no reply you can see is one of these
+     (acknowledgement words only, a question, a condition): answer it as below instead.
+     Send any other reply as it is, once.
 <!-- hypotrail:task binary -->
      **The policy and the conclusion need one reason** in the junior's words ("because
      ...", "parce que ..."): an endorsement alone is refused with `reason_required`.
@@ -253,8 +254,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    sentences (`error.details.changes_since`), then propose again if it still applies.
 7. **Deliverables.** Say "up to date" or "done" only after a `status` read that shows
    it. Report each deliverable with its own status, in the words of its
-   `junior_message`. After exit `3` with a failed report, say "previous report kept and
-   marked stale at revision N" (the message gives N); a changed file hash after a
+   `junior_message`, without a revision number. After exit `3` with a failed report, say "previous report kept and
+   marked stale at revision N" (the message gives N; the only revision number you
+   write unless the junior asks); a changed file hash after a
    failure is the stale banner, not damage. Give the current step and the next action.
 8. **Interrupted execution (exit `4`, `interrupted_unknown`, `next_action:
    acknowledge_interruption` or `outcome_unknown`, or an entry under

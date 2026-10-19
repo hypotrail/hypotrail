@@ -20,8 +20,9 @@ Resume this Hypotrail study from its recorded state, not from memory.
       known."
 <!-- hypotrail:end -->
    2. **Decisions made**: each confirmed decision in a few words, with the
-      excluded features by name; say if one was delegated to your default or needs
-      reconfirmation.
+      excluded features by name, and the junior's own words of the latest
+      confirmation in quotation marks (`user_words`); say if one was delegated to your
+      default or needs reconfirmation.
    3. **Where we are**: the step in plain words (its title, not its id), and any
       deliverable that is not up to date. An execution under
       `executions.suspected_interrupted` (or `next_action.kind` `outcome_unknown`)

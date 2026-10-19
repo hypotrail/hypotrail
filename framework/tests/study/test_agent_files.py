@@ -387,6 +387,10 @@ def test_instructions_carry_the_v0_2a_rules():
         for phrase in ('Answer in the junior\'s language', '`junior_message`', '`junior_text`',
                        '`recap_junior`', '`audience: agent`', '--restatement-fr'):
             assert phrase in rule11, (task, phrase)
+        # round 1 of the v0.2a acceptance run: no bare reply sent to the engine (S6), no
+        # revision number in a status line (S8)
+        assert 'Send no reply you can see is one of these' in rule4, task
+        assert 'without a revision number' in _rule(text, 7), task
         # fewer prohibitions than the 36 "never" of v0.1, and none of the dropped ones
         assert len(re.findall(r'\bnever\b', text, re.I)) <= 16, task
     assert (confirm.QUESTION_REPLY, confirm.CONDITIONAL_REPLY) == ('question_reply',
@@ -415,3 +419,7 @@ def test_the_skill_carries_the_v0_2a_pedagogy():
                        'how the result stands against the success criterion'):
             assert phrase in skill, (task, phrase)
         assert ('"drop contact, its value can be inflated"' in skill) == (task == 'binary')
+        resume = Flat(af.select_task((af.SOURCE / 'dot-claude/commands/hypotrail-resume.md')
+                                     .read_text(), task))
+        for doc in (skill, resume):      # S1: the recap quotes the junior's latest words
+            assert "the junior's own words of the latest confirmation" in doc, task
