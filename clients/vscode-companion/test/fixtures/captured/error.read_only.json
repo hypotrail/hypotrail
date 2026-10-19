@@ -7,11 +7,11 @@
   "argv": [
    "decide",
    "withdraw",
-   "p_7",
+   "p_8",
    "--request-id",
    "b-ro",
    "--expected-revision",
-   "38",
+   "42",
    "--json"
   ],
   "note": ""

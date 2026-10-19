@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 32,
+  "revision": 36,
   "observation_unit": {
    "value": "A vehicle model for a model year",
    "status": "scenario_assumption",
@@ -50,6 +50,9 @@
    "fraction": 0.2,
    "development_rows": 318,
    "schema_check": "pass",
+   "opening": null,
+   "post_final_test": false,
+   "changed_after": [],
    "line": "80 rows are set aside as the final test and stay sealed: nothing here reads them.",
    "audience": "junior"
   },

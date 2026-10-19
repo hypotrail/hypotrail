@@ -89,9 +89,12 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
     assert refused['error']['code'] == 'precondition_missing'
     assert cli.run('eda.target_rate', expect=2)['error']['code'] == 'precondition_missing'
     cli.split_pause()
+    # WP-B1: the variant the policy compares (named in words, fitted like the candidate).
+    cli.decide('model_variant', {'kind': 'regularisation', 'strength': 'strong'},
+               'Yes, compare it with the more strongly regularised variant')
     payloads = {}
     for args in (('split',), ('eda.target_rate',), ('eda.special_values',),
-                 ('fit.baseline',), ('fit.logistic',),
+                 ('fit.baseline',), ('fit.logistic',), ('fit.variant',),
                  ('policy.evaluate', '--rule', 'threshold:0.5', '--rule', 'capacity:100')):
         payload = cli.run(*args)
         assert tuple(payload) == ex.PAYLOAD_KEYS and payload['schema'] == 'hypotrail.run/1'

@@ -96,6 +96,8 @@ capacity_population:
   before: A capacity rule here selects that many of the
   after: validation rows, which stand for a share of the contacts, not for a whole campaign. Read its volume share as the rate to carry over; apply that rate to another population before quoting a count for it.
 paired_heading: Paired differences, model minus baseline (paired bootstrap on the same validation rows)
+policy_note_oof: Figures are out-of-fold predictions of the development rows, after a choice made on them. They are development evidence, optimistic, and not a forecast of a future campaign; only the final test, opened once, is independent.
+comparison_heading: The variant against the candidate model (variant minus candidate, paired bootstrap on the same rows)
 tied_none: No tie at the cut
 tied_yes: Ties at the cut counted pro rata
 adopted: Adopted rule
@@ -132,6 +134,22 @@ verdict_card:
   figures_none: No current evaluation to quote yet.
   limits: Main limits
   all_limits: All the limits of this study
+  development: Development evidence
+  development_note: The figures above are out-of-fold figures on the development rows, used to choose; they are optimistic.
+  validation_note: The figures above are on the validation rows, used to choose; they are optimistic.
+  final: Final test
+  final_absent: This study has no final test; nothing in it is independent evidence.
+  final_sealed: Still sealed. It is opened once, after the choice, in your own words.
+  final_missing: Opened, but its evaluation cannot be cited.
+  final_opened: Opened once, on
+  final_rows: rows nothing had seen, with the chosen configuration refitted on every development row.
+  final_found: Positive rows found on the final test
+  final_mae: Mean absolute error on the final test
+  final_criterion: Success criterion on the final test
+  final_after: After the final test
+  final_after_note: Something changed after the final test was opened, so it no longer measures what the study now holds.
+  trials: Configurations compared
+  trials_note: model configurations evaluated on the same rows so far (a disclosure; the more there are, the more the best one may owe to chance).
   status:
     met: Met
     uncertain: Uncertain, the interval includes zero
@@ -179,10 +197,12 @@ model_names:
   fit.logistic: Model (logistic regression)
   fit.baseline: Baseline (no ranking)
   fit.linear: Linear model
+  fit.variant: Variant
 rows_label:
   train: training rows
   validation: validation rows
   development: development rows
+  final_test: final-test rows
   all: all rows
 # Regression study (M3): labels merged over the ones above (mlkit.study.texts.report).
 regression:
@@ -198,6 +218,7 @@ regression:
     keep_baseline: Keep the mean baseline
     inconclusive: Inconclusive
   model_note: Errors are computed on validation rows after a choice made on them, in the unit of the target. They are optimistic and are not a forecast of the error on future rows.
+  model_note_oof: Errors are out-of-fold predictions of the development rows, after a choice made on them, in the unit of the target. They are development evidence and optimistic; only the final test, opened once, is independent.
   model_missing: No current model comparison yet.
   model_paired_heading: Paired differences, linear model minus mean baseline (a negative difference is a smaller error; paired bootstrap on the same validation rows)
   residuals_heading: Residuals on validation rows (observed minus predicted)

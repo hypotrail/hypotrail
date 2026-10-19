@@ -225,12 +225,17 @@ def _replicate(y: np.ndarray, s: np.ndarray, kind: str, amount) -> tuple[float, 
 
 
 def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *,
-                     level: float = 0.95, reference: str | None = None) -> dict:
+                     level: float = 0.95, reference: str | None = None, pairs=()) -> dict:
     """Percentile intervals of precision, recall, and volume for every model, and of
     each model's difference with ``reference`` (the first model by default).
 
     Every replicate draws one resample of row positions and applies it to every
     model (paired). The result is a pure function of the inputs and ``seed``.
+
+    ``pairs`` (WP-B1): ``[(model, other)]``; ``comparisons[model]`` is then
+    ``{reference: other, precision, recall, volume}``, each ``{point, low, high,
+    undefined_replicates}``: the difference ``model - other`` on the same resamples (the
+    variant against the candidate). The other keys do not depend on ``pairs``.
     """
     y = np.asarray(y, dtype=float)
     names = list(scores)
@@ -267,6 +272,14 @@ def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *
             a, r = points[name][m], points[reference][m]
             deltas[name][m] = {'point': (a - r) if a is not None and r is not None else None,
                                **_interval(diff[:, i], level)}
+    comparisons = {}
+    for name, other in pairs:
+        diff = samples[name] - samples[other]
+        comparisons[name] = {'reference': other}
+        for i, m in enumerate(METRICS):
+            a, r = points[name][m], points[other][m]
+            comparisons[name][m] = {'point': (a - r) if a is not None and r is not None
+                                    else None, **_interval(diff[:, i], level)}
     return {'rule': rule, 'replicates': B, 'seed': seed, 'level': level,
             'reference': reference, 'method': 'paired percentile bootstrap over validation rows',
-            'intervals': intervals, 'deltas': deltas}
+            'intervals': intervals, 'deltas': deltas, 'comparisons': comparisons}

@@ -101,8 +101,9 @@ def test_handoff_json_and_markdown_content(study, tmp_path):
                     '## Not yet defensible', '## Open items', '## How to reproduce',
                     '## Not for production use'):
         assert heading in md, heading
-    # six confirmed decisions (WP-A4: the success criterion and the preprocessing too)
-    assert md.count(cmd_export.NOT_AUTHENTICATED) == 6
+    # seven confirmed decisions (WP-A4: the success criterion and the preprocessing too;
+    # WP-B1: the variant)
+    assert md.count(cmd_export.NOT_AUTHENTICATED) == 7
     assert 'does not authorise production use' in md
     assert str(study) not in md and '<study>' in md
     assert 'Yes, call the twenty best-scored members.' in md

@@ -204,6 +204,14 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     used = logistic['values']['features']
     for feature, status in junior['exclusions'].items():
         assert (feature in used) == (status == 'uncertain_included'), feature
+    # WP-B1: one variant to compare, named in the junior's words and fitted the same way.
+    default = chat.status()['view']['next_action']['default_value']
+    assert default == {'kind': 'regularisation', 'strength': 'strong'}
+    p = chat.propose('model_variant', default, 'You compare the model with a more strongly '
+                                               'regularised variant of it.')
+    chat.confirm(p, 'I confirm the stronger regularisation as the variant.')
+    variant = chat.run('fit.variant')
+    assert variant['values']['C'] == 0.1 and variant['values']['features'] == used
 
     # 6. pause 3: evaluate a threshold, adopt it with the junior's words
     chat = Chat(study, work, 'chat3')
@@ -222,10 +230,12 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert decisions['policy']['value'] == THRESHOLD
     for slot in ('split', 'eda.target_rate', 'eda.special_values',
                  f'eda.rate_by:{junior["rate_by"]}', 'fit.baseline', 'fit.logistic',
-                 'policy.evaluation'):
+                 'fit.variant', 'policy.evaluation'):
         assert view['results'][slot]['current'] is True, slot
     assert {i['status'] for i in view['artifacts']['items'].values()} == {'ok'}
-    assert view['current_step'] == 'conclusion'
+    # WP-B1: the final test may now be opened, once (the conclusion follows it).
+    assert view['current_step'] == 'final_test'
+    assert view['final_test']['status'] == 'sealed' and view['trials']['count'] == 2
 
     # 8. a capacity of 100: re-evaluated on the stored predictions, without refit
     fits_before = {e['result_id']: e['blobs']['predictions'] for e in _fits(study)}
@@ -240,7 +250,8 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert state['current']['fit.logistic'] == logistic['result_id']
     assert state['current']['fit.baseline'] == baseline['result_id']
     assert capacity['values']['predictions'] == {'fit.baseline': baseline['result_id'],
-                                                 'fit.logistic': logistic['result_id']}
+                                                 'fit.logistic': logistic['result_id'],
+                                                 'fit.variant': variant['result_id']}
     # the adopted threshold is not silently replaced: capacity needs its own confirmation
     assert chat.status()['view']['decisions']['policy']['value'] == THRESHOLD
     p = chat.propose('policy', CAPACITY, 'You call the 100 highest-scored clients instead.')
@@ -248,6 +259,24 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert chat.status()['view']['decisions']['policy']['value'] == THRESHOLD
     adopted = chat.confirm(p, 'Yes: our desk can make 100 calls, take the top 100.')
     assert adopted['result']['invalidation']['mutation'] == 'policy.rule_type'
+
+    # 8b. WP-B1: the final test, opened once in the junior's words with a reason
+    value = chat.status()['view']['next_action']['default_value']
+    assert value == {'model': 'fit.logistic', 'rule': CAPACITY}
+    p = chat.propose('final_test', value, 'You open the sealed final test once, for the model '
+                                          'and the rule you chose.')
+    assert chat.confirm(p, 'Yes, I confirm.', expect=2)['error']['code'] == 'reason_required'
+    opened = chat.confirm(p, 'Yes, open it now, because the model and the rule are fixed.')
+    assert opened['result']['opening']['status'] == 'promoted'
+    final_test = fk.read.open(study).current('final_test.evaluation')['output']['values']
+    # the capacity keeps its share of the rows it was chosen on (the validation rows here)
+    share = int(CAPACITY.partition(':')[2]) / capacity['values']['n']
+    assert final_test['capacity_share'] == share
+    assert final_test['rule_final'] == f'capacity:{int(share * final_test["n"] + 0.5)}'
+    again = chat('decide', 'propose', 'final_test', '--value-json', json.dumps(value),
+                 '--restatement', 'Again.', '--rationale', 'Again.', '--request-id',
+                 chat.rid('propose-again-final'), '--expected-revision', chat.rev(), expect=2)
+    assert again['error']['code'] == 'final_test_already_opened'
 
     # 9. a proportionate conclusion, checked before it is proposed
     rule = capacity['values']['rules'][CAPACITY]
@@ -321,6 +350,9 @@ def test_walkthrough(name, cases, tmp_path, capsys):
                           'baseline_tp': round(base['true_positives'], 2),
                           'precision': model['precision'], 'recall': round(model['recall'], 4),
                           'delta_precision': rule['deltas']['fit.logistic']['precision']},
+               'final_test': {'rule': final_test['rule_final'],
+                              'criterion': final_test['criterion']['status'],
+                              'gain': final_test['criterion']['gain']},
                'final_revision': final['revision']}
     with capsys.disabled():
         print('\nwalkthrough', json.dumps(summary, sort_keys=True))

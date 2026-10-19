@@ -27,6 +27,9 @@
     model_choice: 'the model choice',
     success_criterion: 'the success criterion',
     preprocessing: 'the data preparation',
+    // WP-B1: named in words only; their panel views are WP-B5.
+    model_variant: 'the variant to compare',
+    final_test: 'the opening of the final test',
     conclusion: 'the conclusion',
   })[id] || String(id || '').replace(/_/g, ' ');
 
@@ -47,6 +50,7 @@
 
   const MODEL_NAMES = {
     'fit.logistic': 'the logistic model', 'fit.linear': 'the linear model',
+    'fit.variant': 'the variant',
   };
   const modelName = (slot, task) => (slot === 'fit.baseline'
     ? (regression(task) ? 'the mean baseline' : 'the baseline')
@@ -82,12 +86,33 @@
 
   /** A recorded rule (`capacity:N`, `threshold:T`) in words; the numbers are the rule's own. */
   function rule(value, task) {
-    const v = str(value);
+    // WP-B1: a rule applied to the variant ends with "@fit.variant".
+    const [v, model] = str(value).split('@');
+    const tail = model === 'fit.variant' ? ', with the variant' : '';
     let m = v.match(/^capacity:([0-9]+)$/);
-    if (m && !regression(task)) return `Call the top ${m[1]} by score`;
+    if (m && !regression(task)) return `Call the top ${m[1]} by score${tail}`;
     m = v.match(/^threshold:([0-9.]+)$/);
-    if (m && !regression(task)) return `Call everyone scored ${m[1]} or more`;
+    if (m && !regression(task)) return `Call everyone scored ${m[1]} or more${tail}`;
     return null;
+  }
+
+  // WP-B1: the variant and the opening of the final test in words.
+  function variant(raw) {
+    const v = parse(raw);
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'regularisation') {
+      return v.strength === 'weak' ? 'Compare with a less regularised variant'
+        : 'Compare with a more regularised variant';
+    }
+    if (v.kind === 'drop_group') return `Compare with the model without the group "${str(v.group)}"`;
+    return null;
+  }
+
+  function finalTest(raw, task) {
+    const v = parse(raw);
+    if (!v || typeof v !== 'object') return null;
+    const r = v.rule ? rule(v.rule, task) : null;
+    return `Open the final test once for ${modelName(v.model, task)}${r ? ` (${r.toLowerCase()})` : ''}`;
   }
 
   // v0.2a (WP-A4): the two governance decisions in words. The share is a recorded value
@@ -129,6 +154,9 @@
     const share = typeof v.validation_fraction === 'number' ? HT.format.number(v.validation_fraction, 'pct0') : null;
     if (v.method === 'stratified_random' && share) return `Stratified random split, ${share} of the rows for validation`;
     if (v.method === 'random' && share) return `Random split, ${share} of the rows for validation`;
+    if (['kfold_stratified', 'kfold_quantile', 'temporal_folds'].includes(v.method) && typeof v.folds === 'number') {
+      return `Cross-validation in ${v.folds} folds: every row is predicted once by a model that did not see it`;
+    }
     if (v.method === 'ordinal_cutoff' && v.column !== undefined) {
       return `Split in time order: rows with ${v.column} from ${v.cutoff} on are for validation`;
     }
@@ -162,6 +190,8 @@
       case 'split': return split(raw);
       case 'success_criterion': return criterion(raw);
       case 'preprocessing': return preparation(raw);
+      case 'model_variant': return variant(raw);
+      case 'final_test': return finalTest(raw, task);
       case 'policy': return rule(raw, task);
       case 'model_choice': return typeof raw === 'string' && raw.startsWith('fit.') ? cap(`adopt ${modelName(raw, task)}`) : null;
       case 'conclusion': {

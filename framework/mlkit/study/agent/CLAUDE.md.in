@@ -417,6 +417,15 @@ keep a group's rows on one side (no grouped split in this version): name the gro
 split result reports in both partitions, and do not claim the partitions are independent.
 <!-- hypotrail:end -->
 
+Since v0.2b a new study also has `model_variant` and `final_test`. Its `split` is the
+cross-validation `next_action.default_value` drafts (`{"method", "folds", "seed"}`): every
+figure is out of fold, development evidence. After the fits, the junior names one variant
+(`{"kind": "regularisation", "strength": "weak" | "strong"}` or `{"kind": "drop_group",
+"group": G}`), then `run fit.variant`; the choice may pick it (a choice value ending in
+`@fit.variant`, or `"fit.variant"`). After the choice, `final_test` (`{"model", "rule"}`,
+the drafted value) is confirmed in the junior's own words with a reason; confirming it
+scores the sealed final test once, and anything changed afterwards is after the final test.
+
 Deliverables, regenerated after every change: `reports/study.html` (the report; every
 number in it is cited from a result) and `notebooks/study_generated.py` (a Marimo notebook
 whose code cells recompute the registered results). `notebooks/workbench.py` is the

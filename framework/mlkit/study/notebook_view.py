@@ -169,16 +169,40 @@ def _split_keys(study: read.Study, rid: str) -> dict[str, list[str]]:
 def development_frame(study: read.Study, split_rid: str | None = None):
     """The development rows (pandas DataFrame indexed by row key, in file order), with a
     ``partition`` column: ``train`` or ``validation`` from the split result ``split_rid``
-    (the current split when omitted), or None before any split. Never the final test."""
+    (the current split when omitted), or None before any split. Never the final test.
+
+    WP-B1: under cross-validation every development row is explored and fitted on, so its
+    ``partition`` is ``train``; :func:`folds` gives the fold of each row."""
     _, frame = _development(study)
     frame = frame.copy()
     rid = split_rid or study.state['current'].get('split')
     frame['partition'] = None
     if rid:
         keys = _split_keys(study, rid)
+        if _fold_blob(study, rid) is not None:
+            frame.loc[[k for k in keys['train'] if k in frame.index], 'partition'] = 'train'
+            return frame
         for part, rows in keys.items():
             frame.loc[[k for k in rows if k in frame.index], 'partition'] = part
     return frame
+
+
+def _fold_blob(study: read.Study, rid: str):
+    return (study.result(rid).get('blobs') or {}).get('folds')
+
+
+def folds(study: read.Study, split_rid: str | None = None):
+    """WP-B1: the fold of each development row (pandas Series indexed by row key, in file
+    order) of a cross-validation split, or None for a train/validation split."""
+    import pandas as pd
+    rid = split_rid or study.state['current'].get('split')
+    sha = _fold_blob(study, rid) if rid else None
+    if sha is None:
+        return None
+    lines = study.blob(sha).decode('utf-8').splitlines()[1:]
+    pairs = [line.split(',') for line in lines if line]
+    series = pd.Series([int(f) for _, f in pairs], index=[k for k, _ in pairs], name='fold')
+    return series.loc[sorted(series.index, key=lambda k: int(k[1:]))]
 
 
 def training_frame(study: read.Study):

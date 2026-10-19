@@ -47,7 +47,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'criterion', 'eda_looks',
              # v0.2b (WP-B3, R6): the teaching scenario's defaults from the case
              # (``{capacity_share: {value, status, source}}``), or ``null``.
-             'scenario_defaults')
+             'scenario_defaults',
+             # v0.2b (WP-B1): the number of model configurations evaluated so far.
+             'trials')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -95,11 +97,15 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # v0.2a (WP-A7, companion requests): the confirmation mode (ADR 0005) and the
                 # commands that open the notebooks (the view's ``deliverables``), so a
                 # surface needs no full view for them.
-                'mode', 'deliverables')
+                'mode', 'deliverables',
+                # v0.2b (WP-B1): the trial count.
+                'trials')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
 SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+                    # v0.2b (WP-B1): the final test no longer measures what the study holds.
+                    'changed_after_final_test', 'final_test_opening_interrupted',
                     # v0.2a (WP-A4): an adopting verdict against the success criterion.
                     'verdict_contradicts_criterion',
                     # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
@@ -111,7 +117,7 @@ SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
                     'inconclusive_without_choice',
                     'delegated_decisions', 'unconfirmed_decisions',
                     'uncertain_features_included', 'high_cardinality_grouping',
-                    'validation_is_not_independent')
+                    'validation_is_not_independent', 'final_test_sealed')
 SUMMARY_TOP = 5
 
 
@@ -274,7 +280,9 @@ def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
     if item and item['current'] and item['integrity'] == 'ok':
         params = item['params'] if isinstance(item['params'], dict) else {}
         rules = params.get('rules') or ([params['rule']] if params.get('rule') else [])
-        if (rec.canonical_rule(rule) or rule) in {rec.canonical_rule(r) or r for r in rules}:
+        models = params.get('models') or ['fit.logistic']
+        if (rec.policy_rule(rule) or rule) in {rec.canonical_rule(r) or r for r in rules} \
+                and rec.policy_model(rule) in models:
             return None
     return rule
 
@@ -480,7 +488,12 @@ def summary(view: dict) -> dict:
     out['recap_junior'] = recap(out, view, junior=True)
     out['mode'] = view.get('mode')
     out['deliverables'] = _compact_deliverables(view.get('deliverables'))
+    out['trials'] = ({k: view['trials'][k] for k in SUMMARY_TRIALS_KEYS}
+                     if view.get('trials') else None)
     return {k: out[k] for k in SUMMARY_KEYS}
+
+
+SUMMARY_TRIALS_KEYS = ('count',)
 
 
 # WP-A7: the summary keeps each launch's argument list only (the full view also has the
@@ -497,7 +510,9 @@ def _compact_deliverables(deliverables):
 
 
 SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', 'high',
-                          'minimum', 'unit', 'rule', 'result_id', 'contradicts_verdict')
+                          'minimum', 'unit', 'rule', 'result_id', 'contradicts_verdict',
+                          # v0.2b (WP-B1): the criterion on the final test.
+                          'final_test')
 
 
 def _compact_criterion(criterion):
@@ -514,9 +529,12 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
                    'policy': 'policy', 'model_choice': 'model choice',
                    'conclusion': 'conclusion',
                    # v0.2a (WP-A4)
-                   'success_criterion': 'success criterion', 'preprocessing': 'preprocessing'}
+                   'success_criterion': 'success criterion', 'preprocessing': 'preprocessing',
+                   # v0.2b (WP-B1)
+                   'model_variant': 'variant', 'final_test': 'final test'}
 # A regression study's model choice (M3), in words: the recap never says "policy".
-MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
+MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
+                      'fit.variant': 'the variant'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
 # lines do not already say (unconfirmed decisions are the "Decided" and "Next" lines).
 RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated')
@@ -575,26 +593,33 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
         'confirmed', 'reconfirm_required') else None
     candidates = [adopted] + [p['value'] for p in summary_out['open_proposals']
                               if p['decision_id'] == 'policy'] + list(params.get('rules') or [])
-    rule = next((by_rule[rec.canonical_rule(c) or c] for c in candidates
-                 if isinstance(c, str) and (rec.canonical_rule(c) or c) in by_rule), None)
-    if rule is None:
+    found = next(((by_rule[rec.policy_rule(c) or c], c) for c in candidates
+                  if isinstance(c, str) and (rec.policy_rule(c) or c) in by_rule), None)
+    if found is None:
         return None
-    model = ((item['values']['rules'][rule] or {}).get('models') or {}).get(HEADLINE_MODEL) or {}
+    rule, chosen = found
+    # WP-B1: the headline names the model the policy applies its rule to.
+    slot = rec.policy_model(chosen)
+    model = ((item['values']['rules'][rule] or {}).get('models') or {}).get(slot) or {}
     precision, recall = _pct(model.get('precision')), _pct(model.get('recall'))
     if precision is None and recall is None:
         return None
     figures = ', '.join(f'{name} {v}' for name, v in (('precision', precision),
                                                       ('recall', recall)) if v)
     n = item['values'].get('n')
-    rows = f' on the {n} validation rows' if isinstance(n, int) else ' on the validation rows'
-    return {'rule': rule, 'adopted': adopted is not None and (rec.canonical_rule(adopted)
+    where = ('out-of-fold development rows' if item['values'].get('evaluation') == 'out_of_fold'
+             else 'validation rows')
+    rows = f' on the {n} {where}' if isinstance(n, int) else f' on the {where}'
+    named = 'the variant' if slot == 'fit.variant' else 'the logistic model'
+    return {'rule': rule, 'adopted': adopted is not None and (rec.canonical_policy(adopted)
                                                               or adopted) == (
-                                                                  rec.canonical_rule(rule) or rule),
-            'text': f'the logistic model at {rule}{rows}: {figures}, result '
+                                                                  rec.canonical_policy(chosen)
+                                                                  or chosen),
+            'text': f'{named} at {rule}{rows}: {figures}, result '
                     f'{item["result_id"][:RECAP_RID]}',
             # v0.2a (WP-A1): the junior recap names no result id; WP-A7: nor the rule's
             # token, which it says in words.
-            'junior_text': f'the logistic model, {audience.rule_words(rule)},{rows}: {figures}'}
+            'junior_text': f'{named}, {audience.rule_words(rule)},{rows}: {figures}'}
 
 
 def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
@@ -612,6 +637,16 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
         if doubtful:
             parts.append('kept with a doubt ' + ', '.join(doubtful))
         text = f'{label} ({"; ".join(parts) if parts else "every feature kept"})'
+    elif decision_id == 'split' and isinstance(value, dict) and value.get('method') in \
+            st.CV_METHODS:
+        # WP-B1: the evaluation scheme.
+        text = f'{label} ({value.get("folds")}-fold cross-validation, {_spaced(value["method"])})'
+    elif decision_id == 'model_variant' and isinstance(value, dict):
+        text = f'{label} ({audience.variant_words(value)})'
+    elif decision_id == 'final_test' and isinstance(value, dict):
+        text = f'{label} opened ({audience.model_words(value.get("model"))}' + (
+            f', {audience.rule_words(value["rule"])})' if junior and value.get('rule') else
+            f' at {value["rule"]})' if value.get('rule') else ')')
     elif decision_id == 'split' and isinstance(value, dict):
         method = _spaced(value.get('method', 'split'))
         fraction = value.get('validation_fraction')
@@ -621,7 +656,7 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
             share = f' on {value["column"]}, validation from {value.get("cutoff")}'
         text = f'{label} ({method}{share})'
     elif decision_id in ('policy',) and isinstance(value, str):
-        text = f'{label}: {audience.rule_words(value)}' if junior else f'{label} {value}'
+        text = f'{label}: {audience.policy_words(value)}' if junior else f'{label} {value}'
         if headline and headline['adopted']:
             text += f' ({headline["junior_text" if junior else "text"]})'
     elif decision_id == 'model_choice' and isinstance(value, str):
@@ -909,7 +944,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     partial = {'decisions': _decisions(state), 'task': st.task_of(state), 'results': results,
                'open_proposals': [p for p in st.open_proposals(state)]}
     criterion = governance.assess(partial, lambda r: rec.canonical_rule(r) or r)
-    defensible.extend(_governance_limits(state, criterion))
+    started = {slot: r['started_revision'] for slot, r in results.items()
+               if r['integrity'] == 'ok' and r['current']}
+    final_test = partition.final_test_status(state, started)
+    defensible.extend(_governance_limits(state, criterion, final_test))
     return {
         'schema': SCHEMA,
         'study': str(study.study_dir),
@@ -937,14 +975,41 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'settings': state['settings'],
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
-        'final_test': partition.final_test_status(state),
+        'final_test': final_test,
         'deliverables': launch.deliverables(study.study_dir),
         'mode': st.mode_of(state),
         'language': st.language_of(state),
         'criterion': criterion,
         'eda_looks': governance.ledger(study.exposure_records(), _target_column(state)),
         'scenario_defaults': defaults,
+        'trials': trials(study.exposure_records()),
     }
+
+
+# WP-B1: the activities whose runs are model configurations (the baseline is not a trial),
+# and the purposes of their fitting reads.
+TRIAL_ACTIVITIES = ('fit.logistic', 'fit.linear', 'fit.variant')
+TRIAL_PURPOSES = ('train_fit', 'cross_validated_fit')
+TRIALS_KEYS = ('count', 'results', 'note')
+
+
+def trials(records) -> dict:
+    """How many model configurations the study evaluated so far (WP-B1): the distinct
+    results of the candidate and variant fits in the exposure ledger (a rerun with the same
+    inputs is the same result; an interrupted fit counts by its execution). A disclosure, like
+    the count of target looks: the more configurations compared on the same rows, the more
+    the best of them may owe to chance."""
+    seen: list[str] = []
+    for r in records:
+        if r.get('activity') not in TRIAL_ACTIVITIES or r.get('purpose') not in TRIAL_PURPOSES:
+            continue
+        key = r.get('result_id') or r.get('execution_id')
+        if key and key not in seen:
+            seen.append(key)
+    return {'count': len(seen), 'results': seen,
+            'note': 'Each candidate or variant configuration fitted is a trial. Choosing the '
+                    'best of several trials on the same rows makes its figures slightly '
+                    'optimistic; the final test, opened once, is not affected.'}
 
 
 def _target_column(state: dict) -> str | None:
@@ -957,10 +1022,30 @@ def _target_column(state: dict) -> str | None:
         return None
 
 
-def _governance_limits(state: dict, criterion: dict | None) -> list[dict]:
+def _governance_limits(state: dict, criterion: dict | None,
+                       final_test: dict | None = None) -> list[dict]:
     """v0.2a (WP-A4) limits: a verdict that adopts against the success criterion, and a
-    preprocessing motivated by a look at the target."""
+    preprocessing motivated by a look at the target. v0.2b (WP-B1): the final test still
+    sealed (every figure is development evidence), an opening whose evaluation was never
+    recorded, and changes made after the final test was opened."""
     out = []
+    final_test = final_test or {}
+    if final_test.get('status') == 'sealed' and st.has_wp_b1_decisions(state):
+        out.append({'id': 'final_test_sealed',
+                    'text': 'The final test is still sealed: every figure so far is development '
+                            'evidence, measured on rows used to explore, fit, and choose.'})
+    opening = final_test.get('opening') or {}
+    if final_test.get('status') == 'opened' and not opening.get('result_id'):
+        out.append({'id': 'final_test_opening_interrupted',
+                    'text': 'The final test was opened but its evaluation was not recorded: it '
+                            'cannot be opened again, so the study has no final evidence.'})
+    if final_test.get('post_final_test'):
+        out.append({'id': 'changed_after_final_test',
+                    'changed': list(final_test.get('changed_after') or []),
+                    'text': 'Something changed after the final test was opened ('
+                            + ', '.join(final_test.get('changed_after') or []) + '): the final '
+                            'test no longer measures what the study now holds, and it is no '
+                            'longer independent evidence for it.'})
     if criterion and criterion.get('contradicts_verdict'):
         why = ('the gain does not reach the minimum fixed before the models'
                if criterion['status'] == 'not_met' else

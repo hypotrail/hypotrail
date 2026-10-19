@@ -136,9 +136,12 @@ def flow(request, tmp_path, prepared, cases):
 def _fit_footprint(study):
     s = read.open(study)
     fits = [e for e in fk.registry_entries(study) if e['activity'].startswith('fit.')]
+    # WP-B1: a new study's evaluation also reads the variant's predictions.
+    slots = [s_ for s_ in ('fit.baseline', 'fit.logistic', 'fit.variant')
+             if s_ in s.state['current']]
     return (sorted(e['result_id'] for e in fits),
-            {slot: s.state['current'][slot] for slot in ('fit.baseline', 'fit.logistic')},
-            {slot: s.current(slot)['blobs']['predictions'] for slot in ('fit.baseline', 'fit.logistic')},
+            {slot: s.state['current'][slot] for slot in slots},
+            {slot: s.current(slot)['blobs']['predictions'] for slot in slots},
             [r for r in s.exposure_records() if r['purpose'] == 'train_fit'])
 
 

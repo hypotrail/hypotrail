@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 38,
+  "revision": 42,
   "task": "binary",
   "terms": [
    {
@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "b5b53968c0d12b601a0e147a8bb9d595e5b27213b1f1aa9023f2aa223d0a6d5c",
+       "result_id": "59716cbd554a11f556a109f170130f0c4b78264a0c7d704f69bc1e29681b077a",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "82288c22cefe6514c0b090bcc0347a6c4cc207db68f1beb0313590848125643c",
+       "result_id": "2a256ccfe61bee776341ff3526add0c47545f206c2b6debe128a229396cb7723",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.2%",
-       "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.28153703501690847,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "48.0%",
-       "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+       "result_id": "37562121a35384debf5b05f1364f7fd288afe5f94a44011045db149392b055a4",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.48000980392156856,
        "format": "pct1"
@@ -700,7 +700,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -710,7 +710,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -720,7 +720,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -730,7 +730,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+       "result_id": "25f5868d985b4b4ce4067b140c658154fbc66027be3f4d6e48def70893aea929",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -816,7 +816,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "b5b53968c0d12b601a0e147a8bb9d595e5b27213b1f1aa9023f2aa223d0a6d5c",
+       "result_id": "59716cbd554a11f556a109f170130f0c4b78264a0c7d704f69bc1e29681b077a",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -911,6 +911,14 @@
     },
     "text_status": "shown"
    },
+   "model_variant": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
+    "text_status": "shown"
+   },
    "policy": {
     "concept": {
      "segments": [
@@ -947,6 +955,14 @@
       }
      ]
     },
+    "text_status": "shown"
+   },
+   "final_test": {
+    "concept": null,
+    "context": null,
+    "method": null,
+    "interpretation": null,
+    "consequence": null,
     "text_status": "shown"
    },
    "conclusion": {
@@ -1014,7 +1030,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "b5b53968c0d12b601a0e147a8bb9d595e5b27213b1f1aa9023f2aa223d0a6d5c",
+       "result_id": "59716cbd554a11f556a109f170130f0c4b78264a0c7d704f69bc1e29681b077a",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

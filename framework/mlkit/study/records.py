@@ -39,7 +39,13 @@ RESULT_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs
 EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'validation_model_evaluation', 'validation_policy_selection',
                      # ADR 0006: the final-test rows sealed at init (schema check only).
-                     'sealed')
+                     'sealed',
+                     # WP-B1 (ADR 0006 amendment): cross-validation on the development rows
+                     # (each fold fitted on the other folds, every row predicted out of
+                     # fold), the selection made on those predictions, and the one
+                     # evaluation of the opened final test.
+                     'cross_validated_fit', 'out_of_fold_evaluation',
+                     'out_of_fold_policy_selection', 'final_evaluation')
 # Purposes that record rows set aside rather than looked at: not counted in rows_exposed.
 SEALED_PURPOSES = ('sealed',)
 EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', 'execution_id',
@@ -47,7 +53,9 @@ EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', '
                  'time')
 # Purposes that read the validation partition to choose something: their rows are
 # no longer independent evidence.
-SELECTION_PURPOSES = ('validation_model_evaluation', 'validation_policy_selection')
+SELECTION_PURPOSES = ('validation_model_evaluation', 'validation_policy_selection',
+                      # WP-B1: out-of-fold predictions choose too.
+                      'out_of_fold_evaluation', 'out_of_fold_policy_selection')
 
 
 def canonical(obj: Any) -> bytes:
@@ -265,3 +273,67 @@ def parse_rule(rule: Any) -> tuple[str, float | int] | None:
         return None
     kind, _, number = canonical.partition(':')
     return (kind, int(number)) if kind == 'capacity' else (kind, float(number))
+
+
+# --- policy values with a model (WP-B1) ----------------------------------------------------
+
+# A binary study with a variant (WP-B1) adopts a rule **for a model**: the candidate
+# (``capacity:100``, as before) or the variant (``capacity:100@fit.variant``). The rule part
+# keeps the grammar of :func:`canonical_rule`; ``@fit.logistic`` is the candidate and is
+# dropped, so a policy value written before WP-B1 is unchanged.
+POLICY_MODEL_SEP = '@'
+POLICY_CANDIDATE = 'fit.logistic'
+POLICY_MODELS = ('fit.logistic', 'fit.variant')
+
+
+def canonical_policy(value: Any) -> str | None:
+    """The one spelling of a policy value (a rule, optionally ``@<model>``), or None."""
+    if not isinstance(value, str):
+        return None
+    rule, sep, model = value.partition(POLICY_MODEL_SEP)
+    canonical = canonical_rule(rule)
+    if canonical is None:
+        return None
+    model = model.strip()
+    if not sep or model == POLICY_CANDIDATE:
+        return canonical if (not sep or model) else None
+    if model not in POLICY_MODELS:
+        return None
+    return f'{canonical}{POLICY_MODEL_SEP}{model}'
+
+
+def policy_rule(value: Any) -> str | None:
+    """The canonical rule of a policy value (``capacity:100@fit.variant`` -> ``capacity:100``)."""
+    canonical = canonical_policy(value)
+    return canonical.partition(POLICY_MODEL_SEP)[0] if canonical else None
+
+
+def capacity_of(rule: Any) -> int | None:
+    """The ``k`` of a capacity rule (WP-B1: its share of the rows is ``k / n``), else None.
+    The one place a rule's capacity is read; every other kind of rule answers None."""
+    parsed = parse_rule(policy_rule(rule) if isinstance(rule, str) else rule)
+    return int(parsed[1]) if parsed and parsed[0] == 'capacity' else None
+
+
+def share_of(rule: Any) -> float | None:
+    """The ``p`` of a ``share:p`` rule (v0.2b, WP-B3), else None: a capacity already stated
+    as a share of the rows scored, which it keeps on any set of rows."""
+    parsed = parse_rule(policy_rule(rule) if isinstance(rule, str) else rule)
+    return float(parsed[1]) if parsed and parsed[0] == 'share' else None
+
+
+def capacity_share(rule: Any, n: int) -> float | None:
+    """The share of ``n`` scored rows a rule acts on: ``k / n`` for ``capacity:k``, ``p``
+    for ``share:p`` (WP-B1 x WP-B3), None for a threshold."""
+    k = capacity_of(rule)
+    if k is not None:
+        return k / n if n else None
+    return share_of(rule)
+
+
+def policy_model(value: Any) -> str:
+    """The model slot a policy value applies its rule to (the candidate by default)."""
+    canonical = canonical_policy(value)
+    if canonical and POLICY_MODEL_SEP in canonical:
+        return canonical.partition(POLICY_MODEL_SEP)[2]
+    return POLICY_CANDIDATE

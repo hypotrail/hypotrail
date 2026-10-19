@@ -28,7 +28,8 @@
     "recap_audience",
     "recap_junior",
     "mode",
-    "deliverables"
+    "deliverables",
+    "trials"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -59,6 +60,7 @@
     "recap_junior",
     "mode",
     "deliverables",
+    "trials",
     "moments",
     "pauses",
     "last_session",

@@ -477,12 +477,26 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
     elif decision_id == 'policy':
         if dep.parse_policy(value) is None:
             raise _invalid('policy is "threshold:<t in [0, 1]>", "capacity:<k >= 1>", or '
-                           '"share:<p in (0, 1]>".')
+                           '"share:<p in (0, 1]>"'
+                           + (', optionally followed by "@fit.variant" to apply it to the '
+                              'variant' if st.has_wp_b1_decisions(state) else '') + '.')
+        if rec.policy_model(value) != rec.POLICY_CANDIDATE \
+                and not st.has_wp_b1_decisions(state):
+            raise _invalid('This study has no variant: its policy applies to the logistic '
+                           'model.', models=[rec.POLICY_CANDIDATE])
     elif decision_id == 'model_choice':
-        if value not in preconditions.MODEL_CHOICES:
+        choices = model_choices(state)
+        if value not in choices:
             raise _invalid('model_choice names the model slot you adopt: '
-                           + ' or '.join(f'"{m}"' for m in preconditions.MODEL_CHOICES) + '.',
-                           choices=list(preconditions.MODEL_CHOICES))
+                           + ' or '.join(f'"{m}"' for m in choices) + '.',
+                           choices=list(choices))
+    elif decision_id == st.MODEL_VARIANT:
+        validate_variant(state, value)
+    elif decision_id == st.FINAL_TEST:
+        if not isinstance(value, Mapping) or set(value) != set(FINAL_TEST_KEYS):
+            raise _invalid('final_test is {"model", "rule"}: the configuration the study chose '
+                           '(the rule is null in a regression study).',
+                           keys=list(FINAL_TEST_KEYS), chosen=st.choice_config(state))
     elif decision_id == st.SUCCESS_CRITERION:
         try:
             governance.check_criterion(value, st.task_of(state))
@@ -501,14 +515,63 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             raise _invalid('conclusion is {"verdict", "text"}.', verdicts=list(verdicts))
 
 
+# WP-B1: the opening of the final test names the chosen configuration.
+FINAL_TEST_KEYS = ('model', 'rule')
+VARIANT_KEYS = {'regularisation': ('kind', 'strength'), 'drop_group': ('kind', 'group')}
+
+
+def model_choices(state: Mapping) -> tuple[str, ...]:
+    """The model slots a regression study may choose: the candidate and the baseline, and
+    (WP-B1) the variant."""
+    if st.has_wp_b1_decisions(state):
+        return preconditions.MODEL_CHOICES[:1] + ('fit.variant',) \
+            + preconditions.MODEL_CHOICES[1:]
+    return preconditions.MODEL_CHOICES
+
+
+def variant_groups(case: c.Case) -> dict[str, list[str]]:
+    """``{group: [candidate features]}`` of the case's variable groups (WP-B1)."""
+    out: dict[str, list[str]] = {}
+    for v in case.document['variables']:
+        if v['role'] == 'feature' and v.get('group'):
+            out.setdefault(v['group'], []).append(v['name'])
+    return out
+
+
+def validate_variant(state: Mapping, value: Any) -> None:
+    """Refuse a ``model_variant`` value that does not fit the study (``invalid_value``):
+    ``{"kind": "regularisation", "strength": "weak" | "strong"}`` or ``{"kind":
+    "drop_group", "group": <a variable group of the case>}``."""
+    if not isinstance(value, Mapping) or value.get('kind') not in VARIANT_KEYS \
+            or set(value) != set(VARIANT_KEYS[value['kind']]):
+        raise _invalid('model_variant is {"kind": "regularisation", "strength": "weak" or '
+                       '"strong"} or {"kind": "drop_group", "group": <a group of variables>}.',
+                       kinds=list(st.VARIANT_KINDS), strengths=list(st.VARIANT_STRENGTHS),
+                       groups=sorted(variant_groups(case_of(state))))
+    if value['kind'] == 'regularisation' and value['strength'] not in st.VARIANT_STRENGTHS:
+        raise _invalid('strength is "weak" or "strong".', field='strength',
+                       strengths=list(st.VARIANT_STRENGTHS))
+    if value['kind'] == 'drop_group':
+        groups = variant_groups(case_of(state))
+        if value['group'] not in groups:
+            raise _invalid(f'{value["group"]!r} is not a group of candidate features of this '
+                           f'case.', field='group', groups=sorted(groups))
+
+
 def split_methods(state: Mapping) -> list[str]:
     """The split methods of a study: its random method, and ``ordinal_cutoff`` when the
     case declares an integer time column. A declared time column allows ``ordinal_cutoff``
     only: a random split would mix earlier and later rows (no silent fallback)."""
     time_column = state['structure']['time_column']['value']
     if time_column is not None:
-        return [ORDINAL_CUTOFF]
-    return [RANDOM_SPLIT_METHODS[st.task_of(state)]]
+        methods = [ORDINAL_CUTOFF]
+    else:
+        methods = [RANDOM_SPLIT_METHODS[st.task_of(state)]]
+    if st.has_wp_b1_decisions(state):
+        # WP-B1: cross-validation on the development rows, the recommended scheme; the
+        # single validation split stays available.
+        methods = [st.cv_method(state)] + methods
+    return methods
 
 
 def validate_split(state: Mapping, value: Any) -> None:
@@ -522,7 +585,8 @@ def validate_split(state: Mapping, value: Any) -> None:
                        keys=list(SPLIT_KEYS), ordinal_keys=list(ORDINAL_SPLIT_KEYS),
                        methods=allowed)
     method = value['method']
-    if method not in ALL_SPLIT_METHODS:
+    if method not in ALL_SPLIT_METHODS + st.CV_METHODS or (
+            method in st.CV_METHODS and not st.has_wp_b1_decisions(state)):
         raise CommandRefused('unsupported_capability',
                              f'Split method {method!r} is not available.',
                              details={'methods': allowed})
@@ -533,11 +597,24 @@ def validate_split(state: Mapping, value: Any) -> None:
                    f'{time_column!r}.')
         elif method == ORDINAL_CUTOFF:
             why = 'The case declares no time column to cut on.'
+        elif method in st.CV_METHODS:
+            why = f'The cross-validation of this study is {st.cv_method(state)!r}.'
         elif st.task_of(state) == st.REGRESSION:
             why = 'A numeric target is not stratified: use "random".'
         else:
             why = 'A binary target keeps its outcome share: use "stratified_random".'
         raise _invalid(f'Split method {method!r} does not fit this study. {why}', methods=allowed)
+    if method in st.CV_METHODS:
+        if set(value) != set(st.CV_KEYS):
+            raise _invalid('A cross-validation scheme is {"method", "folds", "seed"}.',
+                           keys=list(st.CV_KEYS))
+        folds = value['folds']
+        if type(folds) is not int or not st.MIN_FOLDS <= folds <= st.MAX_FOLDS:
+            raise _invalid(f'folds is a whole number from {st.MIN_FOLDS} to {st.MAX_FOLDS}.',
+                           field='folds')
+        if type(value['seed']) is not int:
+            raise _invalid('seed is an integer.', field='seed')
+        return
     if method == ORDINAL_CUTOFF:
         if set(value) != set(ORDINAL_SPLIT_KEYS):
             raise _invalid('An ordinal cutoff split is {"method", "column", "cutoff"}.',
@@ -889,9 +966,11 @@ def _propose(ctx: Context) -> Handler:
                                                      'task': st.task_of(state)})
         _verify_sources(state)                     # L1: never propose on changed bytes
 
+        if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+            raise final_test_opened_refusal(state)
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
-            value = dep.canonical_rule(value)        # L2: one spelling per rule
+            value = rec.canonical_policy(value)      # L2: one spelling per rule
         if decision_id == st.PREPROCESSING:
             # WP-A4: the motivating results are checked, and the engine stamps the value
             # data-contingent when any of them read the target.
@@ -939,6 +1018,17 @@ def _propose(ctx: Context) -> Handler:
                 'decision_status': decision['status'], 'superseded': superseded,
                 'restatement': params['restatement']}
     return Handler(PROPOSE_PARAMS, run, check)
+
+
+def final_test_opened_refusal(state: Mapping) -> CommandRefused:
+    """WP-B1: the final test is opened once; a second opening is refused."""
+    opening = (state.get('partition') or {}).get('opening') or {}
+    return CommandRefused('final_test_already_opened',
+                          'The final test was already opened; it is opened once. A later '
+                          'change is shown as made after the final test, never measured on it '
+                          'again.',
+                          details={'opening': {k: opening.get(k) for k in
+                                               ('revision', 'model', 'rule', 'result_id')}})
 
 
 def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
@@ -1015,6 +1105,18 @@ def _confirm(ctx: Context) -> Handler:
         if proposal.get('request_id') == ctx.request_id or proposal['revision'] > state['revision']:
             raise _ambiguous('same_request', 'A proposal is confirmed by a later request than the '
                                              'one that created it.', proposal_id=pid)
+        if proposal['decision_id'] == st.FINAL_TEST:
+            decision_id = proposal['decision_id']
+            if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+                raise final_test_opened_refusal(state)
+            if decision_id == st.FINAL_TEST and params['basis'] == st.DELEGATED_DEFAULT:
+                # WP-B1: the opening is the junior's own act, with a reason; never delegated.
+                raise CommandRefused('reason_required',
+                                     'The final test is opened only in the junior\'s own words, '
+                                     'with a reason ("because ..."); it cannot be delegated.',
+                                     details={'decision_id': decision_id, 'proposal_id': pid,
+                                              'user_words': params['user_words'],
+                                              'mode': st.mode_of(state)})
         if params['basis'] == st.DELEGATED_DEFAULT and not states_default(proposal['restatement']):
             raise _ambiguous('restatement_not_default',
                              f'Proposal {pid} does not say it is the assistant\'s recommended '
@@ -1225,6 +1327,8 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
     changes = c.source_changes(state)
     if changes:
         refusals.append(c.changed_sources_error(changes))
+    if decision_id == st.FINAL_TEST and st.final_test_opened(state):
+        refusals.append(final_test_opened_refusal(state))
     for found in (_hold_refusal(state, decision_id, proposal_id), _stale_refusal(state, proposal)):
         if found is not None:
             refusals.append(found)
@@ -1675,6 +1779,9 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
                'action': action, 'request_id': request_id,
                'replayed': bool(receipt.get('replayed')), 'revision': receipt['revision'],
                'result': receipt['result'], 'artifacts': None}
+    if action == ACTION_CONFIRM:
+        payload['result'] = {**payload['result'],
+                             'opening': _opening(store, payload, request_id)}
     code = EXIT_OK
     if not payload['replayed']:
         artifacts = after_commit(store.study_dir, payload)
@@ -1683,6 +1790,46 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
             if any(a.get('status') in ('stale', 'failed') for a in artifacts.values()):
                 code = EXIT_ARTIFACT_STALE
     return Outcome(payload, code)
+
+
+OPENING_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')
+
+
+def _opening(store: StudyStore, payload: dict, request_id: str) -> dict | None:
+    """WP-B1: confirming ``final_test`` opens the final test: the engine runs
+    ``final_test.evaluation`` once, right after the confirmation commits (its reservation
+    marks the final test opened). ``{status, execution_id, result_id, revision, error}`` of
+    that run, None for any other confirmation. A replayed confirmation reports the recorded
+    opening and runs nothing."""
+    result = payload['result']
+    if result.get('decision_id') != st.FINAL_TEST:
+        return None
+    from . import executions
+    if payload['replayed']:
+        state = read.open(store.study_dir).state
+        opening = (state.get('partition') or {}).get('opening') or {}
+        return {'status': 'opened' if opening else 'not_opened',
+                'execution_id': opening.get('execution_id'),
+                'result_id': opening.get('result_id'), 'revision': state['revision'],
+                'error': None}
+    try:
+        outcome = executions.run(store.study_dir, 'final_test.evaluation', {},
+                                 request_id=f'{request_id}:final_test.evaluation',
+                                 expected_revision=payload['revision'], render=False)
+    except Exception as exc:
+        # Refused before its reservation (nothing opened), or failed after it (the final test
+        # is opened and consumed: run.fail recorded the failure and the rows it may have read).
+        state = read.open(store.study_dir).state
+        opening = (state.get('partition') or {}).get('opening') or {}
+        error = (refusal_dict(exc) if isinstance(exc, (CommandRefused, StudyError)) else
+                 {'code': 'internal_error', 'reason': None,
+                  'message': f'{type(exc).__name__}: {exc}', 'details': {}})
+        return {'status': 'failed' if opening else 'refused',
+                'execution_id': opening.get('execution_id'), 'result_id': None,
+                'revision': state['revision'], 'error': error}
+    run = outcome.payload
+    return {'status': run['status'], 'execution_id': run['execution_id'],
+            'result_id': run['result_id'], 'revision': run['revision'], 'error': None}
 
 
 # Phase 3 extension point: a module that renders artefacts after every committed

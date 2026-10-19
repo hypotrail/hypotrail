@@ -46,7 +46,9 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         'recap_audience', 'recap_junior',
                         # v0.2a (WP-A7, companion requests): the confirmation mode and the
                         # view's ``deliverables``.
-                        'mode', 'deliverables')
+                        'mode', 'deliverables',
+                        # v0.2b (WP-B1): the trial count.
+                        'trials')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
@@ -100,7 +102,10 @@ RESULT_KEYS_BY_ACTION = {
                        # ADR 0005 (R3): the agent's concern, and the contradiction warnings.
                        'agent_concern', 'warnings',
                        # v0.2b (WP-B2): the confirmation mode in force.
-                       'mode'),
+                       'mode',
+                       # WP-B1: the opening of the final test that a final_test confirmation
+                       # runs (null for any other decision).
+                       'opening'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
     # Post-v0.1 (P2).
     # Post-v0.1 fixes (D1): the decisions a hold on a confirmed decision asks for again.
@@ -141,7 +146,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.2a (WP-A4): the success criterion assessment and the target-look ledger.
              'criterion', 'eda_looks',
              # v0.2b (WP-B3, R6): the teaching scenario's defaults from the case, or null.
-             'scenario_defaults')
+             'scenario_defaults',
+             # v0.2b (WP-B1): the configurations evaluated so far.
+             'trials')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -195,6 +202,19 @@ FULL_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'succes
 FULL_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split',
                                 'success_criterion', 'preprocessing', 'model_choice',
                                 'conclusion')
+# v0.2b (WP-B1): a study created by init has nine decisions and twelve steps; the v0.2a sets
+# above stay the sets of a study created before (never migrated).
+B1_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+                   'preprocessing', 'model_variant', 'policy', 'final_test', 'conclusion')
+B1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split',
+                              'success_criterion', 'preprocessing', 'model_variant',
+                              'model_choice', 'final_test', 'conclusion')
+B1_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
+               'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
+               'policy', 'final_test', 'conclusion')
+CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds')
+TRIALS_KEYS = ('count', 'results', 'note')
+OPENING_RESULT_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')
 FULL_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
                  'success_criterion', 'train_eda', 'preprocessing', 'models', 'policy',
                  'conclusion')
@@ -209,7 +229,9 @@ DATA_VARIABLE_KEYS = ('name', 'role', 'type', 'unit', 'description', 'descriptio
 PREPROCESSING_KEYS = ('missing', 'rare_category_min_rows', 'caps', 'log_transform')
 CRITERION_VIEW_KEYS = ('decision_status', 'value', 'metric', 'status', 'result_id', 'rule',
                        'model', 'gain', 'low', 'high', 'minimum', 'unit',
-                       'interval_includes_zero', 'verdict', 'contradicts_verdict')
+                       'interval_includes_zero', 'verdict', 'contradicts_verdict',
+                       # v0.2b (WP-B1): the criterion judged on the final test.
+                       'final_test')
 EDA_LOOKS_KEYS = ('target_looks', 'results', 'by_activity', 'note')
 # M3 (regression): the same pauses; the third decision is model_choice.
 TASKS = ('binary', 'regression')
@@ -228,7 +250,9 @@ REGRESSION_MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.featur
                            11: 'code_fingerprint', 12: 'dataset', 13: 'model_choice',
                            # v0.2a (WP-A4).
                            14: 'preprocessing', 15: 'preprocessing.motivation',
-                           16: 'success_criterion', '*': 'unknown'}
+                           16: 'success_criterion',
+                           # v0.2b (WP-B1).
+                           17: 'model_variant', '*': 'unknown'}
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
                      'propose', 'run', 'done',
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
@@ -260,7 +284,11 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'conclusion_outdated', 'inconclusive_without_choice',
                           # v0.2a (WP-A4): an adopting verdict against the success criterion,
                           # a preprocessing motivated by a look at the target.
-                          'verdict_contradicts_criterion', 'data_contingent_preprocessing'}
+                          'verdict_contradicts_criterion', 'data_contingent_preprocessing',
+                          # v0.2b (WP-B1): the final test sealed, its opening interrupted, a
+                          # change after it.
+                          'final_test_sealed', 'final_test_opening_interrupted',
+                          'changed_after_final_test'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -272,7 +300,8 @@ MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.feature_set',
                 10: 'conclusion', 11: 'code_fingerprint', 12: 'dataset',
                 # v0.2a (WP-A4).
                 14: 'preprocessing', 15: 'preprocessing.motivation', 16: 'success_criterion',
-                '*': 'unknown'}
+                # v0.2b (WP-B1).
+                17: 'model_variant', '*': 'unknown'}
 ERROR_CODES = {
     'invalid_arguments', 'internal_error', 'invalid_request', 'idempotency_conflict',
     'stale_revision', 'invalid_command', 'study_missing', 'state_exists', 'integrity_error',
@@ -298,7 +327,9 @@ ERROR_CODES = {
     'reason_required',
     # v0.2b (WP-B2): the training mode, a paraphrase on the proposal's concepts, and a
     # stop on words that contradict the value.
-    'paraphrase_required', 'words_contradict_value'}
+    'paraphrase_required', 'words_contradict_value',
+    # WP-B1: the final test is opened once.
+    'final_test_already_opened'}
 RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
@@ -321,10 +352,16 @@ EXPOSURE_RECORD_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result
 EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'validation_model_evaluation', 'validation_policy_selection',
                      # v0.2a (ADR 0006): the final-test rows set aside at init.
-                     'sealed')
+                     'sealed',
+                     # v0.2b (WP-B1): cross-validation, the selection on out-of-fold
+                     # predictions, the one evaluation of the final test.
+                     'cross_validated_fit', 'out_of_fold_evaluation',
+                     'out_of_fold_policy_selection', 'final_evaluation')
 EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
 FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
-                          'schema_check')
+                          'schema_check',
+                          # v0.2b (WP-B1): the opening, and what changed after it.
+                          'opening', 'post_final_test', 'changed_after')
 PARTITION_RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on',
                          'bins', 'order', 'dataset_sha256', 'n_rows', 'development',
                          'final_test', 'schema_check', 'created', 'implementation')
@@ -442,8 +479,9 @@ def test_status_summary_keys(flow):
     assert view.SUMMARY_KEYS == SUMMARY_PAYLOAD_KEYS[6:]
     assert tuple(payload['goal']) == SUMMARY_GOAL_KEYS
     assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(
-        FULL_STEP_IDS)
-    assert tuple(payload['decisions']) == st.FULL_DECISION_IDS == FULL_DECISION_IDS
+        B1_STEP_IDS)
+    # WP-B1: a new study has the nine decisions (st.FULL_DECISION_IDS stays the v0.2a set).
+    assert tuple(payload['decisions']) == st.B1_DECISION_IDS == B1_DECISION_IDS
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
     assert tuple(payload['executions']) == EXECUTION_VIEW_KEYS
     assert tuple(payload['not_yet_defensible']) == ('top', 'more')
@@ -482,7 +520,7 @@ def test_view_model_keys(flow):
     assert view.CONFIRMATION_VIEW_KEYS == CONFIRMATION_VIEW_KEYS
     assert view.PROPOSAL_VIEW_KEYS == PROPOSAL_VIEW_KEYS
     assert view.RESULT_VIEW_KEYS == RESULT_VIEW_KEYS
-    assert tuple(v['decisions']) == st.FULL_DECISION_IDS
+    assert tuple(v['decisions']) == st.B1_DECISION_IDS
     assert all(tuple(d) == DECISION_VIEW_KEYS for d in v['decisions'].values())
     assert tuple(v['criterion']) == CRITERION_VIEW_KEYS
     assert tuple(v['eda_looks']) == EDA_LOOKS_KEYS
@@ -501,7 +539,7 @@ def test_view_model_keys(flow):
         == LIVENESS_VALUES
     assert not [k for k in (*EXECUTION_VIEW_KEYS, *LIVENESS_VALUES, 'liveness')
                 if k not in DOC_TOKENS]
-    assert [s['id'] for s in v['plan']] == list(FULL_STEP_IDS)
+    assert [s['id'] for s in v['plan']] == list(B1_STEP_IDS)
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
     assert {x['id'] for x in v['not_yet_defensible']} <= NOT_YET_DEFENSIBLE_IDS
@@ -929,7 +967,12 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     from mlkit.study import exposure, partition
     assert exposure.PARTITIONS == EXPOSURE_PARTITIONS
     assert partition.RECORD_KEYS == PARTITION_RECORD_KEYS
-    assert partition.STATUSES == ('sealed',) and partition.STATUS_ABSENT == 'absent'
+    # WP-B1: the final test is opened once (optional record key ``opening``); WP-B3: the
+    # optional ``groups`` of a case whose identical records are grouped.
+    assert partition.STATUSES == ('sealed', 'opened') and partition.STATUS_ABSENT == 'absent'
+    assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening')
+    assert partition.OPENING_KEYS == ('revision', 'execution_id', 'proposal_id', 'user_words',
+                                      'model', 'rule', 'time', 'result_id')
     assert partition.METHODS == ('stratified', 'quantile_stratified', 'temporal')
     assert (partition.DEFAULT_FRACTION, partition.DEFAULT_SEED) == (0.2, 0)
     study = tmp_path / 'study'
@@ -948,8 +991,9 @@ def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_
     assert st.DEFAULT_MODE == 'guided' and st.LANGUAGES == LANGUAGES
     assert st.DEFAULT_LANGUAGE == 'en' and st.MODE_CHANGE_KEYS == MODE_CHANGE_KEYS
     assert st.MODES_AVAILABLE_IN == {} and st.MODE_STRICTNESS == MODE_STRICTNESS
-    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion'),
-                                   'regression': ('model_choice', 'conclusion')}
+    # WP-B1: the opening of the final test needs a reason too.
+    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion', 'final_test'),
+                                   'regression': ('model_choice', 'conclusion', 'final_test')}
     assert cf.WORDS_CONTRADICT_VALUE == 'words_contradict_value'
     warning = cf.availability_warnings('exclude contact', {'contact': 'available_at_prediction'})
     assert [tuple(w) for w in warning] == [WARNING_KEYS]
@@ -978,3 +1022,36 @@ def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_
                '--request-id', 'm1', '--expected-revision', 1, '--study', study)
     assert out.exit_code == 0 and tuple(out.payload) == PAYLOAD_KEYS['decide']
     assert tuple(out.payload['result']) == ('mode', 'previous', 'user_words', 'changed')
+
+
+def test_wp_b1_contract_constants():
+    """v0.2b (WP-B1): the decision sets and steps of a new study, the evaluation schemes, the
+    variant, the trial count, the opening; every name is documented in CLI-CONTRACT.md."""
+    from mlkit.study import activities as act, governance, partition
+    assert st.B1_DECISION_IDS == B1_DECISION_IDS
+    assert st.B1_REGRESSION_DECISION_IDS == B1_REGRESSION_DECISION_IDS
+    assert st.B1_STEP_IDS == B1_STEP_IDS and st.WP_B1_DECISIONS == ('model_variant', 'final_test')
+    assert st.CV_METHODS == CV_METHODS and st.CV_KEYS == ('method', 'folds', 'seed')
+    assert (st.DEFAULT_FOLDS, st.MIN_FOLDS, st.MAX_FOLDS) == (5, 3, 10)
+    assert st.VARIANT_KINDS == ('regularisation', 'drop_group')
+    assert st.VARIANT_STRENGTHS == ('weak', 'strong')
+    assert act.B1_ACTIVITIES == ('fit.variant', 'final_test.evaluation')
+    assert act.VARIANT_C == {'weak': 10.0, 'strong': 0.1}
+    assert act.VARIANT_ALPHA == {'weak': 1.0, 'strong': 10.0}
+    assert view.TRIALS_KEYS == TRIALS_KEYS and view.SUMMARY_TRIALS_KEYS == ('count',)
+    assert cmd.OPENING_KEYS == OPENING_RESULT_KEYS
+    assert cmd.FINAL_TEST_KEYS == ('model', 'rule')
+    assert partition.STATUS_VIEW_KEYS == FINAL_TEST_STATUS_KEYS
+    assert governance.FINAL_CRITERION_KEYS == ('status', 'gain', 'low', 'high', 'minimum',
+                                               'unit', 'interval_includes_zero', 'result_id')
+    assert rec.POLICY_MODELS == ('fit.logistic', 'fit.variant')
+    keys = (set(B1_DECISION_IDS) | set(B1_STEP_IDS) | set(CV_METHODS) | set(TRIALS_KEYS)
+            | set(OPENING_RESULT_KEYS) | set(st.VARIANT_KINDS) | set(st.VARIANT_STRENGTHS)
+            | set(act.B1_ACTIVITIES) | set(partition.OPENING_KEYS)
+            | {'fit.variant', 'final_test.evaluation', 'comparisons', 'cross_validation',
+               'out_of_fold', 'fold_rows', 'capacity_share', 'rule_final', 'post_final_test',
+               'changed_after', 'opened', 'final_test_already_opened', 'drop_group',
+               'state.has_wp_b1_decisions', 'records.canonical_policy',
+               'data.load_final_test', 'activities.CAPABILITY_FOLDS'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert f'`{act.CAPABILITY_FOLDS}`' in DOC
