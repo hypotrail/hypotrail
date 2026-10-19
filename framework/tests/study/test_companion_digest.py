@@ -39,7 +39,10 @@ def test_constants_follow_the_contract():
     assert view.DIGEST_COUNT_KEYS == cc.DIGEST_COUNT_KEYS
     assert view.DIGEST_INVALIDATION_KEYS == cc.DIGEST_INVALIDATION_KEYS
     for task in ('binary', 'regression'):
+        # WP-A4: a new study's split pause also holds the success criterion and the
+        # preprocessing; the session report's v0.1 table stays the table of an older study.
         pauses = {p: list(d) for p, d in cmd_session_report.TASK_PAUSES[task].items()}
+        pauses[2] = ['split', 'success_criterion', 'preprocessing']
         assert view.pause_decisions(task) == pauses
 
 
@@ -225,6 +228,7 @@ def test_regression_digest_has_no_decision_rule_vocabulary(tmp_path):
     flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed')
     flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)

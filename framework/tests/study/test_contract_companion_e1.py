@@ -76,7 +76,8 @@ def test_c1_digest_keys_moments_pauses_and_last_session(binary):
     assert [tuple(x) for x in p['pauses']] == [cc.PAUSE_KEYS] * 3
     assert [x['pause'] for x in p['pauses']] == [1, 2, 3]
     assert p['pauses'][0]['decisions'] == ['prediction_time', 'feature_availability']
-    assert p['pauses'][1]['decisions'] == ['split']
+    # WP-A4: the split pause also holds the success criterion and the preprocessing.
+    assert p['pauses'][1]['decisions'] == ['split', 'success_criterion', 'preprocessing']
     assert p['pauses'][2]['decisions'] == ['policy', 'conclusion']
     assert [x['status'] for x in p['pauses']] == ['closed', 'closed', 'open']
     assert tuple(p['last_session']) == cc.LAST_SESSION_KEYS
@@ -134,6 +135,7 @@ def test_c2_decisions_keys(binary):
     assert p['task'] == 'binary'
     assert [d['decision_id'] for d in p['decisions']] == ['prediction_time',
                                                           'feature_availability', 'split',
+                                                          'success_criterion', 'preprocessing',
                                                           'policy', 'conclusion']
     for d in p['decisions']:
         assert tuple(d) == cc.DECISIONS_ITEM_KEYS
@@ -141,7 +143,8 @@ def test_c2_decisions_keys(binary):
         assert tuple(item) == cc.DECISIONS_PROPOSAL_KEYS
         assert item['origin'] is None or tuple(item['origin']) == cc.ORIGIN_KEYS
     assert [h['decision_id'] for h in p['history']] == ['prediction_time',
-                                                        'feature_availability', 'split']
+                                                        'feature_availability', 'split',
+                                                        'success_criterion', 'preprocessing']
     for h in p['history']:
         assert tuple(h) == cc.DECISIONS_HISTORY_KEYS
         assert h['current'] is True and h['superseded_at'] is None

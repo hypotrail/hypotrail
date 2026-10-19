@@ -177,8 +177,9 @@ def test_view_has_the_contract_keys_and_is_deterministic(populated):
     assert first == second
     assert tuple(first) == view.VIEW_KEYS
     json.dumps(first)                                          # JSON-serialisable
-    assert first['revision'] == 2 and first['current_step'] == 'prediction_time'
-    assert first['next_action']['kind'] == 'propose'
+    # WP-A4: no proposal yet, so step 0 (the data card) is the current step.
+    assert first['revision'] == 2 and first['current_step'] == 'discover_data'
+    assert first['next_action']['kind'] == 'show_data_card'
     result = first['results']['fit.baseline']
     assert tuple(result) == view.RESULT_VIEW_KEYS
     assert result['result_id'] == rid and result['current'] and result['integrity'] == 'ok'
@@ -188,7 +189,8 @@ def test_view_has_the_contract_keys_and_is_deterministic(populated):
     assert set(first['facts']['by_status']) == {'documented_fact', 'scenario_assumption',
                                                 'observed', 'unknown'}
     assert set(first['decisions']) == {'prediction_time', 'feature_availability', 'split',
-                                       'policy', 'conclusion'}
+                                       'success_criterion', 'preprocessing', 'policy',
+                                       'conclusion'}
     assert all(tuple(d) == view.DECISION_VIEW_KEYS for d in first['decisions'].values())
     assert first['not_yet_defensible'][0]['id'] == 'unconfirmed_decisions'
     assert _tree_digest(store.study_dir) == before

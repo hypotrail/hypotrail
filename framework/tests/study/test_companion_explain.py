@@ -72,6 +72,7 @@ def regression(tmp_path_factory):
     flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed')
     flow.decide('feature_availability', fk.availability(AUTO))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)

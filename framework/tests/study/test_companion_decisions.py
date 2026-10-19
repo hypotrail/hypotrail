@@ -48,6 +48,7 @@ def bank(tmp_path_factory):
                                             'thirty percent of rows for validation.')
     _confirm(flow, pid, DELEGATION_WORDS, '--basis', 'delegated_default', '--delegation-scope',
              'this_decision')
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_rate', 'eda.special_values', 'fit.baseline',
                      'fit.logistic'):
         flow.run(activity)
@@ -68,7 +69,8 @@ def test_history_proposals_and_delegation(bank):
     assert [h['current'] for h in policy] == [False, True]
     assert policy[0]['superseded_at'] == policy[1]['revision'] and policy[1]['superseded_at'] is None
     assert policy[1]['channel'] == 'webview' and policy[0]['channel'] == 'chat'
-    assert sum(h['current'] for h in p['history']) == 4
+    # WP-A4: the success criterion and the preprocessing are confirmed too.
+    assert sum(h['current'] for h in p['history']) == 6
     split = next(h for h in p['history'] if h['decision_id'] == 'split')
     assert (split['basis'], split['delegation_scope']) == ('delegated_default', 'this_decision')
     assert split['user_words'] == DELEGATION_WORDS
@@ -151,8 +153,10 @@ def test_regression_decisions(tmp_path):
     study = cc.regression_study(tmp_path / 'work', tmp_path / 'study')
     p = cc.run('decisions', '--study', study)[1]
     assert p['task'] == 'regression'
+    # WP-A4: the two decisions of the split pause before the models.
     assert [d['decision_id'] for d in p['decisions']] == ['prediction_time',
                                                           'feature_availability', 'split',
+                                                          'success_criterion', 'preprocessing',
                                                           'model_choice', 'conclusion']
-    assert [d['pause'] for d in p['decisions']] == [1, 1, 2, 3, 3]
+    assert [d['pause'] for d in p['decisions']] == [1, 1, 2, 2, 2, 3, 3]
     assert p['history'] == [] and p['proposals'] == []

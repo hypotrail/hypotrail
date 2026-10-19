@@ -71,6 +71,7 @@ def bank(tmp_path_factory):
         fk.BANK, duration='not_available', day='not_available', month='not_available',
         campaign='not_available', contact='uncertain_included'))
     flow.decide('split', fk.SPLIT)
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_rate', 'eda.special_values'):
         flow.run(activity)
     flow.run('eda.rate_by', '--column', 'job')
@@ -179,6 +180,7 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
     flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed')
     flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)
@@ -193,4 +195,4 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
     assert {'fit.baseline', 'fit.linear', 'evaluate.regression'} <= set(p['kept_slots'])
     assert cc.r3_imported(flow.study, 'preview', 'effects', pid) == []
     flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it')
-    assert len(flow.previews) == 6
+    assert len(flow.previews) == 8          # WP-A4: the success criterion and the preprocessing

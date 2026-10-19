@@ -101,7 +101,8 @@ def test_handoff_json_and_markdown_content(study, tmp_path):
                     '## Not yet defensible', '## Open items', '## How to reproduce',
                     '## Not for production use'):
         assert heading in md, heading
-    assert md.count(cmd_export.NOT_AUTHENTICATED) == 4       # four confirmed decisions
+    # six confirmed decisions (WP-A4: the success criterion and the preprocessing too)
+    assert md.count(cmd_export.NOT_AUTHENTICATED) == 6
     assert 'does not authorise production use' in md
     assert str(study) not in md and '<study>' in md
     assert 'Yes, call the twenty best-scored members.' in md
@@ -218,6 +219,7 @@ def test_an_auto_mpg_pack_holds_no_rule_vocabulary(tmp_path):
     flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed')
     flow.decide('feature_availability', fk.availability(AUTO))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)
