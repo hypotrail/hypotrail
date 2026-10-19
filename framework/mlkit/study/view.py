@@ -22,7 +22,7 @@ from . import audience
 from . import currency
 from . import launch
 from . import partition
-from . import read
+from . import governance, read
 from . import records as rec
 from . import state as st
 from .case import EPISTEMIC_STATUSES
@@ -41,7 +41,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # notebooks with it.
              'deliverables',
              # ADR 0005 (v0.2a): the confirmation mode and the study language.
-             'mode', 'language')
+             'mode', 'language',
+             # v0.2a (WP-A4): the success criterion against the current evaluation, and the
+             # ledger of explorations that read the target.
+             'criterion', 'eda_looks')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -77,6 +80,8 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # v0.2a (ADR 0006): the sealed final test, or ``status: absent``; before
                 # ``recap``, which stays the last key of the summary.
                 'final_test',
+                # v0.2a (WP-A4): the success criterion and the count of target looks.
+                'criterion', 'eda_looks',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap',
                 # v0.2a (WP-A1): who the recap is written for, and its junior variant.
@@ -85,6 +90,8 @@ SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resoluti
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
 SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+                    # v0.2a (WP-A4): an adopting verdict against the success criterion.
+                    'verdict_contradicts_criterion',
                     # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
                     'conclusion_outdated', 'result_integrity',
                     'adopted_rule_not_evaluated',
@@ -423,11 +430,24 @@ def summary(view: dict) -> dict:
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
            'executions': executions, 'not_yet_defensible': defensible, 'notes': notes,
-           'holds': _holds(notes, decisions), 'final_test': view['final_test']}
+           'holds': _holds(notes, decisions), 'final_test': view['final_test'],
+           'criterion': _compact_criterion(view.get('criterion')),
+           'eda_looks': ({k: view['eda_looks'][k] for k in ('target_looks', 'results')}
+                         if view.get('eda_looks') else None)}
     out['recap'] = recap(out, view)
     out['recap_audience'] = audience.AGENT
     out['recap_junior'] = recap(out, view, junior=True)
     return {k: out[k] for k in SUMMARY_KEYS}
+
+
+SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', 'high',
+                          'minimum', 'unit', 'rule', 'result_id', 'contradicts_verdict')
+
+
+def _compact_criterion(criterion):
+    if not criterion:
+        return None
+    return {k: criterion.get(k) for k in SUMMARY_CRITERION_KEYS}
 
 
 # --- the resume recap (post-v0.1, T8 and F5) ------------------------------------------
@@ -797,6 +817,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
                            'text': f'The adopted policy {adopted} has no current evaluation; '
                                    'its figures cannot be cited until it is evaluated again.'})
     defensible.extend(_small_data(state, results))
+    partial = {'decisions': _decisions(state), 'task': st.task_of(state), 'results': results,
+               'open_proposals': [p for p in st.open_proposals(state)]}
+    criterion = governance.assess(partial, lambda r: rec.canonical_rule(r) or r)
+    defensible.extend(_governance_limits(state, criterion))
     return {
         'schema': SCHEMA,
         'study': str(study.study_dir),
@@ -828,7 +852,43 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'deliverables': launch.deliverables(study.study_dir),
         'mode': st.mode_of(state),
         'language': st.language_of(state),
+        'criterion': criterion,
+        'eda_looks': governance.ledger(study.exposure_records(), _target_column(state)),
     }
+
+
+def _target_column(state: dict) -> str | None:
+    """The target column of the study's case, or None when the case file cannot be read
+    (``sources_changed`` already says so)."""
+    from .case import CaseError, case_of
+    try:
+        return case_of(state).target_column
+    except (CaseError, OSError):
+        return None
+
+
+def _governance_limits(state: dict, criterion: dict | None) -> list[dict]:
+    """v0.2a (WP-A4) limits: a verdict that adopts against the success criterion, and a
+    preprocessing motivated by a look at the target."""
+    out = []
+    if criterion and criterion.get('contradicts_verdict'):
+        why = ('the gain does not reach the minimum fixed before the models'
+               if criterion['status'] == 'not_met' else
+               'the paired interval of the gain includes 0')
+        out.append({'id': 'verdict_contradicts_criterion', 'decisions': ['conclusion'],
+                    'status': criterion['status'],
+                    'text': f'The conclusion adopts while the success criterion fixed before '
+                            f'the models is not met: {why}.'})
+    pre = (state['decisions'].get('preprocessing') or {})
+    value = pre.get('value')
+    if pre.get('status') in ('confirmed', 'reconfirm_required') and isinstance(value, dict) \
+            and value.get('data_contingent'):
+        out.append({'id': 'data_contingent_preprocessing', 'decisions': ['preprocessing'],
+                    'results': list(value.get('motivated_by') or []),
+                    'text': 'The preparation of the variables was chosen after looking at the '
+                            'outcome on training rows, so the validation figures may be '
+                            'slightly optimistic.'})
+    return out
 
 
 def _proposal_view(p: dict, language: str) -> dict:
