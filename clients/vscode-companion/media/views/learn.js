@@ -57,13 +57,17 @@
           const id = e.target.getAttribute('data-concept-card');
           const fully = e.isIntersecting && e.intersectionRatio >= 0.99;
           if (fully && !local.timers.has(id) && !local.counted.has(id)) {
+            // Test hook (§16): the card is being seen; its two seconds are running.
+            e.target.setAttribute('data-seen-timing', 'true');
             local.timers.set(id, setTimeout(() => {
               local.timers.delete(id);
+              e.target.removeAttribute('data-seen-timing');
               if (local.counted.has(id) || !e.target.isConnected) return;
               local.counted.add(id);
               HT.send({ type: 'learn_set', key: 'seen', id });
             }, SEEN_AFTER_MS));
           } else if (!fully && local.timers.has(id)) {
+            e.target.removeAttribute('data-seen-timing');
             clearTimeout(local.timers.get(id));
             local.timers.delete(id);
           }

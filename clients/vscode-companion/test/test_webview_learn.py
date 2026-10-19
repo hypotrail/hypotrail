@@ -122,18 +122,32 @@ def test_concept_card_puts_the_term_first_then_its_definition_and_the_study_text
 
 
 def test_le2_a_card_seen_for_two_seconds_is_counted_once_and_collapses_after_two_sightings(open_panel, fixtures):
-    panel = _open(open_panel, fixtures)
+    # No fixed sleep: Playwright's fake clock, installed before the panel renders, drives the
+    # two seconds; `data-seen-timing` says when the card's timer is armed (a test hook, §16),
+    # and the clock is paused from then on, so only run_for moves it.
+    def clocked(color_scheme='light'):
+        p = open_panel(color_scheme)
+        p.page.clock.install()
+        return p
+    panel = _open(clocked, fixtures)
     page = panel.page
     card = page.locator('[data-concept-card="binary:conclusion"]')
     if page.evaluate("() => document.querySelector('[data-concept-card]').getBoundingClientRect().bottom > innerHeight"):
-        page.wait_for_timeout(2300)
+        page.clock.run_for(2300)
+        assert page.locator('[data-seen-timing]').count() == 0
         assert not [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen'], 'a card partly out of view is not seen'
     card.scroll_into_view_if_needed()
-    page.wait_for_timeout(2500)
+    page.locator('[data-concept-card="binary:conclusion"][data-seen-timing]').wait_for()
+    page.clock.pause_at((page.evaluate('() => Date.now()') + 1) / 1000)   # seconds in the Python API
+    page.clock.run_for(1500)
+    assert not [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen'], 'not before two seconds'
+    page.clock.run_for(600)
     seen = [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen']
     assert seen == [{'v': 2, 'type': 'learn_set', 'key': 'seen', 'id': 'binary:conclusion'}]
+    page.clock.resume()   # a paused clock also holds the page's message handling
     _send(panel, {'type': 'learn_state', **{**EMPTY, 'seen': {'binary:conclusion': 1}}})
-    page.wait_for_timeout(2500)
+    page.clock.run_for(5000)
+    assert page.locator('[data-seen-timing]').count() == 0, 'counted: no new timer'
     assert len([m for m in _posted(panel, 'learn_set') if m['key'] == 'seen']) == 1, 'not counted twice in one panel session'
     assert page.locator('[data-concept-card="binary:conclusion"]').count() == 1, 'one sighting: still open'
     # The stored count is 2 (a reload reads it from globalState): one line, then open on demand.
