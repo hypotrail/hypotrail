@@ -304,6 +304,13 @@ def policy_rule(value: Any) -> str | None:
     return canonical.partition(POLICY_MODEL_SEP)[0] if canonical else None
 
 
+def capacity_of(rule: Any) -> int | None:
+    """The ``k`` of a capacity rule (WP-B1: its share of the rows is ``k / n``), else None.
+    The one place a rule's capacity is read; every other kind of rule answers None."""
+    parsed = parse_rule(policy_rule(rule) if isinstance(rule, str) else rule)
+    return int(parsed[1]) if parsed and parsed[0] == 'capacity' else None
+
+
 def policy_model(value: Any) -> str:
     """The model slot a policy value applies its rule to (the candidate by default)."""
     canonical = canonical_policy(value)

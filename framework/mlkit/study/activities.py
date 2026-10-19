@@ -695,11 +695,12 @@ def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
     inputs['criterion'] = criterion
     params.update(model=model, rule=config.get('rule'), model_params=model_params,
                   reference=BASELINE, task=task)
-    rule = config.get('rule')
-    if rule and rule.startswith('capacity:'):
-        # The capacity was chosen on the development rows; on the final test it keeps its
-        # share of the rows (k / development rows).
-        params['capacity_share'] = int(rule.partition(':')[2]) / part['development']['n_rows']
+    k = rec.capacity_of(config.get('rule'))
+    if k is not None:
+        # The capacity was chosen on the rows the policy evaluation scored (every development
+        # row out of fold, or the validation rows); on the final test it keeps its share.
+        chosen_on = registry.get(store, state['current'][POLICY])['output']['values']['n']
+        params['capacity_share'] = k / chosen_on
     features = list(model_inputs['features'])
     target = case.target_column
     development = partition.development_keys(store.read_blob, inputs.get('development'))
@@ -998,8 +999,7 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
                                                'capability': CAPABILITY_FOLDS,
                                                'path': 'decisions.split', 'rows': n, 'folds': k,
                                                'reason': 'Each fold needs at least two rows.'}]})
-    fold = np.zeros(n, dtype=int)
-    stratified_on, extra = None, {}
+    stratified_on, extra, order, strata = None, {}, None, None
     if method == 'temporal_folds':
         column = plan_['inputs'].get('order_column') or time_order_column(case)
         lines = np.array([_line(key) for key in keys])
@@ -1012,39 +1012,22 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
                                                   f'on every row to make temporal folds.',
                                  details={'column': column})
             order = np.lexsort((lines, values))
-        for i, block in enumerate(np.array_split(order, k), start=1):
-            fold[block] = i
         extra['order_column'] = column
-        if column != 'line':
-            values = pd.to_numeric(frame[column], errors='coerce').to_numpy(dtype=float)
-            extra['fold_ranges'] = [{'fold': i, 'min': float(values[fold == i].min()),
-                                     'max': float(values[fold == i].max())}
-                                    for i in range(1, k + 1)]
+    elif method == 'kfold_stratified':
+        strata = positive(frame, case).to_numpy()
+        stratified_on = case.target_column
     else:
-        from sklearn.model_selection import StratifiedKFold
-        if method == 'kfold_stratified':
-            strata = positive(frame, case).to_numpy()
-            stratified_on = case.target_column
-        else:
-            from .eda import numeric_target
-            y = numeric_target(case, frame)
-            strata = pd.qcut(y, partition.QUANTILE_BINS, labels=False,
-                             duplicates='drop').to_numpy()
-            stratified_on = case.target_column
-            extra['bins'] = partition.QUANTILE_BINS
-        counts = pd.Series(strata).value_counts()
-        if counts.min() < k:
-            raise StudyError('unsupported_capability',
-                             f'The folds cannot be made: {CAPABILITY_FOLDS}.',
-                             details={'reasons': [{
-                                 'code': 'unsupported_capability', 'capability': CAPABILITY_FOLDS,
-                                 'path': 'decisions.split', 'folds': k,
-                                 'smallest_stratum_rows': int(counts.min()),
-                                 'reason': 'Each fold keeps every stratum, which needs at least '
-                                           'as many rows of each stratum as folds.'}]})
-        splitter = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed)
-        for i, (_, test) in enumerate(splitter.split(np.zeros(n), strata), start=1):
-            fold[test] = i
+        from .eda import numeric_target
+        y = numeric_target(case, frame)
+        strata = pd.qcut(y, partition.QUANTILE_BINS, labels=False, duplicates='drop').to_numpy()
+        stratified_on = case.target_column
+        extra['bins'] = partition.QUANTILE_BINS
+    fold = assign_folds(n, k, seed=seed, strata=strata, order=order)
+    if method == 'temporal_folds' and extra['order_column'] != 'line':
+        values = pd.to_numeric(frame[extra['order_column']], errors='coerce').to_numpy(dtype=float)
+        extra['fold_ranges'] = [{'fold': i, 'min': float(values[fold == i].min()),
+                                 'max': float(values[fold == i].max())}
+                                for i in range(1, k + 1)]
     lines_out = ['row_key,fold'] + [f'{key},{int(f)}' for key, f in zip(keys, fold)]
     blobs = {'train': rec.row_keys_bytes(keys), 'validation': rec.row_keys_bytes(keys),
              FOLDS_BLOB: ('\n'.join(lines_out) + '\n').encode('utf-8')}
@@ -1081,6 +1064,49 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
                                      plan_['inputs'].get('previous_split_stale_since'), parts)
     return {'values': values, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
             'n_rows': n}
+
+
+def assign_folds(n: int, k: int, *, seed=None, strata=None, order=None, groups=None):
+    """The fold (1 to ``k``) of each of ``n`` rows: the one place folds are built (WP-B1).
+
+    * ``order`` (row positions in time order): contiguous blocks, fold 1 the earliest;
+    * else ``strata``: ``StratifiedKFold`` (shuffled with ``seed``), each fold keeping the
+      share of every stratum; with ``groups`` (one value per row; rows of a group stay in
+      one fold), ``StratifiedGroupKFold`` instead;
+    * ``groups`` without strata: ``GroupKFold``.
+
+    Refuses (``unsupported_capability``, :data:`CAPABILITY_FOLDS`) a stratum with fewer rows
+    than folds."""
+    import numpy as np
+    import pandas as pd
+    fold = np.zeros(n, dtype=int)
+    if order is not None:
+        for i, block in enumerate(np.array_split(np.asarray(order), k), start=1):
+            fold[block] = i
+        return fold
+    from sklearn import model_selection as ms
+    if strata is not None:
+        counts = pd.Series(strata).value_counts()
+        if counts.min() < k:
+            raise StudyError('unsupported_capability',
+                             f'The folds cannot be made: {CAPABILITY_FOLDS}.',
+                             details={'reasons': [{
+                                 'code': 'unsupported_capability', 'capability': CAPABILITY_FOLDS,
+                                 'path': 'decisions.split', 'folds': k,
+                                 'smallest_stratum_rows': int(counts.min()),
+                                 'reason': 'Each fold keeps every stratum, which needs at least '
+                                           'as many rows of each stratum as folds.'}]})
+        if groups is not None:
+            splits = ms.StratifiedGroupKFold(n_splits=k, shuffle=True,
+                                             random_state=seed).split(np.zeros(n), strata, groups)
+        else:
+            splits = ms.StratifiedKFold(n_splits=k, shuffle=True,
+                                        random_state=seed).split(np.zeros(n), strata)
+    else:
+        splits = ms.GroupKFold(n_splits=k).split(np.zeros(n), groups=groups)
+    for i, (_, test) in enumerate(splits, start=1):
+        fold[test] = i
+    return fold
 
 
 def _fold_groups(frame, column: str, parts: Mapping) -> dict:
@@ -1305,8 +1331,8 @@ def compute_policy(store, plan_: Mapping) -> dict:
             # WP-B1 (additive): the variant against the candidate; a capacity as a share of
             # the rows it was chosen on.
             out[rule]['comparisons'] = paired['comparisons']
-            kind, _, k = rule.partition(':')
-            out[rule]['capacity_share'] = int(k) / len(y) if kind == 'capacity' else None
+            k = rec.capacity_of(rule)
+            out[rule]['capacity_share'] = k / len(y) if k is not None else None
     values = {'rules': out, 'n': len(y), 'n_positive': int(y.sum()),
               'predictions': dict(fits), 'reference': plan_['params']['reference'],
               'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),

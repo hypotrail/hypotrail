@@ -169,12 +169,13 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     # 1. init installs the regression instructions
     code, init = fk.hyp('init', '--case', case_dir, '--study', study, cwd=work)
     assert code == 0 and init['agent_instructions']['status'] == 'copied'
-    # WP-A4: step 0, the success criterion and the preprocessing join the plan.
+    # WP-A4: step 0, the success criterion and the preprocessing join the plan; WP-B1: the
+    # variant before the model choice, the opening of the final test after it.
     assert [s['id'] for s in init['plan']] == ['discover_data', 'prediction_time',
                                                'feature_availability', 'split',
                                                'success_criterion', 'train_eda',
-                                               'preprocessing', 'models', 'model_choice',
-                                               'conclusion']
+                                               'preprocessing', 'models', 'model_variant',
+                                               'model_choice', 'final_test', 'conclusion']
     claude = (study / 'CLAUDE.md').read_text()
     assert '### Regression study' in claude and 'evaluate.regression' in claude
     assert 'hypotrail:task' not in claude
@@ -209,7 +210,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                        {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 1}):
             refused = chat.propose('split', method, 'A random split.', expect=2)
             assert refused['error']['code'] == 'invalid_value', refused
-            assert refused['error']['details']['methods'] == ['ordinal_cutoff']
+            # WP-B1: the temporal folds first, then the single cutoff
+            assert refused['error']['details']['methods'] == ['temporal_folds', 'ordinal_cutoff']
         split_value = {'method': 'ordinal_cutoff', 'column': time_column,
                        'cutoff': junior['cutoff']}
         p = chat.propose('split', split_value,
@@ -222,7 +224,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                        {'method': 'ordinal_cutoff', 'column': junior['mean_by'], 'cutoff': 1}):
             refused = chat.propose('split', method, 'Another split.', expect=2)
             assert refused['error']['code'] == 'invalid_value', refused
-            assert refused['error']['details']['methods'] == ['random']
+            # WP-B1: the quantile folds first, then the single random split
+            assert refused['error']['details']['methods'] == ['kfold_quantile', 'random']
         p = chat.propose('split', junior['split'], 'A random split: 30% of rows for '
                                                    'validation, seed 20261017, fixed now.')
         chat.confirm(p, 'Yes, fix that random split now, before we look at the outcome.')
@@ -285,6 +288,12 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     for feature, status in junior['exclusions'].items():
         assert (feature in used) == (status == 'uncertain_included'), feature
     assert not ({time_column, group_column} - {None}) & set(used)
+    # WP-B1: one variant (a ridge penalty on the linear model), fitted the same way.
+    p = chat.propose('model_variant', {'kind': 'regularisation', 'strength': 'strong'},
+                     'You compare the linear model with a regularised variant of it.')
+    chat.confirm(p, 'I confirm the regularised variant.')
+    variant = chat.run('fit.variant')
+    assert variant['values']['alpha'] == 10.0 and variant['values']['model'] == 'ridge'
 
     # 6. the regression evaluation on validation rows, recorded as model evaluation
     chat = Chat(study, work, 'chat3')
@@ -306,6 +315,10 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert delta['point'] == pytest.approx(ev['models']['fit.linear']['mae']
                                            - ev['models']['fit.baseline']['mae'])
     assert delta['low'] <= delta['point'] <= delta['high']
+    comparison = ev['comparisons']['fit.variant']           # WP-B1: variant minus candidate
+    assert comparison['reference'] == 'fit.linear'
+    assert comparison['mae']['point'] == pytest.approx(ev['models']['fit.variant']['mae']
+                                                       - ev['models']['fit.linear']['mae'])
     if time_column:
         [by_period] = ev['residuals_by']
         assert by_period['column'] == time_column
@@ -326,12 +339,19 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                      'You adopt the linear model.' if adopt else 'You keep the mean baseline.')
     assert chat.confirm(p, 'ok', expect=2)['error']['code'] == 'ambiguous_confirmation'
     chat.confirm(p, 'Yes, adopt the linear model.' if adopt else 'Yes, keep the mean baseline.')
+    # WP-B1: the final test, opened once on the chosen model.
+    p = chat.propose('final_test', {'model': choice, 'rule': None},
+                     'You open the sealed final test once, for the model you chose.')
+    opened = chat.confirm(p, 'Yes, open it now, because the model is chosen.')
+    assert opened['result']['opening']['status'] == 'promoted'
+    final_ev = fk.read.open(study).current('final_test.evaluation')['output']['values']
+    assert final_ev['model'] == choice and final_ev['n'] > 0
 
     # 8. a new process sees everything without any chat memory
     resume = Chat(study, work, 'chat4')
     view = resume.view
     for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
-              'preprocessing', 'model_choice'):
+              'preprocessing', 'model_variant', 'model_choice', 'final_test'):
         assert view['decisions'][d]['status'] == 'confirmed', d
     # the resume recap (T8) names the model choice and the ordinal split, never a policy
     recap = resume('status', '--summary')['recap']
@@ -390,6 +410,10 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
             if e['activity'].startswith('fit.')} == fits                  # no refit
     view = chat.status()['view']
     assert view['decisions']['conclusion']['status'] == 'reconfirm_required'
+    # WP-B1: a change after the opening is after the final test, never measured on it again.
+    assert view['final_test']['post_final_test'] and 'model_choice' in \
+        view['final_test']['changed_after']
+    assert view['decisions']['final_test']['status'] == 'confirmed'
     assert view['results']['evaluate.regression']['result_id'] == evaluation['result_id']
     if adopt:   # adopt_model now needs the linear model chosen
         refused = chat('decide', 'confirm',
@@ -422,8 +446,10 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert ('class="residuals-by"' in page) == (time_column is not None)
     session = chat('session-report')
     pause3 = session['pauses'][2]
-    assert pause3['decisions'] == ['model_choice', 'conclusion'] and pause3['closed_at']
-    assert pause3['confirmed'] == ['conclusion', 'model_choice']
+    # WP-B1: the variant and the opening of the final test are decisions of the third pause.
+    assert pause3['decisions'] == ['model_variant', 'model_choice', 'final_test',
+                                   'conclusion'] and pause3['closed_at']
+    assert pause3['confirmed'] == ['conclusion', 'final_test', 'model_choice', 'model_variant']
     assert {d['decision_id'] for d in session['decisions']} >= {'model_choice', 'conclusion'}
     assert session['sources']['session_log']['enabled'] is True
     # Owner decision: with the log on, ``check`` runs are logged (how often the junior
@@ -433,7 +459,7 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
         [sys.executable, '-m', 'mlkit.study.cli', 'session-report', '--format', 'text',
          '--study', str(study)], capture_output=True, text=True, cwd=work, env=fk.env(),
         timeout=120)
-    assert session_text.returncode == 0 and '| 3 | model_choice, conclusion |' in \
+    assert session_text.returncode == 0 and '| 3 | model_variant, model_choice, final_test, conclusion |' in \
         session_text.stdout
     # The session report records what was tried: a refused command that keeps a rule
     # identifier would be left out of the vocabulary check. This walkthrough's refused

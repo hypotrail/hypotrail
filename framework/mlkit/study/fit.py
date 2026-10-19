@@ -554,8 +554,10 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
         base = np.full(n, float(y_dev.mean()))
         score = base if chosen == 'fit.baseline' else _fit_predict(
             case, development, final, model_inputs, model_params, True)[0]
+        from .records import capacity_of
         rule = params['rule']
-        if rule and rule.startswith('capacity:') and params.get('capacity_share') is not None:
+        if capacity_of(rule) is not None and params.get('capacity_share') is not None:
+            # The capacity keeps its share of the rows on the final test.
             k = max(1, int(np.floor(params['capacity_share'] * n + 0.5)))
             rule_final = f'capacity:{k}'
         else:
