@@ -29,7 +29,10 @@ test('ready: init, then the summary; v0 reads without --digest, v1 with it', asy
     await c.handle({ v: 2, type: 'ready' });
     assert.equal(posted[0].type, 'init');
     assert.deepEqual(posted[0], { v: 2, type: 'init', stage, reviewer: false, learningLayer: true, chatInsert: false, task: null,
-      study: studyKey(AGENT.studyDir) });
+      study: studyKey(AGENT.studyDir),
+      // WP-A5: what "Open in Marimo" runs, for display (lib/launch.js display).
+      marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
+        workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' } });
     assert.equal(runCli.calls[0].tail.includes('--digest'), digest);
     const snap = posted.find(m => m.type === 'snapshot');
     assert.equal(snap.revision, revision);
@@ -257,7 +260,9 @@ test('settings: updateSettings posts init again; navigate validates its target',
   const { c, posted } = make({ settings: { stage: 'v1' } });
   c.updateSettings({ stage: 'v2', chatInsert: true });
   assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null,
-    study: studyKey(AGENT.studyDir) });
+    study: studyKey(AGENT.studyDir),
+    marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
+        workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' } });
   assert.equal(c.navigate({ tab: 'evidence', kind: 'result', id: 'a'.repeat(64) }), true);
   assert.equal(c.navigate({ tab: 'nowhere', kind: 'result', id: 'x' }), false);
   assert.equal(await c.command('go_to_result', {}), undefined, 'no handler registers it in WP-0');

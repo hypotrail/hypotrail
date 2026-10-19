@@ -29,6 +29,7 @@
     updating: 'Updating...',
     loadErrorTitle: 'The panel could not read the study.',
     loadErrorDetail: 'Details from the CLI',
+    loadErrorNext: 'Nothing shown before is current until the study can be read again. Press Retry. If it fails again, ask the assistant in the chat to run the study status and read the message below.',
     retry: 'Retry',
     lastRead: n => `Last read at revision ${n}; the study could not be read now.`,
     viewError: 'This part of the panel could not be read.',

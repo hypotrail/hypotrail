@@ -82,4 +82,22 @@ function launchFor(agent, name, engine = null) {
     ? { name, mode: nb.mode, file, argv, source: 'agent', terminalName } : null;
 }
 
-module.exports = { NOTEBOOKS, launchFor, isMarimoLaunch, prefixFromAgent, fileOf };
+const quote = a => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `"${a.replace(/(["\\$`])/g, '\\$1')}"`);
+
+/**
+ * What the panel shows next to the buttons (display only, never run): the command of each
+ * notebook with its study-relative file, and the engine environment, from agent.json.
+ */
+function display(agent) {
+  const out = { kernel: null, notebook: null, workbench: null };
+  if (!agent) return out;
+  const prefix = prefixFromAgent(agent.argv);
+  if (prefix) out.kernel = prefix[0] === 'uv' ? path.join(prefix[3], '.venv') : prefix[0];
+  for (const name of Object.keys(NOTEBOOKS)) {
+    const l = launchFor(agent, name);
+    if (l) out[name] = [...l.argv.slice(0, -1), NOTEBOOKS[name].path].map(quote).join(' ');
+  }
+  return out;
+}
+
+module.exports = { NOTEBOOKS, launchFor, isMarimoLaunch, prefixFromAgent, fileOf, display };

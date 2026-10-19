@@ -15,7 +15,7 @@ h2 { font-size: 1.1em; margin: 24px 0 8px; border-bottom: 1px solid var(--ht-bor
 h3 { font-size: 1em; margin: 0 0 4px; }
 .muted { color: var(--ht-muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.card { background: var(--ht-surface); border: 1px solid var(--ht-border); border-radius: 6px; padding: 12px; margin: 8px 0; }
+.card { background: var(--ht-surface); border: 1px solid var(--ht-card-border); border-radius: 6px; padding: 12px; margin: 8px 0; }
 blockquote { margin: 8px 0; padding: 6px 10px; background: var(--ht-quote-bg); border-left: 4px solid var(--ht-quote-border); white-space: pre-wrap; }
 code, .ht-mono { font-family: var(--ht-mono); overflow-wrap: anywhere; }
 ol, ul { padding-left: 1.4em; margin: 4px 0; }
@@ -28,18 +28,21 @@ textarea, input, select {
 }
 textarea { width: 100%; min-height: 4.5em; resize: vertical; }
 button {
-  font: inherit; padding: 4px 12px; margin: 6px 8px 0 0; border: 1px solid transparent;
+  font: inherit; padding: 4px 12px; margin: 6px 8px 0 0; border: 1px solid var(--ht-button-border);
   border-radius: 4px; cursor: pointer; color: var(--ht-button-fg); background: var(--ht-button-bg);
 }
-button.secondary { color: var(--ht-button2-fg); background: var(--ht-button2-bg); border-color: var(--ht-border); }
+button.secondary { color: var(--ht-button2-fg); background: var(--ht-button2-bg); border-color: var(--ht-button2-border); }
 button.ht-link { background: none; border: none; color: var(--ht-link); padding: 0; text-decoration: underline; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* WP-A5: a disabled control is not only fainter: no fill, a dashed border, muted text. */
+button:disabled, button.secondary:disabled { cursor: not-allowed; background: transparent; color: var(--ht-muted);
+  border: 1px dashed var(--ht-muted); }
+button.ht-link:disabled { border: none; text-decoration: none; }
 button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--ht-focus); outline-offset: 1px;
 }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .status { font-weight: 600; }
-.status-ok { color: var(--ht-accent); }
+.status-ok { color: var(--ht-fg); }
 .status-stale, .status-failed { color: var(--ht-warn-fg); }
 .hold { color: var(--ht-warn-fg); }
 .alert { border-color: var(--ht-error-border); background: var(--ht-error-bg); }
@@ -54,9 +57,10 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .ht-meta { color: var(--ht-muted); font-size: 0.93em; }
 .ht-badge { font-size: 0.85em; padding: 2px 8px; border-radius: 999px; background: var(--ht-button2-bg); color: var(--ht-button2-fg); }
 .ht-badge-reviewer { background: var(--ht-warn-bg); color: var(--ht-warn-fg); border: 1px solid var(--ht-warn-border); }
-.ht-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--ht-border); }
+.ht-tabs { display: flex; flex-wrap: nowrap; gap: 4px; border-bottom: 1px solid var(--ht-border);
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
 .ht-tabs [role="tab"] { background: none; color: var(--ht-muted); border: none; border-bottom: 2px solid transparent;
-  border-radius: 0; margin: 0; padding: 10px 12px; }
+  border-radius: 0; margin: 0; padding: 10px 12px; flex: none; white-space: nowrap; }
 .ht-tabs [role="tab"][aria-selected="true"] { color: var(--ht-fg); font-weight: 600; border-bottom-color: var(--ht-accent); }
 .ht-count { margin-left: 6px; font-size: 0.8em; padding: 1px 7px; border-radius: 999px; background: var(--ht-accent); color: var(--ht-button-fg); }
 .ht-alerts .card { margin: 8px 0; }
@@ -77,13 +81,14 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 /* Charts (components) */
 .ht-figure { margin: 8px 0; }
 .ht-figure figcaption { font-weight: 600; margin-bottom: 4px; }
-.ht-chart { max-width: 640px; display: block; }
-.ht-chart text { fill: var(--ht-fg); font-size: 11px; font-family: var(--ht-font); }
+.ht-chart-scroll { overflow-x: auto; max-width: 100%; }
+.ht-chart { display: block; max-width: none; }
+.ht-chart text { fill: var(--ht-chart-text); font-size: 11px; font-family: var(--ht-font); }
 .ht-chart .ht-muted-text { fill: var(--ht-muted); }
 .ht-values { border-collapse: collapse; margin: 4px 0; }
 .ht-values th, .ht-values td { border: 1px solid var(--ht-border); padding: 2px 8px; text-align: left; }
-.ht-fill-accent { fill: var(--ht-accent); } .ht-stroke-accent { stroke: var(--ht-accent); }
-.ht-fill-baseline { fill: var(--ht-baseline); } .ht-stroke-baseline { stroke: var(--ht-baseline); }
+.ht-fill-accent { fill: var(--ht-chart-model); } .ht-stroke-accent { stroke: var(--ht-chart-model); }
+.ht-fill-baseline { fill: var(--ht-chart-baseline); } .ht-stroke-baseline { stroke: var(--ht-chart-baseline); }
 .ht-fill-muted { fill: var(--ht-muted); } .ht-stroke-muted { stroke: var(--ht-muted); }
 .ht-fill-fg { fill: var(--ht-fg); } .ht-stroke-fg { stroke: var(--ht-fg); }
 .ht-fill-warn { fill: var(--ht-warn-border); } .ht-stroke-warn { stroke: var(--ht-warn-border); }
@@ -96,3 +101,48 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .ht-fill-link { fill: var(--ht-link); } .ht-stroke-link { stroke: var(--ht-link); }
 .ht-fill-none { fill: none; } .ht-stroke-none { stroke: none; }
 data[data-result-id] { text-decoration: underline dotted; }
+
+/* WP-A5: status chips of one vocabulary (ok, needs you, sealed, error, stale) and severity
+   chips of the limits. The colour is a border and a tint; the text stays the foreground. */
+.ht-status, .ht-tag { display: inline-block; font-size: 0.82em; line-height: 1.4; padding: 0 7px; border-radius: 4px;
+  border: 1px solid var(--ht-chip, var(--ht-border)); color: var(--ht-fg);
+  background: color-mix(in srgb, var(--ht-chip, var(--ht-border)) 16%, transparent); white-space: nowrap; }
+.ht-st-ok, .ht-tag-resolved, .ht-tag-deliverables { --ht-chip: var(--ht-st-ok); }
+.ht-st-needs, .ht-tag-needs, .ht-sev-blocking { --ht-chip: var(--ht-st-needs); }
+.ht-st-sealed, .ht-sev-sealed { --ht-chip: var(--ht-st-sealed); }
+.ht-st-error { --ht-chip: var(--ht-st-error); }
+.ht-st-stale, .ht-tag-evaluated, .ht-sev-caveat { --ht-chip: var(--ht-st-stale); }
+.ht-st-neutral, .ht-tag-other, .ht-sev-context { --ht-chip: var(--ht-muted); }
+.ht-details { margin: 8px 0 0; font-size: 0.93em; }
+.ht-details > summary { cursor: pointer; color: var(--ht-muted); }
+.ht-details ul { margin-top: 4px; }
+.ht-stale { opacity: 0.7; }
+.ht-error-state { padding: 16px; }
+.ht-value-words[title] { text-decoration: underline dotted var(--ht-muted); text-underline-offset: 3px; }
+
+/* WP-A5: below 600 px every table of the panel becomes a list of cards; each cell is
+   labelled by its column (data-label, set by core.js from the table head). */
+@media (max-width: 600px) {
+  table.ht-cardable, table.ht-cardable tbody, table.ht-cardable tr, table.ht-cardable td { display: block; width: auto; }
+  table.ht-cardable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.ht-cardable tr { border: 1px solid var(--ht-card-border); border-radius: 6px; padding: 6px 10px; margin: 8px 0; }
+  table.ht-cardable td { border: none; padding: 2px 0; }
+  table.ht-cardable td[data-label]:not([data-label=""])::before { content: attr(data-label) ": "; color: var(--ht-muted);
+    font-weight: 600; }
+  body { padding: 0 10px 24px; }
+}
+
+/* WP-A5: Windows high contrast and other forced colours. Buttons, chips, cards and the
+   current step keep a visible border in the system colours; chart marks use them too. */
+@media (forced-colors: active) {
+  button, button.secondary { border: 1px solid ButtonText; }
+  button:disabled { color: GrayText; border: 1px dashed GrayText; }
+  button.ht-link { border: none; color: LinkText; }
+  .ht-status, .ht-tag, .card, .ov-section, .ov-hero, .ov-step { border: 1px solid CanvasText; }
+  .ov-step[aria-current="step"] { outline: 3px solid Highlight; }
+  [role="tab"][aria-selected="true"] { border-bottom: 2px solid Highlight; }
+  .ht-chart text { fill: CanvasText; }
+  .ht-fill-accent, .ht-fill-fg { fill: CanvasText; } .ht-stroke-accent, .ht-stroke-fg { stroke: CanvasText; }
+  .ht-fill-baseline, .ht-fill-muted { fill: GrayText; } .ht-stroke-baseline, .ht-stroke-muted { stroke: GrayText; }
+  :focus-visible { outline: 2px solid Highlight; }
+}

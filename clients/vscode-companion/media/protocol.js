@@ -134,6 +134,13 @@
         // CR.2: the study the panel shows (lib/localstore.js studyKey, never the path). The
         // webview keeps the junior's draft words for this study only.
         study: { t: 'str', re: STUDY_KEY, opt: true },
+        // WP-A5 (local launch): what "Open in Marimo" runs, for display only (the commands
+        // with study-relative files, and the engine environment the notebooks run in).
+        marimo: {
+          t: 'obj', opt: true,
+          fields: { kernel: { t: 'str', nullable: true }, notebook: { t: 'str', nullable: true },
+            workbench: { t: 'str', nullable: true } },
+        },
       },
     },
     // CR.1: `currency` is the version, with the revision, a model was read at.

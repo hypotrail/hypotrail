@@ -191,6 +191,7 @@
       title: c.intervalTitle(label, level),
       zero: false,
       rows: metric.models.map(m => ({ label: fitLabel(task, m.fit), point: m.point, low: m.low, high: m.high,
+        tone: m.fit === u.reference || m.fit === 'fit.baseline' ? 'baseline' : null,
         pointText: m.point === null ? notDefined : `${fmt(m.point)}${unit}`, intervalText: intervalText(fmt, m.low, m.high) })),
     });
     if (metric.delta) {

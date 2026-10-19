@@ -32,6 +32,22 @@
   --ht-input-border: var(--vscode-input-border, #8A8F96);
   --ht-quote-bg: var(--vscode-textBlockQuote-background, #F3F2EE);
   --ht-quote-border: var(--vscode-textBlockQuote-border, #C9C6BD);
+  /* WP-A5: one status vocabulary (ok, needs you, sealed, error, stale) and the chart marks,
+     mapped to VS Code's chart colours first. A status colour marks a border or a dot; text
+     stays --ht-fg, so contrast never rests on a chart colour. */
+  --ht-st-ok: var(--vscode-charts-green, #2E7D4F);
+  --ht-st-needs: var(--vscode-charts-blue, #1D5FAF);
+  --ht-st-sealed: var(--vscode-charts-purple, #5B3A9A);
+  --ht-st-error: var(--vscode-charts-red, #B3261E);
+  --ht-st-stale: var(--vscode-charts-yellow, #9A6700);
+  --ht-chart-model: var(--vscode-charts-blue, #0F6E66);
+  --ht-chart-baseline: var(--vscode-charts-lines, #8A8F96);
+  --ht-chart-text: var(--vscode-charts-foreground, var(--ht-fg));
+  /* Borders of controls: VS Code's button border, else the contrast border of a high
+     contrast theme, else none (a filled button) or the panel border (a secondary one). */
+  --ht-button-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+  --ht-button2-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--ht-border)));
+  --ht-card-border: var(--vscode-contrastBorder, var(--ht-border));
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -62,5 +78,12 @@
     --ht-input-border: var(--vscode-input-border, #6B7078);
     --ht-quote-bg: var(--vscode-textBlockQuote-background, #2B2C2F);
     --ht-quote-border: var(--vscode-textBlockQuote-border, #5B6066);
+    --ht-st-ok: var(--vscode-charts-green, #89D185);
+    --ht-st-needs: var(--vscode-charts-blue, #6FA8E8);
+    --ht-st-sealed: var(--vscode-charts-purple, #B180D7);
+    --ht-st-error: var(--vscode-charts-red, #F48771);
+    --ht-st-stale: var(--vscode-charts-yellow, #CCA700);
+    --ht-chart-model: var(--vscode-charts-blue, #4FB3A9);
+    --ht-chart-baseline: var(--vscode-charts-lines, #7D828A);
   }
 }

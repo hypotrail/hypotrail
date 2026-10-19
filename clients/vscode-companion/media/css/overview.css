@@ -1,58 +1,97 @@
-/* Overview view styles (COMPANION-ADVANCED §6.1, mockup Main.dc.html); owned by WP-U1.
-   Colours come from the tokens of tokens.css only; no inline style attribute exists. */
-.ov-section { background: var(--ht-surface); border: 1px solid var(--ht-border); border-radius: 10px;
+/* Overview view styles (COMPANION-ADVANCED §6.1; WP-U1, restructured by WP-A5; mockups
+   docs/design/companion-v0.2-mockups/overview.html and deliverables.html). Colours come
+   from the tokens of tokens.css only; no inline style attribute exists. */
+.ov-section { background: var(--ht-surface); border: 1px solid var(--ht-card-border); border-radius: 10px;
   padding: 4px 18px 16px; margin: 16px 0; }
 .ov-section > h2 { border-bottom: none; margin: 14px 0 8px; }
-.ov-source { font-size: 0.85em; margin: 0 0 8px; }
+
+/* Your next move (the first block of every stage) */
+.ov-hero { border: 2px solid var(--ht-st-needs); border-radius: 10px; padding: 14px 18px 16px; margin: 16px 0;
+  background: var(--ht-surface); }
+.ov-hero[data-hero="done"], .ov-hero[data-hero="propose"], .ov-hero[data-hero="run"], .ov-hero[data-hero="blocked"],
+.ov-hero[data-hero="other"] { border-color: var(--ht-card-border); }
+.ov-hero[data-hero="outcome_unknown"], .ov-hero[data-hero="acknowledge_interruption"] { border-color: var(--ht-st-error); }
+.ov-hero > h2 { border-bottom: none; margin: 2px 0 6px; font-size: 1.25em; }
+.ov-eyebrow { margin: 0; font-size: 0.8em; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--ht-muted); }
+.ov-hero-lead { margin: 0 0 8px; }
+.ov-hero-quote { font-size: 1.05em; }
+.ov-hero-short, .ov-hero-why, .ov-hero-support { margin: 6px 0; }
+.ov-hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.ov-hero-actions button { margin: 0; font-weight: 600; padding: 6px 14px; }
 
 /* Where we are */
 .ov-recap { margin: 8px 0 0; display: grid; grid-template-columns: max-content 1fr; column-gap: 16px; row-gap: 8px; }
 .ov-recap-row { display: contents; }
 .ov-recap dt { color: var(--ht-muted); font-weight: 500; }
 .ov-recap dd { margin: 0; }
+.ov-decided { list-style: none; padding: 0; margin: 0; }
+.ov-decided li { margin: 0 0 4px; }
+.ov-decided-name { color: var(--ht-muted); }
+.ov-decided .ht-status { margin-left: 6px; }
+@media (max-width: 600px) { .ov-recap { grid-template-columns: minmax(0, 1fr); } }
 
-/* Study map */
+/* The journey (study map) */
 .ov-map { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 640px) { .ov-map { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .ov-map { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .ov-map { grid-template-columns: minmax(0, 1fr); } }
 .ov-moment-title { font-size: 0.8em; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--ht-muted); margin: 0 0 6px; }
 .ov-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-.ov-step { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--ht-border); margin: 0; }
+.ov-steps-flat { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.ov-step { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--ht-card-border); margin: 0; }
 .ov-step .ov-mark { margin-right: 6px; }
 .ov-step .ov-sub { display: block; font-size: 0.85em; font-weight: 400; color: var(--ht-muted); }
-.ov-step-done { background: var(--ht-done-bg); border-color: transparent; }
-.ov-step-awaiting_confirmation { border: 2px solid var(--ht-accent); font-weight: 600; }
-.ov-step-awaiting_confirmation .ov-sub { color: var(--ht-fg); }
-.ov-step-needs_reconfirmation { background: var(--ht-warn-bg); border-color: var(--ht-warn-border); color: var(--ht-warn-fg); }
-.ov-step-needs_reconfirmation .ov-sub { color: var(--ht-warn-fg); }
-.ov-step-blocked { color: var(--ht-muted); background: var(--ht-bg); }
-.ov-step[aria-current="step"] { box-shadow: 0 0 0 1px var(--ht-accent); }
+.ov-step-done { border-left: 4px solid var(--ht-st-ok); }
+.ov-step-awaiting_confirmation, .ov-step-reopened { border: 2px solid var(--ht-st-needs); font-weight: 600; }
+.ov-step-awaiting_confirmation .ov-sub, .ov-step-reopened .ov-sub { color: var(--ht-fg); }
+.ov-step-needs_reconfirmation { border: 2px solid var(--ht-st-stale); font-weight: 600; }
+.ov-step-needs_reconfirmation .ov-sub { color: var(--ht-fg); }
+.ov-step-blocked { color: var(--ht-muted); border-style: dashed; }
+.ov-step[aria-current="step"] { box-shadow: 0 0 0 2px var(--ht-st-needs); }
 
-/* Since your last session and Deliverables */
+/* Since your last session and the limits */
 .ov-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 720px) { .ov-grid { grid-template-columns: minmax(0, 1fr); } }
 .ov-grid > .ov-section { margin: 0; }
-.ov-digest { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ov-digest, .ov-limits { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.ov-digest-more > summary { cursor: pointer; color: var(--ht-link); margin-top: 4px; }
 .ov-since-select { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ov-since-select label { display: inline; margin: 0; font-weight: 500; }
-.ov-deliverable { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; }
-.ov-deliverable-label { font-weight: 500; }
-.ov-deliverable-status { font-size: 0.9em; color: var(--ht-muted); }
-.ov-deliverable-status.status-stale, .ov-deliverable-status.status-failed { color: var(--ht-warn-fg); font-weight: 600; }
 
-/* Health */
+/* Deliverables */
+.ov-deliverable { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--ht-border); }
+.ov-deliverable-main { min-width: 0; }
+.ov-deliverable-label { font-weight: 600; }
+.ov-path { font-size: 0.88em; }
+.ov-deliverable-what { margin: 2px 0 4px; }
+.ov-deliverable-status { font-size: 0.93em; }
+.ov-deliverable-actions { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: none; }
+.ov-deliverable-actions button { margin: 0; }
+@media (max-width: 600px) {
+  .ov-deliverable { flex-direction: column; }
+  .ov-deliverable-actions { flex-direction: row; flex-wrap: wrap; }
+}
+.ov-launch { margin: 12px 0 4px; padding: 8px 12px; border-radius: 6px; background: var(--ht-quote-bg);
+  border: 1px solid var(--ht-card-border); }
+.ov-launch-title { font-weight: 600; margin: 0 0 4px; }
+.ov-launch p { margin: 4px 0; }
+.ov-launch pre { margin: 4px 0; font-size: 0.9em; }
+.ov-regenerate { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.ov-regenerate button { margin: 0; }
+
+/* Needs attention (Health) */
 .ov-sub-section { margin: 12px 0; }
 .ov-execution h4 { margin: 0 0 4px; font-size: 1em; }
-.ov-execution { border-color: var(--ht-warn-border); }
+.ov-execution { border-color: var(--ht-st-error); }
 .ov-checks summary { cursor: pointer; font-weight: 600; }
 .ov-findings { list-style: none; padding: 0; }
 .ov-finding { padding: 4px 0; }
 .ov-severity { font-size: 0.8em; text-transform: uppercase; font-weight: 600; padding: 1px 6px; border-radius: 4px;
-  background: var(--ht-button2-bg); color: var(--ht-button2-fg); }
-.ov-finding-error .ov-severity { background: var(--ht-error-bg); color: var(--ht-error-fg); border: 1px solid var(--ht-error-border); }
-.ov-finding-warning .ov-severity { background: var(--ht-warn-bg); color: var(--ht-warn-fg); border: 1px solid var(--ht-warn-border); }
-.ov-nyd { background: var(--ht-warn-bg); border: 1px solid var(--ht-warn-border); border-radius: 10px; padding: 8px 16px;
-  color: var(--ht-warn-fg); }
-.ov-nyd .muted { color: var(--ht-warn-fg); }
+  border: 1px solid var(--ht-card-border); }
+.ov-finding-error .ov-severity { border-color: var(--ht-st-error); }
+.ov-finding-warning .ov-severity { border-color: var(--ht-st-stale); }
+.ov-health-alerts { list-style: none; padding: 0; }
 .ov-recap .ht-link { margin: 0; }
 .ov-finding button { margin-top: 0; }

@@ -26,16 +26,23 @@
     lo -= pad; hi += pad;
     const plot = PLOT;
     const x = v => LABEL + ((v - lo) / (hi - lo)) * plot;
-    const height = rows.length * ROW + 6;
+    // WP-A5: the intervals sit on a drawn axis; with `zero` the 0 is marked and labelled.
+    const AXIS = 18;
+    const height = rows.length * ROW + 6 + AXIS;
+    const axisY = rows.length * ROW + 4;
     const ok = v => typeof v === 'number' && Number.isFinite(v);
     const chart = HT.svg('svg', { viewBox: `0 0 ${W} ${height}`, width: '100%', class: 'ht-chart ht-intervals' }, [
-      zero ? HT.svg('line', { x1: x(0), x2: x(0), y1: 0, y2: height, stroke: 'fg', 'data-zero': true }) : null,
+      HT.svg('line', { x1: LABEL, x2: LABEL + plot, y1: axisY, y2: axisY, stroke: 'muted', 'data-axis': true }),
+      zero ? HT.svg('line', { x1: x(0), x2: x(0), y1: 0, y2: axisY + 4, stroke: 'fg', 'stroke-dasharray': '3 2', 'data-zero': true }) : null,
+      zero ? HT.svg('text', { x: x(0), y: axisY + 15, class: 'ht-muted-text', 'text-anchor': 'middle', 'aria-hidden': 'true',
+        'data-literal': 'axis', text: '0' }) : null,
       ...rows.map((r, i) => {
         const y = i * ROW + ROW / 2;
         return HT.svg('g', { 'data-interval': r.label }, [
           HT.svg('text', { x: LABEL - 6, y: y + 4, class: 'ht-label', 'text-anchor': 'end', text: r.label }),
-          ok(r.low) && ok(r.high) ? HT.svg('line', { x1: x(r.low), x2: x(r.high), y1: y, y2: y, stroke: 'accent', 'stroke-width': 3 }) : null,
-          ok(r.point) ? HT.svg('circle', { cx: x(r.point), cy: y, r: 4, fill: 'fg' }) : null,
+          ok(r.low) && ok(r.high) ? HT.svg('line', { x1: x(r.low), x2: x(r.high), y1: y, y2: y,
+            stroke: r.tone === 'baseline' ? 'baseline' : 'accent', 'stroke-width': 3, 'data-tone': r.tone === 'baseline' ? 'baseline' : 'model' }) : null,
+          ok(r.point) ? HT.svg('circle', { cx: x(r.point), cy: y, r: 4, fill: r.tone === 'baseline' ? 'baseline' : 'fg' }) : null,
           HT.svg('text', { x: W - TEXT + 6, y: y + 4, class: 'ht-value', text: [r.pointText, r.intervalText].filter(Boolean).join(' ') }),
         ]);
       }),
