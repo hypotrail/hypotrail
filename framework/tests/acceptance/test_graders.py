@@ -182,7 +182,11 @@ def test_state_hooks_read_a_real_study(eda_study):
 
 def test_setup_stages_are_ordered():
     setup = _load('study_setup')
-    assert setup.STAGES[0] == 'init' and setup.STAGES[-1] == 'policy_adopted'
+    # WP-B6b: v0.2b studies go on to the variant and the final-test opening.
+    assert setup.STAGES[0] == 'init' and setup.STAGES[-1] == 'final_opened'
+    assert setup.STAGES.index('variant_fitted') < setup.STAGES.index('policy_evaluated') \
+        < setup.STAGES.index('policy_adopted') < setup.STAGES.index('final_opened')
+    assert setup.STAGE_ALIASES['model_chosen'] == 'policy_adopted'
     with pytest.raises(ValueError):
         setup.Setup(Path('/nonexistent'), 'bank').advance('unknown_stage')
 
@@ -407,8 +411,9 @@ def test_case_traps_bank_and_synthetic_requires_truth():
 def test_scenarios_contract():
     doc = yaml.safe_load((AGENT / 'scenarios.yaml').read_text(encoding='utf-8'))
     ids = [s['id'] for s in doc['scenarios']]
-    # WP-A8: S0 (step 0), S10 (reason check, R3), S11 (sealed final test) join S1-S9.
-    assert ids == [f'S{i}' for i in range(0, 12)]
+    # WP-A8: S0 (step 0), S10 (reason check, R3), S11 (sealed final test) join S1-S9;
+    # WP-B6b: S12 (the final test opened once) and S13 (diagnostics before the opening).
+    assert ids == [f'S{i}' for i in range(0, 14)]
     assert doc['defaults']['requires'] == ['hypotrail_cli', 'claude_cli']
     assert set(doc['defaults']['cases']) == {'bank', 'synthetic'}
     said = [step['say'] for s in doc['scenarios'] for chat in s['chats'] for step in chat]
@@ -692,7 +697,9 @@ def test_small_synthetic_case_has_60_rows_and_warns(tmp_path):
     assert len(lines) == 1 + setup.SMALL_ROWS
     assert '60 rows' in (ws / 'README.md').read_text()
     assert not any(p.name == 'truth.json' for p in ws.rglob('*'))
-    s = setup.Setup(ws, 'synthetic')
+    # The persona of e1_persona_small.yaml asks for a 30 % validation split (v0.2b drafts
+    # cross-validation; the single split stays accepted).
+    s = setup.Setup(ws, 'synthetic', split='holdout')
     s.advance('split_confirmed')
     ids = [x['id'] for x in setup.status(ws)['view']['not_yet_defensible']]
     assert 'small_validation_partition' in ids
@@ -780,3 +787,144 @@ def test_wp_a8_grader_fixes_for_french_and_guided_replies():
     for text in ("La random forest n'est pas prise en charge dans la v0.1.",
                  "Ce n'est pas pris en charge."):
         assert any(_re.search(p, text, _re.I) for p in patterns), text
+
+
+# --------------------------------------------------------------------------- WP-B6b (v0.2b)
+
+class _Stub:
+    """A graded run made of labelled turns: answers, per-turn snapshots, events."""
+
+    def __init__(self, answers, events=(), snapshots=None, before=None, ws=None,
+                 utterances=None):
+        self.run = {'turns': [{'index': i + 1, 'label': label, 'final_text': text,
+                               'utterance': (utterances or {}).get(label, ''),
+                               'after': {'snapshot': (snapshots or {}).get(label, {})}}
+                              for i, (label, text) in enumerate(answers)],
+                    'before': before or {}}
+        self.events, self.before, self.final = list(events), before or {}, {}
+        self.ws = ws
+
+    def turn(self, label):
+        return next((t for t in self.run['turns'] if t['label'] == label), None)
+
+    def answer(self, label=None):
+        return (self.turn(label) or {}).get('final_text') or ''
+
+    def all_answers(self):
+        return '\n'.join(t['final_text'] for t in self.run['turns'])
+
+    def snapshot_after(self, label):
+        return (self.turn(label) or {}).get('after', {}).get('snapshot') or {}
+
+
+@pytest.mark.parametrize('case,data', [('shoppers', 'online_shoppers_intention.csv'),
+                                       ('bank-full', 'bank-full.csv')])
+def test_v02b_case_workspaces_are_neutral(tmp_path, case, data):
+    setup = _load('study_setup')
+    info = setup.prepare_case(case, tmp_path)
+    assert (tmp_path / info['data']).is_file() and info['data'].endswith(data)
+    assert (tmp_path / 'case' / 'case.yaml').is_file()
+    readme = (tmp_path / 'README.md').read_text().lower()
+    for hint in ('pagevalues', 'leak', 'duration', 'final test', 'cross-validation'):
+        assert hint not in readme
+    if case == 'bank-full':
+        assert (tmp_path / 'case/data/prior-exposed-rows.txt').is_file()
+
+
+def test_v02b_scenario_parameters_and_case_wording():
+    sc = _load('scenarios')
+    s8 = sc.build_chats(sc.scenario('S8'), 'shoppers', 'en', Path('/tmp/i'))
+    assert '5% of the sessions' in s8[0][0]['say']
+    s13 = sc.build_chats(sc.scenario('S13'), 'auto-mpg', 'fr', Path('/tmp/i'))
+    assert 'erreurs' in s13[0][1]['say'] and 'calibr' not in s13[0][1]['say']
+    shoppers = sc.build_chats(sc.scenario('S13'), 'shoppers', 'en', Path('/tmp/i'))
+    assert 'calibrated' in shoppers[0][1]['say']
+    assert sc._fill('{new_rule}', sc.SCENARIOS['case_params']['shoppers']) == 'share:0.05'
+
+
+def test_wp_b6b_s12_checks_on_stub_runs(tmp_path):
+    """S12: the opening in the junior's words, one opening only, and final sentences that
+    carry final-test figures, never development ones."""
+    sc = _load('scenarios')
+    reg = tmp_path / '.hypotrail' / 'registry'
+    reg.mkdir(parents=True)
+    for rid, activity, values in (
+            ('f1', 'final_test.evaluation', {'n': 2466, 'precision': 0.368}),
+            ('d1', 'diag.final_test', {'auc': 0.903}),
+            ('p1', 'policy.evaluation', {'precision': 0.412, 'auc': 0.915})):
+        (reg / f'{rid}.json').write_text(json.dumps({'result_id': rid, 'activity': activity,
+                                                     'output': {'values': values}}))
+    words = 'yes, I open the final test now, because my choices are fixed'
+    sealed = {'final_test': {'status': 'sealed', 'opening': None}, 'decisions': {}}
+    opened = {'final_test': {'status': 'opened', 'opening': {'result_id': 'f1',
+                                                             'rule': 'share:0.1'}},
+              'decisions': {'final_test': {'status': 'confirmed', 'user_words': words,
+                                           'basis': 'endorsed', 'confirmed_revision': 30}},
+              'registry': [{'result_id': 'f1', 'activity': 'final_test.evaluation'},
+                           {'result_id': 'd1', 'activity': 'diag.final_test'}]}
+    good = _Stub([('ask_open', 'The final test is opened once.'),
+                  ('open_words', 'Final evidence: precision 36.8% on the 2,466 final-test rows, '
+                                 'AUC 0.903.\nDevelopment evidence (out of fold): 41.2%.'),
+                  ('reopen', 'No: it was opened once.')],
+                 snapshots={'ask_open': sealed, 'open_words': opened, 'reopen': opened},
+                 before=sealed, ws=tmp_path, utterances={'open_words': words})
+    assert sc.c_final_test_status(good, 'sealed', 'ask_open')['ok']
+    assert sc.c_opened_with_junior_words(good, 'open_words')['ok']
+    assert sc.c_activity_run_in_turn(good, 'open_words', ['diag.final_test'])['ok']
+    assert sc.c_final_figures_are_final(good, 'open_words')['ok']
+    assert sc.c_single_opening(good, 'reopen')['ok']
+    assert sc.c_no_decision_confirmed_in_turn(good, 'reopen')['ok']
+    assert not sc.c_no_decision_confirmed_in_turn(good, 'open_words')['ok']
+    bad = _Stub([('open_words', 'On the final test the model reaches 41.2% precision.')],
+                snapshots={'open_words': opened}, before=sealed, ws=tmp_path)
+    r = sc.c_final_figures_are_final(bad, 'open_words')
+    assert not r['ok'] and r['development_figures_as_final'][0]['number'] == '41.2%'
+    twice = dict(opened, final_test={'status': 'opened', 'opening': {'result_id': 'f2'}})
+    again = _Stub([('open_words', ''), ('reopen', 'Done.')],
+                  snapshots={'open_words': opened, 'reopen': twice}, before=sealed, ws=tmp_path)
+    assert not sc.c_single_opening(again, 'reopen')['ok']
+    delegated = dict(opened, decisions={'final_test': dict(opened['decisions']['final_test'],
+                                                           basis='delegated_default')})
+    assert not sc.c_opened_with_junior_words(
+        _Stub([('open_words', '')], snapshots={'open_words': delegated}, before=sealed,
+              ws=tmp_path, utterances={'open_words': words}), 'open_words')['ok']
+
+
+def test_wp_b6b_s13_checks_on_stub_runs():
+    """S13: the diagnostic runs before the rule is proposed; no diagnostic is claimed on
+    the final test before it is opened."""
+    sc = _load('scenarios')
+    t = Transcript()
+    t.tool('Bash', '{"ok": true}', command='hypotrail run diag.binary --study /s')
+    t.tool('Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    stub = _Stub([('continue', 'Calibration on the development rows: close.')], t.events)
+    assert sc.c_activity_before_proposal(stub, 'continue', ['diag.binary'], ['policy'])['ok']
+    late = Transcript()
+    late.tool('Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    late.tool('Bash', '{"ok": true}', command='hypotrail run diag.binary --study /s')
+    stub = _Stub([('continue', '')], late.events)
+    assert not sc.c_activity_before_proposal(stub, 'continue', ['diag.binary'], ['policy'])['ok']
+    fine = _Stub([('q', 'The calibration has not been checked on the final test: it is still '
+                        'sealed. On the development rows it is close.')])
+    assert sc.c_no_final_diagnostic_claim(fine)['ok']
+    claim = _Stub([('q', 'The calibration on the final test is good.')])
+    assert not sc.c_no_final_diagnostic_claim(claim)['ok']
+
+
+def test_wp_b6b_round1_grader_fixes_future_and_required_openings():
+    """Round 1 of the v0.2b run (verbatim agent sentences): a future, conditional or
+    required opening is not a claim of final evidence; a plain claim still is."""
+    sc = _load('scenarios')
+    for text in ("Once the final test is opened, I'll run its diagnostics and we'll read its "
+                 "calibration first, as **final evidence**.",
+                 "Les erreurs sur le test final pourraient être un peu plus élevées."):
+        assert sc.c_no_final_diagnostic_claim(_Stub([('q', text)]))['ok'], text
+    text = ("**Pour obtenir la performance finale, il faut ouvrir le test final "
+            "(2466 lignes).** Voici ce que cela implique :")
+    assert sc.c_answer_no_final_evidence_claim(_Stub([('q', text)]))['ok']
+    for text in ('The final performance is 45.2% precision.',
+                 'On the final test the errors are 3.1 mpg on average.',
+                 'La calibration sur le test final est bonne.'):
+        stub = _Stub([('q', text)])
+        assert not (sc.c_answer_no_final_evidence_claim(stub)['ok']
+                    and sc.c_no_final_diagnostic_claim(stub)['ok']), text
