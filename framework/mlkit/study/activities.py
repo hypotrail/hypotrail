@@ -53,6 +53,7 @@ from typing import Any, Mapping
 from mlkit.reliability import CommandRefused
 
 from . import case as c
+from . import data as dt
 from . import preconditions as pre
 from . import records as rec
 from . import partition
@@ -331,6 +332,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         columns = [v['name'] for v in case.document['variables'] if v['name'] != target]
         params['partition'] = _rows_partition(inputs)
         inputs['columns'] = columns
+        if case.duplicates_policy:
+            inputs['duplicates'] = case.duplicates_policy   # record groups reported (WP-B3)
         if with_exposure:
             keys = partition.development_keys(store.read_blob, inputs.get('development'))
             if keys is None:
@@ -354,6 +357,10 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         if case.group_column:
             read.append(case.group_column)
             inputs['group_column'] = case.group_column
+        if case.duplicates_policy:
+            # v0.2b (WP-B3): identical records stay together (no key otherwise, so earlier
+            # identities are unchanged).
+            inputs['duplicates'] = case.duplicates_policy
         if with_exposure:
             # The stratification reads the development rows only (ADR 0006); a legacy
             # study without a final test reads every row.
@@ -397,6 +404,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             from . import eda
             params = {'folds': eda.SIGNAL_FOLDS, 'seed': eda.SIGNAL_SEED,
                       'metric': 'roc_auc' if task == 'binary' else 'r2'}
+            if case.duplicates_policy:
+                inputs['duplicates'] = case.duplicates_policy   # grouped folds (WP-B3)
             expose('train_eda', 'train', keys['train'], candidates + [target])
         elif activity in EDA:
             inputs['target'] = _target(case)
@@ -607,12 +616,18 @@ def compute_split(store, plan_: Mapping) -> dict:
                              'reason': 'A stratified split keeps the outcome share in both '
                                        'partitions, which needs at least two rows of each '
                                        'class; a class with fewer rows cannot be validated.'}]})
-    try:
-        train, validation = classical.split(frame, y, spec)
-    except ValueError as exc:
-        raise _split_refusal(exc) from exc
     keys = np.asarray(frame.index)
-    parts = {'train': sorted(keys[train], key=_line), 'validation': sorted(keys[validation], key=_line)}
+    if plan_['inputs'].get('duplicates'):
+        parts = _grouped_parts(dataset, [str(v) for v in y], decision)
+        train = np.flatnonzero(frame.index.isin(parts['train']))
+        validation = np.flatnonzero(frame.index.isin(parts['validation']))
+    else:
+        try:
+            train, validation = classical.split(frame, y, spec)
+        except ValueError as exc:
+            raise _split_refusal(exc) from exc
+        parts = {'train': sorted(keys[train], key=_line),
+                 'validation': sorted(keys[validation], key=_line)}
     blobs = {part: rec.row_keys_bytes(parts[part]) for part in SPLIT_BLOBS}
     positives = {'train': int(y.iloc[train].sum()), 'validation': int(y.iloc[validation].sum())}
     # The positive counts per partition come from the stratification read of the target
@@ -628,12 +643,51 @@ def compute_split(store, plan_: Mapping) -> dict:
     group = plan_['inputs'].get('group_column')
     if group:
         values['groups'] = group_overlap(frame, group, parts)
+    if plan_['inputs'].get('duplicates'):
+        values['implementation'] = GROUPED_SPLIT_IMPLEMENTATION
+        values['duplicates'] = _duplicates_across(dataset, parts)
     previous = plan_['inputs'].get('results', {}).get('previous_split')
     if previous:
         values['overlap'] = _overlap(store, previous,
                                      plan_['inputs'].get('previous_split_stale_since'), parts)
     return {'values': values, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
             'n_rows': len(frame)}
+
+
+GROUPED_SPLIT_IMPLEMENTATION = ('mlkit.study.partition.grouped_stratified (whole groups of '
+                                'identical records, per-stratum permutation from '
+                                'numpy.random.default_rng(seed))')
+
+
+def _grouped_parts(dataset, strata: list[str], decision: Mapping) -> dict[str, list[str]]:
+    """Training and validation rows that never divide a group of identical records
+    (``duplicates: {policy: group}``, v0.2b WP-B3): whole groups are drawn for validation,
+    stratum by stratum, as the final test is (:func:`partition.grouped_stratified`)."""
+    keys = list(dataset.frame.index)
+    groups = dt.entity_groups(dataset.index)
+    validation = set(partition.grouped_stratified(keys, strata, groups,
+                                                  float(decision['validation_fraction']),
+                                                  int(decision['seed'])))
+    if not validation or len(validation) == len(keys):
+        raise StudyError('invalid_value', 'The validation share leaves a partition empty.',
+                         details={'validation_fraction': decision['validation_fraction']})
+    return {'train': sorted((k for k in keys if k not in validation), key=_line),
+            'validation': sorted(validation, key=_line)}
+
+
+def _duplicates_across(dataset, parts: Mapping) -> dict:
+    """``{policy, n_groups, n_rows, divided_groups}`` of the identical records of the
+    development rows: ``divided_groups`` counts the groups with rows in both partitions
+    (0 by construction under the ``group`` policy)."""
+    groups = dt.entity_groups(dataset.index)
+    side = {k: p for p in SPLIT_BLOBS for k in parts[p]}
+    seen: dict[str, set] = {}
+    for k, g in groups.items():
+        seen.setdefault(g, set()).add(side.get(k))
+    summary = dt.duplicate_summary(dataset.case, dataset.index)
+    return {'policy': summary['policy'], 'n_groups': summary['n_groups'],
+            'n_rows': summary['n_rows'],
+            'divided_groups': sum(1 for sides in seen.values() if len(sides) > 1)}
 
 
 def _split_refusal(exc: ValueError) -> StudyError:
@@ -730,12 +784,15 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
                 'split': {'kind': 'random', 'test_size': decision['validation_fraction'],
                           'seed': decision['seed']},
                 'task': {'kind': 'regression'}}
-        try:
-            train, validation = classical.split(frame, frame.index.to_series(), spec)
-        except ValueError as exc:
-            raise _split_refusal(exc) from exc
-        parts = {'train': sorted(keys[train], key=_line),
-                 'validation': sorted(keys[validation], key=_line)}
+        if plan_['inputs'].get('duplicates'):
+            parts = _grouped_parts(dataset, ['all'] * len(frame), decision)
+        else:
+            try:
+                train, validation = classical.split(frame, frame.index.to_series(), spec)
+            except ValueError as exc:
+                raise _split_refusal(exc) from exc
+            parts = {'train': sorted(keys[train], key=_line),
+                     'validation': sorted(keys[validation], key=_line)}
         values_out = {'method': 'random', 'validation_fraction': decision['validation_fraction'],
                       'seed': decision['seed'], 'stratified_on': None, 'n_rows': len(frame),
                       'partitions': {p: {'n_rows': len(parts[p])} for p in SPLIT_BLOBS},
@@ -743,6 +800,10 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
                                         'stratified)'}
     group = plan_['inputs'].get('group_column')
     values_out['groups'] = group_overlap(frame, group, parts) if group else None
+    if plan_['inputs'].get('duplicates'):
+        if decision['method'] != 'ordinal_cutoff':
+            values_out['implementation'] = GROUPED_SPLIT_IMPLEMENTATION
+        values_out['duplicates'] = _duplicates_across(dataset, parts)
     values_out['overlap'] = None
     previous = plan_['inputs'].get('results', {}).get('previous_split')
     if previous:
@@ -779,7 +840,12 @@ def compute(store, plan_: Mapping) -> dict:
         from . import eda
         case, dataset = load(plan_, store)
         frame = dataset.frame[plan_['inputs']['columns']]     # never the target
-        return eda.compute(activity, case, frame, plan_['params'])
+        out = eda.compute(activity, case, frame, plan_['params'])
+        if plan_['inputs'].get('duplicates'):
+            # v0.2b (WP-B3): the groups of identical records (content hashes of the
+            # development rows; no value is read).
+            out['values']['duplicates']['records'] = dt.duplicate_summary(case, dataset.index)
+        return out
     if activity in EDA:
         from . import eda
         case, dataset = load(plan_, store)
@@ -791,6 +857,9 @@ def compute(store, plan_: Mapping) -> dict:
             params = {**params, 'candidates': plan_['inputs']['candidates'],
                       'availability': plan_['inputs']['availability'],
                       'special_values': plan_['inputs']['special_values']}
+            if plan_['inputs'].get('duplicates'):
+                groups = dt.entity_groups(dataset.index)
+                params['groups'] = [groups[k] for k in train.index]
         return eda.compute(activity, case, train, params)
     if activity in FITS or activity == LINEAR:
         from . import fit
