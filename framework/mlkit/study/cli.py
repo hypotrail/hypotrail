@@ -79,6 +79,8 @@ EXTENSIONS = {
     'evidence': 'mlkit.study.cmd_evidence',
     'explain': 'mlkit.study.cmd_explain',
     'export': 'mlkit.study.cmd_export',
+    # v0.2a (WP-A4, R2): the read-only data card.
+    'data': 'mlkit.study.cmd_data',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -92,6 +94,7 @@ EXTENSION_HELP = {
     'evidence': 'read-only results, lineage, rows read, and exploration catalog',
     'explain': 'glossary terms, step texts, and examples cited from this study',
     'export': 'export a handoff pack of the study into a new folder',
+    'data': 'read-only data card: row unit, sizes, grouped columns, five development rows',
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -376,6 +379,9 @@ def _text(payload: dict) -> str:
         return text(payload)
     if schema == 'hypotrail.evidence/1':
         from .cmd_evidence import text
+        return text(payload)
+    if schema == 'hypotrail.data/1':
+        from .cmd_data import text
         return text(payload)
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
