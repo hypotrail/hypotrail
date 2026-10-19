@@ -208,6 +208,7 @@ def _contrast(a: str, b: str) -> float:
 
 
 def test_text_tokens_contrast_at_least_4_5_to_1_in_both_fallback_themes():
+    # A11Y-2: WCAG contrast of the text tokens against --ht-bg, computed here.
     css = (Path(__file__).resolve().parents[1] / 'media' / 'css' / 'tokens.css').read_text()
     light, dark = css.split('@media (prefers-color-scheme: dark)')
 

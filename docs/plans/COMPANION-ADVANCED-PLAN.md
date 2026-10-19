@@ -1,6 +1,6 @@
 # Advanced companion: implementation plan for parallel agents
 
-Status: **WP-0 done** (frozen interfaces, skeletons, stubs, contract tests; see §2.3, which is authoritative where it is more precise than §2.1 and §2.2). Phase B (WP-E1 to E3, WP-U1 to U5) can start. Integrator decisions: CA.1 to CA.19 in [V0.1-DECISIONS](V0.1-DECISIONS.md).
+Status: **WP-0, Phase B, and WP-I done** (WP-0 froze the interfaces, see §2.3; the eight packages E1 to E3 and U1 to U5 are merged; WP-I integrated them, decisions CA.1 to CA.19 and CI.1 to CI.17 in [V0.1-DECISIONS](V0.1-DECISIONS.md)). The real VS Code checklist of §6 is written ([MANUAL-TEST.md](../../clients/vscode-companion/MANUAL-TEST.md)) and **not run**: it needs the owner and a VS Code. The integration tests of WP-I are `integration-v1/v2/v3.test.js` on Bank and Auto MPG (not the synthetic case, decision CI.15); `capture_fixtures.py` is `test/fixtures/capture.py` and the key-set test is `test_fixture_drift.py` (CI.12).
 
 - Scope: [ADR 0004](../decisions/0004-companion-advanced.md)
 - Behaviour: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md), the **spec**

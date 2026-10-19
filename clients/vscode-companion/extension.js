@@ -9,9 +9,10 @@
 // URI handler; with the flag off each of them shows one message and does nothing else:
 // no setting beyond the flag is read, no file is read, no process is started.
 //
-// WP-0 skeleton (docs/plans/COMPANION-ADVANCED-PLAN.md §2.2): the integrator (WP-I) owns
-// this file. Views and handlers never need to change it: a deep link goes through
-// lib/uri.js (WP-U3), "go to a result" through the handler command `go_to_result`.
+// Owned by the integrator (docs/plans/COMPANION-ADVANCED-PLAN.md §2.2, WP-I). Views and
+// handlers never need to change it: a deep link goes through lib/uri.js, "go to a result"
+// through the handler command `go_to_result`. The study switch and a link to another
+// discovered study rebind the open panel to a new controller and watcher (§6.1.6, CI.10).
 
 const vscode = require('vscode');
 const fs = require('fs');

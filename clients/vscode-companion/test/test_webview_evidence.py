@@ -258,6 +258,7 @@ def test_evidence_controls_are_named_and_reviewer_mode_keeps_the_reads(open_pane
     show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
     assert page.locator('[data-write]').count() == 0
     assert page.locator('[data-show-in-report]').is_enabled(), 'reads and navigation stay in reviewer mode'
+    # A11Y-1: every control has an accessible name, and no positive tabindex.
     unnamed = page.evaluate("""() => [...document.querySelectorAll('#panel-evidence button, #panel-evidence input')]
       .filter(b => !(b.textContent.trim() || b.getAttribute('aria-label') || (b.labels && b.labels.length))).length""")
     assert unnamed == 0

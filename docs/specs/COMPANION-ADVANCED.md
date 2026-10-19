@@ -1,6 +1,6 @@
 # Advanced companion: detailed specification
 
-Status: **specified, not implemented.** The scope and the staging are in [ADR 0004](../decisions/0004-companion-advanced.md). The engine interfaces are in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), cited below as **CC §n**. The work packages and file ownership are in [COMPANION-ADVANCED-PLAN.md](../plans/COMPANION-ADVANCED-PLAN.md). The code base is `clients/vscode-companion/`, which is v0 ([ADR 0003](../decisions/0003-companion-webview-v0.md), decisions CW.1 to CW.12).
+Status: **implemented behind the flag** (stages v0 to v3; WP-0, WP-E1 to E3, WP-U1 to U5, integrated by WP-I with decisions CI.1 to CI.17 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)). Tested in Node, an offline browser, and on the real CLI; **not run inside a real VS Code** ([manual checklist](../../clients/vscode-companion/MANUAL-TEST.md)). The default stage stays `v0`. The scope and the staging are in [ADR 0004](../decisions/0004-companion-advanced.md). The engine interfaces are in [CLI-CONTRACT-COMPANION.md](CLI-CONTRACT-COMPANION.md), cited below as **CC §n**. The work packages and file ownership are in [COMPANION-ADVANCED-PLAN.md](../plans/COMPANION-ADVANCED-PLAN.md). The code base is `clients/vscode-companion/`, which is v0 ([ADR 0003](../decisions/0003-companion-webview-v0.md), decisions CW.1 to CW.12).
 
 Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
 
@@ -78,7 +78,7 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 | Loading | The first `status` call has not answered | The header shows "Reading the study..."; tabs are skeletons with `aria-busy="true"`; no control is enabled |
 | Load error | The CLI cannot start, prints no JSON, or refuses | A `role="alert"` banner with the message and the CLI's stderr in a collapsed `<details>`; a "Retry" button; the last good snapshot is **not** shown as current. If one exists, it is shown greyed with "Last read at revision N; the study could not be read now" |
 | Stale view | A watch event or a write moved the revision while a tab shows older data | Each tab's data carries the revision it was read at. A tab whose data revision is below the snapshot revision shows "Updating..." and reloads (§11). A textarea with text keeps the text and shows the v0 warning "The study changed while you were typing. Read the proposal again before you answer." (CW.9) |
-| Reviewer | `reviewer` setting or command | The header shows a badge "Reviewer, read-only". **No** element with `data-write` is rendered: no textarea for words, no Confirm, Withdraw, Propose, Run, Regenerate, Acknowledge, or Export. The controller refuses every write message with `kind: "invalid"` and "Read-only reviewer mode." (RV-2). Reads, navigation, Open, Show in report, and the agent bridge stay |
+| Reviewer | `reviewer` setting or command | The header shows a badge "Reviewer, read-only". **No** element with `data-write` is rendered except Export: no textarea for words, no Confirm, Withdraw, Propose, Run, Regenerate, or Acknowledge. The controller refuses every write message of the study (W1 to W6) with `kind: "invalid"` and "Read-only reviewer mode." (RV-2). The handoff export (W7) writes no study state, so a reviewer may run it (decision CA.9). Reads, navigation, Open, Show in report, and the agent bridge stay |
 | Read-only process | `HYPOTRAIL_READ_ONLY=1` in the extension host | Writes are refused by the engine (`read_only`) and shown as refusals. Nothing special is done in the client |
 | Busy | One write is running | Every `data-write` control is disabled, and the busy control shows `aria-busy="true"` and "Working..." |
 
@@ -114,7 +114,7 @@ Each alert links to the Overview Health section.
 
 ### 4.2 Navigation targets
 
-A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`, `proposal`, `step`, `limit`, `execution`, `term`. Navigation requests come from deep links (CC §11), evidence chips, and the command "Hypotrail: go to a result...". The target tab opens, scrolls the item into view, moves focus to its heading, and highlights it for 2 s, without motion when `prefers-reduced-motion` is set.
+A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`, `proposal`, `step`, `limit`, `execution`, `term`. Navigation requests come from deep links (CC §11), evidence chips, and the command "Hypotrail: go to a result...". The target tab opens, scrolls the item into view, moves focus to its own heading (`h2` to `h4`; decision CI.14), and highlights it for 2 s, without motion when `prefers-reduced-motion` is set.
 
 ## 5. Data sources and caching
 
@@ -378,7 +378,7 @@ Mockup: `Evidence.dc.html`.
 
 **Result detail (right column).**
 
-- **Header.** The slot as `h2`, then "<rid8>… · current|stale" with a "Copy id" button.
+- **Header.** The slot as `h2`, then "<rid8>… · current|stale" with a "Select the id" button: it opens the full id and selects it, for the junior to copy with the keyboard. The panel writes no clipboard outside the agent bridge (§12, decision CI.5).
 - **Facts list.**
   - "Evaluated on": the partition, `n_rows`, and `n_positive` when present;
   - the headline;
@@ -538,13 +538,13 @@ The answer is never sent to the CLI, the chat, or the study. "Reset my answers f
 **Export.** A section "Hand the study over", with the button "Export a handoff pack" (`data-write="export"`, W7).
 
 - The extension asks for a parent folder with a folder dialog (`showOpenDialog` with `canSelectFolders`, default `<study>/handoff/`) and passes `--out=<parent>/revision-<n>`. The default output is CC §7's.
-- The outcome lists the files written with their sizes, `warnings` in words, and "Open folder" (`revealFileInOS`).
+- The outcome lists the files written with their sizes, `warnings` in words (`recorded.warnings`, decision CI.3), and "Open folder" (`revealFileInOS`).
 - With exit code 3, the outcome reads "The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it."
 
 **Reviewer mode.** A line explains it: "A reviewer can open this study read-only with "Hypotrail: open the study panel (reviewer, read-only)"."
 
 - HO-1. Export runs the exact argv of W7. A non-empty target gives the `export_target_exists` refusal, verbatim.
-- HO-2. Export is absent in reviewer mode. (A reviewer exports with the CLI if they need to; that is an open question.)
+- HO-2. Export stays in reviewer mode, and is the only write control there (decision CA.9, which answered the open question; WP-I aligned this text).
 
 #### 6.6.3 Session report (J)
 
@@ -670,7 +670,7 @@ A unit test enumerates the argv builder module and asserts that exactly these se
 | `run_eda` | `activity` (`^eda\.[a-z_]+$`), `column` (string, 1–200 characters), `revision` | v2 |
 | `render` | — | v1 |
 | `acknowledge` | `executionId` (string, 1–100 characters, `^[A-Za-z0-9_.-]+$`), `words`, `revision` | v1 |
-| `open_artifact` | `artifact` ∈ `report`, `notebook`, `workbench`; `resultId?` | v0 (+ `resultId` v2) |
+| `open_artifact` | `artifact` ∈ `report`, `notebook`, `workbench`; `resultId?` (the report at `#r-<rid>`, or the notebook at the line that names the result; not the workbench); `line?` (int ≥ 1, an editor deliverable at a check finding's line; not the report; not with `resultId`) | v0 (+ `resultId` and `line` v1, decision CI.3) |
 | `navigate_external` | `kind` ∈ `reveal_export`; `path` (string, must equal the last export's `out`) | v3 |
 | `ask_agent` | `about: {kind ∈ result, decision, proposal, step, limit, execution, term; id (string ≤ 100)}`, `question` (string ≤ 2000), `mode` ∈ `copy`, `insert` | v2 |
 | `export_handoff` | `revision` | v3 |
@@ -686,7 +686,7 @@ A unit test enumerates the argv builder module and asserts that exactly these se
 | `view_data` | `view`, `revision`, `model` (the model of §9 for that view), `resultId?` | |
 | `load_error` | `view` (or `null` for the summary), `message`, `detail` | |
 | `busy` | `busy` (bool), `op` (W id or `read`) | |
-| `outcome` | `op` (`W1`–`W7`), `kind` ∈ `ok`, `ok_with_problems`, `not_promoted`, `refused`, `failed`, `invalid`, `cancelled`; `target?` (pid, eid, slot); `revision?`; `refusal?` (`{code, reason, engineMessage, human, details: [string]}`); `recorded?` (`{userWords?, proposalId?, slot?, status?, files?: [{path, bytes}]}`); `artifacts?` (`[{name, status, message}]`); `message?` | |
+| `outcome` | `op` (`W1`–`W7`), `kind` ∈ `ok`, `ok_with_problems`, `not_promoted`, `refused`, `failed`, `invalid`, `cancelled`; `target?` (pid, eid, slot); `revision?`; `refusal?` (`{code, reason, engineMessage, human, details: [string]}`); `recorded?` (`{userWords?, channel?, decisionId?, proposalId?, slot?, status?, files?: [{path, bytes}], out?, warnings?: [string]}`); `artifacts?` (`[{name, status, message}]`); `message?` | |
 | `preview_policy_result` | `seq`, `revision`, `model: PolicyPreviewModel` | dropped by the webview when `seq` is not the latest it sent |
 | `effects` | `proposalId`, `revision`, `model: EffectsModel` | |
 | `draft_result` | `decisionId`, `value`, `revision`, `model: DraftModel` | |
@@ -758,7 +758,7 @@ The v0 rules still apply: CSP, nonce, no command URIs, no local resource roots, 
 - **Location paths.** `location.path` is resolved with `path.resolve(S, path)` and must start with `S + path.sep`. Otherwise "Open" is not offered.
 - **Argv.** Built only in `lib/cli.js`. Values from the webview reach an argv only through the W pre-checks of §7, in `--opt=value` form, and are checked against `\0`. There is never a shell.
 - **URI handler.** Path and query are parsed with `URLSearchParams` and the patterns of CC §11. `study` must equal a discovered study's path, or one the junior confirms in the quick pick. Otherwise the handler opens the quick pick. A link never triggers a write.
-- **Clipboard.** It is written only by the agent bridge, with the template of §6.8.
+- **Clipboard.** It is written only by the agent bridge, with the template of §6.8. No other control, and nothing in the webview (`navigator.clipboard`), writes it; Evidence's "Select the id" only selects the text (decision CI.5, `test/invariants.test.js`).
 
 ## 13. Accessibility and theme
 

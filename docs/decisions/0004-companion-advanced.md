@@ -1,6 +1,6 @@
 # ADR 0004: The advanced companion, staged behind the flag
 
-- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0 (frozen interfaces, skeletons, engine stubs, contract tests) is done; the features are **not implemented** yet.
+- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0, the engine work packages E1 to E3, and the client work packages U1 to U5 are done and integrated (WP-I, decisions CI.1 to CI.17): stages v1 to v3 are **implemented behind the flag**, whose default stays off with stage `v0`. They are tested in Node, an offline browser, and on the real CLI with Bank and Auto MPG studies, and **not run inside a real VS Code** yet (the stage exit criteria below stay open).
 - Date: 18 October 2026
 - Builds on: [ADR 0002](0002-companion-as-cli-client.md), the companion as a client of the CLI, and [ADR 0003](0003-companion-webview-v0.md), companion v0 and decisions CW.1–CW.12
 - Specification: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md)

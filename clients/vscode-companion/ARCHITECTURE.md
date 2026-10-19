@@ -1,6 +1,6 @@
 # Study panel: architecture
 
-The panel is one more client of the `hypotrail` CLI (ADR 0002). It has no build step and no runtime dependency. Behaviour is specified in [COMPANION-ADVANCED.md](../../docs/specs/COMPANION-ADVANCED.md) (the spec), the engine interfaces in [CLI-CONTRACT-COMPANION.md](../../docs/specs/CLI-CONTRACT-COMPANION.md) (CC), and the work packages in [COMPANION-ADVANCED-PLAN.md](../../docs/plans/COMPANION-ADVANCED-PLAN.md). WP-0 froze the interfaces below; a change to one is a request to the integrator.
+The panel is one more client of the `hypotrail` CLI (ADR 0002). It has no build step and no runtime dependency. Behaviour is specified in [COMPANION-ADVANCED.md](../../docs/specs/COMPANION-ADVANCED.md) (the spec), the engine interfaces in [CLI-CONTRACT-COMPANION.md](../../docs/specs/CLI-CONTRACT-COMPANION.md) (CC), and the work packages in [COMPANION-ADVANCED-PLAN.md](../../docs/plans/COMPANION-ADVANCED-PLAN.md). WP-0 froze the interfaces below; WP-I extended them at the packages' request (decisions CI.1 to CI.17 in [V0.1-DECISIONS](../../docs/plans/V0.1-DECISIONS.md#companion-integration-ci)). A change to one is a request to the integrator.
 
 ## Modules
 
@@ -13,15 +13,18 @@ lib/cli.js              THE ONLY child_process user: read builders (READS), writ
 lib/protocol.js         hypotrail.panel/2 schema table and validators; emits media/protocol.js
 lib/controller.js       router: validation, stage gate, reviewer refusal, summary, load dispatch,
                         cache + coalescing + read limits, exclusive write lock, outcome mapping
-lib/cache.js            per key and revision; preview:* keys in a bounded list
+lib/cache.js            CLI payloads per read key and revision; preview:* keys in a bounded list
 lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group
 lib/models/<view>.js    pure payload -> model functions (to<Name>Model) + FIXTURES
 lib/refusals.js         refusal explanations (never suggest words)
 lib/uri.js              deep-link parsing and result-id input (WP-U3)
+lib/bridge.js           the agent bridge's template, clipboard, guarded chat command (WP-U5)
+lib/localstore.js       the globalState schema and limits of spec §10 (WP-U5)
 lib/html.js             the document: media concatenated in a fixed order under one nonce
 media/protocol.js       generated copy of lib/protocol.js (never edit)
 media/format.js         port of cite.fmt_number (cross-tested with Python)
 media/core.js           webview runtime: frame, tabs, live region, modal, tooltip, send(), setState
+media/terms.js          glossary marks and hovers; Hypotrail.askAgent / askButton (the one "Ask the agent" helper)
 media/components/*.js   bars, intervalRows, histogram, boxplot, valuesTable, figure, segments, cited
 media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame)
 media/views/<view>.js   one view per tab, registered with Hypotrail.register
@@ -39,7 +42,8 @@ HT.send({type, ...})  -- {v: 2, ...} -->  controller.handle(raw)
                                             stage gate (stageOf > stage: dropped, diagnostics.ignored)
                                             reviewer + write type -> outcome invalid
                                             ready/refresh -> summary read --------------> status --summary [--digest]
-                                            load -> handlers' loads[view] -> ctx.read --> (cached per key and revision)
+                                            load -> handlers' loads[view] -> ctx.read --> (payload cached per read key and revision,
+                                                                                       projected by each loader's model)
                                             other -> handlers' types[type](message, ctx)
                                                        ctx.write(op, {argv, record}) -> W1-W7 argv (exclusive)
 render(model, ctx) <-- {v: 2, ...} -----  ctx.post(...) validated by protocol.validateOutgoing
@@ -49,12 +53,14 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task),
 
 ## Frozen interfaces
 
-- **Handlers** (`lib/handlers/<name>.js`, discovered in file order): `types: {messageType: async (message, ctx)}`, `loads: {view: {stage?, key(message), argv(cli, agent, message), model(payload)}}`, `commands: {name: async (args, ctx)}` (extension commands such as `go_to_result`), `onReady: async ctx`. A type, view, or command claimed twice throws at start. `ready`, `refresh`, `load`, and `load: summary` belong to the controller.
-- **ctx**: `agent`, `settings`, `snapshot()`, `stageAtLeast(s)`, `post(message)`, `read(key, argv, modelFn, {group?, timeoutMs?})` → `{ok, model, revision} | {ok: false, message, detail, refusal?}`, `write(op, {target, argv(requestId), record(payload)})` → the outcome (or null when refused before running), `refresh()`, `invalid(op, message, target)`, `host` (openArtifact, confirmWithdraw, confirmModal, pickFolder, openFile, revealInOS, writeClipboard, executeCommand, notify, globalState, switchStudy), `exists`, `artifactPath(name)`, `cli`, `refusals`, `uuid`, `log`, `diagnostics`.
+- **Handlers** (`lib/handlers/<name>.js`, discovered in file order): `types: {messageType: async (message, ctx)}`, `loads: {view: {stage?, when?(settings), key(message), argv(cli, agent, message), model(payload)}}` (`key` names the CLI read: loaders of one command share it and its cached payload, as EDA, Evidence and What if? share `evidence`; `when` false refuses the load like a stage gate), `commands: {name: async (args, ctx)}` (extension commands such as `go_to_result`), `onReady: async ctx`. A type, view, or command claimed twice throws at start. `ready`, `refresh`, `load`, and `load: summary` belong to the controller.
+- **ctx**: `agent`, `settings`, `snapshot()`, `stageAtLeast(s)`, `post(message)`, `read(key, argv, modelFn, {group?, timeoutMs?})` → `{ok, model, revision, payload, cached?} | {ok: false, message, detail, refusal?}` (the payload is cached per key and revision; `modelFn` runs on every answer), `write(op, {target, argv(requestId), record(payload)})` → the outcome (or null when refused before running), `refresh()`, `invalid(op, message, target)`, `host` (openArtifact, confirmWithdraw, confirmModal, pickFolder, openFile, revealInOS, writeClipboard, executeCommand, notify, globalState, switchStudy), `exists`, `artifactPath(name)`, `cli`, `refusals`, `uuid`, `log`, `diagnostics`.
 - **Models**: each `lib/models/<name>.js` exports `to<Name>Model(payload)` (throws `ModelError` from `lib/models/common.js` on a wrong schema) and `FIXTURES` (names under `test/fixtures/`). `test/protocol.test.js` round-trips every one.
 - **Views**: `Hypotrail.register(name, {tab, stage, views?, outcomes?, render(model, ctx), onMessage?(message, ctx)})`. `model` is the SummaryModel. `views` lists the data views the controller loads when the tab is shown and the snapshot moved past them; `ctx.data(view)` returns `{revision, model, resultId}`. `outcomes` lists the write ops whose outcome the view renders itself (`ctx.outcome(target)`, `ctx.renderOutcome(o)`); the frame's live region shows the others. `onMessage` returning `false` for a forwarded message (effects, preview_policy_result, draft_result, learn_state) skips the re-render.
 - **View ctx**: `init`, `stage`, `reviewer`, `task`, `learningLayer`, `chatInsert`, `snapshot`, `data`, `error`, `busy`, `busyOp`, `busyTarget`, `send`, `load(view, extra)`, `drafts`, `ui` (setState keys of spec §10 only), `wordsArea`, `outcome`, `renderOutcome`, `el`, `svg`, `format`, `components`, `copy`, `gate(stage, node)`, `atLeast`, `modal`, `tooltip`, `navigate`, `placeholder()`, `rerender()`.
-- **Components** (`Hypotrail.components`): `bars`, `intervalRows`, `histogram`, `boxplot`, `valuesTable`, `figure`, `segments`, `cited`, with the signatures in each file's header and in the plan §2.2.
+- **Components** (`Hypotrail.components`): `bars`, `intervalRows`, `histogram`, `boxplot`, `valuesTable`, `figure`, `segments`, `cited`, `textWidth`, with the signatures in each file's header and in the plan §2.2. `bars` and `intervalRows` size their text columns to their texts (`labelWidth`, `valueWidth`, `textWidth` override); `histogram` and `boxplot` take cited cells `{text, cited}` for edges and axis texts.
+- **Frame helpers**: `Hypotrail.askButton(ctx, {kind, id}, shown, {label?, attrs?, question?})` (stage v2; a modal, then `ask_agent`), `Hypotrail.terms.mark(text, id)` (a glossary-marked word; its id must be in `terms.MAP`), `Hypotrail.registered()` (the registered views, for tests).
+- **Messages added by WP-I**: `open_artifact.resultId` (v1; report anchor or notebook line) and `open_artifact.line` (v1; an editor deliverable at a finding's line); `outcome.recorded.warnings` (W7).
 
 ## Rules every view keeps
 
@@ -65,10 +71,18 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task),
 - A stage-gated element carries `data-stage` (or comes from `ctx.gate`); a later-stage tab is absent, not disabled.
 - Navigation targets carry `data-nav="<kind>:<id>"` (§4.2); `navigate` scrolls to, focuses, and highlights them.
 - Copy lives in `media/copy/<view>.js`; it has no digits outside placeholders and, in a regression study, none of the words of INV-12.
+- "Ask the agent about this" is `Hypotrail.askButton`; no view writes the clipboard or calls `navigator.clipboard` (§12, CI.5).
+- `ctx.placeholder()` is kept in the API but every tab now has its real view; loading states carry `aria-busy="true"`.
 
-## How a work package adds its view
+## Tests and fixtures
 
-1. Replace the placeholder `media/views/<view>.js` (keep `HT.register('<view>', {tab, stage, ...})`), fill `media/copy/<view>.js` and `media/css/<view>.css`.
+- `test/fixtures/*.json`: hand-written payloads with the mockups' values (`index.json` lists them); `test/fixtures/captured/*.json`: real payloads from `test/fixtures/capture.py` (temporary Bank and Auto MPG studies). `test_fixture_drift.py` keeps the first in the shape of the second, and the second in the shape of the live engine.
+- `test/realstudy.js` builds temporary studies from the committed cases and a real controller for `integration-v1/v2/v3.test.js`.
+- `scripts/companion_coverage.py` maps the spec's requirement ids to the test files that name them; `test_requirement_coverage.py` keeps the table in `docs/acceptance/V0.1-CHECKLIST.md` current.
+
+## How a view is changed or added
+
+1. Edit `media/views/<view>.js` (keep `HT.register('<view>', {tab, stage, ...})`), `media/copy/<view>.js` and `media/css/<view>.css`.
 2. Write `lib/models/<view>.js` with its `to<Name>Model` and `FIXTURES`.
 3. Fill `lib/handlers/<view>.js`: `loads` for its data views, `types` for its messages, `commands` if it serves an extension command.
 4. Test: `test/<view>.test.js` (fake CLI from `test/fixture-cli.js`), `test/test_webview_<view>.py` (the `open_panel` fixture of `test/conftest.py`).

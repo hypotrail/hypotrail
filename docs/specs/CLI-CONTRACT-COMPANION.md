@@ -1,6 +1,6 @@
 # CLI contract: additions for the advanced companion
 
-Status: **implemented** (C1 to C11, WP-E1 to WP-E3; integrated by WP-I, decisions CI.1 to CI.12 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)). The WP-0 stubs of §13 are gone. These are the interfaces that the advanced companion
+Status: **implemented** (C1 to C11, WP-E1 to WP-E3; integrated by WP-I, decisions CI.1 to CI.17 in [V0.1-DECISIONS](../plans/V0.1-DECISIONS.md)). The WP-0 stubs of §13 are gone. These are the interfaces that the advanced companion
 ([COMPANION-ADVANCED.md](COMPANION-ADVANCED.md), [ADR 0004](../decisions/0004-companion-advanced.md))
 needs from the engine. The parallel work packages of the
 [plan](../plans/COMPANION-ADVANCED-PLAN.md) treat this document as frozen. Any change goes

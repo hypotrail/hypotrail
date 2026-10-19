@@ -1,0 +1,48 @@
+# Study panel: manual test in a real VS Code
+
+**Status: not run.** WP-I wrote this checklist where no VS Code is available. Nothing below has been checked in a real VS Code, and no automated test replaces it: the Node tests use a fake `vscode` module, and the Playwright tests use a stub `acquireVsCodeApi` and the fallback theme. It is the stage exit criterion of [the plan, §6](../../docs/plans/COMPANION-ADVANCED-PLAN.md#6-real-vs-code-checklist-wp-i-per-stage) and [ADR 0004](../../docs/decisions/0004-companion-advanced.md). Run it with the owner, once per stage you want to move the default to. Record the results in `docs/acceptance/runs/companion-<stage>-<date>.md`, one line per item: pass, fail (with what you saw), or not checked.
+
+## Setup
+
+1. `uv sync --project framework --group dev` in the checkout.
+2. Make two studies **outside the repository**, in a folder whose path has a space, for example `~/hypotrail studies/`:
+   - Bank Marketing: `uv run --project framework hypotrail init --case use-cases/bank-marketing/case.yaml --study "~/hypotrail studies/bank"` (expand `~`), then walk it in the chat (or with the CLI) to the fits and one `policy.evaluate --rule capacity:100`, leaving one proposal open.
+   - Auto MPG: the same with `use-cases/auto-mpg/case.yaml`, walked to `evaluate.regression`.
+3. Start an Extension Development Host from VS Code 1.90 or later: `HYPOTRAIL_COMPANION_STAGE=<stage> code --extensionDevelopmentPath=<checkout>/clients/vscode-companion "~/hypotrail studies"`. Leave `HYPOTRAIL_COMPANION` unset for item 1.
+4. Do every item in Light+, then Dark+, then High Contrast where it says "themes".
+
+## Every stage
+
+1. **Flag off.** "Hypotrail: open the study panel" and the link `vscode://hypotrail-local.hypotrail-companion/result/<any 64 hex>` both show "Companion disabled (feature flag)". Process Explorer shows no new `python` process. Then turn `hypotrail.companion.enabled` on.
+2. **Untrusted workspace.** In Restricted Mode the command shows "The Hypotrail companion runs the study CLI, so it needs a trusted workspace." and nothing opens.
+3. **CSP.** Open the webview developer tools ("Developer: Open Webview Developer Tools"): no Content-Security-Policy violation in the console, after visiting every tab. Note whether VS Code's injected default styles apply (CW.10's open point).
+4. **Theme tokens (themes).** Text, muted text, links, badges, warning and error cards, chart marks, and the focus outline are legible in each theme.
+5. **The watcher.** Confirm or propose something in the chat (`decide ...` through the agent). The panel refreshes once (the revision in the header moves once), with no flicker loop.
+6. **Keyboard.** Tab reaches every control; the arrow keys, Home, and End move between tabs; Escape closes tooltips and modals and returns focus to the opener.
+
+## Stage v1
+
+7. Confirm an open proposal in typed words: "Confirm" is disabled until you type; "ok" is refused with the engine's message verbatim; your words confirm, and the success names the decision.
+8. Withdraw a proposal: the VS Code modal asks first; Cancel records nothing.
+9. Interrupt a run (`HYPOTRAIL_TEST_HOOKS=1 HYPOTRAIL_FAULT=run_after_reserve` on one agent `run`), refresh: the Health card asks for an acknowledgement in your words; "ok" is refused; your words acknowledge it; no Restart button exists.
+10. Regenerate: the report and notebook are rewritten; the deliverables' status follows.
+11. Checks of the deliverables: expanding runs `check` once; "Open" on a finding opens the report at its anchor in the browser, or the notebook or workbench at its line in the editor.
+12. Study switch: the header's "Study: <name>" lists both studies by folder name and path; choosing the other one opens it **in the same panel**; "Pick another folder..." reaches a study elsewhere.
+13. Reviewer mode: "Hypotrail: open the study panel (reviewer, read-only)" shows the badge and no write control (Export excepted from v3).
+
+## Stage v2
+
+14. Slider latency (What if?, Bank): move the slider 10 times; record the median time from release to the updated numbers.
+15. EDA: request a distribution of `age` (Bank) and of `weight` (Auto MPG): the chart appears; the exposure ledger in Evidence gains training rows only.
+16. Propose: a rule the agent has not evaluated says so and offers "Ask the agent"; after the agent evaluates it, "Propose" opens the VS Code modal, and the proposal appears in Decisions as "proposal from this panel". The report (after Regenerate) shows "Proposed from the companion".
+17. A deep link printed in the chat (`vscode://hypotrail-local.hypotrail-companion/result/<id>?study=<path>`) opens the panel on that result, focused and highlighted; a link naming another study asks with the quick pick.
+18. "Show in report" opens the report at `#r-<id>` (check the fragment in the browser's address bar); "Show in the notebook" opens the generated notebook at the line naming the result.
+19. "Ask the agent about this": "Copy for the chat" puts the template text on the clipboard; paste it in the chat. With `chatInsert` enabled by hand in `settings.json` (it is not contributed): "Insert into the chat" **inserts, and does not send**, in the Copilot chat. Record the VS Code and chat extension versions.
+20. Auto MPG: no tab shows threshold, capacity, precision, recall, positive class, policy, calling rule, or selected.
+
+## Stage v3
+
+21. Export a handoff pack: the folder dialog defaults to `<study>/handoff/`; the outcome lists the files and sizes and the warnings in words; "Open folder" reveals it in the OS file manager; exporting again to the same parent is refused verbatim.
+22. Learning layer: hover and focus a marked term (the term first, then its definition); a concept card collapses after its second full sighting; reload the window: the count and your prediction answers persist; turning `learningLayer` off removes every hover, card, and prediction.
+23. `globalState` dump (from a debug console of the extension host, `context.globalState.keys()` and their values): only `hypotrail.learn.prefs`, `hypotrail.learn.seen`, `hypotrail.learn.predictions`, with no path, words, revision, or id.
+24. Session report: with the session log on (`HYPOTRAIL_SESSION_LOG=1` for one CLI call), "Session report" shows "Session log: on" and no words.

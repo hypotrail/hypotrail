@@ -126,3 +126,10 @@ test('§12 clipboard: only the agent bridge writes it (lib/bridge.js through the
     if (/writeClipboard\(|clipboard\.writeText\(/.test(text)) assert.ok(['extension.js', 'lib/bridge.js'].includes(f), f);
   }
 });
+
+test('INV-15: no source reads precomputed tutorial outputs (use-cases/*/results.json, project.json)', () => {
+  for (const f of SOURCES) {
+    const text = read(f);
+    assert.doesNotMatch(text, /results\.json|project\.json|tutorial-results|use-cases/, f);
+  }
+});

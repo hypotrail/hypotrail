@@ -96,7 +96,7 @@ test('URI handler: an invalid link opens nothing', async () => {
   assert.equal(calls.length, 0);
 });
 
-test('untrusted workspace: the reviewer command, go to a result, and a link are refused', async () => {
+test('INV-11 untrusted workspace: the reviewer command, go to a result, and a link are refused', async () => {
   process.env.HYPOTRAIL_COMPANION = '1';
   const calls = fakeExec();
   const fake = createFake({ folders: [makeStudy('trust')], trusted: false });

@@ -73,7 +73,7 @@ async function openWith(fake) {
   return { api, opened, context, extension };
 }
 
-test('flag off: the command shows one message and nothing else runs', async () => {
+test('INV-10 flag off: the command shows one message and nothing else runs', async () => {
   const calls = fakeCli(() => assert.fail('no CLI call when the flag is off'));
   const folder = tmp();
   makeStudy(folder, 'study');
@@ -115,7 +115,7 @@ test('flag: setting default false; setting true or HYPOTRAIL_COMPANION=1 turns i
   assert.equal(pkg.dependencies, undefined, 'no runtime dependency');
 });
 
-test('untrusted workspace: refused before any CLI call', async () => {
+test('INV-11 untrusted workspace: refused before any CLI call', async () => {
   const calls = fakeCli(() => assert.fail('no CLI call'));
   process.env.HYPOTRAIL_COMPANION = '1';
   const folder = tmp();
