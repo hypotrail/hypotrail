@@ -1342,8 +1342,18 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                 shown, who, cls = _who_decided(view, v['name'])
                 stmt = v.get('availability') or {}
                 case_label = labels['fact_status'].get(stmt.get('status'), stmt.get('status') or '')
+                # B6c (M1): the case's own doubt stays visible when the decision overrides it.
+                case_value = stmt.get('value') or 'unknown'
+                decided = (view['decisions']['feature_availability'].get('value') or {})
+                doubt = ''
+                if isinstance(decided, dict) and \
+                        decided.get(v['name']) == 'available_at_prediction' and \
+                        case_value in ('uncertain', 'unknown'):
+                    doubt = (f' <span class="case-doubt" data-case-availability='
+                             f'"{e(case_value)}">{e(ds["case_" + case_value])}</span>')
                 avail = (f'{_badge(cls, shown)}'
-                         f'<br><span class="small">{e(who)}. Case: {e(case_label)}</span>')
+                         f'<br><span class="small">{e(who)}. Case: {e(case_label)}.{doubt}'
+                         f'</span>')
             else:
                 role = v.get('role', '')
                 avail = f'<span class="small">{e(labels.get("roles", {}).get(role, role))}</span>'

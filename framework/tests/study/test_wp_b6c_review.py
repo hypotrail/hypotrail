@@ -19,7 +19,8 @@ import re
 import numpy as np
 import pytest
 
-from mlkit.study import cmd_check, governance, manifest as mf, policy, state as st
+from mlkit.study import cmd_check, commands as cmd, concepts, confirm as cf, governance
+from mlkit.study import manifest as mf, policy, state as st
 
 import flowkit as fk
 from flowkit import Flow
@@ -239,3 +240,86 @@ def test_the_within_fold_bootstrap_keeps_each_fold_and_its_capacity():
     again = policy.paired_bootstrap(y, {'fit.baseline': base, 'fit.logistic': score},
                                     'share:0.1', 50, 7, groups=groups)
     assert again == out
+
+
+# --- M1: the case's doubt survives a decision that marks the feature available ---------------
+
+SHOPPERS = fk.REPO / 'use-cases' / 'online-shoppers'
+
+
+def test_a_case_uncertain_feature_marked_available_is_a_limit(tmp_path):
+    flow = Flow(tmp_path / 'study', SHOPPERS, prefix='m1')
+    flow.init()
+    flow.decide('prediction_time', 'when the session ends, before knowing if it purchased')
+    value = {**fk.availability(SHOPPERS), 'BounceRates': 'available_at_prediction',
+             'ExitRates': 'uncertain_included', 'PageValues': 'not_available'}
+    flow.decide('feature_availability', value)
+    item = next(i for i in flow.view()['not_yet_defensible']
+                if i['id'] == 'uncertain_features_included')
+    assert item['case_uncertain'] == ['BounceRates']
+    assert item['features'] == ['BounceRates', 'ExitRates']
+    assert 'The case calls the availability of these features uncertain' in item['text']
+    assert 'BounceRates' in item['text']
+    flow.call('render', '--study', flow.study)
+    page = (flow.study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    row = re.search(r'<tr data-variable="BounceRates".*?</tr>', page, re.S).group(0)
+    assert 'data-case-availability="uncertain"' in row
+    assert 'The case calls its availability uncertain' in row
+    other = re.search(r'<tr data-variable="ExitRates".*?</tr>', page, re.S).group(0)
+    assert 'data-case-availability' not in other        # kept as uncertain: no override
+    assert flow.call('check', '--study', flow.study)['clean'] is True
+
+
+# --- M2: a variant that leaves a group out is confirmed with a negator ------------------------
+
+GROUP = 'Page metrics from Google Analytics'
+FR_GROUP = 'On compare le modèle avec une variante sans le groupe des métriques Google Analytics.'
+EN_GROUP = 'Compare the model with a variant without the Google Analytics page metrics.'
+
+
+@pytest.mark.parametrize('restatement, words', [
+    (FR_GROUP, 'oui, on compare sans les métriques Google Analytics'),
+    (FR_GROUP, 'Yes, compare the model without the Google Analytics page metrics'),
+    (EN_GROUP, 'Yes, compare the model without the Google Analytics page metrics'),
+    (EN_GROUP, 'oui, on compare sans les métriques Google Analytics'),
+])
+def test_a_drop_group_variant_is_confirmed_with_its_own_negator(restatement, words):
+    proposal = {'proposal_id': 'p_1', 'decision_id': 'model_variant',
+                'value': {'kind': 'drop_group', 'group': GROUP}, 'restatement': restatement,
+                'labels': {}}
+    assert cf.partial_refusal(words, proposal) is None
+    state = {'task': 'binary', 'mode': 'guided', 'decisions': {}}
+    assert cf.guided_problem(state, proposal, words) is None
+
+
+def test_a_real_partial_refusal_of_a_variant_is_still_refused():
+    proposal = {'proposal_id': 'p_1', 'decision_id': 'model_variant',
+                'value': {'kind': 'regularisation', 'strength': 'strong'},
+                'restatement': 'Compare the model with a strongly regularised variant.',
+                'labels': {}}
+    found = cf.partial_refusal('yes for the variant, not strongly regularised', proposal)
+    assert found == {'negator': 'not', 'part': 'strongly'}
+    message = cmd.partial_reply_message('model_variant', found)
+    assert 'plafonnement' not in message and 'variant' in message
+    assert '"not strongly"' in message
+    assert 'plafonnement' in cmd.partial_reply_message('preprocessing')
+
+
+# --- M5: the training mode asks for the timing concept of the value ----------------------------
+
+@pytest.mark.parametrize('words, ok', [
+    ('Yes, at the end of the session, before we know about the purchase', True),
+    ('Yes, at the end of the session', True),
+    ('Yes, before we know about the purchase', True),
+    ("Oui, à la fin de la session, avant de savoir s'il y a eu achat", True),
+    ('Yes, I agree with that', False),
+])
+def test_training_needs_the_timing_concept_of_the_value_only(words, ok):
+    proposal = {'proposal_id': 'p_1', 'decision_id': 'prediction_time',
+                'value': 'when the session ends, before knowing if it purchased',
+                'restatement': 'The score is computed when the session ends, before we know '
+                               'whether it purchased.', 'labels': {}}
+    out = concepts.check({'task': 'binary', 'mode': 'training', 'decisions': {}}, proposal,
+                         words)
+    assert out['concepts'] == ['timing_before', 'event']
+    assert (out['missing'] == []) is ok

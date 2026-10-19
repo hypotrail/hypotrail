@@ -188,6 +188,8 @@ data_section:
   final_test_absent: This study has no final test. It was created before the final test existed, so every row is a development row.
   final_test_opened: rows were set aside as the final test; it has been opened once to measure the chosen configuration (see the verdict). Its rows are read only by that one evaluation and its diagnostics.
   final_test_changed_after: Something changed after the opening, so the final test no longer measures what the study now holds.
+  case_uncertain: The case calls its availability uncertain; it is used as known at prediction time.
+  case_unknown: The case does not document its availability; it is used as known at prediction time.
   target: Target
   dictionary: Columns by group
   rows: The first development rows, target first

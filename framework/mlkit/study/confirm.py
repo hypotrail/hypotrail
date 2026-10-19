@@ -480,10 +480,32 @@ def _partial_part(decision_id: str, value: Mapping, texts, names: Mapping, t: st
             active = active == 'indicator' or (isinstance(active, Mapping)
                                                and 'indicator' in active.values())
         return found if active and not _negated_in(texts, part) else None
+    if decision_id == 'model_variant' and value.get('kind') == 'drop_group':
+        # B6c (M2): a variant that leaves a group out is stated with a negator ("sans les
+        # métriques Google Analytics", "without the page metrics"): negating a word of the
+        # group, or of what the restatement itself leaves out, restates the value.
+        if any(_match(part, w) for w in _dropped_words(value, texts)):
+            return None
     topic = Topic(value, texts)
     if topic.restates(part) and not _negated_in(texts, part):
         return found
     return None
+
+
+DROPPED_SPAN = 8
+
+
+def _dropped_words(value: Mapping, texts) -> set[str]:
+    """The words of a dropped group: its name, and the words a text of the proposal puts
+    after a negator ("sans le groupe des métriques Google Analytics")."""
+    cmd = _cmd()
+    words = set(_tokens(cmd._fold(str(value.get('group') or ''))))
+    for text in texts:
+        tokens = _tokens(cmd._fold(cmd.IDENTIFIER.sub(' ', text or '')))
+        for i, t in enumerate(tokens):
+            if t in PARTIAL_NEGATORS:
+                words |= set(tokens[i + 1:i + 1 + DROPPED_SPAN])
+    return {w for w in words if w not in PARTIAL_SKIP and len(w) > 2}
 
 
 def topic_of(state: Mapping, proposal: Mapping) -> Topic:

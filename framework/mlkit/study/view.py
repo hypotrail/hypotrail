@@ -183,6 +183,41 @@ def case_availability(state: dict) -> dict | None:
             for v in doc['variables'] if v.get('role') == 'feature'}
 
 
+CASE_UNCERTAIN_VALUES = ('uncertain', 'unknown')
+
+
+def case_uncertain_marked_available(state: dict) -> list[str]:
+    """B6c (M1): features the case calls uncertain (or whose availability it does not
+    document) that the confirmed availability decision marks ``available_at_prediction``."""
+    fa = state['decisions'].get('feature_availability') or {}
+    value = fa.get('value')
+    if fa.get('status') not in ('confirmed', 'reconfirm_required') or not isinstance(value, dict):
+        return []
+    statuses = case_availability(state) or {}
+    return sorted(f for f, v in value.items() if v == 'available_at_prediction'
+                  and statuses.get(f) in CASE_UNCERTAIN_VALUES)
+
+
+def _case_uncertain_limit(state: dict, defensible: list) -> None:
+    """B6c (M1): a feature used although the case calls its availability uncertain is a
+    limit, whether the decision says ``uncertain_included`` or ``available_at_prediction``;
+    ``uncertain_features_included`` lists both, ``case_uncertain`` the second kind."""
+    overridden = case_uncertain_marked_available(state)
+    if not overridden:
+        return
+    text = ('The case calls the availability of these features uncertain (or does not '
+            'document it), yet they are used as known at prediction time: '
+            + ', '.join(overridden) + '. Check that they are known at that moment.')
+    item = next((i for i in defensible if i['id'] == 'uncertain_features_included'), None)
+    if item is None:
+        defensible.append({'id': 'uncertain_features_included', 'features': overridden,
+                           'case_uncertain': overridden, 'text': text})
+    else:
+        item['features'] = sorted(set(item['features']) | set(overridden))
+        item['case_uncertain'] = overridden
+        item['text'] = f'{item["text"]} {text}'
+
+
 def _decisions(state: dict) -> dict:
     out = {}
     fa = state['decisions'].get('feature_availability') or {}
@@ -991,6 +1026,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     plan = st.derive_plan(state)
     results = _results(study, state)
     defensible = st.not_yet_defensible(state)
+    _case_uncertain_limit(state, defensible)
     broken = sorted(s for s, r in results.items() if r['integrity'] != 'ok')
     if broken:
         defensible.append({'id': 'result_integrity', 'slots': broken,
