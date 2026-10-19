@@ -51,3 +51,6 @@ tr.dc-superseded, tr.dc-superseded .dc-basis, tr.dc-superseded .dc-decision { co
 details[data-unconfirmed] { margin-top: 8px; }
 .dc-history-value { display: block; }
 .dc-actions button[data-action="confirm"] { font-weight: 600; }
+
+/* WP-B5: the opening of the final test is answered in the chat; its card says so. */
+.dc-final-chat .title { font-weight: 600; margin: 0 0 4px; }

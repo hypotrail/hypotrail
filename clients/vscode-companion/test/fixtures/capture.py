@@ -2,7 +2,8 @@
 
     uv run --project framework python clients/vscode-companion/test/fixtures/capture.py [OUT]
 
-builds two temporary studies outside the repository, Bank Marketing (binary) and Auto MPG
+builds temporary studies outside the repository, Bank Marketing (binary; WP-B5 adds a
+cross-validated Bank study whose final test is opened once, then changed after) and Auto MPG
 (regression), drives them through the ``hypotrail`` CLI code path (``mlkit.study.cli.run``,
 the code a CLI process runs; fault-injected runs are real processes), and writes one file
 per scenario to ``OUT`` (default ``test/fixtures/captured/``):
@@ -40,6 +41,7 @@ from mlkit.study import cli  # noqa: E402
 
 BANK = REPO / 'use-cases' / 'bank-marketing'
 AUTO = REPO / 'use-cases' / 'auto-mpg'
+SHOPPERS = REPO / 'use-cases' / 'online-shoppers'
 # The path the captured payloads show instead of the temporary study directory.
 STUDY_PLACEHOLDER = {'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg'}
 OUT = HERE / 'captured'
@@ -205,6 +207,79 @@ def _killed_run(study: Path, rev: int) -> None:
                    capture_output=True, text=True, timeout=300, check=False)
 
 
+OPEN_WORDS = 'Yes, I open the final test now, because the model and the rule are fixed'
+
+
+def cross_validated(cap: Capture) -> None:
+    """WP-B5: a Bank study with the engine's cross-validation (5 stratified folds), the
+    default variant, ``share:p`` rules, the final test opened once in the junior's words,
+    then a calling rule changed after the opening (``post_final_test``)."""
+    from mlkit.study import state as st
+
+    study = cap.root / 'binary-cv'
+    flow = fk.Flow(study, BANK, prefix='v')
+    flow.init()
+    flow.decide('prediction_time', 'before the first contact of the campaign, from the client file')
+    flow.decide('feature_availability', fk.availability(BANK, duration='not_available', day='not_available',
+                                                         month='not_available', campaign='not_available',
+                                                         contact='uncertain_included'))
+    flow.decide('split', st.b1_default_value(flow.state(), 'split'))
+    flow.model_decisions()
+    for activity in ('split', 'eda.target_rate'):
+        flow.run(activity)
+    flow.run('fit.baseline')
+    flow.run('fit.logistic')
+    flow.variant()
+    flow.run('policy.evaluate', '--rule', 'share:0.1', '--rule', 'capacity:100')
+    flow.decide('policy', 'share:0.1', words='Yes, I adopt calling the top tenth, because the team can make that many calls')
+    value = st.b1_default_value(flow.state(), 'final_test')
+    code, out = run('decide', 'propose', 'final_test', '--value-json', json.dumps(value), '--restatement',
+                    'You open the sealed final test once, for the chosen configuration.', '--rationale',
+                    'The model and the rule are chosen.', '--request-id', 'v-open', '--expected-revision',
+                    flow.rev(), '--study', study)
+    assert code == 0, out
+    pid = out['result']['proposal_id']
+    # WP-B5 (with WP-B4): the development diagnostics before the opening.
+    cap.save('run.diag.binary.cv', 'binary', ['run', 'diag.binary'], 0, flow.run('diag.binary'))
+    cap.read('summary.binary.cv.opening', 'binary', study, 'status', '--summary', '--digest', '--json',
+             note='Bank, cross-validation, final test sealed, its opening proposed (waits for the junior).')
+    cap.read('evidence.binary.cv.sealed', 'binary', study, 'evidence', '--json',
+             note='Bank, cross-validation, variant compared, share rules, final test still sealed.')
+    out = flow.call('decide', 'confirm', pid, '--user-words', OPEN_WORDS, '--request-id', flow.rid(),
+                    '--expected-revision', flow.rev(), '--study', study)
+    assert out['result']['opening']['status'] == 'promoted', out
+    # The final diagnostics, once the final test is opened (WP-B4).
+    cap.save('run.diag.final_test', 'binary', ['run', 'diag.final_test'], 0, flow.run('diag.final_test'))
+    # A later rule, chosen after the opening: "after the final test".
+    flow.run('policy.evaluate', '--rule', 'share:0.1', '--rule', 'share:0.2')
+    cap.read('proposal_draft.binary.share', 'binary', study, 'preview', 'proposal', 'policy', '--value=share:0.2',
+             '--json')
+    cap.read('preview.binary.share', 'binary', study, 'preview', 'policy', '--rule', 'share:0.2', '--intervals',
+             '--json')
+    flow.decide('policy', 'share:0.2', words='Yes, I adopt the top fifth now, because the team grew')
+    # The new rule makes the development diagnostics stale; computed again, after the opening.
+    flow.run('diag.binary')
+    cap.read('summary.binary.cv', 'binary', study, 'status', '--summary', '--digest', '--json',
+             note='Bank, cross-validation, final test opened, then the calling rule changed after it.')
+    cap.read('evidence.binary.cv', 'binary', study, 'evidence', '--json',
+             note='Bank, cross-validation, final test opened, then the calling rule changed after it.')
+    cap.read('decisions.binary.cv', 'binary', study, 'decisions', '--json')
+    cap.read('error.final_test_already_opened', 'binary', study, 'decide', 'propose', 'final_test', '--value-json',
+             json.dumps(st.b1_default_value(flow.state(), 'final_test')), '--restatement',
+             'You open the final test again.', '--rationale', 'x', '--request-id', 'v-again',
+             '--expected-revision', flow.rev(), '--json', expect=(2,))
+
+
+def scenario(cap: Capture) -> None:
+    """WP-B5: the full view of a new Online Shoppers study, for its teaching scenario's
+    default share (``view.scenario_defaults``), which the What if? tab labels."""
+    study = cap.root / 'shoppers'
+    flow = fk.Flow(study, SHOPPERS, prefix='s')
+    flow.init()
+    cap.read('status.shoppers', 'binary', study, 'status', '--json',
+             note='Online Shoppers right after init: the scenario default share of the case.')
+
+
 def regression(cap: Capture) -> None:
     study = cap.root / 'regression'
     flow = fk.Flow(study, AUTO, prefix='a')
@@ -241,6 +316,9 @@ def regression(cap: Capture) -> None:
     # WP-B4: the development diagnostics.
     cap.save('run.diag.regression', 'regression', ['run', 'diag.regression'], 0,
              flow.run('diag.regression'))
+    # WP-B5: the evidence with the development diagnostics of a regression study.
+    cap.read('evidence.regression.diag', 'regression', study, 'evidence', '--json',
+             note='Auto MPG with its development diagnostics (diag.regression).')
 
 
 def capture(root: Path) -> dict[str, dict]:
@@ -248,6 +326,8 @@ def capture(root: Path) -> dict[str, dict]:
     cap = Capture(root)
     with environment(HYPOTRAIL_SESSION_LOG='1'):
         binary(cap)
+        cross_validated(cap)
+        scenario(cap)
         regression(cap)
     return cap.items
 

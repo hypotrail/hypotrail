@@ -33,3 +33,33 @@
 .ht-ledger { width: 100%; }
 .ht-ledger-selection { background: var(--ht-warn-bg); color: var(--ht-warn-fg); }
 .ht-evidence .ht-pending { opacity: 0.6; }
+
+/* WP-B5: the final test first (sealed, opened, changed after, absent), the ledger in words,
+   development and final evidence apart, diagnostics. */
+.ht-ev-final { border-left: 4px solid var(--ht-st-sealed); }
+.ht-ev-final-opened { border-left-color: var(--ht-st-ok); }
+.ht-ev-final-changed, .ht-ev-final-interrupted { border-left-color: var(--ht-warn-border); }
+.ht-ev-final-absent { border-left-color: var(--ht-border); }
+.ht-ev-final-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.ht-ev-final-count { font-size: 1.15em; }
+.ht-ev-partitions { margin: 6px 0; padding-left: 20px; }
+.ht-ev-before ul { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.ht-ev-before p { margin: 6px 0 0; }
+.ht-ev-chat { padding: 6px 10px; border-radius: 6px; background: var(--ht-quote-bg); border: 1px solid var(--ht-card-border); }
+.ht-ev-trials { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ht-border); }
+.ht-ev-trials .title { font-weight: 600; margin: 0; }
+.ht-ledger-final { background: var(--ht-quote-bg); }
+.ht-ledger-final td:first-child { border-left: 3px solid var(--ht-st-sealed); }
+.ht-ledger-words { font-size: 0.9em; }
+.ht-ev-list-head { margin: 10px 0 2px; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ht-muted); }
+.ht-ev-development h4, .ht-ev-final-evidence h4, .ht-ev-diagnostics h4 { margin: 12px 0 4px; }
+.ht-ev-variant { margin-top: 8px; }
+.ht-ev-diag { margin: 8px 0 14px; }
+.ht-confusion td { min-width: 9em; }
+.ht-confusion caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+@media (forced-colors: active) {
+  .ht-ev-final, .ht-ledger-final td:first-child { border-left-color: CanvasText; }
+}
+@media (max-width: 600px) {
+  .ht-evidence table.ht-cardable caption { display: block; text-align: left; }
+}

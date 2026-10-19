@@ -10,12 +10,16 @@
 // No figure is computed; `n` and the counts are the engine's. The adopted or proposed
 // status of a rule comes from the summary, in the view.
 //
+// WP-B5: binary also `gain` (the gain points and the share each evaluated rule acts on,
+// the engine's `capacity_share`), and `evaluatedRules[].share`; `share:p` rules are rules
+// like the others (WP-B3).
+//
 // Keys (§9): task, binary: n, evaluatedRules, initialRule; regression: models, errors,
 // deltas, residuals, residualsBy, splitLimits; plus revision, resultId, bootstrap, and
 // (binary) targetLabel, (regression) unit, validation, splitOrdinal, residualDefinition.
 
 const { ModelError, str, strOrNull, list, obj, int, num, expectSchema, plain } = require('./common');
-const { citable, side } = require('./evidence');
+const { citable, side, gainOf, pathOf } = require('./evidence');
 
 const SCHEMA = 'hypotrail.evidence/1';
 
@@ -35,7 +39,8 @@ function binary(results, base) {
   const splitN = split ? int(obj(obj(obj(split.values).partitions).validation).n_rows) : null;
   if (!evaluation) {
     return { ...base, resultId: null, n: splitN, nPositive: null, evaluatedRules: [], initialRule: null,
-      reference: null, candidate: null, bootstrap: null, targetLabel: target ? strOrNull(target.values.target) : null };
+      reference: null, candidate: null, bootstrap: null, targetLabel: target ? strOrNull(target.values.target) : null, gain: null,
+      evaluation: null };
   }
   const v = obj(evaluation.values);
   const params = obj(evaluation.params);
@@ -52,13 +57,18 @@ function binary(results, base) {
     bootstrap: bootstrapOf(v),
     targetLabel: target ? strOrNull(target.values.target) : null,
     evaluatedRules: rules.map(rule => {
-      const m = obj(obj(obj(obj(v.rules)[rule]).models)[candidate]);
+      const entry = obj(obj(v.rules)[rule]);
+      const m = obj(obj(entry.models)[candidate]);
+      const at = key => pathOf('rules', rule, 'models', candidate, key);
       return { rule, selected: num(m.selected), truePositives: num(m.true_positives), precision: num(m.precision),
-        recall: num(m.recall), tiedAtCut: num(m.tied_at_cut), status: null,
-        paths: { selected: `rules.${rule}.models.[${candidate}].selected`, truePositives: `rules.${rule}.models.[${candidate}].true_positives`,
-          precision: `rules.${rule}.models.[${candidate}].precision`, recall: `rules.${rule}.models.[${candidate}].recall` } };
+        recall: num(m.recall), tiedAtCut: num(m.tied_at_cut), status: null, share: num(entry.capacity_share),
+        paths: { selected: at('selected'), truePositives: at('true_positives'), precision: at('precision'), recall: at('recall'),
+          share: pathOf('rules', rule, 'capacity_share') } };
     }),
     initialRule: rules.length ? rules[0] : null,
+    gain: gainOf(results),
+    // WP-B5: `out_of_fold` under cross-validation, `validation` otherwise (null before WP-B1).
+    evaluation: strOrNull(v.evaluation),
   };
 }
 
@@ -140,6 +150,6 @@ function toWhatIfModel(payload) {
   return plain(task === 'regression' ? regression(results, base) : binary(results, base));
 }
 
-const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression'];
+const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression', 'captured/evidence.binary.cv'];
 
 module.exports = { toWhatIfModel, FIXTURES };

@@ -1,0 +1,648 @@
+{
+ "about": {
+  "schema": "hypotrail.decisions/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decisions/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-cv",
+  "revision": 41,
+  "task": "binary",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "title": "Define the prediction moment",
+    "pause": 1,
+    "step": "prediction_time",
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the prediction_time exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the prediction_time as stated.",
+     "proposal_id": "p_1",
+     "revision": 3,
+     "time": "2026-10-19T17:40:54.946700+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "pause": 1,
+    "step": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "depends_on": [
+     "prediction_time"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the feature_availability exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the feature_availability as stated.",
+     "proposal_id": "p_2",
+     "revision": 5,
+     "time": "2026-10-19T17:40:55.451661+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "split",
+    "title": "Split the data before exploring it",
+    "pause": 2,
+    "step": "split",
+    "status": "confirmed",
+    "value": {
+     "folds": 5,
+     "method": "kfold_stratified",
+     "seed": 20261017
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the split exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the split as stated.",
+     "proposal_id": "p_3",
+     "revision": 7,
+     "time": "2026-10-19T17:40:56.180189+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "pause": 2,
+    "step": "success_criterion",
+    "status": "confirmed",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the success_criterion exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the success_criterion as stated.",
+     "proposal_id": "p_4",
+     "revision": 9,
+     "time": "2026-10-19T17:40:56.923564+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
+    "pause": 2,
+    "step": "preprocessing",
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the preprocessing exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the preprocessing as stated.",
+     "proposal_id": "p_5",
+     "revision": 11,
+     "time": "2026-10-19T17:40:57.652306+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_variant",
+    "title": "Choose one variant to compare",
+    "pause": 3,
+    "step": "model_variant",
+    "status": "confirmed",
+    "value": {
+     "kind": "regularisation",
+     "strength": "strong"
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the model_variant exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the model_variant as stated.",
+     "proposal_id": "p_6",
+     "revision": 21,
+     "time": "2026-10-19T17:41:00.710396+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "policy",
+    "title": "Choose a decision policy",
+    "pause": 3,
+    "step": "policy",
+    "status": "confirmed",
+    "value": "share:0.2",
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "preprocessing",
+     "model_variant"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I adopt the top fifth now, because the team grew",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the policy as stated.",
+     "proposal_id": "p_9",
+     "revision": 39,
+     "time": "2026-10-19T17:41:14.655179+00:00",
+     "authenticated": false,
+     "basis": "endorsed",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "final_test",
+    "title": "Open the final test once",
+    "pause": 3,
+    "step": "final_test",
+    "status": "confirmed",
+    "value": {
+     "model": "fit.logistic",
+     "rule": "share:0.1"
+    },
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "policy"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You open the sealed final test once, for the chosen configuration.",
+     "proposal_id": "p_8",
+     "revision": 31,
+     "time": "2026-10-19T17:41:08.616022+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": []
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "conclusion",
+    "title": "Conclude proportionately",
+    "pause": 3,
+    "step": "conclusion",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "policy",
+     "final_test"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   }
+  ],
+  "proposals": [
+   {
+    "proposal_id": "p_1",
+    "decision_id": "prediction_time",
+    "value": "before the first contact of the campaign, from the client file",
+    "restatement": "You decide the prediction_time as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 2,
+    "created": "2026-10-19T17:40:54.718547+00:00",
+    "closed_revision": 3,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_2",
+    "decision_id": "feature_availability",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "restatement": "You decide the feature_availability as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 4,
+    "created": "2026-10-19T17:40:55.209063+00:00",
+    "closed_revision": 5,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_3",
+    "decision_id": "split",
+    "value": {
+     "folds": 5,
+     "method": "kfold_stratified",
+     "seed": 20261017
+    },
+    "restatement": "You decide the split as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 6,
+    "created": "2026-10-19T17:40:55.826398+00:00",
+    "closed_revision": 7,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_4",
+    "decision_id": "success_criterion",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "restatement": "You decide the success_criterion as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 8,
+    "created": "2026-10-19T17:40:56.621038+00:00",
+    "closed_revision": 9,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_5",
+    "decision_id": "preprocessing",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "restatement": "You decide the preprocessing as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 10,
+    "created": "2026-10-19T17:40:57.275768+00:00",
+    "closed_revision": 11,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "model_variant",
+    "value": {
+     "kind": "regularisation",
+     "strength": "strong"
+    },
+    "restatement": "You decide the model_variant as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 20,
+    "created": "2026-10-19T17:41:00.401634+00:00",
+    "closed_revision": 21,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_7",
+    "decision_id": "policy",
+    "value": "share:0.1",
+    "restatement": "You decide the policy as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "superseded",
+    "revision": 26,
+    "created": "2026-10-19T17:41:04.495676+00:00",
+    "closed_revision": 39,
+    "closed_reason": "replaced by p_9",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_8",
+    "decision_id": "final_test",
+    "value": {
+     "model": "fit.logistic",
+     "rule": "share:0.1"
+    },
+    "restatement": "You open the sealed final test once, for the chosen configuration.",
+    "rationale": "The model and the rule are chosen.",
+    "status": "confirmed",
+    "revision": 28,
+    "created": "2026-10-19T17:41:05.372022+00:00",
+    "closed_revision": 31,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_9",
+    "decision_id": "policy",
+    "value": "share:0.2",
+    "restatement": "You decide the policy as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 38,
+    "created": "2026-10-19T17:41:14.263635+00:00",
+    "closed_revision": 39,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   }
+  ],
+  "history": [
+   {
+    "revision": 3,
+    "time": "2026-10-19T17:40:54.946776+00:00",
+    "decision_id": "prediction_time",
+    "proposal_id": "p_1",
+    "value": "before the first contact of the campaign, from the client file",
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 5,
+    "time": "2026-10-19T17:40:55.451729+00:00",
+    "decision_id": "feature_availability",
+    "proposal_id": "p_2",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 7,
+    "time": "2026-10-19T17:40:56.180274+00:00",
+    "decision_id": "split",
+    "proposal_id": "p_3",
+    "value": {
+     "folds": 5,
+     "method": "kfold_stratified",
+     "seed": 20261017
+    },
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 9,
+    "time": "2026-10-19T17:40:56.923621+00:00",
+    "decision_id": "success_criterion",
+    "proposal_id": "p_4",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 11,
+    "time": "2026-10-19T17:40:57.652466+00:00",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_5",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 21,
+    "time": "2026-10-19T17:41:00.710461+00:00",
+    "decision_id": "model_variant",
+    "proposal_id": "p_6",
+    "value": {
+     "kind": "regularisation",
+     "strength": "strong"
+    },
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 27,
+    "time": "2026-10-19T17:41:04.964912+00:00",
+    "decision_id": "policy",
+    "proposal_id": "p_7",
+    "value": "share:0.1",
+    "user_words": "Yes, I adopt calling the top tenth, because the team can make that many calls",
+    "basis": "endorsed",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": false,
+    "superseded_at": 39
+   },
+   {
+    "revision": 31,
+    "time": "2026-10-19T17:41:08.616093+00:00",
+    "decision_id": "final_test",
+    "proposal_id": "p_8",
+    "value": {
+     "model": "fit.logistic",
+     "rule": "share:0.1"
+    },
+    "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 39,
+    "time": "2026-10-19T17:41:14.658932+00:00",
+    "decision_id": "policy",
+    "proposal_id": "p_9",
+    "value": "share:0.2",
+    "user_words": "Yes, I adopt the top fifth now, because the team grew",
+    "basis": "endorsed",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   }
+  ],
+  "reconfirm_queue": [],
+  "notes": []
+ }
+}

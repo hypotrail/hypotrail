@@ -14,6 +14,9 @@ const NOT_OPEN = 'This proposal is not open in the panel any more. Nothing was r
 const BLANK = 'Type your own answer first. Nothing was recorded.';
 const TOO_LONG = `Your answer is longer than ${MAX_WORDS} characters. Nothing was recorded.`;
 const EFFECTS_UNAVAILABLE = 'The engine could not preview this confirmation.';
+// WP-B5 (ADR 0006 amendment): opening the final test is a chat act. The panel never sends
+// a confirmation of `final_test`, whatever the webview asks (a narrowing of W1).
+const FINAL_TEST_IN_CHAT = 'The final test is opened in the chat, in your own words and with your reason; this panel does not open it. Nothing was recorded.';
 
 function openProposal(ctx, proposalId) {
   const snapshot = ctx.snapshot();
@@ -41,6 +44,10 @@ async function confirm(message, ctx) {
     return;
   }
   if (!(await precheck(ctx, 'W1', proposalId))) return;
+  if (openProposal(ctx, proposalId).decisionId === 'final_test') {
+    ctx.invalid('W1', FINAL_TEST_IN_CHAT, proposalId);
+    return;
+  }
   await ctx.write('W1', {
     target: proposalId,
     argv: requestId => ctx.cli.confirmArgv(ctx.agent, { proposalId, words, requestId, expectedRevision: revision }),
@@ -99,6 +106,7 @@ async function previewEffects(message, ctx) {
 }
 
 module.exports = {
+  FINAL_TEST_IN_CHAT,
   types: { confirm, withdraw, preview_effects: previewEffects },
   loads: {
     decisions: { stage: 'v1', key: () => 'decisions', argv: (cli, agent) => cli.decisionsArgv(agent), model: toDecisionsModel },

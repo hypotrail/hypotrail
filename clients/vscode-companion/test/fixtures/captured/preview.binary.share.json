@@ -1,0 +1,252 @@
+{
+ "about": {
+  "schema": "hypotrail.preview/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "policy",
+   "--rule",
+   "share:0.2",
+   "--intervals",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.preview/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-cv",
+  "revision": 37,
+  "kind": "policy",
+  "rules": [
+   "share:0.2"
+  ],
+  "models": {
+   "fit.baseline": {
+    "result_id": "4af811f846755c3d782a300776d1a6a3ea879c8b8cabd6445ce4f4e55f8d25b9",
+    "current": true,
+    "stale_reason": null
+   },
+   "fit.logistic": {
+    "result_id": "6f71b88e6a426d7fd392655e16417e6956b8a44fc75934b239a4bd3d07ed5118",
+    "current": true,
+    "stale_reason": null
+   },
+   "fit.variant": {
+    "result_id": "2313dfb16d9cfc71ce85e7a6f18abe090fd79ce131460e1f15261a27fad51eee",
+    "current": true,
+    "stale_reason": null
+   }
+  },
+  "evaluations": {
+   "share:0.2": {
+    "fit.baseline": {
+     "rule": "share:0.2",
+     "kind": "share",
+     "parameter": 0.2,
+     "n": 3617,
+     "n_positive": 417,
+     "selected": 723.0,
+     "true_positives": 83.35388443461432,
+     "false_positives": 639.6461155653857,
+     "false_negatives": 333.6461155653857,
+     "precision": 0.11528891346419684,
+     "recall": 0.199889411114183,
+     "volume": 723.0,
+     "volume_rate": 0.199889411114183,
+     "tied_at_cut": 3617,
+     "cut": {
+      "score": 0.11528891346419685,
+      "n_tied": 3617,
+      "fraction_selected": 0.199889411114183
+     },
+     "selection": "expected",
+     "capacity": 723
+    },
+    "fit.logistic": {
+     "rule": "share:0.2",
+     "kind": "share",
+     "parameter": 0.2,
+     "n": 3617,
+     "n_positive": 417,
+     "selected": 723.0,
+     "true_positives": 182.0,
+     "false_positives": 541.0,
+     "false_negatives": 235.0,
+     "precision": 0.2517289073305671,
+     "recall": 0.4364508393285372,
+     "volume": 723.0,
+     "volume_rate": 0.199889411114183,
+     "tied_at_cut": 0,
+     "cut": {
+      "score": null,
+      "n_tied": 0,
+      "fraction_selected": null
+     },
+     "selection": "exact",
+     "capacity": 723
+    },
+    "fit.variant": {
+     "rule": "share:0.2",
+     "kind": "share",
+     "parameter": 0.2,
+     "n": 3617,
+     "n_positive": 417,
+     "selected": 723.0,
+     "true_positives": 182.0,
+     "false_positives": 541.0,
+     "false_negatives": 235.0,
+     "precision": 0.2517289073305671,
+     "recall": 0.4364508393285372,
+     "volume": 723.0,
+     "volume_rate": 0.199889411114183,
+     "tied_at_cut": 0,
+     "cut": {
+      "score": null,
+      "n_tied": 0,
+      "fraction_selected": null
+     },
+     "selection": "exact",
+     "capacity": 723
+    }
+   }
+  },
+  "intervals": {
+   "share:0.2": {
+    "rule": "share:0.2",
+    "replicates": 2000,
+    "seed": 20261017,
+    "level": 0.95,
+    "reference": "fit.baseline",
+    "method": "paired percentile bootstrap over validation rows",
+    "intervals": {
+     "fit.baseline": {
+      "precision": {
+       "low": 0.10505944152612663,
+       "high": 0.12580176942217303,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.199889411114183,
+       "high": 0.19988941111418304,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 723.0,
+       "high": 723.0,
+       "undefined_replicates": 0
+      }
+     },
+     "fit.logistic": {
+      "precision": {
+       "low": 0.21991701244813278,
+       "high": 0.28492392807745504,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.3931973158195317,
+       "high": 0.48292682926829267,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 723.0,
+       "high": 723.0,
+       "undefined_replicates": 0
+      }
+     },
+     "fit.variant": {
+      "precision": {
+       "low": 0.21853388658367912,
+       "high": 0.2821576763485477,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "low": 0.39174940328068664,
+       "high": 0.4791666666666667,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "low": 723.0,
+       "high": 723.0,
+       "undefined_replicates": 0
+      }
+     }
+    },
+    "deltas": {
+     "fit.logistic": {
+      "precision": {
+       "point": 0.13643999386637023,
+       "low": 0.10961664431562804,
+       "high": 0.1641155699744291,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.23656142821435416,
+       "low": 0.1933079047053487,
+       "high": 0.28303741815410965,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     },
+     "fit.variant": {
+      "precision": {
+       "point": 0.13643999386637023,
+       "low": 0.10767078468779863,
+       "high": 0.16188620204803578,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.23656142821435416,
+       "low": 0.19185999216650357,
+       "high": 0.27927725555248367,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     }
+    },
+    "comparisons": {
+     "fit.variant": {
+      "reference": "fit.logistic",
+      "precision": {
+       "point": 0.0,
+       "low": -0.013831258644536604,
+       "high": 0.008298755186722018,
+       "undefined_replicates": 0
+      },
+      "recall": {
+       "point": 0.0,
+       "low": -0.022671456377375814,
+       "high": 0.015077280341099435,
+       "undefined_replicates": 0
+      },
+      "volume": {
+       "point": 0.0,
+       "low": 0.0,
+       "high": 0.0,
+       "undefined_replicates": 0
+      }
+     }
+    }
+   }
+  },
+  "adopted": {
+   "status": "confirmed",
+   "value": "share:0.1"
+  },
+  "recorded": false,
+  "note": "Experiment, not adopted: nothing was recorded. To adopt a rule, run policy.evaluate with it (exposure validation_policy_selection), then propose and confirm the policy.",
+  "warnings": []
+ }
+}

@@ -6,6 +6,8 @@ Status: **implemented behind the flag** (stages v0 to v3; WP-0, WP-E1 to E3, WP-
 
 **Amended by WP-A7 (v0.2a, 2026-10-19).** New views, read only; the writes stay W1–W7. The EDA tab becomes **Data & EDA** (its id stays `eda`): it opens on the data card (`hypotrail data`, a new read, §5, §6.3.0) and the quality check of the development rows, then the exploration of the training rows, where each chart is titled by the question it answers, shows its confidence intervals with n and the shuffled-outcome null band, and the single-feature signal raises the leakage detector's question (§6.3.1); "Run another chart" (W4) offers training-row charts only and says the question first. The Decisions tab shows the confirmation mode and what counts as an answer, the basis of each confirmation as a chip (restated, endorsed, delegated), the agent's concern kept on a confirmation, and later corrections (§6.2.5). The header carries the final-test chip on every tab (§4.1, FR-1); the Overview's "Where we are" shows the success criterion's status (§6.1.1, OV-9). Engine requests of WP-A5 delivered with it: `deliverables` and `mode` in `status --summary`, `recap_junior` in words, digest items with `audience`/`junior_text`, the unknown outcome named in words (CLI-CONTRACT §3, §3.3). Mockups: `eda.html`, `decisions.html`, `overview.html`, and the seal chip of `evidence.html`.
 
+**Amended by WP-B5 (v0.2b, 2026-10-19).** Read-only views of v0.2b; the writes stay W1–W7. The Evidence tab leads with the final test and the exposure ledger, separates development evidence (cross-validation, the variant) from final evidence (the one evaluation of the final test), and shows the diagnostics when the engine has them (§6.4.1, EV-7 to EV-12). The What if? tab gains a third rule kind, a share of the scored rows, and the gain curve of the registered points, with the teaching scenario's share labelled as an assumption of the exercise (§6.5.4, WI-6, WI-7); W3 accepts a `share:p` rule the engine evaluated. "Your next move" covers the pauses of v0.2 (the success criterion, the data preparation, the variant, the opening of the final test); **opening the final test is a chat act**: the panel explains it and points to the chat, and neither the Overview nor the Decisions card offers a control for it; the controller refuses W1 for a `final_test` proposal (a narrowing of W1, §7), and the Decisions badge does not count it. "Where we are" shows the final test (sealed, opened once in the junior's words, changed after the opening) and the confirmation mode with what counts as an answer; changing the mode is a chat act (§6.1.0, §6.1.1, §6.2.5, OV-10, OV-11, DC-10, DC-11). One new read: `scenario` (`status --json`, its `view.scenario_defaults`; §5). Mockups: `evidence.html` (its "Open the final test… (in the chat)" button is not built: the opening has no control) and `overview.html`.
+
 Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
 
 ## 1. Purpose
@@ -140,6 +142,7 @@ A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`
 | `explain` | `explain --json --study S` | `hypotrail.explain/1` | first glossary hover or Learn tab, and the revision moved | Learn, hovers, cards |
 | `session_report` | `session-report --json --study S` | `hypotrail.session_report/1` | Learn tab "Session report" expanded | session report |
 | `data` | `data --json --study S` (WP-A7) | `hypotrail.data/1` (CLI-CONTRACT §11.1) | Data & EDA tab shown, and the version moved | the data card |
+| `scenario` | `status --json --study S` (WP-B5) | `hypotrail.status/1` (its `view.scenario_defaults`, CLI-CONTRACT §4) | What if? tab shown, and the version moved | the scenario share on the gain curve |
 
 **Currency (decision CR.1).** A cached read is valid for one *version* of the study: the summary's revision **and** its `currency`. `currency` is the engine's root field of `status --summary --digest` (a short hexadecimal digest that changes when the dataset is edited, after a render, or when a deliverable is edited or deleted) when the engine sends it. With an engine that does not, the controller computes it (`lib/models/summary.js` `currencyOf`): the first 16 hexadecimal characters of the SHA-256 of the artefacts' statuses, messages and revisions, the not-yet-defensible items, `sources_changed`, and each result slot's id, current flag, integrity, and stale reason. Every read (`view_data`, `effects`, `draft_result`, `preview_policy_result`) carries the currency it was read at, and the webview reloads a view whose data is not at the snapshot's version. `effects:<pid>` and the `evidence:<rid>` detail (its `report_anchor`) follow the same rule.
 
@@ -173,6 +176,10 @@ The first block of the Overview at every stage, v0 included (`data-ov="hero"`). 
 
 - OV-0. On every captured payload, at 900 and 420 px and in Light+, Dark+ and High Contrast, the first 400 px of the Overview hold the next move and no raw result id, proposal id, or rule token (`test_webview_themes.py`).
 
+**WP-B5 (v0.2b).** The pauses of v0.2 are named in words with why they matter (the term first, then its use): the success criterion, the data preparation, the variant to compare, the opening of the final test. An open proposal of these goes to "Answer in Decisions", except the opening of the final test: its next move says "Open the final test, in the chat", explains that it opens once, in the junior's own words with a reason, and offers **no action** (`data-hero-chat`); before a proposal exists the next step says to say so in the chat when the model and the rule are settled. Under cross-validation the supporting figure says "On the out-of-fold predictions of the development rows".
+
+- OV-10. On the captured Bank study waiting for the opening, the hero names the opening of the final test, holds no button and no `data-write`, and points to the chat; the Decisions card of that proposal holds no words field and no confirmation.
+
 #### 6.1.1 Where we are (A)
 
 (Amended by WP-A5.) A `<dl>` with **Goal** (the `Goal` line of `summary.recap_junior`, or of `recap` from an engine without audience keys) and **Decided** (one line per confirmed or to-reconfirm decision in plan order: its name and its value in words, `media/copy/junior.js` `value`, the recorded value in the hover; "to confirm again" or "left to the assistant" as a status tag). The five lines of `recap_junior` follow, byte for byte, under "Details: the engine's recap". The agent recap (`recap`, `recap_audience: agent`) is never rendered. "Next" and "Limit" are not repeated here: the next move (§6.1.0) and the limits (§6.1.5) say them.
@@ -182,6 +189,7 @@ The first block of the Overview at every stage, v0 included (`data-ov="hero"`). 
 
 (WP-A7.) "Decided" also lists the success criterion and the data preparation. A **Success criterion** row follows, from `summary.criterion` (CLI-CONTRACT §11.4): the criterion in words ("Adopt only if precision beats the baseline by at least 5 points"), a status chip (met, uncertain, not met, not assessed yet) with one sentence of what it means, and, when the engine gives one, its gain with the paired interval, signed, in points (binary, `f1`) or as a share (regression, `pct1`), each figure cited to the evaluation `result_id`; a verdict that contradicts the criterion adds a warning line. The panel computes none of these figures.
 
+- OV-11. (WP-B5) Two more rows: **Final test** (sealed with its rows; opened at a revision, in the junior's words quoted, with the success criterion judged on the final test, cited; changed after the opening, with what changed in words; or absent) and **Answers** (the mode as a chip, what counts as an answer in that mode, guided, training or express, the reason the trade-offs and the opening need, and that the mode changes in the chat only; no control).
 - OV-9. With the Bank fixture the row reads "met" and the cited figures +30.5, +21.4, +40.2; each status changes the chip; a regression criterion reads as a share and holds none of the INV-12 words.
 
 #### 6.1.2 Study map (A)
@@ -361,6 +369,8 @@ A note under the table reads "Recorded words, not an authenticated signature." (
 - DC-7. The mode section names the guided mode and the reason rule, task-aware, and holds no control; the policy card shows the reason hint.
 - DC-8. The Bank fixture's history shows restated, endorsed and delegated chips with hovers, the kept concern, and the correction.
 - DC-9. On the captured Bank decisions the success criterion and the data preparation are in words, with no raw JSON value.
+- DC-10. (WP-B5) A proposal of `final_test` is shown with its restatement and value in words, and the note "Answer this one in the chat": no words field, no "Confirm in my words" (withdrawing stays possible). The controller refuses a `confirm` message for a `final_test` proposal as `invalid` and runs nothing. The mode section lists what counts as an answer in each mode (guided, training, express).
+- DC-11. (WP-B5) The refusals of v0.2b are explained in words (`lib/refusals.js`): `paraphrase_required` (with the concepts not said yet, never words to type), `words_contradict_value`, and `final_test_already_opened` (with the revision of the opening).
 
 ### 6.3 EDA (stage v2)
 
@@ -531,6 +541,25 @@ The columns are Purpose, Partition, Rows, and "Recorded by" (activities). The ro
 | EV-5 | Interval bars expose their values in an accessible table ("Show values"). An interval that includes 0 shows the "could be chance" sentence |
 | EV-6 | The lineage of `fit.logistic` in the Bank fixture lists the dataset, split, feature availability, fit.logistic, policy.evaluation, and the report and notebook, in that order |
 
+#### 6.4.1 Final test first, development and final evidence apart (WP-B5)
+
+Order of the tab: the final test, the exposure ledger, the development evidence, the final evidence, the diagnostics (when present), then the results and their detail, then the lineage.
+
+- **Final test** (`data-ev="final-test"`, from the summary's `final_test` and `trials`, and the evidence's `final_test.evaluation`). Sealed: its rows "nobody has read", how they were set aside (the same share of each outcome, the latest rows in time order, ...), the development rows, that every figure below comes from rows that helped to choose, what must be confirmed before it can be opened (the choice, the variant, the success criterion, each with ✓ or ✗), and that opening it is a chat act: no button. Opened: the revision and the time of the evaluation, the junior's words quoted, and what was measured (the configuration in words, the final-test rows, the development rows of the refit). Changed after the opening: the decisions and results of `changed_after` in words. Absent: the study has no final test, so no figure is independent evidence. Then "Configurations evaluated: N" and one sentence on why the count matters.
+- **Exposure ledger.** Each purpose in words, with what was done with the rows (`sealed`, `cross_validated_fit`, `out_of_fold_evaluation`, `out_of_fold_policy_selection`, `final_evaluation` added to §6.4); partitions as "development rows", "final test", "validation rows"; the final-test rows marked; the selection rows highlighted under cross-validation too.
+- **Development evidence · used to choose.** The scheme in words (stratified, quantile, temporal folds; grouped duplicates), the spread across folds of the candidate and the variant (mean ± sd, lowest – highest fold, cited), and the variant: what it changes, each model on the same rows with its interval (the baseline grey), then the paired difference (variant minus candidate) with its interval on an axis with 0 and the fixed sentence of its side. A binary study shows the adopted (or proposed, or first evaluated) rule.
+- **Final evidence · measured once.** The chosen model and the baseline on the final-test rows with their intervals, the paired difference, and the success criterion judged on the final test, all cited to `final_test.evaluation`; "Nothing is measured on the final test yet" while it is sealed.
+- **Diagnostics** (WP-B4; CLI-CONTRACT §13, CLI-CONTRACT-COMPANION §14). Rendered when the evidence holds a current `diag.binary`, `diag.regression` or `diag.final_test`, in two labelled groups: development evidence (the rows read, out of fold or validation; the rule in words with its source: adopted, proposed, the case's teaching share as an exercise assumption, or the engine's default; "computed after the final test was opened" when its `started_revision` is above the opening's) and final evidence (the chosen model on the final-test rows; while sealed "the final test has no diagnostics yet", opening stays a chat act). The chosen model comes first (the adopted `@fit.variant` or model choice, else the candidate), the other under "Also". Binary: the confusion at the rule in words (reached, acted on by mistake, missed, correctly left out) with precision, recall and specificity; AUC and average precision; the gain curve (twenty points) and the calibration plot (ten bins with their Wilson intervals, the diagonal, the Brier score against the base rate); the segments with intervals and small cells marked; the largest coefficients with their bootstrap intervals. Regression: MAE and RMSE, the residual moments, the mean residual by range of the prediction on an axis with 0, the heteroscedasticity indicator, the quantile-quantile plot, residuals by variable, the coefficients, and "no target transform" (INV-12 holds). Every number is cited (`models.[fit].…`); points are marks. The panel never runs a diagnostic.
+
+| Id | Requirement |
+|---|---|
+| EV-7 | The Evidence tab opens on the final test: sealed (rows, method, the chat act, no button), opened (revision, the junior's words, what was measured), changed after (the list in words), absent; with the trial count and its sentence |
+| EV-8 | The ledger rows follow `exposure.ledger` with each purpose explained in words; the final-test rows are marked; no row is invented |
+| EV-9 | Development evidence and final evidence are two labelled sections; the registry lists the final-test results apart |
+| EV-10 | Under cross-validation the scheme is in words and the spread across folds shows mean ± sd and lowest – highest, each cited to its fit |
+| EV-11 | The variant section shows each model with its interval and the paired difference with the sentence of its side, cited to the evaluation |
+| EV-12 | Diagnostics appear only when `diag.*` results are current, development and final apart; each number is cited with its `models.[fit].…` path; a regression study shows none of the INV-12 words; no control runs them |
+
 ### 6.5 What if? (stage v2)
 
 Mockups: `WhatIf.dc.html` (binary) and `Regression.dc.html` (regression part).
@@ -589,6 +618,17 @@ There is no slider. The panel shows:
 | WI-3 | "Propose this rule" is enabled only for a canonical rule in `params.rules`. The propose argv is exactly W3, with the draft's texts byte-identical to `preview proposal` |
 | WI-4 | A regression study renders §6.5.2 and none of §6.5.1, and INV-12 holds |
 | WI-5 | Values from `preview` are never shown outside this tab |
+
+#### 6.5.4 Share rules and the gain curve (WP-B5)
+
+- **Rule kinds.** Threshold, Capacity, and Share (`share:p`, 0.01 to 1 in hundredths; WP-B3): "Act on the top p of the scored rows". A share keeps its meaning on any number of rows; the engine turns it into a count.
+- **Gain curve** (`data-gain`, an experiment surface). The engine's gain points (the top 5, 10 and 20 % of the scored rows) and every evaluated rule with the share it acts on (`capacity_share`), as points of the share of positives reached (recall) against the share of rows acted on, joined in order, with the random-selection diagonal; nothing is drawn between points as if measured. Marks: the junior's adopted or proposed rule, and the case's scenario share (`scenario_defaults.capacity_share`, read with `status --json`) labelled "exercise assumption" with the sentence that it is the exercise's assumption, not a team's figure. A table lists each point (cited) with "Try this share", which moves the slider (a preview, never a write).
+- **Propose.** Unchanged: W3 for a rule the engine evaluated (`proposable`), now including a `share:p` rule; the panel never proposes the scenario share by itself.
+
+| Id | Requirement |
+|---|---|
+| WI-6 | The gain curve shows only registered points (cited in its table), the diagonal, the junior's rule, and the scenario share labelled as an exercise assumption; no figure is computed by the panel |
+| WI-7 | A `share:p` rule passes the protocol, the preview and the W3 argv, with the engine draft's texts byte for byte; a rule the engine did not evaluate is not proposable |
 
 ### 6.6 Learn & hand off (stage v3)
 
@@ -715,6 +755,8 @@ This is a question, not a confirmation of anything.
 | W6 | v1 | Acknowledge in my words | `A run --acknowledge-interruption <eid> --user-words=<words> --request-id ID --expected-revision R --json --study S` | `eid` is in the snapshot's `executions.interrupted` or `suspected_interrupted`; `words` is non-blank and at most 4000 characters |
 | W7 | v3 | Export a handoff pack | `A export handoff --out=<chosen folder>/revision-<R> --expected-revision R --json --study S` (CR.6; never without `--expected-revision`: an older engine's refusal of the option is shown as such) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
 
+**WP-B5 narrowing of W1.** A `confirm` for a proposal whose decision is `final_test` is refused by the controller (`kind: "invalid"`, nothing runs): opening the final test is answered in the chat only (ADR 0006 amendment, AGENTS.md). The webview offers no field for it.
+
 **Not in the whitelist, whatever the stage.**
 
 - `decide propose` of any other decision;
@@ -754,7 +796,7 @@ A unit test enumerates the argv builder module and asserts that exactly these se
 |---|---|---|
 | `ready` | — | v0 |
 | `refresh` | — | v0 |
-| `load` | `view` ∈ `summary`, `decisions`, `eda`, `evidence`, `whatif`, `explain`, `check`, `session_report`, `data` (WP-A7); `resultId?` (64 hex, `evidence` only); `since?` (int ≥ 0, `summary` only). `eda`, `evidence`, and `whatif` share the cached `evidence` read and differ by their model function | v1 |
+| `load` | `view` ∈ `summary`, `decisions`, `eda`, `evidence`, `whatif`, `explain`, `check`, `session_report`, `data` (WP-A7), `scenario` (WP-B5); `resultId?` (64 hex, `evidence` only); `since?` (int ≥ 0, `summary` only). `eda`, `evidence`, and `whatif` share the cached `evidence` read and differ by their model function | v1 |
 | `confirm` | `proposalId` (`^p_\d+$`), `words` (string ≤ 4000), `revision` (int ≥ 1) | v0 |
 | `withdraw` | `proposalId`, `revision` | v0 |
 | `preview_effects` | `proposalId`, `revision` | v1 |

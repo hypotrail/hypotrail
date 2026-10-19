@@ -66,6 +66,8 @@ const BY_CODE = {
   paraphrase_required: 'In the training mode, a confirmation says in your own words what the proposal decides, not only that you agree. The lines below name what your reply does not say yet.',
   // WP-A9 (H3): also a stop in the guided mode until the point is raised in the chat.
   words_contradict_value: 'Your words and the proposal disagree about a variable, so the engine stopped the confirmation. Settle which one you mean in the chat.',
+  // v0.2b (WP-B1, WP-B5): the final test is opened once.
+  final_test_already_opened: 'The final test was already opened. It is opened only once: a later change is shown as made after it and is never measured on it again.',
 };
 
 // Explanations that depend on the write that was refused (the payload's `command`). A
@@ -169,6 +171,9 @@ function summariseDetails(code, details) {
     for (const w of details.warnings.slice(0, 10)) {
       if (w && typeof w.variable === 'string') lines.push(`Your words and the proposal disagree about ${w.variable}`);
     }
+  }
+  if (code === 'final_test_already_opened' && details.opening && typeof details.opening === 'object') {
+    if (Number.isInteger(details.opening.revision)) lines.push(`Opened at revision ${details.opening.revision}`);
   }
   if (code === 'interrupted_execution_pending' && Array.isArray(details.interrupted)) {
     for (const e of details.interrupted.slice(0, 10)) {
