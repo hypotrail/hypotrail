@@ -43,7 +43,9 @@ def test_tabs_of_a_later_stage_are_absent(open_panel, binary, stage):
     if stage == 'v0':
         # v0: one page, no tablist, the v0 sections only.
         assert page.locator('[role="tablist"]').count() == 0
-        assert page.locator('[data-recap] li').count() == 5
+        # WP-A5: the next move first, then the plan; the junior recap under Details.
+        assert page.locator('main [data-ov]').first.get_attribute('data-ov') == 'hero'
+        assert page.locator('[data-recap-details] li').count() == 5
         assert page.locator('[data-proposal-card]').count() == 1
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
@@ -113,9 +115,13 @@ def test_alert_strip_and_navigation_to_health(open_panel, model):
     panel.snapshot(health)
     page = panel.page
     alerts = page.locator('[data-alert]')
-    assert alerts.evaluate_all('as => as.map(a => a.dataset.alert)') == ['interrupted_executions', 'outcome_unknown']
-    assert alerts.first.get_attribute('role') == 'alert'
+    # WP-A5: not on the Overview (its first block is the next move); one alert per event
+    # elsewhere (the unknown outcome is the interrupted execution), in the junior's words.
+    assert alerts.count() == 0
     page.locator('[role="tab"][data-tab="decisions"]').click()
+    assert alerts.evaluate_all('as => as.map(a => a.dataset.alert)') == ['outcome_unknown']
+    assert alerts.first.get_attribute('role') == 'alert'
+    assert alerts.first.locator('p').inner_text() == health['nextAction']['juniorMessage']
     alerts.first.get_by_role('button').click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
     panel.send({'type': 'navigate', 'tab': 'decisions', 'kind': 'proposal', 'id': 'p_5'})
@@ -123,7 +129,9 @@ def test_alert_strip_and_navigation_to_health(open_panel, model):
     assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == 'proposal:p_5'
 
 
-def test_load_error_banner_keeps_the_last_snapshot_greyed(open_panel, binary):
+def test_load_error_replaces_the_content_and_gives_a_next_step(open_panel, binary):
+    # WP-A5: the error state replaces the content (nothing read before is shown as current),
+    # says what to do next, and keeps the CLI's message and stderr under Details.
     panel = open_panel()
     panel.init(stage='v1')
     panel.snapshot(binary)
@@ -132,8 +140,18 @@ def test_load_error_banner_keeps_the_last_snapshot_greyed(open_panel, binary):
     banner = panel.page.locator('[data-load-error]')
     assert banner.get_attribute('role') == 'alert'
     assert f"Last read at revision {binary['revision']}" in banner.inner_text()
+    assert 'Press Retry' in banner.locator('[data-next-step]').inner_text()
+    assert banner.locator('details [data-error-message]').text_content() == 'The hypotrail CLI could not be started.'
+    assert banner.locator('details pre').text_content() == 'stderr text'
+    page = panel.page
+    assert page.locator('main [data-load-error]').count() == 1
+    assert page.locator('main section[data-tab]').count() == 0, 'no tab content under the error'
+    assert page.locator('[data-ov="hero"], [data-proposal-card], .ht-alerts, [data-recap-strip]').count() == 0
     banner.get_by_role('button', name='Retry').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'refresh'}
+    panel.snapshot(binary)
+    assert page.locator('[data-load-error]').count() == 0
+    assert page.locator('[data-ov="hero"]').count() == 1, 'the content is back once the study is read'
 
 
 def test_components_render_geometry_hatch_values_and_citations(open_panel):
@@ -220,3 +238,25 @@ def test_text_tokens_contrast_at_least_4_5_to_1_in_both_fallback_themes():
         for name in ('fg', 'muted', 'link', 'accent', 'warn-fg', 'error-fg'):
             assert _contrast(token(block, name), bg) >= 4.5, (name, token(block, name), bg)
         assert _contrast(token(block, 'experiment-fg'), token(block, 'experiment-bg')) >= 4.5
+
+
+def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, model):
+    # WP-A5 (two-layer copy): the strip on the other tabs is the engine's junior recap,
+    # except its Decided line, which the panel writes from the decisions (no rule token).
+    binary = model('summary', 'captured/summary.binary')
+    panel = open_panel()
+    panel.init(stage='v1', task='binary')
+    panel.snapshot(binary)
+    page = panel.page
+    page.locator('[role="tab"][data-tab="decisions"]').click()
+    lines = page.locator('[data-recap-strip] li').all_inner_texts()
+    junior = binary['recapJunior']
+    assert [l.split(':')[0] for l in lines] == ['Goal', 'Decided', 'Now', 'Next', 'Limit']
+    assert lines[0] == junior[0] and lines[2:] == junior[2:]
+    assert lines[1] == ('Decided: the prediction moment: Before the first contact of the campaign, from the client file; '
+                        'the variables you may use: 11 available · 1 uncertain, kept (contact) · 4 excluded '
+                        '(campaign, day, duration, month); the split: Stratified random split, 30% of the rows for '
+                        'validation; the calling rule: Call everyone scored 0.2 or more.')
+    strip = page.locator('[data-recap-strip]').inner_text()
+    assert 'threshold:0.2' not in strip and 'result ' not in strip
+    assert panel.clean()

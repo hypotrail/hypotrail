@@ -259,7 +259,7 @@
      "id": "unconfirmed_decisions",
      "text": "These decisions are not confirmed: model_choice, conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: ."
+     "junior_text": "Not confirmed by you yet: the model choice and the conclusion."
     },
     {
      "id": "validation_is_not_independent",

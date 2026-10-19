@@ -20,6 +20,7 @@ const path = require('path');
 const flag = require('./lib/flag');
 const study = require('./lib/study');
 const uri = require('./lib/uri');
+const launch = require('./lib/launch');
 const { createController } = require('./lib/controller');
 const { watchStudy } = require('./lib/watch');
 const { renderHtml } = require('./lib/html');
@@ -31,6 +32,29 @@ const VIEW_TYPE = 'hypotrail.companion.study';
 const TRUST_MESSAGE = 'The Hypotrail companion runs the study CLI, so it needs a trusted workspace.';
 const NOT_IN_STAGE = 'This is not available in the current stage of the companion (hypotrail.companion.stage).';
 let current = null;   // {panel, controller, watcher, agent, reviewer}
+// The Marimo terminals this extension opened, per notebook file: one terminal per file is
+// reused while it is open (WP-A5, ADR 0004 "local launch").
+const marimoTerminals = new Map();
+
+/**
+ * Open one of the two Marimo launches of lib/launch.js in a VS Code terminal, created with
+ * an argument list (shellPath, shellArgs): no shell string, nothing typed in. The argv is
+ * checked again here, so no other command can reach a terminal. Returns true when an open
+ * terminal for the same file was shown again, false when a new one was created.
+ */
+function launchMarimo(agent, spec) {
+  if (!spec || !launch.isMarimoLaunch(spec.argv, agent.studyDir, spec.name)) throw new Error('not a Marimo launch of this study');
+  const open = marimoTerminals.get(spec.file);
+  if (open && open.exitStatus === undefined && (vscode.window.terminals || [open]).includes(open)) {
+    open.show();
+    return true;
+  }
+  const terminal = vscode.window.createTerminal({ name: spec.terminalName, shellPath: spec.argv[0],
+    shellArgs: spec.argv.slice(1), cwd: agent.studyDir });
+  marimoTerminals.set(spec.file, terminal);
+  terminal.show();
+  return false;
+}
 
 const PICK_FOLDER = 'Pick another folder...';
 
@@ -82,8 +106,9 @@ function allowed() {
   return true;
 }
 
-function host(context) {
+function host(context, agent) {
   return {
+    launchMarimo: async spec => launchMarimo(agent, spec),
     openArtifact: async (name, target, options = {}) => {
       let file = vscode.Uri.file(target);
       if (options.fragment && typeof file.with === 'function') file = file.with({ fragment: options.fragment });
@@ -209,7 +234,7 @@ function attach(context, mine, agent) {
     settings,
     post: message => { panel.webview.postMessage(message); },
     exists: target => fs.existsSync(target),
-    host: host(context),
+    host: host(context, agent),
     log: e => console.error('[hypotrail companion]', e),
   });
   mine.controller = controller;

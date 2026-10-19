@@ -47,6 +47,8 @@
     const key = `${ctx.version()}|${sel || ''}`;
     if (requested[key]) return;
     requested[key] = true;
+    // WP-A5: the plain read may already be asked by another tab (the Overview's next move).
+    if (!sel && ctx.wanted && ctx.wanted('evidence')) return;
     ctx.load('evidence', sel ? { resultId: sel } : undefined);
   }
 
@@ -191,6 +193,7 @@
       title: c.intervalTitle(label, level),
       zero: false,
       rows: metric.models.map(m => ({ label: fitLabel(task, m.fit), point: m.point, low: m.low, high: m.high,
+        tone: m.fit === u.reference || m.fit === 'fit.baseline' ? 'baseline' : null,
         pointText: m.point === null ? notDefined : `${fmt(m.point)}${unit}`, intervalText: intervalText(fmt, m.low, m.high) })),
     });
     if (metric.delta) {

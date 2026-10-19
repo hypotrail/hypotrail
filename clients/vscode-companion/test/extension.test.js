@@ -194,3 +194,46 @@ test('M2: the environment override keeps the companion on when the setting is tu
   fake.changeSettings({ 'hypotrail.companion.enabled': false });
   assert.equal(fake.calls.panels[0].disposed, false);
 });
+
+test('WP-A5 local launch: "Open in Marimo" starts marimo run or edit in a named terminal with an argument list, reused per file', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  const dir = makeStudy('marimo');
+  fs.mkdirSync(path.join(dir, 'notebooks'));
+  fs.writeFileSync(path.join(dir, 'notebooks', 'study_generated.py'), '# generated\n');
+  fs.writeFileSync(path.join(dir, 'notebooks', 'workbench.py'), '# workbench\n');
+  const calls = [];
+  childProcess.execFile = (file, args, options, cb) => {
+    calls.push(args);
+    // `status --json` (the view) has no deliverables in this fake: the launch falls back to
+    // the argv recorded in agent.json.
+    const body = args.includes('--summary') ? { ...payload('summary.v0.binary'), study: options.cwd }
+      : { schema: 'hypotrail.status/1', ok: true, study: options.cwd, revision: 26, view: {} };
+    setImmediate(() => cb(null, JSON.stringify(body), ''));
+  };
+  const fake = createFake({ folders: [dir] });
+  await activate(fake);
+  const opened = await fake.commands.executeCommand('hypotrail.companion.open');
+  await opened.controller.handle({ v: 2, type: 'ready' });
+  await opened.controller.handle({ v: 2, type: 'open_marimo', artifact: 'notebook' });
+  assert.equal(fake.calls.terminals.length, 1);
+  const t = fake.calls.terminals[0];
+  assert.equal(t.options.shellPath, CLI[0]);
+  assert.deepEqual(t.options.shellArgs, ['-m', 'marimo', 'run', path.join(dir, 'notebooks', 'study_generated.py')]);
+  assert.equal(t.options.cwd, dir);
+  assert.equal(t.options.name, 'Hypotrail · marimo run study_generated.py');
+  assert.ok(!('shellArgs' in t.options) || Array.isArray(t.options.shellArgs), 'an argument list, not a shell string');
+  assert.ok(calls.some(a => a.includes('status') && !a.includes('--summary')), 'the engine launch is read from status --json');
+  // The same file again: the open terminal is shown, no second one.
+  await opened.controller.handle({ v: 2, type: 'open_marimo', artifact: 'notebook' });
+  assert.equal(fake.calls.terminals.length, 1);
+  assert.ok(t.shown >= 2);
+  await opened.controller.handle({ v: 2, type: 'open_marimo', artifact: 'workbench' });
+  assert.equal(fake.calls.terminals.length, 2);
+  assert.deepEqual(fake.calls.terminals[1].options.shellArgs, ['-m', 'marimo', 'edit', path.join(dir, 'notebooks', 'workbench.py')]);
+  // A closed terminal is not reused.
+  t.dispose();
+  await opened.controller.handle({ v: 2, type: 'open_marimo', artifact: 'notebook' });
+  assert.equal(fake.calls.terminals.length, 3);
+  const notices = fake.calls.panels[0].posted.filter(m => m.type === 'notice').map(m => m.text);
+  assert.ok(notices.some(n => /Started "marimo run"/.test(n)), notices.join('\n'));
+});

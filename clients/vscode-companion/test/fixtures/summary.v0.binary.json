@@ -277,7 +277,7 @@
      "id": "unconfirmed_decisions",
      "text": "These decisions are not confirmed: conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: ."
+     "junior_text": "Not confirmed by you yet: the conclusion."
     },
     {
      "id": "uncertain_features_included",

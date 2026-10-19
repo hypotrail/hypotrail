@@ -111,10 +111,18 @@ function sessionReportArgv(agent) {
   return [...agent.argv, 'session-report', ...tail(agent)];
 }
 
+/**
+ * `status --json --study S`: the full view, read only when the junior opens a notebook in
+ * Marimo, for `view.deliverables.launch` (CLI-CONTRACT §3, R7; WP-A5). Never cached.
+ */
+function viewArgv(agent) {
+  return [...agent.argv, 'status', ...tail(agent)];
+}
+
 const READS = Object.freeze({
   summary: statusArgv, decisions: decisionsArgv, effects: previewEffectsArgv, evidence: evidenceArgv,
   preview: previewPolicyArgv, draft: previewProposalArgv, check: checkArgv, explain: explainArgv,
-  session_report: sessionReportArgv,
+  session_report: sessionReportArgv, view: viewArgv,
 });
 
 // --- writes W1-W7 (COMPANION-ADVANCED §7) ---------------------------------------------------
@@ -219,6 +227,6 @@ module.exports = {
   run, READS, WRITES, TIMEOUTS, MAX_BUFFER, READ_TIMEOUT_MS, WRITE_TIMEOUT_MS, EDA_TIMEOUT_MS, MAX_WORDS,
   ArgvError, TOO_LARGE,
   statusArgv, decisionsArgv, previewEffectsArgv, evidenceArgv, previewPolicyArgv, previewProposalArgv,
-  checkArgv, explainArgv, sessionReportArgv,
+  checkArgv, explainArgv, sessionReportArgv, viewArgv,
   confirmArgv, withdrawArgv, proposeArgv, runEdaArgv, renderArgv, acknowledgeArgv, exportArgv,
 };

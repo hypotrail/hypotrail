@@ -34,6 +34,7 @@ const { createCache } = require('./cache');
 const { toSummaryModel, ARTIFACT_PATHS } = require('./models/summary');
 const refusals = require('./refusals');
 const { studyKey } = require('./localstore');
+const launch = require('./launch');
 
 const HANDLERS_DIR = path.join(__dirname, 'handlers');
 const MAX_READS = 2;
@@ -154,7 +155,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   function sendInit() {
     // `study` (CR.2): the study key, so the webview keeps draft words for this study only.
     send({ type: 'init', stage: active.stage, reviewer: active.reviewer === true, learningLayer: active.learningLayer !== false,
-      chatInsert: active.chatInsert === true, task: snapshot ? snapshot.task : null, study: studyKey(agent.studyDir) });
+      chatInsert: active.chatInsert === true, task: snapshot ? snapshot.task : null, study: studyKey(agent.studyDir),
+      marimo: launch.display(agent) });
   }
 
   async function waitForWrite() {

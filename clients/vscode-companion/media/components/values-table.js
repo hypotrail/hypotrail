@@ -39,6 +39,14 @@
     const id = `ht-values-${figures}`;
     chart.setAttribute('role', 'img');
     chart.setAttribute('aria-label', title);
+    // WP-A5: one SVG unit is one CSS pixel. The chart is drawn at its viewBox size, never
+    // scaled up to the panel's width (the 11 px chart text stays 11 px); a narrow panel
+    // scrolls the chart sideways instead of shrinking it.
+    const box = String(chart.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+    if (box.length === 4 && box.every(Number.isFinite)) {
+      chart.setAttribute('width', String(box[2]));
+      chart.setAttribute('height', String(box[3]));
+    }
     const table = valuesTable(null, { columns, rows, caption: caption || title });
     const wrap = HT.el('div', { id, hidden: true }, [table]);
     const c = HT.copy.core;
@@ -50,7 +58,8 @@
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.textContent = open ? c.hideValues : c.showValues;
     });
-    const node = HT.el('figure', { className: 'ht-figure' }, [HT.el('figcaption', { text: title }), chart, toggle, wrap]);
+    const node = HT.el('figure', { className: 'ht-figure' }, [HT.el('figcaption', { text: title }),
+      HT.el('div', { className: 'ht-chart-scroll' }, [chart]), toggle, wrap]);
     if (container) container.appendChild(node);
     return node;
   }

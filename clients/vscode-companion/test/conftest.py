@@ -157,12 +157,16 @@ class Panel:
         self.page.evaluate('m => window.dispatchEvent(new MessageEvent("message", {data: m}))',
                            {'v': 2, **message})
 
-    def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None, study=STUDY_KEY):  # noqa: N803
+    def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None, study=STUDY_KEY,  # noqa: N803
+             marimo=None):
         # `study`: the study key the controller sends (decision CR.2); None leaves it out.
+        # `marimo`: the display of the Marimo launches (WP-A5); None leaves it out.
         message = {'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
                    'chatInsert': chatInsert, 'task': task}
         if study is not None:
             message['study'] = study
+        if marimo is not None:
+            message['marimo'] = marimo
         self.send(message)
 
     def snapshot(self, model: dict) -> None:

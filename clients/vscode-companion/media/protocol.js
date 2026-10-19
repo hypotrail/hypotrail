@@ -80,6 +80,13 @@
         : m.line !== undefined && m.artifact === 'report' ? 'line opens an editor deliverable, not the report'
           : m.line !== undefined && m.resultId !== undefined ? 'line or resultId, not both' : null),
     },
+    // WP-A5 (ADR 0004 amendment "local launch"): open a notebook with Marimo's own local
+    // server in a VS Code terminal, `marimo run` for the generated notebook and `marimo
+    // edit` for the workbench. Not a write of the study; the argv is built in lib/launch.js.
+    open_marimo: {
+      stage: 'v0',
+      fields: { artifact: { t: 'enum', values: ['notebook', 'workbench'] } },
+    },
     navigate_external: {
       stage: 'v3',
       fields: { kind: { t: 'enum', values: ['reveal_export'] }, path: { t: 'str', min: 1, max: 4096 } },
@@ -127,6 +134,13 @@
         // CR.2: the study the panel shows (lib/localstore.js studyKey, never the path). The
         // webview keeps the junior's draft words for this study only.
         study: { t: 'str', re: STUDY_KEY, opt: true },
+        // WP-A5 (local launch): what "Open in Marimo" runs, for display only (the commands
+        // with study-relative files, and the engine environment the notebooks run in).
+        marimo: {
+          t: 'obj', opt: true,
+          fields: { kernel: { t: 'str', nullable: true }, notebook: { t: 'str', nullable: true },
+            workbench: { t: 'str', nullable: true } },
+        },
       },
     },
     // CR.1: `currency` is the version, with the revision, a model was read at.

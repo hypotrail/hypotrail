@@ -230,7 +230,8 @@ def test_dc4_kept_fits_the_conclusion_to_confirm_again_and_regenerated(open_pane
     assert section.locator('[data-effects-box="kept"]').inner_text() == 'Kept\nboth models and their predictions, nothing refitted'
     assert section.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nthe conclusion'
     assert section.locator('[data-effects-box="regenerated"]').inner_text() == 'Regenerated\nreport and notebook'
-    assert section.locator('[data-effects-note]').inner_text() == \
+    # WP-A5: the engine's note on the preview is kept, verbatim, under Details.
+    assert section.locator('details [data-effects-note]').text_content() == \
         'Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm.'
     assert section.locator('[data-effects-first]').count() == 0
     panel.snapshot({**binary, 'revision': 27})
@@ -253,7 +254,8 @@ def test_dc4_first_confirmation_and_a_split_change(open_panel, binary, effects, 
     assert first.locator('[data-effects-box="kept"]').inner_text() == 'Kept\nnothing'
     assert first.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nnothing'
     split = card(panel, 'p_8').locator('[data-effects]')
-    assert 'fit.logistic' in split.locator('[data-effects-box="stale"]').inner_text()
+    stale = split.locator('[data-effects-box="stale"]').inner_text()
+    assert 'the logistic model' in stale and 'fit.logistic' not in stale, 'slots in words (WP-A5)'
     assert split.locator('[data-effects-box="stale"] .dc-box-title').inner_text() == 'Becomes stale'
     assert split.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nthe calling rule'
     assert 'fit.baseline' not in split.locator('[data-effects-box="kept"]').inner_text()
@@ -282,8 +284,14 @@ def test_card_head_pause_origin_holds_and_resolved_conditions(open_panel, binary
     assert c.locator('[data-pause]').inner_text() == 'Pause 3 · business trade-off'
     assert c.locator('h3').first.inner_text() == 'Choose a decision policy'
     assert c.locator('[data-origin]').inner_text() == 'proposal by the agent · not a decision yet'
-    assert c.locator('p.muted').first.inner_text() == 'Proposal p_5, made at revision 26'
-    assert c.locator('code').first.inner_text() == 'capacity:100'
+    # WP-A5: the proposal id and the recorded value are in the hover and under Details.
+    made = c.locator('[data-made-at="p_5"]')
+    assert made.inner_text() == 'Proposed at revision 26' and made.get_attribute('title') == 'p_5'
+    value = c.locator('[data-proposed-value="p_5"]')
+    assert value.inner_text() == 'In short: Call the top 100 by score'
+    assert value.locator('[data-value-raw]').get_attribute('data-value-raw') == 'capacity:100'
+    assert c.locator('[data-value-details="p_5"] code').text_content() == 'capacity:100'
+    assert 'p_5' not in c.locator('h3, [data-proposed-value], [data-made-at]').all_inner_texts().__str__()
     assert c.locator('[data-resolved-note="n_1"]').inner_text() == \
         ('Your condition, resolved: “don\'t adopt anything until I bring my manager\'s figure” → '
          '“my manager says the team can make 100 calls per wave”')
@@ -448,9 +456,12 @@ def test_evidence_chips_at_v2_come_from_current_results_only(open_panel, binary,
     assert any(r['slot'] == 'policy.evaluation' and not r['current'] for r in evidence['results'])
     panel.view_data('evidence', evidence)
     chips = card(panel).locator('[data-evidence="p_5"]')
-    assert chips.locator('[data-evidence-chip]').evaluate_all('cs => cs.map(c => c.innerText)') == ['policy.evaluation · ae80b53f…']
+    # WP-A5: chips in words; the activity and the result id in the hover.
+    assert chips.locator('[data-evidence-chip]').evaluate_all('cs => cs.map(c => [c.innerText, c.title])') == \
+        [['See the calling-rule evaluation →', 'policy.evaluation · result ae80b53f…']]
     delta = chips.locator('[data-evidence-delta] data[data-result-id]')
-    assert delta.inner_text() == 'precision difference +0.245 [+0.157, +0.345]'
+    assert delta.inner_text() == \
+        'Share of successes among the cases picked, against the baseline: +24.5% (interval +15.7% to +34.5%)'
     assert delta.get_attribute('data-result-id') == rid
     assert delta.get_attribute('data-path') == 'rules.capacity:100.deltas.[fit.logistic].precision'
     assert chips.locator('[data-explore]').inner_text() == 'try other rules →'
@@ -504,7 +515,7 @@ def test_dh1_history_basis_channel_superseded_and_unconfirmed(open_panel, binary
     assert rows.evaluate_all('rs => rs.map(r => r.dataset.historyRow)') == [
         'prediction_time:3', 'feature_availability:5', 'split:7', 'policy:27', 'policy:23']
     assert page.locator('table[data-history] th').evaluate_all('ts => ts.map(t => t.innerText)') == \
-        ['Decision', 'Words', 'Basis and channel', 'When']
+        ['Decision', 'Your words', 'How', 'When']
     split = page.locator('[data-history-row="split:7"]')
     basis = split.locator('[data-basis]')
     assert basis.inner_text() == 'delegated (this decision) · chat'
@@ -529,8 +540,13 @@ def test_dh1_history_basis_channel_superseded_and_unconfirmed(open_panel, binary
     proposal = details.locator('[data-unconfirmed-proposal="p_6"]')
     assert 'p_6 · withdrawn' in proposal.inner_text()
     assert proposal.locator('blockquote').inner_text() == 'Call every client scored at 0.5 or more.'
-    fa = page.locator('[data-history-row="feature_availability:5"] code').inner_text()
-    assert fa.startswith('available at prediction time: age, balance') and 'not available: campaign, day, duration, month' in fa
+    # WP-A5: the value in words; the status groups in the hover.
+    fa = page.locator('[data-history-row="feature_availability:5"] .dc-history-value')
+    assert fa.get_attribute('title').startswith('available at prediction time: age, balance')
+    assert 'not available: campaign, day, duration, month' in fa.get_attribute('title')
+    assert fa.inner_text().endswith('4 excluded (duration, day, month, campaign)') or \
+        fa.inner_text().endswith('4 excluded (campaign, day, duration, month)'), fa.inner_text()
+    assert page.locator('[data-history-row="policy:27"] .dc-history-value').inner_text() == 'Call the top 100 by score'
     assert_clean(panel)
 
 
@@ -589,7 +605,7 @@ def test_v0_keeps_the_v0_cards_and_reads_nothing_more(open_panel, binary):
     assert [m['type'] for m in panel.posted()] == ['ready']
     assert page.get_by_label('Your answer, in your own words').input_value() == ''
     assert page.locator('[data-effects], [data-history], [data-pause], [data-origin]').count() == 0
-    assert card(panel).locator('h3').inner_text() == 'Choose a decision policy (policy)'
+    assert card(panel).locator('h3').inner_text() == 'Choose a decision policy', 'no raw decision id (WP-A5)'
     assert_clean(panel)
 
 

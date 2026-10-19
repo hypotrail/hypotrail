@@ -40,7 +40,7 @@ function fileUri(p, fragment = '') {
 function createFake({ folders = [], trusted = true, settings = {}, answers = {}, builtinCommands = {} } = {}) {
   const calls = { info: [], error: [], warning: [], quickPick: [], openDialog: [], panels: [],
     openExternal: [], openExternalUris: [], showTextDocument: [], configuration: [], clipboard: [], inputBox: [],
-    executed: [] };
+    executed: [], terminals: [] };
   const commands = new Map();
   const configListeners = emitter();
   const uriHandlers = [];
@@ -91,6 +91,15 @@ function createFake({ folders = [], trusted = true, settings = {}, answers = {},
         return { dispose() { const i = uriHandlers.indexOf(handler); if (i >= 0) uriHandlers.splice(i, 1); } };
       },
       showTextDocument: async (uri, options) => { calls.showTextDocument.push(uri.fsPath); },
+      // WP-A5: the Marimo launches. A terminal records its options and how often it is shown.
+      terminals: [],
+      createTerminal(options) {
+        const terminal = { options: JSON.parse(JSON.stringify(options)), name: options && options.name, exitStatus: undefined, shown: 0,
+          show() { terminal.shown += 1; }, dispose() { terminal.exitStatus = { code: 0 }; } };
+        calls.terminals.push(terminal);
+        fake.window.terminals.push(terminal);
+        return terminal;
+      },
       createWebviewPanel(viewType, title, column, options) {
         const receive = emitter(), dispose = emitter(), view = emitter();
         const panel = {

@@ -13,9 +13,12 @@
     pause: (n, task) => `Pause ${n} · ${({ 1: 'framing', 2: 'evaluation design', 3: regression(task) ? 'model choice' : 'business trade-off' })[n] || ''}`,
     byAgent: 'proposal by the agent · not a decision yet',
     byPanel: 'proposal from this panel · not a decision yet',
-    madeAt: (pid, rev) => (rev === null || rev === undefined ? `Proposal ${pid}` : `Proposal ${pid}, made at revision ${rev}`),
+    // WP-A5: the proposal id is in the hover (title) and under Details, not in the text.
+    madeAt: (pid, rev) => (rev === null || rev === undefined ? 'Proposed in the chat' : `Proposed at revision ${rev}`),
     restatedAs: 'The assistant restated it as:',
-    proposedValue: 'Proposed value: ',
+    proposedValue: 'In short: ',
+    recordedValue: 'Recorded value: ',
+    details: 'Details',
     availability: {
       available_at_prediction: 'available at prediction time',
       uncertain_included: 'uncertain, included',
@@ -23,8 +26,9 @@
       not_available: 'not available',
     },
     evidenceTitle: 'Evidence',
-    evidenceChip: (activity, rid8) => `${activity} · ${rid8}…`,
-    precisionDelta: (point, low, high) => `precision difference ${point} [${low}, ${high}]`,
+    evidenceChip: (activity, rid8) => `${activity} · result ${rid8}…`,
+    evidenceChipWords: name => `See ${name} →`,
+    precisionDelta: (point, low, high) => `Share of successes among the cases picked, against the baseline: ${point} (interval ${low} to ${high})`,
     explore: task => (regression(task) ? 'explore the errors →' : 'try other rules →'),
     holdOpen: 'On hold in your words: ',
     holdSentence: '. The engine refuses a confirmation of this decision until you resolve the hold in the chat.',
@@ -54,6 +58,7 @@
       conclusion: 'the conclusion',
     }),
     supersedes: pid => `It replaces the open proposal ${pid}.`,
+    supersedesOpen: 'It replaces the proposal that is open now.',
     blockedTitle: 'The engine will refuse a confirmation now:',
     effectsMissing: 'The impact preview is not available.',
     answerLabel: 'Your answer to this proposal, in your own words',
@@ -85,7 +90,7 @@
     chooseInWhatIf: 'Choose in What if?',
     historyTitle: 'Decision history',
     historyCaption: 'Confirmations recorded in the study, grouped by decision, newest first.',
-    columns: ['Decision', 'Words', 'Basis and channel', 'When'],
+    columns: ['Decision', 'Your words', 'How', 'When'],
     basis: (basis, scope) => (basis === 'delegated_default'
       ? (scope === 'standing' ? 'delegated (standing)' : scope === 'this_decision' ? 'delegated (this decision)' : 'delegated')
       : basis === 'explicit' ? 'explicit' : basis),

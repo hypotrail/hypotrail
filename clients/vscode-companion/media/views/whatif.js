@@ -285,7 +285,8 @@
         title: t.metricAt(t.metrics[metric], p.rule), max: 1, unit: t.metrics[metric], rule: null,
         items: fits.map(fit => {
           const v = entry.models[fit][metric];
-          return { label: fitName(t, fit), value: v === null ? 0 : v, valueText: v === null ? t.notDefined : fmt(ctx, v, 'pct1'), small: false, cited: null };
+          return { label: fitName(t, fit), value: v === null ? 0 : v, valueText: v === null ? t.notDefined : fmt(ctx, v, 'pct1'), small: false, cited: null,
+            tone: fit === 'fit.baseline' || fit === p.model.reference ? 'baseline' : null };
         }),
       });
     }
@@ -307,7 +308,7 @@
         rows: fits.map(fit => {
           const point = entry.models[fit].precision;
           const r = entry.intervals[fit].precision;
-          return { label: fitName(t, fit), point, low: r.low, high: r.high,
+          return { label: fitName(t, fit), point, low: r.low, high: r.high, tone: fit === p.model.reference || fit === 'fit.baseline' ? 'baseline' : null,
             pointText: point === null ? t.notDefined : fmt(ctx, point, 'pct1'), intervalText: interval(r) };
         }) });
       if (delta) {
@@ -449,7 +450,8 @@
       intervals(ctx, errors, { title: t.maeTitle, zero: false,
         rows: model.models.map(m => {
           const e = model.errors[m.fit];
-          return { label: name(m.fit), point: e.mae, low: e.maeLow, high: e.maeHigh, pointText: e.mae === null ? '' : `${f2(e.mae)}${unit}`,
+          return { label: name(m.fit), tone: m.fit === model.reference || m.fit === 'fit.baseline' ? 'baseline' : null,
+            point: e.mae, low: e.maeLow, high: e.maeHigh, pointText: e.mae === null ? '' : `${f2(e.mae)}${unit}`,
             intervalText: interval(e.maeLow, e.maeHigh, f2) };
         }) });
       if (model.deltas) {

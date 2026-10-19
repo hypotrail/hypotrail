@@ -32,6 +32,22 @@
   const copyOf = ctx => ctx.copy.decisions;
   const taskOf = ctx => (ctx.snapshot && ctx.snapshot.task) || ctx.task || null;
   const rid8 = id => str(id).slice(0, 8);
+  const J = () => HT.copy.junior;
+
+  /** A decision value in words (WP-A5); the recorded value in its hover, never lost. */
+  function readable(ctx, decisionId, raw, attrs) {
+    const words = J().value(decisionId, raw, taskOf(ctx));
+    return el('span', { className: words ? 'ht-value-words' : 'ht-mono', 'data-value-raw': str(raw),
+      title: words && str(raw) ? `${J().nextMove.engineLabel}: ${str(raw)}` : null, ...(attrs || {}), text: words || str(raw) });
+  }
+
+  /** Slot names of the engine in words (fit.logistic -> the logistic model). */
+  function slotWords(ctx, slot) {
+    const s = str(slot);
+    if (s.startsWith('fit.')) return J().modelName(s, taskOf(ctx));
+    const words = { split: 'the split', 'policy.evaluation': 'the calling-rule evaluation', 'evaluate.regression': 'the model comparison' };
+    return words[s] || s.replace(/[._:]/g, ' ');
+  }
 
   function section(id, title, children, attrs) {
     return el('section', { 'aria-labelledby': id, ...(attrs || {}) }, [el('h2', { id, text: title }), ...children]);
@@ -137,7 +153,8 @@
     const slotOf = r => str(r.slot);
     const chips = [];
     const resultChip = r => el('button', { type: 'button', className: 'dc-chip', 'data-evidence-chip': idOf(r),
-      text: c.evidenceChip(str(r.activity) || slotOf(r), rid8(idOf(r))),
+      title: c.evidenceChip(str(r.activity) || slotOf(r), rid8(idOf(r))),
+      text: c.evidenceChipWords(slotWords(ctx, slotOf(r) || str(r.activity))),
       onclick: () => ctx.navigate({ tab: 'evidence', kind: 'result', id: idOf(r) }) });
     const id = p.decisionId;
     if (EVALUATION_SLOT[id]) {
@@ -152,7 +169,7 @@
         const metric = rule ? arr(rule.metrics).find(x => x && x.metric === 'precision') : null;
         const d = metric && metric.delta;
         if (d && typeof d.point === 'number' && typeof d.low === 'number' && typeof d.high === 'number') {
-          const f = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, 'f3')}`;
+          const f = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, 'pct1')}`;
           chips.push(el('span', { className: 'dc-chip dc-chip-static', 'data-evidence-delta': true },
             [ctx.components.cited(c.precisionDelta(f(d.point), f(d.low), f(d.high)), { resultId: u.resultId, path: d.path, value: d.point })]));
         }
@@ -198,16 +215,16 @@
     } else {
       if (m.firstConfirmation) parts.push(el('p', { 'data-effects-first': true, text: c.effectsFirst }));
       const naming = c.decisionNames(taskOf(ctx));
-      const kept = m.kept.fitsAllKept ? c.keptFits : names(arr(m.kept.slots), c);
+      const kept = m.kept.fitsAllKept ? c.keptFits : names(arr(m.kept.slots).map(x => slotWords(ctx, x)), c);
       const boxes = [
         box('kept', c.kept, kept),
         box('reconfirm', c.toConfirmAgain, names(arr(m.reconfirm).map(r => naming[r.id] || str(r.title) || str(r.id)), c)),
         box('regenerated', c.regenerated, names(arr(m.regenerated).map(n => c.artefactNames[n] || n), c)),
       ];
-      if (arr(m.stale).length) boxes.push(box('stale', c.becomesStale, arr(m.stale).join(', ')));
-      if (arr(m.refit).length) boxes.push(box('refit', c.refitted, arr(m.refit).join(', ')));
+      if (arr(m.stale).length) boxes.push(box('stale', c.becomesStale, arr(m.stale).map(x => slotWords(ctx, x)).join(', ')));
+      if (arr(m.refit).length) boxes.push(box('refit', c.refitted, arr(m.refit).map(x => slotWords(ctx, x)).join(', ')));
       parts.push(el('div', { className: 'dc-boxes' }, boxes));
-      if (m.supersedesProposal) parts.push(el('p', { 'data-supersedes': m.supersedesProposal, text: c.supersedes(m.supersedesProposal) }));
+      if (m.supersedesProposal) parts.push(el('p', { 'data-supersedes': m.supersedesProposal, title: m.supersedesProposal, text: c.supersedesOpen }));
       if (arr(m.blocked).length) {
         blocked = `blocked-${id}`;
         parts.push(el('div', { id: blocked, role: 'status', className: 'dc-blocked', 'data-blocked': id }, [
@@ -218,7 +235,11 @@
         ]));
       }
       if (arr(m.notes).length) parts.push(el('ul', { className: 'muted dc-notes' }, arr(m.notes).map(n => el('li', { text: str(n) }))));
-      if (m.note) parts.push(el('p', { className: 'muted dc-caption', 'data-effects-note': true, text: str(m.note) }));
+      // The engine's note on the preview (layer 2): under Details.
+      if (m.note) {
+        parts.push(el('details', { className: 'ht-details' }, [el('summary', { text: c.details }),
+          el('p', { className: 'muted dc-caption', 'data-effects-note': true, text: str(m.note) })]));
+      }
     }
     return { node: el('div', { className: 'dc-effects', 'aria-labelledby': titleId, 'data-effects': id }, parts), blocked };
   }
@@ -302,7 +323,7 @@
     const pause = v1 ? pauseOf(ctx, p.decisionId) : null;
     const holds = arr(p.holds).map(h => el('p', { className: 'hold dc-hold', 'data-hold': str(h.noteId) }, v1
       ? [c.holdOpen, quote(h.userWords), c.holdSentence]
-      : [c.holdOpenV0(str(h.noteId)), quote(h.userWords), c.holdSentence]));
+      : [c.holdOpen, quote(h.userWords), c.holdSentence]));
     const resolved = v1 ? arr(p.resolvedNotes).map(n => el('p', { className: 'dc-resolved', 'data-resolved-note': str(n.noteId) },
       [c.holdResolved, quote(n.userWords), ' → ', quote(n.resolutionWords || '')])) : [];
     const outcome = ctx.outcome(id);
@@ -317,16 +338,18 @@
         el('span', { className: 'muted dc-origin', 'data-origin': fromPanel ? 'webview' : 'agent' },
           [HT.terms.mark(fromPanel ? c.byPanel : c.byAgent, 'proposal')]),
       ])
-      : el('h3', { id: `title-${id}`, text: `${str(p.decisionTitle)} (${str(p.decisionId)})` });
+      : el('h3', { id: `title-${id}`, text: str(p.decisionTitle) });
 
     const card = el('article', { className: 'card dc-card', 'data-proposal-card': id, 'data-decision': str(p.decisionId),
       'data-nav': `proposal:${id}`, 'aria-labelledby': `title-${id}` }, [
       head,
-      el('p', { className: 'muted', text: c.madeAt(id, Number.isInteger(p.revision) ? p.revision : null) }),
+      el('p', { className: 'muted', 'data-made-at': id, title: id, text: c.madeAt(id, Number.isInteger(p.revision) ? p.revision : null) }),
       v1 ? null : el('p', { text: c.restatedAs }),
       el('blockquote', { text: str(p.restatement), 'data-restatement': id }),
-      el('div', { className: 'dc-value' }, [el('p', {}, [c.proposedValue, el('code', { text: str(p.value) })]),
-        groups ? groupsList(groups, c) : null]),
+      el('div', { className: 'dc-value' }, [el('p', { 'data-proposed-value': id }, [c.proposedValue, readable(ctx, p.decisionId, p.value)]),
+        groups ? groupsList(groups, c) : null,
+        el('details', { className: 'ht-details', 'data-value-details': id }, [el('summary', { text: c.details }),
+          el('p', {}, [c.recordedValue, el('code', { text: str(p.value) }), ` · ${id}`])])]),
       v1 && ctx.atLeast('v2') ? evidenceChips(p, ctx, c) : null,
       ...holds,
       ...resolved,
@@ -408,7 +431,9 @@
           return el('tr', { className: h.current ? '' : 'muted dc-superseded', 'data-history-row': `${h.decisionId}:${h.revision}`,
             'data-current': h.current ? 'true' : 'false', 'data-nav': nav }, [
             el('td', {}, [el('span', { className: 'dc-decision', text: str(h.title) }), ' ',
-              el('code', { text: h.groups ? groupsText(h.groups, c) : str(h.value) })]),
+              h.groups ? el('span', { className: 'dc-history-value', title: groupsText(h.groups, c) },
+                [readable(ctx, h.decisionId, Object.fromEntries(h.groups.flatMap(g => g.columns.map(col => [col, g.status]))))])
+                : el('span', { className: 'dc-history-value' }, [readable(ctx, h.decisionId, h.value)])]),
             el('td', { 'data-words-cell': true }, [quote(h.userWords)]),
             el('td', {}, [el('span', { className: delegated ? 'dc-basis dc-delegated' : 'dc-basis', 'data-basis': str(h.basis),
               text: c.basisChannel(c.basis(str(h.basis), h.scope), str(h.channel)) })]),
@@ -432,7 +457,7 @@
           el('p', {}, [el('span', { className: 'dc-decision', text: str(u.title) }), ' ',
             el('span', { className: 'muted', text: c.proposalStatus(str(u.proposalId), str(u.status), u.closedReason) })]),
           el('blockquote', { text: str(u.restatement) }),
-          el('p', {}, [c.proposedValue, el('code', { text: u.groups ? groupsText(u.groups, c) : str(u.value) })]),
+          el('p', {}, [c.proposedValue, u.groups ? el('code', { text: groupsText(u.groups, c) }) : readable(ctx, u.decisionId, u.value)]),
         ]))),
       ]));
     }
@@ -469,7 +494,7 @@
           : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];
       if (arr(model.holds).length) {
         out.push(section('h-holds', c.holdsTitle, [el('ul', {}, arr(model.holds).map(h =>
-          el('li', { 'data-hold-item': str(h.noteId) }, [`${str(h.decisionTitle)} (${str(h.noteId)}): `, quote(h.userWords)])))]));
+          el('li', { 'data-hold-item': str(h.noteId), title: str(h.noteId) }, [`${str(h.decisionTitle)}: `, quote(h.userWords)])))]));
       }
       if (v1) {
         const entry = ctx.data('decisions');

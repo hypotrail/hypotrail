@@ -73,31 +73,63 @@ def overview_text(page) -> str:
     return page.locator('#panel-overview').inner_text()
 
 
-# --- Where we are (§6.1.1) -------------------------------------------------------------------
+# --- Your next move (§6.1.0, WP-A5) -----------------------------------------------------------
 
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ov1_recap_lines_are_rendered_verbatim_as_a_definition_list(open_panel, binary, scheme):
+def test_ov0_the_next_move_is_the_first_block_and_answers_in_decisions(open_panel, binary, scheme):
     panel = opened(open_panel, binary, scheme=scheme)
     page = panel.page
-    rows = page.locator('[data-recap-list] [data-recap-line]')
-    assert rows.count() == 5
-    got = rows.evaluate_all("rs => rs.map(r => r.querySelector('dt').textContent + ': ' + "
-                            "r.querySelector('[data-recap-text]').textContent)")
-    assert got == binary['recap'], 'byte for byte'
-    assert page.locator('[data-recap-list] dt').all_inner_texts() == ['Goal', 'Decided', 'Now', 'Next', 'Limit']
-    # "Open in Decisions" after the Next line (await_user_words), and only there.
-    link = page.locator('[data-open-decisions]')
-    assert link.count() == 1
-    assert link.get_attribute('data-open-decisions') == 'p_5'
-    link.click()
+    assert page.locator('#panel-overview [data-ov]').first.get_attribute('data-ov') == 'hero'
+    hero = page.locator('[data-ov="hero"]')
+    assert hero.get_attribute('data-hero') == 'await_user_words'
+    assert hero.locator('[data-hero-eyebrow]').inner_text().upper() == 'YOUR NEXT MOVE · PAUSE 3 · BUSINESS TRADE-OFF'
+    assert hero.locator('[data-hero-title]').inner_text() == 'Answer the proposal on the calling rule'
+    assert hero.locator('[data-hero-restatement="p_5"]').inner_text() == binary['proposals'][0]['restatement']
+    value = hero.locator('[data-hero-value]')
+    assert value.inner_text() == 'Call the top 100 by score'
+    assert value.get_attribute('title') == 'Recorded value: capacity:100', 'the recorded value in the hover'
+    assert 'how many clients to call' in hero.locator('[data-hero-why="policy"]').inner_text()
+    # Two-layer copy: the engine's instruction to the assistant is under Details only.
+    agent = binary['nextAction']['message']
+    assert agent not in hero.inner_text()
+    assert agent in hero.locator('[data-hero-details]').text_content()
+    assert 'p_5' not in hero.inner_text() and 'capacity:100' not in hero.inner_text()
+    hero.locator('[data-hero-action="proposal:p_5"]').click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'decisions'
+    assert page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav') == 'proposal:p_5'
     assert_clean(panel)
 
 
-def test_ov2_without_a_recap_the_section_says_so(open_panel, binary):
-    panel = opened(open_panel, {**binary, 'recap': []})
-    assert panel.page.locator('[data-no-recap]').inner_text() == 'No recap yet.'
-    assert panel.page.locator('[data-recap-list]').count() == 0
+# --- Where we are (§6.1.1) -------------------------------------------------------------------
+
+@pytest.mark.parametrize('scheme', THEMES)
+def test_ov1_where_we_are_goal_and_decisions_in_words_junior_recap_under_details(open_panel, binary, scheme):
+    panel = opened(open_panel, binary, scheme=scheme)
+    page = panel.page
+    section = page.locator('[data-ov="where"]')
+    assert section.locator('[data-recap-line="Goal"] dd').inner_text() == binary['recapJunior'][0][len('Goal: '):]
+    decided = section.locator('[data-decided-item]')
+    assert decided.evaluate_all('ds => ds.map(d => d.dataset.decidedItem)') == \
+        ['prediction_time', 'feature_availability', 'split', 'policy']
+    policy = section.locator('[data-decided-item="policy"] [data-value-raw]')
+    assert policy.inner_text() == 'Call everyone scored 0.2 or more'
+    assert policy.get_attribute('data-value-raw') == 'threshold:0.2'
+    split = section.locator('[data-decided-item="split"] [data-value-raw]').inner_text()
+    assert split == 'Stratified random split, 30% of the rows for validation'
+    # OV-1 (amended): the junior recap, byte for byte, under Details; never the agent recap.
+    assert section.locator('[data-recap-details] li').all_text_contents() == binary['recapJunior']
+    text = page.locator('#panel-overview').text_content()
+    for line in binary['recap']:
+        if line not in binary['recapJunior']:
+            assert line not in text, line
+    assert_clean(panel)
+
+
+def test_ov2_without_a_recap_there_is_no_recap_details(open_panel, binary):
+    panel = opened(open_panel, {**binary, 'recap': [], 'recapJunior': []})
+    assert panel.page.locator('[data-recap-details]').count() == 0
+    assert panel.page.locator('[data-ov="where"] [data-recap-line="Goal"]').count() == 0
+    assert panel.page.locator('[data-ov="where"] [data-decided-item]').count() == 4
     assert_clean(panel)
 
 
@@ -160,18 +192,33 @@ def test_map_without_moments_lists_the_plan_in_order(open_panel, binary):
 
 # --- Since your last session (§6.1.3) --------------------------------------------------------
 
+ITEMS = 'li[data-digest-item]:not([data-digest-item="deliverables"])'
+
+
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ov5_ov6_digest_items_verbatim_kept_fits_in_bold_and_no_revision(open_panel, binary, scheme):
+def test_ov5_ov6_digest_grouped_in_the_panels_words_engine_record_under_details(open_panel, binary, scheme):
     panel = opened(open_panel, binary, scheme=scheme)
     page = panel.page
     section = page.locator('[data-ov="since"]')
-    items = section.locator('[data-digest] li')
-    assert items.evaluate_all('is => is.map(i => i.textContent)') == [i['text'] for i in binary['digest']['items']]
+    rows = section.locator(f'[data-digest] {ITEMS}')
+    got = rows.evaluate_all('is => is.map(i => [i.dataset.group, i.querySelector("[data-digest-text]").textContent])')
+    assert got == [
+        ['needs', 'The calling rule was proposed.'],
+        ['evaluated', 'The calling-rule evaluation was computed again.'],
+        ['resolved', 'Your condition on the calling rule, "don\'t adopt anything until I bring my manager\'s figure", '
+                     'was resolved in your words: "my manager says the team can make 100 calls per wave".'],
+        ['other', 'The policy needs confirmation again: its evaluation changed.'],
+    ], 'needs you first, then re-evaluated, resolved; an item the panel has no words for keeps the engine text'
+    assert rows.evaluate_all('is => is.map(i => i.querySelector("[data-chip]").textContent)') == \
+        ['needs you', 're-evaluated', 'resolved', 'other']
     replaced = section.locator('[data-digest-item="result_replaced"]')
     assert replaced.locator('strong[data-kept-fits]').inner_text() == 'Models unchanged, nothing refitted.'
     assert section.locator('strong[data-kept-fits]').count() == 1
-    assert 'needs confirmation again' in section.inner_text()
-    assert 'my manager says the team can make 100 calls per wave' in section.inner_text()
+    deliverables = section.locator('[data-digest-item="deliverables"]')
+    assert deliverables.inner_text().endswith('The report and notebook are up to date.')
+    # Two-layer copy: the engine's third-person record, verbatim, under Details only.
+    assert section.locator('[data-digest-details] li').all_text_contents() == [i['text'] for i in binary['digest']['items']]
+    assert "junior's" not in section.inner_text()
     header = section.locator('[data-since-header]').inner_text()
     assert header.startswith('Since ') and header != 'This session'
     # OV-6: no revision number outside the select's option labels.
@@ -196,11 +243,17 @@ def test_ov5_choosing_the_start_of_the_study_rereads_the_summary_with_since(open
     panel.view_data('summary', older)
     section = page.locator('[data-ov="since"]')
     assert section.locator('[data-since-header]').inner_text() == 'Since the start of the study'
-    assert section.locator('[data-digest] li').count() == 5
+    # Beyond four changes the rest is collapsed under "Show all N changes".
+    assert section.locator(f'[data-digest] {ITEMS}').count() == 4
+    assert section.locator(ITEMS).count() == 5
+    more = section.locator('[data-digest-more]')
+    assert more.locator('summary').inner_text() == 'Show all 5 changes'
+    assert more.get_attribute('open') is None
     assert section.locator('[data-truncated]').inner_text() == \
         'Older changes are not listed. The Decisions tab has the full history.'
     page.locator('[data-since-select]').select_option('23')
-    assert section.locator('[data-digest] li').count() == 4
+    assert section.locator(ITEMS).count() == 4
+    assert section.locator('[data-digest-more]').count() == 0
     assert_clean(panel)
 
 
@@ -219,22 +272,48 @@ def test_digest_of_one_session_truncated_and_empty(open_panel, regression, binar
 
 # --- Deliverables (§6.1.4) -------------------------------------------------------------------
 
+MARIMO = {'kernel': '/opt/hypotrail/framework/.venv',
+          'notebook': 'uv run --project /opt/hypotrail/framework marimo run notebooks/study_generated.py',
+          'workbench': 'uv run --project /opt/hypotrail/framework marimo edit notebooks/workbench.py'}
+
+
 @pytest.mark.parametrize('scheme', THEMES)
-def test_ov7_deliverables_messages_verbatim_open_and_no_regenerate_when_current(open_panel, binary, scheme):
-    panel = opened(open_panel, binary, scheme=scheme)
+@pytest.mark.parametrize('stage', ['v0', 'v1'])
+def test_ov7_deliverables_junior_messages_open_file_and_marimo_launches(open_panel, binary, scheme, stage):
+    panel = opened(open_panel, binary, scheme=scheme, stage=stage, marimo=MARIMO)
     page = panel.page
     rows = page.locator('[data-ov="deliverables"] [data-artifact]')
     assert rows.evaluate_all('rs => rs.map(r => r.dataset.artifact)') == ['report', 'notebook', 'workbench']
     for a in binary['artifacts']:
         row = page.locator(f'[data-ov="deliverables"] [data-artifact="{a["name"]}"]')
-        assert row.locator('[data-message]').inner_text() == a['message']
+        # Two-layer copy: the junior variant; the engine message (it names paths) in the hover.
+        expected = '' if a['name'] == 'workbench' else a['juniorMessage']
+        assert row.locator('[data-message]').inner_text() == expected
+        assert row.locator('[data-message]').get_attribute('title') == a['message']
     assert page.locator('[data-ov="deliverables"] [data-artifact="report"] .ov-deliverable-label').inner_text() == \
         'Report · study.html'
+    assert page.locator('[data-artifact="workbench"] [data-status-chip]').inner_text() == 'yours'
     assert page.locator('[data-write="render"]').count() == 0
     page.get_by_role('button', name='Open the report in the browser').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}
     page.get_by_role('button', name='Open workbench in the editor').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench'}
+    # The local launch (ADR 0004 "local launch"): read the generated notebook, edit the workbench.
+    page.get_by_role('button', name='Open in Marimo (read)').click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'notebook'}
+    page.get_by_role('button', name='Open in Marimo (edit)').click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'workbench'}
+    assert page.locator('[data-launch="notebook"]').inner_text() == MARIMO['notebook']
+    assert page.locator('[data-launch="workbench"]').inner_text() == MARIMO['workbench']
+    assert MARIMO['kernel'] in page.locator('[data-kernel]').inner_text()
+    assert_clean(panel)
+
+
+def test_ov7_reviewer_has_no_marimo_edit(open_panel, binary):
+    panel = opened(open_panel, binary, reviewer=True, marimo=MARIMO)
+    page = panel.page
+    assert page.locator('[data-marimo="workbench"]').count() == 0
+    assert page.locator('[data-marimo="notebook"]').count() == 1
     assert_clean(panel)
 
 
@@ -410,23 +489,43 @@ def test_checks_stale_and_failed_states(open_panel, health, model):
     assert panel.posted()[-1] == {'v': 2, 'type': 'load', 'view': 'check'}
     panel.view_data('check', model('check', 'check.binary'))
     panel.snapshot({**health, 'revision': 27})
-    assert page.locator('[data-updating="check"]').inner_text() == 'Updating...'
+    # WP-A5: older findings stay visible, dimmed and busy, with no "Updating..." label.
+    stale = page.locator('[data-updating="check"]')
+    assert stale.get_attribute('aria-busy') == 'true' and 'ht-stale' in stale.get_attribute('class')
+    assert 'Updating' not in page.locator('[data-ov="deliverables"]').inner_text()
     assert panel.posted()[-1] == {'v': 2, 'type': 'load', 'view': 'check'}, 'a newer revision reads again'
-    assert page.locator('[data-finding]').count() == 2, 'older findings stay visible while updating'
+    assert stale.locator('[data-finding]').count() == 2, 'older findings stay visible while updating'
+    panel.view_data('check', model('check', 'check.binary'), revision=27)
+    assert page.locator('[data-updating="check"]').count() == 0, 'fresh findings are not marked'
+    assert page.locator('[data-finding]').count() == 2
     assert_clean(panel)
 
 
 def test_not_yet_defensible_and_alert_navigation_to_health(open_panel, health):
     panel = opened(open_panel, health)
     page = panel.page
+    # WP-A5: every limit once, with its severity, blocking first; the junior variant (or
+    # the panel's words for an id) as text, never a text written for the agent.
     nyd = page.locator('[data-health="nyd"]')
-    assert nyd.locator('li').all_inner_texts() == [i['text'] for i in health['notYetDefensible']['top']]
-    assert nyd.locator('[data-nyd-more]').inner_text() == 'More: no_causality, workbench_not_tracked'
+    top = health['notYetDefensible']['top']
+    ids = nyd.locator('li[data-nyd]').evaluate_all('ls => ls.map(l => l.dataset.nyd)')
+    assert sorted(ids) == sorted([i['id'] for i in top] + health['notYetDefensible']['more'])
+    assert len(ids) == len(set(ids)), 'each limit is listed once'
+    severities = nyd.locator('li[data-nyd]').evaluate_all('ls => ls.map(l => l.dataset.severity)')
+    order = ['blocking', 'caveat', 'sealed', 'context']
+    assert severities == sorted(severities, key=order.index)
+    assert severities[0] == 'blocking'
+    for i in top:
+        text = nyd.locator(f'li[data-nyd="{i["id"]}"] [data-limit-text]').inner_text()
+        assert text == (i['juniorText'] or i['text'])
+        if i['audience'] == 'agent':
+            assert i['text'] not in nyd.inner_text()
+    assert nyd.locator('li[data-nyd="no_causality"] [data-chip]').inner_text() == 'context'
+    assert 'no_causality' not in nyd.inner_text(), 'no raw id as text'
     page.locator('[role="tab"][data-tab="decisions"]').click()
-    page.locator('[data-alert="interrupted_executions"] button').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
-    assert page.evaluate('document.activeElement.id') == 'ov-executions'
+    assert page.locator('[data-alert="interrupted_executions"]').count() == 0, 'one alert per event'
     page.locator('[data-alert="outcome_unknown"] button').click()
+    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
     focused = page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav')
     assert focused == 'limit:outcome_unknown'
     assert page.locator(f'[data-nav="limit:outcome_unknown"] [data-execution-card="{SUSPECTED}"]').count() == 1
@@ -470,8 +569,11 @@ def test_rv2_reviewer_overview_has_no_write_control_and_keeps_reads(open_panel, 
 def test_v0_shows_the_v0_subset_only(open_panel, health):
     panel = opened(open_panel, health, stage='v0')
     page = panel.page
-    assert page.locator('[data-recap] li').count() == 5
-    for hook in ['[data-ov]', '[data-map]', '[data-digest]', '[data-check]', '[data-write="render"]',
+    # WP-A5: v0 has the next move, the plan, where we are, the limits, and the deliverables.
+    assert page.locator('#panel-overview [data-ov]').evaluate_all('ss => ss.map(s => s.dataset.ov)') == \
+        ['hero', 'map', 'where', 'limits', 'deliverables']
+    assert page.locator('[data-recap-details] li').count() == 5
+    for hook in ['[data-digest]', '[data-check]', '[data-write="render"]', '[data-ov="health"]',
                  '[data-write="acknowledge"]', '[data-stage]']:
         assert page.locator(hook).count() == 0, hook
     assert_clean(panel)
@@ -484,9 +586,11 @@ def test_v1_sections_carry_their_stage_and_loading_is_busy(open_panel, binary):
     assert page.locator('#panel-overview').get_attribute('aria-busy') == 'true'
     assert page.locator('#panel-overview').inner_text() == 'Reading the study...'
     panel.snapshot(binary)
-    for hook in ['where', 'map', 'health']:
+    for hook in ['where', 'map', 'deliverables']:
         assert page.locator(f'[data-ov="{hook}"]').get_attribute('data-stage') == 'v1', hook
     assert page.locator('.ov-grid').get_attribute('data-stage') == 'v1'
+    assert page.locator('[data-ov="hero"]').get_attribute('data-stage') is None, 'the next move is in every stage'
+    assert page.locator('[data-ov="health"]').count() == 0, 'Health shows nothing when nothing is wrong'
     assert_clean(panel)
 
 
@@ -503,7 +607,8 @@ def test_a11y_names_labels_headings_and_tabindex(open_panel, health, scheme):
     assert unnamed == []
     assert page.locator('#panel-overview [tabindex]:not([tabindex="-1"]):not([tabindex="0"])').count() == 0
     assert page.locator('#panel-overview h2').all_inner_texts() == [
-        'Where we are', 'Study map', 'Since your last session', 'Deliverables', 'Health']
+        'A run stopped before it finished', 'Needs attention', 'Study map', 'Since your last session',
+        'What you cannot claim yet', 'Where we are', 'Your deliverables']
     assert page.locator('#panel-overview section[aria-labelledby]').count() >= 5
     button = page.get_by_role('button', name='Open the report in the browser')
     button.focus()

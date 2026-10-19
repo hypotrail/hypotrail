@@ -6,6 +6,9 @@
 // carries the text "small" (never colour alone). Cited values carry data-result-id,
 // data-path and data-value. Returns the figure element.
 //
+// WP-A5: an item with `tone: 'baseline'` (a reference such as the baseline model) is drawn
+// in the baseline grey; every other bar is the model accent.
+//
 // WP-I: the label and value columns are as wide as their longest text (an estimate of
 // the 11 px font, bounded), and the plot keeps its width, so a long label is not clipped;
 // `labelWidth` and `valueWidth` (viewBox units) override the estimate.
@@ -47,7 +50,8 @@
           HT.svg('text', { x: LABEL - 6, y: y + 13, class: 'ht-label', 'text-anchor': 'end',
             text: item.small ? `${item.label} (${HT.copy.core.small})` : item.label }),
           HT.svg('rect', { x: LABEL, y, height: ROW - 8, width: Math.max(1, x(item.value) - LABEL),
-            fill: item.small ? `url(#${id})` : 'accent', 'data-hatched': item.small ? 'true' : null }),
+            fill: item.small ? `url(#${id})` : item.tone === 'baseline' ? 'baseline' : 'accent',
+            'data-hatched': item.small ? 'true' : null, 'data-tone': item.tone === 'baseline' ? 'baseline' : 'model' }),
           text,
         ]);
       }),

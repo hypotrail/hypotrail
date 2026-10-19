@@ -291,7 +291,7 @@ test('HE-2: no write of the Overview restarts or runs an activity', () => {
     fs.readFileSync(path.join(ROOT, 'media', 'copy', 'overview.js'), 'utf8');
   assert.doesNotMatch(view, /'(Restart|Run|Rerun)\b[^']*'/);
   assert.doesNotMatch(view, /type: 'run_eda'|type: 'propose'/);
-  assert.deepEqual(Object.keys(overview.types).sort(), ['acknowledge', 'open_artifact', 'render', 'switch_study']);
+  assert.deepEqual(Object.keys(overview.types).sort(), ['acknowledge', 'open_artifact', 'open_marimo', 'render', 'switch_study']);
 });
 
 // --- reviewer (RV-2) -------------------------------------------------------------------------

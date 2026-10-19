@@ -10,6 +10,8 @@ lib/flag.js             enabled, stage (v0-v3), learningLayer, reviewer, chatIns
 lib/study.js            study discovery and agent.json validation (the CLI argv)
 lib/watch.js            fs.watch of .hypotrail/ (debounced), no polling
 lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W1-W7 (WRITES), run()
+lib/launch.js           the two Marimo launches (WP-A5, ADR 0004 "local launch"): marimo run of the generated
+                        notebook, marimo edit of the workbench; argv from status --json or agent.json
 lib/protocol.js         hypotrail.panel/2 schema table and validators; emits media/protocol.js
 lib/controller.js       router: validation, stage gate, reviewer refusal, summary, load dispatch,
                         cache + coalescing + read limits, exclusive write lock, outcome mapping
@@ -27,11 +29,13 @@ media/core.js           webview runtime: frame, tabs, live region, modal, toolti
 media/terms.js          glossary marks and hovers; Hypotrail.askAgent / askButton (the one "Ask the agent" helper)
 media/components/*.js   bars, intervalRows, histogram, boxplot, valuesTable, figure, segments, cited
 media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame)
+media/copy/junior.js    the junior-facing copy keyed by kind/code/id, and decision values in words (WP-A5,
+                        two-layer copy, COMPANION-ADVANCED §15.1)
 media/views/<view>.js   one view per tab, registered with Hypotrail.register
 media/css/*.css         tokens.css (theme), core.css (frame, components), <view>.css
 ```
 
-Only `lib/cli.js` starts a process. Every read runs with `cli.READ_ENV` (`HYPOTRAIL_SESSION_LOG=0`) merged over the host's environment, so the opt-in session log never records the panel's polling; writes inherit the environment (COMPANION-ADVANCED §5). Only `extension.js` requires `vscode`, so the controller and handlers run under `node --test` with a fake CLI.
+Only `lib/cli.js` starts a process. The one exception is not a child process of the panel: `extension.js` opens a VS Code terminal for the two Marimo launches that `lib/launch.js` accepts (`createTerminal` with `shellPath`/`shellArgs`), and `scripts/check_layout.py` refuses any other terminal. Every read runs with `cli.READ_ENV` (`HYPOTRAIL_SESSION_LOG=0`) merged over the host's environment, so the opt-in session log never records the panel's polling; writes inherit the environment (COMPANION-ADVANCED §5). Only `extension.js` requires `vscode`, so the controller and handlers run under `node --test` with a fake CLI.
 
 ## Message flow
 
@@ -64,6 +68,9 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, 
 - **Fields added by CR**: `currency?` on `snapshot`, `view_data`, `effects`, `draft_result`, `preview_policy_result` (CR.1); `init.study?` (CR.2).
 
 ## Rules every view keeps
+
+- Two-layer copy (COMPANION-ADVANCED §15.1, INV-16): primary content is the panel's copy keyed by the engine's kind, code, or id, or an engine junior text; an `audience: agent` text, a raw id, or a recorded token goes to a hover or a "Details" disclosure.
+- Status and severity tags use one vocabulary (`ht-status ht-st-*`, `ht-tag ht-sev-*`), coloured by the `--vscode-charts-*` tokens; buttons and cards take their borders from `--ht-button-border` and `--ht-card-border`.
 
 - Study text goes in with `text` or text nodes; `el()` refuses `style`, `innerHTML`, and non-function handlers.
 - Words the junior types go only in `ctx.wordsArea({kind, key, ...attrs})`; no other textarea exists (INV-5, `test/invariants.test.js`).

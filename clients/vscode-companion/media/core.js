@@ -438,9 +438,13 @@
   function alertStrip() {
     const snap = state.snapshot;
     if (!snap || !(snap.alerts || []).length) return null;
+    // One alert per event: an unknown outcome is also listed as an interrupted execution.
+    const unknown = snap.alerts.some(a => a.id === 'outcome_unknown');
+    const alerts = snap.alerts.filter(a => !(unknown && a.id === 'interrupted_executions'));
     return el('section', { className: 'ht-alerts', 'aria-label': C().alertsLabel, 'data-stage': 'v1' },
-      snap.alerts.map(a => el('div', { className: 'card alert', role: 'alert', 'data-alert': a.id }, [
-        el('p', { text: a.text }),
+      alerts.map(a => el('div', { className: 'card alert', role: 'alert', 'data-alert': a.id }, [
+        // Two-layer copy (WP-A5): the junior variant, else the panel's own words for the id.
+        el('p', { text: a.juniorText || (HT.copy.junior && HT.copy.junior.limitText[a.id]) || (a.audience === 'agent' ? '' : a.text) }),
         el('button', { type: 'button', className: 'secondary', text: C().openHealth,
           onclick: () => navigate({ tab: 'overview', kind: 'limit', id: a.id }) }),
       ])));
@@ -448,26 +452,37 @@
 
   function recapStrip() {
     const snap = state.snapshot;
-    if (!snap || !(snap.recap || []).length) return null;
+    // Two-layer copy (WP-A5): the junior recap only; the agent recap is never shown here.
+    const lines = Array.isArray(snap && snap.recapJunior) ? snap.recapJunior
+      : snap && snap.recapAudience !== 'agent' ? snap.recap || [] : [];
+    if (!lines.length) return null;
     const collapsed = ui.recapCollapsed === true;
     const c = C();
     return el('section', { className: 'ht-recap', 'aria-label': c.recapTitle, 'data-stage': 'v1', 'data-recap-strip': true }, [
       el('button', { type: 'button', className: 'ht-link', 'aria-expanded': collapsed ? 'false' : 'true',
         text: collapsed ? c.recapShow : c.recapHide, onclick: () => { uiState.set('recapCollapsed', !collapsed); render(); } }),
-      collapsed ? null : el('ul', {}, snap.recap.map(line => el('li', { text: line }))),
+      // WP-A5: the Decided line in the panel's words (no recorded token such as a rule).
+      collapsed ? null : el('ul', {}, lines.map(line => el('li', {
+        'data-recap-strip-line': line.split(':')[0],
+        text: line.startsWith('Decided: ') && HT.copy.junior ? HT.copy.junior.decidedLine(snap) : line }))),
     ]);
   }
 
+  /**
+   * The load error (WP-A5): it replaces the content, so nothing read before is shown as
+   * current, and it says what to do next. The CLI's message and stderr are under Details.
+   */
   function loadErrorBanner() {
     const e = state.loadError;
     if (!e) return null;
     const c = C();
-    return el('div', { className: 'card alert', role: 'alert', 'data-load-error': true }, [
+    return el('div', { className: 'card alert ht-error-state', role: 'alert', 'data-load-error': true }, [
       el('p', { className: 'title', text: c.loadErrorTitle }),
-      el('p', { text: e.message }),
-      state.snapshot ? el('p', { className: 'muted', text: c.lastRead(state.snapshot.revision) }) : null,
-      e.detail ? el('details', {}, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: e.detail })]) : null,
-      el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: refreshAll }),
+      el('p', { 'data-next-step': true, text: c.loadErrorNext }),
+      state.snapshot ? el('p', { className: 'muted', 'data-last-read': true, text: c.lastRead(state.snapshot.revision) }) : null,
+      el('button', { type: 'button', text: c.retry, onclick: refreshAll }),
+      el('details', { className: 'ht-details' }, [el('summary', { text: c.loadErrorDetail }),
+        el('p', { 'data-error-message': true, text: e.message }), e.detail ? el('pre', { text: e.detail }) : null]),
     ]);
   }
 
@@ -492,6 +507,15 @@
       error: name => state.errors[name] || null,
       busy: Boolean(state.busy), busyOp: state.busy ? state.busy.op : null, busyTarget: state.busy ? state.busy.target : null,
       send, load: (name, extra) => send({ type: 'load', view: name, ...(extra || {}) }),
+      // WP-A5: ask for a data view once per version, shared with the frame's own requests
+      // (another tab that needs the same view does not ask again).
+      wanted: name => Boolean(state.requested[`${name}@${version()}`]) && !state.errors[name],
+      want: name => {
+        const key = `${name}@${version()}`;
+        if (fresh(state.data[name]) || state.requested[key] || state.errors[name]) return;
+        state.requested[key] = true;
+        send({ type: 'load', view: name });
+      },
       version, fresh, stamp, epoch: () => state.epoch,
       retry: name => { delete state.errors[name]; for (const k of Object.keys(state.requested)) if (k.startsWith(`${name}@`)) delete state.requested[k]; },
       drafts, ui: uiState, wordsArea,
@@ -548,6 +572,20 @@
     return node;
   }
 
+  /**
+   * WP-A5: every table can turn into cards on a narrow panel (core.css, below 600 px): each
+   * body cell gets its column's head text as `data-label`. Text only, set as an attribute.
+   */
+  function cardTables(node) {
+    for (const table of node.querySelectorAll('table')) {
+      const heads = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
+      table.classList.add('ht-cardable');
+      for (const row of table.querySelectorAll('tbody tr')) {
+        [...row.children].forEach((cell, i) => { if (heads[i] !== undefined) cell.setAttribute('data-label', heads[i]); });
+      }
+    }
+  }
+
   function render() {
     if (!root) return;
     const focused = document.activeElement;
@@ -558,18 +596,20 @@
     const list = tabs();
     const current = activeTab();
     const mounted = [];
-    const panels = list.map(tab => panel(tab, current, mounted));
+    const panels = state.loadError ? [] : list.map(tab => panel(tab, current, mounted));
     root.textContent = '';
     append(root, [
       header(),
       tabbed() && list.length ? tablist(list, current) : null,
-      loadErrorBanner(),
-      tabbed() ? alertStrip() : null,
-      tabbed() && current !== 'overview' ? recapStrip() : null,
+      // WP-A5: the Overview opens on the next move and its "Needs attention" section, so the
+      // alert strip is shown on the other tabs only (nothing pushes the next move down).
+      state.loadError ? null : (tabbed() && current !== 'overview' ? alertStrip() : null),
+      state.loadError ? null : (tabbed() && current !== 'overview' ? recapStrip() : null),
       liveRegion(mounted),
-      el('main', { id: 'main' }, panels),
+      el('main', { id: 'main' }, state.loadError ? [loadErrorBanner()] : panels),
       el('footer', { className: 'ht-footer muted', text: C().footer }),
     ]);
+    cardTables(root);
     // Reviewer mode: no write control, except the handoff export (decision CA.9).
     if (state.init.reviewer) for (const node of root.querySelectorAll('[data-write]:not([data-write="export"])')) node.remove();
     if (focusId) {
@@ -609,13 +649,19 @@
     switch (m.type) {
       case 'init':
         bindStudy(m.study);
-        state.init = { stage: m.stage, reviewer: m.reviewer, learningLayer: m.learningLayer, chatInsert: m.chatInsert, task: m.task };
+        state.init = { stage: m.stage, reviewer: m.reviewer, learningLayer: m.learningLayer, chatInsert: m.chatInsert, task: m.task,
+          marimo: m.marimo || null };
         break;
       case 'snapshot': onSnapshot(m); break;
       case 'view_data':
         state.data[m.view] = { ...stamp(m, state.loadEpoch[m.view] === undefined ? state.epoch : state.loadEpoch[m.view]),
           model: m.model, resultId: m.resultId || null };
         delete state.errors[m.view];
+        // A request made at another version is answered (or superseded): forget it, so a
+        // later return to that version asks again (WP-A5, the shared `want`).
+        for (const k of Object.keys(state.requested)) {
+          if (k.startsWith(`${m.view}@`) && k !== `${m.view}@${version()}`) delete state.requested[k];
+        }
         break;
       case 'load_error':
         if (m.view === null) state.loadError = { message: m.message, detail: m.detail };
