@@ -138,7 +138,7 @@ def compact_snapshot(ws: Path) -> dict:
         decisions[d] = {'status': v.get('status'), 'value': v.get('value'),
                         'user_words': conf.get('user_words'), 'proposal_id': v.get('proposal_id'),
                         'confirmed_revision': conf.get('revision'), 'reason': v.get('reason'),
-                        'basis': conf.get('basis')}
+                        'basis': conf.get('basis'), 'agent_concern': conf.get('agent_concern')}
     ex = view.get('executions') or {}
     arts = view.get('artifacts') or {}
     return {'revision': snap['revision'], 'current_step': view.get('current_step'),

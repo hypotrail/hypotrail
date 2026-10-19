@@ -31,7 +31,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    Compute only with `hypotrail run`. Every number you
 <!-- hypotrail:end -->
    write comes from a hypotrail output, and you name its `result_id` (the first 8
-   characters are enough). Do not compute differences, sums, or counts in your prose:
+   characters are enough; the data card's figures have none). Do not compute differences, sums, or counts in your prose:
 <!-- hypotrail:task binary -->
    cite the registered value (a model-minus-baseline difference is in
    `policy.evaluation` under `rules.<rule>.deltas`), or write the two registered figures
