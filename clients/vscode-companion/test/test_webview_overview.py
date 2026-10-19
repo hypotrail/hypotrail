@@ -282,7 +282,8 @@ def test_he1_he2_execution_cards_empty_reply_disabled_until_typed_and_no_rerun(o
     cards = page.locator('[data-execution-card]')
     assert cards.evaluate_all('cs => cs.map(c => c.dataset.executionCard)') == [INTERRUPTED, SUSPECTED]
     card = page.locator(f'[data-execution-card="{INTERRUPTED}"]')
-    assert card.locator('h4').inner_text() == 'policy.evaluate: the outcome is unknown. Nothing will be restarted.'
+    # WP-I: the engine names the activity policy.evaluation (policy.evaluate is the CLI alias).
+    assert card.locator('h4').inner_text() == 'policy.evaluation: the outcome is unknown. Nothing will be restarted.'
     area = card.get_by_label('Your reply, in your own words')
     assert area.input_value() == '', 'INV-5: never pre-filled'
     hint = card.locator(f'#ack-hint-{INTERRUPTED}')
@@ -371,9 +372,12 @@ def test_he3_checks_load_on_expand_show_findings_counts_and_open(open_panel, hea
     assert stale.locator('[data-finding-message]').inner_text() == '11.0% cites result b7e3c1d0, which is not current.'
     assert stale.locator('[data-where]').inner_text() == 'reports/study.html'
     stale.get_by_role('button', name='Open reports/study.html').click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}, 'v1: no anchor yet'
+    # WP-I (U1 request): from v1 the report opens at the cited result's anchor and an
+    # editor deliverable at the finding's line (open_artifact.resultId and .line).
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report',
+                                  'resultId': 'b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'}
     page.locator('[data-finding="causal_wording"]').get_by_role('button').click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench'}
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench', 'line': 42}
     loads = [m for m in panel.posted() if m.get('view') == 'check']
     assert len(loads) == 1, 'cached per revision: one read'
     panel.view_data('check', model('check', 'check.binary.clean'))
@@ -427,6 +431,19 @@ def test_not_yet_defensible_and_alert_navigation_to_health(open_panel, health):
     assert page.locator(f'[data-nav="limit:outcome_unknown"] [data-execution-card="{SUSPECTED}"]').count() == 1
     navs = page.locator('#panel-overview [data-nav]').evaluate_all('ns => ns.map(n => n.dataset.nav)')
     assert len(navs) == len(set(navs)), 'navigation targets are unique'
+    assert_clean(panel)
+
+
+def test_navigation_focuses_an_h4_heading_of_its_own_target(open_panel, health):
+    # WP-I (U1 request): the frame focuses the target's own h2, h3, or h4, never the
+    # heading of a navigation target nested inside it.
+    panel = opened(open_panel, health)
+    page = panel.page
+    panel.send({'type': 'navigate', 'tab': 'overview', 'kind': 'execution', 'id': INTERRUPTED})
+    assert page.evaluate('document.activeElement.tagName') == 'H4'
+    assert page.evaluate('document.activeElement.id') == f'ov-exec-{INTERRUPTED}'
+    panel.send({'type': 'navigate', 'tab': 'overview', 'kind': 'limit', 'id': 'outcome_unknown'})
+    assert page.evaluate('document.activeElement.dataset.nav') == 'limit:outcome_unknown'
     assert_clean(panel)
 
 

@@ -1,0 +1,1761 @@
+{
+ "about": {
+  "schema": "hypotrail.evidence/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "evidence",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.evidence/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "revision": 24,
+  "task": "regression",
+  "results": [
+   {
+    "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+    "activity": "split",
+    "slot": "split",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "all",
+    "n_rows": 398,
+    "params": {},
+    "upstream": {},
+    "downstream": [
+     "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc"
+    ],
+    "created": "2026-10-19T00:49:32.777944+00:00",
+    "started_revision": 8,
+    "execution_id": "e_20377cec9f51f6bf5ba1fa64",
+    "exposure_id": "x_67788ebbe26c48ab91e69ba20e265c83",
+    "values": {
+     "method": "ordinal_cutoff",
+     "column": "model_year",
+     "cutoff": 79,
+     "n_rows": 398,
+     "partitions": {
+      "train": {
+       "n_rows": 280,
+       "column_min": 70,
+       "column_max": 78,
+       "distinct_values": 9
+      },
+      "validation": {
+       "n_rows": 118,
+       "column_min": 79,
+       "column_max": 82,
+       "distinct_values": 4
+      }
+     },
+     "validation_share": 0.2964824120603015,
+     "stratified_on": null,
+     "implementation": "mlkit.study.activities (ordinal cutoff on the integer values of the time column, never converted to a date)",
+     "scenario": "Rows with model_year >= 79 are validated on a model fitted on rows with model_year < 79: later periods validated on earlier ones. Values beyond the training range are extrapolation.",
+     "groups": {
+      "column": "car_name",
+      "n_groups": 305,
+      "train_groups": 212,
+      "validation_groups": 109,
+      "shared_groups": 16,
+      "validation_rows": 118,
+      "validation_rows_in_shared_groups": 18,
+      "validation_share_in_shared_groups": 0.15254237288135594,
+      "examples": [
+       "amc concord",
+       "buick century",
+       "buick estate wagon (sw)",
+       "buick skylark",
+       "chevrolet caprice classic"
+      ],
+      "capability": "grouped split (v0.2)",
+      "note": "Grouped split is not available in this version: validation rows of a shared group are not independent of the training rows."
+     },
+     "overlap": null
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "280",
+       "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+       "path": "partitions.train.n_rows",
+       "value": 280,
+       "format": "int"
+      },
+      {
+       "text": " training rows / "
+      },
+      {
+       "text": "118",
+       "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+       "path": "partitions.validation.n_rows",
+       "value": 118,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+    "activity": "eda.target_summary",
+    "slot": "eda.target_summary",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 280,
+    "params": {},
+    "upstream": {
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [],
+    "created": "2026-10-19T00:49:32.911700+00:00",
+    "started_revision": 10,
+    "execution_id": "e_ce609b5bf3b974a84907e237",
+    "exposure_id": "x_f8881cd17b4543df93a385ddf0895c27",
+    "values": {
+     "partition": "train",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 280,
+     "n_missing": 0,
+     "n": 280,
+     "mean": 20.68285714285714,
+     "sd": 6.299165819008179,
+     "min": 9.0,
+     "q25": 15.5,
+     "median": 19.95,
+     "q75": 25.0,
+     "max": 43.1,
+     "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Mean "
+      },
+      {
+       "text": "20.68",
+       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "path": "mean",
+       "value": 20.68285714285714,
+       "format": "f2"
+      },
+      {
+       "text": " mpg, standard deviation "
+      },
+      {
+       "text": "6.30",
+       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "path": "sd",
+       "value": 6.299165819008179,
+       "format": "f2"
+      },
+      {
+       "text": " on "
+      },
+      {
+       "text": "280",
+       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "path": "n_rows",
+       "value": 280,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+    "activity": "eda.special_values",
+    "slot": "eda.special_values",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 280,
+    "params": {},
+    "upstream": {
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [],
+    "created": "2026-10-19T00:49:33.100882+00:00",
+    "started_revision": 12,
+    "execution_id": "e_2b12242f306cde1c5f3670f1",
+    "exposure_id": "x_2b1c10a74a01461086aab330bd346ac7",
+    "values": {
+     "partition": "train",
+     "n_rows": 280,
+     "target": "mpg",
+     "unit": "mpg",
+     "special_values": [
+      {
+       "column": "horsepower",
+       "value": "?",
+       "meaning": "Missing value.",
+       "status": "observed",
+       "source": "data/auto-mpg.names:44 documents 6 missing horsepower values; structural inspection of data/auto-mpg.data shows that they are written \"?\"",
+       "n_rows": 2,
+       "share": 0.007142857142857143,
+       "mean_target": 23.0
+      }
+     ],
+     "co_occurrence": [],
+     "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Special values counted on "
+      },
+      {
+       "text": "280",
+       "result_id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+       "path": "n_rows",
+       "value": 280,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+    "activity": "eda.mean_by",
+    "slot": "eda.mean_by:model_year",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 280,
+    "params": {
+     "column": "model_year"
+    },
+    "upstream": {
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [],
+    "created": "2026-10-19T00:49:33.263350+00:00",
+    "started_revision": 14,
+    "execution_id": "e_e80fb65ac70384bd8bab0358",
+    "exposure_id": "x_ce4d187875254217b149fff7901a86ee",
+    "values": {
+     "partition": "train",
+     "column": "model_year",
+     "target": "mpg",
+     "unit": "mpg",
+     "n_rows": 280,
+     "overall_mean": 20.68285714285714,
+     "binned": false,
+     "binning": null,
+     "groups": [
+      {
+       "value": "70",
+       "n_rows": 29,
+       "mean": 17.689655172413794,
+       "sd": 5.33923113964563,
+       "small_count": true
+      },
+      {
+       "value": "71",
+       "n_rows": 28,
+       "mean": 21.25,
+       "sd": 6.591942331642754,
+       "small_count": true
+      },
+      {
+       "value": "72",
+       "n_rows": 28,
+       "mean": 18.714285714285715,
+       "sd": 5.435528819257014,
+       "small_count": true
+      },
+      {
+       "value": "73",
+       "n_rows": 40,
+       "mean": 17.1,
+       "sd": 4.700245492770319,
+       "small_count": false
+      },
+      {
+       "value": "74",
+       "n_rows": 27,
+       "mean": 22.703703703703702,
+       "sd": 6.42000967417684,
+       "small_count": true
+      },
+      {
+       "value": "75",
+       "n_rows": 30,
+       "mean": 20.266666666666666,
+       "sd": 4.940566303805552,
+       "small_count": false
+      },
+      {
+       "value": "76",
+       "n_rows": 34,
+       "mean": 21.573529411764707,
+       "sd": 5.8892973714537264,
+       "small_count": false
+      },
+      {
+       "value": "77",
+       "n_rows": 28,
+       "mean": 23.375,
+       "sd": 6.67586171438786,
+       "small_count": true
+      },
+      {
+       "value": "78",
+       "n_rows": 36,
+       "mean": 24.061111111111114,
+       "sd": 6.898044351337259,
+       "small_count": false
+      }
+     ],
+     "min_group_rows": 30,
+     "warnings": [
+      "model_year = 70: only 29 training rows; its mean is too noisy to read on its own.",
+      "model_year = 71: only 28 training rows; its mean is too noisy to read on its own.",
+      "model_year = 72: only 28 training rows; its mean is too noisy to read on its own.",
+      "model_year = 74: only 27 training rows; its mean is too noisy to read on its own.",
+      "model_year = 77: only 28 training rows; its mean is too noisy to read on its own."
+     ],
+     "n_groups": 9,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on training rows: associations, not effects of the variable."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "9",
+       "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+       "path": "n_groups",
+       "value": 9,
+       "format": "int"
+      },
+      {
+       "text": " groups on "
+      },
+      {
+       "text": "280",
+       "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+       "path": "n_rows",
+       "value": 280,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+    "activity": "eda.distribution",
+    "slot": "eda.distribution:weight",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "train",
+    "n_rows": 280,
+    "params": {
+     "column": "weight"
+    },
+    "upstream": {
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [],
+    "created": "2026-10-19T00:49:33.435558+00:00",
+    "started_revision": 16,
+    "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+    "exposure_id": "x_d920b11e3d27454d991476d291c82b0c",
+    "values": {
+     "partition": "train",
+     "column": "weight",
+     "role": "feature",
+     "type": "numeric",
+     "kind": "numeric",
+     "n_rows": 280,
+     "n_missing": 0,
+     "special_values": [],
+     "numeric": {
+      "n": 280,
+      "min": 1613.0,
+      "q25": 2278.75,
+      "median": 3030.0,
+      "q75": 3855.0,
+      "max": 5140.0,
+      "mean": 3120.4857142857145,
+      "sd": 894.4451473729321,
+      "n_bins": 10,
+      "bin_width": 352.7,
+      "bins": [
+       {
+        "low": 1613.0,
+        "high": 1965.7,
+        "n_rows": 21,
+        "share": 0.075,
+        "closed": "left"
+       },
+       {
+        "low": 1965.7,
+        "high": 2318.4,
+        "n_rows": 55,
+        "share": 0.19642857142857142,
+        "closed": "left"
+       },
+       {
+        "low": 2318.4,
+        "high": 2671.1,
+        "n_rows": 32,
+        "share": 0.11428571428571428,
+        "closed": "left"
+       },
+       {
+        "low": 2671.1,
+        "high": 3023.8,
+        "n_rows": 32,
+        "share": 0.11428571428571428,
+        "closed": "left"
+       },
+       {
+        "low": 3023.8,
+        "high": 3376.5,
+        "n_rows": 28,
+        "share": 0.1,
+        "closed": "left"
+       },
+       {
+        "low": 3376.5,
+        "high": 3729.2,
+        "n_rows": 32,
+        "share": 0.11428571428571428,
+        "closed": "left"
+       },
+       {
+        "low": 3729.2,
+        "high": 4081.9,
+        "n_rows": 23,
+        "share": 0.08214285714285714,
+        "closed": "left"
+       },
+       {
+        "low": 4081.9,
+        "high": 4434.6,
+        "n_rows": 33,
+        "share": 0.11785714285714285,
+        "closed": "left"
+       },
+       {
+        "low": 4434.6,
+        "high": 4787.299999999999,
+        "n_rows": 18,
+        "share": 0.06428571428571428,
+        "closed": "left"
+       },
+       {
+        "low": 4787.299999999999,
+        "high": 5140.0,
+        "n_rows": 6,
+        "share": 0.02142857142857143,
+        "closed": "both"
+       }
+      ]
+     },
+     "groups": null,
+     "n_groups": null,
+     "max_groups": 20,
+     "other": null,
+     "min_group_rows": 30,
+     "warnings": [],
+     "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Distribution on "
+      },
+      {
+       "text": "280",
+       "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+       "path": "n_rows",
+       "value": 280,
+       "format": "int"
+      },
+      {
+       "text": " training rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+    "activity": "fit.baseline",
+    "slot": "fit.baseline",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 118,
+    "params": {
+     "model": "train_mean"
+    },
+    "upstream": {
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [
+     "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc"
+    ],
+    "created": "2026-10-19T00:49:33.578797+00:00",
+    "started_revision": 18,
+    "execution_id": "e_f37508d21e9ebda7c2ebce28",
+    "exposure_id": "x_58dd071ff6d345598536dd52594e6ef0",
+    "values": {
+     "model": "train_mean",
+     "target": "mpg",
+     "unit": "mpg",
+     "train_mean": 20.68285714285714,
+     "train_median": 19.95,
+     "n_train": 280,
+     "features": [],
+     "train": {
+      "n_rows": 280,
+      "mae": 5.2066122448979595,
+      "rmse": 6.287907247329624,
+      "mean_residual": 1.2180732613030289e-15
+     },
+     "validation": {
+      "n_rows": 118,
+      "mae": 10.104600484261507,
+      "rmse": 11.779544934565363,
+      "mean_residual": 9.551041162227607
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "train_mean",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 118,
+      "features": []
+     },
+     "note": "Every row receives the training mean: the reference a model must beat."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Validation MAE "
+      },
+      {
+       "text": "10.10",
+       "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+       "path": "validation.mae",
+       "value": 10.104600484261507,
+       "format": "f2"
+      },
+      {
+       "text": " mpg on "
+      },
+      {
+       "text": "118",
+       "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+       "path": "validation.n_rows",
+       "value": 118,
+       "format": "int"
+      },
+      {
+       "text": " rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+    "activity": "fit.linear",
+    "slot": "fit.linear",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 118,
+    "params": {
+     "estimator": "sklearn.linear_model.LinearRegression",
+     "implementation": "mlkit.classical.pipeline",
+     "model": "linear",
+     "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+     "seed": 0,
+     "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+    },
+    "upstream": {
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [
+     "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc"
+    ],
+    "created": "2026-10-19T00:49:33.747323+00:00",
+    "started_revision": 20,
+    "execution_id": "e_305370681065d9971a93f227",
+    "exposure_id": "x_a569b2dde32241cbab5687e799044fe1",
+    "values": {
+     "model": "linear",
+     "target": "mpg",
+     "unit": "mpg",
+     "features": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin"
+     ],
+     "special_value_indicators": [
+      "horsepower=?"
+     ],
+     "n_train": 280,
+     "n_terms": 8,
+     "intercept": 21.1733701593184,
+     "coefficients": {
+      "num__cylinders": -0.3956896301056627,
+      "num__displacement": 0.3468492875353073,
+      "num__horsepower": -1.1067611777507844,
+      "num__weight": -4.152726914430051,
+      "num__horsepower=?": -0.04984514282715608,
+      "cat__origin_1": -0.9589889210123343,
+      "cat__origin_2": -0.026028613048522633,
+      "cat__origin_3": 0.985017534060859
+     },
+     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "train": {
+      "n_rows": 280,
+      "mae": 2.1148445500819997,
+      "rmse": 2.807014025152431,
+      "mean_residual": -5.075305255429287e-17
+     },
+     "validation": {
+      "n_rows": 118,
+      "mae": 6.308647265230509,
+      "rmse": 7.513230061812575,
+      "mean_residual": 6.190031483897883
+     },
+     "predictions": {
+      "blob": "predictions",
+      "format": "gzip csv row_key,y,prediction",
+      "model": "linear",
+      "partition": "validation",
+      "target": "mpg",
+      "unit": "mpg",
+      "prediction_semantics": "A prediction of the target, in its unit.",
+      "n": 118,
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ]
+     }
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "Validation MAE "
+      },
+      {
+       "text": "6.31",
+       "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+       "path": "validation.mae",
+       "value": 6.308647265230509,
+       "format": "f2"
+      },
+      {
+       "text": " mpg on "
+      },
+      {
+       "text": "118",
+       "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+       "path": "validation.n_rows",
+       "value": 118,
+       "format": "int"
+      },
+      {
+       "text": " rows"
+      }
+     ]
+    }
+   },
+   {
+    "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+    "activity": "evaluate.regression",
+    "slot": "evaluate.regression",
+    "promoted": true,
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok",
+    "partition": "validation",
+    "n_rows": 118,
+    "params": {
+     "candidate": "fit.linear",
+     "metrics": [
+      "mae",
+      "rmse"
+     ],
+     "models": [
+      "fit.baseline",
+      "fit.linear"
+     ],
+     "reference": "fit.baseline"
+    },
+    "upstream": {
+     "fit.baseline": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "fit.linear": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "split": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368"
+    },
+    "downstream": [],
+    "created": "2026-10-19T00:49:33.937080+00:00",
+    "started_revision": 22,
+    "execution_id": "e_808e66ec55e19cf01a72e71c",
+    "exposure_id": "x_7dbf8a7ccc07426ba024120ddc682865",
+    "values": {
+     "n": 118,
+     "target": "mpg",
+     "unit": "mpg",
+     "models": {
+      "fit.baseline": {
+       "n": 118,
+       "mae": 10.104600484261507,
+       "rmse": 11.779544934565363,
+       "mean_residual": 9.551041162227607,
+       "median_abs_residual": 10.317142857142859,
+       "max_abs_residual": 25.91714285714286
+      },
+      "fit.linear": {
+       "n": 118,
+       "mae": 6.308647265230509,
+       "rmse": 7.513230061812575,
+       "mean_residual": 6.190031483897883,
+       "median_abs_residual": 5.385505011592155,
+       "max_abs_residual": 18.45733048413233
+      }
+     },
+     "intervals": {
+      "fit.baseline": {
+       "mae": {
+        "low": 9.027936440677967,
+        "high": 11.181764527845038
+       },
+       "rmse": {
+        "low": 10.674999852030885,
+        "high": 12.817155410727965
+       }
+      },
+      "fit.linear": {
+       "mae": {
+        "low": 5.580350273496465,
+        "high": 7.053419389666958
+       },
+       "rmse": {
+        "low": 6.685713460205095,
+        "high": 8.306924218964754
+       }
+      }
+     },
+     "deltas": {
+      "fit.linear": {
+       "mae": {
+        "point": -3.7959532190309977,
+        "low": -4.343002436145685,
+        "high": -3.249205481492924
+       },
+       "rmse": {
+        "point": -4.266314872752789,
+        "low": -4.737915850416874,
+        "high": -3.7626695342866086
+       }
+      }
+     },
+     "residuals": {
+      "fit.baseline": {
+       "n": 118,
+       "mean": 9.551041162227607,
+       "sd": 6.923985566588213,
+       "min": -5.1828571428571415,
+       "q05": -2.5728571428571416,
+       "q25": 4.817142857142858,
+       "median": 10.317142857142859,
+       "q75": 14.24214285714286,
+       "q95": 20.307142857142853,
+       "max": 25.91714285714286
+      },
+      "fit.linear": {
+       "n": 118,
+       "mean": 6.190031483897883,
+       "sd": 4.276343264176679,
+       "min": -2.2274194020304563,
+       "q05": 0.16127778193049228,
+       "q25": 3.173609806359674,
+       "median": 5.385505011592155,
+       "q75": 8.815031474119564,
+       "q95": 14.861844900635026,
+       "max": 18.45733048413233
+      }
+     },
+     "residuals_by": [
+      {
+       "column": "model_year",
+       "binned": false,
+       "binning": null,
+       "groups": [
+        {
+         "value": "79",
+         "n_rows": 29,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 6.307586206896551,
+           "mean_residual": 4.41024630541872
+          },
+          "fit.linear": {
+           "mae": 4.1580802644269275,
+           "mean_residual": 4.042853350447878
+          }
+         }
+        },
+        {
+         "value": "80",
+         "n_rows": 29,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 13.122857142857143,
+           "mean_residual": 13.013694581280788
+          },
+          "fit.linear": {
+           "mae": 8.402377244232804,
+           "mean_residual": 8.214577459344293
+          }
+         }
+        },
+        {
+         "value": "81",
+         "n_rows": 29,
+         "small_count": true,
+         "models": {
+          "fit.baseline": {
+           "mae": 9.89753694581281,
+           "mean_residual": 9.651625615763546
+          },
+          "fit.linear": {
+           "mae": 5.760628404892748,
+           "mean_residual": 5.581011579717216
+          }
+         }
+        },
+        {
+         "value": "82",
+         "n_rows": 31,
+         "small_count": false,
+         "models": {
+          "fit.baseline": {
+           "mae": 11.0268202764977,
+           "mean_residual": 11.0268202764977
+          },
+          "fit.linear": {
+           "mae": 6.874480187231553,
+           "mean_residual": 6.874480187231553
+          }
+         }
+        }
+       ],
+       "min_group_rows": 30
+      }
+     ],
+     "predictions": {
+      "fit.baseline": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+      "fit.linear": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576"
+     },
+     "reference": "fit.baseline",
+     "candidate": "fit.linear",
+     "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261017,
+      "level": 0.95,
+      "method": "paired percentile bootstrap over validation rows"
+     },
+     "residual_definition": "residual = observed minus predicted; a positive residual means the model predicted too low; the mean residual is the bias",
+     "note": "The model is chosen on these validation rows: these errors are not independent evidence of future error. No model was refitted."
+    },
+    "headline": {
+     "segments": [
+      {
+       "text": "MAE "
+      },
+      {
+       "text": "6.31",
+       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "path": "models.[fit.linear].mae",
+       "value": 6.308647265230509,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the linear model and "
+      },
+      {
+       "text": "10.10",
+       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "path": "models.[fit.baseline].mae",
+       "value": 10.104600484261507,
+       "format": "f2"
+      },
+      {
+       "text": " mpg for the mean baseline on "
+      },
+      {
+       "text": "118",
+       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "path": "n",
+       "value": 118,
+       "format": "int"
+      },
+      {
+       "text": " validation rows"
+      }
+     ]
+    }
+   }
+  ],
+  "truncated": false,
+  "lineage": {
+   "nodes": [
+    {
+     "id": "case",
+     "kind": "source",
+     "label": "case.yaml",
+     "status": "ok"
+    },
+    {
+     "id": "dataset",
+     "kind": "source",
+     "label": "auto-mpg.data",
+     "status": "ok"
+    },
+    {
+     "id": "decision:prediction_time",
+     "kind": "decision",
+     "label": "prediction_time",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:feature_availability",
+     "kind": "decision",
+     "label": "feature_availability",
+     "status": "confirmed"
+    },
+    {
+     "id": "decision:split",
+     "kind": "decision",
+     "label": "split",
+     "status": "confirmed"
+    },
+    {
+     "id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "kind": "result",
+     "label": "split",
+     "status": "current"
+    },
+    {
+     "id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "kind": "result",
+     "label": "eda.target_summary",
+     "status": "current"
+    },
+    {
+     "id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "kind": "result",
+     "label": "eda.special_values",
+     "status": "current"
+    },
+    {
+     "id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "kind": "result",
+     "label": "eda.mean_by:model_year",
+     "status": "current"
+    },
+    {
+     "id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "kind": "result",
+     "label": "eda.distribution:weight",
+     "status": "current"
+    },
+    {
+     "id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "kind": "result",
+     "label": "fit.baseline",
+     "status": "current"
+    },
+    {
+     "id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "kind": "result",
+     "label": "fit.linear",
+     "status": "current"
+    },
+    {
+     "id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "kind": "result",
+     "label": "evaluate.regression",
+     "status": "current"
+    },
+    {
+     "id": "artifact:report",
+     "kind": "artifact",
+     "label": "report",
+     "status": "ok"
+    },
+    {
+     "id": "artifact:notebook",
+     "kind": "artifact",
+     "label": "notebook",
+     "status": "ok"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dataset",
+     "to": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "role": "rows"
+    },
+    {
+     "from": "decision:split",
+     "to": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "role": "rows"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "role": "rows"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "role": "rows"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "role": "rows"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "role": "rows"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "role": "features"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "role": "rows"
+    },
+    {
+     "from": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "to": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "role": "fit.baseline"
+    },
+    {
+     "from": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "to": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "role": "fit.linear"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "role": "split"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    },
+    {
+     "from": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "to": "artifact:report",
+     "role": "consumed"
+    },
+    {
+     "from": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "to": "artifact:notebook",
+     "role": "consumed"
+    }
+   ]
+  },
+  "exposure": {
+   "summary": {
+    "records": 11,
+    "rows_exposed": 398,
+    "by_purpose": {
+     "structural_inspection": 398,
+     "train_eda": 280,
+     "train_fit": 280,
+     "validation_model_evaluation": 118
+    },
+    "by_partition": {
+     "all": {
+      "structural_inspection": 398
+     },
+     "train": {
+      "train_eda": 280,
+      "train_fit": 280
+     },
+     "validation": {
+      "validation_model_evaluation": 118
+     }
+    },
+    "validation_rows_used_for_selection": 118,
+    "prior_exposure": [
+     {
+      "source": "results.json (sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169)",
+      "status": "observed",
+      "value": "Tutorial outputs for protocol \"chronological-70-78-vs-79-82\" (Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+     },
+     {
+      "source": "results.json (sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169)",
+      "status": "observed",
+      "value": "Tutorial outputs for protocol \"random-70-30-counterexample\" (Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+     }
+    ]
+   },
+   "records": [
+    {
+     "exposure_id": "x_edc3ee418a0449b083d050c3a84cb1a0",
+     "revision": 1,
+     "time": "2026-10-19T00:49:32.366109+00:00",
+     "activity": "init.structure",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "n_rows": 398,
+     "columns": [
+      "mpg",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "acceleration",
+      "model_year",
+      "origin",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_67788ebbe26c48ab91e69ba20e265c83",
+     "revision": 8,
+     "time": "2026-10-19T00:49:32.780743+00:00",
+     "activity": "split",
+     "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+     "execution_id": "e_20377cec9f51f6bf5ba1fa64",
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "n_rows": 398,
+     "columns": [
+      "model_year",
+      "car_name"
+     ]
+    },
+    {
+     "exposure_id": "x_f8881cd17b4543df93a385ddf0895c27",
+     "revision": 10,
+     "time": "2026-10-19T00:49:32.913290+00:00",
+     "activity": "eda.target_summary",
+     "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+     "execution_id": "e_ce609b5bf3b974a84907e237",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 280,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_2b1c10a74a01461086aab330bd346ac7",
+     "revision": 12,
+     "time": "2026-10-19T00:49:33.102787+00:00",
+     "activity": "eda.special_values",
+     "result_id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+     "execution_id": "e_2b12242f306cde1c5f3670f1",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 280,
+     "columns": [
+      "mpg",
+      "horsepower"
+     ]
+    },
+    {
+     "exposure_id": "x_ce4d187875254217b149fff7901a86ee",
+     "revision": 14,
+     "time": "2026-10-19T00:49:33.265721+00:00",
+     "activity": "eda.mean_by",
+     "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+     "execution_id": "e_e80fb65ac70384bd8bab0358",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 280,
+     "columns": [
+      "mpg",
+      "model_year"
+     ]
+    },
+    {
+     "exposure_id": "x_d920b11e3d27454d991476d291c82b0c",
+     "revision": 16,
+     "time": "2026-10-19T00:49:33.437456+00:00",
+     "activity": "eda.distribution",
+     "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+     "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+     "purpose": "train_eda",
+     "partition": "train",
+     "n_rows": 280,
+     "columns": [
+      "weight"
+     ]
+    },
+    {
+     "exposure_id": "x_f788d8eb26ff44f382ea89dd65272683",
+     "revision": 18,
+     "time": "2026-10-19T00:49:33.580675+00:00",
+     "activity": "fit.baseline",
+     "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "execution_id": "e_f37508d21e9ebda7c2ebce28",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 280,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_58dd071ff6d345598536dd52594e6ef0",
+     "revision": 18,
+     "time": "2026-10-19T00:49:33.581198+00:00",
+     "activity": "fit.baseline",
+     "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+     "execution_id": "e_f37508d21e9ebda7c2ebce28",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 118,
+     "columns": [
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_aae0e8cc9d864f9fa49f8adff79aeaca",
+     "revision": 20,
+     "time": "2026-10-19T00:49:33.749459+00:00",
+     "activity": "fit.linear",
+     "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "execution_id": "e_305370681065d9971a93f227",
+     "purpose": "train_fit",
+     "partition": "train",
+     "n_rows": 280,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_a569b2dde32241cbab5687e799044fe1",
+     "revision": 20,
+     "time": "2026-10-19T00:49:33.750082+00:00",
+     "activity": "fit.linear",
+     "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+     "execution_id": "e_305370681065d9971a93f227",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 118,
+     "columns": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin",
+      "mpg"
+     ]
+    },
+    {
+     "exposure_id": "x_7dbf8a7ccc07426ba024120ddc682865",
+     "revision": 22,
+     "time": "2026-10-19T00:49:33.939147+00:00",
+     "activity": "evaluate.regression",
+     "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+     "execution_id": "e_808e66ec55e19cf01a72e71c",
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "n_rows": 118,
+     "columns": [
+      "mpg",
+      "model_year"
+     ]
+    }
+   ],
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "rows": 398,
+     "records": 2,
+     "activities": [
+      "init.structure",
+      "split"
+     ],
+     "first_revision": 1,
+     "last_revision": 8
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "train",
+     "rows": 280,
+     "records": 4,
+     "activities": [
+      "eda.target_summary",
+      "eda.special_values",
+      "eda.mean_by",
+      "eda.distribution"
+     ],
+     "first_revision": 10,
+     "last_revision": 16
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "train",
+     "rows": 280,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.linear"
+     ],
+     "first_revision": 18,
+     "last_revision": 20
+    },
+    {
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "rows": 118,
+     "records": 3,
+     "activities": [
+      "fit.baseline",
+      "fit.linear",
+      "evaluate.regression"
+     ],
+     "first_revision": 18,
+     "last_revision": 22
+    }
+   ],
+   "prior_exposure": [
+    {
+     "source": "results.json (sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169)",
+     "status": "observed",
+     "value": "Tutorial outputs for protocol \"chronological-70-78-vs-79-82\" (Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+    },
+    {
+     "source": "results.json (sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169)",
+     "status": "observed",
+     "value": "Tutorial outputs for protocol \"random-70-30-counterexample\" (Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+    }
+   ]
+  },
+  "impacts": [
+   {
+    "decision_id": "prediction_time",
+    "mutation": "prediction_time",
+    "row": 1,
+    "change": "a different prediction moment",
+    "stale_slots": [
+     "fit.linear",
+     "evaluate.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.distribution:weight",
+     "eda.mean_by:model_year",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear"
+    ],
+    "reconfirm": [
+     "feature_availability"
+    ],
+    "notes": [
+     "The linear refit waits until feature availability is confirmed again."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.feature_set",
+    "row": 2,
+    "change": "a change that alters the set of usable features",
+    "stale_slots": [
+     "fit.linear",
+     "evaluate.regression"
+    ],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.distribution:weight",
+     "eda.mean_by:model_year",
+     "fit.baseline"
+    ],
+    "refit": [
+     "fit.linear"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "The mean baseline uses no feature and stays current."
+    ]
+   },
+   {
+    "decision_id": "feature_availability",
+    "mutation": "feature_availability.wording",
+    "row": 3,
+    "change": "a change of the variable descriptions that keeps the same usable features",
+    "stale_slots": [],
+    "kept_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.distribution:weight",
+     "eda.mean_by:model_year",
+     "fit.baseline",
+     "fit.linear",
+     "evaluate.regression"
+    ],
+    "refit": [],
+    "reconfirm": [],
+    "notes": [
+     "The feature set is unchanged; only the dictionary text changes."
+    ]
+   },
+   {
+    "decision_id": "split",
+    "mutation": "split",
+    "row": 4,
+    "change": "a different split of the rows",
+    "stale_slots": [
+     "split",
+     "eda.target_summary",
+     "eda.special_values",
+     "eda.distribution:weight",
+     "eda.mean_by:model_year",
+     "fit.baseline",
+     "fit.linear",
+     "evaluate.regression"
+    ],
+    "kept_slots": [],
+    "refit": [
+     "fit.baseline",
+     "fit.linear"
+    ],
+    "reconfirm": [],
+    "notes": [
+     "Exposure is retained: rows explored under the old split are not unseen. The split activity reports the overlap (exposure.overlap) when it runs."
+    ]
+   }
+  ],
+  "eda_catalog": {
+   "activities": [
+    {
+     "activity": "eda.target_summary",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.special_values",
+     "per_column": false,
+     "columns": [],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.mean_by",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "cylinders",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "displacement",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "horsepower",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "weight",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "acceleration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "model_year",
+       "role": "time",
+       "type": "integer",
+       "slot": "eda.mean_by:model_year",
+       "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d"
+      },
+      {
+       "name": "origin",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": []
+    },
+    {
+     "activity": "eda.distribution",
+     "per_column": true,
+     "columns": [
+      {
+       "name": "mpg",
+       "role": "target",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "cylinders",
+       "role": "feature",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "displacement",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "horsepower",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "weight",
+       "role": "feature",
+       "type": "numeric",
+       "slot": "eda.distribution:weight",
+       "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8"
+      },
+      {
+       "name": "acceleration",
+       "role": "feature",
+       "type": "numeric",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "model_year",
+       "role": "time",
+       "type": "integer",
+       "slot": null,
+       "result_id": null
+      },
+      {
+       "name": "origin",
+       "role": "feature",
+       "type": "category",
+       "slot": null,
+       "result_id": null
+      }
+     ],
+     "runnable": true,
+     "missing": []
+    }
+   ]
+  },
+  "sources": {
+   "case": {
+    "path": "/home/user/hypotrail/.claude/worktrees/agent-aabf258cd1e641fcd/use-cases/auto-mpg/case.yaml",
+    "sha256": "80d55362ef6887c42af3f276a6ad2bba610d22ac0875d4faca223da2aacfc904",
+    "matches": true
+   },
+   "dataset": {
+    "path": "/home/user/hypotrail/.claude/worktrees/agent-aabf258cd1e641fcd/use-cases/auto-mpg/data/auto-mpg.data",
+    "sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+    "matches": true
+   }
+  },
+  "detail": null
+ }
+}

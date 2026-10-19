@@ -118,3 +118,11 @@ test('INV-9: no innerHTML, outerHTML, insertAdjacentHTML, document.write, eval, 
     assert.doesNotMatch(read(f), /\.innerHTML\s*=|outerHTML\s*=|insertAdjacentHTML|document\.write|\beval\(|new Function\(|setAttribute\(['"]style/, f);
   }
 });
+
+test('§12 clipboard: only the agent bridge writes it (lib/bridge.js through the host); the webview never does (CI.5)', () => {
+  for (const f of SOURCES) {
+    const text = read(f);
+    assert.doesNotMatch(text, /navigator\.clipboard|execCommand\(\s*['"]copy/, f);
+    if (/writeClipboard\(|clipboard\.writeText\(/.test(text)) assert.ok(['extension.js', 'lib/bridge.js'].includes(f), f);
+  }
+});

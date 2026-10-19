@@ -3,14 +3,20 @@
 // Each row is a point inside its interval on one shared axis; with `zero: true` the axis
 // includes 0 and draws a 0 rule. Positions are geometry of engine values (INV-14); the texts
 // are the view's formatted engine values. Returns the figure element.
+//
+// WP-I: the label and text columns are as wide as their longest text (bounded estimate,
+// as bars.js), so no label or interval text is clipped; `labelWidth` and `textWidth`
+// (viewBox units) override the estimate.
 (function (HT) {
   'use strict';
-  const W = 420;
-  const LABEL = 130;
-  const TEXT = 120;
+  const PLOT = 200;
   const ROW = 26;
 
-  function intervalRows(container, { rows, zero = false, title }) {
+  function intervalRows(container, { rows, zero = false, title, labelWidth = null, textWidth = null }) {
+    const fit = HT.components.textWidth;
+    const LABEL = labelWidth || fit(rows.map(r => r.label), 60, 320) + 6;
+    const TEXT = textWidth || fit(rows.map(r => [r.pointText, r.intervalText].filter(Boolean).join(' ')), 60, 320) + 12;
+    const W = LABEL + PLOT + TEXT;
     const values = rows.flatMap(r => [r.low, r.high, r.point]).filter(v => typeof v === 'number' && Number.isFinite(v));
     let lo = Math.min(...values, zero ? 0 : Infinity);
     let hi = Math.max(...values, zero ? 0 : -Infinity);
@@ -18,7 +24,7 @@
     if (hi === lo) { hi = lo + 1; }
     const pad = (hi - lo) * 0.05;
     lo -= pad; hi += pad;
-    const plot = W - LABEL - TEXT;
+    const plot = PLOT;
     const x = v => LABEL + ((v - lo) / (hi - lo)) * plot;
     const height = rows.length * ROW + 6;
     const ok = v => typeof v === 'number' && Number.isFinite(v);

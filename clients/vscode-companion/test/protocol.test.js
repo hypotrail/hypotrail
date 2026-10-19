@@ -94,7 +94,14 @@ test('field rules: words, rules, load, learn_set', () => {
   assert.ok(ok({ type: 'learn_set', key: 'prefs', id: 'prefs', value: { hideCards: true } }));
   assert.ok(!ok({ type: 'learn_set', key: 'prefs', id: 'prefs', value: { words: 'x' } }));
   assert.ok(!ok({ type: 'learn_set', key: 'prediction', id: 'q', value: 'Rare <b>' }));
-  assert.ok(!ok({ type: 'open_artifact', artifact: 'notebook', resultId: 'a'.repeat(64) }), 'a fragment opens the report only');
+  // WP-I (U1, U3 requests): a result opens the report at its anchor or the notebook at its
+  // line; a check finding's line opens an editor deliverable. The workbench has no result.
+  assert.ok(ok({ type: 'open_artifact', artifact: 'notebook', resultId: 'a'.repeat(64) }), 'the notebook at a result');
+  assert.ok(!ok({ type: 'open_artifact', artifact: 'workbench', resultId: 'a'.repeat(64) }), 'no result in the workbench');
+  assert.ok(ok({ type: 'open_artifact', artifact: 'notebook', line: 12 }), 'an editor deliverable at a line');
+  assert.ok(!ok({ type: 'open_artifact', artifact: 'report', line: 12 }), 'the report opens in the browser, without a line');
+  assert.ok(!ok({ type: 'open_artifact', artifact: 'notebook', line: 0 }), 'lines start at 1');
+  assert.ok(!ok({ type: 'open_artifact', artifact: 'notebook', line: 3, resultId: 'a'.repeat(64) }), 'one target');
 });
 
 test('stages: every incoming type has one; field stages raise it; writes carry their W id', () => {
@@ -106,7 +113,9 @@ test('stages: every incoming type has one; field stages raise it; writes carry t
   assert.deepEqual(writes, { confirm: 'W1', withdraw: 'W2', propose: 'W3', run_eda: 'W4', render: 'W5',
     acknowledge: 'W6', export_handoff: 'W7' });
   assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'report' }), 'v0');
-  assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'report', resultId: RID }), 'v2');
+  // WP-I: from v1, for the check findings of the Overview (U1 request).
+  assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'report', resultId: RID }), 'v1');
+  assert.equal(protocol.stageOf({ v: 2, type: 'open_artifact', artifact: 'notebook', line: 4 }), 'v1');
   assert.ok(protocol.stageAllows('v2', 'v1') && !protocol.stageAllows('v1', 'v2') && !protocol.stageAllows('v3', 'v9'));
 });
 

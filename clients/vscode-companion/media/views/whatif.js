@@ -24,15 +24,9 @@
   const count = (ctx, x) => (x === null ? '' : fmt(ctx, x, Number.isInteger(x) ? 'int' : 'f1'));
   const levelText = (ctx, level) => (level === null ? '' : fmt(ctx, level, 'pct1').replace('.0%', '%'));
 
-  // The frozen intervalRows component draws in a fixed 420-unit viewBox, where a long label
-  // or interval text overflows and is clipped. Widening the viewBox (a geometry attribute,
-  // no style) keeps every text visible; the marks keep their positions.
+  // The intervalRows component sizes its label and text columns to their texts (WP-I).
   function intervals(ctx, container, options) {
-    const figure = ctx.components.intervalRows(container, options);
-    const chart = figure && figure.querySelector('svg');
-    const box = chart ? String(chart.getAttribute('viewBox') || '').split(' ').map(Number) : [];
-    if (box.length === 4 && box.every(Number.isFinite)) chart.setAttribute('viewBox', `${box[0] - 60} ${box[1]} ${box[2] + 140} ${box[3]}`);
-    return figure;
+    return ctx.components.intervalRows(container, options);
   }
 
   // --- rules ---------------------------------------------------------------------------------
@@ -97,25 +91,6 @@
     return drafts(ctx)[draftKey(decisionId, value)] || null;
   }
 
-  function askAgent(ctx, about, label, fallbackQuestion) {
-    const c = C().common.ask;
-    let area = null;
-    const body = ctx.el('div', {}, [
-      ctx.el('p', {}, [ctx.el('strong', { text: `${c.about}: ` }), label]),
-      ctx.el('label', { for: 'ht-wi-ask', text: c.question }),
-      (area = ctx.wordsArea({ kind: 'askDraft', id: 'ht-wi-ask' })),
-      ctx.el('p', { className: 'muted', text: c.note }),
-    ]);
-    const actions = [{ label: c.copy, value: 'copy', primary: true }];
-    if (ctx.chatInsert) actions.push({ label: c.insert, value: 'insert' });
-    ctx.modal({ title: c.title, body, actions }).then(mode => {
-      if (!mode) return;
-      const typed = area ? area.value.trim() : '';
-      ctx.send({ type: 'ask_agent', about, question: (typed || fallbackQuestion || '').slice(0, 2000), mode });
-      ctx.ui.set('askDraft', undefined);
-    });
-  }
-
   // --- shared pieces -------------------------------------------------------------------------
 
   function banner(ctx) {
@@ -149,8 +124,9 @@
     if (!evaluated) {
       kids.push(ctx.el('p', { 'data-not-evaluated': value, text: t.notEvaluated }));
       if (decisionId === 'policy') {
-        kids.push(ctx.el('button', { type: 'button', className: 'secondary', 'data-ask-agent': 'evaluate', text: t.askEvaluate(value),
-          onclick: () => askAgent(ctx, { kind: 'decision', id: 'policy' }, t.askAbout(value), t.askEvaluateQuestion(value)) }));
+        // The shared agent-bridge helper of media/terms.js (§6.8; WP-I).
+        kids.push(HT.askButton(ctx, { kind: 'decision', id: 'policy' }, t.askAbout(value),
+          { label: t.askEvaluate(value), attrs: { 'data-ask-agent': 'evaluate' }, question: t.askEvaluateQuestion(value) }));
       }
     } else {
       const draft = currentDraft(ctx, decisionId, value);

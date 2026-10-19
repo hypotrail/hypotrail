@@ -39,7 +39,6 @@
     alertsLabel: 'Alerts',
     openHealth: 'Open Health in Overview',
     footer: 'Reads the hypotrail CLI only · no state of its own · the chat, report and notebook stay complete without it.',
-    typing: (before, after) => `The study changed while you were typing (revision ${before} to ${after}). Read the proposal again before confirming.`,
     updated: n => `Updated to revision ${n}.`,
     refusedTitle: (code, reason) => `The engine refused: ${code}${reason ? ' (' + reason + ')' : ''}`,
     engineVerbatim: 'Engine message, verbatim:',

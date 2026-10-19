@@ -1,0 +1,61 @@
+{
+ "about": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "withdraw",
+   "p_6",
+   "--request-id",
+   "b-wd",
+   "--expected-revision",
+   "31",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decide/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-web",
+  "action": "decide.withdraw",
+  "request_id": "b-wd",
+  "replayed": false,
+  "revision": 32,
+  "result": {
+   "proposal_id": "p_6",
+   "decision_id": "policy",
+   "status": "withdrawn",
+   "decision_status": "confirmed"
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 32,
+    "last_ok_revision": 32,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 32,
+    "last_ok_revision": 32,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

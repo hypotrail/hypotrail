@@ -58,6 +58,7 @@
     nothingToRequest: 'The engine lists no chart to request in this study.',
     recorded: (slot, status) => `Recorded: ${slot} (${status}).`,
     distribution: 'Distribution',
+    distributionOnTrain: ' on training rows only: the validation rows stay unexplored.',
   };
   HT.copy = HT.copy || {};
   HT.copy.eda = {

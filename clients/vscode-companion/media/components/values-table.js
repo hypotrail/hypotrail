@@ -55,5 +55,14 @@
     return node;
   }
 
-  Object.assign(HT.components, { valuesTable, figure, cited });
+  /**
+   * An estimate, in SVG viewBox units, of the width of the longest of `texts` in the 11 px
+   * chart font (6.2 units per character), bounded to [min, max]: geometry only (WP-I).
+   */
+  function textWidth(texts, min, max) {
+    const longest = Math.max(0, ...(texts || []).map(t => String(t === null || t === undefined ? '' : t).length));
+    return Math.max(min, Math.min(max, Math.ceil(longest * 6.2)));
+  }
+
+  Object.assign(HT.components, { valuesTable, figure, cited, textWidth });
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

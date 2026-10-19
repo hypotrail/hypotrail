@@ -2,7 +2,8 @@
 // Overview handler (COMPANION-ADVANCED §6.1; owned by WP-U1).
 //
 //   open_artifact   v0: open a deliverable (the report in the browser, the others in the
-//                   editor); v2: the report at the fragment `#r-<resultId>` (EV-4)
+//                   editor); v1: the report at the fragment `#r-<resultId>` (EV-4), the
+//                   notebook at the line that names a result, an editor at a finding's line
 //   load: check     the Health section's "Checks of the deliverables" (cached per revision)
 //   render          W5, "Regenerate the report and notebook"
 //   acknowledge     W6, "Acknowledge in my words" for an interrupted execution
@@ -11,6 +12,7 @@
 // `ready`, `refresh`, and `load: summary` belong to the controller. Reviewer refusals and
 // the stage gate are the controller's too; the pre-checks below are the ones of §7.
 
+const fs = require('fs');
 const { ARTIFACT_PATHS } = require('../models/summary');
 const { toCheckModel } = require('../models/check');
 const { MAX_WORDS } = require('../cli');
@@ -18,13 +20,36 @@ const { MAX_WORDS } = require('../cli');
 // The W5 outcome and busy state carry this target, so the Overview renders them in place.
 const RENDER_TARGET = 'render';
 
+/**
+ * The 1-based line of a deliverable that names `resultId` (the full id, else its first
+ * eight characters, as the evidence `notebook_hint` says), or null. Reading a deliverable
+ * to open it is allowed (INV-1); the study state is never read.
+ */
+function lineOf(target, resultId, read = file => fs.readFileSync(file, 'utf8')) {
+  let text;
+  try { text = read(target); } catch (_) { return null; }
+  const lines = String(text).split(/\r?\n/);
+  for (const needle of [resultId, resultId.slice(0, 8)]) {
+    const i = lines.findIndex(l => l.includes(needle));
+    if (i >= 0) return i + 1;
+  }
+  return null;
+}
+
 async function openArtifact(message, ctx) {
   const target = ctx.artifactPath(message.artifact);
   if (!ctx.exists(target)) {
     ctx.post({ type: 'notice', politeness: 'assertive', text: `${ARTIFACT_PATHS[message.artifact]} does not exist yet.` });
     return;
   }
-  const options = message.resultId ? { fragment: `r-${message.resultId}` } : {};
+  const options = {};
+  if (message.resultId && message.artifact === 'report') options.fragment = `r-${message.resultId}`;
+  if (message.line) options.line = message.line;
+  if (message.resultId && message.artifact !== 'report') {
+    const line = lineOf(target, message.resultId);
+    if (line) options.line = line;
+    else ctx.post({ type: 'notice', politeness: 'polite', text: `${ARTIFACT_PATHS[message.artifact]} does not name this result; it opens at the top.` });
+  }
   await ctx.openArtifact(message.artifact, target, options);
 }
 
@@ -82,4 +107,5 @@ module.exports = {
   },
   RENDER_TARGET,
   acknowledgeable,
+  lineOf,
 };

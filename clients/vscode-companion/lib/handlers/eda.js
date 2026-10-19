@@ -8,13 +8,12 @@
 //               Anything else is `invalid` and no `run` starts (ED-1, INV-13). There is no
 //               partition argument: the engine reads training rows only (CC §8).
 //
-// The cache key is `eda`, not `evidence`: the controller caches the projected model under
-// the key, so two loaders sharing one key would read each other's models. A shared payload
-// cache is a request to the integrator (see the WP-U4 report).
+// The cache key is `evidence`, shared with the Evidence and What if? loaders: the
+// controller caches the payload and projects it with toEdaModel (COMPANION-ADVANCED §5).
 
 const { toEdaModel, requestable } = require('../models/eda');
 
-const KEY = 'eda';
+const KEY = 'evidence';
 const MESSAGES = Object.freeze({
   unread: 'The list of charts could not be read, so nothing was run.',
   moved: 'The study changed since this list of charts was shown. Read it again; nothing was run.',

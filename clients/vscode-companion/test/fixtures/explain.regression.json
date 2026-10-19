@@ -58,6 +58,14 @@
     "steps": []
    },
    {
+    "id": "distribution",
+    "term": "Distribution",
+    "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
     "id": "special_value",
     "term": "Special value",
     "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
@@ -265,7 +273,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Define the prediction moment."
+       "text": "Prediction time"
       }
      ]
     },
@@ -303,7 +311,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Decide which variables are available at prediction time."
+       "text": "Feature availability"
       }
      ]
     },
@@ -341,7 +349,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Split the data before exploring it."
+       "text": "Validation partition"
       }
      ]
     },
@@ -379,7 +387,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Explore the training partition."
+       "text": "Target distribution"
       }
      ]
     },
@@ -417,7 +425,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Fit a mean baseline and a linear model."
+       "text": "Baseline"
       }
      ]
     },
@@ -455,7 +463,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Choose the model."
+       "text": "Mean absolute error (MAE)"
       }
      ]
     },
@@ -493,7 +501,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Conclude proportionately."
+       "text": "Confirmed decision"
       }
      ]
     },

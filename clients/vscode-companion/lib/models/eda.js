@@ -41,7 +41,7 @@ const FMT = Object.freeze({
   'eda.rate_by': { n_rows: 'int', overall_rate: 'pct1', min_group_rows: 'int', n_positive: 'int', rate: 'pct1' },
   'eda.mean_by': { n_rows: 'int', overall_mean: 'f2', min_group_rows: 'int', mean: 'f2', sd: 'f2' },
   'eda.distribution': { n_rows: 'int', n_missing: 'int', share: 'pct1', min_group_rows: 'int', n_values: 'int', n: 'int',
-    min: 'auto', q25: 'auto', median: 'auto', q75: 'auto', max: 'auto' },
+    min: 'auto', q25: 'auto', median: 'auto', q75: 'auto', max: 'auto', low: 'auto', high: 'auto' },
 });
 // Class imbalance (§6.3): the term is introduced when the positive share is below or above these.
 const IMBALANCE = Object.freeze({ low: 0.2, high: 0.8 });
@@ -135,6 +135,8 @@ function distribution(v, f) {
       median: cite(v, 'numeric.median', f.median), q75: cite(v, 'numeric.q75', f.q75), max: cite(v, 'numeric.max', f.max),
       bins: list(n.bins).map((b, i) => ({
         low: num(b && b.low), high: num(b && b.high), closed: str(b && b.closed),
+        // The edges as cited engine values (WP-I, U4 request: the histogram cites them).
+        lowCited: cite(v, `numeric.bins.${i}.low`, f.low), highCited: cite(v, `numeric.bins.${i}.high`, f.high),
         nRows: cite(v, `numeric.bins.${i}.n_rows`, f.n_rows), share: cite(v, `numeric.bins.${i}.share`, f.share),
       })),
     } : null,

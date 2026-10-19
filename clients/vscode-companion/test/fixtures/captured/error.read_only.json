@@ -1,0 +1,31 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "withdraw",
+   "p_5",
+   "--request-id",
+   "b-ro",
+   "--expected-revision",
+   "30",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide withdraw",
+  "error": {
+   "code": "read_only",
+   "message": "HYPOTRAIL_READ_ONLY=1: this process is a read-only notebook kernel and may not render or write study state.",
+   "details": {
+    "variable": "HYPOTRAIL_READ_ONLY"
+   }
+  }
+ }
+}

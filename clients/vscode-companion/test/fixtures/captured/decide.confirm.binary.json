@@ -1,0 +1,79 @@
+{
+ "about": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "confirm",
+   "p_6",
+   "--user-words=Yes, call the 100 best-scored clients in each wave",
+   "--channel",
+   "webview",
+   "--actor",
+   "user",
+   "--request-id",
+   "b-conf",
+   "--expected-revision",
+   "31",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decide/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-confirm",
+  "action": "decide.confirm",
+  "request_id": "b-conf",
+  "replayed": false,
+  "revision": 32,
+  "result": {
+   "decision_id": "policy",
+   "proposal_id": "p_6",
+   "status": "confirmed",
+   "value": "capacity:100",
+   "user_words": "Yes, call the 100 best-scored clients in each wave",
+   "channel": "webview",
+   "actor": "user",
+   "invalidation": {
+    "mutation": "policy.rule_type",
+    "row": 6,
+    "reason": "policy changed (§3.7 row 6: policy.rule_type)",
+    "stale_results": [],
+    "stale_slots": [],
+    "reconfirm_required": []
+   },
+   "basis": "explicit",
+   "delegation_scope": null
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 32,
+    "last_ok_revision": 32,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 32,
+    "last_ok_revision": 32,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

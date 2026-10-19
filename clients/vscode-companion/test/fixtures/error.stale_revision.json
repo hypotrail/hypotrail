@@ -19,11 +19,25 @@
     "current_revision": 26,
     "changes_since": [
      {
-      "revision": 26,
       "action": "decide.propose",
       "params": {
-       "decision_id": "policy"
-      }
+       "decision_id": "policy",
+       "rationale": "The team can make 100 calls per wave.",
+       "restatement": "Call the 100 clients with the highest scores.",
+       "value": "capacity:100"
+      },
+      "request_id": "req-26",
+      "result": {
+       "decision_id": "policy",
+       "decision_status": "confirmed",
+       "proposal_id": "p_5",
+       "restatement": "Call the 100 clients with the highest scores.",
+       "status": "open",
+       "superseded": []
+      },
+      "revision": 26,
+      "state_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "time": "2026-10-18T09:12:00+00:00"
      }
     ]
    }

@@ -331,7 +331,8 @@ def test_a_revision_that_moves_while_typing_warns_and_keeps_the_text(open_panel,
                                     'Read the proposal again before you answer.')
     assert warning.get_attribute('role') == 'status'
     assert area(panel).input_value() == 'Yes, the 100 best-scored'
-    assert 'revision 26 to 27' in page.locator('[data-notice]').inner_text()
+    # One warning only, the card's (WP-I, decision CI.4: the frame's duplicate is gone).
+    assert page.locator('[data-notice]').count() == 0
     # The answer then carries the revision the junior now sees.
     area(panel).press('End')
     area(panel).type(' clients.')
@@ -407,6 +408,11 @@ def test_inv4_no_delegation_control_and_ask_the_agent_never_sends_the_words(open
     ask = card(panel).locator('[data-ask="p_5"]')
     assert ask.inner_text() == 'Ask the agent about this' and ask.get_attribute('data-stage') == 'v2'
     ask.click()
+    # WP-I: the shared helper of §6.8 opens the modal (an empty question), then copies.
+    dialog = page.locator('[role="dialog"]')
+    assert dialog.locator('textarea').input_value() == ''
+    assert dialog.locator('[data-ask-about="proposal:p_5"]').count() == 1
+    dialog.get_by_role('button', name='Copy for the chat').click()
     sent = panel.posted()[-1]
     assert sent == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_5'}, 'question': '', 'mode': 'copy'}
     assert WORDS not in json.dumps(panel.posted())
@@ -420,18 +426,20 @@ def test_v1_has_no_v2_control(open_panel, binary):
     assert_clean(panel)
 
 
-def test_evidence_chips_at_v2_come_from_current_results_only(open_panel, binary):
+def test_evidence_chips_at_v2_come_from_current_results_only(open_panel, binary, model):
+    # WP-I: the chips read the real EvidenceModel (lib/models/evidence.js on the evidence
+    # fixture), not a shape of their own; the stale evaluation of the fixture gets no chip.
     panel = opened(open_panel, binary, stage='v2')
     rid = 'ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02'
-    panel.view_data('evidence', {'revision': 26, 'task': 'binary', 'results': [
-        {'resultId': rid, 'slot': 'policy.evaluation', 'activity': 'policy.evaluation', 'current': True, 'integrity': 'ok'},
-        {'resultId': 'f' * 64, 'slot': 'policy.evaluation', 'activity': 'policy.evaluation', 'current': False, 'integrity': 'ok'}],
-        'uncertainty': {'deltas': [{'label': 'precision difference', 'pointText': '+0.245', 'intervalText': '[0.157, 0.345]',
-                                     'cited': {'resultId': rid, 'path': 'deltas.precision', 'value': 0.245}}]}})
+    evidence = model('evidence', 'evidence.binary')
+    assert any(r['slot'] == 'policy.evaluation' and not r['current'] for r in evidence['results'])
+    panel.view_data('evidence', evidence)
     chips = card(panel).locator('[data-evidence="p_5"]')
     assert chips.locator('[data-evidence-chip]').evaluate_all('cs => cs.map(c => c.innerText)') == ['policy.evaluation · ae80b53f…']
     delta = chips.locator('[data-evidence-delta] data[data-result-id]')
-    assert delta.inner_text() == 'precision difference +0.245 [0.157, 0.345]'
+    assert delta.inner_text() == 'precision difference +0.245 [+0.157, +0.345]'
+    assert delta.get_attribute('data-result-id') == rid
+    assert delta.get_attribute('data-path') == 'rules.capacity:100.deltas.[fit.logistic].precision'
     assert chips.locator('[data-explore]').inner_text() == 'try other rules →'
     chips.locator('[data-evidence-chip]').click()
     assert panel.page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'evidence'

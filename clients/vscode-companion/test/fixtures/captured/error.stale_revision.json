@@ -1,0 +1,58 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "confirm",
+   "p_5",
+   "--user-words=Yes, call the top 100",
+   "--channel",
+   "webview",
+   "--request-id",
+   "b-stale",
+   "--expected-revision",
+   "29",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide confirm",
+  "error": {
+   "code": "stale_revision",
+   "message": "Revision is stale: reread hypotrail status before deciding",
+   "details": {
+    "expected_revision": 29,
+    "current_revision": 30,
+    "changes_since": [
+     {
+      "action": "decide.propose",
+      "params": {
+       "decision_id": "policy",
+       "rationale": "The team can make 100 calls per wave.",
+       "restatement": "Call the 100 clients with the highest scores.",
+       "value": "capacity:100"
+      },
+      "request_id": "b-prop",
+      "result": {
+       "decision_id": "policy",
+       "decision_status": "confirmed",
+       "proposal_id": "p_5",
+       "restatement": "Call the 100 clients with the highest scores.",
+       "status": "open",
+       "superseded": []
+      },
+      "revision": 30,
+      "state_sha256": "b1167fab107bf2214a78b4b24ffa9ab56d0bfdf764b1afb52323b10e04199eff",
+      "time": "2026-10-19T00:49:30.286731+00:00"
+     }
+    ]
+   }
+  }
+ }
+}

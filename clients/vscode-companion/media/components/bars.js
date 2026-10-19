@@ -5,11 +5,13 @@
 // the engine's values formatted by the view (valueText); a `small` bar is hatched AND
 // carries the text "small" (never colour alone). Cited values carry data-result-id,
 // data-path and data-value. Returns the figure element.
+//
+// WP-I: the label and value columns are as wide as their longest text (an estimate of
+// the 11 px font, bounded), and the plot keeps its width, so a long label is not clipped;
+// `labelWidth` and `valueWidth` (viewBox units) override the estimate.
 (function (HT) {
   'use strict';
-  const W = 420;
-  const LABEL = 140;
-  const VALUE = 70;
+  const PLOT = 210;
   const ROW = 24;
   let charts = 0;
 
@@ -20,10 +22,14 @@
       HT.svg('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: 'accent', 'stroke-width': 3 })])]);
   }
 
-  function bars(container, { items, max, rule = null, title, unit = '' }) {
+  function bars(container, { items, max, rule = null, title, unit = '', labelWidth = null, valueWidth = null }) {
     charts += 1;
     const id = `ht-hatch-${charts}`;
-    const plot = W - LABEL - VALUE;
+    const fit = HT.components.textWidth;
+    const LABEL = labelWidth || fit(items.map(i => (i.small ? `${i.label} (${HT.copy.core.small})` : i.label)), 60, 320) + 6;
+    const VALUE = valueWidth || fit(items.map(i => i.valueText), 40, 200) + 8;
+    const plot = PLOT;
+    const W = LABEL + plot + VALUE;
     const top = max > 0 ? max : Math.max(0, ...items.map(i => Number(i.value) || 0)) || 1;
     const height = items.length * ROW + (rule ? 18 : 6);
     const x = v => LABEL + Math.max(0, Math.min(1, (Number(v) || 0) / top)) * plot;

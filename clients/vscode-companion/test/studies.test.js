@@ -106,10 +106,13 @@ test('ST-1: two studies in one workspace give a quick pick of both; switching re
   let choice = 0;
   const fake = createFake({ folders: [root], answers: { quickPick: items => items[choice] } });
   const { extension, context } = load(fake);
-  extension.activate(context);
+  const api = extension.activate(context);
   const first = await fake.commands.executeCommand('hypotrail.companion.open');
   const pick = fake.calls.quickPick[0].items.filter(i => i.dir).map(i => i.dir);
   assert.deepEqual(pick, [a, b], 'a quick pick of both studies, from one workspace folder');
+  // WP-I (U1 request): labelled with the folder name, described by the path (§6.1.6).
+  assert.deepEqual(fake.calls.quickPick[0].items.filter(i => i.dir).map(i => [i.label, i.description]),
+    [['auto-mpg', a], ['bank-marketing', b]]);
   assert.equal(first.agent.studyDir, a);
   await first.controller.handle({ v: 2, type: 'ready' });
   assert.ok(calls.some(args => args.includes('status') && args[args.indexOf('--study') + 1] === a));
@@ -118,14 +121,23 @@ test('ST-1: two studies in one workspace give a quick pick of both; switching re
 
   // The header's switcher posts switch_study; the WP-U1 handler runs the extension's switch.
   choice = 1;
-  await first.controller.handle({ v: 2, type: 'switch_study' });
+  const oldController = first.controller;
+  await oldController.handle({ v: 2, type: 'switch_study' });
   const items = fake.calls.quickPick.at(-1).items;
   assert.equal(items.at(-1).label, 'Pick another folder...');
-  assert.equal(fake.calls.panels[0].disposed, true, 'the old panel and its controller are disposed');
+  // WP-I (U1 request, §6.1.6): the new study opens in the same panel; the old controller
+  // and watcher are disposed.
+  assert.equal(fake.calls.panels.length, 1, 'the same panel');
+  assert.equal(fake.calls.panels[0].disposed, false);
+  assert.notEqual(api.current().controller, oldController, 'a new controller');
+  assert.equal(api.current().agent.studyDir, b);
+  const before = fake.calls.panels[0].posted.length;
+  await oldController.refresh();
+  assert.equal(fake.calls.panels[0].posted.length, before, 'the old controller is disposed: it posts nothing');
   assert.equal(watchers[0].closed, true, 'the old watcher is disposed');
   assert.equal(watchers.length, 2);
   assert.equal(watchers[1].target, path.join(b, '.hypotrail'));
-  const panel = fake.calls.panels[1];
+  const panel = fake.calls.panels[0];
   panel.receive({ v: 2, type: 'ready' });
   await new Promise(resolve => setTimeout(resolve, 50));
   assert.ok(calls.some(args => args.includes('status') && args[args.indexOf('--study') + 1] === b), 'status on the new --study');
@@ -150,5 +162,5 @@ test('ST-2: "Pick another folder..." reaches a study deeper than two levels', as
   assert.equal(fake.calls.openDialog.length, 1);
   assert.equal(api.current().agent.studyDir, deep, 'the deep study is open');
   assert.equal(fake.calls.panels.at(-1).disposed, false);
-  assert.equal(fake.calls.panels.length, 2);
+  assert.equal(fake.calls.panels.length, 1, 'in the same panel (WP-I, §6.1.6)');
 });

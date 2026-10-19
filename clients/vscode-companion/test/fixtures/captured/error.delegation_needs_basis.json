@@ -1,0 +1,35 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "confirm",
+   "p_5",
+   "--user-words=Use your recommended default",
+   "--channel",
+   "webview",
+   "--request-id",
+   "b-deleg",
+   "--expected-revision",
+   "30",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide confirm",
+  "error": {
+   "code": "ambiguous_confirmation",
+   "message": "These words delegate the choice to the assistant. Restate the proposal as your recommended default and confirm it with --basis delegated_default, so the study shows it was delegated.",
+   "details": {
+    "reason": "delegation_needs_basis",
+    "user_words": "Use your recommended default"
+   }
+  }
+ }
+}

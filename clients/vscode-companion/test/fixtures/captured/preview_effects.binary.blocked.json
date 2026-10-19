@@ -1,0 +1,83 @@
+{
+ "about": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "effects",
+   "p_5",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.preview_effects/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-hold",
+  "revision": 31,
+  "proposal_id": "p_5",
+  "decision_id": "policy",
+  "value": "capacity:100",
+  "previous": {
+   "value": "threshold:0.2",
+   "user_words": "Yes, call everyone scored at 0.2 or more",
+   "basis": "explicit",
+   "channel": "chat",
+   "revision": 27,
+   "proposal_id": "p_4"
+  },
+  "mutation": "policy.rule_type",
+  "row": 6,
+  "reason": "policy changed (§3.7 row 6: policy.rule_type)",
+  "stale_results": [],
+  "stale_slots": [],
+  "kept_slots": [
+   "split",
+   "eda.target_rate",
+   "eda.special_values",
+   "eda.distribution:age",
+   "eda.distribution:job",
+   "eda.rate_by:job",
+   "fit.baseline",
+   "fit.logistic",
+   "policy.evaluation"
+  ],
+  "refit": [],
+  "re_eda": [],
+  "re_policy": [
+   "policy.evaluation"
+  ],
+  "recompute": [],
+  "reconfirm_required": [],
+  "supersedes_proposal": "p_4",
+  "blocked": [
+   {
+    "code": "decision_on_hold",
+    "reason": null,
+    "message": "The junior put the policy on hold in their own words; it cannot be confirmed until their words resolve the hold (decide note --resolve). Tell them what is still pending and ask whether the condition is met.",
+    "details": {
+     "decision_id": "policy",
+     "proposal_id": "p_5",
+     "notes": [
+      {
+       "note_id": "n_1",
+       "user_words": "Only if the call centre confirms the wave size"
+      }
+     ]
+    }
+   }
+  ],
+  "artifacts_after": {
+   "report": "regenerated",
+   "notebook": "regenerated",
+   "workbench": "unchanged"
+  },
+  "notes": [
+   "No refit: predictions are reused."
+  ],
+  "recorded": false,
+  "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."
+ }
+}

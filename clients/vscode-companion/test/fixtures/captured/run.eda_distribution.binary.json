@@ -1,0 +1,171 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "eda.distribution",
+   "--column=age"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "run",
+  "request_id": "b11",
+  "replayed": false,
+  "revision": 17,
+  "activity": "eda.distribution",
+  "execution_id": "e_8101d16893f3425fbb4ff727",
+  "status": "promoted",
+  "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+  "values": {
+   "partition": "train",
+   "column": "age",
+   "role": "feature",
+   "type": "integer",
+   "kind": "numeric",
+   "n_rows": 3164,
+   "n_missing": 0,
+   "special_values": [],
+   "numeric": {
+    "n": 3164,
+    "min": 19.0,
+    "q25": 33.0,
+    "median": 39.0,
+    "q75": 48.0,
+    "max": 86.0,
+    "mean": 40.9263590391909,
+    "sd": 10.559196480104337,
+    "n_bins": 10,
+    "bin_width": 6.7,
+    "bins": [
+     {
+      "low": 19.0,
+      "high": 25.7,
+      "n_rows": 76,
+      "share": 0.02402022756005057,
+      "closed": "left"
+     },
+     {
+      "low": 25.7,
+      "high": 32.4,
+      "n_rows": 691,
+      "share": 0.2183944374209861,
+      "closed": "left"
+     },
+     {
+      "low": 32.4,
+      "high": 39.1,
+      "n_rows": 876,
+      "share": 0.27686472819216185,
+      "closed": "left"
+     },
+     {
+      "low": 39.1,
+      "high": 45.8,
+      "n_rows": 511,
+      "share": 0.16150442477876106,
+      "closed": "left"
+     },
+     {
+      "low": 45.8,
+      "high": 52.5,
+      "n_rows": 502,
+      "share": 0.1586599241466498,
+      "closed": "left"
+     },
+     {
+      "low": 52.5,
+      "high": 59.2,
+      "n_rows": 390,
+      "share": 0.12326169405815424,
+      "closed": "left"
+     },
+     {
+      "low": 59.2,
+      "high": 65.9,
+      "n_rows": 61,
+      "share": 0.019279393173198482,
+      "closed": "left"
+     },
+     {
+      "low": 65.9,
+      "high": 72.6,
+      "n_rows": 26,
+      "share": 0.008217446270543615,
+      "closed": "left"
+     },
+     {
+      "low": 72.6,
+      "high": 79.30000000000001,
+      "n_rows": 23,
+      "share": 0.007269279393173199,
+      "closed": "left"
+     },
+     {
+      "low": 79.30000000000001,
+      "high": 86.0,
+      "n_rows": 8,
+      "share": 0.0025284450063211127,
+      "closed": "both"
+     }
+    ]
+   },
+   "groups": null,
+   "n_groups": null,
+   "max_groups": 20,
+   "other": null,
+   "min_group_rows": 30,
+   "warnings": [],
+   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes."
+  },
+  "result": {
+   "execution_id": "e_8101d16893f3425fbb4ff727",
+   "activity": "eda.distribution",
+   "slot": "eda.distribution:age",
+   "status": "promoted",
+   "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+   "input_key": "13d026140f7b93a9527991c7c15fb7ceb483caa57362ded80b251bb3f7b00446",
+   "reason": null,
+   "started_revision": 16,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_3ce77884a43447dc9447d30a5e3f1f14"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 17,
+    "last_ok_revision": 17,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 17,
+    "last_ok_revision": 17,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

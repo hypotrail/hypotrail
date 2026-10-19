@@ -368,8 +368,11 @@
         text: copy().open, 'aria-label': c.openFinding(str(f.where) || str(f.deliverable)),
         onclick: () => {
           const message = { type: 'open_artifact', artifact: f.deliverable };
-          // The report anchor of the cited result needs stage v2 (open_artifact.resultId).
-          if (f.deliverable === 'report' && f.resultId && ctx.atLeast('v2')) message.resultId = f.resultId;
+          // The report at the cited result's anchor, an editor deliverable at the finding's
+          // line (open_artifact.resultId and .line, stage v1).
+          if (f.deliverable === 'report' && f.resultId && ctx.atLeast('v1')) message.resultId = f.resultId;
+          const line = f.location && f.location.line;
+          if (f.deliverable !== 'report' && Number.isInteger(line) && line > 0 && ctx.atLeast('v1')) message.line = line;
           ctx.send(message);
         } }) : null,
     ]);

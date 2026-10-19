@@ -1,7 +1,7 @@
 'use strict';
 // What if? handler (COMPANION-ADVANCED §6.5, §7 W3, §11; CLI-CONTRACT-COMPANION §4). WP-U3.
 //
-//   loads.whatif     `evidence --json` projected by toWhatIfModel (key `evidence.whatif`).
+//   loads.whatif     `evidence --json` projected by toWhatIfModel (the shared key `evidence`).
 //   preview_policy   the slider: debounced (300 ms, only the latest request is kept), at most
 //                    one `preview policy` at a time, cached per (revision, rules, intervals)
 //                    under a `preview:` key (the 64 most recent). The answer carries the
@@ -172,7 +172,7 @@ async function propose(message, ctx) {
 const loads = {
   whatif: {
     stage: 'v2',
-    key: () => 'evidence.whatif',
+    key: () => 'evidence',
     argv: (cli, agent) => cli.evidenceArgv(agent),
     model: toWhatIfModel,
   },

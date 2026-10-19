@@ -182,10 +182,8 @@
       inner = [el('div', { className: 'card alert', role: 'alert', 'data-load-error': 'explain' }, [
         el('p', { className: 'title', text: c.layerError }), el('p', { text: error.message })])];
     } else {
-      // Until `explain` answers. The WP-0 frame test expects the placeholder of the tab here
-      // (test_webview_frame.py); it is replaced by `layerReading` once the integrator
-      // updates that test (WP-U5 report, request R1).
-      inner = [ctx.placeholder()];
+      // Until `explain` answers (WP-I replaced the WP-0 placeholder, U5 request R1).
+      inner = [el('p', { className: 'muted', 'aria-busy': 'true', 'data-learn-loading': true, text: c.layerReading })];
     }
     return el('section', { className: 'ht-learn-layer', 'data-learning-layer': true, 'aria-labelledby': 'learn-layer-title' },
       [head, ...inner]);
@@ -207,6 +205,8 @@
         el('p', { text: c.exportFiles }),
         el('ul', { 'data-export-files': true }, rec.files.map(f => el('li', { className: 'ht-mono', text: c.exportFile(f.path, f.bytes) }))),
       ]) : null,
+      ok && (rec.warnings || []).length ? el('p', { className: 'hold', 'data-export-warnings': true,
+        text: c.exportIncomplete(rec.warnings.join('; ')) }) : null,
       ok && rec.out ? el('p', { className: 'ht-mono', 'data-export-out': true, text: c.exportOut(rec.out) }) : null,
       ok && rec.out ? el('button', { type: 'button', className: 'secondary', 'data-open-export': true, text: c.openFolder,
         onclick: () => ctx.send({ type: 'navigate_external', kind: 'reveal_export', path: rec.out }) }) : null,

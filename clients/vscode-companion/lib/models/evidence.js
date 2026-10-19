@@ -28,7 +28,9 @@ function staleReason(raw) {
     reason: strOrNull(raw.reason),
     codeChanged: list(raw.code_changed).map(str),
     upstreamNotCurrent: list(raw.upstream_not_current).map(x => rid8(str(x))),
-    sourcesChanged: bool(raw.sources_changed),
+    // The engine lists the changed sources (`['dataset']`, read.currency); older payloads
+    // carried a boolean (WP-I drift fix).
+    sourcesChanged: Array.isArray(raw.sources_changed) ? raw.sources_changed.length > 0 : bool(raw.sources_changed),
   };
 }
 

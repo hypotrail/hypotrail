@@ -84,7 +84,45 @@ test('load: a view without a loader answers "Not available in this stage."; a lo
   const data = posted.filter(m => m.type === 'view_data');
   assert.equal(data.length, 3);
   assert.deepEqual(data[0], { v: 2, type: 'view_data', view: 'decisions', revision: 27, model: { revision: 27, n: 5 } });
-  assert.deepEqual(seen, [27]);
+  // WP-I: the cache holds the payload of the read, and each answer projects it with its
+  // loader's model (shared reads, below), so the model runs once per answer, the CLI once.
+  assert.deepEqual(seen, [27, 27, 27]);
+});
+
+test('load: loaders of one command share one cached payload and project it with their own models (WP-I)', async () => {
+  const model = name => p => ({ view: name, revision: p.revision, n: p.history.length });
+  const loader = name => ({ stage: 'v1', key: () => 'decisions-read', argv: (cli, agent) => cli.decisionsArgv(agent), model: model(name) });
+  const handlers = [{ name: 'a', loads: { decisions: loader('decisions') } }, { name: 'b', loads: { eda: loader('eda') } }];
+  const { c, posted, runCli } = make({ settings: { stage: 'v1' }, handlers });
+  await c.handle({ v: 2, type: 'ready' });
+  await Promise.all([c.handle({ v: 2, type: 'load', view: 'decisions' }), c.handle({ v: 2, type: 'load', view: 'eda' })]);
+  await c.handle({ v: 2, type: 'load', view: 'eda' });
+  assert.equal(runCli.calls.filter(x => x.tail[0] === 'decisions').length, 1, 'one process for both views, then the cache');
+  const data = posted.filter(m => m.type === 'view_data');
+  assert.deepEqual(data.map(m => m.model.view).sort(), ['decisions', 'eda', 'eda']);
+  assert.ok(data.every(m => m.view === m.model.view), 'each view gets its own model');
+});
+
+test('load: a loader whose `when(settings)` is false is refused like a stage gate, and runs nothing (WP-I)', async () => {
+  const handlers = [{ name: 'probe', loads: { explain: { stage: 'v1', when: s => s.learningLayer !== false, key: () => 'explain',
+    argv: (cli, agent) => cli.decisionsArgv(agent), model: p => ({ revision: p.revision }) } } }];
+  const { c, posted, runCli } = make({ settings: { stage: 'v3', learningLayer: false }, handlers });
+  await c.handle({ v: 2, type: 'ready' });
+  const before = runCli.calls.length;
+  await c.handle({ v: 2, type: 'load', view: 'explain' });
+  assert.deepEqual(posted.at(-1), { v: 2, type: 'load_error', view: 'explain', message: 'Not available in this stage.', detail: '' });
+  assert.equal(runCli.calls.length, before);
+  c.updateSettings({ learningLayer: true });
+  await c.handle({ v: 2, type: 'load', view: 'explain' });
+  assert.equal(posted.at(-1).type, 'view_data');
+});
+
+test('load explain with the learning layer off: the Learn handler\'s loader is refused, `explain` never runs (LE-3, WP-I)', async () => {
+  const { c, posted, runCli } = make({ settings: { stage: 'v3', learningLayer: false } });
+  await c.handle({ v: 2, type: 'ready' });
+  await c.handle({ v: 2, type: 'load', view: 'explain' });
+  assert.equal(posted.at(-1).type, 'load_error');
+  assert.equal(runCli.calls.filter(x => x.tail[0] === 'explain').length, 0);
 });
 
 test('load summary with since, and a refusal of a loader becomes a load_error', async () => {

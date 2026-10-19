@@ -1,0 +1,292 @@
+{
+ "about": {
+  "schema": "hypotrail.summary/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.summary/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 30,
+  "since": null,
+  "changed": null,
+  "goal": {
+   "intended_use": {
+    "value": "Teaching simulation: prioritize contacts when call capacity is limited",
+    "status": "scenario_assumption"
+   },
+   "decision": {
+    "value": "Select contacts to call first",
+    "status": "scenario_assumption"
+   },
+   "observation_unit": {
+    "value": "A customer contacted during a telephone campaign",
+    "status": "documented_fact"
+   },
+   "prediction_time": {
+    "value": "before the first contact of the campaign, from the client file",
+    "source": "decision",
+    "status": "confirmed"
+   }
+  },
+  "current_step": "conclusion",
+  "plan": [
+   {
+    "id": "prediction_time",
+    "title": "Define the prediction moment",
+    "status": "done"
+   },
+   {
+    "id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "status": "done"
+   },
+   {
+    "id": "split",
+    "title": "Split the data before exploring it",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the training partition",
+    "status": "done"
+   },
+   {
+    "id": "models",
+    "title": "Fit a baseline and a logistic model",
+    "status": "done"
+   },
+   {
+    "id": "policy",
+    "title": "Choose a decision policy",
+    "status": "done"
+   },
+   {
+    "id": "conclusion",
+    "title": "Conclude proportionately",
+    "status": "ready"
+   }
+  ],
+  "next_action": {
+   "kind": "await_user_words",
+   "proposal_id": "p_5",
+   "decision": "policy",
+   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision."
+  },
+  "open_proposals": [
+   {
+    "proposal_id": "p_5",
+    "decision_id": "policy",
+    "value": "capacity:100",
+    "restatement": "Call the 100 clients with the highest scores.",
+    "revision": 30
+   }
+  ],
+  "decisions": {
+   "prediction_time": {
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "feature_availability": {
+    "status": "confirmed",
+    "value": {
+     "available_at_prediction": [
+      "age",
+      "balance",
+      "default",
+      "education",
+      "housing",
+      "job",
+      "loan",
+      "marital",
+      "pdays",
+      "poutcome",
+      "previous"
+     ],
+     "not_available": [
+      "campaign",
+      "day",
+      "duration",
+      "month"
+     ],
+     "uncertain_included": [
+      "contact"
+     ]
+    },
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "split": {
+    "status": "confirmed",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "reason": null,
+    "open_proposals": []
+   },
+   "policy": {
+    "status": "confirmed",
+    "value": "threshold:0.2",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "user_words": "Yes, call everyone scored at 0.2 or more",
+    "reason": null,
+    "open_proposals": [
+     "p_5"
+    ]
+   },
+   "conclusion": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": []
+   }
+  },
+  "results": {
+   "eda.distribution:age": {
+    "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.distribution:job": {
+    "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.rate_by:job": {
+    "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.special_values": {
+    "result_id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.target_rate": {
+    "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.baseline": {
+    "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.logistic": {
+    "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "policy.evaluation": {
+    "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "split": {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   }
+  },
+  "artifacts": {
+   "status": "ok",
+   "items": {
+    "notebook": {
+     "status": "ok",
+     "revision": 30,
+     "last_ok_revision": 30,
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+    },
+    "report": {
+     "status": "ok",
+     "revision": 30,
+     "last_ok_revision": 30,
+     "message": "The report (reports/study.html) is up to date."
+    },
+    "workbench": {
+     "status": "ok",
+     "revision": 2,
+     "last_ok_revision": 2,
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+    }
+   }
+  },
+  "executions": {
+   "active": [],
+   "interrupted": [],
+   "late": [],
+   "suspected_interrupted": []
+  },
+  "not_yet_defensible": {
+   "top": [
+    {
+     "id": "unconfirmed_decisions",
+     "text": "These decisions are not confirmed: conclusion."
+    },
+    {
+     "id": "uncertain_features_included",
+     "text": "These features are used although their availability at prediction time is uncertain: contact."
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+    },
+    {
+     "id": "public_data_already_explored",
+     "text": "The data were explored or published before this study; its rows are not unseen."
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+    }
+   ],
+   "more": [
+    "no_causality",
+    "workbench_not_tracked"
+   ]
+  },
+  "notes": [],
+  "holds": [],
+  "recap": [
+   "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result 8f1781d8).",
+   "Now: Conclude proportionately; the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
+   "Limit: These features are used although their availability at prediction time is uncertain: contact."
+  ]
+ }
+}

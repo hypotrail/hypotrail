@@ -144,14 +144,17 @@
       const r = results.find(x => slotOf(x) === EVALUATION_SLOT[id] && idOf(x));
       if (r) chips.push(resultChip(r));
       if (id === 'policy') {
-        const u = model.uncertainty && typeof model.uncertainty === 'object' ? model.uncertainty : {};
-        const delta = [...arr(u.deltas), ...arr(Array.isArray(model.uncertainty) ? model.uncertainty : u.rows)]
-          .find(row => row && typeof row.pointText === 'string' && /difference|−| - /i.test(str(row.label)));
-        if (delta) {
-          const cite = delta.cited && typeof delta.cited.resultId === 'string' ? delta.cited : null;
-          const label = `${str(delta.label)} ${str(delta.pointText)} ${str(delta.intervalText)}`.trim();
+        // The paired precision difference of the proposed rule, from the EvidenceModel's
+        // uncertainty of the current policy evaluation (lib/models/evidence.js; WP-I
+        // reconciled U2 with U3). Shown only when the engine evaluated that rule.
+        const u = model.uncertainty && model.uncertainty.kind === 'policy' ? model.uncertainty : null;
+        const rule = u ? arr(u.rules).find(x => x && x.rule === str(p.value)) : null;
+        const metric = rule ? arr(rule.metrics).find(x => x && x.metric === 'precision') : null;
+        const d = metric && metric.delta;
+        if (d && typeof d.point === 'number' && typeof d.low === 'number' && typeof d.high === 'number') {
+          const f = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, 'f3')}`;
           chips.push(el('span', { className: 'dc-chip dc-chip-static', 'data-evidence-delta': true },
-            [cite ? ctx.components.cited(label, cite) : label]));
+            [ctx.components.cited(c.precisionDelta(f(d.point), f(d.low), f(d.high)), { resultId: u.resultId, path: d.path, value: d.point })]));
         }
       }
       chips.push(el('button', { type: 'button', className: 'dc-chip', 'data-explore': id, text: c.explore(taskOf(ctx)),
@@ -227,7 +230,9 @@
    */
   function outcomeNode(o, ctx, c) {
     if (!o) return null;
-    if (!(o.op === 'W1' && o.kind === 'ok' && ctx.atLeast('v1'))) return ctx.renderOutcome(o);
+    // §6.2.4 (a v0 text): the confirmed decision is named whenever the outcome says which
+    // one; the frame's generic text (copy/core.js done.W1) is the fallback (decision CI.8).
+    if (!(o.op === 'W1' && o.kind === 'ok' && o.recorded && o.recorded.decisionId)) return ctx.renderOutcome(o);
     const rec = o.recorded || {};
     const decision = str(rec.decisionId);
     const step = arr(ctx.snapshot && ctx.snapshot.plan).find(s => s.id === decision);
@@ -240,9 +245,6 @@
     ]);
   }
 
-  function askAgent(ctx, kind, id) {
-    return ctx.send({ type: 'ask_agent', about: { kind, id }, question: '', mode: ctx.chatInsert ? 'insert' : 'copy' });
-  }
 
   // --- the pending decision card ---------------------------------------------------------
 
@@ -304,7 +306,8 @@
           pause ? el('span', { className: 'dc-pill', 'data-pause': pause, text: c.pause(pause, task) }) : null,
           el('h3', { id: `title-${id}`, text: str(p.decisionTitle) }),
         ]),
-        el('span', { className: 'muted dc-origin', 'data-origin': fromPanel ? 'webview' : 'agent', text: fromPanel ? c.byPanel : c.byAgent }),
+        el('span', { className: 'muted dc-origin', 'data-origin': fromPanel ? 'webview' : 'agent' },
+          [HT.terms.mark(fromPanel ? c.byPanel : c.byAgent, 'proposal')]),
       ])
       : el('h3', { id: `title-${id}`, text: `${str(p.decisionTitle)} (${str(p.decisionId)})` });
 
@@ -329,8 +332,8 @@
       el('div', { className: 'dc-actions' }, [
         ctx.reviewer ? null : confirm,
         ctx.reviewer ? null : withdraw,
-        ctx.gate('v2', el('button', { type: 'button', className: 'secondary', 'data-ask': id, text: c.ask,
-          onclick: () => askAgent(ctx, 'proposal', id) })),
+        // The shared agent-bridge helper of media/terms.js: a modal, then copy (§6.8; WP-I).
+        HT.askButton(ctx, { kind: 'proposal', id }, c.askAbout(str(p.decisionTitle)), { label: c.ask, attrs: { 'data-ask': id } }),
       ]),
       el('div', { className: 'dc-outcome', 'data-card-outcome': id }, [outcomeNode(outcome, ctx, c)]),
     ]);
@@ -357,8 +360,7 @@
             onclick: () => ctx.navigate({ tab: 'decisions', kind: 'proposal', id: q.openProposal }) })
           : el('div', {}, [
             el('p', { className: 'muted', text: c.noNewProposal }),
-            ctx.gate('v2', el('button', { type: 'button', className: 'secondary', 'data-ask-decision': id, text: c.askShort,
-              onclick: () => askAgent(ctx, 'decision', id) })),
+            HT.askButton(ctx, { kind: 'decision', id }, str(q.title), { label: c.askShort, attrs: { 'data-ask-decision': id } }),
             DRAFT_DECISIONS.includes(id) ? ctx.gate('v2', el('button', { type: 'button', className: 'secondary',
               'data-choose': id, text: c.chooseInWhatIf, onclick: () => ctx.navigate({ tab: 'whatif', kind: 'decision', id }) })) : null,
           ]),

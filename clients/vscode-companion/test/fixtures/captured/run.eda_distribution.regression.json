@@ -1,0 +1,171 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "eda.distribution",
+   "--column=weight"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "action": "run",
+  "request_id": "a11",
+  "replayed": false,
+  "revision": 17,
+  "activity": "eda.distribution",
+  "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+  "status": "promoted",
+  "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+  "values": {
+   "partition": "train",
+   "column": "weight",
+   "role": "feature",
+   "type": "numeric",
+   "kind": "numeric",
+   "n_rows": 280,
+   "n_missing": 0,
+   "special_values": [],
+   "numeric": {
+    "n": 280,
+    "min": 1613.0,
+    "q25": 2278.75,
+    "median": 3030.0,
+    "q75": 3855.0,
+    "max": 5140.0,
+    "mean": 3120.4857142857145,
+    "sd": 894.4451473729321,
+    "n_bins": 10,
+    "bin_width": 352.7,
+    "bins": [
+     {
+      "low": 1613.0,
+      "high": 1965.7,
+      "n_rows": 21,
+      "share": 0.075,
+      "closed": "left"
+     },
+     {
+      "low": 1965.7,
+      "high": 2318.4,
+      "n_rows": 55,
+      "share": 0.19642857142857142,
+      "closed": "left"
+     },
+     {
+      "low": 2318.4,
+      "high": 2671.1,
+      "n_rows": 32,
+      "share": 0.11428571428571428,
+      "closed": "left"
+     },
+     {
+      "low": 2671.1,
+      "high": 3023.8,
+      "n_rows": 32,
+      "share": 0.11428571428571428,
+      "closed": "left"
+     },
+     {
+      "low": 3023.8,
+      "high": 3376.5,
+      "n_rows": 28,
+      "share": 0.1,
+      "closed": "left"
+     },
+     {
+      "low": 3376.5,
+      "high": 3729.2,
+      "n_rows": 32,
+      "share": 0.11428571428571428,
+      "closed": "left"
+     },
+     {
+      "low": 3729.2,
+      "high": 4081.9,
+      "n_rows": 23,
+      "share": 0.08214285714285714,
+      "closed": "left"
+     },
+     {
+      "low": 4081.9,
+      "high": 4434.6,
+      "n_rows": 33,
+      "share": 0.11785714285714285,
+      "closed": "left"
+     },
+     {
+      "low": 4434.6,
+      "high": 4787.299999999999,
+      "n_rows": 18,
+      "share": 0.06428571428571428,
+      "closed": "left"
+     },
+     {
+      "low": 4787.299999999999,
+      "high": 5140.0,
+      "n_rows": 6,
+      "share": 0.02142857142857143,
+      "closed": "both"
+     }
+    ]
+   },
+   "groups": null,
+   "n_groups": null,
+   "max_groups": 20,
+   "other": null,
+   "min_group_rows": 30,
+   "warnings": [],
+   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes."
+  },
+  "result": {
+   "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+   "activity": "eda.distribution",
+   "slot": "eda.distribution:weight",
+   "status": "promoted",
+   "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+   "input_key": "bd59c6ad11846e182776862de506c90161c447adae8e9852709abbb96a9c90a4",
+   "reason": null,
+   "started_revision": 16,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_d920b11e3d27454d991476d291c82b0c"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 17,
+    "last_ok_revision": 17,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 17,
+    "last_ok_revision": 17,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

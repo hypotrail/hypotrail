@@ -89,7 +89,9 @@
     "value": "capacity:100",
     "restatement": "Call the 100 clients with the highest scores.",
     "revision": 26,
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    }
   ],
   "decisions": {
@@ -366,7 +368,7 @@
     {
      "revision": 24,
      "time": "2026-10-19T08:27:10.120000+00:00",
-     "action": "decide.note",
+     "action": "decide.resolve_note",
      "kind": "hold_resolved",
      "decision_id": "policy",
      "proposal_id": null,
@@ -392,7 +394,7 @@
      "decision_id": null,
      "proposal_id": null,
      "note_id": null,
-     "activity": "policy.evaluate",
+     "activity": "policy.evaluation",
      "slot": "policy.evaluation",
      "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
      "execution_id": "e_7d2c4b1a9e8f7a6b5c4d3e2f",

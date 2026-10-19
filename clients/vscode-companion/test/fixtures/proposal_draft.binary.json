@@ -26,7 +26,7 @@
   "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result ae80b53f).",
   "evidence": {
    "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
-   "activity": "policy.evaluate",
+   "activity": "policy.evaluation",
    "figures": [
     {
      "path": "n",

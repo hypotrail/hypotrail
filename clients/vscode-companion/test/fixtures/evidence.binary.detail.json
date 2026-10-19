@@ -1152,9 +1152,7 @@
     "current": false,
     "stale_reason": {
      "reason": "replaced by a newer result of the same slot",
-     "code_changed": [],
-     "upstream_not_current": [],
-     "sources_changed": false
+     "since": null
     },
     "integrity": "ok",
     "partition": "validation",
@@ -2011,12 +2009,12 @@
   },
   "sources": {
    "case": {
-    "path": "case.yaml",
+    "path": "/studies/cases/bank-marketing/case.yaml",
     "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929",
     "matches": true
    },
    "dataset": {
-    "path": "data/bank.csv",
+    "path": "/studies/cases/bank-marketing/data/bank.csv",
     "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
     "matches": true
    }

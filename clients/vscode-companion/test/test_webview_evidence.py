@@ -113,7 +113,8 @@ def test_detail_facts_lineage_ev6_and_ledger_ev2(open_panel, model, binary, sche
     detail.locator(f'[data-show-in-report="{LOGISTIC}"]').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report', 'resultId': LOGISTIC}
     detail.locator('[data-show-in-notebook]').click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'notebook'}
+    # WP-I (U3 request): the notebook opens at the line that names the result.
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'notebook', 'resultId': LOGISTIC}
     assert 'look for d0af48b2' in detail.inner_text()
     # Lineage (EV-6) and the impact sentence.
     chain = page.locator(f'[data-chain="{LOGISTIC}"] [data-chain-node]')
@@ -197,6 +198,20 @@ def test_ev3_navigation_selects_and_focuses_the_result(open_panel, model, binary
     assert page.locator(f'[data-result-item="{LOGISTIC}"]').get_attribute('aria-pressed') == 'true'
 
 
+def test_select_the_id_selects_the_full_id_and_never_writes_the_clipboard(open_panel, model, binary):
+    # WP-I, decision CI.5: the panel writes the clipboard only through the agent bridge (§12).
+    panel = opened(open_panel, binary)
+    page = panel.page
+    show(panel, model('evidence', 'evidence.binary'))
+    page.locator(f'[data-result-item="{LOGISTIC}"]').click()
+    show(panel, model('evidence', 'evidence.binary.detail'), LOGISTIC)
+    page.get_by_role('button', name='Select the id').click()
+    assert page.evaluate('() => String(window.getSelection())') == LOGISTIC
+    assert page.locator('details.ht-ev-fullid').evaluate('d => d.open')
+    assert page.locator('[data-select-note]').inner_text() == 'The id is selected: copy it with the keyboard.'
+    assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
+
+
 def test_an_unknown_result_shows_the_engine_refusal_and_returns_to_the_list(open_panel, model, binary):
     panel = opened(open_panel, binary)
     page = panel.page
@@ -219,6 +234,8 @@ def test_regression_evidence_holds_no_decision_rule_vocabulary(open_panel, model
     show(panel, model('evidence', detail_payload(payload, 'evidence.regression', REGRESSION_EVAL)), REGRESSION_EVAL)
     unc = page.locator('[data-uncertainty="regression"]')
     assert unc.locator('[data-metric]').evaluate_all('xs => xs.map(x => x.dataset.metric)') == ['mae', 'rmse']
+    # WP-I: each metric is named by its glossary term, for the learning layer's hovers (§6.7).
+    assert unc.locator('[data-metric] h4 [data-term]').evaluate_all('xs => xs.map(x => x.dataset.term)') == ['mae', 'rmse']
     assert unc.locator('[data-delta-sentence="one_side"]').count() == 2
     page.get_by_role('button', name='Show as a table').click()
     for button in page.locator('#panel-evidence .ht-figure button[aria-controls]').all():

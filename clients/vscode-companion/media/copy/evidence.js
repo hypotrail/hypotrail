@@ -30,8 +30,7 @@
     retry: 'Retry',
     idLine: (rid8, current) => `${rid8}… · ${current ? 'current' : 'stale'}`,
     fullId: 'Full id',
-    copyId: 'Copy id',
-    copied: 'Copied the result id.',
+    copyId: 'Select the id',
     copyFallback: 'The id is selected: copy it with the keyboard.',
     facts: {
       evaluatedOn: 'Evaluated on',
@@ -99,15 +98,6 @@
     },
     usedToChoose: 'used to choose',
     splitUnseen: 'Changing the split does not make explored rows unseen.',
-    ask: {
-      title: 'Ask the agent',
-      about: 'About',
-      question: 'Your question (it may stay empty)',
-      copy: 'Copy for the chat',
-      insert: 'Insert into the chat',
-      note: 'Nothing is sent: the text goes to the clipboard or the chat input, for you to read and send.',
-      result: (slot, rid8) => `result ${rid8} (${slot})`,
-    },
     binary: {
       rule: rule => `Rule ${rule}`,
       metrics: { precision: 'Precision', recall: 'Recall' },

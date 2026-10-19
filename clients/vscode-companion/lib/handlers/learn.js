@@ -43,9 +43,14 @@ function postState(ctx, state) {
   ctx.post({ type: 'learn_state', prefs: state.prefs, seen: state.seen, predictions: state.predictions });
 }
 
-/** The words of the export warnings (CLI-CONTRACT-COMPANION §7), for the notice. */
+/** The export warnings (CLI-CONTRACT-COMPANION §7) in words: `recorded.warnings` of W7. */
+function warningWords(codes) {
+  return (codes || []).map(c => WARNINGS[c] || String(c).replace(/_/g, ' '));
+}
+
+/** The sentence the Learn view shows for those words ('' when there are none). */
 function warningsText(codes) {
-  const words = (codes || []).map(c => WARNINGS[c] || String(c).replace(/_/g, ' '));
+  const words = warningWords(codes);
   return words.length ? `The pack is incomplete: ${words.join('; ')}.` : '';
 }
 
@@ -96,22 +101,20 @@ async function exportHandoff(message, ctx) {
     ctx.post({ type: 'outcome', op: 'W7', kind: 'cancelled', target: 'handoff', message: CANCELLED });
     return null;
   }
-  let warnings = [];
   const outcome = await ctx.write('W7', {
     target: 'handoff',
     argv: () => ctx.cli.WRITES.W7(ctx.agent, { parent, revision: message.revision }),
     record: payload => {
-      warnings = Array.isArray(payload.warnings) ? payload.warnings.filter(w => typeof w === 'string') : [];
+      const codes = Array.isArray(payload.warnings) ? payload.warnings.filter(w => typeof w === 'string') : [];
       const files = (Array.isArray(payload.files) ? payload.files : [])
         .filter(f => f && typeof f.path === 'string' && Number.isInteger(f.bytes) && f.bytes >= 0)
         .map(f => ({ path: f.path, bytes: f.bytes }));
-      return { files, out: typeof payload.out === 'string' ? payload.out : null };
+      // The warnings travel in the outcome (WP-I, U5 request R3), shown with the files.
+      return { files, out: typeof payload.out === 'string' ? payload.out : null, warnings: warningWords(codes) };
     },
   });
   if (outcome && (outcome.kind === 'ok' || outcome.kind === 'ok_with_problems') && outcome.recorded && outcome.recorded.out) {
     session(ctx).lastExport = outcome.recorded.out;
-    const text = warningsText(warnings);
-    if (text) ctx.post({ type: 'notice', politeness: 'polite', text });
   }
   return outcome;
 }
@@ -133,11 +136,14 @@ async function onReady(ctx) {
 module.exports = {
   types: { learn_set: learnSet, export_handoff: exportHandoff, navigate_external: navigateExternal },
   loads: {
-    explain: { stage: 'v3', key: () => 'explain', argv: (cli, agent) => cli.READS.explain(agent), model: toExplainModel },
+    // The learning layer off: the controller refuses the load and `explain` is never read (LE-3).
+    explain: { stage: 'v3', when: settings => settings.learningLayer !== false, key: () => 'explain',
+      argv: (cli, agent) => cli.READS.explain(agent), model: toExplainModel },
     session_report: { stage: 'v3', key: () => 'session_report', argv: (cli, agent) => cli.READS.session_report(agent),
       model: toSessionReportModel },
   },
   onReady,
   warningsText,
+  warningWords,
   WARNINGS,
 };

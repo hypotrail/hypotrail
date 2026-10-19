@@ -1,0 +1,55 @@
+{
+ "about": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "effects",
+   "p_4",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.preview_effects/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "revision": 24,
+  "proposal_id": "p_4",
+  "decision_id": "model_choice",
+  "value": "fit.linear",
+  "previous": null,
+  "mutation": "first_confirmation",
+  "row": null,
+  "reason": "model_choice confirmed for the first time",
+  "stale_results": [],
+  "stale_slots": [],
+  "kept_slots": [
+   "split",
+   "eda.target_summary",
+   "eda.special_values",
+   "eda.distribution:weight",
+   "eda.mean_by:model_year",
+   "fit.baseline",
+   "fit.linear",
+   "evaluate.regression"
+  ],
+  "refit": [],
+  "re_eda": [],
+  "re_policy": [],
+  "recompute": [],
+  "reconfirm_required": [],
+  "supersedes_proposal": null,
+  "blocked": [],
+  "artifacts_after": {
+   "report": "regenerated",
+   "notebook": "regenerated",
+   "workbench": "unchanged"
+  },
+  "notes": [],
+  "recorded": false,
+  "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."
+ }
+}

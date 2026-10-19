@@ -13,7 +13,12 @@
 //   - the generic outcome mapping of a write (§7, "Outcome handling").
 // Handlers live in lib/handlers/*.js. Each exports `{types?, loads?, onReady?}`:
 //   types: {messageType: async (message, ctx) => void}
-//   loads: {view: {key(message), argv(cli, agent, message), model(payload), stage?}}
+//   loads: {view: {key(message), argv(cli, agent, message), model(payload), stage?, when?(settings)}}
+//     `key` names the CLI read, not the view: loaders that run the same command share a
+//     key (`evidence` for EDA, Evidence, and What if?, COMPANION-ADVANCED §5, §8.1) and
+//     one cached payload, which each projects with its own `model`. `when(settings)`
+//     false makes the controller refuse the load like a stage gate (the learning layer
+//     off: `explain` is never read, LE-3).
 //   onReady: async ctx => void (after `ready`, once the first snapshot is posted)
 //   commands: {name: async (args, ctx) => any} (extension commands, e.g. go_to_result)
 // Handlers never call cli.run: they call ctx.read and ctx.write.
@@ -170,27 +175,29 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   /**
-   * ctx.read: a cached, coalesced read. Resolves {ok: true, model, revision, payload?,
+   * ctx.read: a cached, coalesced read. Resolves {ok: true, model, revision, payload,
    * cached?} or {ok: false, message, detail, refusal?}. The cache key is (key, revision of
-   * the last snapshot); `group: 'preview'` uses the single preview slot.
+   * the last snapshot) and holds the CLI payload: each caller projects it with its own
+   * `modelFn`, so loaders of one command share one process and one cache entry.
+   * `group: 'preview'` uses the single preview slot.
    */
   async function read(key, argv, modelFn, { group = key.startsWith('preview:') ? 'preview' : 'read', timeoutMs } = {}) {
     const revision = snapshot ? snapshot.revision : 0;
     const hit = cache.get(key, revision);
-    if (hit !== undefined) return { ...hit, cached: true };
+    if (hit !== undefined) return { ...readResult({ payload: hit }, modelFn), cached: true };
     const id = `${revision}|${key}`;
-    if (inflight.has(id)) return inflight.get(id);
-    const promise = (async () => {
-      try {
-        const out = readResult(await readProcess(argv, { group, timeoutMs }), modelFn);
-        if (out.ok) cache.set(key, revision, { ok: true, model: out.model, revision: out.revision });
-        return out;
-      } finally {
-        inflight.delete(id);
-      }
-    })();
-    inflight.set(id, promise);
-    return promise;
+    if (!inflight.has(id)) {
+      inflight.set(id, (async () => {
+        try {
+          const res = await readProcess(argv, { group, timeoutMs });
+          if (!res.failure && res.payload && res.payload.ok === true) cache.set(key, revision, res.payload);
+          return res;
+        } finally {
+          inflight.delete(id);
+        }
+      })());
+    }
+    return readResult(await inflight.get(id), modelFn);
   }
 
   async function loadSummary({ since = null } = {}) {
@@ -308,7 +315,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
       return send({ type: 'view_data', view: 'summary', revision: out.model.revision, model: out.model });
     }
     const loader = routes.loads[message.view];
-    if (!loader || (loader.stage && !stageAtLeast(loader.stage))) {
+    if (!loader || (loader.stage && !stageAtLeast(loader.stage)) || (typeof loader.when === 'function' && !loader.when({ ...active }))) {
       return send({ type: 'load_error', view: message.view, message: NOT_AVAILABLE, detail: '' });
     }
     const out = await read(loader.key(message), loader.argv(cli, agent, message), loader.model);

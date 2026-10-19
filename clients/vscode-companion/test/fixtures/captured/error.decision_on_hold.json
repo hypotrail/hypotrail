@@ -1,0 +1,41 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "confirm",
+   "p_5",
+   "--user-words=Yes, call the 100 best-scored clients",
+   "--channel",
+   "webview",
+   "--request-id",
+   "b-held",
+   "--expected-revision",
+   "31",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide confirm",
+  "error": {
+   "code": "decision_on_hold",
+   "message": "The junior put the policy on hold in their own words; it cannot be confirmed until their words resolve the hold (decide note --resolve). Tell them what is still pending and ask whether the condition is met.",
+   "details": {
+    "decision_id": "policy",
+    "proposal_id": "p_5",
+    "notes": [
+     {
+      "note_id": "n_1",
+      "user_words": "Only if the call centre confirms the wave size"
+     }
+    ]
+   }
+  }
+ }
+}

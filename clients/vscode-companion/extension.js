@@ -15,6 +15,7 @@
 
 const vscode = require('vscode');
 const fs = require('fs');
+const path = require('path');
 const flag = require('./lib/flag');
 const study = require('./lib/study');
 const uri = require('./lib/uri');
@@ -32,13 +33,23 @@ let current = null;   // {panel, controller, watcher, agent, reviewer}
 
 const PICK_FOLDER = 'Pick another folder...';
 
-/** The study folder to open. `pick` (the study switch) always shows the quick pick. */
-async function chooseStudy(pick = false) {
+/**
+ * The study folder to open. `pick` (the study switch) always shows the quick pick. `want`
+ * (a deep link's `study`) is opened directly only when it is a discovered study;
+ * otherwise the quick pick asks (§12, "URI handler").
+ */
+async function chooseStudy(pick = false, want = null) {
   const folders = (vscode.workspace.workspaceFolders || []).map(f => f.uri.fsPath);
   const found = study.findStudies(folders);
+  if (want) {
+    const match = found.find(dir => path.resolve(dir) === path.resolve(want));
+    if (match) return match;
+    pick = true;
+  }
   if (found.length === 1 && !pick) return found[0];
   if (found.length > 1 || (pick && found.length > 0)) {
-    const items = found.map(dir => ({ label: dir, dir }));
+    // One entry per study: its folder name, described by its path (§6.1.6).
+    const items = found.map(dir => ({ label: path.basename(dir) || dir, description: dir, dir }));
     if (pick) items.push({ label: PICK_FOLDER, dir: null });
     const picked = await vscode.window.showQuickPick(items,
       { title: 'Hypotrail: choose a study', placeHolder: 'A folder holding .hypotrail/agent.json' });
@@ -75,8 +86,14 @@ function host(context) {
     openArtifact: async (name, target, options = {}) => {
       let file = vscode.Uri.file(target);
       if (options.fragment && typeof file.with === 'function') file = file.with({ fragment: options.fragment });
-      if (name === 'report') await vscode.env.openExternal(file);
-      else await vscode.window.showTextDocument(file, { preview: false });
+      if (name === 'report') {
+        await vscode.env.openExternal(file);
+        return;
+      }
+      const shown = { preview: false };
+      const line = options.line;
+      if (Number.isInteger(line) && line > 0 && vscode.Range) shown.selection = new vscode.Range(line - 1, 0, line - 1, 0);
+      await vscode.window.showTextDocument(file, shown);
     },
     confirmWithdraw: async proposal => {
       const answer = await vscode.window.showWarningMessage(
@@ -104,9 +121,9 @@ function host(context) {
   };
 }
 
-async function openPanel(context, { reviewer = false, pick = false } = {}) {
+async function openPanel(context, { reviewer = false, pick = false, want = null } = {}) {
   if (!allowed()) return null;
-  const dir = await chooseStudy(pick);
+  const dir = await chooseStudy(pick, want);
   if (!dir) return null;
   let agent;
   try {
@@ -120,6 +137,15 @@ async function openPanel(context, { reviewer = false, pick = false } = {}) {
     await current.controller.refresh();
     return current;
   }
+  // The study switch (§6.1.6, ST-1): the open panel stays; its controller and watcher are
+  // disposed and a new pair reads the chosen study. The document is loaded again, so the
+  // webview starts from `ready` with the new study's snapshot.
+  if (current && (pick || want) && current.reviewer === reviewer) {
+    attach(context, current, agent);
+    current.panel.webview.html = renderHtml();
+    current.panel.reveal(vscode.ViewColumn.Beside);
+    return current;
+  }
   close();
 
   const settings = flag.settings(vscode, process.env, { forceReviewer: reviewer });
@@ -128,6 +154,49 @@ async function openPanel(context, { reviewer = false, pick = false } = {}) {
       enableScripts: true, enableCommandUris: false, enableForms: false, retainContextWhenHidden: false,
       localResourceRoots: [],
     });
+  const mine = { panel, controller: null, watcher: null, agent: null, reviewer };
+  attach(context, mine, agent);
+  current = mine;
+  // Panel events go to the panel's controller of the moment (the study switch replaces it).
+  const subscriptions = [
+    panel.webview.onDidReceiveMessage(message => {
+      mine.controller.handle(message).catch(e => console.error('[hypotrail companion]', e));
+    }),
+    panel.onDidChangeViewState(event => {
+      if (event.webviewPanel.visible) mine.controller.refresh();
+    }),
+  ];
+  if (typeof vscode.workspace.onDidChangeConfiguration === 'function') {
+    subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
+      if (!event || typeof event.affectsConfiguration !== 'function' || event.affectsConfiguration(flag.SETTING_SECTION)) {
+        mine.controller.updateSettings(flag.settings(vscode, process.env, { forceReviewer: reviewer }));
+      }
+    }));
+  }
+  const configuration = subscriptions.slice(2);
+  subscriptions.push(panel.onDidDispose(() => {
+    detach(mine);
+    for (const s of configuration) if (s && typeof s.dispose === 'function') s.dispose();
+    if (current === mine) current = null;
+  }));
+  context.subscriptions.push(...subscriptions);
+  panel.webview.html = renderHtml();
+  return mine;
+}
+
+/** Dispose the panel's controller and watcher (a study switch or the panel's close). */
+function detach(mine) {
+  if (mine.watcher) mine.watcher.dispose();
+  if (mine.controller) mine.controller.dispose();
+  mine.watcher = null;
+  mine.controller = null;
+}
+
+/** Bind a panel to a study: a new controller and watcher, the old ones disposed. */
+function attach(context, mine, agent) {
+  detach(mine);
+  const { panel, reviewer } = mine;
+  const settings = flag.settings(vscode, process.env, { forceReviewer: reviewer });
   const controller = createController({
     agent,
     settings,
@@ -136,34 +205,9 @@ async function openPanel(context, { reviewer = false, pick = false } = {}) {
     host: host(context),
     log: e => console.error('[hypotrail companion]', e),
   });
-  const watcher = watchStudy(agent.studyDir, () => controller.refresh());
-  const mine = { panel, controller, watcher, agent, reviewer };
-  current = mine;
-  const subscriptions = [
-    panel.webview.onDidReceiveMessage(message => {
-      controller.handle(message).catch(e => console.error('[hypotrail companion]', e));
-    }),
-    panel.onDidChangeViewState(event => {
-      if (event.webviewPanel.visible) controller.refresh();
-    }),
-  ];
-  if (typeof vscode.workspace.onDidChangeConfiguration === 'function') {
-    subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
-      if (!event || typeof event.affectsConfiguration !== 'function' || event.affectsConfiguration(flag.SETTING_SECTION)) {
-        controller.updateSettings(flag.settings(vscode, process.env, { forceReviewer: reviewer }));
-      }
-    }));
-  }
-  const configuration = subscriptions.slice(2);
-  subscriptions.push(panel.onDidDispose(() => {
-    watcher.dispose();
-    controller.dispose();
-    for (const s of configuration) if (s && typeof s.dispose === 'function') s.dispose();
-    if (current === mine) current = null;
-  }));
-  context.subscriptions.push(...subscriptions);
-  panel.webview.html = renderHtml();
-  return mine;
+  mine.controller = controller;
+  mine.agent = agent;
+  mine.watcher = watchStudy(agent.studyDir, () => controller.refresh());
 }
 
 async function goToResult(context) {
@@ -196,7 +240,10 @@ async function handleUri(context, link) {
     vscode.window.showInformationMessage(uri.INVALID_LINK);
     return null;
   }
-  const opened = current || await openPanel(context);
+  // A link naming another study opens it (a discovered one) or asks (the quick pick).
+  const other = target.study && (!current || path.resolve(current.agent.studyDir) !== path.resolve(target.study));
+  const opened = other ? await openPanel(context, { reviewer: current ? current.reviewer : false, want: target.study })
+    : current || await openPanel(context);
   if (!opened) return null;
   opened.controller.navigate(target);
   return opened;

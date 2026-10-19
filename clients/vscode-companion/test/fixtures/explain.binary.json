@@ -66,6 +66,22 @@
     "steps": []
    },
    {
+    "id": "distribution",
+    "term": "Distribution",
+    "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "class_imbalance",
+    "term": "Class imbalance",
+    "definition": "An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
     "id": "base_rate",
     "term": "Base rate",
     "definition": "The share of rows with the positive outcome. Any model must be compared with what this share alone would give.",
@@ -265,7 +281,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Define the prediction moment."
+       "text": "Prediction time"
       }
      ]
     },
@@ -303,7 +319,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Decide which variables are available at prediction time."
+       "text": "Feature availability"
       }
      ]
     },
@@ -341,7 +357,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Split the data before exploring it."
+       "text": "Stratified split"
       }
      ]
     },
@@ -379,7 +395,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Explore the training partition."
+       "text": "Base rate"
       }
      ]
     },
@@ -417,7 +433,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Fit a baseline and a logistic model."
+       "text": "Baseline"
       }
      ]
     },
@@ -455,7 +471,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Choose a decision policy."
+       "text": "Decision policy"
       }
      ]
     },
@@ -493,7 +509,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Conclude proportionately."
+       "text": "Confirmed decision"
       }
      ]
     },

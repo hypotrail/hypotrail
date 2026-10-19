@@ -1,0 +1,434 @@
+{
+ "about": {
+  "schema": "hypotrail.handoff/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.handoff/1",
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 30,
+  "task": "binary",
+  "case": {
+   "id": "uci-bank-marketing-v1",
+   "path": "/home/user/hypotrail/.claude/worktrees/agent-aabf258cd1e641fcd/use-cases/bank-marketing/case.yaml",
+   "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929"
+  },
+  "dataset": {
+   "path": "/home/user/hypotrail/.claude/worktrees/agent-aabf258cd1e641fcd/use-cases/bank-marketing/data/bank.csv",
+   "row_key": {
+    "format": "L<line>",
+    "rule": "source_line"
+   },
+   "rows": 4521,
+   "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde"
+  },
+  "goal": "Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "authenticated": false,
+    "proposal_id": "p_1"
+   },
+   {
+    "decision_id": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "authenticated": false,
+    "proposal_id": "p_2"
+   },
+   {
+    "decision_id": "split",
+    "status": "confirmed",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "authenticated": false,
+    "proposal_id": "p_3"
+   },
+   {
+    "decision_id": "policy",
+    "status": "confirmed",
+    "value": "threshold:0.2",
+    "user_words": "Yes, call everyone scored at 0.2 or more",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "authenticated": false,
+    "proposal_id": "p_4"
+   },
+   {
+    "decision_id": "conclusion",
+    "status": "open",
+    "value": null,
+    "user_words": null,
+    "basis": null,
+    "delegation_scope": null,
+    "channel": null,
+    "actor": null,
+    "authenticated": false,
+    "proposal_id": null
+   }
+  ],
+  "results_cited": [
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "partitions.train.n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "partitions.validation.n_rows",
+    "value": 1357,
+    "shown": "1,357"
+   },
+   {
+    "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+    "activity": "eda.target_rate",
+    "path": "rate",
+    "value": 0.11536030341340076,
+    "shown": "11.5%"
+   },
+   {
+    "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+    "activity": "eda.target_rate",
+    "path": "n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+    "activity": "eda.special_values",
+    "path": "n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+    "activity": "eda.distribution",
+    "path": "n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+    "activity": "eda.distribution",
+    "path": "n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+    "activity": "eda.rate_by",
+    "path": "n_groups",
+    "value": 12,
+    "shown": "12"
+   },
+   {
+    "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+    "activity": "eda.rate_by",
+    "path": "n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+    "activity": "fit.baseline",
+    "path": "validation.roc_auc",
+    "value": 0.5,
+    "shown": "0.500"
+   },
+   {
+    "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+    "activity": "fit.baseline",
+    "path": "validation.n_rows",
+    "value": 1357,
+    "shown": "1,357"
+   },
+   {
+    "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+    "activity": "fit.logistic",
+    "path": "validation.roc_auc",
+    "value": 0.709125942056833,
+    "shown": "0.709"
+   },
+   {
+    "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+    "activity": "fit.logistic",
+    "path": "validation.n_rows",
+    "value": 1357,
+    "shown": "1,357"
+   },
+   {
+    "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+    "activity": "policy.evaluation",
+    "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
+    "value": 0.34782608695652173,
+    "shown": "34.8%"
+   },
+   {
+    "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+    "activity": "policy.evaluation",
+    "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
+    "value": 0.2564102564102564,
+    "shown": "25.6%"
+   },
+   {
+    "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+    "activity": "policy.evaluation",
+    "path": "n",
+    "value": 1357,
+    "shown": "1,357"
+   },
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "n_rows",
+    "value": 4521,
+    "shown": "4,521"
+   },
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "partitions.train.n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "partitions.train.n_rows",
+    "value": 3164,
+    "shown": "3,164"
+   },
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "partitions.validation.n_rows",
+    "value": 1357,
+    "shown": "1,357"
+   },
+   {
+    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "activity": "split",
+    "path": "partitions.validation.n_rows",
+    "value": 1357,
+    "shown": "1,357"
+   }
+  ],
+  "exposure": {
+   "summary": {
+    "records": 13,
+    "rows_exposed": 4521,
+    "by_purpose": {
+     "structural_inspection": 4521,
+     "train_eda": 3164,
+     "train_fit": 3164,
+     "validation_model_evaluation": 1357,
+     "validation_policy_selection": 1357
+    },
+    "by_partition": {
+     "all": {
+      "structural_inspection": 4521
+     },
+     "train": {
+      "train_eda": 3164,
+      "train_fit": 3164
+     },
+     "validation": {
+      "validation_model_evaluation": 1357,
+      "validation_policy_selection": 1357
+     }
+    },
+    "validation_rows_used_for_selection": 1357,
+    "prior_exposure": [
+     {
+      "source": "results.json (sha256 92bb2e63de13592cc8782f36ebf1dec123583bc3729ec99195d8d218c87d62f1)",
+      "status": "observed",
+      "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+     },
+     {
+      "source": "data/split.json",
+      "status": "observed",
+      "value": "data/split.json records the companion split (seed 20261017) whose validation metrics are published in results.json. A study that reuses this seed has no unseen validation rows."
+     }
+    ]
+   },
+   "ledger": [
+    {
+     "purpose": "structural_inspection",
+     "partition": "all",
+     "rows": 4521,
+     "records": 2,
+     "activities": [
+      "init.structure",
+      "split"
+     ],
+     "first_revision": 1,
+     "last_revision": 8
+    },
+    {
+     "purpose": "train_eda",
+     "partition": "train",
+     "rows": 3164,
+     "records": 5,
+     "activities": [
+      "eda.target_rate",
+      "eda.special_values",
+      "eda.rate_by",
+      "eda.distribution"
+     ],
+     "first_revision": 10,
+     "last_revision": 18
+    },
+    {
+     "purpose": "train_fit",
+     "partition": "train",
+     "rows": 3164,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "first_revision": 20,
+     "last_revision": 22
+    },
+    {
+     "purpose": "validation_model_evaluation",
+     "partition": "validation",
+     "rows": 1357,
+     "records": 2,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "first_revision": 20,
+     "last_revision": 22
+    },
+    {
+     "purpose": "validation_policy_selection",
+     "partition": "validation",
+     "rows": 1357,
+     "records": 2,
+     "activities": [
+      "policy.evaluation"
+     ],
+     "first_revision": 24,
+     "last_revision": 28
+    }
+   ]
+  },
+  "not_yet_defensible": [
+   {
+    "id": "unconfirmed_decisions",
+    "text": "These decisions are not confirmed: conclusion."
+   },
+   {
+    "id": "validation_is_not_independent",
+    "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+   },
+   {
+    "id": "public_data_already_explored",
+    "text": "The data were explored or published before this study; its rows are not unseen."
+   },
+   {
+    "id": "no_time_or_entity_identifier",
+    "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+   },
+   {
+    "id": "uncertain_features_included",
+    "text": "These features are used although their availability at prediction time is uncertain: contact."
+   },
+   {
+    "id": "no_causality",
+    "text": "Associations in observational data do not show that acting on a variable would change the outcome."
+   },
+   {
+    "id": "workbench_not_tracked",
+    "text": "Experiments in the notebook workbench are not recorded and are not decisions."
+   }
+  ],
+  "open_items": {
+   "proposals": [
+    "p_5"
+   ],
+   "holds": [],
+   "executions": [],
+   "stale_deliverables": []
+  },
+  "deliverables": {
+   "report": "ok",
+   "notebook": "ok"
+  },
+  "reproduce": [
+   "hypotrail status --study <study> --summary",
+   "hypotrail evidence --study <study>",
+   "hypotrail run split --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.target_rate --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.special_values --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.distribution --column age --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.distribution --column job --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run eda.rate_by --column job --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run fit.baseline --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run fit.logistic --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run policy.evaluate --rule capacity:100 --rule threshold:0.2 --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail render --study <study>",
+   "hypotrail check --study <study>"
+  ],
+  "environment": {
+   "implementation": "cpython",
+   "packages": {
+    "marimo": "0.25.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1"
+   },
+   "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+   "python": "3.13.16"
+  }
+ }
+}

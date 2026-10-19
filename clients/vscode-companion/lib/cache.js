@@ -2,7 +2,8 @@
 // Read cache of the controller (COMPANION-ADVANCED §11): one entry per data key and
 // revision. Entries of older revisions are dropped when a newer summary arrives, except
 // `preview:*` keys, which are kept in a bounded most-recently-used list (64). The cache
-// holds model objects already projected from CLI payloads; it is never written to disk.
+// holds the CLI payloads (successful reads only); the controller projects them per view
+// model on each hit. It is never written to disk.
 //
 // Frozen by WP-0.
 

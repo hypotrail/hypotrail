@@ -1,0 +1,67 @@
+{
+ "about": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "proposal",
+   "model_choice",
+   "--value=fit.linear",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.proposal_draft/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "revision": 24,
+  "decision_id": "model_choice",
+  "value": "fit.linear",
+  "proposable": true,
+  "missing": [],
+  "restatement": "Adopt the linear model. On the 118 validation rows its mean absolute error is 6.31 mpg against 10.10 for the training mean (paired difference -3.80, interval -4.34 to -3.25). These rows were used to choose, so the figures are optimistic.",
+  "rationale": "Chosen by the junior in the companion's What if? view (result ef58893e).",
+  "evidence": {
+   "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+   "activity": "evaluate.regression",
+   "figures": [
+    {
+     "path": "n",
+     "value": 118,
+     "shown": "118"
+    },
+    {
+     "path": "models.[fit.linear].mae",
+     "value": 6.308647265230509,
+     "shown": "6.31"
+    },
+    {
+     "path": "models.[fit.baseline].mae",
+     "value": 10.104600484261507,
+     "shown": "10.10"
+    },
+    {
+     "path": "deltas.[fit.linear].mae.point",
+     "value": -3.7959532190309977,
+     "shown": "-3.80"
+    },
+    {
+     "path": "deltas.[fit.linear].mae.low",
+     "value": -4.343002436145685,
+     "shown": "-4.34"
+    },
+    {
+     "path": "deltas.[fit.linear].mae.high",
+     "value": -3.249205481492924,
+     "shown": "-3.25"
+    }
+   ]
+  },
+  "supersedes_proposal": "p_4",
+  "recorded": false,
+  "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
+ }
+}

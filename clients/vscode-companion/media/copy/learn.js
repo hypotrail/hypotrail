@@ -50,6 +50,7 @@
     exportFiles: 'Files written:',
     exportFile: (file, bytes) => `${file} · ${bytes} bytes`,
     exportOut: out => `Folder: ${out}`,
+    exportIncomplete: words => `The pack is incomplete: ${words}.`,
     exportStaleReport: 'The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it.',
     openFolder: 'Open folder',
     reviewerLine: 'A reviewer can open this study read-only with "Hypotrail: open the study panel (reviewer, read-only)".',

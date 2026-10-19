@@ -7,16 +7,16 @@
 //   commands.go_to_result   "Hypotrail: go to a result...": resolve a pasted id prefix
 //                           through `evidence`, then post `navigate` to the Evidence tab.
 //
-// Cache keys are `evidence.view` and `evidence.view:<rid>`: the controller caches the
-// projected model, so the EDA and What if? views, which read the same command with other
-// model functions, must not share a key with this one (request in the WP-U3 report).
+// Cache keys are `evidence` and `evidence:<rid>` (COMPANION-ADVANCED §5): the controller
+// caches the payload per key, so the EDA and What if? loaders, which read the same
+// `evidence --json` with other model functions, share the listing's process and entry.
 // "Show in report" and "Show in the notebook" are `open_artifact` messages, which the
 // Overview handler serves (the report fragment `#r-<rid>` is WP-0's).
 
 const { toEvidenceModel } = require('../models/evidence');
 const { resultIdInput } = require('../uri');
 
-const LIST_KEY = 'evidence.view';
+const LIST_KEY = 'evidence';
 const keyOf = message => (message.resultId ? `${LIST_KEY}:${message.resultId}` : LIST_KEY);
 
 const loads = {

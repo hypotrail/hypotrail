@@ -18,7 +18,8 @@
   "result": {
    "proposal_id": "p_5",
    "decision_id": "policy",
-   "status": "withdrawn"
+   "status": "withdrawn",
+   "decision_status": "confirmed"
   },
   "artifacts": {
    "report": {

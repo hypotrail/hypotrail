@@ -117,7 +117,8 @@
     ctx.components.boxplot(box, {
       title: c.summaryChart(d.target), min: d.min && d.min.value, q25: d.q25 && d.q25.value, median: d.median && d.median.value,
       q75: d.q75 && d.q75.value, max: d.max && d.max.value,
-      texts: { min: text(ctx, d.min), q25: text(ctx, d.q25), median: text(ctx, d.median), q75: text(ctx, d.q75), max: text(ctx, d.max) },
+      texts: { min: cell(ctx, d.min, rid), q25: cell(ctx, d.q25, rid), median: cell(ctx, d.median, rid), q75: cell(ctx, d.q75, rid),
+        max: cell(ctx, d.max, rid) },
     });
     const term = explainTerm(ctx, 'target_distribution');
     return [
@@ -203,12 +204,14 @@
     const d = card.data;
     const rid = card.resultId;
     const column = card.column || d.column;
-    const out = [];
+    // The glossary term, for the learning layer's hover (§6.7; WP-I).
+    const out = [el('p', { className: 'muted', 'data-term-line': 'distribution' }, [HT.terms.mark(c.distribution, 'distribution'), c.distributionOnTrain])];
     if (d.numeric) {
       const n = d.numeric;
       out.push(ctx.components.histogram(el('div'), {
         title: c.distributionChart(column), axisLabel: column,
-        bins: n.bins.map(b => ({ low: b.low, high: b.high, count: b.nRows ? b.nRows.value : 0, countText: cell(ctx, b.nRows, rid) })),
+        bins: n.bins.map(b => ({ low: b.low, high: b.high, count: b.nRows ? b.nRows.value : 0, countText: cell(ctx, b.nRows, rid),
+          lowText: cell(ctx, b.lowCited, rid), highText: cell(ctx, b.highCited, rid) })),
       }));
       out.push(el('p', { 'data-numeric-line': true }, weave(c.numericLine, [num(ctx, n.median, rid), num(ctx, n.q25, rid),
         num(ctx, n.q75, rid), num(ctx, n.min, rid), num(ctx, n.max, rid), num(ctx, n.n, rid)])));
@@ -342,11 +345,10 @@
           ]));
           return out;
         }
-        // Loading: skeleton cards. The WP-0 placeholder stays until the first read answers
-        // (test_webview_frame.py checks it on a panel that never answers; see the report).
+        // Loading: skeleton cards until the first read answers.
         out.push(el('div', { className: 'eda-gallery', 'aria-busy': 'true', 'data-eda-loading': true }, [
           el('div', { className: 'card eda-skeleton' }, [el('p', { className: 'muted', text: c.loading })]),
-          el('div', { className: 'card eda-skeleton' }, [ctx.placeholder()]),
+          el('div', { className: 'card eda-skeleton', 'aria-hidden': 'true' }),
         ]));
         return out;
       }

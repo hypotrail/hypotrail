@@ -19,14 +19,6 @@
       oneSide: 'On these rows the interval stays on one side of zero.',
       includesZero: 'The interval includes zero: on these rows the difference could be chance.',
       bootstrap: (replicates, level) => `Paired bootstrap, ${replicates} replicates, ${level} level.`,
-      ask: {
-        title: 'Ask the agent',
-        about: 'About',
-        question: 'Your question (it may stay empty)',
-        copy: 'Copy for the chat',
-        insert: 'Insert into the chat',
-        note: 'Nothing is sent: the text goes to the clipboard or the chat input, for you to read and send.',
-      },
     },
     binary: {
       ruleTitle: 'Decision rule',
@@ -59,7 +51,7 @@
       notEvaluated: 'This rule has not been evaluated by the engine yet, so it cannot be proposed here.',
       askEvaluate: rule => `Ask the agent to evaluate ${rule}`,
       askEvaluateQuestion: rule => `Could you evaluate the rule ${rule}, so that I can compare it with the rules already evaluated?`,
-      askAbout: rule => `decision policy (rule ${rule}, not evaluated)`,
+      askAbout: rule => `rule ${rule}, not evaluated`,
     },
     regression: {
       modelTitle: 'Model',

@@ -13,7 +13,10 @@
   "command": "render",
   "error": {
    "code": "read_only",
-   "message": "This process is read-only (HYPOTRAIL_READ_ONLY=1); nothing was written."
+   "message": "This process is read-only (HYPOTRAIL_READ_ONLY=1); nothing was written.",
+   "details": {
+    "variable": "HYPOTRAIL_READ_ONLY"
+   }
   }
  }
 }

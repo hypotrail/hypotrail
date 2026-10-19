@@ -175,7 +175,9 @@
     "created": "2026-10-18T22:31:40.418257+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    },
    {
     "proposal_id": "p_2",
@@ -205,7 +207,9 @@
     "created": "2026-10-18T22:31:41.040535+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    },
    {
     "proposal_id": "p_3",
@@ -222,7 +226,9 @@
     "created": "2026-10-18T22:31:41.158101+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    },
    {
     "proposal_id": "p_6",
@@ -235,7 +241,9 @@
     "created": "2026-10-18T09:10:00+00:00",
     "closed_revision": 21,
     "closed_reason": "withdrawn",
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    },
    {
     "proposal_id": "p_4",
@@ -248,7 +256,9 @@
     "created": "2026-10-18T22:31:44.440711+00:00",
     "closed_revision": 23,
     "closed_reason": "confirmed",
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    },
    {
     "proposal_id": "p_5",
@@ -261,7 +271,9 @@
     "created": "2026-10-18T22:31:45.316664+00:00",
     "closed_revision": 27,
     "closed_reason": "confirmed",
-    "origin": null
+    "origin": {
+     "channel": "chat"
+    }
    }
   ],
   "history": [

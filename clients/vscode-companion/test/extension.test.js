@@ -85,7 +85,7 @@ test('go to a result: needs stage v2, and a pasted id of 8 or more hex character
   assert.match(fake.calls.info.at(-1), /^The results of this study could not be read: /);
 });
 
-test('URI handler: an invalid link opens nothing (every link until WP-U3)', async () => {
+test('URI handler: an invalid link opens nothing', async () => {
   process.env.HYPOTRAIL_COMPANION = '1';
   const calls = fakeExec();
   const fake = createFake({ folders: [makeStudy('uri')] });
@@ -127,4 +127,30 @@ test('settings change posts init again; the study switch offers "Pick another fo
   const opened2 = await opened.controller.context.host.switchStudy();
   assert.equal(fake.calls.quickPick.at(-1).items.at(-1).label, 'Pick another folder...');
   assert.equal(opened2.agent.studyDir, a);
+});
+
+test('URI handler (WP-I): a valid link opens the panel and navigates; its study must be a discovered one', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  process.env.HYPOTRAIL_COMPANION_STAGE = 'v2';
+  fakeExec();
+  const a = makeStudy('link-a');
+  const b = makeStudy('link-b');
+  const rid = 'a'.repeat(64);
+  const fake = createFake({ folders: [a, b], answers: { quickPick: items => items[0] } });
+  const { api } = await activate(fake);
+  // No study in the link: the quick pick (two studies), then the navigation.
+  const opened = await fake.uriHandlers[0].handleUri({ path: `/result/${rid}`, query: '' });
+  assert.equal(opened.agent.studyDir, a);
+  assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: rid });
+  // A discovered study in the link: opened in the same panel, without a quick pick.
+  const picks = fake.calls.quickPick.length;
+  const again = await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${encodeURIComponent(b)}` });
+  assert.equal(again.agent.studyDir, b);
+  assert.equal(fake.calls.quickPick.length, picks, 'no quick pick for a discovered study');
+  assert.equal(fake.calls.panels.length, 1);
+  assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'decisions', kind: 'proposal', id: 'p_5' });
+  // An unknown study in the link: the quick pick asks.
+  await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${encodeURIComponent(path.join(os.tmpdir(), 'elsewhere'))}` });
+  assert.equal(fake.calls.quickPick.length, picks + 1);
+  assert.equal(api.current().agent.studyDir, a, 'the junior chose a study in the quick pick');
 });

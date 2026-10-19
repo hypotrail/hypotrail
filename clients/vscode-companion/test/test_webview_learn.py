@@ -246,9 +246,13 @@ def test_ho1_export_button_outcome_files_open_folder_and_the_stale_report(open_p
     assert button.is_disabled() and button.inner_text() == 'Working...'
     _send(panel, {'type': 'busy', 'busy': False, 'op': 'W7', 'target': 'handoff'})
     _send(panel, {'type': 'outcome', 'op': 'W7', 'kind': 'ok', 'target': 'handoff', 'exitCode': 0, 'revision': 26,
-                'artifacts': [], 'recorded': {'files': files, 'out': out}})
+                'artifacts': [], 'recorded': {'files': files, 'out': out,
+                                              'warnings': ['some proposals are still open', 'some decisions are not confirmed']}})
     region = page.locator('[data-export-outcome="ok"]')
     assert 'Exported the handoff pack.' in region.inner_text()
+    # WP-I (U5 request R3): the warnings of the outcome, in words, with the files.
+    assert region.locator('[data-export-warnings]').inner_text() == (
+        'The pack is incomplete: some proposals are still open; some decisions are not confirmed.')
     assert region.locator('[data-export-files] li').all_inner_texts()[0] == 'handoff.md · 8213 bytes'
     assert region.locator('[data-export-out]').inner_text() == f'Folder: {out}'
     region.locator('[data-open-export]').click()

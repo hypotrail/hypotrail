@@ -1,0 +1,796 @@
+{
+ "about": {
+  "schema": "hypotrail.explain/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "explain",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.explain/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 30,
+  "task": "binary",
+  "terms": [
+   {
+    "id": "prediction_time",
+    "term": "Prediction time",
+    "definition": "The moment when the score is computed and acted on. Only information known at that moment may enter the model.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "prediction_time"
+    ]
+   },
+   {
+    "id": "leakage",
+    "term": "Leakage",
+    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "feature_availability",
+    "term": "Feature availability",
+    "definition": "Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "feature_availability"
+    ]
+   },
+   {
+    "id": "validation_partition",
+    "term": "Validation partition",
+    "definition": "Rows held apart from model fitting and used to compare models and choose a policy. Once used to choose, they are no longer independent evidence.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here "
+      },
+      {
+       "text": "1,357",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.validation.n_rows",
+       "value": 1357,
+       "format": "int"
+      },
+      {
+       "text": " rows are held apart for validation and "
+      },
+      {
+       "text": "3,164",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.train.n_rows",
+       "value": 3164,
+       "format": "int"
+      },
+      {
+       "text": " rows train the models."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": []
+   },
+   {
+    "id": "stratified_split",
+    "term": "Stratified split",
+    "definition": "A random division of the rows that keeps the share of the positive outcome similar in the training and validation partitions.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the positive outcome occurs in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.train.rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " of the training rows and in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.validation.rate",
+       "value": 0.11495946941783346,
+       "format": "pct1"
+      },
+      {
+       "text": " of the validation rows, close shares by construction."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "split"
+    ]
+   },
+   {
+    "id": "exposure",
+    "term": "Data exposure",
+    "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "distribution",
+    "term": "Distribution",
+    "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "class_imbalance",
+    "term": "Class imbalance",
+    "definition": "An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "base_rate",
+    "term": "Base rate",
+    "definition": "The share of rows with the positive outcome. Any model must be compared with what this share alone would give.",
+    "example": {
+     "segments": [
+      {
+       "text": "In this study's training rows the positive outcome occurs in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "path": "rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " of rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "train_eda"
+    ]
+   },
+   {
+    "id": "special_value",
+    "term": "Special value",
+    "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "baseline",
+    "term": "Baseline",
+    "definition": "The simplest reference model, a constant score equal to the training base rate. Keeping the baseline is a valid conclusion.",
+    "example": {
+     "segments": [
+      {
+       "text": "Here the baseline gives every row the training base rate, "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+       "path": "train_rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": ", so it cannot rank the rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "models"
+    ]
+   },
+   {
+    "id": "logistic_regression",
+    "term": "Logistic regression",
+    "definition": "A model that turns a weighted sum of the features into a score between zero and one. It ranks rows; its scores are not calibrated probabilities unless that is checked.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "score",
+    "term": "Score",
+    "definition": "The number a model gives to each row to rank it. A higher score places the row earlier in the queue.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "policy",
+    "term": "Decision policy",
+    "definition": "The rule that turns scores into actions, either a threshold on the score or a fixed capacity of rows to act on.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "policy"
+    ]
+   },
+   {
+    "id": "threshold",
+    "term": "Threshold rule",
+    "definition": "Act on every row whose score is at least the threshold. The number of actions then depends on the data.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "capacity",
+    "term": "Capacity rule",
+    "definition": "Act on a fixed number of the highest-scored rows, matching what the team can actually handle.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "precision",
+    "term": "Precision",
+    "definition": "Among the rows acted on, the share that turned out positive.",
+    "example": {
+     "segments": [
+      {
+       "text": "At threshold:0.2, "
+      },
+      {
+       "text": "34.8%",
+       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
+       "value": 0.34782608695652173,
+       "format": "pct1"
+      },
+      {
+       "text": " of the validation rows the logistic model acts on turn out positive."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": []
+   },
+   {
+    "id": "recall",
+    "term": "Recall",
+    "definition": "Among all positive rows, the share the policy reached.",
+    "example": {
+     "segments": [
+      {
+       "text": "At threshold:0.2, the logistic model reaches "
+      },
+      {
+       "text": "25.6%",
+       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
+       "value": 0.2564102564102564,
+       "format": "pct1"
+      },
+      {
+       "text": " of the positive validation rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": []
+   },
+   {
+    "id": "volume",
+    "term": "Volume",
+    "definition": "How many rows the policy acts on, also shown as a share of the partition.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "tie_at_cut",
+    "term": "Tie at the cut",
+    "definition": "Rows with exactly the score at the cut-off. They are counted pro rata, as an expected value, rather than broken arbitrarily.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "paired_bootstrap",
+    "term": "Paired bootstrap",
+    "definition": "Resampling the same validation rows for both policies at once, so the interval describes their difference rather than each one separately.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "paired_difference",
+    "term": "Paired difference",
+    "definition": "The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.",
+    "example": null,
+    "example_status": "needs_results",
+    "steps": []
+   },
+   {
+    "id": "confidence_interval",
+    "term": "Confidence interval",
+    "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.",
+    "example": {
+     "segments": [
+      {
+       "text": "At threshold:0.2, the logistic model's precision ranges from "
+      },
+      {
+       "text": "25.9%",
+       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
+       "value": 0.2592432950191571,
+       "format": "pct1"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "43.9%",
+       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
+       "value": 0.43927102803738305,
+       "format": "pct1"
+      },
+      {
+       "text": " on resamples of the validation rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": []
+   },
+   {
+    "id": "percentile_interval",
+    "term": "Percentile interval",
+    "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "selection_on_validation",
+    "term": "Selection on validation",
+    "definition": "Choosing a model, a threshold, or a capacity by looking at validation results. The chosen figures are optimistic for that reason.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "documented_fact",
+    "term": "Documented fact",
+    "definition": "A statement backed by the dataset documentation, with its source.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "scenario_assumption",
+    "term": "Scenario assumption",
+    "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "confirmed_decision",
+    "term": "Confirmed decision",
+    "definition": "A choice recorded with the user's own words in reply to a restatement. The engine records the words; it cannot verify who typed them.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "conclusion"
+    ]
+   },
+   {
+    "id": "proposal",
+    "term": "Proposal",
+    "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "stale_result",
+    "term": "Stale result",
+    "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   }
+  ],
+  "steps": {
+   "prediction_time": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Prediction time"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this case the decision is: Select contacts to call first. The moment of prediction decides which variables are allowed."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You state the moment in your own words; the agent restates it and records your answer. No data are read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Every later step is judged against this moment."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it later makes the availability decision, the policy, and the conclusion need confirmation again."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "feature_availability": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Feature availability"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The case describes one row as: A customer contacted during a telephone campaign. For each variable you decide whether it is known at the prediction moment."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Each candidate variable gets one status. Uncertain variables are either excluded or included and listed as a limit."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Variables marked not available, or uncertain and excluded, never enter a model."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "A change that alters the set of usable variables refits the logistic model and asks for the policy again."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "split": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Stratified split"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The split is fixed before any exploration of the outcome, so that validation rows stay apart from fitting."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "A stratified random split with a recorded seed. The rows read are recorded as exposure."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Training rows: "
+      },
+      {
+       "text": "3,164",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.train.n_rows",
+       "value": 3164,
+       "format": "int"
+      },
+      {
+       "text": ", of which "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.train.rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " are positive. Validation rows: "
+      },
+      {
+       "text": "1,357",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.validation.n_rows",
+       "value": 1357,
+       "format": "int"
+      },
+      {
+       "text": ", of which "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "path": "partitions.validation.rate",
+       "value": 0.11495946941783346,
+       "format": "pct1"
+      },
+      {
+       "text": " are positive: stratification keeps the share close."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing the split refits both models and recomputes the exploration; rows already explored stay exposed."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "train_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Base rate"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The outcome is: y: observed term-deposit subscription (yes/no). Exploration reads training rows only."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The target rate and the special values are computed on the training partition, with their denominators."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "In the training rows, the positive outcome occurs in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "path": "rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " of rows. A model has to beat this base rate to be useful."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Special values become explicit indicators in the model instead of ordinary numbers."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "models": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Baseline"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "A constant baseline and a logistic model are fitted on training rows and scored on validation rows."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Predictions on validation rows are stored, so a new policy never requires a refit."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The comparison is made on validation rows, which are then no longer independent evidence."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The policy step reads these stored predictions."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "policy": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Decision policy"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The intended use is: Teaching simulation: prioritize contacts when call capacity is limited. A policy turns scores into a number of actions the team can handle."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Each rule is evaluated on the stored validation predictions, with ties at the cut counted pro rata and paired bootstrap intervals."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The figures describe these validation rows after a choice made on them; they are optimistic and are not a forecast."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Adopting a different threshold or capacity recomputes the evaluation without refitting any model."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "conclusion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Confirmed decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The conclusion says what can be claimed, for which use, and with which limits."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You choose a verdict and write the text; keeping the baseline or calling the study inconclusive are valid results."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The conclusion rests on validation rows that were used for selection."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The limits listed under \"What is not yet defensible\" stay attached to it."
+      }
+     ]
+    },
+    "text_status": "shown"
+   }
+  },
+  "predictions": [
+   {
+    "id": "binary.train_eda.rare",
+    "step": "train_eda",
+    "question": "Is the positive outcome common or rare in the training rows?",
+    "choices": [
+     {
+      "id": "common",
+      "label": "Common"
+     },
+     {
+      "id": "rare",
+      "label": "Rare"
+     },
+     {
+      "id": "not_sure",
+      "label": "Not sure"
+     }
+    ],
+    "reveal": {
+     "segments": [
+      {
+       "text": "It occurs in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "path": "rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " of the training rows. A model has to beat this base rate to be useful."
+      }
+     ]
+    },
+    "available": true
+   },
+   {
+    "id": "binary.policy.beats_baseline",
+    "step": "policy",
+    "question": "Will the logistic model's selection beat the baseline's precision at the evaluated rule?",
+    "choices": [
+     {
+      "id": "yes",
+      "label": "Yes"
+     },
+     {
+      "id": "no",
+      "label": "No"
+     },
+     {
+      "id": "not_sure",
+      "label": "Not sure"
+     }
+    ],
+    "reveal": null,
+    "available": false
+   }
+  ]
+ }
+}

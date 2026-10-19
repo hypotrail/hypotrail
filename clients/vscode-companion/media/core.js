@@ -279,7 +279,10 @@
     const node = document.querySelector(`[data-nav="${CSS.escape(`${target.kind}:${target.id}`)}"]`);
     if (!node) return;
     state.pendingNav = null;
-    const heading = node.querySelector('h2, h3') || node;
+    // Its own heading (h2 to h4, WP-I), else the first h2 or h3 inside it (a wrapper of one
+    // card), else the target itself; never the h4 of a nested target.
+    const heading = [...node.querySelectorAll('h2, h3, h4')].find(h => h.closest('[data-nav]') === node)
+      || node.querySelector('h2, h3') || node;
     if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
     node.scrollIntoView({ block: 'center' });
     heading.focus();
@@ -503,12 +506,9 @@
     const open = new Set((m.model.proposals || []).map(p => p.proposalId));
     const executions = m.model.executions || {};
     const listed = new Set([...(executions.interrupted || []), ...(executions.suspected || [])].map(e => e.executionId));
-    const typing = Object.keys(ui.drafts || {}).some(id => open.has(id) && String(ui.drafts[id]).trim());
-    if (before !== null && before !== m.model.revision && typing) {
-      state.notice = { text: C().typing(before, m.model.revision), politeness: 'polite' };
-    } else if (before !== m.model.revision) {
-      state.notice = null;
-    }
+    // "The study changed while you were typing" is the decision card's own warning, next
+    // to the textarea (CW.9, decision CI.4): the frame does not repeat it.
+    if (before !== m.model.revision) state.notice = null;
     for (const id of Object.keys(ui.drafts || {})) if (!open.has(id)) delete ui.drafts[id];
     for (const id of Object.keys(ui.ackDrafts || {})) if (!listed.has(id)) delete ui.ackDrafts[id];
     keep();
@@ -570,8 +570,11 @@
     send({ type: 'ready' });
   }
 
+  /** The registered views, read-only: {name, tab, stage} (tests and diagnostics). */
+  const registered = () => views.map(v => ({ name: v.name, tab: v.tab, stage: v.stage }));
+
   Object.assign(HT, { el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, start, PALETTE, SVG_NS,
-    diagnostics, _state: state, TAB_ORDER });
+    diagnostics, registered, _state: state, TAB_ORDER });
   HT.components = HT.components || {};
   HT.copy = HT.copy || {};
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

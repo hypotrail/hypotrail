@@ -170,7 +170,9 @@ def test_busy_disables_the_buttons_and_a_new_revision_warns_a_typing_junior(open
     assert page.locator('button[data-action="withdraw"]').is_disabled()
     _send(page, {'type': 'busy', 'busy': False, 'op': 'W1', 'target': 'p_1'})
     _snapshot(page, {**summary_model, 'revision': 4})
-    assert 'revision 3 to 4' in page.locator('[data-notice]').inner_text()
+    # One warning, next to the textarea (WP-I, decision CI.4; the frame no longer repeats it).
+    assert 'revision 3 to 4' in page.locator('[data-typing-warning="p_1"]').inner_text()
+    assert page.locator('[data-notice]').count() == 0
     assert page.get_by_label('Your answer, in your own words').input_value() == \
         'Yes, before the reminder'
     # Unknown or malformed messages are ignored.

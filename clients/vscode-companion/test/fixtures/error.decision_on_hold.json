@@ -15,6 +15,8 @@
    "code": "decision_on_hold",
    "message": "This decision is on hold in the junior's own words; resolve the note first.",
    "details": {
+    "decision_id": "policy",
+    "proposal_id": "p_5",
     "notes": [
      {
       "note_id": "n_1",

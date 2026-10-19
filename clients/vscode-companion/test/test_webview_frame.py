@@ -48,21 +48,23 @@ def test_tabs_of_a_later_stage_are_absent(open_panel, binary, stage):
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
-def test_each_view_of_its_stage_is_registered_and_placeholders_say_so(open_panel, binary):
+def test_each_view_of_its_stage_is_registered_and_waits_busy_for_its_data(open_panel, binary):
+    # WP-I: every tab has its real view (U1-U5), so no WP-0 placeholder is left. Without
+    # its data a view waits, busy (§3.3 "Loading").
     panel = open_panel()
     panel.init(stage='v3')
     panel.snapshot(binary)
     page = panel.page
+    views = page.evaluate('() => globalThis.Hypotrail.registered()')
+    assert sorted(v['tab'] for v in views) == sorted(TABS), views
+    assert {v['tab']: v['stage'] for v in views} == {'overview': 'v0', 'decisions': 'v0', 'eda': 'v2', 'evidence': 'v2',
+                                                       'whatif': 'v2', 'learn': 'v3'}
     for tab in ['eda', 'evidence', 'whatif', 'learn']:
         page.locator(f'[role="tab"][data-tab="{tab}"]').click()
         shown = page.locator(f'#panel-{tab}')
         assert shown.is_visible()
-        placeholder = shown.locator(f'[data-placeholder="{tab}"]')
-        if placeholder.count():
-            assert placeholder.inner_text() == 'Not available in this stage.'
-        else:
-            # A work package replaced the placeholder: without data its view waits, busy.
-            assert shown.locator('[aria-busy="true"]').count() >= 1, tab
+        assert shown.locator('[data-placeholder]').count() == 0, tab
+        assert shown.locator('[aria-busy="true"]').count() >= 1, tab
         assert page.locator('[data-recap-strip]').count() == 1, 'the recap strip is on every tab but Overview'
     page.locator('[role="tab"][data-tab="overview"]').click()
     assert page.locator('[data-recap-strip]').count() == 0
@@ -182,7 +184,7 @@ def test_svg_colours_come_from_the_palette_only(open_panel):
         panel.page.evaluate("() => globalThis.Hypotrail.el('div', {style: 'color: red'})")
 
 
-def test_regression_frame_and_placeholders_hold_no_decision_rule_vocabulary(open_panel, regression):
+def test_regression_frame_and_loading_views_hold_no_decision_rule_vocabulary(open_panel, regression):
     panel = open_panel()
     panel.init(stage='v3', task='regression')
     panel.snapshot(regression)

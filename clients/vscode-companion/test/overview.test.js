@@ -344,6 +344,27 @@ test('open_artifact: a missing deliverable is a notice; an existing one opens (t
   assert.deepEqual(opened, [['report', path.join(AGENT.studyDir, 'reports/study.html'), { fragment: `r-${rid}` }]]);
 });
 
+test('open_artifact (WP-I): a finding\'s line opens an editor there; a result opens the notebook at the line naming it', async () => {
+  const fs = require('fs');
+  const os = require('os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ht open "nb" '));
+  fs.mkdirSync(path.join(dir, 'notebooks'));
+  const rid = 'c'.repeat(8) + 'd'.repeat(56);
+  fs.writeFileSync(path.join(dir, 'notebooks/study_generated.py'), `import marimo\n\n# result ${rid.slice(0, 8)}\nx = 1\n`);
+  const opened = [];
+  const posted = [];
+  const agent = { ...AGENT, studyDir: dir };
+  const c = createController({ agent, post: m => posted.push(m), runCli: fakeCli(undefined, { agentArgv: AGENT.argv }),
+    settings: { stage: 'v1' }, openArtifact: async (name, target, options) => opened.push([name, target, options]), uuid: () => UUID });
+  const notebook = path.join(dir, 'notebooks/study_generated.py');
+  await c.handle({ v: 2, type: 'open_artifact', artifact: 'notebook', line: 4 });
+  await c.handle({ v: 2, type: 'open_artifact', artifact: 'notebook', resultId: rid });
+  await c.handle({ v: 2, type: 'open_artifact', artifact: 'notebook', resultId: 'e'.repeat(64) });
+  assert.deepEqual(opened, [['notebook', notebook, { line: 4 }], ['notebook', notebook, { line: 3 }], ['notebook', notebook, {}]]);
+  assert.match(posted.at(-1).text, /does not name this result; it opens at the top/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 // --- copy (INV-12, §15) ----------------------------------------------------------------------
 
 test('copy: English strings without digits, decision-rule vocabulary, or suggested words', () => {

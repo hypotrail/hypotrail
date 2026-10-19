@@ -1,7 +1,9 @@
 // Histogram of fixed-width bins (eda.distribution, CLI-CONTRACT-COMPANION §8). Frozen by WP-0:
-//   histogram(container, {bins: [{low, high, count, countText}], title, axisLabel})
+//   histogram(container, {bins: [{low, high, count, countText, lowText?, highText?}], title, axisLabel})
 // Column heights are geometry of the engine's counts (INV-14). Bin edges are shown in the
-// values table as the engine gave them. Returns the figure element.
+// values table as the engine gave them. `countText`, `lowText`, and `highText` are a text
+// or a cited cell `{text, cited: {resultId, path, value}}` (WP-I, U4 request). Returns the
+// figure element.
 (function (HT) {
   'use strict';
   const W = 420;
@@ -24,7 +26,8 @@
     return HT.components.figure(container, {
       title, chart,
       columns: [{ key: 'low', label: '' }, { key: 'high', label: '' }, { key: 'count', label: '' }],
-      rows: bins.map(b => ({ low: String(b.low), high: String(b.high), count: b.countText })),
+      rows: bins.map(b => ({ low: b.lowText !== undefined ? b.lowText : String(b.low),
+        high: b.highText !== undefined ? b.highText : String(b.high), count: b.countText })),
     });
   }
 

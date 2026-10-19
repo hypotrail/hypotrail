@@ -4,8 +4,10 @@
 //
 //   Hypotrail.terms.MAP                      {glossary id: [places where the copy marks it]}
 //   Hypotrail.terms.mark(text, id)           a <span data-term="id"> for a word of the copy
-//   Hypotrail.askAgent(ctx, about, shown)    the "Ask the agent about this" modal
-//   Hypotrail.askButton(ctx, about, shown)   its button (stage v2, kept in reviewer mode)
+//   Hypotrail.askAgent(ctx, about, shown, {question?})   the "Ask the agent about this" modal
+//   Hypotrail.askButton(ctx, about, shown, {label?, attrs?, question?})
+//                                            its button (stage v2, kept in reviewer mode);
+//                                            the one helper of every tab (WP-I, §6.8)
 //
 // Hovers. With the learning layer on (stage v3, `learningLayer`), every `[data-term]` in the
 // panel whose id is in `explain.terms` (the task filter) gets a tooltip on hover and on
@@ -17,19 +19,23 @@
 (function (HT) {
   'use strict';
 
-  // Every id is a glossary id of at least one task (test/learn.test.js).
+  // Every id is a glossary id of at least one task, and is marked in the views
+  // (test/learn.test.js; WP-I added the evidence and decisions marks, U5 request R4).
   const MAP = Object.freeze({
     confirmed_decision: ['learn.layer intro'],
     proposal: ['decisions cards'],
     base_rate: ['eda target card'],
+    class_imbalance: ['eda target card'],
+    distribution: ['eda distribution card'],
+    target_distribution: ['eda target card'],
     exposure: ['evidence ledger'],
     stale_result: ['evidence registry'],
     validation_partition: ['evidence ledger'],
     selection_on_validation: ['evidence ledger'],
     paired_difference: ['evidence intervals'],
     confidence_interval: ['evidence intervals'],
-    mae: ['what if residual explorer'],
-    rmse: ['what if residual explorer'],
+    mae: ['evidence intervals'],
+    rmse: ['evidence intervals'],
     extrapolation: ['what if residual explorer'],
   });
 
@@ -110,8 +116,9 @@
    * is the label the junior reads in "About" (the extension builds its own from the
    * snapshot). The question field starts empty, may stay empty, and is not the words of a
    * decision card. Only {about, question, mode} is sent; the extension copies the text.
+   * `question` is sent when the field stays empty (What if?: "Could you evaluate ...").
    */
-  async function askAgent(ctx, about, shown) {
+  async function askAgent(ctx, about, shown, { question: fallback = '' } = {}) {
     const L = HT.copy.learn;
     const area = HT.wordsArea({ kind: 'askDraft', id: 'ht-ask-question', 'aria-describedby': 'ht-ask-hint', maxlength: '2000' });
     const body = HT.el('div', { 'data-ask-modal': true }, [
@@ -125,16 +132,16 @@
     if (ctx.chatInsert === true) actions.push({ label: L.askInsert, value: 'insert' });
     const mode = await HT.modal({ title: L.askTitle, body, actions });
     if (mode !== 'copy' && mode !== 'insert') return false;
-    const question = String(area.value || '').slice(0, 2000);
+    const question = String(area.value.trim() ? area.value : fallback || '').slice(0, 2000);
     const sent = HT.send({ type: 'ask_agent', about: { kind: about.kind, id: String(about.id).slice(0, 100) }, question, mode });
     if (sent && ctx.ui) ctx.ui.set('askDraft', undefined);
     return sent;
   }
 
-  function askButton(ctx, about, shown) {
+  function askButton(ctx, about, shown, { label = null, attrs = {}, question = '' } = {}) {
     if (!ctx.atLeast('v2')) return null;
-    return HT.el('button', { type: 'button', className: 'secondary', 'data-ask': `${about.kind}:${about.id}`, 'data-stage': 'v2',
-      text: HT.copy.learn.ask, onclick: () => { askAgent(ctx, about, shown); } });
+    return HT.el('button', { type: 'button', className: 'secondary', 'data-ask': `${about.kind}:${about.id}`, ...attrs, 'data-stage': 'v2',
+      text: label || HT.copy.learn.ask, onclick: () => { askAgent(ctx, about, shown, { question }); } });
   }
 
   HT.askAgent = askAgent;

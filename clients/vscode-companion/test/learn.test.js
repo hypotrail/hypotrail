@@ -192,7 +192,11 @@ test('HO-1: export runs the exact argv of W7 into <chosen>/revision-<R>; files a
   assert.deepEqual(o.recorded.files.map(f => [f.path, f.bytes]), [['handoff.md', 8213], ['handoff.json', 15327], ['study.html', 91562],
     ['SHA256SUMS', 284]]);
   assert.equal(o.recorded.out, payload('export.binary').out);
-  assert.equal(last('notice').text, 'The pack is incomplete: some proposals are still open; some decisions are not confirmed.');
+  // WP-I (U5 request R3): the warnings, in words, travel in the outcome, not in a notice.
+  assert.deepEqual(o.recorded.warnings, ['some proposals are still open', 'some decisions are not confirmed']);
+  assert.equal(learn.warningsText(payload('export.binary').warnings),
+    'The pack is incomplete: some proposals are still open; some decisions are not confirmed.');
+  assert.ok(!posted.some(m => m.type === 'notice' && /pack is incomplete/.test(m.text)), 'no duplicate notice');
   // Open folder: only the last export's folder.
   await c.handle({ v: 2, type: 'navigate_external', kind: 'reveal_export', path: '/etc' });
   assert.deepEqual(revealed, []);
@@ -219,7 +223,7 @@ test('HO-1: a non-empty target gives export_target_exists verbatim; exit 3 is su
   assert.equal(s.kind, 'ok_with_problems');
   assert.equal(s.exitCode, 3);
   assert.ok(!s.recorded.files.some(f => f.path === 'study.html'));
-  assert.match(stale.last('notice').text, /the report was not current, so it is not in the pack/);
+  assert.ok(s.recorded.warnings.includes('the report was not current, so it is not in the pack'));
 });
 
 test('W7 pre-checks: a cancelled dialog, a stale revision, or a folder inside .hypotrail runs nothing', async () => {
@@ -261,8 +265,15 @@ test('§6.7: every term id marked in the panel copy exists in the glossary of at
     assert.ok(glossary.has(id), `${id} is not a glossary id`);
     assert.ok(Array.isArray(places) && places.length, id);
   }
-  const view = fs.readFileSync(path.join(__dirname, '..', 'media', 'views', 'learn.js'), 'utf8');
-  for (const m of view.matchAll(/terms\.mark\([^,]+, '([a-z_]+)'\)/g)) assert.ok(map[m[1]], `${m[1]} is in MAP`);
+  // WP-I: every view's marks are in MAP, and every MAP id is marked in a view (the metric
+  // ids mae and rmse are marked from the metric name; test_webview_evidence.py checks them).
+  const dir = path.join(__dirname, '..', 'media', 'views');
+  const views = fs.readdirSync(dir).filter(f => f.endsWith('.js')).map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+  const marked = new Set();
+  for (const m of views.matchAll(/terms\.mark\([^;]*?, '([a-z_]+)'\)/g)) marked.add(m[1]);
+  for (const m of views.matchAll(/'data-term': ([^,}]+)/g)) for (const q of m[1].matchAll(/'([a-z_]+)'/g)) marked.add(q[1]);
+  for (const id of marked) assert.ok(map[id], `${id} is in MAP`);
+  for (const id of Object.keys(map)) assert.ok(marked.has(id) || ['mae', 'rmse'].includes(id), `${id} is marked in a view`);
 });
 
 test('the learn copy holds no digit outside placeholders except the quoted engine instruction', () => {

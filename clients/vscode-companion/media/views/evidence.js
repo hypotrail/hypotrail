@@ -22,15 +22,9 @@
   const pct = (ctx, x) => ctx.format.number(x, 'pct1');
   const signed = (text, x) => (x > 0 ? `+${text}` : text);
 
-  // The frozen intervalRows component draws in a fixed 420-unit viewBox, where a long label
-  // or interval text overflows and is clipped. Widening the viewBox (a geometry attribute,
-  // no style) keeps every text visible; the marks keep their positions.
+  // The intervalRows component sizes its label and text columns to their texts (WP-I).
   function intervals(ctx, container, options) {
-    const figure = ctx.components.intervalRows(container, options);
-    const chart = figure && figure.querySelector('svg');
-    const box = chart ? String(chart.getAttribute('viewBox') || '').split(' ').map(Number) : [];
-    if (box.length === 4 && box.every(Number.isFinite)) chart.setAttribute('viewBox', `${box[0] - 60} ${box[1]} ${box[2] + 140} ${box[3]}`);
-    return figure;
+    return ctx.components.intervalRows(container, options);
   }
 
   function selected(ctx) {
@@ -69,27 +63,6 @@
     return c.fits[fit] || fit;
   }
 
-  // --- ask the agent (§6.8): a modal with an empty question; the bridge builds the text ---
-
-  function askAgent(ctx, about, label, fallbackQuestion) {
-    const c = C().ask;
-    let area = null;
-    const body = ctx.el('div', {}, [
-      ctx.el('p', {}, [ctx.el('strong', { text: `${c.about}: ` }), label]),
-      ctx.el('label', { for: 'ht-ev-ask', text: c.question }),
-      (area = ctx.wordsArea({ kind: 'askDraft', id: 'ht-ev-ask' })),
-      ctx.el('p', { className: 'muted', text: c.note }),
-    ]);
-    const actions = [{ label: c.copy, value: 'copy', primary: true }];
-    if (ctx.chatInsert) actions.push({ label: c.insert, value: 'insert' });
-    ctx.modal({ title: c.title, body, actions }).then(mode => {
-      if (!mode) return;
-      const typed = area ? area.value.trim() : '';
-      ctx.send({ type: 'ask_agent', about, question: (typed || fallbackQuestion || '').slice(0, 2000), mode });
-      ctx.ui.set('askDraft', undefined);
-    });
-  }
-
   // --- results registry --------------------------------------------------------------------
 
   function visible(results, filter) {
@@ -105,7 +78,7 @@
       ...FILTERS.map(f => ctx.el('label', { className: 'ht-ev-radio' }, [
         ctx.el('input', { type: 'radio', name: 'ht-ev-filter', id: `ht-ev-filter-${f}`, value: f, checked: f === filter,
           onchange: () => { ctx.ui.set('evidenceFilter', f); ctx.rerender(); } }),
-        c.filters[f],
+        f === 'stale' ? HT.terms.mark(c.filters[f], 'stale_result') : c.filters[f],
       ])),
     ]);
   }
@@ -200,7 +173,7 @@
   function deltaSentence(ctx, delta) {
     const c = C();
     const text = delta.side === 'one_side' ? c.oneSide : delta.side === 'includes_zero' ? c.includesZero : c.undefinedDelta;
-    return ctx.el('p', { 'data-delta-sentence': delta.side, text });
+    return ctx.el('p', { 'data-delta-sentence': delta.side }, [HT.terms.mark(text, 'paired_difference')]);
   }
 
   function intervalText(fmt, low, high) {
@@ -211,6 +184,8 @@
     const c = C();
     const level = u.bootstrap.level !== null ? pct(ctx, u.bootstrap.level).replace('.0%', '%') : '';
     const box = ctx.el('div', { className: 'ht-ev-metric', 'data-metric': metric.metric });
+    // A regression metric is named by its glossary term (MAE, RMSE) for the hovers (§6.7).
+    if (task === 'regression') box.appendChild(ctx.el('h4', {}, [HT.terms.mark(label, metric.metric)]));
     const notDefined = task === 'binary' ? c.binary.notDefined : '';
     intervals(ctx, box, {
       title: c.intervalTitle(label, level),
@@ -254,7 +229,7 @@
       }
     }
     return ctx.el('section', { className: 'ht-ev-uncertainty', 'data-uncertainty': u.kind, 'aria-labelledby': 'ht-ev-unc' }, [
-      ctx.el('h3', { id: 'ht-ev-unc', text: c.uncertaintyTitle }),
+      ctx.el('h3', { id: 'ht-ev-unc' }, [HT.terms.mark(c.uncertaintyTitle, 'confidence_interval')]),
       ...blocks,
       replicates ? ctx.el('p', { className: 'muted', 'data-bootstrap': true, text: c.bootstrap(replicates, level) }) : null,
     ]);
@@ -269,26 +244,20 @@
     return items.map(i => ctx.el('div', { className: 'card ht-warn', role: 'note', 'data-small-data': i.id }, [ctx.el('p', { text: i.text })]));
   }
 
-  function copyId(ctx, detail, code) {
-    const c = C();
-    const done = text => { copyNote = { id: detail.resultId, text }; ctx.rerender(); };
-    const select = () => {
-      const details = code.closest('details');
-      if (details) details.open = true;
-      const range = document.createRange();
-      range.selectNodeContents(code);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    };
-    try {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        navigator.clipboard.writeText(detail.resultId).then(() => done(c.copied), () => { select(); copyNote = { id: detail.resultId, text: c.copyFallback }; });
-        return;
-      }
-    } catch (_) { /* fall back to a selection */ }
-    select();
-    copyNote = { id: detail.resultId, text: c.copyFallback };
+  // "Select the id": opens the full id and selects it, for the junior to copy with the
+  // keyboard. The panel writes the clipboard only through the agent bridge (§12, decision
+  // CI.5), so this button never calls the clipboard API.
+  function selectId(ctx, detail, code) {
+    const details = code.closest('details');
+    if (details) details.open = true;
+    const range = document.createRange();
+    range.selectNodeContents(code);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    copyNote = { id: detail.resultId, text: C().copyFallback };
+    const note = document.querySelector('[data-select-note]');
+    if (note) note.textContent = copyNote.text;
   }
 
   function detailSection(ctx, model, sel, task) {
@@ -312,10 +281,10 @@
       ctx.el('div', { className: 'ht-ev-head' }, [
         ctx.el('h2', { id: 'ht-ev-detail-h', text: detail.slot || detail.activity }),
         ctx.el('span', { className: 'ht-mono muted', 'data-currency': detail.current ? 'current' : 'stale', text: c.idLine(detail.rid8, detail.current) }),
-        ctx.el('button', { type: 'button', className: 'ht-link', 'data-copy-id': true, text: c.copyId, onclick: () => copyId(ctx, detail, code) }),
+        ctx.el('button', { type: 'button', className: 'ht-link', 'data-select-id': true, text: c.copyId, onclick: () => selectId(ctx, detail, code) }),
       ]),
       ctx.el('details', { className: 'ht-ev-fullid' }, [ctx.el('summary', { text: c.fullId }), code]),
-      note ? ctx.el('p', { className: 'muted', role: 'status', text: note }) : null,
+      ctx.el('p', { className: 'muted', role: 'status', 'data-select-note': true, text: note || '' }),
       staleBox(ctx, detail),
       facts(ctx, detail, task),
       ...smallData(ctx, detail),
@@ -323,9 +292,10 @@
         report,
         ctx.el('button', { type: 'button', className: 'secondary', 'data-show-in-notebook': detail.resultId, disabled: !detail.notebookHint,
           'aria-describedby': detail.notebookHint ? 'ht-ev-notebook-hint' : null, text: c.showInNotebook,
-          onclick: () => ctx.send({ type: 'open_artifact', artifact: 'notebook' }) }),
-        ctx.el('button', { type: 'button', className: 'secondary', 'data-ask-agent': 'result', text: c.askAgent,
-          onclick: () => askAgent(ctx, { kind: 'result', id: detail.resultId }, c.ask.result(detail.slot || detail.activity, detail.rid8)) }),
+          onclick: () => ctx.send({ type: 'open_artifact', artifact: 'notebook', resultId: detail.resultId }) }),
+        // The shared agent-bridge helper of media/terms.js (§6.8; WP-I).
+        HT.askButton(ctx, { kind: 'result', id: detail.resultId }, detail.slot || detail.activity,
+          { label: c.askAgent, attrs: { 'data-ask-agent': 'result' } }),
       ]),
       detail.reportAnchor ? null : ctx.el('p', { id: 'ht-ev-not-in-report', className: 'muted', text: c.notInReport }),
       detail.notebookHint ? ctx.el('p', { id: 'ht-ev-notebook-hint', className: 'muted',
@@ -397,14 +367,15 @@
       .map(k => ctx.el('th', { scope: 'col', text: c.ledgerColumns[k] })))]);
     const rows = model.ledger.map(row => ctx.el('tr', { 'data-ledger-row': `${row.purpose}:${row.partition}`,
       className: row.selection ? 'ht-ledger-selection' : null }, [
-      ctx.el('td', {}, [c.purposes[row.purpose] || row.purpose,
+      ctx.el('td', {}, [row.selection ? HT.terms.mark(c.purposes[row.purpose] || row.purpose, 'selection_on_validation')
+        : c.purposes[row.purpose] || row.purpose,
         row.selection ? ctx.el('span', { className: 'sr-only', text: ` (${c.usedToChoose})` }) : null]),
-      ctx.el('td', { text: row.partition }),
+      ctx.el('td', {}, [row.partition === 'validation' ? HT.terms.mark(row.partition, 'validation_partition') : row.partition]),
       ctx.el('td', { 'data-rows': row.rows === null ? '' : String(row.rows), text: int(ctx, row.rows) }),
       ctx.el('td', { text: row.activities.join(', ') }),
     ]));
     return ctx.el('section', { className: 'card ht-ev-ledger', 'aria-labelledby': 'ht-ev-ledger-h', 'data-ledger': true }, [
-      ctx.el('h3', { id: 'ht-ev-ledger-h', text: c.ledgerTitle }),
+      ctx.el('h3', { id: 'ht-ev-ledger-h' }, [HT.terms.mark(c.ledgerTitle, 'exposure')]),
       rows.length ? ctx.el('table', { className: 'ht-values ht-ledger' }, [ctx.el('caption', { className: 'sr-only', text: c.ledgerTitle }), head,
         ctx.el('tbody', {}, rows)]) : ctx.el('p', { className: 'muted', text: c.ledgerEmpty }),
       ...limits.map(i => ctx.el('p', { className: 'hold', 'data-limit': i.id, text: i.text })),

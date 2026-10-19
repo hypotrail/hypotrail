@@ -15,7 +15,8 @@
    "code": "ambiguous_confirmation",
    "message": "The reply delegates the choice; record it with --basis delegated_default in the chat.",
    "details": {
-    "reason": "delegation_needs_basis"
+    "reason": "delegation_needs_basis",
+    "user_words": "Use your recommended default"
    }
   }
  }

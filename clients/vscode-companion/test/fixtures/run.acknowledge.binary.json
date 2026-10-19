@@ -15,16 +15,19 @@
   "request_id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
   "replayed": false,
   "revision": 28,
-  "activity": "policy.evaluate",
+  "activity": "policy.evaluation",
   "execution_id": "e_4c1d9a7b2e3f5a6b7c8d9e0f",
   "status": "acknowledged",
   "result_id": null,
   "values": null,
   "result": {
    "execution_id": "e_4c1d9a7b2e3f5a6b7c8d9e0f",
+   "activity": "policy.evaluation",
    "status": "acknowledged",
    "restarted": false,
-   "user_words": "I know the policy run was cut off and nobody knows what it did."
+   "started_revision": 24,
+   "user_words": "I know the policy run was cut off and nobody knows what it did.",
+   "note": "Acknowledged without restarting. Run the activity again with a new request id only if the junior asks for it."
   },
   "artifacts": {
    "report": {

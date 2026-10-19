@@ -72,10 +72,19 @@ function protocolFactory() {
       stage: 'v1', write: 'W6',
       fields: { executionId: { t: 'str', min: 1, max: 100, re: '^[A-Za-z0-9_.-]+$' }, words, revision: rev },
     },
+    // WP-I: `resultId` (v1) opens the report at `#r-<rid>` or the notebook at the line that
+    // names the result; `line` (v1, a check finding's `location.line`) opens an editor
+    // deliverable at that line. The report opens in the browser, so it takes no line.
     open_artifact: {
       stage: 'v0',
-      fields: { artifact: { t: 'enum', values: ARTIFACTS }, resultId: { t: 'str', re: RESULT_ID, opt: true, stage: 'v2' } },
-      check: m => (m.resultId !== undefined && m.artifact !== 'report' ? 'resultId opens the report only' : null),
+      fields: {
+        artifact: { t: 'enum', values: ARTIFACTS },
+        resultId: { t: 'str', re: RESULT_ID, opt: true, stage: 'v1' },
+        line: { t: 'int', min: 1, opt: true, stage: 'v1' },
+      },
+      check: m => (m.resultId !== undefined && m.artifact === 'workbench' ? 'resultId opens the report or the notebook'
+        : m.line !== undefined && m.artifact === 'report' ? 'line opens an editor deliverable, not the report'
+          : m.line !== undefined && m.resultId !== undefined ? 'line or resultId, not both' : null),
     },
     navigate_external: {
       stage: 'v3',
@@ -154,6 +163,8 @@ function protocolFactory() {
             slot: { t: 'str', opt: true, nullable: true }, status: { t: 'str', opt: true, nullable: true },
             files: { t: 'arr', opt: true, items: { t: 'obj', fields: { path: { t: 'str' }, bytes: { t: 'int', min: 0 } } } },
             out: { t: 'str', opt: true, nullable: true },
+            // W7: the export's warnings, in words (COMPANION-ADVANCED §6.6.2; WP-I).
+            warnings: { t: 'arr', opt: true, items: { t: 'str' } },
           },
         },
         artifacts: {
