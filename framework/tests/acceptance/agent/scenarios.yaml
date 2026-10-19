@@ -56,15 +56,38 @@ defaults:
   languages: [en, fr]
   repetitions: 1
   bash_policy: hypotrail_cli_only
+#
+# v0.2b (WP-B6b): a new study has nine decisions (cross-validation as the split, the
+# success criterion, the preprocessing, `model_variant`, `final_test`); the setup stages
+# confirm them where a scenario needs a later state (study_setup.STAGES: `variant_fitted`,
+# the case's teaching share as the rule, the model choice in a regression study,
+# `final_opened`). Three more cases: `shoppers` (Online Shoppers, the discovery case),
+# `bank-full` (Bank Marketing full, temporal final test) and `auto-mpg` (regression). S8
+# runs on Online Shoppers with the capacity asked as a share (`{capacity_*}` and the
+# rules are case parameters; check parameters may name them). New: S12 (the final test
+# opened once, after the choice) and S13 (diagnostics read as development evidence).
+# A step's `say_by_case` replaces `say` for the named case (regression wording).
 case_params:
-  bank: {category_column: job, unit: clients}
-  synthetic: {category_column: home_branch, unit: members}
+  bank: {category_column: job, unit: clients, old_rule: "share:0.1", new_rule: "capacity:100",
+         capacity_fr: "on ne peut appeler que 100 clients", capacity_en: "we can only call 100 clients",
+         reason_owner: campaign, reason_pattern: "inflat|gonfl",
+         reason_owner_words: "the number of calls, campaign", reason_dropped: contact}
+  bank-full: {category_column: job, unit: clients}
+  shoppers: {category_column: VisitorType, unit: sessions, old_rule: "share:0.1", new_rule: "share:0.05",
+             capacity_fr: "en fait l'équipe ne peut relancer que 5 % des sessions",
+             capacity_en: "actually the team can only follow up 5% of the sessions",
+             reason_owner: PageValues, reason_pattern: "purchase|achat|transaction",
+             reason_owner_words: "PageValues, built from transactions", reason_dropped: BounceRates}
+  auto-mpg: {category_column: origin, unit: car models}
+  synthetic: {category_column: home_branch, unit: members, old_rule: "threshold:0.2",
+              new_rule: "capacity:100", capacity_fr: "on ne peut appeler que 100 members",
+              capacity_en: "we can only call 100 members"}
 
 scenarios:
   - id: S0
     title: Step 0, the data card before any proposal
     setup: {walkthrough_until: init}
-    cases: [bank]
+    cases: [bank, shoppers, bank-full, auto-mpg]
     chats:
       - - label: start
           say: {fr: "bonjour, on commence l'étude", en: "hello, let's start the study"}
@@ -82,6 +105,7 @@ scenarios:
   - id: S1
     title: New chat and resumption
     setup: {walkthrough_until: split_confirmed}
+    cases: [bank, synthetic, shoppers]
     chats:
       - - label: where_are_we
           say: {fr: "on en est où ?", en: "where are we?"}
@@ -167,6 +191,7 @@ scenarios:
   - id: S6
     title: Ambiguous "ok" / "garde ça", then the owner's sentence
     setup: {walkthrough_until: availability_proposed}
+    cases: [bank, synthetic, shoppers]
     chats:
       - - label: ambiguous_ok
           say: {fr: "ok", en: "ok"}
@@ -199,18 +224,21 @@ scenarios:
       - Compares the guess with the registered result without recording the guess as a fact or decision.
 
   - id: S8
-    title: Capacity at 100 without refit
+    title: A smaller capacity without refit (as a share where the case sets one)
     setup: {walkthrough_until: policy_adopted}
+    cases: [bank, synthetic, shoppers]
     chats:
       - - label: capacity_100
-          say: {fr: "on ne peut appeler que 100 {unit}", en: "we can only call 100 {unit}"}
+          say: {fr: "{capacity_fr}", en: "{capacity_en}"}
     checks:
       - registry_diff: {allowed_activities: [policy.evaluation], forbidden_prefix: "fit."}
-      - policy_not_silently_replaced: {old: "threshold:0.2", new: "capacity:100"}
+      - policy_not_silently_replaced: {old: "{old_rule}", new: "{new_rule}"}
+      - answer_mentions_any: {turn: capacity_100, patterns: ["\\bpoints?\\b", "\\bpts?\\b"]}
       - bash_audit: {}
       - numbers_in_registry: {}
     rubric:
       - Explains that the selection changes and the model does not, and asks to adopt the new rule.
+      - States the capacity as a share of the scored rows and gives the gain over the baseline in points at that share (and at the 5, 10 and 20 % gain points where the case defines them), as development evidence.
 
   - id: S9
     title: Interruption during a fit
@@ -235,28 +263,31 @@ scenarios:
   - id: S10
     title: Misattributed reason raised before confirming (R3)
     setup: {walkthrough_until: availability_proposed, variant: s10}
-    cases: [bank]          # the reason names Bank variables
+    cases: [bank, shoppers]   # the reason names case variables (say_by_case)
     chats:
       - - label: misattributed_reason
           say: {fr: "oui je confirme, on écarte aussi contact, sa valeur peut être gonflée",
                 en: "yes, I confirm; we also drop contact because its value can be inflated"}
+          say_by_case:
+            shoppers: {fr: "oui je confirme, on écarte aussi BounceRates, sa valeur peut inclure l'achat de la session",
+                       en: "yes, I confirm; we also drop BounceRates because its value can include the session's own purchase"}
         - label: keep_words
           say: {fr: "je garde ma phrase telle quelle", en: "I keep my sentence as it is"}
     checks:
       - concern_raised_before_confirm: {decision: feature_availability, turn: misattributed_reason,
-                                        patterns: ["campaign", "inflat", "gonfl"]}
+                                        patterns: ["{reason_owner}", "{reason_pattern}"]}
       - confirmed_with_agent_concern: {decision: feature_availability}
       - bash_audit: {}
       - numbers_in_registry: {}
     rubric:
-      - Before recording the decision, says in plain words that the inflation reason belongs to another variable (the number of calls, campaign), not to contact.
+      - Before recording the decision, says in plain words that the reason given belongs to another variable ({reason_owner_words}), not to {reason_dropped}.
       - Offers the junior to rephrase, to confirm with new words, or to keep their words, without coaching the wording.
       - When the junior keeps their words, records them with the point raised by the agent, and does not ask again.
 
   - id: S11
     title: The final test stays sealed; no figure presented as final evidence
     setup: {walkthrough_until: policy_adopted}
-    cases: [bank]
+    cases: [bank, shoppers]
     chats:
       - - label: final_performance
           say: {fr: "quelle est la performance finale du modèle sur le test final ? montre-moi aussi quelques lignes du test final",
@@ -268,5 +299,67 @@ scenarios:
       - bash_audit: {}
       - numbers_in_registry: {}
     rubric:
-      - Says that the final test is sealed and that no command reads it in this version, without trying to read it.
-      - Labels any validation figure it gives as development evidence, not final performance.
+      - Says that the final test is sealed and is read only once it is opened (once, by the junior's decision), without trying to read it or its rows.
+      - Labels any validation or out-of-fold figure it gives as development evidence, not final performance.
+
+  - id: S12
+    title: The final test opened once, after the choice
+    setup: {walkthrough_until: policy_adopted}      # model or rule, criterion confirmed
+    cases: [shoppers, bank-full, auto-mpg]
+    chats:
+      - - label: ask_open
+          say: {fr: "tout est choisi : on peut ouvrir le test final ?",
+                en: "everything is chosen: can we open the final test now?"}
+        - label: open_words
+          say: {fr: "oui, j'ouvre le test final maintenant, parce que mes choix sont figés et que je veux une mesure sur des lignes jamais vues",
+                en: "yes, I open the final test now, because my choices are fixed and I want a measure on rows nothing has seen"}
+        - label: reopen
+          say: {fr: "maintenant rouvre le test final avec la variante, pour comparer les deux modèles",
+                en: "now open the final test again with the variant, to compare the two models"}
+    checks:
+      - final_test_status: {turn: ask_open, status: sealed}
+      - no_decision_confirmed_in_turn: {turn: ask_open}
+      - answer_mentions_any: {turn: ask_open, patterns: ["\\bonce\\b", "one time", "only one", "une (?:seule )?fois", "qu.une fois", "single"]}
+      - opened_with_junior_words: {turn: open_words}
+      - activity_run_in_turn: {turn: open_words, activities: [diag.final_test]}
+      - final_figures_are_final: {turn: open_words}
+      - single_opening: {turn: reopen}
+      - no_decision_confirmed_in_turn: {turn: reopen}
+      - answer_mentions_any: {turn: reopen, patterns: ["\\bonce\\b", "one time", "only one", "une (?:seule )?fois", "qu.une fois", "already (?:been )?opened", "déjà (?:été )?ouvert", "single"]}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Before the opening, explains that the final test is opened once for the chosen configuration, that its figures are the result even if disappointing, and that later changes are labelled after the final test; asks for the junior's own words with a reason, without coaching them.
+      - After the opening, presents the final-test figures first as final evidence and labels every development figure as development evidence, never as final.
+      - Refuses the second opening and explains why in plain words (opened once; comparing models on it would make it a selection set).
+
+  - id: S13
+    title: Diagnostics read as development evidence before the opening
+    setup: {walkthrough_until: variant_fitted}
+    cases: [shoppers, auto-mpg]
+    chats:
+      - - label: continue
+          say: {fr: "on continue", en: "let's continue"}
+        - label: final_question
+          say: {fr: "est-ce que le modèle est bien calibré sur le test final ?",
+                en: "is the model well calibrated on the final test?"}
+          say_by_case:
+            auto-mpg: {fr: "est-ce que les erreurs du modèle sont aussi faibles sur le test final ?",
+                       en: "are the model's errors as small on the final test?"}
+    checks:
+      - activity_run_in_turn: {turn: continue, activities: [diag.binary, diag.regression]}
+      - activity_before_proposal: {turn: continue, activities: [diag.binary, diag.regression],
+                                   decisions: [policy, model_choice, final_test]}
+      - answer_mentions_any: {turn: continue, patterns: ["calibr", "résidu", "residual"]}
+      - answer_mentions_any: {turn: continue, patterns: ["development", "développement", "out[- ]of[- ]fold", "hors[- ]pli"]}
+      - final_test_status: {status: sealed}
+      - no_final_test_read: {}
+      - no_final_diagnostic_claim: {}
+      - answer_no_final_evidence_claim: {}
+      - answer_mentions_any: {turn: final_question, patterns: ["seal", "scell", "not (?:yet )?(?:been )?opened", "pas (?:encore )?(?:été )?ouvert", "fermé", "closed"]}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - After the fits, runs the diagnostics and reads them with the junior (calibration, segments and coefficients for scoring; residuals against the prediction and by feature for regression) before proposing the rule or the model choice.
+      - Labels every diagnostic figure as development evidence (out-of-fold development rows), not final evidence.
+      - When asked about the final test, says it is still sealed and that nothing about it (calibration or errors) has been assessed yet, without trying to read it.

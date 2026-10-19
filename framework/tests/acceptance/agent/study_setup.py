@@ -80,6 +80,13 @@ JUNIOR = {
                               "session's own purchase. Keep BounceRates and ExitRates but list "
                               'them as a doubt.',
         'rate_by': 'VisitorType',
+        # S10: the junior also drops BounceRates with the reason that belongs to PageValues
+        # (built from transactions: it may count the session's own purchase).
+        'exclusions_s10': {'PageValues': 'uncertain_excluded',
+                           'BounceRates': 'uncertain_excluded',
+                           'ExitRates': 'uncertain_included'},
+        'restatement_s10': 'You exclude PageValues and BounceRates, keep ExitRates as a stated '
+                           'doubt, and keep the other variables.',
         'policy_words': 'Yes, follow up the top 10% of sessions, because the budget covers '
                         'one session in ten.',
     },
@@ -446,8 +453,12 @@ def prepare_study(case: str, workspace: Path, hidden_dir: Path | None = None,
 class Setup:
     """Direct CLI driver that takes a study through the walkthrough stages."""
 
-    def __init__(self, study: Path, case: str, variant: str | None = None):
+    def __init__(self, study: Path, case: str, variant: str | None = None,
+                 split: str = 'cv'):
+        """``split``: ``cv`` (the engine's drafted cross-validation in a v0.2b study) or
+        ``holdout`` (the stratified 30 % validation split, still accepted by v0.2b)."""
         self.study, self.case, self.variant, self.n = Path(study), case, variant, 0
+        self.split = split
         self.junior = JUNIOR[case]
         self.log: list[dict] = []
 
@@ -506,7 +517,7 @@ class Setup:
     def split_value(self) -> tuple:
         """v0.2b: the cross-validation the engine drafts; v0.2a studies keep the stratified
         random split."""
-        if not self.has_decision('model_variant'):
+        if not self.has_decision('model_variant') or self.split == 'holdout':
             return SPLIT, ('A stratified random split: 30% of rows for validation, seed '
                            '20261017, fixed before exploring.')
         value = self.default_value('split')
