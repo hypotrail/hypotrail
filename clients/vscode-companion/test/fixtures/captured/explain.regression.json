@@ -55,20 +55,20 @@
        "text": "Here "
       },
       {
-       "text": "118",
-       "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+       "text": "96",
+       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
        "path": "partitions.validation.n_rows",
-       "value": 118,
+       "value": 96,
        "format": "int"
       },
       {
        "text": " rows are held apart for validation and "
       },
       {
-       "text": "280",
-       "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+       "text": "222",
+       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
        "path": "partitions.train.n_rows",
-       "value": 280,
+       "value": 222,
        "format": "int"
       },
       {
@@ -115,10 +115,10 @@
        "text": "Here the mean baseline predicts "
       },
       {
-       "text": "20.68",
-       "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+       "text": "20.57",
+       "result_id": "46c01d05cbeb7e2f942f5e81fcbe70938358e7bf2bcb8d82f430c664bde6cb2d",
        "path": "train_mean",
-       "value": 20.68285714285714,
+       "value": 20.565315315315317,
        "format": "f2"
       },
       {
@@ -149,30 +149,30 @@
        "text": "Here the linear model's MAE minus the baseline's is "
       },
       {
-       "text": "-3.80",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-3.79",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.point",
-       "value": -3.7959532190309977,
+       "value": -3.792215923650031,
        "format": "f2"
       },
       {
        "text": " mpg, between "
       },
       {
-       "text": "-4.34",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-4.38",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.low",
-       "value": -4.343002436145685,
+       "value": -4.375861635363238,
        "format": "f2"
       },
       {
        "text": " and "
       },
       {
-       "text": "-3.25",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-3.16",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.high",
-       "value": -3.249205481492924,
+       "value": -3.159283658688826,
        "format": "f2"
       },
       {
@@ -193,20 +193,20 @@
        "text": "Here the linear model's MAE ranges from "
       },
       {
-       "text": "5.58",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "5.69",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "intervals.[fit.linear].mae.low",
-       "value": 5.580350273496465,
+       "value": 5.690730215654784,
        "format": "f2"
       },
       {
        "text": " to "
       },
       {
-       "text": "7.05",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "7.31",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "intervals.[fit.linear].mae.high",
-       "value": 7.053419389666958,
+       "value": 7.3058496174077225,
        "format": "f2"
       },
       {
@@ -317,20 +317,20 @@
        "text": "On this study's training rows the target has a mean of "
       },
       {
-       "text": "20.68",
-       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "text": "20.57",
+       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
        "path": "mean",
-       "value": 20.68285714285714,
+       "value": 20.565315315315317,
        "format": "f2"
       },
       {
        "text": " mpg and a standard deviation of "
       },
       {
-       "text": "6.30",
-       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "text": "6.20",
+       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
        "path": "sd",
-       "value": 6.299165819008179,
+       "value": 6.195978453412262,
        "format": "f2"
       },
       {
@@ -377,10 +377,10 @@
        "text": "Here the mean residual of the linear model on the validation rows is "
       },
       {
-       "text": "6.19",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "6.39",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.linear].mean_residual",
-       "value": 6.190031483897883,
+       "value": 6.394515464632113,
        "format": "f2"
       },
       {
@@ -401,20 +401,20 @@
        "text": "Here the linear model's validation MAE is "
       },
       {
-       "text": "6.31",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "6.48",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.linear].mae",
-       "value": 6.308647265230509,
+       "value": 6.476590382656274,
        "format": "f2"
       },
       {
        "text": " mpg, against "
       },
       {
-       "text": "10.10",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "10.27",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.baseline].mae",
-       "value": 10.104600484261507,
+       "value": 10.268806306306304,
        "format": "f2"
       },
       {
@@ -437,20 +437,20 @@
        "text": "Here the linear model's validation RMSE is "
       },
       {
-       "text": "7.51",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "7.66",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.linear].rmse",
-       "value": 7.513230061812575,
+       "value": 7.664419781686159,
        "format": "f2"
       },
       {
        "text": " mpg, against "
       },
       {
-       "text": "11.78",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "11.92",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.baseline].rmse",
-       "value": 11.779544934565363,
+       "value": 11.924502477405836,
        "format": "f2"
       },
       {
@@ -567,20 +567,20 @@
        "text": "Training rows: "
       },
       {
-       "text": "280",
-       "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+       "text": "222",
+       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
        "path": "partitions.train.n_rows",
-       "value": 280,
+       "value": 222,
        "format": "int"
       },
       {
        "text": ". Validation rows: "
       },
       {
-       "text": "118",
-       "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+       "text": "96",
+       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
        "path": "partitions.validation.n_rows",
-       "value": 118,
+       "value": 96,
        "format": "int"
       },
       {
@@ -625,20 +625,20 @@
        "text": "On the training rows the target has a mean of "
       },
       {
-       "text": "20.68",
-       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "text": "20.57",
+       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
        "path": "mean",
-       "value": 20.68285714285714,
+       "value": 20.565315315315317,
        "format": "f2"
       },
       {
        "text": " and a standard deviation of "
       },
       {
-       "text": "6.30",
-       "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+       "text": "6.20",
+       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
        "path": "sd",
-       "value": 6.299165819008179,
+       "value": 6.195978453412262,
        "format": "f2"
       },
       {
@@ -683,20 +683,20 @@
        "text": "On the validation rows the mean baseline has a mean absolute error of "
       },
       {
-       "text": "10.10",
-       "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+       "text": "10.27",
+       "result_id": "46c01d05cbeb7e2f942f5e81fcbe70938358e7bf2bcb8d82f430c664bde6cb2d",
        "path": "validation.mae",
-       "value": 10.104600484261507,
+       "value": 10.268806306306304,
        "format": "f2"
       },
       {
        "text": " and the linear model of "
       },
       {
-       "text": "6.31",
-       "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+       "text": "6.48",
+       "result_id": "79ab6c62853552381c280b8f5987817166f34d414d97a76dac5bf7831cb1f25e",
        "path": "validation.mae",
-       "value": 6.308647265230509,
+       "value": 6.476590382656274,
        "format": "f2"
       },
       {
@@ -741,40 +741,40 @@
        "text": "The linear model's MAE minus the baseline's is "
       },
       {
-       "text": "-3.80",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-3.79",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.point",
-       "value": -3.7959532190309977,
+       "value": -3.792215923650031,
        "format": "f2"
       },
       {
        "text": " on the validation rows, between "
       },
       {
-       "text": "-4.34",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-4.38",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.low",
-       "value": -4.343002436145685,
+       "value": -4.375861635363238,
        "format": "f2"
       },
       {
        "text": " and "
       },
       {
-       "text": "-3.25",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-3.16",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.high",
-       "value": -3.249205481492924,
+       "value": -3.159283658688826,
        "format": "f2"
       },
       {
        "text": " on resamples of those rows. Its mean residual (bias) is "
       },
       {
-       "text": "6.19",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "6.39",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.linear].mean_residual",
-       "value": 6.190031483897883,
+       "value": 6.394515464632113,
        "format": "f2"
       },
       {
@@ -855,10 +855,10 @@
        "text": "The mean residual of the linear model on the validation rows is "
       },
       {
-       "text": "6.19",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "6.39",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.linear].mean_residual",
-       "value": 6.190031483897883,
+       "value": 6.394515464632113,
        "format": "f2"
       },
       {
@@ -892,50 +892,50 @@
        "text": "The validation MAE is "
       },
       {
-       "text": "6.31",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "6.48",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.linear].mae",
-       "value": 6.308647265230509,
+       "value": 6.476590382656274,
        "format": "f2"
       },
       {
        "text": " mpg for the linear model and "
       },
       {
-       "text": "10.10",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "10.27",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "models.[fit.baseline].mae",
-       "value": 10.104600484261507,
+       "value": 10.268806306306304,
        "format": "f2"
       },
       {
        "text": " mpg for the mean baseline. The paired difference is "
       },
       {
-       "text": "-3.80",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-3.79",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.point",
-       "value": -3.7959532190309977,
+       "value": -3.792215923650031,
        "format": "f2"
       },
       {
        "text": " mpg, between "
       },
       {
-       "text": "-4.34",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-4.38",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.low",
-       "value": -4.343002436145685,
+       "value": -4.375861635363238,
        "format": "f2"
       },
       {
        "text": " and "
       },
       {
-       "text": "-3.25",
-       "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+       "text": "-3.16",
+       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
        "path": "deltas.[fit.linear].mae.high",
-       "value": -3.249205481492924,
+       "value": -3.159283658688826,
        "format": "f2"
       },
       {

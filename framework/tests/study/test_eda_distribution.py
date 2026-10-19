@@ -78,7 +78,8 @@ def test_bank_age_is_numeric_with_ten_bins_of_training_rows(bank):
     train = _train_keys(bank.study)
     ages = sorted(int(raw[k]['age']) for k in train)
     numeric = values['numeric']
-    assert values['n_rows'] == len(train) == 3164 and values['n_missing'] == 0
+    # v0.1: 3164 training rows, before the final test was sealed (ADR 0006)
+    assert values['n_rows'] == len(train) == 2531 and values['n_missing'] == 0
     assert values['special_values'] == [] and values['groups'] is None
     assert (numeric['n'], numeric['min'], numeric['max']) == (len(ages), ages[0], ages[-1])
     assert numeric['mean'] == pytest.approx(sum(ages) / len(ages))
@@ -104,7 +105,7 @@ def test_bank_pdays_counts_its_special_value_apart(bank):
     train = _train_keys(bank.study)
     special = sum(raw[k]['pdays'] == '-1' for k in train)
     assert [(s['value'], s['n_rows']) for s in values['special_values']] == [(-1, special)]
-    assert special == 2608
+    assert special == 2068          # v0.1: 2608, before the final test was sealed
     numeric = values['numeric']
     assert numeric['min'] >= 0 and numeric['n'] == len(train) - special
     assert sum(b['n_rows'] for b in numeric['bins']) == values['n_rows'] - values['n_missing'] \

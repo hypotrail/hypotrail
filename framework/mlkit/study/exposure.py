@@ -7,7 +7,10 @@ is added or when the split changes. The row keys of one record are a content-
 addressed blob (sorted, one key per line).
 
 Purposes (``records.EXPOSURE_PURPOSES``): ``structural_inspection``, ``train_eda``,
-``train_fit``, ``validation_model_evaluation``, ``validation_policy_selection``.
+``train_fit``, ``validation_model_evaluation``, ``validation_policy_selection``, and
+``sealed`` (ADR 0006): the final-test rows set aside at ``init``, whose cells only a
+counts-only schema check read. Sealed rows are listed, never counted as exposed
+(``rows_exposed``).
 
 Nothing is ever removed: changing the split does not make explored rows unseen.
 :func:`overlap` reports, for a new split, how many rows of each new partition were
@@ -28,7 +31,10 @@ from .errors import StudyError
 from .store import StudyStore, append_jsonl, read_jsonl
 
 EXPOSURE_FILE = 'exposure.jsonl'
-PARTITIONS = ('all', 'train', 'validation')
+# ``development`` and ``final_test`` (ADR 0006): a study with a sealed final test records
+# its structural inspection on the development rows and its final-test rows as ``sealed``;
+# ``all`` stays for a study created before it.
+PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
 
 
 def new_exposure_id() -> str:

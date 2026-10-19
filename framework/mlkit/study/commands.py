@@ -51,7 +51,8 @@ from mlkit.reliability import CommandRefused, Handler
 from . import case as c
 from . import data as dt
 from . import dependencies as dep
-from . import exposure, guard, lock, preconditions, read, view
+from . import exposure, guard, lock, partition, preconditions, read, view
+from . import records as rec
 from . import state as st
 from .errors import StudyError
 from .store import StudyStore
@@ -1295,18 +1296,44 @@ def init(case_path, study_dir) -> Outcome:
         raise StudyError('state_exists', 'A study already exists here; it is never overwritten.',
                          details={'study': str(study_dir)})
     case = c.require_supported(c.load_case(_case_file(case_path)))
-    # Structural inspection: row keys, duplicates, and values that would silently change
-    # meaning (``data.check_values``) are refused before the study exists.
-    index = dt.load_dataset(case).index
+    # ADR 0006: the final test is assigned and sealed before any look. Row keys and
+    # duplicates are read on every record (keys only); the stratification reads the
+    # target (or the declared order); values that would silently change meaning
+    # (``data.check_values``) are then inspected on the development rows only, and the
+    # final test gets a counts-only schema check (``partition.schema_check``).
+    index = dt.row_index(case)
+    frame = dt.read_frame(case, index)
+    assigned = partition.assign(case, index, frame)
+    check = partition.schema_check(case, frame.loc[assigned['final_test']],
+                                   frame.loc[assigned['development']])
+    del frame
+    try:
+        development = dt.load_dataset(case, rows=assigned['development'])
+    except c.CaseError as exc:
+        raise partition.with_final_test_counts(exc, check)
+    partition.refuse_failed_check(case, check)
     state = st.initial_state(case)
     study_dir.mkdir(parents=True, exist_ok=True)
+    dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
+    final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))
+    state[partition.STATE_KEY] = partition.seal(
+        assigned['record'], development_sha=dev_sha,
+        n_development=len(assigned['development']), final_sha=final_sha,
+        n_final=len(assigned['final_test']), check=check, created=state['created'])
     store.create(state)
     with lock.writer_lock(study_dir):
         record = exposure.record(store, exposure_id=exposure.new_exposure_id(),
                                  revision=state['revision'], activity='init.structure',
-                                 result_id=None, purpose='structural_inspection', partition='all',
-                                 row_keys=index.keys, dataset_sha256=index.dataset_sha256,
+                                 result_id=None, purpose='structural_inspection',
+                                 partition=partition.DEVELOPMENT,
+                                 row_keys=development.index.keys,
+                                 dataset_sha256=index.dataset_sha256,
                                  columns=case.column_names)
+        exposure.record(store, exposure_id=exposure.new_exposure_id(),
+                        revision=state['revision'], activity=partition.ACTIVITY,
+                        result_id=None, purpose=partition.EXPOSURE_PURPOSE,
+                        partition=partition.FINAL_TEST, row_keys=assigned['final_test'],
+                        dataset_sha256=index.dataset_sha256, columns=case.column_names)
     agent = _copy_agent_templates(study_dir, case.task)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
@@ -1315,6 +1342,7 @@ def init(case_path, study_dir) -> Outcome:
                     'dataset': snapshot['dataset'],
                     'structural_exposure': {'exposure_id': record['exposure_id'],
                                             'n_rows': record['n_rows']},
+                    'final_test': partition.final_test_status(snapshot),
                     'plan': st.derive_plan(snapshot), 'next_action': st.next_action(snapshot),
                     'agent_instructions': agent,
                     'ignored_sources': ignored,

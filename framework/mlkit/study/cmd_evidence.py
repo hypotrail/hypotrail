@@ -53,7 +53,7 @@ IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_
                'reconfirm', 'notes')
 DETAIL_KEYS = ('result_id', 'values', 'params', 'inputs', 'code', 'environment', 'blobs',
                'exposure', 'consumers', 'report_anchor', 'notebook_hint')
-PARTITION_ORDER = ('all', 'train', 'validation')
+PARTITION_ORDER = ('all', 'development', 'train', 'validation', 'final_test')
 # The EDA activities of each task, in plan order: those of ``activities.task_activities``
 # (the task's own, then the shared ``eda.distribution``), so the catalog cannot drift from
 # what ``run`` accepts (WP-I).

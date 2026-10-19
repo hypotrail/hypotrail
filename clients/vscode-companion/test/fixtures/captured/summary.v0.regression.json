@@ -156,49 +156,49 @@
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "603d751fdcf0fc17986c1e6dda5f8527204751cd510e161a259f1e8d917ff6b8",
+    "result_id": "1d32e21d8e679fc2a4e1afea44eb72216a8df690bb5854c658deefd5c11cfb7e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "3a29ca2ea5edc545dc8bda2afddcc10bb9cbac9b93db86a01d5bc290b72dc45d",
+    "result_id": "3db3e572cb16ead1d35d268e52cbc34c3f0d1eee39b9f0856a457c842516ca24",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "dfdf7f993de85591e46786f561bb80d324c31d4dce544767a07e7b5e5e03b2fd",
+    "result_id": "8de472754cd576297a0f6ea63dbe96b7dab21a232fa26f2c8b7f2be3e0757f5e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "b422b94a7a26eaf16ad3bff8b95ee333b1ce199accf7a2718719a60acafa187b",
+    "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+    "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "a9602b07cb2e7f2f0533b4243fe0f1084e1da8a678ba6d38d9e072e0c7302008",
+    "result_id": "46c01d05cbeb7e2f942f5e81fcbe70938358e7bf2bcb8d82f430c664bde6cb2d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "99508632d17526d42129a31a6c029ba6d2b2517fc490f6608e63fdbf05396576",
+    "result_id": "79ab6c62853552381c280b8f5987817166f34d414d97a76dac5bf7831cb1f25e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "33ec41e689e39abe11619683994343899fa978def67d633a4686e3e996843368",
+    "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -262,10 +262,18 @@
   },
   "notes": [],
   "holds": [],
+  "final_test": {
+   "status": "sealed",
+   "rows": 80,
+   "method": "quantile_stratified",
+   "fraction": 0.2,
+   "development_rows": 318,
+   "schema_check": "pass"
+  },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg; result ef58893e); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result cadc0545); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ]

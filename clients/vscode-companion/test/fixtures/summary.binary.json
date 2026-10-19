@@ -281,6 +281,14 @@
    }
   ],
   "holds": [],
+  "final_test": {
+   "status": "sealed",
+   "rows": 904,
+   "method": "stratified",
+   "fraction": 0.2,
+   "development_rows": 3617,
+   "schema_check": "pass"
+  },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result ae80b53f).",

@@ -18,46 +18,46 @@
   "task": "binary",
   "results": [
    {
-    "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
     "activity": "split",
     "slot": "split",
     "promoted": true,
     "current": true,
     "stale_reason": null,
     "integrity": "ok",
-    "partition": "all",
-    "n_rows": 4521,
+    "partition": "development",
+    "n_rows": 3617,
     "params": {},
     "upstream": {},
     "downstream": [
-     "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
-     "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
-     "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
-     "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
-     "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
-     "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
-     "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600"
+     "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
+     "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
+     "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
+     "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
+     "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
+     "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+     "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8"
     ],
-    "created": "2026-10-19T00:49:26.940328+00:00",
+    "created": "2026-10-19T08:02:08.497158+00:00",
     "started_revision": 8,
     "execution_id": "e_e1b0acf86b9621b8c13ca17b",
-    "exposure_id": "x_51680b4cac534179a40fce8554498e62",
+    "exposure_id": "x_982b5ef7d757419099e3760d02ffcd8b",
     "values": {
      "method": "stratified_random",
      "validation_fraction": 0.3,
      "seed": 20261017,
      "stratified_on": "y",
-     "n_rows": 4521,
+     "n_rows": 3617,
      "partitions": {
       "train": {
-       "n_rows": 3164,
-       "n_positive": 365,
-       "rate": 0.11536030341340076
+       "n_rows": 2531,
+       "n_positive": 292,
+       "rate": 0.11536941920189649
       },
       "validation": {
-       "n_rows": 1357,
-       "n_positive": 156,
-       "rate": 0.11495946941783346
+       "n_rows": 1086,
+       "n_positive": 125,
+       "rate": 0.1151012891344383
       }
      },
      "implementation": "mlkit.classical.split (stratified train_test_split)",
@@ -66,20 +66,20 @@
     "headline": {
      "segments": [
       {
-       "text": "3,164",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "text": "2,531",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.train.n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
        "text": " training rows / "
       },
       {
-       "text": "1,357",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "text": "1,086",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.validation.n_rows",
-       "value": 1357,
+       "value": 1086,
        "format": "int"
       },
       {
@@ -89,7 +89,7 @@
     }
    },
    {
-    "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+    "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
     "activity": "eda.target_rate",
     "slot": "eda.target_rate",
     "promoted": true,
@@ -97,24 +97,24 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "train",
-    "n_rows": 3164,
+    "n_rows": 2531,
     "params": {},
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:27.142932+00:00",
+    "created": "2026-10-19T08:02:08.747416+00:00",
     "started_revision": 10,
     "execution_id": "e_92ee93de02ea87db530298f4",
-    "exposure_id": "x_8b0ecbffd3814b7c869162721e62cd86",
+    "exposure_id": "x_7a16b10e89374e57a72fe74d8546738c",
     "values": {
      "partition": "train",
      "target": "y",
      "positive_label": "yes",
-     "n_rows": 3164,
-     "n_positive": 365,
-     "n_negative": 2799,
-     "rate": 0.11536030341340076
+     "n_rows": 2531,
+     "n_positive": 292,
+     "n_negative": 2239,
+     "rate": 0.11536941920189649
     },
     "headline": {
      "segments": [
@@ -123,19 +123,19 @@
       },
       {
        "text": "11.5%",
-       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
        "path": "rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
        "text": " on "
       },
       {
-       "text": "3,164",
-       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "text": "2,531",
+       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
        "path": "n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -145,7 +145,7 @@
     }
    },
    {
-    "result_id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+    "result_id": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
     "activity": "eda.special_values",
     "slot": "eda.special_values",
     "promoted": true,
@@ -153,19 +153,19 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "train",
-    "n_rows": 3164,
+    "n_rows": 2531,
     "params": {},
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:27.351917+00:00",
+    "created": "2026-10-19T08:02:09.052497+00:00",
     "started_revision": 12,
     "execution_id": "e_cb440fe2f7ec20d54f472663",
-    "exposure_id": "x_cabc79176c03434e9c524ebe34f7df04",
+    "exposure_id": "x_c71db98561764ed19886cd6642c54984",
     "values": {
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "special_values": [
       {
        "column": "job",
@@ -173,10 +173,10 @@
        "meaning": "Listed as a category by the documentation; what it covers is not documented.",
        "status": "unknown",
        "source": "data/bank-names.txt:48",
-       "n_rows": 26,
-       "share": 0.008217446270543615,
-       "n_positive": 5,
-       "rate": 0.19230769230769232
+       "n_rows": 19,
+       "share": 0.0075069142631371,
+       "n_positive": 3,
+       "rate": 0.15789473684210525
       },
       {
        "column": "education",
@@ -184,10 +184,10 @@
        "meaning": "Listed as a category by the documentation; what it covers is not documented.",
        "status": "unknown",
        "source": "data/bank-names.txt:51",
-       "n_rows": 134,
-       "share": 0.042351453855878636,
-       "n_positive": 14,
-       "rate": 0.1044776119402985
+       "n_rows": 102,
+       "share": 0.040300276570525484,
+       "n_positive": 10,
+       "rate": 0.09803921568627451
       },
       {
        "column": "contact",
@@ -195,10 +195,10 @@
        "meaning": "Listed as a category by the documentation; what it covers is not documented.",
        "status": "unknown",
        "source": "data/bank-names.txt:57",
-       "n_rows": 929,
-       "share": 0.2936156763590392,
-       "n_positive": 43,
-       "rate": 0.04628632938643703
+       "n_rows": 700,
+       "share": 0.2765705254839984,
+       "n_positive": 28,
+       "rate": 0.04
       },
       {
        "column": "pdays",
@@ -206,10 +206,10 @@
        "meaning": "The client was not previously contacted.",
        "status": "documented_fact",
        "source": "data/bank-names.txt:63",
-       "n_rows": 2608,
-       "share": 0.8242730720606827,
-       "n_positive": 241,
-       "rate": 0.0924079754601227
+       "n_rows": 2068,
+       "share": 0.8170683524298696,
+       "n_positive": 197,
+       "rate": 0.09526112185686654
       },
       {
        "column": "poutcome",
@@ -217,10 +217,10 @@
        "meaning": "Listed as a category by the documentation; what it covers is not documented.",
        "status": "unknown",
        "source": "data/bank-names.txt:65",
-       "n_rows": 2608,
-       "share": 0.8242730720606827,
-       "n_positive": 241,
-       "rate": 0.0924079754601227
+       "n_rows": 2068,
+       "share": 0.8170683524298696,
+       "n_positive": 197,
+       "rate": 0.09526112185686654
       }
      ],
      "co_occurrence": [
@@ -233,10 +233,10 @@
         "column": "education",
         "value": "unknown"
        },
-       "n_a": 26,
-       "n_b": 134,
-       "n_both": 10,
-       "n_either": 150,
+       "n_a": 19,
+       "n_b": 102,
+       "n_both": 7,
+       "n_either": 114,
        "same_rows": false
       },
       {
@@ -248,10 +248,10 @@
         "column": "contact",
         "value": "unknown"
        },
-       "n_a": 26,
-       "n_b": 929,
-       "n_both": 6,
-       "n_either": 949,
+       "n_a": 19,
+       "n_b": 700,
+       "n_both": 3,
+       "n_either": 716,
        "same_rows": false
       },
       {
@@ -263,10 +263,10 @@
         "column": "pdays",
         "value": -1
        },
-       "n_a": 26,
-       "n_b": 2608,
-       "n_both": 22,
-       "n_either": 2612,
+       "n_a": 19,
+       "n_b": 2068,
+       "n_both": 17,
+       "n_either": 2070,
        "same_rows": false
       },
       {
@@ -278,10 +278,10 @@
         "column": "poutcome",
         "value": "unknown"
        },
-       "n_a": 26,
-       "n_b": 2608,
-       "n_both": 22,
-       "n_either": 2612,
+       "n_a": 19,
+       "n_b": 2068,
+       "n_both": 17,
+       "n_either": 2070,
        "same_rows": false
       },
       {
@@ -293,10 +293,10 @@
         "column": "contact",
         "value": "unknown"
        },
-       "n_a": 134,
-       "n_b": 929,
-       "n_both": 56,
-       "n_either": 1007,
+       "n_a": 102,
+       "n_b": 700,
+       "n_both": 37,
+       "n_either": 765,
        "same_rows": false
       },
       {
@@ -308,10 +308,10 @@
         "column": "pdays",
         "value": -1
        },
-       "n_a": 134,
-       "n_b": 2608,
-       "n_both": 107,
-       "n_either": 2635,
+       "n_a": 102,
+       "n_b": 2068,
+       "n_both": 82,
+       "n_either": 2088,
        "same_rows": false
       },
       {
@@ -323,10 +323,10 @@
         "column": "poutcome",
         "value": "unknown"
        },
-       "n_a": 134,
-       "n_b": 2608,
-       "n_both": 107,
-       "n_either": 2635,
+       "n_a": 102,
+       "n_b": 2068,
+       "n_both": 82,
+       "n_either": 2088,
        "same_rows": false
       },
       {
@@ -338,10 +338,10 @@
         "column": "pdays",
         "value": -1
        },
-       "n_a": 929,
-       "n_b": 2608,
-       "n_both": 923,
-       "n_either": 2614,
+       "n_a": 700,
+       "n_b": 2068,
+       "n_both": 697,
+       "n_either": 2071,
        "same_rows": false
       },
       {
@@ -353,10 +353,10 @@
         "column": "poutcome",
         "value": "unknown"
        },
-       "n_a": 929,
-       "n_b": 2608,
-       "n_both": 923,
-       "n_either": 2614,
+       "n_a": 700,
+       "n_b": 2068,
+       "n_both": 697,
+       "n_either": 2071,
        "same_rows": false
       },
       {
@@ -368,10 +368,10 @@
         "column": "poutcome",
         "value": "unknown"
        },
-       "n_a": 2608,
-       "n_b": 2608,
-       "n_both": 2608,
-       "n_either": 2608,
+       "n_a": 2068,
+       "n_b": 2068,
+       "n_both": 2068,
+       "n_either": 2068,
        "same_rows": true
       }
      ],
@@ -383,10 +383,10 @@
        "text": "Special values counted on "
       },
       {
-       "text": "3,164",
-       "result_id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+       "text": "2,531",
+       "result_id": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
        "path": "n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -396,7 +396,7 @@
     }
    },
    {
-    "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+    "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
     "activity": "eda.rate_by",
     "slot": "eda.rate_by:job",
     "promoted": true,
@@ -404,114 +404,114 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "train",
-    "n_rows": 3164,
+    "n_rows": 2531,
     "params": {
      "column": "job"
     },
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:27.587435+00:00",
+    "created": "2026-10-19T08:02:09.336850+00:00",
     "started_revision": 14,
     "execution_id": "e_087f4c7109d76636536c712c",
-    "exposure_id": "x_46a66f63a0d04fb98e286cb60a8e15a1",
+    "exposure_id": "x_bb48c85214dd4b64865d35c8e5541628",
     "values": {
      "partition": "train",
      "column": "job",
-     "n_rows": 3164,
-     "overall_rate": 0.11536030341340076,
+     "n_rows": 2531,
+     "overall_rate": 0.11536941920189649,
      "binned": false,
      "binning": null,
      "groups": [
       {
        "value": "admin.",
-       "n_rows": 342,
-       "n_positive": 38,
-       "rate": 0.1111111111111111,
+       "n_rows": 243,
+       "n_positive": 33,
+       "rate": 0.13580246913580246,
        "small_count": false
       },
       {
        "value": "blue-collar",
-       "n_rows": 674,
-       "n_positive": 50,
-       "rate": 0.07418397626112759,
+       "n_rows": 510,
+       "n_positive": 34,
+       "rate": 0.06666666666666667,
        "small_count": false
       },
       {
        "value": "entrepreneur",
-       "n_rows": 124,
-       "n_positive": 11,
-       "rate": 0.08870967741935484,
+       "n_rows": 94,
+       "n_positive": 6,
+       "rate": 0.06382978723404255,
        "small_count": false
       },
       {
        "value": "housemaid",
-       "n_rows": 72,
-       "n_positive": 9,
-       "rate": 0.125,
+       "n_rows": 76,
+       "n_positive": 14,
+       "rate": 0.18421052631578946,
        "small_count": false
       },
       {
        "value": "management",
-       "n_rows": 677,
-       "n_positive": 97,
-       "rate": 0.1432791728212703,
+       "n_rows": 538,
+       "n_positive": 69,
+       "rate": 0.12825278810408922,
        "small_count": false
       },
       {
        "value": "retired",
-       "n_rows": 150,
-       "n_positive": 35,
-       "rate": 0.23333333333333334,
+       "n_rows": 142,
+       "n_positive": 36,
+       "rate": 0.2535211267605634,
        "small_count": false
       },
       {
        "value": "self-employed",
-       "n_rows": 116,
-       "n_positive": 14,
-       "rate": 0.1206896551724138,
+       "n_rows": 100,
+       "n_positive": 11,
+       "rate": 0.11,
        "small_count": false
       },
       {
        "value": "services",
-       "n_rows": 292,
-       "n_positive": 26,
-       "rate": 0.08904109589041095,
+       "n_rows": 241,
+       "n_positive": 20,
+       "rate": 0.08298755186721991,
        "small_count": false
       },
       {
        "value": "student",
-       "n_rows": 59,
-       "n_positive": 11,
-       "rate": 0.1864406779661017,
+       "n_rows": 44,
+       "n_positive": 12,
+       "rate": 0.2727272727272727,
        "small_count": false
       },
       {
        "value": "technician",
-       "n_rows": 540,
-       "n_positive": 59,
-       "rate": 0.10925925925925926,
+       "n_rows": 454,
+       "n_positive": 50,
+       "rate": 0.11013215859030837,
        "small_count": false
       },
       {
        "value": "unemployed",
-       "n_rows": 92,
-       "n_positive": 10,
-       "rate": 0.10869565217391304,
+       "n_rows": 70,
+       "n_positive": 4,
+       "rate": 0.05714285714285714,
        "small_count": false
       },
       {
        "value": "unknown (special value)",
-       "n_rows": 26,
-       "n_positive": 5,
-       "rate": 0.19230769230769232,
+       "n_rows": 19,
+       "n_positive": 3,
+       "rate": 0.15789473684210525,
        "small_count": true
       }
      ],
      "min_group_rows": 30,
      "warnings": [
-      "job = unknown (special value): only 26 training rows; its rate is too noisy to read on its own."
+      "job = unknown (special value): only 19 training rows; its rate is too noisy to read on its own."
      ],
      "n_groups": 12,
      "max_groups": 20,
@@ -522,7 +522,7 @@
      "segments": [
       {
        "text": "12",
-       "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+       "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
        "path": "n_groups",
        "value": 12,
        "format": "int"
@@ -531,10 +531,10 @@
        "text": " groups on "
       },
       {
-       "text": "3,164",
-       "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+       "text": "2,531",
+       "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
        "path": "n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -544,7 +544,7 @@
     }
    },
    {
-    "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+    "result_id": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
     "activity": "eda.distribution",
     "slot": "eda.distribution:age",
     "promoted": true,
@@ -552,107 +552,107 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "train",
-    "n_rows": 3164,
+    "n_rows": 2531,
     "params": {
      "column": "age"
     },
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:27.837085+00:00",
+    "created": "2026-10-19T08:02:09.554834+00:00",
     "started_revision": 16,
     "execution_id": "e_8101d16893f3425fbb4ff727",
-    "exposure_id": "x_3ce77884a43447dc9447d30a5e3f1f14",
+    "exposure_id": "x_da86007be234496db48c091fcc186ee3",
     "values": {
      "partition": "train",
      "column": "age",
      "role": "feature",
      "type": "integer",
      "kind": "numeric",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "n_missing": 0,
      "special_values": [],
      "numeric": {
-      "n": 3164,
+      "n": 2531,
       "min": 19.0,
       "q25": 33.0,
       "median": 39.0,
-      "q75": 48.0,
-      "max": 86.0,
-      "mean": 40.9263590391909,
-      "sd": 10.559196480104337,
+      "q75": 49.0,
+      "max": 87.0,
+      "mean": 41.239431054919,
+      "sd": 10.757677739554682,
       "n_bins": 10,
-      "bin_width": 6.7,
+      "bin_width": 6.8,
       "bins": [
        {
         "low": 19.0,
-        "high": 25.7,
-        "n_rows": 76,
-        "share": 0.02402022756005057,
+        "high": 25.8,
+        "n_rows": 57,
+        "share": 0.0225207427894113,
         "closed": "left"
        },
        {
-        "low": 25.7,
-        "high": 32.4,
-        "n_rows": 691,
-        "share": 0.2183944374209861,
+        "low": 25.8,
+        "high": 32.6,
+        "n_rows": 542,
+        "share": 0.21414460687475306,
         "closed": "left"
        },
        {
-        "low": 32.4,
-        "high": 39.1,
-        "n_rows": 876,
-        "share": 0.27686472819216185,
+        "low": 32.6,
+        "high": 39.4,
+        "n_rows": 688,
+        "share": 0.2718293164757013,
         "closed": "left"
        },
        {
-        "low": 39.1,
-        "high": 45.8,
-        "n_rows": 511,
-        "share": 0.16150442477876106,
+        "low": 39.4,
+        "high": 46.2,
+        "n_rows": 479,
+        "share": 0.1892532595811932,
         "closed": "left"
        },
        {
-        "low": 45.8,
-        "high": 52.5,
-        "n_rows": 502,
-        "share": 0.1586599241466498,
+        "low": 46.2,
+        "high": 53.0,
+        "n_rows": 343,
+        "share": 0.13551955748715921,
         "closed": "left"
        },
        {
-        "low": 52.5,
-        "high": 59.2,
-        "n_rows": 390,
-        "share": 0.12326169405815424,
+        "low": 53.0,
+        "high": 59.8,
+        "n_rows": 318,
+        "share": 0.12564203871987356,
         "closed": "left"
        },
        {
-        "low": 59.2,
-        "high": 65.9,
-        "n_rows": 61,
-        "share": 0.019279393173198482,
+        "low": 59.8,
+        "high": 66.6,
+        "n_rows": 56,
+        "share": 0.022125642038719872,
         "closed": "left"
        },
        {
-        "low": 65.9,
-        "high": 72.6,
-        "n_rows": 26,
-        "share": 0.008217446270543615,
+        "low": 66.6,
+        "high": 73.4,
+        "n_rows": 24,
+        "share": 0.009482418016594232,
         "closed": "left"
        },
        {
-        "low": 72.6,
-        "high": 79.30000000000001,
-        "n_rows": 23,
-        "share": 0.007269279393173199,
+        "low": 73.4,
+        "high": 80.19999999999999,
+        "n_rows": 18,
+        "share": 0.007111813512445673,
         "closed": "left"
        },
        {
-        "low": 79.30000000000001,
-        "high": 86.0,
-        "n_rows": 8,
-        "share": 0.0025284450063211127,
+        "low": 80.19999999999999,
+        "high": 87.0,
+        "n_rows": 6,
+        "share": 0.002370604504148558,
         "closed": "both"
        }
       ]
@@ -671,10 +671,10 @@
        "text": "Distribution on "
       },
       {
-       "text": "3,164",
-       "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+       "text": "2,531",
+       "result_id": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
        "path": "n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -684,7 +684,7 @@
     }
    },
    {
-    "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+    "result_id": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
     "activity": "eda.distribution",
     "slot": "eda.distribution:job",
     "promoted": true,
@@ -692,100 +692,100 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "train",
-    "n_rows": 3164,
+    "n_rows": 2531,
     "params": {
      "column": "job"
     },
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:28.123016+00:00",
+    "created": "2026-10-19T08:02:09.865309+00:00",
     "started_revision": 18,
     "execution_id": "e_8651b2bcef1776e9ebffd170",
-    "exposure_id": "x_3e8e552c769047d598bd411a004a9c18",
+    "exposure_id": "x_5ff2a51a283642fc8a6cc823577cf7cc",
     "values": {
      "partition": "train",
      "column": "job",
      "role": "feature",
      "type": "category",
      "kind": "categorical",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "n_missing": 0,
      "special_values": [
       {
        "value": "unknown",
        "meaning": "Listed as a category by the documentation; what it covers is not documented.",
-       "n_rows": 26,
-       "share": 0.008217446270543615
+       "n_rows": 19,
+       "share": 0.0075069142631371
       }
      ],
      "numeric": null,
      "groups": [
       {
        "value": "management",
-       "n_rows": 677,
-       "share": 0.21396965865992415,
+       "n_rows": 538,
+       "share": 0.21256420387198735,
        "small_count": false
       },
       {
        "value": "blue-collar",
-       "n_rows": 674,
-       "share": 0.21302149178255372,
+       "n_rows": 510,
+       "share": 0.20150138285262742,
        "small_count": false
       },
       {
        "value": "technician",
-       "n_rows": 540,
-       "share": 0.1706700379266751,
+       "n_rows": 454,
+       "share": 0.17937574081390756,
        "small_count": false
       },
       {
        "value": "admin.",
-       "n_rows": 342,
-       "share": 0.10809102402022756,
+       "n_rows": 243,
+       "share": 0.0960094824180166,
        "small_count": false
       },
       {
        "value": "services",
-       "n_rows": 292,
-       "share": 0.0922882427307206,
+       "n_rows": 241,
+       "share": 0.09521928091663374,
        "small_count": false
       },
       {
        "value": "retired",
-       "n_rows": 150,
-       "share": 0.04740834386852086,
-       "small_count": false
-      },
-      {
-       "value": "entrepreneur",
-       "n_rows": 124,
-       "share": 0.039190897597977246,
+       "n_rows": 142,
+       "share": 0.05610430659818254,
        "small_count": false
       },
       {
        "value": "self-employed",
-       "n_rows": 116,
-       "share": 0.03666245259165613,
+       "n_rows": 100,
+       "share": 0.039510075069142635,
        "small_count": false
       },
       {
-       "value": "unemployed",
-       "n_rows": 92,
-       "share": 0.029077117572692796,
+       "value": "entrepreneur",
+       "n_rows": 94,
+       "share": 0.03713947056499407,
        "small_count": false
       },
       {
        "value": "housemaid",
-       "n_rows": 72,
-       "share": 0.022756005056890013,
+       "n_rows": 76,
+       "share": 0.0300276570525484,
+       "small_count": false
+      },
+      {
+       "value": "unemployed",
+       "n_rows": 70,
+       "share": 0.02765705254839984,
        "small_count": false
       },
       {
        "value": "student",
-       "n_rows": 59,
-       "share": 0.018647281921618204,
+       "n_rows": 44,
+       "share": 0.01738443303042276,
        "small_count": false
       }
      ],
@@ -802,10 +802,10 @@
        "text": "Distribution on "
       },
       {
-       "text": "3,164",
-       "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+       "text": "2,531",
+       "result_id": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
        "path": "n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -815,7 +815,7 @@
     }
    },
    {
-    "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+    "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
     "activity": "fit.baseline",
     "slot": "fit.baseline",
     "promoted": true,
@@ -823,32 +823,32 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "validation",
-    "n_rows": 1357,
+    "n_rows": 1086,
     "params": {
      "model": "constant_prior"
     },
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [
-     "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
-     "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d"
+     "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
+     "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e"
     ],
-    "created": "2026-10-19T00:49:28.467614+00:00",
+    "created": "2026-10-19T08:02:10.116777+00:00",
     "started_revision": 20,
     "execution_id": "e_76bdb563530c997e6fdf55cc",
-    "exposure_id": "x_8133cc0dfa704382aeb58abe171b65f4",
+    "exposure_id": "x_e8b3e0095b8347cb9eebc69242b9867c",
     "values": {
      "model": "constant_prior",
-     "train_rate": 0.11536030341340076,
-     "n_train": 3164,
-     "n_train_positive": 365,
+     "train_rate": 0.11536941920189649,
+     "n_train": 2531,
+     "n_train_positive": 292,
      "features": [],
      "validation": {
-      "n_rows": 1357,
-      "n_positive": 156,
+      "n_rows": 1086,
+      "n_positive": 125,
       "roc_auc": 0.5,
-      "average_precision": 0.11495946941783346
+      "average_precision": 0.1151012891344383
      },
      "predictions": {
       "blob": "predictions",
@@ -857,8 +857,8 @@
       "partition": "validation",
       "positive_label": "yes",
       "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed.",
-      "n": 1357,
-      "n_positive": 156,
+      "n": 1086,
+      "n_positive": 125,
       "features": []
      },
      "note": "Every row receives the training positive rate: no ranking information."
@@ -870,7 +870,7 @@
       },
       {
        "text": "0.500",
-       "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+       "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
        "path": "validation.roc_auc",
        "value": 0.5,
        "format": "f3"
@@ -879,10 +879,10 @@
        "text": " on "
       },
       {
-       "text": "1,357",
-       "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+       "text": "1,086",
+       "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
        "path": "validation.n_rows",
-       "value": 1357,
+       "value": 1086,
        "format": "int"
       },
       {
@@ -892,7 +892,7 @@
     }
    },
    {
-    "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+    "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
     "activity": "fit.logistic",
     "slot": "fit.logistic",
     "promoted": true,
@@ -900,7 +900,7 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "validation",
-    "n_rows": 1357,
+    "n_rows": 1086,
     "params": {
      "implementation": "mlkit.classical.pipeline",
      "max_iter": 1000,
@@ -910,16 +910,16 @@
      "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
     },
     "upstream": {
-     "split": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df"
+     "split": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b"
     },
     "downstream": [
-     "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
-     "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d"
+     "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
+     "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e"
     ],
-    "created": "2026-10-19T00:49:28.983158+00:00",
+    "created": "2026-10-19T08:02:11.084300+00:00",
     "started_revision": 22,
     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-    "exposure_id": "x_6bd85353bcf744c2881534b12425bcde",
+    "exposure_id": "x_89f2326fe26647369a2d0bad70ea83d8",
     "values": {
      "model": "logistic",
      "features": [
@@ -939,56 +939,56 @@
      "special_value_indicators": [
       "pdays=-1"
      ],
-     "n_train": 3164,
-     "n_train_positive": 365,
+     "n_train": 2531,
+     "n_train_positive": 292,
      "n_terms": 37,
-     "intercept": -2.4064142529924215,
+     "intercept": -1.898766272132126,
      "coefficients": {
-      "num__age": -0.0030167745433309374,
-      "num__balance": 0.004509729517169493,
-      "num__pdays": -0.018632990277690113,
-      "num__previous": 0.04082359847951633,
-      "num__pdays=-1": -0.34388691489547213,
-      "cat__job_admin.": -0.18714937057161846,
-      "cat__job_blue-collar": -0.23631386688316658,
-      "cat__job_entrepreneur": -0.1029654625168213,
-      "cat__job_housemaid": 0.06269460194374626,
-      "cat__job_management": 0.03438597715279985,
-      "cat__job_retired": 0.777804320896715,
-      "cat__job_self-employed": 0.047326220429715626,
-      "cat__job_services": -0.2768501202402688,
-      "cat__job_student": 0.07487908450760306,
-      "cat__job_technician": -0.25074073717854556,
-      "cat__job_unemployed": -0.2659180734040571,
-      "cat__job_unknown": 0.3178511683462093,
-      "cat__marital_divorced": 0.27868904208445144,
-      "cat__marital_married": -0.28120559457638,
-      "cat__marital_single": -0.0024797050257488705,
-      "cat__education_primary": -0.16621548745829653,
-      "cat__education_secondary": 0.13838679934682765,
-      "cat__education_tertiary": 0.2117388910865298,
-      "cat__education_unknown": -0.18890646049275314,
-      "cat__default_no": 0.16650629964846084,
-      "cat__default_yes": -0.17150255716613969,
-      "cat__housing_no": 0.12844864758767505,
-      "cat__housing_yes": -0.13344490510538828,
-      "cat__loan_no": 0.30481834712037625,
-      "cat__loan_yes": -0.30981460463805266,
-      "cat__contact_cellular": 0.3690521822632619,
-      "cat__contact_telephone": 0.14242766743879526,
-      "cat__contact_unknown": -0.5164761072197341,
-      "cat__poutcome_failure": -0.9853056544983114,
-      "cat__poutcome_other": -0.421469778550472,
-      "cat__poutcome_success": 1.5367765758290397,
-      "cat__poutcome_unknown": -0.1349974002979077
+      "num__age": 0.04258998044357821,
+      "num__balance": 0.031925775865689836,
+      "num__pdays": -0.023090210208733745,
+      "num__previous": 0.021777036869236457,
+      "num__pdays=-1": -0.31315764791424305,
+      "cat__job_admin.": 0.14479639493196514,
+      "cat__job_blue-collar": -0.2917257580286748,
+      "cat__job_entrepreneur": -0.46142919227504636,
+      "cat__job_housemaid": 0.48769436582016,
+      "cat__job_management": -0.08569923520989894,
+      "cat__job_retired": 0.6442074430681997,
+      "cat__job_self-employed": -0.012561907275882737,
+      "cat__job_services": -0.3040029073241516,
+      "cat__job_student": 0.7079093023894353,
+      "cat__job_technician": -0.23653531863244176,
+      "cat__job_unemployed": -0.7543360738409751,
+      "cat__job_unknown": 0.13941140157546897,
+      "cat__marital_divorced": 0.20850300064695476,
+      "cat__marital_married": -0.1931684010761404,
+      "cat__marital_single": -0.03760608437266867,
+      "cat__education_primary": -0.09826513504029587,
+      "cat__education_secondary": 0.16363838996832328,
+      "cat__education_tertiary": 0.27699278167290287,
+      "cat__education_unknown": -0.36463752140278527,
+      "cat__default_no": -0.3217156266658136,
+      "cat__default_yes": 0.299444141863969,
+      "cat__housing_no": 0.1994482249132906,
+      "cat__housing_yes": -0.22171970971514324,
+      "cat__loan_no": 0.22875669229304743,
+      "cat__loan_yes": -0.25102817709490083,
+      "cat__contact_cellular": 0.33503851239656524,
+      "cat__contact_telephone": 0.2991981292904287,
+      "cat__contact_unknown": -0.6565081264888405,
+      "cat__poutcome_failure": -0.8456249997565658,
+      "cat__poutcome_other": -0.37185665331321965,
+      "cat__poutcome_success": 1.3344775208767705,
+      "cat__poutcome_unknown": -0.13926735260884196
      },
      "coefficient_scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects",
-     "iterations": 52,
+     "iterations": 53,
      "validation": {
-      "n_rows": 1357,
-      "n_positive": 156,
-      "roc_auc": 0.709125942056833,
-      "average_precision": 0.3128379620280094
+      "n_rows": 1086,
+      "n_positive": 125,
+      "roc_auc": 0.7348678459937565,
+      "average_precision": 0.3719979635443628
      },
      "predictions": {
       "blob": "predictions",
@@ -997,8 +997,8 @@
       "partition": "validation",
       "positive_label": "yes",
       "score_semantics": "Higher means more likely positive. Calibration as a probability is not assessed.",
-      "n": 1357,
-      "n_positive": 156,
+      "n": 1086,
+      "n_positive": 125,
       "features": [
        "age",
        "job",
@@ -1021,20 +1021,20 @@
        "text": "AUC "
       },
       {
-       "text": "0.709",
-       "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+       "text": "0.735",
+       "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
        "path": "validation.roc_auc",
-       "value": 0.709125942056833,
+       "value": 0.7348678459937565,
        "format": "f3"
       },
       {
        "text": " on "
       },
       {
-       "text": "1,357",
-       "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+       "text": "1,086",
+       "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
        "path": "validation.n_rows",
-       "value": 1357,
+       "value": 1086,
        "format": "int"
       },
       {
@@ -1044,7 +1044,7 @@
     }
    },
    {
-    "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+    "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
     "activity": "policy.evaluation",
     "slot": "policy.evaluation",
     "promoted": true,
@@ -1052,7 +1052,7 @@
     "stale_reason": null,
     "integrity": "ok",
     "partition": "validation",
-    "n_rows": 1357,
+    "n_rows": 1086,
     "params": {
      "models": [
       "fit.baseline",
@@ -1065,14 +1065,14 @@
      ]
     },
     "upstream": {
-     "fit.baseline": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
-     "fit.logistic": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600"
+     "fit.baseline": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+     "fit.logistic": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:30.147739+00:00",
+    "created": "2026-10-19T08:02:12.294959+00:00",
     "started_revision": 28,
     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-    "exposure_id": "x_c6e7bfa3e15c41f1818b94552b6e217c",
+    "exposure_id": "x_ae9439f1878a47fcab19cabfb30daf5f",
     "values": {
      "rules": {
       "capacity:100": {
@@ -1081,21 +1081,21 @@
          "rule": "capacity:100",
          "kind": "capacity",
          "parameter": 100,
-         "n": 1357,
-         "n_positive": 156,
+         "n": 1086,
+         "n_positive": 125,
          "selected": 100.0,
-         "true_positives": 11.495946941783346,
-         "false_positives": 88.50405305821666,
-         "false_negatives": 144.50405305821664,
-         "precision": 0.11495946941783347,
-         "recall": 0.07369196757553427,
+         "true_positives": 11.51012891344383,
+         "false_positives": 88.48987108655616,
+         "false_negatives": 113.48987108655616,
+         "precision": 0.1151012891344383,
+         "recall": 0.09208103130755065,
          "volume": 100.0,
-         "volume_rate": 0.07369196757553427,
-         "tied_at_cut": 1357,
+         "volume_rate": 0.09208103130755065,
+         "tied_at_cut": 1086,
          "cut": {
-          "score": 0.11536030341340076,
-          "n_tied": 1357,
-          "fraction_selected": 0.07369196757553427
+          "score": 0.11536941920189649,
+          "n_tied": 1086,
+          "fraction_selected": 0.09208103130755065
          },
          "selection": "expected"
         },
@@ -1103,16 +1103,16 @@
          "rule": "capacity:100",
          "kind": "capacity",
          "parameter": 100,
-         "n": 1357,
-         "n_positive": 156,
+         "n": 1086,
+         "n_positive": 125,
          "selected": 100.0,
-         "true_positives": 36.0,
-         "false_positives": 64.0,
-         "false_negatives": 120.0,
-         "precision": 0.36,
-         "recall": 0.23076923076923078,
+         "true_positives": 37.0,
+         "false_positives": 63.0,
+         "false_negatives": 88.0,
+         "precision": 0.37,
+         "recall": 0.296,
          "volume": 100.0,
-         "volume_rate": 0.07369196757553427,
+         "volume_rate": 0.09208103130755065,
          "tied_at_cut": 0,
          "cut": {
           "score": null,
@@ -1125,13 +1125,13 @@
        "intervals": {
         "fit.baseline": {
          "precision": {
-          "low": 0.09727339719970524,
-          "high": 0.13264554163596168,
+          "low": 0.09668508287292818,
+          "high": 0.13443830570902393,
           "undefined_replicates": 0
          },
          "recall": {
-          "low": 0.07369196757553426,
-          "high": 0.07369196757553427,
+          "low": 0.09208103130755065,
+          "high": 0.09208103130755065,
           "undefined_replicates": 0
          },
          "volume": {
@@ -1142,13 +1142,13 @@
         },
         "fit.logistic": {
          "precision": {
-          "low": 0.26,
-          "high": 0.47,
+          "low": 0.28,
+          "high": 0.49,
           "undefined_replicates": 0
          },
          "recall": {
-          "low": 0.1773049645390071,
-          "high": 0.2911588961396335,
+          "low": 0.23140495867768596,
+          "high": 0.38282552083333327,
           "undefined_replicates": 0
          },
          "volume": {
@@ -1161,15 +1161,15 @@
        "deltas": {
         "fit.logistic": {
          "precision": {
-          "point": 0.24504053058216652,
-          "low": 0.15651436993367723,
-          "high": 0.3447315770081061,
+          "point": 0.2548987108655617,
+          "low": 0.16674033149171275,
+          "high": 0.3667403314917127,
           "undefined_replicates": 0
          },
          "recall": {
-          "point": 0.15707726319369653,
-          "low": 0.10361299696347283,
-          "high": 0.21746692856409924,
+          "point": 0.20391896869244935,
+          "low": 0.13932392737013533,
+          "high": 0.29074448952578263,
           "undefined_replicates": 0
          },
          "volume": {
@@ -1187,12 +1187,12 @@
          "rule": "threshold:0.2",
          "kind": "threshold",
          "parameter": 0.2,
-         "n": 1357,
-         "n_positive": 156,
+         "n": 1086,
+         "n_positive": 125,
          "selected": 0.0,
          "true_positives": 0.0,
          "false_positives": 0.0,
-         "false_negatives": 156.0,
+         "false_negatives": 125.0,
          "precision": null,
          "recall": 0.0,
          "volume": 0.0,
@@ -1209,16 +1209,16 @@
          "rule": "threshold:0.2",
          "kind": "threshold",
          "parameter": 0.2,
-         "n": 1357,
-         "n_positive": 156,
-         "selected": 115.0,
-         "true_positives": 40.0,
-         "false_positives": 75.0,
-         "false_negatives": 116.0,
-         "precision": 0.34782608695652173,
-         "recall": 0.2564102564102564,
-         "volume": 115.0,
-         "volume_rate": 0.0847457627118644,
+         "n": 1086,
+         "n_positive": 125,
+         "selected": 97.0,
+         "true_positives": 37.0,
+         "false_positives": 60.0,
+         "false_negatives": 88.0,
+         "precision": 0.38144329896907214,
+         "recall": 0.296,
+         "volume": 97.0,
+         "volume_rate": 0.08931860036832412,
          "tied_at_cut": 0,
          "cut": {
           "score": 0.2,
@@ -1248,18 +1248,18 @@
         },
         "fit.logistic": {
          "precision": {
-          "low": 0.2592432950191571,
-          "high": 0.43927102803738305,
+          "low": 0.28153703501690847,
+          "high": 0.48000980392156856,
           "undefined_replicates": 0
          },
          "recall": {
-          "low": 0.18618748572733507,
-          "high": 0.3241513658755037,
+          "low": 0.21480158730158733,
+          "high": 0.38282552083333327,
           "undefined_replicates": 0
          },
          "volume": {
-          "low": 95.0,
-          "high": 135.0,
+          "low": 79.0,
+          "high": 115.0,
           "undefined_replicates": 0
          }
         }
@@ -1273,26 +1273,26 @@
           "undefined_replicates": 2000
          },
          "recall": {
-          "point": 0.2564102564102564,
-          "low": 0.18618748572733507,
-          "high": 0.3241513658755037,
+          "point": 0.296,
+          "low": 0.21480158730158733,
+          "high": 0.38282552083333327,
           "undefined_replicates": 0
          },
          "volume": {
-          "point": 115.0,
-          "low": 95.0,
-          "high": 135.0,
+          "point": 97.0,
+          "low": 79.0,
+          "high": 115.0,
           "undefined_replicates": 0
          }
         }
        }
       }
      },
-     "n": 1357,
-     "n_positive": 156,
+     "n": 1086,
+     "n_positive": 125,
      "predictions": {
-      "fit.baseline": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
-      "fit.logistic": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600"
+      "fit.baseline": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+      "fit.logistic": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8"
      },
      "reference": "fit.baseline",
      "bootstrap": {
@@ -1310,30 +1310,30 @@
        "text": "threshold:0.2: precision "
       },
       {
-       "text": "34.8%",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "38.1%",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
-       "value": 0.34782608695652173,
+       "value": 0.38144329896907214,
        "format": "pct1"
       },
       {
        "text": ", recall "
       },
       {
-       "text": "25.6%",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "29.6%",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
-       "value": 0.2564102564102564,
+       "value": 0.296,
        "format": "pct1"
       },
       {
        "text": " on "
       },
       {
-       "text": "1,357",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "1,086",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "n",
-       "value": 1357,
+       "value": 1086,
        "format": "int"
       },
       {
@@ -1343,7 +1343,7 @@
     }
    },
    {
-    "result_id": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+    "result_id": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
     "activity": "policy.evaluation",
     "slot": "policy.evaluation",
     "promoted": false,
@@ -1354,7 +1354,7 @@
     },
     "integrity": "ok",
     "partition": "validation",
-    "n_rows": 1357,
+    "n_rows": 1086,
     "params": {
      "models": [
       "fit.baseline",
@@ -1366,14 +1366,14 @@
      ]
     },
     "upstream": {
-     "fit.baseline": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
-     "fit.logistic": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600"
+     "fit.baseline": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+     "fit.logistic": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8"
     },
     "downstream": [],
-    "created": "2026-10-19T00:49:29.278723+00:00",
+    "created": "2026-10-19T08:02:11.369806+00:00",
     "started_revision": 24,
     "execution_id": "e_40d674998c07527b12a31e29",
-    "exposure_id": "x_9ff3e2e261ff41c9a56a668a0c6602e4",
+    "exposure_id": "x_e680edca988e4cf299753fe3ece80de1",
     "values": null,
     "headline": null
    }
@@ -1418,61 +1418,61 @@
      "status": "confirmed"
     },
     {
-     "id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+     "id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
      "kind": "result",
      "label": "split",
      "status": "current"
     },
     {
-     "id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+     "id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
      "kind": "result",
      "label": "eda.target_rate",
      "status": "current"
     },
     {
-     "id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+     "id": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
      "kind": "result",
      "label": "eda.special_values",
      "status": "current"
     },
     {
-     "id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+     "id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
      "kind": "result",
      "label": "eda.rate_by:job",
      "status": "current"
     },
     {
-     "id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+     "id": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
      "kind": "result",
      "label": "eda.distribution:age",
      "status": "current"
     },
     {
-     "id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+     "id": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
      "kind": "result",
      "label": "eda.distribution:job",
      "status": "current"
     },
     {
-     "id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "kind": "result",
      "label": "fit.baseline",
      "status": "current"
     },
     {
-     "id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "kind": "result",
      "label": "fit.logistic",
      "status": "current"
     },
     {
-     "id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "kind": "result",
      "label": "policy.evaluation",
      "status": "current"
     },
     {
-     "id": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+     "id": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
      "kind": "result",
      "label": "policy.evaluation",
      "status": "stale"
@@ -1493,216 +1493,216 @@
    "edges": [
     {
      "from": "dataset",
-     "to": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+     "to": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
      "role": "rows"
     },
     {
      "from": "decision:split",
-     "to": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+     "to": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+     "to": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
      "role": "rows"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+     "to": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
      "role": "rows"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+     "to": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
      "role": "rows"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+     "to": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
      "role": "rows"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+     "to": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
      "role": "rows"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "to": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "role": "rows"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "to": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "role": "rows"
     },
     {
      "from": "decision:feature_availability",
-     "to": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "to": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "role": "features"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
-     "to": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+     "to": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "to": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "role": "rows"
     },
     {
      "from": "decision:policy",
-     "to": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "to": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "role": "rule"
     },
     {
-     "from": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
-     "to": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "from": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+     "to": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "role": "fit.baseline"
     },
     {
-     "from": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
-     "to": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "from": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
+     "to": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "role": "fit.logistic"
     },
     {
      "from": "dataset",
-     "to": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+     "to": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
      "role": "rows"
     },
     {
      "from": "decision:policy",
-     "to": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+     "to": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
      "role": "rule"
     },
     {
-     "from": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
-     "to": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+     "from": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+     "to": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
      "role": "fit.baseline"
     },
     {
-     "from": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
-     "to": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+     "from": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
+     "to": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
      "role": "fit.logistic"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+     "from": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+     "from": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+     "from": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+     "from": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+     "from": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+     "from": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+     "from": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+     "from": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+     "from": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+     "from": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+     "from": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "from": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "from": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "from": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "from": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "from": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "from": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "to": "artifact:notebook",
      "role": "consumed"
     }
@@ -1710,29 +1710,33 @@
   },
   "exposure": {
    "summary": {
-    "records": 13,
-    "rows_exposed": 4521,
+    "records": 14,
+    "rows_exposed": 3617,
     "by_purpose": {
-     "structural_inspection": 4521,
-     "train_eda": 3164,
-     "train_fit": 3164,
-     "validation_model_evaluation": 1357,
-     "validation_policy_selection": 1357
+     "sealed": 904,
+     "structural_inspection": 3617,
+     "train_eda": 2531,
+     "train_fit": 2531,
+     "validation_model_evaluation": 1086,
+     "validation_policy_selection": 1086
     },
     "by_partition": {
-     "all": {
-      "structural_inspection": 4521
+     "development": {
+      "structural_inspection": 3617
+     },
+     "final_test": {
+      "sealed": 904
      },
      "train": {
-      "train_eda": 3164,
-      "train_fit": 3164
+      "train_eda": 2531,
+      "train_fit": 2531
      },
      "validation": {
-      "validation_model_evaluation": 1357,
-      "validation_policy_selection": 1357
+      "validation_model_evaluation": 1086,
+      "validation_policy_selection": 1086
      }
     },
-    "validation_rows_used_for_selection": 1357,
+    "validation_rows_used_for_selection": 1086,
     "prior_exposure": [
      {
       "source": "results.json (sha256 92bb2e63de13592cc8782f36ebf1dec123583bc3729ec99195d8d218c87d62f1)",
@@ -1748,15 +1752,15 @@
    },
    "records": [
     {
-     "exposure_id": "x_82afcb09d31b4b898a2c6eb5b6e916e6",
+     "exposure_id": "x_e3b80ad18c324198867e85749d350e40",
      "revision": 1,
-     "time": "2026-10-19T00:49:24.911327+00:00",
+     "time": "2026-10-19T08:02:06.512471+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
      "purpose": "structural_inspection",
-     "partition": "all",
-     "n_rows": 4521,
+     "partition": "development",
+     "n_rows": 3617,
      "columns": [
       "age",
       "job",
@@ -1778,43 +1782,73 @@
      ]
     },
     {
-     "exposure_id": "x_51680b4cac534179a40fce8554498e62",
+     "exposure_id": "x_be179c1cf9b84c208e33764cd1949995",
+     "revision": 1,
+     "time": "2026-10-19T08:02:06.513654+00:00",
+     "activity": "init.final_test",
+     "result_id": null,
+     "execution_id": null,
+     "purpose": "sealed",
+     "partition": "final_test",
+     "n_rows": 904,
+     "columns": [
+      "age",
+      "job",
+      "marital",
+      "education",
+      "default",
+      "balance",
+      "housing",
+      "loan",
+      "contact",
+      "day",
+      "month",
+      "duration",
+      "campaign",
+      "pdays",
+      "previous",
+      "poutcome",
+      "y"
+     ]
+    },
+    {
+     "exposure_id": "x_982b5ef7d757419099e3760d02ffcd8b",
      "revision": 8,
-     "time": "2026-10-19T00:49:26.944180+00:00",
+     "time": "2026-10-19T08:02:08.500478+00:00",
      "activity": "split",
-     "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+     "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
      "execution_id": "e_e1b0acf86b9621b8c13ca17b",
      "purpose": "structural_inspection",
-     "partition": "all",
-     "n_rows": 4521,
+     "partition": "development",
+     "n_rows": 3617,
      "columns": [
       "y"
      ]
     },
     {
-     "exposure_id": "x_8b0ecbffd3814b7c869162721e62cd86",
+     "exposure_id": "x_7a16b10e89374e57a72fe74d8546738c",
      "revision": 10,
-     "time": "2026-10-19T00:49:27.145899+00:00",
+     "time": "2026-10-19T08:02:08.751602+00:00",
      "activity": "eda.target_rate",
-     "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+     "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
      "execution_id": "e_92ee93de02ea87db530298f4",
      "purpose": "train_eda",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "y"
      ]
     },
     {
-     "exposure_id": "x_cabc79176c03434e9c524ebe34f7df04",
+     "exposure_id": "x_c71db98561764ed19886cd6642c54984",
      "revision": 12,
-     "time": "2026-10-19T00:49:27.355021+00:00",
+     "time": "2026-10-19T08:02:09.062527+00:00",
      "activity": "eda.special_values",
-     "result_id": "ea0379b4ecd3a806341960bcd9162c935db621c271c4bca89120c9387d5e37a7",
+     "result_id": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
      "execution_id": "e_cb440fe2f7ec20d54f472663",
      "purpose": "train_eda",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "y",
       "contact",
@@ -1825,86 +1859,86 @@
      ]
     },
     {
-     "exposure_id": "x_46a66f63a0d04fb98e286cb60a8e15a1",
+     "exposure_id": "x_bb48c85214dd4b64865d35c8e5541628",
      "revision": 14,
-     "time": "2026-10-19T00:49:27.591115+00:00",
+     "time": "2026-10-19T08:02:09.339941+00:00",
      "activity": "eda.rate_by",
-     "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+     "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
      "execution_id": "e_087f4c7109d76636536c712c",
      "purpose": "train_eda",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "y",
       "job"
      ]
     },
     {
-     "exposure_id": "x_3ce77884a43447dc9447d30a5e3f1f14",
+     "exposure_id": "x_da86007be234496db48c091fcc186ee3",
      "revision": 16,
-     "time": "2026-10-19T00:49:27.840148+00:00",
+     "time": "2026-10-19T08:02:09.561125+00:00",
      "activity": "eda.distribution",
-     "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817",
+     "result_id": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
      "execution_id": "e_8101d16893f3425fbb4ff727",
      "purpose": "train_eda",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "age"
      ]
     },
     {
-     "exposure_id": "x_3e8e552c769047d598bd411a004a9c18",
+     "exposure_id": "x_5ff2a51a283642fc8a6cc823577cf7cc",
      "revision": 18,
-     "time": "2026-10-19T00:49:28.127655+00:00",
+     "time": "2026-10-19T08:02:09.869553+00:00",
      "activity": "eda.distribution",
-     "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34",
+     "result_id": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
      "execution_id": "e_8651b2bcef1776e9ebffd170",
      "purpose": "train_eda",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "job"
      ]
     },
     {
-     "exposure_id": "x_2d7c79592ea549de8544029070393784",
+     "exposure_id": "x_a3f2f46f137d4abbb7330c0707595c24",
      "revision": 20,
-     "time": "2026-10-19T00:49:28.472038+00:00",
+     "time": "2026-10-19T08:02:10.120251+00:00",
      "activity": "fit.baseline",
-     "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "execution_id": "e_76bdb563530c997e6fdf55cc",
      "purpose": "train_fit",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "y"
      ]
     },
     {
-     "exposure_id": "x_8133cc0dfa704382aeb58abe171b65f4",
+     "exposure_id": "x_e8b3e0095b8347cb9eebc69242b9867c",
      "revision": 20,
-     "time": "2026-10-19T00:49:28.473827+00:00",
+     "time": "2026-10-19T08:02:10.121814+00:00",
      "activity": "fit.baseline",
-     "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+     "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
      "execution_id": "e_76bdb563530c997e6fdf55cc",
      "purpose": "validation_model_evaluation",
      "partition": "validation",
-     "n_rows": 1357,
+     "n_rows": 1086,
      "columns": [
       "y"
      ]
     },
     {
-     "exposure_id": "x_33bd6d06a7864e9ca154cc757cf72e36",
+     "exposure_id": "x_b4204e81e4774baf8cd59995a79a753f",
      "revision": 22,
-     "time": "2026-10-19T00:49:28.986735+00:00",
+     "time": "2026-10-19T08:02:11.096953+00:00",
      "activity": "fit.logistic",
-     "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
      "purpose": "train_fit",
      "partition": "train",
-     "n_rows": 3164,
+     "n_rows": 2531,
      "columns": [
       "age",
       "job",
@@ -1922,15 +1956,15 @@
      ]
     },
     {
-     "exposure_id": "x_6bd85353bcf744c2881534b12425bcde",
+     "exposure_id": "x_89f2326fe26647369a2d0bad70ea83d8",
      "revision": 22,
-     "time": "2026-10-19T00:49:28.987988+00:00",
+     "time": "2026-10-19T08:02:11.098502+00:00",
      "activity": "fit.logistic",
-     "result_id": "2a1021c8cf6da0413f683927ea2be16f210e0e01f80feada4997a18fe7bb3600",
+     "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
      "purpose": "validation_model_evaluation",
      "partition": "validation",
-     "n_rows": 1357,
+     "n_rows": 1086,
      "columns": [
       "age",
       "job",
@@ -1948,29 +1982,29 @@
      ]
     },
     {
-     "exposure_id": "x_9ff3e2e261ff41c9a56a668a0c6602e4",
+     "exposure_id": "x_e680edca988e4cf299753fe3ece80de1",
      "revision": 24,
-     "time": "2026-10-19T00:49:29.281227+00:00",
+     "time": "2026-10-19T08:02:11.374582+00:00",
      "activity": "policy.evaluation",
-     "result_id": "340c9a81fdd4f0939cd0b52db25bf80763f939db5713fd10dc39ff1125ad6ecb",
+     "result_id": "ed0cb074ab3844827f2a96682c87f235e3ecafb08690cfef87f35d433a9198d1",
      "execution_id": "e_40d674998c07527b12a31e29",
      "purpose": "validation_policy_selection",
      "partition": "validation",
-     "n_rows": 1357,
+     "n_rows": 1086,
      "columns": [
       "y"
      ]
     },
     {
-     "exposure_id": "x_c6e7bfa3e15c41f1818b94552b6e217c",
+     "exposure_id": "x_ae9439f1878a47fcab19cabfb30daf5f",
      "revision": 28,
-     "time": "2026-10-19T00:49:30.150732+00:00",
+     "time": "2026-10-19T08:02:12.297709+00:00",
      "activity": "policy.evaluation",
-     "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+     "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
      "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
      "purpose": "validation_policy_selection",
      "partition": "validation",
-     "n_rows": 1357,
+     "n_rows": 1086,
      "columns": [
       "y"
      ]
@@ -1979,8 +2013,8 @@
    "ledger": [
     {
      "purpose": "structural_inspection",
-     "partition": "all",
-     "rows": 4521,
+     "partition": "development",
+     "rows": 3617,
      "records": 2,
      "activities": [
       "init.structure",
@@ -1992,7 +2026,7 @@
     {
      "purpose": "train_eda",
      "partition": "train",
-     "rows": 3164,
+     "rows": 2531,
      "records": 5,
      "activities": [
       "eda.target_rate",
@@ -2006,7 +2040,7 @@
     {
      "purpose": "train_fit",
      "partition": "train",
-     "rows": 3164,
+     "rows": 2531,
      "records": 2,
      "activities": [
       "fit.baseline",
@@ -2018,7 +2052,7 @@
     {
      "purpose": "validation_model_evaluation",
      "partition": "validation",
-     "rows": 1357,
+     "rows": 1086,
      "records": 2,
      "activities": [
       "fit.baseline",
@@ -2030,13 +2064,24 @@
     {
      "purpose": "validation_policy_selection",
      "partition": "validation",
-     "rows": 1357,
+     "rows": 1086,
      "records": 2,
      "activities": [
       "policy.evaluation"
      ],
      "first_revision": 24,
      "last_revision": 28
+    },
+    {
+     "purpose": "sealed",
+     "partition": "final_test",
+     "rows": 904,
+     "records": 1,
+     "activities": [
+      "init.final_test"
+     ],
+     "first_revision": 1,
+     "last_revision": 1
     }
    ],
    "prior_exposure": [
@@ -2240,7 +2285,7 @@
        "role": "feature",
        "type": "category",
        "slot": "eda.rate_by:job",
-       "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4"
+       "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372"
       },
       {
        "name": "marital",
@@ -2353,14 +2398,14 @@
        "role": "feature",
        "type": "integer",
        "slot": "eda.distribution:age",
-       "result_id": "fc7224b24b868d5e2fae28d24286743d74bc3ac50af017a684db1e8ee4f87817"
+       "result_id": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f"
       },
       {
        "name": "job",
        "role": "feature",
        "type": "category",
        "slot": "eda.distribution:job",
-       "result_id": "cd9f633175630642ed7cc19388d71098f2f1ac425530b83a8e5d7ce06d948f34"
+       "result_id": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b"
       },
       {
        "name": "marital",
@@ -2475,12 +2520,12 @@
   },
   "sources": {
    "case": {
-    "path": "/home/user/hypotrail/.claude/worktrees/agent-aabf258cd1e641fcd/use-cases/bank-marketing/case.yaml",
+    "path": "/home/user/hypotrail/.claude/worktrees/agent-a494026c136bf63a6/use-cases/bank-marketing/case.yaml",
     "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929",
     "matches": true
    },
    "dataset": {
-    "path": "/home/user/hypotrail/.claude/worktrees/agent-aabf258cd1e641fcd/use-cases/bank-marketing/data/bank.csv",
+    "path": "/home/user/hypotrail/.claude/worktrees/agent-a494026c136bf63a6/use-cases/bank-marketing/data/bank.csv",
     "sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
     "matches": true
    }

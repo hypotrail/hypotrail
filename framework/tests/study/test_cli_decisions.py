@@ -102,7 +102,9 @@ def test_init_creates_revision_one_and_never_overwrites(study, work, synthetic_c
     assert view['revision'] == 1
     assert all(d['status'] == 'open' for d in view['decisions'].values())
     assert view['open_proposals'] == [] and view['next_action']['kind'] == 'propose'
-    assert view['exposure']['by_purpose'] == {'structural_inspection': 300}
+    # ADR 0006: init inspects the 240 development rows and seals 60 final-test rows.
+    assert view['exposure']['by_purpose'] == {'structural_inspection': 240, 'sealed': 60}
+    assert view['exposure']['rows_exposed'] == 240
     code, again = hyp('init', '--case', synthetic_case_dir, '--study', study, cwd=work)
     assert code == 2 and again['error']['code'] == 'state_exists'
     assert _status(study, work)['revision'] == 1
@@ -137,7 +139,8 @@ def test_bank_init_imports_no_tutorial_confirmation(tmp_path, work):
     view = _status(tmp_path / 'bank', work)['view']
     assert all(d['status'] == 'open' for d in view['decisions'].values())
     assert view['dataset']['rows'] == 4521
-    assert view['exposure']['rows_exposed'] == 4521
+    assert view['exposure']['rows_exposed'] == 3617      # development rows (ADR 0006)
+    assert view['final_test']['rows'] == 904
     assert view['exposure']['prior_exposure']
     statuses = {f['id']: s for s, items in view['facts']['by_status'].items() for f in items}
     assert statuses['prediction_time'] == 'scenario_assumption'
@@ -632,7 +635,9 @@ def test_receipts_and_state_stay_valid(study, work):
 
 SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal', 'current_step',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
-                'executions', 'not_yet_defensible', 'notes', 'holds', 'recap')
+                'executions', 'not_yet_defensible', 'notes', 'holds',
+                # v0.2a (ADR 0006): the sealed final test, before the recap.
+                'final_test', 'recap')
 
 
 def test_status_summary_is_compact_and_complete(study, work, features):

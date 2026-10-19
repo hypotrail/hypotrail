@@ -66,10 +66,14 @@ def test_split_matches_the_decision_and_the_known_partition_sizes(flow):
     values = read.open(flow.study).current('split')['output']['values']
     train, validation = values['partitions']['train'], values['partitions']['validation']
     case, raw = _raw(flow.case_dir)
-    assert values['n_rows'] == len(raw) == train['n_rows'] + validation['n_rows']
-    assert validation['n_rows'] == math.ceil(0.3 * len(raw))   # train_test_split rounds up
-    if flow.name == 'bank':
-        assert (train['n_rows'], validation['n_rows']) == (3164, 1357)
+    # ADR 0006: the split divides the development rows; the sealed final test is not split.
+    final = set(fk.partition_keys(flow.study, 'final_test'))
+    development = [k for k in raw if k not in final]
+    assert final and set(fk.partition_keys(flow.study, 'development')) == set(development)
+    assert values['n_rows'] == len(development) == train['n_rows'] + validation['n_rows']
+    assert validation['n_rows'] == math.ceil(0.3 * len(development))   # rounds up
+    if flow.name == 'bank':     # 4,521 rows less the 904 sealed (v0.1: 3164 and 1357)
+        assert (train['n_rows'], validation['n_rows']) == (2531, 1086)
 
 
 def test_target_rate_on_training_rows(flow):
@@ -80,7 +84,7 @@ def test_target_rate_on_training_rows(flow):
     assert (values['n_rows'], values['n_positive']) == (len(train), positives)
     assert values['rate'] == pytest.approx(positives / len(train))
     if flow.name == 'bank':
-        assert (values['n_positive'], values['n_rows']) == (365, 3164)
+        assert (values['n_positive'], values['n_rows']) == (292, 2531)   # v0.1: 365, 3164
 
 
 def test_special_values_and_their_co_occurrence(flow, synthetic_full):
@@ -97,7 +101,7 @@ def test_special_values_and_their_co_occurrence(flow, synthetic_full):
     pairs = {(p['a']['column'], p['b']['column']): p for p in values['co_occurrence']}
     if flow.name == 'bank':
         p = pairs[('pdays', 'poutcome')]
-        assert (p['n_a'], p['n_b'], p['n_both'], p['same_rows']) == (2608, 2608, 2608, True)
+        assert (p['n_a'], p['n_b'], p['n_both'], p['same_rows']) == (2068, 2068, 2068, True)   # v0.1: 2608
         assert not pairs[('contact', 'poutcome')]['same_rows']
     else:
         truth = json.loads(synthetic_full['truth'].read_text())['sentinel']
@@ -122,7 +126,7 @@ def test_rate_by_gives_rates_with_denominators_and_flags_small_groups(flow):
     assert len(values['warnings']) == sum(g['small_count'] for g in groups)
     if flow.name == 'bank':
         unknown = next(g for g in groups if g['value'] == 'unknown (special value)')
-        assert unknown['n_rows'] == 26 and unknown['small_count'] is True
+        assert unknown['n_rows'] == 19 and unknown['small_count'] is True   # v0.1: 26
 
 
 def test_rate_by_bins_a_numeric_column_and_keeps_its_special_value_apart(flow):
@@ -247,7 +251,8 @@ def test_eda_is_refused_before_the_split_result(tmp_path, cases):
         assert {'requirement': 'result_current', 'slot': 'split',
                 'detail': 'Split the data before exploring or fitting it.'} in \
             payload['error']['details']['missing']
-    assert fk.exposure_records(flow.study)[-1]['purpose'] == 'structural_inspection'
+    assert [r['purpose'] for r in fk.exposure_records(flow.study)] == \
+        ['structural_inspection', 'sealed']                 # init only (ADR 0006)
 
 
 def test_eda_on_a_stale_split_is_refused_and_a_late_eda_is_not_promoted(flow):

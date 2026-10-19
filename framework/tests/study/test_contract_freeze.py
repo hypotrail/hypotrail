@@ -36,6 +36,8 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         'notes',
                         # Post-v0.1 fixes (D5): the open holds grouped by decision.
                         'holds',
+                        # v0.2a (ADR 0006): the sealed final test, or status absent.
+                        'final_test',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
                         'recap')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
@@ -58,7 +60,9 @@ SUMMARY_GOAL_KEYS = ('intended_use', 'decision', 'observation_unit', 'prediction
 EXIT_CODES = {'EXIT_OK': 0, 'EXIT_INTERNAL': 1, 'EXIT_REFUSED': 2, 'EXIT_ARTIFACT_STALE': 3,
               'EXIT_UNKNOWN_OUTCOME': 4}
 PAYLOAD_KEYS = {
-    'init': ('schema', 'ok', 'study', 'revision', 'case', 'dataset', 'structural_exposure', 'plan',
+    'init': ('schema', 'ok', 'study', 'revision', 'case', 'dataset', 'structural_exposure',
+             # v0.2a (ADR 0006): the sealed final test.
+             'final_test', 'plan',
              'next_action', 'agent_instructions', 'ignored_sources', 'note'),
     'status': ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'changes_since', 'view'),
     'plan': ('schema', 'ok', 'study', 'revision', 'steps', 'current_step', 'next_action'),
@@ -94,7 +98,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # M3 (regression): the task of the study, ``binary`` or ``regression``.
              'task',
              # Post-v0.1 (P2): the junior's conditions and holds.
-             'notes')
+             'notes',
+             # v0.2a (ADR 0006): the sealed final test, or status absent.
+             'final_test')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
@@ -210,7 +216,15 @@ EXPOSURE_RECORD_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result
                         'execution_id', 'purpose', 'partition', 'n_rows', 'row_keys',
                         'dataset_sha256', 'columns', 'time')
 EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
-                     'validation_model_evaluation', 'validation_policy_selection')
+                     'validation_model_evaluation', 'validation_policy_selection',
+                     # v0.2a (ADR 0006): the final-test rows set aside at init.
+                     'sealed')
+EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
+FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
+                          'schema_check')
+PARTITION_RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on',
+                         'bins', 'order', 'dataset_sha256', 'n_rows', 'development',
+                         'final_test', 'schema_check', 'created', 'implementation')
 EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'check': 'mlkit.study.cmd_check', 'preview': 'mlkit.study.cmd_preview',
               # Post-v0.1: read-only session timeline for observed sessions.
@@ -402,7 +416,7 @@ def test_ambiguous_confirmation_reasons():
 def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, synthetic_case_dir):
     """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
     refusal keys."""
-    assert st.TOP_OPTIONAL_KEYS == ('task', 'notes')
+    assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'partition')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold',) and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
@@ -560,7 +574,7 @@ def test_storage_keys():
     assert rec.RESULT_KEYS == REGISTRY_ENTRY_KEYS
     assert rec.EXPOSURE_KEYS == EXPOSURE_RECORD_KEYS
     assert rec.EXPOSURE_PURPOSES == EXPOSURE_PURPOSES
-    assert exposure.PARTITIONS == ('all', 'train', 'validation')
+    assert exposure.PARTITIONS == EXPOSURE_PARTITIONS
     assert exposure.EXPOSURE_FILE == 'exposure.jsonl'
     assert registry.INDEX_FILE == 'registry-index.jsonl'
     assert read.ARTIFACTS_FILE == 'artifacts.json'
@@ -731,3 +745,21 @@ def test_companion_schema_names():
     assert all(f'`{name}`' in section for name in COMPANION_SCHEMAS.values())
     for module in (cmd_decisions, cmd_evidence, cmd_explain, cmd_export, preview_effects, preview_proposal):
         assert not getattr(module, 'WP0_STUB', False), module.__name__
+
+
+def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
+    """v0.2a (ADR 0006): the sealed final test's record, surfaces, and exposure keys."""
+    from mlkit.study import exposure, partition
+    assert exposure.PARTITIONS == EXPOSURE_PARTITIONS
+    assert partition.RECORD_KEYS == PARTITION_RECORD_KEYS
+    assert partition.STATUSES == ('sealed',) and partition.STATUS_ABSENT == 'absent'
+    assert partition.METHODS == ('stratified', 'quantile_stratified', 'temporal')
+    assert (partition.DEFAULT_FRACTION, partition.DEFAULT_SEED) == (0.2, 0)
+    study = tmp_path / 'study'
+    init = _run('init', '--case', synthetic_case_dir, '--study', study).payload
+    assert tuple(init['final_test']) == FINAL_TEST_STATUS_KEYS
+    assert init['final_test']['status'] == 'sealed'
+    v = _run('status', '--study', study).payload['view']
+    assert tuple(v['final_test']) == FINAL_TEST_STATUS_KEYS
+    assert tuple(_run('status', '--summary', '--study', study).payload['final_test']) == \
+        FINAL_TEST_STATUS_KEYS

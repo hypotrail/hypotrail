@@ -184,3 +184,13 @@ def exposure_records(study: Path) -> list[dict]:
 
 def deep(x):
     return copy.deepcopy(x)
+
+
+def partition_keys(study: Path, part: str) -> list[str]:
+    """Row keys of the study's ``development`` or ``final_test`` rows (ADR 0006), read
+    from the recorded blob; [] when the study has no final test."""
+    s = read.open(study)
+    record = s.state.get('partition')
+    if record is None:
+        return []
+    return [k for k in s.blob(record[part]['row_keys']).decode().splitlines() if k]

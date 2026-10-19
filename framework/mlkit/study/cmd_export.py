@@ -65,7 +65,8 @@ RID = 8
 PURPOSE_LABELS = {'structural_inspection': 'Structural inspection',
                   'train_eda': 'Exploration of training rows', 'train_fit': 'Model fitting',
                   'validation_model_evaluation': 'Model evaluation',
-                  'validation_policy_selection': 'Rule selection'}
+                  'validation_policy_selection': 'Rule selection',
+                  'sealed': 'Final test set aside, sealed (schema check only)'}
 BASIS_WORDS = {st.EXPLICIT: "the junior's own decision",
                st.DELEGATED_DEFAULT: "delegated by the junior to the assistant's recommended "
                                      'default'}
@@ -187,9 +188,12 @@ def _cited(view: Mapping, study: read.Study, citer: cite.Citer) -> tuple[list[di
 
 # The value of the current split that counts the rows of each partition.
 PARTITION_PATHS = {'all': 'n_rows', 'train': 'partitions.train.n_rows',
-                   'validation': 'partitions.validation.n_rows'}
+                   'validation': 'partitions.validation.n_rows',
+                   # ADR 0006: the split counts the development rows it divided.
+                   'development': 'n_rows'}
 PARTITION_WORDS = {'all': 'every row of the dataset', 'train': 'the whole training partition',
-                   'validation': 'the whole validation partition'}
+                   'validation': 'the whole validation partition',
+                   'development': 'every development row (the final test stays sealed)'}
 
 
 def _ledger_lines(ledger: list[dict], citer: cite.Citer) -> tuple[list[dict], list[str]]:

@@ -308,6 +308,7 @@ def test_walkthrough(name, cases, tmp_path, capsys):
                'final_revision': final['revision']}
     with capsys.disabled():
         print('\nwalkthrough', json.dumps(summary, sort_keys=True))
-    if name == 'bank':                  # plan section 7: 365 of 3,164 training rows
-        assert split['values']['n_rows'] == 4521
-        assert (target['n_positive'], target['n_rows']) == (365, 3164)
+    if name == 'bank':     # plan section 7 had 365 of 3,164 training rows of 4,521; since
+        # ADR 0006 the split divides the 3,617 development rows (904 sealed at init)
+        assert split['values']['n_rows'] == 3617
+        assert (target['n_positive'], target['n_rows']) == (292, 2531)

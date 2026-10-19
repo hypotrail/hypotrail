@@ -165,15 +165,10 @@ def read_kwargs(case: Case) -> dict:
     return kwargs
 
 
-def load_dataset(case: Case, *, supported_only: bool = True) -> Dataset:
-    """Load the dataset as a DataFrame indexed by ``row_key``.
-
-    With ``supported_only`` (the default), an unsupported case is refused first
-    (``unsupported_capability``), before the data are read.
-    """
-    if supported_only:
-        require_supported(case)
-    index = row_index(case)
+def read_frame(case: Case, index: RowIndex):
+    """Every record of the verified dataset as a DataFrame indexed by ``row_key``, with no
+    value check. Only :func:`load_dataset` and the final-test assignment at ``init``
+    (:mod:`mlkit.study.partition`) call it."""
     import pandas as pd
 
     frame = pd.read_csv(case.dataset_path, **read_kwargs(case))
@@ -184,8 +179,59 @@ def load_dataset(case: Case, *, supported_only: bool = True) -> Dataset:
                                               f'{list(frame.columns)}; expected {len(index)} '
                                               f'rows and {case.column_names}'}])
     frame.index = pd.Index(index.keys, name=ROW_KEY_NAME)
+    return frame
+
+
+def restrict(index: RowIndex, rows) -> RowIndex:
+    """The row index of the records ``rows`` only, in file order.
+
+    A key that is not a record of the file is an ``integrity_error``: the recorded
+    partition no longer describes this dataset."""
+    wanted = set(rows)
+    unknown = wanted - set(index.keys)
+    if unknown:
+        from .errors import StudyError
+        raise StudyError('integrity_error', 'The recorded development rows are not records of '
+                                            'this dataset.',
+                         details={'unknown_rows': len(unknown),
+                                  'dataset_sha256': index.dataset_sha256})
+    pairs = [(k, h) for k, h in zip(index.keys, index.content_hashes) if k in wanted]
+    return RowIndex(index.dataset_sha256, tuple(k for k, _ in pairs), tuple(h for _, h in pairs))
+
+
+def load_dataset(case: Case, *, supported_only: bool = True, rows=None) -> Dataset:
+    """Load the dataset as a DataFrame indexed by ``row_key``.
+
+    With ``supported_only`` (the default), an unsupported case is refused first
+    (``unsupported_capability``), before the data are read.
+
+    ``rows`` (ADR 0006) restricts the dataset to those row keys: the frame and the row
+    index hold them only, in file order, and values are checked on them only. Study
+    activities never call this function directly: they go through
+    :func:`load_development`, the single choke point that keeps the sealed final test
+    out of every computation. ``rows=None`` reads every record (a legacy study without a
+    final test, or a test of the reader itself).
+    """
+    if supported_only:
+        require_supported(case)
+    index = row_index(case)
+    frame = read_frame(case, index)
+    if rows is not None:
+        index = restrict(index, rows)
+        frame = frame.loc[list(index.keys)].copy()
     check_values(case, frame)
     return Dataset(case=case, index=index, frame=frame)
+
+
+def load_development(case: Case, development) -> Dataset:
+    """The development rows of a study (ADR 0006): the one function through which every
+    activity reads the dataset.
+
+    ``development`` is the list of development row keys of the study's sealed final-test
+    partition, or ``None`` for a legacy study created before the partition existed (every
+    row is then a development row: the study has no final test). The sealed final-test
+    rows are dropped right after parsing; no caller receives them."""
+    return load_dataset(case, rows=development)
 
 
 NUMBER_TYPES = ('numeric', 'integer')
@@ -219,6 +265,11 @@ def check_values(case: Case, frame) -> None:
         column = frame[v['name']]
         if v['type'] in NUMBER_TYPES and not is_numeric_dtype(column):
             bad = column.notna() & pd.to_numeric(column, errors='coerce').isna()
+            if not bad.any():
+                # The non-number cells were in rows left out (the sealed final test, whose
+                # own check counts them): these rows parse, so they are read as numbers.
+                frame[v['name']] = pd.to_numeric(column)
+                continue
             tokens = sorted({str(x) for x in column[bad]})
             problems.append({
                 'path': f'variables[{i}].type',

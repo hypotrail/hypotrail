@@ -22,41 +22,41 @@
   "value": "fit.linear",
   "proposable": true,
   "missing": [],
-  "restatement": "Adopt the linear model. On the 118 validation rows its mean absolute error is 6.31 mpg against 10.10 for the training mean (paired difference -3.80, interval -4.34 to -3.25). These rows were used to choose, so the figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view (result ef58893e).",
+  "restatement": "Adopt the linear model. On the 96 validation rows its mean absolute error is 6.48 mpg against 10.27 for the training mean (paired difference -3.79, interval -4.38 to -3.16). These rows were used to choose, so the figures are optimistic.",
+  "rationale": "Chosen by the junior in the companion's What if? view (result cadc0545).",
   "evidence": {
-   "result_id": "ef58893e4b4d756f81bd0391e9ec96b97cf4aaefcd9e76706cf51aefb33c48cc",
+   "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
    "activity": "evaluate.regression",
    "figures": [
     {
      "path": "n",
-     "value": 118,
-     "shown": "118"
+     "value": 96,
+     "shown": "96"
     },
     {
      "path": "models.[fit.linear].mae",
-     "value": 6.308647265230509,
-     "shown": "6.31"
+     "value": 6.476590382656274,
+     "shown": "6.48"
     },
     {
      "path": "models.[fit.baseline].mae",
-     "value": 10.104600484261507,
-     "shown": "10.10"
+     "value": 10.268806306306304,
+     "shown": "10.27"
     },
     {
      "path": "deltas.[fit.linear].mae.point",
-     "value": -3.7959532190309977,
-     "shown": "-3.80"
+     "value": -3.792215923650031,
+     "shown": "-3.79"
     },
     {
      "path": "deltas.[fit.linear].mae.low",
-     "value": -4.343002436145685,
-     "shown": "-4.34"
+     "value": -4.375861635363238,
+     "shown": "-4.38"
     },
     {
      "path": "deltas.[fit.linear].mae.high",
-     "value": -3.249205481492924,
-     "shown": "-3.25"
+     "value": -3.159283658688826,
+     "shown": "-3.16"
     }
    ]
   },

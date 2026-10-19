@@ -98,8 +98,10 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
     assert view['plan'][3]['status'] == 'done' and view['plan'][4]['status'] == 'done'
     assert view['next_action']['kind'] == 'propose' and view['next_action']['decision'] == 'policy'
     by_purpose = view['exposure']['by_purpose']
-    n = view['dataset']['rows']
-    assert by_purpose['structural_inspection'] == n
+    # ADR 0006: init inspects the development rows; the final test is sealed, not inspected.
+    n = view['final_test']['development_rows']
+    assert by_purpose['structural_inspection'] == n == payloads['split']['values']['n_rows']
+    assert by_purpose['sealed'] == view['final_test']['rows'] == view['dataset']['rows'] - n
     train = payloads['split']['values']['partitions']['train']['n_rows']
     validation = payloads['split']['values']['partitions']['validation']['n_rows']
     assert by_purpose['train_eda'] == by_purpose['train_fit'] == train
@@ -112,8 +114,8 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
     assert preview['evaluations']['capacity:100'] == \
         payloads['policy.evaluate']['values']['rules']['capacity:100']['models']
     if name == 'bank':
-        assert payloads['eda.target_rate']['values']['n_positive'] == 365
-        assert payloads['fit.logistic']['values']['validation']['n_positive'] == 156
+        assert payloads['eda.target_rate']['values']['n_positive'] == 292   # v0.1: 365 (ADR 0006)
+        assert payloads['fit.logistic']['values']['validation']['n_positive'] == 125   # v0.1: 156
         assert 'duration' not in payloads['fit.logistic']['values']['features']
 
 

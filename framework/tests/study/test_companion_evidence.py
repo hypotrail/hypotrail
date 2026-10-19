@@ -74,13 +74,15 @@ def _by_slot(payload):
     return {r['slot']: r for r in payload['results'] if r['promoted']}
 
 
-def test_bank_ledger_has_five_rows_equal_to_the_exposure_summary(bank):
+def test_bank_ledger_has_six_rows_equal_to_the_exposure_summary(bank):
     p = evidence(bank.study)
     ledger = p['exposure']['ledger']
+    # ADR 0006: init inspects the development rows and seals the final test (sixth row).
     assert [(r['purpose'], r['partition']) for r in ledger] == [
-        ('structural_inspection', 'all'), ('train_eda', 'train'), ('train_fit', 'train'),
+        ('structural_inspection', 'development'), ('train_eda', 'train'), ('train_fit', 'train'),
         ('validation_model_evaluation', 'validation'),
-        ('validation_policy_selection', 'validation')]
+        ('validation_policy_selection', 'validation'), ('sealed', 'final_test')]
+    assert ledger[5]['rows'] == read.open(bank.study).state['partition']['final_test']['n_rows']
     summary = read.open(bank.study).exposure_summary()
     assert p['exposure']['summary'] == summary
     for row in ledger:
@@ -210,7 +212,7 @@ def test_a_study_before_the_split_cannot_run_eda(tmp_path, synthetic_case_dir):
     p = evidence(flow.study)
     assert p['results'] == [] and p['impacts'] == [] and p['truncated'] is False
     assert all(not a['runnable'] and a['missing'] for a in p['eda_catalog']['activities'])
-    assert [r['purpose'] for r in p['exposure']['ledger']] == ['structural_inspection']
+    assert [r['purpose'] for r in p['exposure']['ledger']] == ['structural_inspection', 'sealed']
 
 
 def test_auto_mpg_evidence_holds_no_rule_vocabulary(auto):

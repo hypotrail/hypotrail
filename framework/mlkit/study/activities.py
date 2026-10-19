@@ -26,7 +26,8 @@ What each activity reads, and the exposure it records:
 ==================  =============================  ===========================================
 activity            rows read                      exposure purpose
 ==================  =============================  ===========================================
-split               target column of every row     ``structural_inspection`` (stratification)
+split               target column of every         ``structural_inspection`` (stratification)
+                    development row
 eda.*               training rows only             ``train_eda``
 fit.*               training rows, then validation ``train_fit``, ``validation_model_evaluation``
 policy.evaluation   validation predictions         ``validation_policy_selection``
@@ -52,6 +53,7 @@ from mlkit.reliability import CommandRefused
 from . import case as c
 from . import preconditions as pre
 from . import records as rec
+from . import partition
 from . import registry
 from .errors import StudyError
 
@@ -218,7 +220,14 @@ case_of = c.case_of
 
 
 def _base_inputs(state: Mapping) -> dict:
-    return {'dataset_sha256': state['dataset']['sha256'], 'case_sha256': state['case']['sha256']}
+    """Inputs every activity records. A study with a sealed final test (ADR 0006) adds
+    ``development``, the blob of the rows its activities may read; a legacy study has no
+    such key, so its identities are unchanged."""
+    out = {'dataset_sha256': state['dataset']['sha256'], 'case_sha256': state['case']['sha256']}
+    development = partition.inputs(state)
+    if development is not None:
+        out['development'] = development
+    return out
 
 
 def _target(case: c.Case) -> dict:
@@ -321,8 +330,13 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             read.append(case.group_column)
             inputs['group_column'] = case.group_column
         if with_exposure:
-            from . import data as dt
-            expose('structural_inspection', 'all', dt.row_index(case).keys, read)
+            # The stratification reads the development rows only (ADR 0006); a legacy
+            # study without a final test reads every row.
+            keys = partition.development_keys(store.read_blob, inputs.get('development'))
+            if keys is None:
+                from . import data as dt
+                keys = dt.row_index(case).keys
+            expose('structural_inspection', _rows_partition(inputs), keys, read)
     else:
         split_rid = state['current'][SPLIT]
         keys = split_keys(store, split_rid)
@@ -488,9 +502,18 @@ def rows(dataset, keys):
     return dataset.frame.loc[list(keys)]
 
 
-def load(plan_: Mapping):
+def _rows_partition(inputs: Mapping) -> str:
+    """``development`` when the study has a sealed final test, else ``all``."""
+    return partition.DEVELOPMENT if inputs.get('development') else 'all'
+
+
+def load(plan_: Mapping, store):
     """Case and dataset of a plan, with the case and dataset bytes verified against the
-    digests the plan was derived from (the case file is read again here, review fix L1)."""
+    digests the plan was derived from (the case file is read again here, review fix L1).
+
+    The dataset holds the study's development rows only (ADR 0006,
+    :func:`mlkit.study.data.load_development`): the sealed final test never reaches an
+    activity."""
     from . import data as dt
     path = plan_['case_path']
     if os.path.isdir(path):
@@ -508,14 +531,15 @@ def load(plan_: Mapping):
         raise StudyError('dataset_changed', 'The case now names a different dataset digest.',
                          details={'expected_sha256': plan_['dataset_sha256'],
                                   'actual_sha256': case.dataset['sha256']})
-    return case, dt.load_dataset(case)
+    keys = partition.development_keys(store.read_blob, plan_['inputs'].get('development'))
+    return case, dt.load_development(case, keys)
 
 
 def compute_split(store, plan_: Mapping) -> dict:
     import numpy as np
     from mlkit import classical
 
-    case, dataset = load(plan_)
+    case, dataset = load(plan_, store)
     decision = plan_['inputs']['decision']
     if decision['method'] != 'stratified_random':
         return compute_unstratified_split(store, plan_, case, dataset)
@@ -563,7 +587,8 @@ def compute_split(store, plan_: Mapping) -> dict:
     if previous:
         values['overlap'] = _overlap(store, previous,
                                      plan_['inputs'].get('previous_split_stale_since'), parts)
-    return {'values': values, 'blobs': blobs, 'partition': 'all', 'n_rows': len(frame)}
+    return {'values': values, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
+            'n_rows': len(frame)}
 
 
 def _split_refusal(exc: ValueError) -> StudyError:
@@ -679,7 +704,8 @@ def compute_unstratified_split(store, plan_: Mapping, case: c.Case, dataset) -> 
         values_out['overlap'] = _overlap(store, previous,
                                          plan_['inputs'].get('previous_split_stale_since'), parts)
     blobs = {part: rec.row_keys_bytes(parts[part]) for part in SPLIT_BLOBS}
-    return {'values': values_out, 'blobs': blobs, 'partition': 'all', 'n_rows': len(frame)}
+    return {'values': values_out, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
+            'n_rows': len(frame)}
 
 
 def _overlap(store, previous: str, since: int | None, parts: Mapping) -> dict:
@@ -706,14 +732,14 @@ def compute(store, plan_: Mapping) -> dict:
         return compute_split(store, plan_)
     if activity in EDA:
         from . import eda
-        case, dataset = load(plan_)
+        case, dataset = load(plan_, store)
         train = rows(dataset, split_keys(store, plan_['inputs']['results'][SPLIT])['train'])
         if activity == DISTRIBUTION:      # C8: the column only, never the outcome
             train = train[[plan_['params']['column']]]
         return eda.compute(activity, case, train, plan_['params'])
     if activity in FITS or activity == LINEAR:
         from . import fit
-        case, dataset = load(plan_)
+        case, dataset = load(plan_, store)
         keys = split_keys(store, plan_['inputs']['results'][SPLIT])
         return fit.compute(activity, case, rows(dataset, keys['train']),
                            rows(dataset, keys['validation']), plan_['inputs'], plan_['params'])
@@ -804,7 +830,7 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
     paired = regression.paired_bootstrap(y, predictions, int(boot['replicates']),
                                          int(boot['seed']), level=float(boot['level']),
                                          reference=plan_['params']['reference'])
-    case, dataset = load(plan_)
+    case, dataset = load(plan_, store)
     frame = rows(dataset, first['row_keys'])
     by = [_residual_groups(column, frame[column], y, predictions)
           for column in plan_['inputs']['residual_columns']]

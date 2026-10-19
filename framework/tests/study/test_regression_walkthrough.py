@@ -465,9 +465,10 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
                 'choice': choice, 'verdict': verdict}
     with capsys.disabled():
         print('\nregression walkthrough', json.dumps(measured, sort_keys=True))
-    if name == 'auto':     # the historical protocol: 1970-1978 against 1979-1982
-        assert (parts['train']['n_rows'], parts['validation']['n_rows']) == (280, 118)
-        assert summary['n'] == 280
+    if name == 'auto':     # the historical protocol: 1970-1978 against 1979-1982, on the
+        # 318 development rows once 80 are sealed (ADR 0006; v0.1: 280 and 118 of 398)
+        assert (parts['train']['n_rows'], parts['validation']['n_rows']) == (222, 96)
+        assert summary['n'] == 222
 
 
 def _english(n: int) -> str:
