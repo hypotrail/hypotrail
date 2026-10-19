@@ -102,11 +102,13 @@ MODULES = {
     SPECIAL_VALUES: (_BASE, 'mlkit.study.eda'),
     RATE_BY: (_BASE, 'mlkit.study.eda'),
     BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics'),
-    LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical'),
+    LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical',
+               'mlkit.study.governance'),
     POLICY: (_BASE, 'mlkit.study.policy'),
     TARGET_SUMMARY: (_BASE, 'mlkit.study.eda'),
     MEAN_BY: (_BASE, 'mlkit.study.eda'),
-    LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical'),
+    LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical',
+             'mlkit.study.governance'),
     REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression'),
     DISTRIBUTION: (_BASE, 'mlkit.study.eda'),
 }
@@ -403,6 +405,12 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                         f'Running {activity}')
                 inputs['features'] = features
                 inputs['special_values'] = feature_special_values(case, features)
+                # WP-A4: the confirmed preprocessing, in a study that has the decision (an
+                # earlier study keeps its identities: no key).
+                from . import governance
+                preprocessing = governance.effective_preprocessing(state)
+                if preprocessing is not None:
+                    inputs['preprocessing'] = preprocessing
                 if activity == LINEAR:
                     params = dict(LINEAR_PARAMS, seed=0)
                 else:

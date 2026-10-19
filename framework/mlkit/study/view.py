@@ -436,7 +436,9 @@ RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
 DECISION_LABELS = {'prediction_time': 'prediction moment',
                    'feature_availability': 'feature availability', 'split': 'split',
                    'policy': 'policy', 'model_choice': 'model choice',
-                   'conclusion': 'conclusion'}
+                   'conclusion': 'conclusion',
+                   # v0.2a (WP-A4)
+                   'success_criterion': 'success criterion', 'preprocessing': 'preprocessing'}
 # A regression study's model choice (M3), in words: the recap never says "policy".
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
@@ -552,6 +554,17 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
                      f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
         text = f'{label} {_spaced(value.get("verdict", ""))}'.strip()
+    elif decision_id == 'success_criterion' and isinstance(value, dict):
+        if 'min_points' in value:
+            text = (f'{label} (precision gain over the baseline of at least '
+                    f'{value["min_points"]} points)')
+        else:
+            text = (f'{label} (validation error at least '
+                    f'{round(100 * value.get("min_share", 0))}% below the mean baseline)')
+    elif decision_id == 'preprocessing' and isinstance(value, dict):
+        text = f'{label} ({preprocessing_words(value)})'
+        if value.get('data_contingent'):
+            text += ' [motivated by a look at the target]'
     else:
         text = label
     notes = []
@@ -560,6 +573,29 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     if d['status'] == 'reconfirm_required':
         notes.append('to confirm again')
     return text + (f' [{", ".join(notes)}]' if notes else '')
+
+
+def preprocessing_words(value: dict) -> str:
+    """A preprocessing value in words (v0.2a, WP-A4)."""
+    from . import governance
+    if governance.is_default(value):
+        return 'the default: no missing-value indicator, every category kept, no cap, no transform'
+    parts = []
+    missing = value.get('missing')
+    if missing == 'indicator':
+        parts.append('missing-value indicators')
+    elif isinstance(missing, dict):
+        named = sorted(c for c, v in missing.items() if v == 'indicator')
+        if named:
+            parts.append('missing-value indicators for ' + ', '.join(named))
+    if value.get('rare_category_threshold'):
+        parts.append(f'categories with fewer than {value["rare_category_threshold"]} training '
+                     f'rows grouped')
+    if value.get('caps'):
+        parts.append('caps on ' + ', '.join(sorted(value['caps'])))
+    if value.get('log_transform'):
+        parts.append('log transform of ' + ', '.join(value['log_transform']))
+    return '; '.join(parts) if parts else 'the default'
 
 
 def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:

@@ -114,6 +114,86 @@ def design(frame, features: list, special: list, case: c.Case):
     return X, indicators
 
 
+def prepare(case: c.Case, train, validation, X_train, X_val, features: list,
+            preprocessing: Mapping | None, special: list = ()):
+    """Apply the confirmed ``preprocessing`` decision (v0.2a, WP-A4) to the model inputs.
+
+    Every parameter is learnt on the training rows only and applied unchanged to the
+    validation rows: the missing-value indicators (``<column>=(missing)``, added for a
+    feature whose training cells hold a missing value, unless a declared special value that
+    the case reads as missing already gives it an indicator), the rare-category threshold (categories with fewer
+    training rows are grouped as ``(rare)``, and a validation category unseen in training
+    too), the caps (training quantiles; values outside are clipped), and the signed log
+    transform ``sign(x) * log(1 + |x|)``, after the caps. A parameter naming a feature the
+    model does not use is listed in ``ignored``. Returns ``(X_train, X_val, fitted)``;
+    ``fitted`` is None when there is no decision (a study created before WP-A4), and the
+    inputs are then unchanged. The default value changes nothing."""
+    if preprocessing is None:
+        return X_train, X_val, None
+    import numpy as np
+    from pandas.api.types import is_numeric_dtype
+    from . import governance
+
+    X_train, X_val = X_train.copy(), X_val.copy()
+    fitted = {'missing_indicators': [], 'rare_categories': {}, 'caps': {}, 'log_transform': [],
+              'ignored': []}
+    used = set(features)
+    named = set(preprocessing['caps']) | set(preprocessing['log_transform'])
+    if isinstance(preprocessing['missing'], Mapping):
+        named |= set(preprocessing['missing'])
+    fitted['ignored'] = sorted(named - used)
+    na_values = {str(v) for v in case.dataset.get('na_values', ())}
+    covered = {s['column'] for s in special if str(s['value']) in na_values}
+    for column in features:
+        if governance.missing_strategy(preprocessing, column) != 'indicator' \
+                or column in covered:
+            continue
+        if not train[column].isna().any():
+            continue
+        name = f'{column}=(missing)'
+        X_train[name] = train[column].isna().astype(int).to_numpy()
+        X_val[name] = validation[column].isna().astype(int).to_numpy()
+        fitted['missing_indicators'].append(name)
+    k = preprocessing['rare_category_threshold']
+    if k > 0:
+        for column in features:
+            if is_numeric_dtype(X_train[column]):
+                continue
+            counts = X_train[column].dropna().astype(str).value_counts()
+            kept = set(counts[counts >= k].index)
+            folded = sorted(set(counts.index) - kept)
+            if not folded and X_val[column].dropna().astype(str).isin(kept).all():
+                continue
+            for X in (X_train, X_val):
+                text = X[column].map(lambda v: v if v != v else str(v))
+                X[column] = text.where(text.isna() | text.isin(kept), governance.RARE_GROUP)
+            fitted['rare_categories'][column] = {'kept': len(kept), 'folded': folded}
+    for column, (q_low, q_high) in sorted(preprocessing['caps'].items()):
+        if column not in used:
+            continue
+        low = float(X_train[column].quantile(q_low))
+        high = float(X_train[column].quantile(q_high))
+        X_train[column] = X_train[column].clip(low, high)
+        X_val[column] = X_val[column].clip(low, high)
+        fitted['caps'][column] = [low, high]
+    for column in preprocessing['log_transform']:
+        if column not in used:
+            continue
+        for X in (X_train, X_val):
+            v = X[column].astype(float)
+            X[column] = np.sign(v) * np.log1p(np.abs(v))
+        fitted['log_transform'].append(column)
+    return X_train, X_val, fitted
+
+
+def _preprocessing_values(inputs: Mapping, fitted) -> dict:
+    if fitted is None:
+        return {}
+    return {'preprocessing': {'value': dict(inputs['preprocessing']), 'fitted': fitted,
+                              'note': 'Parameters learnt on training rows only and applied '
+                                      'unchanged to validation rows.'}}
+
+
 def logistic(case: c.Case, train, validation, inputs: Mapping, params: Mapping) -> dict:
     from .activities import guard_read_only, positive
     guard_read_only()
@@ -123,6 +203,8 @@ def logistic(case: c.Case, train, validation, inputs: Mapping, params: Mapping) 
     features, special = list(inputs['features']), list(inputs['special_values'])
     X_train, indicators = design(train, features, special, case)
     X_val, _ = design(validation, features, special, case)
+    X_train, X_val, fitted = prepare(case, train, validation, X_train, X_val, features,
+                                     inputs.get('preprocessing'), special)
     y_train = positive(train, case)
     spec = {'task': {'kind': 'binary'}, 'model_options': {}}
     model = classical.pipeline('logistic', X_train, spec, params['seed'])
@@ -140,7 +222,8 @@ def logistic(case: c.Case, train, validation, inputs: Mapping, params: Mapping) 
                                    'per category (one-hot); associations, not effects',
               'iterations': int(model['model'].n_iter_[0]),
               'validation': _validation_summary(y_val, score),
-              'predictions': _predictions_meta(case, 'logistic', features, y_val)}
+              'predictions': _predictions_meta(case, 'logistic', features, y_val),
+              **_preprocessing_values(inputs, fitted)}
     return {'values': values,
             'blobs': {'predictions': predictions_blob(validation.index, y_val, score)},
             'partition': 'validation', 'n_rows': int(len(validation))}
@@ -219,6 +302,8 @@ def linear(case: c.Case, train, validation, inputs: Mapping, params: Mapping) ->
     features, special = list(inputs['features']), list(inputs['special_values'])
     X_train, indicators = design(train, features, special, case)
     X_val, _ = design(validation, features, special, case)
+    X_train, X_val, fitted = prepare(case, train, validation, X_train, X_val, features,
+                                     inputs.get('preprocessing'), special)
     y_train = _target(case, train, 'training')
     y_val = _target(case, validation, 'validation')
     spec = {'task': {'kind': 'regression'}, 'model_options': {}}
@@ -238,7 +323,8 @@ def linear(case: c.Case, train, validation, inputs: Mapping, params: Mapping) ->
                                    'one); associations, not effects',
               'train': _errors(y_train, model.predict(X_train)),
               'validation': _errors(y_val, prediction),
-              'predictions': _regression_meta(case, 'linear', features, y_val)}
+              'predictions': _regression_meta(case, 'linear', features, y_val),
+              **_preprocessing_values(inputs, fitted)}
     return {'values': values,
             'blobs': {'predictions': regression_blob(validation.index, y_val, prediction)},
             'partition': 'validation', 'n_rows': int(len(validation))}

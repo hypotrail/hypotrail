@@ -313,7 +313,8 @@ def _impacts(study: read.Study, view: Mapping) -> list[dict]:
     out = []
     for mutation in dependencies.DECISION_MUTATIONS[task]:
         decision_id = dependencies.DECISION_OF_MUTATION[mutation]
-        if state['decisions'][decision_id]['status'] not in ('confirmed', 'reconfirm_required'):
+        if decision_id not in state['decisions'] or \
+                state['decisions'][decision_id]['status'] not in ('confirmed', 'reconfirm_required'):
             continue
         eff = dependencies.effects_for_mutation(state, mutation, store)
         out.append({'decision_id': decision_id, 'mutation': mutation, 'row': eff['row'],

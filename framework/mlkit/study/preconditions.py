@@ -53,6 +53,28 @@ DECISION_REQUIRES = {
     'model_choice': ('prediction_time', 'feature_availability', 'split'),
     'conclusion': ('prediction_time', 'feature_availability', 'split'),
 }
+# v0.2a (WP-A4): in a study with the WP-A4 decisions, the success criterion and the
+# preprocessing are confirmed after the split decision; the choice and the conclusion need
+# both (the success criterion is fixed before any model is seen, and the conclusion is
+# judged against it).
+WP_A4_REQUIRES = {
+    st.SUCCESS_CRITERION: ('prediction_time', 'feature_availability', 'split'),
+    st.PREPROCESSING: ('prediction_time', 'feature_availability', 'split'),
+    'policy': (st.SUCCESS_CRITERION, st.PREPROCESSING),
+    'model_choice': (st.SUCCESS_CRITERION, st.PREPROCESSING),
+    'conclusion': (st.SUCCESS_CRITERION, st.PREPROCESSING),
+}
+
+
+def decision_requires(state: Mapping, decision_id: str) -> tuple[str, ...]:
+    """The decisions that must be confirmed before ``decision_id`` can be."""
+    base = DECISION_REQUIRES.get(decision_id, ())
+    if st.has_wp_a4_decisions(state):
+        extra = WP_A4_REQUIRES.get(decision_id, ())
+        if decision_id in st.WP_A4_DECISIONS:
+            base = ()
+        base = tuple(dict.fromkeys(base + extra))
+    return base
 
 
 def conclusion_verdicts(state: Mapping | str | None) -> tuple[str, ...]:
@@ -81,7 +103,7 @@ def evaluated_rules(entry: Mapping) -> list[str]:
 def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                          store=None) -> list[dict]:
     """Unmet requirements to confirm ``decision_id`` with ``value``."""
-    missing = [_need_decision(state, d) for d in DECISION_REQUIRES[decision_id]
+    missing = [_need_decision(state, d) for d in decision_requires(state, decision_id)
                if not _confirmed(state, d)]
     if decision_id == 'policy':
         if not st.is_current(state, POLICY_EVALUATION):
@@ -125,11 +147,25 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
 
 
 ACTIVITY_DECISIONS = ('prediction_time', 'feature_availability', 'split')
+# v0.2a (WP-A4): the structural quality overview reads the development rows without the
+# target, so it needs no decision and no split (it can run right after ``init``).
+NO_REQUIREMENT_ACTIVITIES = ('eda.quality',)
+# The fits (and what reads them) need the success criterion and the preprocessing when the
+# study has them: the criterion is fixed before any model is seen, and the models apply the
+# preprocessing.
+MODEL_DECISIONS = (st.SUCCESS_CRITERION, st.PREPROCESSING)
 
 
 def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
     """Unmet requirements to run ``activity`` (a slot name such as ``fit.logistic``)."""
+    if activity in NO_REQUIREMENT_ACTIVITIES:
+        return []
     missing = [_need_decision(state, d) for d in ACTIVITY_DECISIONS if not _confirmed(state, d)]
+    if activity.startswith(('fit.', 'policy.', 'evaluate.')) and st.has_wp_a4_decisions(state):
+        missing += [{**_need_decision(state, d),
+                     'detail': 'Fix the success criterion and the preprocessing before fitting '
+                               'any model.'}
+                    for d in MODEL_DECISIONS if not _confirmed(state, d)]
     if activity == SPLIT_SLOT:
         return missing
     if not st.is_current(state, SPLIT_SLOT):
