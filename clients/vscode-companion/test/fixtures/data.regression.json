@@ -23,7 +23,16 @@
   "development": {
    "rows": 318,
    "columns": 9,
-   "partition": "development"
+   "partition": "development",
+   "duplicates": {
+    "policy": null,
+    "n_groups": 0,
+    "n_rows": 0,
+    "n_extra_rows": 0,
+    "definition": "records identical on every column, the target included",
+    "line": "No two development rows are identical.",
+    "audience": "junior"
+   }
   },
   "target": {
    "column": "mpg",

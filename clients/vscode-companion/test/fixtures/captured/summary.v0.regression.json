@@ -217,61 +217,61 @@
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
+    "result_id": "1b631fe9cb2e159a7fadd40ac6e8c52dd7b090fba67b4fd52195499dc2e9ceb2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a",
+    "result_id": "10b616d122451df2a4ce5b17af2d039a8c0ebfdfb2337388b8a75ea470772292",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "679d634dd22e870c564343e45f8c413c00404b5048e91ddd420c5a429778a7a6",
+    "result_id": "f882796e866a774c95b525caae6f21957e2b32129fce670d6f764e8b1b9d8431",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
+    "result_id": "f7cd9484ce105793af55fe4c912a09021112489753e5627c022fccaf429deb70",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
+    "result_id": "5fcb704f5f88f0ed494d304c8e84cbd240d83b805abf2b78af0cda0f20ca6a5a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+    "result_id": "1f92cee138b4e43cac498b355aa8fa327cd3401a599b44bba715aeb757e47284",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "ce72261b554777048ecf5a4b52c60368b37d22443c86c9022db4f5ae975ca940",
+    "result_id": "19c7262067bc7b6af4c3eb5dd1a0dc567b1bfedede8f72cb638b19a536c524f5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "3640bf3a10283abb1f889c39f4b5d381b052c66eef274234626669ee25aa02ff",
+    "result_id": "1ca2d65ea02ac11fd5a2c954f6a41778582bce8ab5b1026d33ab14b54e6253bd",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "35cb9714c1434ee12596b42e5a807b38724742f94f5784602ae0a9c5c86f77b7",
+    "result_id": "2e585cc7c9755b78cded3dd982c7fb3039adb91d2eb184de421f1171226e962a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
+    "result_id": "8b034053dce4649b34825c6357e29e776e8b69d51f057c467ee3a67db94c9531",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -372,22 +372,22 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "ce72261b554777048ecf5a4b52c60368b37d22443c86c9022db4f5ae975ca940",
+   "result_id": "19c7262067bc7b6af4c3eb5dd1a0dc567b1bfedede8f72cb638b19a536c524f5",
    "contradicts_verdict": false
   },
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
-    "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
-    "546e758cc03761178f88b900bf037858ab81c5fc37b4d1e3f7791451313eee23",
-    "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a"
+    "1f92cee138b4e43cac498b355aa8fa327cd3401a599b44bba715aeb757e47284",
+    "5fcb704f5f88f0ed494d304c8e84cbd240d83b805abf2b78af0cda0f20ca6a5a",
+    "f7cd9484ce105793af55fe4c912a09021112489753e5627c022fccaf429deb70",
+    "10b616d122451df2a4ce5b17af2d039a8c0ebfdfb2337388b8a75ea470772292"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result ce72261b); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result 19c72620); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
