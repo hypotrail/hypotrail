@@ -23,6 +23,15 @@ drafts:
       rationale: >-
         Chosen by the junior in the companion's What if? view, among rules already evaluated
         (result {{rid8}}).
+    share:
+      restatement: >-
+        Adopt the rule {rule}: act on the {pct} highest-scored rows, {{selected}} of the {{n}}
+        validation rows. There the logistic model's selection had precision {{precision}}
+        against {{baseline_precision}} for the baseline, and recall {{recall}}. These
+        validation rows were used to choose the rule, so these figures are optimistic.
+      rationale: >-
+        Chosen by the junior in the companion's What if? view, among rules already evaluated
+        (result {{rid8}}).
     threshold:
       restatement: >-
         Adopt the rule threshold:{t}: act on every row whose score is at least {t}. On the

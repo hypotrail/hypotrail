@@ -84,6 +84,9 @@ def _texts(decision_id: str, value: str, entry: Mapping) -> tuple[str, str, list
         kind, _, amount = value.partition(':')      # the canonical spelling, as written
         templates = content['drafts']['policy'][kind]
         parameters = {'k' if kind == 'capacity' else 't': amount, 'rule': value}
+        if kind == 'share':
+            from .audience import share_percent
+            parameters = {'pct': share_percent(amount), 'rule': value}
     else:
         templates = content['drafts']['model_choice'][value]
         parameters = {'unit': values.get('unit') or ''}

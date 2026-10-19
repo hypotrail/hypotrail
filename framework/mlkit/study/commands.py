@@ -473,7 +473,8 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
         validate_split(state, value)
     elif decision_id == 'policy':
         if dep.parse_policy(value) is None:
-            raise _invalid('policy is "threshold:<t in [0, 1]>" or "capacity:<k >= 1>".')
+            raise _invalid('policy is "threshold:<t in [0, 1]>", "capacity:<k >= 1>", or '
+                           '"share:<p in (0, 1]>".')
     elif decision_id == 'model_choice':
         if value not in preconditions.MODEL_CHOICES:
             raise _invalid('model_choice names the model slot you adopt: '

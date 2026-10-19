@@ -216,7 +216,8 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
         rules = options.get('rules') or []
         if isinstance(rules, str) or not rules:
             raise CommandRefused('invalid_arguments', 'policy.evaluation needs at least one '
-                                                      '--rule (threshold:t or capacity:k).')
+                                                      '--rule (threshold:t, capacity:k, '
+                                                      'or share:p).')
         canonical = []
         for rule in rules:
             try:
@@ -976,6 +977,9 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
     return {'values': values, 'blobs': {}, 'partition': 'validation', 'n_rows': len(y)}
 
 
+CANDIDATE_GAIN_MODEL = 'fit.logistic'
+
+
 def compute_policy(store, plan_: Mapping) -> dict:
 
     from . import policy
@@ -1005,6 +1009,9 @@ def compute_policy(store, plan_: Mapping) -> dict:
               'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
                             'level': float(boot['level']),
                             'method': 'paired percentile bootstrap over validation rows'},
+              # v0.2b (WP-B3, R6): the top 5, 10 and 20 % of the scored rows.
+              'gain_points': {'model': CANDIDATE_GAIN_MODEL,
+                              **policy.gain_points(y, preds[CANDIDATE_GAIN_MODEL]['score'])},
               'counts': 'expected counts when a capacity cut splits a tie group (tied_at_cut)',
               'note': 'The rule is chosen on validation rows: these figures are not independent '
                       'evidence of future performance. No model was refitted.'}
