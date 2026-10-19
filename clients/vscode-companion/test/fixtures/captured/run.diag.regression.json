@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_952532c3c79c0a600a6ca16b",
   "status": "promoted",
-  "result_id": "01beec18ba13ab7c392abc118a5ea021ddd11ab1333c4d3591c49639d383c7e0",
+  "result_id": "7306930d532191148a68d552b4625ba63912ca13e5c7a1d6aa7ccaa3b89fa559",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1177,56 +1177,64 @@
         "value": -4.061984545313062,
         "low": -5.234536471318423,
         "high": -3.193852854834811,
-        "excludes_zero": true
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "num__horsepower",
         "value": -1.1866635219111468,
         "low": -2.429091988823104,
         "high": -0.215620553363709,
-        "excludes_zero": true
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__origin_3",
         "value": 1.1406405002541518,
         "low": 0.08594501308905975,
         "high": 2.244493358101246,
-        "excludes_zero": true
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__origin_1",
         "value": -0.9522927696704008,
         "low": -1.9570374795654415,
         "high": 0.0704453845757341,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__displacement",
         "value": 0.41888510741149876,
         "low": -1.1697864980786072,
         "high": 2.233370233743727,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__cylinders",
         "value": -0.37022387198762724,
         "low": -1.3176608300311516,
         "high": 0.4977653692299574,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__origin_2",
         "value": -0.1883477305837519,
         "low": -1.244668540690834,
         "high": 0.6081908425667397,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__horsepower=?",
         "value": -0.04154318702939566,
         "low": -0.13708834218603827,
         "high": 0.06947948902390343,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        }
       ],
       "n_rows": 222,
@@ -1234,11 +1242,18 @@
       "seed": 20261019,
       "level": 0.95,
       "skipped_replicates": 0,
+      "point_check": {
+       "consistent": true,
+       "max_difference": 3.9968028886505635e-15,
+       "tolerance": 0.0001,
+       "misaligned_terms": [],
+       "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
+      },
       "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "61a7dab56b65b90f992259d9dba5b303f2c111d42ae715c0b609a96086330a5f"
+     "predictions": "fbfe1146c9efc1d26be82a40e1c58f1479c7b45195def602493534bc24561d0d"
     },
     "fit.variant": {
      "errors": {
@@ -2370,56 +2385,64 @@
         "value": -3.1876711076603237,
         "low": -3.8617364269120182,
         "high": -2.5988972569181388,
-        "excludes_zero": true
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "num__horsepower",
         "value": -1.0461027069104654,
         "low": -1.8405225157720457,
         "high": -0.3563429278094127,
-        "excludes_zero": true
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__origin_3",
         "value": 0.9061642971091335,
         "low": 0.076051148851047,
         "high": 1.7792515684501842,
-        "excludes_zero": true
+        "excludes_zero": true,
+        "inside_interval": true
        },
        {
         "term": "cat__origin_1",
         "value": -0.7060718689819638,
         "low": -1.3772328856492302,
         "high": 0.03606694017006684,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__cylinders",
         "value": -0.5206655589928507,
         "low": -1.0970833182950004,
         "high": 0.028234952981895427,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__displacement",
         "value": -0.4706630199042758,
         "low": -1.154202670568835,
         "high": 0.267107702958422,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "cat__origin_2",
         "value": -0.20009242812717776,
         "low": -1.0235986726361677,
         "high": 0.41958434204012324,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        },
        {
         "term": "num__horsepower=?",
         "value": -0.04053541390734935,
         "low": -0.11053329184909746,
         "high": 0.03449637062558004,
-        "excludes_zero": false
+        "excludes_zero": false,
+        "inside_interval": true
        }
       ],
       "n_rows": 222,
@@ -2427,11 +2450,18 @@
       "seed": 20261019,
       "level": 0.95,
       "skipped_replicates": 0,
+      "point_check": {
+       "consistent": true,
+       "max_difference": 4.657385588302532e-14,
+       "tolerance": 0.0001,
+       "misaligned_terms": [],
+       "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
+      },
       "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "747f19138d91dcc7906977b1ad2e39c133f6567effd0fd123ab1c784dfe48455"
+     "predictions": "684eb4190c6ce28ee87a96cc1736e9d1a2eb21f78d5a32c8f8d2f254d32eeedb"
     }
    },
    "coefficient_rows": 222,
@@ -2442,14 +2472,14 @@
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "01beec18ba13ab7c392abc118a5ea021ddd11ab1333c4d3591c49639d383c7e0",
-   "input_key": "bf748323d720aa15e5bb77dc237c4d2ce8a611d34321bd255ebed31f5942a473",
+   "result_id": "7306930d532191148a68d552b4625ba63912ca13e5c7a1d6aa7ccaa3b89fa559",
+   "input_key": "925d6072e395a00094a50e1136a074a8c8781e926fa26bb8cc5705e590310998",
    "reason": null,
    "started_revision": 37,
    "invalidation": null,
    "exposure_ids": [
-    "x_150da251d25e462fb68c37c325e94474",
-    "x_25fd70501d1f4a54b2e31d06bf69aea1"
+    "x_caf46e699d4346029fc4e9ed05aa1ec7",
+    "x_ec45042e9b564289ad3bcd870ddc425c"
    ],
    "registry_created": true,
    "nondeterministic": false

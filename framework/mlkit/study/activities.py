@@ -188,7 +188,8 @@ PREDICTIONS = 'predictions'
 # WP-B6a: the Newton-Cholesky solver reaches the optimum of the penalised likelihood. The
 # default L-BFGS stopped early along the nearly flat direction that a full one-hot encoding
 # and the intercept share, so a stored coefficient could lie outside its own bootstrap
-# interval (Bank ``poutcome=unknown``). Results recorded without ``solver`` keep L-BFGS.
+# interval (a one-hot category of a real case). Results recorded without ``solver`` keep
+# L-BFGS.
 # A tight tolerance (quadratic convergence: a few more steps) keeps the solver's own noise
 # along that direction far below the width of a bootstrap interval.
 LOGISTIC_SOLVER = 'newton-cholesky'

@@ -102,7 +102,10 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # surface needs no full view for them.
                 'mode', 'deliverables',
                 # v0.2b (WP-B1): the trial count.
-                'trials')
+                'trials',
+                # v0.2b (WP-B6a, companion request): the teaching scenario's defaults, as
+                # values only (``{capacity_share: 0.1}``), or ``null``.
+                'scenario_defaults')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
@@ -535,7 +538,17 @@ def summary(view: dict) -> dict:
     out['deliverables'] = _compact_deliverables(view.get('deliverables'))
     out['trials'] = ({k: view['trials'][k] for k in SUMMARY_TRIALS_KEYS}
                      if view.get('trials') else None)
+    out['scenario_defaults'] = _compact_scenario(view.get('scenario_defaults'))
     return {k: out[k] for k in SUMMARY_KEYS}
+
+
+def _compact_scenario(defaults):
+    """WP-B6a: the scenario defaults as ``{name: value}`` (the status is always
+    ``scenario_assumption``; the source stays in the full view)."""
+    if not isinstance(defaults, dict) or not defaults:
+        return None
+    return {k: (v or {}).get('value') if isinstance(v, dict) else v
+            for k, v in sorted(defaults.items())}
 
 
 SUMMARY_TRIALS_KEYS = ('count',)
@@ -557,7 +570,9 @@ def _compact_deliverables(deliverables):
 SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', 'high',
                           'minimum', 'unit', 'rule', 'result_id', 'contradicts_verdict',
                           # v0.2b (WP-B1): the criterion on the final test.
-                          'final_test')
+                          'final_test',
+                          # v0.2b (WP-B6a, companion request): the model the criterion reads.
+                          'model')
 
 
 def _compact_criterion(criterion):

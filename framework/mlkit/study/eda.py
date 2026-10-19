@@ -307,7 +307,10 @@ def _folded(column: str, folded: dict | None, max_groups: int, groups: list) -> 
     return summary, warning
 
 
-def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:
+def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS,
+            rows_word: str = 'training') -> dict:
+    """The positive rate by group of ``column``; ``rows_word`` names the rows the bins
+    were cut on (``development`` under cross-validation, WP-B6a)."""
     from .activities import positive
 
     y = positive(train, case)
@@ -334,7 +337,7 @@ def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
     overall = target_rate(case, train)
     out = {'partition': 'train', 'column': column, 'n_rows': int(len(train)),
            'overall_rate': overall['rate'], 'binned': bool(binned),
-           'binning': binning_words(binned) if binned else None,
+           'binning': binning_words(binned, rows_word) if binned else None,
            'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
            'max_groups': max_groups, 'other': other,
@@ -344,8 +347,10 @@ def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
     return _with_null_band(out, labels, y.astype(float), lambda v: float(v.mean()), 'null_band')
 
 
-def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:
-    """The mean target by group of ``column`` on training rows, with counts."""
+def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS,
+            rows_word: str = 'training') -> dict:
+    """The mean target by group of ``column`` on training rows, with counts; ``rows_word``
+    as :func:`rate_by`."""
     y = numeric_target(case, train)
     labels, order, binned, folded = _groups(case, train, column, max_groups)
     groups, warnings = [], []
@@ -369,7 +374,7 @@ def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
     out = {'partition': 'train', 'column': column, 'target': case.target_column,
            'unit': case.target_unit, 'n_rows': int(len(train)),
            'overall_mean': _mean(y.dropna()), 'binned': bool(binned),
-           'binning': binning_words(binned) if binned else None,
+           'binning': binning_words(binned, rows_word) if binned else None,
            'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
            'max_groups': max_groups, 'other': other,
@@ -816,8 +821,9 @@ def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
         values = target_summary(case, train)
     elif activity == 'eda.mean_by':
         values = mean_by(case, train, params['column'],
-                         params.get('max_groups', MAX_GROUPS))
+                         params.get('max_groups', MAX_GROUPS), params.get('rows_word', 'training'))
     else:
-        values = rate_by(case, train, params['column'], params.get('max_groups', MAX_GROUPS))
+        values = rate_by(case, train, params['column'], params.get('max_groups', MAX_GROUPS),
+                         params.get('rows_word', 'training'))
 
     return {'values': values, 'blobs': {}, 'partition': 'train', 'n_rows': int(len(train))}

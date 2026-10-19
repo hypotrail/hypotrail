@@ -11,6 +11,10 @@
 #              are all digits, so the id is never read as a number).
 # Numbers appear only as placeholders. No text says "recommended default": a draft is the
 # junior's own choice in the companion, never a delegation.
+#
+# ``restatement_cv`` (WP-B6a): the restatement when the evaluation reads out-of-fold
+# predictions (cross-validation, ``values.evaluation: out_of_fold``): there are no validation
+# rows, every development row was scored by a model that had not seen it.
 schema: hypotrail.content.drafts/1
 drafts:
   policy:
@@ -20,6 +24,12 @@ drafts:
         validation rows the logistic model's selection had precision {{precision}} against
         {{baseline_precision}} for the baseline, and recall {{recall}}. These validation rows
         were used to choose the rule, so these figures are optimistic.
+      restatement_cv: >-
+        Adopt the rule capacity:{k}: act on the {k} highest-scored rows. On the out-of-fold
+        predictions of the {{n}} development rows the logistic model's selection had
+        precision {{precision}} against {{baseline_precision}} for the baseline, and recall
+        {{recall}}. These predictions were used to choose the rule, so these figures are
+        development evidence and optimistic.
       rationale: >-
         Chosen by the junior in the companion's What if? view, among rules already evaluated
         (result {{rid8}}).
@@ -29,6 +39,12 @@ drafts:
         validation rows. There the logistic model's selection had precision {{precision}}
         against {{baseline_precision}} for the baseline, and recall {{recall}}. These
         validation rows were used to choose the rule, so these figures are optimistic.
+      restatement_cv: >-
+        Adopt the rule {rule}: act on the {pct} highest-scored rows, {{selected}} of the {{n}}
+        development rows in the out-of-fold predictions. There the logistic model's selection
+        had precision {{precision}} against {{baseline_precision}} for the baseline, and
+        recall {{recall}}. These predictions were used to choose the rule, so these figures
+        are development evidence and optimistic.
       rationale: >-
         Chosen by the junior in the companion's What if? view, among rules already evaluated
         (result {{rid8}}).
@@ -38,6 +54,12 @@ drafts:
         {{n}} validation rows the logistic model selected {{selected}} rows, with precision
         {{precision}} against {{baseline_precision}} for the baseline, and recall {{recall}}.
         These validation rows were used to choose the rule, so these figures are optimistic.
+      restatement_cv: >-
+        Adopt the rule threshold:{t}: act on every row whose score is at least {t}. On the
+        out-of-fold predictions of the {{n}} development rows the logistic model selected
+        {{selected}} rows, with precision {{precision}} against {{baseline_precision}} for the
+        baseline, and recall {{recall}}. These predictions were used to choose the rule, so
+        these figures are development evidence and optimistic.
       rationale: >-
         Chosen by the junior in the companion's What if? view, among rules already evaluated
         (result {{rid8}}).
@@ -48,6 +70,11 @@ drafts:
         {{mae}} {unit} against {{baseline_mae}} for the training mean (paired difference
         {{delta}}, interval {{low}} to {{high}}). These rows were used to choose, so the
         figures are optimistic.
+      restatement_cv: >-
+        Adopt the linear model. On the out-of-fold predictions of the {{n}} development rows
+        its mean absolute error is {{mae}} {unit} against {{baseline_mae}} for the mean
+        (paired difference {{delta}}, interval {{low}} to {{high}}). These predictions were
+        used to choose, so the figures are development evidence and optimistic.
       rationale: >-
         Chosen by the junior in the companion's What if? view (result {{rid8}}).
     fit.baseline:
@@ -56,6 +83,12 @@ drafts:
         error is {{baseline_mae}} {unit} against {{mae}} for the linear model (paired
         difference of the linear model {{delta}}, interval {{low}} to {{high}}). These rows
         were used to choose, so the figures are optimistic.
+      restatement_cv: >-
+        Keep the mean as the model. On the out-of-fold predictions of the {{n}} development
+        rows its mean absolute error is {{baseline_mae}} {unit} against {{mae}} for the linear
+        model (paired difference of the linear model {{delta}}, interval {{low}} to
+        {{high}}). These predictions were used to choose, so the figures are development
+        evidence and optimistic.
       rationale: >-
         Chosen by the junior in the companion's What if? view (result {{rid8}}).
 # The figures each placeholder cites: a value path as segments, a format of

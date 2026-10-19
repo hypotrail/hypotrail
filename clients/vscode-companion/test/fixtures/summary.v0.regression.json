@@ -328,7 +328,8 @@
    "schema_check": "pass",
    "opening": null,
    "post_final_test": false,
-   "changed_after": []
+   "changed_after": [],
+   "excluded_prior_exposed": 0
   },
   "criterion": {
    "decision_status": "confirmed",
@@ -345,7 +346,8 @@
    "rule": null,
    "result_id": null,
    "contradicts_verdict": false,
-   "final_test": null
+   "final_test": null,
+   "model": "fit.linear"
   },
   "eda_looks": {
    "target_looks": 3,
@@ -403,6 +405,7 @@
   },
   "trials": {
    "count": 2
-  }
+  },
+  "scenario_defaults": null
  }
 }

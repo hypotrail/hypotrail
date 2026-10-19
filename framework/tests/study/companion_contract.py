@@ -37,7 +37,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2a (WP-A7): the confirmation mode and the notebook launch commands.
                 'mode', 'deliverables',
                 # v0.2b (WP-B1): the trial count.
-                'trials')
+                'trials',
+                # v0.2b (WP-B6a): the scenario defaults, values only.
+                'scenario_defaults')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.

@@ -53,6 +53,7 @@
    "opening": null,
    "post_final_test": false,
    "changed_after": [],
+   "excluded_prior_exposed": 0,
    "line": "904 rows are set aside as the final test and stay sealed: nothing here reads them.",
    "audience": "junior"
   },

@@ -308,6 +308,10 @@ def _coefficients(citer: cite.Citer, rid: str, base: list, coef: Mapping) -> str
             f'{_num(citer, rid, base + ["coefficients", "n_rows"], "int")} rows, '
             f'{_num(citer, rid, base + ["coefficients", "level"], "pct0")} percentile '
             f'intervals.</p>')
+    check = coef.get('point_check')
+    if isinstance(check, Mapping) and check.get('consistent') is False:
+        # WP-B6a: the stored coefficients are not the refit the intervals describe.
+        meta += f'<p class="small warn">{_lit("message", check.get("note") or "")}</p>'
     return (f'<details class="diag-more"><summary><strong>{e(lab["coefficients_heading"])}'
             f'</strong></summary>{meta}'
             + _table(['Term', 'Coefficient [interval]', 'Interval excludes zero'], rows)

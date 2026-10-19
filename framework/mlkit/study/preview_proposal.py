@@ -115,7 +115,8 @@ def _texts(decision_id: str, value: str, entry: Mapping) -> tuple[str, str, list
         text = _PARAMETER.sub(lambda m: str(parameters.get(m.group(1), m.group(0))), text)
         return re.sub(r'\s+', ' ', text).replace(' )', ')').strip()
 
-    restatement = fill(templates['restatement'])
+    cv = values.get('evaluation') == 'out_of_fold'
+    restatement = fill(templates['restatement_cv' if cv else 'restatement'])
     rationale = fill(templates['rationale'])
     return restatement, rationale, figures
 

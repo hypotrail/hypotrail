@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-19T17:41:17.902604+00:00",
+   "updated": "2026-10-19T18:09:13.091020+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -627,7 +627,8 @@
     "schema_check": "pass",
     "opening": null,
     "post_final_test": false,
-    "changed_after": []
+    "changed_after": [],
+    "excluded_prior_exposed": 0
    },
    "deliverables": {
     "interpreter": "/hypotrail/framework/.venv/bin/python",
