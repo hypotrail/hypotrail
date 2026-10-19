@@ -28,7 +28,7 @@ import re
 from importlib import resources
 from typing import Any, Mapping
 
-from . import cite, render_charts, texts
+from . import cite, render_charts, render_diagnostics, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
@@ -52,7 +52,7 @@ def lit(kind: str, text: Any, tag: str = 'span') -> str:
 
 def _css() -> str:
     base = (resources.files('mlkit') / 'assets' / 'design.css').read_text(encoding='utf-8')
-    return base + REPORT_CSS + render_charts.CHART_CSS
+    return base + REPORT_CSS + render_charts.CHART_CSS + render_diagnostics.CSS
 
 
 REPORT_CSS = '''
@@ -774,6 +774,11 @@ def _not_yet_defensible(view: Mapping) -> str:
             f'{_concept("selection_on_validation")}<ul>{"".join(items)}</ul></section>')
 
 
+# WP-B4: the capped points of a diagnostic scatter plot are drawn, never shown as figures; the
+# annex leaves them out (they stay in the registry and in ``hypotrail evidence``).
+ANNEX_SKIPPED = 'scatter'
+
+
 def _annex(view: Mapping, citer: cite.Citer) -> str:
     labels = _labels()
     blocks = []
@@ -793,6 +798,8 @@ def _annex(view: Mapping, citer: cite.Citer) -> str:
             rows.append(f'<tr><td>{lit("identifier", "n_rows", "code")}</td>'
                         f'<td>{citer.num(rid, "@n_rows", "int")}</td></tr>')
         for segments, _ in cite.leaves(item['values']):
+            if ANNEX_SKIPPED in segments:
+                continue        # WP-B4: chart points are drawn, not shown as figures
             path = cite.format_path(segments)
             rows.append(f'<tr><td>{lit("identifier", path, "code")}</td>'
                         f'<td>{citer.num(rid, path, "auto")}</td></tr>')
@@ -1361,7 +1368,8 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
     body = ''.join([
         _verdict(view, citer), _objective(view), _data(view, citer, variables or [], sample),
         _charts(view, citer), _plan(view), _decisions(view, variables or []),
-        _evidence(view, citer), comparison, _not_yet_defensible(view), _facts(view),
+        _evidence(view, citer), comparison, render_diagnostics.section(view, citer),
+        _not_yet_defensible(view), _facts(view),
         _surfaces(view, surfaces), _annex(view, citer)])
 
     consumed = sorted({c['result_id'] for c in citer.cited})

@@ -405,6 +405,106 @@ assert abs(validation_mae - evaluation["models"]["fit.linear"]["mae"]) < FIT_TOL
     return 'recompute_comparison', code
 
 
+# --- WP-B4: the diagnostics, recomputed from the stored predictions ---------------------------
+
+def _diag_model(view: Mapping, item: Mapping, final: bool) -> str | None:
+    values = item['values']
+    models = list(values.get('models') or {})
+    if final:
+        return values.get('model') if values.get('model') in models else None
+    wanted = (view.get('criterion') or {}).get('model')
+    if wanted in models:
+        return wanted
+    return next((m for m in ('fit.logistic', 'fit.linear') if m in models), None)
+
+
+def diagnostics_cell(view: Mapping, task: str, final: bool = False) -> tuple[str, str] | None:
+    """WP-B4: the confusion matrix at the rule and the calibration bins (binary), or the
+    residuals by bin of prediction (regression), recomputed with numpy from the stored
+    predictions the diagnostics read, and asserted equal to the registry. A rule whose cut
+    splits a tie group (counted pro rata by the engine) is explained instead."""
+    slot = 'diag.final_test' if final else ('diag.regression' if task == 'regression'
+                                            else 'diag.binary')
+    item = _current(view, slot)
+    if item is None:
+        return None
+    model = _diag_model(view, item, final)
+    if model is None:
+        return None
+    p = 'final_' if final else 'dev_'
+    name = f'recompute_{p}diagnostics'
+    rows = 'final-test row' if final else 'development row'
+    head = f'''{p}diagnostics = nv.values(study, RESULT_IDS[{q(slot)}])
+{p}model = {p}diagnostics["models"][{q(model)}]
+# The predictions the diagnostics read: one per {rows}, stored by the model's evaluation.
+{p}predicted = study.predictions({p}model["predictions"])
+{p}y = {p}predicted["y"].to_numpy(dtype=float)
+'''
+    if task == 'regression':
+        code = head + f'''{p}prediction = {p}predicted["prediction"].to_numpy(dtype=float)
+{p}residual = {p}y - {p}prediction
+# Ten bins of equal size in prediction order (a stable sort keeps tied rows in file order).
+{p}order = np.argsort({p}prediction, kind="stable")
+{p}bins = np.empty(len({p}prediction), dtype=int)
+{p}bins[{p}order] = np.arange(len({p}prediction)) * 10 // len({p}prediction)
+{p}by_bin = pd.DataFrame({{"bin": {p}bins + 1, "prediction": {p}prediction,
+                         "residual": {p}residual}}).groupby("bin").agg(
+    n=("residual", "size"), mean_residual=("residual", "mean"))
+print({p}by_bin)
+
+assert abs({p}residual.mean() - {p}model["residuals"]["mean"]) < TOLERANCE
+for _item in {p}model["by_prediction"]["bins"]:
+    assert {p}by_bin.loc[_item["bin"], "n"] == _item["n"]
+    assert abs({p}by_bin.loc[_item["bin"], "mean_residual"] - _item["mean_residual"]) < TOLERANCE'''
+        return name, code
+    conf = (item['values']['models'][model] or {}).get('confusion') or {}
+    rule = str(item['values'].get('rule') or '')
+    kind, _, amount = rule.partition(':')
+    if conf.get('tied_at_cut') or conf.get('selection') != 'exact':
+        return None
+    if kind in ('capacity', 'share'):
+        k = str(conf.get('capacity') if kind == 'share' else amount)
+        if not k.isdigit():
+            return None
+        select = (f'# The rule {rule}: the {int(k)} rows with the highest scores.\n'
+                  f'{p}selected = np.zeros(len({p}score), dtype=bool)\n'
+                  f'{p}selected[np.argsort(-{p}score, kind="stable")[:{int(k)}]] = True')
+    elif kind == 'threshold':
+        select = (f'# The rule {rule}: every row scored {amount} or more.\n'
+                  f'{p}selected = {p}score >= {float(amount)!r}')
+    else:
+        return None
+    code = head + f'''{p}score = {p}predicted["score"].to_numpy(dtype=float)
+{select}
+{p}positive = {p}y == 1
+{p}confusion = {{
+    "true_positives": int(({p}selected & {p}positive).sum()),
+    "false_positives": int(({p}selected & ~{p}positive).sum()),
+    "false_negatives": int((~{p}selected & {p}positive).sum()),
+    "true_negatives": int((~{p}selected & ~{p}positive).sum()),
+}}
+print({p}confusion)
+for _key, _count in {p}confusion.items():
+    assert _count == {p}model["confusion"][_key], _key
+
+# Calibration: ten bins of equal size in score order (a stable sort keeps tied rows in file
+# order), the mean score against the observed positive rate, and the Brier score.
+{p}order = np.argsort({p}score, kind="stable")
+{p}bins = np.empty(len({p}score), dtype=int)
+{p}bins[{p}order] = np.arange(len({p}score)) * 10 // len({p}score)
+{p}calibration = pd.DataFrame({{"bin": {p}bins + 1, "score": {p}score,
+                              "y": {p}y}}).groupby("bin").agg(
+    n=("y", "size"), mean_predicted=("score", "mean"), observed_rate=("y", "mean"))
+print({p}calibration)
+for _item in {p}model["calibration"]["bins"]:
+    _row = {p}calibration.loc[_item["bin"]]
+    assert _row["n"] == _item["n"]
+    assert abs(_row["mean_predicted"] - _item["mean_predicted"]) < TOLERANCE
+    assert abs(_row["observed_rate"] - _item["observed_rate"]) < TOLERANCE
+assert abs(np.mean(({p}score - {p}y) ** 2) - {p}model["calibration"]["brier"]) < TOLERANCE'''
+    return name, code
+
+
 def cells_by_step(view: Mapping, task: str, target: str | None,
                   positive: Any) -> dict[str, list[tuple[str, str]]]:
     """Step id -> recomputation cells (name, code), in notebook order."""
@@ -433,6 +533,14 @@ def cells_by_step(view: Mapping, task: str, target: str | None,
             policy = policy_cell(view)
             if policy:
                 out['policy'] = [policy]
+    # WP-B4: the diagnostics, with the choice they describe and with the final test.
+    choice = 'model_choice' if task == 'regression' else 'policy'
+    development = diagnostics_cell(view, task)
+    if development:
+        out.setdefault(choice, []).append(development)
+    final = diagnostics_cell(view, task, final=True)
+    if final:
+        out.setdefault('final_test', []).append(final)
     return out
 
 

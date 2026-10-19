@@ -56,8 +56,13 @@ TARGET_ACTIVITIES = ('eda.target_rate', 'eda.target_summary', 'eda.special_value
                      'fit.baseline', 'fit.logistic', 'fit.linear', 'policy.evaluation',
                      'evaluate.regression',
                      # WP-B1.
-                     'fit.variant', 'final_test.evaluation')
+                     'fit.variant', 'final_test.evaluation',
+                     # WP-B4.
+                     'diag.binary', 'diag.regression', 'diag.final_test')
 EDA_PREFIX = 'eda.'
+# WP-B4: the development diagnostics read the target too (one look per run).
+DIAG_PREFIX = 'diag.'
+DIAGNOSTICS_PURPOSE = 'development_diagnostics'
 
 
 class ValueProblem(ValueError):
@@ -96,11 +101,22 @@ def ledger(records: Iterable[Mapping], target: str | None) -> dict:
     replaced an earlier one is a second look), ``results`` lists their result ids in order,
     ``by_activity`` counts them per activity."""
     looks, results, by_activity = 0, [], {}
+    runs: set = set()
     for r in records:
-        if r.get('purpose') != 'train_eda' or not str(r.get('activity', '')).startswith(EDA_PREFIX):
+        activity = str(r.get('activity', ''))
+        eda = r.get('purpose') == 'train_eda' and activity.startswith(EDA_PREFIX)
+        # WP-B4: a development diagnostic reads the target of the development rows too.
+        diag = r.get('purpose') == DIAGNOSTICS_PURPOSE and activity.startswith(DIAG_PREFIX)
+        if not (eda or diag):
             continue
         if target is None or target not in (r.get('columns') or []):
             continue
+        if diag:
+            # A diagnostic of a train/validation study records two partitions: one look.
+            run = r.get('execution_id') or r.get('exposure_id')
+            if run in runs:
+                continue
+            runs.add(run)
         looks += 1
         activity = r['activity']
         by_activity[activity] = by_activity.get(activity, 0) + 1
@@ -108,9 +124,10 @@ def ledger(records: Iterable[Mapping], target: str | None) -> dict:
         if rid and rid not in results:
             results.append(rid)
     return {'target_looks': looks, 'results': results, 'by_activity': dict(sorted(by_activity.items())),
-            'note': 'Each exploration that read the target on training rows is a look. The '
-                    'count is a disclosure: the more looks, the more a pattern found among '
-                    'them can be chance. Validation and final-test rows are never explored.'}
+            'note': 'Each exploration that read the target on training rows is a look, and so '
+                    'is each diagnostic of the models on the development rows. The count is a '
+                    'disclosure: the more looks, the more a pattern found among them can be '
+                    'chance. Validation and final-test rows are never explored.'}
 
 
 # --- preprocessing -------------------------------------------------------------------------

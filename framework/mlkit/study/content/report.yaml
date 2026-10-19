@@ -17,6 +17,7 @@ sections:
   facts: What the case states
   evidence: Evidence by step
   policy: Policy comparison
+  diagnostics: Model diagnostics
   not_yet_defensible: What is not yet defensible
   annex: Results annex
 surfaces:
@@ -193,6 +194,55 @@ looks:
   summary: Looks at the outcome on training rows
   note: Each exploration that read the target on training rows counts as one look. The more looks, the more a pattern found among them can be chance.
   count: looks so far
+# v0.2b (WP-B4, R9): the model diagnostics section. No digits: every number is cited.
+diagnostics:
+  intro: Where the model errs, and how far its scores can be read as probabilities. Each part answers one question, from the stored predictions.
+  development: Development evidence
+  development_note: Computed on the predictions of the development rows on which the model and the rule were chosen. They describe the choice; only the final test is independent evidence.
+  after_opening: Computed after the final test was opened, on the development rows only; it adds nothing to the final evidence.
+  before_opening: Computed before the final test was opened.
+  final: Final evidence
+  final_note: Computed once the final test was opened, from the predictions of its one evaluation, for the chosen configuration only.
+  final_sealed: The final test is still sealed, so it has no diagnostics. They are computed only after you open it.
+  final_absent: This study has no final test.
+  final_pending: The final test is opened; its diagnostics are not computed yet.
+  pending: No diagnostics yet. They are computed from the predictions of the models once they are fitted and compared.
+  stale: These diagnostics no longer describe the current models or rule; they are not cited until computed again.
+  model: Model shown
+  models_heading: The models side by side
+  rule: Rule of these figures
+  rule_source:
+    adopted: the rule you adopted
+    proposed: the proposed rule, not adopted yet
+    scenario_default: the teaching scenario's share, no rule proposed yet
+    engine_default: a default share, no rule proposed yet
+  confusion_heading: Confusion matrix at the rule
+  confusion_rows: Actual outcome
+  confusion_selected: Selected by the rule
+  confusion_not_selected: Not selected
+  confusion_positive: Positive
+  confusion_negative: Negative
+  confusion_expected: A tie at the cut is counted pro rata, so these counts are expected counts.
+  gain_heading: Gain curve
+  roc_heading: Ranking quality
+  calibration_heading: Calibration
+  calibration_table: Calibration bins (equal numbers of rows, in score order)
+  segments_heading: Precision and recall at the rule, by segment
+  segments_note: Segments chosen by the engine; a cell with few rows or few selected rows is flagged and should not be read alone.
+  coefficients_heading: Coefficients with bootstrap intervals
+  coefficients_note: The largest coefficients in size. Associations given the other variables, not effects of changing a variable.
+  examples_heading: Examples of errors
+  false_positives: Selected, but the outcome was negative (highest scores first)
+  false_negatives: Not selected, but the outcome was positive (lowest scores first)
+  examples_none: None at this rule.
+  residuals_heading: Residuals
+  residual_summary: Distribution of the residuals (observed minus predicted)
+  hetero_heading: Does the error grow with the prediction?
+  hetero_yes: Flagged
+  hetero_no: Not flagged
+  by_feature_heading: Residuals by variable
+  largest_heading: The largest errors
+  smearing: Target transform
 model_names:
   fit.logistic: Model (logistic regression)
   fit.baseline: Baseline (no ranking)

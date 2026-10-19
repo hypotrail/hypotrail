@@ -533,7 +533,16 @@ def _numbers(value):
         for v in value:
             yield from _numbers(v)
     elif isinstance(value, str):
-        yield from (float(x) for x in re.findall(r'-?\d+(?:\.\d+)?', value))
+        if _TIMESTAMP.fullmatch(value):
+            return      # a clock reading, never a figure a draft could repeat
+        # Standalone numbers only: the digits inside an identifier (a hex result id, an
+        # exposure id drawn at random) are not figures, and reading them made the "free"
+        # number below depend on random ids (the flake of test_regression_walkthrough).
+        yield from (float(x) for x in _STANDALONE_NUMBER.findall(value))
+
+
+_TIMESTAMP = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?')
+_STANDALONE_NUMBER = re.compile(r'(?<![\w.])-?\d+(?:\.\d+)?(?![\w])')
 
 
 def _check_words_in_the_target_unit(study: Path, work: Path, ev: dict, view: dict) -> None:
@@ -554,8 +563,14 @@ def _check_words_in_the_target_unit(study: Path, work: Path, ev: dict, view: dic
         out = check(draft)
         assert out['clean'] is True, out['findings']
         assert [t for t in out['traced'] if t.get('in_words')], out['traced']
-    # a figure no registered value, decision, or case statement holds is reported
-    known = list(_numbers(view))
+    # a figure no registered value, decision, case statement, or data card cell holds is
+    # reported. The data card is in check's pool (WP-A8) but not in the view: without it the
+    # "free" figure could be a cell of the five example rows, which check rightly traces.
+    card = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', 'data', '--study',
+                           str(study)], capture_output=True, text=True, cwd=work, env=fk.env(),
+                          timeout=120)
+    assert card.returncode == 0, card.stderr
+    known = list(_numbers(view)) + list(_numbers(json.loads(card.stdout)))
     free = next((k for k in range(97, 1, -1) if all(abs(k - v) > 0.5 for v in known)), None)
     if free is not None:
         out = check(f'On the validation rows, the linear model was off by about '
