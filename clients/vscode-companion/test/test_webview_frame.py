@@ -256,7 +256,9 @@ def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, 
     assert lines[1] == ('Decided: the prediction moment: Before the first contact of the campaign, from the client file; '
                         'the variables you may use: 11 available · 1 uncertain, kept (contact) · 4 excluded '
                         '(campaign, day, duration, month); the split: Stratified random split, 30% of the rows for '
-                        'validation; the calling rule: Call everyone scored 0.2 or more.')
+                        'validation; the success criterion: Adopt only if precision beats the baseline by at least 5 '
+                        'points; the data preparation: Missing values not flagged, no capping, no log scale; '
+                        'the calling rule: Call everyone scored 0.2 or more.')
     strip = page.locator('[data-recap-strip]').inner_text()
     assert 'threshold:0.2' not in strip and 'result ' not in strip
     assert panel.clean()

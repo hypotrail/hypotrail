@@ -25,6 +25,8 @@
     split: 'the split',
     policy: regression(task) ? 'the third decision' : 'the calling rule',
     model_choice: 'the model choice',
+    success_criterion: 'the success criterion',
+    preprocessing: 'the data preparation',
     conclusion: 'the conclusion',
   })[id] || String(id || '').replace(/_/g, ' ');
 
@@ -36,6 +38,8 @@
     policy: regression(task) ? 'This decision turns the results into an action.'
       : 'The calling rule turns scores into an action: how many clients to call, given what the team can handle.',
     model_choice: 'The model choice picks the model whose errors on the validation rows fit your use.',
+    success_criterion: 'The success criterion fixes, before you see the results, how much better than the baseline a model must be to be worth adopting.',
+    preprocessing: 'The data preparation says how missing values, rare categories, extreme values and skewed columns are handled; it is learned on the training rows only.',
     conclusion: 'The conclusion says what the study supports, and what it does not.',
   })[id] || '';
 
@@ -86,6 +90,39 @@
     return null;
   }
 
+  // v0.2a (WP-A4): the two governance decisions in words. The share is a recorded value
+  // shown as a percentage, not a figure the panel computes from results.
+  function criterion(raw) {
+    const v = parse(raw);
+    if (!v || typeof v !== 'object') return null;
+    if (typeof v.min_points === 'number') {
+      return `Adopt only if precision beats the baseline by at least ${v.min_points} points`;
+    }
+    if (typeof v.min_share === 'number') {
+      return `Adopt only if the validation error is at least ${Math.round(100 * v.min_share)}% below the mean baseline`;
+    }
+    return null;
+  }
+
+  function preparation(raw) {
+    const v = parse(raw);
+    if (!v || typeof v !== 'object') return null;
+    const parts = [];
+    if (v.missing && typeof v.missing === 'object') {
+      const flagged = Object.keys(v.missing).filter(k => v.missing[k] === 'indicator');
+      parts.push(flagged.length ? `missing values flagged (${flagged.join(', ')})` : 'missing values not flagged');
+    } else {
+      parts.push(v.missing === 'indicator' ? 'missing values flagged' : 'missing values not flagged');
+    }
+    if (v.rare_category_min_rows) parts.push(`categories under ${v.rare_category_min_rows} rows grouped`);
+    const caps = v.caps && typeof v.caps === 'object' ? Object.keys(v.caps) : [];
+    parts.push(caps.length ? `extreme values capped (${caps.join(', ')})` : 'no capping');
+    const logs = Array.isArray(v.log_transform) ? v.log_transform : [];
+    parts.push(logs.length ? `log scale for ${logs.join(', ')}` : 'no log scale');
+    const text = cap(parts.join(', '));
+    return v.data_contingent ? `${text} (chosen after looking at the outcome)` : text;
+  }
+
   function split(value) {
     const v = parse(value);
     if (!v || typeof v !== 'object') return null;
@@ -123,6 +160,8 @@
         return parts.join(' · ');
       }
       case 'split': return split(raw);
+      case 'success_criterion': return criterion(raw);
+      case 'preprocessing': return preparation(raw);
       case 'policy': return rule(raw, task);
       case 'model_choice': return typeof raw === 'string' && raw.startsWith('fit.') ? cap(`adopt ${modelName(raw, task)}`) : null;
       case 'conclusion': {
