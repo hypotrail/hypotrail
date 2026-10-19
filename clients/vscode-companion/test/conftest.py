@@ -36,6 +36,8 @@ HERE = Path(__file__).resolve().parent
 CLIENT = HERE.parent
 FIXTURES = HERE / 'fixtures'
 NONCE = 'testNonce0123456789abcdef'
+# The study key of `init` in these tests (decision CR.2): one study unless a test names another.
+STUDY_KEY = '0123456789abcdef'
 NODE = shutil.which('node')
 
 try:
@@ -155,9 +157,13 @@ class Panel:
         self.page.evaluate('m => window.dispatchEvent(new MessageEvent("message", {data: m}))',
                            {'v': 2, **message})
 
-    def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None):  # noqa: N803
-        self.send({'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
-                   'chatInsert': chatInsert, 'task': task})
+    def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None, study=STUDY_KEY):  # noqa: N803
+        # `study`: the study key the controller sends (decision CR.2); None leaves it out.
+        message = {'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,
+                   'chatInsert': chatInsert, 'task': task}
+        if study is not None:
+            message['study'] = study
+        self.send(message)
 
     def snapshot(self, model: dict) -> None:
         # As the controller: the snapshot carries the model's currency (decision CR.1).

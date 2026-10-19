@@ -25,7 +25,7 @@
   // previews per proposal and version (revision, currency, Refresh epoch; CR.1);
   // `effectsEpoch` is the epoch each preview was asked at.
   const view = {
-    ctx: null, effects: {}, asked: {}, inflight: new Set(), waiting: [], typedAt: {}, requested: {}, effectsEpoch: {},
+    ctx: null, effects: {}, asked: {}, inflight: new Set(), waiting: [], requested: {}, effectsEpoch: {},
     lastOutcome: null, observer: null,
   };
 
@@ -272,14 +272,16 @@
       area = ctx.wordsArea({ kind: 'drafts', key: id, id: `words-${id}`, name: `words-${id}`, rows: '3',
         'aria-describedby': describedBy, 'data-proposal': id, 'data-write': 'confirm',
         onInput: () => {
-          view.typedAt[id] = ctx.snapshot.revision;
-          if (typing) typing.remove();
+          // Words cleared and typed again start at the revision shown (CR.3).
+          if (typing && !area.value.trim()) { typing.remove(); typing = null; }
           sync();
         } });
     }
     confirm.addEventListener('click', () => {
       if (!area || !area.value.trim() || ctx.busy || blocked) return;
-      ctx.send({ type: 'confirm', proposalId: id, words: area.value, revision: model.revision });
+      // The revision the junior started typing at (CR.3): the engine refuses a stale one.
+      const typedAt = ctx.drafts.revision('drafts', id);
+      ctx.send({ type: 'confirm', proposalId: id, words: area.value, revision: Number.isInteger(typedAt) ? typedAt : model.revision });
     });
     withdraw.addEventListener('click', () => {
       if (ctx.busy) return;
@@ -287,9 +289,15 @@
     });
     sync();
 
-    const typedAt = view.typedAt[id];
+    // CR.3: the warning comes from the stored draft, so it survives a reload, and stays
+    // until the junior says they read the proposal again.
+    const typedAt = ctx.drafts.revision('drafts', id);
     typing = area && area.value.trim() && Number.isInteger(typedAt) && typedAt < model.revision
-      ? el('p', { className: 'hold', role: 'status', 'data-typing-warning': id, text: c.typing(typedAt, model.revision) }) : null;
+      ? el('div', { className: 'hold dc-typing', role: 'status', 'data-typing-warning': id }, [
+        el('p', { 'data-typing-text': true, text: c.typing(typedAt, model.revision) }),
+        el('button', { type: 'button', className: 'secondary', 'data-reread': id, text: c.reread(model.revision),
+          onclick: () => { ctx.drafts.reread('drafts', id); ctx.rerender(); } }),
+      ]) : null;
     const groups = v1 ? availabilityGroups(p.decisionId, str(p.value)) : null;
     const pause = v1 ? pauseOf(ctx, p.decisionId) : null;
     const holds = arr(p.holds).map(h => el('p', { className: 'hold dc-hold', 'data-hold': str(h.noteId) }, v1
@@ -484,7 +492,6 @@
         // Previews of proposals that are no longer open are dropped.
         const open = new Set(arr(m.model && m.model.proposals).map(p => p.proposalId));
         for (const pid of Object.keys(view.effects)) if (!open.has(pid)) delete view.effects[pid];
-        for (const pid of Object.keys(view.typedAt)) if (!open.has(pid)) delete view.typedAt[pid];
         for (const pid of [...view.inflight]) if (!open.has(pid)) view.inflight.delete(pid);
         view.waiting = view.waiting.filter(pid => open.has(pid));
       }

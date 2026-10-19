@@ -65,7 +65,8 @@
       'To hand the choice to the assistant, say so in the chat; this panel does not record delegations.',
     noDelegation: 'To hand the choice to the assistant, say so in the chat; this panel does not record delegations.',
     typing: (before, after) => `The study changed while you were typing (revision ${before} to ${after}). ` +
-      'Read the proposal again before you answer.',
+      `Read the proposal again before you answer. A confirmation now names revision ${before}, so the engine refuses it.`,
+    reread: revision => `I read the proposal again at revision ${revision}`,
     reviewerNote: 'Read-only reviewer mode: this panel records no answer.',
     confirm: 'Confirm in my words',
     withdraw: 'Withdraw proposal',
