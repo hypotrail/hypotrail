@@ -269,6 +269,142 @@ def _walk_numbers(value: Any) -> Iterable[float]:
             yield from _walk_numbers(v)
 
 
+# WP-A9 (H2): paths of a result that a free text never cites. They are a result's internals
+# (null-band shuffles, the quality card's value ranges, bootstrap replicate counts, seeds,
+# settings, coefficients, tie-breaking details), and a figure that happens to equal one of
+# them was traced to it ("La précision du modèle est de 10 %" traced to a null band). The
+# rendered deliverables cite by path (``data-result-id``) and are not affected.
+INTERNAL_SEGMENTS = frozenset({
+    'null_band', 'undefined_replicates', 'replicates', 'seed', 'shuffles', 'max_groups',
+    'min_group_rows', 'iterations', 'n_terms', 'coefficients', 'intercept', 'cut',
+    'tied_at_cut', 'folds', 'rank', 'bin_width', 'n_bins', 'fitted', 'preprocessing',
+    'questions', 'co_occurrence'})
+INTERNAL_BY_SLOT = {'eda.quality': frozenset({'ranges', 'rare', 'rare_rows'})}
+# WP-A9 (H2): words near a number that name what it measures, and the path segments a
+# matching registry value must contain ("précision ... 10 %" binds to a precision). A count
+# noun ("50 clients") binds a number without a percent sign to a count.
+METRIC_WORDS = (
+    (re.compile(r'\b(?:precision|pr[ée]cision|hit\s+rate|taux\s+de\s+r[ée]ussite)\b', re.I),
+     ('precision',)),
+    (re.compile(r'\b(?:recall|rappel|couverture|coverage)\b', re.I), ('recall',)),
+    (re.compile(r'\b(?:auc|roc)\b', re.I), ('roc_auc',)),
+    (re.compile(r'\blift\b', re.I), ('lift',)),
+    (re.compile(r'\b(?:gain|gains)\b', re.I), ('gain_points', 'deltas', 'gain')),
+    (re.compile(r'\b(?:mae|rmse|error|errors|erreur|erreurs|residual\w*|r[ée]sidu\w*)\b', re.I),
+     ('mae', 'rmse', 'error', 'residual')),
+    (re.compile(r'\b(?:missing|manquant\w*|absent\w*)\b', re.I), ('missing',)),
+    (re.compile(r'\b(?:distinct\w*|modalit[ée]s?|categor\w*|cat[ée]gor\w*)\b', re.I),
+     ('n_distinct', 'groups', 'n_groups')),
+)
+RATE_WORDS = re.compile(r'\b(?:rate|rates|taux|share|part|proportion|pourcentage|percentage)\b',
+                        re.I)
+RATE_SEGMENTS = ('rate', 'share', 'precision', 'recall', 'fraction', 'missing', 'gain', 'lift',
+                 'deltas', 'interval', 'level', 'average_precision', 'roc_auc', 'point')
+COUNT_NOUNS = re.compile(
+    r'\b(?:clients?|customers?|rows?|lignes?|calls?|appels?|sessions?|observations?|people|'
+    r'personnes?|subscribers?|souscripteurs?|souscriptions?|positives?|positifs?|contacts?|'
+    r'members?|membres?|cases?|cas|individus?|records?|enregistrements?|visits?|visites?|'
+    r'buyers?|acheteurs?|cars?|voitures?)\b', re.I)
+COUNT_SEGMENTS = frozenset({'n', 'n_rows', 'n_positive', 'n_negative', 'selected', 'volume',
+                            'true_positives', 'false_positives', 'false_negatives', 'capacity',
+                            'n_train', 'n_train_positive', 'n_special', 'n_missing', 'n_a',
+                            'n_b', 'n_both', 'n_either', 'n_groups', 'n_distinct', 'rows',
+                            'development_rows', 'n_rows_with_missing', '@n_rows', 'point',
+                            'low', 'high'})
+_NEAR_BEFORE, _NEAR_AFTER = 60, 30
+
+
+def internal_path(slot: str, path: str) -> bool:
+    """WP-A9 (H2): a result path a free text never cites (:data:`INTERNAL_SEGMENTS`)."""
+    if not path or path in cite.META_PATHS:
+        return False
+    try:
+        segments = cite.parse_path(path)
+    except Exception:      # noqa: BLE001 - an unreadable path is not cited either
+        return True
+    if INTERNAL_SEGMENTS & set(segments):
+        return True
+    return bool(INTERNAL_BY_SLOT.get(slot, frozenset()) & set(segments))
+
+
+INTERVAL_WORDS = re.compile(r'\b(?:intervals?|intervalles?|between|entre|ranges?|fourchette|'
+                            r'ci|ic|bounds?|bornes?|resamples?|bootstrap)\b|[\[\]–]'
+                            r'|\d\s*%?\s*(?:to|à|-)\s*[-−]?\d', re.I)
+MODEL_WORDS = re.compile(r'\b(?:model|mod[èe]le|logisti\w*|linear|lin[ée]aire)\b', re.I)
+BASELINE_WORDS = re.compile(r'\b(?:baseline|r[ée]f[ée]rence|constant\w*|base|mean|moyenne)\b',
+                            re.I)
+INTERVAL_PARENTS = frozenset({'interval', 'intervals', 'deltas'})
+SENTENCE_END = re.compile(r'[.!?](?=\s|$)|[;\n]')
+
+
+@dataclasses.dataclass(frozen=True)
+class Binding:
+    """WP-A9 (H2): what the words near a number say it measures. ``segments``: path
+    segments a matching value must hold (None: any). ``interval``: interval words are near,
+    so an interval's bound may match (without them only point values do). ``model``: a model
+    is named and the baseline is not, so the baseline's values do not match."""
+    segments: tuple | None = None
+    interval: bool = False
+    model: bool = False
+
+
+def binding(text: str, start: int, end: int, percent: bool) -> Binding:
+    """WP-A9 (H2): the :class:`Binding` of a number at ``text[start:end]``, from the words
+    near it in its sentence (:data:`METRIC_WORDS`, a count noun after a number without a
+    percent sign, interval and model words)."""
+    lo = max(0, start - _NEAR_BEFORE)
+    hi = min(len(text), end + _NEAR_AFTER)
+    before, after = text[lo:start], text[end:hi]
+    # The clause: a sentence end (never the point of a decimal number), a semicolon.
+    ends = [m.end() for m in SENTENCE_END.finditer(before)]
+    if ends:
+        before = before[ends[-1]:]
+    stops = [i for i in (after.find('. '), after.find('\n'), after.find(';'), after.find(','),
+                         after.find(':'), after.find('('), after.find(')')) if i >= 0]
+    if stops:
+        after = after[:min(stops)]
+    # The words that name what a number measures: before it in its clause, or the first
+    # three words after it ("42 % precision", "50 clients").
+    soon = ' '.join(after.split()[:3])
+    named = before + ' ' + soon
+    near = before + ' ' + after
+    # A count noun right after the number, or after one qualifying word ("90 validation
+    # rows", "50 clients").
+    count = not percent and bool(COUNT_NOUNS.search(' '.join(soon.split()[:2])))
+    out: list[str] = []
+    if not count:
+        for pattern, segments in METRIC_WORDS:
+            if pattern.search(named):
+                out.extend(segments)
+        if RATE_WORDS.search(named):
+            out.extend(RATE_SEGMENTS)
+    return Binding(segments=('#count',) if count else (tuple(dict.fromkeys(out)) or None),
+                   interval=bool(INTERVAL_WORDS.search(near)),
+                   model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near))
+
+
+def _bound(item: Mapping, bind: Binding | None) -> bool:
+    """A registry item a number with the binding ``bind`` may match."""
+    if bind is None:
+        return True
+    path = item['path']
+    try:
+        segments = cite.parse_path(path) if path not in cite.META_PATHS else [path]
+    except Exception:      # noqa: BLE001
+        return False
+    if not bind.interval and segments[-1] in ('low', 'high') \
+            and INTERVAL_PARENTS & set(segments[:-1]):
+        return False
+    if bind.model and any(seg == 'fit.baseline' or seg.startswith('baseline')
+                          for seg in segments):
+        return False
+    if bind.segments is None:
+        return True
+    if bind.segments == ('#count',):
+        return segments[-1] in COUNT_SEGMENTS
+    return any(b in seg for seg in segments for b in bind.segments)
+
+
 def _is_difference(path: str) -> bool:
     """True when a value path addresses a registered difference (``deltas``)."""
     if not path or path in cite.META_PATHS:
@@ -315,8 +451,11 @@ class Pool:
             if cite.is_number(item['n_rows']):
                 leaves.append((('@n_rows',), item['n_rows']))
             for segments, value in leaves:
+                path = cite.format_path(segments)
+                if internal_path(slot, path):
+                    continue
                 bucket.append({'result_id': item['result_id'], 'slot': slot,
-                               'path': cite.format_path(segments), 'value': value})
+                               'path': path, 'value': value})
         for d in view['decisions'].values():
             if d['value'] is not None and d['decision_id'] != 'conclusion':
                 self._literal('decision', d['decision_id'], d['value'])
@@ -425,15 +564,20 @@ class Pool:
                 return item
         return None
 
-    def trace(self, tok: cite.Token, *, difference: bool = False) -> tuple[str, dict | None]:
+    def trace(self, tok: cite.Token, *, difference: bool = False,
+              bind: 'Binding | None' = None) -> tuple[str, dict | None]:
         """Where ``tok`` comes from. ``difference``: the token is written in percentage
-        points, so only a registered difference (``deltas``) can match it."""
+        points, so only a registered difference (``deltas``) can match it. ``bind`` (WP-A9,
+        H2): the path segments the words near the number name (:func:`binding`); a result
+        whose path holds none of them is not a match."""
         for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
                               (self.stale, 'stale')):
             if difference and label == 'literal':
                 continue
             for item in bucket:
                 if difference and not _is_difference(item['path']):
+                    continue
+                if label != 'literal' and not _bound(item, bind):
                     continue
                 if cite.shown_matches(tok, item['value']) or (
                         not tok.percent and label == 'literal'
@@ -556,7 +700,8 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
         difference = not tok.percent and bool(PERCENTAGE_POINTS.match(masked, tok.end))
         if difference:
             tok = dataclasses.replace(tok, percent=True)
-        label, item = pool.trace(tok, difference=difference)
+        bind = binding(masked, tok.start, tok.end, tok.percent)
+        label, item = pool.trace(tok, difference=difference, bind=bind)
         if label in ('none', 'stale') and tok.start in identifiers:
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'rule',
                            'value': tok.value})
