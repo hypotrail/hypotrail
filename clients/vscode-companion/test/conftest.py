@@ -146,7 +146,13 @@ class Panel:
         self.context, self.page, self.requests, self.errors, self.csp = context, page, requests, errors, csp
 
     def send(self, message: dict) -> None:
-        self.page.evaluate('m => window.postMessage(m, "*")', {'v': 2, **message})
+        # Delivered synchronously: the `message` listeners (core.js) have run when this
+        # returns. `window.postMessage` only queues a task, so an assertion that reads the
+        # DOM without auto-waiting (`page.evaluate`, `get_attribute` on an element that
+        # already exists) could run before the message was handled (WP-I: the intermittent
+        # failure of test_ev3_navigation_selects_and_focuses_the_result).
+        self.page.evaluate('m => window.dispatchEvent(new MessageEvent("message", {data: m}))',
+                           {'v': 2, **message})
 
     def init(self, stage='v0', reviewer=False, learningLayer=True, chatInsert=False, task=None):  # noqa: N803
         self.send({'type': 'init', 'stage': stage, 'reviewer': reviewer, 'learningLayer': learningLayer,

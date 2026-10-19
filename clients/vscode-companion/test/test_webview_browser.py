@@ -68,7 +68,8 @@ def opened(open_panel):
 
 
 def _send(page, message):
-    page.evaluate('m => window.postMessage(m, "*")', {'v': 2, **message})
+    # Synchronous delivery, as Panel.send in conftest.py (no race with the next assertion).
+    page.evaluate('m => window.dispatchEvent(new MessageEvent("message", {data: m}))', {'v': 2, **message})
 
 
 def _snapshot(page, model):
