@@ -264,13 +264,13 @@ test('copy (WP-B5): share rules in words; the junior copy holds no digit and, fo
   globalThis.Hypotrail = { copy: {}, format: { number: x => String(x) } };
   require('../media/copy/junior.js');
   const J = globalThis.Hypotrail.copy.junior;
-  assert.equal(J.value('policy', 'share:0.1', 'binary'), 'Call the top 10% by score');
-  assert.equal(J.value('policy', 'share:0.25@fit.variant', 'binary'), 'Call the top 25% by score, with the variant');
+  assert.equal(J.value('policy', 'share:0.1', 'binary'), 'Select the top 10% by score');
+  assert.equal(J.value('policy', 'share:0.25@fit.variant', 'binary'), 'Select the top 25% by score, with the variant');
   assert.equal(J.value('policy', 'share:0.1', 'regression'), null);
   assert.equal(J.finalTestState({ status: 'opened', opening: { resultId: 'x' }, postFinalTest: true }), 'changed');
   assert.equal(J.finalTestState({ status: 'opened', opening: { resultId: null } }), 'interrupted');
   assert.equal(J.finalTestState({ status: 'absent' }), 'absent');
-  const FORBIDDEN = /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b/i;
+  const FORBIDDEN = /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b/i;
   for (const mode of ['guided', 'training', 'express']) {
     for (const line of J.modes.rules(mode, 'regression', true)) {
       assert.ok(!FORBIDDEN.test(line), line);
@@ -280,5 +280,23 @@ test('copy (WP-B5): share rules in words; the junior copy holds no digit and, fo
   assert.ok(J.why('final_test', 'regression') && !FORBIDDEN.test(J.why('final_test', 'regression')));
   assert.ok(!FORBIDDEN.test(J.why('model_variant', 'regression')));
   for (const [k, v] of Object.entries(J.finalTest)) if (typeof v === 'string') assert.ok(!/\d/.test(v), k);
+  delete globalThis.Hypotrail;
+});
+
+test('copy (v0.2 closure): rule words are case-neutral (no "call" or "clients" for a sessions or a regression case)', () => {
+  globalThis.Hypotrail = { copy: {}, format: { number: x => String(x) } };
+  delete require.cache[require.resolve('../media/copy/junior.js')];
+  require('../media/copy/junior.js');
+  const J = globalThis.Hypotrail.copy.junior;
+  assert.equal(J.value('policy', 'capacity:100', 'binary'), 'Select the top 100 by score');
+  assert.equal(J.value('policy', 'threshold:0.2', 'binary'), 'Select every case scored 0.2 or more');
+  const texts = [
+    J.value('policy', 'capacity:100', 'binary'), J.value('policy', 'share:0.1', 'binary'),
+    J.value('policy', 'threshold:0.2@fit.variant', 'binary'), J.why('policy', 'binary'),
+  ];
+  for (const t of texts) {
+    assert.ok(t, 'a rule text');
+    assert.doesNotMatch(t, /\b(call|calls|calling|clients?)\b/i, t);
+  }
   delete globalThis.Hypotrail;
 });

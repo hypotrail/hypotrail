@@ -138,7 +138,7 @@ def test_instructions_name_only_real_decisions_activities_and_commands():
               'fit.logistic', 'policy.evaluate'):
         assert f'`{a}' in text and a in act.CLI_NAMES, a
     for phrase in ('status --json', '--user-words', '--restatement', 'check --text -',
-                   'stale_revision', '--request-id', 'garde ça', 'not supported in v0.1'):
+                   'stale_revision', '--request-id', 'garde ça', 'not supported in this version'):
         assert phrase in text, phrase
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
     assert 'status --json' in resume and 'five lines' in resume

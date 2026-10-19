@@ -24,7 +24,7 @@ const PYTHON = path.join(FRAMEWORK, '.venv', 'bin', 'python');
 const CASES = { binary: path.join(REPO, 'use-cases', 'bank-marketing'), regression: path.join(REPO, 'use-cases', 'auto-mpg') };
 const skip = fs.existsSync(PYTHON) ? false : 'framework/.venv is missing: run uv sync --project framework --group dev';
 // INV-12: the words of a decision rule, absent from everything a regression study shows.
-const FORBIDDEN = /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b/i;
+const FORBIDDEN = /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b/i;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 /** Every string of a value, recursively. */

@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
 WRITES = {'confirm', 'withdraw', 'propose', 'run_eda', 'render', 'acknowledge', 'export_handoff'}
 

@@ -26,7 +26,7 @@ from mlkit.study import cite
 
 ROOT = Path(__file__).resolve().parents[3]
 ACTIVITIES_YAML = ROOT / 'framework' / 'mlkit' / 'study' / 'content' / 'activities.yaml'
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 BINARY_WORDS = re.compile(r'\b(outcome|positive|imbalance|base rate)\b', re.I)
 SUMMARY = {'binary': 'summary.binary', 'regression': 'summary.regression'}
 EVIDENCE = {'binary': 'evidence.binary', 'regression': 'evidence.regression'}

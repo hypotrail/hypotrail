@@ -54,7 +54,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    use, for example 'an error of <N> <unit>'"), never a made-up number. A request that no
    activity
 <!-- hypotrail:end -->
-   covers is translated into one that exists; otherwise answer "not supported in v0.1".
+   covers is translated into one that exists; otherwise answer "not supported in this version".
 3. **Step 0, then the pauses, and only these.** Step 0 (`next_action.kind`
    `show_data_card`, before any proposal): run `data --format text` and show the junior
    the data card in short, introducing **development rows** and **final test** from the

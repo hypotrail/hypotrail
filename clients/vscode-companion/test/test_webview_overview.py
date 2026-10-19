@@ -10,7 +10,7 @@ import re
 
 import pytest
 
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 MOMENTS = ['Frame the change', 'Prepare evidence', 'Work and compare', 'Conclude and hand over']
 INTERRUPTED = 'e_4c1d9a7b2e3f5a6b7c8d9e0f'
 SUSPECTED = 'e_8e7d6c5b4a39281706f5e4d3'
@@ -83,12 +83,12 @@ def test_ov0_the_next_move_is_the_first_block_and_answers_in_decisions(open_pane
     hero = page.locator('[data-ov="hero"]')
     assert hero.get_attribute('data-hero') == 'await_user_words'
     assert hero.locator('[data-hero-eyebrow]').inner_text().upper() == 'YOUR NEXT MOVE · PAUSE 3 · BUSINESS TRADE-OFF'
-    assert hero.locator('[data-hero-title]').inner_text() == 'Answer the proposal on the calling rule'
+    assert hero.locator('[data-hero-title]').inner_text() == 'Answer the proposal on the decision rule'
     assert hero.locator('[data-hero-restatement="p_5"]').inner_text() == binary['proposals'][0]['restatement']
     value = hero.locator('[data-hero-value]')
-    assert value.inner_text() == 'Call the top 100 by score'
+    assert value.inner_text() == 'Select the top 100 by score'
     assert value.get_attribute('title') == 'Recorded value: capacity:100', 'the recorded value in the hover'
-    assert 'how many clients to call' in hero.locator('[data-hero-why="policy"]').inner_text()
+    assert 'which cases to act on' in hero.locator('[data-hero-why="policy"]').inner_text()
     # Two-layer copy: the engine's instruction to the assistant is under Details only.
     agent = binary['nextAction']['message']
     assert agent not in hero.inner_text()
@@ -112,7 +112,7 @@ def test_ov1_where_we_are_goal_and_decisions_in_words_junior_recap_under_details
     assert decided.evaluate_all('ds => ds.map(d => d.dataset.decidedItem)') == \
         ['prediction_time', 'feature_availability', 'split', 'policy']
     policy = section.locator('[data-decided-item="policy"] [data-value-raw]')
-    assert policy.inner_text() == 'Call everyone scored 0.2 or more'
+    assert policy.inner_text() == 'Select every case scored 0.2 or more'
     assert policy.get_attribute('data-value-raw') == 'threshold:0.2'
     split = section.locator('[data-decided-item="split"] [data-value-raw]').inner_text()
     assert split == 'Stratified random split, 30% of the rows for validation'
@@ -203,9 +203,9 @@ def test_ov5_ov6_digest_grouped_in_the_panels_words_engine_record_under_details(
     rows = section.locator(f'[data-digest] {ITEMS}')
     got = rows.evaluate_all('is => is.map(i => [i.dataset.group, i.querySelector("[data-digest-text]").textContent])')
     assert got == [
-        ['needs', 'The calling rule was proposed.'],
-        ['evaluated', 'The calling-rule evaluation was computed again.'],
-        ['resolved', 'Your condition on the calling rule, "don\'t adopt anything until I bring my manager\'s figure", '
+        ['needs', 'The decision rule was proposed.'],
+        ['evaluated', 'The decision-rule evaluation was computed again.'],
+        ['resolved', 'Your condition on the decision rule, "don\'t adopt anything until I bring my manager\'s figure", '
                      'was resolved in your words: "my manager says the team can make 100 calls per wave".'],
         ['other', 'The policy needs confirmation again: its evaluation changed.'],
     ], 'needs you first, then re-evaluated, resolved; an item the panel has no words for keeps the engine text'
