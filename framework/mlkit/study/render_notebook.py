@@ -32,7 +32,6 @@ This module writes files; it refuses to run in a read-only process
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -40,7 +39,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from . import guard, manifest as mf, render_html, texts
+from . import currency, guard, manifest as mf, render_html, texts
 from .templates import workbench as wb_template
 
 GENERATED = mf.ARTIFACTS['notebook']
@@ -49,7 +48,6 @@ CANDIDATE = 'notebooks/workbench.candidate.py'
 STUDY_TEMPLATE_VERSION = 1
 MAX_REPLACE_ATTEMPTS = 5
 
-_GENERATED_WITH = re.compile(rb'^__generated_with = "[^"\n]*"$', re.MULTILINE)
 _TEMPLATE_VERSION = re.compile(rb'template_version = (\d+)')
 
 # Test hook: called with the target path right before the final hash check and
@@ -57,13 +55,8 @@ _TEMPLATE_VERSION = re.compile(rb'template_version = (\d+)')
 before_replace: Callable[[Path], None] | None = None
 
 
-def sha256(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
-def edit_check_sha256(data: bytes) -> str:
-    """Hash used to detect user edits; only the ``__generated_with`` stamp is ignored."""
-    return sha256(_GENERATED_WITH.sub(b'__generated_with = ""', data))
+sha256 = currency.sha256
+edit_check_sha256 = currency.edit_check_sha256
 
 
 # --- generation -------------------------------------------------------------------------

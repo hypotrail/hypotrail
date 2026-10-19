@@ -893,11 +893,16 @@ def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
              'current': {s: r['result_id'] for s, r in view['results'].items()}}
     for name, path in mf.ARTIFACTS.items():
         item = manifest['artifacts'].get(name)
-        status = mf.effective_status(item, state)
+        file = mf.file_check(study.study_dir, item)               # M4: the bytes on disk
+        status = mf.effective_status(item, state, None, file)
         if status != 'ok':
+            reason = mf.stale_reason(item, state, None, file)
+            extra = {'reason': reason} if reason in (mf.FILE_MISSING, mf.FILE_CHANGED) else {}
+            words = f' ({" ".join(reason.split("_"))})' if extra else ''
             findings.append(finding('artifact_not_current', f'artifact:{name}',
-                                    f'{path} is {status}.', status=status,
-                                    error=(item or {}).get('error'), location=location(path)))
+                                    f'{path} is {status}{words}.', status=status,
+                                    error=(item or {}).get('error'), location=location(path),
+                                    **extra))
     report = study.study_dir / mf.ARTIFACTS['report']
     if report.is_file():
         findings += check_html(view, study, report.read_text(encoding='utf-8'),

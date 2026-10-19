@@ -229,7 +229,9 @@ def _lineage(study: read.Study, view: Mapping, results: list[dict], entries: Map
         return study.currency(rid)['current']
     for name in LINEAGE_ARTIFACTS:
         nodes.append({'id': f'artifact:{name}', 'kind': 'artifact', 'label': name,
-                      'status': currency.effective_status(items.get(name), state, is_current)})
+                      'status': currency.effective_status(
+                          items.get(name), state, is_current,
+                          currency.file_check(study.study_dir, items.get(name)))})
     for r in results:
         rid, entry = r['result_id'], entries[r['result_id']]
         if entry.get('exposure_id'):
@@ -376,7 +378,8 @@ def _detail(study: read.Study, rid: str, item: dict, manifest: Mapping) -> dict:
     def is_current(r):
         return study.currency(r)['current']
     report = items.get('report')
-    cited = currency.effective_status(report, state, is_current) == 'ok' \
+    cited = currency.effective_status(report, state, is_current,
+                                      currency.file_check(study.study_dir, report)) == 'ok' \
         and rid in ((report or {}).get('consumed') or [])
     notebook = study.study_dir / mf.ARTIFACTS['notebook']
     hint = None

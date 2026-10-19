@@ -14,7 +14,8 @@ The manifest records, for every deliverable, what was written and from what::
 at, when it failed); ``consumed`` lists the result ids whose numbers it cites.
 
 **An artefact is current** iff its status is ``ok``, its revision equals the state
-revision, and every result it consumes is still current (promoted and not stale).
+revision, every result it consumes is still current (promoted and not stale), and its
+file exists with the recorded hash (review fix M4, :func:`currency.file_check`).
 :func:`effective_status` computes this against a state; the stored ``status`` only
 says how the last render went. The workbench is not generated (``generated: false``):
 it is created once, never overwritten, and its experiments are not tracked, so it is
@@ -30,7 +31,8 @@ import json
 from pathlib import Path
 from typing import Mapping
 
-from .currency import consumed_current, effective_status, message, overall  # noqa: F401
+from .currency import (FILE_CHANGED, FILE_MISSING, consumed_current,  # noqa: F401
+                       effective_status, file_check, message, overall, stale_reason)
 
 SCHEMA = 'hypotrail.artifacts/1'
 FILE = 'artifacts.json'
@@ -80,15 +82,17 @@ def item(manifest: Mapping, name: str, *, kind: str, generated: bool = True) -> 
     return base
 
 
-def summary(manifest: Mapping, state: Mapping) -> dict:
+def summary(manifest: Mapping, state: Mapping, study_dir=None) -> dict:
     """``{name: {status, path, revision, last_ok_revision, error, ..., message}}`` per
-    artefact; ``message`` is one human sentence (:func:`currency.message`)."""
+    artefact; ``message`` is one human sentence (:func:`currency.message`). With
+    ``study_dir``, each file is checked against its recorded hash (M4)."""
     out = {}
     for name in ARTIFACTS:
         raw = manifest.get('artifacts', {}).get(name)
         if raw is None:
             continue
-        entry = {'status': effective_status(raw, state), 'path': raw.get('path'),
+        file = file_check(study_dir, raw)
+        entry = {'status': effective_status(raw, state, None, file), 'path': raw.get('path'),
                  'revision': raw.get('revision'), 'last_ok_revision': raw.get('last_ok_revision'),
                  'error': raw.get('error')}
         if raw.get('generated') is False:
@@ -97,7 +101,7 @@ def summary(manifest: Mapping, state: Mapping) -> dict:
             entry['candidate'] = raw['candidate']
         if raw.get('user_edits_preserved'):
             entry['user_edits_preserved'] = list(raw['user_edits_preserved'])
-        entry['message'] = message(name, raw, state)
+        entry['message'] = message(name, raw, state, None, file)
         out[name] = entry
     return out
 

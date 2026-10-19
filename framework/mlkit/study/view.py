@@ -126,8 +126,10 @@ def _artifacts(study: read.Study, state: dict) -> dict:
     """The manifest with each artefact's **effective** status (``currency.effective_status``).
 
     The stored ``status`` only says how the last render went; an artefact written for an
-    earlier revision, or citing a result that is no longer current, is ``stale`` even if
-    that render succeeded. The stored value stays visible as ``recorded_status``.
+    earlier revision, citing a result that is no longer current, or whose file was deleted
+    or changed since (M4), is ``stale`` even if that render succeeded; ``stale_reason`` says
+    which (``currency.STALE_REASONS``, or null). The stored value stays visible as
+    ``recorded_status``.
     """
     raw = study.artifacts()
     if raw is None:
@@ -141,9 +143,11 @@ def _artifacts(study: read.Study, state: dict) -> dict:
     for name, item in raw['artifacts'].items():
         if not isinstance(item, dict):
             continue
+        file = currency.file_check(study.study_dir, item)     # M4: the bytes on disk
         items[name] = {**item, 'recorded_status': item.get('status'),
-                       'status': currency.effective_status(item, state, current),
-                       'message': currency.message(name, item, state, current)}
+                       'status': currency.effective_status(item, state, current, file),
+                       'stale_reason': currency.stale_reason(item, state, current, file),
+                       'message': currency.message(name, item, state, current, file)}
     return {'manifest': read.ARTIFACTS_FILE,
             'status': currency.overall(i['status'] for i in items.values()), 'items': items}
 

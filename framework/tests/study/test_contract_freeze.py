@@ -648,6 +648,19 @@ def test_phase3_render_and_check_contract():
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
+def test_deliverable_file_currency_contract():
+    """Review fix M4: the file reasons of a stale deliverable and the functions behind them."""
+    from mlkit.study import currency
+    assert currency.STALE_REASONS == ('file_missing', 'file_changed', 'revision_changed',
+                                      'result_not_current')
+    assert [n for n, _ in _params(currency.effective_status)] == ['item', 'state', 'is_current',
+                                                                  'file']
+    assert [n for n, _ in _params(currency.file_check)] == ['study_dir', 'item']
+    tokens = {*currency.STALE_REASONS, 'stale_reason', 'currency.STALE_REASONS',
+              'currency.file_check', 'edit_check_sha256', '__generated_with'}
+    assert not sorted(t for t in tokens if t not in DOC_TOKENS)
+
+
 def test_session_report_and_session_log_contract():
     from mlkit.study import cmd_session_report, sessionlog
     assert cmd_session_report.SCHEMA == SESSION_REPORT_SCHEMA

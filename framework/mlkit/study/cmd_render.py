@@ -171,7 +171,7 @@ def render_all(study_dir) -> dict:
             StudyStore(study).event('render_failed', revision=view['revision'], artifacts=failed,
                                     errors={n: ordered[n]['error'] for n in failed})
     return {'revision': view['revision'], 'status': new['status'],
-            'artifacts': mf.summary(new, state)}
+            'artifacts': mf.summary(new, state, study)}
 
 
 def _failed_everywhere(exc: BaseException, payload: dict | None = None) -> dict:
