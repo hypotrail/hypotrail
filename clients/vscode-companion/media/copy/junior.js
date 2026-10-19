@@ -23,7 +23,7 @@
     prediction_time: 'the prediction moment',
     feature_availability: 'the variables you may use',
     split: 'the split',
-    policy: regression(task) ? 'the third decision' : 'the calling rule',
+    policy: regression(task) ? 'the third decision' : 'the decision rule',
     model_choice: 'the model choice',
     success_criterion: 'the success criterion',
     preprocessing: 'the data preparation',
@@ -39,7 +39,7 @@
     feature_availability: 'Only columns known at the prediction moment may be used; a column filled in later would leak the outcome into the model.',
     split: 'The split sets aside rows the models never learn from, so their errors can be measured honestly.',
     policy: regression(task) ? 'This decision turns the results into an action.'
-      : 'The calling rule turns scores into an action: how many clients to call, given what the team can handle.',
+      : 'The decision rule turns scores into an action: which cases to act on, given what the team can handle.',
     model_choice: 'The model choice picks the model whose errors on the validation rows fit your use.',
     success_criterion: 'The success criterion fixes, before you see the results, how much better than the baseline a model must be to be worth adopting.',
     preprocessing: 'The data preparation says how missing values, rare categories, extreme values and skewed columns are handled; it is learned on the training rows only.',
@@ -105,12 +105,12 @@
     const [v, model] = str(value).split('@');
     const tail = model === 'fit.variant' ? ', with the variant' : '';
     let m = v.match(/^capacity:([0-9]+)$/);
-    if (m && !regression(task)) return `Call the top ${m[1]} by score${tail}`;
+    if (m && !regression(task)) return `Select the top ${m[1]} by score${tail}`;
     // WP-B5: a share of the scored rows (WP-B3).
     m = v.match(/^share:([0-9.]+)$/);
-    if (m && !regression(task) && sharePercent(m[1])) return `Call the top ${sharePercent(m[1])} by score${tail}`;
+    if (m && !regression(task) && sharePercent(m[1])) return `Select the top ${sharePercent(m[1])} by score${tail}`;
     m = v.match(/^threshold:([0-9.]+)$/);
-    if (m && !regression(task)) return `Call everyone scored ${m[1]} or more${tail}`;
+    if (m && !regression(task)) return `Select every case scored ${m[1]} or more${tail}`;
     return null;
   }
 
@@ -182,7 +182,7 @@
   }
 
   const VERDICTS = {
-    adopt_policy: 'Adopt the calling rule',
+    adopt_policy: 'Adopt the decision rule',
     adopt_model: 'Adopt the chosen model',
     keep_baseline: 'Keep the current practice',
     inconclusive: 'Inconclusive',
@@ -335,7 +335,7 @@
     split: 'The split', 'eda.target_rate': 'The outcome rate', 'eda.target_summary': 'The target summary',
     'eda.special_values': 'The special-value check', 'eda.rate_by': 'An outcome rate by group',
     'eda.mean_by': 'A target mean by group', 'eda.distribution': 'A distribution', 'fit.baseline': 'The baseline model',
-    'fit.logistic': 'The logistic model', 'fit.linear': 'The linear model', 'policy.evaluate': 'The calling-rule evaluation',
+    'fit.logistic': 'The logistic model', 'fit.linear': 'The linear model', 'policy.evaluate': 'The decision-rule evaluation',
     'evaluate.regression': 'The model comparison',
     // WP-A7: the quality check (development rows) and the leakage detector.
     'eda.quality': 'The data quality check', 'eda.single_feature_signal': 'The single-feature signal check',
@@ -394,7 +394,7 @@
     line: name => `This study uses the ${name} mode.`,
     // `finalTest`: the study has the opening of a final test (WP-B1), which also needs a reason.
     rules: (mode, task, finalTest) => {
-      const choice = regression(task) ? 'the model choice' : 'the calling rule';
+      const choice = regression(task) ? 'the model choice' : 'the decision rule';
       const opening = finalTest ? 'Opening the final test also needs your reason, and you give it in the chat only.' : null;
       if (mode === 'training') {
         return [
@@ -432,7 +432,7 @@
     temporal: 'the latest rows in time order',
   };
   const SLOTS = {
-    split: 'the split', 'policy.evaluation': 'the calling-rule evaluation', 'evaluate.regression': 'the model comparison',
+    split: 'the split', 'policy.evaluation': 'the decision-rule evaluation', 'evaluate.regression': 'the model comparison',
     'fit.baseline': 'the baseline', 'fit.logistic': 'the logistic model', 'fit.linear': 'the linear model', 'fit.variant': 'the variant',
   };
   /** A decision id or a result slot of `changed_after` in words. */

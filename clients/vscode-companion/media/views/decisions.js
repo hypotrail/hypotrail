@@ -45,7 +45,7 @@
   function slotWords(ctx, slot) {
     const s = str(slot);
     if (s.startsWith('fit.')) return J().modelName(s, taskOf(ctx));
-    const words = { split: 'the split', 'policy.evaluation': 'the calling-rule evaluation', 'evaluate.regression': 'the model comparison' };
+    const words = { split: 'the split', 'policy.evaluation': 'the decision-rule evaluation', 'evaluate.regression': 'the model comparison' };
     return words[s] || s.replace(/[._:]/g, ' ');
   }
 

@@ -15,7 +15,7 @@ import re
 
 from test_webview_evidence import detail_payload
 
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 CONTROLS = ('button:not([data-write]):not([role="tab"]):not([disabled]), summary, input[type="radio"], '
             'input[type="checkbox"], select, input[type="range"]')
 TABS = {

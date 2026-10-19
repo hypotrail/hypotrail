@@ -320,7 +320,7 @@ test('the learn copy holds no digit outside placeholders except the quoted engin
   for (const [k, v] of Object.entries(copy)) {
     if (typeof v !== 'string' || k === 'sessionLogOff') continue;
     assert.doesNotMatch(v, /\d/, k);
-    assert.doesNotMatch(v, /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b/i, k);
+    assert.doesNotMatch(v, /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b/i, k);
   }
   assert.equal(copy.sessionLogOff,
     'Start the CLI once with HYPOTRAIL_SESSION_LOG=1 to turn it on; delete .hypotrail/session-log.jsonl to turn it off.');

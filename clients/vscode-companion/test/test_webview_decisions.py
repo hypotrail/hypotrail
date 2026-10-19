@@ -14,7 +14,7 @@ import re
 
 import pytest
 
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
 RESTATEMENT = 'Call the 100 clients with the highest scores.'
 WORDS = 'Yes: we can make 100 calls per wave, so call the 100 best-scored clients.'
@@ -146,7 +146,7 @@ def test_dc1_words_stay_on_their_card_and_are_dropped_after_a_confirmation(open_
     last = page.locator('[data-last-outcome="p_5"]')
     assert last.locator('[data-outcome="ok"]').count() == 1
     assert WORDS in last.inner_text()
-    assert last.locator('.title').inner_text() == 'Confirmed the calling rule in your words (channel webview).'
+    assert last.locator('.title').inner_text() == 'Confirmed the decision rule in your words (channel webview).'
     assert last.locator('[data-recorded-words]').inner_text() == f'Recorded: “{WORDS}”'
     assert 'The report is up to date.' in last.inner_text()
     assert textarea_values(page) == ['']
@@ -257,7 +257,7 @@ def test_dc4_first_confirmation_and_a_split_change(open_panel, binary, effects, 
     stale = split.locator('[data-effects-box="stale"]').inner_text()
     assert 'the logistic model' in stale and 'fit.logistic' not in stale, 'slots in words (WP-A5)'
     assert split.locator('[data-effects-box="stale"] .dc-box-title').inner_text() == 'Becomes stale'
-    assert split.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nthe calling rule'
+    assert split.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nthe decision rule'
     assert 'fit.baseline' not in split.locator('[data-effects-box="kept"]').inner_text()
     assert split.locator('.dc-notes').inner_text() == 'Changing the split does not make explored rows unseen.'
     assert_clean(panel)
@@ -288,7 +288,7 @@ def test_card_head_pause_origin_holds_and_resolved_conditions(open_panel, binary
     made = c.locator('[data-made-at="p_5"]')
     assert made.inner_text() == 'Proposed at revision 26' and made.get_attribute('title') == 'p_5'
     value = c.locator('[data-proposed-value="p_5"]')
-    assert value.inner_text() == 'In short: Call the top 100 by score'
+    assert value.inner_text() == 'In short: Select the top 100 by score'
     assert value.locator('[data-value-raw]').get_attribute('data-value-raw') == 'capacity:100'
     assert c.locator('[data-value-details="p_5"] code').text_content() == 'capacity:100'
     assert 'p_5' not in c.locator('h3, [data-proposed-value], [data-made-at]').all_inner_texts().__str__()
@@ -458,7 +458,7 @@ def test_evidence_chips_at_v2_come_from_current_results_only(open_panel, binary,
     chips = card(panel).locator('[data-evidence="p_5"]')
     # WP-A5: chips in words; the activity and the result id in the hover.
     assert chips.locator('[data-evidence-chip]').evaluate_all('cs => cs.map(c => [c.innerText, c.title])') == \
-        [['See the calling-rule evaluation →', 'policy.evaluation · result ae80b53f…']]
+        [['See the decision-rule evaluation →', 'policy.evaluation · result ae80b53f…']]
     delta = chips.locator('[data-evidence-delta] data[data-result-id]')
     assert delta.inner_text() == \
         'Share of successes among the cases picked, against the baseline: +24.5% (interval +15.7% to +34.5%)'
@@ -550,7 +550,7 @@ def test_dh1_history_basis_channel_superseded_and_unconfirmed(open_panel, binary
     assert 'not available: campaign, day, duration, month' in fa.get_attribute('title')
     assert fa.inner_text().endswith('4 excluded (duration, day, month, campaign)') or \
         fa.inner_text().endswith('4 excluded (campaign, day, duration, month)'), fa.inner_text()
-    assert page.locator('[data-history-row="policy:27"] .dc-history-value').inner_text() == 'Call the top 100 by score'
+    assert page.locator('[data-history-row="policy:27"] .dc-history-value').inner_text() == 'Select the top 100 by score'
     assert_clean(panel)
 
 

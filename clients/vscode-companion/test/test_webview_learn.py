@@ -15,7 +15,7 @@ import pytest
 
 expect = pytest.importorskip('playwright.sync_api').expect
 
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 EMPTY = {'prefs': {'hideCards': False}, 'seen': {}, 'predictions': {}}
 
 

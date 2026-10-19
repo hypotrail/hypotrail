@@ -24,7 +24,7 @@ import themes
 
 SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
 THEMES = ['light', 'dark', 'hc']
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 
 
 def shot(page, name):
@@ -356,7 +356,7 @@ def test_dc7_the_mode_line_says_what_counts_as_an_answer(open_panel, views):
     assert mode.count() == 1
     text = mode.inner_text()
     assert 'This study uses the guided mode.' in text
-    assert 'For the calling rule and the conclusion, also give your reason' in text
+    assert 'For the decision rule and the conclusion, also give your reason' in text
     assert 'changes only in the chat' in text
     assert mode.locator('button, select, input, textarea, [data-write]').count() == 0
     card = page.locator('[data-proposal-card][data-decision="policy"]')
@@ -441,7 +441,7 @@ def test_ov9_where_we_are_shows_the_success_criterion_status(open_panel, views):
     assert 'Adopt only if precision beats the baseline by at least 5 points' in row.inner_text()
     cited = row.locator('[data-criterion-gain] [data-result-id]').evaluate_all('ns => ns.map(n => n.textContent)')
     assert cited == ['+30.5', '+21.4', '+40.2']
-    assert 'when you call the top 100 by score' in row.inner_text()
+    assert 'when you select the top 100 by score' in row.inner_text()
     shot(page, 'overview-criterion')
     for status in ('uncertain', 'not_met', 'not_assessed'):
         changed = copy.deepcopy(views['hand.summary'])

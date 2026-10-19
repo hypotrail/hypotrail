@@ -13,7 +13,7 @@ const { fixture, names, DIR } = require('./fixture-cli');
 
 const CONTRACT = JSON.parse(fs.readFileSync(path.join(DIR, 'contract-keys.json'), 'utf8'));
 const INDEX = JSON.parse(fs.readFileSync(path.join(DIR, 'index.json'), 'utf8'));
-const FORBIDDEN = /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b/i;
+const FORBIDDEN = /\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b/i;
 
 /** Every value at `selector` ("a.b[].c", "steps.*") of `value`, skipping nulls. */
 function select(value, selector) {

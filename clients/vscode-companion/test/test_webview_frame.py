@@ -13,7 +13,7 @@ import pytest
 TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn']
 STAGE_TABS = {'v0': [], 'v1': ['overview', 'decisions'],
               'v2': ['overview', 'eda', 'decisions', 'evidence', 'whatif'], 'v3': TABS}
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 
 
 @pytest.fixture(scope='module')
@@ -260,7 +260,7 @@ def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, 
                         'points; the data preparation: Missing values not flagged, no capping, no log scale; '
                         # WP-B1: the variant the policy compares, in words
                         'the variant to compare: Compare with a more regularised variant; '
-                        'the calling rule: Call everyone scored 0.2 or more.')
+                        'the decision rule: Select every case scored 0.2 or more.')
     strip = page.locator('[data-recap-strip]').inner_text()
     assert 'threshold:0.2' not in strip and 'result ' not in strip
     assert panel.clean()

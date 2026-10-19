@@ -26,7 +26,7 @@ import themes
 
 SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
 THEMES = ['light', 'dark', 'hc']
-FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|selected)\b', re.I)
+FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 CHART_SIZES = """() => {
   const body = parseFloat(getComputedStyle(document.body).fontSize);
   return [...document.querySelectorAll('svg.ht-chart')].filter(s => s.getBoundingClientRect().width > 0).map(svg => {
@@ -131,7 +131,7 @@ def test_ev7_evidence_opens_on_the_opened_final_test_then_the_ledger(open_panel,
     assert f", on {fe['values']['n']:,} final-test rows, refitted on {fe['values']['refit']['n_rows']:,} development rows" in measured
     changed = card.locator('[data-changed]').evaluate_all('ns => ns.map(n => n.dataset.changed)')
     assert changed == raw['changed_after']
-    assert 'the calling rule' in card.locator('[data-changed-after]').inner_text()
+    assert 'the decision rule' in card.locator('[data-changed-after]').inner_text()
     trials = card.locator('[data-trials]')
     assert trials.get_attribute('data-trials') == str(views['raw.summary.opened']['trials']['count'])
     assert 'Configurations evaluated: 2' in trials.inner_text() and 'luck' in trials.inner_text()
@@ -392,7 +392,7 @@ def test_ov11_where_we_are_shows_the_final_test_and_the_mode(open_panel, views):
     crit = row.locator('[data-final-criterion]')
     assert crit.get_attribute('data-final-criterion') == raw['criterion']['final_test']['status']
     assert crit.locator('data[data-path="criterion.gain"]').get_attribute('data-result-id') == raw['criterion']['final_test']['result_id']
-    assert 'the calling rule' in row.locator('[data-changed-after]').inner_text()
+    assert 'the decision rule' in row.locator('[data-changed-after]').inner_text()
     mode = page.locator('[data-mode-explainer="guided"]')
     assert 'This study uses the guided mode.' in mode.inner_text()
     assert 'opening of the final test' in mode.inner_text().lower() or 'Opening the final test' in mode.inner_text()

@@ -60,7 +60,7 @@
       // WP-B5: the two decisions of WP-B1.
       model_variant: 'the variant to compare',
       final_test: 'the opening of the final test',
-      policy: regression(task) ? 'the third decision' : 'the calling rule',
+      policy: regression(task) ? 'the third decision' : 'the decision rule',
       model_choice: 'the model choice',
       conclusion: 'the conclusion',
     }),
@@ -123,7 +123,7 @@
     modeRules: task => [
       'An answer is a reply to the open proposal, in your own words, that agrees with it.',
       'It is not an answer when it is only "ok", asks a question, or keeps a condition such as "yes, but" or "unless".',
-      `For ${regression(task) ? 'the model choice' : 'the calling rule'} and the conclusion, also give your reason: why it fits your situation.`,
+      `For ${regression(task) ? 'the model choice' : 'the decision rule'} and the conclusion, also give your reason: why it fits your situation.`,
       'When the assistant raises a point about your reason, you may keep your words; the point is recorded next to them.',
     ],
     modeOther: 'This mode is described in the chat; the panel shows its name only.',
