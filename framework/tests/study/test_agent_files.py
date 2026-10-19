@@ -232,7 +232,7 @@ def test_instructions_carry_the_rerun_wording_fixes():
                    'placeholder such as <N>', "'the team can call <N>'",
                    'never a made-up number'):
         assert phrase in rule2, phrase
-    assert 'Never\ninvent a figure' in skill and 'write <N>' in skill
+    assert 'Do not\ninvent a figure' in skill and 'write <N>' in skill   # WP-A8: was "Never"
     for template in (text, skill, resume):        # the examples themselves use placeholders
         for invented in ('38 subscribers', 'we will get 38', '115 selected', '3,164',
                          '3fa9c2e1', '31 %', 'call 250', 'limit of 100'):
@@ -395,3 +395,23 @@ def test_instructions_carry_the_v0_2a_rules():
     assert confirm.REASON_REQUIRED == 'reason_required'
     assert st.SUCCESS_CRITERION == 'success_criterion' and st.PREPROCESSING == 'preprocessing'
     assert 'final_test' in view.SUMMARY_KEYS and audience.AGENT == 'agent'
+
+
+def test_the_skill_carries_the_v0_2a_pedagogy():
+    """WP-A8: the skill teaches step 0, EDA governance, the two new decisions, the reason
+    check (a)/(b)/(c), and development evidence, for both tasks; its R3 example names
+    Bank variables only in the binary rendering."""
+    for task in ('binary', 'regression'):
+        skill = Flat(af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
+                                    .read_text(), task))
+        for phrase in ('## Step 0: the data card', '`show_data_card`', 'data --format text',
+                       '## Exploring the training rows', '`values.question`',
+                       'is a leakage detector, not a selection tool', '`eda_looks`',
+                       '## The success criterion and the preprocessing',
+                       '`next_action.default_value`', '`motivated_by`',
+                       '**data-contingent decision**', "**The junior's reasons.**",
+                       '(a) rephrase', '(c) keep their words', '`--agent-concern`',
+                       '**Development evidence, final evidence.**',
+                       'how the result stands against the success criterion'):
+            assert phrase in skill, (task, phrase)
+        assert ('"drop contact, its value can be inflated"' in skill) == (task == 'binary')
