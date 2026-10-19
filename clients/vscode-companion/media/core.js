@@ -438,8 +438,11 @@
   function alertStrip() {
     const snap = state.snapshot;
     if (!snap || !(snap.alerts || []).length) return null;
+    // One alert per event: an unknown outcome is also listed as an interrupted execution.
+    const unknown = snap.alerts.some(a => a.id === 'outcome_unknown');
+    const alerts = snap.alerts.filter(a => !(unknown && a.id === 'interrupted_executions'));
     return el('section', { className: 'ht-alerts', 'aria-label': C().alertsLabel, 'data-stage': 'v1' },
-      snap.alerts.map(a => el('div', { className: 'card alert', role: 'alert', 'data-alert': a.id }, [
+      alerts.map(a => el('div', { className: 'card alert', role: 'alert', 'data-alert': a.id }, [
         // Two-layer copy (WP-A5): the junior variant, else the panel's own words for the id.
         el('p', { text: a.juniorText || (HT.copy.junior && HT.copy.junior.limitText[a.id]) || (a.audience === 'agent' ? '' : a.text) }),
         el('button', { type: 'button', className: 'secondary', text: C().openHealth,
@@ -595,7 +598,9 @@
     append(root, [
       header(),
       tabbed() && list.length ? tablist(list, current) : null,
-      state.loadError ? null : (tabbed() ? alertStrip() : null),
+      // WP-A5: the Overview opens on the next move and its "Needs attention" section, so the
+      // alert strip is shown on the other tabs only (nothing pushes the next move down).
+      state.loadError ? null : (tabbed() && current !== 'overview' ? alertStrip() : null),
       state.loadError ? null : (tabbed() && current !== 'overview' ? recapStrip() : null),
       liveRegion(mounted),
       el('main', { id: 'main' }, state.loadError ? [loadErrorBanner()] : panels),

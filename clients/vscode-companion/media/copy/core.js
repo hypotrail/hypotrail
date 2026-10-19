@@ -38,7 +38,7 @@
     recapShow: 'Show the recap',
     recapHide: 'Hide the recap',
     alertsLabel: 'Alerts',
-    openHealth: 'Open Health in Overview',
+    openHealth: 'Go to what needs attention',
     footer: 'Reads the hypotrail CLI only · no state of its own · the chat, report and notebook stay complete without it.',
     updated: n => `Updated to revision ${n}.`,
     refusedTitle: (code, reason) => `The engine refused: ${code}${reason ? ' (' + reason + ')' : ''}`,

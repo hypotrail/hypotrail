@@ -523,10 +523,9 @@ def test_not_yet_defensible_and_alert_navigation_to_health(open_panel, health):
     assert nyd.locator('li[data-nyd="no_causality"] [data-chip]').inner_text() == 'context'
     assert 'no_causality' not in nyd.inner_text(), 'no raw id as text'
     page.locator('[role="tab"][data-tab="decisions"]').click()
-    page.locator('[data-alert="interrupted_executions"] button').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
-    assert page.evaluate('document.activeElement.id') == 'ov-executions'
+    assert page.locator('[data-alert="interrupted_executions"]').count() == 0, 'one alert per event'
     page.locator('[data-alert="outcome_unknown"] button').click()
+    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
     focused = page.evaluate('document.activeElement.closest("[data-nav]").dataset.nav')
     assert focused == 'limit:outcome_unknown'
     assert page.locator(f'[data-nav="limit:outcome_unknown"] [data-execution-card="{SUSPECTED}"]').count() == 1

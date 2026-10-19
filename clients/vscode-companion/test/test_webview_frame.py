@@ -115,9 +115,13 @@ def test_alert_strip_and_navigation_to_health(open_panel, model):
     panel.snapshot(health)
     page = panel.page
     alerts = page.locator('[data-alert]')
-    assert alerts.evaluate_all('as => as.map(a => a.dataset.alert)') == ['interrupted_executions', 'outcome_unknown']
-    assert alerts.first.get_attribute('role') == 'alert'
+    # WP-A5: not on the Overview (its first block is the next move); one alert per event
+    # elsewhere (the unknown outcome is the interrupted execution), in the junior's words.
+    assert alerts.count() == 0
     page.locator('[role="tab"][data-tab="decisions"]').click()
+    assert alerts.evaluate_all('as => as.map(a => a.dataset.alert)') == ['outcome_unknown']
+    assert alerts.first.get_attribute('role') == 'alert'
+    assert alerts.first.locator('p').inner_text() == health['nextAction']['juniorMessage']
     alerts.first.get_by_role('button').click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'overview'
     panel.send({'type': 'navigate', 'tab': 'decisions', 'kind': 'proposal', 'id': 'p_5'})

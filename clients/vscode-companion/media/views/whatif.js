@@ -450,7 +450,8 @@
       intervals(ctx, errors, { title: t.maeTitle, zero: false,
         rows: model.models.map(m => {
           const e = model.errors[m.fit];
-          return { label: name(m.fit), point: e.mae, low: e.maeLow, high: e.maeHigh, pointText: e.mae === null ? '' : `${f2(e.mae)}${unit}`,
+          return { label: name(m.fit), tone: m.fit === model.reference || m.fit === 'fit.baseline' ? 'baseline' : null,
+            point: e.mae, low: e.maeLow, high: e.maeHigh, pointText: e.mae === null ? '' : `${f2(e.mae)}${unit}`,
             intervalText: interval(e.maeLow, e.maeHigh, f2) };
         }) });
       if (model.deltas) {
