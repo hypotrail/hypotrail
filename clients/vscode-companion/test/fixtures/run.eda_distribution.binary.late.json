@@ -118,7 +118,8 @@
    "other": null,
    "min_group_rows": 30,
    "warnings": [],
-   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes."
+   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+   "question": "How are the values of age distributed among the training rows?"
   },
   "result": {
    "execution_id": "e_cccccccccccccccccccccccc",

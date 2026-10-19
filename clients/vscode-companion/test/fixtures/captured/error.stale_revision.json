@@ -7,14 +7,14 @@
   "argv": [
    "decide",
    "confirm",
-   "p_5",
+   "p_7",
    "--user-words=Yes, call the top 100",
    "--channel",
    "webview",
    "--request-id",
    "b-stale",
    "--expected-revision",
-   "29",
+   "33",
    "--json"
   ],
   "note": ""
@@ -27,8 +27,8 @@
    "code": "stale_revision",
    "message": "Revision is stale: reread hypotrail status before deciding",
    "details": {
-    "expected_revision": 29,
-    "current_revision": 30,
+    "expected_revision": 33,
+    "current_revision": 34,
     "changes_since": [
      {
       "action": "decide.propose",
@@ -42,14 +42,14 @@
       "result": {
        "decision_id": "policy",
        "decision_status": "confirmed",
-       "proposal_id": "p_5",
+       "proposal_id": "p_7",
        "restatement": "Call the 100 clients with the highest scores.",
        "status": "open",
        "superseded": []
       },
-      "revision": 30,
-      "state_sha256": "8d3a55c795bb92b55c8c90faa829170c04dad465394e49c2275c5494da55c6f7",
-      "time": "2026-10-19T08:50:32.878941+00:00"
+      "revision": 34,
+      "state_sha256": "3890dd1229ebd4db139d6aebb5728589e95a0bad716c68050de5c9dedaf4be1d",
+      "time": "2026-10-19T09:50:33.944423+00:00"
      }
     ]
    }

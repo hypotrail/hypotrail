@@ -7,7 +7,7 @@
   "argv": [
    "preview",
    "effects",
-   "p_4",
+   "p_6",
    "--json"
   ],
   "note": ""
@@ -16,8 +16,8 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 24,
-  "proposal_id": "p_4",
+  "revision": 28,
+  "proposal_id": "p_6",
   "decision_id": "model_choice",
   "value": "fit.linear",
   "previous": null,

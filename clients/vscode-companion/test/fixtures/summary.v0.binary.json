@@ -319,6 +319,15 @@
    "development_rows": 3617,
    "schema_check": "pass"
   },
+  "criterion": null,
+  "eda_looks": {
+   "target_looks": 3,
+   "results": [
+    "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
+    "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
+    "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942"
+   ]
+  },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result ae80b53f).",

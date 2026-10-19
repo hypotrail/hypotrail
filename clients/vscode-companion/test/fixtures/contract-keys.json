@@ -22,6 +22,8 @@
     "notes",
     "holds",
     "final_test",
+    "criterion",
+    "eda_looks",
     "recap",
     "recap_audience",
     "recap_junior"
@@ -48,6 +50,8 @@
     "notes",
     "holds",
     "final_test",
+    "criterion",
+    "eda_looks",
     "recap",
     "recap_audience",
     "recap_junior",
@@ -613,7 +617,8 @@
     "other",
     "min_group_rows",
     "warnings",
-    "note"
+    "note",
+    "question"
    ],
    "values.numeric": [
     "n",

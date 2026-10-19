@@ -300,6 +300,15 @@
    "development_rows": 318,
    "schema_check": "pass"
   },
+  "criterion": null,
+  "eda_looks": {
+   "target_looks": 3,
+   "results": [
+    "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+    "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
+    "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a"
+   ]
+  },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",

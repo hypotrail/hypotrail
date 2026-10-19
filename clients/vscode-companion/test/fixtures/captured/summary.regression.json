@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 24,
+  "revision": 28,
   "since": null,
   "changed": null,
   "goal": {
@@ -41,6 +41,11 @@
   "current_step": "model_choice",
   "plan": [
    {
+    "id": "discover_data",
+    "title": "Discover the data",
+    "status": "done"
+   },
+   {
     "id": "prediction_time",
     "title": "Define the prediction moment",
     "status": "done"
@@ -56,8 +61,18 @@
     "status": "done"
    },
    {
+    "id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "status": "done"
+   },
+   {
     "id": "train_eda",
     "title": "Explore the training partition",
+    "status": "done"
+   },
+   {
+    "id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
     "status": "done"
    },
    {
@@ -78,7 +93,7 @@
   ],
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_4",
+   "proposal_id": "p_6",
    "decision": "model_choice",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
@@ -86,11 +101,11 @@
   },
   "open_proposals": [
    {
-    "proposal_id": "p_4",
+    "proposal_id": "p_6",
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 24,
+    "revision": 28,
     "origin": {
      "channel": "chat"
     }
@@ -151,6 +166,36 @@
     "open_proposals": [],
     "feature_basis": null
    },
+   "success_criterion": {
+    "status": "confirmed",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "preprocessing": {
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
    "model_choice": {
     "status": "proposed",
     "value": "fit.linear",
@@ -159,7 +204,7 @@
     "user_words": null,
     "reason": null,
     "open_proposals": [
-     "p_4"
+     "p_6"
     ],
     "feature_basis": null
    },
@@ -176,49 +221,49 @@
   },
   "results": {
    "eda.distribution:weight": {
-    "result_id": "c4971962282e4844264c1dae85f0d08ad1b2d1f31c483f5718ce0d3908c5192c",
+    "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "fc8e5f80e34c5942848877fbad2230bb2012b54793a324cfce11598311599d2b",
+    "result_id": "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "84b426ef0540f3e66fd8178dc73293155a215b28d94d9e17a43b0c3f615f14f9",
+    "result_id": "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
+    "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+    "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "6a00b1aa9e4498afebab1f9e8d8dda309a76bc58f0a842979c6c9c9734a38dc9",
+    "result_id": "3640bf3a10283abb1f889c39f4b5d381b052c66eef274234626669ee25aa02ff",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "2b61f1e671e973345918230d2ebd31ee4103d325d6c05779fc2f7d7b7f30212c",
+    "result_id": "bce018d194ce90370e584aa3cf79b260b29aa50d503598c8ec01de3cf3d3391d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
+    "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -229,16 +274,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 24,
-     "last_ok_revision": 24,
+     "revision": 28,
+     "last_ok_revision": 28,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 24,
-     "last_ok_revision": 24,
+     "revision": 28,
+     "last_ok_revision": 28,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -306,17 +351,41 @@
    "development_rows": 318,
    "schema_check": "pass"
   },
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "mae_reduction",
+    "min_share": 0.1
+   },
+   "status": "met",
+   "gain": 0.36929471747082676,
+   "low": 0.30765831630777174,
+   "high": 0.4261314806060684,
+   "minimum": 0.1,
+   "unit": "share",
+   "rule": null,
+   "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
+   "contradicts_verdict": false
+  },
+  "eda_looks": {
+   "target_looks": 3,
+   "results": [
+    "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+    "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
+    "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a"
+   ]
+  },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result cbe74d99); the report and notebook are up to date.",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; result 7b9c2c93); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
-   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform).",
    "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
@@ -326,16 +395,19 @@
     "id": "frame",
     "title": "Frame the change",
     "steps": [
+     "discover_data",
      "prediction_time",
      "feature_availability",
-     "split"
+     "split",
+     "success_criterion"
     ]
    },
    {
     "id": "evidence",
     "title": "Prepare evidence",
     "steps": [
-     "train_eda"
+     "train_eda",
+     "preprocessing"
     ]
    },
    {
@@ -370,11 +442,15 @@
    {
     "pause": 2,
     "decisions": [
-     "split"
+     "split",
+     "success_criterion",
+     "preprocessing"
     ],
     "status": "closed",
     "confirmed": [
-     "split"
+     "split",
+     "success_criterion",
+     "preprocessing"
     ]
    },
    {
@@ -389,16 +465,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-19T08:50:34.467807+00:00",
+   "boundary_time": "2026-10-19T09:50:36.745647+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 24,
+   "until": 28,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-19T08:50:34.496762+00:00",
+     "time": "2026-10-19T09:50:36.822453+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -419,7 +495,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-19T08:50:34.546584+00:00",
+     "time": "2026-10-19T09:50:36.948643+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -447,7 +523,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-19T08:50:34.694245+00:00",
+     "time": "2026-10-19T09:50:37.061018+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -468,7 +544,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-19T08:50:34.754290+00:00",
+     "time": "2026-10-19T09:50:37.154311+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -496,7 +572,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-19T08:50:34.794781+00:00",
+     "time": "2026-10-19T09:50:37.234260+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -517,7 +593,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-19T08:50:34.837233+00:00",
+     "time": "2026-10-19T09:50:37.348568+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -544,8 +620,106 @@
      "text": "The split was confirmed in the junior's words (channel chat)."
     },
     {
+     "revision": 8,
+     "time": "2026-10-19T09:50:37.468813+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "Success criterion was proposed."
+    },
+    {
      "revision": 9,
-     "time": "2026-10-19T08:50:34.959725+00:00",
+     "time": "2026-10-19T09:50:37.546379+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "Success criterion was confirmed in the junior's words (channel chat)."
+    },
+    {
+     "revision": 10,
+     "time": "2026-10-19T09:50:37.668367+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "Preprocessing was proposed."
+    },
+    {
+     "revision": 11,
+     "time": "2026-10-19T09:50:37.782451+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "Preprocessing was confirmed in the junior's words (channel chat)."
+    },
+    {
+     "revision": 13,
+     "time": "2026-10-19T09:50:37.968431+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -553,8 +727,8 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
-     "execution_id": "e_20377cec9f51f6bf5ba1fa64",
+     "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
+     "execution_id": "e_ea1ff066194e9ce5fbc1533b",
      "rules": null,
      "column": null,
      "channel": null,
@@ -565,8 +739,8 @@
      "text": "The split was computed."
     },
     {
-     "revision": 11,
-     "time": "2026-10-19T08:50:35.105626+00:00",
+     "revision": 15,
+     "time": "2026-10-19T09:50:38.242061+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -574,8 +748,8 @@
      "note_id": null,
      "activity": "eda.target_summary",
      "slot": "eda.target_summary",
-     "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
-     "execution_id": "e_ce609b5bf3b974a84907e237",
+     "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+     "execution_id": "e_f37508d21e9ebda7c2ebce28",
      "rules": null,
      "column": null,
      "channel": null,
@@ -586,8 +760,8 @@
      "text": "The target summary was computed."
     },
     {
-     "revision": 13,
-     "time": "2026-10-19T08:50:35.275119+00:00",
+     "revision": 17,
+     "time": "2026-10-19T09:50:38.503594+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -595,8 +769,8 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "84b426ef0540f3e66fd8178dc73293155a215b28d94d9e17a43b0c3f615f14f9",
-     "execution_id": "e_2b12242f306cde1c5f3670f1",
+     "result_id": "0be410cabebded8bd7f8a0d25e7ea05ad6240b0b1003ea63dee2008b30b381b4",
+     "execution_id": "e_305370681065d9971a93f227",
      "rules": null,
      "column": null,
      "channel": null,
@@ -607,8 +781,8 @@
      "text": "The special-value check was computed."
     },
     {
-     "revision": 15,
-     "time": "2026-10-19T08:50:35.442713+00:00",
+     "revision": 19,
+     "time": "2026-10-19T09:50:38.775684+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -616,8 +790,8 @@
      "note_id": null,
      "activity": "eda.mean_by",
      "slot": "eda.mean_by:model_year",
-     "result_id": "fc8e5f80e34c5942848877fbad2230bb2012b54793a324cfce11598311599d2b",
-     "execution_id": "e_e80fb65ac70384bd8bab0358",
+     "result_id": "744abb364235ac91ade86e2bc93108e281f4f1c64d88e350ee487dee0636fd2a",
+     "execution_id": "e_808e66ec55e19cf01a72e71c",
      "rules": null,
      "column": "model_year",
      "channel": null,
@@ -628,8 +802,8 @@
      "text": "The target mean by group of model_year was computed."
     },
     {
-     "revision": 17,
-     "time": "2026-10-19T08:50:35.621583+00:00",
+     "revision": 21,
+     "time": "2026-10-19T09:50:38.983487+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -637,8 +811,8 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:weight",
-     "result_id": "c4971962282e4844264c1dae85f0d08ad1b2d1f31c483f5718ce0d3908c5192c",
-     "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+     "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
+     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
      "rules": null,
      "column": "weight",
      "channel": null,
@@ -649,8 +823,8 @@
      "text": "The distribution of weight was computed."
     },
     {
-     "revision": 19,
-     "time": "2026-10-19T08:50:35.792367+00:00",
+     "revision": 23,
+     "time": "2026-10-19T09:50:39.188145+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -658,8 +832,8 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "6a00b1aa9e4498afebab1f9e8d8dda309a76bc58f0a842979c6c9c9734a38dc9",
-     "execution_id": "e_f37508d21e9ebda7c2ebce28",
+     "result_id": "3640bf3a10283abb1f889c39f4b5d381b052c66eef274234626669ee25aa02ff",
+     "execution_id": "e_5f95a7d242e4ea751ed82afb",
      "rules": null,
      "column": null,
      "channel": null,
@@ -670,8 +844,8 @@
      "text": "The training mean baseline was computed."
     },
     {
-     "revision": 21,
-     "time": "2026-10-19T08:50:36.028835+00:00",
+     "revision": 25,
+     "time": "2026-10-19T09:50:39.433440+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -679,8 +853,8 @@
      "note_id": null,
      "activity": "fit.linear",
      "slot": "fit.linear",
-     "result_id": "2b61f1e671e973345918230d2ebd31ee4103d325d6c05779fc2f7d7b7f30212c",
-     "execution_id": "e_305370681065d9971a93f227",
+     "result_id": "bce018d194ce90370e584aa3cf79b260b29aa50d503598c8ec01de3cf3d3391d",
+     "execution_id": "e_622dd0c704d6af123eea761a",
      "rules": null,
      "column": null,
      "channel": null,
@@ -691,8 +865,8 @@
      "text": "The linear model was computed."
     },
     {
-     "revision": 23,
-     "time": "2026-10-19T08:50:36.263348+00:00",
+     "revision": 27,
+     "time": "2026-10-19T09:50:39.742168+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -700,8 +874,8 @@
      "note_id": null,
      "activity": "evaluate.regression",
      "slot": "evaluate.regression",
-     "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
-     "execution_id": "e_808e66ec55e19cf01a72e71c",
+     "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
+     "execution_id": "e_284db43c31758f9aef75cd0b",
      "rules": null,
      "column": null,
      "channel": null,
@@ -712,12 +886,12 @@
      "text": "The model evaluation was computed."
     },
     {
-     "revision": 24,
-     "time": "2026-10-19T08:50:36.329452+00:00",
+     "revision": 28,
+     "time": "2026-10-19T09:50:39.874870+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
-     "proposal_id": "p_4",
+     "proposal_id": "p_6",
      "note_id": null,
      "activity": null,
      "slot": null,
@@ -735,8 +909,8 @@
    ],
    "truncated": false,
    "counts": {
-    "proposed": 4,
-    "confirmed": 3,
+    "proposed": 6,
+    "confirmed": 5,
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
@@ -748,6 +922,6 @@
    }
   },
   "task": "regression",
-  "currency": "e4ffef280f5f8d5d"
+  "currency": "eec37c29ee94691f"
  }
 }

@@ -7,14 +7,14 @@
   "argv": [
    "decide",
    "confirm",
-   "p_5",
+   "p_7",
    "--user-words=ok",
    "--channel",
    "webview",
    "--request-id",
    "b-ok",
    "--expected-revision",
-   "30",
+   "34",
    "--json"
   ],
   "note": ""

@@ -52,8 +52,12 @@ def test_origin_is_the_last_key_of_open_proposals_and_the_report_says_so(clone):
 
 @pytest.mark.parametrize('task', st.TASKS)
 def test_the_eda_catalog_is_the_eda_activities_of_the_task(task):
-    expected = tuple(a for a in act.task_activities(task) if a in act.EDA)
+    # WP-A4: the structural quality overview and the single-feature signal are EDA
+    # activities the companion's catalog leaves out (the panel's own work package decides).
+    expected = tuple(a for a in act.task_activities(task) if a in act.EDA
+                     and a not in (act.QUALITY, act.SIGNAL))
     assert cmd_evidence.EDA_CATALOG[task] == expected
+    assert cmd_evidence.COMPANION_EXCLUDED_EDA == (act.QUALITY, act.SIGNAL)
     assert act.DISTRIBUTION in expected, 'the shared activity is offered to both tasks'
     assert set(cmd_evidence.PER_COLUMN_ROLES) == set(act.PER_COLUMN)
     assert cmd_evidence.PER_COLUMN_ROLES[act.DISTRIBUTION] == act.DISTRIBUTION_ROLES
@@ -63,7 +67,8 @@ def test_the_live_catalog_matches_task_activities(binary):
     code, payload = cc.run('evidence', '--study', binary.study)
     assert code == 0, payload
     listed = tuple(a['activity'] for a in payload['eda_catalog']['activities'])
-    assert listed == tuple(a for a in act.task_activities('binary') if a in act.EDA)
+    assert listed == tuple(a for a in act.task_activities('binary') if a in act.EDA
+                           and a not in cmd_evidence.COMPANION_EXCLUDED_EDA)
 
 
 @pytest.mark.parametrize('task', st.TASKS)
