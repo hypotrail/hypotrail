@@ -1,6 +1,6 @@
 # Contributing
 
-v0.1 of the junior workflow ([the specification](docs/specs/JUNIOR-WORKFLOW.md)) is implemented for Bank Marketing with Claude Code. Start with [the handoff](docs/handoff/IMPLEMENTATION.md) for its capabilities and limits, and [the checklist](docs/acceptance/V0.1-CHECKLIST.md) for its evidence. The old companion is paused; a study panel for VS Code (`clients/vscode-companion/`, ADRs 0003 and 0004) exists behind a feature flag that is off by default, with its stages v1 to v3 behind the stage setting (default `v0`).
+v0.2 of the junior workflow ([the specification](docs/specs/JUNIOR-WORKFLOW.md)) is implemented with Claude Code, on Online Shoppers first, then Bank Marketing, Bank Marketing full, and Auto MPG. Start with [the handoff](docs/handoff/IMPLEMENTATION.md) for its capabilities and limits, and [the v0.2 checklist](docs/acceptance/V0.2-CHECKLIST.md) for its evidence ([v0.1 checklist](docs/acceptance/V0.1-CHECKLIST.md) for the earlier slice). The old companion is paused; a study panel for VS Code (`clients/vscode-companion/`, ADRs 0003 and 0004) exists behind a feature flag that is off by default, with its stages v1 to v3 behind the stage setting (default `v0`).
 
 Use English for maintained prose, interface text, code comments, and new examples. Preserve original third-party data and identifiers required for compatibility. Keep changes focused and explain both behavior and validation in commits and pull requests.
 
