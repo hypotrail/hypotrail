@@ -22,103 +22,103 @@
   "activity": "eda.rate_by",
   "execution_id": "e_087f4c7109d76636536c712c",
   "status": "promoted",
-  "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
+  "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
   "values": {
    "partition": "train",
    "column": "job",
-   "n_rows": 3164,
-   "overall_rate": 0.11536030341340076,
+   "n_rows": 2531,
+   "overall_rate": 0.11536941920189649,
    "binned": false,
    "binning": null,
    "groups": [
     {
      "value": "admin.",
-     "n_rows": 342,
-     "n_positive": 38,
-     "rate": 0.1111111111111111,
+     "n_rows": 243,
+     "n_positive": 33,
+     "rate": 0.13580246913580246,
      "small_count": false
     },
     {
      "value": "blue-collar",
-     "n_rows": 674,
-     "n_positive": 50,
-     "rate": 0.07418397626112759,
+     "n_rows": 510,
+     "n_positive": 34,
+     "rate": 0.06666666666666667,
      "small_count": false
     },
     {
      "value": "entrepreneur",
-     "n_rows": 124,
-     "n_positive": 11,
-     "rate": 0.08870967741935484,
+     "n_rows": 94,
+     "n_positive": 6,
+     "rate": 0.06382978723404255,
      "small_count": false
     },
     {
      "value": "housemaid",
-     "n_rows": 72,
-     "n_positive": 9,
-     "rate": 0.125,
+     "n_rows": 76,
+     "n_positive": 14,
+     "rate": 0.18421052631578946,
      "small_count": false
     },
     {
      "value": "management",
-     "n_rows": 677,
-     "n_positive": 97,
-     "rate": 0.1432791728212703,
+     "n_rows": 538,
+     "n_positive": 69,
+     "rate": 0.12825278810408922,
      "small_count": false
     },
     {
      "value": "retired",
-     "n_rows": 150,
-     "n_positive": 35,
-     "rate": 0.23333333333333334,
+     "n_rows": 142,
+     "n_positive": 36,
+     "rate": 0.2535211267605634,
      "small_count": false
     },
     {
      "value": "self-employed",
-     "n_rows": 116,
-     "n_positive": 14,
-     "rate": 0.1206896551724138,
+     "n_rows": 100,
+     "n_positive": 11,
+     "rate": 0.11,
      "small_count": false
     },
     {
      "value": "services",
-     "n_rows": 292,
-     "n_positive": 26,
-     "rate": 0.08904109589041095,
+     "n_rows": 241,
+     "n_positive": 20,
+     "rate": 0.08298755186721991,
      "small_count": false
     },
     {
      "value": "student",
-     "n_rows": 59,
-     "n_positive": 11,
-     "rate": 0.1864406779661017,
+     "n_rows": 44,
+     "n_positive": 12,
+     "rate": 0.2727272727272727,
      "small_count": false
     },
     {
      "value": "technician",
-     "n_rows": 540,
-     "n_positive": 59,
-     "rate": 0.10925925925925926,
+     "n_rows": 454,
+     "n_positive": 50,
+     "rate": 0.11013215859030837,
      "small_count": false
     },
     {
      "value": "unemployed",
-     "n_rows": 92,
-     "n_positive": 10,
-     "rate": 0.10869565217391304,
+     "n_rows": 70,
+     "n_positive": 4,
+     "rate": 0.05714285714285714,
      "small_count": false
     },
     {
      "value": "unknown (special value)",
-     "n_rows": 26,
-     "n_positive": 5,
-     "rate": 0.19230769230769232,
+     "n_rows": 19,
+     "n_positive": 3,
+     "rate": 0.15789473684210525,
      "small_count": true
     }
    ],
    "min_group_rows": 30,
    "warnings": [
-    "job = unknown (special value): only 26 training rows; its rate is too noisy to read on its own."
+    "job = unknown (special value): only 19 training rows; its rate is too noisy to read on its own."
    ],
    "n_groups": 12,
    "max_groups": 20,
@@ -130,13 +130,13 @@
    "activity": "eda.rate_by",
    "slot": "eda.rate_by:job",
    "status": "promoted",
-   "result_id": "b3d45ce91d607e944233d6ea913073d664bdcf4e7d17dee8ab75231d5a688db4",
-   "input_key": "0c62fa2461ef9ee3caad2410d107a94495ad7d01976484a05558976c564e0ec8",
+   "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
+   "input_key": "71b33d6842822edefd7fad9b1686ce8b6ddca65f13ba5145e2472696bde50526",
    "reason": null,
    "started_revision": 14,
    "invalidation": null,
    "exposure_ids": [
-    "x_46a66f63a0d04fb98e286cb60a8e15a1"
+    "x_bb48c85214dd4b64865d35c8e5541628"
    ],
    "registry_created": true,
    "nondeterministic": false

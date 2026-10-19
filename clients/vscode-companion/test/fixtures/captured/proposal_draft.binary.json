@@ -22,31 +22,31 @@
   "value": "capacity:100",
   "proposable": true,
   "missing": [],
-  "restatement": "Adopt the rule capacity:100: act on the 100 highest-scored rows. On the 1,357 validation rows the logistic model's selection had precision 36.0% against 11.5% for the baseline, and recall 23.1%. These validation rows were used to choose the rule, so these figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 8f1781d8).",
+  "restatement": "Adopt the rule capacity:100: act on the 100 highest-scored rows. On the 1,086 validation rows the logistic model's selection had precision 37.0% against 11.5% for the baseline, and recall 29.6%. These validation rows were used to choose the rule, so these figures are optimistic.",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 474ee9e1).",
   "evidence": {
-   "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+   "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
    "activity": "policy.evaluation",
    "figures": [
     {
      "path": "n",
-     "value": 1357,
-     "shown": "1,357"
+     "value": 1086,
+     "shown": "1,086"
     },
     {
      "path": "rules.capacity:100.models.[fit.logistic].precision",
-     "value": 0.36,
-     "shown": "36.0%"
+     "value": 0.37,
+     "shown": "37.0%"
     },
     {
      "path": "rules.capacity:100.models.[fit.baseline].precision",
-     "value": 0.11495946941783347,
+     "value": 0.1151012891344383,
      "shown": "11.5%"
     },
     {
      "path": "rules.capacity:100.models.[fit.logistic].recall",
-     "value": 0.23076923076923078,
-     "shown": "23.1%"
+     "value": 0.296,
+     "shown": "29.6%"
     }
    ]
   },

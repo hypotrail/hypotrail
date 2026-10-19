@@ -55,20 +55,20 @@
        "text": "Here "
       },
       {
-       "text": "1,357",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "text": "1,086",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.validation.n_rows",
-       "value": 1357,
+       "value": 1086,
        "format": "int"
       },
       {
        "text": " rows are held apart for validation and "
       },
       {
-       "text": "3,164",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "text": "2,531",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.train.n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -90,9 +90,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.train.rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
@@ -100,9 +100,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.validation.rate",
-       "value": 0.11495946941783346,
+       "value": 0.1151012891344383,
        "format": "pct1"
       },
       {
@@ -150,9 +150,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
        "path": "rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
@@ -184,9 +184,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "44b5d2995f3ba004f19b66c224a45ab4919cc3c8234875474216bbeb65eef7c8",
+       "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
        "path": "train_rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
@@ -251,10 +251,10 @@
        "text": "At threshold:0.2, "
       },
       {
-       "text": "34.8%",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "38.1%",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
-       "value": 0.34782608695652173,
+       "value": 0.38144329896907214,
        "format": "pct1"
       },
       {
@@ -275,10 +275,10 @@
        "text": "At threshold:0.2, the logistic model reaches "
       },
       {
-       "text": "25.6%",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "29.6%",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
-       "value": 0.2564102564102564,
+       "value": 0.296,
        "format": "pct1"
       },
       {
@@ -331,20 +331,20 @@
        "text": "At threshold:0.2, the logistic model's precision ranges from "
       },
       {
-       "text": "25.9%",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "28.2%",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
-       "value": 0.2592432950191571,
+       "value": 0.28153703501690847,
        "format": "pct1"
       },
       {
        "text": " to "
       },
       {
-       "text": "43.9%",
-       "result_id": "8f1781d87397e65b2d0e16eb2a19a988f9e9ac6b620673b123988dca88d2b84d",
+       "text": "48.0%",
+       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
-       "value": 0.43927102803738305,
+       "value": 0.48000980392156856,
        "format": "pct1"
       },
       {
@@ -519,10 +519,10 @@
        "text": "Training rows: "
       },
       {
-       "text": "3,164",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "text": "2,531",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.train.n_rows",
-       "value": 3164,
+       "value": 2531,
        "format": "int"
       },
       {
@@ -530,19 +530,19 @@
       },
       {
        "text": "11.5%",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.train.rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
        "text": " are positive. Validation rows: "
       },
       {
-       "text": "1,357",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "text": "1,086",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.validation.n_rows",
-       "value": 1357,
+       "value": 1086,
        "format": "int"
       },
       {
@@ -550,9 +550,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "48fa370be2198149983c49fb17554259503d61d9d04b516b93a6b8a41384d6df",
+       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
        "path": "partitions.validation.rate",
-       "value": 0.11495946941783346,
+       "value": 0.1151012891344383,
        "format": "pct1"
       },
       {
@@ -598,9 +598,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
        "path": "rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
@@ -758,9 +758,9 @@
       },
       {
        "text": "11.5%",
-       "result_id": "698ce30573d1e0547c9d64398f2a10833377a43276baae3aba0bb2e1cdc67d32",
+       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
        "path": "rate",
-       "value": 0.11536030341340076,
+       "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
