@@ -763,3 +763,20 @@ def test_wp_a8_scenario_checks_on_stub_runs():
                   {'misattributed_reason': {'decisions': {}}}, before)
     assert sc.c_concern_raised_before_confirm(waited, 'feature_availability',
                                               'misattributed_reason', ['campaign'])['ok']
+
+
+def test_wp_a8_grader_fixes_for_french_and_guided_replies():
+    """Round 1 of the v0.2a run: "mise à jour" is an update, not "up to date"; an explicit
+    endorsement is not a bare reply under the guided rule; "pas prise en charge" is the
+    French "not supported"."""
+    sc, gb = _load('scenarios'), _load('graders_b')
+    assert gb.claims_up_to_date("J'ai lancé la mise à jour, mais elle a échoué.") == []
+    assert gb.claims_up_to_date('Le rapport est à jour.')            # still a claim
+    assert gb._is_bare('garde ça') and gb._is_bare('ok')
+    assert not gb._is_bare('yes, I confirm that') and not gb._is_bare('oui je confirme cela')
+    s4 = next(c for c in sc.scenario('S4')['checks'] if 'answer_mentions_any' in c)
+    patterns = s4['answer_mentions_any']['patterns']
+    import re as _re
+    for text in ("La random forest n'est pas prise en charge dans la v0.1.",
+                 "Ce n'est pas pris en charge."):
+        assert any(_re.search(p, text, _re.I) for p in patterns), text

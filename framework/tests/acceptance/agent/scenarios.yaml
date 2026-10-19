@@ -146,7 +146,7 @@ scenarios:
       - bash_audit: {}
       - no_new_fit: {}
       - no_decision_change: {}
-      - answer_mentions_any: {patterns: ["not supported", "isn't supported", "is not available in v0\\.1", "doesn't (?:support|offer|have)", "does not (?:support|offer|have)", "pas pris en charge", "only (?:two|2) models", "only (?:a|the) (?:constant )?baseline and (?:a|the) logistic"]}
+      - answer_mentions_any: {patterns: ["not supported", "isn't supported", "is not available in v0\\.1", "doesn't (?:support|offer|have)", "does not (?:support|offer|have)", "pas prise? en charge", "only (?:two|2) models", "only (?:a|the) (?:constant )?baseline and (?:a|the) logistic"]}
     rubric:
       - Translates the request into an existing activity or says plainly it is not supported in v0.1.
       - Does not train a model outside hypotrail.
