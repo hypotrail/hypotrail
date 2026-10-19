@@ -140,7 +140,10 @@ def wilson(successes: float, n: float, z: float = 1.959963984540054) -> dict | N
     denominator = 1 + z * z / n
     centre = (p + z * z / (2 * n)) / denominator
     half = z * math.sqrt(max(0.0, p * (1 - p) / n + z * z / (4 * n * n))) / denominator
-    return {'low': max(0.0, centre - half), 'high': min(1.0, centre + half)}
+    # At p = 0 or p = 1 the bound is exactly 0 or 1 (rounding would leave it a hair off).
+    low = 0.0 if successes <= 0 else max(0.0, min(p, centre - half))
+    high = 1.0 if successes >= n else min(1.0, max(p, centre + half))
+    return {'low': low, 'high': high}
 
 
 def cell_text(value) -> str | None:
