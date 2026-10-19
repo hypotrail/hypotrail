@@ -1,4 +1,4 @@
-# Agent acceptance scenarios S0-S11 (plan WP0.7, WP4.3, amendments A1/A2; v0.2a WP-A8).
+# Agent acceptance scenarios S0-S13 (plan WP0.7, WP4.3, amendments A1/A2; v0.2a WP-A8; v0.2b WP-B6b).
 #
 # Driven by scenarios.py (and test_scenarios.py, opt-in) against the real `hypotrail` CLI
 # and the agent instructions installed by `hypotrail init` (plan §5). Results are

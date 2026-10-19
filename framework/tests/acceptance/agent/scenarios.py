@@ -1,4 +1,4 @@
-"""Scenario driver for the agent acceptance scenarios S0-S11 (plan WP0.7, WP4.3, WP-A8).
+"""Scenario driver for the agent acceptance scenarios S0-S13 (plan WP0.7, WP4.3, WP-A8, WP-B6b).
 
 Claude Code acceptance, not Copilot acceptance.
 
