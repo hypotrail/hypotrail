@@ -17,8 +17,9 @@ mean by group, the candidate model's validation metric with the confirmed prepro
 and, for a binary study, the policy at the adopted rule (selected rows, positive rows
 found, precision); for a regression study, the baseline's validation error.
 
-A cell is generated only when the registered result is current and its recomputation is
-exact with this plain code: a binned or folded group table, a capacity cut that splits a
+A cell is generated only when the registered result is current, its registry entry holds
+what the cell reads (the split's row keys, the fit's features and special values), and its
+recomputation is exact with this plain code: a binned or folded group table, a capacity cut that splits a
 tie group (counted pro rata by the engine), or a target that is not a plain column is
 explained in words instead (:func:`skipped`).
 
@@ -29,7 +30,13 @@ This module generates text only: it imports neither pandas nor scikit-learn.
 """
 from __future__ import annotations
 
+import json
 from typing import Any, Mapping
+
+
+def q(text: Any) -> str:
+    """A string literal of the generated code, in double quotes."""
+    return json.dumps(str(text), ensure_ascii=False)
 
 TOLERANCE = 1e-9
 FIT_TOLERANCE = 1e-6
@@ -39,8 +46,8 @@ IMPORTS = '''import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.metrics import mean_absolute_error, roc_auc_score
+from sklearn.linear_model import {model}
+from sklearn.metrics import {metric}
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -48,6 +55,13 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 # up to rounding (TOLERANCE), a refitted model's metric up to solver noise (FIT_TOLERANCE).
 TOLERANCE = 1e-9
 FIT_TOLERANCE = 1e-6'''
+
+
+def imports(task: str) -> str:
+    """The imports cell of the recomputation (the model and metric of the task)."""
+    if task == 'regression':
+        return IMPORTS.format(model='LinearRegression', metric='mean_absolute_error')
+    return IMPORTS.format(model='LogisticRegression', metric='roc_auc_score')
 
 
 def _current(view: Mapping, slot: str) -> Mapping | None:
@@ -59,12 +73,13 @@ def _current(view: Mapping, slot: str) -> Mapping | None:
 
 
 def _positive_expr(frame: str, target: str, positive: Any) -> str:
-    return f'({frame}[{target!r}].astype(str) == {str(positive)!r})'
+    return f'({frame}[{q(target)}].astype(str) == {q(str(positive))})'
 
 
 def split_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     item = _current(view, 'split')
-    if item is None:
+    # The registry entry must hold what the cell reads: the row keys of both partitions.
+    if item is None or not {'train', 'validation'} <= set(item.get('blobs') or {}):
         return None
     code = f'''# The development rows only: the final test stays sealed and is never loaded.
 # "partition" says whether each row trains the models or validates them.
@@ -87,7 +102,7 @@ def target_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[s
         if _current(view, 'eda.target_summary') is None:
             return None
         code = f'''target_summary = nv.values(study, RESULT_IDS["eda.target_summary"])
-train_target = pd.to_numeric(train[{target!r}])
+train_target = pd.to_numeric(train[{q(target)}])
 print(train_target.describe())
 
 assert train_target.count() == target_summary["n"]
@@ -98,7 +113,7 @@ assert abs(train_target.std() - target_summary["sd"]) < TOLERANCE'''
     if _current(view, 'eda.target_rate') is None:
         return None
     code = f'''target_rate = nv.values(study, RESULT_IDS["eda.target_rate"])
-# 1 when the outcome is the positive label {str(positive)!r}, else 0.
+# 1 when the outcome is the positive label {q(str(positive))}, else 0.
 train_positive = {_positive_expr("train", target, positive)}.astype(int)
 print(f"{{train_positive.sum()}} positive rows of {{len(train)}} training rows: "
       f"rate {{train_positive.mean():.4f}}")
@@ -132,31 +147,31 @@ def group_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[st
         return None
     column = slot.split(':', 1)[1]
     if task == 'regression':
-        code = f'''by_group = nv.values(study, RESULT_IDS[{slot!r}])
-# The mean of the target in each group of {column!r}, on training rows.
+        code = f'''by_group = nv.values(study, RESULT_IDS[{q(slot)}])
+# The mean of the target in each group of {q(column)}, on training rows.
 group_means = (
-    train.assign(target=pd.to_numeric(train[{target!r}]))
-    .groupby(train[{column!r}].astype(str))["target"]
+    train.assign(target=pd.to_numeric(train[{q(target)}]))
+    .groupby(train[{q(column)}].astype(str))["target"]
     .agg(["size", "mean"])
 )
 print(group_means)
 
 for _group in by_group["groups"]:
-    _value = _group["value"].removesuffix({SPECIAL_SUFFIX!r})
+    _value = _group["value"].removesuffix({q(SPECIAL_SUFFIX)})
     assert group_means.loc[_value, "size"] == _group["n_rows"]
     assert abs(group_means.loc[_value, "mean"] - _group["mean"]) < TOLERANCE'''
         return 'recompute_by_group', code
-    code = f'''by_group = nv.values(study, RESULT_IDS[{slot!r}])
-# The positive rate in each group of {column!r}, on training rows.
+    code = f'''by_group = nv.values(study, RESULT_IDS[{q(slot)}])
+# The positive rate in each group of {q(column)}, on training rows.
 group_rates = (
     train.assign(positive=train_positive)
-    .groupby(train[{column!r}].astype(str))["positive"]
+    .groupby(train[{q(column)}].astype(str))["positive"]
     .agg(["size", "sum", "mean"])
 )
 print(group_rates)
 
 for _group in by_group["groups"]:
-    _value = _group["value"].removesuffix({SPECIAL_SUFFIX!r})
+    _value = _group["value"].removesuffix({q(SPECIAL_SUFFIX)})
     assert group_rates.loc[_value, "size"] == _group["n_rows"]
     assert group_rates.loc[_value, "sum"] == _group["n_positive"]
     assert abs(group_rates.loc[_value, "mean"] - _group["rate"]) < TOLERANCE'''
@@ -182,17 +197,19 @@ prepare_columns = ColumnTransformer(
 def fit_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str, str] | None:
     slot = 'fit.linear' if task == 'regression' else 'fit.logistic'
     item = _current(view, slot)
-    if item is None:
+    inputs = (item or {}).get('inputs')
+    if item is None or not isinstance(inputs, Mapping) \
+            or not {'features', 'special_values'} <= set(inputs):
         return None
-    head = f'''candidate = nv.values(study, RESULT_IDS[{slot!r}])
+    head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
 # The inputs exactly as the model saw them: the features you kept, special values as
 # indicator columns, and the preparation you confirmed, learnt on training rows only.
-X_train, X_validation = nv.model_inputs(study, RESULT_IDS[{slot!r}], train, validation)
-print("Preparation:", nv.preprocessing_words(study, RESULT_IDS[{slot!r}]))
+X_train, X_validation = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train, validation)
+print("Preparation:", nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
 '''
     if task == 'regression':
-        code = head + f'''y_train = pd.to_numeric(train[{target!r}])
-y_validation = pd.to_numeric(validation[{target!r}])
+        code = head + f'''y_train = pd.to_numeric(train[{q(target)}])
+y_validation = pd.to_numeric(validation[{q(target)}])
 
 {PIPELINE}
 model = Pipeline([("prepare", prepare_columns), ("model", LinearRegression())])
@@ -252,7 +269,7 @@ selected = score >= {float(amount)!r}'''
     else:
         return None
     code = f'''policy = nv.values(study, RESULT_IDS["policy.evaluation"])
-at_rule = policy["rules"][{rule!r}]["models"]["fit.logistic"]
+at_rule = policy["rules"][{q(rule)}]["models"]["fit.logistic"]
 {select}
 found = int(y_validation.to_numpy()[selected].sum())
 precision = found / selected.sum()

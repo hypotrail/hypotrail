@@ -8,7 +8,16 @@ Numbers are shown from registry entries named by ``RESULT_IDS``, which the gener
 froze at render time, so the notebook shows the same numbers as the HTML report of
 that revision, formatted by the same :class:`mlkit.study.cite.Citer`.
 
-pandas is imported only by :func:`workbench_scores` (through ``read.Study.predictions``).
+pandas is imported only by the functions that return rows or predictions
+(:func:`workbench_scores`, :func:`development_frame`, :func:`training_frame`,
+:func:`model_inputs`); the engine views import neither pandas nor scikit-learn.
+
+Rows (v0.2a, WP-A6): :func:`development_frame` and :func:`training_frame` return the study's
+**development rows** only, through :func:`mlkit.study.data.load_development`, the same
+choke point every activity uses: the sealed final test is never loaded (ADR 0006). The
+generated notebook recomputes results the registry already holds from these rows (the same
+rows, already recorded as exposure by the activity that computed them); nothing here
+records a read, a result, or a decision.
 """
 from __future__ import annotations
 
@@ -125,6 +134,103 @@ def source_block(study: read.Study, result_ids: Mapping[str, str], slots: list[s
     items = {f'{labels["source_label"]}: {slot}': mo.md(source_md(study, result_ids[slot]))
              for slot in slots if slot in result_ids}
     return mo.accordion(items) if items else mo.md('')
+
+
+# --- rows for the recomputation cells (v0.2a, WP-A6) -------------------------------------
+
+def values(study: read.Study, rid: str) -> dict:
+    """The registered values of result ``rid`` (verified registry entry)."""
+    return study.result(rid)['output']['values']
+
+
+def _development(study: read.Study):
+    from . import case as c, data as dt, partition
+
+    state = study.state
+    case = c.case_of(state, verify_data=True)
+    keys = partition.development_keys(study.blob, partition.inputs(state))
+    return case, dt.load_development(case, keys).frame
+
+
+def _split_keys(study: read.Study, rid: str) -> dict[str, list[str]]:
+    from . import records as rec
+
+    entry = study.result(rid)
+    if entry['activity'] != 'split':
+        raise StudyError('invalid_arguments', f'Result {rid} is not a split.',
+                         details={'result_id': rid})
+    blobs = entry.get('blobs') or {}
+    if not {'train', 'validation'} <= set(blobs):
+        raise StudyError('no_row_keys', f'Split result {rid} holds no row keys.',
+                         details={'result_id': rid})
+    return {part: rec.parse_row_keys(study.blob(blobs[part])) for part in ('train', 'validation')}
+
+
+def development_frame(study: read.Study, split_rid: str | None = None):
+    """The development rows (pandas DataFrame indexed by row key, in file order), with a
+    ``partition`` column: ``train`` or ``validation`` from the split result ``split_rid``
+    (the current split when omitted), or None before any split. Never the final test."""
+    _, frame = _development(study)
+    frame = frame.copy()
+    rid = split_rid or study.state['current'].get('split')
+    frame['partition'] = None
+    if rid:
+        keys = _split_keys(study, rid)
+        for part, rows in keys.items():
+            frame.loc[[k for k in rows if k in frame.index], 'partition'] = part
+    return frame
+
+
+def training_frame(study: read.Study):
+    """The training rows of the current split (development rows only, never the final
+    test), without the ``partition`` column; an empty frame before any split."""
+    try:
+        frame = development_frame(study)
+    except StudyError as exc:
+        if exc.code != 'no_row_keys':
+            raise
+        frame = _development(study)[1]
+        return frame.iloc[0:0]
+    return frame[frame['partition'] == 'train'].drop(columns=['partition'])
+
+
+def model_inputs(study: read.Study, rid: str, train, validation):
+    """``(X_train, X_validation)`` exactly as the fit ``rid`` built them: its features, its
+    special values as indicator columns, and its confirmed preprocessing learnt on the
+    training rows only (:func:`mlkit.study.fit.design` and :func:`mlkit.study.fit.prepare`,
+    pure functions; nothing is fitted here)."""
+    from . import case as c, fit
+
+    entry = study.result(rid)
+    inputs = entry['inputs']
+    case = c.case_of(study.state)
+    features, special = list(inputs['features']), list(inputs['special_values'])
+    train = train.drop(columns=['partition'], errors='ignore')
+    validation = validation.drop(columns=['partition'], errors='ignore')
+    X_train, _ = fit.design(train, features, special, case)
+    X_val, _ = fit.design(validation, features, special, case)
+    X_train, X_val, _ = fit.prepare(case, train, validation, X_train, X_val, features,
+                                    inputs.get('preprocessing'), special)
+    return X_train, X_val
+
+
+def preprocessing_words(study: read.Study, rid: str) -> str:
+    """The preparation of fit ``rid`` in words (as the report writes it)."""
+    value = study.result(rid)['inputs'].get('preprocessing')
+    if value is None:
+        return 'none recorded (a study created before the preprocessing decision)'
+    return render_html.value_words('preprocessing', value, None)
+
+
+def example_html(cited: cite.Citer, term_id: str | None, task: str | None = None) -> str:
+    """The contextual example of a glossary term, with this study's cited numbers, or ''
+    when the term has none or its results are not computed yet."""
+    with texts.task_context(task):
+        entry = texts.glossary(term_id) if term_id else None
+        example = (entry or {}).get('cited_example')
+        if not example or not cited.ready(example):
+            return ''
+        return f'<p><em>In this study.</em> {cited.expand(example)}</p>'
 
 
 # --- workbench --------------------------------------------------------------------------

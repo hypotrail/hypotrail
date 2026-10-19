@@ -6,12 +6,16 @@ labelled "Experiment, not adopted" evaluates a rule with the pure
 ``mlkit.study.policy.evaluate`` on the stored validation predictions and shows the
 adopted policy next to it. Nothing it computes is recorded.
 
+Template version 2 (v0.2a, WP-A6) adds a starter cell that loads the development
+training rows with :func:`mlkit.study.notebook_view.training_frame` (never the sealed final
+test), so a cell copied from the generated notebook has rows to run on.
+
 Bump :data:`TEMPLATE_VERSION` when the cells change: an existing workbench is then
 left intact and ``workbench.candidate.py`` is written next to it.
 """
 from __future__ import annotations
 
-TEMPLATE_VERSION = 1
+TEMPLATE_VERSION = 2
 EXPERIMENT_LABEL = 'Experiment, not adopted'
 
 SETUP = '''import os
@@ -56,6 +60,12 @@ EXPERIMENT = '''mo.Html(
     )
 )'''
 
+STARTER = '''# The training rows of the current split: development rows only, the final test stays
+# sealed. Copy a cell of the generated notebook below and adapt it. Nothing is recorded,
+# and a look at the outcome here is not counted in the study's ledger of looks.
+train_rows = nv.training_frame(study)
+train_rows.head()'''
+
 NOTES = '''mo.md(
     """
 ## Your notes
@@ -93,11 +103,14 @@ REGRESSION_EXPERIMENT = '''mo.Html(nv.residuals_html(preds, model.value, rows.va
 def cells(template_version: int = TEMPLATE_VERSION,
           task: str = 'binary') -> list[tuple[str, str]]:
     if task == 'regression':
-        return [('setup', SETUP), ('intro', REGRESSION_INTRO), ('load_study', REGRESSION_LOAD),
-                ('controls', REGRESSION_CONTROLS), ('experiment', REGRESSION_EXPERIMENT),
-                ('your_notes', NOTES)]
-    return [('setup', SETUP), ('intro', INTRO), ('load_study', LOAD),
-            ('controls', CONTROLS), ('experiment', EXPERIMENT), ('your_notes', NOTES)]
+        out = [('setup', SETUP), ('intro', REGRESSION_INTRO), ('load_study', REGRESSION_LOAD),
+               ('controls', REGRESSION_CONTROLS), ('experiment', REGRESSION_EXPERIMENT)]
+    else:
+        out = [('setup', SETUP), ('intro', INTRO), ('load_study', LOAD),
+               ('controls', CONTROLS), ('experiment', EXPERIMENT)]
+    if template_version >= 2:
+        out.append(('training_rows', STARTER))
+    return out + [('your_notes', NOTES)]
 
 
 
