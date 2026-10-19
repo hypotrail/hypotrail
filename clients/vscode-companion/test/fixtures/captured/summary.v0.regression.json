@@ -87,8 +87,7 @@
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 24,
-    "label": "Adopt the linear model."
+    "revision": 24
    }
   ],
   "decisions": {

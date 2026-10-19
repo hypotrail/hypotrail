@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T07:45:33.505309+00:00",
+     "time": "2026-10-19T07:56:50.024206+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -76,7 +76,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T07:45:33.691319+00:00",
+     "time": "2026-10-19T07:56:50.223234+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -104,7 +104,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T07:45:33.791024+00:00",
+     "time": "2026-10-19T07:56:50.336068+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -132,7 +132,7 @@
      "restatement": "You decide the policy as stated.",
      "proposal_id": "p_4",
      "revision": 27,
-     "time": "2026-10-19T07:45:37.281515+00:00",
+     "time": "2026-10-19T07:56:53.900466+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -169,7 +169,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T07:45:32.831989+00:00",
+    "created": "2026-10-19T07:56:49.540583+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -201,7 +201,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T07:45:33.618291+00:00",
+    "created": "2026-10-19T07:56:50.145921+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -220,7 +220,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T07:45:33.739411+00:00",
+    "created": "2026-10-19T07:56:50.279697+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -235,7 +235,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 26,
-    "created": "2026-10-19T07:45:37.197686+00:00",
+    "created": "2026-10-19T07:56:53.803957+00:00",
     "closed_revision": 27,
     "closed_reason": "confirmed",
     "origin": {
@@ -250,7 +250,7 @@
     "rationale": "The team can make 100 calls per wave.",
     "status": "open",
     "revision": 30,
-    "created": "2026-10-19T07:45:38.284824+00:00",
+    "created": "2026-10-19T07:56:54.629026+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -261,7 +261,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T07:45:33.505403+00:00",
+    "time": "2026-10-19T07:56:50.024267+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "before the first contact of the campaign, from the client file",
@@ -275,7 +275,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T07:45:33.691623+00:00",
+    "time": "2026-10-19T07:56:50.223553+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -306,7 +306,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T07:45:33.791082+00:00",
+    "time": "2026-10-19T07:56:50.336165+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -324,7 +324,7 @@
    },
    {
     "revision": 27,
-    "time": "2026-10-19T07:45:37.281570+00:00",
+    "time": "2026-10-19T07:56:53.900538+00:00",
     "decision_id": "policy",
     "proposal_id": "p_4",
     "value": "threshold:0.2",

@@ -32,7 +32,9 @@
     "reconfirm_required": []
    },
    "basis": "explicit",
-   "delegation_scope": null
+   "delegation_scope": null,
+   "agent_concern": null,
+   "warnings": []
   },
   "artifacts": {
    "report": {
