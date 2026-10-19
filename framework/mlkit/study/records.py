@@ -37,7 +37,11 @@ RESULT_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs
                'started_revision', 'environment', 'created')
 
 EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
-                     'validation_model_evaluation', 'validation_policy_selection')
+                     'validation_model_evaluation', 'validation_policy_selection',
+                     # ADR 0006: the final-test rows sealed at init (schema check only).
+                     'sealed')
+# Purposes that record rows set aside rather than looked at: not counted in rows_exposed.
+SEALED_PURPOSES = ('sealed',)
 EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', 'execution_id',
                  'purpose', 'partition', 'n_rows', 'row_keys', 'dataset_sha256', 'columns',
                  'time')
@@ -161,7 +165,8 @@ def summarize(records: list[dict], rows_of: Mapping[str, list[str]],
         by_purpose.setdefault(rec['purpose'], set()).update(keys)
         part = by_partition.setdefault(rec.get('partition') or 'all', {})
         part.setdefault(rec['purpose'], set()).update(keys)
-    every = set().union(*by_purpose.values()) if by_purpose else set()
+    looked = [keys for p, keys in by_purpose.items() if p not in SEALED_PURPOSES]
+    every = set().union(*looked) if looked else set()
     selection = set().union(*(by_purpose.get(p, set()) for p in SELECTION_PURPOSES))
     return {
         'records': len(records),

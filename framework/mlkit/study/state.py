@@ -200,7 +200,9 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # ``task`` (``binary`` or ``regression``) is written by every new study; a state written
 # before it existed has no ``task`` and is a binary study. ``notes`` (post-v0.1, P2) holds
 # the conditions the junior states at a pause; it appears with the first note.
-TOP_OPTIONAL_KEYS = ('task', 'notes')
+# ``partition`` (v0.2a, ADR 0006): the sealed final test assigned at ``init``
+# (:mod:`mlkit.study.partition`); a study created before it has none and no final test.
+TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -526,6 +528,9 @@ def validate_state(state: Any) -> list[dict]:
                                            proposals, task)
     if 'notes' in present:
         problems += _notes_problems(state['notes'], task)
+    if 'partition' in present:
+        from . import partition
+        problems += partition.validate(state['partition'])
     for key in ('current', 'stale', 'receipts'):
         if not isinstance(state[key], dict):
             problems.append({'path': key, 'problem': 'must be a mapping'})

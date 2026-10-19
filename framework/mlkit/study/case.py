@@ -55,7 +55,15 @@ CAPABILITY_GROUPED_SPLIT = 'grouped split (v0.2)'
 
 TOP_REQUIRED = ('schema', 'id', 'title', 'description', 'provenance', 'dataset', 'target',
                 'row_key', 'facts', 'variables', 'special_values', 'structure', 'task')
-TOP_OPTIONAL = ('prior_exposure', 'migration')
+TOP_OPTIONAL = ('prior_exposure', 'migration', 'order')
+# ``order`` (v0.2a, ADR 0006): the declared row order, ``{by, direction, status, source}``.
+# ``by`` is ``line`` (the physical order of the file) or a numeric or integer variable.
+# With it, the sealed final test is the last rows in that order (temporal); without it,
+# the final test is a stratified random sample.
+ORDER_KEYS = ('by', 'direction', 'status', 'source')
+ORDER_BY_LINE = 'line'
+ORDER_DIRECTIONS = ('ascending', 'descending')
+ORDER_COLUMN_TYPES = ('numeric', 'integer')
 DATASET_REQUIRED = ('path', 'format', 'sep', 'encoding', 'decimal', 'header', 'sha256', 'rows',
                     'columns')
 DATASET_OPTIONAL = ('quotechar', 'na_values')
@@ -143,6 +151,11 @@ class Case:
     def target_unit(self) -> str | None:
         """The unit of the target variable (required for a regression target)."""
         return self.variables[self.target_column].get('unit')
+
+    @property
+    def order(self) -> dict | None:
+        """The declared row order (``order``, ADR 0006), or None."""
+        return self.document.get('order')
 
     @property
     def time_column(self) -> str | None:
@@ -388,6 +401,26 @@ def validate(document: Any) -> list[dict]:
         else:
             for i, item in enumerate(pe):
                 p.statement(item, f'prior_exposure[{i}]')
+    if 'order' in document:
+        o = document['order']
+        if p.keys(o, 'order', ORDER_KEYS):
+            p.status(o['status'], 'order.status')
+            p.text(o['source'], 'order.source')
+            if o['direction'] not in ORDER_DIRECTIONS:
+                p.add('order.direction', f'must be one of {", ".join(ORDER_DIRECTIONS)}')
+            by = o['by']
+            if by == ORDER_BY_LINE:
+                if ORDER_BY_LINE in names:
+                    p.add('order.by', f'"{ORDER_BY_LINE}" is ambiguous: a variable has that name')
+            elif by not in names:
+                p.add('order.by', f'must be "{ORDER_BY_LINE}" or name a variable')
+            else:
+                variable = next(v for v in variables if v['name'] == by)
+                if variable['type'] not in ORDER_COLUMN_TYPES:
+                    p.add('order.by', 'an order column has type '
+                          + ' or '.join(ORDER_COLUMN_TYPES))
+                if variable['role'] == 'target':
+                    p.add('order.by', 'the target cannot order the rows')
     if 'migration' in document:
         m = document['migration']
         if p.keys(m, 'migration', MIGRATION_REQUIRED, MIGRATION_OPTIONAL):
