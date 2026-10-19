@@ -135,21 +135,51 @@ test('EV-9: the final evaluation is the engine\'s, apart from development eviden
 
 // --- diagnostics (EV-12) --------------------------------------------------------------------
 
-test('EV-12: diagnostics are read only from current diag.* results, in the planned shape of WP-B4', () => {
-  const p = payload('evidence.binary.diagnostics');
+test('EV-12: diagnostics are read from current diag.* results in the frozen shape (CLI-CONTRACT §13), development and final apart', () => {
+  const p = payload('captured/evidence.binary.cv');
   const d = toEvidenceModel(p).diagnostics;
-  assert.deepEqual(d.map(x => [x.kind, x.evaluation]), [['confusion', 'out_of_fold'], ['gain', 'out_of_fold'],
-    ['calibration', 'out_of_fold'], ['segments', 'out_of_fold'], ['confusion', 'final_test']]);
-  const raw = p.results.find(r => r.activity === 'diag.confusion' && r.partition === 'development').values.confusion;
-  assert.deepEqual(Object.fromEntries(Object.entries(d[0].cells).map(([k, v]) => [k, v.value])), raw);
-  assert.equal(d[0].cells.tn.path, 'confusion.tn');
-  assert.equal(d[2].bins.length, 5);
-  assert.equal(d[3].segments[1].group, 'telephone');
-  // A stale diagnostic is not read; the captured engine has none yet.
-  const stale = JSON.parse(JSON.stringify(p));
-  for (const r of stale.results) if (/^diag\./.test(r.activity)) r.current = false;
-  assert.deepEqual(toEvidenceModel(stale).diagnostics, []);
-  assert.deepEqual(toEvidenceModel(payload('captured/evidence.binary.cv')).diagnostics, []);
+  assert.deepEqual(d.map(x => [x.slot, x.evidence]).sort(), [['diag.binary', 'development'], ['diag.final_test', 'final']]);
+  const dev = d.find(x => x.slot === 'diag.binary');
+  const raw = p.results.find(r => r.result_id === dev.resultId).values;
+  assert.equal(dev.rule, raw.rule);
+  assert.equal(dev.ruleSource, 'adopted');
+  assert.deepEqual(dev.models.map(m => m.fit), Object.keys(raw.models));
+  const m = dev.models[0];
+  const rc = raw.models[m.fit].confusion;
+  assert.deepEqual([m.confusion.tp.value, m.confusion.fp.value, m.confusion.fn.value, m.confusion.tn.value],
+    [rc.true_positives, rc.false_positives, rc.false_negatives, rc.true_negatives]);
+  assert.equal(m.confusion.tn.path, `models.[${m.fit}].confusion.true_negatives`);
+  assert.equal(m.curve.length, raw.models[m.fit].curve.points.length);
+  assert.equal(m.calibration.brier.value, raw.models[m.fit].calibration.brier);
+  assert.equal(m.calibration.brier.path, `models.[${m.fit}].calibration.brier`);
+  assert.deepEqual(m.segments.map(s => s.column), raw.models[m.fit].segments.map(s => s.column));
+  assert.equal(m.coefficients.total, raw.models[m.fit].coefficients.terms.length);
+  assert.ok(m.coefficients.terms.length <= 8);
+  const fin = d.find(x => x.slot === 'diag.final_test');
+  assert.deepEqual(fin.models.map(x => x.fit), [p.results.find(r => r.result_id === fin.resultId).values.model]);
+  assert.equal(fin.evaluation, 'final_test');
+  // The superseded development diagnostic (stale after the new rule) is not read.
+  assert.equal(p.results.filter(r => r.slot === 'diag.binary').length, 2);
+  // Regression: errors, residuals, bins by prediction, quantiles, by feature.
+  const r = toEvidenceModel(payload('captured/evidence.regression.diag')).diagnostics;
+  assert.deepEqual(r.map(x => x.slot), ['diag.regression']);
+  const rm = r[0].models[0];
+  const rraw = payload('captured/evidence.regression.diag').results.find(x => x.slot === 'diag.regression').values.models[rm.fit];
+  assert.equal(rm.errors.mae.value, rraw.errors.mae);
+  assert.equal(rm.byPrediction.length, rraw.by_prediction.bins.length);
+  assert.equal(rm.qq.length, rraw.qq.points.length);
+  assert.equal(rm.heteroscedasticity.flag, rraw.heteroscedasticity.flag);
+  assert.equal(r[0].smearingApplies, false);
+  // No diagnostic in an evidence captured before any run.
+  assert.deepEqual(toEvidenceModel(payload('captured/evidence.binary')).diagnostics, []);
+});
+
+test('DC-10: a waiting final_test proposal is not counted on the Decisions badge (a chat act)', () => {
+  const raw = payload('captured/summary.binary.cv.opening');
+  const m = toSummaryModel(raw);
+  assert.ok(m.proposals.some(p => p.decisionId === 'final_test'));
+  assert.equal(m.waitingCount, raw.open_proposals.filter(p => p.decision_id !== 'final_test').length);
+  assert.equal(m.waitingCount, 0);
 });
 
 // --- the gain curve and share rules (WI-6, WI-7) ---------------------------------------------

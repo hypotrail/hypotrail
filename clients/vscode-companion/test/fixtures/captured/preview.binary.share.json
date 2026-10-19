@@ -18,24 +18,24 @@
   "schema": "hypotrail.preview/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-cv",
-  "revision": 33,
+  "revision": 37,
   "kind": "policy",
   "rules": [
    "share:0.2"
   ],
   "models": {
    "fit.baseline": {
-    "result_id": "6b1ff0c62b9a92581a6b2f9dd4333e00574a8c92d7b22b1c9d6b559807532941",
+    "result_id": "63453e5ca1657a658b69db7333892ccabe3cbecad4de2b8de785fa3466851e43",
     "current": true,
     "stale_reason": null
    },
    "fit.logistic": {
-    "result_id": "94c5d951d31eeb745eef2450ed0e6213ceab8878f546dec4df61b9a13825dc63",
+    "result_id": "c4f033f5be4f9a8290b701b10b6c9824db7ee40b4f9a8a9eb33ad2e9256fe52a",
     "current": true,
     "stale_reason": null
    },
    "fit.variant": {
-    "result_id": "1a710aade4ca4e424ecd92e0a834b0c6b7e7fa6d92738c94c0965b65a91e32a5",
+    "result_id": "b7d7e93e025c43cc66b6bde53b27bd8346729634d2a601dade9f08be9e5ba0b1",
     "current": true,
     "stale_reason": null
    }

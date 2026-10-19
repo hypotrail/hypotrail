@@ -6,7 +6,8 @@ the final test (a chat act), and the mode explainer.
 The real document under the real CSP, offline, on the **captured** payloads of a real
 cross-validated Bank study whose final test was opened once and then changed after
 (``test/fixtures/captured/*.cv*``), on the captured Online Shoppers view (the scenario
-share), and on the hand-written diagnostics fixture (WP-B4's planned shape, to reconcile),
+share), and on the captured diagnostics of WP-B4 (``diag.binary`` and ``diag.final_test`` in the
+opened study, ``diag.regression`` in Auto MPG; CLI-CONTRACT §13),
 in the Light+, Dark+ and High Contrast variable sets (``themes.py``) at 900 and 420 px.
 With ``HYPOTRAIL_SHOTS=<dir>`` the tests also write screenshots there, for a person to look
 at; nothing is asserted on them. Requirement ids: EV-7 to EV-12, WI-6, WI-7, OV-10, OV-11,
@@ -64,7 +65,8 @@ def views(model, payload):
         'evidence.sealed': model('evidence', 'captured/evidence.binary.cv.sealed'),
         'evidence.split': model('evidence', 'captured/evidence.binary'),
         'evidence.regression': model('evidence', 'captured/evidence.regression'),
-        'evidence.diagnostics': model('evidence', 'evidence.binary.diagnostics'),
+        'evidence.diagnostics': model('evidence', 'captured/evidence.binary.cv'),
+        'evidence.regression.diag': model('evidence', 'captured/evidence.regression.diag'),
         'whatif.opened': model('whatif', 'captured/evidence.binary.cv'),
         'whatif.sealed': model('whatif', 'captured/evidence.binary.cv.sealed'),
         'decisions.opened': model('decisions', 'captured/decisions.binary.cv'),
@@ -72,7 +74,8 @@ def views(model, payload):
         'raw.summary.opened': payload('captured/summary.binary.cv'),
         'raw.summary.opening': payload('captured/summary.binary.cv.opening'),
         'raw.evidence.opened': payload('captured/evidence.binary.cv'),
-        'raw.evidence.diagnostics': payload('evidence.binary.diagnostics'),
+        'raw.evidence.diagnostics': payload('captured/evidence.binary.cv'),
+        'raw.evidence.sealed': payload('captured/evidence.binary.cv.sealed'),
     }
     return out
 
@@ -218,7 +221,9 @@ def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_p
     # The registry lists the final-test results apart.
     assert page.locator('[data-final-results]').count() == 1
     items = page.locator('[data-results-partition="final_test"] [data-result-item]').evaluate_all('ns => ns.map(n => n.dataset.resultItem)')
-    assert items == [fe['result_id']]
+    on_final = [r['result_id'] for r in views['raw.evidence.opened']['results']
+                if r['promoted'] and r['current'] and r['partition'] == 'final_test']
+    assert fe['result_id'] in items and sorted(items) == sorted(on_final)
     clean(panel)
     shot(page, 'evidence-development-final-light-900')
 
@@ -226,30 +231,74 @@ def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_p
 # --- diagnostics (EV-12) ------------------------------------------------------------------------
 
 def test_ev12_diagnostics_render_when_present_each_number_cited(open_panel, views):
+    """EV-12 on the captured diagnostics: development (out of fold, computed after the opening) and final apart."""
     panel = open_tab(open_panel, views['summary.opened'], 'evidence')
     panel.view_data('evidence', views['evidence.diagnostics'])
     page = panel.page
     section = page.locator('[data-ev="diagnostics"]')
     assert section.count() == 1
     assert section.locator('[data-diag-evaluation]').evaluate_all('ns => ns.map(n => n.dataset.diagEvaluation)') == \
-        ['out_of_fold', 'final_test']
-    kinds = section.locator('[data-diag]').evaluate_all('ns => ns.map(n => n.dataset.diag)')
-    assert kinds == ['confusion', 'gain', 'calibration', 'segments', 'confusion']
-    raw = next(r for r in views['raw.evidence.diagnostics']['results']
-               if r['activity'] == 'diag.confusion' and r['partition'] == 'development')
-    tn = section.locator(f'[data-cell="tn"] data[data-result-id="{raw["result_id"]}"]').first
-    assert tn.get_attribute('data-path') == 'confusion.tn'
-    assert tn.get_attribute('data-value') == str(raw['values']['confusion']['tn'])
-    assert 'missed' in section.locator('[data-confusion="out_of_fold"]').inner_text()
-    assert section.locator('[data-diag="calibration"] [data-diagonal]').count() == 1
-    assert section.locator('[data-diag="calibration"] line[data-interval]').count() == 5
-    assert section.locator('[data-segments="3"]').count() == 1
+        ['development', 'final']
+    raw = {r['slot']: r for r in views['raw.evidence.diagnostics']['results'] if r['promoted'] and r['current']}
+    dev = section.locator('[data-diag="diag.binary"]')
+    assert dev.get_attribute('data-result-ref') == raw['diag.binary']['result_id']
+    assert dev.locator('[data-after-opening]').count() == 1, 'computed after the opening, on development rows'
+    assert dev.locator('[data-diag-rule]').get_attribute('data-diag-rule') == raw['diag.binary']['values']['rule']
+    assert '(your adopted rule)' in dev.locator('[data-diag-rule]').inner_text()
+    chosen = dev.locator('[data-diag-model]').first.get_attribute('data-diag-model')
+    policy = views['summary.opened']['decisions']['policy']['value']
+    assert chosen == (policy.split('@')[1] if '@' in policy else 'fit.logistic')
+    confusion = raw['diag.binary']['values']['models'][chosen]['confusion']
+    tn = dev.locator(f'[data-diag-model="{chosen}"] [data-cell="tn"] data').first
+    assert tn.get_attribute('data-path') == f'models.[{chosen}].confusion.true_negatives'
+    assert float(tn.get_attribute('data-value')) == confusion['true_negatives']
+    assert tn.get_attribute('data-result-id') == raw['diag.binary']['result_id']
+    assert dev.locator('[data-diag-also]').count() == 1, 'the variant under "Also"'
+    first = dev.locator(f'[data-diag-model="{chosen}"]').first
+    assert first.locator('[data-diag-chart="gain"] [data-point]').count() == \
+        len(raw['diag.binary']['values']['models'][chosen]['curve']['points'])
+    assert first.locator('[data-diag-chart="calibration"] line[data-interval]').count() == \
+        len(raw['diag.binary']['values']['models'][chosen]['calibration']['bins'])
+    brier = first.locator('[data-brier] data').first
+    assert brier.get_attribute('data-path') == f'models.[{chosen}].calibration.brier'
+    assert first.locator('[data-segments]').count() == len(raw['diag.binary']['values']['models'][chosen]['segments'])
+    assert first.locator('[data-coefficients]').count() == 1
+    final = section.locator('[data-diag="diag.final_test"]')
+    assert final.get_attribute('data-diag-evidence') == 'final'
+    assert final.locator('[data-diag-rows="final_test"]').inner_text().startswith(
+        f"On {raw['diag.final_test']['values']['n']:,} final-test rows")
+    assert section.locator('button:not(.ht-link), [data-write]').count() == 0, 'the panel never runs a diagnostic'
     charts_unscaled(page)
     clean(panel)
     shot(page, 'evidence-diagnostics-light-900')
+    # Sealed: development diagnostics, and the final test has none yet (a chat act).
+    panel.snapshot(views['summary.opening'])
+    panel.view_data('evidence', views['evidence.sealed'])
+    assert page.locator('[data-diag-final="sealed"]').count() == 1
+    assert page.locator('[data-diag="diag.binary"] [data-after-opening]').count() == 0
     # Without diag.* results the section is absent.
-    panel.view_data('evidence', views['evidence.opened'])
+    panel.view_data('evidence', views['evidence.split'])
     assert page.locator('[data-ev="diagnostics"]').count() == 0
+
+
+@pytest.mark.parametrize('theme', THEMES)
+def test_ev12_regression_diagnostics_residuals_without_rule_words(open_panel, views, theme):
+    panel = open_tab(open_panel, views['summary.regression'], 'evidence', theme=theme)
+    panel.view_data('evidence', views['evidence.regression.diag'])
+    page = panel.page
+    dev = page.locator('[data-diag="diag.regression"]')
+    assert dev.count() == 1
+    assert dev.locator('[data-diag-rows="validation"]').count() == 1
+    assert dev.locator('[data-errors] data').first.get_attribute('data-path').endswith('.errors.mae')
+    assert dev.locator('[data-diag-chart="residuals"] [data-zero]').count() >= 1
+    assert dev.locator('[data-diag-chart="qq"] [data-diagonal]').count() >= 1
+    assert dev.locator('[data-by-feature]').count() >= 1
+    assert dev.locator('[data-no-transform]').count() >= 1
+    text = page.locator('#panel-evidence').inner_text()
+    assert not FORBIDDEN.search(text), FORBIDDEN.search(text)
+    charts_unscaled(page)
+    clean(panel)
+    shot(page, f'evidence-regression-diagnostics-{theme}-900')
 
 
 def test_ev12_regression_evidence_holds_no_rule_words(open_panel, views):
@@ -384,9 +433,9 @@ def test_a11y3_wp_b5_views_in_every_theme_and_at_420px(open_panel, views, theme,
     no_sideways(page)
     charts_unscaled(page)
     # The confusion counts keep their column as a label when the table turns into cards.
-    tp = page.locator('[data-confusion="out_of_fold"] td[data-cell="tp"]')
+    tp = page.locator('[data-confusion="development"] td[data-cell="tp"]').first
     assert tp.get_attribute('data-label') == 'acted on'
-    assert page.locator('[data-confusion="out_of_fold"] td[data-cell="fn"]').get_attribute('data-label') == 'not acted on'
+    assert page.locator('[data-confusion="final"] td[data-cell="fn"]').first.get_attribute('data-label') == 'not acted on'
     shot(page, f'evidence-{theme}-{width}')
     page.locator('[role="tab"][data-tab="whatif"]').click()
     panel.view_data('scenario', views['scenario'])

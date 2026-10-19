@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-19T15:36:21.335063+00:00",
+   "updated": "2026-10-19T16:40:52.400476+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -686,7 +686,7 @@
     "target_looks": 0,
     "results": [],
     "by_activity": {},
-    "note": "Each exploration that read the target on training rows is a look. The count is a disclosure: the more looks, the more a pattern found among them can be chance. Validation and final-test rows are never explored."
+    "note": "Each exploration that read the target on training rows is a look, and so is each diagnostic of the models on the development rows. The count is a disclosure: the more looks, the more a pattern found among them can be chance. Validation and final-test rows are never explored."
    },
    "scenario_defaults": {
     "capacity_share": {

@@ -633,103 +633,215 @@
       ctx.el('h3', { id: 'ht-ev-fe-h', text: c.finalEvidenceTitle }), ...kids]);
   }
 
-  // --- diagnostics (WP-B4's results, in the shape of its plan; see lib/models/evidence.js) ---
+  // --- diagnostics (WP-B4; CLI-CONTRACT §13, CLI-CONTRACT-COMPANION §14) ------------------
+  //
+  // Development diagnostics (`diag.binary`, `diag.regression`: candidate and variant) and the
+  // final diagnostics (`diag.final_test`: the chosen model), apart and labelled. The chosen
+  // model comes first, the other under "Also". Every number is a cited value of the result;
+  // curve, calibration and quantile points are marks. The panel never runs a diagnostic.
 
-  function diagConfusion(ctx, d) {
+  const pctTicks = max => [0, max / 2, max].map(v => ({ value: v, text: `${Math.round(v * 1000) / 10}%` }));
+  const numTicks = (lo, hi, f) => [lo, (lo + hi) / 2, hi].map(v => ({ value: v, text: f(v) }));
+
+  function citeCell(ctx, d, cell, fmt) {
+    return cell && cell.value !== null && cell.value !== undefined
+      ? ctx.components.cited(fmt(cell.value), { resultId: d.resultId, path: cell.path, value: cell.value }) : '';
+  }
+
+  function diagConfusion(ctx, d, m) {
     const t = C().diag.confusion;
-    const cell = (k, label) => {
-      const x = d.cells[k];
-      return ctx.el('td', { 'data-cell': k }, [
-        x.value === null ? '' : ctx.components.cited(ctx.format.number(x.value, Number.isInteger(x.value) ? 'int' : 'f1'),
-          { resultId: d.resultId, path: x.path, value: x.value }),
-        ctx.el('div', { className: 'muted', text: label })]);
-    };
-    return ctx.el('table', { className: 'ht-values ht-confusion', 'data-confusion': d.evaluation }, [
-      ctx.el('caption', { text: t.question }),
-      // An empty head cell first, so the narrow-panel cards label each count by its column.
-      ctx.el('thead', {}, [ctx.el('tr', {}, [ctx.el('th', { scope: 'col', text: '' }), ctx.el('th', { scope: 'col', text: t.actedOn }),
-        ctx.el('th', { scope: 'col', text: t.notActedOn })])]),
-      ctx.el('tbody', {}, [
-        ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.positive }), cell('tp', t.tp), cell('fn', t.fn)]),
-        ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.negative }), cell('fp', t.fp), cell('tn', t.tn)]),
+    const count = x => ctx.format.number(x, Number.isInteger(x) ? 'int' : 'f1');
+    const cell = (k, label) => ctx.el('td', { 'data-cell': k }, [citeCell(ctx, d, m.confusion[k], count),
+      ctx.el('div', { className: 'muted', text: label })]);
+    return ctx.el('div', {}, [
+      ctx.el('p', { className: 'ht-ev-diag-question', text: t.question }),
+      ctx.el('table', { className: 'ht-values ht-confusion', 'data-confusion': d.evidence }, [
+        ctx.el('caption', { className: 'sr-only', text: t.question }),
+        // An empty head cell first, so the narrow-panel cards label each count by its column.
+        ctx.el('thead', {}, [ctx.el('tr', {}, [ctx.el('th', { scope: 'col', text: '' }), ctx.el('th', { scope: 'col', text: t.actedOn }),
+          ctx.el('th', { scope: 'col', text: t.notActedOn })])]),
+        ctx.el('tbody', {}, [
+          ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.positive }), cell('tp', t.tp), cell('fn', t.fn)]),
+          ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.negative }), cell('fp', t.fp), cell('tn', t.tn)]),
+        ]),
       ]),
+      ctx.el('p', { 'data-confusion-rates': true }, [t.precision, citeCell(ctx, d, m.confusion.precision, x => pct(ctx, x)),
+        t.recall, citeCell(ctx, d, m.confusion.recall, x => pct(ctx, x)), t.specificity,
+        citeCell(ctx, d, m.confusion.specificity, x => pct(ctx, x)), '.',
+        m.confusion.selection === 'expected' ? ` ${t.expected}` : '']),
     ]);
   }
 
-  const TICKS = [0, 0.5, 1].map(v => ({ value: v, text: `${v * 100}%` }));
-
-  function diagCurve(ctx, d, kind) {
-    const c = C().diag[kind];
-    const box = ctx.el('div', { 'data-diag-chart': kind });
-    if (kind === 'gain') {
-      ctx.components.curve(box, { title: c.question, xDomain: [0, 1], yDomain: [0, 1], xTicks: TICKS, yTicks: TICKS,
-        xLabel: HT.copy.whatif.binary.gain.x, yLabel: HT.copy.whatif.binary.gain.y, diagonal: { label: HT.copy.whatif.binary.gain.random },
-        points: d.points.map(p => ({ x: p.share, y: p.recall, label: `${pct0(ctx, p.share)}: ${pct0(ctx, p.recall)}` })),
-        columns: [{ key: 'share', label: HT.copy.whatif.binary.gain.x }, { key: 'recall', label: HT.copy.whatif.binary.gain.y }],
-        rows: d.points.map(p => ({ share: { text: pct(ctx, p.share), cited: { resultId: d.resultId, path: p.paths.share, value: p.share } },
+  function diagBinaryCurves(ctx, d, m) {
+    const c = C().diag;
+    const out = [];
+    out.push(ctx.el('p', { 'data-ranking': true }, [c.auc, citeCell(ctx, d, m.rocAuc, x => ctx.format.number(x, 'f3')),
+      c.ap, citeCell(ctx, d, m.averagePrecision, x => ctx.format.number(x, 'f3')), '.']));
+    if (m.curve.length) {
+      const box = ctx.el('div', { 'data-diag-chart': 'gain' });
+      const g = HT.copy.whatif.binary.gain;
+      ctx.components.curve(box, { title: c.gain.question, xTicks: pctTicks(1), yTicks: pctTicks(1), xLabel: g.x, yLabel: g.y,
+        diagonal: { label: g.random, at: 0.6 },
+        points: m.curve.map(p => ({ x: p.share, y: p.recall, label: '' })),
+        columns: [{ key: 'share', label: g.columns.share }, { key: 'recall', label: g.columns.recall }],
+        rows: m.curve.map(p => ({ share: { text: pct(ctx, p.share), cited: { resultId: d.resultId, path: p.paths.share, value: p.share } },
           recall: { text: pct(ctx, p.recall), cited: { resultId: d.resultId, path: p.paths.recall, value: p.recall } } })) });
-    } else {
-      ctx.components.curve(box, { title: c.question, xDomain: [0, 1], yDomain: [0, 1], xTicks: TICKS, yTicks: TICKS,
-        xLabel: c.x, yLabel: c.y, diagonal: { label: c.diagonal },
-        points: d.bins.map(b => ({ x: b.meanPred, y: b.observed, low: b.low, high: b.high, label: '' })),
-        columns: [{ key: 'pred', label: c.x }, { key: 'obs', label: c.y }, { key: 'n', label: C().diag.segments.columns.interval }],
-        rows: d.bins.map(b => ({ pred: { text: pct(ctx, b.meanPred), cited: { resultId: d.resultId, path: b.paths.meanPred, value: b.meanPred } },
-          obs: { text: pct(ctx, b.observed), cited: { resultId: d.resultId, path: b.paths.observed, value: b.observed } },
-          n: b.low === null ? '' : `[${pct(ctx, b.low)}, ${pct(ctx, b.high)}]` })) });
+      out.push(box);
     }
-    return box;
+    const cal = m.calibration;
+    if (cal.bins.length) {
+      const box = ctx.el('div', { 'data-diag-chart': 'calibration' });
+      const top = Math.min(1, [0.25, 0.5, 1].find(t => cal.bins.every(b => Math.max(b.meanPred, b.high === null ? 0 : b.high) <= t)) || 1);
+      ctx.components.curve(box, { title: c.calibration.question, xDomain: [0, top], yDomain: [0, top], xTicks: pctTicks(top),
+        yTicks: pctTicks(top), xLabel: c.calibration.x, yLabel: c.calibration.y, diagonal: { label: c.calibration.diagonal },
+        points: cal.bins.map(b => ({ x: b.meanPred, y: b.observed, low: b.low, high: b.high, label: '' })),
+        columns: [{ key: 'bin', label: c.calibration.bin }, { key: 'n', label: c.calibration.n }, { key: 'pred', label: c.calibration.x },
+          { key: 'obs', label: c.calibration.y }, { key: 'interval', label: c.segments.columns.interval }],
+        rows: cal.bins.map(b => ({ bin: b.bin === null ? '' : String(b.bin),
+          n: b.n === null ? '' : { text: int(ctx, b.n), cited: { resultId: d.resultId, path: b.paths.n, value: b.n } },
+          pred: { text: pct(ctx, b.meanPred), cited: { resultId: d.resultId, path: b.paths.meanPred, value: b.meanPred } },
+          obs: { text: pct(ctx, b.observed), cited: { resultId: d.resultId, path: b.paths.observed, value: b.observed } },
+          interval: b.low === null ? '' : `[${pct(ctx, b.low)}, ${pct(ctx, b.high)}]` })) });
+      box.appendChild(ctx.el('p', { 'data-brier': true }, [c.calibration.brier,
+        citeCell(ctx, d, cal.brier, x => ctx.format.number(x, 'f3')), c.calibration.brierBase,
+        citeCell(ctx, d, cal.brierBase, x => ctx.format.number(x, 'f3')), '.',
+        cal.outside !== null ? ` ${c.calibration.outside(int(ctx, cal.outside), int(ctx, cal.bins.length))}` : '']));
+      out.push(box);
+    }
+    return out;
   }
 
-  function diagSegments(ctx, d, task) {
+  function diagSegments(ctx, d, m) {
     const t = C().diag.segments;
-    const table = ctx.components.valuesTable(null, { caption: t.question,
-      columns: [{ key: 'group', label: t.columns.group }, { key: 'n', label: t.columns.n }, { key: 'precision', label: t.columns.precision },
-        { key: 'interval', label: t.columns.interval }, { key: 'recall', label: t.columns.recall }],
-      rows: d.segments.map(g => ({ group: `${g.variable} = ${g.group}`,
-        n: g.n === null ? '' : { text: int(ctx, g.n), cited: { resultId: d.resultId, path: g.paths.n, value: g.n } },
-        precision: g.precision === null ? '' : { text: pct(ctx, g.precision), cited: { resultId: d.resultId, path: g.paths.precision, value: g.precision } },
-        interval: g.low === null || g.high === null ? '' : `[${pct(ctx, g.low)}, ${pct(ctx, g.high)}]`,
-        recall: g.recall === null ? '' : { text: pct(ctx, g.recall), cited: { resultId: d.resultId, path: g.paths.recall, value: g.recall } } })) });
-    table.setAttribute('data-segments', String(d.segments.length));
-    return table;
+    return m.segments.map(s => {
+      const table = ctx.components.valuesTable(null, { caption: t.caption(s.column),
+        columns: [{ key: 'value', label: t.columns.group }, { key: 'n', label: t.columns.n }, { key: 'precision', label: t.columns.precision },
+          { key: 'interval', label: t.columns.interval }, { key: 'recall', label: t.columns.recall }],
+        rows: s.groups.map(g => ({ value: g.small ? `${g.value} (${t.small})` : g.value,
+          n: g.n === null ? '' : { text: int(ctx, g.n), cited: { resultId: d.resultId, path: g.paths.n, value: g.n } },
+          precision: g.precision === null ? t.notDefined : { text: pct(ctx, g.precision), cited: { resultId: d.resultId, path: g.paths.precision, value: g.precision } },
+          interval: g.precisionLow === null || g.precisionHigh === null ? '' : `[${pct(ctx, g.precisionLow)}, ${pct(ctx, g.precisionHigh)}]`,
+          recall: g.recall === null ? t.notDefined : { text: pct(ctx, g.recall), cited: { resultId: d.resultId, path: g.paths.recall, value: g.recall } } })) });
+      table.setAttribute('data-segments', s.column);
+      return table;
+    });
   }
 
-  function diagResiduals(ctx, d, task) {
-    const t = C().diag.residuals;
-    const box = ctx.el('div', { 'data-diag-chart': 'residuals' });
+  function diagCoefficients(ctx, d, m) {
+    const t = C().diag.coefficients;
+    const k = m.coefficients;
+    if (!k || !k.terms.length) return null;
+    const f = x => `${x > 0 ? '+' : ''}${ctx.format.number(x, 'f3')}`;
+    const table = ctx.components.valuesTable(null, { caption: t.caption(int(ctx, k.terms.length), int(ctx, k.total)),
+      columns: [{ key: 'term', label: t.columns.term }, { key: 'value', label: t.columns.value }, { key: 'interval', label: t.columns.interval },
+        { key: 'zero', label: t.columns.zero }],
+      rows: k.terms.map(x => ({ term: x.term,
+        value: x.value === null ? '' : { text: f(x.value), cited: { resultId: d.resultId, path: x.path, value: x.value } },
+        interval: x.low === null || x.high === null ? '' : `[${f(x.low)}, ${f(x.high)}]`, zero: x.excludesZero ? t.excludes : t.includes })) });
+    table.setAttribute('data-coefficients', String(k.terms.length));
+    return ctx.el('div', {}, [table, ctx.el('p', { className: 'muted', text: t.note(int(ctx, k.replicates)) })]);
+  }
+
+  function diagRegression(ctx, d, m) {
+    const c = C().diag.regression;
+    const unit = d.unit ? ` ${d.unit}` : '';
     const f2 = x => ctx.format.number(x, 'f2');
-    intervals(ctx, box, { title: t.question, zero: true,
-      rows: d.bins.map(b => ({ label: t.row(b.meanPred === null ? '' : f2(b.meanPred)), point: b.meanResidual, low: b.low, high: b.high,
-        pointText: `${b.meanResidual > 0 ? '+' : ''}${f2(b.meanResidual)}`, intervalText: b.low === null ? '' : `[${f2(b.low)}, ${f2(b.high)}]` })) });
-    return box;
+    const s2 = x => `${x > 0 ? '+' : ''}${f2(x)}`;
+    const out = [ctx.el('p', { 'data-errors': true }, [c.mae, citeCell(ctx, d, m.errors.mae, x => `${f2(x)}${unit}`), c.rmse,
+      citeCell(ctx, d, m.errors.rmse, x => `${f2(x)}${unit}`), '.'])];
+    out.push(ctx.el('p', { 'data-residual-moments': true }, [c.mean, citeCell(ctx, d, m.residuals.mean, s2), c.sd,
+      citeCell(ctx, d, m.residuals.sd, f2), c.skew, citeCell(ctx, d, m.residuals.skewness, s2), c.kurt,
+      citeCell(ctx, d, m.residuals.kurtosis, s2), '.']));
+    if (m.byPrediction.length) {
+      const box = ctx.el('div', { 'data-diag-chart': 'residuals' });
+      intervals(ctx, box, { title: c.byPrediction, zero: true,
+        rows: m.byPrediction.map(b => ({ label: c.around(b.meanPrediction === null ? '' : f2(b.meanPrediction)), point: b.meanResidual,
+          low: null, high: null, pointText: b.meanResidual === null ? '' : `${s2(b.meanResidual)}${unit}`, intervalText: '' })) });
+      out.push(box);
+    }
+    const h = m.heteroscedasticity;
+    out.push(ctx.el('p', { className: h.flag ? 'hold' : '', 'data-heteroscedasticity': h.flag ? 'flag' : 'none' }, [
+      h.flag ? c.spreadFlag : c.spreadOk, c.corr, citeCell(ctx, d, h.correlation, x => ctx.format.number(x, 'f2')), c.ratio,
+      citeCell(ctx, d, h.ratio, x => ctx.format.number(x, 'f2')), '.']));
+    if (m.qq.length) {
+      const box = ctx.el('div', { 'data-diag-chart': 'qq' });
+      const lim = Math.ceil(Math.max(...m.qq.flatMap(p => [Math.abs(p.theoretical), Math.abs(p.sample)])));
+      ctx.components.curve(box, { title: c.qq, xDomain: [-lim, lim], yDomain: [-lim, lim],
+        xTicks: numTicks(-lim, lim, v => String(v)), yTicks: numTicks(-lim, lim, v => String(v)), xLabel: c.qqX, yLabel: c.qqY,
+        diagonal: { label: c.qqDiagonal, at: 0.75 }, points: m.qq.map(p => ({ x: p.theoretical, y: p.sample, label: '' })),
+        columns: [{ key: 'x', label: c.qqX }, { key: 'y', label: c.qqY }],
+        rows: m.qq.map(p => ({ x: f2(p.theoretical), y: f2(p.sample) })) });
+      box.appendChild(ctx.el('p', { className: 'muted', text: c.qqWhy }));
+      out.push(box);
+    }
+    for (const fcol of m.byFeature.slice(0, 3)) {
+      const table = ctx.components.valuesTable(null, { caption: c.byFeature(fcol.column),
+        columns: [{ key: 'value', label: c.columns.value }, { key: 'n', label: c.columns.n }, { key: 'mean', label: c.columns.mean }],
+        rows: fcol.groups.map(g => ({ value: g.small ? `${g.value} (${C().diag.segments.small})` : g.value,
+          n: g.n === null ? '' : { text: int(ctx, g.n), cited: { resultId: d.resultId, path: g.paths.n, value: g.n } },
+          mean: g.meanResidual === null ? '' : { text: `${s2(g.meanResidual)}${unit}`, cited: { resultId: d.resultId, path: g.paths.meanResidual, value: g.meanResidual } } })) });
+      table.setAttribute('data-by-feature', fcol.column);
+      out.push(table);
+    }
+    if (!d.smearingApplies) out.push(ctx.el('p', { className: 'muted', 'data-no-transform': true, text: c.noTransform }));
+    return out;
   }
 
-  function diagnosticsSection(ctx, model, task) {
+  function diagModel(ctx, d, m, task) {
+    const c = C().diag;
+    const body = task === 'regression' ? diagRegression(ctx, d, m)
+      : [diagConfusion(ctx, d, m), ...diagBinaryCurves(ctx, d, m), ...diagSegments(ctx, d, m)];
+    const coef = diagCoefficients(ctx, d, m);
+    return ctx.el('div', { className: 'ht-ev-diag-model', 'data-diag-model': m.fit }, [
+      ctx.el('h5', { text: c.modelTitle(fitLabel(task, m.fit)) }), ...body, coef]);
+  }
+
+  function diagResult(ctx, d, summary, task) {
+    const c = C().diag;
+    const kids = [];
+    const rows = c.rows[d.evaluation];
+    if (rows && d.n !== null) kids.push(ctx.el('p', { 'data-diag-rows': d.evaluation, text: rows(int(ctx, d.n)) }));
+    if (task !== 'regression' && d.rule) {
+      const words = J().value('policy', d.rule, task) || d.rule;
+      kids.push(ctx.el('p', { 'data-diag-rule': d.rule, title: d.rule, text: c.atRule(words, c.ruleSource[d.ruleSource] || '') }));
+    }
+    const opening = summary && summary.finalTest && summary.finalTest.opening;
+    if (d.evidence === 'development' && opening && d.startedRevision !== null && d.startedRevision > opening.revision) {
+      kids.push(ctx.el('p', { className: 'hold', 'data-after-opening': true, text: c.afterOpening }));
+    }
+    // The chosen model first: the final test's, else the adopted choice (`@fit.variant` in a
+    // policy, the slot of a model choice), else the candidate (CLI-CONTRACT-COMPANION §14).
+    const decisions = (summary && summary.decisions) || {};
+    const choice = task === 'regression' ? String((decisions.model_choice || {}).value || '')
+      : String((decisions.policy || {}).value || '').split('@')[1] || '';
+    const chosen = d.model || (/^fit\./.test(choice) ? choice : null);
+    const order = [...d.models].sort((a, b) => (b.fit === chosen) - (a.fit === chosen));
+    const [first, ...rest] = order;
+    if (first) kids.push(diagModel(ctx, d, first, task));
+    if (rest.length) {
+      kids.push(ctx.el('details', { className: 'ht-details', 'data-diag-also': true }, [
+        ctx.el('summary', { text: c.also(rest.map(m => fitLabel(task, m.fit)).join(', ')) }),
+        ...rest.map(m => diagModel(ctx, d, m, task))]));
+    }
+    return ctx.el('div', { className: 'ht-ev-diag', 'data-diag': d.slot, 'data-diag-evidence': d.evidence, 'data-result-ref': d.resultId }, kids);
+  }
+
+  function diagnosticsSection(ctx, model, summary, task) {
     const c = C();
     const items = model.diagnostics || [];
     if (!items.length) return null;
-    const where = ev => c.diagnosticsWhere[ev] || ev;
-    const groups = ['out_of_fold', 'final_test'].map(ev => [ev, items.filter(d => (d.evaluation === 'final_test' ? 'final_test' : 'out_of_fold') === ev)])
-      .filter(([, list]) => list.length);
+    const state = J().finalTestState(summary && summary.finalTest);
+    const dev = items.filter(d => d.evidence === 'development');
+    const fin = items.filter(d => d.evidence === 'final');
     const kids = [ctx.el('p', { className: 'muted', text: c.diagnosticsLead })];
-    for (const [ev, list] of groups) {
-      const block = ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': ev }, [
-        ctx.el('h4', { text: where(ev) })]);
-      for (const d of list) {
-        // Binary diagnostics use the vocabulary of a decision rule; a regression study shows
-        // residuals only (INV-12).
-        if (task === 'regression' && d.kind !== 'residuals' && d.kind !== 'other') continue;
-        const card = ctx.el('div', { className: 'ht-ev-diag', 'data-diag': d.kind, 'data-result-ref': d.resultId });
-        if (d.kind === 'confusion') card.appendChild(diagConfusion(ctx, d));
-        else if (d.kind === 'gain' && d.points.length) card.appendChild(diagCurve(ctx, d, 'gain'));
-        else if (d.kind === 'calibration' && d.bins.length) card.appendChild(diagCurve(ctx, d, 'calibration'));
-        else if (d.kind === 'segments') card.appendChild(diagSegments(ctx, d, task));
-        else if (d.kind === 'residuals' && d.bins.length) card.appendChild(diagResiduals(ctx, d, task));
-        else card.appendChild(ctx.el('p', { className: 'muted', text: `${d.activity} · ${c.reconcile}` }));
-        block.appendChild(card);
-      }
-      kids.push(block);
-    }
+    kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'development' }, [
+      ctx.el('h4', { text: c.diagnosticsWhere.development }),
+      ...(dev.length ? dev.map(d => diagResult(ctx, d, summary, task)) : [ctx.el('p', { className: 'muted', text: c.diag.noneDevelopment })])]));
+    kids.push(ctx.el('div', { className: 'ht-ev-diag-group', 'data-diag-evaluation': 'final' }, [
+      ctx.el('h4', { text: c.diagnosticsWhere.final }),
+      ...(fin.length ? fin.map(d => diagResult(ctx, d, summary, task))
+        : [ctx.el('p', { className: 'muted', 'data-diag-final': state || 'none',
+          text: state === 'sealed' ? c.diag.finalSealed : state === 'absent' ? c.finalAbsent : c.diag.finalPending })])]));
     return ctx.el('section', { className: 'card ht-ev-diagnostics', 'aria-labelledby': 'ht-ev-diag-h', 'data-ev': 'diagnostics' }, [
       ctx.el('h3', { id: 'ht-ev-diag-h', text: c.diagnosticsTitle }), ...kids]);
   }
@@ -765,7 +877,7 @@
     if (stale) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: c.updating }));
     // WP-B5: the final test and the ledger first, development and final evidence apart.
     const first = [finalTestCard(summary, model, ctx), ledger(ctx, model), developmentSection(ctx, model, task),
-      finalEvidenceSection(ctx, model, summary, task), diagnosticsSection(ctx, model, task)].filter(Boolean);
+      finalEvidenceSection(ctx, model, summary, task), diagnosticsSection(ctx, model, summary, task)].filter(Boolean);
     for (const node of first) root.appendChild(node);
     root.appendChild(ctx.el('div', { className: `ht-ev-grid${stale ? ' ht-pending' : ''}` }, [
       registry(ctx, model, sel),

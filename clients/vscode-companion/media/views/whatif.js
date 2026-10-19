@@ -418,7 +418,7 @@
     const box = ctx.el('div', { className: 'ht-wi-gain-chart', 'data-gain-chart': String(rows.length) });
     ctx.components.curve(box, { title: g.question, xDomain: [0, xMax], yDomain: [0, yMax], xTicks: ticksOf(xMax), yTicks: ticksOf(yMax),
       xLabel: g.x, yLabel: g.y,
-      diagonal: { label: g.random }, marks,
+      diagonal: { label: g.random, at: 0.6 }, marks,
       points: rows.map(r => ({ x: r.share, y: r.recall, label: `${pct0(r.share)}: ${pct0(r.recall)}` })),
       columns: [{ key: 'share', label: g.columns.share }, { key: 'recall', label: g.columns.recall },
         { key: 'precision', label: g.columns.precision }, { key: 'source', label: g.columns.source }],

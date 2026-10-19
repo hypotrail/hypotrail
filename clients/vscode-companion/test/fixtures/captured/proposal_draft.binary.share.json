@@ -17,15 +17,15 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-cv",
-  "revision": 33,
+  "revision": 37,
   "decision_id": "policy",
   "value": "share:0.2",
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the rule share:0.2: act on the 20% highest-scored rows, 723 of the 3,617 validation rows. There the logistic model's selection had precision 25.2% against 11.5% for the baseline, and recall 43.6%. These validation rows were used to choose the rule, so these figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 72d3f6f2).",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result f48403d6).",
   "evidence": {
-   "result_id": "72d3f6f25588c9186f332e61d90a2960ac5f29e38ccefb6ce042ea3001036609",
+   "result_id": "f48403d67cdbf166ec83520c4c2533bee12cde86ae268eeb2a09cf49f3eb7dd1",
    "activity": "policy.evaluation",
    "figures": [
     {

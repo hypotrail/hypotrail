@@ -302,7 +302,9 @@ function toSummaryModel(summary) {
     notYetDefensible: { top, more: list(nyd.more).map(str) },
     alerts,
     digest: digestModel(summary.digest, summary.last_session),
-    waitingCount: proposals.length + reconfirm,
+    // WP-B5: the opening of the final test is answered in the chat, not in the panel, so its
+    // open proposal is not counted on the Decisions badge.
+    waitingCount: proposals.filter(p => p.decisionId !== 'final_test').length + reconfirm,
     // "Regenerate" is offered when a generated deliverable is stale or failed, or nothing
     // was rendered yet (COMPANION-ADVANCED §6.1.4, OV-7).
     regenerate: str(summary.artifacts && summary.artifacts.status) === 'not_rendered' ||

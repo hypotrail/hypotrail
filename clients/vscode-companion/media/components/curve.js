@@ -28,6 +28,7 @@
     const shown = points.filter(p => ok(p.x) && ok(p.y)).sort((a, b) => a.x - b.x);
     const path = shown.map((p, i) => `${i ? 'L' : 'M'}${x(p.x).toFixed(1)} ${y(p.y).toFixed(1)}`).join(' ');
     const baseY = M.top + ph;
+    const diagonalStart = Math.max(xDomain[0], yDomain[0]);
     const diagonalEnd = Math.min(xDomain[1], yDomain[1]);
     const chart = HT.svg('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', class: 'ht-chart ht-curve' }, [
       // Axes.
@@ -42,10 +43,15 @@
         transform: `rotate(-90 12 ${M.top + ph / 2})`, text: yLabel }) : null,
       // The reference diagonal.
       // y = x, up to the smaller of the two domains (the axes may be cut to the points' range).
-      diagonal ? HT.svg('line', { x1: x(0), y1: y(0), x2: x(diagonalEnd), y2: y(diagonalEnd),
+      diagonal ? HT.svg('line', { x1: x(diagonalStart), y1: y(diagonalStart), x2: x(diagonalEnd), y2: y(diagonalEnd),
         stroke: 'baseline', 'stroke-dasharray': '4 3', 'data-diagonal': true }) : null,
-      diagonal ? HT.svg('text', { x: x(diagonalEnd) - 4, y: y(diagonalEnd) + 14, class: 'ht-muted-text', 'text-anchor': 'end',
-        text: diagonal.label }) : null,
+      // The label sits below the diagonal: at its end, or at `diagonal.at` of its length
+      // (a gain curve lies above the diagonal, so the space below it is free).
+      diagonal ? (() => {
+        const t = typeof diagonal.at === 'number' ? diagonalStart + diagonal.at * (diagonalEnd - diagonalStart) : diagonalEnd;
+        return HT.svg('text', { x: x(t) + (diagonal.at ? 6 : -4), y: y(t) + 14, class: 'ht-muted-text',
+          'text-anchor': diagonal.at ? 'start' : 'end', text: diagonal.label });
+      })() : null,
       // Marks (a chosen share).
       ...marks.filter(m => ok(m.x)).map((m, i) => HT.svg('g', { 'data-mark': m.label }, [
         HT.svg('line', { x1: x(m.x), x2: x(m.x), y1: M.top, y2: baseY, stroke: m.tone === 'experiment' ? 'experiment' : 'accent',
@@ -57,7 +63,7 @@
       ...shown.map(p => HT.svg('g', { 'data-point': p.label }, [
         ok(p.low) && ok(p.high) ? HT.svg('line', { x1: x(p.x), x2: x(p.x), y1: y(p.low), y2: y(p.high), stroke: 'accent',
           'stroke-width': 2, 'data-interval': true }) : null,
-        HT.svg('circle', { cx: x(p.x), cy: y(p.y), r: 4, fill: p.tone === 'baseline' ? 'baseline' : 'fg' }),
+        HT.svg('circle', { cx: x(p.x), cy: y(p.y), r: shown.length > 10 ? 2.5 : 4, fill: p.tone === 'baseline' ? 'baseline' : 'fg' }),
         // Below and to the right of the point: under a rising curve, away from its line.
         p.label ? HT.svg('text', { x: x(p.x) + 7, y: y(p.y) + 15, class: 'ht-value', text: p.label }) : null,
       ])),

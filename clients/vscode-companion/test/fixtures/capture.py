@@ -239,6 +239,8 @@ def cross_validated(cap: Capture) -> None:
                     flow.rev(), '--study', study)
     assert code == 0, out
     pid = out['result']['proposal_id']
+    # WP-B5 (with WP-B4): the development diagnostics before the opening.
+    cap.save('run.diag.binary.cv', 'binary', ['run', 'diag.binary'], 0, flow.run('diag.binary'))
     cap.read('summary.binary.cv.opening', 'binary', study, 'status', '--summary', '--digest', '--json',
              note='Bank, cross-validation, final test sealed, its opening proposed (waits for the junior).')
     cap.read('evidence.binary.cv.sealed', 'binary', study, 'evidence', '--json',
@@ -246,6 +248,8 @@ def cross_validated(cap: Capture) -> None:
     out = flow.call('decide', 'confirm', pid, '--user-words', OPEN_WORDS, '--request-id', flow.rid(),
                     '--expected-revision', flow.rev(), '--study', study)
     assert out['result']['opening']['status'] == 'promoted', out
+    # The final diagnostics, once the final test is opened (WP-B4).
+    cap.save('run.diag.final_test', 'binary', ['run', 'diag.final_test'], 0, flow.run('diag.final_test'))
     # A later rule, chosen after the opening: "after the final test".
     flow.run('policy.evaluate', '--rule', 'share:0.1', '--rule', 'share:0.2')
     cap.read('proposal_draft.binary.share', 'binary', study, 'preview', 'proposal', 'policy', '--value=share:0.2',
@@ -253,6 +257,8 @@ def cross_validated(cap: Capture) -> None:
     cap.read('preview.binary.share', 'binary', study, 'preview', 'policy', '--rule', 'share:0.2', '--intervals',
              '--json')
     flow.decide('policy', 'share:0.2', words='Yes, I adopt the top fifth now, because the team grew')
+    # The new rule makes the development diagnostics stale; computed again, after the opening.
+    flow.run('diag.binary')
     cap.read('summary.binary.cv', 'binary', study, 'status', '--summary', '--digest', '--json',
              note='Bank, cross-validation, final test opened, then the calling rule changed after it.')
     cap.read('evidence.binary.cv', 'binary', study, 'evidence', '--json',
@@ -310,6 +316,9 @@ def regression(cap: Capture) -> None:
     # WP-B4: the development diagnostics.
     cap.save('run.diag.regression', 'regression', ['run', 'diag.regression'], 0,
              flow.run('diag.regression'))
+    # WP-B5: the evidence with the development diagnostics of a regression study.
+    cap.read('evidence.regression.diag', 'regression', study, 'evidence', '--json',
+             note='Auto MPG with its development diagnostics (diag.regression).')
 
 
 def capture(root: Path) -> dict[str, dict]:

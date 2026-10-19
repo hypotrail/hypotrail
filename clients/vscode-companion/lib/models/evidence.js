@@ -14,7 +14,7 @@
 // scheme of the split in values, and the spread across folds of each fit), variant (the
 // variant against the candidate, paired), gain (the gain points and the share of each
 // evaluated rule), finalEvaluation (the one evaluation of the final test), and diagnostics
-// (the `diag.*` results of WP-B4, in the shape of its plan; see diagnosticsOf).
+// (the `diag.*` results of WP-B4, CLI-CONTRACT §13; see diagnosticsOf).
 
 const { ModelError, str, strOrNull, list, obj, int, num, bool, expectSchema, segments, plain } = require('./common');
 
@@ -483,68 +483,108 @@ function finalEvaluationOf(rawResults, task) {
   };
 }
 
-// WP-B4 is written in parallel. Until its contract lands, the diagnostics are read in the
-// shape of its plan (V0.2-IMPLEMENTATION-PLAN WP-B4; INTEGRATOR: reconcile with the engine's
-// `diag.*` payload and test/fixtures/evidence.binary.diagnostics.json): a current result
-// whose activity starts with `diag.`, its kind named by the activity, its values
-//   confusion    {rule, model, evaluation, n, confusion: {tp, fp, fn, tn}}
-//   gain         {model, evaluation, points: [{share, recall, precision}]}
-//   calibration  {model, evaluation, bins: [{mean_pred, observed, low, high, n}]}
-//   segments     {model, rule, evaluation, segments: [{variable, group, precision, recall, n, low, high}]}
-//   residuals    {model, evaluation, bins: [{mean_pred, mean_residual, low, high, n}]}
-// where `evaluation` is `out_of_fold` (development rows) or `final_test`. Anything else is
-// listed by name only. Every number shown is one of these values.
-const DIAG_KINDS = ['confusion', 'gain', 'calibration', 'segments', 'residuals'];
+// Model diagnostics (WP-B4; CLI-CONTRACT §13, CLI-CONTRACT-COMPANION §14). Results of the
+// slots `diag.binary` or `diag.regression` (development evidence: the candidate and the
+// variant) and `diag.final_test` (final evidence: the chosen model only). Only current,
+// verified results are read; each number keeps its value path for citing
+// (`models.[fit.logistic].calibration.brier`). Points of `curve`, `qq` and `scatter` are
+// drawn as marks; the panel computes nothing.
+const DIAG_SLOTS = ['diag.binary', 'diag.regression', 'diag.final_test'];
+const MAX_TERMS = 8;
 
-function diagKind(activity) {
-  const a = str(activity).toLowerCase();
-  if (a.includes('confusion')) return 'confusion';
-  if (a.includes('calibration')) return 'calibration';
-  if (a.includes('segment')) return 'segments';
-  if (a.includes('residual')) return 'residuals';
-  if (a.includes('gain') || a.includes('lift')) return 'gain';
-  return 'other';
+function binaryDiag(m, at) {
+  const c = obj(m.confusion);
+  const cell = k => ({ value: num(c[k]), path: at('confusion', k) });
+  const cal = obj(m.calibration);
+  const coef = obj(m.coefficients);
+  return {
+    confusion: { tp: cell('true_positives'), fp: cell('false_positives'), fn: cell('false_negatives'),
+      tn: cell('true_negatives'), precision: cell('precision'), recall: cell('recall'), specificity: cell('specificity'),
+      selection: strOrNull(c.selection) },
+    curve: list(obj(m.curve).points).map((p, i) => ({ share: num(p && p.share), recall: num(p && p.recall),
+      fpr: num(p && p.false_positive_rate), precision: num(p && p.precision),
+      paths: { share: at('curve', 'points', i, 'share'), recall: at('curve', 'points', i, 'recall'),
+        fpr: at('curve', 'points', i, 'false_positive_rate') } })).filter(p => p.share !== null && p.recall !== null),
+    rocAuc: { value: num(m.roc_auc), path: at('roc_auc') },
+    averagePrecision: { value: num(m.average_precision), path: at('average_precision') },
+    calibration: {
+      brier: { value: num(cal.brier), path: at('calibration', 'brier') },
+      brierBase: { value: num(cal.brier_base_rate), path: at('calibration', 'brier_base_rate') },
+      outside: int(cal.bins_outside_interval),
+      bins: list(cal.bins).map((b, i) => ({ bin: int(b && b.bin), n: int(b && b.n), meanPred: num(b && b.mean_predicted),
+        observed: num(b && b.observed_rate), low: num(b && b.low), high: num(b && b.high), inside: b && b.inside_interval === true,
+        paths: { meanPred: at('calibration', 'bins', i, 'mean_predicted'), observed: at('calibration', 'bins', i, 'observed_rate'),
+          n: at('calibration', 'bins', i, 'n') } })).filter(b => b.meanPred !== null && b.observed !== null),
+    },
+    segments: list(m.segments).map((s, si) => ({ column: str(s && s.column),
+      groups: list(s && s.groups).map((g, gi) => {
+        const p = k => at('segments', si, 'groups', gi, k);
+        return { value: str(g && g.value), n: int(g && g.n), selected: num(g && g.selected), precision: num(g && g.precision),
+          precisionLow: num(g && g.precision_low), precisionHigh: num(g && g.precision_high), recall: num(g && g.recall),
+          small: g && g.small_cell === true,
+          paths: { n: p('n'), selected: p('selected'), precision: p('precision'), recall: p('recall') } };
+      }) })),
+    coefficients: coefficientsOf(coef, at),
+    examples: { falsePositives: list(obj(m.examples).false_positives).length, falseNegatives: list(obj(m.examples).false_negatives).length },
+  };
 }
 
-function diagnosticsOf(rawResults) {
-  return rawResults.filter(r => r && r.current === true && r.integrity === 'ok' && /^diag\./.test(str(r.activity))
-    && r.values && typeof r.values === 'object').map(r => {
+function coefficientsOf(coef, at) {
+  if (!coef || !Array.isArray(coef.terms)) return null;
+  return {
+    total: coef.terms.length, replicates: int(coef.replicates), level: num(coef.level), scale: strOrNull(coef.scale),
+    terms: coef.terms.slice(0, MAX_TERMS).map((t, i) => ({ term: str(t && t.term), value: num(t && t.value),
+      low: num(t && t.low), high: num(t && t.high), excludesZero: t && t.excludes_zero === true,
+      path: at('coefficients', 'terms', i, 'value') })),
+  };
+}
+
+function regressionDiag(m, at) {
+  const e = obj(m.errors);
+  const r = obj(m.residuals);
+  const h = obj(m.heteroscedasticity);
+  return {
+    errors: { mae: { value: num(e.mae), path: at('errors', 'mae') }, rmse: { value: num(e.rmse), path: at('errors', 'rmse') } },
+    residuals: { mean: { value: num(r.mean), path: at('residuals', 'mean') }, sd: { value: num(r.sd), path: at('residuals', 'sd') },
+      skewness: { value: num(r.skewness), path: at('residuals', 'skewness') },
+      kurtosis: { value: num(r.excess_kurtosis), path: at('residuals', 'excess_kurtosis') } },
+    qq: list(obj(m.qq).points).map(p => ({ theoretical: num(p && p.theoretical), sample: num(p && p.sample) }))
+      .filter(p => p.theoretical !== null && p.sample !== null),
+    byPrediction: list(obj(m.by_prediction).bins).map((b, i) => ({ bin: int(b && b.bin), n: int(b && b.n),
+      meanPrediction: num(b && b.mean_prediction), meanResidual: num(b && b.mean_residual), sd: num(b && b.sd_residual),
+      paths: { meanPrediction: at('by_prediction', 'bins', i, 'mean_prediction'), meanResidual: at('by_prediction', 'bins', i, 'mean_residual'),
+        n: at('by_prediction', 'bins', i, 'n') } })),
+    heteroscedasticity: { correlation: { value: num(h.abs_residual_prediction_correlation), path: at('heteroscedasticity', 'abs_residual_prediction_correlation') },
+      ratio: { value: num(h.spread_ratio_top_bottom), path: at('heteroscedasticity', 'spread_ratio_top_bottom') }, flag: h.flag === true },
+    byFeature: list(m.by_feature).map((f, fi) => ({ column: str(f && f.column), binned: f && f.binned === true,
+      groups: list(f && f.groups).map((g, gi) => ({ value: str(g && g.value), n: int(g && g.n), meanResidual: num(g && g.mean_residual),
+        mae: num(g && g.mae), small: g && g.small_cell === true,
+        paths: { n: at('by_feature', fi, 'groups', gi, 'n'), meanResidual: at('by_feature', fi, 'groups', gi, 'mean_residual') } })) })),
+    coefficients: coefficientsOf(obj(m.coefficients), at),
+    largestErrors: list(obj(m.examples).largest_errors).length,
+  };
+}
+
+function diagnosticsOf(rawResults, task) {
+  return rawResults.filter(r => r && r.promoted === true && DIAG_SLOTS.includes(str(r.slot)) && citable(r)).map(r => {
     const v = obj(r.values);
-    const kind = diagKind(r.activity);
-    const base = { kind, resultId: str(r.result_id), activity: str(r.activity), slot: strOrNull(r.slot),
-      evaluation: strOrNull(v.evaluation) || (r.partition === 'final_test' ? 'final_test' : 'out_of_fold'),
-      model: strOrNull(v.model), rule: strOrNull(v.rule), n: int(v.n) ?? int(r.n_rows) };
-    if (kind === 'confusion') {
-      const c = obj(v.confusion);
-      const cell = k => ({ value: num(c[k]), path: pathOf('confusion', k) });
-      return { ...base, cells: { tp: cell('tp'), fp: cell('fp'), fn: cell('fn'), tn: cell('tn') } };
-    }
-    if (kind === 'gain') {
-      return { ...base, points: list(v.points).map((p, i) => ({ share: num(p && p.share), recall: num(p && p.recall),
-        precision: num(p && p.precision), paths: { share: pathOf('points', i, 'share'), recall: pathOf('points', i, 'recall'),
-          precision: pathOf('points', i, 'precision') } })).filter(p => p.share !== null && p.recall !== null) };
-    }
-    if (kind === 'calibration') {
-      return { ...base, bins: list(v.bins).map((b, i) => ({ meanPred: num(b && b.mean_pred), observed: num(b && b.observed),
-        low: num(b && b.low), high: num(b && b.high), n: int(b && b.n),
-        paths: { meanPred: pathOf('bins', i, 'mean_pred'), observed: pathOf('bins', i, 'observed'),
-          low: pathOf('bins', i, 'low'), high: pathOf('bins', i, 'high'), n: pathOf('bins', i, 'n') } }))
-        .filter(b => b.meanPred !== null && b.observed !== null) };
-    }
-    if (kind === 'segments') {
-      return { ...base, segments: list(v.segments).map((g, i) => ({ variable: str(g && g.variable), group: str(g && g.group),
-        precision: num(g && g.precision), recall: num(g && g.recall), n: int(g && g.n), low: num(g && g.low), high: num(g && g.high),
-        paths: { precision: pathOf('segments', i, 'precision'), recall: pathOf('segments', i, 'recall'), n: pathOf('segments', i, 'n'),
-          low: pathOf('segments', i, 'low'), high: pathOf('segments', i, 'high') } })) };
-    }
-    if (kind === 'residuals') {
-      return { ...base, bins: list(v.bins).map((b, i) => ({ meanPred: num(b && b.mean_pred), meanResidual: num(b && b.mean_residual),
-        low: num(b && b.low), high: num(b && b.high), n: int(b && b.n),
-        paths: { meanPred: pathOf('bins', i, 'mean_pred'), meanResidual: pathOf('bins', i, 'mean_residual'),
-          low: pathOf('bins', i, 'low'), high: pathOf('bins', i, 'high'), n: pathOf('bins', i, 'n') } }))
-        .filter(b => b.meanResidual !== null) };
-    }
-    return base;
+    const binary = task !== 'regression';
+    const fits = Object.keys(obj(v.models));
+    const models = fits.map(fit => {
+      const at = (...parts) => pathOf('models', fit, ...parts);
+      const m = obj(obj(v.models)[fit]);
+      const body = binary ? binaryDiag(m, at) : regressionDiag(m, at);
+      return { fit, ...body };
+    });
+    return {
+      slot: str(r.slot), resultId: str(r.result_id), evidence: v.evidence === 'final' ? 'final' : 'development',
+      partition: strOrNull(v.partition), evaluation: strOrNull(v.evaluation), purpose: strOrNull(v.purpose),
+      startedRevision: int(r.started_revision), n: int(v.n), nPositive: int(v.n_positive),
+      rule: strOrNull(v.rule), ruleSource: strOrNull(v.rule_source), model: strOrNull(v.model),
+      unit: strOrNull(v.unit), targetTransform: v.target_transform === undefined ? null : v.target_transform,
+      smearingApplies: obj(v.smearing).applies === true, segmentColumns: list(v.segment_columns).map(str),
+      models,
+    };
   });
 }
 
@@ -588,11 +628,11 @@ function toEvidenceModel(payload) {
     variant: variantOf(rawResults, task),
     gain: task === 'binary' ? gainOf(rawResults) : null,
     finalEvaluation: finalEvaluationOf(rawResults, task),
-    diagnostics: diagnosticsOf(rawResults),
+    diagnostics: diagnosticsOf(rawResults, task),
   });
 }
 
-const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression', 'evidence.binary.diagnostics',
-  'captured/evidence.binary.cv', 'captured/evidence.binary.cv.sealed'];
+const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression',
+  'captured/evidence.binary.cv', 'captured/evidence.binary.cv.sealed', 'captured/evidence.regression.diag'];
 
-module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, gainOf, pathOf, DIAG_KINDS, FIXTURES, SCHEMA };
+module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, gainOf, pathOf, DIAG_SLOTS, FIXTURES, SCHEMA };
