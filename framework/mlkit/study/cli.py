@@ -1,19 +1,24 @@
 """``hypotrail`` command-line interface (plan §4, ``docs/specs/CLI-CONTRACT.md``).
 
-    hypotrail init --case CASE --study DIR
+    hypotrail init --case CASE --study DIR [--lang en|fr]
     hypotrail status --study DIR [--since REV] [--json] [--summary]
     hypotrail plan --study DIR
     hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
-                     --restatement TEXT --rationale TEXT
+                     --restatement TEXT --rationale TEXT [--lang en|fr]
+                     [--restatement-en TEXT] [--restatement-fr TEXT]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail decide confirm PROPOSAL --user-words TEXT [--channel chat|cli|webview]
-                     [--actor NAME] [--basis explicit|delegated_default]
-                     [--delegation-scope this_decision|standing]
+    hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) --user-words TEXT
+                     [--channel chat|cli|webview] [--actor NAME]
+                     [--basis explicit|delegated_default]
+                     [--delegation-scope this_decision|standing] [--agent-concern TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide withdraw PROPOSAL [--reason TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID) --text TEXT
+                     [--kind hold|correction]
                      --request-id ID --expected-revision REV --study DIR
+    hypotrail mode set guided|training|express --user-words TEXT
+                     --request-id ID --expected-revision REV --study DIR      (ADR 0005)
 
 Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlog``)::
 
@@ -117,6 +122,8 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
 
     p = sub.add_parser('init', parents=[common], help='create a study on a case')
     p.add_argument('--case', required=True, help='case.yaml or its directory')
+    p.add_argument('--lang', choices=st.LANGUAGES, default=st.DEFAULT_LANGUAGE,
+                   help='the study language: surfaces show restatements in it (ADR 0005)')
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',
@@ -140,21 +147,34 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
     # choices: a value outside ``state.CHANNELS`` is ``invalid_value`` (``details.field``).
     p.add_argument('--channel', default=None,
                    help='chat (the default), cli, or webview: where the proposal came from')
+    # ADR 0005: a restatement per language. ``--lang`` names the language of --restatement.
+    p.add_argument('--lang', choices=st.LANGUAGES, default=None,
+                   help='the language of --restatement')
+    for lang in st.LANGUAGES:
+        p.add_argument(f'--restatement-{lang}', default=None, dest=f'restatement_{lang}',
+                       help=f'the restatement in {lang} (shown when the study language is '
+                            f'{lang})')
     _mutation(p)
     p = verbs.add_parser('confirm', parents=[common])
-    p.add_argument('proposal_id')
+    p.add_argument('proposal_id', nargs='?', default=None)
+    p.add_argument('--proposal', default=None, dest='proposal_flag', metavar='PROPOSAL',
+                   help='the open proposal the words answer (same as the positional PROPOSAL)')
     p.add_argument('--user-words', required=True,
                    help="the user's verbatim reply to the restatement")
     p.add_argument('--channel', choices=('chat', 'cli', 'webview'), default=cmd.DEFAULT_CHANNEL)
     p.add_argument('--actor', default=cmd.DEFAULT_ACTOR)
-    p.add_argument('--basis', choices=st.CONFIRMATION_BASES, default=cmd.DEFAULT_BASIS,
-                   help='explicit (the default): the reply decides; delegated_default: the reply '
-                        "explicitly delegates to the assistant's recommended default, which the "
+    p.add_argument('--basis', choices=st.REQUEST_BASES, default=cmd.DEFAULT_BASIS,
+                   help="explicit (the default): the junior's own reply decides (recorded as "
+                        'endorsed or restated); delegated_default: the reply explicitly '
+                        "delegates to the assistant's recommended default, which the "
                         'restatement states')
     p.add_argument('--delegation-scope', choices=st.DELEGATION_SCOPES, default=None,
                    help='with delegated_default: this_decision (the junior delegated at this '
                         'pause) or standing (an earlier delegation for questions they cannot '
                         'answer; it never covers the policy or the conclusion)')
+    p.add_argument('--agent-concern', default=None,
+                   help='a point you raised about the junior\'s words before they confirmed, '
+                        'and that they kept (R3); shown with the decision')
     _mutation(p)
     p = verbs.add_parser('withdraw', parents=[common])
     p.add_argument('proposal_id')
@@ -169,8 +189,20 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
     target.add_argument('--withdraw', default=None, metavar='NOTE_ID',
                         help="withdraw an open hold that no longer applies, with the junior's "
                              'own words')
-    p.add_argument('--text', required=True,
+    p.add_argument('--text', '--user-words', required=True, dest='text',
                    help="the junior's words, verbatim (the condition, or what resolves it)")
+    p.add_argument('--kind', choices=st.NOTE_KINDS, default=None,
+                   help='with --about: hold (the default) blocks the decision until resolved; '
+                        "correction records a later correction of a confirmed decision's "
+                        'reasoning without asking for it again')
+    _mutation(p)
+
+    mode = sub.add_parser('mode', help='set the confirmation mode (ADR 0005)')
+    mverbs = mode.add_subparsers(dest='verb', required=True, parser_class=Parser)
+    p = mverbs.add_parser('set', parents=[common])
+    p.add_argument('mode', help='guided (training and express arrive in v0.2b)')
+    p.add_argument('--user-words', required=True,
+                   help="the user's verbatim words asking for this mode")
     _mutation(p)
 
     if extension is not None:
@@ -197,12 +229,25 @@ def _decide(args) -> cmd.Outcome:
         if args.channel not in (None, cmd.DEFAULT_CHANNEL):
             cmd.check_channel(args.channel)
             params['channel'] = args.channel
+        # ADR 0005: ``labels`` only when a language is given, so earlier requests keep
+        # their identity.
+        labels = {lang: getattr(args, f'restatement_{lang}') for lang in st.LANGUAGES
+                  if getattr(args, f'restatement_{lang}') is not None}
+        if args.lang is not None:
+            labels.setdefault(args.lang, args.restatement)
+        if labels:
+            params['labels'] = labels
     elif args.verb == 'confirm':
-        action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id,
+        if (args.proposal_id is None) == (args.proposal_flag is None):
+            raise ArgumentError('decide confirm names one proposal: PROPOSAL or --proposal')
+        action, params = cmd.ACTION_CONFIRM, {'proposal_id': args.proposal_id
+                                              or args.proposal_flag,
                                               'user_words': args.user_words,
                                               'channel': args.channel, 'actor': args.actor,
                                               'basis': args.basis,
                                               'delegation_scope': args.delegation_scope}
+        if args.agent_concern is not None:
+            params['agent_concern'] = args.agent_concern
     elif args.verb == 'note' and args.resolve is not None:
         action, params = cmd.ACTION_RESOLVE_NOTE, {'note_id': args.resolve,
                                                    'user_words': args.text}
@@ -211,6 +256,8 @@ def _decide(args) -> cmd.Outcome:
                                                     'user_words': args.text}
     elif args.verb == 'note':
         action, params = cmd.ACTION_NOTE, {'decision_id': args.about, 'user_words': args.text}
+        if args.kind not in (None, st.HOLD):
+            params['kind'] = args.kind
     else:
         action, params = cmd.ACTION_WITHDRAW, {'proposal_id': args.proposal_id,
                                                'reason': args.reason}
@@ -220,7 +267,12 @@ def _decide(args) -> cmd.Outcome:
 
 def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
-        return cmd.init(args.case, args.study)
+        return cmd.init(args.case, args.study, language=args.lang)
+    if args.command == 'mode':
+        return cmd.apply(args.study, action=cmd.ACTION_SET_MODE,
+                         params={'mode': args.mode, 'user_words': args.user_words},
+                         request_id=args.request_id, expected_revision=args.expected_revision,
+                         command='mode set')
     if args.command == 'status':
         if args.digest and not args.summary:
             raise ArgumentError('--digest requires --summary')
@@ -328,7 +380,7 @@ def _run(argv: list) -> cmd.Outcome:
     name = argv[0] if argv else ''
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
-    command = ' '.join(argv[:2]) if name in ('decide', 'export') else name
+    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode') else name
     try:
         extension = name if name in EXTENSIONS else None
         if extension and importlib.util.find_spec(EXTENSIONS[extension]) is None:

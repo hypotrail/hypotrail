@@ -68,6 +68,10 @@ hold_resolved: Condition resolved
 hold_resolved_by: Resolved in your words
 hold_withdrawn: Condition withdrawn
 hold_withdrawn_by: Withdrawn in your words
+agent_concern: Point raised by the agent
+agent_concern_kept: kept by the user, who confirmed these words
+correction: Correction in your words
+correction_note: Recorded after the confirmation; the decision was not asked again.
 credit_heading: Who decided what
 credit_delegated: "The assistant's recommended default, delegated by the analyst (not the analyst's own choice):"
 credit_explicit: "Confirmed in the analyst's own words:"

@@ -160,6 +160,18 @@ def _plan(view: Mapping) -> str:
             f'{lit("message", na.get("message", ""))}</p></section>')
 
 
+def _concern(conf: Mapping) -> str:
+    """R3 (ADR 0005): the point the agent raised before the junior confirmed, kept by them.
+    Minimal; the report is redesigned by a later work package."""
+    concern = conf.get('agent_concern')
+    if not concern:
+        return ''
+    labels = _labels()
+    return (f'<br><span class="small" data-concern="agent"><strong>'
+            f'{e(labels["agent_concern"])}</strong> ({e(labels["agent_concern_kept"])}): '
+            f'{lit("message", concern)}</span>')
+
+
 def _confirmation(conf: Mapping) -> str:
     labels = _labels()
     if conf.get('basis') == 'delegated_default':
@@ -172,14 +184,14 @@ def _confirmation(conf: Mapping) -> str:
                 f'{lit("identifier", conf.get("actor"))}, at revision '
                 f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>'
                 f'<br><span class="small">{e(labels["delegated_restatement"])}: '
-                f'{lit("proposal", conf.get("restatement", ""))}</span></div>')
+                f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}</div>')
     return (f'<div class="words" data-basis="explicit"><strong>{e(labels["user_words"])}:</strong> '
             f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
             f'<br><span class="small">Channel {lit("identifier", conf.get("channel"))}, actor '
             f'{lit("identifier", conf.get("actor"))}, at revision '
             f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>'
             f'<br><span class="small">{e(labels["restatement"])}: '
-            f'{lit("proposal", conf.get("restatement", ""))}</span></div>')
+            f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}</div>')
 
 
 def _credit(view: Mapping, titles: Mapping) -> str:
@@ -210,6 +222,11 @@ def _credit(view: Mapping, titles: Mapping) -> str:
 def _note(n: Mapping) -> str:
     """A condition the junior stated on a decision (P2), open or resolved, verbatim."""
     labels = _labels()
+    if n.get('kind') == 'correction':             # R3 (ADR 0005): a later correction
+        return (f'<div class="words" data-note="{e(n["note_id"])}" data-status="recorded" '
+                f'data-kind="correction"><strong>{e(labels["correction"])}:</strong> '
+                f'<q data-literal="user_words">{e(n["user_words"])}</q>'
+                f'<br><span class="small">{e(labels["correction_note"])}</span></div>')
     if n['status'] == 'open':
         return (f'<div class="words delegated" data-note="{e(n["note_id"])}" data-status="open">'
                 f'{_badge("proposed", labels["hold_open"])}'

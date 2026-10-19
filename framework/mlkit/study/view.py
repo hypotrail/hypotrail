@@ -30,18 +30,25 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'structure', 'results', 'stale', 'invalidations', 'executions', 'artifacts',
              'exposure', 'not_yet_defensible', 'settings', 'task',
              # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
-             'notes')
+             'notes',
+             # ADR 0005 (v0.2a): the confirmation mode and the study language.
+             'mode', 'language')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
                       'revision', 'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
+                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope',
+                          # ADR 0005 (R3): the point the agent raised, kept by the junior.
+                          'agent_concern')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # Advanced companion (C9, decision CI.6): the stored origin, ``null``
                       # for a proposal recorded before C9. The report reads it.
-                      'origin')
+                      'origin',
+                      # ADR 0005: the restatement per language (``null`` when none was
+                      # given), and ``label``, the restatement in the study language.
+                      'labels', 'label')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
                     'n_rows', 'values', 'blobs', 'params', 'inputs', 'code_fingerprint',
                     'environment', 'execution_id', 'exposure_id', 'started_revision',
@@ -321,7 +328,9 @@ def summary(view: dict) -> dict:
                         'reason': dec['reason'], 'open_proposals': dec['open_proposals']}
     proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],
                   'value': _compact_value(p['decision_id'], p['value']),
-                  'restatement': p['restatement'], 'revision': p['revision']}
+                  'restatement': p['restatement'], 'revision': p['revision'],
+                  # ADR 0005: the restatement in the study language.
+                  'label': p['label']}
                  for p in view['open_proposals']]
     results = {slot: {'result_id': r['result_id'], 'current': r['current'],
                       'stale_reason': r['stale_reason'], 'integrity': r['integrity']}
@@ -674,8 +683,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         'next_action': st.next_action(state, suspected),
-        'open_proposals': [{k: copy.deepcopy(p.get(k)) if k == 'origin' else p[k]
-                            for k in PROPOSAL_VIEW_KEYS}
+        'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
         'decisions': _decisions(state),
@@ -691,7 +699,21 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'settings': state['settings'],
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
+        'mode': st.mode_of(state),
+        'language': st.language_of(state),
     }
+
+
+def _proposal_view(p: dict, language: str) -> dict:
+    out = {}
+    for k in PROPOSAL_VIEW_KEYS:
+        if k in ('origin', 'labels'):
+            out[k] = copy.deepcopy(p.get(k))
+        elif k == 'label':
+            out[k] = st.label_of(p, language)
+        else:
+            out[k] = p[k]
+    return out
 
 
 # --- the digest of the advanced companion (CLI-CONTRACT-COMPANION §1, C1) -------------
@@ -901,6 +923,9 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
         main = t.template('withdrawn', **fields)
     elif kind == 'hold_recorded':
         main = t.template('hold_recorded', words=params.get('user_words'), **fields)
+    elif action == 'decide.note':
+        # ADR 0005 (R3): a correction note is listed as ``other``, not as a hold.
+        main = t.template('correction_recorded', words=params.get('user_words'), **fields)
     elif kind == 'hold_resolved':
         note = (state.get('notes') or {}).get(item['note_id']) or {}
         name = 'hold_withdrawn' if action == 'decide.withdraw_note' else 'hold_resolved'
@@ -961,6 +986,8 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
             continue
         kept = [s for s in sorted(occupant) if s.startswith('fit.') and occupant[s] not in stale]
         kind = _KIND_OF_ACTION.get(action, 'other')
+        if action == 'decide.note' and result.get('kind') == st.CORRECTION:
+            kind = 'other'                       # ADR 0005: a correction is not a hold
         promoted = action == _PROMOTE and result.get('status') == 'promoted'
         if promoted:
             kind = 'result_replaced' if result.get('slot') in occupant else 'result_added'

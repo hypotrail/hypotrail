@@ -64,6 +64,8 @@ LOGGED_READS = ('status', 'check')
 SAFE_VALUE_FLAGS = ('--basis', '--delegation-scope', '--rule', '--column', '--channel',
                     '--acknowledge-interruption', '--since', '--about', '--resolve', '--withdraw',
                     '--max-groups',
+                    # ADR 0005: a proposal id, a note kind, a language.
+                    '--proposal', '--kind', '--lang',
                     # Advanced companion (CLI-CONTRACT-COMPANION R5): identifiers and a count.
                     '--limit', '--result', '--term')
 SAFE_SWITCHES = ('--summary', '--json', '--intervals',
@@ -155,7 +157,7 @@ def entry(argv: Sequence[str], payload: Mapping, exit_code: int, time: str) -> d
     """The log line of one invocation (no content; module docstring)."""
     argv = [str(a) for a in argv]
     command = argv[0] if argv else ''
-    verb = argv[1] if command in ('decide', 'preview') and len(argv) > 1 else None
+    verb = argv[1] if command in ('decide', 'preview', 'mode') and len(argv) > 1 else None
     line = {'schema': SCHEMA, 'time': time, 'command': command, 'verb': verb,
             'exit_code': exit_code, 'ok': bool(payload.get('ok')),
             'revision': payload.get('revision') if isinstance(payload.get('revision'), int)
@@ -163,7 +165,9 @@ def entry(argv: Sequence[str], payload: Mapping, exit_code: int, time: str) -> d
     if command == 'decide' and verb in ('propose',) and len(argv) > 2:
         line['decision_id'] = argv[2]
     if command == 'decide' and verb in ('confirm', 'withdraw') and len(argv) > 2:
-        line['proposal_id'] = argv[2]
+        # ADR 0005: ``decide confirm --proposal P`` names it with a flag.
+        flagged = [argv[i + 1] for i in range(2, len(argv) - 1) if argv[i] == '--proposal']
+        line['proposal_id'] = flagged[0] if flagged else argv[2]
     if command == 'run' and len(argv) > 1 and not argv[1].startswith('--'):
         line['activity'] = argv[1]
     if not payload.get('ok'):

@@ -59,7 +59,18 @@ CONFIRMATION_KEYS = ('user_words', 'proposal_id', 'restatement', 'authenticated'
 # which the restatement stated. Optional in the record: a confirmation without it (written
 # before the basis existed) is explicit.
 EXPLICIT, DELEGATED_DEFAULT = 'explicit', 'delegated_default'
-CONFIRMATION_BASES = (EXPLICIT, DELEGATED_DEFAULT)
+# Guided confirmation (ADR 0005, v0.2a): a confirmation in the junior's own words is recorded
+# as ``endorsed`` (an explicit endorsement of the proposal it is bound to, "oui je confirme
+# cela") or ``restated`` (the reply repeats content of the proposal's value or restatement).
+# ``explicit`` stays readable in studies written before v0.2a, and stays the request value of
+# ``decide confirm --basis`` for "the junior's own words": the engine records which of
+# ``endorsed`` and ``restated`` they are.
+ENDORSED, RESTATED = 'endorsed', 'restated'
+CONFIRMATION_BASES = (EXPLICIT, ENDORSED, RESTATED, DELEGATED_DEFAULT)
+# What ``decide confirm --basis`` accepts (the junior's own words, or a delegation).
+REQUEST_BASES = (EXPLICIT, DELEGATED_DEFAULT)
+# Bases of a decision taken in the junior's own words (not delegated).
+OWN_WORDS_BASES = (EXPLICIT, ENDORSED, RESTATED)
 DEFAULT_BASIS = EXPLICIT
 # The scope of a delegation (R1). ``this_decision``: the junior delegated at this very
 # pause. ``standing``: an earlier delegation that covers every question the junior cannot
@@ -69,7 +80,24 @@ DEFAULT_BASIS = EXPLICIT
 THIS_DECISION, STANDING = 'this_decision', 'standing'
 DELEGATION_SCOPES = (THIS_DECISION, STANDING)
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
-CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope')
+# ``agent_concern`` (R3, ADR 0005): a point the agent raised about the junior's words before
+# confirming, kept by the junior; ``null`` when none was raised. Written by every v0.2a
+# confirmation; a confirmation recorded before has none.
+CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern')
+
+# Confirmation modes (ADR 0005). ``guided`` is the only mode implemented in v0.2a and the
+# default; ``training`` and ``express`` are reserved (accepted in the schema, refused by
+# ``mode set`` with ``unsupported_capability`` until v0.2b).
+GUIDED, TRAINING, EXPRESS = 'guided', 'training', 'express'
+MODES = (GUIDED, TRAINING, EXPRESS)
+SUPPORTED_MODES = (GUIDED,)
+DEFAULT_MODE = GUIDED
+MODES_AVAILABLE_IN = {TRAINING: 'v0.2b', EXPRESS: 'v0.2b'}
+MODE_CHANGE_KEYS = ('mode', 'previous', 'user_words', 'revision', 'time', 'request_id')
+# The study language (``init --lang``): proposals may carry a restatement per language
+# (``labels``) and surfaces show the one of the study language.
+LANGUAGES = ('en', 'fr')
+DEFAULT_LANGUAGE = 'en'
 
 # Which confirmed decisions a decision rests on. Changing one of them makes the
 # dependants need reconfirmation (plan §3.7, rows 1, 2, 4, and 5).
@@ -200,7 +228,10 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # ``task`` (``binary`` or ``regression``) is written by every new study; a state written
 # before it existed has no ``task`` and is a binary study. ``notes`` (post-v0.1, P2) holds
 # the conditions the junior states at a pause; it appears with the first note.
-TOP_OPTIONAL_KEYS = ('task', 'notes')
+# ``mode`` and ``language`` (ADR 0005, v0.2a) are written by every new study; a state
+# without them is a guided study in English. ``mode_history`` appears with the first
+# ``mode set``.
+TOP_OPTIONAL_KEYS = ('task', 'notes', 'mode', 'language', 'mode_history')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -209,7 +240,10 @@ PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rational
 # confirmed values it was based on (a change makes it stale), and why it was closed.
 # ``origin`` (CLI-CONTRACT-COMPANION §9, C9) is ``{channel}``, where the proposal came from;
 # ``decide propose`` writes it on every new proposal; one recorded before C9 has none.
-PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason', 'origin')
+# ``labels`` (ADR 0005) is ``{language: restatement}``, written when the proposal was made
+# with a restatement per language; surfaces show the one of the study language.
+PROPOSAL_OPTIONAL_KEYS = ('request_id', 'basis', 'closed_revision', 'closed_reason', 'origin',
+                          'labels')
 ORIGIN_KEYS = ('channel',)
 EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
 # A junior's condition or hold on a decision (post-v0.1, P2): "don't adopt anything until I
@@ -219,8 +253,11 @@ EXECUTION_BUCKETS = ('active', 'interrupted', 'late')
 # junior may also withdraw it in their words (``decide note --withdraw``, D5): ``withdrawn``.
 NOTE_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'created', 'revision',
              'request_id', 'resolution')
-NOTE_KINDS = ('hold',)
-NOTE_STATUSES = ('open', 'resolved', 'withdrawn')
+# A ``correction`` (R3, ADR 0005) is a later correction of a decision's reasoning, in the
+# junior's words: it is ``recorded`` at once, never blocks, and asks for nothing again.
+HOLD, CORRECTION = 'hold', 'correction'
+NOTE_KINDS = (HOLD, CORRECTION)
+NOTE_STATUSES = ('open', 'resolved', 'withdrawn', 'recorded')
 NOTE_RESOLUTION_KEYS = ('user_words', 'revision', 'time', 'request_id')
 
 
@@ -271,7 +308,25 @@ def empty_decision(decision_id: str, task: str = DEFAULT_TASK) -> dict:
             'reason': None}
 
 
-def initial_state(case: Case, *, created: str | None = None) -> dict:
+def mode_of(state: Mapping | None) -> str:
+    """The confirmation mode of a study (``guided`` when the state predates modes)."""
+    return state.get('mode', DEFAULT_MODE) if isinstance(state, Mapping) else DEFAULT_MODE
+
+
+def language_of(state: Mapping | None) -> str:
+    """The study language (``en`` when the state predates it)."""
+    return state.get('language', DEFAULT_LANGUAGE) if isinstance(state, Mapping) \
+        else DEFAULT_LANGUAGE
+
+
+def label_of(proposal: Mapping, language: str) -> str:
+    """The restatement of ``proposal`` in ``language``, else its restatement."""
+    labels = proposal.get('labels') or {}
+    return labels.get(language) or proposal['restatement']
+
+
+def initial_state(case: Case, *, created: str | None = None,
+                  language: str = DEFAULT_LANGUAGE) -> dict:
     """The state of a new study on ``case``, before its first commit (revision 0).
 
     Refuses an unsupported case (``unsupported_capability``) without fallback. Facts
@@ -305,6 +360,8 @@ def initial_state(case: Case, *, created: str | None = None) -> dict:
         'invalidations': [],
         'receipts': {},
         'settings': copy.deepcopy(DEFAULT_SETTINGS),
+        'mode': DEFAULT_MODE,
+        'language': language,
     }
 
 
@@ -318,7 +375,7 @@ def _sha256_file(path) -> str:
 
 def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
                  time: str | None = None, basis: str = DEFAULT_BASIS,
-                 delegation_scope: str | None = None) -> dict:
+                 delegation_scope: str | None = None, agent_concern: str | None = None) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
@@ -326,11 +383,13 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
     ``basis`` is ``explicit`` or ``delegated_default`` (:data:`CONFIRMATION_BASES`).
     ``delegation_scope`` is ``None`` for an explicit confirmation, else ``this_decision``,
     ``standing``, or ``None`` when the delegation did not state it (:data:`DELEGATION_SCOPES`).
+    ``agent_concern`` is the point the agent raised before the junior confirmed (R3), or None.
     """
     record = {'user_words': user_words, 'proposal_id': proposal['proposal_id'],
               'restatement': proposal['restatement'], 'authenticated': False,
               'channel': channel, 'actor': actor, 'revision': revision, 'time': time or now(),
-              'basis': basis, 'delegation_scope': delegation_scope}
+              'basis': basis, 'delegation_scope': delegation_scope,
+              'agent_concern': agent_concern}
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -363,6 +422,15 @@ def confirmation_basis(c: Any) -> str:
     return c.get('basis', DEFAULT_BASIS) if isinstance(c, dict) else DEFAULT_BASIS
 
 
+def basis_class(basis: str | None) -> str | None:
+    """``own_words`` for a decision taken in the junior's words (``explicit``, ``endorsed``,
+    ``restated``), ``delegated`` for a delegation; None stays None. The conclusion's credit
+    line depends on this class only (:func:`dependencies.outdates_conclusion`)."""
+    if basis is None:
+        return None
+    return 'delegated' if basis == DELEGATED_DEFAULT else 'own_words'
+
+
 def _confirmation_problems(c: Any, path: str) -> list[dict]:
     problems: list[dict] = []
     present = tuple(k for k in CONFIRMATION_OPTIONAL_KEYS if isinstance(c, dict) and k in c)
@@ -371,6 +439,10 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
     if 'basis' in present and c['basis'] not in CONFIRMATION_BASES:
         problems.append({'path': f'{path}.basis',
                          'problem': f'must be one of {", ".join(CONFIRMATION_BASES)}'})
+    if 'agent_concern' in present and c['agent_concern'] is not None \
+            and not _text(c['agent_concern']):
+        problems.append({'path': f'{path}.agent_concern',
+                         'problem': 'must be null or a non-empty string'})
     if 'delegation_scope' in present and c['delegation_scope'] is not None:
         if c['delegation_scope'] not in DELEGATION_SCOPES:
             problems.append({'path': f'{path}.delegation_scope',
@@ -442,6 +514,13 @@ def _proposal_problems(pid: Any, p: Any, task: str = DEFAULT_TASK) -> list[dict]
             problems.append({'path': f'{path}.{key}', 'problem': 'must be a non-empty string'})
     if type(p['revision']) is not int or p['revision'] < 0:
         problems.append({'path': f'{path}.revision', 'problem': 'must be a revision number'})
+    if 'labels' in p:
+        labels = p['labels']
+        if not isinstance(labels, dict) or not labels \
+                or any(k not in LANGUAGES or not _text(v) for k, v in labels.items()):
+            problems.append({'path': f'{path}.labels',
+                             'problem': f'must map languages ({", ".join(LANGUAGES)}) to '
+                                        f'non-empty restatements'})
     if 'origin' in p:
         # C9: where the proposal came from, ``{channel}``; absent before C9.
         origin = p['origin']
@@ -476,6 +555,10 @@ def _notes_problems(notes: Any, task: str = DEFAULT_TASK) -> list[dict]:
             problems.append({'path': f'{path}.user_words', 'problem': 'must be a non-empty string'})
         if type(n['revision']) is not int or n['revision'] < 0:
             problems.append({'path': f'{path}.revision', 'problem': 'must be a revision number'})
+        if (n['kind'] == CORRECTION) != (n['status'] == 'recorded'):
+            problems.append({'path': f'{path}.status',
+                             'problem': 'a correction is recorded; a hold is open, resolved or '
+                                        'withdrawn'})
         if n['status'] in ('resolved', 'withdrawn'):
             r = n['resolution']
             if _keys(r, f'{path}.resolution', NOTE_RESOLUTION_KEYS, problems) \
@@ -497,6 +580,20 @@ def validate_state(state: Any) -> list[dict]:
         problems.append({'path': 'task', 'problem': f'must be one of {", ".join(TASKS)}'})
         return problems
     task = task_of(state)
+    if 'mode' in present and state['mode'] not in MODES:
+        problems.append({'path': 'mode', 'problem': f'must be one of {", ".join(MODES)}'})
+    if 'language' in present and state['language'] not in LANGUAGES:
+        problems.append({'path': 'language', 'problem': f'must be one of {", ".join(LANGUAGES)}'})
+    if 'mode_history' in present:
+        history = state['mode_history']
+        if not isinstance(history, list):
+            problems.append({'path': 'mode_history', 'problem': 'must be a list'})
+        else:
+            for i, change in enumerate(history):
+                if _keys(change, f'mode_history.{i}', MODE_CHANGE_KEYS, problems) \
+                        and (change['mode'] not in MODES or not _text(change['user_words'])):
+                    problems.append({'path': f'mode_history.{i}',
+                                     'problem': "needs a known mode and the user's words"})
     if state['schema'] != SCHEMA:
         problems.append({'path': 'schema', 'problem': f'must be "{SCHEMA}"'})
     if type(state['revision']) is not int or state['revision'] < 0:
