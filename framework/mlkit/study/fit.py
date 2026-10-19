@@ -93,12 +93,14 @@ def design(frame, features: list, special: list, case: c.Case):
 
     A feature the case declares as a ``category`` but whose codes are numbers (``origin``
     coded 1, 2, 3) is read as text, so it is one-hot encoded rather than taken as a
-    magnitude."""
-    from pandas.api.types import is_numeric_dtype
+    magnitude. A column pandas reads as booleans (``TRUE``/``FALSE`` in the file, v0.2b) is
+    read as text too, ``True``/``False``, like any other two-valued category."""
+    from pandas.api.types import is_bool_dtype, is_numeric_dtype
     from .activities import matches
     X = frame[features].copy()
     for name in features:
-        if case.variables[name]['type'] == 'category' and is_numeric_dtype(X[name]):
+        if is_bool_dtype(X[name]) or (case.variables[name]['type'] == 'category'
+                                      and is_numeric_dtype(X[name])):
             X[name] = X[name].map(lambda v: None if v != v else str(v)).astype(object)
     na_values = case.dataset.get('na_values', ())
     indicators = []

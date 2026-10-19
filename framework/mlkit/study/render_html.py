@@ -796,6 +796,9 @@ def rule_words(rule: Any) -> str:
         return f'Select the {param} highest-scored rows'
     if kind == 'threshold' and param:
         return f'Select every row scored {param} or more'
+    if kind == 'share' and param:
+        from .audience import share_percent
+        return f'Select the {share_percent(param)} highest-scored rows'
     return text
 
 

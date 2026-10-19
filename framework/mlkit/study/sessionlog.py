@@ -75,6 +75,7 @@ SAFE_SWITCHES = ('--summary', '--json', '--intervals',
 # identifier, a rule (``threshold:t``, ``capacity:k``) or a model slot (``fit.<name>``);
 # any other text is dropped. ``preview`` kinds are logged as the ``verb``.
 SAFE_PREVIEW_VALUE = re.compile(r'(?:threshold:(?:0(?:\.\d+)?|1(?:\.0+)?)|capacity:[1-9]\d{0,6}'
+                                r'|share:(?:0\.\d+|1(?:\.0+)?)'
                                 r'|fit\.[a-z_]+)')
 
 

@@ -44,7 +44,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              'mode', 'language',
              # v0.2a (WP-A4): the success criterion against the current evaluation, and the
              # ledger of explorations that read the target.
-             'criterion', 'eda_looks')
+             'criterion', 'eda_looks',
+             # v0.2b (WP-B3, R6): the teaching scenario's defaults from the case
+             # (``{capacity_share: {value, status, source}}``), or ``null``.
+             'scenario_defaults')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -226,6 +229,37 @@ def rid_reason(item: dict, key: str):
     """A key of a result item's derived stale reason (``code_changed``, ...), or None."""
     reason = item.get('stale_reason')
     return reason.get(key) if isinstance(reason, dict) else None
+
+
+def scenario_defaults(state: dict) -> dict | None:
+    """The case's ``scenario_defaults`` (v0.2b, WP-B3), or None: none declared, or the case
+    file can no longer be read (``sources_changed`` then says why)."""
+    from . import case as c
+    try:
+        return copy.deepcopy(c.case_of(state).scenario_defaults)
+    except (c.CaseError, OSError):
+        return None
+
+
+def _assumed_capacity(state: dict, defaults: dict | None) -> list[dict]:
+    """``capacity_assumed_for_exercise`` (R6) when the adopted policy acts on the share of
+    the scored rows the teaching scenario assumes, not on a figure from the team."""
+    share = ((defaults or {}).get('capacity_share') or {}).get('value')
+    decision = state['decisions'].get('policy') or {}
+    rule = decision.get('value')
+    if share is None or decision.get('status') not in ('confirmed', 'reconfirm_required') \
+            or not isinstance(rule, str):
+        return []
+    parsed = rec.parse_rule(rule)
+    if parsed is None or parsed[0] != 'share' or abs(parsed[1] - float(share)) > 1e-12:
+        return []
+    pct = audience.share_percent(share)
+    return [{'id': 'capacity_assumed_for_exercise', 'rule': rec.canonical_rule(rule),
+             'share': share,
+             'text': f'Capacity assumed for the exercise: acting on the top {pct} of the '
+                     f'scored rows is the teaching scenario\'s assumption, not a figure from a '
+                     f'team that does the follow-up. With a real team, ask how many it can '
+                     f'handle and evaluate that capacity.'}]
 
 
 def _adopted_without_evaluation(state: dict, results: dict) -> str | None:
@@ -870,6 +904,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
                            'text': f'The adopted policy {adopted} has no current evaluation; '
                                    'its figures cannot be cited until it is evaluated again.'})
     defensible.extend(_small_data(state, results))
+    defaults = scenario_defaults(state)
+    defensible.extend(_assumed_capacity(state, defaults))
     partial = {'decisions': _decisions(state), 'task': st.task_of(state), 'results': results,
                'open_proposals': [p for p in st.open_proposals(state)]}
     criterion = governance.assess(partial, lambda r: rec.canonical_rule(r) or r)
@@ -907,6 +943,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'language': st.language_of(state),
         'criterion': criterion,
         'eda_looks': governance.ledger(study.exposure_records(), _target_column(state)),
+        'scenario_defaults': defaults,
     }
 
 

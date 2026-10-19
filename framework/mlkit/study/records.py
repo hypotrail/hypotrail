@@ -234,7 +234,10 @@ def canonical_rule(rule: Any) -> str | None:
     ``threshold:t`` with ``0 <= t <= 1`` written in plain decimal digits, trailing zeros
     dropped (``threshold:0.30`` and ``threshold:0.3`` are one rule, ``threshold:1.0`` is
     ``threshold:1``); ``capacity:k`` with ``k >= 1`` written in plain digits, leading
-    zeros dropped. Spaces around the parts are ignored. Signs, exponents, underscores
+    zeros dropped; ``share:p`` (v0.2b, WP-B3) with ``0 < p <= 1`` written like a threshold:
+    act on the share ``p`` of the scored rows, a capacity of ``round(p * n)`` rows on the
+    ``n`` rows evaluated (``mlkit.study.policy.share_capacity``). Spaces around the parts are
+    ignored. Signs, exponents, underscores
     (``capacity:1_000``), non-ASCII digits, ``nan``, and ``inf`` are refused. Every
     comparison, identity, and stored value of a rule uses this spelling.
     """
@@ -245,17 +248,18 @@ def canonical_rule(rule: Any) -> str | None:
     if kind == 'capacity' and _CAPACITY.fullmatch(number):
         k = int(number)
         return f'capacity:{k}' if k >= 1 else None
-    if kind == 'threshold' and _THRESHOLD.fullmatch(number):
+    if kind in ('threshold', 'share') and _THRESHOLD.fullmatch(number):
         t = Decimal(number)
-        if not 0 <= t <= 1:
+        if not 0 <= t <= 1 or (kind == 'share' and t == 0):
             return None
         text = format(t.normalize(), 'f')
-        return f'threshold:{text}'
+        return f'{kind}:{text}'
     return None
 
 
 def parse_rule(rule: Any) -> tuple[str, float | int] | None:
-    """``("threshold", t)`` or ``("capacity", k)`` of a rule (:func:`canonical_rule`)."""
+    """``("threshold", t)``, ``("capacity", k)`` or ``("share", p)`` of a rule
+    (:func:`canonical_rule`)."""
     canonical = canonical_rule(rule)
     if canonical is None:
         return None

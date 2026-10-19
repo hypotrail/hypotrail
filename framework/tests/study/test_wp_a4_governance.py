@@ -61,8 +61,11 @@ def test_the_data_card_shows_development_rows_grouped_without_any_rate(tmp_path)
     card = flow.call('data', '--study', flow.study)
     assert card['schema'] == 'hypotrail.data/1' and card['ok'] is True
     final = flow.view()['final_test']
+    duplicates = card['development'].pop('duplicates')      # v0.2b (WP-B3), additive
     assert card['development'] == {'rows': final['development_rows'], 'columns': 17,
                                    'partition': 'development'}
+    assert duplicates['policy'] is None and duplicates['n_groups'] == 0
+    assert duplicates['line'] == 'No two development rows are identical.'
     assert card['final_test']['status'] == 'sealed' and card['final_test']['audience'] == 'junior'
     assert card['target']['positive_label'] == 'yes' and card['target']['negative_label'] == 'no'
     assert card['observation_unit']['value']

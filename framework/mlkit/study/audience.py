@@ -77,7 +77,15 @@ def rule_words(rule) -> str:
         return f'call the top {k} by score'
     if kind == 'threshold' and k:
         return f'call everyone scored {k} or more'
+    if kind == 'share' and k:
+        return f'call the top {share_percent(k)} by score'
     return str(rule)
+
+
+def share_percent(p) -> str:
+    """``0.1`` (or ``"0.1"``) as ``10%``, ``0.125`` as ``12.5%``."""
+    pct = 100 * float(p)
+    return f'{pct:.0f}%' if abs(pct - round(pct)) < 1e-9 else f'{pct:g}%'
 
 
 def model_words(slot) -> str:

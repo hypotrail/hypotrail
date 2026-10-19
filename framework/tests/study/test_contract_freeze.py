@@ -139,7 +139,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # ADR 0005: the confirmation mode and the study language.
              'mode', 'language',
              # v0.2a (WP-A4): the success criterion assessment and the target-look ledger.
-             'criterion', 'eda_looks')
+             'criterion', 'eda_looks',
+             # v0.2b (WP-B3, R6): the teaching scenario's defaults from the case, or null.
+             'scenario_defaults')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.

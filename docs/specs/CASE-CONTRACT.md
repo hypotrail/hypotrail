@@ -50,6 +50,8 @@ Top-level keys, in this order. Unknown keys are refused.
 | `task` | yes | `binary` or `regression` |
 | `prior_exposure` | no | List of `{value, status, source}`: what is already published or exposed for this dataset |
 | `order` | no | v0.2a: the declared row order, see [Order](#order) |
+| `duplicates` | no | v0.2b: how identical records are treated, see [Duplicates](#duplicates) |
+| `scenario_defaults` | no | v0.2b: defaults of a teaching scenario, see [Scenario defaults](#scenario-defaults) |
 | `migration` | no | See [Migration block](#migration-block) |
 
 ### Dataset
@@ -141,7 +143,36 @@ order:
 
 Optional (v0.2a, ADR 0006). It states that the rows are ordered in time: `by: line` (the physical order of the file) or a variable of type `numeric` or `integer` (not the target); `direction` is `ascending` (later rows come later, or have larger values) or `descending`. `status` and `source` say why the order is known. With `order`, the sealed final test is the last rows in that order (`temporal`, ties broken by file line, the count of ties at the cut recorded); without it, a stratified random sample. A variable named `line` makes `by: line` ambiguous and is refused (`invalid_case`), as are an unknown variable, a variable of another type, and another direction. A row whose order column holds no number refuses `init`.
 
-The committed cases declare no order: Bank Marketing's `bank.csv` documents none, and Auto MPG's time column (`model_year`) is used by the `ordinal_cutoff` split of the development rows, not by the final test.
+Bank Marketing's `bank.csv` documents no order, and Auto MPG's time column (`model_year`) is used by the `ordinal_cutoff` split of the development rows, not by the final test; neither declares one. Since v0.2b, Bank Marketing's full file (`use-cases/bank-marketing-full`) declares `order: {by: line, direction: ascending}` (`bank-names.txt:31`, "ordered by date"): its final test is the last 20 % of the lines.
+
+### Duplicates
+
+```yaml
+duplicates:
+  policy: group
+  status: scenario_assumption
+  source: 125 rows repeat an earlier row; nothing says whether they are one session recorded twice
+```
+
+Optional (v0.2b, WP-B3). Without it, two records with the same content (every column, the target included) refuse `init` (`duplicate records (v0.2)`, see [Capabilities](#capabilities)). With `policy: group` (the only policy), the records with identical content form one **entity group** (`data.entity_groups`: the group is named by its first row key), and a group is never divided:
+
+- the sealed final test draws whole groups: a stratified assignment draws groups (identical records share their target, hence their stratum) until the stratum's share is reached (`partition.grouped_stratified`; with no repeated record it draws exactly the rows of the ungrouped assignment); a temporal assignment moves every copy of a group divided by the cut to the side of its earliest record. The partition record gains `groups: {policy, n_groups, n_rows, moved_rows}`;
+- the `split` decision draws whole groups for validation (a stratified or random split; an ordinal cutoff keeps identical rows together by construction), and its values report `duplicates: {policy, n_groups, n_rows, divided_groups}` (`divided_groups` is 0);
+- the folds of `eda.single_feature_signal` are grouped (`StratifiedGroupKFold`, `GroupKFold`; `grouped_folds` in its values).
+
+Every record keeps its own row key, and exposure counts rows. The data card reports the groups (`development.duplicates`) and so does `eda.quality` (`duplicates.records`). `status` and `source` say why the policy is chosen; it is almost always a `scenario_assumption`: a file rarely documents whether identical rows are one entity.
+
+### Scenario defaults
+
+```yaml
+scenario_defaults:
+  capacity_share:
+    value: 0.1
+    status: scenario_assumption
+    source: 'Teaching scenario: the follow-up budget covers one finished session in ten.'
+```
+
+Optional (v0.2b, WP-B3, remark R6), for **teaching cases only**. `capacity_share` is the share of the scored rows the exercise assumes the team can act on (`0 < value <= 1`); its status must be `scenario_assumption` (`invalid_case` otherwise): a default capacity is never a fact about a business, and a real business case declares no default (a team figure, or an explicit per-decision delegation, is required). It is not a decision either: the view shows it (`view.scenario_defaults`), the agent asks the capacity as a share and shows the gain at 5, 10 and 20 % (`policy.evaluation` values `gain_points`), and when the adopted policy is `share:p` with `p` equal to this value, `not_yet_defensible` lists `capacity_assumed_for_exercise`.
 
 ### Structure
 
@@ -167,7 +198,7 @@ structure:
 | Condition | Capability |
 |---|---|
 | `structure.time_column.value` names a variable whose type is not `integer` (a date, a decimal number) | `temporal split on a date or non-integer time column (v0.2)` |
-| Two records have the same content (`data.row_index`, at `init`) | `duplicate records (v0.2)` |
+| Two records have the same content (`data.row_index`, at `init`), and the case declares no `duplicates: {policy: group}` | `duplicate records (v0.2)` |
 | A target cell is missing (`data.check_values`, at `init`) | `missing target values (v0.2)` |
 
 Since M3, `binary` and `regression` tasks are supported, and a declared time column of type `integer` is supported: the study splits it by an ordinal cutoff (`{"method": "ordinal_cutoff", "column", "cutoff"}`, `CLI-CONTRACT.md` §5), reading its values as integers, never as dates.
@@ -244,6 +275,10 @@ The supplement may set `group` and `labels` per variable (v0.2a, WP-A4); Bank Ma
 | `use-cases/bank-marketing/case.yaml` | `binary` | supported |
 | `use-cases/auto-mpg/case.yaml` | `regression`, time column `model_year` (integer), group column `car_name` | supported (M3); limitation `grouped split (v0.2)` |
 | `use-cases/breast-cancer-wdbc/case.yaml` | `binary`, 30 numeric features, no time or group column; generated by `prepare.py`, data copied from the installed scikit-learn (not committed) | supported |
+| `use-cases/online-shoppers/case.yaml` | `binary`, 125 repeated rows under `duplicates: {policy: group}`, `scenario_defaults.capacity_share` 0.1; generated by `build_case.py`, data committed | supported |
+| `use-cases/bank-marketing-full/case.yaml` | `binary`, `order: {by: line}` (temporal final test), `scenario_defaults.capacity_share` 0.1; generated by `build_case.py` from the Bank Marketing case, data committed | supported |
 | `use-cases/diabetes/case.yaml` | `regression`, no time or group column; generated by `prepare.py`, data copied from the installed scikit-learn (not committed) | supported |
+
+A case without a companion `project.json` may be written by a generator script next to it, which builds the document in code and is the only way the YAML changes (`--check` compares the committed file with a fresh generation; the case tests run it). v0.2b's two cases use `build_case.py` (committed data, which must be present, plus `--verify`, the integrity checks of the data against the figures their source publishes); the scikit-learn cases use `prepare.py` (below). A generated case follows this contract exactly as a migrated one; it has no `migration` block.
 
 A case generated by a use case's `prepare.py` (data whose redistribution terms are not stated) commits `case.yaml` and the script, never the data: `prepare.py` copies the data into an ignored `data/` folder, `prepare.py --check` compares the committed `case.yaml` with a fresh generation, and `scripts/check_layout.py` lists such a dataset as not materialized when it is absent.

@@ -155,7 +155,8 @@ REVISION_SPAN = re.compile(
     r'|\brevisions\s*\d+(?:\s*(?:,|and|or|to|-|\u2013)\s*\d+(?![.,]\d))+', re.IGNORECASE)
 # A rule written as an identifier ("capacity:100", "threshold:0.2") names a rule; it is
 # traced when it can be and never reported as a claim (D4).
-RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity)\s*:\s*(-?\d+(?:\.\d+)?)', re.IGNORECASE)
+RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity|share)\s*:\s*(-?\d+(?:\.\d+)?)',
+                             re.IGNORECASE)
 # A result id prefix made only of digits ("(result 52659681)") is an identifier, not a
 # figure (R3): at least this many digits, after one of these words or as the start of a
 # registry ``result_id``.

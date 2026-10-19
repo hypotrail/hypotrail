@@ -10,16 +10,18 @@ Start with [the implementation entry point](docs/START-HERE.md); [the handoff](d
 
 ```sh
 uv sync --project framework --group dev
-uv run --project framework hypotrail init --case use-cases/bank-marketing/case.yaml --study ~/studies/bank
-cd ~/studies/bank && claude
+uv run --project framework hypotrail init --case use-cases/online-shoppers/case.yaml --study ~/studies/shoppers
+cd ~/studies/shoppers && claude
 ```
 
-Create the study in a folder **outside this repository** (here `~/studies/bank`): Claude Code also loads instruction files from parent folders. `init` installs the study agent's instructions (`CLAUDE.md`, a skill, and a `/hypotrail-resume` command) in that folder. Open it with Claude Code and say what you want to do; the agent reads the study state, proposes each decision, and records it only with your own words or an explicit delegation. The report `reports/study.html` and the notebooks in `notebooks/` are generated after each recorded change.
+From v0.2b the discovery case is [Online Shoppers Purchasing Intention](use-cases/online-shoppers/README.md): which finished sessions of an online shop to follow up when the budget covers only some. Then try [Bank Marketing](use-cases/bank-marketing/README.md) (`use-cases/bank-marketing/case.yaml`, the v0.2a reference) or its [full file in time order](use-cases/bank-marketing-full/README.md) (`use-cases/bank-marketing-full/case.yaml`, a temporal final test), and [Auto MPG](use-cases/auto-mpg/README.md) for regression.
+
+Create the study in a folder **outside this repository** (here `~/studies/shoppers`): Claude Code also loads instruction files from parent folders. `init` installs the study agent's instructions (`CLAUDE.md`, a skill, and a `/hypotrail-resume` command) in that folder. Open it with Claude Code and say what you want to do; the agent reads the study state, proposes each decision, and records it only with your own words or an explicit delegation. The report `reports/study.html` and the notebooks in `notebooks/` are generated after each recorded change.
 
 | Directory | Purpose |
 |---|---|
 | [framework/](framework/README.md) | Reusable Python engine, notebook sources, templates, and tests |
-| [use-cases/](use-cases/README.md) | Bank Marketing and Auto MPG data, context, adapters, and reference results |
+| [use-cases/](use-cases/README.md) | Online Shoppers, Bank Marketing (sample and full file), Auto MPG, and two scikit-learn cases: data, context, adapters, and reference results |
 | [clients/vscode-companion/](clients/vscode-companion/README.md) | Study panel for VS Code, a client of the `hypotrail` CLI behind a feature flag that is off by default (v0) |
 | [experimental/companion/](experimental/companion/README.md) | Paused browser and VS Code companion experiment |
 | [docs/](docs/START-HERE.md) | Product specification, architecture, design review, and implementation handoff |

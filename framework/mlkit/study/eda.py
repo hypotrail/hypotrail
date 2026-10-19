@@ -672,12 +672,16 @@ def quality(case: c.Case, frame) -> dict:
 
 
 def single_feature_signal(case: c.Case, train, candidates: list, availability: Mapping,
-                          special: list) -> dict:
+                          special: list, groups: list | None = None) -> dict:
     """Out-of-fold signal of each candidate feature alone on the training rows (5 folds,
     fixed seed): the AUC of a one-feature logistic model (binary) or the R² of a one-feature
     linear model (regression). A feature whose signal reaches the level, or stands far above
     the others, raises a legitimacy question: is its value really known at the prediction
-    moment? It never selects or drops a feature."""
+    moment? It never selects or drops a feature.
+
+    ``groups`` (v0.2b, WP-B3, ``duplicates: {policy: group}``): the entity group of every
+    training row; the folds then keep each group of identical records whole
+    (``StratifiedGroupKFold`` or ``GroupKFold``)."""
     import numpy as np
     from sklearn.linear_model import LinearRegression
     from sklearn.model_selection import KFold, StratifiedKFold, cross_val_predict
@@ -693,6 +697,11 @@ def single_feature_signal(case: c.Case, train, candidates: list, availability: M
     else:
         y = numeric_target(case, train).to_numpy(dtype=float)
         folds = KFold(SIGNAL_FOLDS, shuffle=True, random_state=SIGNAL_SEED)
+    if groups is not None:
+        from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
+        folds = (StratifiedGroupKFold(SIGNAL_FOLDS, shuffle=True, random_state=SIGNAL_SEED)
+                 if binary else GroupKFold(SIGNAL_FOLDS))
+        folds = list(folds.split(np.zeros(len(y)), y, groups))
     signals = []
     for name in candidates:
         own = [s for s in special if s['column'] == name]
@@ -740,13 +749,16 @@ def single_feature_signal(case: c.Case, train, candidates: list, availability: M
                         f'prediction moment, or is it recorded at or after the '
                         f'{"outcome" if binary else "target"}? '
                         f'(availability decided: {status})'})
-    return {'partition': 'train', 'n_rows': int(len(train)), 'metric': metric,
+    out = {'partition': 'train', 'n_rows': int(len(train)), 'metric': metric,
             'folds': SIGNAL_FOLDS, 'seed': SIGNAL_SEED, 'signals': signals, 'median': median,
             'level': level, 'gap': gap, 'questions': questions,
             'question': question('eda.single_feature_signal', task=case.task),
             'note': 'Each feature alone, scored out of fold on the training rows. A high value '
                     'only raises a question about when the value is known; it never keeps or '
                     'drops a feature, and a legitimate feature may score high.'}
+    if groups is not None:
+        out['grouped_folds'] = 'identical records kept in one fold (duplicates: group)'
+    return out
 
 
 def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
@@ -756,7 +768,8 @@ def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
                 'n_rows': int(len(train))}
     if activity == 'eda.single_feature_signal':
         values = single_feature_signal(case, train, params['candidates'],
-                                       params['availability'], params['special_values'])
+                                       params['availability'], params['special_values'],
+                                       params.get('groups'))
     elif activity == 'eda.distribution':
         values = distribution(case, train, params['column'],
                               params.get('max_groups', MAX_GROUPS))
