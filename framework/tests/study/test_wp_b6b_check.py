@@ -80,6 +80,12 @@ def test_binary_diagnostic_coefficients_and_criterion_gain_are_traced(tmp_path):
     text = (f"{term['term'].split('__')[-1]}: {term['value']:.2f} "
             f"(interval {term['low']:.2f} to {term['high']:.2f}).")
     assert _errors(flow.study, text) == []
+    # Round 2: a calibration bin's observed rate with its interval, and the Brier score.
+    cal = values['models']['fit.logistic']['calibration']
+    b = cal['bins'][-1]
+    text = (f"In the top bin the observed rate was {b['observed_rate']:.3f} (interval "
+            f"{b['low']:.3f} to {b['high']:.4f}); calibration Brier {cal['brier']:.3f}.")
+    assert _errors(flow.study, text) == []
     crit = flow.view()['criterion']
     assert crit['status'] != 'not_assessed'
     gain = f"{crit['gain']:.1f}".replace('.', ',')

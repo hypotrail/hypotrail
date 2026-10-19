@@ -297,13 +297,17 @@ METRIC_WORDS = (
     (re.compile(r'\b(?:mae|rmse|error|errors|erreur|erreurs|residual\w*|r[ée]sidu\w*)\b', re.I),
      ('mae', 'rmse', 'error', 'residual')),
     (re.compile(r'\b(?:missing|manquant\w*|absent\w*)\b', re.I), ('missing',)),
+    (re.compile(r'\b(?:calibra\w*|brier)\b', re.I), ('calibration', 'brier')),
     (re.compile(r'\b(?:distinct\w*|modalit[ée]s?|categor\w*|cat[ée]gor\w*)\b', re.I),
      ('n_distinct', 'groups', 'n_groups')),
 )
 RATE_WORDS = re.compile(r'\b(?:rate|rates|taux|share|part|proportion|pourcentage|percentage)\b',
                         re.I)
 RATE_SEGMENTS = ('rate', 'share', 'precision', 'recall', 'fraction', 'missing', 'gain', 'lift',
-                 'deltas', 'interval', 'level', 'average_precision', 'roc_auc', 'point')
+                 'deltas', 'interval', 'level', 'average_precision', 'roc_auc', 'point',
+                 # WP-B6b (round 2): a calibration bin's observed rate and its interval
+                 # bounds (``calibration.bins.N.low``).
+                 'calibration')
 COUNT_NOUNS = re.compile(
     r'\b(?:clients?|customers?|rows?|lignes?|calls?|appels?|sessions?|observations?|people|'
     r'personnes?|subscribers?|souscripteurs?|souscriptions?|positives?|positifs?|contacts?|'
