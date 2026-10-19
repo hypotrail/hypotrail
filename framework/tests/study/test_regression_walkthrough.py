@@ -325,7 +325,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     p = chat.propose('model_choice', choice,
                      'You adopt the linear model.' if adopt else 'You keep the mean baseline.')
     assert chat.confirm(p, 'ok', expect=2)['error']['code'] == 'ambiguous_confirmation'
-    chat.confirm(p, 'Yes, adopt the linear model.' if adopt else 'Yes, keep the mean baseline.')
+    chat.confirm(p, 'Yes, adopt the linear model, because it errs less.' if adopt
+                 else 'Yes, keep the mean baseline, because it is simpler.')
 
     # 8. a new process sees everything without any chat memory
     resume = Chat(study, work, 'chat4')
@@ -383,7 +384,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     fits = {e['result_id'] for e in fk.registry_entries(study) if e['activity'].startswith('fit.')}
     other = 'fit.baseline' if adopt else 'fit.linear'
     p = chat.propose('model_choice', other, 'You switch to the other model.')
-    changed = chat.confirm(p, 'Yes, switch to the other model.')['result']['invalidation']
+    changed = chat.confirm(p, 'Yes, switch to the other model, because the comparison '
+                                    'changed my mind.')['result']['invalidation']
     assert changed['mutation'] == 'model_choice' and changed['row'] == 13
     assert changed['reconfirm_required'] == ['conclusion'] and changed['stale_results'] == []
     assert {e['result_id'] for e in fk.registry_entries(study)
@@ -395,11 +397,12 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
         refused = chat('decide', 'confirm',
                        chat.propose('conclusion', {'verdict': 'adopt_model', 'text': text},
                                     'You adopt the linear model.'),
-                       '--user-words', 'Yes, I adopt the linear model.', '--request-id',
+                       '--user-words', 'Yes, I adopt the linear model, because it errs less.',
+                       '--request-id',
                        chat.rid('confirm'), '--expected-revision', chat.rev(), expect=2)
         assert refused['error']['code'] == 'precondition_missing'
     p = chat.propose('model_choice', choice, 'You return to your first choice.')
-    chat.confirm(p, 'Yes, return to my first choice.')
+    chat.confirm(p, 'Yes, return to my first choice, because it errs less.')
     p = chat.propose('conclusion', {'verdict': verdict, 'text': text},
                      'You conclude as stated and record the limits.')
     chat.confirm(p, 'I conclude as stated, with the bias on later periods as a limit.')

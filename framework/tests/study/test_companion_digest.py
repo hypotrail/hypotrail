@@ -124,7 +124,7 @@ def test_every_action_appears_with_its_kind(binary, tmp_path):
     start = flow.rev()
     pid = cc.open_proposal(flow, 'policy')
     flow.call('decide', 'confirm', pid, '--user-words', 'Yes, I want the policy exactly as '
-              'you stated it', '--request-id', flow.rid(), '--expected-revision', flow.rev(),
+              'you stated it, because it fits our situation', '--request-id', flow.rid(), '--expected-revision', flow.rev(),
               '--study', flow.study)
     flow.call('decide', 'note', '--about', 'policy', '--text', "wait for my manager's figure",
               '--request-id', flow.rid(), '--expected-revision', flow.rev(), '--study',
@@ -179,7 +179,7 @@ def test_a_policy_reconfirmation_names_the_decision(binary, tmp_path):
     flow = fk.Flow(fk.clone(binary.study, tmp_path / 'study'), binary.case_dir, prefix='r')
     pid = cc.open_proposal(flow, 'policy')
     flow.call('decide', 'confirm', pid, '--user-words', 'Yes, I want the policy exactly as '
-              'you stated it', '--request-id', flow.rid(), '--expected-revision', flow.rev(),
+              'you stated it, because it fits our situation', '--request-id', flow.rid(), '--expected-revision', flow.rev(),
               '--study', flow.study)
     start = flow.rev()
     flow.run('policy.evaluate', '--rule', 'capacity:25')

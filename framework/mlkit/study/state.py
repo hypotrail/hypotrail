@@ -104,7 +104,7 @@ EXPRESS_STANDING_DELEGATION_DECISIONS = STANDING_DELEGATION_DECISIONS + (
 # confirmation; a confirmation recorded before has none. ``mode`` (v0.2b, WP-B2): the
 # confirmation mode in force when the words were accepted; a confirmation recorded before
 # has none (it was guided, or v0.1 rules).
-CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mode')
+CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mode', 'warnings')
 
 # Confirmation modes (ADR 0005). ``guided`` is the default (v0.2a); ``training`` and
 # ``express`` are implemented in v0.2b (WP-B2). ``MODE_STRICTNESS`` orders them: lowering the
@@ -195,8 +195,12 @@ STEPS = (
     {'id': 'train_eda', 'pause': None, 'decision': None,
      'activities': ('eda.target_rate', 'eda.special_values'), 'requires': ('split',),
      'title': 'Explore the training partition',
-     'question': 'What does the training partition show about the target and the special '
-                 'values?',
+     # WP-A9 (M5): the step names the rows it reads and the wider catalog, and says that
+     # each look at the outcome is counted.
+     'question': 'What do the training rows show about the outcome and the special values? '
+                 'Other explorations (the quality overview, rates by variable, distributions, '
+                 'the single-feature signal) each answer a question stated first; every look '
+                 'at the outcome is counted.',
      'expected_output': 'Target rate and special-value results on training rows, with their '
                         'exposure recorded.',
      'completion': 'The training EDA results are current.'},
@@ -234,8 +238,10 @@ REGRESSION_STEPS = (
     {'id': 'train_eda', 'pause': None, 'decision': None,
      'activities': ('eda.target_summary', 'eda.special_values'), 'requires': ('split',),
      'title': 'Explore the training partition',
-     'question': 'What does the training partition show about the distribution of the target '
-                 'and the special values?',
+     'question': 'What do the training rows show about the distribution of the target and '
+                 'the special values? Other explorations (the quality overview, means by '
+                 'variable, distributions, the single-feature signal) each answer a question '
+                 'stated first; every look at the target is counted.',
      'expected_output': 'A target summary (count, mean, standard deviation, quantiles, missing '
                         'values) and special-value counts on training rows, with their exposure '
                         'recorded.',
@@ -284,15 +290,21 @@ SUCCESS_STEP = {
     'id': SUCCESS_CRITERION, 'pause': 2, 'decision': SUCCESS_CRITERION, 'activities': (),
     'requires': ('split',),
     'title': 'Fix the success criterion before seeing a model',
-    'question': 'How large a gain in precision over the baseline, at the rule you will adopt, '
-                'would make the model worth using? It is fixed now, before any model is '
-                'fitted.',
+    # WP-A9 (M6): the terms first, then the question.
+    'question': 'Precision is the share of the rows a rule selects that turn out positive. The '
+                'baseline gives every row the same score, so its precision is the overall '
+                'positive rate. The rule says which rows you act on: the top share or number '
+                'of scores, or the rows above a score threshold. How many percentage points of '
+                'precision above the baseline, at the rule you will adopt, would make the '
+                'model worth using? It is fixed now, before any model is fitted.',
     'expected_output': 'A confirmed minimum gain over the baseline, stated before any model '
                        'result is seen.',
     'completion': 'Decision success_criterion is confirmed.'}
 REGRESSION_SUCCESS_STEP = dict(
     SUCCESS_STEP,
-    question='How much smaller than the error of the mean baseline should the validation '
+    question='The mean absolute error is the average size of a prediction\'s error, in the '
+             'unit of the target. The mean baseline predicts the training mean for every row. '
+             'How much smaller than the error of the mean baseline should the validation '
              'error of the model be for it to be worth using? It is fixed now, before any '
              'model is fitted.',
     expected_output='A confirmed minimum relative error reduction over the mean baseline, '
@@ -532,7 +544,7 @@ def _sha256_file(path) -> str:
 def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
                  time: str | None = None, basis: str = DEFAULT_BASIS,
                  delegation_scope: str | None = None, agent_concern: str | None = None,
-                 mode: str | None = None) -> dict:
+                 mode: str | None = None, warnings: list | None = None) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
@@ -542,6 +554,8 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
     ``standing``, or ``None`` when the delegation did not state it (:data:`DELEGATION_SCOPES`).
     ``agent_concern`` is the point the agent raised before the junior confirmed (R3), or None.
     ``mode`` is the confirmation mode in force (v0.2b); the record omits it when None.
+    ``warnings`` (WP-A9, H3) are the ``words_contradict_value`` warnings the words raised
+    and the junior kept; the record omits them when there are none.
     """
     record = {'user_words': user_words, 'proposal_id': proposal['proposal_id'],
               'restatement': proposal['restatement'], 'authenticated': False,
@@ -550,6 +564,8 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
               'agent_concern': agent_concern}
     if mode is not None:
         record['mode'] = mode
+    if warnings:
+        record['warnings'] = [dict(w) for w in warnings]
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -601,6 +617,10 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
                          'problem': f'must be one of {", ".join(CONFIRMATION_BASES)}'})
     if 'mode' in present and c['mode'] not in MODES:
         problems.append({'path': f'{path}.mode', 'problem': f'must be one of {", ".join(MODES)}'})
+    if 'warnings' in present and (not isinstance(c['warnings'], list) or not all(
+            isinstance(w, dict) and _text(w.get('variable')) for w in c['warnings'])):
+        problems.append({'path': f'{path}.warnings',
+                         'problem': 'must be a list of warnings naming their variable'})
     if 'agent_concern' in present and c['agent_concern'] is not None \
             and not _text(c['agent_concern']):
         problems.append({'path': f'{path}.agent_concern',

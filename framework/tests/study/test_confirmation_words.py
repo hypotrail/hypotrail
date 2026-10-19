@@ -289,9 +289,12 @@ def test_a_negation_is_a_refusal_only_when_it_targets_the_agreement(words, negat
 @pytest.mark.parametrize('words', [w for _, w in AGREE_WITH_CAVEAT[:6]])
 def test_the_refused_acceptances_now_confirm_in_a_real_process(flow, words):
     """The six replies the post-v0.1 runs refused confirm a proposal they relate to, and the
-    recorded words keep the limits the junior stated."""
+    recorded words keep the limits the junior stated. WP-A9 (H1): a reply confirms only a
+    proposal it is about, so the restatement also carries the prediction moment the first
+    reply answered (Auto MPG)."""
     restatement = ('You adopt the recommended option as an exploratory result, the linear model '
-                   'or the call policy, with a pilot or a later check as the next step.')
+                   'or the call policy, with a pilot or a later check as the next step; or you '
+                   'predict mpg once a new model\'s specs are fixed, before it is measured.')
     extra = ()
     if cmd.is_delegation(words):   # "Go with your recommendation: ..." delegates (D1)
         restatement = 'My recommended default: ' + restatement

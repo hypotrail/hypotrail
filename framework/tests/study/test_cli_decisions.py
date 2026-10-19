@@ -459,7 +459,9 @@ def test_three_pauses_are_preconditions(study, work, features):
             rev=rev + 1)
     pol = propose(study, work, 'policy', value='capacity:100', rid='p1', rev=rev + 2,
                   restatement='Call the 100 highest-scored members.')['result']['proposal_id']
-    out = confirm(study, work, pol, 'Yes, call the top hundred.', rid='p2', rev=rev + 3, expect=2)
+    # WP-A9 (H1): the words give a reason, so the refusal is the missing precondition.
+    out = confirm(study, work, pol, 'Yes, call the top hundred because the desk has that '
+                  'capacity.', rid='p2', rev=rev + 3, expect=2)
     assert out['error']['code'] == 'precondition_missing'
     # WP-A4: the success criterion and the preprocessing come first, then the evaluation.
     missing = out['error']['details']['missing']
@@ -468,7 +470,8 @@ def test_three_pauses_are_preconditions(study, work, features):
     concl = propose(study, work, 'conclusion', value_json={'verdict': 'adopt_policy',
                                                            'text': 'Adopt the model.'},
                     rid='c1', rev=rev + 3)['result']['proposal_id']
-    out = confirm(study, work, concl, 'Yes, adopt the model.', rid='c2', rev=rev + 4, expect=2)
+    out = confirm(study, work, concl, 'Yes, adopt the model because it ranks better.',
+                  rid='c2', rev=rev + 4, expect=2)
     assert out['error']['code'] == 'precondition_missing'
 
 

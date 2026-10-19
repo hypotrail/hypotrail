@@ -43,7 +43,7 @@ class Previewing(fk.Flow):
         preview = self.preview(pid)
         assert preview['blocked'] == [], preview['blocked']
         out = self.call('decide', 'confirm', pid, '--user-words',
-                        words or f'Yes, I want the {decision} exactly as you stated it',
+                        words or fk.default_words(decision),
                         '--request-id', self.rid(), '--expected-revision', preview['revision'],
                         '--study', self.study, expect=None)
         assert out['ok'] is True, out
@@ -101,7 +101,8 @@ def test_bank_policy_change_keeps_both_fits(bank, tmp_path):
 
     # with a confirmed conclusion, the policy change asks for the conclusion again
     flow.decide('conclusion', {'verdict': 'keep_baseline', 'text': CONCLUSION_TEXT},
-                'I keep the baseline for now, as you stated the conclusion.')
+                'I keep the baseline for now, as you stated the conclusion, because the gain is '
+                'uncertain.')
     flow.run('policy.evaluate', '--rule', 'capacity:150')
     p = flow.preview(flow.propose('policy', 'capacity:150'))
     assert p['refit'] == [] and p['reconfirm_required'] == ['conclusion']
@@ -117,7 +118,7 @@ def test_bank_blocked_refusals(bank, tmp_path):
     assert tuple(p['blocked'][0]) == cc.PREVIEW_EFFECTS_BLOCKED_KEYS
     assert p['blocked'][0]['details']['missing']
     refused = flow.call('decide', 'confirm', p['proposal_id'], '--user-words',
-                        'Yes, I want the policy exactly as you stated it', '--request-id',
+                        'Yes, I want the policy exactly as you stated it, because it fits our situation', '--request-id',
                         flow.rid(), '--expected-revision', flow.rev(), '--study', flow.study,
                         expect=2)
     assert refused['error']['code'] == p['blocked'][0]['code']
@@ -129,7 +130,7 @@ def test_bank_blocked_refusals(bank, tmp_path):
     assert [b['code'] for b in p['blocked']] == ['decision_on_hold', 'precondition_missing']
     assert p['blocked'][0]['details']['notes'][0]['user_words'].startswith("don't adopt")
     refused = flow.call('decide', 'confirm', p['proposal_id'], '--user-words',
-                        'Yes, I want the policy exactly as you stated it', '--request-id',
+                        'Yes, I want the policy exactly as you stated it, because it fits our situation', '--request-id',
                         flow.rid(), '--expected-revision', flow.rev(), '--study', flow.study,
                         expect=2)
     assert refused['error']['code'] == 'decision_on_hold'
@@ -186,7 +187,7 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
         flow.run(activity)
     flow.decide('model_choice', 'fit.linear')
     flow.decide('conclusion', {'verdict': 'adopt_model', 'text': CONCLUSION_TEXT},
-                'I adopt the linear model, as you stated the conclusion.')
+                'I adopt the linear model, as you stated the conclusion, because it errs less.')
     pid = flow.propose('model_choice', 'fit.baseline')
     code, p = cc.r1_read_only(flow.study, 'preview', 'effects', pid)
     assert code == 0, p
@@ -194,5 +195,5 @@ def test_auto_mpg_walkthrough_previews_equal_every_confirmation(tmp_path):
     assert p['reconfirm_required'] == ['conclusion'] and p['stale_results'] == []
     assert {'fit.baseline', 'fit.linear', 'evaluate.regression'} <= set(p['kept_slots'])
     assert cc.r3_imported(flow.study, 'preview', 'effects', pid) == []
-    flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it')
+    flow.confirm(pid, 'Yes, I want the model_choice switched back, exactly as you stated it, because it errs less')
     assert len(flow.previews) == 8          # WP-A4: the success criterion and the preprocessing

@@ -100,6 +100,19 @@ def availability(case_dir, **overrides) -> dict:
     return value
 
 
+# The trade-offs need a reason in the junior's words (ADR 0005; WP-A9: a repetition of the
+# value is no reason), so the test words for them give one.
+REASON_DECISIONS = ('policy', 'model_choice', 'conclusion')
+
+
+def default_words(decision: str) -> str:
+    """The words a test study confirms ``decision`` with (a test choice)."""
+    words = f'Yes, I want the {decision} exactly as you stated it'
+    if decision in REASON_DECISIONS:
+        words += ', because it fits our situation'
+    return words
+
+
 class Flow:
     """A study driven in-process through ``cli.run`` (same code path as the CLI)."""
 
@@ -132,7 +145,7 @@ class Flow:
                       '--rationale', 'It fits the scenario.', '--request-id', self.rid(),
                       '--expected-revision', self.rev(), '--study', self.study)
         return self.call('decide', 'confirm', p['result']['proposal_id'], '--user-words',
-                         words or f'Yes, I want the {decision} exactly as you stated it',
+                         words or default_words(decision),
                          '--request-id', self.rid(), '--expected-revision', self.rev(),
                          '--study', self.study)
 

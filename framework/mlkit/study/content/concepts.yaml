@@ -131,6 +131,31 @@ concepts:
     hint: what is decided, in your own words
     terms: []
 
+# Domain words of the trade-off decisions (WP-A9, H1): in the guided mode a reason is a
+# connector ("because", "parce que") or a clause that says something beyond the value's own
+# words (and the concept terms of the value, which restate it) and that is about the
+# decision: it states a number of the value, or two of its content words, or at least half
+# of them, repeat the proposal or are listed here. Generic business words only; no dataset
+# name.
+reason_domain:
+  policy: [budget*, cost*, cout*, team*, equipe*, desk, centre, center, staff, effectif*, agent*,
+           conseill*, capacit*, workload, charge, resourc*, ressourc*, limit*, priorit*, time,
+           temps, hour*, heure*, day*, jour*, week*, semaine*, slot*, creneau*, precision,
+           baseline, reference, gain*, lift, recall, rappel, risk*, risque*, revenue*, profit*,
+           money, argent, margin*, marge*, waste*, gaspill*, effort*, handle*, afford*,
+           manage*, gerer, traiter, process*, volume*, demand*, besoin*, need*, service*,
+           suit, suivre, follow*, keep up, absorb*, enough, assez, suffisant*]
+  model_choice: [error*, erreur*, mae, accura*, precis*, better, mieux, simpl*, interpret*,
+                 expla*, baseline, reference, gain*, reduc*, risk*, risque*, stabl*, robust*,
+                 uncertain*, incertain*, interval*, intervalle*, cost*, cout*, maint*]
+  conclusion: [evidence*, preuve*, result*, gain*, precision, baseline, reference, criterion,
+               critere*, interval*, intervalle*, uncertain*, incertain*, validation, test*,
+               risk*, risque*, limit*, enough, assez, suffisant*, insuffisant*, sample*,
+               echantillon*, signal*, robust*, stabl*, decision*, budget*, cost*, cout*, team*,
+               equipe*, model*, modele*, error*, erreur*, policy, policies, politique*, rule*,
+               regle*, pilot*, adopt*, deploy*, deploie*, routine, usage, campaign*, campagne*,
+               check*, verif*, later, plus tard, period*, periode*]
+
 # Translation groups for the words of a free-text value (the prediction moment): a word of
 # the value also matches the other words of its group. Generic event words only.
 synonyms:

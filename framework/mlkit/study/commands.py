@@ -778,6 +778,10 @@ REPLY_MESSAGES = {
     'conditional_reply': 'These words set a condition or hesitate ("yes but", "unless", "oui '
                          'mais"): nothing is confirmed. Ask what the condition is; record it as '
                          'a hold, or propose again.',
+    # WP-A9 (B1): a partial refusal is reported as ``conditional_reply``.
+    'partial_reply': 'These words accept one part of the proposal and refuse another ("oui pour '
+                     'le plafonnement, pas pour le log"): nothing is confirmed. Ask which parts '
+                     'the junior wants and propose again with that value.',
 }
 
 
@@ -949,9 +953,12 @@ def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
             return registry.get(store, rid)
         except StudyError:
             return None
+    target = case_of(state).target_column
+    # WP-A9 (M1): every target-involving look before the proposal makes it data-contingent.
+    looks = governance.ledger(read.open(store.study_dir).exposure_records(),
+                              target)['target_looks']
     try:
-        return governance.normalize_preprocessing(value, lookup,
-                                                  case_of(state).target_column)
+        return governance.normalize_preprocessing(value, lookup, target, looks_before=looks)
     except governance.ValueProblem as exc:
         raise _invalid(exc.message, **exc.details) from None
 
@@ -1052,6 +1059,15 @@ def _confirm(ctx: Context) -> Handler:
                                                     f'proposal of {decision_id}.',
                              proposal_id=pid, open_proposals=others)
         delegated = params['basis'] == st.DELEGATED_DEFAULT
+        # WP-A9 (B1): accepting one part of the proposal and refusing another is no
+        # confirmation, in every mode ("oui pour le plafonnement, pas de log").
+        partial = cf.partial_refusal(words, proposal)
+        if partial is not None:
+            raise _ambiguous('conditional_reply', REPLY_MESSAGES['partial_reply'],
+                             proposal_id=pid, user_words=words, partial=partial)
+        warnings = cf.availability_warnings(words, value) \
+            if decision_id == 'feature_availability' and not delegated else []
+        concern = params.get('agent_concern')
         if delegated:
             basis_recorded = st.DELEGATED_DEFAULT
         elif mode == st.TRAINING:
@@ -1059,22 +1075,26 @@ def _confirm(ctx: Context) -> Handler:
             _check_training(state, proposal, words)
             basis_recorded = st.RESTATED
         else:
-            # Guided rule (ADR 0005, integrator fix): an explicit endorsement expression, or
-            # a reply that repeats the proposal; "yes, I like pizza" is never a decision.
-            if not cf.is_endorsement(words) and not cf.restates(
-                    words, value=value, texts=(proposal['restatement'],
-                                               *(proposal.get('labels') or {}).values())):
+            # Guided rule (ADR 0005, WP-A9): an explicit endorsement expression, or a reply
+            # that agrees and is about the proposal; "yes, I like pizza" and "oui, la pizza
+            # du client est bonne" are never decisions. The trade-offs need a reason.
+            problem = cf.guided_problem(state, proposal, words)
+            if problem == 'unrelated_reply':
                 raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
                                  proposal_id=pid, user_words=words,
                                  restatement=proposal['restatement'])
-            if cf.needs_reason(state, decision_id) and not cf.has_reason(words):
+            if problem == cf.REASON_REQUIRED:
                 raise CommandRefused(
                     'reason_required',
-                    f'The {decision_id} is a trade-off: an endorsement alone does not record '
-                    f'why. Ask the junior for one reason in their own words ("because ...", '
-                    f'"parce que ...") and confirm with that reply.',
+                    f'The {decision_id} is a trade-off: an endorsement or a repetition of the '
+                    f'value does not record why. Ask the junior for one reason in their own '
+                    f'words ("because ...", "parce que ...") and confirm with that reply.',
                     details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
                              'mode': mode})
+            if warnings and mode == st.GUIDED and concern is None:
+                # WP-A9 (H3): in the guided mode the contradiction is the one stop of R3; the
+                # agent raises it, and the junior's kept words are recorded with the concern.
+                raise _contradiction_refusal(decision_id, pid, words, mode, warnings)
             basis_recorded = cf.recorded_basis(words, proposal)
         # C3: the part of a confirmation that does not depend on the words is one function,
         # shared with ``preview effects``: the refusals left (changed sources, value,
@@ -1082,16 +1102,14 @@ def _confirm(ctx: Context) -> Handler:
         plan = confirmation_plan(state, ctx.store, pid, basis=basis_recorded)
         if plan['refusals']:
             raise plan['refusals'][0]
-        concern = params.get('agent_concern')
+        # R3 by mode: a recorded warning in express, and in guided once the agent raised it
+        # (``--agent-concern``); a contradiction stops a training confirmation before this
+        # point. WP-A9 (H3): the warnings are kept on the confirmation record.
         record = _apply_confirmation(state, plan, pid, store=ctx.store,
                                      user_words=words, channel=params['channel'],
                                      actor=params['actor'], basis=basis_recorded,
                                      delegation_scope=params['delegation_scope'],
-                                     agent_concern=concern, mode=mode)
-        # R3 by mode: a warning in guided and express (a contradiction stops a training
-        # confirmation before this point).
-        warnings = cf.availability_warnings(words, value) \
-            if decision_id == 'feature_availability' else []
+                                     agent_concern=concern, mode=mode, warnings=warnings)
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
                 'value': copy.deepcopy(value), 'user_words': words,
                 'channel': params['channel'], 'actor': params['actor'],
@@ -1116,17 +1134,7 @@ def _check_training(state: Mapping, proposal: Mapping, words: str) -> None:
     if decision_id == 'feature_availability':
         found = cf.availability_warnings(words, value)
         if found:
-            named = ', '.join(w['variable'] for w in found)
-            raise CommandRefused(
-                'words_contradict_value',
-                f'In the training mode, words that contradict the value stop the confirmation: '
-                f'the junior\'s words say the opposite of the proposal for {named}. Tell them '
-                f'what the value says; they confirm with words that match it, or you propose '
-                f'again with the value they mean.',
-                details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
-                         'mode': mode, 'warnings': found,
-                         'junior_message': f'Your words and the proposal disagree about {named}: '
-                                           f'say which one you mean.'})
+            raise _contradiction_refusal(decision_id, pid, words, mode, found)
     texts = (proposal['restatement'], *(proposal.get('labels') or {}).values())
     result = concepts.check(state, proposal, words)
     if not result['said'] and not cf.is_endorsement(words) \
@@ -1154,6 +1162,30 @@ def _check_training(state: Mapping, proposal: Mapping, words: str) -> None:
             f'their situation and confirm with that reply.',
             details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
                      'mode': mode})
+
+
+def _contradiction_refusal(decision_id: str, pid: str, words: str, mode: str,
+                           found: list[dict]) -> CommandRefused:
+    """``words_contradict_value`` (R3): a refusal in the training mode, and in the guided
+    mode while the agent has not raised the point (``--agent-concern``, WP-A9)."""
+    named = ', '.join(w['variable'] for w in found)
+    if mode == st.TRAINING:
+        lead = ('In the training mode, words that contradict the value stop the confirmation: '
+                f'the junior\'s words say the opposite of the proposal for {named}. Tell them '
+                'what the value says; they confirm with words that match it, or you propose '
+                'again with the value they mean.')
+    else:
+        lead = (f'The junior\'s words say the opposite of the proposal for {named}. In the '
+                f'guided mode this is the one stop: tell them what the value says. They '
+                f'reformulate, confirm with new words, or keep their words; to keep them, '
+                f'confirm again with --agent-concern stating the point you raised. If the '
+                f'value is wrong, propose again with the value they mean.')
+    return CommandRefused(
+        'words_contradict_value', lead,
+        details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
+                 'mode': mode, 'warnings': found,
+                 'junior_message': f'Your words and the proposal disagree about {named}: '
+                                   f'say which one you mean.'})
 
 
 # The part of an invalidation record a confirmation reports in ``result.invalidation``,
@@ -1275,7 +1307,7 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
 def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, user_words: str,
                         channel: str, actor: str, basis: str, delegation_scope: str | None,
                         time: str | None = None, agent_concern: str | None = None,
-                        mode: str | None = None) -> dict:
+                        mode: str | None = None, warnings: list | None = None) -> dict:
     """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
     decision_id, value = plan['decision_id'], plan['value']
     proposal = state['proposals'][proposal_id]
@@ -1289,7 +1321,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
                                    actor=actor, revision=revision, time=time, basis=basis,
                                    delegation_scope=delegation_scope,
                                    agent_concern=agent_concern,
-                                   mode=mode if mode is not None else st.mode_of(state))
+                                   mode=mode if mode is not None else st.mode_of(state),
+                                   warnings=warnings)
     proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
     decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
                     confirmation=confirmation, revision=revision, reason=None)

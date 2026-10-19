@@ -63,7 +63,7 @@ def test_a_webview_proposal_follows_every_rule(clone):
                       '--study', clone.study, expect=2)
     assert bare['error']['details']['reason'] == 'bare_acknowledgement'
     out = clone.call('decide', 'confirm', pid, '--user-words', 'Yes, I want the policy exactly '
-                     'as you stated it', '--channel', 'webview', '--request-id', clone.rid(),
+                     'as you stated it, because it fits our situation', '--channel', 'webview', '--request-id', clone.rid(),
                      '--expected-revision', clone.rev(), '--study', clone.study, expect=None)
     assert out['ok'] is True and out['result']['channel'] == 'webview'
     assert read.open(clone.study).state['proposals'][pid]['origin'] == {'channel': 'webview'}

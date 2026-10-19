@@ -288,7 +288,7 @@ def test_training_policy_needs_the_rule_and_a_reason_connector(pause3):
     assert done['result']['basis'] == st.RESTATED
 
 
-def test_guided_policy_takes_any_content_word_as_a_reason(pause3):
+def test_guided_policy_takes_a_clause_beyond_the_value_as_a_reason(pause3):
     pid = _propose(pause3, 'policy', 'capacity:20', 'You call the 20 highest-scored members.')
     done = _confirm(pause3, pid, 'appeler les 20 meilleurs, le service suit')
     assert done['result']['mode'] == 'guided'
@@ -315,6 +315,14 @@ def test_words_that_contradict_the_value_by_mode(bank, mode):
         assert 'contact' in error['details']['junior_message']
         assert bank.rev() == rev
         assert bank.state()['decisions']['feature_availability']['status'] == 'proposed'
+    elif mode == st.GUIDED:
+        # WP-A9 (H3): the guided stop; confirmed once the agent raised the point.
+        out = _confirm(bank, pid, OWNER_FA, expect=2)
+        assert out['error']['code'] == 'words_contradict_value'
+        assert bank.rev() == rev
+        done = _confirm(bank, pid, OWNER_FA, '--agent-concern', 'contact is kept by the value')
+        assert done['result']['status'] == 'confirmed'
+        assert [w['variable'] for w in done['result']['warnings']] == ['contact']
     else:
         done = _confirm(bank, pid, OWNER_FA)
         assert done['result']['status'] == 'confirmed'
