@@ -169,9 +169,12 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     # 1. init installs the regression instructions
     code, init = fk.hyp('init', '--case', case_dir, '--study', study, cwd=work)
     assert code == 0 and init['agent_instructions']['status'] == 'copied'
-    assert [s['id'] for s in init['plan']] == ['prediction_time', 'feature_availability',
-                                               'split', 'train_eda', 'models',
-                                               'model_choice', 'conclusion']
+    # WP-A4: step 0, the success criterion and the preprocessing join the plan.
+    assert [s['id'] for s in init['plan']] == ['discover_data', 'prediction_time',
+                                               'feature_availability', 'split',
+                                               'success_criterion', 'train_eda',
+                                               'preprocessing', 'models', 'model_choice',
+                                               'conclusion']
     claude = (study / 'CLAUDE.md').read_text()
     assert '### Regression study' in claude and 'evaluate.regression' in claude
     assert 'hypotrail:task' not in claude
@@ -186,6 +189,9 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     chat = Chat(study, work, 'chat1')
     assert chat.view['task'] == 'regression'
     assert 'policy' not in chat.view['decisions']
+    # WP-A4: step 0, the data card (informational), before the first proposal.
+    assert chat.view['next_action']['kind'] == 'show_data_card'
+    assert chat('data')['target']['task'] == 'regression'
     p = chat.propose('prediction_time', junior['prediction_time'], junior['restatement'])
     assert chat.confirm(p, 'ok', expect=2)['error']['code'] == 'ambiguous_confirmation'
     chat.confirm(p, junior['words'])
@@ -247,6 +253,12 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     else:
         assert 'grouped_split_unsupported' not in nyd
 
+    # WP-A4: the success criterion, fixed before any model.
+    p = chat.propose('success_criterion', {'metric': 'mae_reduction', 'min_share': 0.1},
+                     'The model is worth using only if its validation error is at least 10% '
+                     'below the error of the mean baseline.')
+    chat.confirm(p, 'I confirm: at least 10% less error than the mean.')
+
     # 4. training EDA (an activity of a binary study is refused)
     assert chat.run('eda.target_rate', expect=2)['error']['code'] == 'invalid_arguments'
     summary = chat.run('eda.target_summary')['values']
@@ -260,7 +272,11 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     eda_exposure = [r for r in fk.exposure_records(study) if r['purpose'] == 'train_eda']
     assert {r['partition'] for r in eda_exposure} == {'train'}
 
-    # 5. both fits
+    # 5. the default preprocessing (WP-A4), then both fits
+    default = chat.status()['view']['next_action']['default_value']
+    p = chat.propose('preprocessing', default, 'You keep the default preparation of the '
+                                               'variables: nothing added, nothing grouped.')
+    chat.confirm(p, 'I confirm the default preparation.')
     baseline = chat.run('fit.baseline')
     linear = chat.run('fit.linear')
     assert baseline['values']['model'] == 'train_mean'
@@ -314,7 +330,8 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     # 8. a new process sees everything without any chat memory
     resume = Chat(study, work, 'chat4')
     view = resume.view
-    for d in ('prediction_time', 'feature_availability', 'split', 'model_choice'):
+    for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+              'preprocessing', 'model_choice'):
         assert view['decisions'][d]['status'] == 'confirmed', d
     # the resume recap (T8) names the model choice and the ordinal split, never a policy
     recap = resume('status', '--summary')['recap']

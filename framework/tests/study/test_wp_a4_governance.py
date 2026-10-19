@@ -147,16 +147,16 @@ def test_fits_wait_for_the_success_criterion_and_the_preprocessing(tmp_path):
 
 
 @pytest.mark.parametrize('value, field', [
-    ({'missing': 'all', 'rare_category_threshold': 0, 'caps': {}, 'log_transform': []}, 'missing'),
-    ({'missing': 'none', 'rare_category_threshold': -1, 'caps': {}, 'log_transform': []},
-     'rare_category_threshold'),
-    ({'missing': 'none', 'rare_category_threshold': 0, 'caps': {'job': [0.01, 0.99]},
+    ({'missing': 'all', 'rare_category_min_rows': 0, 'caps': {}, 'log_transform': []}, 'missing'),
+    ({'missing': 'none', 'rare_category_min_rows': -1, 'caps': {}, 'log_transform': []},
+     'rare_category_min_rows'),
+    ({'missing': 'none', 'rare_category_min_rows': 0, 'caps': {'job': [0.01, 0.99]},
       'log_transform': []}, 'caps'),
-    ({'missing': 'none', 'rare_category_threshold': 0, 'caps': {'balance': [0.9, 0.1]},
+    ({'missing': 'none', 'rare_category_min_rows': 0, 'caps': {'balance': [0.9, 0.1]},
       'log_transform': []}, 'caps.balance'),
-    ({'missing': 'none', 'rare_category_threshold': 0, 'caps': {}, 'log_transform': ['month']},
+    ({'missing': 'none', 'rare_category_min_rows': 0, 'caps': {}, 'log_transform': ['month']},
      'log_transform'),
-    ({'missing': 'none', 'rare_category_threshold': 0, 'caps': {}, 'log_transform': [],
+    ({'missing': 'none', 'rare_category_min_rows': 0, 'caps': {}, 'log_transform': [],
       'motivated_by': ['nope']}, 'motivated_by'),
 ])
 def test_a_preprocessing_value_that_does_not_fit_the_case_is_refused(tmp_path, value, field):
@@ -218,7 +218,7 @@ def test_a_changed_preprocessing_refits_the_candidate_and_keeps_the_exploration(
     flow.run('policy.evaluation', '--rule', 'capacity:100')
     flow.decide('policy', 'capacity:100', 'Yes, capacity:100 because the team calls a hundred')
     before = flow.state()['current']
-    value = {'missing': 'indicator', 'rare_category_threshold': 30,
+    value = {'missing': 'indicator', 'rare_category_min_rows': 30,
              'caps': {'balance': [0.01, 0.99]}, 'log_transform': ['balance', 'campaign'],
              'motivated_by': [quality['result_id']]}
     p = flow.call('decide', 'propose', 'preprocessing', '--value-json', json.dumps(value),

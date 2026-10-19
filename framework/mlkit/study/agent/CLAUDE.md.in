@@ -325,7 +325,7 @@ Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}`
 feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
 `uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
 "seed": N}`), `success_criterion` (`{"metric": "precision_gain", "min_points": P}`),
-`preprocessing` (`{"missing": "none" | "indicator", "rare_category_threshold": K, "caps":
+`preprocessing` (`{"missing": "none" | "indicator", "rare_category_min_rows": K, "caps":
 {}, "log_transform": [], "motivated_by": [result ids]}`), `policy` (`threshold:T` or
 `capacity:K`, evaluated first), `conclusion`
 (`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`). A

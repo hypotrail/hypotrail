@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from mlkit.study import case as c, cli, read
+from mlkit.study import case as c, cli, governance, read
 
 import flowkit as fk
 
@@ -172,6 +172,9 @@ class Walk:
                      {'method': 'random' if regression else 'stratified_random',
                       'validation_fraction': 0.3, 'seed': 7})
         self.decide('split', split)
+        # WP-A4: the success criterion and the default preprocessing, before any model.
+        self.decide('success_criterion', fk.criterion(case.task))
+        self.decide('preprocessing', dict(governance.DEFAULT_PREPROCESSING))
         parts = self.run('split')['values']
         if regression:
             self.run('eda.target_summary')

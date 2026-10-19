@@ -608,8 +608,8 @@ def preprocessing_words(value: dict) -> str:
         named = sorted(c for c, v in missing.items() if v == 'indicator')
         if named:
             parts.append('missing-value indicators for ' + ', '.join(named))
-    if value.get('rare_category_threshold'):
-        parts.append(f'categories with fewer than {value["rare_category_threshold"]} training '
+    if value.get('rare_category_min_rows'):
+        parts.append(f'categories with fewer than {value["rare_category_min_rows"]} training '
                      f'rows grouped')
     if value.get('caps'):
         parts.append('caps on ' + ', '.join(sorted(value['caps'])))

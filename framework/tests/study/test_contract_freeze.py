@@ -192,7 +192,7 @@ DATA_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'observation_unit', 'd
 DATA_VARIABLE_KEYS = ('name', 'role', 'type', 'unit', 'description', 'description_fr',
                       'availability', 'decided', 'special_values', 'n_missing', 'n_distinct',
                       'examples')
-PREPROCESSING_KEYS = ('missing', 'rare_category_threshold', 'caps', 'log_transform')
+PREPROCESSING_KEYS = ('missing', 'rare_category_min_rows', 'caps', 'log_transform')
 CRITERION_VIEW_KEYS = ('decision_status', 'value', 'metric', 'status', 'result_id', 'rule',
                        'model', 'gain', 'low', 'high', 'minimum', 'unit',
                        'interval_includes_zero', 'verdict', 'contradicts_verdict')
@@ -660,7 +660,7 @@ def test_wp_a4_contract_constants():
     assert cmd_data.PAYLOAD_KEYS == DATA_PAYLOAD_KEYS
     assert cmd_data.VARIABLE_KEYS == DATA_VARIABLE_KEYS
     assert governance.PREPROCESSING_KEYS == PREPROCESSING_KEYS
-    assert governance.DEFAULT_PREPROCESSING == {'missing': 'none', 'rare_category_threshold': 0,
+    assert governance.DEFAULT_PREPROCESSING == {'missing': 'none', 'rare_category_min_rows': 0,
                                                 'caps': {}, 'log_transform': []}
     assert governance.CRITERION_KEYS == {'binary': ('metric', 'min_points'),
                                          'regression': ('metric', 'min_share')}

@@ -21,7 +21,7 @@ steps:
   preprocessing:
     concept: data_contingent_decision
     context: The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
-    method: Missing-value indicators, the rare-category threshold, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
+    method: Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
     interpretation: A preparation chosen after looking at the outcome is stamped data-contingent; the validation figures may then be slightly optimistic.
     consequence: Changing it refits the candidate model and asks for the policy and the conclusion again; the exploration is unchanged.
   prediction_time:
@@ -80,7 +80,7 @@ regression_steps:
   preprocessing:
     concept: data_contingent_decision
     context: The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
-    method: Missing-value indicators, the rare-category threshold, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
+    method: Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
     interpretation: A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic.
     consequence: Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged.
   prediction_time:

@@ -10,7 +10,7 @@ junior's words, its parameters learnt on training rows only and applied to valid
 (and later to every fold). Its value is::
 
     {"missing": "none" | "indicator" | {column: "none" | "indicator"},
-     "rare_category_threshold": k,          # >= 0 training rows; 0 keeps every category
+     "rare_category_min_rows": k,          # >= 0 training rows; 0 keeps every category
      "caps": {column: [q_low, q_high]},     # training quantiles, 0 <= q_low < q_high <= 1
      "log_transform": [column, ...],        # signed log, sign(x) * log(1 + |x|)
      "motivated_by": [result_id, ...],      # optional when proposed: the analyses behind it
@@ -34,10 +34,10 @@ from __future__ import annotations
 import copy
 from typing import Any, Callable, Iterable, Mapping
 
-PREPROCESSING_KEYS = ('missing', 'rare_category_threshold', 'caps', 'log_transform')
+PREPROCESSING_KEYS = ('missing', 'rare_category_min_rows', 'caps', 'log_transform')
 PREPROCESSING_OPTIONAL_KEYS = ('motivated_by', 'data_contingent')
 MISSING_STRATEGIES = ('none', 'indicator')
-DEFAULT_PREPROCESSING = {'missing': 'none', 'rare_category_threshold': 0, 'caps': {},
+DEFAULT_PREPROCESSING = {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
                          'log_transform': []}
 # The parameters that change a model (``motivated_by`` and ``data_contingent`` do not).
 PARAMETER_KEYS = PREPROCESSING_KEYS
@@ -120,7 +120,7 @@ def check_preprocessing(value: Any, case) -> None:
     features = _features(case)
     numeric = sorted(n for n, v in features.items() if v['type'] in NUMERIC_TYPES)
     if not isinstance(value, Mapping):
-        raise ValueProblem('preprocessing is {"missing", "rare_category_threshold", "caps", '
+        raise ValueProblem('preprocessing is {"missing", "rare_category_min_rows", "caps", '
                            '"log_transform"} (and optionally "motivated_by").',
                            keys=list(PREPROCESSING_KEYS), default=DEFAULT_PREPROCESSING)
     missing = [k for k in PREPROCESSING_KEYS if k not in value]
@@ -140,10 +140,10 @@ def check_preprocessing(value: Any, case) -> None:
     elif strategy not in MISSING_STRATEGIES:
         raise ValueProblem('missing is "none", "indicator", or a mapping of features to one of '
                            'them.', field='missing', strategies=list(MISSING_STRATEGIES))
-    k = value['rare_category_threshold']
+    k = value['rare_category_min_rows']
     if isinstance(k, bool) or not isinstance(k, int) or k < 0:
-        raise ValueProblem('rare_category_threshold is a whole number of training rows (0 keeps '
-                           'every category).', field='rare_category_threshold')
+        raise ValueProblem('rare_category_min_rows is a whole number of training rows (0 keeps '
+                           'every category).', field='rare_category_min_rows')
     caps = value['caps']
     if not isinstance(caps, Mapping):
         raise ValueProblem('caps maps numeric features to [q_low, q_high].', field='caps',

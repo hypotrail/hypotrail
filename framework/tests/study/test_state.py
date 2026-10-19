@@ -230,7 +230,7 @@ def test_plan_and_next_action_follow_the_three_pauses(state):
         state['current'][slot] = f'r_{slot}'
     action = st.next_action(state)
     assert action == {**action, 'kind': 'propose', 'decision': 'preprocessing'}
-    assert action['default_value'] == {'missing': 'none', 'rare_category_threshold': 0,
+    assert action['default_value'] == {'missing': 'none', 'rare_category_min_rows': 0,
                                        'caps': {}, 'log_transform': []}
     assert _kinds(state)[7] == 'blocked'                  # the models wait for it
     _confirm(state, 'preprocessing', action['default_value'])

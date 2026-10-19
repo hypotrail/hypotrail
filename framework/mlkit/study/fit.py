@@ -121,7 +121,7 @@ def prepare(case: c.Case, train, validation, X_train, X_val, features: list,
     Every parameter is learnt on the training rows only and applied unchanged to the
     validation rows: the missing-value indicators (``<column>=(missing)``, added for a
     feature whose training cells hold a missing value, unless a declared special value that
-    the case reads as missing already gives it an indicator), the rare-category threshold (categories with fewer
+    the case reads as missing already gives it an indicator), the minimum rows of a category (categories with fewer
     training rows are grouped as ``(rare)``, and a validation category unseen in training
     too), the caps (training quantiles; values outside are clipped), and the signed log
     transform ``sign(x) * log(1 + |x|)``, after the caps. A parameter naming a feature the
@@ -154,7 +154,7 @@ def prepare(case: c.Case, train, validation, X_train, X_val, features: list,
         X_train[name] = train[column].isna().astype(int).to_numpy()
         X_val[name] = validation[column].isna().astype(int).to_numpy()
         fitted['missing_indicators'].append(name)
-    k = preprocessing['rare_category_threshold']
+    k = preprocessing['rare_category_min_rows']
     if k > 0:
         for column in features:
             if is_numeric_dtype(X_train[column]):
