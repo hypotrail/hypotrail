@@ -165,7 +165,20 @@ def compact_snapshot(ws: Path) -> dict:
                       for n in view.get('notes') or []],
             'not_yet_defensible_ids': [x.get('id') for x in view.get('not_yet_defensible') or []],
             'invalidations': [{k: i.get(k) for k in ('revision', 'decision_id', 'mutation', 'row')}
-                              for i in view.get('invalidations') or []]}
+                              for i in view.get('invalidations') or []],
+            # WP-B6b (S12, S13): the final test's state and its opening record.
+            'final_test': _final_test_digest(view.get('final_test'))}
+
+
+def _final_test_digest(ft) -> dict | None:
+    if not isinstance(ft, dict):
+        return None
+    opening = ft.get('opening') or {}
+    return {'status': ft.get('status'), 'rows': ft.get('rows'),
+            'opening': {k: opening.get(k) for k in ('revision', 'model', 'rule', 'result_id',
+                                                    'user_words')} if opening else None,
+            'post_final_test': ft.get('post_final_test'),
+            'changed_after': ft.get('changed_after')}
 
 
 def arm_b_after_turn(chats: list[list[dict]], extra_docs: list[str] = ()):
