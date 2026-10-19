@@ -238,3 +238,25 @@ def test_text_tokens_contrast_at_least_4_5_to_1_in_both_fallback_themes():
         for name in ('fg', 'muted', 'link', 'accent', 'warn-fg', 'error-fg'):
             assert _contrast(token(block, name), bg) >= 4.5, (name, token(block, name), bg)
         assert _contrast(token(block, 'experiment-fg'), token(block, 'experiment-bg')) >= 4.5
+
+
+def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, model):
+    # WP-A5 (two-layer copy): the strip on the other tabs is the engine's junior recap,
+    # except its Decided line, which the panel writes from the decisions (no rule token).
+    binary = model('summary', 'captured/summary.binary')
+    panel = open_panel()
+    panel.init(stage='v1', task='binary')
+    panel.snapshot(binary)
+    page = panel.page
+    page.locator('[role="tab"][data-tab="decisions"]').click()
+    lines = page.locator('[data-recap-strip] li').all_inner_texts()
+    junior = binary['recapJunior']
+    assert [l.split(':')[0] for l in lines] == ['Goal', 'Decided', 'Now', 'Next', 'Limit']
+    assert lines[0] == junior[0] and lines[2:] == junior[2:]
+    assert lines[1] == ('Decided: the prediction moment: Before the first contact of the campaign, from the client file; '
+                        'the variables you may use: 11 available · 1 uncertain, kept (contact) · 4 excluded '
+                        '(campaign, day, duration, month); the split: Stratified random split, 30% of the rows for '
+                        'validation; the calling rule: Call everyone scored 0.2 or more.')
+    strip = page.locator('[data-recap-strip]').inner_text()
+    assert 'threshold:0.2' not in strip and 'result ' not in strip
+    assert panel.clean()

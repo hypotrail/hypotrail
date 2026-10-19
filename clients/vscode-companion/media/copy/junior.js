@@ -259,7 +259,24 @@
     }
   }
 
+  /**
+   * The "Decided" line of the recap strip in the panel's words (the engine's junior recap
+   * still quotes recorded tokens such as a rule): each confirmed decision and its value.
+   */
+  function decidedLine(model) {
+    const task = model && model.task;
+    const plan = Array.isArray(model && model.plan) ? model.plan : [];
+    const parts = plan.filter(s => model.decisions && model.decisions[s.id]
+      && ['confirmed', 'reconfirm_required'].includes(model.decisions[s.id].status)).map(s => {
+      const d = model.decisions[s.id];
+      const words = value(s.id, d.value, task) || str(d.value);
+      return `${decisionName(s.id, task)}: ${words}${d.status === 'reconfirm_required' ? ' (to confirm again)' : ''}`;
+    });
+    return `Decided: ${parts.length ? parts.join('; ') : 'nothing yet'}.`;
+  }
+
   HT.copy.junior = {
+    decidedLine,
     decisionName, why, value, availability, modelName, nextMove,
     SEVERITY, SEVERITY_ORDER, severityLabel, limitText, limitFallback,
     GROUP_OF_KIND, groups, GROUP_ORDER, digestText,

@@ -461,7 +461,10 @@
     return el('section', { className: 'ht-recap', 'aria-label': c.recapTitle, 'data-stage': 'v1', 'data-recap-strip': true }, [
       el('button', { type: 'button', className: 'ht-link', 'aria-expanded': collapsed ? 'false' : 'true',
         text: collapsed ? c.recapShow : c.recapHide, onclick: () => { uiState.set('recapCollapsed', !collapsed); render(); } }),
-      collapsed ? null : el('ul', {}, lines.map(line => el('li', { text: line }))),
+      // WP-A5: the Decided line in the panel's words (no recorded token such as a rule).
+      collapsed ? null : el('ul', {}, lines.map(line => el('li', {
+        'data-recap-strip-line': line.split(':')[0],
+        text: line.startsWith('Decided: ') && HT.copy.junior ? HT.copy.junior.decidedLine(snap) : line }))),
     ]);
   }
 
