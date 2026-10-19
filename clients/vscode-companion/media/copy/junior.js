@@ -276,6 +276,8 @@
     // WP-B5: the final test (ADR 0006 and its WP-B1 amendment), the scenario's capacity.
     final_test_sealed: 'sealed', changed_after_final_test: 'caveat', final_test_opening_interrupted: 'blocking',
     capacity_assumed_for_exercise: 'caveat', verdict_contradicts_criterion: 'blocking',
+    // WP-B6c: keeping the baseline against a criterion met on the final test.
+    verdict_keeps_baseline_against_criterion: 'caveat',
     public_data_already_explored: 'context', no_time_or_entity_identifier: 'context', no_causality: 'context',
     workbench_not_tracked: 'context',
   };
@@ -312,6 +314,8 @@
     final_test_opening_interrupted: 'The opening of the final test stopped before its result was recorded; the final test is used up and cannot be opened again.',
     capacity_assumed_for_exercise: 'The share of cases acted on is the teaching scenario\'s assumption, not a figure from a team.',
     verdict_contradicts_criterion: 'The conclusion adopts although the success criterion is not met.',
+    // WP-B6c.
+    verdict_keeps_baseline_against_criterion: 'The conclusion keeps the baseline although the success criterion is met on the final test; say why.',
   };
   const limitFallback = id => `${cap(String(id || '').replace(/_/g, ' '))}.`;
 

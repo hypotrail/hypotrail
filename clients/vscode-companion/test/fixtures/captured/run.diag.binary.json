@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_58ab52047846c7c88a36253e",
   "status": "promoted",
-  "result_id": "9f979e537bc6f7a2a38733900f7ad395d55e69d92a84cfb71bb45df26c282422",
+  "result_id": "9864825bcc2bafe59e09071a6c956971218e5dcbdd775a95cdf3c3ed798dba0a",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1156,7 +1156,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "435a01783bac15954df350f6cb1fbdcb6f3b29e9fa0d36b2634e3f2c8ece12b7"
+     "predictions": "75160d6e61aa66d718dadcc7ca26341dc560692c1659f21bc7a15efaa05d6887"
     },
     "fit.variant": {
      "confusion": {
@@ -2275,7 +2275,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "e32fdd67ab8ff42bfcbc3a5f867b8ea84755955aed2d0e59bc3832d3f95a95a5"
+     "predictions": "b581d617656fe77882805d22add8b419a0a839a261534b2c1b41f818dc205436"
     }
    },
    "coefficient_rows": 2531,
@@ -2286,14 +2286,14 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "9f979e537bc6f7a2a38733900f7ad395d55e69d92a84cfb71bb45df26c282422",
-   "input_key": "b314fbb0ddf55e34f595dfb21734e4559702ecf2d611ac25d7a287b501fb08f1",
+   "result_id": "9864825bcc2bafe59e09071a6c956971218e5dcbdd775a95cdf3c3ed798dba0a",
+   "input_key": "5c11d6efe51815f4f1a07da11c221745259d02e57f2a093f441e2738541e6c69",
    "reason": null,
    "started_revision": 43,
    "invalidation": null,
    "exposure_ids": [
-    "x_274f7f1b8b2e47fa9902cc41020cf389",
-    "x_44a4250010e642e1ad8472cf1d9dca68"
+    "x_dced5eab950b4c578c2703fb88fe10d4",
+    "x_fbe0eab58b8b469ea850b5e56a3b873e"
    ],
    "registry_created": true,
    "nondeterministic": false
