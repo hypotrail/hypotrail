@@ -36,6 +36,7 @@
     holdResolved: 'Your condition, resolved: ',
     holdsTitle: 'On hold',
     effectsTitle: 'If you confirm',
+    effectsTitleOpening: 'If you open it in the chat',
     effectsLoading: 'Reading what a confirmation would change...',
     effectsUpdating: 'Updating...',
     effectsFirst: 'Nothing recorded so far is invalidated.',

@@ -15,7 +15,7 @@
   'use strict';
   const W = 380;
   const H = 250;
-  const M = { left: 52, right: 16, top: 12, bottom: 44 };
+  const M = { left: 52, right: 26, top: 12, bottom: 44 };
 
   function curve(container, { title, points, xDomain = [0, 1], yDomain = [0, 1], xTicks = [], yTicks = [], xLabel = '',
     yLabel = '', diagonal = null, marks = [], columns, rows }) {
@@ -28,6 +28,7 @@
     const shown = points.filter(p => ok(p.x) && ok(p.y)).sort((a, b) => a.x - b.x);
     const path = shown.map((p, i) => `${i ? 'L' : 'M'}${x(p.x).toFixed(1)} ${y(p.y).toFixed(1)}`).join(' ');
     const baseY = M.top + ph;
+    const diagonalEnd = Math.min(xDomain[1], yDomain[1]);
     const chart = HT.svg('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', class: 'ht-chart ht-curve' }, [
       // Axes.
       HT.svg('line', { x1: M.left, x2: M.left + pw, y1: baseY, y2: baseY, stroke: 'muted', 'data-axis': 'x' }),
@@ -40,14 +41,16 @@
       yLabel ? HT.svg('text', { x: 12, y: M.top + ph / 2, class: 'ht-label', 'text-anchor': 'middle',
         transform: `rotate(-90 12 ${M.top + ph / 2})`, text: yLabel }) : null,
       // The reference diagonal.
-      diagonal ? HT.svg('line', { x1: x(xDomain[0]), y1: y(yDomain[0]), x2: x(xDomain[1]), y2: y(yDomain[1]),
+      // y = x, up to the smaller of the two domains (the axes may be cut to the points' range).
+      diagonal ? HT.svg('line', { x1: x(0), y1: y(0), x2: x(diagonalEnd), y2: y(diagonalEnd),
         stroke: 'baseline', 'stroke-dasharray': '4 3', 'data-diagonal': true }) : null,
-      diagonal ? HT.svg('text', { x: x(xDomain[1]) - 4, y: y(yDomain[1]) + 14, class: 'ht-muted-text', 'text-anchor': 'end',
+      diagonal ? HT.svg('text', { x: x(diagonalEnd) - 4, y: y(diagonalEnd) + 14, class: 'ht-muted-text', 'text-anchor': 'end',
         text: diagonal.label }) : null,
       // Marks (a chosen share).
-      ...marks.filter(m => ok(m.x)).map(m => HT.svg('g', { 'data-mark': m.label }, [
+      ...marks.filter(m => ok(m.x)).map((m, i) => HT.svg('g', { 'data-mark': m.label }, [
         HT.svg('line', { x1: x(m.x), x2: x(m.x), y1: M.top, y2: baseY, stroke: m.tone === 'experiment' ? 'experiment' : 'accent',
           'stroke-dasharray': '2 3' }),
+        HT.svg('text', { x: x(m.x) + 3, y: M.top + 10 + 12 * i, class: 'ht-muted-text', text: m.label }),
       ])),
       // The engine's points, joined in x order.
       shown.length > 1 ? HT.svg('path', { d: path, fill: 'none', stroke: 'accent', 'stroke-width': 2, 'data-curve': true }) : null,
@@ -55,7 +58,8 @@
         ok(p.low) && ok(p.high) ? HT.svg('line', { x1: x(p.x), x2: x(p.x), y1: y(p.low), y2: y(p.high), stroke: 'accent',
           'stroke-width': 2, 'data-interval': true }) : null,
         HT.svg('circle', { cx: x(p.x), cy: y(p.y), r: 4, fill: p.tone === 'baseline' ? 'baseline' : 'fg' }),
-        p.label ? HT.svg('text', { x: x(p.x) + 6, y: y(p.y) - 6, class: 'ht-value', text: p.label }) : null,
+        // Below and to the right of the point: under a rising curve, away from its line.
+        p.label ? HT.svg('text', { x: x(p.x) + 7, y: y(p.y) + 15, class: 'ht-value', text: p.label }) : null,
       ])),
     ]);
     return HT.components.figure(container, { title, chart, columns, rows });

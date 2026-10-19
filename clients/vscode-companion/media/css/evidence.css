@@ -60,3 +60,6 @@
 @media (forced-colors: active) {
   .ht-ev-final, .ht-ledger-final td:first-child { border-left-color: CanvasText; }
 }
+@media (max-width: 600px) {
+  .ht-evidence table.ht-cardable caption { display: block; text-align: left; }
+}

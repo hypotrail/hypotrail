@@ -409,9 +409,15 @@
     const marks = [mine ? { x: mine.share, label: g.yourRule, tone: 'accent' } : null,
       assumed !== null ? { x: assumed, label: g.scenarioMark, tone: 'experiment' } : null].filter(Boolean);
     const cite = (x, path, f) => (x === null ? '' : { text: f(x), cited: { resultId: gain.resultId, path, value: x } });
-    const ticks = [0, 0.25, 0.5, 0.75, 1].map(v => ({ value: v, text: `${v * 100}%` }));
+    // The axes are cut to the points' range (a quarter, a half, or all of the rows), so the
+    // registered points are not crowded into a corner; the diagonal is drawn on that range.
+    const top = v => [0.25, 0.5, 1].find(t => v <= t) || 1;
+    const xMax = top(Math.max(...rows.map(r => r.share), ...marks.map(m => m.x)));
+    const yMax = top(Math.max(...rows.map(r => r.recall)));
+    const ticksOf = m => [0, m / 2, m].map(v => ({ value: v, text: `${Math.round(v * 1000) / 10}%` }));
     const box = ctx.el('div', { className: 'ht-wi-gain-chart', 'data-gain-chart': String(rows.length) });
-    ctx.components.curve(box, { title: g.question, xTicks: ticks, yTicks: ticks, xLabel: g.x, yLabel: g.y,
+    ctx.components.curve(box, { title: g.question, xDomain: [0, xMax], yDomain: [0, yMax], xTicks: ticksOf(xMax), yTicks: ticksOf(yMax),
+      xLabel: g.x, yLabel: g.y,
       diagonal: { label: g.random }, marks,
       points: rows.map(r => ({ x: r.share, y: r.recall, label: `${pct0(r.share)}: ${pct0(r.recall)}` })),
       columns: [{ key: 'share', label: g.columns.share }, { key: 'recall', label: g.columns.recall },

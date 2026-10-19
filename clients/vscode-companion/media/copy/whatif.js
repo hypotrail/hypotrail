@@ -63,7 +63,7 @@
         x: 'share of rows acted on (highest scores first)',
         y: 'share of positives reached',
         random: 'random selection',
-        caption: (rows, n) => `The logistic model on the ${n} ${rows}; each point is one the engine computed. Between the points nothing is drawn as if it were measured.`,
+        caption: (rows, n) => `The logistic model on the ${n} ${rows}. Each dot is a point the engine computed; the lines only join the dots and are not measurements.`,
         columns: { share: 'Share acted on', recall: 'Positives reached', precision: 'Precision', source: 'From', status: 'Status' },
         sourcePoint: 'gain point',
         sourceRule: rule => `evaluated rule ${rule}`,

@@ -139,7 +139,7 @@
       model_variant: 'the variant compared', success_criterion: 'the success criterion confirmed' },
     done: 'done', notYet: 'not yet',
     openedAt: (rev, time) => `Opened at revision ${rev}${time ? `, ${time}` : ''}, in your words:`,
-    evaluated: (what, n, refit) => `It measured ${what} on ${n} final-test rows, refitted on ${refit} development rows.`,
+    evaluated: (what, n, refit) => `It measured ${what}, on ${n} final-test rows, refitted on ${refit} development rows.`,
     changedAfter: 'Changed after the opening',
     trials: n => `Configurations evaluated: ${n}`,
     trialsWhy: 'Each model or variant tried on the same rows is one more chance to find a good figure by luck. The count is a disclosure: the more configurations, the more optimistic the best development figure.',

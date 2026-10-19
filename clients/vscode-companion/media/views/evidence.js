@@ -524,7 +524,7 @@
           columns: [{ key: 'model', label: cols.model }, { key: 'metric', label: cols.metric }, { key: 'mean', label: cols.mean },
             { key: 'range', label: cols.range }], rows });
         table.setAttribute('data-cv-spread', String(rows.length));
-        kids.push(ctx.el('h4', { text: c.spreadTitle }), table, ctx.el('p', { className: 'muted', text: c.spreadWhy }));
+        kids.push(table, ctx.el('p', { className: 'muted', text: c.spreadWhy }));
       }
     } else if (model.results.some(r => r.slot === 'split' && r.current)) {
       kids.push(ctx.el('p', { 'data-cv-scheme': 'split', text: c.schemeSplit }));
@@ -646,7 +646,8 @@
     };
     return ctx.el('table', { className: 'ht-values ht-confusion', 'data-confusion': d.evaluation }, [
       ctx.el('caption', { text: t.question }),
-      ctx.el('thead', {}, [ctx.el('tr', {}, [ctx.el('td', {}), ctx.el('th', { scope: 'col', text: t.actedOn }),
+      // An empty head cell first, so the narrow-panel cards label each count by its column.
+      ctx.el('thead', {}, [ctx.el('tr', {}, [ctx.el('th', { scope: 'col', text: '' }), ctx.el('th', { scope: 'col', text: t.actedOn }),
         ctx.el('th', { scope: 'col', text: t.notActedOn })])]),
       ctx.el('tbody', {}, [
         ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.positive }), cell('tp', t.tp), cell('fn', t.fn)]),

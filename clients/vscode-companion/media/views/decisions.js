@@ -67,7 +67,7 @@
       el('p', {}, [el('span', { className: 'ht-status ht-st-needs', 'data-mode-chip': mode, text: name }), ' ', c.modeLine(name)]),
       known ? el('ul', { className: 'dc-mode-rules' }, M.rules(mode, taskOf(ctx), finalTest).map(t => el('li', { text: t })))
         : el('p', { className: 'muted', text: c.modeOther }),
-      el('p', { className: 'muted', 'data-mode-change': true, text: c.modeChange }),
+      el('p', { className: 'muted', 'data-mode-change': true, text: known ? M.change : c.modeChange }),
     ]);
   }
 
@@ -235,7 +235,8 @@
     const entry = view.effects[id];
     const fresh = ctx.fresh(entry);
     const titleId = `effects-${id}`;
-    const parts = [el('h4', { id: titleId, text: c.effectsTitle })];
+    // WP-B5: the opening of the final test is answered in the chat; its preview says so.
+    const parts = [el('h4', { id: titleId, text: str(p.decisionId) === 'final_test' ? c.effectsTitleOpening : c.effectsTitle })];
     if (!entry) {
       parts.push(el('p', { className: 'muted', 'aria-busy': 'true', 'data-effects-loading': true, text: c.effectsLoading }));
       return { node: el('div', { className: 'dc-effects', 'aria-labelledby': titleId, 'data-effects': id }, parts), blocked: null };
