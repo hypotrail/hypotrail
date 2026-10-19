@@ -16,6 +16,7 @@ const fs = require('fs');
 const { ARTIFACT_PATHS } = require('../models/summary');
 const { toCheckModel } = require('../models/check');
 const { MAX_WORDS } = require('../cli');
+const launch = require('../launch');
 
 // The W5 outcome and busy state carry this target, so the Overview renders them in place.
 const RENDER_TARGET = 'render';
@@ -95,17 +96,66 @@ async function acknowledge(message, ctx) {
   });
 }
 
+/** The engine's `deliverables` of `status --json` (`view.deliverables`), or null. */
+function deliverablesOf(payload) {
+  const d = payload && payload.view && payload.view.deliverables;
+  return d && typeof d === 'object' && !Array.isArray(d) ? d : null;
+}
+
+/**
+ * Open a notebook with Marimo's own local server (WP-A5; ADR 0004 amendment "local
+ * launch"): `marimo run` for the generated notebook, `marimo edit` for the workbench, in a
+ * VS Code terminal the extension creates with an argument list. The engine's launch argv
+ * (`status --json`, `view.deliverables.launch`) is used when it has the expected form,
+ * else the one built from `.hypotrail/agent.json` (lib/launch.js). Writes nothing to the
+ * study. In reviewer mode only the read-only `marimo run` is offered.
+ */
+async function openMarimo(message, ctx) {
+  const name = message.artifact;
+  const rel = ARTIFACT_PATHS[name];
+  if (ctx.settings.reviewer && name === 'workbench') {
+    ctx.post({ type: 'notice', politeness: 'assertive', text: 'Read-only reviewer mode: the workbench is not opened for editing. Nothing was started.' });
+    return;
+  }
+  if (!ctx.exists(ctx.artifactPath(name))) {
+    ctx.post({ type: 'notice', politeness: 'assertive', text: `${rel} does not exist yet. Nothing was started.` });
+    return;
+  }
+  let engine = null;
+  const snap = ctx.snapshot();
+  if (snap && snap.deliverables && snap.deliverables.launch) engine = snap.deliverables.launch[name] || null;
+  else {
+    const out = await ctx.read('view', ctx.cli.viewArgv(ctx.agent), deliverablesOf, { cache: false });
+    engine = out.ok && out.model && out.model.launch ? out.model.launch[name] || null : null;
+  }
+  const spec = launch.launchFor(ctx.agent, name, engine);
+  if (!spec) {
+    ctx.post({ type: 'notice', politeness: 'assertive',
+      text: `The panel cannot build the Marimo command for ${rel} from this study's engine. Open the file, or ask the agent for the command. Nothing was started.` });
+    return;
+  }
+  if (!ctx.host || typeof ctx.host.launchMarimo !== 'function') {
+    ctx.post({ type: 'notice', politeness: 'assertive', text: 'This host cannot open a terminal. Nothing was started.' });
+    return;
+  }
+  const reused = await ctx.host.launchMarimo(spec);
+  ctx.post({ type: 'notice', politeness: 'polite', text: reused
+    ? `The terminal "${spec.terminalName}" already runs ${rel}; it is shown again.`
+    : `Started "marimo ${spec.mode}" for ${rel} in the terminal "${spec.terminalName}". Stop it with Ctrl+C in that terminal.` });
+}
+
 /** The header's study switcher: the extension shows the quick pick and reopens the panel. */
 async function switchStudy(_message, ctx) {
   if (ctx.host && typeof ctx.host.switchStudy === 'function') await ctx.host.switchStudy();
 }
 
 module.exports = {
-  types: { open_artifact: openArtifact, render, acknowledge, switch_study: switchStudy },
+  types: { open_artifact: openArtifact, open_marimo: openMarimo, render, acknowledge, switch_study: switchStudy },
   loads: {
     check: { stage: 'v1', key: () => 'check', argv: (cli, agent) => cli.checkArgv(agent), model: toCheckModel },
   },
   RENDER_TARGET,
   acknowledgeable,
   lineOf,
+  deliverablesOf,
 };

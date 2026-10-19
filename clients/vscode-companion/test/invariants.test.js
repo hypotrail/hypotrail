@@ -60,7 +60,7 @@ test('INV-3, INV-13: exactly seven write builders W1-W7, each a whitelisted argv
   assert.deepEqual(builders.sort(), [...writes, ...reads].sort(), 'every argv builder is a listed read or write');
   assert.equal(new Set(writes).size, 7);
   assert.deepEqual(Object.keys(cli.READS), ['summary', 'decisions', 'effects', 'evidence', 'preview', 'draft', 'check',
-    'explain', 'session_report']);
+    'explain', 'session_report', 'view']);
   for (const [w, sample] of Object.entries(SAMPLES)) {
     const tail = sample().slice(AGENT.argv.length);
     const verbs = tail.slice(0, 2).join(' ');

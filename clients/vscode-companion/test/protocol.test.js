@@ -29,6 +29,7 @@ const TO_EXTENSION = {
   render: [{}, null],
   acknowledge: [{ executionId: 'e_1a2b', words: 'I know it was interrupted.', revision: 3 }, ['executionId', 'e 1']],
   open_artifact: [{ artifact: 'report', resultId: RID }, ['artifact', '../etc/passwd']],
+  open_marimo: [{ artifact: 'workbench' }, ['artifact', 'report']],
   navigate_external: [{ kind: 'reveal_export', path: '/tmp/x/revision-3' }, ['kind', 'open']],
   ask_agent: [{ about: { kind: 'result', id: 'abcd1234' }, question: '', mode: 'copy' }, ['mode', 'send']],
   export_handoff: [{ revision: 3 }, ['revision', 1.5]],

@@ -94,6 +94,53 @@ COMPANION_FORBIDDEN = re.compile(
     r"|shell:\s*true|\bexecSync\b|\bspawn\(|childProcess\.exec\(|\bexec\("
     r"|vscode\.lm\b|WebSocket|localStorage|indexedDB|\bfetch\(|workspaceState")
 
+# ADR 0004 amendment "local launch" (WP-A5): the panel may open a VS Code terminal for
+# exactly two commands, Marimo's own server on the study's two notebooks (`marimo run` of
+# the generated notebook, `marimo edit` of the workbench). The terminal is created once,
+# in extension.js, with an argument list (shellPath and shellArgs), after lib/launch.js
+# accepted the argv; nothing types into a terminal and no other file creates one.
+COMPANION_LAUNCH_FILE = 'lib/launch.js'
+COMPANION_TERMINAL_FILE = 'extension.js'
+COMPANION_NOTEBOOKS = {"notebook: Object.freeze({ path: 'notebooks/study_generated.py', mode: 'run' })",
+                       "workbench: Object.freeze({ path: 'notebooks/workbench.py', mode: 'edit' })"}
+TERMINAL_CALL = re.compile(r'createTerminal\s*\(')
+TERMINAL_FORBIDDEN = re.compile(r'\bsendText\b|\bcreateTerminal\s*\(\s*[\'"`]|\bshellPath\s*:\s*[\'"`]'
+                                r'|ExtensionTerminalOptions|\bpty\s*:')
+
+
+def companion_terminal_errors(sources):
+    """Errors of the terminal rule over ``{relative path: text}`` of the client sources."""
+    errors = []
+    for rel, text in sorted(sources.items()):
+        if TERMINAL_FORBIDDEN.search(text):
+            errors.append(f'Companion client source types into or builds a shell terminal: {rel}')
+        if rel != COMPANION_TERMINAL_FILE and TERMINAL_CALL.search(text):
+            errors.append(f'Companion client creates a terminal outside {COMPANION_TERMINAL_FILE}: {rel}')
+    main = sources.get(COMPANION_TERMINAL_FILE, '')
+    calls = list(TERMINAL_CALL.finditer(main))
+    if len(calls) > 1:
+        errors.append(f'Companion client creates more than one terminal call in {COMPANION_TERMINAL_FILE}')
+    if calls:
+        start = calls[0].start()
+        call = main[start:main.find('})', start) + 2]
+        before = main[max(0, main.rfind('\nfunction ', 0, start)):start]
+        if 'shellPath:' not in call or 'shellArgs:' not in call:
+            errors.append('Companion client terminal is not created with an argument list (shellPath, shellArgs)')
+        if 'launch.isMarimoLaunch(' not in before:
+            errors.append('Companion client terminal is created without lib/launch.js accepting the Marimo argv')
+        launch = sources.get(COMPANION_LAUNCH_FILE)
+        if launch is None:
+            errors.append(f'Companion client creates a terminal but has no {COMPANION_LAUNCH_FILE}')
+        else:
+            modes = re.findall(r"^\s*\w+: Object\.freeze\(\{ path: '[^']*', mode: '[^']*' \}\)", launch, re.M)
+            if {m.strip() for m in modes} != COMPANION_NOTEBOOKS:
+                errors.append(f'Companion client {COMPANION_LAUNCH_FILE} launches other than marimo run of the '
+                              'generated notebook and marimo edit of the workbench')
+            if "tail[0] !== 'marimo'" not in launch:
+                errors.append(f'Companion client {COMPANION_LAUNCH_FILE} does not require the marimo command')
+    return errors
+
+
 def check_companion_client(errors):
     """The companion client stays default-off, dependency-free, and CLI-only."""
     folder = ROOT / COMPANION_CLIENT
@@ -123,6 +170,8 @@ def check_companion_client(errors):
     for path in sources:
         if COMPANION_FORBIDDEN.search(path.read_text(encoding='utf-8')):
             errors.append(f'Companion client source uses a forbidden API: {path.relative_to(ROOT)}')
+    errors.extend(companion_terminal_errors(
+        {p.relative_to(folder).as_posix(): p.read_text(encoding='utf-8') for p in sources}))
     return len(sources)
 
 def main():

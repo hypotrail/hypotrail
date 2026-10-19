@@ -28,13 +28,44 @@ const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrit
 const DECISION_PAUSE = { prediction_time: 1, feature_availability: 1, split: 2, policy: 3, model_choice: 3, conclusion: 3 };
 const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep', 'plan', 'moments', 'pauses',
   'nextAction', 'artifacts', 'artifactsStatus', 'proposals', 'holds', 'notes', 'decisions', 'executions',
-  'notYetDefensible', 'alerts', 'digest', 'waitingCount', 'regenerate', 'currency'];
+  'notYetDefensible', 'alerts', 'digest', 'waitingCount', 'regenerate', 'currency',
+  // WP-A5 (two-layer copy, CLI-CONTRACT §3.3): the junior variants of the engine's texts.
+  'recapJunior', 'recapAudience', 'finalTest', 'deliverables'];
+// The audiences of an engine text (CLI-CONTRACT §3.3).
+const AUDIENCES = ['junior', 'agent'];
 // The engine's currency digest (CR.1): a short lowercase hexadecimal string.
 const CURRENCY = /^[0-9a-f]{1,64}$/;
 // Generated deliverables: the workbench is the junior's own file and is never regenerated.
 const GENERATED = ['report', 'notebook'];
 
 class SummaryError extends ModelError {}
+
+/**
+ * The text a surface may show the junior as primary content (WP-A5, two-layer copy): the
+ * engine's junior variant when it gives one, else the text itself unless its audience is
+ * `agent` (then null: the panel shows its own copy, keyed by kind or id, and the engine
+ * text only under "Details"). A text without an audience (an older engine) is shown.
+ */
+function juniorOf(text, audience, junior) {
+  if (typeof junior === 'string' && junior.trim()) return junior;
+  if (audience === 'agent') return null;
+  return typeof text === 'string' ? text : null;
+}
+const audienceOf = a => (AUDIENCES.includes(a) ? a : null);
+
+/** The launch commands of `deliverables` (CLI-CONTRACT §3, R7) when the payload has them. */
+function deliverablesModel(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const launch = obj(raw.launch);
+  const out = {};
+  for (const name of ['notebook', 'workbench']) {
+    const l = obj(launch[name]);
+    if (Array.isArray(l.argv) && l.argv.every(a => typeof a === 'string')) {
+      out[name] = { mode: str(l.mode), path: str(l.path), argv: l.argv.slice(), shell: str(l.shell) };
+    }
+  }
+  return { interpreter: strOrNull(raw.interpreter), launch: out };
+}
 
 function taskOf(summary, plan) {
   if (summary.task === 'binary' || summary.task === 'regression') return summary.task;
@@ -114,7 +145,9 @@ function toSummaryModel(summary) {
   const decisions = {};
   for (const [id, d] of Object.entries(decisionsRaw)) {
     decisions[id] = { status: str(d && d.status), basis: strOrNull(d && d.basis), delegationScope: strOrNull(d && d.delegation_scope),
-      userWords: strOrNull(d && d.user_words), reason: strOrNull(d && d.reason), value: showValue(d && d.value) };
+      userWords: strOrNull(d && d.user_words), reason: strOrNull(d && d.reason), value: showValue(d && d.value),
+      featureBasis: d && d.feature_basis && typeof d.feature_basis === 'object' && !Array.isArray(d.feature_basis)
+        ? d.feature_basis : null };
   }
   const plan = list(summary.plan).map(step => {
     const id = str(step && step.id);
@@ -167,12 +200,18 @@ function toSummaryModel(summary) {
   const artifacts = Object.keys(ARTIFACT_PATHS).filter(name => items[name]).map(name => ({
     name, label: ARTIFACT_LABELS[name], path: ARTIFACT_PATHS[name],
     status: str(items[name].status), message: str(items[name].message),
+    audience: audienceOf(items[name].audience),
+    juniorMessage: juniorOf(items[name].message, items[name].audience, items[name].junior_message),
   }));
   const nyd = summary.not_yet_defensible || {};
   const next = summary.next_action || {};
-  const top = list(nyd.top).map(i => ({ id: str(i && i.id), text: str(i && i.text) }));
+  const top = list(nyd.top).map(i => ({ id: str(i && i.id), text: str(i && i.text), audience: audienceOf(i && i.audience),
+    juniorText: juniorOf(i && i.text, i && i.audience, i && i.junior_text) }));
   const alerts = top.filter(i => ALERT_IDS.includes(i.id));
-  if (str(next.kind) === 'outcome_unknown') alerts.push({ id: 'outcome_unknown', text: str(next.message) });
+  if (str(next.kind) === 'outcome_unknown') {
+    alerts.push({ id: 'outcome_unknown', text: str(next.message), audience: audienceOf(next.audience),
+      juniorText: juniorOf(next.message, next.audience, next.junior_message) });
+  }
   const ex = obj(summary.executions);
   const reconfirm = Object.values(decisions).filter(d => d.status === 'reconfirm_required').length;
   return {
@@ -186,7 +225,9 @@ function toSummaryModel(summary) {
     moments: list(summary.moments).map(m => ({ id: str(m && m.id), title: str(m && m.title), steps: list(m && m.steps).map(str) })),
     pauses,
     nextAction: { kind: str(next.kind), message: str(next.message), proposalId: strOrNull(next.proposal_id),
-      decision: strOrNull(next.decision), executionId: strOrNull(next.execution_id) },
+      decision: strOrNull(next.decision), executionId: strOrNull(next.execution_id),
+      step: strOrNull(next.step), activity: strOrNull(next.activity),
+      audience: audienceOf(next.audience), juniorMessage: juniorOf(next.message, next.audience, next.junior_message) },
     artifacts,
     artifactsStatus: str(summary.artifacts && summary.artifacts.status),
     proposals,
@@ -208,6 +249,16 @@ function toSummaryModel(summary) {
     regenerate: str(summary.artifacts && summary.artifacts.status) === 'not_rendered' ||
       artifacts.some(a => GENERATED.includes(a.name) && (a.status === 'stale' || a.status === 'failed')),
     currency: currencyOf(summary),
+    // WP-A5: `recap_junior` (CLI-CONTRACT §3.3) when the engine sends it; the agent recap
+    // (`recap`) is kept as it is, for the Details disclosure and the older tests.
+    recapJunior: Array.isArray(summary.recap_junior) ? summary.recap_junior.map(str) : null,
+    recapAudience: audienceOf(summary.recap_audience),
+    finalTest: summary.final_test && typeof summary.final_test === 'object' ? {
+      status: str(summary.final_test.status), rows: int(summary.final_test.rows), method: strOrNull(summary.final_test.method),
+      fraction: typeof summary.final_test.fraction === 'number' ? summary.final_test.fraction : null,
+      developmentRows: int(summary.final_test.development_rows),
+    } : null,
+    deliverables: deliverablesModel(summary.deliverables),
   };
 }
 
@@ -216,5 +267,5 @@ const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary'
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;
 
-module.exports = { toSummaryModel, toModel, currencyOf, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
+module.exports = { toSummaryModel, toModel, currencyOf, juniorOf, CURRENCY, SummaryError, ARTIFACT_PATHS, ARTIFACT_LABELS, PROPOSAL_ID, SUMMARY_SCHEMA,
   SUMMARY_KEYS, ALERT_IDS, GENERATED, FIXTURES };
