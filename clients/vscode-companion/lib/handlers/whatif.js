@@ -50,7 +50,8 @@ async function pump(ctx, s) {
       ctx.post({ type: 'notice', politeness: 'assertive', text: `The preview could not be computed: ${out.message}` });
       continue;
     }
-    ctx.post({ type: 'preview_policy_result', seq: m.seq, revision: out.revision, model: out.model });
+    ctx.post({ type: 'preview_policy_result', seq: m.seq, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
+      model: out.model });
   }
 }
 
@@ -109,7 +110,8 @@ async function draft(message, ctx) {
     ctx.post({ type: 'notice', politeness: 'assertive', text: `The draft could not be read: ${out.message}` });
     return;
   }
-  ctx.post({ type: 'draft_result', decisionId, value, revision: out.revision, model: out.model });
+  ctx.post({ type: 'draft_result', decisionId, value, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
+    model: out.model });
 }
 
 function modalText(decisionId, value, model) {

@@ -30,9 +30,8 @@
 
   function loadOnce(ctx, view) {
     const snap = ctx.snapshot;
-    const have = ctx.data(view);
-    if (!snap || (have && have.revision >= snap.revision)) return;
-    const key = `${view}@${snap.revision}`;
+    if (!snap || ctx.fresh(ctx.data(view))) return;
+    const key = `${view}@${ctx.version()}`;
     if (local.requested[key]) return;
     local.requested[key] = true;
     ctx.load(view);

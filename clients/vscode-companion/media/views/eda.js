@@ -341,7 +341,7 @@
           out.push(el('div', { className: 'card alert', role: 'alert', 'data-eda-error': true }, [
             el('p', { className: 'title', text: c.loadError }), el('p', { text: error.message }),
             error.detail ? el('details', {}, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: error.detail })]) : null,
-            el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => ctx.load('eda') }),
+            el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => { ctx.retry('eda'); ctx.load('eda'); } }),
           ]));
           return out;
         }
@@ -353,7 +353,7 @@
         return out;
       }
       out.push(banner(ctx, c, data));
-      if (ctx.snapshot && data.revision < ctx.snapshot.revision) out.push(el('p', { className: 'muted', 'data-updating': true, text: c.updating }));
+      if (ctx.snapshot && !ctx.fresh(data)) out.push(el('p', { className: 'muted', 'data-updating': true, text: c.updating }));
       if (error) out.push(el('p', { className: 'alert', role: 'alert', 'data-eda-error': true, text: `${c.loadError} ${error.message}` }));
       const cards = arr(data.model.cards);
       const gallery = el('div', { className: 'eda-gallery', 'aria-label': c.galleryLabel });

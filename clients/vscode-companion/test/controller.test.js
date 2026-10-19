@@ -83,7 +83,9 @@ test('load: a view without a loader answers "Not available in this stage."; a lo
   assert.equal(runCli.calls.filter(x => x.tail[0] === 'decisions').length, 1, 'coalesced, then cached');
   const data = posted.filter(m => m.type === 'view_data');
   assert.equal(data.length, 3);
-  assert.deepEqual(data[0], { v: 2, type: 'view_data', view: 'decisions', revision: 27, model: { revision: 27, n: 5 } });
+  assert.deepEqual(data[0], { v: 2, type: 'view_data', view: 'decisions', revision: 27, currency: c.snapshot().currency,
+    model: { revision: 27, n: 5 } });
+  assert.match(c.snapshot().currency, /^[0-9a-f]{16}$/, 'the read carries the version it was read at (CR.1)');
   // WP-I: the cache holds the payload of the read, and each answer projects it with its
   // loader's model (shared reads, below), so the model runs once per answer, the CLI once.
   assert.deepEqual(seen, [27, 27, 27]);

@@ -22,9 +22,10 @@
   const EVALUATION_SLOT = { policy: 'policy.evaluation', model_choice: 'evaluate.regression' };
 
   // View state: never a decision, never a number of the study. Effects are the engine's
-  // previews per proposal and revision; `typedAt` is the revision the junior last typed at.
+  // previews per proposal and version (revision, currency, Refresh epoch; CR.1);
+  // `effectsEpoch` is the epoch each preview was asked at.
   const view = {
-    ctx: null, effects: {}, asked: {}, inflight: new Set(), waiting: [], typedAt: {}, requested: {},
+    ctx: null, effects: {}, asked: {}, inflight: new Set(), waiting: [], typedAt: {}, requested: {}, effectsEpoch: {},
     lastOutcome: null, observer: null,
   };
 
@@ -38,19 +39,18 @@
 
   // --- reads ----------------------------------------------------------------------------
 
-  /** Ask once per revision for a data view this tab shows (decisions, evidence). */
+  /** Ask once per version for a data view this tab shows (decisions, evidence; CR.1). */
   function ensureLoad(ctx, name) {
-    const rev = ctx.snapshot.revision;
-    const have = ctx.data(name);
-    if (have && have.revision >= rev) return;
-    const key = `${name}@${rev}`;
+    if (ctx.fresh(ctx.data(name))) return;
+    const key = `${name}@${ctx.version()}`;
     if (view.requested[key]) return;
     view.requested[key] = true;
     ctx.load(name);
   }
 
   function retryLoad(ctx, name) {
-    delete view.requested[`${name}@${ctx.snapshot.revision}`];
+    delete view.requested[`${name}@${ctx.version()}`];
+    ctx.retry(name);
     ensureLoad(ctx, name);
   }
 
@@ -59,9 +59,8 @@
     const ctx = view.ctx;
     if (!ctx || !ctx.snapshot || !ctx.atLeast('v1')) return;
     const rev = ctx.snapshot.revision;
-    const have = view.effects[pid];
-    if (have && have.revision >= rev) return;
-    const key = `${pid}@${rev}`;
+    if (ctx.fresh(view.effects[pid])) return;
+    const key = `${pid}@${ctx.version()}`;
     if (view.asked[key] || view.inflight.has(pid)) return;
     if (view.inflight.size >= MAX_EFFECT_READS) {
       if (!view.waiting.includes(pid)) view.waiting.push(pid);
@@ -69,6 +68,7 @@
     }
     view.asked[key] = true;
     view.inflight.add(pid);
+    view.effectsEpoch[pid] = ctx.epoch();
     ctx.send({ type: 'preview_effects', proposalId: pid, revision: rev });
   }
 
@@ -183,7 +183,7 @@
   function effectsSection(p, ctx, c) {
     const id = p.proposalId;
     const entry = view.effects[id];
-    const fresh = entry && entry.revision >= ctx.snapshot.revision;
+    const fresh = ctx.fresh(entry);
     const titleId = `effects-${id}`;
     const parts = [el('h4', { id: titleId, text: c.effectsTitle })];
     if (!entry) {
@@ -384,7 +384,7 @@
       children.push(el('p', { className: 'muted', 'aria-busy': 'true', text: ctx.copy.core.reading }));
       return section('h-dc-history', c.historyTitle, children, { 'aria-busy': 'true' });
     }
-    const stale = entry.revision < ctx.snapshot.revision;
+    const stale = !ctx.fresh(entry);
     if (stale) children.push(el('p', { className: 'muted', 'data-updating': true, text: ctx.copy.core.updating }));
     const data = entry.model;
     const rows = arr(data.history);
@@ -471,9 +471,10 @@
       }
       return out;
     },
-    onMessage(m) {
+    onMessage(m, ctx) {
       if (m.type === 'effects') {
-        view.effects[m.proposalId] = { revision: m.revision, model: m.model };
+        const epoch = view.effectsEpoch[m.proposalId];
+        view.effects[m.proposalId] = { ...ctx.stamp(m, epoch === undefined ? ctx.epoch() : epoch), model: m.model };
         view.inflight.delete(m.proposalId);
         drainEffects();
         return true;

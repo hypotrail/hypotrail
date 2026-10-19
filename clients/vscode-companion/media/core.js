@@ -35,6 +35,9 @@
     init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null },
     snapshot: null, data: {}, errors: {}, busy: null, outcomes: {}, lastOutcome: null,
     loadError: null, notice: null, lastRead: null, requested: {}, pendingNav: null,
+    // CR.1: `epoch` counts the junior's explicit Refreshes; data read before the last one
+    // is read again. `loadEpoch[view]` is the epoch at which a view's load was sent.
+    epoch: 0, loadEpoch: {},
   };
   let ui = {};
   let root = null;
@@ -133,6 +136,40 @@
     return area;
   }
 
+  // --- currency (decision CR.1) ---------------------------------------------------------
+
+  /** The version of the snapshot the panel shows: revision, currency, and Refresh epoch. */
+  function version() {
+    const snap = state.snapshot;
+    return snap ? `${snap.revision}:${snap.currency || ''}:${state.epoch}` : '';
+  }
+
+  /**
+   * Whether data `{revision, currency?, epoch?}` was read at the snapshot's version: a
+   * newer revision, or the same revision with the same currency and since the last
+   * explicit Refresh. A model read at the same revision but another currency (a dataset
+   * edit, a deliverable deleted or edited) is not current any more.
+   */
+  function fresh(entry) {
+    const snap = state.snapshot;
+    if (!entry || !snap || !Number.isInteger(entry.revision)) return false;
+    if (entry.revision > snap.revision) return true;
+    return entry.revision === snap.revision && (entry.currency || '') === (snap.currency || '') &&
+      (entry.epoch === undefined ? 0 : entry.epoch) === state.epoch;
+  }
+
+  /** The stamp of a message read now: its revision and currency, and the current epoch. */
+  function stamp(m, epoch = state.epoch) {
+    return { revision: m.revision, currency: m.currency || '', epoch };
+  }
+
+  /** The junior's explicit Refresh (header, load-error Retry): every view reads again. */
+  function refreshAll() {
+    state.epoch += 1;
+    state.requested = {};
+    send({ type: 'refresh' });
+  }
+
   const rank = s => P().stageRank(s);
   const atLeast = s => P().stageAllows(state.init.stage, s);
 
@@ -144,6 +181,7 @@
       diagnostics.dropped += 1;
       return false;
     }
+    if (valid.type === 'load') state.loadEpoch[valid.view] = state.epoch;
     api.postMessage(valid);
     return true;
   }
@@ -324,7 +362,7 @@
         snap ? el('span', { className: 'ht-mono', 'data-revision': snap.revision, text: c.revision(snap.revision) }) : null,
         ageNode,
         el('button', { type: 'button', className: 'secondary', text: c.refresh, disabled: Boolean(state.busy),
-          onclick: () => send({ type: 'refresh' }) }),
+          'data-refresh': true, onclick: refreshAll }),
       ]),
     ]);
   }
@@ -388,7 +426,7 @@
       el('p', { text: e.message }),
       state.snapshot ? el('p', { className: 'muted', text: c.lastRead(state.snapshot.revision) }) : null,
       e.detail ? el('details', {}, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: e.detail })]) : null,
-      el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => send({ type: 'refresh' }) }),
+      el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: refreshAll }),
     ]);
   }
 
@@ -413,6 +451,8 @@
       error: name => state.errors[name] || null,
       busy: Boolean(state.busy), busyOp: state.busy ? state.busy.op : null, busyTarget: state.busy ? state.busy.target : null,
       send, load: (name, extra) => send({ type: 'load', view: name, ...(extra || {}) }),
+      version, fresh, stamp, epoch: () => state.epoch,
+      retry: name => { delete state.errors[name]; for (const k of Object.keys(state.requested)) if (k.startsWith(`${name}@`)) delete state.requested[k]; },
       drafts, ui: uiState, wordsArea,
       outcome: target => state.outcomes[target] || null,
       renderOutcome, el, svg, format: HT.format, components: HT.components, copy: HT.copy,
@@ -423,14 +463,18 @@
     };
   }
 
-  /** Ask for the data views a mounted view needs when the snapshot moved past them. */
+  /**
+   * Ask for the data views a mounted view needs when the snapshot moved past them: a new
+   * revision, a new currency, or an explicit Refresh (CR.1). A failed load is asked again
+   * at the next version, or when the view's Retry calls `ctx.retry(view)`.
+   */
   function requestLoads(mounted) {
     if (!state.snapshot) return;
     for (const v of mounted) {
       for (const name of v.views || []) {
         const have = state.data[name];
-        const key = `${name}@${state.snapshot.revision}`;
-        if ((have && have.revision >= state.snapshot.revision) || state.requested[key]) continue;
+        const key = `${name}@${version()}`;
+        if (fresh(have) || state.requested[key]) continue;
         state.requested[key] = true;
         send({ type: 'load', view: name });
       }
@@ -527,7 +571,8 @@
         break;
       case 'snapshot': onSnapshot(m); break;
       case 'view_data':
-        state.data[m.view] = { revision: m.revision, model: m.model, resultId: m.resultId || null };
+        state.data[m.view] = { ...stamp(m, state.loadEpoch[m.view] === undefined ? state.epoch : state.loadEpoch[m.view]),
+          model: m.model, resultId: m.resultId || null };
         delete state.errors[m.view];
         break;
       case 'load_error':
@@ -574,7 +619,7 @@
   const registered = () => views.map(v => ({ name: v.name, tab: v.tab, stage: v.stage }));
 
   Object.assign(HT, { el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, start, PALETTE, SVG_NS,
-    diagnostics, registered, _state: state, TAB_ORDER });
+    diagnostics, registered, _state: state, TAB_ORDER, fresh, version });
   HT.components = HT.components || {};
   HT.copy = HT.copy || {};
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

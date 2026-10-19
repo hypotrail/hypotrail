@@ -8,7 +8,9 @@
 //     stage is above the active stage is ignored, like an invalid one (diagnostics.ignored);
 //   - the reviewer refusal: every write message gets an `invalid` outcome, nothing runs;
 //   - the summary read (snapshot), its coalescing, and the `load` dispatch to loaders;
-//   - the per-key, per-revision read cache with coalescing, the read concurrency limits
+//   - the per-key, per-version read cache with coalescing (a version is the summary's
+//     `<revision>:<currency>`, decision CR.1; the explicit Refresh and every write empty
+//     the non-preview entries), the read concurrency limits
 //     (two reads, one `preview policy`), and the exclusive write lock (reads wait);
 //   - the generic outcome mapping of a write (§7, "Outcome handling").
 // Handlers live in lib/handlers/*.js. Each exports `{types?, loads?, onReady?}`:
@@ -44,6 +46,11 @@ const REVIEWER_ALLOWED = Object.freeze(['W7']);
 const BUSY_REFUSAL = 'Another request is in progress.';
 const NOT_PROMOTED = 'The result was computed but not used: the study changed while it ran. Nothing in the study changed.';
 const NOT_AVAILABLE = 'Not available in this stage.';
+
+/** The cache version of a snapshot: its revision and currency (CR.1). */
+function versionOf(snap) {
+  return snap ? `${snap.revision}:${snap.currency || ''}` : '0:';
+}
 
 /** Handler modules of lib/handlers/, in file-name order; a type or view claimed twice throws. */
 function loadHandlers(dir = HANDLERS_DIR) {
@@ -175,29 +182,33 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   /**
-   * ctx.read: a cached, coalesced read. Resolves {ok: true, model, revision, payload,
-   * cached?} or {ok: false, message, detail, refusal?}. The cache key is (key, revision of
-   * the last snapshot) and holds the CLI payload: each caller projects it with its own
-   * `modelFn`, so loaders of one command share one process and one cache entry.
-   * `group: 'preview'` uses the single preview slot.
+   * ctx.read: a cached, coalesced read. Resolves {ok: true, model, revision, currency,
+   * payload, cached?} or {ok: false, message, detail, refusal?}. The cache key is (key,
+   * version of the last snapshot: `<revision>:<currency>`, CR.1) and holds the CLI
+   * payload: each caller projects it with its own `modelFn`, so loaders of one command
+   * share one process and one cache entry. `group: 'preview'` uses the single preview
+   * slot. `cache: false` neither reads nor fills the cache (the draft read before W3).
    */
-  async function read(key, argv, modelFn, { group = key.startsWith('preview:') ? 'preview' : 'read', timeoutMs } = {}) {
-    const revision = snapshot ? snapshot.revision : 0;
-    const hit = cache.get(key, revision);
-    if (hit !== undefined) return { ...readResult({ payload: hit }, modelFn), cached: true };
-    const id = `${revision}|${key}`;
+  async function read(key, argv, modelFn, { group = key.startsWith('preview:') ? 'preview' : 'read', timeoutMs, cache: useCache = true } = {}) {
+    const version = versionOf(snapshot);
+    const currency = snapshot ? snapshot.currency || '' : '';
+    const stamp = out => (out.ok ? { ...out, currency } : out);
+    if (!useCache) return stamp(readResult(await readProcess(argv, { group, timeoutMs }), modelFn));
+    const hit = cache.get(key, version);
+    if (hit !== undefined) return { ...stamp(readResult({ payload: hit }, modelFn)), cached: true };
+    const id = `${version}|${key}`;
     if (!inflight.has(id)) {
       inflight.set(id, (async () => {
         try {
           const res = await readProcess(argv, { group, timeoutMs });
-          if (!res.failure && res.payload && res.payload.ok === true) cache.set(key, revision, res.payload);
+          if (!res.failure && res.payload && res.payload.ok === true) cache.set(key, version, res.payload);
           return res;
         } finally {
           inflight.delete(id);
         }
       })());
     }
-    return readResult(await inflight.get(id), modelFn);
+    return stamp(readResult(await inflight.get(id), modelFn));
   }
 
   async function loadSummary({ since = null } = {}) {
@@ -218,10 +229,10 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
       send({ type: 'load_error', view: null, message: out.message, detail: out.detail || '' });
       return;
     }
-    const before = snapshot ? snapshot.revision : null;
+    const before = versionOf(snapshot);
     snapshot = out.model;
-    if (before === null || snapshot.revision > before) cache.prune(snapshot.revision);
-    send({ type: 'snapshot', revision: snapshot.revision, model: snapshot });
+    if (versionOf(snapshot) !== before) cache.prune(versionOf(snapshot));
+    send({ type: 'snapshot', revision: snapshot.revision, currency: snapshot.currency, model: snapshot });
   }
 
   /** Refresh from the CLI; concurrent calls are coalesced into one more read. */
@@ -301,6 +312,9 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     } finally {
       busy = null;
       writeGate = null;
+      // A write can change what a read answers without moving the summary (an export, a
+      // render that changed nothing visible): the non-preview cache is emptied (CR.1).
+      cache.clearData();
       release();
       send({ type: 'busy', busy: false, op, target });
     }
@@ -312,7 +326,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     if (message.view === 'summary') {
       const out = await loadSummary({ since: message.since === undefined ? null : message.since });
       if (!out.ok) return send({ type: 'load_error', view: 'summary', message: out.message, detail: out.detail || '' });
-      return send({ type: 'view_data', view: 'summary', revision: out.model.revision, model: out.model });
+      return send({ type: 'view_data', view: 'summary', revision: out.model.revision, currency: out.model.currency, model: out.model });
     }
     const loader = routes.loads[message.view];
     if (!loader || (loader.stage && !stageAtLeast(loader.stage)) || (typeof loader.when === 'function' && !loader.when({ ...active }))) {
@@ -320,7 +334,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     }
     const out = await read(loader.key(message), loader.argv(cli, agent, message), loader.model);
     if (!out.ok) return send({ type: 'load_error', view: message.view, message: out.message, detail: out.detail || '' });
-    const reply = { type: 'view_data', view: message.view, revision: out.revision, model: out.model };
+    const reply = { type: 'view_data', view: message.view, revision: out.revision, currency: out.currency, model: out.model };
     if (message.resultId !== undefined) reply.resultId = message.resultId;
     return send(reply);
   }
@@ -370,6 +384,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
         for (const fn of routes.ready) await fn(ctx);
         return;
       case 'refresh':
+        // The explicit Refresh (and the load-error Retry) reads everything again (CR.1).
+        cache.clearData();
         return refresh();
       case 'load':
         return handleLoad(message);

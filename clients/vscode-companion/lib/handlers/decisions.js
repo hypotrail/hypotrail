@@ -90,10 +90,12 @@ async function previewEffects(message, ctx) {
     p => toEffectsModel(p, { titles: names }));
   const snapshot = ctx.snapshot();
   const revision = out.ok ? out.revision : (snapshot ? snapshot.revision : 0);
+  // The version the preview was read at (CR.1): the card asks again when it moves.
+  const currency = out.ok ? out.currency : (snapshot ? snapshot.currency : undefined);
   const model = out.ok ? out.model
     : unavailableEffects(proposalId, out.refusal ? `${EFFECTS_UNAVAILABLE} ${out.refusal.engineMessage}` : `${EFFECTS_UNAVAILABLE} ${out.message}`,
       out.refusal || null);
-  ctx.post({ type: 'effects', proposalId, revision, model });
+  ctx.post({ type: 'effects', proposalId, revision, ...(currency ? { currency } : {}), model });
 }
 
 module.exports = {
