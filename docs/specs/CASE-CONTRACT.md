@@ -111,6 +111,9 @@ task: binary
 | `type` | `numeric`, `integer`, `binary`, `category`, `ordinal`, `string`, or `date` |
 | `role` | `feature`, `target`, `identifier`, `group_id`, or `time` |
 | `unit`, `format` | Optional |
+| `group` | Optional (v0.2a, WP-A4): the group the data card (`hypotrail data`) shows the variable in, for example `Client` or `Last contact of this campaign` |
+| `labels` | Optional (v0.2a, WP-A4): the description in another language, `{fr: "..."}` (languages `en`, `fr`); the data card shows `labels.fr` next to the description |
+| `range` | Optional (v0.2a, WP-A4), numeric or integer variables only: `{min, max, status, source}`, the possible values (either bound may be `null`, not both); `eda.quality` counts the ordinary values outside it |
 | `description` | What the value means. For a variable that describes an event close to the outcome, say so: for example "last contact of the current campaign" |
 | `status`, `source` | Epistemic status of the description |
 | `availability` | `{value, status, source}`, see below |
@@ -231,6 +234,8 @@ What `project.json` does not carry comes from `use-cases/<id>/case-supplement.ya
 - a supplement never records a confirmation;
 - every `documented_fact` in a supplement cites an existing use-case file as `path:line`, with a line number inside that file;
 - availability may be a `documented_fact` only with value `not_available`. In Bank Marketing this applies to `duration` alone: `data/bank-names.txt:56,60` documents it as the duration of the last contact of the current campaign.
+
+The supplement may set `group` and `labels` per variable (v0.2a, WP-A4); Bank Marketing and Auto MPG do, and their `case.yaml` is regenerated from it (the dataset sha256 is unchanged; the case file sha256 changes, so a study created on the previous case file reports `sources_changed`).
 
 ## Committed cases
 

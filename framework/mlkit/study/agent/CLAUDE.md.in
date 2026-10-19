@@ -58,7 +58,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 3. **Three pauses, and only these:**
    1. the prediction moment, then feature availability with the exclusions the junior
       writes in their own words;
-   2. the split, before any exploration of the outcome;
+   2. the split, before any exploration of the outcome; then the success criterion (fixed
+      before any model is fitted) and, after the training exploration, the preprocessing
+      (the engine's default is `next_action.default_value`; name the results that motivated
+      a change in `motivated_by`);
 <!-- hypotrail:task binary -->
    3. the policy adoption, then the conclusion.
 <!-- hypotrail:task regression -->
@@ -288,9 +291,13 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
     `notebooks/workbench.py`). Never edit `.hypotrail/`, `reports/`, or
     `notebooks/study_generated.py`.
 
+Before the first proposal, `next_action` is `show_data_card`: show the junior the data card
+(`data --format text`) and let them read it; nothing is confirmed at that step.
+
 ## Commands
 
 ```sh
+{{HYPOTRAIL}} data [--format text] --study {{STUDY}}
 {{HYPOTRAIL}} status --summary --study {{STUDY}}
 {{HYPOTRAIL}} status --json --study {{STUDY}}
 {{HYPOTRAIL}} plan --study {{STUDY}}
@@ -317,12 +324,17 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
 feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
 `uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
-"seed": N}`), `policy` (`threshold:T` or `capacity:K`, evaluated first), `conclusion`
+"seed": N}`), `success_criterion` (`{"metric": "precision_gain", "min_points": P}`),
+`preprocessing` (`{"missing": "none" | "indicator", "rare_category_threshold": K, "caps":
+{}, "log_transform": [], "motivated_by": [result ids]}`), `policy` (`threshold:T` or
+`capacity:K`, evaluated first), `conclusion`
 (`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`). A
 restatement or rationale may repeat the figures of a current result; any other number is
 refused (`literal_number_in_text`).
 
-Activities: `split`, `eda.target_rate`, `eda.special_values`, `eda.rate_by --column NAME`,
+Activities: `split`, `eda.quality` (no target, before or after the split),
+`eda.target_rate`, `eda.special_values`, `eda.rate_by --column NAME`,
+`eda.single_feature_signal` (a high signal only raises a legitimacy question),
 `fit.baseline`, `fit.logistic`, `policy.evaluate --rule R` (repeatable). Changing a
 capacity or a threshold is a new `policy.evaluate`: it reuses the stored predictions and
 never refits, and it always evaluates the adopted rule too. A new policy needs a new
@@ -338,13 +350,14 @@ feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
 `uncertain_included`; the time column is not a feature), `split` (with a declared time
 column `{"method": "ordinal_cutoff", "column": "<time column>", "cutoff": K}`: rows at or
 above K are validation rows; without one `{"method": "random", "validation_fraction": F,
-"seed": N}`), `model_choice` (`"fit.linear"` or `"fit.baseline"`, after
+"seed": N}`), `success_criterion` (`{"metric": "mae_reduction", "min_share": F}`),
+`preprocessing` (as for a binary study), `model_choice` (`"fit.linear"` or `"fit.baseline"`, after
 `evaluate.regression`), `conclusion` (`{"verdict": "adopt_model" | "keep_baseline" |
 "inconclusive", "text": "..."}`). A restatement or rationale may repeat the figures of a
 current result; any other number is refused (`literal_number_in_text`).
 
-Activities: `split`, `eda.target_summary`, `eda.special_values`, `eda.mean_by --column
-NAME` (a feature or the time column), `fit.baseline` (the training mean), `fit.linear`,
+Activities: `split`, `eda.quality`, `eda.target_summary`, `eda.special_values`, `eda.mean_by
+--column NAME` (a feature or the time column), `eda.single_feature_signal`, `fit.baseline` (the training mean), `fit.linear`,
 `evaluate.regression` (MAE and RMSE in the target unit with paired bootstrap intervals,
 the linear-minus-baseline differences, residuals, residuals by period). Changing the model
 choice reuses the stored predictions and the evaluation and never refits.

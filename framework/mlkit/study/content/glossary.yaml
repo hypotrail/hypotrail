@@ -149,10 +149,28 @@ terms:
   development_rows:
     term: Development rows
     definition: Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the clients in the development rows feed the exploration, the model fits, and the comparison of call lists, while the sealed clients stay unread.
+  wilson_interval:
+    term: Wilson interval
+    definition: An interval for a proportion, such as a positive rate in a group, that stays inside zero and one and remains sensible for small groups and rates close to zero. It shows how much the rate could move with another sample of the same size. For example, a rate computed on a few dozen clients gets a wide interval, the same rate on a thousand clients a narrow one.
+  permutation_null_band:
+    term: Permutation null band
+    definition: The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.
+  data_contingent_decision:
+    term: Data-contingent decision
+    definition: A decision chosen after looking at the outcome in the data. It is allowed, but it is recorded with the analyses that motivated it, because a choice adapted to the training rows makes the validation figures slightly optimistic. For example, capping a variable because a chart of the outcome looked odd at its extremes is a data-contingent preparation.
+  success_criterion:
+    term: Success criterion
+    definition: The smallest gain over the baseline that would make the model worth adopting, fixed before any model is fitted, so the result cannot move the bar. The conclusion is read against it. For example, deciding before the models that the call list must beat the baseline's precision by a given number of points, and keeping the baseline when it does not.
+  single_feature_signal:
+    term: Single-feature signal
+    definition: How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
-binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration]
+binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration, wilson_interval]
 regression_terms:
+  success_criterion:
+    term: Success criterion
+    definition: The smallest reduction of the baseline's error that would make the model worth adopting, fixed before any model is fitted, so the result cannot move the bar. The conclusion is read against it. For example, deciding before the models that the linear model must make errors at least a tenth smaller than predicting the training mean for every car, and keeping the mean when it does not.
   prediction_time:
     term: Prediction time
     definition: The moment when the prediction is made and used. Only information known at that moment may enter the model.

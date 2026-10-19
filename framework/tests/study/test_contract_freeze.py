@@ -38,6 +38,8 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         'holds',
                         # v0.2a (ADR 0006): the sealed final test, or status absent.
                         'final_test',
+                        # v0.2a (WP-A4): the success criterion and the target-look count.
+                        'criterion', 'eda_looks',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
                         'recap',
                         # v0.2a (WP-A1): who the recap is for, and its junior variant.
@@ -130,7 +132,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.2a (WP-A1, R7): the engine's Python and the notebook launch commands.
              'deliverables',
              # ADR 0005: the confirmation mode and the study language.
-             'mode', 'language')
+             'mode', 'language',
+             # v0.2a (WP-A4): the success criterion assessment and the target-look ledger.
+             'criterion', 'eda_looks')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -170,6 +174,29 @@ STEP_KEYS = ('id', 'title', 'question', 'expected_output', 'completion', 'pause'
              'activities', 'decide_first', 'missing_results', 'requires', 'status', 'current')
 STEP_IDS = ('prediction_time', 'feature_availability', 'split', 'train_eda', 'models', 'policy',
             'conclusion')
+# v0.2a (WP-A4): a study created by init has seven decisions and ten steps; the v0.1 sets
+# above stay the sets of a study created before (never migrated).
+FULL_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+                     'preprocessing', 'policy', 'conclusion')
+FULL_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split',
+                                'success_criterion', 'preprocessing', 'model_choice',
+                                'conclusion')
+FULL_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
+                 'success_criterion', 'train_eda', 'preprocessing', 'models', 'policy',
+                 'conclusion')
+FULL_REGRESSION_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
+                            'success_criterion', 'train_eda', 'preprocessing', 'models',
+                            'model_choice', 'conclusion')
+DATA_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'observation_unit', 'development',
+                     'target', 'final_test', 'groups', 'rows', 'note')
+DATA_VARIABLE_KEYS = ('name', 'role', 'type', 'unit', 'description', 'description_fr',
+                      'availability', 'decided', 'special_values', 'n_missing', 'n_distinct',
+                      'examples')
+PREPROCESSING_KEYS = ('missing', 'rare_category_threshold', 'caps', 'log_transform')
+CRITERION_VIEW_KEYS = ('decision_status', 'value', 'metric', 'status', 'result_id', 'rule',
+                       'model', 'gain', 'low', 'high', 'minimum', 'unit',
+                       'interval_includes_zero', 'verdict', 'contradicts_verdict')
+EDA_LOOKS_KEYS = ('target_looks', 'results', 'by_activity', 'note')
 # M3 (regression): the same pauses; the third decision is model_choice.
 TASKS = ('binary', 'regression')
 REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'model_choice',
@@ -185,11 +212,15 @@ REGRESSION_MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.featur
                            3: 'feature_availability.wording', 4: 'split', 7: 'settings.bootstrap',
                            8: 'usage_label', 9: 'eda_added', 10: 'conclusion',
                            11: 'code_fingerprint', 12: 'dataset', 13: 'model_choice',
-                           '*': 'unknown'}
+                           # v0.2a (WP-A4).
+                           14: 'preprocessing', 15: 'preprocessing.motivation',
+                           16: 'success_criterion', '*': 'unknown'}
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
                      'propose', 'run', 'done',
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
-                     'outcome_unknown'}
+                     'outcome_unknown',
+                     # v0.2a (WP-A4, R2): step 0, informational.
+                     'show_data_card'}
 EXECUTION_VIEW_KEYS = ('active', 'interrupted', 'late', 'suspected_interrupted')
 LIVENESS_VALUES = ('running', 'outcome_unknown', 'not_checked')
 NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independent',
@@ -212,7 +243,10 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           'high_cardinality_grouping',
                           # Post-v0.1 fixes: the conclusion outdated by a later change (D2),
                           # an inconclusive conclusion without a choice (D6).
-                          'conclusion_outdated', 'inconclusive_without_choice'}
+                          'conclusion_outdated', 'inconclusive_without_choice',
+                          # v0.2a (WP-A4): an adopting verdict against the success criterion,
+                          # a preprocessing motivated by a look at the target.
+                          'verdict_contradicts_criterion', 'data_contingent_preprocessing'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -221,7 +255,10 @@ EFFECT_KEYS = ('refit', 're_eda', 're_policy', 're_chart', 're_explain', 'reconf
 MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.feature_set',
                 3: 'feature_availability.wording', 4: 'split', 5: 'policy.parameter',
                 6: 'policy.rule_type', 7: 'settings.bootstrap', 8: 'usage_label', 9: 'eda_added',
-                10: 'conclusion', 11: 'code_fingerprint', 12: 'dataset', '*': 'unknown'}
+                10: 'conclusion', 11: 'code_fingerprint', 12: 'dataset',
+                # v0.2a (WP-A4).
+                14: 'preprocessing', 15: 'preprocessing.motivation', 16: 'success_criterion',
+                '*': 'unknown'}
 ERROR_CODES = {
     'invalid_arguments', 'internal_error', 'invalid_request', 'idempotency_conflict',
     'stale_revision', 'invalid_command', 'study_missing', 'state_exists', 'integrity_error',
@@ -280,7 +317,9 @@ EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'session-report': 'mlkit.study.cmd_session_report',
               # Advanced companion (CLI-CONTRACT-COMPANION §13): WP-0 stubs, then WP-E1/E2.
               'decisions': 'mlkit.study.cmd_decisions', 'evidence': 'mlkit.study.cmd_evidence',
-              'explain': 'mlkit.study.cmd_explain', 'export': 'mlkit.study.cmd_export'}
+              'explain': 'mlkit.study.cmd_explain', 'export': 'mlkit.study.cmd_export',
+              # v0.2a (WP-A4, R2): the read-only data card.
+              'data': 'mlkit.study.cmd_data'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
@@ -308,7 +347,9 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
                   'causal_wording': 'warning', 'forecast_wording': 'warning',
                   'artifact_not_current': 'warning', 'untracked_files': 'warning',
                   # Post-v0.1 (P7).
-                  'misattributed_delegation': 'error'}
+                  'misattributed_delegation': 'error',
+                  # v0.2a (WP-A4).
+                  'verdict_contradicts_criterion': 'warning'}
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category')
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
@@ -381,8 +422,9 @@ def test_status_summary_keys(flow):
     assert tuple(payload) == SUMMARY_PAYLOAD_KEYS and payload['schema'] == SUMMARY_SCHEMA
     assert view.SUMMARY_KEYS == SUMMARY_PAYLOAD_KEYS[6:]
     assert tuple(payload['goal']) == SUMMARY_GOAL_KEYS
-    assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(STEP_IDS)
-    assert tuple(payload['decisions']) == st.DECISION_IDS
+    assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(
+        FULL_STEP_IDS)
+    assert tuple(payload['decisions']) == st.FULL_DECISION_IDS == FULL_DECISION_IDS
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
     assert tuple(payload['executions']) == EXECUTION_VIEW_KEYS
     assert tuple(payload['not_yet_defensible']) == ('top', 'more')
@@ -415,8 +457,10 @@ def test_view_model_keys(flow):
     assert view.CONFIRMATION_VIEW_KEYS == CONFIRMATION_VIEW_KEYS
     assert view.PROPOSAL_VIEW_KEYS == PROPOSAL_VIEW_KEYS
     assert view.RESULT_VIEW_KEYS == RESULT_VIEW_KEYS
-    assert tuple(v['decisions']) == st.DECISION_IDS
+    assert tuple(v['decisions']) == st.FULL_DECISION_IDS
     assert all(tuple(d) == DECISION_VIEW_KEYS for d in v['decisions'].values())
+    assert tuple(v['criterion']) == CRITERION_VIEW_KEYS
+    assert tuple(v['eda_looks']) == EDA_LOOKS_KEYS
     conf = v['decisions']['prediction_time']['confirmation']
     assert tuple(conf) == CONFIRMATION_VIEW_KEYS and conf['authenticated'] is False
     # ADR 0005: "Yes, before the reminder." repeats the value, so it is recorded as restated.
@@ -432,7 +476,7 @@ def test_view_model_keys(flow):
         == LIVENESS_VALUES
     assert not [k for k in (*EXECUTION_VIEW_KEYS, *LIVENESS_VALUES, 'liveness')
                 if k not in DOC_TOKENS]
-    assert [s['id'] for s in v['plan']] == list(STEP_IDS)
+    assert [s['id'] for s in v['plan']] == list(FULL_STEP_IDS)
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
     assert {x['id'] for x in v['not_yet_defensible']} <= NOT_YET_DEFENSIBLE_IDS
@@ -454,7 +498,8 @@ def test_next_action_kinds_and_not_yet_defensible_ids_in_source():
     defensible = (inspect.getsource(st.not_yet_defensible) + inspect.getsource(view.build)
                   + inspect.getsource(view._small_data)
                   + inspect.getsource(view.small_partition_warning)
-                  + inspect.getsource(view.capacity_warning))
+                  + inspect.getsource(view.capacity_warning)
+                  + inspect.getsource(view._governance_limits))
     ids = set(re.findall(r"\{'id': '([a-z_]+)'", defensible))
     assert ids == NOT_YET_DEFENSIBLE_IDS
 
@@ -602,6 +647,33 @@ def test_actions_and_their_parameters():
     assert st.AVAILABILITY_DECISIONS == ('available_at_prediction', 'not_available',
                                          'uncertain_excluded', 'uncertain_included')
     assert pre.CONCLUSION_VERDICTS == ('adopt_policy', 'keep_baseline', 'inconclusive')
+
+
+def test_wp_a4_contract_constants():
+    """v0.2a (WP-A4): the decision sets and steps of a new study, the data card keys, the
+    preprocessing and criterion shapes; every name is documented in CLI-CONTRACT.md."""
+    from mlkit.study import activities as act, cmd_data, governance
+    assert st.FULL_DECISION_IDS == FULL_DECISION_IDS
+    assert st.FULL_REGRESSION_DECISION_IDS == FULL_REGRESSION_DECISION_IDS
+    assert st.FULL_STEP_IDS == FULL_STEP_IDS and st.FULL_REGRESSION_STEP_IDS == FULL_REGRESSION_STEP_IDS
+    assert st.STEP_IDS == STEP_IDS and st.DECISION_IDS[:3] == FULL_DECISION_IDS[:3]
+    assert cmd_data.PAYLOAD_KEYS == DATA_PAYLOAD_KEYS
+    assert cmd_data.VARIABLE_KEYS == DATA_VARIABLE_KEYS
+    assert governance.PREPROCESSING_KEYS == PREPROCESSING_KEYS
+    assert governance.DEFAULT_PREPROCESSING == {'missing': 'none', 'rare_category_threshold': 0,
+                                                'caps': {}, 'log_transform': []}
+    assert governance.CRITERION_KEYS == {'binary': ('metric', 'min_points'),
+                                         'regression': ('metric', 'min_share')}
+    assert act.SHARED_ACTIVITIES == ('eda.distribution', 'eda.quality',
+                                     'eda.single_feature_signal')
+    keys = (set(FULL_DECISION_IDS) | set(FULL_STEP_IDS) | set(DATA_PAYLOAD_KEYS)
+            | set(DATA_VARIABLE_KEYS) | set(PREPROCESSING_KEYS) | set(CRITERION_VIEW_KEYS)
+            | set(EDA_LOOKS_KEYS) | set(act.SHARED_ACTIVITIES)
+            | {'show_data_card', 'default_value', 'motivated_by', 'data_contingent',
+               'min_points', 'min_share', 'precision_gain', 'mae_reduction',
+               'verdict_contradicts_criterion', 'data_contingent_preprocessing',
+               'hypotrail.data/1', 'null_band', 'interval', 'question'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
 def test_regression_contract_constants():
@@ -754,7 +826,8 @@ def test_session_report_and_session_log_contract():
     assert cmd_session_report.SCHEMA == SESSION_REPORT_SCHEMA
     assert cmd_session_report.PAYLOAD_KEYS == SESSION_REPORT_KEYS
     assert (sessionlog.SCHEMA, sessionlog.LOG_FILE, sessionlog.ENV) == tuple(SESSION_LOG.values())
-    assert sessionlog.UNLOGGED == ('session-report', 'export')
+    # v0.2a (WP-A4): the data card is read-only and never logged.
+    assert sessionlog.UNLOGGED == ('session-report', 'export', 'data')
     # Reads (CLI-CONTRACT §8.6, CLI-CONTRACT-COMPANION R5): only status and check are logged,
     # when the log is on (owner decision at the companion integration).
     assert sessionlog.READ_COMMANDS == ('status', 'plan', 'preview', 'decisions', 'evidence',

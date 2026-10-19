@@ -946,13 +946,17 @@ _COUNT_OF_KIND = {'proposed': 'proposed', 'confirmed': 'confirmed', 'withdrawn':
                   'run_failed': 'runs_failed'}
 
 
-def moments(task: str) -> list[dict]:
-    """The four moments of the plan (``content/steps.yaml``, ``moments``)."""
+def moments(task: str, state: dict | None = None) -> list[dict]:
+    """The four moments of the plan (``content/steps.yaml``, ``moments``). With ``state``,
+    only the steps of that study are listed (a study created before WP-A4 has no success
+    criterion or preprocessing step)."""
     from . import texts
 
     data = texts.load('steps')
     overlay = data.get('regression_moments', {}) if task == st.REGRESSION else {}
-    return [{'id': m['id'], 'title': m['title'], 'steps': list(overlay.get(m['id'], m['steps']))}
+    ids = set(st.step_ids(state if state is not None else task))
+    return [{'id': m['id'], 'title': m['title'],
+             'steps': [s for s in overlay.get(m['id'], m['steps']) if s in ids]}
             for m in data['moments']]
 
 
@@ -1247,7 +1251,7 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
     out = dict(summary_out)
     out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
                               .get('origin')} for p in summary_out['open_proposals']]
-    out.update({'moments': moments(built['task']), 'pauses': pauses(state),
+    out.update({'moments': moments(built['task'], state), 'pauses': pauses(state),
                 'last_session': session,
                 'digest': digest(study, state, since=session['boundary_revision']
                                  if since is None else since),

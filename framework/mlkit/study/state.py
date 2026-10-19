@@ -963,8 +963,14 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                     'message': f'Step {step["id"]} needs: {", ".join(step["requires"])}.'}
         decide = step['decision'] and not _confirmed(state, step['decision'])
         if decide and (step['decide_first'] or not step['missing_results']):
-            return {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
-                    'message': step['question']}
+            action = {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
+                      'message': step['question']}
+            if step['decision'] == PREPROCESSING:
+                # WP-A4: the engine's default, the preparation the models used before the
+                # decision existed (results stay comparable).
+                from .governance import DEFAULT_PREPROCESSING
+                action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
+            return action
         return {'kind': 'run', 'step': step['id'], 'activity': step['missing_results'][0],
                 'message': step['question']}
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}

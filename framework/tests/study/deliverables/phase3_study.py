@@ -30,6 +30,7 @@ SPLIT_VALUE = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed'
 NOT_AVAILABLE = 'desk_followups'
 UNCERTAIN_INCLUDED = 'reminders_sent'
 POLICY_RULE = 'capacity:20'
+CRITERION_VALUE = {'metric': 'precision_gain', 'min_points': 5}
 
 # Canonical value shapes (CLI-CONTRACT.md section 8.5) that these fixtures follow.
 CANONICAL_SHAPES = {
@@ -247,6 +248,16 @@ def build(study: Path, case_dir: Path, upto: str = 'conclusion',
              'Use that split before we look at anything.')
     if standing_delegation is not None:
         del b.decide
+    from mlkit.study import governance, state as st
+    if st.has_wp_a4_decisions(read.open(study).state):
+        # WP-A4: the success criterion and the preprocessing, before any model.
+        b.decide('success_criterion', CRITERION_VALUE,
+                 'The model is worth using only if its precision beats the baseline by at '
+                 'least 5 points at the adopted rule.',
+                 'I confirm: at least 5 points over the baseline.')
+        b.decide('preprocessing', dict(governance.DEFAULT_PREPROCESSING),
+                 'Keep the default preparation of the variables.',
+                 'I confirm the default preparation.')
     from mlkit.study import case as c
     case = c.load_case(case_dir, verify_data=False)
     target = {'target': case.target_column, 'positive_label': case.positive_label}

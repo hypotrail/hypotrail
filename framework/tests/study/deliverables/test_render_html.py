@@ -206,7 +206,9 @@ def test_teaching_texts_are_data_without_digits():
         assert loaded
     steps = texts.load('steps')['steps']
     from mlkit.study import state as st
-    assert set(steps) == set(st.STEP_IDS)
+    # WP-A4: the step texts cover every step of a new study (discover_data, success_criterion
+    # and preprocessing added to the v0.1 steps).
+    assert set(steps) == set(st.FULL_STEP_IDS)
     for s in steps.values():
         assert texts.glossary(s['concept']), s['concept']
     for slot, spec in texts.load('activities')['activities'].items():

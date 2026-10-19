@@ -81,6 +81,14 @@ def spawn(*args, cwd, extra_env=None) -> subprocess.Popen:
                             env=env(**(extra_env or {})))
 
 
+def criterion(state) -> dict:
+    """A success criterion for a test study (a test choice, not a recommendation)."""
+    from mlkit.study import state as st
+    if st.task_of(state) == st.REGRESSION:
+        return {'metric': 'mae_reduction', 'min_share': 0.1}
+    return {'metric': 'precision_gain', 'min_points': 5}
+
+
 def availability(case_dir, **overrides) -> dict:
     """An availability decision that follows the case: not_available where the case says
     so, available_at_prediction otherwise (a test choice, not a recommendation)."""
@@ -128,11 +136,28 @@ class Flow:
                          '--request-id', self.rid(), '--expected-revision', self.rev(),
                          '--study', self.study)
 
-    def pauses(self, split=True, **availability_overrides):
+    def pauses(self, split=True, model_decisions=True, **availability_overrides):
+        """The decisions before the models: the prediction moment, the availability, the
+        split, and (WP-A4, in a study that has them, unless ``model_decisions`` is False) the
+        success criterion and the default preprocessing, both required before any fit."""
         self.decide('prediction_time', 'before the first contact of the campaign')
         self.decide('feature_availability', availability(self.case_dir, **availability_overrides))
         if split:
             self.decide('split', SPLIT)
+            if model_decisions:
+                self.model_decisions()
+
+    def model_decisions(self, preprocessing=None):
+        """WP-A4: confirm the success criterion and the preprocessing (the engine's default
+        unless given), when the study has these decisions."""
+        from mlkit.study import governance, state as st
+        decisions = self.state()['decisions']
+        if not st.has_wp_a4_decisions(self.state()):
+            return
+        if decisions['success_criterion']['status'] != 'confirmed':
+            self.decide('success_criterion', criterion(self.state()))
+        if decisions['preprocessing']['status'] != 'confirmed':
+            self.decide('preprocessing', preprocessing or dict(governance.DEFAULT_PREPROCESSING))
 
     def run(self, activity, *options, expect=0, request_id=None):
         return self.call('run', activity, *options, '--request-id', request_id or self.rid(),
