@@ -40,7 +40,8 @@ def auto(tmp_path_factory):
     flow.pauses(split=False)
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
     flow.run('split')
-    for column in ('mpg', 'model_year'):
+    # weight (values of 1,000 or more, shown with decimals) was a value_mismatch (WP-A6 fix)
+    for column in ('mpg', 'model_year', 'weight'):
         flow.run('eda.distribution', '--column', column)
     flow.call('render', '--study', flow.study)
     return flow
@@ -107,8 +108,12 @@ def test_generated_notebook_shows_the_distribution(bank):
 
 def test_regression_report_shows_the_distribution_without_binary_vocabulary(auto):
     html = (auto.study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
-    for slot in ('eda.distribution:mpg', 'eda.distribution:model_year'):
+    for slot in ('eda.distribution:mpg', 'eda.distribution:model_year',
+                 'eda.distribution:weight'):
         block = _block(html, slot)
         assert _cited(block)
         assert not BINARY_VOCABULARY.search(re.sub(r'<[^>]+>', ' ', block)), slot
-    assert cmd_check.run_check(auto.study)['clean']
+    report = cmd_check.run_check(auto.study)
+    assert report['clean'], report['findings']
+    weight = _block(html, 'eda.distribution:weight')
+    assert re.search(r'>\d,\d{3}\.\d</data>', weight), 'expected a grouped decimal value'

@@ -188,6 +188,20 @@ def test_paths_formats_and_number_parsing():
     assert not cite.shown_matches(cite.parse_numbers('11.6%')[0], 0.11534)
 
 
+def test_thousands_with_decimals_parse_as_one_number():
+    # WP-A6: ``fmt_number`` writes a value of 1,000 or more as "3,842.8" (auto format);
+    # the parser used to read "3,842" and drop ".8", so ``check`` reported value_mismatch
+    # for every cited number of 1,000 or more with decimals (Auto MPG weight).
+    for value in (3842.75, 1965.7, -1234.56, 1000.04, 123456.7):
+        shown = cite.fmt_number(value, 'auto')
+        [tok] = cite.parse_numbers(shown)
+        assert tok.decimals == 1 and cite.shown_matches(tok, value), (shown, tok)
+    [tok] = cite.parse_numbers('a weight of 3,842.75 lb.')
+    assert (tok.value, tok.decimals, tok.text) == (3842.75, 2, '3,842.75')
+    assert [t.value for t in cite.parse_numbers('1,000.')] == [1000.0]
+    assert not cite.shown_matches(cite.parse_numbers('3,842.8')[0], 3842.0)
+
+
 def test_teaching_texts_are_data_without_digits():
     for name in texts.CONTENT_FILES:
         data = texts.load(name)

@@ -43,12 +43,14 @@ META_PATHS = ('@n_rows',)
 TEMPLATE = re.compile(r'\{\{(r|slot|fact):([^{}|]+?)(?:\|([^{}]*))?\}\}')
 _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 
-# A number in prose: thousands with comma groups ("3,164"), a decimal with a dot or a
+# A number in prose: thousands with comma groups ("3,164", and with decimals "3,842.8", as
+# :func:`fmt_number` writes a value of 1,000 or more), a decimal with a dot or a
 # comma ("0.115", "0,115"), an integer; an optional percent sign. A number glued to a
 # letter or an underscore ("pct1", "x_2", "3f9a") is part of a word, not a number. A minus
 # sign glued to the digits makes the number negative ("-1", a sentinel); "10-18" is two numbers.
 # The minus may be the hyphen-minus or the Unicode minus sign U+2212 ("−0.99").
-NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+|\d+(?:[.,]\d+)?)(?![\w])(\s?%)?')
+NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)'
+                    r'(?![\w])(\s?%)?')
 
 
 def untraceable(message: str, **details) -> StudyError:
@@ -160,8 +162,10 @@ def parse_numbers(text: str) -> list[Token]:
     out = []
     for m in NUMBER.finditer(text):
         sign, body, pct = (-1.0 if m.group(1) else 1.0), m.group(2), bool(m.group(3))
-        if re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+", body):
-            value, decimals = float(body.replace(',', '')), 0
+        grouped = re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+(?:\.(\d+))?", body)
+        if grouped:
+            value = float(body.replace(',', ''))
+            decimals = len(grouped.group(1) or '')
         else:
             norm = body.replace(',', '.')
             value = float(norm)
