@@ -257,6 +257,24 @@
 
   // --- Request a chart --------------------------------------------------------------------
 
+  /**
+   * The columns the recorded availability decision marks `not_available` (decision CR.7).
+   * The summary holds the value as JSON, either {status: [columns]} or {column: status}.
+   * EDA still runs on them (training rows); the panel only says so next to their name.
+   */
+  function notAtPrediction(ctx) {
+    const d = ctx.snapshot && ctx.snapshot.decisions && ctx.snapshot.decisions.feature_availability;
+    let value = null;
+    try { value = d && d.value ? JSON.parse(d.value) : null; } catch (_) { value = null; }
+    const out = new Set();
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+    for (const [k, v] of Object.entries(value)) {
+      if (k === 'not_available' && Array.isArray(v)) v.filter(x => typeof x === 'string').forEach(x => out.add(x));
+      else if (v === 'not_available') out.add(k);
+    }
+    return out;
+  }
+
   function requestCard(ctx, c, data, task) {
     const model = data.model;
     const perColumn = arr(model.catalog).filter(a => a.perColumn && PER_COLUMN.includes(a.activity));
@@ -273,10 +291,12 @@
         .sort((a, b) => PER_COLUMN.indexOf(a.activity) - PER_COLUMN.indexOf(b.activity));
       if (!charts.some(a => a.activity === memory.activity)) memory.activity = charts.length ? charts[0].activity : null;
       const label = activity => (activity === 'eda.distribution' ? c.distribution : c.byChartLabel);
+      const unavailable = notAtPrediction(ctx);
+      const tags = col => [col.role, unavailable.has(col.name) ? c.notAtPrediction : null].filter(Boolean);
       const variable = el('select', { id: 'eda-variable', 'data-request': 'column',
         onchange: e => { memory.column = e.target.value; memory.activity = null; ctx.rerender(); } },
       columns.map(col => el('option', { value: col.name, selected: col.name === memory.column ? true : null,
-        text: col.role ? `${col.name} (${col.role})` : col.name })));
+        text: tags(col).length ? `${col.name} (${tags(col).join(', ')})` : col.name })));
       const chart = el('select', { id: 'eda-chart', 'data-request': 'activity',
         onchange: e => { memory.activity = e.target.value; ctx.rerender(); } },
       charts.map(a => el('option', { value: a.activity, selected: a.activity === memory.activity ? true : null, text: label(a.activity) })));
@@ -291,6 +311,8 @@
           'aria-busy': working ? 'true' : null, text: working ? c.working : c.run,
           onclick: () => ctx.send({ type: 'run_eda', activity: entry.activity, column: memory.column, revision: data.revision }) });
       out.push(el('label', { for: 'eda-variable', text: c.variable }), variable,
+        unavailable.has(memory.column) ? el('p', { className: 'muted', 'data-not-at-prediction': memory.column,
+          text: c.notAtPredictionHint(memory.column) }) : null,
         el('label', { for: 'eda-chart', text: c.chart }), chart, el('div', {}, [action]));
     }
     out.push(el('p', { className: 'muted', 'data-hint': true }, [c.hint]),

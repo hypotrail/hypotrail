@@ -55,6 +55,10 @@
     hint: 'Runs an engine EDA activity and records which rows were seen. Validation rows are never used here. For free exploration, use your workbench notebook, marked as an experiment.',
     openWorkbench: 'Open the workbench',
     notAvailable: 'Not available yet:',
+    // CR.7: a feature the availability decision excludes; EDA still runs on training rows.
+    notAtPrediction: 'not available at prediction time',
+    notAtPredictionHint: name => `${name} is not available at prediction time (your availability decision), so the models ` +
+      'do not use it. The chart describes the training rows only.',
     nothingToRequest: 'The engine lists no chart to request in this study.',
     recorded: (slot, status) => `Recorded: ${slot} (${status}).`,
     distribution: 'Distribution',

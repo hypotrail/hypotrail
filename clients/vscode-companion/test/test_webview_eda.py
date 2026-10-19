@@ -416,3 +416,31 @@ def test_learning_layer_adds_the_explain_example_and_definition_when_already_rea
     reg.view_data('explain', {'terms': {'target_distribution': {'term': 'Target distribution',
                   'definition': 'How the target values spread.', 'example': None}}, 'steps': [], 'predictions': []}, revision=22)
     assert reg.page.locator('[data-term="target_distribution"]').inner_text() == 'Target distribution: How the target values spread.'
+
+
+def test_cr7_a_feature_not_available_at_prediction_time_is_labelled_and_still_runs_on_training_rows(open_panel, model, payload):
+    # Decision CR.7 (review finding): the availability decision says `duration` is not
+    # available at prediction time. The engine's catalog still lists it (EDA describes the
+    # training rows); the panel says so next to the name, and still lets the junior run it.
+    ev = copy.deepcopy(payload('evidence.binary'))
+    for a in ev['eda_catalog']['activities']:
+        if a['activity'] in ('eda.rate_by', 'eda.distribution'):
+            a['columns'].append({'name': 'duration', 'role': 'feature', 'type': 'numeric', 'slot': None, 'result_id': None})
+    panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', ev))
+    page = panel.page
+    options = dict(page.locator('#eda-variable option').evaluate_all('os => os.map(o => [o.value, o.textContent])'))
+    assert options['duration'] == 'duration (feature, not available at prediction time)'
+    assert options['age'] == 'age (feature)'
+    assert page.locator('[data-not-at-prediction]').count() == 0
+    page.locator('#eda-variable').select_option('duration')
+    hint = page.locator('[data-not-at-prediction]')
+    assert hint.inner_text() == ('duration is not available at prediction time (your availability decision), so the models '
+                                 'do not use it. The chart describes the training rows only.')
+    assert page.locator('#eda-run').is_enabled(), 'still runnable, on training rows'
+    page.locator('#eda-run').click()
+    assert panel.posted()[-1]['type'] == 'run_eda' and panel.posted()[-1]['column'] == 'duration'
+    assert panel.clean()
+    # Regression: an uncertain, excluded feature is not "not available"; nothing is added.
+    reg, _ = open_eda(open_panel, model, 'regression')
+    texts = reg.page.locator('#eda-variable option').evaluate_all('os => os.map(o => o.textContent)')
+    assert not any('prediction time' in t for t in texts)

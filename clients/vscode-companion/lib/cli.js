@@ -157,14 +157,20 @@ function acknowledgeArgv(agent, { executionId, words, requestId: id, expectedRev
     `--user-words=${text(words, 'the words')}`, ...mutation(id, expectedRevision), ...tail(agent)];
 }
 
-/** W7. `export handoff --out=<parent>/revision-<R> --json --study S` (no revision option). */
-function exportArgv(agent, { parent, revision: rev }) {
+/**
+ * W7. `export handoff --out=<parent>/revision-<R> --expected-revision R --json --study S`.
+ * The engine refuses a stale R (decision CR.6), so the folder's name and its content name
+ * the same revision. `legacy: true` leaves the option out, for an engine that does not
+ * know it (the handler's one retry after `invalid_arguments`).
+ */
+function exportArgv(agent, { parent, revision: rev, legacy = false }) {
   const folder = text(parent, 'the folder', { max: 4096 });
   if (!path.isAbsolute(folder)) throw new ArgvError('the folder must be absolute');
   const inside = path.resolve(agent.studyDir, '.hypotrail');
   const out = path.join(folder, `revision-${revision(rev)}`);
   if (out === inside || out.startsWith(inside + path.sep)) throw new ArgvError('the folder must not be inside .hypotrail');
-  return [...agent.argv, 'export', 'handoff', `--out=${out}`, ...tail(agent)];
+  return [...agent.argv, 'export', 'handoff', `--out=${out}`, ...(legacy ? [] : ['--expected-revision', String(revision(rev))]),
+    ...tail(agent)];
 }
 
 const WRITES = Object.freeze({

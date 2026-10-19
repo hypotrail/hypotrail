@@ -291,7 +291,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
    * `record(payload)` returns the `recorded` object of a success. Exclusive: reads wait;
    * a second write while one runs is `invalid`. Always refreshes after the outcome.
    */
-  async function write(op, { target = null, argv, record = null, refresh: again_ = true } = {}) {
+  async function write(op, { target = null, argv, record = null, refresh: again_ = true, retry = null } = {}) {
     if (!protocol.WRITE_OPS.includes(op)) throw new Error(`unknown write ${op}`);
     if (active.reviewer && !REVIEWER_ALLOWED.includes(op)) { invalid(op, REVIEWER_REFUSAL, target); return null; }
     if (busy) { invalid(op, BUSY_REFUSAL, target); return null; }
@@ -308,7 +308,11 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     send({ type: 'busy', busy: true, op, target });
     let outcome;
     try {
-      const res = await runCommand(built, cli.TIMEOUTS[op]);
+      let res = await runCommand(built, cli.TIMEOUTS[op]);
+      // `retry(res)` may name one more argv, run under the same lock before any outcome is
+      // posted (W7 on an engine without `--expected-revision`, decision CR.6).
+      const again = typeof retry === 'function' ? retry(res) : null;
+      if (Array.isArray(again)) res = await runCommand(again, cli.TIMEOUTS[op]);
       outcome = { ...outcomeOf(op, res, record), target };
       send({ type: 'outcome', ...outcome });
     } finally {

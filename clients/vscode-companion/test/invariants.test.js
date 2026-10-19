@@ -66,8 +66,15 @@ test('INV-3, INV-13: exactly seven write builders W1-W7, each a whitelisted argv
     const verbs = tail.slice(0, 2).join(' ');
     assert.ok(['decide confirm', 'decide withdraw', 'decide propose', 'run eda.distribution', 'render --json',
       'run --acknowledge-interruption', 'export handoff'].includes(verbs), `${w}: ${verbs}`);
-    if (w === 'W5' || w === 'W7') {
+    if (w === 'W5') {
       assert.ok(!tail.includes('--request-id') && !tail.includes('--expected-revision'), `${w} has no revision`);
+    } else if (w === 'W7') {
+      // CR.6: the export names the revision the junior saw; it writes no study state, so
+      // it carries no request id.
+      assert.ok(!tail.includes('--request-id'), 'W7 has no request id');
+      const folder = tail.find(a => a.startsWith('--out=')).match(/revision-([0-9]+)$/)[1];
+      assert.ok(tail.includes('--expected-revision'), w);
+      assert.equal(tail[tail.indexOf('--expected-revision') + 1], folder, 'the folder and the option name one revision');
     } else {
       assert.equal(tail[tail.indexOf('--request-id') + 1], UUID, w);
       assert.equal(tail[tail.indexOf('--expected-revision') + 1], '3', w);
