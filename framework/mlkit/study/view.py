@@ -58,10 +58,11 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'notes',
                 # Post-v0.1 fixes (D5): the open holds grouped by decision.
                 'holds',
+                # v0.2a (ADR 0006): the sealed final test, or ``status: absent``; before
+                # ``recap``, which stays the last key of the summary.
+                'final_test',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
-                'recap',
-                # v0.2a (ADR 0006): the sealed final test, or ``status: absent``.
-                'final_test')
+                'recap')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.

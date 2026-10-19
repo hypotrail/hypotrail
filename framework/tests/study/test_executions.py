@@ -74,7 +74,7 @@ def test_death_between_reserve_and_promote_is_an_unknown_outcome(flow, work, fau
     # The rows it may have read stay exposed, with no result.
     mine = [r for r in fk.exposure_records(flow.study) if r['execution_id'] == eid]
     assert [(r['purpose'], r['partition'], r['result_id']) for r in mine] == [
-        ('structural_inspection', 'all', None)]
+        ('structural_inspection', 'development', None)]   # ADR 0006
     assert not lock.orphaned_leases(flow.study)                # the orphan lease is cleared
     assert view['results'] == {}                               # nothing ran, nothing restarted
     assert len(fk.registry_entries(flow.study)) == before

@@ -379,8 +379,11 @@ def test_two_percent_positives(tmp_path):
 def test_tiny_dataset_of_sixty_rows(task, tmp_path):
     v = Variant(tmp_path, task=task, n_rows=100).keep(60)
     result = completed(outcome(v, tmp_path))
-    assert result['split']['n_rows'] == 60
-    assert result['split']['partitions']['validation']['n_rows'] == 18
+    # ADR 0006: 20 % is sealed first (12 rows binary; 2 of each of 5 quantile bins of 12 in
+    # regression), the split divides the rest (v0.1: 60 rows, 18 validation rows).
+    sealed = 12 if task == 'binary' else 10
+    assert result['split']['n_rows'] == 60 - sealed
+    assert result['split']['partitions']['validation']['n_rows'] == 15
 
 
 def test_windows_line_endings(tmp_path):
@@ -402,22 +405,25 @@ def test_extreme_imbalance_one_positive_is_refused_at_the_split(tmp_path):
     error = refused(outcome(v, tmp_path), 'split', 'unsupported_capability',
                     'stratified split with fewer than two rows of each class')
     reason = error['details']['reasons'][0]
-    assert reason['counts'] == {'renewed': 1, 'lapsed': 399}
+    # ADR 0006: the lone positive stays a development row (a stratum of one rounds to
+    # no final-test row); 80 of the 399 negatives are sealed (v0.1: 399).
+    assert reason['counts'] == {'renewed': 1, 'lapsed': 319}
 
 
 def test_capacity_larger_than_the_validation_partition(tmp_path):
     v = Variant(tmp_path, n_rows=100).keep(60)
     result = completed(outcome(v, tmp_path, capacity=100))
     rule = result['evaluation']['rules']['capacity:100']['models']['fit.logistic']
-    assert rule['selected'] == 18
+    # 48 development rows once 12 are sealed (ADR 0006), 15 of them validation (v0.1: 18).
+    assert rule['selected'] == 15
     # G.12: warnings, not refusals: the capacity selects every row of a small partition.
     assert {'capacity_exceeds_validation', 'small_validation_partition'} <= result['nyd']
     items = {x['id']: x for x in read_view(tmp_path)['not_yet_defensible']}
     assert items['capacity_exceeds_validation']['rules'] == ['capacity:100']
-    assert items['capacity_exceeds_validation']['n_rows'] == 18
+    assert items['capacity_exceeds_validation']['n_rows'] == 15
     assert 'selects every row' in items['capacity_exceeds_validation']['text']
-    assert items['small_validation_partition']['n_rows'] == 18
-    assert '18 rows' in items['small_validation_partition']['text']
+    assert items['small_validation_partition']['n_rows'] == 15
+    assert '15 rows' in items['small_validation_partition']['text']
 
 
 def test_undeclared_blank_cells_in_a_numeric_feature_are_refused(tmp_path):
@@ -447,7 +453,10 @@ def test_missing_binary_target_is_refused_with_its_capability(tmp_path):
          'source': 'Perturbation test'})
     error = refused(outcome(v, tmp_path), 'init', 'unsupported_capability',
                     'missing target values (v0.2)')
-    assert error['details']['reasons'][0]['rows'] == 12
+    # ADR 0006: 10 development rows are named; the 2 sealed ones are only counted.
+    reason = error['details']['reasons'][0]
+    assert (reason['rows'], reason['final_test_rows']) == (10, 2)
+    assert error['details']['final_test_check']['status'] == 'fail'
     assert not (tmp_path / 'study' / '.hypotrail').exists()
 
 
@@ -478,9 +487,28 @@ def test_three_positives_complete_or_name_their_limit(tmp_path):
     assert '1 of them positive' in item['text']
 
 
-def test_binary_target_label_outside_the_declared_labels_is_refused(tmp_path):
+def _final_test_rows(case_dir) -> set:
+    """The row keys ``init`` would seal for this case (ADR 0006)."""
+    from mlkit.study import data as dt, partition
+    case = c.load_case(case_dir)
+    index = dt.row_index(case)
+    return set(partition.assign(case, index, dt.read_frame(case, index))['final_test'])
+
+
+@pytest.mark.parametrize('where', ['development', 'final_test'])
+def test_binary_target_label_outside_the_declared_labels_is_refused(tmp_path, where):
     v = Variant(tmp_path)
-    v.cells('outcome', lambda n, x: 'Renewed' if n == 5 else x)
+    sealed = _final_test_rows(v.write())
+    target = v.columns.index('outcome')
+    # A negative row keeps its stratum when relabelled, so the assignment does not move.
+    n = next(i for i, r in enumerate(v.rows)
+             if r[target] == 'lapsed' and (f'L{i + 2}' in sealed) == (where == 'final_test'))
+    v.cells('outcome', lambda i, x: 'Renewed' if i == n else x)
     error = refused(outcome(v, tmp_path), 'init', 'invalid_case')
     problem = error['problems'][0]
-    assert problem['path'] == 'target' and "'Renewed'" in problem['problem']
+    assert problem['path'] == 'target'
+    if where == 'development':          # named with its label
+        assert "'Renewed'" in problem['problem']
+    else:                               # sealed: counted, never shown (ADR 0006)
+        assert problem['partition'] == 'final_test' and 'Renewed' not in json.dumps(error)
+        assert '1 sealed final-test rows' in problem['problem']

@@ -171,7 +171,8 @@ def test_a_bad_cell_in_the_final_test_refuses_init_with_counts_only(tmp_path):
     assert error['code'] == 'invalid_case'
     text = json.dumps(error)
     assert 'SECRET-TOKEN' not in text and f'L{n + 1}' not in text
-    assert any(p['path'] == 'final_test' and '1 sealed final-test rows' in p['problem']
+    assert any(p['partition'] == 'final_test' and p['path'].startswith('variables[')
+               and '1 sealed final-test rows' in p['problem']
                for p in error['problems'])
     assert not (tmp_path / 'study' / '.hypotrail' / 'state.json').exists()
 

@@ -36,10 +36,10 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         'notes',
                         # Post-v0.1 fixes (D5): the open holds grouped by decision.
                         'holds',
-                        # Post-v0.1 (T8, F5): five resume lines generated from state.
-                        'recap',
                         # v0.2a (ADR 0006): the sealed final test, or status absent.
-                        'final_test')
+                        'final_test',
+                        # Post-v0.1 (T8, F5): five resume lines generated from state.
+                        'recap')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.

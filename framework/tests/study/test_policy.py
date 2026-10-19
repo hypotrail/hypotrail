@@ -216,7 +216,7 @@ def test_policy_evaluation_values_and_ties(flow):
     assert values['bootstrap'] == {'replicates': 2000, 'seed': 20261017, 'level': 0.95,
                                    'method': 'paired percentile bootstrap over validation rows'}
     if flow.name == 'bank':
-        assert (values['n'], values['n_positive']) == (1357, 156)
+        assert (values['n'], values['n_positive']) == (1086, 125)   # v0.1: 1357, 156 (ADR 0006)
 
 
 def test_recall_interval_width_is_consistent_with_the_binomial_approximation(flow):
@@ -228,7 +228,7 @@ def test_recall_interval_width_is_consistent_with_the_binomial_approximation(flo
     expected = 1.959964 * math.sqrt(p * (1 - p) / values['n_positive'])
     assert 0.8 < half / expected < 1.25, (half, expected)
     if flow.name == 'bank':
-        assert values['n_positive'] == 156
+        assert values['n_positive'] == 125     # v0.1: 156 (ADR 0006)
 
 
 def test_policy_evaluation_needs_both_fits_and_a_rule(tmp_path, cases):

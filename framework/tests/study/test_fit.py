@@ -64,7 +64,7 @@ def test_predictions_are_persisted_and_readable_through_read(flow):
         assert entry['output']['values']['validation']['roc_auc'] == pytest.approx(
             metrics.roc_auc(frame['y'], frame['score']))
     if flow.name == 'bank':
-        assert (meta['n'], meta['n_positive']) == (1357, 156)
+        assert (meta['n'], meta['n_positive']) == (1086, 125)   # v0.1: 1357, 156 (ADR 0006)
 
 
 def test_constant_baseline_is_the_training_prior(flow):
@@ -78,7 +78,7 @@ def test_constant_baseline_is_the_training_prior(flow):
     assert values['features'] == [] and values['validation']['roc_auc'] == 0.5
     assert values['validation']['average_precision'] == pytest.approx(frame['y'].mean())
     if flow.name == 'bank':
-        assert (values['n_train_positive'], values['n_train']) == (365, 3164)
+        assert (values['n_train_positive'], values['n_train']) == (292, 2531)   # v0.1: 365, 3164
 
 
 def test_baseline_needs_no_scikit_learn(flow):
@@ -218,7 +218,8 @@ def test_fits_are_deterministic(flow):
 
 def test_read_only_environment_makes_fits_raise(flow, monkeypatch):
     s = read.open(flow.study)
-    case, dataset = act.load(act.plan(sto.StudyStore(flow.study), s.state, 'fit.baseline', {}))
+    case, dataset = act.load(act.plan(sto.StudyStore(flow.study), s.state, 'fit.baseline', {}),
+                             sto.StudyStore(flow.study))
     split = _split(flow.study)
     train, validation = act.rows(dataset, split['train']), act.rows(dataset, split['validation'])
     monkeypatch.setenv('HYPOTRAIL_READ_ONLY', '1')

@@ -197,12 +197,20 @@ def schema_check(case: Case, final_frame, development_frame) -> dict:
             'checks': checks, 'reveals': 'counts of failing rows only, no value'}
 
 
-def refuse_failed_check(check: Mapping) -> None:
+def _check_path(case: Case, item: Mapping) -> str:
+    """The case path a failed check concerns: the variable's type, or the target."""
+    if item['check'] == 'numeric_cells':
+        names = case.column_names
+        return f'variables[{names.index(item["column"])}].type'
+    return 'target'
+
+
+def refuse_failed_check(case: Case, check: Mapping) -> None:
     """Refuse ``init`` when the final test fails its schema check (counts only)."""
     if check['status'] == 'pass':
         return
     failed = [c for c in check['checks'] if c['failing_rows']]
-    problems = [{'path': 'final_test',
+    problems = [{'path': _check_path(case, c), 'partition': FINAL_TEST,
                  'problem': f'{c["failing_rows"]} sealed final-test rows fail the check '
                             f'{c["check"]} on {c["column"]!r}; their values are not shown, '
                             f'since the final test stays sealed.'} for c in failed]
@@ -220,6 +228,22 @@ def refuse_failed_check(check: Mapping) -> None:
     raise CaseError('invalid_case', 'Some sealed final-test values would silently change '
                                     'meaning.', problems=problems,
                     details={'final_test_check': dict(check)})
+
+
+def with_final_test_counts(error: CaseError, check: Mapping) -> CaseError:
+    """A refusal of the development rows, completed with the final test's counts when it
+    fails too: a missing-target reason gains ``final_test_rows``, any other refusal
+    ``details.final_test_check``. Never a value of the final test."""
+    if check['status'] == 'pass':
+        return error
+    missing = next(c['failing_rows'] for c in check['checks'] if c['check'] == 'target_missing')
+    from .data import CAPABILITY_MISSING_TARGET
+    reasons = error.details.get('reasons') or []
+    for reason in reasons:
+        if reason.get('capability') == CAPABILITY_MISSING_TARGET:
+            reason['final_test_rows'] = missing
+    error.details['final_test_check'] = dict(check)
+    return error
 
 
 def seal(record: Mapping, *, development_sha: str, n_development: int, final_sha: str,

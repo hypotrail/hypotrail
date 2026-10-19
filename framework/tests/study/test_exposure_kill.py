@@ -51,7 +51,7 @@ def test_a_kill_during_recovery_never_loses_the_exposure(flow, tmp_path):
     code, _, _ = _run(flow, tmp_path, 'third')
     assert code == 4
     assert eid in flow.state()['executions']['interrupted']
-    assert _mine(flow, eid) == [('structural_inspection', 'all', None)]
+    assert _mine(flow, eid) == [('structural_inspection', 'development', None)]
 
 
 def test_a_kill_during_a_failure_never_loses_the_exposure(flow, tmp_path):
@@ -61,7 +61,7 @@ def test_a_kill_during_a_failure_never_loses_the_exposure(flow, tmp_path):
     code, _, _ = _run(flow, tmp_path, 'after')
     assert code == 4                                   # an unknown outcome, never restarted
     assert eid in flow.state()['executions']['interrupted']
-    assert _mine(flow, eid) == [('structural_inspection', 'all', None)]
+    assert _mine(flow, eid) == [('structural_inspection', 'development', None)]
 
 
 def test_a_failure_records_its_exposure_once(flow, tmp_path):
@@ -69,6 +69,6 @@ def test_a_failure_records_its_exposure_once(flow, tmp_path):
     assert code == 1                                   # internal error, committed as failed
     eid = ex.execution_id('failing')
     assert eid not in flow.state()['executions']['active']
-    assert _mine(flow, eid) == [('structural_inspection', 'all', None)]
+    assert _mine(flow, eid) == [('structural_inspection', 'development', None)]
     assert flow.run('split')['status'] == 'promoted'
-    assert _mine(flow, eid) == [('structural_inspection', 'all', None)]
+    assert _mine(flow, eid) == [('structural_inspection', 'development', None)]

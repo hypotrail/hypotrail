@@ -1304,11 +1304,14 @@ def init(case_path, study_dir) -> Outcome:
     index = dt.row_index(case)
     frame = dt.read_frame(case, index)
     assigned = partition.assign(case, index, frame)
-    development = dt.load_dataset(case, rows=assigned['development'])
     check = partition.schema_check(case, frame.loc[assigned['final_test']],
-                                   development.frame)
+                                   frame.loc[assigned['development']])
     del frame
-    partition.refuse_failed_check(check)
+    try:
+        development = dt.load_dataset(case, rows=assigned['development'])
+    except c.CaseError as exc:
+        raise partition.with_final_test_counts(exc, check)
+    partition.refuse_failed_check(case, check)
     state = st.initial_state(case)
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))

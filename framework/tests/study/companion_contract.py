@@ -27,7 +27,9 @@ import flowkit as fk
 # --- C1 (CC §1) --------------------------------------------------------------------------
 SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal', 'current_step',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
-                'executions', 'not_yet_defensible', 'notes', 'holds', 'recap')
+                'executions', 'not_yet_defensible', 'notes', 'holds',
+                # v0.2a (ADR 0006): the sealed final test, before the recap.
+                'final_test', 'recap')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.
