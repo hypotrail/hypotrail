@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-19T20:25:59.652963+00:00",
+   "updated": "2026-10-19T21:08:08.984719+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
