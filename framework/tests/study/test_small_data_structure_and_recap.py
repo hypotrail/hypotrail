@@ -164,7 +164,8 @@ def test_binary_recap_cites_the_adopted_policy_result(full_study):
     assert len(recap) == 5 and all('\n' not in line for line in recap)
     rid = summary['results']['policy.evaluation']['result_id'][:8]
     decided = recap[1]
-    m = re.search(r'policy capacity:20 \(the logistic model at capacity:20 on the 90 validation '
+    # WP-A9 (M6): the rule is named once (no "at capacity:20" repeated in the parenthesis).
+    m = re.search(r'policy capacity:20 \(the logistic model on the 90 validation '
                   r'rows: precision (\d+\.\d)%, recall (\d+\.\d)%, result ([0-9a-f]{8})\)', decided)
     assert m, decided
     model = read.open(full_study).result(summary['results']['policy.evaluation']['result_id'])

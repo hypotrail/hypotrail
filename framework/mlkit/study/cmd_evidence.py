@@ -17,7 +17,8 @@ lock, no write, no exposure, no dataset row read, no pandas, numpy, scikit-learn
 * ``impacts``: for each row of the dependency table that can change a confirmed decision,
   what would go stale now (``dependencies.effects_for_mutation``, on a copy of the state).
 * ``eda_catalog``: the EDA activities of the task, the columns each one accepts (the only
-  columns the companion may request), and whether they can run.
+  columns the companion may request), the rows each one reads (``partition``), and whether
+  they can run.
 * ``sources``: the case and dataset files, with their recorded digest and whether the
   file still matches it.
 * ``detail``: with ``--result``, the full record of one result.
@@ -58,13 +59,15 @@ PARTITION_ORDER = ('all', 'development', 'train', 'validation', 'final_test')
 # The EDA activities of each task, in plan order: those of ``activities.task_activities``
 # (the task's own, then the shared ``eda.distribution``), so the catalog cannot drift from
 # what ``run`` accepts (WP-I).
-# v0.2a (WP-A4): the structural quality overview and the single-feature signal are not
-# in the companion's catalog: the panel runs a chart of training rows (ADR 0004, W4), and
-# offering these is a decision of the panel's own work package.
-COMPANION_EXCLUDED_EDA = (act.QUALITY, act.SIGNAL)
-EDA_CATALOG = {task: tuple(a for a in act.task_activities(task) if a in act.EDA
-                           and a not in COMPANION_EXCLUDED_EDA)
+# WP-A9 (M5): the catalog lists every EDA activity of the task, the structural quality
+# overview and the single-feature signal included; ``partition`` says which rows each one
+# reads. The panel runs per-column charts of training rows only (ADR 0004, W4), and keeps
+# that restriction on its side.
+EDA_CATALOG = {task: tuple(a for a in act.task_activities(task) if a in act.EDA)
                for task in (st.BINARY, st.REGRESSION)}
+# The EDA activities that read the development rows (structure only, no target); every
+# other one reads the training rows.
+DEVELOPMENT_EDA = (act.QUALITY,)
 # The roles of the columns each per-column activity accepts (as ``run`` would accept them).
 PER_COLUMN_ROLES = {act.RATE_BY: ('feature',), act.MEAN_BY: ('feature', 'time'),
                     act.DISTRIBUTION: act.DISTRIBUTION_ROLES}
@@ -359,7 +362,8 @@ def _eda_catalog(study: read.Study) -> dict:
                             'result_id': rid if current else None})
         missing = preconditions.missing_for_activity(state, activity)
         out.append({'activity': activity, 'per_column': roles is not None, 'columns': columns,
-                    'runnable': not missing, 'missing': missing})
+                    'runnable': not missing, 'missing': missing,
+                    'partition': 'development' if activity in DEVELOPMENT_EDA else 'train'})
     return {'activities': out}
 
 

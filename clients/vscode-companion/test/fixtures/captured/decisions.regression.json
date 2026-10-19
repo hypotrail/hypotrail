@@ -33,12 +33,13 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T13:42:33.575100+00:00",
+     "time": "2026-10-19T16:05:26.884539+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -67,12 +68,13 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T13:42:34.008317+00:00",
+     "time": "2026-10-19T16:05:27.233569+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -96,12 +98,13 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T13:42:34.382470+00:00",
+     "time": "2026-10-19T16:05:27.757067+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -124,12 +127,13 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-19T13:42:34.706127+00:00",
+     "time": "2026-10-19T16:05:28.296161+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -145,7 +149,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "depends_on": [],
     "reason": null,
@@ -156,12 +161,13 @@
      "restatement": "You decide the preprocessing as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-19T13:42:35.074076+00:00",
+     "time": "2026-10-19T16:05:28.769155+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null,
-     "mode": "guided"
+     "mode": "guided",
+     "warnings": []
     },
     "open_proposals": []
    },
@@ -213,7 +219,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T13:42:33.389313+00:00",
+    "created": "2026-10-19T16:05:26.701538+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -235,7 +241,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T13:42:33.797396+00:00",
+    "created": "2026-10-19T16:05:27.072133+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -254,7 +260,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T13:42:34.179185+00:00",
+    "created": "2026-10-19T16:05:27.529117+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -272,7 +278,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-19T13:42:34.539494+00:00",
+    "created": "2026-10-19T16:05:28.035326+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -288,13 +294,14 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "restatement": "You decide the preprocessing as stated.",
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-19T13:42:34.905763+00:00",
+    "created": "2026-10-19T16:05:28.557126+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -309,7 +316,7 @@
     "rationale": "Lower error on later years.",
     "status": "open",
     "revision": 32,
-    "created": "2026-10-19T13:42:38.883145+00:00",
+    "created": "2026-10-19T16:05:33.250542+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -320,7 +327,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T13:42:33.575181+00:00",
+    "time": "2026-10-19T16:05:26.884587+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -334,7 +341,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T13:42:34.008471+00:00",
+    "time": "2026-10-19T16:05:27.233635+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -355,7 +362,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T13:42:34.382551+00:00",
+    "time": "2026-10-19T16:05:27.757178+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -373,7 +380,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-19T13:42:34.706190+00:00",
+    "time": "2026-10-19T16:05:28.296221+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -390,7 +397,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-19T13:42:35.074153+00:00",
+    "time": "2026-10-19T16:05:28.769227+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
@@ -399,7 +406,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "user_words": "Yes, I want the preprocessing exactly as you stated it",
     "basis": "restated",

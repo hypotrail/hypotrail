@@ -140,11 +140,13 @@ LEDGER_KEYS = ('purpose', 'partition', 'rows', 'records', 'activities', 'first_r
 IMPACT_KEYS = ('decision_id', 'mutation', 'row', 'change', 'stale_slots', 'kept_slots', 'refit',
                'reconfirm', 'notes')
 EDA_CATALOG_KEYS = ('activities',)
-EDA_CATALOG_ITEM_KEYS = ('activity', 'per_column', 'columns', 'runnable', 'missing')
+EDA_CATALOG_ITEM_KEYS = ('activity', 'per_column', 'columns', 'runnable', 'missing', 'partition')
 EDA_CATALOG_COLUMN_KEYS = ('name', 'role', 'type', 'slot', 'result_id')
 EDA_CATALOG_ACTIVITIES = {
-    'binary': ('eda.target_rate', 'eda.special_values', 'eda.rate_by', 'eda.distribution'),
-    'regression': ('eda.target_summary', 'eda.special_values', 'eda.mean_by', 'eda.distribution'),
+    'binary': ('eda.target_rate', 'eda.special_values', 'eda.rate_by', 'eda.distribution',
+               'eda.quality', 'eda.single_feature_signal'),
+    'regression': ('eda.target_summary', 'eda.special_values', 'eda.mean_by', 'eda.distribution',
+                   'eda.quality', 'eda.single_feature_signal'),
 }
 SOURCES_KEYS = ('case', 'dataset')
 SOURCE_KEYS = ('path', 'sha256', 'matches')

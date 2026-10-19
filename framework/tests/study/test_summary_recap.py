@@ -100,7 +100,7 @@ def test_decisions_name_the_excluded_features_and_the_delegation(flow, synthetic
     excluded = summary['decisions']['feature_availability']['value']
     for feature in excluded['not_available'] + excluded['uncertain_excluded']:
         assert feature in decided, feature
-    assert 'excluded ' in decided and 'kept with a doubt fines_outstanding' in decided
+    assert 'excluded ' in decided and 'kept despite a doubt: fines_outstanding' in decided
     assert 'split (stratified random, 30% for validation) [delegated to the assistant]' \
         in decided
     assert decided.index('prediction moment') < decided.index('feature availability') \

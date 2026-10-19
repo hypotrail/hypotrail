@@ -52,13 +52,13 @@ terms:
     definition: The number a model gives to each row to rank it. A higher score places the row earlier in the queue.
   policy:
     term: Decision policy
-    definition: The rule that turns scores into actions, either a threshold on the score or a fixed capacity of rows to act on.
+    definition: The rule that turns scores into actions, either a threshold on the score, a fixed capacity of rows to act on, or a share of the scored rows.
   threshold:
     term: Threshold rule
     definition: Act on every row whose score is at least the threshold. The number of actions then depends on the data.
   capacity:
     term: Capacity rule
-    definition: Act on a fixed number of the highest-scored rows, matching what the team can actually handle.
+    definition: Act on a fixed number of the highest-scored rows, matching what the team can actually handle. A share rule states the capacity as a share of the scored rows instead (the top tenth, for example), so it carries over to a population of another size.
   precision:
     term: Precision
     definition: Among the rows acted on, the share that turned out positive.

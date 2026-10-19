@@ -2454,14 +2454,16 @@
      "per_column": false,
      "columns": [],
      "runnable": true,
-     "missing": []
+     "missing": [],
+     "partition": "train"
     },
     {
      "activity": "eda.special_values",
      "per_column": false,
      "columns": [],
      "runnable": true,
-     "missing": []
+     "missing": [],
+     "partition": "train"
     },
     {
      "activity": "eda.rate_by",
@@ -2553,7 +2555,8 @@
       }
      ],
      "runnable": true,
-     "missing": []
+     "missing": [],
+     "partition": "train"
     },
     {
      "activity": "eda.distribution",
@@ -2652,7 +2655,8 @@
       }
      ],
      "runnable": true,
-     "missing": []
+     "missing": [],
+     "partition": "train"
     }
    ]
   },

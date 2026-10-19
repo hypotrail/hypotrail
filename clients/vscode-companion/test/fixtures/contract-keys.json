@@ -370,7 +370,8 @@
     "per_column",
     "columns",
     "runnable",
-    "missing"
+    "missing",
+    "partition"
    ],
    "eda_catalog.activities[].columns[]": [
     "name",

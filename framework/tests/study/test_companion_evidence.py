@@ -213,9 +213,12 @@ def test_a_study_before_the_split_cannot_run_eda(tmp_path, synthetic_case_dir):
     flow.init()
     p = evidence(flow.study)
     assert p['results'] == [] and p['impacts'] == [] and p['truncated'] is False
-    assert all(not a['runnable'] and a['missing'] for a in p['eda_catalog']['activities'])
-    # WP-A4: the structural quality overview runs before the split (not in this catalog).
-    assert not [a for a in p['eda_catalog']['activities'] if a['activity'] == 'eda.quality']
+    # WP-A9 (M5): the catalog lists the structural quality overview, which reads the
+    # development rows and needs no split; every training-row activity waits for it.
+    items = {a['activity']: a for a in p['eda_catalog']['activities']}
+    assert items['eda.quality']['runnable'] and items['eda.quality']['partition'] == 'development'
+    assert all(not a['runnable'] and a['missing'] for a in p['eda_catalog']['activities']
+               if a['partition'] == 'train')
     assert [r['purpose'] for r in p['exposure']['ledger']] == ['structural_inspection', 'sealed']
 
 

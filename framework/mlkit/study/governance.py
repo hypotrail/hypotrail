@@ -14,13 +14,16 @@ junior's words, its parameters learnt on training rows only and applied to valid
      "caps": {column: [q_low, q_high]},     # training quantiles, 0 <= q_low < q_high <= 1
      "log_transform": [column, ...],        # signed log, sign(x) * log(1 + |x|)
      "motivated_by": [result_id, ...],      # optional when proposed: the analyses behind it
-     "data_contingent": true | false}       # set by the engine
+     "data_contingent": true | false,       # set by the engine
+     "target_looks_before": n}              # set by the engine (WP-A9, M1)
 
 :data:`DEFAULT_PREPROCESSING` is what the models did before the decision existed (no
 missing-value indicator, every category kept, no cap, no transform), so results stay
 comparable. ``data_contingent`` is computed by the engine when the value is proposed: true
-when any result named in ``motivated_by`` read the target (:func:`uses_target`). A
-decision motivated by a look at the target is still allowed; it is stamped so.
+when any result named in ``motivated_by`` read the target (:func:`uses_target`), or (WP-A9,
+M1) when the study had any target-involving look on training rows before the proposal,
+named or not: ``target_looks_before`` records how many (:func:`ledger`). A decision
+motivated by a look at the target is still allowed; it is stamped so.
 
 **Success criterion** (decision ``success_criterion``): fixed after the split decision and
 before any model is fitted. A binary study states a minimum precision gain over the
@@ -35,7 +38,7 @@ import copy
 from typing import Any, Callable, Iterable, Mapping
 
 PREPROCESSING_KEYS = ('missing', 'rare_category_min_rows', 'caps', 'log_transform')
-PREPROCESSING_OPTIONAL_KEYS = ('motivated_by', 'data_contingent')
+PREPROCESSING_OPTIONAL_KEYS = ('motivated_by', 'data_contingent', 'target_looks_before')
 MISSING_STRATEGIES = ('none', 'indicator')
 DEFAULT_PREPROCESSING = {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
                          'log_transform': []}
@@ -174,14 +177,20 @@ def check_preprocessing(value: Any, case) -> None:
     if 'data_contingent' in value and not isinstance(value['data_contingent'], bool):
         raise ValueProblem('data_contingent is set by the engine (true or false).',
                            field='data_contingent')
+    looks = value.get('target_looks_before', 0)
+    if isinstance(looks, bool) or not isinstance(looks, int) or looks < 0:
+        raise ValueProblem('target_looks_before is set by the engine (a count of looks).',
+                           field='target_looks_before')
 
 
 def normalize_preprocessing(value: Mapping, lookup: Callable[[str], Mapping | None],
-                            target: str | None = None) -> dict:
+                            target: str | None = None, looks_before: int = 0) -> dict:
     """The value recorded for a proposal: ``motivated_by`` (``[]`` when absent, in the given
-    order) and ``data_contingent`` computed from the motivating results. ``lookup(rid)``
-    returns the registry entry of a result id, or None when the study has no such result
-    (:class:`ValueProblem`, ``unknown_results``)."""
+    order), ``data_contingent`` computed from the motivating results and from the
+    target-involving looks the study had before the proposal (``looks_before``, WP-A9 M1),
+    and ``target_looks_before``. ``lookup(rid)`` returns the registry entry of a result id,
+    or None when the study has no such result (:class:`ValueProblem`,
+    ``unknown_results``)."""
     out = {k: copy.deepcopy(value[k]) for k in PREPROCESSING_KEYS}
     motivated = list(dict.fromkeys(value.get('motivated_by') or []))
     entries, unknown = [], []
@@ -191,13 +200,19 @@ def normalize_preprocessing(value: Mapping, lookup: Callable[[str], Mapping | No
     if unknown:
         raise ValueProblem('motivated_by names results this study does not have.',
                            field='motivated_by', unknown_results=unknown)
-    contingent = any(uses_target(e, target) for e in entries)
+    contingent = any(uses_target(e, target) for e in entries) or looks_before > 0
     if 'data_contingent' in value and value['data_contingent'] != contingent:
-        raise ValueProblem('data_contingent is computed by the engine from motivated_by: '
+        raise ValueProblem('data_contingent is computed by the engine from motivated_by and '
+                           f'the looks at the target before the proposal: '
                            f'{str(contingent).lower()} here.', field='data_contingent',
                            computed=contingent)
+    if 'target_looks_before' in value and value['target_looks_before'] != looks_before:
+        raise ValueProblem('target_looks_before is counted by the engine: '
+                           f'{looks_before} here.', field='target_looks_before',
+                           computed=looks_before)
     out['motivated_by'] = motivated
     out['data_contingent'] = contingent
+    out['target_looks_before'] = looks_before
     return out
 
 

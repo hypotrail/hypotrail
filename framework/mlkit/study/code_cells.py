@@ -194,6 +194,53 @@ prepare_columns = ColumnTransformer(
 )'''
 
 
+def preparation_steps(values: Mapping) -> str | None:
+    """WP-A9 (M3): the confirmed preparation of a fit as readable pandas steps, in the
+    engine's order (missing-value indicators, rare categories grouped, caps, signed log),
+    each learnt on the training rows only and applied unchanged to the validation rows. It
+    reads what the fit recorded (``values.preprocessing``: the value and what was learnt),
+    so the steps are the fit's own. None when the fit recorded no preparation (a study
+    created before the decision)."""
+    pre = values.get('preprocessing') if isinstance(values, Mapping) else None
+    if not isinstance(pre, Mapping) or not isinstance(pre.get('value'), Mapping) \
+            or not isinstance(pre.get('fitted'), Mapping):
+        return None
+    value, fitted = pre['value'], pre['fitted']
+    lines = []
+    for name in fitted.get('missing_indicators') or []:
+        column = name[:-len('=(missing)')] if name.endswith('=(missing)') else name
+        lines += [f'# Missing-value indicator for {column}: 1 where the cell is empty.',
+                  f'X_train[{q(name)}] = train[{q(column)}].isna().astype(int).to_numpy()',
+                  f'X_validation[{q(name)}] = validation[{q(column)}].isna().astype(int).to_numpy()']
+    k = value.get('rare_category_min_rows')
+    for column in fitted.get('rare_categories') or {}:
+        lines += [f'# Categories of {column} with fewer than {k} training rows are grouped as '
+                  f'"(rare)" (a category unseen in training too).',
+                  f'_counts = X_train[{q(column)}].dropna().astype(str).value_counts()',
+                  f'_kept = set(_counts[_counts >= {int(k)}].index)',
+                  'for _X in (X_train, X_validation):',
+                  f'    _text = _X[{q(column)}].map(lambda v: v if v != v else str(v))',
+                  f'    _X[{q(column)}] = _text.where(_text.isna() | _text.isin(_kept), "(rare)")']
+    for column, bounds in sorted((value.get('caps') or {}).items()):
+        if column not in (fitted.get('caps') or {}):
+            continue
+        q_low, q_high = bounds
+        lines += [f'# Cap {column} at its training quantiles {q_low} and {q_high}; values '
+                  f'outside are clipped.',
+                  f'_low = float(X_train[{q(column)}].quantile({q_low!r}))',
+                  f'_high = float(X_train[{q(column)}].quantile({q_high!r}))',
+                  f'X_train[{q(column)}] = X_train[{q(column)}].clip(_low, _high)',
+                  f'X_validation[{q(column)}] = X_validation[{q(column)}].clip(_low, _high)']
+    for column in fitted.get('log_transform') or []:
+        lines += [f'# Signed log of {column}: sign(x) * log(1 + |x|), after the caps.',
+                  'for _X in (X_train, X_validation):',
+                  f'    _v = _X[{q(column)}].astype(float)',
+                  f'    _X[{q(column)}] = np.sign(_v) * np.log1p(np.abs(_v))']
+    if not lines:
+        return '# The default preparation: nothing added, grouped, capped, or transformed.'
+    return '\n'.join(lines)
+
+
 def fit_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str, str] | None:
     slot = 'fit.linear' if task == 'regression' else 'fit.logistic'
     item = _current(view, slot)
@@ -201,11 +248,28 @@ def fit_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str,
     if item is None or not isinstance(inputs, Mapping) \
             or not {'features', 'special_values'} <= set(inputs):
         return None
-    head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
-# The inputs exactly as the model saw them: the features you kept, special values as
-# indicator columns, and the preparation you confirmed, learnt on training rows only.
+    steps = preparation_steps(item['values'])
+    if steps is None:
+        head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
+# The inputs exactly as the model saw them: the features you kept and special values as
+# indicator columns.
 X_train, X_validation = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train, validation)
-print("Preparation:", nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
+print(nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
+'''
+    else:
+        head = f'''candidate = nv.values(study, RESULT_IDS[{q(slot)}])
+# The inputs as the model saw them: the features you kept, special values as indicator
+# columns.
+X_train, X_validation = nv.design_inputs(study, RESULT_IDS[{q(slot)}], train, validation)
+print(nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
+# The preparation you confirmed, learnt on the training rows only and applied unchanged
+# to the validation rows.
+{steps}
+# The same inputs as the engine's fit.
+_engine_train, _engine_validation = nv.model_inputs(study, RESULT_IDS[{q(slot)}], train,
+                                                    validation)
+pd.testing.assert_frame_equal(X_train, _engine_train)
+pd.testing.assert_frame_equal(X_validation, _engine_validation)
 '''
     if task == 'regression':
         code = head + f'''y_train = pd.to_numeric(train[{q(target)}])

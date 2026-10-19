@@ -93,6 +93,8 @@ details.annex{margin:28px 0}
 details.annex>summary{font-size:20px;font-weight:700;color:var(--ink)}
 details>summary{cursor:pointer}
 @media (max-width:640px){dl.facts{grid-template-columns:minmax(0,1fr)}dl.facts dd{margin-bottom:8px}}
+.scroll-hint{display:none}
+@media (max-width:640px){.scroll-hint{display:block}.dictionary th,.dictionary td{padding:10px}.dictionary td:nth-child(2){min-width:150px}.dictionary td{overflow-wrap:anywhere}}
 '''
 
 THEME_SCRIPT = '''(function(){var b=document.body,k="hypotrail-theme",t=document.querySelector("[data-theme-toggle]");
@@ -196,6 +198,22 @@ def _concern(conf: Mapping) -> str:
             f'{lit("message", concern)}</span>')
 
 
+def _warnings(conf: Mapping) -> str:
+    """WP-A9 (H3): the ``words_contradict_value`` warnings the junior kept, in words."""
+    items = [w for w in conf.get('warnings') or [] if isinstance(w, Mapping)]
+    if not items:
+        return ''
+    labels = _labels()['contradiction']
+    lines = []
+    for w in items:
+        text = labels['exclude' if w.get('said') == 'exclude' else 'keep'].format(
+            variable=w.get('variable', ''))
+        lines.append(f'<br><span class="small" data-warning="{e(str(w.get("code", "")))}" '
+                     f'data-variable="{e(str(w.get("variable", "")))}"><strong>'
+                     f'{e(labels["title"])}</strong>: {e(text)}</span>')
+    return ''.join(lines)
+
+
 def _chip(conf: Mapping) -> str:
     """The basis of a confirmation as a chip (v0.2a, WP-A6; ADR 0005)."""
     basis = conf.get('basis') or 'explicit'
@@ -220,13 +238,15 @@ def _confirmation(conf: Mapping) -> str:
                 f'<br><span class="small">{e(labels["delegated_note"])}</span>'
                 f'<br>{_recorded(conf)}'
                 f'<br><span class="small">{e(labels["delegated_restatement"])}: '
-                f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}</div>')
+                f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}'
+                f'{_warnings(conf)}</div>')
     return (f'<div class="words" data-basis="explicit">{_chip(conf)}'
             f'<strong>{e(labels["user_words"])}:</strong> '
             f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
             f'<br>{_recorded(conf)}'
             f'<br><span class="small">{e(labels["restatement"])}: '
-            f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}</div>')
+            f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}'
+            f'{_warnings(conf)}</div>')
 
 
 def _credit(view: Mapping, titles: Mapping) -> str:
@@ -341,6 +361,8 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
                              f'</p>')
         if did == 'feature_availability':
             parts.append(_availability_table(view, variables))
+        if did == 'preprocessing' and isinstance(d['value'], Mapping):
+            parts.append(_motivation(view, d['value']))
         if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
             parts.append(_confirmation(d['confirmation']))
         if d['reason']:
@@ -364,6 +386,41 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
             f'{_concept("confirmed_decision")}{_concept("proposal")}{"".join(cards)}</section>')
 
 
+def _capital(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+def _motivation(view: Mapping, value: Mapping) -> str:
+    """WP-A9 (M1): the questions that motivated a preparation, and whether it was chosen
+    after looking at the outcome, in words."""
+    labels = _labels()['motivation']
+    by_rid = {item.get('result_id'): item for item in view['results'].values()}
+    questions = []
+    for rid in value.get('motivated_by') or []:
+        item = by_rid.get(rid) or {}
+        values = item.get('values') if isinstance(item.get('values'), Mapping) else {}
+        question = values.get('question')
+        if isinstance(question, str) and question:
+            questions.append(f'<li data-motivated-by="{e(rid)}">{lit("message", question)}</li>')
+        else:
+            questions.append(f'<li data-motivated-by="{e(rid)}">'
+                             f'{lit("message", labels["not_current"])}</li>')
+    parts = []
+    if questions:
+        parts.append(f'<p class="small"><strong>{e(labels["questions"])}</strong></p>'
+                     f'<ul class="small">{"".join(questions)}</ul>')
+    looks = value.get('target_looks_before')
+    if value.get('data_contingent'):
+        text = labels['contingent']
+        if isinstance(looks, int) and looks > 0:
+            text += ' ' + labels['looks'].format(n=looks, s='' if looks == 1 else 's')
+        parts.append(f'<p class="notice" data-contingent="true">{lit("structure", text)}</p>')
+    elif value.get('motivated_by') is not None:
+        parts.append(f'<p class="small" data-contingent="false">'
+                     f'{lit("message", labels["not_contingent"])}</p>')
+    return ''.join(parts)
+
+
 def _facts(view: Mapping) -> str:
     labels = _labels()
     groups = []
@@ -382,8 +439,9 @@ def _facts(view: Mapping) -> str:
             status = stmt.get('status', 'unknown')
             label = labels['fact_status'].get(status, status)
             shown = 'not available' if stmt.get('value') is None else _value_text(stmt.get('value'))
+            name = (labels.get('structure_words') or {}).get(key, key)
             structure.append(f'<li data-structure="{e(key)}">{_badge(status, label)}'
-                             f'{lit("identifier", key, "code")}: {lit("case", shown)} '
+                             f'{lit("message", _capital(name))}: {lit("case", shown)} '
                              f'<span class="small">Source: {lit("case", stmt.get("source", ""))}</span></li>')
     return (f'<section class="card" id="facts"><h2>{e(labels["sections"]["facts"])}</h2>'
             f'<p>Statements of the case are never decisions: each one keeps its status and source.</p>'
@@ -422,6 +480,9 @@ def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
                     raw = cite.resolve(row, keys)
                 except KeyError:
                     raw = None
+                if isinstance(raw, bool):
+                    # WP-A9 (M6): a flag reads in words, and only when it is set.
+                    raw = 'yes' if raw else None
                 cells.append(f'<td>{lit("category", "" if raw is None else _value_text(raw))}</td>')
             elif citer.has(rid, path):
                 cells.append(f'<td>{citer.num(rid, path, c.get("fmt", "auto"))}</td>')
@@ -698,7 +759,7 @@ def _residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
                 for key in ('mean_residual', 'mae'):
                     path = cite.format_path(prefix + ['models', m, key])
                     cells.append(f'<td>{citer.num(rid, path, "f2") if citer.has(rid, path) else ""}</td>')
-            small = 'yes' if group.get('small_count') else 'no'
+            small = 'yes' if group.get('small_count') else ''
             cells.append(f'<td>{lit("category", small)}</td>')
             body.append(f'<tr data-group="{e(str(group.get("value", "")))}">{"".join(cells)}</tr>')
         out += (f'<h3>{e(labels["residuals_by_heading"])}: '
@@ -720,9 +781,12 @@ def _not_yet_defensible(view: Mapping) -> str:
             details.append(', '.join(e(titles.get(x, x)) for x in item['decisions']))
         if item.get('rules'):
             details.append(', '.join(lit('decision_value', rule_words(x)) for x in item['rules']))
-        for key in ('features', 'missing'):
-            if item.get(key):
-                details.append(', '.join(lit('identifier', x, 'code') for x in item[key]))
+        if item.get('features'):
+            details.append(', '.join(lit('identifier', x, 'code') for x in item['features']))
+        if item.get('missing'):
+            # WP-A9 (M6): structure keys in words, never as raw ids.
+            words = labels.get('structure_words') or {}
+            details.append(', '.join(lit('message', words.get(x, x)) for x in item['missing']))
         ids = [str(x) for key in ('results', 'executions', 'slots') for x in item.get(key) or []]
         for source in item.get('sources') or []:
             details.append(lit('case', source))
@@ -1090,6 +1154,8 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
     for v in variables:
         groups.setdefault(v.get('group') or ds['ungrouped'], []).append(v)
     head = ds['head']
+    # WP-A9 (M6): a narrow screen scrolls the tables sideways; say so where it shows.
+    parts.append(f'<p class="small scroll-hint" data-scroll-hint>{e(ds["scroll_hint"])}</p>')
     for group, items in groups.items():
         rows = []
         for v in items:

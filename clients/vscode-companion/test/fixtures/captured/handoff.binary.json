@@ -15,7 +15,7 @@
   "case": {
    "id": "uci-bank-marketing-v1",
    "path": "<case>/case.yaml",
-   "sha256": "f3d01dd64794e2cfd4b52a3a5b52e37d16b67193822d6e2655ef517400a28058"
+   "sha256": "c403c79c0f056cb5bcd53f68b05e59b9624fe1b18c8689e0cb979b7c5779121b"
   },
   "dataset": {
    "path": "<case>/data/bank.csv",
@@ -109,7 +109,8 @@
      "log_transform": [],
      "missing": "none",
      "motivated_by": [],
-     "rare_category_min_rows": 0
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
     },
     "user_words": "Yes, I want the preprocessing exactly as you stated it",
     "basis": "restated",
@@ -146,147 +147,147 @@
   ],
   "results_cited": [
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "b5b53968c0d12b601a0e147a8bb9d595e5b27213b1f1aa9023f2aa223d0a6d5c",
+    "result_id": "e2c280e8c4ae18354ed9ec703eaa7acf79a9efcc26c64b7a93e75047ececd4c9",
     "activity": "eda.target_rate",
     "path": "rate",
     "value": 0.11536941920189649,
     "shown": "11.5%"
    },
    {
-    "result_id": "b5b53968c0d12b601a0e147a8bb9d595e5b27213b1f1aa9023f2aa223d0a6d5c",
+    "result_id": "e2c280e8c4ae18354ed9ec703eaa7acf79a9efcc26c64b7a93e75047ececd4c9",
     "activity": "eda.target_rate",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "7b361d024425dd6964ffdeaf63196ca087e0b4851c1ad51478abfca3a0e7e7ea",
+    "result_id": "cb3572f62361ceb5e9f0a78cd32fc71473d44e6e58989c08e8e1bb7730cc3a73",
     "activity": "eda.special_values",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "ea5df7367d71a8ac642be1468f15a5331d76e338e247019b71b21793cbb69243",
+    "result_id": "3440e2cb2f6eac5fc4139ecc5214a9723a4757628c833c9d7a7c12aa0740bdba",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "fe6853369bd6b8818bbdebd9302a770a3e3c7f871b65e7fdf268aaf15d6250c3",
+    "result_id": "3a32436e501daa0b013dc582a469feeb66e27be1477cfca7f49550142fc904b8",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "941ae1a9a2e3941f46ab6b6baca0b0e943d1128812a60467bc0ee17c7451328f",
+    "result_id": "5623db46e96f594bbeb2acd449682326a026cf4ef8fea269692647dd6d81860e",
     "activity": "eda.rate_by",
     "path": "n_groups",
     "value": 12,
     "shown": "12"
    },
    {
-    "result_id": "941ae1a9a2e3941f46ab6b6baca0b0e943d1128812a60467bc0ee17c7451328f",
+    "result_id": "5623db46e96f594bbeb2acd449682326a026cf4ef8fea269692647dd6d81860e",
     "activity": "eda.rate_by",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "82288c22cefe6514c0b090bcc0347a6c4cc207db68f1beb0313590848125643c",
+    "result_id": "ffd0c4bfde485783fc2a8fde8ca93f7da495d9d0104c970b23b075dbda0ee457",
     "activity": "fit.baseline",
     "path": "validation.roc_auc",
     "value": 0.5,
     "shown": "0.500"
    },
    {
-    "result_id": "82288c22cefe6514c0b090bcc0347a6c4cc207db68f1beb0313590848125643c",
+    "result_id": "ffd0c4bfde485783fc2a8fde8ca93f7da495d9d0104c970b23b075dbda0ee457",
     "activity": "fit.baseline",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "1bc9ab67cb5817ae2ee87daf5c75f6b1613936bc771f6d29357ba4475a0da6ac",
+    "result_id": "8c6e100667c647469902db4ae09a5b242fe166ef8bd9d3e2188e8807092495af",
     "activity": "fit.logistic",
     "path": "validation.roc_auc",
     "value": 0.7348678459937565,
     "shown": "0.735"
    },
    {
-    "result_id": "1bc9ab67cb5817ae2ee87daf5c75f6b1613936bc771f6d29357ba4475a0da6ac",
+    "result_id": "8c6e100667c647469902db4ae09a5b242fe166ef8bd9d3e2188e8807092495af",
     "activity": "fit.logistic",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+    "result_id": "69b67863c53a2956465011c993c6bdeb2d2102164141df9b77765ad23e3f1df0",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
     "value": 0.38144329896907214,
     "shown": "38.1%"
    },
    {
-    "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+    "result_id": "69b67863c53a2956465011c993c6bdeb2d2102164141df9b77765ad23e3f1df0",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
     "value": 0.296,
     "shown": "29.6%"
    },
    {
-    "result_id": "5b2c564c8ce324d65121508b6aac1f4b916c9d0b8f28eba95672483c0d468a3e",
+    "result_id": "69b67863c53a2956465011c993c6bdeb2d2102164141df9b77765ad23e3f1df0",
     "activity": "policy.evaluation",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "n_rows",
     "value": 3617,
     "shown": "3,617"
    },
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "027ab5296360c299a5868e190773bdd764942ff9f9c810f4b8ad985a8d2f31bd",
+    "result_id": "3066f683e341d5a86a58d6d4396270c6b189c9ff273a2ad4186a98b18408744a",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
@@ -324,9 +325,9 @@
     "validation_rows_used_for_selection": 1086,
     "prior_exposure": [
      {
-      "source": "Tutorial results published with the dataset",
+      "source": "Results of an earlier analysis published with the dataset",
       "status": "observed",
-      "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+      "value": "Outputs of an earlier analysis (protocol \"stratified-70-30\": Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
      },
      {
       "source": "data/split.json",

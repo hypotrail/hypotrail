@@ -10,7 +10,7 @@ activities:
     label: Split
     glossary: stratified_split
     highlights:
-      - {path: n_rows, label: Rows in the dataset, fmt: int}
+      - {path: n_rows, label: Development rows, fmt: int}
       - {path: partitions.train.n_rows, label: Training rows, fmt: int}
       - {path: partitions.validation.n_rows, label: Validation rows, fmt: int}
       - {path: partitions.train.n_positive, label: Positive rows in training, fmt: int}
@@ -145,7 +145,7 @@ regression_activities:
     label: Split
     glossary: validation_partition
     highlights:
-      - {path: n_rows, label: Rows in the dataset, fmt: int}
+      - {path: n_rows, label: Development rows, fmt: int}
       - {path: partitions.train.n_rows, label: Training rows, fmt: int}
       - {path: partitions.validation.n_rows, label: Validation rows, fmt: int}
       - {path: cutoff, label: Cutoff (validation from this value of the time column), fmt: int}
