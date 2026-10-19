@@ -257,7 +257,11 @@ test('flag: stage, learning layer, reviewer, chatInsert and their overrides', ()
   assert.equal(flag.learningLayer(fake({ 'hypotrail.companion.learningLayer': false }), {}), false);
   assert.equal(flag.learningLayer(fake(), { HYPOTRAIL_COMPANION_LEARNING: '0' }), false);
   assert.equal(flag.reviewer(fake(), { HYPOTRAIL_COMPANION_REVIEWER: '1' }), true);
-  assert.equal(flag.chatInsert(fake({ 'hypotrail.companion.chatInsert': true })), true);
+  // Forced off until a real VS Code session verifies that the insertion does not send
+  // (decision CR.8): the setting is ignored.
+  assert.equal(flag.chatInsert(fake({ 'hypotrail.companion.chatInsert': true })), false);
+  assert.equal(flag.settings(fake({ 'hypotrail.companion.chatInsert': true }), {}).chatInsert, false);
+  assert.equal(flag.CHAT_INSERT_VERIFIED, false);
   assert.equal(flag.settings(fake(), { HYPOTRAIL_COMPANION_CHAT_INSERT: '1' }).chatInsert, false, 'no environment override');
   assert.equal(flag.settings(fake(), {}, { forceReviewer: true }).reviewer, true);
   assert.ok(flag.stageAtLeast('v2', 'v1') && !flag.stageAtLeast('v1', 'v2'));

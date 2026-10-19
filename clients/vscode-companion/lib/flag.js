@@ -12,7 +12,10 @@
 // - reviewer: `hypotrail.companion.reviewer` (default false); HYPOTRAIL_COMPANION_REVIEWER=1.
 // - chatInsert: `hypotrail.companion.chatInsert` (default false). It is NOT contributed in
 //   package.json (hidden) and has no environment override, until a real VS Code session
-//   verifies that the chat insertion does not send (integrator decision CA.8).
+//   verifies that the chat insertion does not send (integrator decision CA.8). Until then
+//   the setting is ignored and reads as false (CHAT_INSERT_VERIFIED, decision CR.8): the
+//   bridge copies to the clipboard only. Verifying it is a change of this constant, with
+//   the observation recorded in docs/plans/V0.1-DECISIONS.md.
 
 const SETTING_SECTION = 'hypotrail.companion';
 const SETTING_KEY = 'enabled';
@@ -22,6 +25,8 @@ const LEARNING_ENV = 'HYPOTRAIL_COMPANION_LEARNING';
 const REVIEWER_ENV = 'HYPOTRAIL_COMPANION_REVIEWER';
 const DISABLED_MESSAGE = 'Companion disabled (feature flag)';
 const STAGES = ['v0', 'v1', 'v2', 'v3'];
+// CR.8: false until a real VS Code session shows that the chat insertion does not send.
+const CHAT_INSERT_VERIFIED = false;
 const DEFAULTS = Object.freeze({ stage: 'v0', learningLayer: true, reviewer: false, chatInsert: false });
 
 function setting(vscode, key, fallback) {
@@ -71,7 +76,7 @@ function reviewer(vscode, env = process.env) {
 }
 
 function chatInsert(vscode) {
-  return setting(vscode, 'chatInsert', DEFAULTS.chatInsert) === true;
+  return CHAT_INSERT_VERIFIED && setting(vscode, 'chatInsert', DEFAULTS.chatInsert) === true;
 }
 
 /** {stage, reviewer, learningLayer, chatInsert}; `forceReviewer` for the reviewer command. */
@@ -82,5 +87,5 @@ function settings(vscode, env = process.env, { forceReviewer = false } = {}) {
 
 module.exports = {
   isEnabled, stage, normalizeStage, stageRank, stageAtLeast, learningLayer, reviewer, chatInsert, settings,
-  SETTING_SECTION, SETTING_KEY, ENV_VAR, STAGE_ENV, LEARNING_ENV, REVIEWER_ENV, DISABLED_MESSAGE, STAGES, DEFAULTS,
+  CHAT_INSERT_VERIFIED, SETTING_SECTION, SETTING_KEY, ENV_VAR, STAGE_ENV, LEARNING_ENV, REVIEWER_ENV, DISABLED_MESSAGE, STAGES, DEFAULTS,
 };

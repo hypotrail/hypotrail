@@ -144,13 +144,14 @@ test('URI handler (WP-I): a valid link opens the panel and navigates; its study 
   assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'evidence', kind: 'result', id: rid });
   // A discovered study in the link: opened in the same panel, without a quick pick.
   const picks = fake.calls.quickPick.length;
-  const again = await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${encodeURIComponent(b)}` });
+  // vscode.Uri.query is decoded: the handler gets the path as is.
+  const again = await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${b}` });
   assert.equal(again.agent.studyDir, b);
   assert.equal(fake.calls.quickPick.length, picks, 'no quick pick for a discovered study');
   assert.equal(fake.calls.panels.length, 1);
   assert.deepEqual(fake.calls.panels[0].posted.at(-1), { v: 2, type: 'navigate', tab: 'decisions', kind: 'proposal', id: 'p_5' });
   // An unknown study in the link: the quick pick asks.
-  await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${encodeURIComponent(path.join(os.tmpdir(), 'elsewhere'))}` });
+  await fake.uriHandlers[0].handleUri({ path: '/proposal/p_5', query: `study=${path.join(os.tmpdir(), 'elsewhere')}` });
   assert.equal(fake.calls.quickPick.length, picks + 1);
   assert.equal(api.current().agent.studyDir, a, 'the junior chose a study in the quick pick');
 });

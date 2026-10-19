@@ -199,6 +199,21 @@ function fakeExec() {
   return calls;
 }
 
+test('CR.8: the chatInsert setting is ignored until verified: init says false and "insert" copies', async () => {
+  process.env.HYPOTRAIL_COMPANION = '1';
+  process.env.HYPOTRAIL_COMPANION_STAGE = 'v2';
+  fakeExec();
+  const fake = createFake({ folders: [makeStudy()], settings: { 'hypotrail.companion.chatInsert': true } });
+  const { extension, context } = load(fake);
+  extension.activate(context);
+  const opened = await fake.commands.executeCommand('hypotrail.companion.open');
+  await opened.controller.handle({ v: 2, type: 'ready' });
+  assert.ok(fake.calls.panels[0].posted.filter(m => m.type === 'init').every(m => m.chatInsert === false));
+  await opened.controller.handle({ v: 2, type: 'ask_agent', about: { kind: 'proposal', id: 'p_5' }, question: '', mode: 'insert' });
+  assert.ok(!fake.calls.executed.some(x => x.id === 'workbench.action.chat.open'), 'no chat command');
+  assert.equal(fake.calls.clipboard.length, 1);
+});
+
 test('AB-1, AB-2 through the extension: vscode.env.clipboard only; no chat command unless chatInsert', async () => {
   process.env.HYPOTRAIL_COMPANION = '1';
   process.env.HYPOTRAIL_COMPANION_STAGE = 'v2';

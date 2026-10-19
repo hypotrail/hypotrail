@@ -22,18 +22,22 @@ const PROPOSAL_ID = /^p_[0-9]+$/;
 // state.ALL_DECISION_IDS of the engine (binary and regression decisions).
 const DECISION_IDS = ['prediction_time', 'feature_availability', 'split', 'policy', 'conclusion', 'model_choice'];
 const MAX_STUDY = 4096;
+const STUDY_PARAM = 'study=';
 
+/**
+ * The `study` of a deep link's query. VS Code hands the handler a decoded query
+ * (`vscode.Uri.query` is percent-decoded), so `+`, `&`, `=` and `%` may be characters of
+ * the path itself: URLSearchParams would turn `+` into a space and cut the path at `&`.
+ * The only query a link may carry is `study=<absolute path>`, and the path is the whole
+ * rest of the query, as is (review finding; COMPANION-ADVANCED §12 "URI handler"). The
+ * extension then opens it only when it is a discovered study; otherwise the quick pick asks.
+ */
 function studyOf(query) {
   const text = typeof query === 'string' ? query.replace(/^\?/, '') : '';
   if (!text) return { ok: true, study: null };
-  let params;
-  try { params = new URLSearchParams(text); } catch (_) { return { ok: false }; }
-  const keys = [...params.keys()];
-  if (keys.some(k => k !== 'study') || keys.length > 1) return { ok: false };
-  const study = params.get('study');
-  if (typeof study !== 'string' || !study || study.length > MAX_STUDY || study.includes('\0') || !path.isAbsolute(study)) {
-    return { ok: false };
-  }
+  if (!text.startsWith(STUDY_PARAM)) return { ok: false };
+  const study = text.slice(STUDY_PARAM.length);
+  if (!study || study.length > MAX_STUDY || study.includes('\0') || !path.isAbsolute(study)) return { ok: false };
   return { ok: true, study };
 }
 

@@ -406,6 +406,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     handle, refresh,
     snapshot: () => snapshot,
     diagnostics: () => diagnostics,
+    /** The number of cached payloads (tests: the cache stays bounded). */
+    cacheSize: () => cache.size(),
     settings: () => ({ ...active }),
     /** Post a navigation request (a deep link, "go to a result"); false when invalid. */
     navigate(target) {
