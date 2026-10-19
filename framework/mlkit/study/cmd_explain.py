@@ -233,7 +233,7 @@ def explain(study_dir, *, term: str | None = None) -> dict:
     study = read.open(study_dir)
     view = view_model.build(study)
     task = st.task_of(view['task'])
-    with texts.task_context(task):
+    with texts.study_context(view):
         citer = cite.Citer.from_view(view)
         values = placeholders(view)
         plan_steps = [s['id'] for s in view['plan']]

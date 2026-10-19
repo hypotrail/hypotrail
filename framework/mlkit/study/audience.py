@@ -31,7 +31,7 @@ DECISION_WORDS = {'prediction_time': 'the prediction moment',
                   'model_variant': 'the variant to compare',
                   'final_test': 'the opening of the final test'}
 # Plan steps in words (the steps without a decision of their own).
-STEP_WORDS = {'train_eda': 'the exploration of the training rows', 'models': 'the model fits',
+STEP_WORDS = {'train_eda': 'the exploration of the data', 'models': 'the model fits',
               'discover_data': 'the discovery of the data'}
 
 

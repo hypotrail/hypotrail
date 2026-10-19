@@ -242,6 +242,129 @@ def test_the_within_fold_bootstrap_keeps_each_fold_and_its_capacity():
     assert again == out
 
 
+# --- M3: no training or validation vocabulary in a cross-validated study ----------------------
+
+TRAIN_VALIDATION = re.compile(r'validation|training rows?|training partition|training mean|'
+                              r'training base rate|training and validation', re.I)
+# Legitimate uses: the name of the scheme itself, and the generic definitions of what a model
+# does with the rows it is fitted on (within a fold, the other folds' rows).
+ALLOWED = re.compile(r'cross-validat\w*|cross_validation|more rows than one validation partition',
+                     re.I)
+GENERIC_TERMS = ('overfitting', 'regularisation', 'imputation', 'standardisation')
+
+
+def _junior_text(page: str) -> str:
+    """The report's text a junior reads: no annex, no style, no recorded words or values
+    (the junior's own words and the case's statements are quoted as they are)."""
+    from html.parser import HTMLParser
+
+    class Text(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.depth, self.out = 0, []
+
+        def handle_starttag(self, tag, attrs):
+            a = dict(attrs)
+            skip = tag in ('style', 'script') or a.get('id') == 'annex' or \
+                a.get('data-literal') in ('user_words', 'decision_value', 'case', 'proposal')
+            if self.depth or skip:
+                self.depth += 1 if tag not in ('br', 'img', 'input', 'meta', 'link') else 0
+
+        def handle_endtag(self, tag):
+            if self.depth:
+                self.depth -= 1
+
+        def handle_data(self, data):
+            if not self.depth:
+                self.out.append(data)
+
+    p = Text()
+    p.feed(page)
+    return ' '.join(' '.join(p.out).split())
+
+
+def _offending(text: str, allowed_sentences=()) -> list[str]:
+    for sentence in allowed_sentences:
+        text = text.replace(' '.join(sentence.split()), ' ')
+    text = ALLOWED.sub(' ', text)
+    return [text[max(0, m.start() - 80):m.end() + 40] for m in TRAIN_VALIDATION.finditer(text)]
+
+
+def _generic_definitions(task: str) -> list[str]:
+    from mlkit.study import texts
+    with texts.task_context(task), texts.scheme_context('cross_validation'):
+        return [texts.glossary(t)['definition'] for t in GENERIC_TERMS if texts.glossary(t)]
+
+
+@pytest.fixture(scope='module')
+def opened_regression(tmp_path_factory):
+    flow = _flow(tmp_path_factory.mktemp('b6c_reg'), task='regression')
+    _open(flow)
+    return flow
+
+
+@pytest.mark.parametrize('name', ['opened', 'opened_regression'])
+def test_a_cross_validated_study_speaks_of_folds_not_validation_rows(name, request, tmp_path):
+    base = request.getfixturevalue(name)
+    flow = Flow(fk.clone(base.study, tmp_path / 'study'), base.case_dir, prefix='m3')
+    task = flow.state()['task']
+    flow.run('eda.special_values')
+    flow.run('eda.target_summary' if task == 'regression' else 'eda.target_rate')
+    flow.run('diag.regression' if task == 'regression' else 'diag.binary')
+    view = flow.view()
+    assert view['decisions']['split']['value']['method'] in st.CV_METHODS
+    page = _page(flow)
+    found = _offending(_junior_text(page), _generic_definitions(task))
+    assert not found, found
+    # The plan, the next action, the limits and the junior recap.
+    for step in view['plan']:
+        assert not _offending(' '.join(str(step.get(k)) for k in
+                                       ('title', 'question', 'expected_output'))), step
+    summary = flow.call('status', '--summary', '--study', flow.study)
+    texts_ = [i.get('junior_text') or i.get('text') for i in view['not_yet_defensible']]
+    texts_ += list(summary['recap_junior']) + [view['next_action'].get('junior_message') or '']
+    assert not [t for t in texts_ if _offending(str(t))], texts_
+    # The notebook's explanations too.
+    notebook = (flow.study / 'notebooks' / 'study_generated.py').read_text(encoding='utf-8')
+    markdown = ' '.join(re.findall(r'mo\.md\((?:r|f)?"""(.*?)"""', notebook, re.S))
+    assert not _offending(markdown, _generic_definitions(task)), _offending(markdown)
+    # The split question and the regression opening are worded for the scheme and the task.
+    split = next(s for s in view['plan'] if s['id'] == 'split')
+    assert split['question'].startswith('How are the development rows divided into folds')
+    opening = next(s for s in view['plan'] if s['id'] == 'final_test')
+    if task == 'regression':
+        assert opening['question'].startswith('Now that the model is chosen,')
+        assert 'rule' not in opening['question']
+
+
+def test_the_selection_chart_plots_the_adopted_configuration(opened, tmp_path):
+    """B6c (M4): a policy that applies its rule to the variant is drawn with the variant."""
+    flow = Flow(fk.clone(opened.study, tmp_path / 'study'), opened.case_dir, prefix='m4')
+    chart = re.search(r'<figure data-chart="selection">.*?</figure>', _page(flow), re.S).group(0)
+    assert 'models.[fit.logistic].true_positives' in chart
+    assert 'Model (logistic, the candidate)' in chart
+    flow.decide('policy', 'capacity:40@fit.variant',
+                words='Yes, the variant with that rule because it ranks as well with fewer terms')
+    assert flow.view()['criterion']['model'] == 'fit.variant'
+    chart = re.search(r'<figure data-chart="selection">.*?</figure>', _page(flow), re.S).group(0)
+    assert 'models.[fit.variant].true_positives' in chart
+    assert 'models.[fit.logistic].true_positives' not in chart
+    assert 'Model (the variant, adopted with the rule)' in chart
+    assert 'each rule applied within each fold' in chart
+    assert flow.call('check', '--study', flow.study)['clean'] is True
+
+
+def test_a_train_validation_study_keeps_its_words(tmp_path):
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=300)['case'].parent
+    flow = Flow(tmp_path / 'study', case_dir)
+    flow.init()
+    flow.decide('prediction_time', 'when the record is created, before the outcome')
+    flow.decide('feature_availability', fk.availability(case_dir))
+    flow.decide('split', fk.SPLIT)
+    split = next(s for s in flow.view()['plan'] if s['id'] == 'split')
+    assert 'between training and validation' in split['question']
+
+
 # --- M1: the case's doubt survives a decision that marks the feature available ---------------
 
 SHOPPERS = fk.REPO / 'use-cases' / 'online-shoppers'

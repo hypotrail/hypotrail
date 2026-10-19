@@ -167,6 +167,19 @@ def _num(x: Any) -> bool:
     return cite.is_number(x)
 
 
+def _rows() -> str:
+    """B6c (M3): the rows the exploration reads: every development row under
+    cross-validation, the training rows otherwise."""
+    from . import texts
+    return 'development rows' if texts.is_cv() else 'training rows'
+
+
+def _scored() -> str:
+    """B6c (M3): the rows a model comparison reads."""
+    from . import texts
+    return 'out-of-fold predictions' if texts.is_cv() else 'validation rows'
+
+
 # --- 1. the target ------------------------------------------------------------------------
 
 def target_balance(citer: cite.Citer, rid: str, values: Mapping) -> str:
@@ -188,16 +201,16 @@ def target_balance(citer: cite.Citer, rid: str, values: Mapping) -> str:
         y += ROW + 6
     # WP-A9 (M6): the grid is drawn first, under the bars and their labels.
     body.insert(0, scale.axis(TOP - 6, y + 2))
-    svg = _svg(y + AXIS, ''.join(body), 'Training rows by outcome')
+    svg = _svg(y + AXIS, ''.join(body), f'{_rows().capitalize()} by outcome')
     rate = citer.num(rid, 'rate', 'pct1')
     interval = ''
     if citer.has(rid, 'interval.low') and citer.has(rid, 'interval.high'):
         interval = (f' (<span data-literal="setting">95%</span> interval '
                     f'{citer.num(rid, "interval.low", "pct1")} to '
                     f'{citer.num(rid, "interval.high", "pct1")})')
-    note = f'Positive rate on training rows: {rate}{interval}.'
+    note = f'Positive rate on {_rows()}: {rate}{interval}.'
     return figure('target_balance', values.get('question') or
-                  'How often is the outcome positive among the training rows?', svg,
+                  f'How often is the outcome positive among the {_rows()}?', svg,
                   note=note)
 
 
@@ -215,7 +228,7 @@ def target_distribution(citer: cite.Citer, rid: str, values: Mapping) -> str:
             f'y2="{y + 20}"/>',
             f'<rect class="box" x="{scale(values["q25"]):.1f}" y="{y + 6}" '
             f'width="{scale(values["q75"]) - scale(values["q25"]):.1f}" height="28" rx="4">'
-            f'<title>Middle half of the training rows</title></rect>',
+            f'<title>Middle half of the {_rows()}</title></rect>',
             f'<line class="median" x1="{scale(values["median"]):.1f}" y1="{y + 4}" '
             f'x2="{scale(values["median"]):.1f}" y2="{y + 36}"/>']
     mi = values.get('mean_interval') or {}
@@ -224,21 +237,21 @@ def target_distribution(citer: cite.Citer, rid: str, values: Mapping) -> str:
                     f'x2="{scale(mi["high"]):.1f}" y2="{y + 46}"/>')
     body.append(f'<circle class="mean" cx="{scale(values["mean"]):.1f}" cy="{y + 46}" r="5">'
                 f'<title>Mean</title></circle>')
-    body.append(lit('category', 'Training rows', LEFT - 8, y + 24, 'end'))
+    body.append(lit('category', _rows().capitalize(), LEFT - 8, y + 24, 'end'))
     body.append(citer.svg_num(rid, 'min', 'auto', x=scale(lo), y=y - 2, anchor='middle'))
     body.append(citer.svg_num(rid, 'median', 'auto', x=scale(values['median']), y=y - 2,
                               anchor='middle'))
     body.append(citer.svg_num(rid, 'max', 'auto', x=scale(hi), y=y - 2, anchor='middle'))
-    svg = _svg(y + 60 + AXIS, ''.join(body), 'Distribution of the target on training rows')
+    svg = _svg(y + 60 + AXIS, ''.join(body), f'Distribution of the target on {_rows()}')
     unit = values.get('unit') or ''
-    note = (f'Box: the middle half of the training rows; thick line: the median; circle: the '
+    note = (f'Box: the middle half of the {_rows()}; thick line: the median; circle: the '
             f'mean {citer.num(rid, "mean", "auto")}')
     if _num(mi.get('low')) and _num(mi.get('high')):
         note += (f' with its interval {citer.num(rid, "mean_interval.low", "auto")} to '
                  f'{citer.num(rid, "mean_interval.high", "auto")}')
     note += f'. Unit: <span data-literal="case">{e(unit)}</span>.' if unit else '.'
     return figure('target_distribution', values.get('question') or
-                  'How is the target distributed among the training rows?', svg, note=note)
+                  f'How is the target distributed among the {_rows()}?', svg, note=note)
 
 
 # --- 2. rate or mean by group ---------------------------------------------------------------
@@ -305,7 +318,7 @@ def by_group(citer: cite.Citer, rid: str, values: Mapping, *, rate: bool) -> str
         else:
             note = ('The spread between groups stays within what shuffling the target draws: '
                     'it is not distinguishable from chance. ')
-    note += ('Dashed line: the overall value on training rows. An association between groups, '
+    note += (f'Dashed line: the overall value on {_rows()}. An association between groups, '
              'not an effect of the variable.')
     column = str(values.get('column', ''))
     question = values.get('question') or f'Does the outcome differ across the groups of {column}?'
@@ -356,7 +369,7 @@ def signal(citer: cite.Citer, rid: str, values: Mapping) -> str:
     lg = legend(('m', 'Used by the model'), ('flagged', 'Strong enough to question'),
                 ('b', 'Not used by the model'))
     lg = lg.replace('<span class="b">', '<span class="b unused">')
-    note = (f'{name} of a model that sees one feature at a time, out of fold on training rows. '
+    note = (f'{name} of a model that sees one feature at a time, out of fold on {_rows()}. '
             'A strong signal raises one question only: is this feature truly known at the '
             'moment of prediction? It never selects features.')
     return figure('single_feature_signal', values.get('question') or
@@ -471,16 +484,16 @@ def residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
     x0 = scale(0)
     body.append(f'<line class="zero" x1="{x0:.1f}" y1="{TOP - 6}" x2="{x0:.1f}" y2="{y - 6}"/>')
     body.insert(0, scale.axis(TOP - 6, y - 4))
-    svg = _svg(y + AXIS - 4, ''.join(body), 'Residuals of each model on validation rows')
+    svg = _svg(y + AXIS - 4, ''.join(body), f'Residuals of each model on the {_scored()}')
     unit = values.get('unit')
     unit_note = f' Unit: <span data-literal="case">{e(unit)}</span>.' if unit else ''
-    note = ('Residual: observed minus predicted, on validation rows. Line: from the '
+    note = (f'Residual: observed minus predicted, on the {_scored()}. Line: from the '
             '<span data-literal="setting">5th</span> to the '
             '<span data-literal="setting">95th</span> percentile; box: the middle half; thick '
             'line: the median. A box away from the zero line means the model is biased on '
             'these rows.' + unit_note)
     return figure('residuals', 'How far from the observed value are the predictions of each '
-                  'model on validation rows?', svg,
+                  f'model on the {_scored()}?', svg,
                   legend(('box', 'Linear model'), ('box b', 'Mean baseline')), note)
 
 
@@ -522,7 +535,7 @@ def residuals_by(citer: cite.Citer, rid: str, values: Mapping) -> str:
     body.insert(0, scale.axis(TOP - 6, y + 2))
     column = str(block.get('column', ''))
     svg = _svg(y + AXIS, ''.join(body), f'Mean residual by {column}')
-    note = ('Mean residual (observed minus predicted) of the validation rows of each group; the '
+    note = (f'Mean residual (observed minus predicted) of the {_scored()} of each group; the '
             'value shown is the linear model\'s. Groups with few rows are noisy.')
     return figure(f'residuals_by:{column}', f'Does the error drift across the values of '
                   f'{column}?', svg, legend(('m', 'Linear model'), ('b', 'Mean baseline')),

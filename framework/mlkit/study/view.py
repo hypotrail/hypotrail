@@ -25,6 +25,7 @@ from . import partition
 from . import governance, read
 from . import records as rec
 from . import state as st
+from . import texts
 from .case import EPISTEMIC_STATUSES
 from .errors import StudyError
 
@@ -726,7 +727,8 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
 
 
 def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
-                    headline: dict | None = None, junior: bool = False) -> str:
+                    headline: dict | None = None, junior: bool = False,
+                    cv: bool = False) -> str:
     # v0.2a (WP-A7): the junior recap names each decision and its value in words, never a
     # recorded token (a rule, a model slot, a verdict id).
     label = audience.decision_words(decision_id) if junior else DECISION_LABELS[decision_id]
@@ -766,8 +768,9 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
         text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
         mae = (errors or {}).get('mae', {}).get(value)
         if mae is not None:
-            text += (f' (validation MAE {mae} {errors["unit"]})' if junior else
-                     f' (validation MAE {mae} {errors["unit"]}, result '
+            where = 'out-of-fold' if cv else 'validation'
+            text += (f' ({where} MAE {mae} {errors["unit"]})' if junior else
+                     f' ({where} MAE {mae} {errors["unit"]}, result '
                      f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
         verdict = value.get('verdict', '')
@@ -778,7 +781,9 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
             text = (f'{label} (precision gain over the baseline of at least '
                     f'{value["min_points"]} points)')
         else:
-            text = (f'{label} (validation error at least '
+            # B6c (M3): the error the criterion reads, in the study's scheme.
+            error = 'out-of-fold error' if cv else 'validation error'
+            text = (f'{label} ({error} at least '
                     f'{round(100 * value.get("min_share", 0))}% below the mean baseline)')
     elif decision_id == 'preprocessing' and isinstance(value, dict):
         text = f'{label} ({preprocessing_words(value)})'
@@ -934,7 +939,8 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
     errors = _regression_errors(view)
     headline = _policy_headline(view, summary_out) if st.task_of(view.get('task')) == st.BINARY \
         else None
-    decided = [_recap_decision(d, item, errors, headline, junior)
+    cv = texts.scheme_of(view) == texts.CROSS_VALIDATION
+    decided = [_recap_decision(d, item, errors, headline, junior, cv)
                for d, item in summary_out['decisions'].items()
                if item['status'] in ('confirmed', 'reconfirm_required')]
     titles = {s['id']: s['title'] for s in summary_out['plan']}
@@ -1191,9 +1197,12 @@ def _governance_limits(state: dict, criterion: dict | None,
             and value.get('data_contingent'):
         out.append({'id': 'data_contingent_preprocessing', 'decisions': ['preprocessing'],
                     'results': list(value.get('motivated_by') or []),
-                    'text': 'The preparation of the variables was chosen after looking at the '
-                            'outcome on training rows, so the validation figures may be '
-                            'slightly optimistic.'})
+                    'text': ('The preparation of the variables was chosen after looking at '
+                             'the outcome on the development rows, so the out-of-fold figures '
+                             'may be slightly optimistic.' if st.uses_cross_validation(state)
+                             else 'The preparation of the variables was chosen after looking '
+                                  'at the outcome on training rows, so the validation figures '
+                                  'may be slightly optimistic.')})
     return out
 
 

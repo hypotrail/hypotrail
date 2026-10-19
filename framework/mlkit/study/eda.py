@@ -825,5 +825,26 @@ def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
     else:
         values = rate_by(case, train, params['column'], params.get('max_groups', MAX_GROUPS),
                          params.get('rows_word', 'training'))
-
+    if params.get('rows_word') == 'development':
+        values = development_words(values)
     return {'values': values, 'blobs': {}, 'partition': 'train', 'n_rows': int(len(train))}
+
+
+# B6c (M3): under cross-validation the exploration reads every development row; its
+# questions and notes say so (the engine's own sentences only, never a data value).
+WORDED_KEYS = ('question', 'note', 'warnings', 'binning', 'text')
+
+
+def development_words(node, key: str | None = None):
+    if isinstance(node, str):
+        if key in WORDED_KEYS:
+            return node.replace('the training rows', 'the development rows') \
+                .replace('training rows', 'development rows')
+        return node
+    if isinstance(node, dict):
+        return {k: development_words(v, k if k in WORDED_KEYS else
+                                     (key if key in WORDED_KEYS else None))
+                for k, v in node.items()}
+    if isinstance(node, list):
+        return [development_words(v, key) for v in node]
+    return node

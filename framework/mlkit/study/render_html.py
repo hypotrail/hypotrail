@@ -973,7 +973,9 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
                 parts.append('missing-value indicators for ' + ', '.join(sorted(missing)))
             k = value.get('rare_category_min_rows')
             if isinstance(k, int) and k > 0:
-                parts.append(f'categories with fewer than {k} training rows grouped')
+                # B6c (M3): under cross-validation, the rows each fold's model is fitted on.
+                rows = ('rows a model is fitted on' if texts.is_cv() else 'training rows')
+                parts.append(f'categories with fewer than {k} {rows} grouped')
             if value.get('caps'):
                 parts.append('values capped for ' + ', '.join(sorted(value['caps'])))
             if value.get('log_transform'):
@@ -1465,7 +1467,7 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
     plan, the decisions, the evidence by step, the comparison, the limits, the case
     statements, the surfaces, and the annex (collapsed).
     """
-    with texts.task_context(view.get('task')):
+    with texts.study_context(view):
         return _build(view, surfaces=surfaces, variables=variables, sample=sample)
 
 

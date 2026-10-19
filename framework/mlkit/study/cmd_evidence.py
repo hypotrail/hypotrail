@@ -449,7 +449,7 @@ def evidence(study_dir, *, result_id: str | None = None, limit: int = DEFAULT_LI
     view = view_model.build(study)
     state = study.state
     task = st.task_of(state)
-    with texts.task_context(task):
+    with texts.study_context(view):
         items = _entries(study)
         by_rid = {i['rid']: i for i in items}
         if result_id is not None and result_id not in by_rid:

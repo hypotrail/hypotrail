@@ -284,3 +284,65 @@ regression_metrics:
   - {key: mae, label: MAE, fmt: f2, glossary: mae}
   - {key: rmse, label: RMSE, fmt: f2, glossary: rmse}
   - {key: mean_residual, label: Mean residual (bias), fmt: f2, glossary: bias}
+# B6c (M3): a study evaluated by cross-validation has no training or validation rows to
+# name: every development row is explored, and each is predicted once, out of fold, by a
+# model fitted on the other folds (mlkit.study.texts.activity). ``cv_activities`` replaces
+# whole specs; ``cv_labels`` renames the labels of the other specs.
+cv_activities:
+  split:
+    label: Cross-validation folds
+    glossary: cross_validation
+    highlights:
+      - {path: n_rows, label: Development rows, fmt: int}
+      - {path: folds, label: Folds (each row predicted once, by a model fitted on the other folds), fmt: int}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+      - {path: duplicates.n_groups, label: Groups of identical records kept in one fold, fmt: int}
+    tables:
+      - rows: fold_rows
+        columns:
+          - {key: fold, label: Fold, fmt: int}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+regression_cv_activities:
+  split:
+    label: Cross-validation folds
+    glossary: cross_validation
+    highlights:
+      - {path: n_rows, label: Development rows, fmt: int}
+      - {path: folds, label: Folds (each row predicted once, by a model fitted on the other folds), fmt: int}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+    tables:
+      - rows: fold_rows
+        columns:
+          - {key: fold, label: Fold, fmt: int}
+          - {key: n_rows, label: Rows, fmt: int}
+cv_labels:
+  Target rate on training rows: Target rate on the development rows
+  Special values on training rows: Special values on the development rows
+  Training rows read: Development rows read
+  Share of training rows: Share of development rows
+  Target rate by group on training rows: Target rate by group on the development rows
+  Distribution of one column on training rows: Distribution of one column on the development rows
+  Target summary on training rows: Target summary on the development rows
+  Mean target by group on training rows: Mean target by group on the development rows
+  Signal of each feature alone on training rows: Signal of each feature alone on the development rows
+  Ranking quality on validation (AUC): Ranking quality out of fold (AUC)
+  Average precision on validation: Average precision out of fold
+  Ranking quality out of fold or on validation (AUC): Ranking quality out of fold (AUC)
+  Constant score (training positive share): Constant score (development positive share)
+  Training rows fitted: Development rows of the reported coefficients
+  Validation rows scored: Development rows predicted out of fold
+  Validation rows predicted: Development rows predicted out of fold
+  Positive rows in validation: Positive development rows
+  Policy evaluation on validation rows: Policy evaluation on the out-of-fold predictions
+  Validation rows: Development rows predicted out of fold
+  Mean absolute error on validation (MAE): Mean absolute error out of fold (MAE)
+  Root mean squared error on validation (RMSE): Root mean squared error out of fold (RMSE)
+  Mean residual on validation (bias): Mean residual out of fold (bias)
+  Mean absolute error out of fold or on validation: Mean absolute error out of fold
+  Prediction for every row (training mean): Mean of the development rows (each fold is predicted with the mean of the other folds)
+  Training median (for reference): Development median (for reference)
+  Mean absolute error on training rows: Mean absolute error on the rows fitted (in sample)
+  Root mean squared error on training rows: Root mean squared error on the rows fitted (in sample)
+  Model comparison on validation rows: Model comparison on the out-of-fold predictions

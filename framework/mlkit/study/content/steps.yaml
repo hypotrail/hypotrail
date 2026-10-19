@@ -138,3 +138,55 @@ moments:
     steps: [final_test, conclusion]
 regression_moments:
   compare: [models, model_variant, model_choice]
+# B6c (M3): a study evaluated by cross-validation explores every development row and
+# predicts each once, out of fold, by a model fitted on the other folds. These keys are
+# merged over the step of the task (``regression_cv_steps`` first in a regression study).
+cv_steps:
+  preprocessing:
+    context: The exploration of the development rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at quantiles, and log transforms are learnt, fold by fold, on the rows each model is fitted on, and applied unchanged to the fold it predicts. The default changes nothing.
+    interpretation: A preparation chosen after looking at the outcome is stamped data-contingent; the out-of-fold figures may then be slightly optimistic.
+  split:
+    concept: cross_validation
+    context: The folds are fixed before any exploration of the outcome. Each development row is predicted once, by a model fitted on the other folds, so every row counts in the comparison.
+    method: Stratified folds with a recorded seed, or contiguous blocks in time order when the case declares an order. The rows read are recorded as exposure.
+    interpretation: "{{slot:split:folds|int}} folds over {{slot:split:n_rows|int}} development rows; each row is predicted once, out of fold."
+  train_eda:
+    context: "The outcome is: {{fact:target|not stated by the case}}. Exploration reads the development rows; the final test stays sealed."
+    method: The target rate and the special values are computed on the development rows, with their denominators.
+    interpretation: "In the development rows, the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows. A model has to beat this base rate to be useful."
+  models:
+    context: A constant baseline and a logistic model are fitted fold by fold; each fold is scored by models fitted on the other folds.
+    method: The out-of-fold predictions of every development row are stored, so a new policy never requires a refit.
+    interpretation: The comparison is made on these out-of-fold predictions; they helped choose, so they are development evidence, not independent evidence.
+  policy:
+    method: Each rule is evaluated on the stored out-of-fold predictions; a capacity or a share is applied within each fold, since each fold is scored by its own model. Ties at the cut are counted pro rata, with paired bootstrap intervals.
+    interpretation: The figures describe these development rows after a choice made on them; they are optimistic and are not a forecast. Only the final test, opened once, is independent.
+  conclusion:
+    interpretation: The conclusion rests on out-of-fold figures of rows used for selection, and on the final test once it is opened.
+regression_cv_steps:
+  success_criterion:
+    method: You state the smallest relative reduction of the out-of-fold mean absolute error of the mean baseline that would make the model worth using.
+  preprocessing:
+    context: The exploration of the development rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at quantiles, and log transforms are learnt, fold by fold, on the rows each model is fitted on, and applied unchanged to the fold it predicts. The default changes nothing.
+    interpretation: A preparation chosen after looking at the target is stamped data-contingent; the out-of-fold errors may then be slightly optimistic.
+  split:
+    concept: cross_validation
+    context: The folds are fixed before any exploration of the target. Each development row is predicted once, by a model fitted on the other folds; quantile folds keep the target's spread similar in each fold, and temporal folds follow the time order.
+    method: Folds on target quantiles with a recorded seed, or contiguous blocks in time order when the case declares a time column or an order. The rows read are recorded as exposure.
+    interpretation: "{{slot:split:folds|int}} folds over {{slot:split:n_rows|int}} development rows; each row is predicted once, out of fold."
+  train_eda:
+    context: "The target is: {{fact:target|not stated by the case}}. Exploration reads the development rows; the final test stays sealed."
+    method: The target summary and the special values are computed on the development rows, with their counts.
+    interpretation: "On the development rows the target has a mean of {{slot:eda.target_summary:mean|f2}} and a standard deviation of {{slot:eda.target_summary:sd|f2}}, in the unit of the target. The mean baseline predicts the mean of the rows it is fitted on; a model has to do better to be useful."
+  models:
+    context: A mean baseline and a linear model are fitted fold by fold; each fold is predicted by models fitted on the other folds.
+    method: The out-of-fold predictions of every development row are stored, so comparing and choosing a model never requires a refit.
+    interpretation: "Out of fold, the mean baseline has a mean absolute error of {{slot:fit.baseline:validation.mae|f2}} and the linear model of {{slot:fit.linear:validation.mae|f2}}, in the unit of the target."
+  model_choice:
+    context: "The intended use is: {{fact:intended_use|not stated by the case}}. A model is adopted only when it reduces the error of the mean baseline by more than the variability of these out-of-fold predictions, and its residuals do not show a bias that matters for that use."
+    method: MAE and RMSE are computed in the unit of the target on the stored out-of-fold predictions, with paired bootstrap intervals of each and of the difference with the baseline, and the residuals by period.
+    interpretation: "The linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} out of fold, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of those rows. Its mean residual (bias) is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. These rows were used for the choice, so the figures are optimistic and are not a forecast."
+  conclusion:
+    interpretation: The conclusion rests on out-of-fold figures of rows used for the choice, and on the final test once it is opened.
