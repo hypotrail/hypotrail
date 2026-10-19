@@ -351,7 +351,9 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
                   # v0.2a (WP-A4).
                   'verdict_contradicts_criterion': 'warning'}
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
-                 'identifier', 'parameter', 'environment', 'setting', 'message', 'category')
+                 'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
+                 # v0.2a (WP-A6): state counts, the five example rows, chart axis ticks.
+                 'structure', 'data_row', 'axis')
 WRITER_MODULES = {'store', 'lock', 'registry', 'exposure', 'dependencies', 'commands', 'cli',
                   'migrate', 'preconditions'}
 

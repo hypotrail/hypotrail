@@ -48,7 +48,8 @@ CHART_CSS = '''
 .charts figure{margin:18px 0 26px;padding:0;max-width:680px}
 .charts figcaption{font-size:13px;color:var(--muted);margin:0 0 8px;max-width:680px}
 .charts figcaption strong{color:var(--ink)}
-svg.chart{display:block;width:100%;max-width:680px;height:auto;overflow:visible}
+.chart-frame{overflow-x:auto;max-width:680px}
+svg.chart{display:block;width:100%;min-width:520px;max-width:680px;height:auto;overflow:visible}
 svg.chart text{font-size:12px;fill:var(--ink);font-family:inherit}
 svg.chart text.axis,svg.chart text.note{fill:var(--muted);font-size:11px}
 svg.chart text.val{font-variant-numeric:tabular-nums;font-weight:650}
@@ -153,7 +154,8 @@ def _svg(height: float, body: str, label: str) -> str:
 def figure(chart_id: str, question: str, svg: str, legend: str = '', note: str = '') -> str:
     note_html = f'<p class="small">{note}</p>' if note else ''
     return (f'<figure data-chart="{e(chart_id)}"><figcaption><strong>Question.</strong> '
-            f'{e(question)}</figcaption>{svg}{legend}{note_html}</figure>')
+            f'{e(question)}</figcaption><div class="chart-frame">{svg}</div>{legend}'
+            f'{note_html}</figure>')
 
 
 def legend(*items: tuple[str, str]) -> str:

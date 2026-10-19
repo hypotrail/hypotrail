@@ -78,7 +78,7 @@ dl.figures dt{color:var(--muted)}dl.figures dd{margin:0;text-align:right}
 .card.verdict{border-left:4px solid var(--accent)!important}
 dl.facts{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:4px 18px;max-width:none}
 dl.facts dt{color:var(--muted)}dl.facts dd{margin:0;color:var(--ink)}
-.dictionary td:first-child{white-space:nowrap}
+.dictionary td:first-child,.availability td:first-child{white-space:nowrap}
 .verdict .conclusion{font-size:18px;color:var(--ink);margin:4px 0 10px}
 .verdict q{display:block;margin:6px 0 12px;color:var(--ink)}
 .verdict .limits li{margin:4px 0}
@@ -879,19 +879,28 @@ def _binary_figures(view: Mapping, citer: cite.Citer, rule: str | None) -> list[
     d = cite.format_path(['rules', rule, 'deltas', 'fit.logistic', 'precision'])
     iv = cite.format_path(['rules', rule, 'intervals', 'fit.logistic', 'precision'])
     rows = []
-    if not citer.has(rid, f'{m}.true_positives'):
+
+    def opt(path: str, fmt: str, before: str = '', after: str = '') -> str:
+        # an undefined value (no row selected: no precision) is left out, never cited
+        return f'{before}{citer.num(rid, path, fmt)}{after}' if citer.has(rid, path) else ''
+
+    def interval(base: str, fmt: str) -> str:
+        if citer.has(rid, base + '.low') and citer.has(rid, base + '.high'):
+            return (f', interval {citer.num(rid, base + ".low", fmt)} to '
+                    f'{citer.num(rid, base + ".high", fmt)}')
+        return ''
+
+    if not (citer.has(rid, f'{m}.true_positives') and citer.has(rid, f'{m}.selected')):
         return []
+    precision = opt(m + '.precision', 'pct1', ' (precision ', interval(iv, 'pct1') + ')') \
+        if citer.has(rid, m + '.precision') else ''
     rows.append(('Positive rows found by the model',
                  f'{citer.num(rid, m + ".true_positives", "auto")} among '
-                 f'{citer.num(rid, m + ".selected", "auto")} selected rows (precision '
-                 f'{citer.num(rid, m + ".precision", "pct1")}'
-                 + (f', interval {citer.num(rid, iv + ".low", "pct1")} to '
-                    f'{citer.num(rid, iv + ".high", "pct1")}' if citer.has(rid, iv + '.low')
-                    else '') + ')'))
+                 f'{citer.num(rid, m + ".selected", "auto")} selected rows{precision}'))
     if citer.has(rid, f'{b}.true_positives'):
         rows.append(('Baseline at the same rule',
-                     f'{citer.num(rid, b + ".true_positives", "auto")} on average without ranking (precision '
-                     f'{citer.num(rid, b + ".precision", "pct1")})'))
+                     f'{citer.num(rid, b + ".true_positives", "auto")} on average without '
+                     f'ranking{opt(b + ".precision", "pct1", " (precision ", ")")}'))
     if citer.has(rid, f'{d}.point'):
         interval = ''
         if citer.has(rid, f'{d}.low') and citer.has(rid, f'{d}.high'):

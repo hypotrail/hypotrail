@@ -161,8 +161,8 @@ def _split_keys(study: read.Study, rid: str) -> dict[str, list[str]]:
                          details={'result_id': rid})
     blobs = entry.get('blobs') or {}
     if not {'train', 'validation'} <= set(blobs):
-        raise StudyError('no_row_keys', f'Split result {rid} holds no row keys.',
-                         details={'result_id': rid})
+        raise StudyError('integrity_error', f'Split result {rid} holds no row keys.',
+                         details={'result_id': rid, 'blobs': sorted(blobs)})
     return {part: rec.parse_row_keys(study.blob(blobs[part])) for part in ('train', 'validation')}
 
 
@@ -184,13 +184,11 @@ def development_frame(study: read.Study, split_rid: str | None = None):
 def training_frame(study: read.Study):
     """The training rows of the current split (development rows only, never the final
     test), without the ``partition`` column; an empty frame before any split."""
-    try:
-        frame = development_frame(study)
-    except StudyError as exc:
-        if exc.code != 'no_row_keys':
-            raise
-        frame = _development(study)[1]
-        return frame.iloc[0:0]
+    rid = study.state['current'].get('split')
+    blobs = (study.result(rid).get('blobs') or {}) if rid else {}
+    if not {'train', 'validation'} <= set(blobs):          # no split, or no row keys
+        return _development(study)[1].iloc[0:0]
+    frame = development_frame(study, rid)
     return frame[frame['partition'] == 'train'].drop(columns=['partition'])
 
 
