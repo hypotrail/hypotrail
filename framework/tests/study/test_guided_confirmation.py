@@ -349,13 +349,8 @@ def test_a_proposal_without_labels_keeps_its_request_identity(flow):
 def test_mode_set(flow):
     state = flow.state()
     assert state['mode'] == 'guided' and state['language'] == 'en'
-    for mode in ('training', 'express'):
-        out = flow.call('mode', 'set', mode, '--user-words', 'je veux le mode ' + mode,
-                        '--request-id', flow.rid(), '--expected-revision', flow.rev(),
-                        '--study', flow.study, expect=2)
-        assert out['error']['code'] == 'unsupported_capability'
-        assert out['error']['details']['available_in'] == 'v0.2b'
-        assert out['command'] == 'mode set'
+    # v0.2b (WP-B2): training and express are implemented; their rules are tested in
+    # test_confirmation_modes.py.
     bad = flow.call('mode', 'set', 'turbo', '--user-words', 'turbo please', '--request-id',
                     flow.rid(), '--expected-revision', flow.rev(), '--study', flow.study,
                     expect=2)

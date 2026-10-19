@@ -364,3 +364,21 @@ test('refusal contexts: W3 propose, W4 run, W6 acknowledge, W7 export, from the 
   assert.equal(hold.human, 'This decision is on hold in your own words. Resolve the hold in the chat before confirming. Nothing was recorded.');
   assert.deepEqual(hold.details, ['On hold (n_1): "don\'t adopt anything until I bring my manager\'s figure"']);
 });
+
+test('training mode refusals (ADR 0005, WP-B2): paraphrase_required names what is not said, words_contradict_value the variable', () => {
+  const para = refusals.describe(error('decide confirm', 'paraphrase_required', 'In the training mode ...', {
+    decision_id: 'prediction_time', mode: 'training',
+    missing: [{ concept: 'timing_before', hint: 'when the score is computed, relative to the event (before it)' },
+      { concept: 'event', hint: 'the event the prediction moment refers to' }],
+  }));
+  assert.equal(para.code, 'paraphrase_required');
+  assert.match(para.human, /^In the training mode, a confirmation says in your own words/);
+  assert.ok(para.human.endsWith(' Nothing was recorded.'));
+  assert.deepEqual(para.details, ['Not said yet: when the score is computed, relative to the event (before it)',
+    'Not said yet: the event the prediction moment refers to']);
+  const contra = refusals.describe(error('decide confirm', 'words_contradict_value', 'In the training mode ...', {
+    warnings: [{ code: 'words_contradict_value', variable: 'contact', said: 'exclude', value: 'available_at_prediction' }],
+  }));
+  assert.match(contra.human, /training mode stopped the confirmation/);
+  assert.deepEqual(contra.details, ['Your words and the proposal disagree about contact']);
+});

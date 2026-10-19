@@ -62,6 +62,9 @@ const BY_CODE = {
   invalid_command: 'The engine does not accept this request.',
   // ADR 0005: the policy, the model choice and the conclusion need a reason.
   reason_required: 'This decision is a trade-off, so the engine records it only with your reason, in your own words.',
+  // ADR 0005, v0.2b (WP-B2): the training mode.
+  paraphrase_required: 'In the training mode, a confirmation says in your own words what the proposal decides, not only that you agree. The lines below name what your reply does not say yet.',
+  words_contradict_value: 'Your words and the proposal disagree about a variable, so the training mode stopped the confirmation. Settle which one you mean in the chat.',
 };
 
 // Explanations that depend on the write that was refused (the payload's `command`). A
@@ -156,6 +159,16 @@ function summariseDetails(code, details) {
     }
   }
   if (code === 'export_target_exists' && typeof details.path === 'string') lines.push(`Folder: ${details.path}`);
+  if (code === 'paraphrase_required' && Array.isArray(details.missing)) {
+    for (const m of details.missing.slice(0, 10)) {
+      if (m && typeof m.hint === 'string') lines.push(`Not said yet: ${m.hint}`);
+    }
+  }
+  if (code === 'words_contradict_value' && Array.isArray(details.warnings)) {
+    for (const w of details.warnings.slice(0, 10)) {
+      if (w && typeof w.variable === 'string') lines.push(`Your words and the proposal disagree about ${w.variable}`);
+    }
+  }
   if (code === 'interrupted_execution_pending' && Array.isArray(details.interrupted)) {
     for (const e of details.interrupted.slice(0, 10)) {
       const id = typeof e === 'string' ? e : (e && e.execution_id);

@@ -20,8 +20,10 @@ Decision actions:
   and an open proposal created by an earlier request whose basis (the confirmed
   decisions it rests on) is unchanged. Otherwise it refuses with
   ``ambiguous_confirmation``. The words follow the rules of the study's confirmation mode
-  (ADR 0005, :mod:`mlkit.study.confirm`; ``guided`` in v0.2a), and the policy, the model
-  choice and the conclusion need a reason (``reason_required``). It checks the three-pause
+  (ADR 0005, :mod:`mlkit.study.confirm`: ``guided``, the default; ``training``, a paraphrase
+  on the proposal's concepts, :mod:`mlkit.study.concepts`, ``paraphrase_required``; and
+  ``express``, a wider standing delegation), and the policy, the model choice and the
+  conclusion need a reason (``reason_required``). It checks the three-pause
   preconditions, applies the §3.7 dependency table, and records the invalidation. Its
   request ``basis`` says how the user decided: ``explicit`` (their own reply to the
   restatement, the default; recorded as ``endorsed`` or ``restated``) or
@@ -57,6 +59,7 @@ from typing import Any, Callable, Mapping
 from mlkit.reliability import CommandRefused, Handler
 
 from . import case as c
+from . import concepts
 from . import confirm as cf
 from . import data as dt
 from . import dependencies as dep
@@ -955,7 +958,7 @@ def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
 def _confirm(ctx: Context) -> Handler:
     def check(params):
         words = params['user_words']
-        # ADR 0005: the guided rules (the only mode of v0.2a; ``mode set`` refuses the others).
+        # ADR 0005: the reply rules of every mode (the training rules follow in ``run``).
         reason = cf.reply_problem(words)
         if reason == 'missing_user_words':
             raise _ambiguous('missing_user_words', REPLY_MESSAGES[reason])
@@ -1021,19 +1024,22 @@ def _confirm(ctx: Context) -> Handler:
         hold = _hold_refusal(state, decision_id, pid)
         if hold is not None:
             raise hold
-        if params['basis'] == st.DELEGATED_DEFAULT \
-                and decision_id not in st.STANDING_DELEGATION_DECISIONS \
+        mode = st.mode_of(state)
+        standing = st.standing_delegation_decisions(state)
+        if params['basis'] == st.DELEGATED_DEFAULT and decision_id not in standing \
                 and params['delegation_scope'] != st.THIS_DECISION:
+            covers = ('the prediction moment, the feature availability, the split, the success '
+                      'criterion and the preprocessing' if mode == st.EXPRESS else
+                      'the prediction moment, the feature availability and the split')
             raise _ambiguous('delegation_not_given_at_this_pause',
                              f'The {decision_id} is decided only with the junior\'s own words, '
-                             f'or with a delegation they give at this pause: a standing '
-                             f'delegation covers the prediction moment, the feature '
-                             f'availability and the split only. Ask the junior to choose, '
-                             f'stating your recommended default; if they delegate now, confirm '
-                             f'with --delegation-scope this_decision.',
+                             f'or with a delegation they give at this pause: in the {mode} mode '
+                             f'a standing delegation covers {covers} only. Ask the junior to '
+                             f'choose, stating your recommended default; if they delegate now, '
+                             f'confirm with --delegation-scope this_decision.',
                              proposal_id=pid, decision_id=decision_id,
                              delegation_scope=params['delegation_scope'],
-                             standing_covers=list(st.STANDING_DELEGATION_DECISIONS))
+                             standing_covers=list(standing), mode=mode)
         stale = _stale_refusal(state, proposal)
         if stale is not None:
             raise stale
@@ -1047,6 +1053,10 @@ def _confirm(ctx: Context) -> Handler:
         delegated = params['basis'] == st.DELEGATED_DEFAULT
         if delegated:
             basis_recorded = st.DELEGATED_DEFAULT
+        elif mode == st.TRAINING:
+            # v0.2b (WP-B2): the training rules, concept matching and a stop on a contradiction.
+            _check_training(state, proposal, words)
+            basis_recorded = st.RESTATED
         else:
             # Guided rule (ADR 0005, integrator fix): an explicit endorsement expression, or
             # a reply that repeats the proposal; "yes, I like pizza" is never a decision.
@@ -1063,7 +1073,7 @@ def _confirm(ctx: Context) -> Handler:
                     f'why. Ask the junior for one reason in their own words ("because ...", '
                     f'"parce que ...") and confirm with that reply.',
                     details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
-                             'mode': st.mode_of(state)})
+                             'mode': mode})
             basis_recorded = cf.recorded_basis(words, proposal)
         # C3: the part of a confirmation that does not depend on the words is one function,
         # shared with ``preview effects``: the refusals left (changed sources, value,
@@ -1076,7 +1086,9 @@ def _confirm(ctx: Context) -> Handler:
                                      user_words=words, channel=params['channel'],
                                      actor=params['actor'], basis=basis_recorded,
                                      delegation_scope=params['delegation_scope'],
-                                     agent_concern=concern)
+                                     agent_concern=concern, mode=mode)
+        # R3 by mode: a warning in guided and express (a contradiction stops a training
+        # confirmation before this point).
         warnings = cf.availability_warnings(words, value) \
             if decision_id == 'feature_availability' else []
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
@@ -1084,8 +1096,63 @@ def _confirm(ctx: Context) -> Handler:
                 'channel': params['channel'], 'actor': params['actor'],
                 'invalidation': {k: record[k] for k in INVALIDATION_RESULT_KEYS},
                 'basis': basis_recorded, 'delegation_scope': params['delegation_scope'],
-                'agent_concern': concern, 'warnings': warnings}
+                'agent_concern': concern, 'warnings': warnings, 'mode': mode}
     return Handler(CONFIRM_PARAMS, run, check)
+
+
+def _check_training(state: Mapping, proposal: Mapping, words: str) -> None:
+    """The training rules (ADR 0005, v0.2b): refuse the junior's words unless they restate
+    the proposal on its concepts (:mod:`mlkit.study.concepts`).
+
+    In order: a ``feature_availability`` reply whose words contradict the value
+    (``words_contradict_value``, a refusal in this mode); a reply with no endorsement, no
+    word or number of the proposal and no concept of it (``ambiguous_confirmation``,
+    ``unrelated_reply``); a concept left unsaid (``paraphrase_required``, ``details.missing``
+    names each one, with a hint for the junior); for the trade-offs, no reason connector
+    (``reason_required``)."""
+    pid, decision_id, value = proposal['proposal_id'], proposal['decision_id'], proposal['value']
+    mode = st.TRAINING
+    if decision_id == 'feature_availability':
+        found = cf.availability_warnings(words, value)
+        if found:
+            named = ', '.join(w['variable'] for w in found)
+            raise CommandRefused(
+                'words_contradict_value',
+                f'In the training mode, words that contradict the value stop the confirmation: '
+                f'the junior\'s words say the opposite of the proposal for {named}. Tell them '
+                f'what the value says; they confirm with words that match it, or you propose '
+                f'again with the value they mean.',
+                details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
+                         'mode': mode, 'warnings': found,
+                         'junior_message': f'Your words and the proposal disagree about {named}: '
+                                           f'say which one you mean.'})
+    texts = (proposal['restatement'], *(proposal.get('labels') or {}).values())
+    result = concepts.check(state, proposal, words)
+    if not result['said'] and not cf.is_endorsement(words) \
+            and not cf.restates(words, value=value, texts=texts):
+        raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
+                         proposal_id=pid, user_words=words,
+                         restatement=proposal['restatement'])
+    if result['missing']:
+        hints = '; '.join(m['hint'] for m in result['missing'])
+        raise CommandRefused(
+            'paraphrase_required',
+            f'In the training mode the junior confirms by saying, in their own words, what the '
+            f'proposal decides; an endorsement is not enough. Their reply does not say: {hints}. '
+            f'Ask them to restate the decision in their own words; do not suggest the words.',
+            details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
+                     'mode': mode, 'missing': result['missing'], 'said': result['said'],
+                     'junior_message': 'In the training mode, your confirmation says in your own '
+                                       'words what you decide, not only that you agree. Your '
+                                       f'reply does not say yet: {hints}.'})
+    if cf.needs_reason(state, decision_id) and not concepts.has_reason_connector(words):
+        raise CommandRefused(
+            'reason_required',
+            f'The {decision_id} is a trade-off: in the training mode the junior also says why, '
+            f'with a reason clause ("because ...", "parce que ..."). Ask the junior why it fits '
+            f'their situation and confirm with that reply.',
+            details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
+                     'mode': mode})
 
 
 # The part of an invalidation record a confirmation reports in ``result.invalidation``,
@@ -1206,7 +1273,8 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
 
 def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, user_words: str,
                         channel: str, actor: str, basis: str, delegation_scope: str | None,
-                        time: str | None = None, agent_concern: str | None = None) -> dict:
+                        time: str | None = None, agent_concern: str | None = None,
+                        mode: str | None = None) -> dict:
     """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
     decision_id, value = plan['decision_id'], plan['value']
     proposal = state['proposals'][proposal_id]
@@ -1219,7 +1287,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
     confirmation = st.confirmation(user_words=user_words, proposal=proposal, channel=channel,
                                    actor=actor, revision=revision, time=time, basis=basis,
                                    delegation_scope=delegation_scope,
-                                   agent_concern=agent_concern)
+                                   agent_concern=agent_concern,
+                                   mode=mode if mode is not None else st.mode_of(state))
     proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
     decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
                     confirmation=confirmation, revision=revision, reason=None)
@@ -1392,11 +1461,14 @@ def _withdraw_note(ctx: Context) -> Handler:
 def _set_mode(ctx: Context) -> Handler:
     """``study.set_mode`` (ADR 0005): the confirmation mode, in the user's own words.
 
-    ``guided`` is the only mode of v0.2a; ``training`` and ``express`` are reserved and
-    refused with ``unsupported_capability`` (``details.available_in``). A change is never
-    made without the user's words: empty words, a refusal, a question, a condition, or a
-    bare acknowledgement are refused as for a confirmation (``ambiguous_confirmation``).
-    The change is recorded in ``mode_history`` with the words."""
+    ``guided`` (the default), ``training`` and ``express`` (v0.2b). Lowering the strictness
+    (training to guided, guided to express, :func:`state.lowers_strictness`) needs the user's
+    words, and they must name the mode asked for (``unrelated_reply`` otherwise,
+    ``concepts.mode_named``); raising it (express to guided, guided to training) needs no
+    words. Words, when given, are never empty, a refusal, a question, a condition, or a bare
+    acknowledgement (``ambiguous_confirmation``, as for a confirmation). Keeping the same mode
+    needs words too. A change never touches a decision: past confirmations stay valid, each
+    with the mode it was recorded in. The change is recorded in ``mode_history``."""
     def check(params):
         mode = params['mode']
         if mode not in st.MODES:
@@ -1405,25 +1477,43 @@ def _set_mode(ctx: Context) -> Handler:
         if mode not in st.SUPPORTED_MODES:
             raise CommandRefused('unsupported_capability',
                                  f'The {mode} mode is planned for '
-                                 f'{st.MODES_AVAILABLE_IN[mode]}; this version supports '
-                                 f'{", ".join(st.SUPPORTED_MODES)} only.',
+                                 f'{st.MODES_AVAILABLE_IN.get(mode, "a later version")}; this '
+                                 f'version supports {", ".join(st.SUPPORTED_MODES)} only.',
                                  details={'mode': mode,
-                                          'available_in': st.MODES_AVAILABLE_IN[mode],
+                                          'available_in': st.MODES_AVAILABLE_IN.get(mode),
                                           'supported': list(st.SUPPORTED_MODES)})
         words = params['user_words']
-        reason = cf.reply_problem(words)
-        if reason is not None:
-            raise _ambiguous(reason, REPLY_MESSAGES[reason], user_words=words)
+        if words is not None and not isinstance(words, str):
+            raise _invalid('user_words is a string.', field='user_words')
+        if words is not None and words.strip():
+            reason = cf.reply_problem(words)
+            if reason is not None:
+                raise _ambiguous(reason, REPLY_MESSAGES[reason], user_words=words)
 
     def run(state, params):
         previous = st.mode_of(state)
+        mode, words = params['mode'], params['user_words']
+        given = isinstance(words, str) and bool(words.strip())
+        if not given and not st.raises_strictness(previous, mode):
+            raise _ambiguous('missing_user_words',
+                             f'Changing the mode from {previous} to {mode} needs the user\'s '
+                             f'own words asking for it: only a change to a stricter mode '
+                             f'(express to guided, guided to training) is made without them.',
+                             previous=previous, mode=mode)
+        if given and st.lowers_strictness(previous, mode) \
+                and not concepts.mode_named(mode, words):
+            raise _ambiguous('unrelated_reply',
+                             f'These words do not ask for the {mode} mode: a less strict mode is '
+                             f'set only on the user\'s words that name it. Ask the user which '
+                             f'mode they want.', user_words=words, previous=previous, mode=mode)
         revision = state['revision'] + 1
-        state['mode'] = params['mode']
+        state['mode'] = mode
+        recorded = words if given else None
         state.setdefault('mode_history', []).append(
-            {'mode': params['mode'], 'previous': previous, 'user_words': params['user_words'],
+            {'mode': mode, 'previous': previous, 'user_words': recorded,
              'revision': revision, 'time': st.now(), 'request_id': ctx.request_id})
-        return {'mode': params['mode'], 'previous': previous,
-                'user_words': params['user_words'], 'changed': previous != params['mode']}
+        return {'mode': mode, 'previous': previous, 'user_words': recorded,
+                'changed': previous != mode}
     return Handler(SET_MODE_PARAMS, run, check)
 
 
