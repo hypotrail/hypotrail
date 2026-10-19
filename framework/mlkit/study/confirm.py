@@ -8,7 +8,7 @@ revision, and it is not:
 * empty (``missing_user_words``);
 * a refusal, a hesitation or a disagreement (``negative_reply``, :func:`commands.is_negative`);
 * a question (``question_reply``: the reply holds a question mark);
-* conditional (``conditional_reply``: "oui mais je veux réfléchir", "d'accord sauf contact",
+* conditional (``conditional_reply``: "oui mais je veux réfléchir", "d'accord sauf ...",
   "yes but", "unless", "sauf si": :func:`is_conditional`);
 * a bare acknowledgement (``bare_acknowledgement``: "ok", "oui", "sure, sounds good"),
   unless it is an explicit first-person endorsement ("je confirme", "I agree",
@@ -201,7 +201,7 @@ CLAUSES = re.compile(r"[,;:.!?…—–()]+|\s-\s")
 
 def _direction(tokens: list[str]) -> str | None:
     """``exclude``, ``keep``, None (neither), or ``unclear`` (both kinds of words, or a
-    negation before the first of them: "on ne garde pas duration")."""
+    negation before the first of them: "on ne garde pas x1")."""
     def excludes(t):
         return t in EXCLUDE_WORDS or t.startswith(EXCLUDE_STEMS)
 
@@ -224,8 +224,8 @@ def availability_warnings(words: str, value: Mapping) -> list[dict]:
     The words are cut into clauses (punctuation). A clause that names a variable takes the
     direction of its exclusion words ("exclure", "écarter", "retirer", "sans", "exclude",
     "drop", "remove") or keep words ("garder", "inclure", "keep", "include", "use"); a clause
-    with no such word continues the direction of the clause before it ("exclure duration,
-    contact et pdays"). A clause with a negation, or with both kinds of words, says nothing.
+    with no such word continues the direction of the clause before it ("exclure x1,
+    x2 et x3"). A clause with a negation, or with both kinds of words, says nothing.
     Each contradiction is ``{code: words_contradict_value, variable, said, value, message}``.
     """
     if not isinstance(words, str) or not isinstance(value, Mapping):

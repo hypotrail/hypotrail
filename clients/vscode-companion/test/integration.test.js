@@ -139,7 +139,7 @@ test('a stale revision is refused with the diff, then the typed words confirm wi
   assert.equal(confirmation.channel, 'webview');
   assert.equal(confirmation.actor, 'user');
   assert.equal(confirmation.user_words, words);
-  assert.equal(confirmation.basis, 'explicit');
+  assert.equal(confirmation.basis, 'restated');   // ADR 0005: own words repeating the proposal
   assert.equal(confirmation.authenticated, false);
   assert.equal(snapshot().model.revision, rev + 1);
   assert.equal(snapshot().model.proposals.length, 0);

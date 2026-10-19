@@ -43,12 +43,13 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           'agent_concern')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
+                      # ADR 0005: the restatement per language (``null`` when none was
+                      # given), and ``label``, the restatement in the study language. Before
+                      # ``origin``, which stays the last key (decision CI.6).
+                      'labels', 'label',
                       # Advanced companion (C9, decision CI.6): the stored origin, ``null``
                       # for a proposal recorded before C9. The report reads it.
-                      'origin',
-                      # ADR 0005: the restatement per language (``null`` when none was
-                      # given), and ``label``, the restatement in the study language.
-                      'labels', 'label')
+                      'origin')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
                     'n_rows', 'values', 'blobs', 'params', 'inputs', 'code_fingerprint',
                     'environment', 'execution_id', 'exposure_id', 'started_revision',
@@ -328,9 +329,7 @@ def summary(view: dict) -> dict:
                         'reason': dec['reason'], 'open_proposals': dec['open_proposals']}
     proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],
                   'value': _compact_value(p['decision_id'], p['value']),
-                  'restatement': p['restatement'], 'revision': p['revision'],
-                  # ADR 0005: the restatement in the study language.
-                  'label': p['label']}
+                  'restatement': p['restatement'], 'revision': p['revision']}
                  for p in view['open_proposals']]
     results = {slot: {'result_id': r['result_id'], 'current': r['current'],
                       'stale_reason': r['stale_reason'], 'integrity': r['integrity']}

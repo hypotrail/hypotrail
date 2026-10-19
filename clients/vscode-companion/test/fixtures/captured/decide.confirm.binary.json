@@ -45,8 +45,10 @@
     "stale_slots": [],
     "reconfirm_required": []
    },
-   "basis": "explicit",
-   "delegation_scope": null
+   "basis": "restated",
+   "delegation_scope": null,
+   "agent_concern": null,
+   "warnings": []
   },
   "artifacts": {
    "report": {

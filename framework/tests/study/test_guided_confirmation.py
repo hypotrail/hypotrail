@@ -292,8 +292,9 @@ def test_labels_and_the_study_language(bank):
     p = v['open_proposals'][0]
     assert p['labels'] == {'fr': PT_FR} and p['label'] == PT_FR
     assert p['restatement'] == PT_RESTATEMENT
+    assert list(p)[-1] == 'origin'                         # CI.6: origin stays last
     summary = bank.call('status', '--summary', '--study', bank.study)
-    assert summary['open_proposals'][0]['label'] == PT_FR
+    assert 'label' not in summary['open_proposals'][0]     # CA.4: the v0.1 summary shape
     # A French paraphrase restates through the French label.
     assert _confirm(bank, pid, 'oui, avant le premier appel')['result']['basis'] == st.RESTATED
 

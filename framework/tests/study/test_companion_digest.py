@@ -148,7 +148,7 @@ def test_every_action_appears_with_its_kind(binary, tmp_path):
     confirmed, hold, resolved, replaced, proposed, withdrawn = items
     assert confirmed['text'] == "The policy was confirmed in the junior's words (channel chat)."
     assert confirmed['invalidation']['mutation'] == 'first_confirmation'
-    assert (confirmed['channel'], confirmed['basis']) == ('chat', 'explicit')
+    assert (confirmed['channel'], confirmed['basis']) == ('chat', 'restated')  # ADR 0005: own words repeating the proposal are recorded as restated (was explicit)
     assert hold['text'] == ('Hold recorded on the policy: "wait for my manager\'s figure". The '
                             'policy needs confirmation again: the junior put the policy on hold.')
     assert hold['invalidation']['mutation'] == 'hold_added'

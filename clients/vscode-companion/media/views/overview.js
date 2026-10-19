@@ -106,7 +106,8 @@
     switch (step.status) {
       case 'done':
         if (p !== null && step.decisionStatus === 'confirmed') {
-          if (step.basis === 'explicit') return c.pauseWords(p);
+          // ADR 0005: endorsed and restated are the junior's own words, like explicit.
+          if (['explicit', 'endorsed', 'restated'].includes(step.basis)) return c.pauseWords(p);
           if (step.basis === 'delegated_default') return c.pauseDelegated(p);
         }
         return '';

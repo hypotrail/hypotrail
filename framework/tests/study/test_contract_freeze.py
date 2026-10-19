@@ -41,7 +41,9 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
-NOTE_STATUSES = ('open', 'resolved', 'withdrawn')
+NOTE_STATUSES = ('open', 'resolved', 'withdrawn',
+                 # ADR 0005 (R3): a correction is recorded at once.
+                 'recorded')
 # Post-v0.1 (P2): a junior's condition or hold on a decision.
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
@@ -70,12 +72,16 @@ RESULT_KEYS_BY_ACTION = {
     'decide.propose': ('proposal_id', 'decision_id', 'status', 'decision_status', 'superseded',
                        'restatement'),
     'decide.confirm': ('decision_id', 'proposal_id', 'status', 'value', 'user_words', 'channel',
-                       'actor', 'invalidation', 'basis', 'delegation_scope'),
+                       'actor', 'invalidation', 'basis', 'delegation_scope',
+                       # ADR 0005 (R3): the agent's concern, and the contradiction warnings.
+                       'agent_concern', 'warnings'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
     # Post-v0.1 (P2).
     # Post-v0.1 fixes (D1): the decisions a hold on a confirmed decision asks for again.
     'decide.note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds',
-                    'reconfirm_required'),
+                    'reconfirm_required',
+                    # ADR 0005 (R3): hold or correction.
+                    'kind'),
     'decide.resolve_note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
     # Post-v0.1 fixes (D5).
     'decide.withdraw_note': ('note_id', 'decision_id', 'status', 'user_words', 'open_holds'),
@@ -86,7 +92,12 @@ ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rati
                  'decide.withdraw': {'proposal_id', 'reason'},
                  'decide.note': {'decision_id', 'user_words'},
                  'decide.resolve_note': {'note_id', 'user_words'},
-                 'decide.withdraw_note': {'note_id', 'user_words'}}
+                 'decide.withdraw_note': {'note_id', 'user_words'},
+                 # ADR 0005: the confirmation mode, in the user's words.
+                 'study.set_mode': {'mode', 'user_words'}}
+# ADR 0005: optional parameters, carried only when given (a replay stays a replay).
+OPTIONAL_ACTION_PARAMS = {'decide.propose': {'channel', 'labels'},
+                          'decide.confirm': {'agent_concern'}, 'decide.note': {'kind'}}
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
              'stale', 'invalidations', 'executions', 'artifacts', 'exposure',
@@ -94,19 +105,34 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # M3 (regression): the task of the study, ``binary`` or ``regression``.
              'task',
              # Post-v0.1 (P2): the junior's conditions and holds.
-             'notes')
+             'notes',
+             # ADR 0005: the confirmation mode and the study language.
+             'mode', 'language')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
-                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
-# Post-acceptance contract (D1): how the user decided.
-CONFIRMATION_BASES = ('explicit', 'delegated_default')
+                          'revision', 'time', 'authenticated', 'basis', 'delegation_scope',
+                          # ADR 0005 (R3).
+                          'agent_concern')
+# Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
+# of own words of the guided mode; ``explicit`` stays readable and is the request default.
+CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
+REQUEST_BASES = ('explicit', 'delegated_default')
+# ADR 0005: confirmation modes, languages, the guided reply reasons and warnings.
+MODES = ('guided', 'training', 'express')
+SUPPORTED_MODES = ('guided',)
+LANGUAGES = ('en', 'fr')
+MODE_CHANGE_KEYS = ('mode', 'previous', 'user_words', 'revision', 'time', 'request_id')
+WARNING_KEYS = ('code', 'variable', 'said', 'value', 'message')
 # Acceptance rerun (R1): the scope of a delegation. A standing delegation never covers the
 # policy or the conclusion.
 DELEGATION_SCOPES = ('this_decision', 'standing')
 STANDING_DELEGATION_DECISIONS = ('prediction_time', 'feature_availability', 'split')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
+                      # ADR 0005: restatements per language, and the study-language one,
+                      # inserted before origin, which stays last (CI.6).
+                      'labels', 'label',
                       # Advanced companion (C9, decision CI.6): additive, last.
                       'origin')
 RESULT_VIEW_KEYS = ('slot', 'result_id', 'activity', 'current', 'stale_reason', 'partition',
@@ -191,7 +217,9 @@ ERROR_CODES = {
     # Post-v0.1 (P2): holds; (P7) a default credited to the analyst.
     'decision_on_hold', 'unknown_note', 'note_not_open', 'misattributed_delegation',
     # Advanced companion (CLI-CONTRACT-COMPANION §12, WP-E2): export handoff.
-    'export_target_exists'}
+    'export_target_exists',
+    # ADR 0005: the policy, the model choice and the conclusion need a reason.
+    'reason_required'}
 RESERVED_CODES: set[str] = set()
 AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not_found',
                      'proposal_withdrawn', 'proposal_superseded', 'proposal_confirmed',
@@ -202,7 +230,9 @@ AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not
                      'negative_reply', 'unrelated_reply',
                      # Acceptance rerun (R1): policy and conclusion need a delegation given
                      # at that pause.
-                     'delegation_not_given_at_this_pause'}
+                     'delegation_not_given_at_this_pause',
+                     # ADR 0005 (guided mode): a question, a conditional agreement.
+                     'question_reply', 'conditional_reply'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')
@@ -347,7 +377,11 @@ def test_view_model_keys(flow):
     assert all(tuple(d) == DECISION_VIEW_KEYS for d in v['decisions'].values())
     conf = v['decisions']['prediction_time']['confirmation']
     assert tuple(conf) == CONFIRMATION_VIEW_KEYS and conf['authenticated'] is False
-    assert conf['basis'] == 'explicit' and conf['delegation_scope'] is None
+    # ADR 0005: "Yes, before the reminder." repeats the value, so it is recorded as restated.
+    assert conf['basis'] == 'restated' and conf['delegation_scope'] is None
+    assert conf['agent_concern'] is None
+    assert v['mode'] == 'guided' and v['language'] == 'en'
+    assert [tuple(p) for p in v['open_proposals']] in ([], [PROPOSAL_VIEW_KEYS])
     assert tuple(v['exposure']) == EXPOSURE_SUMMARY_KEYS
     assert tuple(v['artifacts']) == ARTIFACT_VIEW_KEYS
     assert tuple(v['facts']) == ('by_status', 'count')
@@ -402,9 +436,9 @@ def test_ambiguous_confirmation_reasons():
 def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, synthetic_case_dir):
     """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
     refusal keys."""
-    assert st.TOP_OPTIONAL_KEYS == ('task', 'notes')
+    assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'mode', 'language', 'mode_history')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
-    assert st.NOTE_KINDS == ('hold',) and st.NOTE_STATUSES == NOTE_STATUSES
+    assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
     study = tmp_path / 'study'
     _run('init', '--case', synthetic_case_dir, '--study', study)
@@ -503,7 +537,9 @@ def test_actions_and_their_parameters():
     assert set(reliability.REQUEST_KEYS) == {'request_id', 'expected_revision', 'action', 'params'}
     assert cmd.DEFAULT_CHANNEL == 'chat' and st.CHANNELS == ('chat', 'cli', 'webview')
     assert st.CONFIRMATION_BASES == CONFIRMATION_BASES and cmd.DEFAULT_BASIS == 'explicit'
-    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope')
+    assert st.REQUEST_BASES == REQUEST_BASES
+    assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern')
+    assert {a: set(p) for a, p in cmd.OPTIONAL_PARAMS.items()} == OPTIONAL_ACTION_PARAMS
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DELEGATION_SCOPES == DELEGATION_SCOPES
     assert st.STANDING_DELEGATION_DECISIONS == STANDING_DELEGATION_DECISIONS
@@ -731,3 +767,36 @@ def test_companion_schema_names():
     assert all(f'`{name}`' in section for name in COMPANION_SCHEMAS.values())
     for module in (cmd_decisions, cmd_evidence, cmd_explain, cmd_export, preview_effects, preview_proposal):
         assert not getattr(module, 'WP0_STUB', False), module.__name__
+
+
+def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_case_dir):
+    """ADR 0005: modes, languages, ``mode set``, the guided reasons, ``reason_required`` and
+    the ``words_contradict_value`` warning."""
+    from mlkit.study import confirm as cf
+    assert st.MODES == MODES and st.SUPPORTED_MODES == SUPPORTED_MODES
+    assert st.DEFAULT_MODE == 'guided' and st.LANGUAGES == LANGUAGES
+    assert st.DEFAULT_LANGUAGE == 'en' and st.MODE_CHANGE_KEYS == MODE_CHANGE_KEYS
+    assert st.MODES_AVAILABLE_IN == {'training': 'v0.2b', 'express': 'v0.2b'}
+    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion'),
+                                   'regression': ('model_choice', 'conclusion')}
+    assert cf.WORDS_CONTRADICT_VALUE == 'words_contradict_value'
+    warning = cf.availability_warnings('exclude contact', {'contact': 'available_at_prediction'})
+    assert [tuple(w) for w in warning] == [WARNING_KEYS]
+    keys = (set(MODES) | set(LANGUAGES) | set(MODE_CHANGE_KEYS) | set(WARNING_KEYS)
+            | set(CONFIRMATION_BASES) | {'mode_history', 'language', 'labels', 'label',
+                                         'agent_concern', 'warnings', 'words_contradict_value',
+                                         'reason_required', 'question_reply',
+                                         'conditional_reply', 'correction', 'recorded',
+                                         'study.set_mode', 'available_in', 'confirm.ENDORSEMENT',
+                                         'confirm.availability_warnings', 'confirm.has_reason'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    for line in ('hypotrail mode set guided|training|express --user-words TEXT',
+                 '[--agent-concern TEXT]', '--proposal PROPOSAL', '[--kind hold|correction]',
+                 '[--restatement-fr TEXT]', 'hypotrail init --case CASE --study DIR [--lang en|fr]'):
+        assert line in DOC, line
+    study = tmp_path / 'study'
+    assert _run('init', '--case', synthetic_case_dir, '--study', study).exit_code == 0
+    out = _run('mode', 'set', 'guided', '--user-words', 'I keep the guided mode.',
+               '--request-id', 'm1', '--expected-revision', 1, '--study', study)
+    assert out.exit_code == 0 and tuple(out.payload) == PAYLOAD_KEYS['decide']
+    assert tuple(out.payload['result']) == ('mode', 'previous', 'user_words', 'changed')

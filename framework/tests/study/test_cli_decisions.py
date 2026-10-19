@@ -268,9 +268,10 @@ def test_a_delegation_is_never_recorded_as_explicit(study, work):
     assert out['error']['details']['reason'] == 'delegation_needs_basis'
     done = confirm(study, work, pid, 'Yes: we predict before the first reminder goes out.',
                    rid='r3', rev=2)
-    assert done['result']['basis'] == 'explicit'
+    # ADR 0005: own words repeating the proposal are recorded as restated (was explicit).
+    assert done['result']['basis'] == 'restated'
     view = _status(study, work)['view']
-    assert view['decisions']['prediction_time']['confirmation']['basis'] == 'explicit'
+    assert view['decisions']['prediction_time']['confirmation']['basis'] == 'restated'
     assert 'delegated_decisions' not in {x['id'] for x in view['not_yet_defensible']}
     code, bad = hyp('decide', 'confirm', pid, '--user-words', 'x y z', '--basis', 'guessed',
                     '--request-id', 'r4', '--expected-revision', 3, '--study', study, cwd=work)
@@ -284,7 +285,8 @@ def test_an_explicit_reply_confirms_a_recommended_default(study, work):
                   restatement=DEFAULT_RESTATEMENT)['result']['proposal_id']
     done = confirm(study, work, pid, 'Yes, before the first reminder is sent: that is when we act.',
                    rid='r2', rev=2)
-    assert done['result']['status'] == 'confirmed' and done['result']['basis'] == 'explicit'
+    # ADR 0005: own words repeating the proposal are recorded as restated (was explicit).
+    assert done['result']['status'] == 'confirmed' and done['result']['basis'] == 'restated'
     assert done['result']['delegation_scope'] is None
     view = _status(study, work)['view']
     assert view['decisions']['prediction_time']['confirmation']['restatement'] \
@@ -661,7 +663,8 @@ def test_status_summary_is_compact_and_complete(study, work, features):
     assert p['restatement'].startswith('Everything is known') and p['proposal_id'] == 'p_2'
     assert p['value']['not_available'] == ['desk_followups']
     pt = summary['decisions']['prediction_time']
-    assert pt == {'status': 'confirmed', 'value': PT, 'basis': 'explicit', 'delegation_scope': None,
+    # ADR 0005: own words repeating the proposal are recorded as restated (was explicit).
+    assert pt == {'status': 'confirmed', 'value': PT, 'basis': 'restated', 'delegation_scope': None,
                   'user_words': 'Yes: we predict before the first reminder goes out.',
                   'reason': None, 'open_proposals': []}
     assert summary['decisions']['feature_availability']['status'] == 'proposed'

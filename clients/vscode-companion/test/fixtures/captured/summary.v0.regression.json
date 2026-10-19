@@ -87,14 +87,15 @@
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 24
+    "revision": 24,
+    "label": "Adopt the linear model."
    }
   ],
   "decisions": {
    "prediction_time": {
     "status": "confirmed",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
     "reason": null,
@@ -114,7 +115,7 @@
       "weight"
      ]
     },
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
     "reason": null,
@@ -127,7 +128,7 @@
      "cutoff": 79,
      "method": "ordinal_cutoff"
     },
-    "basis": "explicit",
+    "basis": "restated",
     "delegation_scope": null,
     "user_words": "Yes, I want the split exactly as you stated it",
     "reason": null,
