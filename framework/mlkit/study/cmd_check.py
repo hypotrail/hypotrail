@@ -280,12 +280,14 @@ class Pool:
 
     Literals are recorded values a text may repeat: decision and proposal values, the
     rules evaluated by the current policy evaluation, the junior's recorded words, settings,
-    case statements, and ``user_texts`` (text the junior wrote, passed with
-    ``--allow-user-text``).
+    case statements, ``user_texts`` (text the junior wrote, passed with
+    ``--allow-user-text``), the sealed final test's counts, and (WP-A8) the figures of the
+    data card (``data_card``, the ``hypotrail data`` payload).
     """
 
     def __init__(self, view: Mapping, user_texts: Iterable[str] = (),
-                 result_ids: Iterable[str] | None = None, retired: Iterable[Mapping] = ()):
+                 result_ids: Iterable[str] | None = None, retired: Iterable[Mapping] = (),
+                 data_card: Mapping | None = None):
         self.current, self.stale, self.literal = [], [], []
         # Withdrawn and superseded proposals (F3): never literals; only named in the
         # finding when an untraceable number repeats one of their figures.
@@ -371,6 +373,14 @@ class Pool:
         count('decisions', 'decisions', len(view['decisions']))
         self._literal('setting', 'settings', view['settings'])
         self._literal('case', 'dataset.rows', view['dataset'].get('rows'))
+        # WP-A8: the sealed final test's counts (state, ADR 0006) and the data card's figures
+        # (step 0 shows them before any result exists): row and column counts, missing,
+        # distinct and special-value counts, and the example cells it prints.
+        final = view.get('final_test') or {}
+        for key in ('rows', 'development_rows'):
+            self._literal('final_test', f'final_test.{key}', final.get(key))
+        for source, value in data_card_figures(data_card):
+            self._literal('data_card', source, value)
         for items in view['facts']['by_status'].values():
             for f in items:
                 self._literal('case', f['id'], f['value'])
@@ -429,6 +439,27 @@ class Pool:
                         and abs(item['value'] - tok.value) < 1e-9):
                     return label, item
         return 'none', None
+
+
+def data_card_figures(card: Mapping | None) -> list[tuple[str, Any]]:
+    """``(source, value)`` of every figure the data card shows (WP-A8): what ``check`` lets
+    a text repeat after step 0. Example cells are quoted data, never statistics."""
+    if not isinstance(card, Mapping):
+        return []
+    dev = card.get('development') or {}
+    out = [('data.development.rows', dev.get('rows')),
+           ('data.development.columns', dev.get('columns'))]
+    for group in card.get('groups') or []:
+        for v in group.get('variables') or []:
+            name = v.get('name')
+            out += [(f'data.{name}.n_missing', v.get('n_missing')),
+                    (f'data.{name}.n_distinct', v.get('n_distinct')),
+                    (f'data.{name}.examples', v.get('examples'))]
+            out += [(f'data.{name}.special_values', s.get('n_rows'))
+                    for s in v.get('special_values') or []]
+    for item in (card.get('rows') or {}).get('items') or []:
+        out.append((f'data.rows.{item.get("row_key")}', item.get('values')))
+    return [(source, value) for source, value in out if value is not None]
 
 
 def _rule_spaced(value: Any) -> Any:
@@ -612,9 +643,10 @@ def check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterab
 
 def _check_text(view: Mapping, text: str, where: str = 'text', user_texts: Iterable[str] = (),
                 result_ids: Iterable[str] | None = None,
-                retired: Iterable[Mapping] = (), locate=None) -> tuple[list[dict], list[dict]]:
-    findings, traced = trace_text(Pool(view, user_texts, result_ids, retired), text, where,
-                                  locate)
+                retired: Iterable[Mapping] = (), locate=None,
+                data_card: Mapping | None = None) -> tuple[list[dict], list[dict]]:
+    findings, traced = trace_text(Pool(view, user_texts, result_ids, retired, data_card),
+                                  text, where, locate)
     return (findings + wording(text, where, locate) + attribution(text, where, locate),
             traced)
 
@@ -1004,6 +1036,16 @@ def text_location_path(study_dir: Path, text_path: str | None) -> str | None:
         return path.as_posix()
 
 
+def _data_card(study_dir) -> dict | None:
+    """The data card of the study (WP-A8), or None when it cannot be read (a changed
+    dataset): its figures then stay untraceable, as before."""
+    from . import cmd_data
+    try:
+        return cmd_data.card(study_dir)
+    except Exception:      # noqa: BLE001 - a text check never fails on the card
+        return None
+
+
 def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = (),
               text_path: str | None = None) -> dict:
     """The ``hypotrail.check/1`` payload. ``text_path`` names the file ``text`` was read
@@ -1019,7 +1061,8 @@ def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()
                                        result_ids=registry_ids(study),
                                        retired=retired_proposals(study),
                                        locate=_text_locator(
-                                           text_location_path(study_dir, text_path), text))
+                                           text_location_path(study_dir, text_path), text),
+                                       data_card=_data_card(study_dir))
         target = 'text'
     counts = {'error': sum(f['severity'] == 'error' for f in findings),
               'warning': sum(f['severity'] == 'warning' for f in findings)}

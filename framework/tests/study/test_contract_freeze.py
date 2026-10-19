@@ -823,6 +823,9 @@ def test_phase3_render_and_check_contract():
     assert [n for n, _ in _params(cmd_check.check_text)] == ['view', 'text', 'where',
                                                              'user_texts', 'result_ids']
     assert {'cmd_check.registry_ids', 'result_id'} <= DOC_TOKENS
+    # WP-A8: the data card's figures and the sealed counts are literals of a text check.
+    assert {'cmd_check.data_card_figures', 'data_card', 'final_test'} <= DOC_TOKENS
+    assert callable(cmd_check.data_card_figures)
     assert render_html.LITERAL_KINDS == LITERAL_KINDS
     assert cmd_render.FAULTS == ('render_html', 'render_notebook')
     assert (cmd_render.FAULT_ENV, cmd_render.HOOKS_ENV) == ('HYPOTRAIL_FAULT', 'HYPOTRAIL_TEST_HOOKS')

@@ -33,6 +33,9 @@ AUTO_MPG = REPO_ROOT / 'use-cases' / 'auto-mpg'
 
 SPLIT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
 THRESHOLD = 'threshold:0.2'
+# v0.2a (WP-A4): the success criterion is fixed after the split, before any fit; the
+# preprocessing after the training exploration (the engine's default, as in the walkthrough).
+CRITERION = {'metric': 'precision_gain', 'min_points': 5}
 
 # The junior's words, as in the WP4.2 walkthrough (framework/tests/study/test_walkthrough.py).
 JUNIOR = {
@@ -47,6 +50,13 @@ JUNIOR = {
         'availability_words': 'Drop duration, day, month and campaign: they describe the calls '
                               'of this campaign. Keep contact but list it as a doubt.',
         'rate_by': 'job',
+        # S10 (WP-A8, owner remark R3): the junior also drops `contact` with a reason that
+        # belongs to `campaign` (inflation), so the availability proposal excludes it.
+        'exclusions_s10': {'duration': 'not_available', 'day': 'not_available',
+                           'month': 'not_available', 'campaign': 'not_available',
+                           'contact': 'uncertain_excluded'},
+        'restatement_s10': 'You exclude duration, day, month, campaign and contact, and keep '
+                           'the other variables.',
         # S2: an earlier, different prediction moment that the junior corrects in a second chat
         'prediction_time_s2': 'before each call of the campaign, from the client file and the '
                               'calls made so far',
@@ -359,7 +369,7 @@ class Setup:
         value = {v['name']: ('not_available' if v['availability']['value'] == 'not_available'
                              else 'available_at_prediction')
                  for v in doc['variables'] if v['role'] == 'feature'}
-        value.update(self.junior['exclusions'])
+        value.update(self.junior['exclusions_s10' if self.variant == 's10' else 'exclusions'])
         return value
 
     def advance(self, until: str) -> None:
@@ -376,6 +386,7 @@ class Setup:
                 self.confirm(p, j['words'])
             self.availability_proposal = self.propose(
                 'feature_availability', self.availability_value(),
+                j['restatement_s10'] if self.variant == 's10' else
                 'You exclude the variables you listed and keep the doubtful one as a stated limit.')
         if stop >= 2:
             self.confirm(self.availability_proposal, j['availability_words'])
@@ -384,9 +395,17 @@ class Setup:
             self.confirm(p, 'Yes, fix that split now, before we look at the outcome.')
             self.run('split')
         if stop >= 3:
+            p = self.propose('success_criterion', CRITERION,
+                             'The model is worth using only if its precision beats the baseline '
+                             'by at least 5 points at the rule you adopt.')
+            self.confirm(p, 'I confirm: at least 5 points over the baseline.')
             self.run('eda.target_rate')
             self.run('eda.special_values')
             self.run('eda.rate_by', '--column', j['rate_by'])
+            default = status(self.study)['view']['next_action']['default_value']
+            p = self.propose('preprocessing', default, 'You keep the default preparation of the '
+                                                       'variables: nothing added, nothing grouped.')
+            self.confirm(p, 'I confirm the default preparation.')
         if stop >= 4:
             self.run('fit.baseline')
             self.run('fit.logistic')

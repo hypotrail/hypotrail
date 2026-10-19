@@ -199,7 +199,7 @@ def _special_values_numeric(case: c.Case, train) -> dict:
             'unit': case.target_unit, 'special_values': items, 'co_occurrence': pairs,
             'note': 'Counts on training rows. A missing-value marker is imputed by the model, '
                     'with an indicator column for a numeric variable.',
-            'question': question('eda.special_values')}
+            'question': question('eda.special_values', task='regression')}
 
 
 def _bins(values, special_mask):
@@ -491,9 +491,18 @@ QUESTIONS = {
                                  'well that its availability at the prediction moment should be '
                                  'questioned?',
 }
+# A regression study speaks of its target, never of an "outcome" (WP-A8): the questions that
+# name it are worded for the numeric target.
+REGRESSION_QUESTIONS = {
+    'eda.special_values': 'How many training rows carry each special value, and how does the '
+                          'target look among them?',
+    'eda.single_feature_signal': 'Does any single feature, on its own, predict the target so '
+                                 'well that its availability at the prediction moment should be '
+                                 'questioned?',
+}
 
 
-def question(activity: str, column: str | None = None) -> str:
+def question(activity: str, column: str | None = None, task: str = 'binary') -> str:
     if activity == 'eda.rate_by':
         return (f'Does the positive rate differ across the groups of {column} by more than '
                 f'chance alone draws?')
@@ -502,6 +511,8 @@ def question(activity: str, column: str | None = None) -> str:
                 f'chance alone draws?')
     if activity == 'eda.distribution':
         return f'How are the values of {column} distributed among the training rows?'
+    if task == 'regression' and activity in REGRESSION_QUESTIONS:
+        return REGRESSION_QUESTIONS[activity]
     return QUESTIONS[activity]
 
 
@@ -726,12 +737,13 @@ def single_feature_signal(case: c.Case, train, candidates: list, availability: M
             questions.append({
                 'feature': s['feature'], 'score': value, 'availability': s['availability'],
                 'text': f'{s["feature"]} {what}{why}. Is its value really known at the '
-                        f'prediction moment, or is it recorded at or after the outcome? '
+                        f'prediction moment, or is it recorded at or after the '
+                        f'{"outcome" if binary else "target"}? '
                         f'(availability decided: {status})'})
     return {'partition': 'train', 'n_rows': int(len(train)), 'metric': metric,
             'folds': SIGNAL_FOLDS, 'seed': SIGNAL_SEED, 'signals': signals, 'median': median,
             'level': level, 'gap': gap, 'questions': questions,
-            'question': question('eda.single_feature_signal'),
+            'question': question('eda.single_feature_signal', task=case.task),
             'note': 'Each feature alone, scored out of fold on the training rows. A high value '
                     'only raises a question about when the value is known; it never keeps or '
                     'drops a feature, and a legitimate feature may score high.'}

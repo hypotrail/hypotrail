@@ -420,7 +420,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+       "result_id": "9d9a279df5d2541b1e0056246b98315b550b6a30f4ca457ecb056dfc3ac70832",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -430,7 +430,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+       "result_id": "9d9a279df5d2541b1e0056246b98315b550b6a30f4ca457ecb056dfc3ac70832",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -804,7 +804,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+       "result_id": "9d9a279df5d2541b1e0056246b98315b550b6a30f4ca457ecb056dfc3ac70832",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -814,7 +814,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
+       "result_id": "9d9a279df5d2541b1e0056246b98315b550b6a30f4ca457ecb056dfc3ac70832",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
