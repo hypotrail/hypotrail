@@ -32,7 +32,8 @@ INTRO = '''mo.md(
     """
 # Workbench
 
-Try a threshold or a capacity on the stored validation predictions. **Experiments here
+Try a threshold, a capacity or a share on the stored predictions (out-of-fold under
+cross-validation). **Experiments here
 are not recorded and are not decisions**: to adopt a policy, ask the agent, who records
 your own words with `hypotrail decide`.
 """

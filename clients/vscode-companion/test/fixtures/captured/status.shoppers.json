@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-19T21:08:08.984719+00:00",
+   "updated": "2026-10-19T22:17:08.753015+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -213,7 +213,7 @@
     {
      "id": "policy",
      "title": "Choose a decision policy",
-     "question": "Which rule turns scores into actions (a threshold or a capacity), and what does it cost and gain?",
+     "question": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
      "expected_output": "A current policy evaluation and a confirmed policy adoption.",
      "completion": "The policy evaluation is current and decision policy is confirmed.",
      "pause": 3,

@@ -245,8 +245,8 @@ STEPS = (
     {'id': 'policy', 'pause': 3, 'decision': 'policy', 'activities': ('policy.evaluation',),
      'requires': ('models',), 'decide_first': False,
      'title': 'Choose a decision policy',
-     'question': 'Which rule turns scores into actions (a threshold or a capacity), and what '
-                 'does it cost and gain?',
+     'question': 'Which rule turns scores into actions (a threshold, a capacity or a share), '
+                 'and what does it cost and gain?',
      'expected_output': 'A current policy evaluation and a confirmed policy adoption.',
      'completion': 'The policy evaluation is current and decision policy is confirmed.'},
     {'id': 'conclusion', 'pause': 3, 'decision': 'conclusion', 'activities': (),
