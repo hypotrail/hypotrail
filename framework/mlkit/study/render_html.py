@@ -1127,11 +1127,15 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
         figures.insert(0, (card['development'], e(card['development_note']
                                                    if _out_of_fold(citer, task)
                                                    else card['validation_note'])))
-    rows += figures
-    if not figures:
-        rows.append((card['figures'], e(card['figures_none'])))
-    if b1:
-        rows += _final_rows(view, citer, task)
+    development = figures or [(card['figures'], e(card['figures_none']))]
+    if b1 and (view.get('final_test') or {}).get('status') == 'opened':
+        # WP-B6a: once the final test is opened, its evidence comes first and the
+        # development evidence second, still labelled as such.
+        rows += _final_rows(view, citer, task) + development
+    else:
+        rows += development
+        if b1:
+            rows += _final_rows(view, citer, task)
     parts.append('<dl class="facts">' + ''.join(f'<dt>{e(k)}</dt><dd>{v}</dd>'
                                                   for k, v in rows) + '</dl>')
     limits = _limits(view)

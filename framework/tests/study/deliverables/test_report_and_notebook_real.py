@@ -403,6 +403,10 @@ def test_the_verdict_card_separates_development_and_final_evidence(cv_studies, n
     final = read.open(study).current('final_test.evaluation')['result_id']
     assert f'data-result-id="{final}"' in verdict
     assert 'Configurations compared' in verdict
+    # WP-B6a: once opened, the final-test evidence comes first, the development second.
+    assert verdict.index('Opened once, on') < verdict.index('Development evidence')
+    assert verdict.index('Success criterion on the final test') \
+        < verdict.index('Development evidence')
     assert 'id="variant-comparison"' in page
     report = cmd_check.run_check(study)
     assert report['clean'], report['findings']
