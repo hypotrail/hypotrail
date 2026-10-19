@@ -94,6 +94,8 @@ details.annex>summary{font-size:20px;font-weight:700;color:var(--ink)}
 details>summary{cursor:pointer}
 @media (max-width:640px){dl.facts{grid-template-columns:minmax(0,1fr)}dl.facts dd{margin-bottom:8px}}
 .scroll-hint{display:none}
+.report main section,.report main details{overflow-wrap:anywhere;min-width:0}
+.report main table{overflow-wrap:normal}
 @media (max-width:640px){.scroll-hint{display:block}.dictionary th,.dictionary td{padding:10px}.dictionary td:nth-child(2){min-width:150px}.dictionary td{overflow-wrap:anywhere}}
 '''
 
@@ -1164,6 +1166,10 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
     return f'<section class="card verdict" id="verdict">{"".join(parts)}</section>'
 
 
+def _lower_first(text: str) -> str:
+    return text[:1].lower() + text[1:] if text else text
+
+
 def _out_of_fold(citer: cite.Citer, task: str) -> bool:
     rid = citer.slot_rid('evaluate.regression' if task == 'regression' else 'policy.evaluation')
     if rid is None:
@@ -1209,7 +1215,7 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
                 rows.append((card['final_found'],
                              f'{citer.num(rid, m + ".true_positives", "auto")} among '
                              f'{citer.num(rid, m + ".selected", "auto")} selected rows'
-                             f'{precision}; {lit("decision_value", rule_words(rule))}'))
+                             f'{precision}; {lit("decision_value", _lower_first(rule_words(rule)))}'))
         crit = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
         # B6c (B1): the binary final criterion is stored in percentage points already
         # (``fit.final_evaluation``); the regression one is a share shown as a percentage.

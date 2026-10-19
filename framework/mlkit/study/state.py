@@ -1310,9 +1310,12 @@ def not_yet_defensible(state: dict) -> list[dict]:
     split_value = (state['decisions'].get('split') or {}).get('value')
     if is_cv_split(split_value):
         # WP-B1: out-of-fold predictions on the development rows are development evidence.
+        # B6c (M3): a regression study chooses a model, not a rule.
+        compared = ('the models and the variant' if task_of(state) == REGRESSION
+                    else 'the models, the variant and the rule')
         items.append({'id': 'validation_is_not_independent',
-                      'text': 'Out-of-fold predictions on the development rows are used to '
-                              'compare the models, the variant and the rule, so they are '
+                      'text': f'Out-of-fold predictions on the development rows are used to '
+                              f'compare {compared}, so they are '
                               'development evidence, not independent evidence of future '
                               'performance. Only the sealed final test, opened once, is.'})
     elif task_of(state) == REGRESSION:

@@ -99,6 +99,30 @@ def test_report_works_offline_without_decision_controls(browser, full_study):
         context.close()
 
 
+def test_report_never_scrolls_sideways_on_a_narrow_screen(browser, full_study, tmp_path):
+    """B6c (Low): at 400 px the page fits its width; tables and charts scroll inside their
+    own frames, and a long unbreakable quotation (a source URL) wraps."""
+    page_text = (full_study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    long_quote = ('<p>Source: <q data-literal="case">Obtained from the public mirror https://'
+                  'raw.githubusercontent.com/' + 'a-very-long-path-segment/' * 12
+                  + 'data.csv</q></p>')
+    page_text = page_text.replace('</section>', long_quote + '</section>', 1)
+    copy = tmp_path / 'study.html'
+    copy.write_text(page_text, encoding='utf-8')
+    context = browser.new_context(offline=True, viewport={'width': 400, 'height': 900})
+    try:
+        page = context.new_page()
+        page.goto(copy.resolve().as_uri())
+        page.wait_for_load_state('load')
+        width = page.evaluate('document.documentElement.scrollWidth')
+        assert width <= 400, width
+        frames = page.evaluate('''() => [...document.querySelectorAll('.scroll, .chart-frame')]
+            .filter(f => f.scrollWidth > f.clientWidth).length''')
+        assert frames >= 1          # the wide tables scroll inside their frames
+    finally:
+        context.close()
+
+
 def test_report_follows_a_dark_preference(browser, full_study):
     context, page, requests, errors = _open(browser, full_study / mf.ARTIFACTS['report'], 'dark')
     try:

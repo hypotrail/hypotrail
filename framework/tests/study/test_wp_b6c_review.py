@@ -335,6 +335,9 @@ def test_a_cross_validated_study_speaks_of_folds_not_validation_rows(name, reque
     if task == 'regression':
         assert opening['question'].startswith('Now that the model is chosen,')
         assert 'rule' not in opening['question']
+        limit = next(i for i in view['not_yet_defensible']
+                     if i['id'] == 'validation_is_not_independent')
+        assert 'the rule' not in limit['text']
 
 
 def test_the_selection_chart_plots_the_adopted_configuration(opened, tmp_path):
