@@ -235,7 +235,9 @@ CRITERION_VIEW_KEYS = ('decision_status', 'value', 'metric', 'status', 'result_i
                        'model', 'gain', 'low', 'high', 'minimum', 'unit',
                        'interval_includes_zero', 'verdict', 'contradicts_verdict',
                        # v0.2b (WP-B1): the criterion judged on the final test.
-                       'final_test')
+                       'final_test',
+                       # B6c (H4): where the criterion is judged, and its status there.
+                       'judged_on', 'judged_status')
 EDA_LOOKS_KEYS = ('target_looks', 'results', 'by_activity', 'note')
 # M3 (regression): the same pauses; the third decision is model_choice.
 TASKS = ('binary', 'regression')
@@ -292,7 +294,10 @@ NOT_YET_DEFENSIBLE_IDS = {'unconfirmed_decisions', 'validation_is_not_independen
                           # v0.2b (WP-B1): the final test sealed, its opening interrupted, a
                           # change after it.
                           'final_test_sealed', 'final_test_opening_interrupted',
-                          'changed_after_final_test'}
+                          'changed_after_final_test',
+                          # B6c (H4): keeping the baseline against a criterion met on the
+                          # final test.
+                          'verdict_keeps_baseline_against_criterion'}
 INVALIDATION_KEYS = ('revision', 'decision_id', 'mutation', 'row', 'reason', 'stale_results',
                      'stale_slots', 'reconfirm_required', 'effects', 'previous')
 CONFIRM_INVALIDATION_KEYS = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
@@ -411,7 +416,9 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
                   # Post-v0.1 (P7).
                   'misattributed_delegation': 'error',
                   # v0.2a (WP-A4).
-                  'verdict_contradicts_criterion': 'warning'}
+                  'verdict_contradicts_criterion': 'warning',
+                  # B6c (H4).
+                  'verdict_keeps_baseline_against_criterion': 'warning'}
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
                  # v0.2a (WP-A6): state counts, the five example rows, chart axis ticks.

@@ -94,3 +94,23 @@ The Bank full case seals the latest 9,042 lines of `bank-full.csv`. 893 of them 
 - The development rows of Bank full include 893 later calls (the bank.csv records of the last period); temporal folds place them in the last block. They were exposed before the study began, so keeping them in development hides nothing.
 - Studies created before this amendment keep their partition (nothing is migrated); a Bank full study created earlier still holds those 893 rows in its final test, and its case file now reports `sources_changed`.
 - Exposure counts are unchanged: the declaration is about where rows may go, not a look recorded in the ledger. The `prior_exposure` statements keep saying in words why the rows are not unseen.
+
+## Amendment (v0.2b, WP-B6c): rules are applied within each fold; the criterion is judged on the final test once opened
+
+- Date: 19 October 2026
+- Sources: fresh review of v0.2b, findings H3 and H4 ([V0.2-DECISIONS.md](../plans/V0.2-DECISIONS.md), WP-B6c); [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §11.4 and §12
+
+### Context
+
+Each fold's out-of-fold scores come from a model fitted without that fold. Under temporal folds the models differ by period, and so do their score scales: ranking every development row on one pooled list selects most rows from the periods whose model scores high, not the best rows of each period. On Bank full (temporal folds, `share:0.1`) the pooled reading gave the logistic model a lower precision than the baseline (6.8 % against 7.3 %); applied within each fold it is 10.4 %, with per-fold precisions from 4.5 % to 27.7 %. Separately, after the opening the report and the check still weighed the verdict against the development figures.
+
+### Decision
+
+1. Under cross-validation, a capacity or a share is applied **within each fold**: each fold keeps the rule's share of its rows and selects its best-scored rows by its own model; the counts are summed, and each fold's counts and precision are reported (`by_fold`). The paired bootstrap resamples within each fold. A threshold reads the scores as they are. The development diagnostics, `preview policy`, the gain points and the notebook's recomputation cells do the same. The final test, scored by one model refitted on every development row, applies the rule to all its rows, as before.
+2. Once the final test is opened and its evaluation measured the configuration the study holds, the success criterion is **judged on the final test** (`view.criterion.judged_on`, `judged_status`); the development status stays as context. An adopting verdict against a final status that is not met, or a `keep_baseline` verdict against a met one, is flagged (`verdict_contradicts_criterion`; `verdict_keeps_baseline_against_criterion`, a warning that asks why).
+
+### Consequences
+
+- Policy figures under cross-validation describe what a team acting on each period's best rows would have found; the spread across folds is visible, not averaged away.
+- Results computed before this amendment are stale through the code fingerprint and recomputed on the next run; nothing is migrated.
+- A configuration chosen on optimistic development figures can be met or not met on the final test; the verdict card shows one judged status and explains a difference.

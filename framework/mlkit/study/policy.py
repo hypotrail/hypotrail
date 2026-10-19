@@ -118,9 +118,20 @@ def _capacity_counts(y: np.ndarray, s: np.ndarray, k: int) -> tuple[float, float
     return float(take.sum()), float(np.sum(take * positives / counts))
 
 
-def weights(score, rule) -> tuple[np.ndarray, dict]:
-    """Selection weights (1, 0, or a fraction) and the cut description of ``rule``."""
+def weights(score, rule, groups=None) -> tuple[np.ndarray, dict]:
+    """Selection weights (1, 0, or a fraction) and the cut description of ``rule``; with
+    ``groups`` (B6c, H3) a capacity or a share selects within each fold."""
     s = np.asarray(score, dtype=float)
+    if groups is not None and parse_rule(rule)[0] != 'threshold':
+        folds = fold_index(groups)
+        caps = fold_capacities(rule, [len(ix) for _, ix in folds], len(s))
+        w = np.zeros(len(s))
+        tied = 0
+        for (_, ix), k in zip(folds, caps):
+            wf, cut = capacity_weights(s[ix], k)
+            w[ix] = wf
+            tied += cut['n_tied']
+        return w, {'score': None, 'n_tied': tied, 'fraction_selected': None}
     kind, amount, k = _resolved(rule, len(s))
     if kind == 'threshold':
         at = s == amount
@@ -142,16 +153,62 @@ def _ratios(selected: float, tp: float, positives: float, n: int) -> dict:
             'volume': selected, 'volume_rate': selected / n if n else None}
 
 
-def evaluate(y, score, rule) -> dict:
+def fold_index(groups) -> list[tuple[int, np.ndarray]]:
+    """``[(fold, positions)]`` of a fold assignment, folds in increasing order."""
+    g = np.asarray(groups)
+    return [(int(v), np.flatnonzero(g == v)) for v in np.unique(g)]
+
+
+def fold_capacities(rule, sizes, n: int) -> list[int] | None:
+    """B6c (H3): the capacity of ``rule`` within each fold of ``sizes`` rows: a share keeps
+    its share of each fold, a capacity ``k`` its share ``k / n`` of each fold
+    (:func:`share_capacity`); None for a threshold, which needs no capacity."""
+    kind, amount = parse_rule(rule)
+    if kind == 'threshold':
+        return None
+    p = float(amount) if kind == 'share' else (int(amount) / n if n else 0.0)
+    return [share_capacity(p, int(m)) for m in sizes]
+
+
+def _fold_rows(y: np.ndarray, s: np.ndarray, rule, folds) -> list[dict]:
+    n = len(y)
+    caps = fold_capacities(rule, [len(ix) for _, ix in folds], n)
+    out = []
+    for i, (fold, ix) in enumerate(folds):
+        yf, sf = y[ix], s[ix]
+        if caps is None:
+            selected, tp, _ = _counts(yf, (sf >= parse_rule(rule)[1]).astype(float))
+        else:
+            selected, tp = _capacity_counts(yf, sf, caps[i])
+        row = {'fold': fold, 'n': int(len(ix)), 'n_positive': int(yf.sum()),
+               'selected': selected, 'true_positives': tp,
+               'precision': tp / selected if selected > 0 else None}
+        if caps is not None:
+            row['capacity'] = caps[i]
+        out.append(row)
+    return out
+
+
+def evaluate(y, score, rule, groups=None) -> dict:
     """Confusion counts and rates of ``rule`` on ``(y, score)``; pure.
 
     ``y`` is 1 for the positive label and 0 otherwise. Counts are expected counts
     when a capacity cut splits a tie group (``selection: "expected"``).
+
+    ``groups`` (B6c, H3): the fold of each row of out-of-fold scores. Each fold's scores
+    come from another model, so their scales differ (a temporal fold's model sees other
+    periods); a capacity or a share is then applied **within each fold** (its share of
+    the fold's rows, the best scores of that fold's model) and the counts are summed
+    (``selection_scope: "within_fold"``, ``capacity`` the summed capacity). A threshold
+    reads the scores as they are (``selection_scope: "pooled"``). ``by_fold`` gives each
+    fold's counts and precision.
     """
     y = np.asarray(y, dtype=float)
     s = np.asarray(score, dtype=float)
     if y.shape != s.shape or y.ndim != 1:
         raise ValueError('y and score are one-dimensional arrays of the same length')
+    if groups is not None:
+        return _evaluate_within(y, s, rule, groups)
     kind, amount, k = _resolved(rule, len(s))
     w, cut = weights(s, rule)
     if k is not None:
@@ -172,7 +229,37 @@ def evaluate(y, score, rule) -> dict:
     return out
 
 
-def gain_points(y, score, shares=GAIN_SHARES) -> dict:
+def _evaluate_within(y: np.ndarray, s: np.ndarray, rule, groups) -> dict:
+    g = np.asarray(groups)
+    if g.shape != y.shape:
+        raise ValueError('groups has one fold per row')
+    kind, amount = parse_rule(rule)
+    folds = fold_index(g)
+    if kind == 'threshold':
+        out = evaluate(y, s, rule)
+        out['selection_scope'] = 'pooled'
+        out['by_fold'] = _fold_rows(y, s, rule, folds)
+        return out
+    rows = _fold_rows(y, s, rule, folds)
+    n = len(y)
+    selected = float(sum(r['selected'] for r in rows))
+    tp = float(sum(r['true_positives'] for r in rows))
+    positives = float(y.sum())
+    tied = 0
+    for r, (_, ix) in zip(rows, folds):
+        tied += capacity_weights(s[ix], r['capacity'])[1]['n_tied']
+    return {'rule': rule, 'kind': kind, 'parameter': amount, 'n': n,
+            'n_positive': int(positives), 'selected': selected, 'true_positives': tp,
+            'false_positives': selected - tp, 'false_negatives': positives - tp,
+            **_ratios(selected, tp, positives, n),
+            'tied_at_cut': tied, 'cut': {'score': None, 'n_tied': tied,
+                                         'fraction_selected': None},
+            'selection': 'expected' if tied else 'exact',
+            'capacity': int(sum(r['capacity'] for r in rows)),
+            'selection_scope': 'within_fold', 'by_fold': rows}
+
+
+def gain_points(y, score, shares=GAIN_SHARES, groups=None) -> dict:
     """What acting on the top ``shares`` of the scored rows selects (v0.2b, WP-B3, R6).
 
     For each share ``p``: the capacity ``k`` (:func:`share_capacity`), the expected
@@ -186,9 +273,17 @@ def gain_points(y, score, shares=GAIN_SHARES) -> dict:
     positives = float(y.sum())
     base = positives / n if n else None
     points = []
+    folds = fold_index(groups) if groups is not None else None
     for p in shares:
-        k = share_capacity(p, n)
-        selected, tp = _capacity_counts(y, s, k) if n else (0.0, 0.0)
+        if folds is None:
+            k = share_capacity(p, n)
+            selected, tp = _capacity_counts(y, s, k) if n else (0.0, 0.0)
+        else:
+            # B6c (H3): the top share of each fold, by that fold's model.
+            rows = _fold_rows(y, s, f'share:{p:g}', folds)
+            k = int(sum(r['capacity'] for r in rows))
+            selected = float(sum(r['selected'] for r in rows))
+            tp = float(sum(r['true_positives'] for r in rows))
         precision = tp / selected if selected > 0 else None
         points.append({'share': float(p), 'rule': f'share:{p:g}', 'capacity': k,
                        'selected': selected, 'true_positives': tp, 'precision': precision,
@@ -196,10 +291,13 @@ def gain_points(y, score, shares=GAIN_SHARES) -> dict:
                                        if precision is not None and base is not None else None),
                        'lift': precision / base if precision is not None and base else None,
                        'recall': tp / positives if positives > 0 else None})
-    return {'n': n, 'n_positive': int(positives), 'base_rate': base, 'points': points,
-            'definition': 'gain_points is the precision of the top share minus the base rate, '
-                          'in percentage points; recall is the share of the positive rows '
-                          'found (the cumulative gain).'}
+    out = {'n': n, 'n_positive': int(positives), 'base_rate': base, 'points': points,
+           'definition': 'gain_points is the precision of the top share minus the base rate, '
+                         'in percentage points; recall is the share of the positive rows '
+                         'found (the cumulative gain).'}
+    if folds is not None:
+        out['selection_scope'] = 'within_fold'
+    return out
 
 
 def _interval(samples: np.ndarray, level: float) -> dict:
@@ -210,6 +308,22 @@ def _interval(samples: np.ndarray, level: float) -> dict:
     alpha = (1.0 - level) / 2.0
     low, high = np.percentile(defined, [100 * alpha, 100 * (1 - alpha)])
     return {'low': float(low), 'high': float(high), 'undefined_replicates': undefined}
+
+
+def _replicate_within(y: np.ndarray, s: np.ndarray, kind: str, amount,
+                      folds: list, caps: list[int] | None) -> tuple[float, float, float]:
+    """One replicate of within-fold selection (``folds`` are positions in the resample)."""
+    if kind == 'threshold':
+        return _replicate(y, s, kind, amount)
+    selected = tp = 0.0
+    for (_, ix), k in zip(folds, caps):
+        a, b = _capacity_counts(y[ix], s[ix], k)
+        selected += a
+        tp += b
+    positives = float(y.sum())
+    precision = tp / selected if selected > 0 else np.nan
+    recall = tp / positives if positives > 0 else np.nan
+    return precision, recall, selected
 
 
 def _replicate(y: np.ndarray, s: np.ndarray, kind: str, amount) -> tuple[float, float, float]:
@@ -225,7 +339,8 @@ def _replicate(y: np.ndarray, s: np.ndarray, kind: str, amount) -> tuple[float, 
 
 
 def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *,
-                     level: float = 0.95, reference: str | None = None, pairs=()) -> dict:
+                     level: float = 0.95, reference: str | None = None, pairs=(),
+                     groups=None) -> dict:
     """Percentile intervals of precision, recall, and volume for every model, and of
     each model's difference with ``reference`` (the first model by default).
 
@@ -254,14 +369,29 @@ def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *
     rng = np.random.default_rng(seed)
     n = len(y)
     samples = {name: np.empty((B, len(METRICS))) for name in names}
-    for b in range(B):
-        idx = rng.integers(0, n, n)
-        yb = y[idx]
-        for name in names:
-            samples[name][b] = _replicate(yb, arrays[name][idx], kind, amount)
+    if groups is None:
+        for b in range(B):
+            idx = rng.integers(0, n, n)
+            yb = y[idx]
+            for name in names:
+                samples[name][b] = _replicate(yb, arrays[name][idx], kind, amount)
+    else:
+        # B6c (H3): resample within each fold (each keeps its size), select within each.
+        folds = fold_index(groups)
+        caps = fold_capacities(rule, [len(ix) for _, ix in folds], n)
+        local, start = [], 0
+        for fold, ix in folds:
+            local.append((fold, np.arange(start, start + len(ix))))
+            start += len(ix)
+        for b in range(B):
+            idx = np.concatenate([ix[rng.integers(0, len(ix), len(ix))] for _, ix in folds])
+            yb = y[idx]
+            for name in names:
+                samples[name][b] = _replicate_within(yb, arrays[name][idx], kind, amount,
+                                                     local, caps)
     intervals = {name: {m: _interval(samples[name][:, i], level) for i, m in enumerate(METRICS)}
                  for name in names}
-    points = {name: evaluate(y, arrays[name], rule) for name in names}
+    points = {name: evaluate(y, arrays[name], rule, groups) for name in names}
     deltas = {}
     for name in names:
         if name == reference:
@@ -280,6 +410,8 @@ def paired_bootstrap(y, scores: Mapping[str, object], rule, B: int, seed: int, *
             a, r = points[name][m], points[other][m]
             comparisons[name][m] = {'point': (a - r) if a is not None and r is not None
                                     else None, **_interval(diff[:, i], level)}
+    method = ('paired percentile bootstrap over validation rows' if groups is None else
+              'paired percentile bootstrap, rows resampled within each fold')
     return {'rule': rule, 'replicates': B, 'seed': seed, 'level': level,
-            'reference': reference, 'method': 'paired percentile bootstrap over validation rows',
+            'reference': reference, 'method': method,
             'intervals': intervals, 'deltas': deltas, 'comparisons': comparisons}

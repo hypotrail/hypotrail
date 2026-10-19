@@ -227,16 +227,19 @@ def _order(labels: list[str]) -> list[str]:
 
 # --- binary ---------------------------------------------------------------------------------
 
-def selection_weights(score, rule):
-    """Selection weights (1, 0, or a fraction for a tie group split by a capacity cut)."""
+def selection_weights(score, rule, groups=None):
+    """Selection weights (1, 0, or a fraction for a tie group split by a capacity cut);
+    with ``groups`` (B6c, H3), within each fold of out-of-fold scores."""
     from . import policy
-    return policy.weights(score, rule)[0]
+    return policy.weights(score, rule, groups)[0]
 
 
-def confusion(y, score, rule) -> dict:
-    """The confusion matrix of ``rule`` on ``(y, score)`` (expected counts at a split tie)."""
+def confusion(y, score, rule, groups=None) -> dict:
+    """The confusion matrix of ``rule`` on ``(y, score)`` (expected counts at a split tie);
+    with ``groups`` (B6c, H3), a capacity or a share is applied within each fold, as the
+    policy evaluation applies it."""
     from . import policy
-    ev = policy.evaluate(y, score, rule)
+    ev = policy.evaluate(y, score, rule, groups)
     n = ev['n']
     negatives = n - ev['n_positive']
     tn = negatives - ev['false_positives']
@@ -249,12 +252,15 @@ def confusion(y, score, rule) -> dict:
            'selection': ev['selection'], 'tied_at_cut': ev['tied_at_cut']}
     if ev.get('capacity') is not None:
         out['capacity'] = ev['capacity']
+    if ev.get('selection_scope'):
+        out['selection_scope'] = ev['selection_scope']
     return out
 
 
-def curve(y, score, shares=CURVE_SHARES) -> dict:
+def curve(y, score, shares=CURVE_SHARES, groups=None) -> dict:
     """Gain, lift, ROC and precision-recall points at the top ``shares`` of the scored rows
-    (ties at a cut counted pro rata, as a capacity)."""
+    (ties at a cut counted pro rata, as a capacity); with ``groups`` (B6c, H3), the top
+    share of each fold. The AUC and the average precision pool the rows."""
     import numpy as np
     from . import metrics, policy
     y = np.asarray(y, dtype=float)
@@ -264,9 +270,16 @@ def curve(y, score, shares=CURVE_SHARES) -> dict:
     negatives = n - positives
     base = positives / n if n else None
     points = []
+    folds = policy.fold_index(groups) if groups is not None else None
     for p in shares:
-        k = policy.share_capacity(p, n)
-        selected, tp = policy._capacity_counts(y, s, k) if n else (0.0, 0.0)
+        if folds is None:
+            k = policy.share_capacity(p, n)
+            selected, tp = policy._capacity_counts(y, s, k) if n else (0.0, 0.0)
+        else:
+            rows = policy._fold_rows(y, s, f'share:{p:g}', folds)
+            k = int(sum(r['capacity'] for r in rows))
+            selected = float(sum(r['selected'] for r in rows))
+            tp = float(sum(r['true_positives'] for r in rows))
         fp = selected - tp
         precision = tp / selected if selected > 0 else None
         points.append({'share': float(p), 'capacity': k, 'selected': selected,
@@ -391,11 +404,12 @@ def examples(frame, keys, y, score, w, features, limit: int = MAX_EXAMPLES) -> d
                     'feature values as written in the file. Examples to read, not a sample.'}
 
 
-def binary_model(y, score, rule, frame, keys, segment_cols, features) -> dict:
-    """Every binary diagnostic of one model's predictions at ``rule``."""
-    w = selection_weights(score, rule)
-    c = curve(y, score)
-    return {'confusion': confusion(y, score, rule),
+def binary_model(y, score, rule, frame, keys, segment_cols, features, groups=None) -> dict:
+    """Every binary diagnostic of one model's predictions at ``rule`` (``groups``: the fold
+    of each out-of-fold row, B6c H3)."""
+    w = selection_weights(score, rule, groups)
+    c = curve(y, score, groups=groups)
+    return {'confusion': confusion(y, score, rule, groups),
             'curve': {k: v for k, v in c.items() if k not in ('roc_auc', 'average_precision')},
             'roc_auc': c['roc_auc'], 'average_precision': c['average_precision'],
             'calibration': calibration(y, score),

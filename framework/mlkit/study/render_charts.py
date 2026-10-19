@@ -365,14 +365,24 @@ def signal(citer: cite.Citer, rid: str, values: Mapping) -> str:
 
 # --- 4. binary: positives found at each rule -------------------------------------------------
 
-def selection(citer: cite.Citer, rid: str, values: Mapping, rule_words) -> str:
+SELECTION_LEGEND = {'fit.logistic': 'Model (logistic, the candidate)',
+                    'fit.variant': 'Model (the variant, adopted with the rule)'}
+
+
+def selection(citer: cite.Citer, rid: str, values: Mapping, rule_words,
+              model: str = 'fit.logistic') -> str:
+    """Positive rows found at each evaluated rule by ``model`` (B6c, M4: the configuration
+    the policy adopts, or proposes; the variant when the rule applies to it) and by the
+    baseline. Under cross-validation the counts are out of fold (M3)."""
     rules = values.get('rules') if isinstance(values.get('rules'), Mapping) else {}
     items = []
     for key, item in rules.items():
         models = item.get('models') if isinstance(item, Mapping) else None
         if not isinstance(models, Mapping):
             continue
-        m, b = models.get('fit.logistic') or {}, models.get('fit.baseline') or {}
+        if model not in models:
+            model = 'fit.logistic'
+        m, b = models.get(model) or {}, models.get('fit.baseline') or {}
         if _num(m.get('true_positives')) and _num(b.get('true_positives')) \
                 and _num(m.get('selected')):
             items.append((key, m, b))
@@ -383,20 +393,21 @@ def selection(citer: cite.Citer, rid: str, values: Mapping, rule_words) -> str:
     top = max([m['true_positives'] for _, m, _ in items] + ([total] if _num(total) else []))
     scale = Scale(0, _nice_max(top), x1=WIDTH - RIGHT - 10)
     body, y = [], TOP + 10
+    slot = cite.format_path([model])
     for key, m, b in items:
         prefix = cite.format_path(['rules', key, 'models'])
         body.append(lit('decision_value', rule_words(key), 0, y + 4, 'start'))
         y += 12
-        body.append(citer.svg_num(rid, f'{prefix}.[fit.logistic].selected', 'auto',
+        body.append(citer.svg_num(rid, f'{prefix}.{slot}.selected', 'auto',
                                   x=LEFT - 8, y=y + 15, anchor='end', cls='axis',
                                   suffix=' rows selected'))
-        for cls, model, data, dy in (('m', 'fit.logistic', m, 0), ('b', 'fit.baseline', b, 20)):
+        for cls, name, data, dy in (('m', model, m, 0), ('b', 'fit.baseline', b, 20)):
             w = max(1.0, scale(data['true_positives']) - scale(0))
-            label = 'Model' if model == 'fit.logistic' else 'Baseline'
+            label = 'Model' if name != 'fit.baseline' else 'Baseline'
             body.append(f'<rect class="{cls}" x="{LEFT}" y="{y + dy + 2}" width="{w:.1f}" '
                         f'height="16" rx="4"><title>{label}</title></rect>')
-            body.append(citer.svg_num(rid, f'{prefix}.[{model}].true_positives', 'auto',
-                                      x=LEFT + w + 6, y=y + dy + 15))
+            body.append(citer.svg_num(rid, f'{prefix}.{cite.format_path([name])}'
+                                      '.true_positives', 'auto', x=LEFT + w + 6, y=y + dy + 15))
         y += 52
     if _num(total):
         x = scale(total)
@@ -405,10 +416,21 @@ def selection(citer: cite.Citer, rid: str, values: Mapping, rule_words) -> str:
                                   cls='axis', suffix=' positive rows in all'))
     body.insert(0, scale.axis(TOP - 4, y - 6))
     svg = _svg(y + AXIS - 8, ''.join(body), 'Positive rows found among the selected rows')
-    lg = legend(('m', 'Model (logistic)'), ('b', 'Baseline (no ranking, average count)'))
-    note = ('Validation rows. The rule is chosen on these rows, so these counts are optimistic '
-            'and are not a forecast. The dashed line is every positive row of the validation '
-            'rows.')
+    lg = legend(('m', SELECTION_LEGEND.get(model, 'Model')),
+                ('b', 'Baseline (no ranking, average count)'))
+    if values.get('evaluation') == 'out_of_fold':
+        within = any(isinstance(item, Mapping) and any(
+            isinstance(v, Mapping) and v.get('selection_scope') == 'within_fold'
+            for v in (item.get('models') or {}).values()) for item in rules.values())
+        note = ('Out-of-fold predictions of the development rows'
+                + (', each rule applied within each fold' if within else '')
+                + '. The rule is chosen on these rows, so these counts are optimistic and are '
+                  'not a forecast. The dashed line is every positive row of the development '
+                  'rows.')
+    else:
+        note = ('Validation rows. The rule is chosen on these rows, so these counts are '
+                'optimistic and are not a forecast. The dashed line is every positive row of '
+                'the validation rows.')
     return figure('selection', 'Among the rows each rule selects, how many positive rows does '
                   'the model find, compared with the baseline?', svg, lg, note)
 

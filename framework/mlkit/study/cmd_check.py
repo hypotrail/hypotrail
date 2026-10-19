@@ -97,7 +97,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from . import cite, manifest as mf, read, view as view_model, wordnum
+from . import cite, governance, manifest as mf, read, view as view_model, wordnum
 from . import commands as cmd
 from .errors import StudyError
 
@@ -112,7 +112,10 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
             'misattributed_delegation': 'error',
             # v0.2a (WP-A4): the conclusion adopts while the success criterion is not met
             # or its paired interval includes 0.
-            'verdict_contradicts_criterion': 'warning'}
+            'verdict_contradicts_criterion': 'warning',
+            # B6c (H4): the conclusion keeps the baseline while the criterion is met on the
+            # final test.
+            'verdict_keeps_baseline_against_criterion': 'warning'}
 FINDING_CODES = tuple(SEVERITY)
 
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|cannot|doesn't|don't|isn't|aren't|without|"
@@ -930,11 +933,36 @@ def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str
         attr_ok, factor = False, 1.0
     if factor not in (1.0, 100.0):          # only the points format scales (cite.pts*)
         attr_ok = False
+    if factor == 100.0 and _already_points(item['values'], path, value):
+        # B6c (B1): the points format scales a difference of fractions; a value already in
+        # points (a gain stored with ``unit: percentage points``, or any value outside
+        # [-1, 1]) shown with it is a figure 100 times too large, even though the text
+        # matches the attribute times the scale.
+        return [finding('value_mismatch', where,
+                        f'The cited value {shown!r} scales a figure already in percentage '
+                        f'points by 100 ({path!r}).', result_id=rid, path=path, shown=shown,
+                        attribute=raw, registry=value, reason='double_scaled')]
     if not attr_ok or len(toks) != 1 or not cite.shown_matches(toks[0], value, factor):
         return [finding('value_mismatch', where,
                         f'The cited value {shown!r} differs from the registry value at {path!r}.',
                         result_id=rid, path=path, shown=shown, attribute=raw, registry=value)]
     return []
+
+
+POINT_UNITS = ('percentage points', 'points')
+
+
+def _already_points(values, path: str, value) -> bool:
+    """True when the value at ``path`` cannot be a difference of fractions: its size is
+    above 1, or its mapping declares a unit in points (``criterion.unit``)."""
+    if cite.is_number(value) and abs(value) > 1 + 1e-12:
+        return True
+    try:
+        segments = cite.parse_path(path)
+        parent = cite.resolve(values, segments[:-1]) if len(segments) > 1 else values
+    except (KeyError, StudyError):
+        return False
+    return isinstance(parent, Mapping) and parent.get('unit') in POINT_UNITS
 
 
 def check_html(view: Mapping, study: read.Study, page: str, where: str) -> list[dict]:
@@ -1086,16 +1114,36 @@ def check_criterion(view: Mapping) -> list[dict]:
     the policy or the model while the success criterion fixed before the models is not met,
     or met by the point estimate only (its paired interval includes 0)."""
     c = view.get('criterion')
-    if not c or not c.get('contradicts_verdict'):
+    if not c:
         return []
+    final = c.get('final_test') or {}
+    on_final = c.get('judged_on') == 'final_test'
+    if governance.keeps_against_met(c):
+        return [finding('verdict_keeps_baseline_against_criterion', 'decision:conclusion',
+                        'The conclusion keeps the baseline although the success criterion is '
+                        'met on the final test (the gain reaches the minimum and its interval '
+                        'excludes 0). Keeping the baseline can be right for a reason the '
+                        'criterion does not capture (a cost, a risk, a limit of the data): the '
+                        'conclusion should say which, or the verdict should be reconsidered.',
+                        status='met', judged_on='final_test',
+                        development_status=c.get('status'), verdict=c['verdict'],
+                        gain=final.get('gain'), low=final.get('low'), high=final.get('high'),
+                        minimum=final.get('minimum'), result_id=final.get('result_id'))]
+    if not c.get('contradicts_verdict'):
+        return []
+    judged = c.get('judged_status') or c['status']
+    src = final if on_final else c
     why = ('the gain does not reach the minimum fixed before the models'
-           if c['status'] == 'not_met' else
+           if judged == 'not_met' else
            'the paired interval of the gain includes 0, so the gain may be chance')
+    where = ' on the final test' if on_final else ''
     return [finding('verdict_contradicts_criterion', 'decision:conclusion',
                     f'The conclusion adopts ({c["verdict"]}) while the success criterion is '
-                    f'{" ".join(c["status"].split("_"))}: {why}.',
-                    status=c['status'], verdict=c['verdict'], gain=c['gain'], low=c['low'],
-                    high=c['high'], minimum=c['minimum'], result_id=c['result_id'])]
+                    f'{" ".join(judged.split("_"))}{where}: {why}.',
+                    status=judged, verdict=c['verdict'], gain=src.get('gain'),
+                    low=src.get('low'), high=src.get('high'), minimum=src.get('minimum'),
+                    result_id=src.get('result_id'), judged_on=c.get('judged_on'),
+                    development_status=c.get('status'))]
 
 
 def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:

@@ -166,6 +166,11 @@ verdict_card:
   final_found: Positive rows found on the final test
   final_mae: Mean absolute error on the final test
   final_criterion: Success criterion on the final test
+  final_gain: Precision gain over the baseline
+  final_reduction: Reduction of the baseline's error
+  judged_final: on the final test, where it is judged once the final test is opened.
+  development_status: 'On the development rows, as context:'
+  status_differ: They differ because the development figures helped choose, so they may be optimistic, and both carry chance; the final test, measured once on rows nothing had seen, is the one that judges.
   final_after: After the final test
   final_after_note: Something changed after the final test was opened, so it no longer measures what the study now holds.
   trials: Configurations compared
@@ -181,6 +186,8 @@ data_section:
   columns: Columns
   final_test_sealed: rows are set aside as the final test and stay sealed; nothing in this report reads them.
   final_test_absent: This study has no final test. It was created before the final test existed, so every row is a development row.
+  final_test_opened: rows were set aside as the final test; it has been opened once to measure the chosen configuration (see the verdict). Its rows are read only by that one evaluation and its diagnostics.
+  final_test_changed_after: Something changed after the opening, so the final test no longer measures what the study now holds.
   target: Target
   dictionary: Columns by group
   rows: The first development rows, target first

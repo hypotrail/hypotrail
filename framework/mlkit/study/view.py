@@ -114,6 +114,8 @@ SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
                     'changed_after_final_test', 'final_test_opening_interrupted',
                     # v0.2a (WP-A4): an adopting verdict against the success criterion.
                     'verdict_contradicts_criterion',
+                    # B6c (H4): keeping the baseline against a criterion met on the final test.
+                    'verdict_keeps_baseline_against_criterion',
                     # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
                     'conclusion_outdated', 'result_integrity',
                     'adopted_rule_not_evaluated',
@@ -572,7 +574,9 @@ SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', '
                           # v0.2b (WP-B1): the criterion on the final test.
                           'final_test',
                           # v0.2b (WP-B6a, companion request): the model the criterion reads.
-                          'model')
+                          'model',
+                          # B6c (H4): where the criterion is judged, and its status there.
+                          'judged_on', 'judged_status')
 
 
 def _compact_criterion(criterion):
@@ -1127,13 +1131,24 @@ def _governance_limits(state: dict, criterion: dict | None,
                             'test no longer measures what the study now holds, and it is no '
                             'longer independent evidence for it.'})
     if criterion and criterion.get('contradicts_verdict'):
+        judged = criterion.get('judged_status') or criterion['status']
+        on_final = criterion.get('judged_on') == 'final_test'
         why = ('the gain does not reach the minimum fixed before the models'
-               if criterion['status'] == 'not_met' else
+               if judged == 'not_met' else
                'the paired interval of the gain includes 0')
+        where = ' on the final test' if on_final else ''
         out.append({'id': 'verdict_contradicts_criterion', 'decisions': ['conclusion'],
-                    'status': criterion['status'],
+                    'status': judged,
                     'text': f'The conclusion adopts while the success criterion fixed before '
-                            f'the models is not met: {why}.'})
+                            f'the models is not met{where}: {why}.'})
+    if governance.keeps_against_met(criterion):
+        # B6c (H4): keeping the baseline against a criterion met on the final test.
+        out.append({'id': 'verdict_keeps_baseline_against_criterion',
+                    'decisions': ['conclusion'], 'status': 'met',
+                    'text': 'The conclusion keeps the baseline although the success criterion '
+                            'fixed before the models is met on the final test: say why (a '
+                            'cost, a risk, or a limit the criterion does not capture), or '
+                            'reconsider the verdict.'})
     pre = (state['decisions'].get('preprocessing') or {})
     value = pre.get('value')
     if pre.get('status') in ('confirmed', 'reconfirm_required') and isinstance(value, dict) \

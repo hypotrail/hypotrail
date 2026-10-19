@@ -92,6 +92,24 @@ def _arguments(args: argparse.Namespace) -> None:
         raise ArgumentError('preview proposal needs --value')
 
 
+def _fold_groups(study, keys):
+    """B6c (H3): the fold of each scored row under cross-validation (a capacity or a share
+    is then applied within each fold, as ``policy.evaluation`` applies it), else None."""
+    import numpy as np
+    split = study.current('split') if study.state['current'].get('split') else None
+    sha = (split or {}).get('blobs', {}).get('folds')
+    if sha is None:
+        return None
+    assignment = {}
+    for line in study.blob(sha).decode('utf-8').splitlines()[1:]:
+        key, _, fold = line.partition(',')
+        if key:
+            assignment[key] = int(fold)
+    if any(k not in assignment for k in keys):
+        return None
+    return np.asarray([assignment[k] for k in keys])
+
+
 def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
     """The preview payload; pure reads only."""
     import gzip
@@ -142,7 +160,9 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
         scores[slot] = np.asarray([float(r[2]) for r in rows])
         models[slot] = {'result_id': entry['result_id'], 'current': study.is_current(slot),
                         'stale_reason': study.stale_reason(entry['result_id'])}
-    evaluations = {rule: {slot: policy.evaluate(y, scores[slot], rule) for slot in slots}
+    groups = _fold_groups(study, keys)
+    evaluations = {rule: {slot: policy.evaluate(y, scores[slot], rule, groups)
+                          for slot in slots}
                    for rule in rules}
     boot = None
     if intervals:
@@ -152,7 +172,8 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
                                               level=float(settings['level']),
                                               reference=FITS[0],
                                               pairs=[('fit.variant', 'fit.logistic')]
-                                              if 'fit.variant' in scores else [])
+                                              if 'fit.variant' in scores else [],
+                                              groups=groups)
                 for rule in rules}
     decision = state['decisions']['policy']
     from . import view
