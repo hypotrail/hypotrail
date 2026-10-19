@@ -75,6 +75,19 @@ EXTENSIONS = {
     'explain': 'mlkit.study.cmd_explain',
     'export': 'mlkit.study.cmd_export',
 }
+# One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
+# every command without importing the extension modules.
+EXTENSION_HELP = {
+    'run': 'run one activity (split, exploration, fit, evaluation) and record its result',
+    'render': 'write the HTML report and the notebooks for the current revision',
+    'check': 'check the numbers and wording of the deliverables, or of a text',
+    'preview': 'preview a policy or the effects of a proposal; records nothing',
+    'session-report': 'read-only timeline of the study, by working session',
+    'decisions': 'read-only history of every decision and proposal',
+    'evidence': 'read-only results, lineage, rows read, and exploration catalog',
+    'explain': 'glossary terms, step texts, and examples cited from this study',
+    'export': 'export a handoff pack of the study into a new folder',
+}
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
 
@@ -110,10 +123,18 @@ def _mutation(parser: argparse.ArgumentParser) -> None:
                         help='the revision you read with status')
 
 
-def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
+def build_parser(extension: str | None = None, *, listing: bool = False
+                 ) -> argparse.ArgumentParser:
+    """The parser; ``listing`` adds every extension command with its one-line help (for
+    ``hypotrail --help``) without importing it."""
     common = _common()
-    parser = Parser(prog='hypotrail', description='Junior ML study engine.')
-    sub = parser.add_subparsers(dest='command', required=True, parser_class=Parser)
+    parser = Parser(prog='hypotrail', description='Junior ML study engine. Every command takes '
+                                                  '--study DIR and prints one JSON document '
+                                                  '(--format text for a readable summary).',
+                    formatter_class=lambda prog: argparse.HelpFormatter(
+                        prog, max_help_position=20, width=110))
+    sub = parser.add_subparsers(dest='command', required=True, parser_class=Parser,
+                                metavar='COMMAND')
 
     p = sub.add_parser('init', parents=[common], help='create a study on a case')
     p.add_argument('--case', required=True, help='case.yaml or its directory')
@@ -126,7 +147,8 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
                         '(CLI-CONTRACT-COMPANION §1)')
     sub.add_parser('plan', parents=[common], help='read-only plan with step statuses')
 
-    decide = sub.add_parser('decide', help='propose, confirm, or withdraw a decision')
+    decide = sub.add_parser('decide', help='propose, confirm, or withdraw a decision, or '
+                                           'record a note on one')
     verbs = decide.add_subparsers(dest='verb', required=True, parser_class=Parser)
     p = verbs.add_parser('propose', parents=[common])
     p.add_argument('decision_id')
@@ -175,8 +197,11 @@ def build_parser(extension: str | None = None) -> argparse.ArgumentParser:
 
     if extension is not None:
         module = importlib.import_module(EXTENSIONS[extension])
-        p = sub.add_parser(extension, parents=[common])
+        p = sub.add_parser(extension, parents=[common], help=EXTENSION_HELP.get(extension))
         module.configure(p)
+    elif listing:
+        for name in EXTENSIONS:
+            sub.add_parser(name, help=EXTENSION_HELP[name], add_help=False)
     return parser
 
 
@@ -287,8 +312,19 @@ def _text(payload: dict) -> str:
         from .cmd_session_report import markdown
         return markdown(payload)
     if schema == cmd.SCHEMAS['init']:
-        return (f'study created at {payload["study"]} (revision {payload["revision"]}) on case '
-                f'{payload["case"]["id"]}\nnext action: {payload["next_action"]["message"]}')
+        lines = [f'study created at {payload["study"]} (revision {payload["revision"]}) on case '
+                 f'{payload["case"]["id"]}', f'next action: {payload["next_action"]["message"]}']
+        lines += [f'notice: {n["message"]}' for n in payload.get('notices') or []]
+        for name, launch in ((payload.get('deliverables') or {}).get('launch') or {}).items():
+            lines.append(f'open the {name}: {launch["shell"]}')
+        return '\n'.join(lines)
+    # v0.2a (WP-A1): readable text for the learning and evidence commands.
+    if schema == 'hypotrail.explain/1':
+        from .cmd_explain import text
+        return text(payload)
+    if schema == 'hypotrail.evidence/1':
+        from .cmd_evidence import text
+        return text(payload)
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
@@ -346,7 +382,7 @@ def _run(argv: list) -> cmd.Outcome:
 def main(argv: Sequence[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv in (['-h'], ['--help']) or not argv:
-        build_parser().print_help()
+        build_parser(listing=True).print_help()
         return cmd.EXIT_OK if argv else cmd.EXIT_REFUSED
     outcome = run(argv)
     try:

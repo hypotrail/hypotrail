@@ -254,3 +254,48 @@ def explain(study_dir, *, term: str | None = None) -> dict:
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
     return cmd.Outcome(explain(args.study, term=args.term))
+
+
+# --- text output (v0.2a, WP-A1) --------------------------------------------------------
+
+def _joined(block) -> str:
+    """The text of ``{segments}`` (or None) as one line."""
+    if not isinstance(block, Mapping):
+        return ''
+    return ' '.join(''.join(str(s.get('text', '')) for s in block.get('segments') or [])
+                    .split())
+
+
+def text(payload: Mapping) -> str:
+    """``explain --format text``: the glossary (term first, then its explanation and the
+    study's example when it can be shown), then, for the whole glossary, the step texts and
+    the "predict before you look" questions. Not a contract."""
+    lines = [f'Glossary of this {payload["task"]} study (revision {payload["revision"]})', '']
+    for t in payload['terms']:
+        lines.append(f'{t["term"]}')
+        lines.append(f'  {t["definition"]}')
+        example = _joined(t.get('example'))
+        if example:
+            lines.append(f'  In this study: {example}')
+        elif t.get('example_status') == 'needs_results':
+            lines.append('  In this study: shown once the results it cites are current.')
+        if t.get('steps'):
+            lines.append(f'  Used at: {", ".join(t["steps"])}')
+        lines.append('')
+    if len(payload['terms']) > 1:
+        lines.append('Steps')
+        for step_id, step in payload['steps'].items():
+            concept = _joined(step.get('concept'))
+            lines.append(f'  {step_id}' + (f' ({concept})' if concept else ''))
+            for key in STEP_TEXT_KEYS:
+                said = _joined(step.get(key))
+                if said:
+                    lines.append(f'    {key.capitalize()}: {said}')
+            if step.get('text_status') == 'needs_results':
+                lines.append('    Some texts are shown once the results they cite are current.')
+        if payload['predictions']:
+            lines += ['', 'Predict before you look']
+            for q in payload['predictions']:
+                choices = ' / '.join(c['label'] for c in q['choices'])
+                lines.append(f'  ({q["step"]}) {q["question"]} [{choices}]')
+    return '\n'.join(lines).rstrip()
