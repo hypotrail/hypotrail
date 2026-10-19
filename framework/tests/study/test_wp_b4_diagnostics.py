@@ -72,8 +72,10 @@ def test_binary_diagnostics_read_the_out_of_fold_predictions(tmp_path):
     assert values['question'] and values['note'] == dg.DEVELOPMENT_NOTE
     # No rule adopted or proposed, no teaching share in the synthetic case: the default.
     assert (values['rule'], values['rule_source']) == (dg.DEFAULT_RULE, 'engine_default')
+    assert tuple(values) == dg.BINARY_KEYS
     assert set(values['models']) == {'fit.logistic', 'fit.variant'}
     for model, d in values['models'].items():
+        assert tuple(d) == dg.BINARY_MODEL_KEYS
         preds = study.predictions(study.current(model)['result_id'])
         assert d['predictions'] == study.current(model)['result_id']
         y, score = preds['y'].to_numpy(dtype=float), preds['score'].to_numpy(dtype=float)
@@ -193,12 +195,14 @@ def test_final_diagnostics_only_after_the_opening(tmp_path, monkeypatch):
     out = flow.run('diag.final_test')
     assert reads == ['opened', 'opened']
     values = out['values']
+    assert tuple(values) == dg.FINAL_BINARY_KEYS
     assert values['evidence'] == 'final' and values['purpose'] == 'final_evaluation'
     assert values['partition'] == 'final_test' and values['n'] == len(final)
     assert values['note'] == dg.FINAL_NOTE
     model = values['model']
     d = values['models'][model]
-    assert set(values['models']) == {model} and 'coefficients' not in d
+    assert set(values['models']) == {model}
+    assert tuple(d) == tuple(k for k in dg.BINARY_MODEL_KEYS if k != 'coefficients')
     assert values['rule'] == read.open(flow.study).current('final_test.evaluation')[
         'output']['values']['rule_final']
     for kind in ('false_positives', 'false_negatives'):
@@ -218,7 +222,9 @@ def test_final_diagnostics_only_after_the_opening(tmp_path, monkeypatch):
 def test_regression_diagnostics(tmp_path):
     flow = _ready(tmp_path, task='regression', n_rows=500)
     values = flow.run('diag.regression')['values']
+    assert tuple(values) == dg.REGRESSION_KEYS
     assert set(values['models']) == {'fit.linear', 'fit.variant'}
+    assert all(tuple(d) == dg.REGRESSION_MODEL_KEYS for d in values['models'].values())
     assert values['smearing'] == {'applies': False, 'implemented': False,
                                   'note': dg.SMEARING_NOTE}
     assert values['target_transform'] is None and 'Lumley' in values['normality_note']

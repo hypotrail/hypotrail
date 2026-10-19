@@ -91,6 +91,27 @@ SPREAD_RATIO = 1.5
 MISSING = '(missing)'
 OTHER = '(other values)'
 
+# The value shapes (CLI-CONTRACT.md §13, frozen by test_contract_freeze.py).
+BINARY_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n', 'n_positive',
+               'base_rate', 'rule', 'rule_source', 'segment_columns', 'segment_rule', 'models',
+               'coefficient_rows', 'note')
+REGRESSION_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n', 'target',
+                   'unit', 'residual_columns', 'residual_definition', 'target_transform',
+                   'smearing', 'normality_note', 'models', 'coefficient_rows', 'note')
+FINAL_BINARY_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n',
+                     'model', 'final_evaluation', 'n_positive', 'base_rate', 'rule',
+                     'segment_columns', 'segment_rule', 'models', 'note')
+FINAL_REGRESSION_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n',
+                         'model', 'final_evaluation', 'target', 'unit', 'residual_columns',
+                         'residual_definition', 'target_transform', 'smearing',
+                         'normality_note', 'models', 'note')
+# One model's diagnostics; ``coefficients`` in the development diagnostics only.
+BINARY_MODEL_KEYS = ('confusion', 'curve', 'roc_auc', 'average_precision', 'calibration',
+                     'segments', 'examples', 'coefficients', 'predictions')
+REGRESSION_MODEL_KEYS = ('errors', 'residuals', 'qq', 'by_prediction', 'heteroscedasticity',
+                         'by_feature', 'scatter', 'examples', 'coefficients', 'predictions')
+EVIDENCE = ('development', 'final')
+
 QUESTIONS = {
     DIAG_BINARY: 'Where does the model err at the rule, and can its score be read as a '
                  'probability?',
