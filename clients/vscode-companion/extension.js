@@ -170,7 +170,13 @@ async function openPanel(context, { reviewer = false, pick = false, want = null 
   if (typeof vscode.workspace.onDidChangeConfiguration === 'function') {
     subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
       if (!event || typeof event.affectsConfiguration !== 'function' || event.affectsConfiguration(flag.SETTING_SECTION)) {
-        mine.controller.updateSettings(flag.settings(vscode, process.env, { forceReviewer: reviewer }));
+        // INV-10 (review finding M2): the master flag turned off closes the panel; its
+        // controller and watcher are disposed with it, so nothing runs any more.
+        if (!flag.isEnabled(vscode)) {
+          panel.dispose();
+          return;
+        }
+        if (mine.controller) mine.controller.updateSettings(flag.settings(vscode, process.env, { forceReviewer: reviewer }));
       }
     }));
   }
