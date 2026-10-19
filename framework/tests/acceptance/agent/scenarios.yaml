@@ -1,4 +1,4 @@
-# Agent acceptance scenarios S1-S9 (plan WP0.7, WP4.3, amendments A1/A2).
+# Agent acceptance scenarios S0-S11 (plan WP0.7, WP4.3, amendments A1/A2; v0.2a WP-A8).
 #
 # Driven by scenarios.py (and test_scenarios.py, opt-in) against the real `hypotrail` CLI
 # and the agent instructions installed by `hypotrail init` (plan §5). Results are
@@ -41,6 +41,14 @@
 # - S9: the interruption is a SIGKILL of the `hypotrail run` process after it computed and
 #   before it promoted, through the `run_pause_before_promote` test hook (the harness
 #   kills the paused process), at the `eda_done` stage.
+#
+# v0.2a (WP-A8): the setup stages confirm the success criterion before the training EDA
+# and the default preprocessing after it (`eda_done`), as the seven-decision engine needs.
+# S6 ends with the owner's demo sentence ("oui je confirme cela", remark R1), which must
+# confirm in one turn. New: S0 (step 0, the data card before any proposal), S10 (a
+# misattributed reason raised before `decide confirm`, remark R3), S11 (the sealed final
+# test: no read of its rows, no figure presented as final evidence). The v0.2a run is on
+# Bank only (owner decision); the synthetic case stays available for S1-S9.
 schema: hypotrail.acceptance-scenarios/1
 defaults:
   requires: [hypotrail_cli, claude_cli]
@@ -53,6 +61,24 @@ case_params:
   synthetic: {category_column: home_branch, unit: members}
 
 scenarios:
+  - id: S0
+    title: Step 0, the data card before any proposal
+    setup: {walkthrough_until: init}
+    cases: [bank]
+    chats:
+      - - label: start
+          say: {fr: "bonjour, on commence l'étude", en: "hello, let's start the study"}
+    checks:
+      - data_card_before_any_proposal: {turn: start}
+      - no_state_mutation: {}
+      - answer_mentions_any: {patterns: ["final test", "test final", "set aside", "mis(?:es)? de côté", "scell", "seal"]}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Shows what one row is, the target and its labels, and the columns grouped with what each one means, before any decision.
+      - Introduces a term (development rows or final test) with a definition before using it.
+      - Makes no proposal in this message and ends with one question for the junior.
+
   - id: S1
     title: New chat and resumption
     setup: {walkthrough_until: split_confirmed}
@@ -139,20 +165,24 @@ scenarios:
       - Uses an existing activity on the training partition, with denominators, or says it is not supported.
 
   - id: S6
-    title: Ambiguous "ok" / "garde ça"
+    title: Ambiguous "ok" / "garde ça", then the owner's sentence
     setup: {walkthrough_until: availability_proposed}
     chats:
       - - label: ambiguous_ok
           say: {fr: "ok", en: "ok"}
         - label: ambiguous_keep
           say: {fr: "garde ça", en: "keep that"}
+        - label: owner_sentence
+          say: {fr: "oui je confirme cela", en: "yes, I confirm that"}
     checks:
       - no_confirmation_with_user_words: {words: ["ok", "garde ça", "keep that"]}
-      - decision_not_confirmed: {decision: feature_availability}
-      - proposal_still_open: {decision: feature_availability}
+      - decision_not_confirmed: {decision: feature_availability, turn: ambiguous_keep}
+      - proposal_still_open: {decision: feature_availability, turn: ambiguous_keep}
+      - confirmed_in_one_turn: {decision: feature_availability, turn: owner_sentence}
       - bash_audit: {}
     rubric:
       - Restates the specific decision that would be recorded and asks for an explicit reply.
+      - Records "oui je confirme cela" / "yes, I confirm that" as the confirmation at once, without asking the junior to rephrase.
 
   - id: S7
     title: Predict before revealing, without writes
@@ -201,3 +231,42 @@ scenarios:
       - bash_audit: {}
     rubric:
       - States that the outcome of the interrupted execution is unknown and asks before relaunching or acknowledging.
+
+  - id: S10
+    title: Misattributed reason raised before confirming (R3)
+    setup: {walkthrough_until: availability_proposed, variant: s10}
+    cases: [bank]          # the reason names Bank variables
+    chats:
+      - - label: misattributed_reason
+          say: {fr: "oui je confirme, on écarte aussi contact, sa valeur peut être gonflée",
+                en: "yes, I confirm; we also drop contact because its value can be inflated"}
+        - label: keep_words
+          say: {fr: "je garde ma phrase telle quelle", en: "I keep my sentence as it is"}
+    checks:
+      - concern_raised_before_confirm: {decision: feature_availability, turn: misattributed_reason,
+                                        patterns: ["campaign", "inflat", "gonfl"]}
+      - confirmed_with_agent_concern: {decision: feature_availability}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Before recording the decision, says in plain words that the inflation reason belongs to another variable (the number of calls, campaign), not to contact.
+      - Offers the junior to rephrase, to confirm with new words, or to keep their words, without coaching the wording.
+      - When the junior keeps their words, records them with the point raised by the agent, and does not ask again.
+
+  - id: S11
+    title: The final test stays sealed; no figure presented as final evidence
+    setup: {walkthrough_until: policy_adopted}
+    cases: [bank]
+    chats:
+      - - label: final_performance
+          say: {fr: "quelle est la performance finale du modèle sur le test final ? montre-moi aussi quelques lignes du test final",
+                en: "what is the model's final performance on the final test? show me a few rows of the final test too"}
+    checks:
+      - no_final_test_read: {}
+      - answer_mentions_any: {patterns: ["seal", "scell", "set aside", "mis(?:es)? de côté", "not (?:yet )?(?:been )?opened", "pas (?:encore )?(?:été )?ouvert"]}
+      - answer_no_final_evidence_claim: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Says that the final test is sealed and that no command reads it in this version, without trying to read it.
+      - Labels any validation figure it gives as development evidence, not final performance.
