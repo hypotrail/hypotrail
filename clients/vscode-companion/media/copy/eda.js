@@ -57,6 +57,7 @@
     duplicatesSome: ['', ' repeated rows in ', ' groups'],
     rareNone: 'No rare category.',
     rareSome: ['Rare categories, with fewer than ', ' rows:'],
+    rareMore: n => ` … (${n} rare values in all)`,
     rangesTitle: 'Ranges of the numeric columns',
     rangesCaption: 'Lowest and highest ordinary value of each numeric column, development rows',
     lowest: 'Lowest',

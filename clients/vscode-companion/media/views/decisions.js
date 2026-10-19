@@ -527,7 +527,7 @@
       const proposals = arr(model.proposals);
       const cards = proposals.map(p => proposalCard(p, model, ctx, c));
       const articles = cards.map(n => (n.matches('[data-proposal-card]') ? n : n.querySelector('[data-proposal-card]')));
-      const out = [v1 ? modeSection(model, ctx, c) : null, lastOutcomeSection(model, ctx, c),
+      const out = [lastOutcomeSection(model, ctx, c),
         section('h-proposals', c.waitingTitle, cards.length ? cards
           : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];
       if (arr(model.holds).length) {
@@ -535,6 +535,8 @@
           el('li', { 'data-hold-item': str(h.noteId), title: str(h.noteId) }, [`${str(h.decisionTitle)}: `, quote(h.userWords)])))]));
       }
       if (v1) {
+        // WP-A7: the mode follows the waiting cards, so what waits for the junior comes first.
+        out.push(modeSection(model, ctx, c));
         const entry = ctx.data('decisions');
         if (entry && entry.model) out.push(queueSection(entry.model, ctx, c));
         out.push(historySection(entry && entry.model ? entry : null, ctx, c));

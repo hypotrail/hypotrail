@@ -19,6 +19,7 @@
   // Activities whose run reads the outcome, so each run is one more look (CLI-CONTRACT §11.2).
   const READS_TARGET = ['eda.rate_by', 'eda.mean_by'];
   const EXCLUDED = ['not_available', 'uncertain_excluded'];
+  const RARE_SHOWN = 6;
 
   // View memory (in this webview only; nothing here is study state): the Request choice,
   // the last W4 outcome (rendered in the Request card, `outcomes: ['W4']`), and the language
@@ -487,7 +488,9 @@
       : [q.duplicatesNone, d.duplicates.definition ? ` (${d.duplicates.definition}).` : '.']));
     lines.push(el('p', { 'data-quality': 'rare' }, d.rare.length
       ? [...weave(q.rareSome, [num(ctx, d.rare[0].rareRows, rid)]), ...d.rare.flatMap((r, k) => [k ? '; ' : ' ', el('code', { text: r.column }), ': ',
-        ...r.rare.flatMap((x, j) => [j ? ', ' : '', `${x.value} (`, num(ctx, x.nRows, rid), ')'])]), '.']
+        // A column with many rare values (a name per row) lists the first few, then their count.
+        ...r.rare.slice(0, RARE_SHOWN).flatMap((x, j) => [j ? ', ' : '', `${x.value} (`, num(ctx, x.nRows, rid), ')']),
+        r.rare.length > RARE_SHOWN ? q.rareMore(ctx.format.number(r.rare.length, 'int')) : '']), '.']
       : [q.rareNone]));
     const ranges = el('div', { className: 'eda-table' });
     if (d.ranges.length) {
