@@ -30,12 +30,15 @@ REPO_ROOT = HERE.parents[3]
 FRAMEWORK = REPO_ROOT / 'framework'
 BANK = REPO_ROOT / 'use-cases' / 'bank-marketing'
 AUTO_MPG = REPO_ROOT / 'use-cases' / 'auto-mpg'
+BANK_FULL = REPO_ROOT / 'use-cases' / 'bank-marketing-full'
+SHOPPERS = REPO_ROOT / 'use-cases' / 'online-shoppers'
 
 SPLIT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
 THRESHOLD = 'threshold:0.2'
 # v0.2a (WP-A4): the success criterion is fixed after the split, before any fit; the
 # preprocessing after the training exploration (the engine's default, as in the walkthrough).
 CRITERION = {'metric': 'precision_gain', 'min_points': 5}
+REGRESSION_CRITERION = {'metric': 'mae_reduction', 'min_share': 0.1}
 
 # The junior's words, as in the WP4.2 walkthrough (framework/tests/study/test_walkthrough.py).
 JUNIOR = {
@@ -64,6 +67,35 @@ JUNIOR = {
                           'calls made so far.',
         'words_s2': 'Yes, before each call, with what we know at that point.',
     },
+    # v0.2b (WP-B6b): the discovery case. PageValues is the leakage question of the case
+    # (availability `uncertain`, flagged by the single-feature signal).
+    'shoppers': {
+        'prediction_time': 'at the end of the session, before any follow-up is sent',
+        'restatement': 'You score each session when it ends, from what the session recorded, '
+                       'before any follow-up.',
+        'words': 'Yes, when the session ends, before we send any follow-up.',
+        'exclusions': {'PageValues': 'uncertain_excluded', 'BounceRates': 'uncertain_included',
+                       'ExitRates': 'uncertain_included'},
+        'availability_words': 'Leave PageValues out: we do not know whether it counts the '
+                              "session's own purchase. Keep BounceRates and ExitRates but list "
+                              'them as a doubt.',
+        'rate_by': 'VisitorType',
+        'policy_words': 'Yes, follow up the top 10% of sessions, because the budget covers '
+                        'one session in ten.',
+    },
+    # Regression generality case (Auto MPG), words of test_regression_walkthrough.py.
+    'auto-mpg': {
+        'prediction_time': 'when the technical characteristics of a new model are fixed, '
+                           'before its fuel efficiency is measured',
+        'restatement': 'You estimate fuel efficiency once the technical characteristics are '
+                       'fixed, before any measurement of it.',
+        'words': 'Yes, once the technical characteristics are fixed and before measuring it.',
+        'exclusions': {'acceleration': 'uncertain_excluded'},
+        'availability_words': 'Leave acceleration out, its measurement is unclear; keep the '
+                              'other characteristics and the origin.',
+        'mean_by': 'model_year',
+        'choice_words': 'Yes, adopt the linear model, because it errs less than the mean.',
+    },
     'synthetic': {
         'prediction_time': 'when the membership expires, before any reminder is sent',
         'restatement': 'You score each member when the membership expires, before the first '
@@ -83,8 +115,26 @@ JUNIOR = {
     },
 }
 
+# Bank Marketing full: the same variables and junior words as Bank (the same campaigns).
+JUNIOR['bank'].update(act='call', unit='clients',
+                      policy_words='Yes, call the top 10% of clients, because the call team '
+                                   'can contact one client in ten.')
+JUNIOR['shoppers'].update(act='follow up', unit='sessions')
+JUNIOR['bank-full'] = dict(JUNIOR['bank'])
+
+# v0.2b (WP-B6b): a new study has nine decisions. After the fits come the variant
+# (``model_variant`` confirmed, ``fit.variant`` run), the rule or model choice, and the
+# final-test opening. In a regression study the stage names keep their binary spelling:
+# ``baseline_and_logistic_fitted`` fits the mean baseline and the linear model,
+# ``policy_evaluated`` runs ``evaluate.regression``, and ``policy_adopted`` (alias
+# ``model_chosen``) confirms the model choice. ``final_opened`` confirms the opening with
+# the junior's words and a reason.
 STAGES = ('init', 'availability_proposed', 'split_confirmed', 'eda_done',
-          'baseline_and_logistic_fitted', 'policy_evaluated', 'policy_adopted')
+          'baseline_and_logistic_fitted', 'variant_fitted', 'policy_evaluated',
+          'policy_adopted', 'final_opened')
+STAGE_ALIASES = {'model_chosen': 'policy_adopted'}
+VARIANT = {'kind': 'regularisation', 'strength': 'strong'}
+OPEN_WORDS = 'Yes, I open the sealed final test now, because the model and the rule are fixed.'
 
 BANK_README = """\
 # Term deposit campaign: whom to call first
@@ -131,6 +181,57 @@ what we know about older ones.
 
 This is a learning exercise on public data: the scenario is an assumption for the
 exercise, not a decision taken by anyone.
+"""
+
+
+BANK_FULL_README = """\
+# Term deposit campaigns: whom to call first
+
+## Files
+
+- `case/data/bank-full.csv`: one row per client contacted in the phone campaigns of a
+  Portuguese bank, in time order (May 2008 to November 2010); semicolon-separated, header
+  on the first line. The target column is `y` (`yes` = the client subscribed a term
+  deposit).
+- `case/data/bank-names.txt`: the original documentation distributed with the data.
+- `case/data/prior-exposed-rows.txt`: the row keys of the rows already published in the
+  smaller `bank.csv` extract (read by the study tool).
+- `case/case.yaml`: the case description used by the study tool.
+
+The data are the public UCI "Bank Marketing" data set (Moro, Rita and Cortez, 2014;
+CC BY 4.0). Do not modify these files.
+
+## Scenario
+
+The bank is preparing its next phone campaign for the term deposit. The call team has
+limited capacity and cannot call every client. **Before the calls are made**, we would like
+to decide which clients to call first.
+
+This is a learning exercise on public data: the scenario is an assumption for the
+exercise, not a decision taken by the bank.
+"""
+
+
+SHOPPERS_README = """\
+# Online shop sessions: which sessions to follow up
+
+## Files
+
+- `case/data/online_shoppers_intention.csv`: one row per session on an online shop over
+  one year; comma-separated, header on the first line. The target column is `Revenue`
+  (`TRUE` = the session ended with a purchase).
+- `case/case.yaml`: the case description used by the study tool.
+
+The data are the public UCI "Online Shoppers Purchasing Intention" data set (Sakar, Polat,
+Katircioglu and Kastro, 2019; CC BY 4.0). Do not modify these files.
+
+## Scenario
+
+The shop can follow up only some finished sessions (an email or an ad). **When a session
+ends**, we would like to rank the sessions and follow up the most promising ones first.
+
+This is a learning exercise on public data: the scenario is an assumption for the
+exercise, not a decision taken by the shop.
 """
 
 
@@ -260,6 +361,21 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
                 'target': 'mpg', 'positive': None, 'case_yaml': 'case/case.yaml',
                 'files': ['README.md', 'case/case.yaml', 'case/data/auto-mpg.data',
                           'case/data/auto-mpg.names']}
+    if case in ('bank-full', 'shoppers'):
+        src = BANK_FULL if case == 'bank-full' else SHOPPERS
+        (dest / 'data').mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src / 'case.yaml', dest / 'case.yaml')
+        names = sorted(p.name for p in (src / 'data').iterdir() if p.is_file())
+        for name in names:
+            shutil.copyfile(src / 'data' / name, dest / 'data' / name)
+        (ws / 'README.md').write_text(BANK_FULL_README if case == 'bank-full'
+                                      else SHOPPERS_README, encoding='utf-8')
+        doc = yaml.safe_load((src / 'case.yaml').read_text(encoding='utf-8'))
+        target = doc['target']
+        return {'case': case, 'data': f"case/{doc['dataset']['path']}",
+                'sep': doc['dataset'].get('sep', ','), 'target': target['column'],
+                'positive': target.get('positive_label'), 'case_yaml': 'case/case.yaml',
+                'files': ['README.md', 'case/case.yaml'] + [f'case/data/{n}' for n in names]}
     if case in ('synthetic', 'synthetic-small'):
         from importlib import util as _u   # noqa: F401  (keeps the import local)
         if hidden_dir is None:
@@ -372,11 +488,47 @@ class Setup:
         value.update(self.junior['exclusions_s10' if self.variant == 's10' else 'exclusions'])
         return value
 
+    def view(self) -> dict:
+        return status(self.study)['view']
+
+    def has_decision(self, decision: str) -> bool:
+        return decision in (self.view().get('decisions') or {})
+
+    def regression(self) -> bool:
+        return 'model_choice' in (self.view().get('decisions') or {})
+
+    def default_value(self, decision: str):
+        """The engine's drafted value for ``decision`` (``next_action.default_value`` when the
+        next action is about it)."""
+        na = self.view().get('next_action') or {}
+        return na.get('default_value')
+
+    def split_value(self) -> tuple:
+        """v0.2b: the cross-validation the engine drafts; v0.2a studies keep the stratified
+        random split."""
+        if not self.has_decision('model_variant'):
+            return SPLIT, ('A stratified random split: 30% of rows for validation, seed '
+                           '20261017, fixed before exploring.')
+        value = self.default_value('split')
+        if not (isinstance(value, dict) and value.get('folds')):
+            raise CliError(f'no drafted cross-validation at the split pause: {value!r}')
+        return value, (f"A {value['folds']}-fold cross-validation of the development rows "
+                       f"({value['method']}), fixed before exploring.")
+
+    def rule(self) -> str:
+        """The rule the setup evaluates and adopts: the case's teaching share when it has
+        one (v0.2b), else the v0.1 threshold."""
+        share = ((self.view().get('scenario_defaults') or {}).get('capacity_share') or {})
+        p = share.get('value') if isinstance(share, dict) else share
+        return f'share:{p:g}' if p else THRESHOLD
+
     def advance(self, until: str) -> None:
+        until = STAGE_ALIASES.get(until, until)
         if until not in STAGES:
             raise ValueError(f'unknown stage {until!r}; one of {STAGES}')
         stop = STAGES.index(until)
         j = self.junior
+        regression = self.regression()
         if stop >= 1:
             if self.variant == 's2':
                 p = self.propose('prediction_time', j['prediction_time_s2'], j['restatement_s2'])
@@ -390,27 +542,62 @@ class Setup:
                 'You exclude the variables you listed and keep the doubtful one as a stated limit.')
         if stop >= 2:
             self.confirm(self.availability_proposal, j['availability_words'])
-            p = self.propose('split', SPLIT, 'A stratified random split: 30% of rows for '
-                                             'validation, seed 20261017, fixed before exploring.')
+            value, restatement = self.split_value()
+            p = self.propose('split', value, restatement)
             self.confirm(p, 'Yes, fix that split now, before we look at the outcome.')
             self.run('split')
         if stop >= 3:
-            p = self.propose('success_criterion', CRITERION,
-                             'The model is worth using only if its precision beats the baseline '
-                             'by at least 5 points at the rule you adopt.')
-            self.confirm(p, 'I confirm: at least 5 points over the baseline.')
-            self.run('eda.target_rate')
-            self.run('eda.special_values')
-            self.run('eda.rate_by', '--column', j['rate_by'])
-            default = status(self.study)['view']['next_action']['default_value']
+            if regression:
+                p = self.propose('success_criterion', REGRESSION_CRITERION,
+                                 'The linear model is worth using only if its mean absolute '
+                                 'error is at least 10% lower than the mean baseline.')
+                self.confirm(p, 'I confirm: at least 10% less error than the mean.')
+                self.run('eda.target_summary')
+                self.run('eda.special_values')
+                self.run('eda.mean_by', '--column', j['mean_by'])
+            else:
+                p = self.propose('success_criterion', CRITERION,
+                                 'The model is worth using only if its precision beats the '
+                                 'baseline by at least 5 points at the rule you adopt.')
+                self.confirm(p, 'I confirm: at least 5 points over the baseline.')
+                self.run('eda.target_rate')
+                self.run('eda.special_values')
+                self.run('eda.rate_by', '--column', j['rate_by'])
+            default = self.default_value('preprocessing')
             p = self.propose('preprocessing', default, 'You keep the default preparation of the '
                                                        'variables: nothing added, nothing grouped.')
             self.confirm(p, 'I confirm the default preparation.')
         if stop >= 4:
             self.run('fit.baseline')
-            self.run('fit.logistic')
-        if stop >= 5:
-            self.run('policy.evaluate', '--rule', THRESHOLD)
+            self.run('fit.linear' if regression else 'fit.logistic')
+        has_variant = self.has_decision('model_variant')
+        if stop >= 5 and has_variant:
+            p = self.propose('model_variant', VARIANT,
+                             'You compare the candidate with a strongly regularised variant.')
+            self.confirm(p, 'I confirm the strongly regularised variant, because it tells us '
+                            'whether pulling the coefficients towards zero changes the ranking.')
+            self.run('fit.variant')
+        rule = None if regression else self.rule()
         if stop >= 6:
-            p = self.propose('policy', THRESHOLD, 'You call every client whose score is at least 0.2.')
-            self.confirm(p, 'Yes, call everyone scored 0.2 or more.')
+            if regression:
+                self.run('evaluate.regression')
+            else:
+                self.run('policy.evaluate', '--rule', rule)
+        if stop >= 7:
+            if regression:
+                p = self.propose('model_choice', 'fit.linear', 'You adopt the linear model.')
+                self.confirm(p, j['choice_words'])
+            elif rule == THRESHOLD:
+                p = self.propose('policy', THRESHOLD,
+                                 'You call every client whose score is at least 0.2.')
+                self.confirm(p, 'Yes, call everyone scored 0.2 or more.')
+            else:
+                pct = f'{float(rule[6:]) * 100:g}%'
+                p = self.propose('policy', rule, f"You {j['act']} the top {pct} of "
+                                                 f"{j['unit']}, ranked by the model's score.")
+                self.confirm(p, j['policy_words'])
+        if stop >= 8:
+            value = self.default_value('final_test')
+            p = self.propose('final_test', value, 'You open the sealed final test once, for the '
+                                                  'chosen configuration.')
+            self.confirm(p, OPEN_WORDS)
