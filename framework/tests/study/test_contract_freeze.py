@@ -418,7 +418,8 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
                   # v0.2a (WP-A4).
                   'verdict_contradicts_criterion': 'warning',
                   # B6c (H4).
-                  'verdict_keeps_baseline_against_criterion': 'warning'}
+                  'verdict_keeps_baseline_against_criterion': 'warning',
+                  'final_test_figure_outdated': 'error'}
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
                  # v0.2a (WP-A6): state counts, the five example rows, chart axis ticks.
