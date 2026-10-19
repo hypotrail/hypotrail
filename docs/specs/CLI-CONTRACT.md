@@ -163,7 +163,8 @@ The HTML report shows the junior variants (the next action and the limits). Agen
 | `final_test` | v0.2a (ADR 0006, additive, last): `{status, rows, method, fraction, development_rows, schema_check}` (`partition.final_test_status`, §4.1) |
 | `deliverables` | v0.2a (WP-A1, R7; additive, last): the same object as `init.deliverables` (§3), so a surface or the report can give the exact commands that open the notebooks with the engine's Python |
 | `criterion` | v0.2a (WP-A4, additive, after `language`): the success criterion against the current evaluation (`governance.assess`, §11.4), or `null` in a study without the decision |
-| `eda_looks` | v0.2a (WP-A4, additive, last): the ledger of target-involving looks (`governance.ledger`, §11.2) |
+| `eda_looks` | v0.2a (WP-A4, additive): the ledger of target-involving looks (`governance.ledger`, §11.2) |
+| `trials` | v0.2b (WP-B1, additive, last): the model configurations evaluated so far, `{count, results, note}` (`view.trials`, §12); `status --summary` holds `trials: {count}` after `deliverables` |
 | `notes` | Post-v0.1 (P2, additive): the junior's conditions and holds, oldest first, each `{note_id, decision_id, kind, user_words, status, revision, resolution}` (`view.NOTE_VIEW_KEYS`); `kind` is `hold` or `correction` (ADR 0005), `status` is `open`, `resolved`, `withdrawn`, or `recorded` (a correction), `resolution` is `null` or `{user_words, revision, time, request_id}` (§5.1). Empty for a study without notes |
 | `mode` | ADR 0005 (additive): the confirmation mode, `guided` (a state without `mode` is guided) |
 | `language` | ADR 0005 (additive): the study language, `en` or `fr` (a state without it is `en`) |

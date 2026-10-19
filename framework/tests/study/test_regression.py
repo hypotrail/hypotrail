@@ -29,6 +29,12 @@ def auto_state():
     return st.initial_state(c.load_case(AUTO))
 
 
+@pytest.fixture(scope='module')
+def auto_state_a4(auto_state):
+    """The Auto MPG state of a study created before WP-B1 (v0.2a, never migrated)."""
+    return fk.wp_a4_shape(copy.deepcopy(auto_state))
+
+
 # --- errors and the paired bootstrap ---------------------------------------------------------
 
 def test_errors_and_residuals_are_in_the_unit_of_the_target():
@@ -76,7 +82,11 @@ def test_paired_bootstrap_is_deterministic_and_paired():
 
 def test_split_methods_follow_the_task_and_the_time_column(auto_state, new_study):
     binary = new_study.load_state()
-    assert cmd.split_methods(binary) == ['stratified_random']
+    # WP-B1: a new study lists its cross-validation first; the single split stays available.
+    assert cmd.split_methods(binary) == ['kfold_stratified', 'stratified_random']
+    assert cmd.split_methods(auto_state) == ['temporal_folds', 'ordinal_cutoff']
+    assert cmd.split_methods(fk.wp_a4_shape(copy.deepcopy(binary))) == ['stratified_random']
+    auto_state = fk.wp_a4_shape(copy.deepcopy(auto_state))
     assert cmd.split_methods(auto_state) == ['ordinal_cutoff']
     no_time = copy.deepcopy(auto_state)
     no_time['structure']['time_column']['value'] = None
@@ -136,9 +146,10 @@ def test_group_overlap_counts_shared_groups():
 
 def test_model_choice_and_regression_verdicts(auto_state):
     state = copy.deepcopy(auto_state)
-    # WP-A4: the success criterion and the preprocessing come before the models.
+    # WP-A4: the success criterion and the preprocessing come before the models;
+    # WP-B1: the variant before the choice.
     for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
-              'preprocessing'):
+              'preprocessing', 'model_variant'):
         state['decisions'][d]['status'] = 'confirmed'
     assert cmd.validate_value(state, 'model_choice', 'fit.linear') is None
     with pytest.raises(CommandRefused):
@@ -170,8 +181,27 @@ def test_model_choice_and_regression_verdicts(auto_state):
     assert pre.missing_for_decision(state, 'conclusion',
                                     {'verdict': 'adopt_model', 'text': 'x'}) == []
     state['current']['split'] = 'r_split'
+    # WP-B1: the evaluation compares the variant the junior named too.
     assert [m['slot'] for m in pre.missing_for_activity(state, 'evaluate.regression')] == [
-        'fit.baseline', 'fit.linear']
+        'fit.baseline', 'fit.linear', 'fit.variant']
+
+
+def test_a_wp_b1_regression_study_refits_its_variant_with_the_candidate(auto_state):
+    """WP-B1: what refits the linear candidate refits its variant; a new variant (row 17)
+    refits the variant only and asks for the model choice and the conclusion again."""
+    eff = dep.effects(auto_state, 'preprocessing',
+                      {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
+                       'log_transform': []},
+                      {'missing': 'indicator', 'rare_category_min_rows': 0, 'caps': {},
+                       'log_transform': []})
+    assert eff['refit'] == ['fit.linear', 'fit.variant']
+    eff = dep.effects(auto_state, 'model_variant', {'kind': 'regularisation', 'strength': 'weak'},
+                      {'kind': 'regularisation', 'strength': 'strong'})
+    assert (eff['mutation'], eff['row']) == ('model_variant', 17)
+    assert eff['refit'] == ['fit.variant'] and eff['re_policy'] == ['evaluate.regression']
+    assert eff['reconfirm'] == ['model_choice', 'conclusion']
+    eff = dep.effects(auto_state, 'model_choice', 'fit.linear', {'odd': 1})
+    assert 'final_test' not in eff['reconfirm'] and 'model_variant' in eff['reconfirm']
 
 
 def test_regression_activities_are_refused_in_a_binary_study_and_back(auto_state, new_study):
@@ -214,9 +244,9 @@ def test_regression_activities_are_refused_in_a_binary_study_and_back(auto_state
     ('success_criterion', {'metric': 'mae_reduction', 'min_share': 0.1},
      {'metric': 'mae_reduction', 'min_share': 0.2}, 'success_criterion', 16, [], ['conclusion']),
 ])
-def test_regression_dependency_rows(auto_state, decision, old, new, mutation, row, refit,
+def test_regression_dependency_rows(auto_state_a4, decision, old, new, mutation, row, refit,
                                     reconfirm):
-    eff = dep.effects(auto_state, decision, old, new)
+    eff = dep.effects(auto_state_a4, decision, old, new)
     assert (eff['mutation'], eff['row']) == (mutation, row)
     assert eff['refit'] == refit and eff['reconfirm'] == reconfirm
     if mutation in ('prediction_time', 'feature_availability.feature_set', 'split'):
@@ -283,7 +313,7 @@ def test_regression_view_names_its_task(tmp_path):
     flow.init()
     view = flow.view()
     assert view['task'] == 'regression'
-    assert tuple(view['decisions']) == st.FULL_REGRESSION_DECISION_IDS
+    assert tuple(view['decisions']) == st.B1_REGRESSION_DECISION_IDS
     # WP-A4: step 0 first (the data card), then the first decision's question.
     assert view['next_action']['kind'] == 'show_data_card'
     flow.call('data', '--study', flow.study)

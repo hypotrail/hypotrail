@@ -134,7 +134,7 @@ activities:
     highlights:
       - {path: validation.roc_auc, label: Ranking quality out of fold or on validation (AUC), fmt: f3}
       - {path: validation.average_precision, label: Average precision, fmt: f3}
-      - {path: C, label: Regularisation parameter C (the candidate has 1), fmt: auto}
+      - {path: C, label: Regularisation parameter C of the variant, fmt: auto}
       - {path: cross_validation.spread.roc_auc.sd, label: Spread of the AUC across folds (standard deviation), fmt: f3}
       - {path: n_terms, label: Model terms after encoding, fmt: int}
   final_test.evaluation:

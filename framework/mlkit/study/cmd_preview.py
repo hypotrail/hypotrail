@@ -123,7 +123,9 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
         raise StudyError('precondition_missing', 'Previewing a policy needs both fits.',
                          details={'missing': missing})
     models, scores, y, keys = {}, {}, None, None
-    for slot in FITS:
+    # WP-B1: the variant, once fitted, is previewed with the candidate it is compared with.
+    slots = FITS + (('fit.variant',) if state['current'].get('fit.variant') else ())
+    for slot in slots:
         entry = study.current(slot)
         sha = entry['blobs'].get('predictions')
         if sha is None:
@@ -140,7 +142,7 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
         scores[slot] = np.asarray([float(r[2]) for r in rows])
         models[slot] = {'result_id': entry['result_id'], 'current': study.is_current(slot),
                         'stale_reason': study.stale_reason(entry['result_id'])}
-    evaluations = {rule: {slot: policy.evaluate(y, scores[slot], rule) for slot in FITS}
+    evaluations = {rule: {slot: policy.evaluate(y, scores[slot], rule) for slot in slots}
                    for rule in rules}
     boot = None
     if intervals:

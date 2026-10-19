@@ -185,7 +185,19 @@ class Flow:
         if run:
             self.run('fit.variant')
 
+    EVALUATIONS = ('policy.evaluate', 'policy.evaluation', 'evaluate.regression')
+
     def run(self, activity, *options, expect=0, request_id=None):
+        """Run one activity. WP-B1 (a test convenience): in a study with a variant decision,
+        an evaluation needs the variant it compares; when the test has not named one, the
+        default test variant is named and fitted first (:meth:`variant`)."""
+        if activity in self.EVALUATIONS and expect == 0:
+            from mlkit.study import state as st
+            state = self.state()
+            if st.has_wp_b1_decisions(state) and (
+                    state['decisions']['model_variant']['status'] != 'confirmed'
+                    or not st.is_current(state, 'fit.variant')):
+                self.variant()
         return self.call('run', activity, *options, '--request-id', request_id or self.rid(),
                          '--expected-revision', self.rev(), '--study', self.study, expect=expect)
 

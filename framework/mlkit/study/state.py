@@ -1092,7 +1092,7 @@ DEFAULT_CV_SEED = 20261017
 # The variant of the candidate (decision ``model_variant``): one kind, one parameter.
 VARIANT_KINDS = ('regularisation', 'drop_group')
 VARIANT_STRENGTHS = ('weak', 'strong')
-DEFAULT_VARIANT = {'kind': 'regularisation', 'strength': 'strong'}
+DEFAULT_VARIANT = dict(kind='regularisation', strength='strong')
 
 
 def is_cv_split(value) -> bool:

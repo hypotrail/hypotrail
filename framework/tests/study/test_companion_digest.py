@@ -43,6 +43,9 @@ def test_constants_follow_the_contract():
         # preprocessing; the session report's v0.1 table stays the table of an older study.
         pauses = {p: list(d) for p, d in cmd_session_report.TASK_PAUSES[task].items()}
         pauses[2] = ['split', 'success_criterion', 'preprocessing']
+        # WP-B1: the third pause names the variant first and may open the final test.
+        choice = pauses[3][0]
+        pauses[3] = ['model_variant', choice, 'final_test', 'conclusion']
         assert view.pause_decisions(task) == pauses
 
 
@@ -189,7 +192,9 @@ def test_a_policy_reconfirmation_names_the_decision(binary, tmp_path):
     assert len(again) == 1
     assert again[0]['text'].startswith("The policy was confirmed again in the junior's words")
     assert 'Models unchanged, nothing refitted.' in again[0]['text']
-    assert again[0]['invalidation']['kept_fits'] == ['fit.baseline', 'fit.logistic']
+    # WP-B1: the variant is a fit the evaluation compares; it is kept too.
+    assert again[0]['invalidation']['kept_fits'] == ['fit.baseline', 'fit.logistic',
+                                                     'fit.variant']
     assert again[0]['invalidation']['refit'] == []
     # a split change: the policy needs the junior's words again
     start = flow.rev()
@@ -240,7 +245,9 @@ def test_regression_digest_has_no_decision_rule_vocabulary(tmp_path):
     p = _digest(flow, since=0)
     assert p['task'] == 'regression'
     assert [tuple(m['steps']) for m in p['moments']] == list(cc.MOMENT_STEPS['regression'])
-    assert p['pauses'][2]['decisions'] == ['model_choice', 'conclusion']
+    # WP-B1: the variant before the model choice, the opening of the final test after it.
+    assert p['pauses'][2]['decisions'] == ['model_variant', 'model_choice', 'final_test',
+                                           'conclusion']
     kinds = {i['kind'] for i in p['digest']['items']}
     assert {'proposed', 'confirmed', 'result_added', 'hold_recorded'} <= kinds
     joined = ' '.join(i['text'] for i in p['digest']['items'])

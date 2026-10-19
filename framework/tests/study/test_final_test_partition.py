@@ -35,6 +35,10 @@ def _raw(case_dir):
         return case, {f'L{i}': dict(zip(header, row)) for i, row in enumerate(reader, start=2)}
 
 
+# WP-B1: the surfaces also say how the final test was opened, and what changed after it.
+SEALED_EXTRA = {'opening': None, 'post_final_test': False, 'changed_after': []}
+
+
 def _half_up(n, fraction=partition.DEFAULT_FRACTION):
     return int(math.floor(n * fraction + 0.5))
 
@@ -67,7 +71,7 @@ def test_bank_final_test_is_a_stratified_fifth_sealed_at_init(bank_study):
     assert record['schema_check']['status'] == 'pass'
     assert payload['final_test'] == {'status': 'sealed', 'rows': 904, 'method': 'stratified',
                                      'fraction': 0.2, 'development_rows': 3617,
-                                     'schema_check': 'pass'}
+                                     'schema_check': 'pass', **SEALED_EXTRA}
     assert payload['structural_exposure']['n_rows'] == 3617
 
 
@@ -82,7 +86,7 @@ def test_assignment_is_deterministic(bank_study, tmp_path):
 def test_status_and_summary_report_the_sealed_final_test(bank_study):
     flow, _ = bank_study
     expected = {'status': 'sealed', 'rows': 904, 'method': 'stratified', 'fraction': 0.2,
-                'development_rows': 3617, 'schema_check': 'pass'}
+                'development_rows': 3617, 'schema_check': 'pass', **SEALED_EXTRA}
     assert flow.view()['final_test'] == expected
     summary = flow.call('status', '--summary', '--study', flow.study)
     assert summary['final_test'] == expected
@@ -244,8 +248,9 @@ def _assert_no_final_row_in_records(study: Path, final: set):
         assert entry['inputs']['development'] == partition.inputs(s.state)
 
 
-@pytest.mark.parametrize('task', ['binary', 'regression'])
-def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch, task):
+@pytest.mark.parametrize('task, scheme', [('binary', 'split'), ('regression', 'split'),
+                                          ('binary', 'cv'), ('regression', 'cv')])
+def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch, task, scheme):
     case_dir = fk.make_case(tmp_path / 'case', task=task, n_rows=600)['case'].parent
     walk = Walk(case_dir, tmp_path / 'study')
     walk.call('init', 'init', '--case', case_dir, '--study', walk.study)
@@ -256,8 +261,12 @@ def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch,
     regression = task == 'regression'
     walk.decide('prediction_time', 'when the record is created, before the outcome')
     walk.decide('feature_availability', fk.availability(case_dir))
-    walk.decide('split', {'method': 'random' if regression else 'stratified_random',
-                          'validation_fraction': 0.3, 'seed': 7})
+    if scheme == 'cv':        # WP-B1: the cross-validation of the development rows
+        walk.decide('split', {'method': 'kfold_quantile' if regression else 'kfold_stratified',
+                              'folds': 5, 'seed': 7})
+    else:
+        walk.decide('split', {'method': 'random' if regression else 'stratified_random',
+                              'validation_fraction': 0.3, 'seed': 7})
     # WP-A4: the success criterion and the default preprocessing, before any model.
     walk.decide('success_criterion', fk.criterion(case.task))
     walk.decide('preprocessing', {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
@@ -272,6 +281,8 @@ def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch,
     walk.run('eda.distribution', '--column', feature)
     walk.run('fit.baseline')
     walk.run('fit.linear' if regression else 'fit.logistic')
+    walk.decide('model_variant', dict(fk.VARIANT))          # WP-B1
+    walk.run('fit.variant')
     if regression:
         walk.run('evaluate.regression')
     else:
@@ -279,9 +290,9 @@ def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch,
     for args in (('status', '--study', walk.study), ('evidence', '--study', walk.study),
                  ('export', '--study', walk.study), ('check', '--study', walk.study)):
         cli.run([str(a) for a in args])
-    # split, 4 EDA, 2 fits (+ the regression evaluation, which reads its time column);
-    # the policy evaluation reads predictions only.
-    assert seen['loads'] == (8 if regression else 7) and seen['rows'] >= 6
+    # split, 4 EDA, 3 fits (WP-B1: the variant) (+ the regression evaluation, which reads its
+    # time column); the policy evaluation reads predictions only.
+    assert seen['loads'] == (9 if regression else 8) and seen['rows'] >= 7
     _assert_no_final_row_in_records(walk.study, final)
 
 
@@ -294,7 +305,7 @@ def test_a_legacy_study_without_partition_loads_runs_and_shows_no_final_test(tmp
     flow = Flow(tmp_path / 'study', case_dir)
     assert 'partition' not in flow.state()
     absent = {'status': 'absent', 'rows': None, 'method': None, 'fraction': None,
-              'development_rows': None, 'schema_check': None}
+              'development_rows': None, 'schema_check': None, **SEALED_EXTRA}
     assert flow.view()['final_test'] == absent
     assert flow.call('status', '--summary', '--study', flow.study)['final_test'] == absent
     flow.pauses()

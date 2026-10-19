@@ -132,9 +132,9 @@ moments:
     steps: [train_eda, preprocessing]
   - id: compare
     title: Work and compare
-    steps: [models, policy]
+    steps: [models, model_variant, policy]
   - id: conclude
     title: Conclude and hand over
-    steps: [conclusion]
+    steps: [final_test, conclusion]
 regression_moments:
-  compare: [models, model_choice]
+  compare: [models, model_variant, model_choice]

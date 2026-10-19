@@ -79,8 +79,9 @@ ROWS = [
 
 
 def test_table_has_rows_one_to_twelve_and_unknown():
-    # WP-A4 adds rows 14 to 16 (preprocessing, its motivation, the success criterion).
-    assert [m['row'] for m in dep.MUTATIONS] == list(range(1, 13)) + [14, 15, 16, '*']
+    # WP-A4 adds rows 14 to 16 (preprocessing, its motivation, the success criterion);
+    # WP-B1 row 17 (the variant).
+    assert [m['row'] for m in dep.MUTATIONS] == list(range(1, 13)) + [14, 15, 16, 17, '*']
 
 
 @pytest.mark.parametrize('row, decision_id, old, new, mutation, stale_slots, reconfirm', ROWS,
@@ -118,7 +119,9 @@ def test_mutation_row(full, row, decision_id, old, new, mutation, stale_slots, r
 def test_row_1_blocks_the_logistic_refit_until_availability_is_reconfirmed(full):
     _, state = full
     eff = dep.effects(state, 'prediction_time', PT, 'after the first reminder')
-    assert eff['refit'] == ['fit.logistic'] and eff['blocked_until'] == ['feature_availability']
+    # WP-B1: in a new study the variant is the candidate with one change, so it refits too.
+    assert eff['refit'] == ['fit.logistic', 'fit.variant']
+    assert eff['blocked_until'] == ['feature_availability']
 
 
 def test_row_3_only_rewrites_the_dictionary_text(full):

@@ -35,7 +35,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
                 'recap_audience', 'recap_junior',
                 # v0.2a (WP-A7): the confirmation mode and the notebook launch commands.
-                'mode', 'deliverables')
+                'mode', 'deliverables',
+                # v0.2b (WP-B1): the trial count.
+                'trials')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.
@@ -49,13 +51,14 @@ MOMENTS = (('frame', 'Frame the change'), ('evidence', 'Prepare evidence'),
            ('compare', 'Work and compare'), ('conclude', 'Conclude and hand over'))
 # v0.2a (WP-A4): step 0 and the success criterion frame the change; the preprocessing is
 # prepared with the evidence. A moment lists only the steps of its study.
+# WP-B1: the variant is compared with the models, the final test opened before concluding.
 MOMENT_STEPS = {
     'binary': (('discover_data', 'prediction_time', 'feature_availability', 'split',
                 'success_criterion'), ('train_eda', 'preprocessing'),
-               ('models', 'policy'), ('conclusion',)),
+               ('models', 'model_variant', 'policy'), ('final_test', 'conclusion')),
     'regression': (('discover_data', 'prediction_time', 'feature_availability', 'split',
                     'success_criterion'), ('train_eda', 'preprocessing'),
-                   ('models', 'model_choice'), ('conclusion',)),
+                   ('models', 'model_variant', 'model_choice'), ('final_test', 'conclusion')),
 }
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
 LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
