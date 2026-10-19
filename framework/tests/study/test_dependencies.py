@@ -79,7 +79,8 @@ ROWS = [
 
 
 def test_table_has_rows_one_to_twelve_and_unknown():
-    assert [m['row'] for m in dep.MUTATIONS] == list(range(1, 13)) + ['*']
+    # WP-A4 adds rows 14 to 16 (preprocessing, its motivation, the success criterion).
+    assert [m['row'] for m in dep.MUTATIONS] == list(range(1, 13)) + [14, 15, 16, '*']
 
 
 @pytest.mark.parametrize('row, decision_id, old, new, mutation, stale_slots, reconfirm', ROWS,

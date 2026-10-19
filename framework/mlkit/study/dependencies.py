@@ -149,7 +149,8 @@ REGRESSION_MUTATIONS: tuple[dict, ...] = (
      'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
      'notes': ('The mean baseline uses no feature and stays current; the exploration is '
                'unchanged.',)},
-    MUTATIONS[12], MUTATIONS[13], MUTATIONS[14], MUTATIONS[15],
+    BY_MUTATION['preprocessing.motivation'], BY_MUTATION['success_criterion'],
+    BY_MUTATION['unknown'],
 )
 REGRESSION_BY_MUTATION = {m['mutation']: m for m in REGRESSION_MUTATIONS}
 MUTATIONS_BY_TASK = {st.BINARY: MUTATIONS, st.REGRESSION: REGRESSION_MUTATIONS}

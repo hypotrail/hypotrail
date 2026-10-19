@@ -136,7 +136,9 @@ def test_group_overlap_counts_shared_groups():
 
 def test_model_choice_and_regression_verdicts(auto_state):
     state = copy.deepcopy(auto_state)
-    for d in ('prediction_time', 'feature_availability', 'split'):
+    # WP-A4: the success criterion and the preprocessing come before the models.
+    for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+              'preprocessing'):
         state['decisions'][d]['status'] = 'confirmed'
     assert cmd.validate_value(state, 'model_choice', 'fit.linear') is None
     with pytest.raises(CommandRefused):
@@ -200,8 +202,17 @@ def test_regression_activities_are_refused_in_a_binary_study_and_back(auto_state
     ('model_choice', 'fit.linear', 'fit.baseline', 'model_choice', 13, [], ['conclusion']),
     ('conclusion', {'verdict': 'keep_baseline', 'text': 'a'},
      {'verdict': 'adopt_model', 'text': 'a'}, 'conclusion', 10, [], []),
+    # WP-A4: an unknown change asks for every other decision of the study again, the
+    # success criterion and the preprocessing included.
     ('model_choice', 'fit.linear', {'odd': 1}, 'unknown', '*', ['fit.baseline', 'fit.linear'],
-     ['prediction_time', 'feature_availability', 'split', 'conclusion']),
+     ['prediction_time', 'feature_availability', 'split', 'success_criterion', 'preprocessing',
+      'conclusion']),
+    ('preprocessing', {'missing': 'none', 'rare_category_threshold': 0, 'caps': {},
+                       'log_transform': []},
+     {'missing': 'indicator', 'rare_category_threshold': 0, 'caps': {}, 'log_transform': []},
+     'preprocessing', 14, ['fit.linear'], ['model_choice', 'conclusion']),
+    ('success_criterion', {'metric': 'mae_reduction', 'min_share': 0.1},
+     {'metric': 'mae_reduction', 'min_share': 0.2}, 'success_criterion', 16, [], ['conclusion']),
 ])
 def test_regression_dependency_rows(auto_state, decision, old, new, mutation, row, refit,
                                     reconfirm):
@@ -272,8 +283,17 @@ def test_regression_view_names_its_task(tmp_path):
     flow.init()
     view = flow.view()
     assert view['task'] == 'regression'
-    assert tuple(view['decisions']) == st.REGRESSION_DECISION_IDS
-    question = view['plan'][0]['question']
+    assert tuple(view['decisions']) == st.FULL_REGRESSION_DECISION_IDS
+    # WP-A4: step 0 first (the data card), then the first decision's question.
+    assert view['next_action']['kind'] == 'show_data_card'
+    flow.call('data', '--study', flow.study)
+    flow.call('decide', 'propose', 'prediction_time', '--value', 'when the model is designed',
+              '--restatement', 'You predict when the model is designed.', '--rationale', 'x',
+              '--request-id', 'v-p', '--expected-revision', flow.rev(), '--study', flow.study)
+    flow.call('decide', 'withdraw', 'p_1', '--reason', 'restart', '--request-id', 'v-w',
+              '--expected-revision', flow.rev(), '--study', flow.study)
+    view = flow.view()
+    question = view['plan'][1]['question']
     # v0.2a (WP-A1): plus the audience of the message and its junior variant (the question).
     assert view['next_action'] == {'kind': 'propose', 'step': 'prediction_time',
                                    'decision': 'prediction_time', 'message': question,
