@@ -441,8 +441,14 @@ FINAL_CLAIM_RE = re.compile(r'final (?:test|evidence|performance|result)|test fi
                             r'performance finale|preuve finale|résultat final', re.I)
 NOT_FINAL_RE = re.compile(r"\b(?:no|not|n't|never|none|sealed|scell\w*|unopened|pas|aucun\w*|"
                           r"jamais|ne|until|before|avant|jusqu\w*|instead|rather|only|"
-                          r"development|développement|validation|v0\.2b|later|ultérieur\w*)\b",
-                          re.I)
+                          r"development|développement|validation|v0\.2b|later|ultérieur\w*|"
+                          # WP-B6b (round 1): a future, conditional or required opening is
+                          # no claim ("Once the final test is opened, I'll ...", "Pour
+                          # obtenir la performance finale, il faut ouvrir le test final",
+                          # "pourraient être").
+                          r"once|when|will|would|could|might|quand|lorsque|faut|need\w*|"
+                          r"requires?|pourr\w*|ser(?:a|ait|ont|aient)|open\w*|ouvr\w*)\b"
+                          r"|'ll\b", re.I)
 
 
 def c_answer_no_final_evidence_claim(ctx):

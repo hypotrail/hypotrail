@@ -292,7 +292,8 @@ METRIC_WORDS = (
     (re.compile(r'\b(?:recall|rappel|couverture|coverage)\b', re.I), ('recall',)),
     (re.compile(r'\b(?:auc|roc)\b', re.I), ('roc_auc',)),
     (re.compile(r'\blift\b', re.I), ('lift',)),
-    (re.compile(r'\b(?:gain|gains)\b', re.I), ('gain_points', 'deltas', 'gain')),
+    # WP-B6b: "la précision gagne 21,4 points" (the French verb) names a gain too.
+    (re.compile(r'\b(?:gain|gains|gagn\w*)\b', re.I), ('gain_points', 'deltas', 'gain')),
     (re.compile(r'\b(?:mae|rmse|error|errors|erreur|erreurs|residual\w*|r[ée]sidu\w*)\b', re.I),
      ('mae', 'rmse', 'error', 'residual')),
     (re.compile(r'\b(?:missing|manquant\w*|absent\w*)\b', re.I), ('missing',)),
@@ -325,15 +326,31 @@ def internal_path(slot: str, path: str) -> bool:
         segments = cite.parse_path(path)
     except Exception:      # noqa: BLE001 - an unreadable path is not cited either
         return True
-    if INTERNAL_SEGMENTS & set(segments):
+    internal = INTERNAL_SEGMENTS
+    if slot.startswith(DIAGNOSTIC_SLOTS):
+        # WP-B6b: a diagnostic's coefficients and their bootstrap intervals are what the
+        # agent is asked to read with the junior (CLAUDE.md, "Diagnostics"); a fit's raw
+        # coefficients stay internal. The refit check of the point stays internal.
+        # The scatter points are drawn, never shown as figures (WP-B4).
+        internal = (internal - {'coefficients'}) | {'point_check', 'scatter'}
+    if internal & set(segments):
         return True
     return bool(INTERNAL_BY_SLOT.get(slot, frozenset()) & set(segments))
+
+
+DIAGNOSTIC_SLOTS = ('diag.',)
 
 
 INTERVAL_WORDS = re.compile(r'\b(?:intervals?|intervalles?|between|entre|ranges?|fourchette|'
                             r'ci|ic|bounds?|bornes?|resamples?|bootstrap)\b|[\[\]–]'
                             r'|\d\s*%?\s*(?:to|à|-)\s*[-−]?\d', re.I)
-MODEL_WORDS = re.compile(r'\b(?:model|mod[èe]le|logisti\w*|linear|lin[ée]aire)\b', re.I)
+# WP-B6b: "model year(s)" (a time column) names no model.
+MODEL_WORDS = re.compile(r'\b(?:model(?![\s_-]+years?\b)|mod[èe]le|logisti\w*|linear|'
+                         r'lin[ée]aire)\b', re.I)
+# WP-B6b: the first bound of a range written after the number ("3.49 à 4.18", "40% to 54%").
+RANGE_AFTER = re.compile(r'\s*%?\s*(?:to|à|-|–)\s*[-−]?\d', re.I)
+# ... and the second bound ("3.44 à 4.13"): the number follows a bound and a range word.
+RANGE_BEFORE = re.compile(r'\d\s*%?\s*(?:to|à|-|–)\s*[-−]?$', re.I)
 BASELINE_WORDS = re.compile(r'\b(?:baseline|r[ée]f[ée]rence|constant\w*|base|mean|moyenne)\b',
                             re.I)
 INTERVAL_PARENTS = frozenset({'interval', 'intervals', 'deltas'})
@@ -382,7 +399,8 @@ def binding(text: str, start: int, end: int, percent: bool) -> Binding:
         if RATE_WORDS.search(named):
             out.extend(RATE_SEGMENTS)
     return Binding(segments=('#count',) if count else (tuple(dict.fromkeys(out)) or None),
-                   interval=bool(INTERVAL_WORDS.search(near)),
+                   interval=bool(INTERVAL_WORDS.search(near) or RANGE_AFTER.match(text, end)
+                                 or RANGE_BEFORE.search(text, max(0, start - 20), start)),
                    model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near))
 
 
@@ -406,6 +424,44 @@ def _bound(item: Mapping, bind: Binding | None) -> bool:
     if bind.segments == ('#count',):
         return segments[-1] in COUNT_SEGMENTS
     return any(b in seg for seg in segments for b in bind.segments)
+
+
+def group_labels(values: Any) -> list[str]:
+    """WP-B6b: the text labels of a result's groups (``groups: [{value|label: "<text>"}]``,
+    as the EDA, the residuals by period and the diagnostics by variable print them)."""
+    out: list[str] = []
+    if isinstance(values, Mapping):
+        for key, v in values.items():
+            if key == 'groups' and isinstance(v, list):
+                out += [g[k] for g in v if isinstance(g, Mapping)
+                        for k in ('value', 'label') if isinstance(g.get(k), str)]
+            out += group_labels(v)
+    elif isinstance(values, list):
+        for v in values:
+            out += group_labels(v)
+    return out
+
+
+CRITERION_FIGURES = ('gain', 'low', 'high')
+
+
+def criterion_items(criterion: Mapping | None) -> list[dict]:
+    """WP-B6b: the citable figures of ``view.criterion`` (development, then final test),
+    as pool items of the result each was read from."""
+    if not isinstance(criterion, Mapping):
+        return []
+    metric = criterion.get('metric') or 'criterion'
+    out = []
+    for prefix, block in (('criterion', criterion),
+                          ('criterion.final_test', criterion.get('final_test'))):
+        if not isinstance(block, Mapping) or not isinstance(block.get('result_id'), str):
+            continue
+        for key in CRITERION_FIGURES:
+            value = block.get(key)
+            if cite.is_number(value):
+                out.append({'result_id': block['result_id'], 'slot': 'criterion',
+                            'path': f'{prefix}.{metric}.{key}', 'value': value})
+    return out
 
 
 def _is_difference(path: str) -> bool:
@@ -459,6 +515,19 @@ class Pool:
                     continue
                 bucket.append({'result_id': item['result_id'], 'slot': slot,
                                'path': path, 'value': value})
+        # WP-B6b: the success criterion as ``status`` shows it (``view.criterion``): the
+        # gain and its interval on the development evidence (in points for a scoring study,
+        # a share of the baseline's MAE for a regression), and on the final test once
+        # opened. The path names the metric ("precision_gain", "mae_reduction") so that a
+        # number bound to "precision" or "MAE" may match it.
+        self.current.extend(criterion_items(view.get('criterion')))
+        # WP-B6b: the bounds a group label prints ("81 to 82 year (19xx)", "(2166.8,
+        # 2584.4]") are literals of a current result: a text that names the group repeats
+        # them.
+        for slot, item in sorted(view['results'].items()):
+            if item['values'] is not None and item['current'] and item['integrity'] == 'ok':
+                for label in group_labels(item['values']):
+                    self._literal('group_label', f'{slot}:{label}', label)
         for d in view['decisions'].values():
             if d['value'] is not None and d['decision_id'] != 'conclusion':
                 self._literal('decision', d['decision_id'], d['value'])

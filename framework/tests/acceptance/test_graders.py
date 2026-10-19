@@ -909,3 +909,22 @@ def test_wp_b6b_s13_checks_on_stub_runs():
     assert sc.c_no_final_diagnostic_claim(fine)['ok']
     claim = _Stub([('q', 'The calibration on the final test is good.')])
     assert not sc.c_no_final_diagnostic_claim(claim)['ok']
+
+
+def test_wp_b6b_round1_grader_fixes_future_and_required_openings():
+    """Round 1 of the v0.2b run (verbatim agent sentences): a future, conditional or
+    required opening is not a claim of final evidence; a plain claim still is."""
+    sc = _load('scenarios')
+    for text in ("Once the final test is opened, I'll run its diagnostics and we'll read its "
+                 "calibration first, as **final evidence**.",
+                 "Les erreurs sur le test final pourraient être un peu plus élevées."):
+        assert sc.c_no_final_diagnostic_claim(_Stub([('q', text)]))['ok'], text
+    text = ("**Pour obtenir la performance finale, il faut ouvrir le test final "
+            "(2466 lignes).** Voici ce que cela implique :")
+    assert sc.c_answer_no_final_evidence_claim(_Stub([('q', text)]))['ok']
+    for text in ('The final performance is 45.2% precision.',
+                 'On the final test the errors are 3.1 mpg on average.',
+                 'La calibration sur le test final est bonne.'):
+        stub = _Stub([('q', text)])
+        assert not (sc.c_answer_no_final_evidence_claim(stub)['ok']
+                    and sc.c_no_final_diagnostic_claim(stub)['ok']), text
