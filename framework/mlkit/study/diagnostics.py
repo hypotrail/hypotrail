@@ -444,7 +444,7 @@ def heteroscedasticity(y, prediction) -> dict:
                 or (ratio is not None and (ratio >= SPREAD_RATIO or ratio <= 1 / SPREAD_RATIO)))
     return {'abs_residual_prediction_correlation': corr, 'spread_ratio_top_bottom': ratio,
             'flag': flag,
-            'rule': f'flagged when the rank correlation of the absolute residual with the '
+            'rule': f'Flagged when the rank correlation of the absolute residual with the '
                     f'prediction is at least {HETERO_CORRELATION} in size, or the residual '
                     f'standard deviation of the top third of the predictions is more than '
                     f'{SPREAD_RATIO} times (or less than 1/{SPREAD_RATIO} of) that of the '
