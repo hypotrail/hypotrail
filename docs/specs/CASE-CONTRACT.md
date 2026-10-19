@@ -49,6 +49,7 @@ Top-level keys, in this order. Unknown keys are refused.
 | `structure` | yes | See [Structure](#structure) |
 | `task` | yes | `binary` or `regression` |
 | `prior_exposure` | no | List of `{value, status, source}`: what is already published or exposed for this dataset |
+| `order` | no | v0.2a: the declared row order, see [Order](#order) |
 | `migration` | no | See [Migration block](#migration-block) |
 
 ### Dataset
@@ -76,6 +77,8 @@ On load, the dataset must exist inside the case directory (`dataset_missing`), i
 - a missing target value (a cell matching `na_values`) is `unsupported_capability`, capability `missing target values (v0.2)`, with the count and the first row keys, for both tasks: rows are neither dropped nor imputed.
 
 Only which cells parse and which labels occur are read, never a rate; the reading is the structural inspection that `init` records as exposure.
+
+**Development rows and the sealed final test (v0.2a, ADR 0006).** `init` first sets aside a final test (20 % of the rows, `CLI-CONTRACT.md` §4.1). The checks above, with values and row keys, run on the development rows only. The final-test rows get the same checks as counts of failing rows only (`numeric_cells`, `target_missing`, `target_labels`), never a value, a label, or a row key: a failure refuses `init` with `invalid_case` (or `unsupported_capability` for missing targets) and those counts. Row keys and duplicates are still read on every record. Every later reading of the data (by every activity) receives the development rows only.
 
 ### Row key
 
@@ -122,6 +125,20 @@ task: binary
 - `source` says why.
 
 Availability is almost never a `documented_fact`. Documentation usually describes what a variable measures, not when it becomes known; that depends on the prediction time, which is a study decision. Study state records the availability *decision* (`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`; plan §3.2) and may differ from the case.
+
+### Order
+
+```yaml
+order:
+  by: line            # or the name of a numeric or integer variable
+  direction: ascending
+  status: documented_fact
+  source: data/README.md:12
+```
+
+Optional (v0.2a, ADR 0006). It states that the rows are ordered in time: `by: line` (the physical order of the file) or a variable of type `numeric` or `integer` (not the target); `direction` is `ascending` (later rows come later, or have larger values) or `descending`. `status` and `source` say why the order is known. With `order`, the sealed final test is the last rows in that order (`temporal`, ties broken by file line, the count of ties at the cut recorded); without it, a stratified random sample. A variable named `line` makes `by: line` ambiguous and is refused (`invalid_case`), as are an unknown variable, a variable of another type, and another direction. A row whose order column holds no number refuses `init`.
+
+The committed cases declare no order: Bank Marketing's `bank.csv` documents none, and Auto MPG's time column (`model_year`) is used by the `ordinal_cutoff` split of the development rows, not by the final test.
 
 ### Structure
 
