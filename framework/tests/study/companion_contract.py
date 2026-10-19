@@ -29,8 +29,13 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
                 'executions', 'not_yet_defensible', 'notes', 'holds', 'recap')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
-# decision CA.3, ADR 0004 open question 7). Without ``--digest`` the summary is unchanged.
-DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'digest', 'task')
+# decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
+# Without ``--digest`` the summary is unchanged.
+DIGEST_SUMMARY_KEYS = SUMMARY_KEYS + ('moments', 'pauses', 'last_session', 'digest', 'task',
+                                      'currency')
+CURRENCY_HEX = 16
+CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'alerts',
+                       'next_action', 'executions', 'results')
 MOMENT_KEYS = ('id', 'title', 'steps')
 MOMENTS = (('frame', 'Frame the change'), ('evidence', 'Prepare evidence'),
            ('compare', 'Work and compare'), ('conclude', 'Conclude and hand over'))

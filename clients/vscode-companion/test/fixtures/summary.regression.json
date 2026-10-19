@@ -399,6 +399,7 @@
     "invalidations": 0
    }
   },
-  "task": "regression"
+  "task": "regression",
+  "currency": "2b8e61f0c4a9d375"
  }
 }

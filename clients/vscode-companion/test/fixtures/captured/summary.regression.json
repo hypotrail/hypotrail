@@ -341,7 +341,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-19T00:49:32.360880+00:00",
+   "boundary_time": "2026-10-19T02:13:39.059180+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -350,7 +350,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-19T00:49:32.384640+00:00",
+     "time": "2026-10-19T02:13:39.087461+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -371,7 +371,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-19T00:49:32.429855+00:00",
+     "time": "2026-10-19T02:13:39.137669+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -399,7 +399,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-19T00:49:32.503104+00:00",
+     "time": "2026-10-19T02:13:39.203836+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -420,7 +420,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-19T00:49:32.555570+00:00",
+     "time": "2026-10-19T02:13:39.265046+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -448,7 +448,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-19T00:49:32.601891+00:00",
+     "time": "2026-10-19T02:13:39.304400+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -469,7 +469,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-19T00:49:32.645201+00:00",
+     "time": "2026-10-19T02:13:39.345840+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -497,7 +497,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-19T00:49:32.800014+00:00",
+     "time": "2026-10-19T02:13:39.470083+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -518,7 +518,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-19T00:49:32.932009+00:00",
+     "time": "2026-10-19T02:13:39.630248+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -539,7 +539,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-19T00:49:33.121257+00:00",
+     "time": "2026-10-19T02:13:39.840431+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -560,7 +560,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-19T00:49:33.293573+00:00",
+     "time": "2026-10-19T02:13:39.987475+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -581,7 +581,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-19T00:49:33.458909+00:00",
+     "time": "2026-10-19T02:13:40.111635+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -602,7 +602,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-19T00:49:33.601092+00:00",
+     "time": "2026-10-19T02:13:40.257019+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -623,7 +623,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-19T00:49:33.769923+00:00",
+     "time": "2026-10-19T02:13:40.426642+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -644,7 +644,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-19T00:49:33.957918+00:00",
+     "time": "2026-10-19T02:13:40.609366+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -665,7 +665,7 @@
     },
     {
      "revision": 24,
-     "time": "2026-10-19T00:49:34.028781+00:00",
+     "time": "2026-10-19T02:13:40.677804+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -699,6 +699,7 @@
     "invalidations": 0
    }
   },
-  "task": "regression"
+  "task": "regression",
+  "currency": "155930486d07d75c"
  }
 }

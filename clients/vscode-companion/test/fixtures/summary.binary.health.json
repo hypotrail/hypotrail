@@ -502,6 +502,7 @@
     "invalidations": 1
    }
   },
-  "task": "binary"
+  "task": "binary",
+  "currency": "9d0c7a35e1b2f468"
  }
 }

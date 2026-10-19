@@ -697,7 +697,12 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
 # --- the digest of the advanced companion (CLI-CONTRACT-COMPANION §1, C1) -------------
 
 # ``status --summary --digest`` appends these keys after ``recap``, in this order.
-DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task')
+DIGEST_SUMMARY_KEYS = ('moments', 'pauses', 'last_session', 'digest', 'task', 'currency')
+# Review fix H1: ``currency`` is the first CURRENCY_HEX hex characters of a sha256 over the
+# canonical JSON of :func:`currency_inputs` (CLI-CONTRACT-COMPANION §1.5).
+CURRENCY_HEX = 16
+CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'alerts',
+                       'next_action', 'executions', 'results')
 MOMENT_KEYS = ('id', 'title', 'steps')
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
 LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
@@ -1032,5 +1037,54 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
                 'last_session': session,
                 'digest': digest(study, state, since=session['boundary_revision']
                                  if since is None else since),
-                'task': built['task']})
+                'task': built['task'], 'currency': currency_digest(study, built)})
     return out
+
+
+def currency_inputs(study: read.Study, built: dict) -> dict:
+    """What ``currency`` digests (CLI-CONTRACT-COMPANION §1.5): everything a client shows
+    that can change **without** a new revision, plus the revision itself.
+
+    * ``sources``: the sha256 of the case and dataset files as they are now (the recorded one
+      when they match), so an edited dataset changes it;
+    * ``artifacts``: per deliverable, its effective status, ``stale_reason``, and for the
+      generated ones the hash of the file on disk (``currency.file_fingerprint``; null when
+      missing), so a render, a deleted file, or an edited one changes it. The workbench is
+      the junior's free space: only its status counts;
+    * ``sources_changed`` and ``alerts`` (the ids of ``not_yet_defensible``, in order),
+      ``next_action`` (its kind), ``executions`` (the interrupted, suspected, and late ids);
+    * ``results``: per promoted slot, ``[result_id, current, integrity]``, the registry's
+      current set with the derived currency (a code change makes a result not current).
+
+    It reads the files the view read already (and the generated deliverables' bytes); it
+    reads no clock and no absolute path, so it is equal for equal study content."""
+    changed = {c['label']: c['actual_sha256'] for c in study.source_changes()}
+    sources = {label: changed.get(label, built[label]['sha256'])
+               for label in ('case', 'dataset')}
+    artifacts = {}
+    for name, item in sorted(built['artifacts']['items'].items()):
+        artifacts[name] = {'status': item.get('status'),
+                           'stale_reason': item.get('stale_reason'),
+                           'file': None if item.get('generated') is False
+                           else currency.file_fingerprint(study.study_dir, item)}
+    ex = built['executions']
+    ids = [x['id'] for x in built['not_yet_defensible']]
+    return {'revision': built['revision'], 'sources': sources,
+            'artifacts': {'status': built['artifacts']['status'], 'items': artifacts},
+            'sources_changed': 'sources_changed' in ids, 'alerts': ids,
+            'next_action': (built['next_action'] or {}).get('kind'),
+            'executions': {k: sorted(ex[k]) for k in ('interrupted', 'suspected_interrupted',
+                                                      'late')},
+            'results': {slot: [r['result_id'], r['current'], r['integrity']]
+                        for slot, r in sorted(built['results'].items())}}
+
+
+def currency_digest(study: read.Study, built: dict) -> str:
+    """The ``currency`` of ``status --summary --digest`` (review fix H1)."""
+    import hashlib
+    import json
+
+    inputs = currency_inputs(study, built)
+    text = json.dumps({k: inputs[k] for k in CURRENCY_INPUT_KEYS}, sort_keys=True,
+                      separators=(',', ':'), ensure_ascii=True)
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()[:CURRENCY_HEX]

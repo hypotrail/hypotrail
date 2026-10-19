@@ -49,7 +49,8 @@
     "pauses",
     "last_session",
     "digest",
-    "task"
+    "task",
+    "currency"
    ],
    "moments[]": [
     "id",

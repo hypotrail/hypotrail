@@ -39,6 +39,18 @@ def edit_check_sha256(data: bytes) -> str:
     return sha256(GENERATED_WITH.sub(b'__generated_with = ""', data))
 
 
+def file_fingerprint(study_dir, item: Mapping | None) -> str | None:
+    """The hash :func:`file_check` compares for ``item``'s file now (``edit_check_sha256``
+    when the item records one, else ``sha256``), or None when the file cannot be read."""
+    if study_dir is None or not item or not isinstance(item.get('path'), str):
+        return None
+    try:
+        data = (Path(study_dir) / item['path']).read_bytes()
+    except OSError:
+        return None
+    return edit_check_sha256(data) if item.get('edit_check_sha256') else sha256(data)
+
+
 def file_check(study_dir, item: Mapping | None) -> str | None:
     """``file_missing``, ``file_changed``, or None (the file is the one recorded, or the
     item is not a recorded ``ok`` generated deliverable, so its file is not checked).

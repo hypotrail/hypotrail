@@ -465,7 +465,7 @@ The additions for the advanced companion (ADR 0004) are specified in [CLI-CONTRA
 
 | Addition | Command | Schema |
 |---|---|---|
-| C1 | `status --summary --digest [--since REV]` | `hypotrail.summary/1` (keys `moments`, `pauses`, `last_session`, `digest`, `task` after `recap`; `origin` in `open_proposals`) |
+| C1 | `status --summary --digest [--since REV]` | `hypotrail.summary/1` (keys `moments`, `pauses`, `last_session`, `digest`, `task`, `currency` after `recap`; `origin` in `open_proposals`) |
 | C2 | `decisions` | `hypotrail.decisions/1` |
 | C3 | `preview effects PROPOSAL` | `hypotrail.preview_effects/1` |
 | C4 | `preview proposal DECISION --value V` | `hypotrail.proposal_draft/1` |

@@ -53,7 +53,7 @@ hypotrail status --study DIR --summary --digest [--since REV] [--json]
 
 - `--digest` requires `--summary`. Without it the command fails with `invalid_arguments`.
 - Without `--digest`, `status --summary` is byte-for-byte unchanged. `status --json` changes only by the additive `origin` of its `open_proposals` (§9, decision CI.6).
-- With `--digest`, five keys are appended **after** `recap`, in this order: `moments`, `pauses`, `last_session`, `digest`, `task`. The schema stays `hypotrail.summary/1`, because the change is additive (CLI-CONTRACT §3, the precedent of `recap` and `notes`).
+- With `--digest`, six keys are appended **after** `recap`, in this order: `moments`, `pauses`, `last_session`, `digest`, `task`, and (review fix H1) `currency` (§1.5). The schema stays `hypotrail.summary/1`, because the change is additive (CLI-CONTRACT §3, the precedent of `recap` and `notes`).
 - `task` is `binary` or `regression` (`view.task`). It removes the client's inference from step ids (ADR 0004 open question 7, answered yes; decision CA.3).
 - With `--digest` only, each `open_proposals` item gains `origin` as its last key (C9). Without `--digest` the items are unchanged, so the byte-identical rule above holds (decision CA.4).
 
@@ -131,6 +131,25 @@ A regression study's texts never use the vocabulary of a decision rule (CLI-CONT
 - Each confirmation, proposal, note, and promoted run of the Bank walkthrough appears with its `kind`.
 - The sentence for a policy reconfirmation names the reconfirmed decision.
 - The regression digest of the Auto MPG walkthrough holds none of the words `threshold`, `capacity`, `precision`, `recall`, `policy`, or `positive class`.
+
+### 1.5 `currency` (review fix H1)
+
+A string of `view.CURRENCY_HEX` (16) lowercase hex characters: the first characters of the sha256 of the canonical JSON (sorted keys, no spaces, ASCII) of `view.currency_inputs`, an object with exactly the keys `view.CURRENCY_INPUT_KEYS`:
+
+| Key | Content |
+|---|---|
+| `revision` | The current revision |
+| `sources` | `{case, dataset}`: the sha256 of each file as it is now (the recorded one when it matches, null when missing) |
+| `artifacts` | `{status, items}`: the overall effective status, and per deliverable `{status, stale_reason, file}`; `file` is the hash of the file on disk that the currency rule compares (`currency.file_fingerprint`: `edit_check_sha256` for the generated notebook, `sha256` otherwise; null when missing), and null for the workbench, the junior's free space |
+| `sources_changed` | Whether `not_yet_defensible` holds `sources_changed` |
+| `alerts` | The ids of `not_yet_defensible`, in order |
+| `next_action` | Its `kind` |
+| `executions` | `{interrupted, suspected_interrupted, late}`: sorted execution ids |
+| `results` | Per promoted slot, `[result_id, current, integrity]`: the registry's current set with the derived currency |
+
+Purpose: a client that polls `status --summary --digest` compares `currency` with the value it last showed and redraws when it differs. It changes on every new revision, and also on what changes **without** one: an edited, deleted, or restored case or dataset file; a render (a deliverable becoming current, failing, or being rewritten); an edited, replaced, or deleted report or generated notebook (CLI-CONTRACT §8.3, M4); a result whose code changed; an execution whose outcome became unknown. It is equal otherwise: for repeated reads, for an edited workbench, and for Marimo's rewrite of the notebook's `__generated_with` stamp. It holds no absolute path and reads no clock (R4), so two studies with equal content have equal `currency`. It reads the deliverables' bytes once more than `status`; it reads no dataset row (R2).
+
+`currency` is present **only** with `--digest`: without it the summary stays byte-for-byte unchanged (the frozen golden of CLI-CONTRACT §4). A client from stage `v1` reads `status --summary --digest`. The values are opaque: a client compares them for equality only.
 
 ## 2. C2: `decisions`
 
