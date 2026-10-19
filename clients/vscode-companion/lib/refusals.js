@@ -85,6 +85,17 @@ const BY_CONTEXT = {
   },
 };
 
+// An engine older than `export --expected-revision` (CR.6) refuses the option itself
+// (`invalid_arguments` whose message names it). The panel never exports without it.
+const OLDER_ENGINE_EXPORT = 'The study engine in this environment is older than this panel: it does not know the ' +
+  'revision check of an export (--expected-revision), so it exported nothing. Update the hypotrail engine of this ' +
+  'environment, then export again.';
+
+/** True for an older engine's refusal of `export --expected-revision` (CR.6). */
+function olderEngineExport(context, code, message) {
+  return context === 'export' && code === 'invalid_arguments' && /--expected-revision/.test(message);
+}
+
 /** The refusal context of a payload: propose, run, acknowledge, export, or null. */
 function contextOf(payload, code, reason, details) {
   const command = typeof (payload && payload.command) === 'string' ? payload.command : '';
@@ -104,8 +115,10 @@ function describe(payload) {
   const code = typeof error.code === 'string' ? error.code : 'unknown_error';
   const details = error.details && typeof error.details === 'object' ? error.details : {};
   const reason = typeof details.reason === 'string' ? details.reason : null;
-  const context = BY_CONTEXT[contextOf(payload, code, reason, details)] || {};
-  const human = (reason && context[reason]) || context[code] || (reason && BY_REASON[reason]) || BY_CODE[code] ||
+  const where = contextOf(payload, code, reason, details);
+  const context = BY_CONTEXT[where] || {};
+  const human = olderEngineExport(where, code, String(error.message || '')) ? OLDER_ENGINE_EXPORT
+    : (reason && context[reason]) || context[code] || (reason && BY_REASON[reason]) || BY_CODE[code] ||
     'The engine refused this request.';
   return {
     code, reason,
@@ -147,4 +160,4 @@ function summariseDetails(code, details) {
   return lines.map(l => String(l));
 }
 
-module.exports = { describe, contextOf, BY_REASON, BY_CODE, BY_CONTEXT, NOTHING };
+module.exports = { describe, contextOf, BY_REASON, BY_CODE, BY_CONTEXT, NOTHING, OLDER_ENGINE_EXPORT };

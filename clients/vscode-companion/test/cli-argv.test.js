@@ -56,11 +56,11 @@ test('writes: exact argv of W1-W7 (§7)', () => {
     [...A, 'run', '--acknowledge-interruption', 'e_4c1d', '--user-words=I know it stopped.', '--request-id', ID,
       '--expected-revision', '3', ...T]);
   // CR.6: the export names the revision the junior saw, so the engine refuses a stale one;
-  // `legacy` is the same argv for an engine without the option.
+  // there is no form without the option (an unknown `legacy` flag changes nothing).
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
     [...A, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--expected-revision', '26', ...T]);
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26, legacy: true }),
-    [...A, 'export', 'handoff', '--out=/tmp/hand off/revision-26', ...T]);
+    cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }));
 });
 
 test('timeouts and buffer (§7, §11)', () => {

@@ -15,6 +15,7 @@ const { createController } = require('../lib/controller');
 const { toExplainModel } = require('../lib/models/explain');
 const { toSessionReportModel } = require('../lib/models/session_report');
 const { ModelError } = require('../lib/models/common');
+const refusals = require('../lib/refusals');
 const localstore = require('../lib/localstore');
 const learn = require('../lib/handlers/learn');
 const { createFake, load, memento } = require('./fake-vscode');
@@ -228,20 +229,27 @@ test('HO-1: a non-empty target gives export_target_exists verbatim; exit 3 is su
   assert.ok(s.recorded.warnings.includes('the report was not current, so it is not in the pack'));
 });
 
-test('CR.6: an engine without `export --expected-revision` refuses the option; the export runs once more without it', async () => {
+test('CR.6: an engine without `export --expected-revision` refuses the option; no second run, the panel says the engine is older', async () => {
   const host = { pickFolder: async () => '/tmp/packs' };
   const unknown = { payload: { schema: 'hypotrail.error/1', ok: false, command: 'export',
     error: { code: 'invalid_arguments', message: 'unrecognized arguments: --expected-revision 26' } }, exitCode: 2 };
-  const { c, runCli, posted } = make({ host, route: t => (t[0] === 'export' && t.includes('--expected-revision') ? unknown : undefined) });
+  const { c, runCli, posted } = make({ host, route: t => (t[0] === 'export' ? unknown : undefined) });
   await c.handle({ v: 2, type: 'ready' });
   await c.handle({ v: 2, type: 'export_handoff', revision: 26 });
   const runs = runCli.calls.filter(x => x.tail[0] === 'export');
-  assert.equal(runs.length, 2);
-  assert.ok(runs[0].tail.includes('--expected-revision') && !runs[1].tail.includes('--expected-revision'));
+  assert.equal(runs.length, 1, 'never exported without the revision check');
+  assert.ok(runs[0].tail.includes('--expected-revision'));
   const outcomes = posted.filter(m => m.type === 'outcome');
-  assert.equal(outcomes.length, 1, 'one outcome: the second run\'s');
-  assert.equal(outcomes[0].kind, 'ok');
-  assert.equal(outcomes[0].recorded.out, payload('export.binary').out, 'the folder the engine answered');
+  assert.equal(outcomes.length, 1);
+  assert.equal(outcomes[0].kind, 'refused');
+  assert.equal(outcomes[0].refusal.code, 'invalid_arguments');
+  assert.equal(outcomes[0].refusal.engineMessage, 'unrecognized arguments: --expected-revision 26', 'the engine message, verbatim');
+  assert.match(outcomes[0].refusal.human, /older than this panel/);
+  assert.match(outcomes[0].refusal.human, /Nothing was recorded\.$/);
+  assert.equal(outcomes[0].recorded, undefined);
+  // Another argument refusal of an export keeps the generic sentence.
+  const other = refusals.describe({ ...unknown.payload, error: { code: 'invalid_arguments', message: 'bad --out' } });
+  assert.doesNotMatch(other.human, /older than this panel/);
 });
 
 test('CR.6: an engine that knows the option and refuses a stale revision: the refusal verbatim, no second run', async () => {

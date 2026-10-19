@@ -160,16 +160,16 @@ function acknowledgeArgv(agent, { executionId, words, requestId: id, expectedRev
 /**
  * W7. `export handoff --out=<parent>/revision-<R> --expected-revision R --json --study S`.
  * The engine refuses a stale R (decision CR.6), so the folder's name and its content name
- * the same revision. `legacy: true` leaves the option out, for an engine that does not
- * know it (the handler's one retry after `invalid_arguments`).
+ * the same revision. There is no form without the option: an engine that does not know it
+ * refuses the export (`invalid_arguments`), and the panel says the engine is older.
  */
-function exportArgv(agent, { parent, revision: rev, legacy = false }) {
+function exportArgv(agent, { parent, revision: rev }) {
   const folder = text(parent, 'the folder', { max: 4096 });
   if (!path.isAbsolute(folder)) throw new ArgvError('the folder must be absolute');
   const inside = path.resolve(agent.studyDir, '.hypotrail');
   const out = path.join(folder, `revision-${revision(rev)}`);
   if (out === inside || out.startsWith(inside + path.sep)) throw new ArgvError('the folder must not be inside .hypotrail');
-  return [...agent.argv, 'export', 'handoff', `--out=${out}`, ...(legacy ? [] : ['--expected-revision', String(revision(rev))]),
+  return [...agent.argv, 'export', 'handoff', `--out=${out}`, '--expected-revision', String(revision(rev)),
     ...tail(agent)];
 }
 

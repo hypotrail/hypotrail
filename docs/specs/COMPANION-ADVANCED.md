@@ -542,7 +542,7 @@ The answer is never sent to the CLI, the chat, or the study. "Reset my answers f
 
 **Export.** A section "Hand the study over", with the button "Export a handoff pack" (`data-write="export"`, W7).
 
-- The extension asks for a parent folder with a folder dialog (`showOpenDialog` with `canSelectFolders`, default `<study>/handoff/`) and passes `--out=<parent>/revision-<n> --expected-revision <n>`, so the engine refuses the export when the study moved since the panel showed revision n (decision CR.6). An engine that does not know the option refuses it (`invalid_arguments` naming `--expected-revision`); the controller then runs the export once more without it, under the same lock, and posts one outcome. The default output is CC §7's.
+- The extension asks for a parent folder with a folder dialog (`showOpenDialog` with `canSelectFolders`, default `<study>/handoff/`) and passes `--out=<parent>/revision-<n> --expected-revision <n>`, so the engine refuses the export when the study moved since the panel showed revision n (decision CR.6). An engine that does not know the option refuses it (`invalid_arguments` naming `--expected-revision`); the panel never exports without it: the outcome is that refusal, the engine message verbatim, with the sentence that the study engine is older than the panel and must be updated (`lib/refusals.js`, `OLDER_ENGINE_EXPORT`). The default output is CC §7's.
 - The outcome and "Open folder" name the folder the engine answered (`out`), never one the panel computed.
 - The outcome lists the files written with their sizes, `warnings` in words (`recorded.warnings`, decision CI.3), and "Open folder" (`revealFileInOS`).
 - With exit code 3, the outcome reads "The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it."
@@ -625,7 +625,7 @@ This is a question, not a confirmation of anything.
 | W4 | v2 | Run on training rows | `A run <activity> --column=<c> --request-id ID --expected-revision R --json --study S` | `activity` ∈ the `eda_catalog.activities[].activity` values with `per_column: true` and `runnable: true` of the evidence read at revision R; `c` is one of that activity's `columns[].name` |
 | W5 | v1 | Regenerate | `A render --json --study S` | not reviewer; not busy |
 | W6 | v1 | Acknowledge in my words | `A run --acknowledge-interruption <eid> --user-words=<words> --request-id ID --expected-revision R --json --study S` | `eid` is in the snapshot's `executions.interrupted` or `suspected_interrupted`; `words` is non-blank and at most 4000 characters |
-| W7 | v3 | Export a handoff pack | `A export handoff --out=<chosen folder>/revision-<R> --expected-revision R --json --study S` (CR.6; without `--expected-revision` once, for an engine that refuses the option) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
+| W7 | v3 | Export a handoff pack | `A export handoff --out=<chosen folder>/revision-<R> --expected-revision R --json --study S` (CR.6; never without `--expected-revision`: an older engine's refusal of the option is shown as such) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
 
 **Not in the whitelist, whatever the stage.**
 
