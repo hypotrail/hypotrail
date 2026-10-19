@@ -30,7 +30,7 @@
    {
     "id": "leakage",
     "term": "Leakage",
-    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.",
+    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, the duration of the last call to a client is known only once the call has ended, so a model that uses it to decide whom to call relies on information it cannot have before the call; it looks excellent on past calls and is useless in a campaign.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -142,7 +142,7 @@
    {
     "id": "base_rate",
     "term": "Base rate",
-    "definition": "The share of rows with the positive outcome. Any model must be compared with what this share alone would give.",
+    "definition": "The share of rows with the positive outcome. Any model must be compared with what this share alone would give. For example, when few clients subscribe a term deposit, a model that predicts \"no\" for everyone is right for most clients and finds no subscriber; the base rate is the bar any call list must beat.",
     "example": {
      "segments": [
       {
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
+       "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+       "result_id": "8567dad2d05a9323f15f93d4ffffe2dd43712466b6e76e0a90fb6a0ec27f549d",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -324,7 +324,7 @@
    {
     "id": "confidence_interval",
     "term": "Confidence interval",
-    "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.",
+    "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign. For example, a precision interval that runs from close to the base rate to well above it says that the call list may barely beat calling clients at random.",
     "example": {
      "segments": [
       {
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.2%",
-       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.28153703501690847,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "48.0%",
-       "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.48000980392156856,
        "format": "pct1"
@@ -409,6 +409,102 @@
     "id": "stale_result",
     "term": "Stale result",
     "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "auc",
+    "term": "AUC (area under the ROC curve)",
+    "definition": "The chance that a randomly drawn positive row gets a higher score than a randomly drawn negative row. It judges the ranking over every possible cut-off, not the result of one decision rule. For example, for a campaign that ranks clients before calling them about a term deposit, an AUC of one half means the ranking puts subscribers ahead of non-subscribers no better than chance.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "average_precision",
+    "term": "Average precision",
+    "definition": "The precision reached each time the ranked list meets a positive row, averaged from the top of the list down. Unlike the AUC, it depends on the base rate, so it suits a rare outcome. For example, when few clients subscribe, average precision tells how pure the top of the call list stays, which is what the calling team feels.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "lift",
+    "term": "Lift",
+    "definition": "The precision of the rows acted on divided by the base rate. A lift above one means the rule finds positive rows more often than acting at random would. For example, if the clients called first subscribe twice as often as the clients in general, the lift of that call list is two.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "calibration",
+    "term": "Calibration",
+    "definition": "Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated, and this study does not assess calibration. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "overfitting",
+    "term": "Overfitting",
+    "definition": "A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "regularisation",
+    "term": "Regularisation",
+    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training rows for steadier predictions on new rows. For example, in a logistic model of client subscriptions with many job and month categories, regularisation keeps a rare category from getting an extreme weight from a handful of clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "one_hot_encoding",
+    "term": "One-hot encoding",
+    "definition": "Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the job of a client becomes one indicator per job, such as \"technician\" or \"retired\", and the model learns a weight for each.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "imputation",
+    "term": "Imputation",
+    "definition": "Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, a client whose account balance is missing would get the median balance of the training clients, never a figure computed with validation clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "standardisation",
+    "term": "Standardisation",
+    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on training rows. It puts features on one scale, so their weights and a penalty treat them alike. For example, a client's age in years and account balance in euros are rescaled so that the weight on balance is not tiny only because euro amounts are large numbers.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "cross_validation",
+    "term": "Cross-validation",
+    "definition": "Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the clients, each model is fitted five times and judged each time on clients it did not see.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "final_test",
+    "term": "Final test (holdout)",
+    "definition": "Rows set apart and sealed before any look at the data, opened once, after the model and the decision rule are frozen, to measure them on rows that played no part in any choice. It is the study's only independent evidence. For example, the clients sealed at the start are scored once by the chosen model and call list; any change made after that opening is reported as made after the final test.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "development_rows",
+    "term": "Development rows",
+    "definition": "Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the clients in the development rows feed the exploration, the model fits, and the comparison of call lists, while the sealed clients stay unread.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -520,7 +616,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -530,7 +626,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -540,7 +636,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -550,7 +646,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -598,7 +694,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
+       "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -758,7 +854,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
+       "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

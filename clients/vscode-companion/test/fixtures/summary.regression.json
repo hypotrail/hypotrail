@@ -80,7 +80,9 @@
    "kind": "await_user_words",
    "proposal_id": "p_4",
    "decision": "model_choice",
-   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision."
+   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
+   "audience": "agent",
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
   },
   "open_proposals": [
    {
@@ -102,7 +104,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "feature_availability": {
     "status": "confirmed",
@@ -122,7 +125,17 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": {
+     "default_from_case": [
+      "acceleration",
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "origin",
+      "weight"
+     ]
+    }
    },
    "split": {
     "status": "confirmed",
@@ -135,7 +148,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the split exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "model_choice": {
     "status": "proposed",
@@ -146,7 +160,8 @@
     "reason": null,
     "open_proposals": [
      "p_4"
-    ]
+    ],
+    "feature_basis": null
    },
    "conclusion": {
     "status": "open",
@@ -155,7 +170,8 @@
     "delegation_scope": null,
     "user_words": null,
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    }
   },
   "results": {
@@ -209,19 +225,25 @@
      "status": "ok",
      "revision": 22,
      "last_ok_revision": 22,
-     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+     "audience": "agent",
+     "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
      "revision": 22,
      "last_ok_revision": 22,
-     "message": "The report (reports/study.html) is up to date."
+     "message": "The report (reports/study.html) is up to date.",
+     "audience": "agent",
+     "junior_message": "The report is up to date."
     },
     "workbench": {
      "status": "ok",
      "revision": 2,
      "last_ok_revision": 2,
-     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+     "audience": "agent",
+     "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
     }
    }
   },
@@ -235,23 +257,33 @@
    "top": [
     {
      "id": "unconfirmed_decisions",
-     "text": "These decisions are not confirmed: model_choice, conclusion."
+     "text": "These decisions are not confirmed: model_choice, conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: ."
     },
     {
      "id": "validation_is_not_independent",
-     "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+     "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "public_data_already_explored",
-     "text": "The data were explored or published before this study; its rows are not unseen."
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "grouped_split_unsupported",
-     "text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows."
+     "text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "no_causality",
-     "text": "Associations in observational data do not show that acting on a variable would change the outcome."
+     "text": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "audience": "junior",
+     "junior_text": null
     }
    ],
    "more": [
@@ -272,6 +304,14 @@
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
    "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg; result 142ac050); the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+  ],
+  "recap_audience": "agent",
+  "recap_junior": [
+   "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
+   "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79).",
+   "Now: Choose the model (validation MAE: the mean baseline 10.10 mpg; the linear model 6.31 mpg); the report and notebook are up to date.",
    "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],

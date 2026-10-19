@@ -11,7 +11,7 @@ terms:
     definition: The moment when the score is computed and acted on. Only information known at that moment may enter the model.
   leakage:
     term: Leakage
-    definition: A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.
+    definition: A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, the duration of the last call to a client is known only once the call has ended, so a model that uses it to decide whom to call relies on information it cannot have before the call; it looks excellent on past calls and is useless in a campaign.
   feature_availability:
     term: Feature availability
     definition: Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.
@@ -35,7 +35,7 @@ terms:
     definition: An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.
   base_rate:
     term: Base rate
-    definition: The share of rows with the positive outcome. Any model must be compared with what this share alone would give.
+    definition: The share of rows with the positive outcome. Any model must be compared with what this share alone would give. For example, when few clients subscribe a term deposit, a model that predicts "no" for everyone is right for most clients and finds no subscriber; the base rate is the bar any call list must beat.
     cited_example: "In this study's training rows the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows."
   special_value:
     term: Special value
@@ -86,7 +86,7 @@ terms:
     cited_example: "At <rule>, the logistic model's precision minus the baseline's is {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, between {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} and {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
   confidence_interval:
     term: Confidence interval
-    definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.
+    definition: A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign. For example, a precision interval that runs from close to the base rate to well above it says that the call list may barely beat calling clients at random.
     example: Here the logistic model's precision at <rule> ranges from <low> to <high> on resamples of the <n> validation rows (policy evaluation <result_id>, intervals); a wide range means the figure is uncertain.
     cited_example: "At <rule>, the logistic model's precision ranges from {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.low|pct1}} to {{slot:policy.evaluation:rules.[<rule>].intervals.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
   percentile_interval:
@@ -110,9 +110,48 @@ terms:
   stale_result:
     term: Stale result
     definition: A result computed under decisions that have since changed. It is kept for the record but is not cited.
+  # v0.2a (WP-A1): terms a junior meets in model evaluation and preparation. Each definition
+  # gives the term first, then explains it with an example of a campaign that calls clients
+  # about a term deposit (a regression study reads its own versions below).
+  auc:
+    term: AUC (area under the ROC curve)
+    definition: The chance that a randomly drawn positive row gets a higher score than a randomly drawn negative row. It judges the ranking over every possible cut-off, not the result of one decision rule. For example, for a campaign that ranks clients before calling them about a term deposit, an AUC of one half means the ranking puts subscribers ahead of non-subscribers no better than chance.
+  average_precision:
+    term: Average precision
+    definition: The precision reached each time the ranked list meets a positive row, averaged from the top of the list down. Unlike the AUC, it depends on the base rate, so it suits a rare outcome. For example, when few clients subscribe, average precision tells how pure the top of the call list stays, which is what the calling team feels.
+  lift:
+    term: Lift
+    definition: The precision of the rows acted on divided by the base rate. A lift above one means the rule finds positive rows more often than acting at random would. For example, if the clients called first subscribe twice as often as the clients in general, the lift of that call list is two.
+  calibration:
+    term: Calibration
+    definition: Whether a score matches how often the outcome occurs among rows with that score. A model can rank well and still be badly calibrated, and this study does not assess calibration. For example, if the clients a model scores at about one in five subscribe far less often than one in five, its scores cannot be read as probabilities, even if the ranking is useful.
+  overfitting:
+    term: Overfitting
+    definition: A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.
+  regularisation:
+    term: Regularisation
+    definition: A penalty on large model weights during fitting. It trades a little fit on the training rows for steadier predictions on new rows. For example, in a logistic model of client subscriptions with many job and month categories, regularisation keeps a rare category from getting an extreme weight from a handful of clients.
+  one_hot_encoding:
+    term: One-hot encoding
+    definition: Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the job of a client becomes one indicator per job, such as "technician" or "retired", and the model learns a weight for each.
+  imputation:
+    term: Imputation
+    definition: Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, a client whose account balance is missing would get the median balance of the training clients, never a figure computed with validation clients.
+  standardisation:
+    term: Standardisation
+    definition: Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on training rows. It puts features on one scale, so their weights and a penalty treat them alike. For example, a client's age in years and account balance in euros are rescaled so that the weight on balance is not tiny only because euro amounts are large numbers.
+  cross_validation:
+    term: Cross-validation
+    definition: Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the clients, each model is fitted five times and judged each time on clients it did not see.
+  final_test:
+    term: Final test (holdout)
+    definition: Rows set apart and sealed before any look at the data, opened once, after the model and the decision rule are frozen, to measure them on rows that played no part in any choice. It is the study's only independent evidence. For example, the clients sealed at the start are scored once by the chosen model and call list; any change made after that opening is reported as made after the final test.
+  development_rows:
+    term: Development rows
+    definition: Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the clients in the development rows feed the exploration, the model fits, and the comparison of call lists, while the sealed clients stay unread.
 # Regression study (M3). A regression study hides the binary-only terms below and reads
 # ``regression_terms`` where its definitions differ or are new (mlkit.study.texts).
-binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut]
+binary_only: [base_rate, class_imbalance, stratified_split, logistic_regression, score, policy, threshold, capacity, precision, recall, volume, tie_at_cut, auc, average_precision, lift, calibration]
 regression_terms:
   prediction_time:
     term: Prediction time
@@ -182,3 +221,31 @@ regression_terms:
   selection_on_validation:
     term: Selection on validation
     definition: Choosing a model by looking at validation results. The chosen model's validation error is optimistic for that reason.
+  # v0.2a (WP-A1): the shared terms with an example on cars and fuel efficiency.
+  leakage:
+    term: Leakage
+    definition: A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, a fuel consumption measured on a road test would reveal a car's fuel efficiency, but it is known only after the measurement the model is meant to anticipate.
+  overfitting:
+    term: Overfitting
+    definition: A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.
+  regularisation:
+    term: Regularisation
+    definition: A penalty on large model weights during fitting. It trades a little fit on the training rows for steadier predictions on new rows. For example, with few cars and closely related features such as weight and displacement, a penalty keeps their weights from offsetting each other with large opposite values.
+  one_hot_encoding:
+    term: One-hot encoding
+    definition: Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the origin of a car is coded as a region number; it becomes one indicator per region instead of a number the model would read as a measurement.
+  imputation:
+    term: Imputation
+    definition: Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.
+  standardisation:
+    term: Standardisation
+    definition: Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on training rows. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.
+  cross_validation:
+    term: Cross-validation
+    definition: Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.
+  final_test:
+    term: Final test (holdout)
+    definition: Rows set apart and sealed before any look at the data, opened once, after the model is chosen, to measure it on rows that played no part in any choice. It is the study's only independent evidence. For example, the cars sealed at the start are predicted once by the chosen model; any change made after that opening is reported as made after the final test.
+  development_rows:
+    term: Development rows
+    definition: Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.

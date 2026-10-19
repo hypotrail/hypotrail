@@ -30,7 +30,7 @@
    {
     "id": "leakage",
     "term": "Leakage",
-    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.",
+    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use. For example, a fuel consumption measured on a road test would reveal a car's fuel efficiency, but it is known only after the measurement the model is meant to anticipate.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -56,7 +56,7 @@
       },
       {
        "text": "96",
-       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
+       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "222",
-       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
+       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -116,7 +116,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "46c01d05cbeb7e2f942f5e81fcbe70938358e7bf2bcb8d82f430c664bde6cb2d",
+       "result_id": "6a00b1aa9e4498afebab1f9e8d8dda309a76bc58f0a842979c6c9c9734a38dc9",
        "path": "train_mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -150,7 +150,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -160,7 +160,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -170,7 +170,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -194,7 +194,7 @@
       },
       {
        "text": "5.69",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "intervals.[fit.linear].mae.low",
        "value": 5.690730215654784,
        "format": "f2"
@@ -204,7 +204,7 @@
       },
       {
        "text": "7.31",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "intervals.[fit.linear].mae.high",
        "value": 7.3058496174077225,
        "format": "f2"
@@ -276,6 +276,70 @@
     "steps": []
    },
    {
+    "id": "overfitting",
+    "term": "Overfitting",
+    "definition": "A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "regularisation",
+    "term": "Regularisation",
+    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training rows for steadier predictions on new rows. For example, with few cars and closely related features such as weight and displacement, a penalty keeps their weights from offsetting each other with large opposite values.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "one_hot_encoding",
+    "term": "One-hot encoding",
+    "definition": "Turning a category column into one indicator column per category, set for the rows that have that category. A linear model needs it because categories have no order. For example, the origin of a car is coded as a region number; it becomes one indicator per region instead of a number the model would read as a measurement.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "imputation",
+    "term": "Imputation",
+    "definition": "Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "standardisation",
+    "term": "Standardisation",
+    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on training rows. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "cross_validation",
+    "term": "Cross-validation",
+    "definition": "Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "final_test",
+    "term": "Final test (holdout)",
+    "definition": "Rows set apart and sealed before any look at the data, opened once, after the model is chosen, to measure it on rows that played no part in any choice. It is the study's only independent evidence. For example, the cars sealed at the start are predicted once by the chosen model; any change made after that opening is reported as made after the final test.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "development_rows",
+    "term": "Development rows",
+    "definition": "Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
     "id": "random_split",
     "term": "Random split",
     "definition": "A random division of the rows between training and validation, with a recorded seed. It assumes the rows are exchangeable, which a time order or repeated entities can contradict.",
@@ -318,7 +382,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
+       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -328,7 +392,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
+       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -378,7 +442,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -402,7 +466,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -412,7 +476,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -438,7 +502,7 @@
       },
       {
        "text": "7.66",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.linear].rmse",
        "value": 7.664419781686159,
        "format": "f2"
@@ -448,7 +512,7 @@
       },
       {
        "text": "11.92",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.baseline].rmse",
        "value": 11.924502477405836,
        "format": "f2"
@@ -568,7 +632,7 @@
       },
       {
        "text": "222",
-       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
+       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -578,7 +642,7 @@
       },
       {
        "text": "96",
-       "result_id": "874ecd67c969a11c813061235e2c542c3e397a93e85398e9ff6fe8075580797a",
+       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -626,7 +690,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
+       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -636,7 +700,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "92752395bfc084223cbb4a1e47f9391f457132f680950589daf322b9c8c184dd",
+       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -684,7 +748,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "46c01d05cbeb7e2f942f5e81fcbe70938358e7bf2bcb8d82f430c664bde6cb2d",
+       "result_id": "6a00b1aa9e4498afebab1f9e8d8dda309a76bc58f0a842979c6c9c9734a38dc9",
        "path": "validation.mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -694,7 +758,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "79ab6c62853552381c280b8f5987817166f34d414d97a76dac5bf7831cb1f25e",
+       "result_id": "2b61f1e671e973345918230d2ebd31ee4103d325d6c05779fc2f7d7b7f30212c",
        "path": "validation.mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -742,7 +806,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -752,7 +816,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -762,7 +826,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -772,7 +836,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -856,7 +920,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -893,7 +957,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -903,7 +967,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -913,7 +977,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -923,7 +987,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -933,7 +997,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "cadc0545f4da11a7a3bb0725f8bbe050c9c6e1a85f6487c6247e3d651a68d833",
+       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"

@@ -99,8 +99,10 @@ def test_every_column_has_an_entry_and_undescribed_columns_have_unknown_availabi
         if v['name'] not in described:
             assert v['availability'] == {
                 'value': 'unknown', 'status': 'unknown',
-                'source': 'Not described in project.json; availability at prediction time is '
-                          'not documented'}
+                'source': 'Availability at prediction time is not documented'}
+            # v0.2a (WP-A1): the statement names no tutorial file; the rule log keeps it.
+            assert f'variables.{v["name"]}: not described in project.json: status and ' \
+                   'availability unknown' in doc['migration']['rules']
 
 
 @pytest.mark.parametrize('which', sorted(CASES))
@@ -232,13 +234,13 @@ def test_mapping_table_for_statuses_and_availability(tmp_path):
     assert v['a']['availability']['status'] == 'scenario_assumption'
     assert v['b']['status'] == 'scenario_assumption'
     assert v['b']['availability'] == {'value': 'unknown', 'status': 'unknown',
-                                      'source': 'Companion tutorial (project.json): '
-                                                'availability unknown'}
+                                      'source': 'Availability at prediction time is not '
+                                                'documented'}
     assert v['c']['status'] == 'unknown' and v['c']['type'] == 'numeric'
     assert v['c']['availability']['value'] == 'unknown'
     assert v['target']['availability'] == {
         'value': 'not_available', 'status': 'scenario_assumption',
-        'source': 'Companion tutorial (project.json); not established by the dataset documentation'}
+        'source': 'Teaching scenario assumption; not established by the dataset documentation'}
     assert 'confirmed' not in m.render(doc).lower()
     c.check_document(doc)
 

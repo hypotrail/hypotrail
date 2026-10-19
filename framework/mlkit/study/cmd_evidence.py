@@ -25,6 +25,7 @@ lock, no write, no exposure, no dataset row read, no pandas, numpy, scikit-learn
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 from typing import Mapping
 
@@ -451,3 +452,66 @@ def evidence(study_dir, *, result_id: str | None = None, limit: int = DEFAULT_LI
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
     return cmd.Outcome(evidence(args.study, result_id=args.result, limit=args.limit))
+
+
+# --- text output (v0.2a, WP-A1) --------------------------------------------------------
+
+def _segments_text(block) -> str:
+    if not isinstance(block, Mapping):
+        return ''
+    return ' '.join(''.join(str(s.get('text', '')) for s in block.get('segments') or [])
+                    .split())
+
+
+def text(payload: Mapping) -> str:
+    """``evidence --format text``: the results with their currency and headline, the
+    exposure ledger, the sources, and the EDA catalog, in readable lines. Not a contract."""
+    lines = [f'Evidence of the {payload["task"]} study at revision {payload["revision"]}', '',
+             'Results' + (' (the oldest are not listed)' if payload.get('truncated') else '')]
+    if not payload['results']:
+        lines.append('  none yet')
+    for r in payload['results']:
+        name = r.get('slot') or r.get('activity') or r['result_id'][:12]
+        if r.get('integrity') != 'ok':
+            state = f'fails its integrity check ({r.get("integrity")})'
+        elif r.get('current'):
+            state = 'current'
+        else:
+            reason = r.get('stale_reason')
+            why = reason.get('reason') if isinstance(reason, Mapping) else reason
+            state = 'not current' + (f': {why}' if why else '')
+        rows = f', {r["n_rows"]} rows' if isinstance(r.get('n_rows'), int) else ''
+        part = f' on {r["partition"]}' if r.get('partition') else ''
+        lines.append(f'  {name} (result {r["result_id"][:8]}){part}{rows}: {state}')
+        headline = _segments_text(r.get('headline'))
+        if headline:
+            lines.append(f'    {headline}')
+    ledger = (payload.get('exposure') or {}).get('ledger') or []
+    lines += ['', 'Rows read (exposure ledger)']
+    if not ledger:
+        lines.append('  none yet')
+    for row in ledger:
+        lines.append(f'  {" ".join(str(row["purpose"]).split("_"))} on {row["partition"]}: '
+                     f'{row["rows"]} distinct rows, {row["records"]} reads '
+                     f'({", ".join(row.get("activities") or [])})')
+    lines += ['', 'Sources']
+    for label, src in (payload.get('sources') or {}).items():
+        lines.append(f'  {label}: {src.get("path")} '
+                     + ('(unchanged)' if src.get('matches') else '(changed since the study started)'))
+    catalog = (payload.get('eda_catalog') or {}).get('activities') or []
+    if catalog:
+        lines += ['', 'Exploration catalog (training rows)']
+        for a in catalog:
+            done = [c['name'] for c in a.get('columns') or [] if c.get('result_id')]
+            extra = (f'; explored: {", ".join(done)}' if done else '') if a.get('per_column') \
+                else ''
+            needs = [str(m.get('decision') or m.get('slot') or m.get('requirement'))
+                     if isinstance(m, Mapping) else str(m) for m in a.get('missing') or []]
+            ready = 'can run' if a.get('runnable') else \
+                'waits for: ' + ', '.join(dict.fromkeys(needs))
+            lines.append(f'  {a["activity"]}: {ready}{extra}')
+    detail = payload.get('detail')
+    if isinstance(detail, Mapping):
+        lines += ['', f'Detail of result {str(detail.get("result_id"))[:8]}']
+        lines.append('  ' + json.dumps(detail.get('values'), ensure_ascii=False, sort_keys=True))
+    return '\n'.join(lines).rstrip()

@@ -157,7 +157,8 @@ def _plan(view: Mapping) -> str:
     return (f'<section class="card" id="plan"><h2>{e(labels["sections"]["plan"])}</h2>'
             f'<ol class="plan">{"".join(items)}</ol>'
             f'<p><strong>{e(labels["next_action"])}:</strong> '
-            f'{lit("message", na.get("message", ""))}</p></section>')
+            # v0.2a (WP-A1): the junior reads the report, never the agent's instruction.
+            f'{lit("message", na.get("junior_message") or na.get("message", ""))}</p></section>')
 
 
 def _confirmation(conf: Mapping) -> str:
@@ -233,6 +234,12 @@ def _availability_table(view: Mapping, variables: list[dict]) -> str:
     if not features:
         return ''
     confirmed = decision['status'] == 'confirmed'
+    # v0.2a (WP-A1): each feature says whether the junior discussed it (named in their words
+    # or in the restatement they answered); an undiscussed one is never "your decision".
+    bases = decision.get('feature_basis') or {}
+    conf = decision.get('confirmation') or {}
+    delegated = conf.get('basis') == 'delegated_default'
+    basis_labels = labels['availability_basis']
     rows = []
     for v in features:
         status = value.get(v['name'])
@@ -240,12 +247,27 @@ def _availability_table(view: Mapping, variables: list[dict]) -> str:
         kind = 'confirmed' if confirmed and status else ('proposed' if status else 'stale')
         stmt = v.get('availability') or {}
         case_label = labels['fact_status'].get(stmt.get('status'), stmt.get('status') or '')
-        rows.append(f'<tr data-feature="{e(v["name"])}"><td>{lit("identifier", v["name"], "code")}</td>'
-                    f'<td>{_badge(kind, shown)}</td><td>{_badge(stmt.get("status") or "unknown", case_label)} '
-                    f'{lit("case", stmt.get("value", ""))}</td></tr>')
-    head = 'Your decision' if confirmed else 'Proposed, not confirmed'
+        case_value = stmt.get('value')
+        case_words = (labels['availability'].get(case_value)
+                      if case_value not in (None, '', 'unknown', 'missing')
+                      else labels['availability_not_stated'])
+        basis = bases.get(v['name'])
+        if not confirmed or not status:
+            who, cls = labels['availability_basis_open'], 'proposed'
+        elif delegated:
+            who, cls = labels['delegated'], 'delegated'
+        else:
+            who = basis_labels.get(basis or 'default_from_case')
+            cls = 'confirmed' if basis == 'discussed' else 'stale'
+        rows.append(f'<tr data-feature="{e(v["name"])}" data-feature-basis="{e(basis or "")}">'
+                    f'<td>{lit("identifier", v["name"], "code")}</td>'
+                    f'<td>{_badge(kind, shown)}</td><td>{_badge(cls, who)}</td>'
+                    f'<td>{_badge(stmt.get("status") or "unknown", case_label)} '
+                    f'{lit("case", case_words or case_value or "")}</td></tr>')
     return ('<div class="scroll"><table class="availability"><thead><tr><th>Variable</th>'
-            f'<th>{e(head)}</th><th>What the case states</th></tr></thead><tbody>'
+            f'<th>{e(labels["availability_head"]["status"])}</th>'
+            f'<th>{e(labels["availability_head"]["basis"])}</th>'
+            f'<th>{e(labels["availability_head"]["case"])}</th></tr></thead><tbody>'
             f'{"".join(rows)}</tbody></table></div>')
 
 
@@ -645,7 +667,8 @@ def _not_yet_defensible(view: Mapping) -> str:
         if isinstance(item.get('column'), str):
             details.append(lit('identifier', item['column'], 'code'))
         more = f' {e(extra[item["id"]])}' if item['id'] in extra else ''
-        items.append(f'<li data-nyd="{e(item["id"])}"><strong>{lit("message", item["text"])}</strong>'
+        text = item.get('junior_text') or item['text']      # v0.2a (WP-A1): for the junior
+        items.append(f'<li data-nyd="{e(item["id"])}"><strong>{lit("message", text)}</strong>'
                      f'{more}{"<br>" + "; ".join(details) if details else ""}</li>')
     return (f'<section class="card" id="not-yet-defensible">'
             f'<h2>{e(labels["sections"]["not_yet_defensible"])}</h2>'

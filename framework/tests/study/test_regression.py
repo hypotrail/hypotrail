@@ -273,8 +273,10 @@ def test_regression_view_names_its_task(tmp_path):
     view = flow.view()
     assert view['task'] == 'regression'
     assert tuple(view['decisions']) == st.REGRESSION_DECISION_IDS
+    question = view['plan'][0]['question']
+    # v0.2a (WP-A1): plus the audience of the message and its junior variant (the question).
     assert view['next_action'] == {'kind': 'propose', 'step': 'prediction_time',
-                                   'decision': 'prediction_time',
-                                   'message': view['plan'][0]['question']}
+                                   'decision': 'prediction_time', 'message': question,
+                                   'audience': 'junior', 'junior_message': question}
     text = json.dumps(view).lower()
     assert not [w for w in BINARY_VOCABULARY if w in text]

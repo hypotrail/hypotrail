@@ -15,7 +15,7 @@
   "case": {
    "id": "uci-bank-marketing-v1",
    "path": "<case>/case.yaml",
-   "sha256": "8b2420523aac80e021a6491e558171a6555e1644a9b8cf90949486f1ee266929"
+   "sha256": "42253e9b4ebb8240a28650e8faa11318e1cfaa6308c60c254bfac7b68aecb4a4"
   },
   "dataset": {
    "path": "<case>/data/bank.csv",
@@ -112,147 +112,147 @@
   ],
   "results_cited": [
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
+    "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
     "activity": "eda.target_rate",
     "path": "rate",
     "value": 0.11536941920189649,
     "shown": "11.5%"
    },
    {
-    "result_id": "7c90fc2957632f8d87fd5cd76c0d52eababfe3a5f2557d5743035cdcc5cbc4f6",
+    "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
     "activity": "eda.target_rate",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a4bbafc6d619b35000ec937510edb5dd65cbdb919725abbe8cba567c299088ff",
+    "result_id": "913957f08b279ea28884004ec426d26f3eac6c8779324d85a1b2ad8bf47aae49",
     "activity": "eda.special_values",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "05face8d8fca9b844d2fb85a97b5c60a25edd63e5d0cfaf552b795344148279f",
+    "result_id": "6057ca76a22f683b2631d854732668e09a4e9b819f527215e9860e55993c07f1",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "79fd6ebdbcd2758b26c0ae46aad6efbada870c89ee9b8acc34a0ca47b890af6b",
+    "result_id": "9390aea25ce9135c013035a4844383bd7a32db38e91d44c59c96c0c58e77760d",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
+    "result_id": "b55cc7aa0b274432e7904c5fd04b0f47fcf938f7684c79c9f54072380f27306a",
     "activity": "eda.rate_by",
     "path": "n_groups",
     "value": 12,
     "shown": "12"
    },
    {
-    "result_id": "d457160b842c10444aa1573984d981b26b7d74e475e59e6ba037c6399100e372",
+    "result_id": "b55cc7aa0b274432e7904c5fd04b0f47fcf938f7684c79c9f54072380f27306a",
     "activity": "eda.rate_by",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+    "result_id": "8567dad2d05a9323f15f93d4ffffe2dd43712466b6e76e0a90fb6a0ec27f549d",
     "activity": "fit.baseline",
     "path": "validation.roc_auc",
     "value": 0.5,
     "shown": "0.500"
    },
    {
-    "result_id": "7b1a09c140375475baa25111518919cfb5cecd244efa900aab8c9a1025f2be04",
+    "result_id": "8567dad2d05a9323f15f93d4ffffe2dd43712466b6e76e0a90fb6a0ec27f549d",
     "activity": "fit.baseline",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
+    "result_id": "bd6bf02e4a53642978cb832a27f8b60da391a02f088cbc30ec8664e2abbb9c44",
     "activity": "fit.logistic",
     "path": "validation.roc_auc",
     "value": 0.7348678459937565,
     "shown": "0.735"
    },
    {
-    "result_id": "a48951a28afbcac658a490ea6c7e66c7e376398e0412696a4c5fe0741f3331f8",
+    "result_id": "bd6bf02e4a53642978cb832a27f8b60da391a02f088cbc30ec8664e2abbb9c44",
     "activity": "fit.logistic",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+    "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
     "value": 0.38144329896907214,
     "shown": "38.1%"
    },
    {
-    "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+    "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
     "value": 0.296,
     "shown": "29.6%"
    },
    {
-    "result_id": "474ee9e170cea9dccf798eee7e3ac66c650735ea44963a7a30acab478e8b429e",
+    "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
     "activity": "policy.evaluation",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "n_rows",
     "value": 3617,
     "shown": "3,617"
    },
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "8dc00ddd8f90a715a311a8df78f689519674e22ee09f273b3db02023cd8e501b",
+    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
@@ -290,14 +290,14 @@
     "validation_rows_used_for_selection": 1086,
     "prior_exposure": [
      {
-      "source": "results.json (sha256 92bb2e63de13592cc8782f36ebf1dec123583bc3729ec99195d8d218c87d62f1)",
+      "source": "Tutorial results published with the dataset",
       "status": "observed",
-      "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) are published in results.json. The rows used there are not unseen, and its validation is not independent evidence."
+      "value": "Tutorial outputs for protocol \"stratified-70-30\" (Stratified random 70/30 split. 3164 training rows, 1357 validation rows, seed 20261017. Standardization and encoding fitted on training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
      },
      {
       "source": "data/split.json",
       "status": "observed",
-      "value": "data/split.json records the companion split (seed 20261017) whose validation metrics are published in results.json. A study that reuses this seed has no unseen validation rows."
+      "value": "data/split.json records the tutorial split (seed 20261017) whose validation metrics were published with this dataset. A study that reuses this seed has no unseen validation rows."
      }
     ]
    },

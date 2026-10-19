@@ -29,7 +29,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
                 'executions', 'not_yet_defensible', 'notes', 'holds',
                 # v0.2a (ADR 0006): the sealed final test, before the recap.
-                'final_test', 'recap')
+                'final_test', 'recap',
+                # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
+                'recap_audience', 'recap_junior')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.

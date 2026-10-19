@@ -15,9 +15,12 @@ scikit-learn at import and at build time.
 from __future__ import annotations
 
 import copy
+import re
 from pathlib import Path
 
+from . import audience
 from . import currency
+from . import launch
 from . import partition
 from . import read
 from . import records as rec
@@ -33,11 +36,16 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # Post-v0.1 (P2): the junior's conditions and holds, verbatim.
              'notes',
              # v0.2a (ADR 0006): the sealed final test, or ``status: absent``.
-             'final_test')
+             'final_test',
+             # v0.2a (WP-A1, R7): the engine's Python and the commands that open the
+             # notebooks with it.
+             'deliverables')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
-                      'revision', 'reason', 'confirmation', 'open_proposals')
+                      'revision', 'reason', 'confirmation', 'open_proposals',
+                      # v0.2a (WP-A1): per-feature basis of a feature availability value.
+                      'feature_basis')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
                           'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
@@ -62,7 +70,9 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # ``recap``, which stays the last key of the summary.
                 'final_test',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
-                'recap')
+                'recap',
+                # v0.2a (WP-A1): who the recap is written for, and its junior variant.
+                'recap_audience', 'recap_junior')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
@@ -80,6 +90,34 @@ SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
 SUMMARY_TOP = 5
 
 
+# v0.2a (WP-A1): the basis of each feature's availability status. A feature named in the
+# junior's words or in the restatement they answered was discussed; any other feature kept
+# the status the proposal carried, from the case's statement, without being discussed, and
+# is never shown as the junior's own decision. Derived at view time from the stored
+# confirmation, so a study written before v0.2a reads the same way.
+DISCUSSED, DEFAULT_FROM_CASE = 'discussed', 'default_from_case'
+FEATURE_BASES = (DISCUSSED, DEFAULT_FROM_CASE)
+
+
+def mentions(name: str, text: str) -> bool:
+    """Whether ``text`` names the variable ``name`` as a word (case-insensitive; an
+    underscore may be written as a space or a hyphen)."""
+    if not name or not text:
+        return False
+    parts = [re.escape(p) for p in str(name).split('_') if p]
+    pattern = r'(?<![\w])' + r'[ _-]?'.join(parts) + r'(?![\w])'
+    return re.search(pattern, str(text), re.IGNORECASE) is not None
+
+
+def feature_basis(value, confirmation) -> dict | None:
+    """``{feature: discussed | default_from_case}`` of a confirmed availability value, or
+    None (no value or no confirmation)."""
+    if not isinstance(value, dict) or not isinstance(confirmation, dict):
+        return None
+    words = ' '.join(str(confirmation.get(k) or '') for k in ('user_words', 'restatement'))
+    return {f: DISCUSSED if mentions(f, words) else DEFAULT_FROM_CASE for f in sorted(value)}
+
+
 def _decisions(state: dict) -> dict:
     out = {}
     for d in st.decision_ids(state):
@@ -92,7 +130,9 @@ def _decisions(state: dict) -> dict:
                                     'basis': st.confirmation_basis(conf)}
                                    if isinstance(conf, dict) else None),
                   'open_proposals': sorted(p['proposal_id'] for p in st.open_proposals(state)
-                                           if p['decision_id'] == d)}
+                                           if p['decision_id'] == d),
+                  'feature_basis': (feature_basis(dec['value'], conf)
+                                    if d == 'feature_availability' else None)}
     return out
 
 
@@ -154,6 +194,8 @@ def _artifacts(study: read.Study, state: dict) -> dict:
                        'status': currency.effective_status(item, state, current, file),
                        'stale_reason': currency.stale_reason(item, state, current, file),
                        'message': currency.message(name, item, state, current, file)}
+        # v0.2a (WP-A1): the message names paths and asks for a render (agent).
+        items[name].update(audience.artifact(name, items[name]))
     return {'manifest': read.ARTIFACTS_FILE,
             'status': currency.overall(i['status'] for i in items.values()), 'items': items}
 
@@ -324,7 +366,9 @@ def summary(view: dict) -> dict:
                         'basis': conf['basis'] if conf else None,
                         'delegation_scope': conf['delegation_scope'] if conf else None,
                         'user_words': conf['user_words'] if conf else None,
-                        'reason': dec['reason'], 'open_proposals': dec['open_proposals']}
+                        'reason': dec['reason'], 'open_proposals': dec['open_proposals'],
+                        'feature_basis': _compact_value('feature_availability',
+                                                        dec.get('feature_basis'))}
     proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],
                   'value': _compact_value(p['decision_id'], p['value']),
                   'restatement': p['restatement'], 'revision': p['revision']}
@@ -335,7 +379,9 @@ def summary(view: dict) -> dict:
     artifacts = {'status': view['artifacts']['status'],
                  'items': {name: {'status': i.get('status'), 'revision': i.get('revision'),
                                   'last_ok_revision': i.get('last_ok_revision'),
-                                  'message': i.get('message')}
+                                  'message': i.get('message'),
+                                  'audience': i.get('audience'),
+                                  'junior_message': i.get('junior_message')}
                            for name, i in view['artifacts']['items'].items()}}
     executions = {
         'active': sorted(view['executions']['active']),
@@ -352,7 +398,12 @@ def summary(view: dict) -> dict:
     rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
     ordered = sorted(view['not_yet_defensible'],
                      key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
-    defensible = {'top': [{'id': x['id'], 'text': x['text']} for x in ordered[:SUMMARY_TOP]],
+    defensible = {'top': [{'id': x['id'], 'text': x['text'],
+                           'audience': x.get('audience', audience.JUNIOR),
+                           # Compact: null when ``text`` is already written for the junior.
+                           'junior_text': (audience.junior_text(x)
+                                           if x.get('audience') == audience.AGENT else None)}
+                          for x in ordered[:SUMMARY_TOP]],
                   'more': [x['id'] for x in ordered[SUMMARY_TOP:]]}
     plan = [{'id': step['id'], 'title': step['title'], 'status': step['status']}
             for step in view['plan']]
@@ -366,6 +417,8 @@ def summary(view: dict) -> dict:
            'executions': executions, 'not_yet_defensible': defensible, 'notes': notes,
            'holds': _holds(notes, decisions), 'final_test': view['final_test']}
     out['recap'] = recap(out, view)
+    out['recap_audience'] = audience.AGENT
+    out['recap_junior'] = recap(out, view, junior=True)
     return {k: out[k] for k in SUMMARY_KEYS}
 
 
@@ -452,11 +505,13 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
                                                               or adopted) == (
                                                                   rec.canonical_rule(rule) or rule),
             'text': f'the logistic model at {rule}{rows}: {figures}, result '
-                    f'{item["result_id"][:RECAP_RID]}'}
+                    f'{item["result_id"][:RECAP_RID]}',
+            # v0.2a (WP-A1): the junior recap names no result id.
+            'junior_text': f'the logistic model at {rule}{rows}: {figures}'}
 
 
 def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
-                    headline: dict | None = None) -> str:
+                    headline: dict | None = None, junior: bool = False) -> str:
     label = DECISION_LABELS[decision_id]
     value = d['value']
     if decision_id == 'feature_availability' and isinstance(value, dict):
@@ -479,12 +534,13 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     elif decision_id in ('policy',) and isinstance(value, str):
         text = f'{label} {value}'
         if headline and headline['adopted']:
-            text += f' ({headline["text"]})'
+            text += f' ({headline["junior_text" if junior else "text"]})'
     elif decision_id == 'model_choice' and isinstance(value, str):
         text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
         mae = (errors or {}).get('mae', {}).get(value)
         if mae is not None:
-            text += (f' (validation MAE {mae} {errors["unit"]}, result '
+            text += (f' (validation MAE {mae} {errors["unit"]})' if junior else
+                     f' (validation MAE {mae} {errors["unit"]}, result '
                      f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
         text = f'{label} {_spaced(value.get("verdict", ""))}'.strip()
@@ -498,9 +554,13 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     return text + (f' [{", ".join(notes)}]' if notes else '')
 
 
-def _recap_next(summary_out: dict, view: dict) -> str:
+def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
     nxt = summary_out['next_action']
     kind = nxt.get('kind')
+    if junior and kind != 'await_user_words' and nxt.get('audience') == audience.AGENT \
+            and nxt.get('junior_message'):
+        # v0.2a (WP-A1): an instruction to the agent is never quoted to the junior.
+        return str(nxt['junior_message']).strip()
     titles = {s['id']: s['title'] for s in summary_out['plan']}
     if kind in ('outcome_unknown', 'acknowledge_interruption'):
         activity = nxt.get('activity') or 'an activity'
@@ -522,7 +582,24 @@ def _recap_next(summary_out: dict, view: dict) -> str:
     return 'nothing left in the plan; review what is not yet defensible.'
 
 
-def recap(summary_out: dict, view: dict) -> list[str]:
+def _deliverables_line(items: dict) -> str:
+    """The deliverables part of the ``Now`` line: what is not up to date, and what has not
+    been rendered yet (v0.2a, WP-A1: never "up to date" before a first render)."""
+    unwritten = [n for n in ('report', 'notebook')
+                 if n not in items or items[n].get('status') == 'not_rendered']
+    behind = sorted(name for name, item in items.items()
+                    if item.get('status') not in ('ok', 'not_rendered') and name != 'workbench')
+    if not unwritten and not behind:
+        return 'the report and notebook are up to date'
+    parts = []
+    if behind:
+        parts.append(', '.join(behind) + ' not up to date')
+    if unwritten:
+        parts.append(' and '.join(unwritten) + ' not rendered yet')
+    return '; '.join(parts)
+
+
+def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
     """Five lines a new chat may quote to resume (post-v0.1, T8 and F5).
 
     Deterministic, from the summary and the view only, with no revision numbers or ids
@@ -539,6 +616,9 @@ def recap(summary_out: dict, view: dict) -> list[str]:
        stand-in figure keeps its caveat);
     5. ``Limit``: the most urgent limit of ``not_yet_defensible`` the other lines do not
        already say.
+
+    ``junior`` (v0.2a, WP-A1): the variant written for the junior (``recap_junior``): no
+    result id, the junior variant of an agent instruction, and holds in the second person.
     """
     goal = summary_out['goal']
     use = _fact_value(goal['intended_use']) or 'not stated in the case'
@@ -552,31 +632,32 @@ def recap(summary_out: dict, view: dict) -> list[str]:
     errors = _regression_errors(view)
     headline = _policy_headline(view, summary_out) if st.task_of(view.get('task')) == st.BINARY \
         else None
-    decided = [_recap_decision(d, item, errors, headline)
+    decided = [_recap_decision(d, item, errors, headline, junior)
                for d, item in summary_out['decisions'].items()
                if item['status'] in ('confirmed', 'reconfirm_required')]
     titles = {s['id']: s['title'] for s in summary_out['plan']}
     step = titles.get(summary_out['current_step'], 'every step is done') \
         if summary_out['current_step'] else 'every step is done'
-    behind = sorted(name for name, item in summary_out['artifacts']['items'].items()
-                    if item.get('status') != 'ok' and name != 'workbench')
-    deliverables = ('the report and notebook are up to date' if not behind
-                    else ', '.join(behind) + ' not up to date')
+    deliverables = _deliverables_line(summary_out['artifacts']['items'])
     chosen = summary_out['decisions'].get('model_choice') or {}
     if errors and chosen.get('status') not in ('confirmed', 'reconfirm_required'):
         # Before the model choice, "Now" gives both validation errors (P3).
         named = '; '.join(f'{MODEL_CHOICE_WORDS.get(slot, slot)} {mae} {errors["unit"]}'
                           for slot, mae in sorted(errors['mae'].items()))
-        step += (f' (validation MAE: {named}; result '
-                 f'{errors["result_id"][:RECAP_RID]})')
+        step += (f' (validation MAE: {named})' if junior else
+                 f' (validation MAE: {named}; result {errors["result_id"][:RECAP_RID]})')
     if headline and not headline['adopted']:
         # D10: before a rule is adopted, "Now" gives the latest evaluated figures.
-        step += f' (latest policy evaluation: {headline["text"]})'
+        step += (f' (latest policy evaluation: '
+                 f'{headline["junior_text" if junior else "text"]})')
     limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP]
     rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
     limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
-    limit = limits[0]['text'] if limits else 'none recorded.'
-    nxt = _recap_next(summary_out, view).rstrip()
+    if limits:
+        limit = audience.junior_text(limits[0]) if junior else limits[0]['text']
+    else:
+        limit = 'none recorded.'
+    nxt = _recap_next(summary_out, view, junior).rstrip()
     holds = summary_out.get('holds') or []
     if holds:
         # P2: a condition the junior stated stays visible in every chat until resolved;
@@ -585,6 +666,8 @@ def recap(summary_out: dict, view: dict) -> list[str]:
                          + f' (the {DECISION_LABELS.get(h["decision_id"], h["decision_id"])})'
                          for h in holds)
         nxt += ('' if nxt.endswith(('.', '"', '?')) else '.') + (
+            f' On hold in your words: {said}; nothing on hold is confirmed until you '
+            'resolve it.' if junior else
             f" On hold in the junior's words: {said}; nothing on hold is confirmed until "
             'they resolve it.')
     lines = [f'Goal: {use}; the prediction is made {moment}.',
@@ -679,7 +762,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'dataset': dict(state['dataset']),
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
-        'next_action': st.next_action(state, suspected),
+        # v0.2a (WP-A1): every message for a surface says who it is written for.
+        'next_action': audience.next_action(st.next_action(state, suspected)),
         'open_proposals': [{k: copy.deepcopy(p.get(k)) if k == 'origin' else p[k]
                             for k in PROPOSAL_VIEW_KEYS}
                            for p in sorted(st.open_proposals(state),
@@ -693,11 +777,12 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'executions': executions,
         'artifacts': _artifacts(study, state),
         'exposure': study.exposure_summary(),
-        'not_yet_defensible': defensible,
+        'not_yet_defensible': [audience.limit(x) for x in defensible],
         'settings': state['settings'],
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
         'final_test': partition.final_test_status(state),
+        'deliverables': launch.deliverables(study.study_dir),
     }
 
 

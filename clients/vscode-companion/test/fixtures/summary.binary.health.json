@@ -80,7 +80,9 @@
    "kind": "outcome_unknown",
    "execution_id": "e_8e7d6c5b4a39281706f5e4d3",
    "activity": "fit.logistic",
-   "message": "The outcome of fit.logistic is unknown: no process holds its lease. Tell the junior, do not call it in progress, and ask before acknowledging."
+   "message": "The outcome of fit.logistic is unknown: no process holds its lease. Tell the junior, do not call it in progress, and ask before acknowledging.",
+   "audience": "agent",
+   "junior_message": "A run stopped before it finished, and its outcome is unknown. It is not in progress and does not restart by itself; you will be asked before it is recorded as interrupted."
   },
   "open_proposals": [
    {
@@ -102,7 +104,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the prediction_time exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "feature_availability": {
     "status": "confirmed",
@@ -134,7 +137,27 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the feature_availability exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": {
+     "default_from_case": [
+      "age",
+      "balance",
+      "campaign",
+      "contact",
+      "day",
+      "default",
+      "duration",
+      "education",
+      "housing",
+      "job",
+      "loan",
+      "marital",
+      "month",
+      "pdays",
+      "poutcome",
+      "previous"
+     ]
+    }
    },
    "split": {
     "status": "confirmed",
@@ -147,7 +170,8 @@
     "delegation_scope": null,
     "user_words": "Yes, I want the split exactly as you stated it",
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    },
    "policy": {
     "status": "confirmed",
@@ -158,7 +182,8 @@
     "reason": null,
     "open_proposals": [
      "p_5"
-    ]
+    ],
+    "feature_basis": null
    },
    "conclusion": {
     "status": "open",
@@ -167,7 +192,8 @@
     "delegation_scope": null,
     "user_words": null,
     "reason": null,
-    "open_proposals": []
+    "open_proposals": [],
+    "feature_basis": null
    }
   },
   "results": {
@@ -221,19 +247,25 @@
      "status": "ok",
      "revision": 26,
      "last_ok_revision": 26,
-     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+     "audience": "agent",
+     "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "stale",
      "revision": 26,
      "last_ok_revision": 26,
-     "message": "The report (reports/study.html) is stale: it shows revision 25."
+     "message": "The report (reports/study.html) is stale: it shows revision 25.",
+     "audience": "agent",
+     "junior_message": "The report is out of date: the study changed after it was written. Do not rely on it until it is written again."
     },
     "workbench": {
      "status": "ok",
      "revision": 2,
      "last_ok_revision": 2,
-     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+     "audience": "agent",
+     "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
     }
    }
   },
@@ -267,27 +299,39 @@
    "top": [
     {
      "id": "interrupted_executions",
-     "text": "These executions have an unknown outcome: policy.evaluate, fit.logistic."
+     "text": "These executions have an unknown outcome: policy.evaluate, fit.logistic.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "unconfirmed_decisions",
-     "text": "These decisions are not confirmed: conclusion."
+     "text": "These decisions are not confirmed: conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: ."
     },
     {
      "id": "uncertain_features_included",
-     "text": "These features are used although their availability at prediction time is uncertain: contact."
+     "text": "These features are used although their availability at prediction time is uncertain: contact.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "validation_is_not_independent",
-     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "public_data_already_explored",
-     "text": "The data were explored or published before this study; its rows are not unseen."
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "audience": "junior",
+     "junior_text": null
     },
     {
      "id": "no_time_or_entity_identifier",
-     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions.",
+     "audience": "junior",
+     "junior_text": null
     }
    ],
    "more": [
@@ -316,6 +360,14 @@
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%, result ae80b53f).",
+   "Now: Conclude proportionately; the report and notebook are up to date.",
+   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
+   "Limit: These features are used although their availability at prediction time is uncertain: contact."
+  ],
+  "recap_audience": "agent",
+  "recap_junior": [
+   "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1357 validation rows: precision 34.8%, recall 25.6%).",
    "Now: Conclude proportionately; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."

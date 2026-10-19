@@ -76,7 +76,7 @@ variables:
   availability:
     value: not_available
     status: scenario_assumption
-    source: Companion tutorial (project.json); not established by the dataset documentation
+    source: Teaching scenario assumption; not established by the dataset documentation
   special_values: []
 - name: cylinders
   type: integer
@@ -88,8 +88,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values: []
 - name: displacement
   type: numeric
@@ -101,8 +101,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values: []
 - name: horsepower
   type: numeric
@@ -114,8 +114,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values:
   - value: '?'
     meaning: Missing value.
@@ -132,8 +132,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values: []
 - name: acceleration
   type: numeric
@@ -145,7 +145,7 @@ variables:
   availability:
     value: unknown
     status: unknown
-    source: 'Companion tutorial (project.json): availability unknown'
+    source: Availability at prediction time is not documented
   special_values: []
 - name: model_year
   type: integer
@@ -157,8 +157,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values: []
 - name: origin
   type: category
@@ -169,8 +169,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values: []
 - name: car_name
   type: string
@@ -182,8 +182,8 @@ variables:
   availability:
     value: available_at_prediction
     status: scenario_assumption
-    source: Companion tutorial (project.json); the dataset documentation does not establish availability
-      at prediction time
+    source: Teaching scenario assumption; the dataset documentation does not establish availability at
+      prediction time
   special_values: []
 special_values:
 - column: horsepower
@@ -213,15 +213,15 @@ task: regression
 prior_exposure:
 - value: Tutorial outputs for protocol "chronological-70-78-vs-79-82" (Train on 1970–1978, compare on
     1979–1982. Chronological split by model year. The horsepower imputation median is calculated from
-    training data only.) are published in results.json. The rows used there are not unseen, and its validation
-    is not independent evidence.
+    training data only.) were published with this dataset. The rows used there are not unseen, and that
+    validation is not independent evidence.
   status: observed
-  source: results.json (sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169)
+  source: Tutorial results published with the dataset
 - value: 'Tutorial outputs for protocol "random-70-30-counterexample" (Counterexample: random 70/30 split
-    (mixed years). Random split with seed 20261017. Future years also contribute to training.) are published
-    in results.json. The rows used there are not unseen, and its validation is not independent evidence.'
+    (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published
+    with this dataset. The rows used there are not unseen, and that validation is not independent evidence.'
   status: observed
-  source: results.json (sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169)
+  source: Tutorial results published with the dataset
 migration:
   from: project.json
   from_schema: hypotrail.project/1
@@ -265,6 +265,7 @@ migration:
   - 'facts.repeated_observations: supplement sets source, status, value'
   - 'structure.group_column: set by the supplement'
   - 'structure.duplicates: set by the supplement'
+  - 'prior_exposure: results.json sha256 6c26a5d5da81d7f7115eb9a60ac5925b14007eadf48702eefde8d996f8447169'
   notes:
   - project.json and results.json are companion tutorial contracts. Nothing in them is a human decision,
     and this case imports none of their choices as one.

@@ -39,7 +39,9 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         # v0.2a (ADR 0006): the sealed final test, or status absent.
                         'final_test',
                         # Post-v0.1 (T8, F5): five resume lines generated from state.
-                        'recap')
+                        'recap',
+                        # v0.2a (WP-A1): who the recap is for, and its junior variant.
+                        'recap_audience', 'recap_junior')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
@@ -55,7 +57,18 @@ RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
 PREVIEW_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'rules', 'models',
                         'evaluations', 'intervals', 'adopted', 'recorded', 'note', 'warnings')
 SUMMARY_DECISION_KEYS = ('status', 'value', 'basis', 'delegation_scope', 'user_words', 'reason',
-                         'open_proposals')
+                         'open_proposals',
+                         # v0.2a (WP-A1): grouped per-feature basis of the availability.
+                         'feature_basis')
+# v0.2a (WP-A1): who each message is written for, and its junior variant.
+AUDIENCES = ('junior', 'agent')
+FEATURE_BASES = ('discussed', 'default_from_case')
+SUMMARY_ARTIFACT_ITEM_KEYS = ('status', 'revision', 'last_ok_revision', 'message', 'audience',
+                              'junior_message')
+SUMMARY_LIMIT_KEYS = ('id', 'text', 'audience', 'junior_text')
+DELIVERABLES_KEYS = ('interpreter', 'launch')
+LAUNCH_KEYS = ('mode', 'path', 'argv', 'shell')
+NOTICE_KEYS = ('code', 'audience', 'message', 'junior_message', 'line')
 SUMMARY_GOAL_KEYS = ('intended_use', 'decision', 'observation_unit', 'prediction_time')
 EXIT_CODES = {'EXIT_OK': 0, 'EXIT_INTERNAL': 1, 'EXIT_REFUSED': 2, 'EXIT_ARTIFACT_STALE': 3,
               'EXIT_UNKNOWN_OUTCOME': 4}
@@ -63,7 +76,9 @@ PAYLOAD_KEYS = {
     'init': ('schema', 'ok', 'study', 'revision', 'case', 'dataset', 'structural_exposure',
              # v0.2a (ADR 0006): the sealed final test.
              'final_test', 'plan',
-             'next_action', 'agent_instructions', 'ignored_sources', 'note'),
+             'next_action', 'agent_instructions', 'ignored_sources', 'note',
+             # v0.2a (WP-A1, R7): editor-settings notices and the notebook launch commands.
+             'notices', 'deliverables'),
     'status': ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'changes_since', 'view'),
     'plan': ('schema', 'ok', 'study', 'revision', 'steps', 'current_step', 'next_action'),
     'decide': ('schema', 'ok', 'study', 'action', 'request_id', 'replayed', 'revision', 'result',
@@ -100,9 +115,13 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # Post-v0.1 (P2): the junior's conditions and holds.
              'notes',
              # v0.2a (ADR 0006): the sealed final test, or status absent.
-             'final_test')
+             'final_test',
+             # v0.2a (WP-A1, R7): the engine's Python and the notebook launch commands.
+             'deliverables')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
-                      'reason', 'confirmation', 'open_proposals')
+                      'reason', 'confirmation', 'open_proposals',
+                      # v0.2a (WP-A1): per-feature basis of a feature availability value.
+                      'feature_basis')
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
                           'revision', 'time', 'authenticated', 'basis', 'delegation_scope')
 # Post-acceptance contract (D1): how the user decided.
@@ -341,12 +360,21 @@ def test_status_summary_keys(flow):
     assert [line.split(':', 1)[0] for line in payload['recap']] == list(RECAP_LABELS)
     assert tuple(payload['artifacts']) == ('status', 'items')
     for name, item in payload['artifacts']['items'].items():
-        assert tuple(item) == ('status', 'revision', 'last_ok_revision', 'message'), name
+        assert tuple(item) == SUMMARY_ARTIFACT_ITEM_KEYS, name
+        assert item['audience'] in AUDIENCES and item['junior_message'], name
+    assert all(tuple(x) == SUMMARY_LIMIT_KEYS and x['audience'] in AUDIENCES
+               and (x['junior_text'] if x['audience'] == 'agent' else x['junior_text'] is None)
+               for x in payload['not_yet_defensible']['top'])
+    assert payload['recap_audience'] == 'agent' and len(payload['recap_junior']) == len(RECAP_LABELS)
+    assert [line.split(':', 1)[0] for line in payload['recap_junior']] == list(RECAP_LABELS)
+    assert {'audience', 'junior_message'} <= set(payload['next_action'])
     assert view.SUMMARY_NOTE_KEYS == SUMMARY_NOTE_KEYS
     assert view.SUMMARY_HOLD_KEYS == SUMMARY_HOLD_KEYS and payload['holds'] == []
     keys = ({SUMMARY_SCHEMA} | set(SUMMARY_PAYLOAD_KEYS) | set(SUMMARY_DECISION_KEYS)
             | set(SUMMARY_GOAL_KEYS) | {'top', 'more', 'message'} | set(RECAP_LABELS)
-            | set(SUMMARY_NOTE_KEYS) | set(SUMMARY_HOLD_KEYS))
+            | set(SUMMARY_NOTE_KEYS) | set(SUMMARY_HOLD_KEYS) | set(AUDIENCES)
+            | set(FEATURE_BASES) | set(SUMMARY_ARTIFACT_ITEM_KEYS) | set(SUMMARY_LIMIT_KEYS)
+            | set(DELIVERABLES_KEYS) | set(LAUNCH_KEYS) | set(NOTICE_KEYS))
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
 
 
@@ -374,6 +402,15 @@ def test_view_model_keys(flow):
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
     assert {x['id'] for x in v['not_yet_defensible']} <= NOT_YET_DEFENSIBLE_IDS
+    # v0.2a (WP-A1): every message carries its audience and a junior variant.
+    assert v['next_action']['audience'] in AUDIENCES and v['next_action']['junior_message']
+    assert all(x['audience'] in AUDIENCES and x['junior_text'] for x in v['not_yet_defensible'])
+    assert all(i['audience'] in AUDIENCES and i['junior_message']
+               for i in v['artifacts']['items'].values())
+    assert tuple(v['deliverables']) == DELIVERABLES_KEYS
+    assert all(tuple(x) == LAUNCH_KEYS for x in v['deliverables']['launch'].values())
+    basis = v['decisions']['feature_availability']['feature_basis']
+    assert basis is None or set(basis.values()) <= set(FEATURE_BASES)
     assert 'revision' in flow['status'].payload['changes_since'][0]
 
 

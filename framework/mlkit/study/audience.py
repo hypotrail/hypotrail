@@ -1,0 +1,176 @@
+"""Who a message of the engine is written for (v0.2a, WP-A1; CLI-CONTRACT §3.3).
+
+Every sentence the engine emits for a surface carries ``audience``:
+
+* ``junior``: the text may be shown to the junior as it is. It speaks to them in the
+  second person or neutrally, and names no command, flag, decision id, or field;
+* ``agent``: the text instructs the assistant ("Show the restatement and record the user's
+  own words") or describes the junior in the third person. A surface never shows it to the
+  junior; the junior variant next to it (``junior_message`` or ``junior_text``) is written
+  for them.
+
+The functions here are pure and additive: they never change an existing key, they add
+``audience`` and the junior variant. Free of pandas, numpy, and scikit-learn.
+"""
+from __future__ import annotations
+
+from typing import Mapping
+
+JUNIOR, AGENT = 'junior', 'agent'
+AUDIENCES = (JUNIOR, AGENT)
+
+# Decisions in words, for the junior (a regression study's model choice included).
+DECISION_WORDS = {'prediction_time': 'the prediction moment',
+                  'feature_availability': 'the feature availability', 'split': 'the split',
+                  'policy': 'the decision policy', 'model_choice': 'the model choice',
+                  'conclusion': 'the conclusion'}
+# Plan steps in words (the steps without a decision of their own).
+STEP_WORDS = {'train_eda': 'the exploration of the training rows', 'models': 'the model fits'}
+
+
+def decision_words(decision_id) -> str:
+    return DECISION_WORDS.get(decision_id) or STEP_WORDS.get(decision_id) \
+        or ' '.join(str(decision_id).split('_'))
+
+
+def join(words) -> str:
+    words = list(words)
+    if not words:
+        return ''
+    return words[0] if len(words) == 1 else ', '.join(words[:-1]) + ' and ' + words[-1]
+
+
+def _capital(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+# --- next_action -------------------------------------------------------------------------
+
+def _junior_next(action: Mapping) -> tuple[str, str]:
+    """``(audience of message, junior_message)`` of one ``next_action``."""
+    kind = action.get('kind')
+    message = str(action.get('message') or '')
+    if kind == 'outcome_unknown':
+        return AGENT, ('A run stopped before it finished, and its outcome is unknown. It is '
+                       'not in progress and does not restart by itself; you will be asked '
+                       'before it is recorded as interrupted.')
+    if kind == 'acknowledge_interruption':
+        return AGENT, ('A run was interrupted and its outcome is unknown. It does not restart '
+                       'by itself; you will be asked before it is recorded as interrupted.')
+    if kind == 'reconfirm':
+        return AGENT, (f'Your answer on {decision_words(action.get("decision"))} must be '
+                       'confirmed again: something it depends on changed after you confirmed '
+                       'it.')
+    if kind == 'await_user_words':
+        return AGENT, (f'A proposal on {decision_words(action.get("decision"))} is waiting for '
+                       'your answer. Read its restatement and reply in your own words; a bare '
+                       '"ok" does not decide.')
+    if kind == 'blocked':
+        needed = join(decision_words(r) for r in action.get('requires') or [])
+        return AGENT, (f'This step waits for earlier steps: {needed}.' if needed
+                       else 'This step waits for an earlier step.')
+    if kind in ('propose', 'run'):
+        # The step's question, written for the junior (state.STEPS).
+        return JUNIOR, message
+    if kind == 'done':
+        return AGENT, ('Every step of the plan is done. Before relying on the conclusion, read '
+                       'the limits the report lists.')
+    return AGENT, message
+
+
+def next_action(action: Mapping | None) -> dict | None:
+    """``action`` with ``audience`` (of its ``message``) and ``junior_message`` added.
+
+    ``junior_message`` is always present: equal to ``message`` when that is already written
+    for the junior (a step question), a second-person sentence without command, flag, or id
+    names otherwise."""
+    if action is None:
+        return None
+    out = dict(action)
+    audience, junior = _junior_next(action)
+    out['audience'] = audience
+    out['junior_message'] = junior
+    return out
+
+
+# --- not_yet_defensible ------------------------------------------------------------------
+
+def _junior_limit(item: Mapping) -> str | None:
+    """The junior variant of a limit written for the agent, or None when its text is
+    already written for the junior."""
+    kind = item.get('id')
+    if kind == 'unconfirmed_decisions':
+        named = join(decision_words(d) for d in item.get('decisions') or [])
+        return f'Not confirmed by you yet: {named}.'
+    if kind == 'open_holds':
+        return ('You set a condition that is not resolved yet, so nothing it covers can be '
+                'confirmed until your own words resolve it: '
+                + join(decision_words(d) for d in item.get('decisions') or []) + '.')
+    if kind == 'conclusion_outdated':
+        return ('The conclusion was confirmed before a decision it summarizes changed, so its '
+                'text may no longer describe the study; you will be asked to confirm it again.')
+    if kind == 'delegated_decisions':
+        named = join(decision_words(d) for d in item.get('decisions') or [])
+        return (f'You delegated these to the assistant\'s recommended default, so they are not '
+                f'your own judgment: {named}.')
+    if kind == 'stale_results':
+        return 'Some results are out of date and are computed again before they are cited.'
+    return None
+
+
+def limit(item: Mapping) -> dict:
+    """A ``not_yet_defensible`` item with ``audience`` (of its ``text``) and
+    ``junior_text``: the text itself when it is written for the junior, its junior
+    variant otherwise."""
+    out = dict(item)
+    junior = _junior_limit(item)
+    out['audience'] = AGENT if junior is not None else JUNIOR
+    out['junior_text'] = junior if junior is not None else str(item.get('text') or '')
+    return out
+
+
+def junior_text(item: Mapping) -> str:
+    """The text of a limit that may be shown to the junior."""
+    if item.get('junior_text'):
+        return item['junior_text']
+    junior = _junior_limit(item)
+    return junior if junior is not None else str(item.get('text') or '')
+
+
+# --- deliverables ------------------------------------------------------------------------
+
+ARTIFACT_WORDS = {'report': 'the report', 'notebook': 'the generated notebook',
+                  'workbench': 'the workbench'}
+
+
+def artifact(name: str, item: Mapping) -> dict:
+    """``{audience, junior_message}`` of a deliverable's ``message`` (``currency.message``):
+    it names paths and asks for a render, so it is written for the agent."""
+    label = ARTIFACT_WORDS.get(name, ' '.join(str(name).split('_')))
+    status = item.get('status')
+    if item.get('generated') is False or name == 'workbench':
+        junior = (f'{_capital(label)} is your free space: it is created once, never '
+                  'overwritten, and not tracked by the study.')
+    elif status == 'ok':
+        junior = f'{_capital(label)} is up to date.'
+    elif status == 'not_rendered':
+        junior = f'{_capital(label)} has not been written yet.'
+    elif status == 'failed':
+        junior = (f'The last update of {label} failed; do not rely on it until it is '
+                  'written again.')
+    else:
+        junior = (f'{_capital(label)} is out of date: the study changed after it was '
+                  'written. Do not rely on it until it is written again.')
+    return {'audience': AGENT, 'junior_message': junior}
+
+
+def annotate_view(view: dict) -> dict:
+    """Annotate a built view in place: ``next_action`` and every
+    ``not_yet_defensible`` item get their audience (used by :func:`mlkit.study.view.build`)."""
+    view['next_action'] = next_action(view.get('next_action'))
+    view['not_yet_defensible'] = [limit(x) for x in view.get('not_yet_defensible') or []]
+    return view
+
+
+__all__ = ['JUNIOR', 'AGENT', 'AUDIENCES', 'next_action', 'limit', 'junior_text', 'artifact',
+           'annotate_view', 'decision_words', 'join']

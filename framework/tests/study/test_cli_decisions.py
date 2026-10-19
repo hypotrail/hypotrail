@@ -637,7 +637,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
                 'executions', 'not_yet_defensible', 'notes', 'holds',
                 # v0.2a (ADR 0006): the sealed final test, before the recap.
-                'final_test', 'recap')
+                'final_test', 'recap',
+                # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
+                'recap_audience', 'recap_junior')
 
 
 def test_status_summary_is_compact_and_complete(study, work, features):
@@ -668,7 +670,9 @@ def test_status_summary_is_compact_and_complete(study, work, features):
     pt = summary['decisions']['prediction_time']
     assert pt == {'status': 'confirmed', 'value': PT, 'basis': 'explicit', 'delegation_scope': None,
                   'user_words': 'Yes: we predict before the first reminder goes out.',
-                  'reason': None, 'open_proposals': []}
+                  'reason': None, 'open_proposals': [],
+                  # v0.2a (WP-A1): additive, null for any decision but the availability.
+                  'feature_basis': None}
     assert summary['decisions']['feature_availability']['status'] == 'proposed'
     assert summary['executions'] == {'active': [], 'interrupted': [], 'late': [],
                                      'suspected_interrupted': []}           # F1

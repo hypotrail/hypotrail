@@ -175,7 +175,11 @@ def test_a_policy_adopted_after_the_conclusion_outdates_it(evaluated):
     assert view.build(b.study)['next_action'] == {
         'kind': 'reconfirm', 'decision': 'conclusion',
         'message': f'Decision conclusion must be confirmed again: '
-                   f'{state["decisions"]["conclusion"]["reason"]}'}
+                   f'{state["decisions"]["conclusion"]["reason"]}',
+        # v0.2a (WP-A1): the message names an id, so it is the agent's; the junior's variant.
+        'audience': 'agent',
+        'junior_message': 'Your answer on the conclusion must be confirmed again: something '
+                          'it depends on changed after you confirmed it.'}
     summary = _run('status', '--summary', '--study', b.study)
     assert summary['not_yet_defensible']['top'][0]['id'] == 'conclusion_outdated'
     assert 'conclusion keep baseline' in summary['recap'][1] \

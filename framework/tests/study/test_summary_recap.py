@@ -56,11 +56,18 @@ def test_a_new_study_recaps_the_goal_and_the_first_decision(flow):
     summary = _summary(flow)
     recap = summary['recap']
     _assert_shape(recap, summary)
-    assert tuple(summary)[-1] == 'recap'
+    # v0.2a: the sealed final test (ADR 0006) sits between the holds and the recap; the
+    # additive audience keys (WP-A1) follow the recap.
+    keys = tuple(summary)
+    assert keys[keys.index('holds') + 1:keys.index('holds') + 3] == ('final_test', 'recap')
+    assert keys[-2:] == ('recap_audience', 'recap_junior')
     intended = summary['goal']['intended_use']['value']
     assert recap[0].startswith(f'Goal: {intended}; the prediction is made ')
     assert recap[1] == 'Decided: nothing yet.'
     assert recap[2].startswith('Now: Define the prediction moment')
+    # v0.2a (WP-A1): nothing was rendered yet, so nothing is "up to date".
+    assert recap[2].endswith('report and notebook not rendered yet.'), recap[2]
+    assert 'up to date' not in recap[2]
     assert recap[3].startswith('Next: ')
     assert recap[4].startswith('Limit: ') and 'not confirmed' not in recap[4]
 
