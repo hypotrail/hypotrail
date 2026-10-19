@@ -5,10 +5,9 @@ changes two copies behind the engine's back: one cited number of ``reports/study
 is edited (a stale citation), and the report is deleted. The real controller then reads
 each copy after the junior's Refresh. Not a VS Code session; needs framework/.venv.
 
-The cases that need the engine's currency (review finding M4 of the engine: a deleted or
-edited deliverable is not current, and ``summary.currency`` moves) are strict expected
-failures while the engine does not send ``currency``; the integrator flips them when it
-does (a pass then fails the run until the marker goes).
+The cases on the engine's currency (review finding M4 of the engine: a deleted or edited
+deliverable is not current, and ``summary.currency`` moves) run against the engine as it
+is; the engine sends ``currency`` under ``status --summary --digest``.
 """
 from __future__ import annotations
 
@@ -49,15 +48,13 @@ def test_he3_an_edited_cited_number_is_a_check_finding_after_refresh_with_a_work
     assert e['checkReads'] == 2, 'the Refresh read the checks again (same revision)'
 
 
-@pytest.mark.xfail(reason='needs engine M4', strict=True)
 def test_he3_an_edited_report_moves_the_engine_currency(he3):
-    if not engine_currency(he3):
-        pytest.fail('the engine sends no summary.currency yet')
+    assert engine_currency(he3), 'the engine sends summary.currency'
     assert he3['edited']['after']['currencyMoved'] is True
 
 
-@pytest.mark.xfail(reason='needs engine M4', strict=True)
 def test_he3_a_deleted_report_is_not_current_and_regenerate_is_offered(he3):
+    assert engine_currency(he3), 'the engine sends summary.currency'
     d = he3['deleted']
     assert d['before']['report'] == 'ok'
     assert d['after']['report'] != 'ok', 'a deleted report is not current'

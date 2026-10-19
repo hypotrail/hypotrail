@@ -15,10 +15,12 @@ const { fakeCli, payload } = require('./fixture-cli');
 
 const AGENT = { argv: ['/opt/py/bin/python', '-m', 'mlkit.study.cli'], studyDir: '/studies/bank' };
 const clone = x => JSON.parse(JSON.stringify(x));
+/** The summary fixture as an engine without `status --summary --digest` sends it: no root `currency`. */
+const withoutCurrency = () => { const s = payload('summary.binary'); delete s.currency; return s; };
 
 /** A controller whose summary is whatever `summary.current` holds when it is read. */
-function make({ stage = 'v2' } = {}) {
-  const summary = { current: payload('summary.binary') };
+function make({ stage = 'v2', engineCurrency = true } = {}) {
+  const summary = { current: engineCurrency ? payload('summary.binary') : withoutCurrency() };
   const posted = [];
   const runCli = fakeCli(tail => (tail[0] === 'status' ? { payload: clone(summary.current) } : undefined), { agentArgv: AGENT.argv });
   const c = createController({ agent: AGENT, post: m => posted.push(m), runCli, settings: { stage },
@@ -28,7 +30,8 @@ function make({ stage = 'v2' } = {}) {
 }
 
 test('currencyOf: the engine digest when present, else a stable digest of the currency fields', () => {
-  const base = payload('summary.binary');
+  assert.equal(currencyOf(payload('summary.binary')), payload('summary.binary').currency, 'the captured engine digest is used');
+  const base = withoutCurrency();
   const own = currencyOf(base);
   assert.match(own, /^[0-9a-f]{16}$/);
   assert.equal(currencyOf(clone(base)), own, 'stable for the same summary');
@@ -74,7 +77,7 @@ test('H1, fallback path: an engine without `currency` — a dataset edit (alert)
     s => { for (const r of Object.values(s.results)) r.current = false; },
   ];
   for (const change of changes) {
-    const { c, summary, count, posted } = make();
+    const { c, summary, count, posted } = make({ engineCurrency: false });
     assert.equal(summary.current.currency, undefined, 'the fixture is an engine without the field');
     await c.handle({ v: 2, type: 'ready' });
     await c.handle({ v: 2, type: 'load', view: 'evidence' });

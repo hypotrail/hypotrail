@@ -532,5 +532,16 @@
   "source": "hand-authored",
   "argv": [],
   "note": "handoff.json written in the pack (hypotrail.handoff/1)."
+ },
+ "session_report.regression": {
+  "schema": "hypotrail.session_report/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "session-report",
+   "--json"
+  ],
+  "note": "Auto MPG with the model choice proposed; the session log on (INV-12: no decision-rule vocabulary)."
  }
 }

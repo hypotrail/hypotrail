@@ -5,7 +5,9 @@ The per-view tests scan each tab as first rendered; this test also scans the who
 text after every interaction a junior can make without writing: each button that is not
 a write control (the "Ask the agent" modals included), each disclosure opened, each radio
 and checkbox, each option of each select, each range moved, and "Select the id" of an
-Evidence detail. Auto MPG fixtures, stage v3. This is not a VS Code session.
+Evidence detail. Auto MPG fixtures (the session report too: a binary study's report names its ``policy``
+decision, an engine identifier), stage v3. Each scan waits for the events the action
+queued (a ``details`` toggle renders after the click). This is not a VS Code session.
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ TABS = {
     'decisions': [('decisions', 'decisions', 'decisions.regression'), ('evidence', 'evidence', 'evidence.regression')],
     'evidence': [('evidence', 'evidence', 'evidence.regression')],
     'whatif': [('whatif', 'whatif', 'evidence.regression')],
-    'learn': [('explain', 'explain', 'explain.regression'), ('session_report', 'session_report', 'session_report.binary')],
+    'learn': [('explain', 'explain', 'explain.regression'), ('session_report', 'session_report', 'session_report.regression')],
 }
 
 
@@ -30,6 +32,11 @@ def scan(page, where, hits):
     text = page.locator('body').inner_text()
     for m in FORBIDDEN.finditer(text):
         hits.append((where, m.group(0), text[max(0, m.start() - 60):m.end() + 30].replace('\n', ' ')))
+
+
+def settle(page):
+    """Let the events an action queued run (a ``details`` toggle fires after the click)."""
+    page.evaluate('() => new Promise(r => setTimeout(() => requestAnimationFrame(() => setTimeout(r, 0)), 0))')
 
 
 def act(page, control):
@@ -72,6 +79,7 @@ def test_inv12_regression_vocabulary_after_every_interaction_in_every_tab(open_p
             except Exception:  # noqa: BLE001 - a control hidden by an earlier action
                 i += 1
                 continue
+            settle(page)
             scan(page, f'{tab}: {label}', hits)
             done.append((tab, label))
             page.keyboard.press('Escape')
@@ -85,6 +93,7 @@ def test_inv12_regression_vocabulary_after_every_interaction_in_every_tab(open_p
                 select = page.locator('[data-select-id]')
                 if select.count():
                     select.first.click(timeout=2000)
+                    settle(page)
                     scan(page, f'{tab}: Select the id of {rid[:8]}', hits)
                     selects += 1
             if page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') != tab:

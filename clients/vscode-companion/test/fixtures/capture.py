@@ -222,6 +222,7 @@ def regression(cap: Capture) -> None:
              '--value=fit.linear', '--json')
     cap.read('evidence.regression', 'regression', study, 'evidence', '--json')
     cap.read('explain.regression', 'regression', study, 'explain', '--json')
+    cap.read('session_report.regression', 'regression', study, 'session-report', '--json')
 
 
 def capture(root: Path) -> dict[str, dict]:
