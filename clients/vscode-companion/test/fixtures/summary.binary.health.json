@@ -357,7 +357,22 @@
    "development_rows": 3617,
    "schema_check": "pass"
   },
-  "criterion": null,
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "precision_gain",
+    "min_points": 5
+   },
+   "status": "met",
+   "gain": 30.5,
+   "low": 21.4,
+   "high": 40.2,
+   "minimum": 5,
+   "unit": "percentage points",
+   "rule": "capacity:100",
+   "result_id": "ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02",
+   "contradicts_verdict": false
+  },
   "eda_looks": {
    "target_looks": 3,
    "results": [

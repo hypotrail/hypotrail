@@ -14,7 +14,8 @@ function protocolFactory() {
   const VERSION = 2;
   const STAGES = ['v0', 'v1', 'v2', 'v3'];
   const TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
-  const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report'];
+  // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`).
+  const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data'];
   const WRITE_OPS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];

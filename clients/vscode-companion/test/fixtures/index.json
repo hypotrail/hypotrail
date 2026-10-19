@@ -240,7 +240,7 @@
    "decisions",
    "--json"
   ],
-  "note": "Mockup Decision history: delegated split, superseded threshold policy, policy confirmed from the panel."
+  "note": "Mockup Decision history: delegated split, superseded threshold policy, policy confirmed from the panel. WP-A7: restated and endorsed bases, an agent concern kept on the availability, and a later correction in the junior's words."
  },
  "decisions.binary.reconfirm": {
   "schema": "hypotrail.decisions/1",

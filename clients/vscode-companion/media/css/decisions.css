@@ -36,7 +36,17 @@
 .dc-history th { font-size: 0.9em; color: var(--ht-muted); }
 .dc-decision { font-weight: 600; }
 .dc-basis { color: var(--ht-fg); }
-.dc-basis.dc-delegated { color: var(--ht-warn-fg); background: var(--ht-warn-bg); border-radius: 4px; padding: 0 4px; }
+/* WP-A7: the basis is a status chip of one vocabulary (core.css); delegated in the stale tone. */
+.dc-basis-cell { white-space: nowrap; }
+.dc-basis.dc-delegated { color: var(--ht-warn-fg); background: var(--ht-warn-bg); }
+.dc-channel { font-size: 0.9em; }
+.dc-concern, .dc-correction { margin: 4px 0 0; font-size: 0.93em; }
+.dc-correction { color: var(--ht-fg); border-left: 3px solid var(--ht-st-needs); padding-left: 6px; }
+.dc-mode { margin: 8px 0 12px; }
+.dc-mode h3 { margin-bottom: 4px; }
+.dc-mode p { margin: 4px 0; }
+.dc-mode-rules { margin: 4px 0; }
+.dc-reason-hint { margin: 4px 0; padding: 4px 8px; border-left: 3px solid var(--ht-st-needs); }
 tr.dc-superseded, tr.dc-superseded .dc-basis, tr.dc-superseded .dc-decision { color: var(--ht-muted); }
 details[data-unconfirmed] { margin-top: 8px; }
 .dc-history-value { display: block; }

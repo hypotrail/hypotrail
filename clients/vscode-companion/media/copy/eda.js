@@ -4,8 +4,103 @@
 // (notes, warnings, meanings) are shown verbatim and do not live here. Owned by WP-U4.
 (function (HT) {
   'use strict';
+  // WP-A7: the data card, the quality check of the development rows, the question per
+  // chart, the confidence intervals and the shuffled-outcome band, the leakage detector.
+  const AVAILABILITY = {
+    available_at_prediction: 'available at prediction', uncertain_included: 'uncertain, kept',
+    uncertain_excluded: 'uncertain, left out', not_available: 'not available',
+  };
+  const data = task => ({
+    title: 'The data',
+    structural: task === 'regression' ? 'structural reading · no target figure' : 'structural reading · no outcome rate',
+    oneRow: 'One row',
+    notStated: 'not stated in the case',
+    size: (rows, columns) => `${rows} rows · ${columns} columns`,
+    developmentOnly: 'Development rows only: the final test is set aside and never shown.',
+    allRows: 'All rows: this study has no sealed final test.',
+    targetLead: 'Target ',
+    targetLater: task === 'regression'
+      ? 'Its distribution is shown below, on the training rows, after the split.'
+      : 'How often it occurs is shown below, on the training rows, after the split.',
+    sealed: 'final test sealed',
+    rowsTitle: 'Five rows, as stored (fixed rows, the target first)',
+    rowsCaption: 'Five development rows, the target first',
+    missingCell: '(missing)',
+    excludedTitle: 'Left out of the models by your availability decision',
+    excludedLegend: '✗ marks a column your availability decision leaves out of the models.',
+    dictionaryTitle: n => `Dictionary (${n} columns, grouped)`,
+    dictionaryCaption: 'The columns of the data, grouped, with their meaning and whether they are known at the prediction moment',
+    columns: ['Column', 'Type', 'Meaning', 'Known at the prediction moment?', 'Missing', 'Examples'],
+    frenchLabels: 'Show French labels',
+    englishLabels: 'Show English labels',
+    special: 'Special value ',
+    rows: n => `${n} rows`,
+    values: n => `${n} values`,
+    types: { integer: 'whole number', numeric: 'number', category: 'category', binary: 'two values', string: 'text' },
+    availability: AVAILABILITY,
+    yourDecision: 'your decision',
+    notDocumented: 'not documented',
+    factStatus: { documented_fact: 'documented fact', scenario_assumption: 'scenario assumption', observed: 'observed',
+      unknown: 'not documented' },
+    target: 'target',
+    loading: 'Reading the data card...',
+    loadError: 'The data card could not be read.',
+  });
+  const quality = word => ({
+    tag: `development rows · ${word} not read`,
+    read: ['Read on ', ' development rows and ', ' columns, without the target.'],
+    missingNone: 'No missing cell.',
+    missingSome: 'Missing cells:',
+    rowsWithMissing: ['Rows with at least one missing cell: ', '.'],
+    together: 'Missing together: ',
+    duplicatesNone: 'No repeated row',
+    duplicatesSome: ['', ' repeated rows in ', ' groups'],
+    rareNone: 'No rare category.',
+    rareSome: ['Rare categories, with fewer than ', ' rows:'],
+    rangesTitle: 'Ranges of the numeric columns',
+    rangesCaption: 'Lowest and highest ordinary value of each numeric column, development rows',
+    lowest: 'Lowest',
+    highest: 'Highest',
+    outside: 'Below / above the declared range',
+    noRange: 'no declared range',
+  });
+  // The strings of the shared copy that name what is predicted: "outcome" (binary) or
+  // "target" (regression).
+  const named = word => ({
+    quality: quality(word),
+    looksLead: `Looks at the ${word} so far: `,
+    looksText: `Each chart that reads the ${word} counts once; the more looks, the more a pattern found among them can be chance.`,
+    bandHead: `Shuffled-${word} band`,
+    bandLegend: `Grey band: the range of the same figure when the ${word} is shuffled among the training rows, which is what chance alone draws.`,
+    leakQuestion: `Is its value really known at the prediction moment, or is it recorded at or after the ${word}? A legitimate column may score high; the question is when its value is known.`,
+    oneMoreLook: `This chart reads the ${word}: running it counts as one more look.`,
+  });
   const common = {
-    heading: 'Exploration of the training rows',
+    heading: 'Data and exploration',
+    explorationTitle: 'Exploration of the training rows',
+    qualityTitle: 'Data quality',
+    sealedChip: 'final test sealed',
+    sealedRows: n => `The ${n} final-test rows are never read here.`,
+    noFinalTest: 'This study has no sealed final test: it was created before one was set aside at the start.',
+    intervalHead: 'Confidence interval',
+    intervalLegend: 'Line across a bar: the confidence interval, the range the value could plausibly take with other rows of the same kind.',
+    answers: 'It answers:',
+    signalTitle: 'Single-feature signal',
+    signalAuc: 'AUC',
+    signalR2: 'R²',
+    signalChart: metric => `Each column alone, out of fold (${metric}), training rows`,
+    level: 'level',
+    signalLegend: () => ['Each column is scored alone, out of fold, over ', ' folds of the ', ' training rows; the median of all columns is ',
+      '. A bar in the accent colour reaches the level or stands far above the others.'],
+    signalExcluded: '(left out)',
+    leakTitle: 'Leakage detector',
+    leakLine: metric => [` alone reaches ${metric === 'AUC' ? 'an AUC' : 'an R²'} of `, ' on the training rows.'],
+    availabilityWords: AVAILABILITY,
+    noDecision: 'no decision',
+    leakExcluded: 'Your availability decision leaves it out of the models; this is why that matters.',
+    leakKept: 'Your availability decision keeps it in the models: check when its value is known before you rely on them.',
+    leakUndecided: 'No availability decision covers it yet.',
+    noLeak: () => ['No single column stands out: none reaches the level of ', ' or stands far above the others.'],
     bannerLead: 'Training rows only.',
     bannerText: 'Every chart is a registered result, computed by the engine.',
     rowsSeen: 'rows seen in EDA',
@@ -46,7 +141,7 @@
     specialsLine: 'Special values:',
     missingLine: 'Missing:',
     distributionHatch: ['Hatched bar: fewer than ', ' rows.'],
-    requestTitle: 'Request a chart',
+    requestTitle: 'Run another chart',
     variable: 'Variable',
     chart: 'Chart',
     run: 'Run on training rows',
@@ -68,6 +163,16 @@
   HT.copy.eda = {
     binary: {
       ...common,
+      ...named('outcome'),
+      data: data('binary'),
+      intervalLine: ['Confidence interval of the rate: ', ' to ', '.'],
+      bandOutside: ['The spread between groups, ', ', is larger than in every one of the ', ' shuffles of the outcome (at most ',
+        '): more than chance alone usually draws, although about one look in twenty does so by chance.'],
+      bandInside: ['The spread between groups, ', ', stays within what the ', ' shuffles of the outcome draw (up to ',
+        '): it cannot be told apart from chance.'],
+      requestQuestion: (activity, column) => (activity === 'eda.distribution'
+        ? `How are the values of ${column} spread on the training rows? Are there extreme values?`
+        : `Does the outcome rate differ across the values of ${column} on the training rows, by more than chance draws?`),
       targetTitle: target => `Target · ${target}`,
       targetChart: target => `Outcome ${target}, training rows`,
       targetLine: ['', ' ', ' · ', ' of ', ' rows'],
@@ -89,6 +194,16 @@
     },
     regression: {
       ...common,
+      ...named('target'),
+      data: data('regression'),
+      meanIntervalLine: ['Confidence interval of the mean: ', ' to ', '.'],
+      bandOutside: ['The spread between the group means, ', ', is larger than in every one of the ', ' shuffles of the target (at most ',
+        '): more than chance alone usually draws, although about one look in twenty does so by chance.'],
+      bandInside: ['The spread between the group means, ', ', stays within what the ', ' shuffles of the target draw (up to ',
+        '): it cannot be told apart from chance.'],
+      requestQuestion: (activity, column) => (activity === 'eda.distribution'
+        ? `How are the values of ${column} spread on the training rows? Are there extreme values?`
+        : `Does the target mean differ across the values of ${column} on the training rows, by more than chance draws?`),
       targetTitle: target => `Target · ${target}`,
       summaryChart: target => `Distribution of the target ${target}, training rows`,
       summaryTerm: 'Target distribution',

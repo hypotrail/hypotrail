@@ -24,3 +24,42 @@
 .eda-request label { margin-top: 4px; }
 .eda-skeleton { min-height: 120px; }
 .eda-stack { max-width: 640px; }
+
+/* WP-A7: the data card, the quality check, the question per chart, the leakage detector. */
+.eda-data, .eda-quality { margin: 8px 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.eda-data h4, .eda-quality h4 { margin: 6px 0 0; font-size: 0.95em; }
+.eda-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.eda-fact { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 6px;
+  border: 1px solid var(--ht-card-border); background: var(--ht-bg); }
+.eda-seal-line, .eda-banner-seal { margin: 0; }
+.eda-scroll { overflow-x: auto; max-width: 100%; }
+.eda-rows, .eda-dictionary { border-collapse: collapse; font-size: 0.93em; }
+.eda-rows th, .eda-rows td, .eda-dictionary th, .eda-dictionary td { border-bottom: 1px solid var(--ht-border);
+  padding: 3px 8px; text-align: left; vertical-align: top; }
+.eda-rows td { white-space: nowrap; }
+.eda-target-col { font-weight: 600; background: var(--ht-done-bg); }
+.eda-excluded { color: var(--ht-muted); }
+.eda-group-row th { background: var(--ht-quote-bg); font-weight: 600; text-align: left; padding: 4px 8px; }
+.eda-dictionary-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.eda-dictionary-head button { margin: 0; }
+.eda-num { text-align: right; }
+.eda-name code { white-space: nowrap; overflow-wrap: normal; }
+.eda-known-source, .eda-special-line { font-size: 0.9em; }
+.eda-section-title { margin: 20px 0 4px; font-size: 1.05em; }
+.eda-card-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.eda-question { font-weight: 600; }
+.eda-chart-name { font-size: 0.85em; }
+.eda-looks { flex-basis: 100%; }
+.eda-band-line { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--ht-card-border); }
+.eda-band-outside { border-color: var(--ht-st-stale); }
+.eda-leak { padding: 8px 10px; border-radius: 6px; border: 1px solid var(--ht-warn-border); background: var(--ht-warn-bg);
+  color: var(--ht-warn-fg); display: flex; flex-direction: column; gap: 4px; }
+.eda-request-question { padding: 6px 10px; border-radius: 6px; background: var(--ht-quote-bg); }
+.eda-legend { font-size: 0.9em; }
+@media (max-width: 600px) {
+  .eda-group-row th { display: block; }
+  .eda-rows td { white-space: normal; }
+}
+@media (forced-colors: active) {
+  .eda-leak, .eda-band-line, .eda-fact { border: 1px solid CanvasText; }
+}

@@ -29,7 +29,7 @@ test('EV-1: the Current filter lists the promoted current results; stale ones ca
   const m = toEvidenceModel(p);
   const current = m.results.filter(r => r.promoted && r.current).map(r => r.resultId);
   assert.deepEqual(current, p.results.filter(r => r.promoted && r.current && r.integrity === 'ok').map(r => r.result_id));
-  assert.equal(current.length, 8);
+  assert.equal(current.length, 10);   // WP-A7: the fixture gained the signal and quality results
   const stale = m.results.filter(r => !r.current);
   assert.deepEqual(stale.map(r => r.resultId), [STALE]);
   for (const r of stale) {
@@ -137,7 +137,7 @@ test('models: a wrong schema throws; unknown keys are ignored; results without a
   p.extra = { anything: true };
   p.results.push({ result_id: 'not-an-id', activity: 'x' });
   const m = toEvidenceModel(p);
-  assert.equal(m.results.length, 9);
+  assert.equal(m.results.length, 11);   // WP-A7: two more results in the fixture
   assert.deepEqual(JSON.parse(JSON.stringify(m)), m);
 });
 

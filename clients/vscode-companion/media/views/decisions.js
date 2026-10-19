@@ -49,6 +49,35 @@
     return words[s] || s.replace(/[._:]/g, ' ');
   }
 
+  /**
+   * WP-A7 (ADR 0005): the confirmation mode of the study and what counts as an answer, read
+   * only. The mode changes in the chat with the junior's words (`mode set`, not a W1-W7
+   * write), so the panel shows it and never offers to change it.
+   */
+  function modeSection(model, ctx, c) {
+    const mode = str(model.mode);
+    if (!mode) return null;
+    const name = c.modeNames[mode] || mode;
+    return el('section', { className: 'card dc-mode', 'aria-labelledby': 'h-dc-mode', 'data-mode': mode }, [
+      el('h3', { id: 'h-dc-mode', text: c.modeTitle }),
+      el('p', {}, [el('span', { className: 'ht-status ht-st-needs', 'data-mode-chip': mode, text: name }), ' ', c.modeLine(name)]),
+      mode === 'guided' ? el('ul', { className: 'dc-mode-rules' }, c.modeRules(taskOf(ctx)).map(t => el('li', { text: t })))
+        : el('p', { className: 'muted', text: c.modeOther }),
+      el('p', { className: 'muted', 'data-mode-change': true, text: c.modeChange }),
+    ]);
+  }
+
+  /** WP-A7: the basis of a confirmation as a chip of one vocabulary, its meaning in the hover. */
+  function basisChip(c, basis, scope, channel) {
+    const b = str(basis) || 'explicit';
+    const label = b === 'delegated_default' ? c.basis(b, scope) : (c.basisChip[b] || b);
+    return el('span', { className: 'dc-basis-cell' }, [
+      el('span', { className: `ht-status dc-basis ${b === 'delegated_default' ? 'ht-st-stale dc-delegated' : 'ht-st-ok'}`,
+        'data-basis': b, title: c.basisHelp[b] || null, text: label }),
+      channel ? el('span', { className: 'muted dc-channel', 'data-channel': channel, text: ` ${c.channelWords(channel)}` }) : null,
+    ]);
+  }
+
   function section(id, title, children, attrs) {
     return el('section', { 'aria-labelledby': id, ...(attrs || {}) }, [el('h2', { id, text: title }), ...children]);
   }
@@ -357,6 +386,8 @@
       area ? el('div', { className: 'dc-answer' }, [
         el('label', { for: `words-${id}`, text: v1 ? c.answerLabel : c.answerLabelV0 }),
         area,
+        v1 && c.reasonDecisions.includes(str(p.decisionId))
+          ? el('p', { className: 'dc-reason-hint', 'data-reason-hint': id, text: c.reasonHint }) : null,
         el('p', { id: `hint-${id}`, className: 'muted', text: v1 ? `${c.answerHint} ${c.noDelegation}` : c.answerHintV0 }),
         typing,
       ]) : el('p', { className: 'muted', 'data-reviewer-note': true, text: c.reviewerNote }),
@@ -399,6 +430,12 @@
     }));
   }
 
+  /** WP-A7 (ADR 0005, R3): the corrections the junior recorded later, in their words. */
+  function corrections(data, decisionId, c) {
+    return arr(data.notes).filter(n => n.kind === 'correction' && n.decisionId === decisionId)
+      .map(n => el('p', { className: 'dc-correction', 'data-correction': str(n.noteId) }, [c.correction, quote(n.userWords)]));
+  }
+
   function historySection(entry, ctx, c) {
     const err = ctx.error('decisions');
     const children = [];
@@ -425,7 +462,6 @@
         el('caption', { className: 'sr-only', text: c.historyCaption }),
         el('thead', {}, [el('tr', {}, c.columns.map(name => el('th', { scope: 'col', text: name })))]),
         el('tbody', {}, rows.map(h => {
-          const delegated = h.basis === 'delegated_default';
           const nav = navSeen.has(h.decisionId) ? null : `decision:${h.decisionId}`;
           navSeen.add(h.decisionId);
           return el('tr', { className: h.current ? '' : 'muted dc-superseded', 'data-history-row': `${h.decisionId}:${h.revision}`,
@@ -434,9 +470,11 @@
               h.groups ? el('span', { className: 'dc-history-value', title: groupsText(h.groups, c) },
                 [readable(ctx, h.decisionId, Object.fromEntries(h.groups.flatMap(g => g.columns.map(col => [col, g.status]))))])
                 : el('span', { className: 'dc-history-value' }, [readable(ctx, h.decisionId, h.value)])]),
-            el('td', { 'data-words-cell': true }, [quote(h.userWords)]),
-            el('td', {}, [el('span', { className: delegated ? 'dc-basis dc-delegated' : 'dc-basis', 'data-basis': str(h.basis),
-              text: c.basisChannel(c.basis(str(h.basis), h.scope), str(h.channel)) })]),
+            el('td', { 'data-words-cell': true }, [quote(h.userWords),
+              h.agentConcern ? el('p', { className: 'hold dc-concern', 'data-agent-concern': h.decisionId },
+                [c.concern, quote(h.agentConcern)]) : null,
+              ...(h.current ? corrections(data, h.decisionId, c) : [])]),
+            el('td', { 'data-basis-cell': true }, [basisChip(c, h.basis, h.scope, str(h.channel))]),
             el('td', {}, [
               el('span', { className: 'ht-mono', text: c.atRevision(h.revision) }), ' · ',
               el('span', { 'data-time': true, text: ctx.format.localTime(h.time) }),
@@ -489,7 +527,7 @@
       const proposals = arr(model.proposals);
       const cards = proposals.map(p => proposalCard(p, model, ctx, c));
       const articles = cards.map(n => (n.matches('[data-proposal-card]') ? n : n.querySelector('[data-proposal-card]')));
-      const out = [lastOutcomeSection(model, ctx, c),
+      const out = [v1 ? modeSection(model, ctx, c) : null, lastOutcomeSection(model, ctx, c),
         section('h-proposals', c.waitingTitle, cards.length ? cards
           : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];
       if (arr(model.holds).length) {

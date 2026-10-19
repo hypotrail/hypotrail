@@ -4,6 +4,8 @@ Status: **implemented behind the flag** (stages v0 to v3; WP-0, WP-E1 to E3, WP-
 
 **Amended by WP-A5 (v0.2a, 2026-10-19).** The panel speaks to the junior, not to the agent: the "verbatim" rule of engine texts becomes the **two-layer copy contract** of §15.1 (INV-16); every stage opens on "Your next move" (§6.1.0); the journey marks the step that waits for the junior (§6.1.2); decision values are shown in words with the recorded value in a hover and under "Details"; limits carry a severity and are listed once (§6.1.5); "Since your last session" is grouped (§6.1.3); a load error replaces the content (§3.3); Health appears only when something is wrong; the deliverables offer "Open file" and the two Marimo launches of ADR 0004 "local launch" (§6.1.4); the theming, high-contrast, and narrow-width rules of §13 are extended. Where this amendment and an earlier paragraph differ, the amendment wins. Mockups: `docs/design/companion-v0.2-mockups/` (overview, decisions, deliverables).
 
+**Amended by WP-A7 (v0.2a, 2026-10-19).** New views, read only; the writes stay W1–W7. The EDA tab becomes **Data & EDA** (its id stays `eda`): it opens on the data card (`hypotrail data`, a new read, §5, §6.3.0) and the quality check of the development rows, then the exploration of the training rows, where each chart is titled by the question it answers, shows its confidence intervals with n and the shuffled-outcome null band, and the single-feature signal raises the leakage detector's question (§6.3.1); "Run another chart" (W4) offers training-row charts only and says the question first. The Decisions tab shows the confirmation mode and what counts as an answer, the basis of each confirmation as a chip (restated, endorsed, delegated), the agent's concern kept on a confirmation, and later corrections (§6.2.5). The header carries the final-test chip on every tab (§4.1, FR-1); the Overview's "Where we are" shows the success criterion's status (§6.1.1, OV-9). Engine requests of WP-A5 delivered with it: `deliverables` and `mode` in `status --summary`, `recap_junior` in words, digest items with `audience`/`junior_text`, the unknown outcome named in words (CLI-CONTRACT §3, §3.3). Mockups: `eda.html`, `decisions.html`, `overview.html`, and the seal chip of `evidence.html`.
+
 Requirement identifiers are written like `OV-3`. Each one is testable, and the plan maps each one to a test. "MUST" and "MUST NOT" are binding. The visual target is the six static mockups (`companion-mock/project/*.dc.html`): their layout, content, wording, and colours express intent; their numbers are real Bank and Auto MPG walkthrough values; their result ids are illustrative. Where the mockups and this document differ, this document wins.
 
 ## 1. Purpose
@@ -90,7 +92,7 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 ### 4.1 Frame (every tab)
 
 ```text
-┌ header: logo · "Hypotrail · <case id>" · [regression] · badge "Experimental · feature flag on"
+┌ header: logo · "Hypotrail · <case id>" · [final-test chip, WP-A7] · [regression] · badge "Experimental · feature flag on"
 │         [Reviewer, read-only] · study switcher (v1) · "revision N" · "read from CLI · <age>" · [Refresh]
 ├ tabs:   Overview · EDA (v2) · Decisions [count] · Evidence (v2) · What if? (v2) · Learn & hand off (v3)
 ├ alert strip (only when present, every tab except Overview; WP-A5): sources changed · execution with unknown outcome · integrity error
@@ -99,6 +101,10 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 ├ main: the tab
 └ footer: "Reads the hypotrail CLI only · no state of its own · the chat, report and notebook stay complete without it."
 ```
+
+**Final-test chip (WP-A7).** From `summary.final_test` (CLI-CONTRACT §4.1), on every tab and every stage: "Final test sealed · N rows" (`ht-st-sealed`, N the engine's count) when sealed, "Final test opened · N rows" when opened (v0.2b), and "No final test" for a study created before the seal (status `absent`); its hover says what it means. An engine without `final_test` gives no chip.
+
+- FR-1. The chip reads "Final test sealed · 904 rows" on every tab of the captured Bank study, and "No final test" for a legacy summary (`test_webview_wp_a7.py`).
 
 **Tab order.** The order follows the mockups. The final names are Overview, EDA, Decisions, Evidence, What if?, and **Learn & hand off**. The mockups' "Learn" becomes "Learn & hand off" because the tab also holds the export and the session report.
 
@@ -133,6 +139,7 @@ A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`
 | `check` | `check --json --study S` | `hypotrail.check/1` | Overview Health section expanded, and the revision moved | findings |
 | `explain` | `explain --json --study S` | `hypotrail.explain/1` | first glossary hover or Learn tab, and the revision moved | Learn, hovers, cards |
 | `session_report` | `session-report --json --study S` | `hypotrail.session_report/1` | Learn tab "Session report" expanded | session report |
+| `data` | `data --json --study S` (WP-A7) | `hypotrail.data/1` (CLI-CONTRACT §11.1) | Data & EDA tab shown, and the version moved | the data card |
 
 **Currency (decision CR.1).** A cached read is valid for one *version* of the study: the summary's revision **and** its `currency`. `currency` is the engine's root field of `status --summary --digest` (a short hexadecimal digest that changes when the dataset is edited, after a render, or when a deliverable is edited or deleted) when the engine sends it. With an engine that does not, the controller computes it (`lib/models/summary.js` `currencyOf`): the first 16 hexadecimal characters of the SHA-256 of the artefacts' statuses, messages and revisions, the not-yet-defensible items, `sources_changed`, and each result slot's id, current flag, integrity, and stale reason. Every read (`view_data`, `effects`, `draft_result`, `preview_policy_result`) carries the currency it was read at, and the webview reloads a view whose data is not at the snapshot's version. `effects:<pid>` and the `evidence:<rid>` detail (its `report_anchor`) follow the same rule.
 
@@ -172,6 +179,10 @@ The first block of the Overview at every stage, v0 included (`data-ov="hero"`). 
 
 - OV-1. The Details hold `summary.recap_junior`, byte for byte; no line of the agent recap that differs from it appears in the Overview.
 - OV-2. Without a recap, there is no Details disclosure and no Goal line; Decided still lists the decisions.
+
+(WP-A7.) "Decided" also lists the success criterion and the data preparation. A **Success criterion** row follows, from `summary.criterion` (CLI-CONTRACT §11.4): the criterion in words ("Adopt only if precision beats the baseline by at least 5 points"), a status chip (met, uncertain, not met, not assessed yet) with one sentence of what it means, and, when the engine gives one, its gain with the paired interval, signed, in points (binary, `f1`) or as a share (regression, `pct1`), each figure cited to the evaluation `result_id`; a verdict that contradicts the criterion adds a warning line. The panel computes none of these figures.
+
+- OV-9. With the Bank fixture the row reads "met" and the cited figures +30.5, +21.4, +40.2; each status changes the chip; a regression criterion reads as a share and holds none of the INV-12 words.
 
 #### 6.1.2 Study map (A)
 
@@ -339,9 +350,57 @@ A note under the table reads "Recorded words, not an authenticated signature." (
 | Confirm success | "Confirmed <title> in your words (channel webview)." + "Recorded: "<words>"" + artefact messages (v0) |
 | Delegation attempted | the refusal, plus the explanation "Your reply hands the choice to the assistant. A delegation is recorded in the chat, not in this panel." (v0) |
 
+#### 6.2.5 Mode, bases, concerns, corrections (WP-A7)
+
+- **Mode.** At stage v1 and later the tab opens on "What counts as your answer": the study's mode (`summary.mode`, ADR 0005) as a chip and, for `guided`, what counts as an answer (a reply to the open proposal in the junior's own words that agrees with it; not a bare "ok", a question, or a condition), that the calling rule (the model choice in a regression study) and the conclusion also need a reason, and that a point the agent raises may be kept. The mode changes in the chat only (`mode set`, not a write of the panel): there is no control.
+- **Reason hint.** A card of `policy`, `model_choice`, or `conclusion` says before the textarea that the decision is a trade-off and needs a reason; it suggests no words. The `reason_required`, `conditional_reply`, and `question_reply` refusals keep INV-8 with the explanations of `lib/refusals.js`.
+- **Bases.** The history's "How" column is a chip of the basis (`restated`, `endorsed`, `delegated` with its scope; `your words` for an `explicit` record made before ADR 0005), its meaning in the hover, then the channel in words ("in the chat", "in this panel").
+- **Concerns and corrections.** The current confirmation's `agent_concern` is shown under the words: "Point raised by the agent before you confirmed, kept by you: “…”"; each correction note (`kind: correction`) of that decision follows: "Your later correction, in your words: “…”".
+- **Values in words.** The success criterion and the data preparation read in the words of `media/copy/junior.js`.
+
+- DC-7. The mode section names the guided mode and the reason rule, task-aware, and holds no control; the policy card shows the reason hint.
+- DC-8. The Bank fixture's history shows restated, endorsed and delegated chips with hovers, the kept concern, and the correction.
+- DC-9. On the captured Bank decisions the success criterion and the data preparation are in words, with no raw JSON value.
+
 ### 6.3 EDA (stage v2)
 
-Mockup: `EDA.dc.html`.
+Mockup: `EDA.dc.html`; WP-A7: `docs/design/companion-v0.2-mockups/eda.html`.
+
+#### 6.3.0 Data card and quality (WP-A7)
+
+The tab ("Data & EDA") opens on the data card, from the `data` read (§5; CLI-CONTRACT §11.1: development rows only, no exposure, no target rate):
+
+- three facts: what one row describes (the case's observation unit and its status), the development rows and columns, and the target with its description and labels ("how often it occurs is shown below, on the training rows, after the split");
+- the final test's junior line (`final_test.line`) with a sealed chip;
+- the five fixed development rows, the target column first; a column the availability decision leaves out (`not_available`, `uncertain_excluded`) is marked ✗ with a legend (not colour only);
+- the dictionary, grouped in the case's order: column, type (with unit, and the number of values of a non-numeric column), meaning (the description and each special value with its meaning and rows), "Known at the prediction moment?" (the junior's decision in words, else the case's statement and its status), missing cells, examples;
+- "Show French labels" when the case has `labels.fr` (`description_fr`): the descriptions switch to French, marked `lang="fr"`; the button says "Show English labels" to switch back; it is view memory only.
+
+The `eda.quality` result (development rows, the target not read) follows the data card, titled by its question: missing cells and co-missing patterns, repeated rows, rare categories, and the ranges of numeric columns against a declared range, each figure cited.
+
+- DA-1. The tab asks for `data` and shows the data card first, then the quality card, then the exploration banner and charts.
+- DA-2. The five rows have the target first and mark each excluded column with ✗ and a legend.
+- DA-3. The dictionary's groups and variables follow the engine's order, with each variable's missing count and special values.
+- DA-4. "Show French labels" swaps every description that has a French label, marked `lang="fr"`, and back.
+- DA-5. Without French labels there is no toggle.
+- DA-6. The data card holds no cited figure and no percentage.
+
+#### 6.3.1 Exploration amendments (WP-A7)
+
+- Each card's title is the engine's question (`values.question`); the chart's name and the result chip follow.
+- The banner adds the sealed final-test rows ("never read here") and the ledger of looks at the outcome (`summary.eda_looks.target_looks`): each chart that reads the outcome counts once.
+- Confidence intervals: the target rate and target mean say theirs; a by-column chart and the special values draw each group's interval as a line across its bar, and its values say "rate [low–high] of n".
+- Null band: each group's shuffled-outcome band is drawn behind its bar (grey); one sentence says whether the observed spread is above every one of the 19 shuffles, with the engine's figures.
+- Single-feature signal: one bar per feature (the flagged ones in the accent, the others grey, an excluded feature marked "(left out)", the level as a rule); for each flagged feature a "Leakage detector" box states its score, asks whether its value is really known at the prediction moment, and says the junior's availability decision for it in words. It never keeps or drops a feature.
+- "Run another chart" (W4) offers the per-column training-row charts only and states the question of the chosen chart before it runs; a chart that reads the outcome says it is one more look.
+
+- ED-7. Every card is titled by its question.
+- ED-8. A by-column chart draws intervals and the band, and states the band in words with cited figures; the target card states its interval.
+- ED-9. The leakage detector asks the question with the cited score and the availability decision (Bank: `duration`, already excluded).
+- ED-10. The quality card says it reads development rows without the target, with cited counts.
+- ED-11. The banner's look count and sealed rows equal the summary's.
+- ED-12. "Run another chart" states the question first, says "one more look" for an outcome chart, and sends exactly W4.
+- ED-13. The Auto MPG Data & EDA tab holds none of the INV-12 words, French labels shown.
 
 **Sources.** `evidence` (results whose `activity` is an `eda.*` activity and whose `promoted` is true; `eda_catalog`; `exposure.ledger`).
 
@@ -695,7 +754,7 @@ A unit test enumerates the argv builder module and asserts that exactly these se
 |---|---|---|
 | `ready` | — | v0 |
 | `refresh` | — | v0 |
-| `load` | `view` ∈ `summary`, `decisions`, `eda`, `evidence`, `whatif`, `explain`, `check`, `session_report`; `resultId?` (64 hex, `evidence` only); `since?` (int ≥ 0, `summary` only). `eda`, `evidence`, and `whatif` share the cached `evidence` read and differ by their model function | v1 |
+| `load` | `view` ∈ `summary`, `decisions`, `eda`, `evidence`, `whatif`, `explain`, `check`, `session_report`, `data` (WP-A7); `resultId?` (64 hex, `evidence` only); `since?` (int ≥ 0, `summary` only). `eda`, `evidence`, and `whatif` share the cached `evidence` read and differ by their model function | v1 |
 | `confirm` | `proposalId` (`^p_\d+$`), `words` (string ≤ 4000), `revision` (int ≥ 1) | v0 |
 | `withdraw` | `proposalId`, `revision` | v0 |
 | `preview_effects` | `proposalId`, `revision` | v1 |

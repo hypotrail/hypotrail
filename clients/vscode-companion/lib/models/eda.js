@@ -15,31 +15,45 @@ const { ModelError, str, strOrNull, list, obj, int, num, bool, expectSchema } = 
 
 const EVIDENCE_SCHEMA = 'hypotrail.evidence/1';
 const EDA_KEYS = ['revision', 'task', 'cards', 'catalog', 'rowsSeen'];
-const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 'data'];
+// WP-A7: `question`, the question the result answers (the engine's `values.question`), which
+// titles its card.
+const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 'question', 'data'];
 
 // Gallery order (§6.3): the target, the special values, the by-column results, then the
 // distributions; by column name inside a group.
+// WP-A7: the single-feature signal (the leakage detector) after the special values, and
+// the structural quality check of the development rows last (the view shows it with the data
+// card, apart from the training-row gallery).
 const ORDER = {
-  'eda.target_rate': 0, 'eda.target_summary': 0, 'eda.special_values': 1,
-  'eda.rate_by': 2, 'eda.mean_by': 2, 'eda.distribution': 3,
+  'eda.target_rate': 0, 'eda.target_summary': 0, 'eda.special_values': 1, 'eda.single_feature_signal': 2,
+  'eda.rate_by': 3, 'eda.mean_by': 3, 'eda.distribution': 4, 'eda.quality': 5,
 };
 const KINDS = {
   'eda.target_rate': 'target_rate', 'eda.target_summary': 'target_summary', 'eda.special_values': 'special_values',
   'eda.rate_by': 'rate_by', 'eda.mean_by': 'mean_by', 'eda.distribution': 'distribution',
+  'eda.single_feature_signal': 'signal', 'eda.quality': 'quality',
 };
 
 // Precision of each number, from framework/mlkit/study/content/activities.yaml (highlights
 // and table columns). `eda.distribution` has no display specification yet (WP-E3 adds it):
 // counts are `int`, shares `pct1`, and quantiles `auto`, the format of `cite` for a value
 // without a declared precision. test/eda.test.js reads the YAML and checks this table.
+// WP-A7: an interval or a null band has the precision of the value it bounds; the
+// single-feature score has two decimals, as the engine's own question text writes it.
 const FMT = Object.freeze({
-  'eda.target_rate': { rate: 'pct1', n_positive: 'int', n_negative: 'int', n_rows: 'int' },
+  'eda.target_rate': { rate: 'pct1', n_positive: 'int', n_negative: 'int', n_rows: 'int', low: 'pct1', high: 'pct1' },
   'eda.target_summary': { n_rows: 'int', n_missing: 'int', mean: 'f2', sd: 'f2', min: 'f2', q25: 'f2', median: 'f2',
-    q75: 'f2', max: 'f2' },
+    q75: 'f2', max: 'f2', low: 'f2', high: 'f2' },
   'eda.special_values': { n_rows: 'int', share: 'pct1', n_positive: 'int', rate: 'pct1', mean_target: 'f2', n_both: 'int',
-    n_either: 'int' },
-  'eda.rate_by': { n_rows: 'int', overall_rate: 'pct1', min_group_rows: 'int', n_positive: 'int', rate: 'pct1' },
-  'eda.mean_by': { n_rows: 'int', overall_mean: 'f2', min_group_rows: 'int', mean: 'f2', sd: 'f2' },
+    n_either: 'int', low: 'pct1', high: 'pct1' },
+  'eda.rate_by': { n_rows: 'int', overall_rate: 'pct1', min_group_rows: 'int', n_positive: 'int', rate: 'pct1',
+    low: 'pct1', high: 'pct1', observed: 'pct1', null_min: 'pct1', null_max: 'pct1', shuffles: 'int' },
+  'eda.mean_by': { n_rows: 'int', overall_mean: 'f2', min_group_rows: 'int', mean: 'f2', sd: 'f2',
+    low: 'f2', high: 'f2', observed: 'f2', null_min: 'f2', null_max: 'f2', shuffles: 'int' },
+  'eda.single_feature_signal': { n_rows: 'int', folds: 'int', score: 'f2', median: 'f2', level: 'f2', gap: 'f2' },
+  'eda.quality': { n_rows: 'int', n_columns: 'int', n_missing: 'int', share: 'pct1', n_rows_with_missing: 'int',
+    n_groups: 'int', n_distinct: 'int', rare_rows: 'int', min: 'auto', max: 'auto', n_special: 'int', n_below: 'int',
+    n_above: 'int' },
   'eda.distribution': { n_rows: 'int', n_missing: 'int', share: 'pct1', min_group_rows: 'int', n_values: 'int', n: 'int',
     min: 'auto', q25: 'auto', median: 'auto', q75: 'auto', max: 'auto', low: 'auto', high: 'auto' },
 });
@@ -66,12 +80,19 @@ function label(value) {
   return value === null || value === undefined ? '' : JSON.stringify(value);
 }
 
+/** An engine interval `{low, high}` at `path` as two cited values, or null (WP-A7). */
+function interval(v, path, f) {
+  const low = cite(v, `${path}.low`, f.low);
+  const high = cite(v, `${path}.high`, f.high);
+  return low && high ? { low, high } : null;
+}
+
 function targetRate(v, f) {
   const rate = cite(v, 'rate', f.rate);
   return {
     target: str(v.target), positiveLabel: label(v.positive_label),
     rate, nPositive: cite(v, 'n_positive', f.n_positive), nNegative: cite(v, 'n_negative', f.n_negative),
-    nRows: cite(v, 'n_rows', f.n_rows),
+    nRows: cite(v, 'n_rows', f.n_rows), interval: interval(v, 'interval', f),
     imbalanced: rate !== null && (rate.value < IMBALANCE.low || rate.value > IMBALANCE.high),
   };
 }
@@ -80,6 +101,7 @@ function targetSummary(v, f) {
   const out = { target: str(v.target), unit: str(v.unit), note: str(v.note) };
   for (const [key, name] of [['n_rows', 'nRows'], ['n_missing', 'nMissing'], ['mean', 'mean'], ['sd', 'sd'], ['min', 'min'],
     ['q25', 'q25'], ['median', 'median'], ['q75', 'q75'], ['max', 'max']]) out[name] = cite(v, key, f[key]);
+  out.meanInterval = interval(v, 'mean_interval', f);
   return out;
 }
 
@@ -91,6 +113,7 @@ function specialValues(v, f) {
       nRows: cite(v, `special_values.${i}.n_rows`, f.n_rows), share: cite(v, `special_values.${i}.share`, f.share),
       nPositive: cite(v, `special_values.${i}.n_positive`, f.n_positive), rate: cite(v, `special_values.${i}.rate`, f.rate),
       meanTarget: cite(v, `special_values.${i}.mean_target`, f.mean_target),
+      interval: interval(v, `special_values.${i}.interval`, f),
     })),
     together: list(v.co_occurrence).map((c, i) => ({ c, i })).filter(({ c }) => c && c.same_rows === true).map(({ c, i }) => ({
       a: { column: str(obj(c.a).column), value: label(obj(c.a).value) },
@@ -100,9 +123,22 @@ function specialValues(v, f) {
   };
 }
 
+/** The permutation null band of a by-column chart (CLI-CONTRACT §11.2), or null. */
+function nullBand(v, f) {
+  const band = obj(v.null_band);
+  const chart = obj(band.chart);
+  if (!Object.keys(chart).length) return null;
+  return {
+    statistic: str(chart.statistic), observed: cite(v, 'null_band.chart.observed', f.observed),
+    nullMin: cite(v, 'null_band.chart.null_min', f.null_min), nullMax: cite(v, 'null_band.chart.null_max', f.null_max),
+    outside: chart.outside === true, shuffles: cite(v, 'null_band.shuffles', f.shuffles), note: str(band.note),
+  };
+}
+
 function byColumn(v, f, measure) {
   const other = v.other && typeof v.other === 'object' ? v.other : null;
   return {
+    nullBand: nullBand(v, f),
     column: str(v.column), unit: str(v.unit), note: str(v.note), warnings: list(v.warnings).map(str),
     nRows: cite(v, 'n_rows', f.n_rows), minGroupRows: cite(v, 'min_group_rows', f.min_group_rows),
     overall: cite(v, measure === 'rate' ? 'overall_rate' : 'overall_mean', measure === 'rate' ? f.overall_rate : f.overall_mean),
@@ -111,6 +147,8 @@ function byColumn(v, f, measure) {
       value: cite(v, `groups.${i}.${measure}`, f[measure]), nRows: cite(v, `groups.${i}.n_rows`, f.n_rows),
       nPositive: measure === 'rate' ? cite(v, `groups.${i}.n_positive`, f.n_positive) : null,
       sd: measure === 'mean' ? cite(v, `groups.${i}.sd`, f.sd) : null,
+      interval: interval(v, `groups.${i}.interval`, f),
+      band: interval(v, `groups.${i}.null_band`, f),
     })),
     other: other ? {
       value: cite(v, `other.${measure}`, f[measure]), nRows: cite(v, 'other.n_rows', f.n_rows),
@@ -149,6 +187,45 @@ function distribution(v, f) {
   };
 }
 
+/** The single-feature signal (the leakage detector, CLI-CONTRACT §11.2). */
+function signal(v, f) {
+  return {
+    metric: str(v.metric), nRows: cite(v, 'n_rows', f.n_rows), folds: cite(v, 'folds', f.folds), note: str(v.note),
+    median: cite(v, 'median', f.median), level: cite(v, 'level', f.level),
+    signals: list(v.signals).map((s, i) => ({
+      feature: str(s && s.feature), availability: strOrNull(s && s.availability), flag: bool(s && s.flag),
+      rank: int(s && s.rank), score: cite(v, `signals.${i}.score`, f.score),
+    })),
+    questions: list(v.questions).map((q, i) => ({
+      feature: str(q && q.feature), availability: strOrNull(q && q.availability),
+      score: cite(v, `questions.${i}.score`, f.score), text: str(q && q.text),
+    })),
+  };
+}
+
+/** The structural quality of the development rows (the target is not read). */
+function quality(v, f) {
+  const dup = obj(v.duplicates);
+  return {
+    partition: str(v.partition), nRows: cite(v, 'n_rows', f.n_rows), nColumns: cite(v, 'n_columns', f.n_columns),
+    targetRead: v.target_read === true, note: str(v.note),
+    nRowsWithMissing: cite(v, 'n_rows_with_missing', f.n_rows_with_missing),
+    missing: list(v.missing).map((m, i) => ({ column: str(m && m.column), nMissing: cite(v, `missing.${i}.n_missing`, f.n_missing),
+      share: cite(v, `missing.${i}.share`, f.share) })).filter(m => m.nMissing && m.nMissing.value > 0),
+    coMissing: list(v.co_missing).map((m, i) => ({ columns: list(m && m.columns).map(str),
+      nRows: cite(v, `co_missing.${i}.n_rows`, f.n_rows), share: cite(v, `co_missing.${i}.share`, f.share) })),
+    duplicates: { nRows: cite(v, 'duplicates.n_rows', f.n_rows), nGroups: cite(v, 'duplicates.n_groups', f.n_groups),
+      definition: str(dup.definition) },
+    rare: list(v.cardinality).map((c, i) => ({ column: str(c && c.column), nDistinct: cite(v, `cardinality.${i}.n_distinct`, f.n_distinct),
+      rareRows: cite(v, `cardinality.${i}.rare_rows`, f.rare_rows),
+      rare: list(c && c.rare).map((r, j) => ({ value: label(r && r.value), nRows: cite(v, `cardinality.${i}.rare.${j}.n_rows`, f.n_rows) })) }))
+      .filter(c => c.rare.length),
+    ranges: list(v.ranges).map((r, i) => ({ column: str(r && r.column), min: cite(v, `ranges.${i}.min`, f.min),
+      max: cite(v, `ranges.${i}.max`, f.max), declared: Boolean(r && r.declared),
+      nBelow: cite(v, `ranges.${i}.n_below`, f.n_below), nAbove: cite(v, `ranges.${i}.n_above`, f.n_above) })),
+  };
+}
+
 function cardData(activity, values) {
   const v = obj(values);
   const f = FMT[activity];
@@ -158,6 +235,8 @@ function cardData(activity, values) {
     case 'eda.special_values': return specialValues(v, f);
     case 'eda.rate_by': return byColumn(v, f, 'rate');
     case 'eda.mean_by': return byColumn(v, f, 'mean');
+    case 'eda.single_feature_signal': return signal(v, f);
+    case 'eda.quality': return quality(v, f);
     default: return distribution(v, f);
   }
 }
@@ -172,9 +251,10 @@ function columnOf(r) {
 function card(r) {
   const activity = str(r.activity);
   const current = r.current === true && r.integrity === 'ok' && r.values !== null && typeof r.values === 'object';
+  const values = obj(r.values);
   return {
     slot: str(r.slot), activity, column: columnOf(r), resultId: str(r.result_id), current,
-    kind: KINDS[activity], data: current ? cardData(activity, r.values) : null,
+    kind: KINDS[activity], question: current ? str(values.question) : '', data: current ? cardData(activity, r.values) : null,
   };
 }
 

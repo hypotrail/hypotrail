@@ -22,8 +22,18 @@
     minutesAgo: m => `${m} min ago`,
     refresh: 'Refresh',
     tabsLabel: 'Study panel sections',
-    tabs: { overview: 'Overview', eda: 'EDA', decisions: 'Decisions', evidence: 'Evidence', whatif: 'What if?',
+    // WP-A7: the EDA tab opens on the data card, so it reads "Data & EDA" (its id stays `eda`).
+    tabs: { overview: 'Overview', eda: 'Data & EDA', decisions: 'Decisions', evidence: 'Evidence', whatif: 'What if?',
       learn: 'Learn & hand off' },
+    // WP-A7: the header's final-test chip (ADR 0006), on every tab.
+    finalTest: {
+      sealed: rows => `Final test sealed · ${rows} rows`,
+      sealedTitle: 'Set aside when the study was created, before any look at the data. No chart, fit or evaluation reads these rows; they give the one independent figure at the end.',
+      opened: rows => `Final test opened · ${rows} rows`,
+      openedTitle: 'The final test was opened once, at the end. A figure computed after that is labelled as such.',
+      absent: 'No final test',
+      absentTitle: 'This study was created before a final test was set aside at the start: no rows are sealed, so every figure comes from rows the study has already used.',
+    },
     waiting: n => `${n} waiting for you`,
     reading: 'Reading the study...',
     updating: 'Updating...',

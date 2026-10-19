@@ -12,6 +12,11 @@
 // WP-I: the label and value columns are as wide as their longest text (an estimate of
 // the 11 px font, bounded), and the plot keeps its width, so a long label is not clipped;
 // `labelWidth` and `valueWidth` (viewBox units) override the estimate.
+//
+// WP-A7 (additive): an item may carry `interval: {low, high}` (a line across the bar's end,
+// with end ticks: the engine's interval of the value) and `band: {low, high}` (a grey band
+// behind the bar: the range a null model draws, such as the shuffled-outcome band). Both
+// are geometry of engine values; the value text sits after the furthest of them.
 (function (HT) {
   'use strict';
   const PLOT = 210;
@@ -40,18 +45,30 @@
       hatch(id),
       ...items.map((item, i) => {
         const y = i * ROW + 4;
-        const text = HT.svg('text', { x: x(item.value) + 4, y: y + 13, class: 'ht-value', text: item.valueText });
+        const ok = v => typeof v === 'number' && Number.isFinite(v);
+        const iv = item.interval && ok(item.interval.low) && ok(item.interval.high) ? item.interval : null;
+        const band = item.band && ok(item.band.low) && ok(item.band.high) ? item.band : null;
+        const end = Math.max(x(item.value), iv ? x(iv.high) : 0, band ? x(band.high) : 0);
+        const text = HT.svg('text', { x: end + 4, y: y + 13, class: 'ht-value', text: item.valueText });
         if (item.cited) {
           text.setAttribute('data-result-id', String(item.cited.resultId || ''));
           text.setAttribute('data-path', String(item.cited.path || ''));
           text.setAttribute('data-value', String(item.cited.value));
         }
+        const mid = y + (ROW - 8) / 2;
         return HT.svg('g', { 'data-bar': item.label, 'data-small': item.small ? 'true' : null }, [
           HT.svg('text', { x: LABEL - 6, y: y + 13, class: 'ht-label', 'text-anchor': 'end',
             text: item.small ? `${item.label} (${HT.copy.core.small})` : item.label }),
+          band ? HT.svg('rect', { x: x(band.low), y: y - 2, height: ROW - 4, width: Math.max(1, x(band.high) - x(band.low)),
+            fill: 'baseline', class: 'ht-band', 'data-band': true }) : null,
           HT.svg('rect', { x: LABEL, y, height: ROW - 8, width: Math.max(1, x(item.value) - LABEL),
             fill: item.small ? `url(#${id})` : item.tone === 'baseline' ? 'baseline' : 'accent',
             'data-hatched': item.small ? 'true' : null, 'data-tone': item.tone === 'baseline' ? 'baseline' : 'model' }),
+          iv ? HT.svg('g', { 'data-interval': true }, [
+            HT.svg('line', { x1: x(iv.low), x2: x(iv.high), y1: mid, y2: mid, stroke: 'fg', 'stroke-width': 1.5 }),
+            HT.svg('line', { x1: x(iv.low), x2: x(iv.low), y1: mid - 4, y2: mid + 4, stroke: 'fg', 'stroke-width': 1.5 }),
+            HT.svg('line', { x1: x(iv.high), x2: x(iv.high), y1: mid - 4, y2: mid + 4, stroke: 'fg', 'stroke-width': 1.5 }),
+          ]) : null,
           text,
         ]);
       }),

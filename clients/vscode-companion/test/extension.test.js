@@ -222,7 +222,9 @@ test('WP-A5 local launch: "Open in Marimo" starts marimo run or edit in a named 
   assert.equal(t.options.cwd, dir);
   assert.equal(t.options.name, 'Hypotrail · marimo run study_generated.py');
   assert.ok(!('shellArgs' in t.options) || Array.isArray(t.options.shellArgs), 'an argument list, not a shell string');
-  assert.ok(calls.some(a => a.includes('status') && !a.includes('--summary')), 'the engine launch is read from status --json');
+  // WP-A7: the summary carries `deliverables` (CLI-CONTRACT §3), so the launch reads no
+  // `status --json` (its argv names the fixture's study, not this one: the agent.json form is used).
+  assert.ok(!calls.some(a => a.includes('status') && !a.includes('--summary')), 'no status --json read');
   // The same file again: the open terminal is shown, no second one.
   await opened.controller.handle({ v: 2, type: 'open_marimo', artifact: 'notebook' });
   assert.equal(fake.calls.terminals.length, 1);

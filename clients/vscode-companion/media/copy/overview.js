@@ -42,6 +42,24 @@
     toConfirmAgain: 'to confirm again',
     delegated: 'left to the assistant',
     recapDetails: 'Details: the engine\'s recap',
+    // WP-A7: the success criterion against the evaluation (the term first, then its use).
+    criterion: {
+      title: 'Success criterion',
+      status: { met: 'met', uncertain: 'uncertain', not_met: 'not met', not_assessed: 'not assessed yet' },
+      why: {
+        met: 'The gain reaches your minimum, and its interval stays above zero.',
+        uncertain: 'The gain reaches your minimum, but its interval includes zero: it may be chance.',
+        not_met: 'The gain stays below the minimum you fixed before seeing the results.',
+        not_assessed: 'There is no current evaluation to compare with it yet.',
+      },
+      gain: rule => `Gain over the baseline in the share of successes among the cases picked${rule ? ` when you ${rule}` : ''}: `,
+      reduction: 'Reduction of the mean baseline\'s validation error: ',
+      points: ' points',
+      interval: ' (interval ',
+      to: ' to ',
+      close: ')',
+      contradicts: 'Your conclusion adopts although the criterion is not met. The checks flag it; confirm it again only with a reason.',
+    },
     noRecap: 'No recap yet.',
     openInDecisions: 'Open in Decisions',
 

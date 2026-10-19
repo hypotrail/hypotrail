@@ -27,7 +27,10 @@
   const RENDER_TARGET = 'render';
   const MAP_STATUSES = ['done', 'awaiting_confirmation', 'needs_reconfirmation', 'ready', 'blocked', 'reopened'];
   const MAX_DIGEST = 4;
-  const DECISIONS = ['prediction_time', 'feature_availability', 'split', 'policy', 'model_choice', 'conclusion'];
+  // WP-A7: the success criterion and the data preparation are decisions too (WP-A4).
+  const DECISIONS = ['prediction_time', 'feature_availability', 'split', 'success_criterion', 'preprocessing', 'policy',
+    'model_choice', 'conclusion'];
+  const CRITERION_TONE = { met: 'ok', uncertain: 'stale', not_met: 'error', not_assessed: 'neutral' };
 
   // View-local, not persisted: the chosen digest boundary, the checks expansion, the reads
   // asked per version, and the executions acknowledged from this panel.
@@ -256,6 +259,43 @@
     return line ? line.slice(label.length + 2) : null;
   };
 
+  /**
+   * WP-A7: the success criterion against the current evaluation (CLI-CONTRACT §11.4): the
+   * criterion in words, its status (met, uncertain, not met, not assessed yet), and the
+   * engine's gain with its paired interval, cited to the evaluation it was read from. The
+   * panel computes nothing: the gain, the interval and the status are the engine's.
+   */
+  function criterionRow(model, ctx) {
+    const k = model.criterion;
+    if (!k || !k.value) return null;
+    const c = copy().criterion;
+    const task = taskOf(model, ctx);
+    const share = k.unit === 'share';
+    const fmt = x => ctx.format.number(x, share ? 'pct1' : 'f1');
+    const signed = x => `${x > 0 ? '+' : ''}${fmt(x)}`;
+    const cite = (x, path) => (k.resultId
+      ? ctx.components.cited(signed(x), { resultId: k.resultId, path, value: x }) : signed(x));
+    const has = x => typeof x === 'number' && Number.isFinite(x);
+    const rule = k.rule ? J().value('policy', k.rule, task) : null;
+    const figure = has(k.gain) ? el('p', { className: 'ov-criterion-figure', 'data-criterion-gain': true }, [
+      share ? c.reduction : c.gain(rule ? rule.charAt(0).toLowerCase() + rule.slice(1) : null),
+      cite(k.gain, 'criterion.gain'), share ? '' : c.points,
+      has(k.low) && has(k.high) ? [c.interval, cite(k.low, 'criterion.low'), c.to, cite(k.high, 'criterion.high'), c.close] : null,
+      '.',
+    ]) : null;
+    return el('div', { className: 'ov-recap-row', 'data-recap-line': 'Criterion', 'data-criterion': k.status }, [
+      el('dt', { text: c.title }),
+      el('dd', {}, [
+        valueNode('success_criterion', k.value, task),
+        ' ', el('span', { className: `ht-status ht-st-${CRITERION_TONE[k.status] || 'neutral'}`, 'data-criterion-status': k.status,
+          text: c.status[k.status] || k.status }),
+        el('p', { className: 'muted ov-criterion-why', text: c.why[k.status] || '' }),
+        figure,
+        k.contradictsVerdict ? el('p', { className: 'hold', role: 'status', 'data-criterion-contradicts': true, text: c.contradicts }) : null,
+      ]),
+    ]);
+  }
+
   function whereWeAre(model, ctx) {
     const c = copy();
     const task = taskOf(model, ctx);
@@ -277,6 +317,8 @@
         ]);
       })) : el('span', { className: 'muted', text: c.nothingDecided })]),
     ]));
+    const criterion = criterionRow(model, ctx);
+    if (criterion) rows.push(criterion);
     const body = el('dl', { className: 'ov-recap', 'data-recap-list': true }, rows);
     // The engine's recap under Details: its junior variant; an older engine's recap (no
     // audience) as it is; never a recap written for the agent.
@@ -296,7 +338,10 @@
       let group = J().GROUP_OF_KIND[item.kind] || 'other';
       if (item.kind === 'proposed' && !open.has(item.proposalId)) group = 'resolved';
       if (item.kind === 'result_replaced' || item.kind === 'result_added') group = 'evaluated';
-      const text = J().digestText(item, task, item.noteId ? notes[item.noteId] : null) || str(item.text);
+      // Two-layer copy: the panel's words, else the engine's junior variant (WP-A7), else
+      // the engine text when it is written for the junior; never an `agent` text.
+      const text = J().digestText(item, task, item.noteId ? notes[item.noteId] : null) || str(item.juniorText)
+        || (item.audience === 'agent' ? J().digestFallback : str(item.text));
       return { item, group, text };
     });
     // Newest first inside each group; groups in a fixed order (needs you first).

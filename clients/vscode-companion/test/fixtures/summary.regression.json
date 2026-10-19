@@ -300,7 +300,22 @@
    "development_rows": 318,
    "schema_check": "pass"
   },
-  "criterion": null,
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "mae_reduction",
+    "min_share": 0.1
+   },
+   "status": "not_assessed",
+   "gain": null,
+   "low": null,
+   "high": null,
+   "minimum": null,
+   "unit": "share",
+   "rule": null,
+   "result_id": null,
+   "contradicts_verdict": false
+  },
   "eda_looks": {
    "target_looks": 3,
    "results": [
