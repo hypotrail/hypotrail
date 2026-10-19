@@ -1,6 +1,6 @@
 # Junior Copilot HTML and Marimo workflow
 
-Status: **consolidated target specification, not yet implemented**. This preserves the product decisions for an agent without conversation history. Explicit subsequent user specifications take precedence. Storage conventions below are implementation proposals to validate.
+Status: **consolidated target specification, partly implemented**: v0.2 implements a slice of it with Claude Code (not Copilot) on Online Shoppers, Bank Marketing, Bank Marketing full, Auto MPG and a synthetic case; see [the handoff](../handoff/IMPLEMENTATION.md) for what exists and [the v0.2 checklist](../acceptance/V0.2-CHECKLIST.md) for its evidence. This preserves the product decisions for an agent without conversation history. Explicit subsequent user specifications take precedence. Storage conventions below are implementation proposals to validate.
 
 ## Intended outcome
 

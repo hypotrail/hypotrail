@@ -220,6 +220,8 @@ structure:
 | Two records have the same content (`data.row_index`, at `init`), and the case declares no `duplicates: {policy: group}` | `duplicate records (v0.2)` |
 | A target cell is missing (`data.check_values`, at `init`) | `missing target values (v0.2)` |
 
+The "(v0.2)" in these identifiers is historical: it named the release planned for each capability when v0.1 was frozen, and the strings are kept for compatibility. At the v0.2 closure, identical records are supported through `duplicates: {policy: group}` (v0.2b); a date or decimal time column, a missing target value, and a grouped split by a declared group column are still not supported.
+
 Since M3, `binary` and `regression` tasks are supported, and a declared time column of type `integer` is supported: the study splits it by an ordinal cutoff (`{"method": "ordinal_cutoff", "column", "cutoff"}`, `CLI-CONTRACT.md` §5), reading its values as integers, never as dates.
 
 There is no silent fallback: a declared time column is never handled by a random split (an `ordinal_cutoff` split is then the only method), a date time column is refused rather than converted, and a regression target is never reframed as a classification. A time or group column is "declared" whatever its status, because a `scenario_assumption` of dependence is enough to invalidate a random split.
