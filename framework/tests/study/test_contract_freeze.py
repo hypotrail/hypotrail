@@ -48,7 +48,9 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         # view's ``deliverables``.
                         'mode', 'deliverables',
                         # v0.2b (WP-B1): the trial count.
-                        'trials')
+                        'trials',
+                        # v0.2b (WP-B6a): the scenario defaults, values only.
+                        'scenario_defaults')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
