@@ -239,17 +239,18 @@ structure:
     source: 'Structural inspection of data/auto-mpg.data: no exact duplicate rows'
 task: regression
 prior_exposure:
-- value: Tutorial outputs for protocol "chronological-70-78-vs-79-82" (Train on 1970–1978, compare on
-    1979–1982. Chronological split by model year. The horsepower imputation median is calculated from
-    training data only.) were published with this dataset. The rows used there are not unseen, and that
-    validation is not independent evidence.
+- value: 'Outputs of an earlier analysis (protocol "chronological-70-78-vs-79-82": Train on 1970–1978,
+    compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated
+    from training data only.) were published with this dataset. The rows used there are not unseen, and
+    that validation is not independent evidence.'
   status: observed
-  source: Tutorial results published with the dataset
-- value: 'Tutorial outputs for protocol "random-70-30-counterexample" (Counterexample: random 70/30 split
-    (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published
-    with this dataset. The rows used there are not unseen, and that validation is not independent evidence.'
+  source: Results of an earlier analysis published with the dataset
+- value: 'Outputs of an earlier analysis (protocol "random-70-30-counterexample": Counterexample: random
+    70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.)
+    were published with this dataset. The rows used there are not unseen, and that validation is not independent
+    evidence.'
   status: observed
-  source: Tutorial results published with the dataset
+  source: Results of an earlier analysis published with the dataset
 migration:
   from: project.json
   from_schema: hypotrail.project/1

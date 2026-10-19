@@ -60,7 +60,10 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           'agent_concern',
                           # v0.2b (WP-B2): the mode in force when the words were accepted
                           # (``null`` for a confirmation recorded before v0.2b).
-                          'mode')
+                          'mode',
+                          # WP-A9 (H3): the words_contradict_value warnings kept with the
+                          # agent's concern (``[]`` when none).
+                          'warnings')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: the restatement per language (``null`` when none was
@@ -117,11 +120,15 @@ SUMMARY_TOP = 5
 
 # v0.2a (WP-A1): the basis of each feature's availability status. A feature named in the
 # junior's words or in the restatement they answered was discussed; any other feature kept
-# the status the proposal carried, from the case's statement, without being discussed, and
-# is never shown as the junior's own decision. Derived at view time from the stored
-# confirmation, so a study written before v0.2a reads the same way.
+# the status the proposal carried without being discussed, and is never shown as the
+# junior's own decision. WP-A9 (H3): an undiscussed status is ``default_from_case`` only
+# when the case states that very status; when the case states none (``unknown``) or another
+# one, the status was the assistant's proposal (``proposed_not_discussed``). Derived at
+# view time from the stored confirmation and the case, so a study written before v0.2a
+# reads the same way.
 DISCUSSED, DEFAULT_FROM_CASE = 'discussed', 'default_from_case'
-FEATURE_BASES = (DISCUSSED, DEFAULT_FROM_CASE)
+PROPOSED_NOT_DISCUSSED = 'proposed_not_discussed'
+FEATURE_BASES = (DISCUSSED, DEFAULT_FROM_CASE, PROPOSED_NOT_DISCUSSED)
 
 
 def mentions(name: str, text: str) -> bool:
@@ -134,17 +141,41 @@ def mentions(name: str, text: str) -> bool:
     return re.search(pattern, str(text), re.IGNORECASE) is not None
 
 
-def feature_basis(value, confirmation) -> dict | None:
-    """``{feature: discussed | default_from_case}`` of a confirmed availability value, or
-    None (no value or no confirmation)."""
+def feature_basis(value, confirmation, case_statuses: dict | None = None) -> dict | None:
+    """``{feature: discussed | default_from_case | proposed_not_discussed}`` of a confirmed
+    availability value, or None (no value or no confirmation). ``case_statuses`` maps a
+    feature to the availability the case states (``unknown`` when it states none); without
+    it, an undiscussed feature reads ``default_from_case`` (as before WP-A9)."""
     if not isinstance(value, dict) or not isinstance(confirmation, dict):
         return None
     words = ' '.join(str(confirmation.get(k) or '') for k in ('user_words', 'restatement'))
-    return {f: DISCUSSED if mentions(f, words) else DEFAULT_FROM_CASE for f in sorted(value)}
+    out = {}
+    for f in sorted(value):
+        if mentions(f, words):
+            out[f] = DISCUSSED
+        elif case_statuses is None or case_statuses.get(f) == value[f]:
+            out[f] = DEFAULT_FROM_CASE
+        else:
+            out[f] = PROPOSED_NOT_DISCUSSED
+    return out
+
+
+def case_availability(state: dict) -> dict | None:
+    """``{feature: the availability value the case states}``, or None when the case file
+    cannot be read."""
+    from . import case as c
+    try:
+        doc = c.case_of(state).document
+    except (c.CaseError, OSError):
+        return None
+    return {v['name']: (v.get('availability') or {}).get('value') or 'unknown'
+            for v in doc['variables'] if v.get('role') == 'feature'}
 
 
 def _decisions(state: dict) -> dict:
     out = {}
+    fa = state['decisions'].get('feature_availability') or {}
+    statuses = case_availability(state) if isinstance(fa.get('confirmation'), dict) else None
     for d in st.decision_ids(state):
         dec = state['decisions'][d]
         conf = dec['confirmation']
@@ -152,11 +183,12 @@ def _decisions(state: dict) -> dict:
                   'proposal_id': dec['proposal_id'], 'depends_on': list(dec['depends_on']),
                   'revision': dec['revision'], 'reason': dec['reason'],
                   'confirmation': ({**{k: conf.get(k) for k in CONFIRMATION_VIEW_KEYS},
-                                    'basis': st.confirmation_basis(conf)}
+                                    'basis': st.confirmation_basis(conf),
+                                    'warnings': list(conf.get('warnings') or [])}
                                    if isinstance(conf, dict) else None),
                   'open_proposals': sorted(p['proposal_id'] for p in st.open_proposals(state)
                                            if p['decision_id'] == d),
-                  'feature_basis': (feature_basis(dec['value'], conf)
+                  'feature_basis': (feature_basis(dec['value'], conf, statuses)
                                     if d == 'feature_availability' else None)}
     return out
 
@@ -239,6 +271,19 @@ def scenario_defaults(state: dict) -> dict | None:
         return copy.deepcopy(c.case_of(state).scenario_defaults)
     except (c.CaseError, OSError):
         return None
+
+
+def _with_default_rule(action: dict, defaults: dict | None) -> dict:
+    """WP-A9 (R6): at the policy step of a teaching case (``scenario_defaults
+    .capacity_share``), the next action carries the scenario's rule as ``default_value``
+    (``share:<p>``), as the preprocessing step carries the engine's default. The agent asks
+    the capacity as a share and presents it as the exercise's assumption."""
+    share = ((defaults or {}).get('capacity_share') or {}).get('value')
+    if share is None or action.get('kind') not in ('propose', 'run') \
+            or (action.get('decision') or action.get('step')) != 'policy':
+        return action
+    return {**action, 'default_value': rec.canonical_rule(f'share:{share}')
+            or f'share:{share}'}
 
 
 def _assumed_capacity(state: dict, defaults: dict | None) -> list[dict]:
@@ -594,7 +639,11 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
                     f'{item["result_id"][:RECAP_RID]}',
             # v0.2a (WP-A1): the junior recap names no result id; WP-A7: nor the rule's
             # token, which it says in words.
-            'junior_text': f'the logistic model, {audience.rule_words(rule)},{rows}: {figures}'}
+            'junior_text': f'the logistic model, {audience.rule_words(rule)},{rows}: {figures}',
+            # WP-A9 (M6): after the rule itself (the Decided line), without repeating it.
+            'short_text': f'the logistic model{rows}: {figures}, result '
+                          f'{item["result_id"][:RECAP_RID]}',
+            'short_junior_text': f'the logistic model{rows}: {figures}'}
 
 
 def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
@@ -610,7 +659,7 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
         if excluded:
             parts.append('excluded ' + ', '.join(excluded))
         if doubtful:
-            parts.append('kept with a doubt ' + ', '.join(doubtful))
+            parts.append('kept despite a doubt: ' + ', '.join(doubtful))
         text = f'{label} ({"; ".join(parts) if parts else "every feature kept"})'
     elif decision_id == 'split' and isinstance(value, dict):
         method = _spaced(value.get('method', 'split'))
@@ -623,7 +672,7 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     elif decision_id in ('policy',) and isinstance(value, str):
         text = f'{label}: {audience.rule_words(value)}' if junior else f'{label} {value}'
         if headline and headline['adopted']:
-            text += f' ({headline["junior_text" if junior else "text"]})'
+            text += f' ({headline["short_junior_text" if junior else "short_text"]})'
     elif decision_id == 'model_choice' and isinstance(value, str):
         text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
         mae = (errors or {}).get('mae', {}).get(value)
@@ -704,6 +753,13 @@ def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
             return str(nxt.get('message', '')).strip()
         title = titles.get(nxt.get('step'), nxt.get('step') or 'the next step')
         return f'{title}: {nxt.get("message", "")}'.strip()
+    if kind == 'show_data_card':
+        # WP-A9 (M4): step 0 is the first step of the plan, not its end.
+        return ('show the junior the data card (hypotrail data): what one row describes, the '
+                'columns and their meaning, and five example rows; nothing to confirm. Then '
+                'propose the prediction moment.')
+    if kind != 'done' and nxt.get('message'):
+        return str(nxt['message']).strip()
     return 'nothing left in the plan; review what is not yet defensible.'
 
 
@@ -729,6 +785,14 @@ def _junior_now(summary_out: dict, titles: dict, step: str) -> str:
 
 def _capital_first(text: str) -> str:
     return text[:1].upper() + text[1:]
+
+
+def _mid_sentence(text: str) -> str:
+    """``text`` placed mid-sentence: a capital first letter of an ordinary word is lowered
+    ("Before the call" -> "before the call"); an acronym or a name in capitals is kept."""
+    if len(text) >= 2 and text[0].isupper() and text[1].islower():
+        return text[0].lower() + text[1:]
+    return text
 
 
 def _deliverables_line(items: dict) -> str:
@@ -775,9 +839,9 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
     if pt is None:
         moment = 'not decided yet'
     elif pt['source'] == 'decision' and pt['status'] == 'confirmed':
-        moment = str(pt['value'])
+        moment = _mid_sentence(str(pt['value']))
     else:
-        moment = f'{pt["value"]} (from the case, not decided yet)'
+        moment = f'{_mid_sentence(str(pt["value"]))} (from the case, not decided yet)'
     errors = _regression_errors(view)
     headline = _policy_headline(view, summary_out) if st.task_of(view.get('task')) == st.BINARY \
         else None
@@ -920,7 +984,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'plan': plan,
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
-        'next_action': audience.next_action(st.next_action(state, suspected)),
+        'next_action': audience.next_action(_with_default_rule(st.next_action(state, suspected),
+                                                               defaults)),
         'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],

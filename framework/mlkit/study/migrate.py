@@ -66,7 +66,10 @@ ROLE_NOTES = {
              'group; the case role is "feature" and no group column is declared from it',
 }
 SUPPLEMENT_KEYS = ('schema', 'purpose', 'dataset', 'target', 'facts', 'variables', 'structure',
-                   'prior_exposure', 'notes')
+                   'prior_exposure', 'notes',
+                   # WP-A9 (R6): the teaching scenario's defaults, copied as they are
+                   # (``scenario_assumption`` only; the case contract checks them).
+                   'scenario_defaults')
 SUPPLEMENT_DATASET_KEYS = ('sep', 'header', 'quotechar', 'na_values', 'encoding', 'decimal',
                            'column_names')
 # v0.2a (WP-A1): statements a surface shows the junior name no tutorial file; the migration
@@ -380,12 +383,15 @@ def from_companion_project(path, *, supplement=None) -> dict:
         log('prior_exposure', f'{RESULTS_FILE} sha256 {_sha(results_path)}')
         for protocol in results.get('protocols', []):
             prior.append({
-                'value': f'Tutorial outputs for protocol "{protocol["id"]}" ({protocol["label"]}. '
-                         f'{protocol["description"]}) were published with this dataset. The rows '
-                         f'used there are not unseen, and that validation is not independent '
-                         f'evidence.',
+                # WP-A9 (M6): the junior reads this statement in the limits; it names an
+                # earlier analysis, not the companion tutorial it came from (the migration
+                # record keeps the file).
+                'value': f'Outputs of an earlier analysis (protocol "{protocol["id"]}": '
+                         f'{protocol["label"]}. {protocol["description"]}) were published with '
+                         f'this dataset. The rows used there are not unseen, and that validation '
+                         f'is not independent evidence.',
                 'status': 'observed',
-                'source': 'Tutorial results published with the dataset'})
+                'source': 'Results of an earlier analysis published with the dataset'})
     prior += copy.deepcopy(sup.get('prior_exposure', []))
 
     for item in ds.get('transformations', []):
@@ -433,8 +439,10 @@ def from_companion_project(path, *, supplement=None) -> dict:
         'structure': structure,
         'task': task,
         'prior_exposure': prior,
-        'migration': migration,
     }
+    if 'scenario_defaults' in sup:
+        document['scenario_defaults'] = copy.deepcopy(sup['scenario_defaults'])
+    document['migration'] = migration
     leftovers = [p for p, node in case_contract._walk(document, '')
                  if isinstance(node, str) and TEMPLATE.search(node)]
     if leftovers:

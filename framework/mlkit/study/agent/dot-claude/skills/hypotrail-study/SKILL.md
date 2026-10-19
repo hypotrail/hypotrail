@@ -170,12 +170,16 @@ they stated.
 belongs to another variable or contradicts the case is a misconception the report would
 keep as their justification.
 <!-- hypotrail:task binary -->
-For example, "drop contact, its value can be inflated": what grows during the campaign is
-the number of calls (`campaign`); `contact` is the channel of the last call.
+For example, in a telemarketing case, "drop contact, its value can be inflated": what
+grows during the campaign is the number of calls (`campaign`); `contact` is the channel of
+the last call.
 <!-- hypotrail:end -->
 Say what does not fit in one sentence, then let them (a) rephrase, (b) confirm with new
 words without that reason, or (c) keep their words, recorded with `--agent-concern`.
-Their choice, not yours.
+Their choice, not yours. When their words drop a variable the value keeps (they said
+"drop contact" and the proposal keeps it), the guided mode refuses the confirmation
+(`words_contradict_value`) until you raise it: propose again with the value they mean,
+or record their kept words with `--agent-concern`; the warning stays on the record.
 
 Start a restatement with "My recommended default:" only when you propose a default
 after a delegation; every other proposal, including one made on "continue", is a plain
@@ -286,14 +290,22 @@ the result.
   the selection rule applied to the same scores changes. Say so explicitly, and cite the
   fit result ids as unchanged.
 - **Which population a capacity applies to.** A capacity of K selects K of the <N>
-  validation rows (the evaluation's `n`), which stand for a share of the contacts, not a
-  whole campaign. Say so, and give the selection as a rate of those rows (`volume_rate`)
-  before any extrapolation to another population. Translating the team's capacity into
-  validation rows is your job, never the junior's: ask only for business figures (the
-  calls the team can make, the contacts the campaign covers), choose the capacity on the
-  validation rows yourself, evaluate it, and cite its `volume_rate` next to their figures.
-  A capacity at least as large as the validation rows selects every row: say it tests no
-  ranking.
+  validation rows (the evaluation's `n`), which stand for a share of the scored rows, not
+  a whole population. Say so, and give the selection as a rate of those rows
+  (`volume_rate`) before any extrapolation to another population.
+- **Capacity as a share (teaching cases).** When the case sets
+  `scenario_defaults.capacity_share` (the policy's `next_action.default_value` is then
+  `share:<p>`), the capacity is one question, asked as a share of the scored rows. Before
+  recommending, show the gain in points over the baseline at 5, 10 and 20 % of the rows
+  (`gain_points.points` of the policy evaluation, with its `result_id`), then propose the
+  default as the exercise's assumption ("the exercise assumes ..."), never as a fact about
+  the team. Kept, it is listed as "capacity assumed for the exercise" in what is not yet
+  defensible. The rule is `share:<p>`.
+- **Without a default (a real case).** Translating the team's capacity into validation
+  rows is your job, never the junior's: ask only for business figures (the actions the
+  team can take, the rows its population covers), choose the capacity on the validation
+  rows yourself, evaluate it, and cite its `volume_rate` next to their figures. A capacity
+  at least as large as the validation rows selects every row: say it tests no ranking.
 <!-- hypotrail:task regression -->
 - **Errors in the unit of the target.** Give MAE first (the typical size of one error),
   then RMSE (it weighs large errors more: a gap between the two means a few large
