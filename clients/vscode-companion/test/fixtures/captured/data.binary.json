@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 38,
+  "revision": 42,
   "observation_unit": {
    "value": "A customer contacted during a telephone campaign",
    "status": "documented_fact",
@@ -41,6 +41,9 @@
    "fraction": 0.2,
    "development_rows": 3617,
    "schema_check": "pass",
+   "opening": null,
+   "post_final_test": false,
+   "changed_after": [],
    "line": "904 rows are set aside as the final test and stay sealed: nothing here reads them.",
    "audience": "junior"
   },

@@ -1496,7 +1496,8 @@
     },
     "upstream": {
      "fit.baseline": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
-     "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+     "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "fit.variant": "ddcbf654b0107f132937e89e10e630e299e21c9984eb79f92253c135c696b01a"
     },
     "downstream": [],
     "created": "2026-10-18T22:31:45.179361+00:00",
@@ -1516,7 +1517,8 @@
      "note": "The rule is chosen on validation rows: these figures are not independent evidence of future performance. No model was refitted.",
      "predictions": {
       "fit.baseline": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
-      "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+      "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+      "fit.variant": "ddcbf654b0107f132937e89e10e630e299e21c9984eb79f92253c135c696b01a"
      },
      "reference": "fit.baseline",
      "rules": {
@@ -1539,6 +1541,26 @@
           "high": 0.0,
           "low": 0.0,
           "point": 0.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "point": 0.28489871086556173,
+          "low": 0.18147329650092084,
+          "high": 0.37308011049723744,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.22791896869244938,
+          "low": 0.15428715364759085,
+          "high": 0.29680785758133826,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
           "undefined_replicates": 0
          }
         }
@@ -1575,6 +1597,23 @@
          "volume": {
           "high": 100.0,
           "low": 100.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "low": 0.29,
+          "high": 0.5,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.2463681849551415,
+          "high": 0.3888888888888889,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 100.0,
+          "high": 100.0,
           "undefined_replicates": 0
          }
         }
@@ -1623,8 +1662,54 @@
          "true_positives": 36.0,
          "volume": 100.0,
          "volume_rate": 0.07369196757553427
+        },
+        "fit.variant": {
+         "rule": "capacity:100",
+         "kind": "capacity",
+         "parameter": 100,
+         "n": 1086,
+         "n_positive": 125,
+         "selected": 100.0,
+         "true_positives": 40.0,
+         "false_positives": 60.0,
+         "false_negatives": 85.0,
+         "precision": 0.4,
+         "recall": 0.32,
+         "volume": 100.0,
+         "volume_rate": 0.09208103130755065,
+         "tied_at_cut": 0,
+         "cut": {
+          "score": null,
+          "n_tied": 0,
+          "fraction_selected": null
+         },
+         "selection": "exact"
         }
-       }
+       },
+       "comparisons": {
+        "fit.variant": {
+         "reference": "fit.logistic",
+         "precision": {
+          "point": 0.030000000000000027,
+          "low": -0.030000000000000027,
+          "high": 0.06,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": 0.02400000000000002,
+          "low": -0.025215425153112103,
+          "high": 0.046153846153846156,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "capacity_share": 0.09208103130755065
       },
       "threshold:0.2": {
        "deltas": {
@@ -1645,6 +1730,26 @@
           "high": 135.0,
           "low": 95.0,
           "point": 115.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "point": null,
+          "low": null,
+          "high": null,
+          "undefined_replicates": 2000
+         },
+         "recall": {
+          "point": 0.288,
+          "low": 0.21008403361344538,
+          "high": 0.37097385141739975,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": 86.0,
+          "low": 68.0,
+          "high": 103.0,
           "undefined_replicates": 0
          }
         }
@@ -1681,6 +1786,23 @@
          "volume": {
           "high": 135.0,
           "low": 95.0,
+          "undefined_replicates": 0
+         }
+        },
+        "fit.variant": {
+         "precision": {
+          "low": 0.31763271162123385,
+          "high": 0.5200555555555553,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "low": 0.21008403361344538,
+          "high": 0.37097385141739975,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "low": 68.0,
+          "high": 103.0,
           "undefined_replicates": 0
          }
         }
@@ -1729,8 +1851,69 @@
          "true_positives": 40.0,
          "volume": 115.0,
          "volume_rate": 0.0847457627118644
+        },
+        "fit.variant": {
+         "rule": "threshold:0.2",
+         "kind": "threshold",
+         "parameter": 0.2,
+         "n": 1086,
+         "n_positive": 125,
+         "selected": 86.0,
+         "true_positives": 36.0,
+         "false_positives": 50.0,
+         "false_negatives": 89.0,
+         "precision": 0.4186046511627907,
+         "recall": 0.288,
+         "volume": 86.0,
+         "volume_rate": 0.07918968692449356,
+         "tied_at_cut": 0,
+         "cut": {
+          "score": 0.2,
+          "n_tied": 0,
+          "fraction_selected": null
+         },
+         "selection": "exact"
         }
-       }
+       },
+       "comparisons": {
+        "fit.variant": {
+         "reference": "fit.logistic",
+         "precision": {
+          "point": 0.03716135219371858,
+          "low": -0.022234292049549045,
+          "high": 0.09984323915152564,
+          "undefined_replicates": 0
+         },
+         "recall": {
+          "point": -0.008000000000000007,
+          "low": -0.0503719058651384,
+          "high": 0.03479023646071699,
+          "undefined_replicates": 0
+         },
+         "volume": {
+          "point": -11.0,
+          "low": -23.0,
+          "high": 1.0,
+          "undefined_replicates": 0
+         }
+        }
+       },
+       "capacity_share": null
+      }
+     },
+     "evaluation": "validation",
+     "ranking": {
+      "fit.baseline": {
+       "roc_auc": 0.5,
+       "average_precision": 0.1151012891344383
+      },
+      "fit.logistic": {
+       "roc_auc": 0.7348678459937565,
+       "average_precision": 0.3719979635443628
+      },
+      "fit.variant": {
+       "roc_auc": 0.7433090530697191,
+       "average_precision": 0.37708644271079733
       }
      }
     },
@@ -1769,7 +1952,8 @@
     },
     "upstream": {
      "fit.baseline": "6621babc79f006db497d862674db4f24f6bef5472c3cf93131ea58cf876d76ee",
-     "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5"
+     "fit.logistic": "d0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5",
+     "fit.variant": "ddcbf654b0107f132937e89e10e630e299e21c9984eb79f92253c135c696b01a"
     },
     "downstream": [],
     "created": "2026-10-18T09:21:00+00:00",
@@ -2018,6 +2202,9 @@
       "structural_inspection": 3617,
       "validation_model_evaluation": 1357,
       "validation_policy_selection": 1357
+     },
+     "final_test": {
+      "sealed": 904
      }
     },
     "validation_rows_used_for_selection": 1357,

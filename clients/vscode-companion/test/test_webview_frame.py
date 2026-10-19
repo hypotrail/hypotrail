@@ -258,6 +258,8 @@ def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, 
                         '(campaign, day, duration, month); the split: Stratified random split, 30% of the rows for '
                         'validation; the success criterion: Adopt only if precision beats the baseline by at least 5 '
                         'points; the data preparation: Missing values not flagged, no capping, no log scale; '
+                        # WP-B1: the variant the policy compares, in words
+                        'the variant to compare: Compare with a more regularised variant; '
                         'the calling rule: Call everyone scored 0.2 or more.')
     strip = page.locator('[data-recap-strip]').inner_text()
     assert 'threshold:0.2' not in strip and 'result ' not in strip

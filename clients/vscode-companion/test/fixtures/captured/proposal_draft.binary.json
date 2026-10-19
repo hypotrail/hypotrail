@@ -17,15 +17,15 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 38,
+  "revision": 42,
   "decision_id": "policy",
   "value": "capacity:100",
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the rule capacity:100: act on the 100 highest-scored rows. On the 1,086 validation rows the logistic model's selection had precision 37.0% against 11.5% for the baseline, and recall 29.6%. These validation rows were used to choose the rule, so these figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 8ad39852).",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 6245509f).",
   "evidence": {
-   "result_id": "8ad398529cf5afb2d823f7166e3102bafca6b63febe51bb9f8cd04ddcd5c28b7",
+   "result_id": "6245509fec6436ab9a940739c1d53cd6418a22d3ee83131501a169e8417fcadb",
    "activity": "policy.evaluation",
    "figures": [
     {
@@ -50,7 +50,7 @@
     }
    ]
   },
-  "supersedes_proposal": "p_7",
+  "supersedes_proposal": "p_8",
   "recorded": false,
   "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
  }

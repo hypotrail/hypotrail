@@ -150,7 +150,9 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
         boot = {rule: policy.paired_bootstrap(y, scores, rule, int(settings['replicates']),
                                               int(settings['seed']),
                                               level=float(settings['level']),
-                                              reference=FITS[0])
+                                              reference=FITS[0],
+                                              pairs=[('fit.variant', 'fit.logistic')]
+                                              if 'fit.variant' in scores else [])
                 for rule in rules}
     decision = state['decisions']['policy']
     from . import view

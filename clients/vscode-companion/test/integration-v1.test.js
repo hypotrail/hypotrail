@@ -36,8 +36,9 @@ test('v1 open: one summary read with the digest; the decisions read is cached pe
   await Promise.all([p.send({ type: 'load', view: 'decisions' }), p.send({ type: 'load', view: 'decisions' })]);
   await p.send({ type: 'load', view: 'decisions' });
   assert.equal(p.commands().filter(x => x.startsWith('decisions')).length, 1, 'coalesced, then cached');
-  // WP-A4: a new study holds seven decisions (success criterion and preprocessing added).
-  assert.equal(p.last('view_data').model.decisions.length, 7);
+  // WP-A4: a new study holds seven decisions (success criterion and preprocessing added);
+  // WP-B1: nine (the variant and the opening of the final test).
+  assert.equal(p.last('view_data').model.decisions.length, 9);
   await p.send({ type: 'load', view: 'check' });
   assert.equal(p.last('view_data').view, 'check');
   report(t, p, 'v1 Bank reads');

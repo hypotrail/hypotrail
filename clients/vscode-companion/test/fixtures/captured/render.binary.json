@@ -14,22 +14,22 @@
   "schema": "hypotrail.render/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 38,
+  "revision": 42,
   "status": "ok",
   "artifacts": {
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 38,
-    "last_ok_revision": 38,
+    "revision": 42,
+    "last_ok_revision": 42,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 38,
-    "last_ok_revision": 38,
+    "revision": 42,
+    "last_ok_revision": 42,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

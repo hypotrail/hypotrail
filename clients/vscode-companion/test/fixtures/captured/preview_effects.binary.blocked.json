@@ -7,7 +7,7 @@
   "argv": [
    "preview",
    "effects",
-   "p_7",
+   "p_8",
    "--json"
   ],
   "note": ""
@@ -16,8 +16,8 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-hold",
-  "revision": 39,
-  "proposal_id": "p_7",
+  "revision": 43,
+  "proposal_id": "p_8",
   "decision_id": "policy",
   "value": "capacity:100",
   "previous": {
@@ -25,8 +25,8 @@
    "user_words": "Yes, call everyone scored at 0.2 or more",
    "basis": "restated",
    "channel": "chat",
-   "revision": 35,
-   "proposal_id": "p_6"
+   "revision": 39,
+   "proposal_id": "p_7"
   },
   "mutation": "policy.rule_type",
   "row": 6,
@@ -44,6 +44,7 @@
    "eda.single_feature_signal",
    "fit.baseline",
    "fit.logistic",
+   "fit.variant",
    "policy.evaluation"
   ],
   "refit": [],
@@ -53,7 +54,7 @@
   ],
   "recompute": [],
   "reconfirm_required": [],
-  "supersedes_proposal": "p_6",
+  "supersedes_proposal": "p_7",
   "blocked": [
    {
     "code": "decision_on_hold",
@@ -61,7 +62,7 @@
     "message": "The junior put the policy on hold in their own words; it cannot be confirmed until their words resolve the hold (decide note --resolve). Tell them what is still pending and ask whether the condition is met.",
     "details": {
      "decision_id": "policy",
-     "proposal_id": "p_7",
+     "proposal_id": "p_8",
      "notes": [
       {
        "note_id": "n_1",
