@@ -302,7 +302,7 @@
    {
     "id": "imputation",
     "term": "Imputation",
-    "definition": "Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, the cars whose horsepower is missing get the median horsepower of the training cars, never a figure computed with validation cars.",
+    "definition": "Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.",
     "example": null,
     "example_status": "none",
     "steps": []

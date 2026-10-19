@@ -11,7 +11,9 @@
 * Feature availability has a per-feature basis; an undiscussed feature is never "Your
   decision" in the report.
 * The committed cases and the report carry no tutorial provenance string.
-* The glossary has the v0.2a terms, term first, then a contextual example.
+* The glossary has the v0.2a terms, term first, then a contextual example (a campaign
+  calling clients about a term deposit, or cars for a regression study; the engine names no
+  dataset).
 
 Scope U and S (in-process CLI code path, temporary studies only).
 """
@@ -288,7 +290,9 @@ def test_glossary_holds_the_v02a_terms_with_a_contextual_example(task):
         assert entry['term'] and entry['definition'], term
         if term != 'confidence_interval' or task == 'binary':
             assert 'For example' in entry['definition'], (task, term)
-        words = 'bank' if task == 'binary' else 'car'
+        # The engine names no dataset (test_synthetic_case): the context is a campaign
+        # calling clients, or cars and their fuel efficiency.
+        words = 'client' if task == 'binary' else 'car'
         if term not in ('confidence_interval',):
             assert words in entry['definition'].lower(), (task, term)
 
