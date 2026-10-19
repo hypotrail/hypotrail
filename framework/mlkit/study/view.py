@@ -745,11 +745,15 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     elif decision_id == 'split' and isinstance(value, dict) and value.get('method') in \
             st.CV_METHODS:
         # WP-B1: the evaluation scheme.
-        text = f'{label} ({value.get("folds")}-fold cross-validation, {_spaced(value["method"])})'
+        method = (audience.CV_METHOD_WORDS.get(value['method'], _spaced(value['method']))
+                  if junior else _spaced(value['method']))
+        text = f'{label} ({value.get("folds")}-fold cross-validation, {method})'
     elif decision_id == 'model_variant' and isinstance(value, dict):
         text = f'{label} ({audience.variant_words(value)})'
     elif decision_id == 'final_test' and isinstance(value, dict):
-        text = f'{label} opened ({audience.model_words(value.get("model"))}' + (
+        # B6c (Low): "the final test, opened once", never "the opening ... opened".
+        opened = 'the final test, opened once' if junior else f'{label} opened'
+        text = f'{opened} ({audience.model_words(value.get("model"))}' + (
             f', {audience.rule_words(value["rule"])})' if junior and value.get('rule') else
             f' at {value["rule"]})' if value.get('rule') else ')')
     elif decision_id == 'split' and isinstance(value, dict):

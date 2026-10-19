@@ -394,8 +394,18 @@ def current_results_pool(store: StudyStore, state: Mapping, *, literals: bool = 
                          'confirmation': dec['confirmation']}
                      for d, dec in state['decisions'].items()
                      if d != 'conclusion' and dec['status'] == 'confirmed'}
+    # B6c (H2): what changed after the final test was opened (a final-test figure then no
+    # longer describes the choice).
+    started = {}
+    for slot, item in results.items():
+        try:
+            started[slot] = study.result(item['result_id'])['started_revision']
+        except (StudyError, KeyError):
+            continue
+    final = partition.final_test_status(state, started)
     return cmd_check.Pool({'results': results, 'decisions': decisions, 'open_proposals': [],
-                           'settings': {}, 'dataset': {}, 'facts': {'by_status': {}}})
+                           'settings': {}, 'dataset': {}, 'facts': {'by_status': {}},
+                           'final_test': {'changed_after': final.get('changed_after') or []}})
 
 
 def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatement: str,
@@ -414,7 +424,8 @@ def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatem
     findings, _ = cmd_check.trace_text(current_results_pool(store, state, literals=True),
                                        mask_identifiers(value['text']), 'value.text')
     numbers = [f['details']['number'] for f in findings
-               if f['code'] in ('untraceable_number', 'stale_number')]
+               if f['code'] in ('untraceable_number', 'stale_number',
+                                'final_test_figure_outdated')]
     if numbers:
         raise CommandRefused('literal_number_in_text',
                              'The conclusion text contains numbers that are not figures of a '
@@ -497,6 +508,15 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             raise _invalid('final_test is {"model", "rule"}: the configuration the study chose '
                            '(the rule is null in a regression study).',
                            keys=list(FINAL_TEST_KEYS), chosen=st.choice_config(state))
+        # B6c (Low): a value that is not the chosen configuration is refused when proposed,
+        # not only when confirmed.
+        chosen = st.choice_config(state)
+        rule = value.get('rule')
+        said = {'model': value.get('model'),
+                'rule': (rec.canonical_rule(rule) or rule) if isinstance(rule, str) else rule}
+        if chosen is not None and said != chosen:
+            raise _invalid('The final test opens the configuration the study chose; propose it '
+                           'as chosen.', field='final_test', chosen=chosen, value=dict(value))
     elif decision_id == st.SUCCESS_CRITERION:
         try:
             governance.check_criterion(value, st.task_of(state))
@@ -507,6 +527,17 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             governance.check_preprocessing(value, case_of(state))
         except governance.ValueProblem as exc:
             raise _invalid(exc.message, **exc.details) from None
+        # B6c (Low): a cap or a transform of a variable the model does not use would be
+        # silently ignored; it is refused instead, naming the variables.
+        availability = (state['decisions'].get('feature_availability') or {}).get('value')
+        if isinstance(availability, Mapping):
+            excluded = {f for f, s in availability.items() if s in cf.EXCLUDED_STATUSES}
+            for field in ('caps', 'log_transform'):
+                named = sorted(set(value.get(field) or []) & excluded)
+                if named:
+                    raise _invalid(f'{field} names variables the model does not use (excluded '
+                                   f'by the availability decision): {", ".join(named)}.',
+                                   field=field, excluded=named)
     elif decision_id == 'conclusion':
         verdicts = preconditions.conclusion_verdicts(state)
         if not isinstance(value, Mapping) or set(value) != set(CONCLUSION_KEYS) \

@@ -28,7 +28,7 @@ import re
 from importlib import resources
 from typing import Any, Mapping
 
-from . import cite, render_charts, render_diagnostics, texts
+from . import audience, cite, render_charts, render_diagnostics, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
@@ -366,7 +366,8 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
         if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
             parts.append(_confirmation(d['confirmation']))
         if d['reason']:
-            parts.append(f'<p class="notice">{lit("message", d["reason"])}</p>')
+            parts.append(f'<p class="notice">'
+                         f'{lit("message", audience.reason_words(d["reason"]))}</p>')
         for n in view.get('notes') or []:
             if n['decision_id'] == did:
                 parts.append(_note(n))
@@ -505,7 +506,7 @@ def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
         reason = (item['stale_reason'] or {}).get('reason') if item['stale_reason'] else item['integrity']
         return (f'<div data-slot="{e(slot)}" data-state="stale"><h4>{e(title)} '
                 f'{_badge("stale", texts.load("steps")["stale"])}</h4>'
-                f'<p class="small">{lit("message", reason or "")}</p></div>')
+                f'<p class="small">{lit("message", audience.reason_words(reason))}</p></div>')
     question = item['values'].get('question') if isinstance(item['values'], Mapping) else None
     asked = f'<p><strong>Question.</strong> {lit("message", question)}</p>' if question else ''
     return (f'<div data-slot="{e(slot)}" data-state="current">'

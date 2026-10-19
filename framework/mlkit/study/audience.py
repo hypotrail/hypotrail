@@ -14,6 +14,7 @@ The functions here are pure and additive: they never change an existing key, the
 """
 from __future__ import annotations
 
+import re
 from typing import Mapping
 
 JUNIOR, AGENT = 'junior', 'agent'
@@ -76,16 +77,23 @@ VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the c
 
 
 def rule_words(rule) -> str:
-    """``capacity:100`` as "call the top 100 by score", ``threshold:0.2`` as "call everyone
-    scored 0.2 or more"; anything else as it is."""
+    """``capacity:100`` as "select the top 100 by score", ``threshold:0.2`` as "select every
+    row scored 0.2 or more"; anything else as it is. B6c (Low): the words fit every case
+    (a call, an email, an inspection), so they never name one action."""
     kind, _, k = str(rule).partition(':')
     if kind == 'capacity' and k:
-        return f'call the top {k} by score'
+        return f'select the top {k} by score'
     if kind == 'threshold' and k:
-        return f'call everyone scored {k} or more'
+        return f'select every row scored {k} or more'
     if kind == 'share' and k:
-        return f'call the top {share_percent(k)} by score'
+        return f'select the top {share_percent(k)} by score'
     return str(rule)
+
+
+# B6c (Low): the cross-validation methods in words.
+CV_METHOD_WORDS = {'kfold_stratified': 'stratified on the outcome',
+                   'kfold_quantile': 'stratified on target quantiles',
+                   'temporal_folds': 'blocks in time order'}
 
 
 def share_percent(p) -> str:
@@ -116,6 +124,22 @@ def variant_words(value) -> str:
 
 def model_words(slot) -> str:
     return MODEL_WORDS.get(str(slot), ' '.join(str(slot).replace('fit.', '').split('_')))
+
+
+_PLAN_REF = re.compile(r'\s*\(§\s*3\.7 row \d+(?::[^)]*)?\)')
+
+
+def reason_words(reason) -> str:
+    """B6c (Low): a staleness or reconfirmation reason in the junior's words: no internal
+    reference ("§3.7 row 5: policy.parameter"), decisions and activities in words."""
+    text = _PLAN_REF.sub('', str(reason or '')).strip()
+    m = re.match(r'([a-z_]+) changed\b', text)
+    if m and m.group(1) in DECISION_WORDS:
+        return _capital(f'{decision_words(m.group(1))} changed{text[m.end():]}')
+    m = re.fullmatch(r'code of activity ([\w.:]+) changed', text)
+    if m:
+        return _capital(f'the code of {activity_words(m.group(1))} changed')
+    return text
 
 
 def join(words) -> str:
@@ -210,6 +234,11 @@ def _junior_limit(item: Mapping) -> str | None:
                 f'your own judgment: {named}.')
     if kind == 'stale_results':
         return 'Some results are out of date and are computed again before they are cited.'
+    if kind == 'adopted_rule_not_evaluated':
+        # B6c (Low): the rule in words, never its token.
+        rules = join(rule_words(r) for r in item.get('rules') or [])
+        return (f'The adopted policy ({rules}) has no current evaluation; its figures are cited '
+                f'again once it is evaluated again.')
     return None
 
 

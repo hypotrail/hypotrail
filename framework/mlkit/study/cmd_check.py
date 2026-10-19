@@ -115,7 +115,9 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
             'verdict_contradicts_criterion': 'warning',
             # B6c (H4): the conclusion keeps the baseline while the criterion is met on the
             # final test.
-            'verdict_keeps_baseline_against_criterion': 'warning'}
+            'verdict_keeps_baseline_against_criterion': 'warning',
+            # B6c (H2): a final-test figure in a text after the choice changed.
+            'final_test_figure_outdated': 'error'}
 FINDING_CODES = tuple(SEVERITY)
 
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|cannot|doesn't|don't|isn't|aren't|without|"
@@ -343,15 +345,59 @@ INTERVAL_PARENTS = frozenset({'interval', 'intervals', 'deltas'})
 SENTENCE_END = re.compile(r'[.!?](?=\s|$)|[;\n]')
 
 
+# B6c (H2): the evidence a sentence speaks of. A figure said of the final test traces to the
+# final evidence only (the one final evaluation and its diagnostics); a figure said of the
+# development evidence (out of fold, cross-validated, validation) never traces to it.
+FINAL_SCOPE = re.compile(r"\b(?:final[- ]test\w*|tests?[- ]finals?|final evaluation|"
+                         r"[ée]valuation finale|sealed rows|lignes scell[ée]es)\b", re.I)
+DEVELOPMENT_SCOPE = re.compile(r"\b(?:out[- ]of[- ]fold|hors[- ]pli\w*|cross[- ]validat\w*|"
+                               r"validation crois[ée]e|development|d[ée]veloppement|"
+                               r"validation)\b", re.I)
+FINAL_SLOTS = ('final_test.evaluation', 'diag.final_test')
+# B6c (H2): a percentage right after a rule word ("la règle des 20 %", "the top 20%") is the
+# rule's share: it matches the rule the evidence of the sentence evaluated.
+RULE_WORDS = re.compile(r"\b(?:rules?|r[èe]gles?|top|share|capacit\w*|meilleur\w*|best|"
+                        r"premi[èe]r\w*)\b[^\d]{0,14}$", re.I)
+# B6c (H2): the bounds of a diagnostic's segments and intervals are internals unless the
+# words speak of an interval.
+DIAG_BOUNDS = ('low', 'high', 'precision_low', 'precision_high', 'recall_low', 'recall_high')
+# B6c (H2): decisions whose change after the opening means the final test no longer measured
+# the configuration a text would claim.
+CHOICE_CHANGES = ('policy', 'model_choice', 'model_variant', 'preprocessing',
+                  'feature_availability', 'split')
+
+
 @dataclasses.dataclass(frozen=True)
 class Binding:
     """WP-A9 (H2): what the words near a number say it measures. ``segments``: path
     segments a matching value must hold (None: any). ``interval``: interval words are near,
     so an interval's bound may match (without them only point values do). ``model``: a model
-    is named and the baseline is not, so the baseline's values do not match."""
+    is named and the baseline is not, so the baseline's values do not match. B6c (H2):
+    ``scope`` is ``final`` or ``development`` when the sentence speaks of one evidence only;
+    ``rule`` when the number is a rule's share ("la règle des 20 %")."""
     segments: tuple | None = None
     interval: bool = False
     model: bool = False
+    scope: str | None = None
+    rule: bool = False
+
+
+def scope_of(sentence: str) -> str | None:
+    """B6c (H2): ``final``, ``development``, or None (both, or neither, named)."""
+    final = bool(FINAL_SCOPE.search(sentence))
+    development = bool(DEVELOPMENT_SCOPE.search(FINAL_SCOPE.sub(' ', sentence)))
+    if final and not development:
+        return 'final'
+    if development and not final:
+        return 'development'
+    return None
+
+
+def _sentence_around(text: str, start: int, end: int) -> str:
+    ends = [m.end() for m in SENTENCE_END.finditer(text, 0, start)]
+    lo = ends[-1] if ends else 0
+    m = SENTENCE_END.search(text, end)
+    return text[lo:m.start() if m else len(text)]
 
 
 def binding(text: str, start: int, end: int, percent: bool) -> Binding:
@@ -386,7 +432,9 @@ def binding(text: str, start: int, end: int, percent: bool) -> Binding:
             out.extend(RATE_SEGMENTS)
     return Binding(segments=('#count',) if count else (tuple(dict.fromkeys(out)) or None),
                    interval=bool(INTERVAL_WORDS.search(near)),
-                   model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near))
+                   model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near),
+                   scope=scope_of(_sentence_around(text, start, end)),
+                   rule=percent and bool(RULE_WORDS.search(text[max(0, start - 30):start])))
 
 
 def _bound(item: Mapping, bind: Binding | None) -> bool:
@@ -397,6 +445,18 @@ def _bound(item: Mapping, bind: Binding | None) -> bool:
     try:
         segments = cite.parse_path(path) if path not in cite.META_PATHS else [path]
     except Exception:      # noqa: BLE001
+        return False
+    slot = str(item.get('slot') or '')
+    # B6c (H2): the evidence the sentence speaks of.
+    if bind.scope == 'final' and slot not in FINAL_SLOTS:
+        return False
+    if bind.scope == 'development' and slot in FINAL_SLOTS:
+        return False
+    if bind.rule:
+        # A rule's share matches the share of a rule that evidence evaluated.
+        return segments[-1] == 'capacity_share'
+    if slot.startswith('diag.') and not bind.interval and (
+            'segments' in segments or segments[-1] in DIAG_BOUNDS):
         return False
     if not bind.interval and segments[-1] in ('low', 'high') \
             and INTERVAL_PARENTS & set(segments[:-1]):
@@ -525,6 +585,9 @@ class Pool:
         final = view.get('final_test') or {}
         for key in ('rows', 'development_rows'):
             self._literal('final_test', f'final_test.{key}', final.get(key))
+        # B6c (H2): the choices changed after the opening; a final-test figure then no
+        # longer describes the configuration the study holds.
+        self.changed_after = sorted(set(final.get('changed_after') or []) & set(CHOICE_CHANGES))
         for source, value in data_card_figures(data_card):
             self._literal('data_card', source, value)
         for items in view['facts']['by_status'].values():
@@ -579,6 +642,9 @@ class Pool:
         for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
                               (self.stale, 'stale')):
             if difference and label == 'literal':
+                continue
+            if label == 'literal' and bind is not None and bind.scope == 'final' \
+                    and bind.rule:
                 continue
             for item in bucket:
                 if difference and not _is_difference(item['path']):
@@ -722,7 +788,18 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',
                            'value': tok.value})
             continue
-        if label == 'current':
+        if label == 'current' and item['slot'] in FINAL_SLOTS \
+                and getattr(pool, 'changed_after', None):
+            findings.append(finding(
+                'final_test_figure_outdated', where,
+                f'{tok.text.strip()} is a figure of the final test, which measured the '
+                f'configuration chosen before {", ".join(pool.changed_after)} changed after the '
+                f'opening: it does not describe the configuration the study now holds. Say so, '
+                f'or cite development evidence of the current choice.',
+                number=tok.text.strip(), result_id=item['result_id'], path=item['path'],
+                changed_after=list(pool.changed_after),
+                location=locate(tok.start) if locate else None))
+        elif label == 'current':
             traced.append({'text': tok.text.strip(), 'result_id': item['result_id'],
                            'slot': item['slot'], 'path': item['path'], 'value': item['value']})
         elif label == 'literal':

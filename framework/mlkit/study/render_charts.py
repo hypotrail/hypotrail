@@ -73,6 +73,16 @@ svg.chart circle.mean{fill:var(--paper);stroke:var(--ink);stroke-width:2}
 .legend span.b:before{background:var(--muted);opacity:.55}
 .legend span.band:before{background:var(--muted);opacity:.18}
 .legend span.flagged:before{background:var(--amber)}
+.legend span.unused:before{opacity:.3}
+.legend span.box:before{opacity:.35}
+.legend span.box.b:before{background:var(--muted);opacity:.35}
+.legend span.final:before{background:var(--amber)}
+.legend span.line:before{height:0;border-radius:0;background:none;border-top:3px solid var(--accent);vertical-align:3px}
+.legend span.line.final:before{border-top-color:var(--amber)}
+.legend span.diag:before{height:0;border-radius:0;background:none;border-top:2px dashed var(--muted);vertical-align:3px;opacity:1}
+.legend span.bin:before{background:var(--paper);border:2px solid var(--ink);border-radius:50%;width:9px;height:9px}
+.legend span.pt:before{border-radius:50%;opacity:.45}
+.legend span.pt.final:before{background:var(--amber);opacity:.55}
 @media (forced-colors:active){svg.chart rect,svg.chart circle{forced-color-adjust:none}}
 '''
 

@@ -354,6 +354,94 @@ def test_the_selection_chart_plots_the_adopted_configuration(opened, tmp_path):
     assert flow.call('check', '--study', flow.study)['clean'] is True
 
 
+# --- H2: check binds a figure to the evidence its sentence speaks of ---------------------------
+
+def _values(flow, slot):
+    from mlkit.study import read
+    return read.open(flow.study).current(slot)['output']['values']
+
+
+def _check(flow, text):
+    from mlkit.study import cmd_check
+    return cmd_check.run_check(flow.study, text)
+
+
+def _pct(v):
+    return f'{100 * v:.1f}%'
+
+
+def test_a_final_test_claim_traces_to_final_evidence_and_back(opened):
+    final = _values(opened, 'final_test.evaluation')
+    fin = final['models']['fit.logistic']
+    final_auc = f'{final["ranking"]["fit.logistic"]["roc_auc"]:.3f}'
+    dev_auc = f'{_values(opened, "fit.logistic")["validation"]["roc_auc"]:.3f}'
+    assert final_auc != dev_auc
+    # The final figure said of the final test: traced to the final evaluation.
+    out = _check(opened, f'On the final test the model ranks the rows with an AUC of '
+                         f'{final_auc}.')
+    assert out['clean'], out['findings']
+    assert out['traced'][0]['slot'] == 'final_test.evaluation'
+    # A development figure said of the final test: refused.
+    out = _check(opened, f'On the final test the model ranks the rows with an AUC of '
+                         f'{dev_auc}.')
+    assert [f['code'] for f in out['findings']] == ['untraceable_number']
+    # The final figure said of the out-of-fold evidence: refused; the development one passes.
+    out = _check(opened, f'Out of fold, the model ranks the rows with an AUC of {final_auc}.')
+    assert [f['code'] for f in out['findings']] == ['untraceable_number']
+    out = _check(opened, f'Out of fold, the model ranks the rows with an AUC of {dev_auc}.')
+    assert out['clean'] and out['traced'][0]['slot'] != 'final_test.evaluation'
+    # A rule's share said of the final test matches the rule the final test evaluated.
+    out = _check(opened, 'With the rule of the top 40% the final test shows a precision of '
+                         f'{_pct(fin["precision"])}.')
+    assert 'untraceable_number' in [f['code'] for f in out['findings']]
+
+
+def test_diagnostic_segment_bounds_are_not_traced_without_interval_words(opened, tmp_path):
+    flow = Flow(fk.clone(opened.study, tmp_path / 'study'), opened.case_dir, prefix='h2')
+    flow.run('diag.binary')
+    diag = _values(flow, 'diag.binary')['models']['fit.logistic']
+    bounds = [g[k] for seg in diag['segments'] for g in seg['groups']
+              for k in ('precision_low', 'recall_high') if g.get(k) is not None]
+    from mlkit.study import cmd_check, read, view as vm
+    pool = cmd_check.Pool(vm.build(read.open(flow.study)))
+    for value in bounds:
+        text = f'The model selects rows with a share of {_pct(value)}.'
+        _, traced = cmd_check.trace_text(pool, text, 'text')
+        assert not any(t.get('slot') == 'diag.binary' and 'segments' in t.get('path', '')
+                       for t in traced), traced
+
+
+REVIEWER_SENTENCE = ('Avec la règle des 20 %, le test final montre une précision de {p} contre '
+                     '{b} pour la base, un gain de {g} points.')
+
+
+def test_a_conclusion_cannot_quote_the_final_test_after_the_rule_changed(opened, tmp_path):
+    """The reviewer's sentence (Online Shoppers, os19), with this study's figures: the policy
+    changed after the opening, and the final test measured another rule."""
+    flow = Flow(fk.clone(opened.study, tmp_path / 'study'), opened.case_dir, prefix='h2c')
+    final = _values(flow, 'final_test.evaluation')
+    p = final['models']['fit.logistic']['precision']
+    b = final['models']['fit.baseline']['precision']
+    g = 100 * final['deltas']['fit.logistic']['precision']['point']
+    text = REVIEWER_SENTENCE.format(p=f'{100 * p:.1f} %', b=f'{100 * b:.1f} %', g=f'{g:.1f}')
+    before = _check(flow, text)
+    assert 'final_test_figure_outdated' not in [f['code'] for f in before['findings']]
+    assert 'untraceable_number' in [f['code'] for f in before['findings']]   # the 20 %
+    flow.run('policy.evaluate', '--rule', 'capacity:30')
+    flow.decide('policy', 'capacity:30',
+                words='Yes, I adopt that rule because the desk now has thirty slots')
+    assert 'policy' in flow.view()['final_test']['changed_after']
+    after = _check(flow, text)
+    codes = [f['code'] for f in after['findings']]
+    assert codes.count('final_test_figure_outdated') == 3, after['findings']
+    assert after['clean'] is False
+    out = flow.call('decide', 'propose', 'conclusion', '--value-json', json.dumps(
+        {'verdict': 'adopt_policy', 'text': text}), '--restatement', 'On adopte.',
+        '--rationale', 'x', '--request-id', flow.rid(), '--expected-revision', flow.rev(),
+        '--study', flow.study, expect=2)
+    assert out['error']['code'] == 'literal_number_in_text'
+
+
 def test_a_train_validation_study_keeps_its_words(tmp_path):
     case_dir = fk.make_case(tmp_path / 'case', n_rows=300)['case'].parent
     flow = Flow(tmp_path / 'study', case_dir)
@@ -446,3 +534,71 @@ def test_training_needs_the_timing_concept_of_the_value_only(words, ok):
                          words)
     assert out['concepts'] == ['timing_before', 'event']
     assert (out['missing'] == []) is ok
+
+
+# --- Low --------------------------------------------------------------------------------------
+
+def test_a_final_test_value_other_than_the_choice_is_refused_when_proposed(opened, tmp_path):
+    flow = Flow(fk.clone(opened.study, tmp_path / 'study'), opened.case_dir, prefix='lo')
+    # Before the opening only: reproduce on a fresh choice (the clone is opened already, so
+    # check the value rule directly on its state).
+    state = flow.state()
+    chosen = st.choice_config(state)
+    assert chosen == {'model': 'fit.logistic', 'rule': 'capacity:40'}
+    from mlkit.study.errors import StudyError
+    from mlkit.reliability import CommandRefused
+    for value in ({'model': 'fit.variant', 'rule': 'capacity:40'},
+                  {'model': 'fit.logistic', 'rule': 'share:0.2'}):
+        with pytest.raises((CommandRefused, StudyError)) as info:
+            cmd.validate_value(state, 'final_test', value)
+        assert info.value.code == 'invalid_value'
+        assert info.value.details['chosen'] == chosen
+    cmd.validate_value(state, 'final_test', dict(chosen))
+
+
+def test_caps_or_logs_of_an_excluded_variable_are_refused(tmp_path):
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=300)['case'].parent
+    flow = Flow(tmp_path / 'study', case_dir)
+    flow.init()
+    flow.decide('prediction_time', 'when the record is created, before the outcome')
+    availability = fk.availability(case_dir)
+    assert availability['desk_followups'] == 'not_available'
+    flow.decide('feature_availability', availability)
+    flow.decide('split', flow.view()['next_action']['default_value'])
+    for field, part in (('caps', {'desk_followups': [0, 0.99]}),
+                        ('log_transform', ['desk_followups'])):
+        value = {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
+                 'log_transform': [], field: part}
+        out = flow.call('decide', 'propose', 'preprocessing', '--value-json', json.dumps(value),
+                        '--restatement', 'You cap it.', '--rationale', 'x', '--request-id',
+                        flow.rid(), '--expected-revision', flow.rev(), '--study', flow.study,
+                        expect=2)
+        assert out['error']['code'] == 'invalid_value'
+        assert out['error']['details']['field'] == field
+        assert out['error']['details']['excluded'] == ['desk_followups']
+
+
+def test_reasons_and_the_recap_are_in_the_juniors_words():
+    from mlkit.study import audience
+    assert audience.reason_words('policy changed (§3.7 row 5: policy.parameter)') == \
+        'The decision policy changed'
+    assert audience.reason_words('code of activity fit.logistic changed (§3.7 row 11)') == \
+        'The code of the logistic model changed'
+    assert '§' not in audience.reason_words('split changed (§3.7 row 3: x); its code changed '
+                                            '(§3.7 row 11)')
+    assert audience.rule_words('share:0.1') == 'select the top 10% by score'
+    assert audience.rule_words('capacity:100') == 'select the top 100 by score'
+    assert 'call' not in audience.rule_words('threshold:0.3')
+    limit = audience.limit({'id': 'adopted_rule_not_evaluated', 'rules': ['share:0.1'],
+                            'text': 'The adopted policy share:0.1 has no current evaluation.'})
+    assert 'share:0.1' not in limit['junior_text']
+    assert 'select the top 10% by score' in limit['junior_text']
+
+
+def test_the_junior_recap_names_the_folds_and_the_opening_in_words(opened):
+    from mlkit.study import read, view as vm
+    recap = ' '.join(vm.summary(vm.build(read.open(opened.study)))['recap_junior'])
+    assert 'stratified on the outcome' in recap and 'kfold' not in recap
+    assert 'the final test, opened once' in recap
+    assert 'the opening of the final test opened' not in recap
+    assert ' call ' not in f' {recap} '
