@@ -79,7 +79,9 @@ test('OV-9: the summary model carries the criterion, the target looks, and the m
   const m = toSummaryModel(payload('summary.binary'));
   assert.deepEqual(m.criterion, { decisionStatus: 'confirmed', value: '{"metric":"precision_gain","min_points":5}', status: 'met',
     gain: 30.5, low: 21.4, high: 40.2, minimum: 5, unit: 'percentage points', rule: 'capacity:100',
-    resultId: 'ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02', contradictsVerdict: false });
+    resultId: 'ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02', contradictsVerdict: false,
+    // WP-B5: the criterion judged on the final test; null while the final test is sealed.
+    finalTest: null });
   assert.equal(m.edaLooks.targetLooks, payload('summary.binary').eda_looks.target_looks);
   assert.equal(m.mode, 'guided');
   assert.equal(m.deliverables.launch.notebook.mode, 'run');

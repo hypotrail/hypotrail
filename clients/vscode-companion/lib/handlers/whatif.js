@@ -2,6 +2,8 @@
 // What if? handler (COMPANION-ADVANCED §6.5, §7 W3, §11; CLI-CONTRACT-COMPANION §4). WP-U3.
 //
 //   loads.whatif     `evidence --json` projected by toWhatIfModel (the shared key `evidence`).
+//   loads.scenario   WP-B5: `status --json` projected by toScenarioModel (the teaching
+//                    scenario's default share, labelled as an assumption of the exercise).
 //   preview_policy   the slider: debounced (300 ms, only the latest request is kept), at most
 //                    one `preview policy` at a time, cached per (revision, rules, intervals)
 //                    under a `preview:` key (the 64 most recent). The answer carries the
@@ -16,9 +18,10 @@
 const { toWhatIfModel } = require('../models/whatif');
 const { toPolicyPreviewModel } = require('../models/preview');
 const { toDraftModel } = require('../models/draft');
+const { toScenarioModel } = require('../models/scenario');
 
 const DEBOUNCE_MS = 300;
-const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6})$/;
+const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
 const FIT_SLOT = /^fit\.[a-z_]+$/;
 const DECISION_OF_TASK = { binary: 'policy', regression: 'model_choice' };
 const NOTHING = 'Nothing was recorded.';
@@ -178,6 +181,14 @@ const loads = {
     key: () => 'evidence',
     argv: (cli, agent) => cli.evidenceArgv(agent),
     model: toWhatIfModel,
+  },
+  // WP-B5: the full view holds `scenario_defaults` (the summary and the evidence do not);
+  // cached per version like any read. Engine request: carry it in the summary.
+  scenario: {
+    stage: 'v2',
+    key: () => 'scenario',
+    argv: (cli, agent) => cli.viewArgv(agent),
+    model: toScenarioModel,
   },
 };
 

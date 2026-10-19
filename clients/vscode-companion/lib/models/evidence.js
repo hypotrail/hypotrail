@@ -10,6 +10,11 @@
 //
 // Keys (§9): revision, task, results, ledger, lineage, impacts, sources, detail,
 // uncertainty; plus truncated and splitOverlap (the "explored rows" sentence of §6.4).
+// WP-B5 (v0.2b) adds, all read from current, verified results only: crossValidation (the
+// scheme of the split in values, and the spread across folds of each fit), variant (the
+// variant against the candidate, paired), gain (the gain points and the share of each
+// evaluated rule), finalEvaluation (the one evaluation of the final test), and diagnostics
+// (the `diag.*` results of WP-B4, in the shape of its plan; see diagnosticsOf).
 
 const { ModelError, str, strOrNull, list, obj, int, num, bool, expectSchema, segments, plain } = require('./common');
 
@@ -17,8 +22,14 @@ const SCHEMA = 'hypotrail.evidence/1';
 const RESULT_ID = /^[0-9a-f]{64}$/;
 // The order of artefact chips in a lineage (CLI-CONTRACT §8.3).
 const ARTIFACT_ORDER = ['report', 'notebook', 'workbench'];
-// Purposes whose validation rows chose something (§6.4: the highlighted ledger row).
-const SELECTION_PURPOSE = { binary: 'validation_policy_selection', regression: 'validation_model_evaluation' };
+// Purposes whose rows chose something (§6.4: the highlighted ledger row). WP-B5: under
+// cross-validation the choice reads out-of-fold predictions of the development rows.
+const SELECTION_PURPOSES = {
+  binary: [['validation_policy_selection', 'validation'], ['out_of_fold_policy_selection', 'development']],
+  regression: [['validation_model_evaluation', 'validation'], ['out_of_fold_evaluation', 'development']],
+};
+const isSelection = (task, purpose, partition) => (SELECTION_PURPOSES[task] || [])
+  .some(([p, part]) => p === purpose && part === partition);
 
 const rid8 = id => String(id || '').slice(0, 8);
 
@@ -291,6 +302,239 @@ function detailOf(raw, rawResults, lineage, impacts) {
   };
 }
 
+// --- v0.2b (WP-B5): cross-validation, the variant, the gain, the final test, diagnostics --
+
+/** One segment of a value path (CLI-CONTRACT-COMPANION §5, `cite.format_path`). */
+const seg = x => (/[.[\]]/.test(String(x)) ? `[${x}]` : String(x));
+const pathOf = (...parts) => parts.map(seg).join('.');
+
+/** The promoted, current, verified result of `slot`, or null. */
+function promotedOf(rawResults, slot) {
+  return rawResults.find(r => r && r.promoted === true && r.slot === slot && citable(r)) || null;
+}
+
+/**
+ * The scheme of the current split when it is a cross-validation (CLI-CONTRACT §12), and
+ * the spread across folds of the current candidate and variant: mean, sd, min, max of each
+ * metric, as the engine computed them. Null under a train/validation split.
+ */
+function crossValidationOf(rawResults, task) {
+  const split = promotedOf(rawResults, 'split');
+  const v = split ? obj(split.values) : {};
+  if (!split || v.scheme !== 'cross_validation') return null;
+  const dup = v.duplicates && typeof v.duplicates === 'object' ? v.duplicates : null;
+  const groups = v.groups && typeof v.groups === 'object' ? v.groups : null;
+  const fits = (task === 'regression' ? ['fit.linear', 'fit.variant'] : ['fit.logistic', 'fit.variant']).map(slot => {
+    const r = promotedOf(rawResults, slot);
+    const cv = r ? obj(obj(r.values).cross_validation) : null;
+    if (!cv || !cv.spread) return null;
+    return {
+      fit: slot, resultId: str(r.result_id),
+      metrics: Object.entries(obj(cv.spread)).map(([metric, x]) => {
+        const m = obj(x);
+        const at = k => pathOf('cross_validation', 'spread', metric, k);
+        return { metric, mean: num(m.mean), sd: num(m.sd), min: num(m.min), max: num(m.max),
+          paths: { mean: at('mean'), sd: at('sd'), min: at('min'), max: at('max') } };
+      }),
+    };
+  }).filter(Boolean);
+  return {
+    resultId: str(split.result_id), method: str(v.method), folds: int(v.folds), seed: int(v.seed),
+    stratifiedOn: strOrNull(v.stratified_on), nRows: int(v.n_rows), orderColumn: strOrNull(v.order_column),
+    duplicates: dup ? { policy: strOrNull(dup.policy), nGroups: int(dup.n_groups), dividedGroups: int(dup.divided_groups) } : null,
+    sharedGroups: groups ? { column: strOrNull(groups.column), inSeveralFolds: int(groups.groups_in_several_folds),
+      rows: int(groups.rows_in_shared_groups) } : null,
+    foldRows: list(v.fold_rows).map(f => ({ fold: int(f && f.fold), nRows: int(f && f.n_rows) })),
+    fits,
+  };
+}
+
+/**
+ * The variant (CLI-CONTRACT §12): what it changes, and its paired comparison with the
+ * candidate in the current evaluation (variant minus candidate), per rule for a binary
+ * study, per error for a regression study. Null without a current variant.
+ */
+function variantOf(rawResults, task) {
+  const fit = promotedOf(rawResults, 'fit.variant');
+  if (!fit) return null;
+  const fv = obj(fit.values);
+  const kind = obj(fv.variant);
+  const evaluation = promotedOf(rawResults, task === 'regression' ? 'evaluate.regression' : 'policy.evaluation');
+  const ev = evaluation ? obj(evaluation.values) : {};
+  const metric = (raw, path) => {
+    const d = interval(raw, path);
+    return { ...d, side: side(d.low, d.high) };
+  };
+  let comparisons = [];
+  let reference = null;
+  if (evaluation && task === 'binary') {
+    const rules = list(obj(evaluation.params).rules).map(str)
+      .filter(rule => obj(obj(obj(ev.rules)[rule]).comparisons)['fit.variant']);
+    comparisons = rules.map(rule => {
+      const c = obj(obj(obj(obj(ev.rules)[rule]).comparisons)['fit.variant']);
+      reference = reference || strOrNull(c.reference);
+      return { rule, metrics: ['precision', 'recall'].map(m => ({ metric: m,
+        ...metric(c[m], pathOf('rules', rule, 'comparisons', 'fit.variant', m, 'point')) })) };
+    });
+  } else if (evaluation) {
+    const c = obj(obj(ev.comparisons)['fit.variant']);
+    if (Object.keys(c).length) {
+      reference = strOrNull(c.reference);
+      comparisons = [{ rule: null, metrics: ['mae', 'rmse'].map(m => ({ metric: m,
+        ...metric(c[m], pathOf('comparisons', 'fit.variant', m, 'point')) })) }];
+    }
+  }
+  const ranking = task === 'binary' && ev.ranking ? Object.entries(obj(ev.ranking)).map(([slot, r]) => ({
+    fit: slot, rocAuc: num(obj(r).roc_auc), path: pathOf('ranking', slot, 'roc_auc') })) : [];
+  return {
+    resultId: str(fit.result_id),
+    kind: strOrNull(kind.kind), strength: strOrNull(kind.strength), group: strOrNull(kind.group),
+    evaluationId: evaluation ? str(evaluation.result_id) : null,
+    reference: reference || (task === 'regression' ? 'fit.linear' : 'fit.logistic'),
+    comparisons,
+    ranking,
+    bootstrap: evaluation ? bootstrapOf(ev) : null,
+  };
+}
+
+/**
+ * The gain points of the current policy evaluation (v0.2b, WP-B3): for the top 5, 10 and
+ * 20 % of the scored rows, the share of the positive rows reached (recall) and the
+ * precision; plus every evaluated rule with the share of the rows it acts on
+ * (`capacity_share`, the engine's). The panel draws them; it computes none of them.
+ */
+function gainOf(rawResults) {
+  const r = promotedOf(rawResults, 'policy.evaluation');
+  if (!r) return null;
+  const v = obj(r.values);
+  const g = v.gain_points && typeof v.gain_points === 'object' ? v.gain_points : null;
+  if (!g) return null;
+  const model = str(g.model) || 'fit.logistic';
+  const points = list(g.points).map((p, i) => ({
+    share: num(p && p.share), rule: strOrNull(p && p.rule), capacity: int(p && p.capacity),
+    precision: num(p && p.precision), recall: num(p && p.recall), gainPoints: num(p && p.gain_points), lift: num(p && p.lift),
+    paths: { share: pathOf('gain_points', 'points', i, 'share'), recall: pathOf('gain_points', 'points', i, 'recall'),
+      precision: pathOf('gain_points', 'points', i, 'precision'), capacity: pathOf('gain_points', 'points', i, 'capacity') },
+  })).filter(p => p.share !== null && p.recall !== null);
+  const rules = list(obj(r.params).rules).map(str).map(rule => {
+    const entry = obj(obj(v.rules)[rule]);
+    const m = obj(obj(entry.models)[model]);
+    return { rule, share: num(entry.capacity_share), recall: num(m.recall), precision: num(m.precision),
+      paths: { share: pathOf('rules', rule, 'capacity_share'), recall: pathOf('rules', rule, 'models', model, 'recall'),
+        precision: pathOf('rules', rule, 'models', model, 'precision') } };
+  }).filter(x => x.share !== null && x.recall !== null);
+  return { resultId: str(r.result_id), model, n: int(g.n), nPositive: int(g.n_positive), baseRate: num(g.base_rate),
+    points, rules, evaluation: strOrNull(v.evaluation) };
+}
+
+/**
+ * The one evaluation of the final test (CLI-CONTRACT §12, `final_test.evaluation`): the
+ * configuration, the rows, the chosen model against the baseline with intervals, and the
+ * success criterion judged on these rows. Null while the final test is sealed.
+ */
+function finalEvaluationOf(rawResults, task) {
+  const r = rawResults.find(x => x && x.slot === 'final_test.evaluation' && x.promoted === true) || null;
+  if (!r) return null;
+  if (!citable(r)) return { resultId: str(r.result_id), current: false };
+  const v = obj(r.values);
+  const chosen = str(v.model);
+  const reference = 'fit.baseline';
+  const fits = [chosen, ...Object.keys(obj(v.models)).filter(f => f !== chosen && f !== reference), reference]
+    .filter(f => obj(v.models)[f]);
+  const metrics = task === 'regression' ? ['mae', 'rmse'] : ['precision', 'recall'];
+  const k = obj(v.criterion);
+  const criterionPath = x => pathOf('criterion', x);
+  return {
+    resultId: str(r.result_id), current: true, created: strOrNull(r.created), model: chosen, rule: strOrNull(v.rule),
+    ruleFinal: strOrNull(v.rule_final), capacityShare: num(v.capacity_share), n: int(v.n), nPositive: int(v.n_positive),
+    refitRows: int(obj(v.refit).n_rows), unit: strOrNull(v.unit), note: strOrNull(v.note),
+    bootstrap: bootstrapOf(v),
+    metrics: metrics.map(metric => {
+      const d = obj(obj(v.deltas)[chosen])[metric];
+      const delta = d ? interval(d, pathOf('deltas', chosen, metric, 'point')) : null;
+      return {
+        metric,
+        models: fits.map(fit => {
+          const i = obj(obj(obj(v.intervals)[fit])[metric]);
+          return { fit, point: num(obj(obj(v.models)[fit])[metric]), low: num(i.low), high: num(i.high),
+            path: pathOf('models', fit, metric) };
+        }),
+        delta: delta ? { fit: chosen, ...delta, side: side(delta.low, delta.high) } : null,
+      };
+    }),
+    criterion: Object.keys(k).length ? {
+      metric: strOrNull(k.metric), minimum: num(k.minimum), unit: strOrNull(k.unit), gain: num(k.gain), low: num(k.low),
+      high: num(k.high), includesZero: k.interval_includes_zero === true, status: strOrNull(k.status),
+      paths: { gain: criterionPath('gain'), low: criterionPath('low'), high: criterionPath('high'), minimum: criterionPath('minimum') },
+    } : null,
+  };
+}
+
+// WP-B4 is written in parallel. Until its contract lands, the diagnostics are read in the
+// shape of its plan (V0.2-IMPLEMENTATION-PLAN WP-B4; INTEGRATOR: reconcile with the engine's
+// `diag.*` payload and test/fixtures/evidence.binary.diagnostics.json): a current result
+// whose activity starts with `diag.`, its kind named by the activity, its values
+//   confusion    {rule, model, evaluation, n, confusion: {tp, fp, fn, tn}}
+//   gain         {model, evaluation, points: [{share, recall, precision}]}
+//   calibration  {model, evaluation, bins: [{mean_pred, observed, low, high, n}]}
+//   segments     {model, rule, evaluation, segments: [{variable, group, precision, recall, n, low, high}]}
+//   residuals    {model, evaluation, bins: [{mean_pred, mean_residual, low, high, n}]}
+// where `evaluation` is `out_of_fold` (development rows) or `final_test`. Anything else is
+// listed by name only. Every number shown is one of these values.
+const DIAG_KINDS = ['confusion', 'gain', 'calibration', 'segments', 'residuals'];
+
+function diagKind(activity) {
+  const a = str(activity).toLowerCase();
+  if (a.includes('confusion')) return 'confusion';
+  if (a.includes('calibration')) return 'calibration';
+  if (a.includes('segment')) return 'segments';
+  if (a.includes('residual')) return 'residuals';
+  if (a.includes('gain') || a.includes('lift')) return 'gain';
+  return 'other';
+}
+
+function diagnosticsOf(rawResults) {
+  return rawResults.filter(r => r && r.current === true && r.integrity === 'ok' && /^diag\./.test(str(r.activity))
+    && r.values && typeof r.values === 'object').map(r => {
+    const v = obj(r.values);
+    const kind = diagKind(r.activity);
+    const base = { kind, resultId: str(r.result_id), activity: str(r.activity), slot: strOrNull(r.slot),
+      evaluation: strOrNull(v.evaluation) || (r.partition === 'final_test' ? 'final_test' : 'out_of_fold'),
+      model: strOrNull(v.model), rule: strOrNull(v.rule), n: int(v.n) ?? int(r.n_rows) };
+    if (kind === 'confusion') {
+      const c = obj(v.confusion);
+      const cell = k => ({ value: num(c[k]), path: pathOf('confusion', k) });
+      return { ...base, cells: { tp: cell('tp'), fp: cell('fp'), fn: cell('fn'), tn: cell('tn') } };
+    }
+    if (kind === 'gain') {
+      return { ...base, points: list(v.points).map((p, i) => ({ share: num(p && p.share), recall: num(p && p.recall),
+        precision: num(p && p.precision), paths: { share: pathOf('points', i, 'share'), recall: pathOf('points', i, 'recall'),
+          precision: pathOf('points', i, 'precision') } })).filter(p => p.share !== null && p.recall !== null) };
+    }
+    if (kind === 'calibration') {
+      return { ...base, bins: list(v.bins).map((b, i) => ({ meanPred: num(b && b.mean_pred), observed: num(b && b.observed),
+        low: num(b && b.low), high: num(b && b.high), n: int(b && b.n),
+        paths: { meanPred: pathOf('bins', i, 'mean_pred'), observed: pathOf('bins', i, 'observed'),
+          low: pathOf('bins', i, 'low'), high: pathOf('bins', i, 'high'), n: pathOf('bins', i, 'n') } }))
+        .filter(b => b.meanPred !== null && b.observed !== null) };
+    }
+    if (kind === 'segments') {
+      return { ...base, segments: list(v.segments).map((g, i) => ({ variable: str(g && g.variable), group: str(g && g.group),
+        precision: num(g && g.precision), recall: num(g && g.recall), n: int(g && g.n), low: num(g && g.low), high: num(g && g.high),
+        paths: { precision: pathOf('segments', i, 'precision'), recall: pathOf('segments', i, 'recall'), n: pathOf('segments', i, 'n'),
+          low: pathOf('segments', i, 'low'), high: pathOf('segments', i, 'high') } })) };
+    }
+    if (kind === 'residuals') {
+      return { ...base, bins: list(v.bins).map((b, i) => ({ meanPred: num(b && b.mean_pred), meanResidual: num(b && b.mean_residual),
+        low: num(b && b.low), high: num(b && b.high), n: int(b && b.n),
+        paths: { meanPred: pathOf('bins', i, 'mean_pred'), meanResidual: pathOf('bins', i, 'mean_residual'),
+          low: pathOf('bins', i, 'low'), high: pathOf('bins', i, 'high'), n: pathOf('bins', i, 'n') } }))
+        .filter(b => b.meanResidual !== null) };
+    }
+    return base;
+  });
+}
+
 function toEvidenceModel(payload) {
   const p = expectSchema(payload, SCHEMA);
   if (!Number.isInteger(p.revision)) throw new ModelError(`The CLI did not return a ${SCHEMA} document.`);
@@ -304,7 +548,7 @@ function toEvidenceModel(payload) {
     rows: int(row && row.rows),
     records: int(row && row.records),
     activities: list(row && row.activities).map(str),
-    selection: str(row && row.purpose) === SELECTION_PURPOSE[task] && str(row && row.partition) === 'validation',
+    selection: isSelection(task, str(row && row.purpose), str(row && row.partition)),
   }));
   const lineage = lineageOf(p.lineage);
   const impacts = list(p.impacts).map(impactItem);
@@ -327,9 +571,15 @@ function toEvidenceModel(payload) {
     detail: detailOf(p.detail, rawResults, lineage, impacts),
     uncertainty: uncertaintyOf(evaluation),
     splitOverlap: Boolean(split && split.values.overlap !== null && split.values.overlap !== undefined),
+    crossValidation: crossValidationOf(rawResults, task),
+    variant: variantOf(rawResults, task),
+    gain: task === 'binary' ? gainOf(rawResults) : null,
+    finalEvaluation: finalEvaluationOf(rawResults, task),
+    diagnostics: diagnosticsOf(rawResults),
   });
 }
 
-const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression'];
+const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression', 'evidence.binary.diagnostics',
+  'captured/evidence.binary.cv', 'captured/evidence.binary.cv.sealed'];
 
-module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, FIXTURES, SCHEMA };
+module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, gainOf, pathOf, DIAG_KINDS, FIXTURES, SCHEMA };

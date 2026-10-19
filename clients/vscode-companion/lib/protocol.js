@@ -14,8 +14,10 @@ function protocolFactory() {
   const VERSION = 2;
   const STAGES = ['v0', 'v1', 'v2', 'v3'];
   const TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
-  // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`).
-  const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data'];
+  // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`). WP-B5:
+  // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
+  const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data',
+    'scenario'];
   const WRITE_OPS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];
@@ -26,7 +28,7 @@ function protocolFactory() {
   // The summary's currency (decision CR.1) and the study key of `init` (decision CR.2).
   const CURRENCY = '^[0-9a-f]{1,64}$';
   const STUDY_KEY = '^[0-9a-f]{16}$';
-  const RULE = '^(threshold:(0(\\.[0-9]+)?|1(\\.0+)?)|capacity:[1-9][0-9]{0,6})$';
+  const RULE = '^(threshold:(0(\\.[0-9]+)?|1(\\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\\.[0-9]*[1-9][0-9]*|1(\\.0+)?))$';
 
   // Field specs: {t: 'str'|'int'|'bool'|'enum'|'obj'|'arr'|'any', opt?, nullable?, ...}.
   const pid = { t: 'str', re: PROPOSAL_ID };

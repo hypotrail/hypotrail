@@ -12,7 +12,7 @@
 // a draft it reads again.
 (function (HT) {
   'use strict';
-  const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6})$/;
+  const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
   const S = {
     kind: null, value: null, rule: null, seq: 0, sent: {}, preview: null, pending: false,
     drafts: {}, asked: {}, draftRevision: null, draftVersion: null, fit: null, nodes: {}, started: null,

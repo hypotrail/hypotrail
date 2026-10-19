@@ -32,6 +32,8 @@ function names() {
 function defaultRoute(tail, task = 'binary') {
   const [command, verb] = tail;
   const b = task === 'binary';
+  // WP-B5: `status --json` (no --summary) is the full view (the What if? scenario read).
+  if (command === 'status' && !tail.includes('--summary')) return 'captured/status.shoppers';
   if (command === 'status') return tail.includes('--digest') ? (b ? 'summary.binary' : 'summary.regression') : (b ? 'summary.v0.binary' : 'summary.v0.regression');
   if (command === 'decisions') return b ? 'decisions.binary' : 'decisions.regression';
   if (command === 'data') return b ? 'data.binary' : 'data.regression';

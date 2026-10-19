@@ -33,7 +33,9 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   'recapJunior', 'recapAudience', 'finalTest', 'deliverables',
   // WP-A7: the success criterion against the evaluation, the count of looks at the outcome,
   // and the confirmation mode (CLI-CONTRACT §3, §11.2, §11.4, §5.2).
-  'criterion', 'edaLooks', 'mode'];
+  'criterion', 'edaLooks', 'mode',
+  // WP-B5: the count of model configurations evaluated so far (CLI-CONTRACT §12, a disclosure).
+  'trials'];
 // The statuses of the success criterion (CLI-CONTRACT §11.4).
 const CRITERION_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
 const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
@@ -85,6 +87,38 @@ function criterionModel(raw) {
     decisionStatus: strOrNull(raw.decision_status), value: raw.value && typeof raw.value === 'object' ? showValue(raw.value) : null,
     status, gain: num(raw.gain), low: num(raw.low), high: num(raw.high), minimum: num(raw.minimum), unit: strOrNull(raw.unit),
     rule: strOrNull(raw.rule), resultId: strOrNull(raw.result_id), contradictsVerdict: raw.contradicts_verdict === true,
+    // WP-B5 (CLI-CONTRACT §12): the criterion judged once on the final test, or null.
+    finalTest: finalCriterionModel(raw.final_test),
+  };
+}
+
+/** `criterion.final_test` (CLI-CONTRACT §12, `governance.FINAL_CRITERION_KEYS`), or null. */
+function finalCriterionModel(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return {
+    status: CRITERION_STATUSES.includes(raw.status) ? raw.status : 'not_assessed',
+    gain: num(raw.gain), low: num(raw.low), high: num(raw.high), minimum: num(raw.minimum), unit: strOrNull(raw.unit),
+    intervalIncludesZero: raw.interval_includes_zero === true, resultId: strOrNull(raw.result_id),
+  };
+}
+
+/**
+ * `summary.final_test` (ADR 0006 and its WP-B1 amendment): sealed, opened (with the
+ * opening: the revision, the configuration, the result, the junior's words), changed after
+ * the opening, or absent (a study created before the seal). Counts are the engine's.
+ */
+function finalTestModel(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const o = raw.opening && typeof raw.opening === 'object' && !Array.isArray(raw.opening) ? raw.opening : null;
+  return {
+    status: str(raw.status), rows: int(raw.rows), method: strOrNull(raw.method),
+    fraction: typeof raw.fraction === 'number' ? raw.fraction : null,
+    developmentRows: int(raw.development_rows),
+    schemaCheck: strOrNull(raw.schema_check),
+    opening: o ? { revision: int(o.revision), model: strOrNull(o.model), rule: strOrNull(o.rule),
+      resultId: strOrNull(o.result_id), userWords: strOrNull(o.user_words) } : null,
+    postFinalTest: raw.post_final_test === true,
+    changedAfter: list(raw.changed_after).map(str).filter(Boolean),
   };
 }
 
@@ -278,20 +312,19 @@ function toSummaryModel(summary) {
     // (`recap`) is kept as it is, for the Details disclosure and the older tests.
     recapJunior: Array.isArray(summary.recap_junior) ? summary.recap_junior.map(str) : null,
     recapAudience: audienceOf(summary.recap_audience),
-    finalTest: summary.final_test && typeof summary.final_test === 'object' ? {
-      status: str(summary.final_test.status), rows: int(summary.final_test.rows), method: strOrNull(summary.final_test.method),
-      fraction: typeof summary.final_test.fraction === 'number' ? summary.final_test.fraction : null,
-      developmentRows: int(summary.final_test.development_rows),
-    } : null,
+    finalTest: finalTestModel(summary.final_test),
     deliverables: deliverablesModel(summary.deliverables),
     criterion: criterionModel(summary.criterion),
     edaLooks: summary.eda_looks && typeof summary.eda_looks === 'object'
       ? { targetLooks: int(summary.eda_looks.target_looks), results: list(summary.eda_looks.results).map(str) } : null,
     mode: strOrNull(summary.mode),
+    trials: summary.trials && typeof summary.trials === 'object' && !Array.isArray(summary.trials)
+      ? { count: int(summary.trials.count) } : null,
   };
 }
 
-const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary', 'summary.regression', 'summary.binary.health'];
+const FIXTURES = ['summary.v0.binary', 'summary.v0.regression', 'summary.binary', 'summary.regression', 'summary.binary.health',
+  'captured/summary.binary.cv', 'captured/summary.binary.cv.opening'];
 
 // v0 name, kept for the migrated tests and older callers.
 const toModel = toSummaryModel;

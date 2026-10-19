@@ -41,6 +41,7 @@ from mlkit.study import cli  # noqa: E402
 
 BANK = REPO / 'use-cases' / 'bank-marketing'
 AUTO = REPO / 'use-cases' / 'auto-mpg'
+SHOPPERS = REPO / 'use-cases' / 'online-shoppers'
 # The path the captured payloads show instead of the temporary study directory.
 STUDY_PLACEHOLDER = {'binary': '/studies/bank marketing "demo"', 'regression': '/studies/auto mpg'}
 OUT = HERE / 'captured'
@@ -259,6 +260,16 @@ def cross_validated(cap: Capture) -> None:
              '--expected-revision', flow.rev(), '--json', expect=(2,))
 
 
+def scenario(cap: Capture) -> None:
+    """WP-B5: the full view of a new Online Shoppers study, for its teaching scenario's
+    default share (``view.scenario_defaults``), which the What if? tab labels."""
+    study = cap.root / 'shoppers'
+    flow = fk.Flow(study, SHOPPERS, prefix='s')
+    flow.init()
+    cap.read('status.shoppers', 'binary', study, 'status', '--json',
+             note='Online Shoppers right after init: the scenario default share of the case.')
+
+
 def regression(cap: Capture) -> None:
     study = cap.root / 'regression'
     flow = fk.Flow(study, AUTO, prefix='a')
@@ -300,6 +311,7 @@ def capture(root: Path) -> dict[str, dict]:
     with environment(HYPOTRAIL_SESSION_LOG='1'):
         binary(cap)
         cross_validated(cap)
+        scenario(cap)
         regression(cap)
     return cap.items
 

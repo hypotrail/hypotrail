@@ -1,0 +1,705 @@
+{
+ "about": {
+  "schema": "hypotrail.status/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--json"
+  ],
+  "note": "Online Shoppers right after init: the scenario default share of the case."
+ },
+ "payload": {
+  "schema": "hypotrail.status/1",
+  "ok": true,
+  "study": "/tmp/capture/shoppers",
+  "revision": 1,
+  "since": null,
+  "changed": null,
+  "changes_since": null,
+  "view": {
+   "schema": "hypotrail.view/1",
+   "study": "/tmp/capture/shoppers",
+   "revision": 1,
+   "updated": "2026-10-19T15:36:21.335063+00:00",
+   "case": {
+    "id": "uci-online-shoppers-v1",
+    "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
+    "sha256": "86f394c70c3c14380a96ebc594b2b5e41c52e6fc82c6dd7ce9c1cd23d34ad3a0"
+   },
+   "dataset": {
+    "path": "/hypotrail/use-cases/online-shoppers/data/online_shoppers_intention.csv",
+    "row_key": {
+     "format": "L<line>",
+     "rule": "source_line"
+    },
+    "rows": 12330,
+    "sha256": "b3055ee355f59134d851d32641183cb4a8b45def7124d2f50442a042f358e0d9"
+   },
+   "plan": [
+    {
+     "id": "discover_data",
+     "title": "Discover the data",
+     "question": "What does one row describe, which columns are there and what does each one mean, and what do a few rows look like?",
+     "expected_output": "The data card read with you: the row unit, the columns grouped with their meaning and availability, and a few example rows. Nothing is decided at this step.",
+     "completion": "Done once a first proposal is made.",
+     "pause": null,
+     "decision": null,
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [],
+     "status": "ready",
+     "current": true
+    },
+    {
+     "id": "prediction_time",
+     "title": "Define the prediction moment",
+     "question": "At what moment is the prediction made, and what is known at that moment?",
+     "expected_output": "A confirmed prediction time, restated and answered in your own words.",
+     "completion": "Decision prediction_time is confirmed.",
+     "pause": 1,
+     "decision": "prediction_time",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [],
+     "status": "ready",
+     "current": false
+    },
+    {
+     "id": "feature_availability",
+     "title": "Decide which variables are available at prediction time",
+     "question": "Which variables are known at the prediction moment, and which must be excluded?",
+     "expected_output": "A confirmed availability status for every candidate feature, with the exclusions listed in your own words.",
+     "completion": "Decision feature_availability is confirmed.",
+     "pause": 1,
+     "decision": "feature_availability",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "prediction_time"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "split",
+     "title": "Split the data before exploring it",
+     "question": "How are rows divided between training and validation, before any exploration of the target?",
+     "expected_output": "A confirmed split decision and a recorded split result.",
+     "completion": "Decision split is confirmed and the split result is current.",
+     "pause": 2,
+     "decision": "split",
+     "activities": [
+      "split"
+     ],
+     "decide_first": true,
+     "missing_results": [
+      "split"
+     ],
+     "requires": [
+      "prediction_time",
+      "feature_availability"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "success_criterion",
+     "title": "Fix the success criterion before seeing a model",
+     "question": "How large a gain in precision over the baseline, at the rule you will adopt, would make the model worth using? It is fixed now, before any model is fitted.",
+     "expected_output": "A confirmed minimum gain over the baseline, stated before any model result is seen.",
+     "completion": "Decision success_criterion is confirmed.",
+     "pause": 2,
+     "decision": "success_criterion",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "train_eda",
+     "title": "Explore the training partition",
+     "question": "What does the training partition show about the target and the special values?",
+     "expected_output": "Target rate and special-value results on training rows, with their exposure recorded.",
+     "completion": "The training EDA results are current.",
+     "pause": null,
+     "decision": null,
+     "activities": [
+      "eda.target_rate",
+      "eda.special_values"
+     ],
+     "decide_first": true,
+     "missing_results": [
+      "eda.target_rate",
+      "eda.special_values"
+     ],
+     "requires": [
+      "split"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "preprocessing",
+     "title": "Decide how the model prepares the variables",
+     "question": "How should the model treat missing values, rare categories, extreme values and skewed variables? Every parameter is learnt on training rows only.",
+     "expected_output": "A confirmed preprocessing, with the explorations that motivated it.",
+     "completion": "Decision preprocessing is confirmed.",
+     "pause": 2,
+     "decision": "preprocessing",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "models",
+     "title": "Fit a baseline and a logistic model",
+     "question": "How much does a simple model improve on a constant baseline on validation?",
+     "expected_output": "Persisted validation predictions for the baseline and the logistic model.",
+     "completion": "Both fit results are current.",
+     "pause": null,
+     "decision": null,
+     "activities": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "decide_first": true,
+     "missing_results": [
+      "fit.baseline",
+      "fit.logistic"
+     ],
+     "requires": [
+      "split",
+      "success_criterion",
+      "preprocessing"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "model_variant",
+     "title": "Choose one variant to compare",
+     "question": "Which single variant of the candidate model should be compared with it under the same evaluation: a stronger or weaker regularisation, or the model without one group of variables?",
+     "expected_output": "A confirmed variant and its out-of-fold predictions, evaluated like the candidate.",
+     "completion": "Decision model_variant is confirmed and the variant fit is current.",
+     "pause": 3,
+     "decision": "model_variant",
+     "activities": [
+      "fit.variant"
+     ],
+     "decide_first": true,
+     "missing_results": [
+      "fit.variant"
+     ],
+     "requires": [
+      "models"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "policy",
+     "title": "Choose a decision policy",
+     "question": "Which rule turns scores into actions (a threshold or a capacity), and what does it cost and gain?",
+     "expected_output": "A current policy evaluation and a confirmed policy adoption.",
+     "completion": "The policy evaluation is current and decision policy is confirmed.",
+     "pause": 3,
+     "decision": "policy",
+     "activities": [
+      "policy.evaluation"
+     ],
+     "decide_first": false,
+     "missing_results": [
+      "policy.evaluation"
+     ],
+     "requires": [
+      "models",
+      "model_variant"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "final_test",
+     "title": "Open the final test once",
+     "question": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+     "expected_output": "A confirmed opening in your own words, with a reason, and the one evaluation of the chosen configuration on the final test.",
+     "completion": "Decision final_test is confirmed and the final evaluation is recorded.",
+     "pause": 3,
+     "decision": "final_test",
+     "activities": [
+      "final_test.evaluation"
+     ],
+     "decide_first": true,
+     "missing_results": [
+      "final_test.evaluation"
+     ],
+     "requires": [
+      "policy"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "conclusion",
+     "title": "Conclude proportionately",
+     "question": "What can be said, for which use, and with which limits? Keeping the baseline is a valid result.",
+     "expected_output": "A confirmed conclusion that names its limits.",
+     "completion": "Decision conclusion is confirmed.",
+     "pause": 3,
+     "decision": "conclusion",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "models"
+     ],
+     "status": "blocked",
+     "current": false
+    }
+   ],
+   "current_step": "discover_data",
+   "next_action": {
+    "kind": "show_data_card",
+    "step": "discover_data",
+    "message": "Before proposing anything, show the junior the data card (hypotrail data): the row unit, the grouped columns with their meaning and availability, and the five example rows. It is informational: nothing to confirm. Then propose the prediction moment.",
+    "audience": "agent",
+    "junior_message": "First, look at the data with the assistant: what one row describes, the columns and what each one means, and five example rows. Nothing is decided at this step."
+   },
+   "open_proposals": [],
+   "decisions": {
+    "prediction_time": {
+     "decision_id": "prediction_time",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "feature_availability": {
+     "decision_id": "feature_availability",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "split": {
+     "decision_id": "split",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "success_criterion": {
+     "decision_id": "success_criterion",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "preprocessing": {
+     "decision_id": "preprocessing",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "model_variant": {
+     "decision_id": "model_variant",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "policy": {
+     "decision_id": "policy",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "preprocessing",
+      "model_variant"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "final_test": {
+     "decision_id": "final_test",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant",
+      "policy"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "conclusion": {
+     "decision_id": "conclusion",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant",
+      "policy",
+      "final_test"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    }
+   },
+   "facts": {
+    "by_status": {
+     "documented_fact": [],
+     "scenario_assumption": [
+      {
+       "id": "decision",
+       "value": "Select the finished sessions to follow up first",
+       "source": "Teaching scenario"
+      },
+      {
+       "id": "intended_use",
+       "value": "Teaching simulation: choose which finished sessions to follow up (an email or a retargeting ad) when the budget covers only some of them",
+       "source": "Teaching scenario"
+      },
+      {
+       "id": "observation_unit",
+       "value": "One browsing session of a visitor on an online shop",
+       "source": "Description from the UCI dataset page (id 468) and Sakar et al. (2019) as recalled when the case was prepared; the page was not reachable, so it is not verified here. To verify: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset"
+      },
+      {
+       "id": "prediction_time",
+       "value": "When the session ends",
+       "source": "Teaching scenario"
+      },
+      {
+       "id": "repeated_observations",
+       "value": "The UCI description says each session belongs to a different user over one year (recalled, not verified here). The file has no user or session identifier; 125 rows repeat an earlier row exactly.",
+       "source": "Description from the UCI dataset page (id 468) and Sakar et al. (2019) as recalled when the case was prepared; the page was not reachable, so it is not verified here. To verify: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset"
+      },
+      {
+       "id": "target",
+       "value": "Revenue: whether the session ended with a purchase (True/False; the file writes TRUE/FALSE, read as booleans)",
+       "source": "Description from the UCI dataset page (id 468) and Sakar et al. (2019) as recalled when the case was prepared; the page was not reachable, so it is not verified here. To verify: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset"
+      },
+      {
+       "id": "target_as_proxy",
+       "value": "Revenue is the purchase of the same session. The follow-up aims at a later purchase, which the data do not record: the score ranks sessions by how much they look like sessions that bought, a proxy of purchase intention, not the effect of a follow-up.",
+       "source": "Teaching scenario"
+      }
+     ],
+     "observed": [
+      {
+       "id": "data_class_counts",
+       "value": "Revenue TRUE in 1908 rows and FALSE in 10422, as UCI publishes (1908 and 10422). A structural count of the labels over every row, not a rate studied on training rows.",
+       "source": "Structural inspection of data/online_shoppers_intention.csv; verification method: build_case.py --verify (label counts compared with the UCI figures)"
+      },
+      {
+       "id": "data_mirror",
+       "value": "Obtained on 2026-10-19 from the public mirror https://raw.githubusercontent.com/fenago/datasets/main/online_shoppers_intention.csv (UCI was unreachable from the preparation environment); sha256 b3055ee355f59134d851d32641183cb4a8b45def7124d2f50442a042f358e0d9; CRLF line ends.",
+       "source": "Download log of the preparation (README.md, \"Provenance and verification\")"
+      },
+      {
+       "id": "data_rows_columns",
+       "value": "12330 data rows and 18 columns, as UCI publishes (12330 sessions, 18 attributes)",
+       "source": "Structural inspection of data/online_shoppers_intention.csv; verification method: build_case.py --verify (csv parsing, every row has 18 fields)"
+      }
+     ],
+     "unknown": [
+      {
+       "id": "causal_effect",
+       "value": "Not measured: the data record no follow-up and no later purchase.",
+       "source": "Observational nature of the data"
+      },
+      {
+       "id": "row_order",
+       "value": "No order is documented, and the file holds no date: only the month, without the year. The final test is therefore a stratified random sample, not the latest sessions.",
+       "source": "Structural inspection of data/online_shoppers_intention.csv"
+      }
+     ]
+    },
+    "count": 12
+   },
+   "structure": {
+    "duplicates": {
+     "source": "Structural inspection of data/online_shoppers_intention.csv: 125 rows repeat an earlier row on every column (76 groups, 201 rows)",
+     "status": "observed",
+     "value": 125
+    },
+    "group_column": {
+     "source": "No user or session identifier in the file",
+     "status": "unknown",
+     "value": null
+    },
+    "row_unit": {
+     "source": "Description from the UCI dataset page (id 468) and Sakar et al. (2019) as recalled when the case was prepared; the page was not reachable, so it is not verified here. To verify: https://archive.ics.uci.edu/dataset/468/online+shoppers+purchasing+intention+dataset",
+     "status": "scenario_assumption",
+     "value": "One browsing session"
+    },
+    "time_column": {
+     "source": "Only the month of the visit, without the year",
+     "status": "unknown",
+     "value": null
+    }
+   },
+   "results": {},
+   "stale": {},
+   "invalidations": [],
+   "executions": {
+    "active": {},
+    "interrupted": {},
+    "late": {},
+    "suspected_interrupted": {}
+   },
+   "artifacts": {
+    "manifest": null,
+    "status": "not_rendered",
+    "items": {}
+   },
+   "exposure": {
+    "records": 2,
+    "rows_exposed": 9864,
+    "by_purpose": {
+     "sealed": 2466,
+     "structural_inspection": 9864
+    },
+    "by_partition": {
+     "development": {
+      "structural_inspection": 9864
+     },
+     "final_test": {
+      "sealed": 2466
+     }
+    },
+    "validation_rows_used_for_selection": 0,
+    "prior_exposure": [
+     {
+      "source": "Public availability since 2018",
+      "status": "observed",
+      "value": "A widely used public dataset (UCI, Kaggle, many tutorials and papers, among them Sakar et al. 2019): its rows and the strength of PageValues are not unseen, and a language model has likely read analyses of it."
+     }
+    ]
+   },
+   "not_yet_defensible": [
+    {
+     "id": "unconfirmed_decisions",
+     "decisions": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant",
+      "policy",
+      "final_test",
+      "conclusion"
+     ],
+     "text": "These decisions are not confirmed: prediction_time, feature_availability, split, success_criterion, preprocessing, model_variant, policy, final_test, conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the decision policy, the opening of the final test and the conclusion."
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+     "audience": "junior",
+     "junior_text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+    },
+    {
+     "id": "public_data_already_explored",
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "sources": [
+      "Public availability since 2018"
+     ],
+     "audience": "junior",
+     "junior_text": "The data were explored or published before this study; its rows are not unseen."
+    },
+    {
+     "id": "no_time_or_entity_identifier",
+     "missing": [
+      "time_column",
+      "group_column"
+     ],
+     "text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions.",
+     "audience": "junior",
+     "junior_text": "The data have no time column or entity identifier, so the study cannot check drift over time or repeated entities across partitions."
+    },
+    {
+     "id": "no_causality",
+     "text": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "audience": "junior",
+     "junior_text": "Associations in observational data do not show that acting on a variable would change the outcome."
+    },
+    {
+     "id": "workbench_not_tracked",
+     "text": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "audience": "junior",
+     "junior_text": "Experiments in the notebook workbench are not recorded and are not decisions."
+    },
+    {
+     "id": "final_test_sealed",
+     "text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose.",
+     "audience": "junior",
+     "junior_text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
+    }
+   ],
+   "settings": {
+    "bootstrap": {
+     "level": 0.95,
+     "replicates": 2000,
+     "seed": 20261017
+    }
+   },
+   "task": "binary",
+   "notes": [],
+   "final_test": {
+    "status": "sealed",
+    "rows": 2466,
+    "method": "stratified",
+    "fraction": 0.2,
+    "development_rows": 9864,
+    "schema_check": "pass",
+    "opening": null,
+    "post_final_test": false,
+    "changed_after": []
+   },
+   "deliverables": {
+    "interpreter": "/hypotrail/framework/.venv/bin/python",
+    "launch": {
+     "notebook": {
+      "mode": "run",
+      "path": "notebooks/study_generated.py",
+      "argv": [
+       "uv",
+       "run",
+       "--project",
+       "/hypotrail/framework",
+       "marimo",
+       "run",
+       "/tmp/capture/shoppers/notebooks/study_generated.py"
+      ],
+      "shell": "uv run --project /hypotrail/framework marimo run '/tmp/capture/shoppers/notebooks/study_generated.py'"
+     },
+     "workbench": {
+      "mode": "edit",
+      "path": "notebooks/workbench.py",
+      "argv": [
+       "uv",
+       "run",
+       "--project",
+       "/hypotrail/framework",
+       "marimo",
+       "edit",
+       "/tmp/capture/shoppers/notebooks/workbench.py"
+      ],
+      "shell": "uv run --project /hypotrail/framework marimo edit '/tmp/capture/shoppers/notebooks/workbench.py'"
+     }
+    }
+   },
+   "mode": "guided",
+   "language": "en",
+   "criterion": {
+    "decision_status": "open",
+    "value": null,
+    "metric": "precision_gain",
+    "status": "not_assessed",
+    "result_id": null,
+    "rule": null,
+    "model": null,
+    "gain": null,
+    "low": null,
+    "high": null,
+    "minimum": null,
+    "unit": "percentage points",
+    "interval_includes_zero": null,
+    "verdict": null,
+    "contradicts_verdict": false,
+    "final_test": null
+   },
+   "eda_looks": {
+    "target_looks": 0,
+    "results": [],
+    "by_activity": {},
+    "note": "Each exploration that read the target on training rows is a look. The count is a disclosure: the more looks, the more a pattern found among them can be chance. Validation and final-test rows are never explored."
+   },
+   "scenario_defaults": {
+    "capacity_share": {
+     "value": 0.1,
+     "status": "scenario_assumption",
+     "source": "Teaching scenario: the follow-up budget covers one finished session in ten. A real team would give its own figure."
+    }
+   },
+   "trials": {
+    "count": 0,
+    "results": [],
+    "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
+   }
+  }
+ }
+}
