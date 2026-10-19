@@ -234,7 +234,13 @@ def test_online_shoppers_end_to_end_with_grouped_folds_a_share_and_the_opening(t
     for rule, p in (('share:0.1', 0.1), ('share:0.2', 0.2)):
         entry = out['rules'][rule]
         assert entry['capacity_share'] == p
-        assert entry['models']['fit.logistic']['capacity'] == policy.share_capacity(p, n_dev)
+        # B6c (H3): the share is applied within each fold; the capacity is their sum.
+        sizes = {}
+        for fold in folds.values():
+            sizes[fold] = sizes.get(fold, 0) + 1
+        assert entry['models']['fit.logistic']['capacity'] == sum(
+            policy.share_capacity(p, m) for m in sizes.values())
+        assert entry['models']['fit.logistic']['selection_scope'] == 'within_fold'
         assert entry['comparisons']['fit.variant']['reference'] == 'fit.logistic'
     # The gain points are computed on the out-of-fold predictions of every development row.
     gain = out['gain_points']
@@ -255,6 +261,42 @@ def test_online_shoppers_end_to_end_with_grouped_folds_a_share_and_the_opening(t
     assert flow.call('check', '--study', flow.study)['clean'] is True
 
 
+def _assert_within_fold(flow, out, folds):
+    """B6c (H3): under temporal folds each period is scored by a model of other periods, so
+    a capacity or a share selects the best rows of each fold by that fold's model; the
+    counts are summed and each fold's precision is reported."""
+    assert out['selection']['scope'] == 'within_fold' and out['selection']['folds'] == 3
+    assert out['gain_points']['selection_scope'] == 'within_fold'
+    store = sto.StudyStore(flow.study)
+    pred = act.read_predictions(store, flow.state()['current']['fit.logistic'])
+    y, score = pred['y'], pred['score']
+    fold = np.asarray([folds[k] for k in pred['row_keys']])
+    for rule, share in (('share:0.1', 0.1), ('capacity:500', 500 / 37062)):
+        entry = out['rules'][rule]['models']['fit.logistic']
+        assert entry['selection_scope'] == 'within_fold'
+        assert [f['fold'] for f in entry['by_fold']] == [1, 2, 3]
+        selected = found = 0.0
+        for f in entry['by_fold']:
+            rows = np.flatnonzero(fold == f['fold'])
+            assert f['n'] == len(rows)
+            assert f['capacity'] == policy.share_capacity(share, len(rows))
+            best = rows[np.argsort(-score[rows], kind='stable')][:f['capacity']]
+            assert f['true_positives'] == pytest.approx(y[best].sum())
+            assert f['precision'] == pytest.approx(y[best].mean())
+            selected += f['selected']
+            found += f['true_positives']
+        assert entry['selected'] == selected == entry['capacity']
+        assert entry['true_positives'] == pytest.approx(found)
+        assert entry['precision'] == pytest.approx(found / selected)
+        pooled = policy.evaluate(y, score, rule)
+        assert 'selection_scope' not in pooled
+        # The pooled reading ranks rows of different folds on scales that differ: it selects
+        # another set of rows, with another precision.
+        assert pooled['precision'] != pytest.approx(entry['precision'], abs=1e-6)
+        precisions = [f['precision'] for f in entry['by_fold']]
+        assert max(precisions) - min(precisions) > 0.05     # the periods differ
+
+
 def test_bank_full_end_to_end_with_temporal_folds_on_the_file_order(tmp_path):
     flow = Flow(tmp_path / 'study', BANK_FULL, prefix='b')
     flow.init()
@@ -273,10 +315,11 @@ def test_bank_full_end_to_end_with_temporal_folds_on_the_file_order(tmp_path):
     flow.run('fit.baseline')
     assert flow.run('fit.logistic')['values']['cross_validation']['method'] == 'temporal_folds'
     flow.variant()
-    out = flow.run('policy.evaluate', '--rule', 'capacity:500')['values']
+    out = flow.run('policy.evaluate', '--rule', 'capacity:500', '--rule', 'share:0.1')['values']
     assert out['evaluation'] == 'out_of_fold' and out['n'] == 37062
     assert out['rules']['capacity:500']['capacity_share'] == 500 / 37062
     assert out['gain_points']['n'] == 37062
+    _assert_within_fold(flow, out, folds)
     flow.decide('policy', 'capacity:500',
                 words='Yes, I adopt that rule because the desk can make that many calls')
     opening = _open(flow)

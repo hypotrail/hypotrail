@@ -360,8 +360,10 @@ def _delegate(flow, decision, value, scope='standing', expect=0):
 
 @pytest.mark.parametrize('decision', ('success_criterion', 'preprocessing'))
 def test_express_standing_delegation_covers_the_framing_decisions(flow, decision):
+    # B6c: a guided standing delegation covers the default preprocessing (below); a
+    # preparation that changes something is covered only in express.
     value = fk.criterion(flow.state()) if decision == 'success_criterion' \
-        else dict(governance.DEFAULT_PREPROCESSING)
+        else {**governance.DEFAULT_PREPROCESSING, 'missing': 'indicator'}
     _framing(flow)
     refused = _delegate(flow, decision, value, expect=2)            # guided: not covered
     assert refused['error']['details']['reason'] == 'delegation_not_given_at_this_pause'
@@ -372,6 +374,25 @@ def test_express_standing_delegation_covers_the_framing_decisions(flow, decision
     assert done['result']['delegation_scope'] == 'standing' and done['result']['mode'] == 'express'
     delegated = next(i for i in flow.view()['not_yet_defensible'] if i['id'] == 'delegated_decisions')
     assert decision in delegated['decisions']
+
+
+def test_a_guided_standing_delegation_covers_the_default_preprocessing_only(flow):
+    """B6c (integrator decision, ADR 0005): fewer pauses for a junior who delegated; a
+    preparation that changes anything still needs their words."""
+    _framing(flow)
+    criterion = _propose(flow, 'success_criterion', fk.criterion(flow.state()),
+                         'You fix the minimum gain as stated.')
+    _confirm(flow, criterion, 'Yes, that minimum gain is what makes the model worth it')
+    changed = {**governance.DEFAULT_PREPROCESSING, 'caps': {}, 'missing': 'indicator'}
+    refused = _delegate(flow, 'preprocessing', changed, expect=2)
+    assert refused['error']['details']['reason'] == 'delegation_not_given_at_this_pause'
+    assert 'when it is the engine\'s default' in refused['error']['message']
+    done = _delegate(flow, 'preprocessing', dict(governance.DEFAULT_PREPROCESSING))
+    assert done['result']['basis'] == st.DELEGATED_DEFAULT and done['result']['mode'] == 'guided'
+    assert done['result']['delegation_scope'] == 'standing'
+    delegated = next(i for i in flow.view()['not_yet_defensible']
+                     if i['id'] == 'delegated_decisions')
+    assert 'preprocessing' in delegated['decisions']
 
 
 def test_express_never_covers_the_policy_or_the_conclusion(pause3):

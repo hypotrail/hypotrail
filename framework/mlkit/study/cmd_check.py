@@ -97,7 +97,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from . import cite, manifest as mf, read, view as view_model, wordnum
+from . import cite, governance, manifest as mf, read, view as view_model, wordnum
 from . import commands as cmd
 from .errors import StudyError
 
@@ -112,7 +112,12 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
             'misattributed_delegation': 'error',
             # v0.2a (WP-A4): the conclusion adopts while the success criterion is not met
             # or its paired interval includes 0.
-            'verdict_contradicts_criterion': 'warning'}
+            'verdict_contradicts_criterion': 'warning',
+            # B6c (H4): the conclusion keeps the baseline while the criterion is met on the
+            # final test.
+            'verdict_keeps_baseline_against_criterion': 'warning',
+            # B6c (H2): a final-test figure in a text after the choice changed.
+            'final_test_figure_outdated': 'error'}
 FINDING_CODES = tuple(SEVERITY)
 
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|cannot|doesn't|don't|isn't|aren't|without|"
@@ -361,15 +366,67 @@ INTERVAL_PARENTS = frozenset({'interval', 'intervals', 'deltas'})
 SENTENCE_END = re.compile(r'[.!?](?=\s|$)|[;\n]')
 
 
+# B6c (H2): the evidence a sentence speaks of. A figure said of the final test traces to the
+# final evidence only (the one final evaluation and its diagnostics); a figure said of the
+# development evidence (out of fold, cross-validated, validation) never traces to it.
+FINAL_SCOPE = re.compile(r"\b(?:final[- ]test\w*|tests?[- ]finals?|final evaluation|"
+                         r"[ée]valuation finale|sealed rows|lignes scell[ée]es)\b", re.I)
+DEVELOPMENT_SCOPE = re.compile(r"\b(?:out[- ]of[- ]fold|hors[- ]pli\w*|cross[- ]validat\w*|"
+                               r"validation crois[ée]e|development|d[ée]veloppement|"
+                               r"validation)\b", re.I)
+FINAL_SLOTS = ('final_test.evaluation', 'diag.final_test')
+# B6c (H2): a percentage right after a rule word ("la règle des 20 %", "the top 20%") is the
+# rule's share: it matches the rule the evidence of the sentence evaluated.
+RULE_WORDS = re.compile(r"\b(?:rules?|r[èe]gles?|top|share|capacit\w*|meilleur\w*|best|"
+                        r"premi[èe]r\w*)\b[^\d]{0,14}$", re.I)
+# B6c (H2): the bounds of a diagnostic's segments and intervals are internals unless the
+# words speak of an interval.
+DIAG_BOUNDS = ('low', 'high', 'precision_low', 'precision_high', 'recall_low', 'recall_high')
+# B6c (H2): decisions whose change after the opening means the final test no longer measured
+# the configuration a text would claim.
+CHOICE_CHANGES = ('policy', 'model_choice', 'model_variant', 'preprocessing',
+                  'feature_availability', 'split')
+
+
 @dataclasses.dataclass(frozen=True)
 class Binding:
     """WP-A9 (H2): what the words near a number say it measures. ``segments``: path
     segments a matching value must hold (None: any). ``interval``: interval words are near,
     so an interval's bound may match (without them only point values do). ``model``: a model
-    is named and the baseline is not, so the baseline's values do not match."""
+    is named and the baseline is not, so the baseline's values do not match. B6c (H2):
+    ``scope`` is ``final`` or ``development`` when the sentence speaks of one evidence only;
+    ``rule`` when the number is a rule's share ("la règle des 20 %")."""
     segments: tuple | None = None
     interval: bool = False
     model: bool = False
+    scope: str | None = None
+    rule: bool = False
+
+
+def scope_of(sentence: str) -> str | None:
+    """B6c (H2): ``final``, ``development``, or None (both, or neither, named)."""
+    final = bool(FINAL_SCOPE.search(sentence))
+    development = bool(DEVELOPMENT_SCOPE.search(FINAL_SCOPE.sub(' ', sentence)))
+    if final and not development:
+        return 'final'
+    if development and not final:
+        return 'development'
+    return None
+
+
+def final_item(item: Mapping) -> bool:
+    """B6c (H2): a pool item of the final evidence: the final evaluation, its diagnostics,
+    or the criterion judged on the final test (WP-B6b's ``criterion.final_test`` items)."""
+    return item.get('slot') in FINAL_SLOTS or (
+        item.get('slot') == 'criterion'
+        and str(item.get('path') or '').startswith('criterion.final_test'))
+
+
+def _sentence_around(text: str, start: int, end: int) -> str:
+    ends = [m.end() for m in SENTENCE_END.finditer(text, 0, start)]
+    lo = ends[-1] if ends else 0
+    m = SENTENCE_END.search(text, end)
+    return text[lo:m.start() if m else len(text)]
 
 
 def binding(text: str, start: int, end: int, percent: bool) -> Binding:
@@ -405,7 +462,9 @@ def binding(text: str, start: int, end: int, percent: bool) -> Binding:
     return Binding(segments=('#count',) if count else (tuple(dict.fromkeys(out)) or None),
                    interval=bool(INTERVAL_WORDS.search(near) or RANGE_AFTER.match(text, end)
                                  or RANGE_BEFORE.search(text, max(0, start - 20), start)),
-                   model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near))
+                   model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near),
+                   scope=scope_of(_sentence_around(text, start, end)),
+                   rule=percent and bool(RULE_WORDS.search(text[max(0, start - 30):start])))
 
 
 def _bound(item: Mapping, bind: Binding | None) -> bool:
@@ -416,6 +475,18 @@ def _bound(item: Mapping, bind: Binding | None) -> bool:
     try:
         segments = cite.parse_path(path) if path not in cite.META_PATHS else [path]
     except Exception:      # noqa: BLE001
+        return False
+    slot = str(item.get('slot') or '')
+    # B6c (H2): the evidence the sentence speaks of.
+    if bind.scope == 'final' and not final_item(item):
+        return False
+    if bind.scope == 'development' and final_item(item):
+        return False
+    if bind.rule:
+        # A rule's share matches the share of a rule that evidence evaluated.
+        return segments[-1] == 'capacity_share'
+    if slot.startswith('diag.') and not bind.interval and (
+            'segments' in segments or segments[-1] in DIAG_BOUNDS):
         return False
     if not bind.interval and segments[-1] in ('low', 'high') \
             and INTERVAL_PARENTS & set(segments[:-1]):
@@ -595,6 +666,9 @@ class Pool:
         final = view.get('final_test') or {}
         for key in ('rows', 'development_rows'):
             self._literal('final_test', f'final_test.{key}', final.get(key))
+        # B6c (H2): the choices changed after the opening; a final-test figure then no
+        # longer describes the configuration the study holds.
+        self.changed_after = sorted(set(final.get('changed_after') or []) & set(CHOICE_CHANGES))
         for source, value in data_card_figures(data_card):
             self._literal('data_card', source, value)
         for items in view['facts']['by_status'].values():
@@ -649,6 +723,9 @@ class Pool:
         for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
                               (self.stale, 'stale')):
             if difference and label == 'literal':
+                continue
+            if label == 'literal' and bind is not None and bind.scope == 'final' \
+                    and bind.rule:
                 continue
             for item in bucket:
                 if difference and not _is_difference(item['path']):
@@ -792,7 +869,18 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',
                            'value': tok.value})
             continue
-        if label == 'current':
+        if label == 'current' and final_item(item) \
+                and getattr(pool, 'changed_after', None):
+            findings.append(finding(
+                'final_test_figure_outdated', where,
+                f'{tok.text.strip()} is a figure of the final test, which measured the '
+                f'configuration chosen before {", ".join(pool.changed_after)} changed after the '
+                f'opening: it does not describe the configuration the study now holds. Say so, '
+                f'or cite development evidence of the current choice.',
+                number=tok.text.strip(), result_id=item['result_id'], path=item['path'],
+                changed_after=list(pool.changed_after),
+                location=locate(tok.start) if locate else None))
+        elif label == 'current':
             traced.append({'text': tok.text.strip(), 'result_id': item['result_id'],
                            'slot': item['slot'], 'path': item['path'], 'value': item['value']})
         elif label == 'literal':
@@ -1003,11 +1091,36 @@ def _check_cited(view: Mapping, study: read.Study, rid: str, path: str, raw: str
         attr_ok, factor = False, 1.0
     if factor not in (1.0, 100.0):          # only the points format scales (cite.pts*)
         attr_ok = False
+    if factor == 100.0 and _already_points(item['values'], path, value):
+        # B6c (B1): the points format scales a difference of fractions; a value already in
+        # points (a gain stored with ``unit: percentage points``, or any value outside
+        # [-1, 1]) shown with it is a figure 100 times too large, even though the text
+        # matches the attribute times the scale.
+        return [finding('value_mismatch', where,
+                        f'The cited value {shown!r} scales a figure already in percentage '
+                        f'points by 100 ({path!r}).', result_id=rid, path=path, shown=shown,
+                        attribute=raw, registry=value, reason='double_scaled')]
     if not attr_ok or len(toks) != 1 or not cite.shown_matches(toks[0], value, factor):
         return [finding('value_mismatch', where,
                         f'The cited value {shown!r} differs from the registry value at {path!r}.',
                         result_id=rid, path=path, shown=shown, attribute=raw, registry=value)]
     return []
+
+
+POINT_UNITS = ('percentage points', 'points')
+
+
+def _already_points(values, path: str, value) -> bool:
+    """True when the value at ``path`` cannot be a difference of fractions: its size is
+    above 1, or its mapping declares a unit in points (``criterion.unit``)."""
+    if cite.is_number(value) and abs(value) > 1 + 1e-12:
+        return True
+    try:
+        segments = cite.parse_path(path)
+        parent = cite.resolve(values, segments[:-1]) if len(segments) > 1 else values
+    except (KeyError, StudyError):
+        return False
+    return isinstance(parent, Mapping) and parent.get('unit') in POINT_UNITS
 
 
 def check_html(view: Mapping, study: read.Study, page: str, where: str) -> list[dict]:
@@ -1159,16 +1272,36 @@ def check_criterion(view: Mapping) -> list[dict]:
     the policy or the model while the success criterion fixed before the models is not met,
     or met by the point estimate only (its paired interval includes 0)."""
     c = view.get('criterion')
-    if not c or not c.get('contradicts_verdict'):
+    if not c:
         return []
+    final = c.get('final_test') or {}
+    on_final = c.get('judged_on') == 'final_test'
+    if governance.keeps_against_met(c):
+        return [finding('verdict_keeps_baseline_against_criterion', 'decision:conclusion',
+                        'The conclusion keeps the baseline although the success criterion is '
+                        'met on the final test (the gain reaches the minimum and its interval '
+                        'excludes 0). Keeping the baseline can be right for a reason the '
+                        'criterion does not capture (a cost, a risk, a limit of the data): the '
+                        'conclusion should say which, or the verdict should be reconsidered.',
+                        status='met', judged_on='final_test',
+                        development_status=c.get('status'), verdict=c['verdict'],
+                        gain=final.get('gain'), low=final.get('low'), high=final.get('high'),
+                        minimum=final.get('minimum'), result_id=final.get('result_id'))]
+    if not c.get('contradicts_verdict'):
+        return []
+    judged = c.get('judged_status') or c['status']
+    src = final if on_final else c
     why = ('the gain does not reach the minimum fixed before the models'
-           if c['status'] == 'not_met' else
+           if judged == 'not_met' else
            'the paired interval of the gain includes 0, so the gain may be chance')
+    where = ' on the final test' if on_final else ''
     return [finding('verdict_contradicts_criterion', 'decision:conclusion',
                     f'The conclusion adopts ({c["verdict"]}) while the success criterion is '
-                    f'{" ".join(c["status"].split("_"))}: {why}.',
-                    status=c['status'], verdict=c['verdict'], gain=c['gain'], low=c['low'],
-                    high=c['high'], minimum=c['minimum'], result_id=c['result_id'])]
+                    f'{" ".join(judged.split("_"))}{where}: {why}.',
+                    status=judged, verdict=c['verdict'], gain=src.get('gain'),
+                    low=src.get('low'), high=src.get('high'), minimum=src.get('minimum'),
+                    result_id=src.get('result_id'), judged_on=c.get('judged_on'),
+                    development_status=c.get('status'))]
 
 
 def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:

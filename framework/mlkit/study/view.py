@@ -25,6 +25,7 @@ from . import partition
 from . import governance, read
 from . import records as rec
 from . import state as st
+from . import texts
 from .case import EPISTEMIC_STATUSES
 from .errors import StudyError
 
@@ -114,6 +115,8 @@ SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
                     'changed_after_final_test', 'final_test_opening_interrupted',
                     # v0.2a (WP-A4): an adopting verdict against the success criterion.
                     'verdict_contradicts_criterion',
+                    # B6c (H4): keeping the baseline against a criterion met on the final test.
+                    'verdict_keeps_baseline_against_criterion',
                     # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
                     'conclusion_outdated', 'result_integrity',
                     'adopted_rule_not_evaluated',
@@ -179,6 +182,41 @@ def case_availability(state: dict) -> dict | None:
         return None
     return {v['name']: (v.get('availability') or {}).get('value') or 'unknown'
             for v in doc['variables'] if v.get('role') == 'feature'}
+
+
+CASE_UNCERTAIN_VALUES = ('uncertain', 'unknown')
+
+
+def case_uncertain_marked_available(state: dict) -> list[str]:
+    """B6c (M1): features the case calls uncertain (or whose availability it does not
+    document) that the confirmed availability decision marks ``available_at_prediction``."""
+    fa = state['decisions'].get('feature_availability') or {}
+    value = fa.get('value')
+    if fa.get('status') not in ('confirmed', 'reconfirm_required') or not isinstance(value, dict):
+        return []
+    statuses = case_availability(state) or {}
+    return sorted(f for f, v in value.items() if v == 'available_at_prediction'
+                  and statuses.get(f) in CASE_UNCERTAIN_VALUES)
+
+
+def _case_uncertain_limit(state: dict, defensible: list) -> None:
+    """B6c (M1): a feature used although the case calls its availability uncertain is a
+    limit, whether the decision says ``uncertain_included`` or ``available_at_prediction``;
+    ``uncertain_features_included`` lists both, ``case_uncertain`` the second kind."""
+    overridden = case_uncertain_marked_available(state)
+    if not overridden:
+        return
+    text = ('The case calls the availability of these features uncertain (or does not '
+            'document it), yet they are used as known at prediction time: '
+            + ', '.join(overridden) + '. Check that they are known at that moment.')
+    item = next((i for i in defensible if i['id'] == 'uncertain_features_included'), None)
+    if item is None:
+        defensible.append({'id': 'uncertain_features_included', 'features': overridden,
+                           'case_uncertain': overridden, 'text': text})
+    else:
+        item['features'] = sorted(set(item['features']) | set(overridden))
+        item['case_uncertain'] = overridden
+        item['text'] = f'{item["text"]} {text}'
 
 
 def _decisions(state: dict) -> dict:
@@ -572,7 +610,9 @@ SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', '
                           # v0.2b (WP-B1): the criterion on the final test.
                           'final_test',
                           # v0.2b (WP-B6a, companion request): the model the criterion reads.
-                          'model')
+                          'model',
+                          # B6c (H4): where the criterion is judged, and its status there.
+                          'judged_on', 'judged_status')
 
 
 def _compact_criterion(criterion):
@@ -687,7 +727,8 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
 
 
 def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
-                    headline: dict | None = None, junior: bool = False) -> str:
+                    headline: dict | None = None, junior: bool = False,
+                    cv: bool = False) -> str:
     # v0.2a (WP-A7): the junior recap names each decision and its value in words, never a
     # recorded token (a rule, a model slot, a verdict id).
     label = audience.decision_words(decision_id) if junior else DECISION_LABELS[decision_id]
@@ -704,11 +745,15 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     elif decision_id == 'split' and isinstance(value, dict) and value.get('method') in \
             st.CV_METHODS:
         # WP-B1: the evaluation scheme.
-        text = f'{label} ({value.get("folds")}-fold cross-validation, {_spaced(value["method"])})'
+        method = (audience.CV_METHOD_WORDS.get(value['method'], _spaced(value['method']))
+                  if junior else _spaced(value['method']))
+        text = f'{label} ({value.get("folds")}-fold cross-validation, {method})'
     elif decision_id == 'model_variant' and isinstance(value, dict):
         text = f'{label} ({audience.variant_words(value)})'
     elif decision_id == 'final_test' and isinstance(value, dict):
-        text = f'{label} opened ({audience.model_words(value.get("model"))}' + (
+        # B6c (Low): "the final test, opened once", never "the opening ... opened".
+        opened = 'the final test, opened once' if junior else f'{label} opened'
+        text = f'{opened} ({audience.model_words(value.get("model"))}' + (
             f', {audience.rule_words(value["rule"])})' if junior and value.get('rule') else
             f' at {value["rule"]})' if value.get('rule') else ')')
     elif decision_id == 'split' and isinstance(value, dict):
@@ -727,8 +772,9 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
         text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
         mae = (errors or {}).get('mae', {}).get(value)
         if mae is not None:
-            text += (f' (validation MAE {mae} {errors["unit"]})' if junior else
-                     f' (validation MAE {mae} {errors["unit"]}, result '
+            where = 'out-of-fold' if cv else 'validation'
+            text += (f' ({where} MAE {mae} {errors["unit"]})' if junior else
+                     f' ({where} MAE {mae} {errors["unit"]}, result '
                      f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
         verdict = value.get('verdict', '')
@@ -739,7 +785,9 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
             text = (f'{label} (precision gain over the baseline of at least '
                     f'{value["min_points"]} points)')
         else:
-            text = (f'{label} (validation error at least '
+            # B6c (M3): the error the criterion reads, in the study's scheme.
+            error = 'out-of-fold error' if cv else 'validation error'
+            text = (f'{label} ({error} at least '
                     f'{round(100 * value.get("min_share", 0))}% below the mean baseline)')
     elif decision_id == 'preprocessing' and isinstance(value, dict):
         text = f'{label} ({preprocessing_words(value)})'
@@ -895,7 +943,8 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
     errors = _regression_errors(view)
     headline = _policy_headline(view, summary_out) if st.task_of(view.get('task')) == st.BINARY \
         else None
-    decided = [_recap_decision(d, item, errors, headline, junior)
+    cv = texts.scheme_of(view) == texts.CROSS_VALIDATION
+    decided = [_recap_decision(d, item, errors, headline, junior, cv)
                for d, item in summary_out['decisions'].items()
                if item['status'] in ('confirmed', 'reconfirm_required')]
     titles = {s['id']: s['title'] for s in summary_out['plan']}
@@ -987,6 +1036,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     plan = st.derive_plan(state)
     results = _results(study, state)
     defensible = st.not_yet_defensible(state)
+    _case_uncertain_limit(state, defensible)
     broken = sorted(s for s, r in results.items() if r['integrity'] != 'ok')
     if broken:
         defensible.append({'id': 'result_integrity', 'slots': broken,
@@ -1127,22 +1177,36 @@ def _governance_limits(state: dict, criterion: dict | None,
                             'test no longer measures what the study now holds, and it is no '
                             'longer independent evidence for it.'})
     if criterion and criterion.get('contradicts_verdict'):
+        judged = criterion.get('judged_status') or criterion['status']
+        on_final = criterion.get('judged_on') == 'final_test'
         why = ('the gain does not reach the minimum fixed before the models'
-               if criterion['status'] == 'not_met' else
+               if judged == 'not_met' else
                'the paired interval of the gain includes 0')
+        where = ' on the final test' if on_final else ''
         out.append({'id': 'verdict_contradicts_criterion', 'decisions': ['conclusion'],
-                    'status': criterion['status'],
+                    'status': judged,
                     'text': f'The conclusion adopts while the success criterion fixed before '
-                            f'the models is not met: {why}.'})
+                            f'the models is not met{where}: {why}.'})
+    if governance.keeps_against_met(criterion):
+        # B6c (H4): keeping the baseline against a criterion met on the final test.
+        out.append({'id': 'verdict_keeps_baseline_against_criterion',
+                    'decisions': ['conclusion'], 'status': 'met',
+                    'text': 'The conclusion keeps the baseline although the success criterion '
+                            'fixed before the models is met on the final test: say why (a '
+                            'cost, a risk, or a limit the criterion does not capture), or '
+                            'reconsider the verdict.'})
     pre = (state['decisions'].get('preprocessing') or {})
     value = pre.get('value')
     if pre.get('status') in ('confirmed', 'reconfirm_required') and isinstance(value, dict) \
             and value.get('data_contingent'):
         out.append({'id': 'data_contingent_preprocessing', 'decisions': ['preprocessing'],
                     'results': list(value.get('motivated_by') or []),
-                    'text': 'The preparation of the variables was chosen after looking at the '
-                            'outcome on training rows, so the validation figures may be '
-                            'slightly optimistic.'})
+                    'text': ('The preparation of the variables was chosen after looking at '
+                             'the outcome on the development rows, so the out-of-fold figures '
+                             'may be slightly optimistic.' if st.uses_cross_validation(state)
+                             else 'The preparation of the variables was chosen after looking '
+                                  'at the outcome on training rows, so the validation figures '
+                                  'may be slightly optimistic.')})
     return out
 
 

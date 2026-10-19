@@ -166,6 +166,11 @@ verdict_card:
   final_found: Positive rows found on the final test
   final_mae: Mean absolute error on the final test
   final_criterion: Success criterion on the final test
+  final_gain: Precision gain over the baseline
+  final_reduction: Reduction of the baseline's error
+  judged_final: on the final test, where it is judged once the final test is opened.
+  development_status: 'On the development rows, as context:'
+  status_differ: They differ because the development figures helped choose, so they may be optimistic, and both carry chance; the final test, measured once on rows nothing had seen, is the one that judges.
   final_after: After the final test
   final_after_note: Something changed after the final test was opened, so it no longer measures what the study now holds.
   trials: Configurations compared
@@ -181,6 +186,10 @@ data_section:
   columns: Columns
   final_test_sealed: rows are set aside as the final test and stay sealed; nothing in this report reads them.
   final_test_absent: This study has no final test. It was created before the final test existed, so every row is a development row.
+  final_test_opened: rows were set aside as the final test; it has been opened once to measure the chosen configuration (see the verdict). Its rows are read only by that one evaluation and its diagnostics.
+  final_test_changed_after: Something changed after the opening, so the final test no longer measures what the study now holds.
+  case_uncertain: The case calls its availability uncertain; it is used as known at prediction time.
+  case_unknown: The case does not document its availability; it is used as known at prediction time.
   target: Target
   dictionary: Columns by group
   rows: The first development rows, target first
@@ -300,3 +309,32 @@ regression:
     no_causality: The study compares predictions; it does not show that changing a variable would change the target.
     workbench_not_tracked: Experiments in the workbench change nothing and prove nothing.
     grouped_split_unsupported: The split result shows how many group values both partitions share and how many validation rows they hold.
+  # B6c (M3): a regression study evaluated by cross-validation (merged last).
+  cross_validation:
+    model_note: Errors are out-of-fold predictions of the development rows, after a choice made on them, in the unit of the target. They are development evidence and optimistic; only the final test, opened once, is independent.
+    model_paired_heading: Paired differences, linear model minus mean baseline (a negative difference is a smaller error; paired bootstrap on the same out-of-fold predictions)
+    residuals_heading: Residuals of the out-of-fold predictions (observed minus predicted)
+    not_yet_defensible_extra:
+      validation_is_not_independent: A model chosen on out-of-fold predictions makes its out-of-fold error optimistic; only the final test, opened once, is independent.
+      grouped_split_unsupported: The split result shows how many group values the folds share.
+# B6c (M3): a study evaluated by cross-validation has no training or validation rows to
+# name (mlkit.study.texts.report merges this mapping last).
+cross_validation:
+  motivation:
+    contingent: Chosen after looking at the outcome on the development rows, so the out-of-fold figures may be slightly optimistic.
+    not_contingent: Chosen before any look at the outcome on the development rows.
+  policy_note: Figures are out-of-fold predictions of the development rows, after a choice made on them. They are development evidence, optimistic, and not a forecast of a future campaign; only the final test, opened once, is independent.
+  capacity_population:
+    after: development rows predicted out of fold (a capacity keeps its share of each fold), which stand for a share of the scored rows, not for a whole population. Read its volume share as the rate to carry over (a share rule states that rate directly); apply that rate to another population before quoting a count for it.
+  paired_heading: Paired differences, model minus baseline (paired bootstrap on the same out-of-fold predictions, resampled within each fold)
+  not_yet_defensible_extra:
+    validation_is_not_independent: A threshold or capacity chosen on out-of-fold predictions makes those figures optimistic; only the final test, opened once, is independent.
+  slot_labels:
+    eda.single_feature_signal: Signal of each feature alone on the development rows
+  charts_intro: Each chart answers one question and is drawn from registered results only. The development rows are explored, and their out-of-fold predictions compare the models and choose; the final test stays apart.
+  looks:
+    summary: Looks at the outcome on the development rows
+    note: Each exploration that read the target on the development rows counts as one look. The more looks, the more a pattern found among them can be chance.
+  rows_label:
+    train: development rows
+    validation: development rows predicted out of fold

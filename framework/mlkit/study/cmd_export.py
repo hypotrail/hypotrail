@@ -408,7 +408,7 @@ def build(study_dir) -> tuple[read.Study, dict, dict[str, bytes], bool]:
     view = view_model.build(study)
     summary = view_model.summary(view)
     task = st.task_of(view['task'])
-    with texts.task_context(task):
+    with texts.study_context(view):
         citer = cite.Citer.from_view(view)
         decisions, decisions_md = _decisions(view)
         results_cited, cited_md = _cited(view, study, citer)

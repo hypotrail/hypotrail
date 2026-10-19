@@ -69,11 +69,13 @@ def banner_html(study: read.Study, generated_revision: int, result_ids: Mapping[
 
 
 def step_html(cited: cite.Citer, result_ids: Mapping[str, str], slots: list[str],
-              context: str, interpretation: str, task: str | None = None) -> str:
+              context: str, interpretation: str, task: str | None = None,
+              scheme: str | None = None) -> str:
     """Context, result figures, and interpretation of one step (numbers cited).
 
-    ``task`` (``regression`` for a regression study) selects the display texts."""
-    with texts.task_context(task):
+    ``task`` (``regression`` for a regression study) and ``scheme`` (``cross_validation``,
+    B6c) select the display texts."""
+    with texts.task_context(task), texts.scheme_context(scheme):
         return _step_html(cited, result_ids, slots, context, interpretation)
 
 
@@ -261,10 +263,11 @@ def preprocessing_words(study: read.Study, rid: str) -> str:
     return render_html.value_words('preprocessing', value, None)
 
 
-def example_html(cited: cite.Citer, term_id: str | None, task: str | None = None) -> str:
+def example_html(cited: cite.Citer, term_id: str | None, task: str | None = None,
+                 scheme: str | None = None) -> str:
     """The contextual example of a glossary term, with this study's cited numbers, or ''
     when the term has none or its results are not computed yet."""
-    with texts.task_context(task):
+    with texts.task_context(task), texts.scheme_context(scheme):
         entry = texts.glossary(term_id) if term_id else None
         example = (entry or {}).get('cited_example')
         if not example or not cited.ready(example):

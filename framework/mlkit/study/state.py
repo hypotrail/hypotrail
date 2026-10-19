@@ -407,7 +407,82 @@ def _b1_steps(full: tuple, choice: str) -> tuple:
 
 
 B1_STEPS = _b1_steps(FULL_STEPS, 'policy')
-B1_REGRESSION_STEPS = _b1_steps(FULL_REGRESSION_STEPS, 'model_choice')
+B1_REGRESSION_STEPS = tuple(
+    # B6c (M3): a regression study chooses a model, not a rule.
+    dict(s, question='Now that the model is chosen, do you open the sealed final test, once, '
+                     'to measure it on rows nothing has seen? After this, any change is made '
+                     'after the final test.')
+    if s['id'] == FINAL_TEST else s for s in _b1_steps(FULL_REGRESSION_STEPS, 'model_choice'))
+
+# B6c (M3): the words of the plan under cross-validation. Every development row is explored,
+# and each is predicted once by a model fitted on the other folds: there are no "training
+# rows" or "validation rows" to name. Merged over the step (``steps``).
+CV_STEP_TEXTS = {
+    'split': {
+        'question': 'How are the development rows divided into folds, each predicted by a model '
+                    'fitted on the other folds, before any exploration of the target?',
+        'expected_output': 'A confirmed cross-validation and a recorded fold assignment.'},
+    'train_eda': {
+        'title': 'Explore the development rows',
+        'question': 'What do the development rows show about the outcome and the special '
+                    'values? Other explorations (the quality overview, rates by variable, '
+                    'distributions, the single-feature signal) each answer a question stated '
+                    'first; every look at the outcome is counted.',
+        'expected_output': 'Target rate and special-value results on the development rows, with '
+                           'their exposure recorded.'},
+    'preprocessing': {
+        'question': 'How should the model treat missing values, rare categories, extreme values '
+                    'and skewed variables? Every parameter is learnt only on the rows each model '
+                    'is fitted on, the other folds.'},
+    'models': {
+        'question': 'How much does a simple model improve on a constant baseline, measured out '
+                    'of fold on the development rows?',
+        'expected_output': 'Persisted out-of-fold predictions for the baseline and the logistic '
+                           'model.'},
+}
+REGRESSION_CV_STEP_TEXTS = {
+    **CV_STEP_TEXTS,
+    'train_eda': {
+        'title': 'Explore the development rows',
+        'question': 'What do the development rows show about the distribution of the target and '
+                    'the special values? Other explorations (the quality overview, means by '
+                    'variable, distributions, the single-feature signal) each answer a question '
+                    'stated first; every look at the target is counted.',
+        'expected_output': 'A target summary and special-value counts on the development rows, '
+                           'with their exposure recorded.'},
+    'success_criterion': {
+        'question': 'The mean absolute error is the average size of a prediction\'s error, in '
+                    'the unit of the target. The mean baseline predicts, for every row, the mean '
+                    'of the rows it is fitted on. How much smaller than the error of the mean '
+                    'baseline should the out-of-fold error of the model be for it to be worth '
+                    'using? It is fixed now, before any model is fitted.'},
+    'models': {
+        'question': 'Which predictions do the mean baseline and a linear model give for each '
+                    'development row, predicted out of fold?',
+        'expected_output': 'Persisted out-of-fold predictions for the mean baseline and the '
+                           'linear model.'},
+    'model_choice': {
+        'question': 'Does the linear model reduce the out-of-fold error of the mean baseline, in '
+                    'the target unit, by enough to adopt it, given the paired intervals and the '
+                    'residuals?'},
+}
+CV_STEP_TEXTS_BY_TASK = {BINARY: CV_STEP_TEXTS, REGRESSION: REGRESSION_CV_STEP_TEXTS}
+
+
+def uses_cross_validation(state: Mapping | None) -> bool:
+    """B6c (M3): the study evaluates by cross-validation: its split decision (or an open
+    split proposal) is one, or a study with a final test has not decided it yet (the draft
+    is one)."""
+    if not isinstance(state, Mapping) or not has_wp_b1_decisions(state):
+        return False
+    value = (state['decisions'].get('split') or {}).get('value')
+    if isinstance(value, Mapping) and value.get('method'):
+        return value['method'] in CV_METHODS
+    for p in (state.get('proposals') or {}).values():
+        if p.get('decision_id') == 'split' and p.get('status') == 'open' \
+                and isinstance(p.get('value'), Mapping):
+            return p['value'].get('method') in CV_METHODS
+    return True
 B1_STEPS_BY_TASK = {BINARY: B1_STEPS, REGRESSION: B1_REGRESSION_STEPS}
 B1_STEP_IDS = tuple(s['id'] for s in B1_STEPS)
 B1_REGRESSION_STEP_IDS = tuple(s['id'] for s in B1_REGRESSION_STEPS)
@@ -519,7 +594,11 @@ def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
     the data" and its own five decisions' steps (the models then need the split only)."""
     if has_wp_b1_decisions(state):
-        return B1_STEPS_BY_TASK[task_of(state)]
+        out = B1_STEPS_BY_TASK[task_of(state)]
+        if uses_cross_validation(state):
+            texts = CV_STEP_TEXTS_BY_TASK[task_of(state)]
+            out = tuple(dict(s, **texts.get(s['id'], {})) for s in out)
+        return out
     full = FULL_STEPS_BY_TASK[task_of(state)]
     if has_wp_a4_decisions(state):
         return full
@@ -1231,9 +1310,12 @@ def not_yet_defensible(state: dict) -> list[dict]:
     split_value = (state['decisions'].get('split') or {}).get('value')
     if is_cv_split(split_value):
         # WP-B1: out-of-fold predictions on the development rows are development evidence.
+        # B6c (M3): a regression study chooses a model, not a rule.
+        compared = ('the models and the variant' if task_of(state) == REGRESSION
+                    else 'the models, the variant and the rule')
         items.append({'id': 'validation_is_not_independent',
-                      'text': 'Out-of-fold predictions on the development rows are used to '
-                              'compare the models, the variant and the rule, so they are '
+                      'text': f'Out-of-fold predictions on the development rows are used to '
+                              f'compare {compared}, so they are '
                               'development evidence, not independent evidence of future '
                               'performance. Only the sealed final test, opened once, is.'})
     elif task_of(state) == REGRESSION:
@@ -1254,7 +1336,16 @@ def not_yet_defensible(state: dict) -> list[dict]:
     structure = state['structure']
     missing = [k for k in ('time_column', 'group_column') if structure[k]['value'] is None]
     group = structure['group_column']['value']
-    if group is not None:
+    if group is not None and is_cv_split(split_value):
+        # B6c (M3): the same limit in the words of the folds.
+        items.append({'id': 'grouped_split_unsupported', 'column': group,
+                      'capability': 'grouped split (v0.2)',
+                      'text': f'Rows that share a value of {group} can fall in several folds: '
+                              f'this version does not group the folds by it, so the split '
+                              f'reports how many group values the folds share instead of '
+                              f'preventing it. A row predicted out of fold is then not '
+                              f'independent of the rows of its group the model was fitted on.'})
+    elif group is not None:
         items.append({'id': 'grouped_split_unsupported', 'column': group,
                       'capability': 'grouped split (v0.2)',
                       'text': f'Rows that share a value of {group} can fall in both partitions: '

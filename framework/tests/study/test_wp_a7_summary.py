@@ -68,7 +68,7 @@ def test_recap_junior_names_the_waiting_step_and_says_values_in_words(binary, tm
               '--expected-revision', flow.rev(), '--study', flow.study)
     p = _summary(flow)
     decided = p['recap_junior'][1]
-    assert 'the decision policy: call the top 20 by score' in decided, decided
+    assert 'the decision policy: select the top 20 by score' in decided, decided
     assert 'the feature availability' in decided and 'the split (' in decided
     assert not TOKENS.search(' '.join(p['recap_junior'])), p['recap_junior']
     # The agent recap keeps its tokens: it is quoted by the assistant, not shown to the junior.
@@ -101,10 +101,10 @@ def test_every_digest_item_has_an_audience_and_a_junior_variant(binary, tmp_path
                                    'figure". The policy needs confirmation again: you put the '
                                    'policy on hold.')
     replaced = by_kind['result_replaced']
-    assert replaced['junior_text'] == ('The policy evaluation was replaced for: call the top '
-                                       '20 by score; call the top 30 by score. Models '
+    assert replaced['junior_text'] == ('The policy evaluation was replaced for: select the top '
+                                       '20 by score; select the top 30 by score. Models '
                                        'unchanged, nothing refitted.')
-    assert by_kind['proposed']['junior_text'] == ('The policy was proposed: call the top 30 '
+    assert by_kind['proposed']['junior_text'] == ('The policy was proposed: select the top 30 '
                                                   'by score.')
     quality = by_kind['result_added']
     assert quality['text'] == 'The data quality check was computed.'
@@ -125,7 +125,7 @@ def test_an_unknown_outcome_names_the_activity_in_words():
                                     'activity': 'something.new', 'message': 'agent text'})
     assert unknown['junior_message'].startswith('A run of an analysis stopped')
     assert audience.activity_words('eda.rate_by:job') == 'an outcome rate by group (job)'
-    assert audience.rule_words('threshold:0.2') == 'call everyone scored 0.2 or more'
+    assert audience.rule_words('threshold:0.2') == 'select every row scored 0.2 or more'
 
 
 def test_the_junior_now_line_of_an_unknown_outcome_names_the_run():

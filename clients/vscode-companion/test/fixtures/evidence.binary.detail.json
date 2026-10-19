@@ -1959,6 +1959,48 @@
        "roc_auc": 0.7433090530697191,
        "average_precision": 0.37708644271079733
       }
+     },
+     "gain_points_variant": {
+      "model": "fit.variant",
+      "n": 1086,
+      "n_positive": 125,
+      "base_rate": 0.1151012891344383,
+      "points": [
+       {
+        "share": 0.05,
+        "rule": "share:0.05",
+        "capacity": 54,
+        "selected": 54.0,
+        "true_positives": 31.0,
+        "precision": 0.5740740740740741,
+        "gain_points": 45.897278493963576,
+        "lift": 4.987555555555556,
+        "recall": 0.248
+       },
+       {
+        "share": 0.1,
+        "rule": "share:0.1",
+        "capacity": 109,
+        "selected": 109.0,
+        "true_positives": 39.0,
+        "precision": 0.3577981651376147,
+        "gain_points": 24.269687600317642,
+        "lift": 3.1085504587155968,
+        "recall": 0.312
+       },
+       {
+        "share": 0.2,
+        "rule": "share:0.2",
+        "capacity": 217,
+        "selected": 217.0,
+        "true_positives": 54.0,
+        "precision": 0.2488479262672811,
+        "gain_points": 13.37466371328428,
+        "lift": 2.1619907834101384,
+        "recall": 0.432
+       }
+      ],
+      "definition": "gain_points is the precision of the top share minus the base rate, in percentage points; recall is the share of the positive rows found (the cumulative gain)."
      }
     },
     "headline": {

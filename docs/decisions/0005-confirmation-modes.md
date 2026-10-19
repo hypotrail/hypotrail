@@ -77,3 +77,7 @@ The owner validated three modes: guided (default), training, and express. The en
 - Whether `--agent-concern` should be refused in the training mode, making the R3 stop mechanical (v0.2b records it, as in guided; the agent instructions ask for new words).
 - Whether `reason_required` should also apply to `feature_availability` exclusions.
 - A finer reason check (a clause that explains rather than restates).
+
+## Amendment (v0.2b, WP-B6c): the default preprocessing under a guided standing delegation
+
+Integrator decision, open to review (V0.2-DECISIONS.md, WP-B6c). In the guided mode a standing delegation also covers the `preprocessing` decision when its value is the engine's default (`governance.is_default`: no missing-value indicator, every category kept, no cap, no transform), so a junior who delegated the framing questions is not paused for a preparation that changes nothing (`commands.standing_covers_default_preprocessing`). A preparation that changes anything still needs the junior's words or a delegation given at that pause; the success criterion is still asked; express is unchanged; training never covers it. The delegated decision is recorded as `delegated_default` with scope `standing` and listed in `delegated_decisions`.

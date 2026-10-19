@@ -394,8 +394,18 @@ def current_results_pool(store: StudyStore, state: Mapping, *, literals: bool = 
                          'confirmation': dec['confirmation']}
                      for d, dec in state['decisions'].items()
                      if d != 'conclusion' and dec['status'] == 'confirmed'}
+    # B6c (H2): what changed after the final test was opened (a final-test figure then no
+    # longer describes the choice).
+    started = {}
+    for slot, item in results.items():
+        try:
+            started[slot] = study.result(item['result_id'])['started_revision']
+        except (StudyError, KeyError):
+            continue
+    final = partition.final_test_status(state, started)
     return cmd_check.Pool({'results': results, 'decisions': decisions, 'open_proposals': [],
-                           'settings': {}, 'dataset': {}, 'facts': {'by_status': {}}})
+                           'settings': {}, 'dataset': {}, 'facts': {'by_status': {}},
+                           'final_test': {'changed_after': final.get('changed_after') or []}})
 
 
 def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatement: str,
@@ -414,7 +424,8 @@ def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatem
     findings, _ = cmd_check.trace_text(current_results_pool(store, state, literals=True),
                                        mask_identifiers(value['text']), 'value.text')
     numbers = [f['details']['number'] for f in findings
-               if f['code'] in ('untraceable_number', 'stale_number')]
+               if f['code'] in ('untraceable_number', 'stale_number',
+                                'final_test_figure_outdated')]
     if numbers:
         raise CommandRefused('literal_number_in_text',
                              'The conclusion text contains numbers that are not figures of a '
@@ -497,6 +508,15 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             raise _invalid('final_test is {"model", "rule"}: the configuration the study chose '
                            '(the rule is null in a regression study).',
                            keys=list(FINAL_TEST_KEYS), chosen=st.choice_config(state))
+        # B6c (Low): a value that is not the chosen configuration is refused when proposed,
+        # not only when confirmed.
+        chosen = st.choice_config(state)
+        rule = value.get('rule')
+        said = {'model': value.get('model'),
+                'rule': (rec.canonical_rule(rule) or rule) if isinstance(rule, str) else rule}
+        if chosen is not None and said != chosen:
+            raise _invalid('The final test opens the configuration the study chose; propose it '
+                           'as chosen.', field='final_test', chosen=chosen, value=dict(value))
     elif decision_id == st.SUCCESS_CRITERION:
         try:
             governance.check_criterion(value, st.task_of(state))
@@ -507,6 +527,17 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             governance.check_preprocessing(value, case_of(state))
         except governance.ValueProblem as exc:
             raise _invalid(exc.message, **exc.details) from None
+        # B6c (Low): a cap or a transform of a variable the model does not use would be
+        # silently ignored; it is refused instead, naming the variables.
+        availability = (state['decisions'].get('feature_availability') or {}).get('value')
+        if isinstance(availability, Mapping):
+            excluded = {f for f, s in availability.items() if s in cf.EXCLUDED_STATUSES}
+            for field in ('caps', 'log_transform'):
+                named = sorted(set(value.get(field) or []) & excluded)
+                if named:
+                    raise _invalid(f'{field} names variables the model does not use (excluded '
+                                   f'by the availability decision): {", ".join(named)}.',
+                                   field=field, excluded=named)
     elif decision_id == 'conclusion':
         verdicts = preconditions.conclusion_verdicts(state)
         if not isinstance(value, Mapping) or set(value) != set(CONCLUSION_KEYS) \
@@ -862,6 +893,38 @@ REPLY_MESSAGES = {
 }
 
 
+def standing_covers_default_preprocessing(state: Mapping, decision_id: str, value) -> bool:
+    """B6c (integrator decision, ADR 0005): in the guided mode a standing delegation also
+    covers the ``preprocessing`` when the proposal is the engine's default (the variables
+    kept as they are: no change chosen from the data), so a junior who delegated is not
+    paused for it. A preparation that changes anything still needs their words."""
+    return decision_id == 'preprocessing' and st.mode_of(state) == st.GUIDED \
+        and isinstance(value, Mapping) and governance.is_default(value)
+
+
+# B6c (M2): the example of a partial refusal is one of the decision refused, never the
+# preprocessing example on another decision.
+PARTIAL_EXAMPLES = {
+    'preprocessing': '"oui pour le plafonnement, pas pour le log"',
+    'feature_availability': '"yes, keep them all except contact"',
+    'split': '"yes for the folds, not that seed"',
+    'model_variant': '"yes for the variant, not the strong regularisation"',
+    'final_test': '"yes for the model, not that rule"',
+}
+
+
+def partial_reply_message(decision_id: str, partial: Mapping | None = None) -> str:
+    """The refusal message of a partial acceptance of ``decision_id``, naming the refused
+    part when known."""
+    example = PARTIAL_EXAMPLES.get(decision_id)
+    partial = partial or {}
+    said = (f' (here "{partial["negator"]} {partial["part"]}")'
+            if partial.get('part') and partial.get('negator') else '')
+    return ('These words accept one part of the proposal and refuse another'
+            + (f', as in {example}' if example else '') + f'{said}: nothing is confirmed. '
+            'Ask which parts the junior wants and propose again with that value.')
+
+
 # A reply that hands the choice to the assistant's recommendation (D1). It must name the
 # assistant's default or recommendation, or the act of leaving the choice to it: "go with
 # it", "ok", or "garde ça" never delegate.
@@ -1137,9 +1200,13 @@ def _confirm(ctx: Context) -> Handler:
         mode = st.mode_of(state)
         standing = st.standing_delegation_decisions(state)
         if params['basis'] == st.DELEGATED_DEFAULT and decision_id not in standing \
-                and params['delegation_scope'] != st.THIS_DECISION:
+                and params['delegation_scope'] != st.THIS_DECISION \
+                and not standing_covers_default_preprocessing(state, decision_id, value):
             covers = ('the prediction moment, the feature availability, the split, the success '
                       'criterion and the preprocessing' if mode == st.EXPRESS else
+                      'the prediction moment, the feature availability, the split, and the '
+                      'preprocessing when it is the engine\'s default'
+                      if mode == st.GUIDED else
                       'the prediction moment, the feature availability and the split')
             raise _ambiguous('delegation_not_given_at_this_pause',
                              f'The {decision_id} is decided only with the junior\'s own words, '
@@ -1165,7 +1232,7 @@ def _confirm(ctx: Context) -> Handler:
         # confirmation, in every mode ("oui pour le plafonnement, pas de log").
         partial = cf.partial_refusal(words, proposal)
         if partial is not None:
-            raise _ambiguous('conditional_reply', REPLY_MESSAGES['partial_reply'],
+            raise _ambiguous('conditional_reply', partial_reply_message(decision_id, partial),
                              proposal_id=pid, user_words=words, partial=partial)
         warnings = cf.availability_warnings(words, value) \
             if decision_id == 'feature_availability' and not delegated else []

@@ -410,3 +410,48 @@ def test_the_verdict_card_separates_development_and_final_evidence(cv_studies, n
     assert 'id="variant-comparison"' in page
     report = cmd_check.run_check(study)
     assert report['clean'], report['findings']
+    # B6c (B1): the final-test criterion is shown at its registered size, in its unit.
+    crit = read.open(study).current('final_test.evaluation')['output']['values']['criterion']
+    shown = _cited_text(verdict, final, 'criterion.gain')
+    if name == 'bank':
+        assert crit['unit'] == 'percentage points'
+        assert shown == f'{crit["gain"]:.1f}'
+        assert abs(float(shown)) <= 100
+        row = verdict[verdict.index('Success criterion on the final test'):]
+        assert f'{shown}</data> percentage points' in row
+        for bound in ('low', 'high'):
+            assert _cited_text(verdict, final, f'criterion.{bound}') == f'{crit[bound]:.1f}'
+    else:
+        assert shown == f'{100 * crit["gain"]:.1f}%'
+
+
+def _cited_text(page: str, rid: str, path: str) -> str:
+    m = re.search(r'<data value="[^"]*" data-result-id="' + re.escape(rid) + r'" data-path="'
+                  + re.escape(path) + r'"[^>]*>([^<]*)</data>', page)
+    assert m, path
+    return m.group(1)
+
+
+def test_check_catches_a_final_criterion_shown_100_times_too_large(cv_studies, tmp_path):
+    """B6c (B1): a value already in percentage points shown with the points format (which
+    multiplies by 100) matches its attribute times the scale, yet it is wrong: check says so."""
+    import shutil
+    study = tmp_path / 'bank'
+    shutil.copytree(cv_studies['bank'], study)
+    report = study / mf.ARTIFACTS['report']
+    page = report.read_text(encoding='utf-8')
+    final = read.open(study).current('final_test.evaluation')['result_id']
+    gain = read.open(study).current('final_test.evaluation')['output']['values']['criterion'][
+        'gain']
+    m = re.search(r'<data value="([^"]*)" data-result-id="' + re.escape(final)
+                  + r'" data-path="criterion.gain"([^>]*)>([^<]*)</data>', page)
+    assert m and 'data-scale' not in m.group(2)
+    bad = m.group(0).replace(' data-path="criterion.gain"',
+                             ' data-path="criterion.gain" data-scale="100"').replace(
+        f'>{m.group(3)}<', f'>{100 * gain:.1f}<')
+    report.write_text(page.replace(m.group(0), bad, 1), encoding='utf-8')
+    result = cmd_check.run_check(study)
+    found = [f for f in result['findings'] if f['code'] == 'value_mismatch'
+             and f['details'].get('path') == 'criterion.gain']
+    assert found and found[0]['details']['reason'] == 'double_scaled'
+    assert result['clean'] is False

@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-19T18:09:13.091020+00:00",
+   "updated": "2026-10-19T21:08:08.984719+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -88,8 +88,8 @@
     {
      "id": "split",
      "title": "Split the data before exploring it",
-     "question": "How are rows divided between training and validation, before any exploration of the target?",
-     "expected_output": "A confirmed split decision and a recorded split result.",
+     "question": "How are the development rows divided into folds, each predicted by a model fitted on the other folds, before any exploration of the target?",
+     "expected_output": "A confirmed cross-validation and a recorded fold assignment.",
      "completion": "Decision split is confirmed and the split result is current.",
      "pause": 2,
      "decision": "split",
@@ -126,9 +126,9 @@
     },
     {
      "id": "train_eda",
-     "title": "Explore the training partition",
-     "question": "What do the training rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
-     "expected_output": "Target rate and special-value results on training rows, with their exposure recorded.",
+     "title": "Explore the development rows",
+     "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+     "expected_output": "Target rate and special-value results on the development rows, with their exposure recorded.",
      "completion": "The training EDA results are current.",
      "pause": null,
      "decision": null,
@@ -150,7 +150,7 @@
     {
      "id": "preprocessing",
      "title": "Decide how the model prepares the variables",
-     "question": "How should the model treat missing values, rare categories, extreme values and skewed variables? Every parameter is learnt on training rows only.",
+     "question": "How should the model treat missing values, rare categories, extreme values and skewed variables? Every parameter is learnt only on the rows each model is fitted on, the other folds.",
      "expected_output": "A confirmed preprocessing, with the explorations that motivated it.",
      "completion": "Decision preprocessing is confirmed.",
      "pause": 2,
@@ -167,8 +167,8 @@
     {
      "id": "models",
      "title": "Fit a baseline and a logistic model",
-     "question": "How much does a simple model improve on a constant baseline on validation?",
-     "expected_output": "Persisted validation predictions for the baseline and the logistic model.",
+     "question": "How much does a simple model improve on a constant baseline, measured out of fold on the development rows?",
+     "expected_output": "Persisted out-of-fold predictions for the baseline and the logistic model.",
      "completion": "Both fit results are current.",
      "pause": null,
      "decision": null,
@@ -681,7 +681,9 @@
     "interval_includes_zero": null,
     "verdict": null,
     "contradicts_verdict": false,
-    "final_test": null
+    "final_test": null,
+    "judged_on": "development",
+    "judged_status": "not_assessed"
    },
    "eda_looks": {
     "target_looks": 0,

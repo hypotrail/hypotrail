@@ -365,7 +365,7 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
            'rule': None, 'model': None, 'gain': None, 'low': None, 'high': None,
            'minimum': None, 'unit': 'percentage points' if task == 'binary' else 'share',
            'interval_includes_zero': None, 'verdict': None, 'contradicts_verdict': False,
-           'final_test': None}
+           'final_test': None, 'judged_on': 'development', 'judged_status': 'not_assessed'}
     conclusion = decisions.get('conclusion') or {}
     verdict = conclusion.get('value', {}).get('verdict') \
         if isinstance(conclusion.get('value'), Mapping) else None
@@ -404,9 +404,44 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
             out['interval_includes_zero'] = includes
             reached = out['gain'] >= out['minimum'] - 1e-12
             out['status'] = 'not_met' if not reached else ('uncertain' if includes else 'met')
-    out['contradicts_verdict'] = verdict in ADOPT_VERDICTS and out['status'] in ('not_met',
-                                                                                 'uncertain')
-    # WP-B1 (additive, last): the criterion judged on the final test, shown apart from the
+    # WP-B1 (additive): the criterion judged on the final test, shown apart from the
     # development evidence above.
     out['final_test'] = final_criterion(results) if isinstance(value, Mapping) else None
+    # B6c (H4, additive, last): once the final test is opened, the criterion is judged on
+    # it (``judged_on``, ``judged_status``), the development status staying as context; the
+    # verdict is weighed against the judged status. A final evaluation of another
+    # configuration than the current choice (a change after the opening) does not judge it.
+    judged_on, judged = 'development', out['status']
+    final = out['final_test']
+    if final and final.get('status') and _same_configuration(results, out, canonical):
+        judged_on, judged = 'final_test', final['status']
+    out['judged_on'], out['judged_status'] = judged_on, judged
+    out['contradicts_verdict'] = verdict in ADOPT_VERDICTS and judged in ('not_met', 'uncertain')
     return out
+
+
+KEEP_VERDICTS = ('keep_baseline',)
+
+
+def keeps_against_met(criterion: Mapping | None) -> bool:
+    """B6c (H4): the conclusion keeps the baseline while the criterion, judged on the final
+    test, is met: not a contradiction (other reasons may weigh), but a tension to explain."""
+    return bool(criterion) and criterion.get('verdict') in KEEP_VERDICTS \
+        and criterion.get('judged_on') == 'final_test' \
+        and criterion.get('judged_status') == 'met'
+
+
+def _same_configuration(results: Mapping, out: Mapping, canonical: Callable[[str], str]) -> bool:
+    """True when the current final evaluation measured the configuration the development
+    criterion reads (its model and, for a policy, its rule), or when no development
+    configuration is known yet."""
+    item = results.get('final_test.evaluation')
+    values = item.get('values') if isinstance(item, Mapping) else None
+    if not isinstance(values, Mapping):
+        return False
+    if out.get('model') is None:
+        return True
+    if values.get('model') != out.get('model'):
+        return False
+    rule = values.get('rule')
+    return out.get('rule') is None or rule is None or canonical(str(rule)) == out.get('rule')

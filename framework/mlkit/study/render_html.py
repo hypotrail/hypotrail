@@ -28,7 +28,7 @@ import re
 from importlib import resources
 from typing import Any, Mapping
 
-from . import cite, render_charts, render_diagnostics, texts
+from . import audience, cite, render_charts, render_diagnostics, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
@@ -94,6 +94,8 @@ details.annex>summary{font-size:20px;font-weight:700;color:var(--ink)}
 details>summary{cursor:pointer}
 @media (max-width:640px){dl.facts{grid-template-columns:minmax(0,1fr)}dl.facts dd{margin-bottom:8px}}
 .scroll-hint{display:none}
+.report main section,.report main details{overflow-wrap:anywhere;min-width:0}
+.report main table{overflow-wrap:normal}
 @media (max-width:640px){.scroll-hint{display:block}.dictionary th,.dictionary td{padding:10px}.dictionary td:nth-child(2){min-width:150px}.dictionary td{overflow-wrap:anywhere}}
 '''
 
@@ -366,7 +368,8 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
         if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
             parts.append(_confirmation(d['confirmation']))
         if d['reason']:
-            parts.append(f'<p class="notice">{lit("message", d["reason"])}</p>')
+            parts.append(f'<p class="notice">'
+                         f'{lit("message", audience.reason_words(d["reason"]))}</p>')
         for n in view.get('notes') or []:
             if n['decision_id'] == did:
                 parts.append(_note(n))
@@ -505,7 +508,7 @@ def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
         reason = (item['stale_reason'] or {}).get('reason') if item['stale_reason'] else item['integrity']
         return (f'<div data-slot="{e(slot)}" data-state="stale"><h4>{e(title)} '
                 f'{_badge("stale", texts.load("steps")["stale"])}</h4>'
-                f'<p class="small">{lit("message", reason or "")}</p></div>')
+                f'<p class="small">{lit("message", audience.reason_words(reason))}</p></div>')
     question = item['values'].get('question') if isinstance(item['values'], Mapping) else None
     asked = f'<p><strong>Question.</strong> {lit("message", question)}</p>' if question else ''
     return (f'<div data-slot="{e(slot)}" data-state="current">'
@@ -973,7 +976,9 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
                 parts.append('missing-value indicators for ' + ', '.join(sorted(missing)))
             k = value.get('rare_category_min_rows')
             if isinstance(k, int) and k > 0:
-                parts.append(f'categories with fewer than {k} training rows grouped')
+                # B6c (M3): under cross-validation, the rows each fold's model is fitted on.
+                rows = ('rows a model is fitted on' if texts.is_cv() else 'training rows')
+                parts.append(f'categories with fewer than {k} {rows} grouped')
             if value.get('caps'):
                 parts.append('values capped for ' + ', '.join(sorted(value['caps'])))
             if value.get('log_transform'):
@@ -1094,9 +1099,23 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
         if sc.get('status') == 'confirmed':
             status = criterion.get('status') or 'not_assessed'
             words = value_words('success_criterion', sc['value'], task)
-            rows.append((card['criterion'],
-                         f'{lit("decision_value", words)}. '
-                         f'{_badge(status, card["status"].get(status, status))}'))
+            if criterion.get('judged_on') == 'final_test':
+                # B6c (H4): one judged criterion, on the final test once it is opened; the
+                # development status is context, explained when the two differ.
+                judged = criterion.get('judged_status') or 'not_assessed'
+                text = (f'{lit("decision_value", words)}. '
+                        f'{_badge(judged, card["status"].get(judged, judged))} '
+                        f'{e(card["judged_final"])}'
+                        f'<br><span class="small" data-development-status="{e(status)}">'
+                        f'{e(card["development_status"])} '
+                        f'{e(card["status"].get(status, status))}.')
+                if judged != status:
+                    text += f' {e(card["status_differ"])}'
+                rows.append((card['criterion'], text + '</span>'))
+            else:
+                rows.append((card['criterion'],
+                             f'{lit("decision_value", words)}. '
+                             f'{_badge(status, card["status"].get(status, status))}'))
         else:
             rows.append((card['criterion'], e(card['criterion_none'])))
     decision = 'model_choice' if task == 'regression' else 'policy'
@@ -1147,6 +1166,10 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
     return f'<section class="card verdict" id="verdict">{"".join(parts)}</section>'
 
 
+def _lower_first(text: str) -> str:
+    return text[:1].lower() + text[1:] if text else text
+
+
 def _out_of_fold(citer: cite.Citer, task: str) -> bool:
     rid = citer.slot_rid('evaluate.regression' if task == 'regression' else 'policy.evaluation')
     if rid is None:
@@ -1178,8 +1201,11 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
             for slot in (model, 'fit.baseline') if model != 'fit.baseline' else (model,):
                 path = cite.format_path(['models', slot, 'mae'])
                 if citer.has(rid, path):
+                    # B6c (Low): the error is in the target's unit; say which.
+                    unit = values.get('unit')
                     rows.append((f'{card["final_mae"]}, {_model_name(slot).lower()}',
-                                 citer.num(rid, path, 'f2')))
+                                 citer.num(rid, path, 'f2')
+                                 + (f' {lit("case", unit)}' if unit else '')))
         else:
             rule = values.get('rule_final')
             m = cite.format_path(['models', model])
@@ -1189,9 +1215,11 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
                 rows.append((card['final_found'],
                              f'{citer.num(rid, m + ".true_positives", "auto")} among '
                              f'{citer.num(rid, m + ".selected", "auto")} selected rows'
-                             f'{precision}; {lit("decision_value", rule_words(rule))}'))
+                             f'{precision}; {lit("decision_value", _lower_first(rule_words(rule)))}'))
         crit = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
-        fmt = 'pts1' if task != 'regression' else 'pct1'
+        # B6c (B1): the binary final criterion is stored in percentage points already
+        # (``fit.final_evaluation``); the regression one is a share shown as a percentage.
+        fmt = 'f1' if task != 'regression' else 'pct1'
         if crit.get('gain') is not None and citer.has(rid, 'criterion.gain'):
             interval = ''
             if citer.has(rid, 'criterion.low') and citer.has(rid, 'criterion.high'):
@@ -1199,9 +1227,15 @@ def _final_rows(view: Mapping, citer: cite.Citer, task: str) -> list[tuple[str, 
                             f'{citer.num(rid, "criterion.high", fmt)}')
             unit = ' percentage points' if task != 'regression' else ''
             state = crit.get('status') or 'not_assessed'
+            judged_here = (view.get('criterion') or {}).get('judged_on') == 'final_test'
+            # B6c (H4): the badge is shown once, on the success-criterion row, when the
+            # criterion is judged on this evaluation.
+            badge = '' if judged_here else \
+                f' {_badge(state, card["status"].get(state, state))}'
+            gain_words = card['final_gain'] if task != 'regression' else card['final_reduction']
             rows.append((card['final_criterion'],
-                         f'{citer.num(rid, "criterion.gain", fmt)}{unit}{interval}. '
-                         f'{_badge(state, card["status"].get(state, state))}'))
+                         f'{e(gain_words)} {citer.num(rid, "criterion.gain", fmt)}{unit}'
+                         f'{interval}.{badge}'))
     if final.get('post_final_test'):
         rows.append((card['final_after'], e(card['final_after_note'])))
     trials = (view.get('trials') or {}).get('count')
@@ -1280,6 +1314,12 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
         facts.append((ds['columns'], lit('structure', len(variables))))
     if final.get('status') == 'sealed':
         sealed = f'{lit("structure", format(final["rows"], ","))} {e(ds["final_test_sealed"])}'
+    elif final.get('status') == 'opened':
+        # B6c (H1): once opened, the final test is no longer sealed: say so, and say when
+        # something changed after the opening.
+        sealed = f'{lit("structure", format(final["rows"], ","))} {e(ds["final_test_opened"])}'
+        if final.get('post_final_test') or final.get('changed_after'):
+            sealed += f' {e(ds["final_test_changed_after"])}'
     else:
         sealed = e(ds['final_test_absent'])
     facts.append(('Final test', sealed))
@@ -1311,8 +1351,18 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                 shown, who, cls = _who_decided(view, v['name'])
                 stmt = v.get('availability') or {}
                 case_label = labels['fact_status'].get(stmt.get('status'), stmt.get('status') or '')
+                # B6c (M1): the case's own doubt stays visible when the decision overrides it.
+                case_value = stmt.get('value') or 'unknown'
+                decided = (view['decisions']['feature_availability'].get('value') or {})
+                doubt = ''
+                if isinstance(decided, dict) and \
+                        decided.get(v['name']) == 'available_at_prediction' and \
+                        case_value in ('uncertain', 'unknown'):
+                    doubt = (f' <span class="case-doubt" data-case-availability='
+                             f'"{e(case_value)}">{e(ds["case_" + case_value])}</span>')
                 avail = (f'{_badge(cls, shown)}'
-                         f'<br><span class="small">{e(who)}. Case: {e(case_label)}</span>')
+                         f'<br><span class="small">{e(who)}. Case: {e(case_label)}.{doubt}'
+                         f'</span>')
             else:
                 role = v.get('role', '')
                 avail = f'<span class="small">{e(labels.get("roles", {}).get(role, role))}</span>'
@@ -1384,7 +1434,8 @@ def _charts(view: Mapping, citer: cite.Citer) -> str:
     else:
         rid, v = values('policy.evaluation')
         if rid:
-            out.append(render_charts.selection(citer, rid, v, rule_words))
+            model = (view.get('criterion') or {}).get('model') or 'fit.logistic'
+            out.append(render_charts.selection(citer, rid, v, rule_words, model))
     figures = [f for f in out if f][:MAX_CHARTS]
     body = ''.join(figures) if figures else f'<p class="muted">{e(labels["charts_none"])}</p>'
     return (f'<section class="card charts" id="charts"><h2>{e(labels["sections"]["charts"])}'
@@ -1423,7 +1474,7 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
     plan, the decisions, the evidence by step, the comparison, the limits, the case
     statements, the surfaces, and the annex (collapsed).
     """
-    with texts.task_context(view.get('task')):
+    with texts.study_context(view):
         return _build(view, surfaces=surfaces, variables=variables, sample=sample)
 
 

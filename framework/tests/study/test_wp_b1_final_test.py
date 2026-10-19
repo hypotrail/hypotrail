@@ -399,10 +399,14 @@ def test_the_opening_refusals(tmp_path):
     assert {'decision': 'policy'}.items() <= next(
         m for m in out['error']['details']['missing'] if m.get('decision') == 'policy').items()
     flow.decide('policy', 'capacity:40', words='Yes, I adopt it because the desk can do it')
-    # A value other than the chosen configuration.
+    # A value other than the chosen configuration: refused when proposed (B6c), and by the
+    # opening's precondition if it ever reached a confirmation.
     p = _propose_final(flow, {'model': 'fit.variant', 'rule': 'capacity:40'})
-    out = _confirm(flow, p['result']['proposal_id'], expect=2)
-    assert [m['requirement'] for m in out['error']['details']['missing']] == [
+    assert p['error']['code'] == 'invalid_value'
+    assert p['error']['details']['chosen'] == {'model': 'fit.logistic', 'rule': 'capacity:40'}
+    from mlkit.study import preconditions as pre
+    assert [m['requirement'] for m in pre.final_test_missing(
+        flow.state(), {'model': 'fit.variant', 'rule': 'capacity:40'})][:1] == [
         'chosen_configuration']
     p = _propose_final(flow)
     # Without a reason, or delegated.

@@ -581,6 +581,10 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                       'reference': BASELINE}
             if cv:
                 params['evaluation'] = 'out_of_fold'
+                # B6c (H3): a capacity or a share is applied within each fold, so the folds
+                # are an input (the split that assigned them).
+                params['selection'] = WITHIN_FOLD
+                inputs['fold_split'] = split_rid
                 expose('out_of_fold_policy_selection', partition.DEVELOPMENT, keys['validation'],
                        [target])
             else:
@@ -1534,6 +1538,29 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
 
 
 CANDIDATE_GAIN_MODEL = 'fit.logistic'
+# B6c (H3): under cross-validation, each fold's out-of-fold scores come from a different
+# model (fitted without that fold), so their scales differ; a capacity or a share selects
+# the best rows of each fold by that fold's model, and the counts are summed.
+WITHIN_FOLD = 'within_fold'
+WITHIN_FOLD_NOTE = ('Under cross-validation each fold is scored by a model fitted on the other '
+                    'folds, so scores of different folds are not on the same scale (with '
+                    'temporal folds, each period is scored by a model of other periods). A '
+                    'capacity or a share is therefore applied within each fold: the best-scored '
+                    'share of each fold\'s rows, by that fold\'s model, and the counts are '
+                    'summed; by_fold gives each fold\'s precision. A threshold reads the scores '
+                    'as they are.')
+
+
+def policy_groups(store, plan_: Mapping, row_keys: list[str]):
+    """The fold of each scored row (B6c, H3), or None when the evaluation pools the rows."""
+    if plan_['params'].get('selection') != WITHIN_FOLD:
+        return None
+    import numpy as np
+    assignment = fold_assignment(store, plan_['inputs']['fold_split'])
+    if assignment is None or any(k not in assignment for k in row_keys):
+        raise StudyError('integrity_error', 'The folds of the split do not cover the scored '
+                                            'rows; the rules cannot be applied within folds.')
+    return np.asarray([assignment[k] for k in row_keys])
 
 
 def compute_policy(store, plan_: Mapping) -> dict:
@@ -1554,13 +1581,16 @@ def compute_policy(store, plan_: Mapping) -> dict:
     y = first['y']
     out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
     pairs = [(VARIANT, LOGISTIC)] if VARIANT in models else []
+    groups = policy_groups(store, plan_, first['row_keys'])
     out = {}
     for rule in plan_['params']['rules']:
-        points = {slot: policy.evaluate(y, preds[slot]['score'], rule) for slot in models}
+        points = {slot: policy.evaluate(y, preds[slot]['score'], rule, groups)
+                  for slot in models}
         paired = policy.paired_bootstrap(y, {s: preds[s]['score'] for s in models}, rule,
                                          int(boot['replicates']), int(boot['seed']),
                                          level=float(boot['level']),
-                                         reference=plan_['params']['reference'], pairs=pairs)
+                                         reference=plan_['params']['reference'], pairs=pairs,
+                                         groups=groups)
         out[rule] = {'models': points, 'intervals': paired['intervals'],
                      'deltas': paired['deltas']}
         if pairs or out_of_fold:
@@ -1575,7 +1605,8 @@ def compute_policy(store, plan_: Mapping) -> dict:
                             'method': 'paired percentile bootstrap over validation rows'},
               # v0.2b (WP-B3, R6): the top 5, 10 and 20 % of the scored rows.
               'gain_points': {'model': CANDIDATE_GAIN_MODEL,
-                              **policy.gain_points(y, preds[CANDIDATE_GAIN_MODEL]['score'])},
+                              **policy.gain_points(y, preds[CANDIDATE_GAIN_MODEL]['score'],
+                                                   groups=groups)},
               'counts': 'expected counts when a capacity cut splits a tie group (tied_at_cut)',
               'note': 'The rule is chosen on validation rows: these figures are not independent '
                       'evidence of future performance. No model was refitted.'}
@@ -1592,6 +1623,16 @@ def compute_policy(store, plan_: Mapping) -> dict:
                               'the development rows: these figures are development evidence, '
                               'not independent evidence of future performance. No model was '
                               'refitted.')
+        if groups is not None:
+            values['bootstrap']['method'] = ('paired percentile bootstrap over the out-of-fold '
+                                             'predictions, rows resampled within each fold')
+            values['selection'] = {'scope': WITHIN_FOLD, 'folds': int(len(set(groups.tolist()))),
+                                   'note': WITHIN_FOLD_NOTE}
+        if VARIANT in models:
+            # B6c (M4): the top shares for the variant too, so a policy that applies its rule
+            # to the variant can show its own gain points.
+            values['gain_points_variant'] = {'model': VARIANT, **policy.gain_points(
+                y, preds[VARIANT]['score'], groups=groups)}
     return {'values': values, 'blobs': {},
             'partition': partition.DEVELOPMENT if out_of_fold else 'validation',
             'n_rows': len(y)}
@@ -1656,13 +1697,20 @@ def compute_diagnostics(store, plan_: Mapping) -> dict:
     frame = rows(dataset, keys)
     fitted_rows = rows(dataset, split_keys(store, results[SPLIT])['train'])
     boot = params['coefficients']
+    groups = None
+    if binary and params['evaluation'] == 'out_of_fold':
+        # B6c (H3): the rule is applied within each fold, as the policy evaluation applies it.
+        assignment = fold_assignment(store, results[SPLIT]) or {}
+        if all(k in assignment for k in keys):
+            import numpy as np
+            groups = np.asarray([assignment[k] for k in keys])
     out_models = {}
     for m in models:
         entry = registry.get(store, results[m])
         features = list(entry['inputs'].get('features') or [])
         if binary:
             diag = dg.binary_model(y, preds[m]['score'], params['rule'], frame, keys,
-                                   params['segments'], features)
+                                   params['segments'], features, groups)
         else:
             diag = dg.regression_model(y, preds[m]['prediction'], frame, keys, case, features)
         fitted = entry['output']['values']

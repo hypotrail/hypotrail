@@ -22,7 +22,8 @@ import sys
 import numpy as np
 import pytest
 
-from mlkit.study import data as dt, diagnostics as dg, policy, read, state as st
+from mlkit.study import data as dt, diagnostics as dg, notebook_view as nv, policy, read
+from mlkit.study import state as st
 
 import flowkit as fk
 from flowkit import Flow
@@ -80,9 +81,13 @@ def test_binary_diagnostics_read_the_out_of_fold_predictions(tmp_path):
         assert d['predictions'] == study.current(model)['result_id']
         y, score = preds['y'].to_numpy(dtype=float), preds['score'].to_numpy(dtype=float)
         assert values['n'] == len(y) == len(development)
-        # The confusion matrix is the policy evaluation's at the same rule.
-        ev = policy.evaluate(y, score, values['rule'])
+        # The confusion matrix is the policy evaluation's at the same rule: under
+        # cross-validation (B6c, H3) the rule selects within each fold.
+        assignment = nv.folds(study)
+        groups = assignment.reindex(preds['row_key']).to_numpy()
+        ev = policy.evaluate(y, score, values['rule'], groups)
         c = d['confusion']
+        assert c['selection_scope'] == ev['selection_scope'] == 'within_fold'
         assert (c['true_positives'], c['false_positives'], c['false_negatives']) == \
             (ev['true_positives'], ev['false_positives'], ev['false_negatives'])
         assert c['true_positives'] + c['false_positives'] + c['false_negatives'] \

@@ -498,10 +498,13 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
         blob = regression_blob(keys, y, oof)
     pre = _preprocessing_values(inputs, fitted)
     if pre:
-        pre['preprocessing']['note'] = ('Parameters learnt on the training rows of each fold and '
-                                        'applied to its held-out rows; shown here as learnt on '
-                                        'every development row.')
+        pre['preprocessing']['note'] = ('Parameters learnt, in each fold, on the rows of the '
+                                        'other folds and applied to the fold they predict; '
+                                        'shown here as learnt on every development row.')
     values.update(pre)
+    # B6c (M3): the coefficients come from the fit on every development row.
+    values['coefficient_scale'] = values['coefficient_scale'].replace(
+        'of the training rows', 'of the development rows')
     values.update(_variant_values(inputs, params))
     values.update(common)
     return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'development',

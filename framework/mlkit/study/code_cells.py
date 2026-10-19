@@ -428,11 +428,25 @@ def policy_cell(view: Mapping) -> tuple[str, str] | None:
     if not isinstance(entry, Mapping) or entry.get('tied_at_cut'):
         return None                    # a tie at the cut is counted pro rata by the engine
     kind, _, amount = rule.partition(':')
-    if kind == 'share':
+    if entry.get('selection_scope') == 'within_fold' and kind in ('capacity', 'share'):
+        # B6c (H3): under cross-validation each fold is scored by its own model, so the
+        # rule selects the best-scored rows of each fold (its capacity there).
+        select = ('# The rule within each fold: the best-scored rows of each fold, as many '
+                  'as\n# the fold\'s capacity (each fold is scored by a model fitted on the '
+                  'other folds).\n'
+                  'selected = np.zeros(len(score), dtype=bool)\n'
+                  'for _item in at_rule["by_fold"]:\n'
+                  '    _rows = np.flatnonzero((folds == _item["fold"]).to_numpy())\n'
+                  '    _best = _rows[np.argsort(-score[_rows], kind="stable")]\n'
+                  '    selected[_best[:_item["capacity"]]] = True')
+        kind = 'within_fold'
+    elif kind == 'share':
         # v0.2b: a share of the n validation rows is a capacity of round(p * n) rows.
         amount = str(entry.get('capacity') or '')
         kind = 'capacity' if amount.isdigit() else kind
-    if kind == 'capacity':
+    if kind == 'within_fold':
+        pass
+    elif kind == 'capacity':
         select = (f'''# The {amount} validation rows with the highest scores.
 order = np.argsort(-score, kind="stable")
 selected = np.zeros(len(score), dtype=bool)
@@ -538,7 +552,23 @@ for _item in {p}model["by_prediction"]["bins"]:
     kind, _, amount = rule.partition(':')
     if conf.get('tied_at_cut') or conf.get('selection') != 'exact':
         return None
-    if kind in ('capacity', 'share'):
+    if kind in ('capacity', 'share') and conf.get('selection_scope') == 'within_fold':
+        # B6c (H3): the rule within each fold, as the policy evaluation applies it.
+        evaluation = _current(view, 'policy.evaluation') or {}
+        by_fold = ((((evaluation.get('values') or {}).get('rules') or {}).get(rule) or {})
+                   .get('models') or {}).get(model, {}).get('by_fold')
+        if not by_fold:
+            return None
+        select = (f'# The rule {rule} within each fold: the best-scored rows of each fold.\n'
+                  f'{p}folds = nv.folds(study).reindex({p}predicted["row_key"]).to_numpy()\n'
+                  f'{p}by_fold = nv.values(study, RESULT_IDS["policy.evaluation"])["rules"]'
+                  f'[{q(rule)}]["models"][{q(model)}]["by_fold"]\n'
+                  f'{p}selected = np.zeros(len({p}score), dtype=bool)\n'
+                  f'for _item in {p}by_fold:\n'
+                  f'    _rows = np.flatnonzero({p}folds == _item["fold"])\n'
+                  f'    _best = _rows[np.argsort(-{p}score[_rows], kind="stable")]\n'
+                  f'    {p}selected[_best[:_item["capacity"]]] = True')
+    elif kind in ('capacity', 'share'):
         k = str(conf.get('capacity') if kind == 'share' else amount)
         if not k.isdigit():
             return None

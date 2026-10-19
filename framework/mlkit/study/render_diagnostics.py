@@ -27,7 +27,7 @@ import html
 import re
 from typing import Any, Mapping
 
-from . import cite, render_charts, texts
+from . import audience, cite, render_charts, texts
 from .render_charts import legend, lit as svg_lit, figure
 
 e = html.escape
@@ -193,7 +193,9 @@ def gain_chart(citer: cite.Citer, rid: str, base: list, curve: Mapping, rule_sha
             f'average precision {_num(citer, rid, base + ["average_precision"], "f3")}.')
     return figure('diag_gain', 'If the team acts on the best-scored rows first, what share of '
                   'all positive rows does it find?', svg,
-                  legend(('m', 'Model'), ('b', 'Acting at random')), note)
+                  # B6c (Low): each swatch looks like its mark (a line, a dashed diagonal).
+                  legend(('line final' if final else 'line', 'Model'),
+                         ('diag', 'Acting at random')), note)
 
 
 def calibration_chart(citer: cite.Citer, rid: str, base: list, cal: Mapping) -> str:
@@ -220,7 +222,8 @@ def calibration_chart(citer: cite.Citer, rid: str, base: list, cal: Mapping) -> 
             f'{_num(citer, rid, base + ["calibration", "brier_base_rate"], "f4")} for the '
             f'constant base rate (lower is better).')
     return figure('diag_calibration', 'When the model gives rows a score, do about that share '
-                  'of them turn out positive?', svg, legend(('m', 'Bin and its interval')), note)
+                  'of them turn out positive?', svg, legend(('bin', 'Bin and its interval')),
+                  note)
 
 
 def _confusion(citer: cite.Citer, rid: str, base: list, conf: Mapping) -> str:
@@ -430,7 +433,8 @@ def residual_chart(citer: cite.Citer, rid: str, base: list, d: Mapping, final: b
             f'prediction: {_num(citer, rid, h + ["abs_residual_prediction_correlation"], "f2")}.')
     return figure('diag_residuals', 'Are the errors centred on zero across the range of the '
                   'predictions, and do they widen?', svg,
-                  legend(('m', 'Mean residual by bin of predictions')), note)
+                  legend(('pt final' if final else 'pt', 'One row'),
+                         ('line', 'Mean residual by bin of predictions')), note)
 
 
 def observed_chart(citer: cite.Citer, rid: str, base: list, d: Mapping, final: bool) -> str:
@@ -604,7 +608,7 @@ def _part(view: Mapping, citer: cite.Citer, slot: str, task: str, final: bool) -
         reason = (item.get('stale_reason') or {}).get('reason') or item.get('integrity') or ''
         return (f'<div data-slot="{e(slot)}" data-state="stale"><p>'
                 f'{_badge("stale", texts.load("steps")["stale"])} {e(lab["stale"])} '
-                f'{_lit("message", reason)}</p></div>')
+                f'{_lit("message", audience.reason_words(reason))}</p></div>')
     values = item['values']
     model = values.get('model') if final else _focus(view, values, task)
     body = (_regression_body if task == 'regression' else _binary_body)(

@@ -347,7 +347,9 @@
    "result_id": null,
    "contradicts_verdict": false,
    "final_test": null,
-   "model": "fit.linear"
+   "model": "fit.linear",
+   "judged_on": "development",
+   "judged_status": "not_assessed"
   },
   "eda_looks": {
    "target_looks": 3,

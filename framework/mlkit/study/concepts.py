@@ -180,9 +180,16 @@ def concept_map(state: Mapping, proposal: Mapping) -> list[dict]:
     items: list[dict] = []
     if decision_id == 'prediction_time' and isinstance(value, str):
         tokens = fold_tokens(value)
-        for timing in TIMING:
-            if any_said(concept_terms(timing), tokens):
-                items.append(_terms_concept(timing))
+        # B6c (M5): one timing concept, the one that places the moment (before or after the
+        # event, else at it); a reply says it with any timing word the value uses. "when the
+        # session ends, before knowing if it purchased" needs "before" or "at the end", not
+        # both.
+        timings = [t for t in TIMING if any_said(concept_terms(t), tokens)]
+        if timings:
+            main = next((t for t in ('timing_before', 'timing_after') if t in timings),
+                        timings[0])
+            items.append(_terms_concept(main, [term for t in timings
+                                               for term in concept_terms(t)]))
         event = _event_terms(value, labels)
         if event:
             items.append(_terms_concept('event', event))

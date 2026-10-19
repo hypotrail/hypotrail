@@ -28,7 +28,9 @@ concepts:
     terms: [after, once, following, afterwards, apres, une fois, suite, a la suite, des que]
   timing_at:
     hint: when the score is computed, relative to the event (at its moment)
-    terms: [at the time, at the moment, when, during, moment, lors, pendant, quand, au moment]
+    terms: [at the time, at the moment, when, during, moment, lors, pendant, quand, au moment,
+            at the end, by the end, end of, ends, a la fin, en fin de, fin de, se termine,
+            termine]
   event:
     hint: the event the prediction moment refers to
     terms: []
