@@ -236,9 +236,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 <!-- hypotrail:end -->
      recommended default, and accept either their own choice (`--basis explicit`) or a
      delegation they give now (`--delegation-scope this_decision`); the engine refuses a
-     standing delegation there (`delegation_not_given_at_this_pause`). It does not cover
-     the success criterion or the preprocessing either (in guided; see express
-     below): ask for those.
+     standing delegation there (`delegation_not_given_at_this_pause`). In guided it does
+     not cover the success criterion, nor a preprocessing that changes anything, but it
+     covers the engine's default preprocessing (variables kept as they are): ask for the rest.
    - **Modes** (ADR 0005, `mode` in `status --json`; the rules above are `guided`). In
      `training` the junior paraphrases the decision's concepts in their own words: an
      endorsement alone is refused with `paraphrase_required`; show its
