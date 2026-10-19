@@ -208,7 +208,14 @@ function run(argv, { execFile = childProcess.execFile, timeoutMs = READ_TIMEOUT_
   });
 }
 
+/**
+ * The environment of every read (merged over the extension host's): the opt-in session
+ * log never records the panel's reads (CLI-CONTRACT §8.6, CLI-CONTRACT-COMPANION R5).
+ */
+const READ_ENV = Object.freeze({ HYPOTRAIL_SESSION_LOG: '0' });
+
 module.exports = {
+  READ_ENV,
   run, READS, WRITES, TIMEOUTS, MAX_BUFFER, READ_TIMEOUT_MS, WRITE_TIMEOUT_MS, EDA_TIMEOUT_MS, MAX_WORDS,
   ArgvError, TOO_LARGE,
   statusArgv, decisionsArgv, previewEffectsArgv, evidenceArgv, previewPolicyArgv, previewProposalArgv,

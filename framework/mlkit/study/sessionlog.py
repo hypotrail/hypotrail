@@ -2,23 +2,29 @@
 
 The study's own records (``revisions.jsonl``, ``events.jsonl``) hold every committed
 change. They do not hold what an observation of a junior's session also needs: refused
-commands with their codes, refused confirmations among them. This module appends one line
-per invocation of a **mutating** command to ``.hypotrail/session-log.jsonl``, **only when
-the log is enabled**:
+commands with their codes, refused confirmations among them, and how often the junior
+looks at where the study stands (``status``) or checks a text (``check``). This module
+appends one line per invocation of a mutating command or of a logged read
+(:data:`LOGGED_READS`) to ``.hypotrail/session-log.jsonl``, **only when the log is
+enabled**:
 
 * ``HYPOTRAIL_SESSION_LOG=1`` enables it for that process and creates the file;
-* once the file exists, every later mutating invocation appends to it, in any chat, until
+* once the file exists, every later logged invocation appends to it, in any chat, until
   the file is deleted;
 * ``HYPOTRAIL_SESSION_LOG=0`` disables it for that process even when the file exists;
 * a read-only process (``HYPOTRAIL_READ_ONLY=1``) never writes it.
 
-Review fix (reads write nothing): a read-only command (:data:`READ_COMMANDS`: ``status``,
-``plan``, ``preview``, ``decisions``, ``evidence``, ``explain``, ``check``) never appends a
-line, so a client that polls them leaves the study tree byte-identical; with
-``HYPOTRAIL_SESSION_LOG=1`` it may still create the empty file, which is the opt-in itself.
-``export`` and ``session-report`` (:data:`UNLOGGED`) never touch the file at all: an export
-leaves the study tree byte-identical (CLI-CONTRACT-COMPANION C7), and the report reads the
-log. Lines written by an earlier version for reads stay readable by ``session-report``.
+Reads (owner decision at the companion integration, which amends the review fix "reads
+write nothing"): of the read-only commands (:data:`READ_COMMANDS`), ``status`` and
+``check`` (:data:`LOGGED_READS`) are logged again **when the log is on**, because how often
+the junior checks is what an observation wants to see. The other reads (``plan``,
+``preview``, ``decisions``, ``evidence``, ``explain``) never append a line: a preview
+follows a slider, and the panel's reads are not the junior's checks. With
+``HYPOTRAIL_SESSION_LOG=1`` they may still create the empty file, which is the opt-in
+itself. With the log on, a logged read changes the study tree by its log line only; with
+the log off, every read leaves it byte-identical. ``export`` and ``session-report``
+(:data:`UNLOGGED`) never touch the file at all: an export leaves the study tree
+byte-identical (CLI-CONTRACT-COMPANION C7), and the report reads the log.
 
 Privacy: a line holds no conversation content and no data values beyond identifiers the
 study already shows. It never records ``--user-words``, a restatement, a rationale, a
@@ -49,8 +55,11 @@ HOME = '.hypotrail'
 # Commands that never touch the log: the report reads it and must not grow it; an export
 # leaves the study tree byte-identical (CLI-CONTRACT-COMPANION C7).
 UNLOGGED = ('session-report', 'export')
-# Read-only commands: never a line (reads write nothing); the opt-in may create the file.
+# Read-only commands. Those not in LOGGED_READS never append a line (the opt-in may still
+# create the empty file); those in LOGGED_READS append one when the log is on.
 READ_COMMANDS = ('status', 'plan', 'preview', 'decisions', 'evidence', 'explain', 'check')
+# Owner decision (companion integration): how often the junior checks is observed.
+LOGGED_READS = ('status', 'check')
 # Flags whose values are identifiers the study already shows; every other value is dropped.
 SAFE_VALUE_FLAGS = ('--basis', '--delegation-scope', '--rule', '--column', '--channel',
                     '--acknowledge-interruption', '--since', '--about', '--resolve', '--withdraw',
@@ -222,7 +231,7 @@ def record(argv: Sequence[str], payload: Mapping, exit_code: int) -> None:
         study = _study_arg(argv)
         if study is None or not enabled(study):
             return
-        if argv[0] in READ_COMMANDS:
+        if argv[0] in READ_COMMANDS and argv[0] not in LOGGED_READS:
             if os.environ.get(ENV) == '1' and not path(study).exists():
                 path(study).touch()          # the opt-in: an empty log, never a line
             return

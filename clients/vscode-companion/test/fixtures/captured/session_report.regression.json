@@ -21,34 +21,35 @@
    "events": 1,
    "session_log": {
     "enabled": true,
-    "entries": 16,
+    "entries": 33,
     "path": ".hypotrail/session-log.jsonl",
     "note": null
    },
    "artifacts_status": "ok"
   },
   "span": {
-   "first": "2026-10-19T03:56:20.158800+00:00",
-   "last": "2026-10-19T03:56:21.895273+00:00",
-   "seconds": 1.7,
+   "first": "2026-10-19T04:20:50.995614+00:00",
+   "last": "2026-10-19T04:20:52.616144+00:00",
+   "seconds": 1.6,
    "revisions": 24
   },
   "commands": {
    "decide confirm": 3,
    "decide propose": 4,
    "init": 1,
-   "run": 8
+   "run": 8,
+   "status": 17
   },
   "refusals": [],
   "decisions": [
    {
     "proposal_id": "p_1",
     "decision_id": "prediction_time",
-    "proposed_at": "2026-10-19T03:56:20.179754+00:00",
+    "proposed_at": "2026-10-19T04:20:51.024307+00:00",
     "proposed_revision": 2,
     "outcome": "confirmed",
-    "closed_at": "2026-10-19T03:56:20.228054+00:00",
-    "seconds_open": 0.0,
+    "closed_at": "2026-10-19T04:20:51.075232+00:00",
+    "seconds_open": 0.1,
     "basis": "explicit",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -57,10 +58,10 @@
    {
     "proposal_id": "p_2",
     "decision_id": "feature_availability",
-    "proposed_at": "2026-10-19T03:56:20.294303+00:00",
+    "proposed_at": "2026-10-19T04:20:51.174882+00:00",
     "proposed_revision": 4,
     "outcome": "confirmed",
-    "closed_at": "2026-10-19T03:56:20.348139+00:00",
+    "closed_at": "2026-10-19T04:20:51.234499+00:00",
     "seconds_open": 0.1,
     "basis": "explicit",
     "delegation_scope": null,
@@ -70,10 +71,10 @@
    {
     "proposal_id": "p_3",
     "decision_id": "split",
-    "proposed_at": "2026-10-19T03:56:20.384552+00:00",
+    "proposed_at": "2026-10-19T04:20:51.274079+00:00",
     "proposed_revision": 6,
     "outcome": "confirmed",
-    "closed_at": "2026-10-19T03:56:20.423070+00:00",
+    "closed_at": "2026-10-19T04:20:51.316952+00:00",
     "seconds_open": 0.0,
     "basis": "explicit",
     "delegation_scope": null,
@@ -83,7 +84,7 @@
    {
     "proposal_id": "p_4",
     "decision_id": "model_choice",
-    "proposed_at": "2026-10-19T03:56:21.835921+00:00",
+    "proposed_at": "2026-10-19T04:20:52.557859+00:00",
     "proposed_revision": 24,
     "outcome": "open",
     "closed_at": null,
@@ -101,8 +102,8 @@
      "prediction_time",
      "feature_availability"
     ],
-    "opened_at": "2026-10-19T03:56:20.179754+00:00",
-    "closed_at": "2026-10-19T03:56:20.348139+00:00",
+    "opened_at": "2026-10-19T04:20:51.024307+00:00",
+    "closed_at": "2026-10-19T04:20:51.234499+00:00",
     "seconds": 0.2,
     "proposals": 2,
     "confirmed": [
@@ -117,8 +118,8 @@
     "decisions": [
      "split"
     ],
-    "opened_at": "2026-10-19T03:56:20.384552+00:00",
-    "closed_at": "2026-10-19T03:56:20.423070+00:00",
+    "opened_at": "2026-10-19T04:20:51.274079+00:00",
+    "closed_at": "2026-10-19T04:20:51.316952+00:00",
     "seconds": 0.0,
     "proposals": 1,
     "confirmed": [
@@ -133,7 +134,7 @@
      "model_choice",
      "conclusion"
     ],
-    "opened_at": "2026-10-19T03:56:21.835921+00:00",
+    "opened_at": "2026-10-19T04:20:52.557859+00:00",
     "closed_at": null,
     "seconds": null,
     "proposals": 1,
@@ -148,9 +149,9 @@
     "activity": "split",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-19T03:56:20.482018+00:00",
+    "started_at": "2026-10-19T04:20:51.374572+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:20.545295+00:00",
+    "ended_at": "2026-10-19T04:20:51.433538+00:00",
     "seconds": 0.1,
     "slot": "split",
     "result_id": "33ec41e6"
@@ -160,9 +161,9 @@
     "activity": "eda.target_summary",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-19T03:56:20.620711+00:00",
+    "started_at": "2026-10-19T04:20:51.511865+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:20.688939+00:00",
+    "ended_at": "2026-10-19T04:20:51.567587+00:00",
     "seconds": 0.1,
     "slot": "eda.target_summary",
     "result_id": "b422b94a"
@@ -172,9 +173,9 @@
     "activity": "eda.special_values",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-19T03:56:20.842137+00:00",
+    "started_at": "2026-10-19T04:20:51.705767+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:20.900826+00:00",
+    "ended_at": "2026-10-19T04:20:51.769886+00:00",
     "seconds": 0.1,
     "slot": "eda.special_values",
     "result_id": "dfdf7f99"
@@ -184,9 +185,9 @@
     "activity": "eda.mean_by",
     "rules": null,
     "column": "model_year",
-    "started_at": "2026-10-19T03:56:21.000201+00:00",
+    "started_at": "2026-10-19T04:20:51.839566+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:21.072479+00:00",
+    "ended_at": "2026-10-19T04:20:51.906623+00:00",
     "seconds": 0.1,
     "slot": "eda.mean_by:model_year",
     "result_id": "3a29ca2e"
@@ -196,9 +197,9 @@
     "activity": "eda.distribution",
     "rules": null,
     "column": "weight",
-    "started_at": "2026-10-19T03:56:21.144415+00:00",
+    "started_at": "2026-10-19T04:20:51.985055+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:21.209199+00:00",
+    "ended_at": "2026-10-19T04:20:52.046180+00:00",
     "seconds": 0.1,
     "slot": "eda.distribution:weight",
     "result_id": "603d751f"
@@ -208,9 +209,9 @@
     "activity": "fit.baseline",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-19T03:56:21.288614+00:00",
+    "started_at": "2026-10-19T04:20:52.128646+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:21.346586+00:00",
+    "ended_at": "2026-10-19T04:20:52.191174+00:00",
     "seconds": 0.1,
     "slot": "fit.baseline",
     "result_id": "a9602b07"
@@ -220,9 +221,9 @@
     "activity": "fit.linear",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-19T03:56:21.435414+00:00",
+    "started_at": "2026-10-19T04:20:52.270345+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:21.531404+00:00",
+    "ended_at": "2026-10-19T04:20:52.352699+00:00",
     "seconds": 0.1,
     "slot": "fit.linear",
     "result_id": "99508632"
@@ -232,9 +233,9 @@
     "activity": "evaluate.regression",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-19T03:56:21.613001+00:00",
+    "started_at": "2026-10-19T04:20:52.427975+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-19T03:56:21.729841+00:00",
+    "ended_at": "2026-10-19T04:20:52.503291+00:00",
     "seconds": 0.1,
     "slot": "evaluate.regression",
     "result_id": "ef58893e"
@@ -242,7 +243,7 @@
   ],
   "renders": [
    {
-    "time": "2026-10-19T03:56:20.218391+00:00",
+    "time": "2026-10-19T04:20:51.064888+00:00",
     "command": "decide",
     "revision": 2,
     "artifacts": {
@@ -252,7 +253,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.256956+00:00",
+    "time": "2026-10-19T04:20:51.116047+00:00",
     "command": "decide",
     "revision": 3,
     "artifacts": {
@@ -262,7 +263,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.322953+00:00",
+    "time": "2026-10-19T04:20:51.210900+00:00",
     "command": "decide",
     "revision": 4,
     "artifacts": {
@@ -272,7 +273,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.377629+00:00",
+    "time": "2026-10-19T04:20:51.263643+00:00",
     "command": "decide",
     "revision": 5,
     "artifacts": {
@@ -282,7 +283,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.414586+00:00",
+    "time": "2026-10-19T04:20:51.306015+00:00",
     "command": "decide",
     "revision": 6,
     "artifacts": {
@@ -292,7 +293,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.451787+00:00",
+    "time": "2026-10-19T04:20:51.346522+00:00",
     "command": "decide",
     "revision": 7,
     "artifacts": {
@@ -302,7 +303,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.586263+00:00",
+    "time": "2026-10-19T04:20:51.486518+00:00",
     "command": "run",
     "revision": 9,
     "artifacts": {
@@ -312,7 +313,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.813385+00:00",
+    "time": "2026-10-19T04:20:51.675848+00:00",
     "command": "run",
     "revision": 11,
     "artifacts": {
@@ -322,7 +323,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.968418+00:00",
+    "time": "2026-10-19T04:20:51.812111+00:00",
     "command": "run",
     "revision": 13,
     "artifacts": {
@@ -332,7 +333,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:21.117261+00:00",
+    "time": "2026-10-19T04:20:51.956738+00:00",
     "command": "run",
     "revision": 15,
     "artifacts": {
@@ -342,7 +343,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:21.263331+00:00",
+    "time": "2026-10-19T04:20:52.099381+00:00",
     "command": "run",
     "revision": 17,
     "artifacts": {
@@ -352,7 +353,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:21.395939+00:00",
+    "time": "2026-10-19T04:20:52.241345+00:00",
     "command": "run",
     "revision": 19,
     "artifacts": {
@@ -362,7 +363,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:21.582824+00:00",
+    "time": "2026-10-19T04:20:52.401091+00:00",
     "command": "run",
     "revision": 21,
     "artifacts": {
@@ -372,7 +373,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:21.819027+00:00",
+    "time": "2026-10-19T04:20:52.544705+00:00",
     "command": "run",
     "revision": 23,
     "artifacts": {
@@ -382,7 +383,7 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:21.895273+00:00",
+    "time": "2026-10-19T04:20:52.599857+00:00",
     "command": "decide",
     "revision": 24,
     "artifacts": {
@@ -396,20 +397,20 @@
   "gaps": [],
   "timeline": [
    {
-    "time": "2026-10-19T03:56:20.158800+00:00",
+    "time": "2026-10-19T04:20:50.995614+00:00",
     "source": "revision",
     "revision": 1,
     "action": "init"
    },
    {
-    "time": "2026-10-19T03:56:20.163759+00:00",
+    "time": "2026-10-19T04:20:51.000061+00:00",
     "source": "event",
     "kind": "study_created",
     "revision": 1
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.174396+00:00",
+    "time": "2026-10-19T04:20:51.013385+00:00",
     "command": "init",
     "verb": null,
     "exit_code": 0,
@@ -418,7 +419,19 @@
     "options": {}
    },
    {
-    "time": "2026-10-19T03:56:20.179754+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.017559+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 1,
+    "options": {},
+    "current_step": "prediction_time",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:51.024307+00:00",
     "source": "revision",
     "revision": 2,
     "action": "decide.propose",
@@ -428,7 +441,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.218391+00:00",
+    "time": "2026-10-19T04:20:51.064888+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -446,7 +459,19 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.228054+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.067894+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 2,
+    "options": {},
+    "current_step": "prediction_time",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:51.075232+00:00",
     "source": "revision",
     "revision": 3,
     "action": "decide.confirm",
@@ -461,7 +486,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.256956+00:00",
+    "time": "2026-10-19T04:20:51.116047+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -484,7 +509,19 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.294303+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.142109+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 3,
+    "options": {},
+    "current_step": "feature_availability",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:51.174882+00:00",
     "source": "revision",
     "revision": 4,
     "action": "decide.propose",
@@ -494,7 +531,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.322953+00:00",
+    "time": "2026-10-19T04:20:51.210900+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -512,7 +549,19 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.348139+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.214073+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 4,
+    "options": {},
+    "current_step": "feature_availability",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:51.234499+00:00",
     "source": "revision",
     "revision": 5,
     "action": "decide.confirm",
@@ -527,7 +576,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.377629+00:00",
+    "time": "2026-10-19T04:20:51.263643+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -550,7 +599,19 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.384552+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.268120+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 5,
+    "options": {},
+    "current_step": "split",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:51.274079+00:00",
     "source": "revision",
     "revision": 6,
     "action": "decide.propose",
@@ -560,7 +621,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.414586+00:00",
+    "time": "2026-10-19T04:20:51.306015+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -578,7 +639,19 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.423070+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.309910+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 6,
+    "options": {},
+    "current_step": "split",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:51.316952+00:00",
     "source": "revision",
     "revision": 7,
     "action": "decide.confirm",
@@ -593,7 +666,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.451787+00:00",
+    "time": "2026-10-19T04:20:51.346522+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -616,7 +689,19 @@
     }
    },
    {
-    "time": "2026-10-19T03:56:20.482018+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.349468+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 7,
+    "options": {},
+    "current_step": "split",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:51.374572+00:00",
     "source": "revision",
     "revision": 8,
     "action": "run.reserve",
@@ -625,7 +710,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-19T03:56:20.545295+00:00",
+    "time": "2026-10-19T04:20:51.433538+00:00",
     "source": "revision",
     "revision": 9,
     "action": "run.promote",
@@ -637,7 +722,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.586263+00:00",
+    "time": "2026-10-19T04:20:51.486518+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -655,7 +740,19 @@
     "result_id": "33ec41e6"
    },
    {
-    "time": "2026-10-19T03:56:20.620711+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.490433+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 9,
+    "options": {},
+    "current_step": "train_eda",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:51.511865+00:00",
     "source": "revision",
     "revision": 10,
     "action": "run.reserve",
@@ -664,7 +761,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-19T03:56:20.688939+00:00",
+    "time": "2026-10-19T04:20:51.567587+00:00",
     "source": "revision",
     "revision": 11,
     "action": "run.promote",
@@ -676,7 +773,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.813385+00:00",
+    "time": "2026-10-19T04:20:51.675848+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -694,7 +791,19 @@
     "result_id": "b422b94a"
    },
    {
-    "time": "2026-10-19T03:56:20.842137+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.680277+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 11,
+    "options": {},
+    "current_step": "train_eda",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:51.705767+00:00",
     "source": "revision",
     "revision": 12,
     "action": "run.reserve",
@@ -703,7 +812,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-19T03:56:20.900826+00:00",
+    "time": "2026-10-19T04:20:51.769886+00:00",
     "source": "revision",
     "revision": 13,
     "action": "run.promote",
@@ -715,7 +824,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:20.968418+00:00",
+    "time": "2026-10-19T04:20:51.812111+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -733,7 +842,19 @@
     "result_id": "dfdf7f99"
    },
    {
-    "time": "2026-10-19T03:56:21.000201+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.817166+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 13,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:51.839566+00:00",
     "source": "revision",
     "revision": 14,
     "action": "run.reserve",
@@ -743,7 +864,7 @@
     "column": "model_year"
    },
    {
-    "time": "2026-10-19T03:56:21.072479+00:00",
+    "time": "2026-10-19T04:20:51.906623+00:00",
     "source": "revision",
     "revision": 15,
     "action": "run.promote",
@@ -755,7 +876,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:21.117261+00:00",
+    "time": "2026-10-19T04:20:51.956738+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -775,7 +896,19 @@
     "result_id": "3a29ca2e"
    },
    {
-    "time": "2026-10-19T03:56:21.144415+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:51.962118+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 15,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:51.985055+00:00",
     "source": "revision",
     "revision": 16,
     "action": "run.reserve",
@@ -785,7 +918,7 @@
     "column": "weight"
    },
    {
-    "time": "2026-10-19T03:56:21.209199+00:00",
+    "time": "2026-10-19T04:20:52.046180+00:00",
     "source": "revision",
     "revision": 17,
     "action": "run.promote",
@@ -797,7 +930,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:21.263331+00:00",
+    "time": "2026-10-19T04:20:52.099381+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -817,7 +950,19 @@
     "result_id": "603d751f"
    },
    {
-    "time": "2026-10-19T03:56:21.288614+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:52.104975+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 17,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:52.128646+00:00",
     "source": "revision",
     "revision": 18,
     "action": "run.reserve",
@@ -826,7 +971,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-19T03:56:21.346586+00:00",
+    "time": "2026-10-19T04:20:52.191174+00:00",
     "source": "revision",
     "revision": 19,
     "action": "run.promote",
@@ -838,7 +983,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:21.395939+00:00",
+    "time": "2026-10-19T04:20:52.241345+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -856,7 +1001,19 @@
     "result_id": "a9602b07"
    },
    {
-    "time": "2026-10-19T03:56:21.435414+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:52.248126+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 19,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:52.270345+00:00",
     "source": "revision",
     "revision": 20,
     "action": "run.reserve",
@@ -865,7 +1022,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-19T03:56:21.531404+00:00",
+    "time": "2026-10-19T04:20:52.352699+00:00",
     "source": "revision",
     "revision": 21,
     "action": "run.promote",
@@ -877,7 +1034,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:21.582824+00:00",
+    "time": "2026-10-19T04:20:52.401091+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -895,7 +1052,19 @@
     "result_id": "99508632"
    },
    {
-    "time": "2026-10-19T03:56:21.613001+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:52.408320+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 21,
+    "options": {},
+    "current_step": "model_choice",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:52.427975+00:00",
     "source": "revision",
     "revision": 22,
     "action": "run.reserve",
@@ -904,7 +1073,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-19T03:56:21.729841+00:00",
+    "time": "2026-10-19T04:20:52.503291+00:00",
     "source": "revision",
     "revision": 23,
     "action": "run.promote",
@@ -916,7 +1085,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:21.819027+00:00",
+    "time": "2026-10-19T04:20:52.544705+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -934,7 +1103,19 @@
     "result_id": "ef58893e"
    },
    {
-    "time": "2026-10-19T03:56:21.835921+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:52.551925+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 23,
+    "options": {},
+    "current_step": "model_choice",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:52.557859+00:00",
     "source": "revision",
     "revision": 24,
     "action": "decide.propose",
@@ -944,7 +1125,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-19T03:56:21.895273+00:00",
+    "time": "2026-10-19T04:20:52.599857+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -960,6 +1141,37 @@
      "report": "ok",
      "workbench": "ok"
     }
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:52.607264+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 24,
+    "options": {
+     "json": true,
+     "summary": true
+    },
+    "current_step": "model_choice",
+    "next_action": "await_user_words"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:52.616144+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 24,
+    "options": {
+     "digest": true,
+     "json": true,
+     "summary": true
+    },
+    "current_step": "model_choice",
+    "next_action": "await_user_words"
    }
   ],
   "privacy": "No conversation content: user words, restatements, rationales, proposed values, reasons, and checked text are never copied. Identifiers, codes, counts, and times only."

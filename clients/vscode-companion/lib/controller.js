@@ -140,9 +140,14 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     post(valid);
     return true;
   };
-  const runCommand = (argv, timeoutMs) => {
+  // A read runs with cli.READ_ENV (HYPOTRAIL_SESSION_LOG=0): the panel's reads, its polling
+  // of `status` included, are not the junior's checks, so the opt-in session log never
+  // records them (CLI-CONTRACT §8.6). A write inherits the environment and is logged.
+  const runCommand = (argv, timeoutMs, { read = false } = {}) => {
     diagnostics.commands.push(argv.slice(agent.argv.length, agent.argv.length + 2).join(' '));
-    return runCli(argv, { timeoutMs, cwd: agent.studyDir });
+    const options = { timeoutMs, cwd: agent.studyDir };
+    if (read) options.env = { ...process.env, ...cli.READ_ENV };
+    return runCli(argv, options);
   };
   const stageAtLeast = wanted => protocol.stageAllows(active.stage, wanted);
 
@@ -162,7 +167,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     const limit = group === 'preview' ? previews : reads;
     await limit.acquire();
     try {
-      return await runCommand(argv, timeoutMs);
+      return await runCommand(argv, timeoutMs, { read: true });
     } finally {
       limit.release();
     }

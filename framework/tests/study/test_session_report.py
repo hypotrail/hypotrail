@@ -2,9 +2,10 @@
 
 The report is read-only and content-free; the log records only when enabled
 (``HYPOTRAIL_SESSION_LOG=1`` once, then while the file exists), never in a read-only
-process, never a read-only command (review fix: reads write nothing; ``export`` leaves the
-study tree byte-identical), and never the junior's words, a restatement, a rationale, a
-value, or checked text. Studies live in temporary directories.
+process, never a read other than ``status`` and ``check`` (owner decision: how often the
+junior checks is observed; previews, evidence, explain, decisions and plan stay unlogged,
+and ``export`` leaves the study tree byte-identical), and never the junior's words, a
+restatement, a rationale, a value, or checked text. Studies live in temporary directories.
 """
 from __future__ import annotations
 
@@ -49,8 +50,7 @@ def logged(tmp_path, synthetic_case_dir, monkeypatch):
     monkeypatch.setenv(sessionlog.ENV, '1')
     _call('status', '--summary', '--study', study, expect=0)
     monkeypatch.delenv(sessionlog.ENV)
-    assert sessionlog.path(study).is_file()                    # the opt-in: an empty log
-    assert sessionlog.path(study).read_bytes() == b''
+    assert sessionlog.path(study).is_file()                    # the opt-in, and its line
     p = _call('decide', 'propose', 'prediction_time', '--value', 'before the reminder',
               '--restatement', RESTATEMENT, '--rationale', RATIONALE, '--request-id', 'a',
               '--expected-revision', 1, '--study', study)['result']['proposal_id']
@@ -84,14 +84,15 @@ def test_the_log_is_off_by_default_and_the_report_says_so(tmp_path, synthetic_ca
     assert [d['outcome'] for d in out['decisions']] == ['confirmed'] * 3
 
 
-def test_the_log_records_mutations_and_their_refusals_never_reads(logged):
+def test_the_log_records_mutations_refusals_status_and_checks(logged):
     lines = [json.loads(x) for x in sessionlog.path(logged).read_text().splitlines()]
     assert {x['schema'] for x in lines} == {sessionlog.SCHEMA}
     assert [(x['command'], x['verb'], x['exit_code']) for x in lines] == [
-        ('decide', 'propose', 0), ('decide', 'confirm', 2), ('decide', 'confirm', 0),
-        ('run', None, 2)]
+        ('status', None, 0), ('decide', 'propose', 0), ('decide', 'confirm', 2),
+        ('decide', 'confirm', 0), ('check', None, 0), ('run', None, 2)]
+    assert lines[0]['options'] == {'summary': True}
     out = rep.report(logged)
-    assert out['sources']['session_log'] == {'enabled': True, 'entries': 4,
+    assert out['sources']['session_log'] == {'enabled': True, 'entries': 6,
                                              'path': '.hypotrail/session-log.jsonl',
                                              'note': None}
     assert [(r['command'], r['code'], r['reason']) for r in out['refusals']] == [
@@ -102,8 +103,11 @@ def test_the_log_records_mutations_and_their_refusals_never_reads(logged):
     assert decision['refused_confirmations'] == 1
     assert decision['refusal_reasons'] == {'bare_acknowledgement': 1}
     assert decision['seconds_open'] >= 0 and decision['basis'] == 'explicit'
-    assert out['checks'] == []                                  # a check is a read
-    assert out['commands'] == {'decide confirm': 2, 'decide propose': 1, 'run': 1}
+    [check] = out['checks']                                     # a logged read
+    assert check['target'] == 'text' and check['clean'] is False
+    assert check['codes'] == {'untraceable_number': 1}
+    assert out['commands'] == {'check': 1, 'decide confirm': 2, 'decide propose': 1, 'run': 1,
+                               'status': 1}
     assert out['pauses'][0]['refused_confirmations'] == 1
     assert out['pauses'][0]['closed_at'] is None               # availability still open
     sources = {x['source'] for x in out['timeline']}
@@ -132,35 +136,76 @@ def test_disable_and_read_only_processes_write_nothing(logged, monkeypatch):
     _call('status', '--study', logged, expect=0)
     monkeypatch.delenv('HYPOTRAIL_READ_ONLY')
     assert sessionlog.path(logged).read_text() == before
-    _call('plan', '--study', logged, expect=0)                  # a read: never a line
+    _call('plan', '--study', logged, expect=0)                  # an unlogged read
     assert sessionlog.path(logged).read_text() == before
+    _call('status', '--study', logged, expect=0)                # the file keeps it on
+    assert sessionlog.path(logged).read_text().count('\n') == before.count('\n') + 1
     _call('run', 'split', '--request-id', 'e', '--expected-revision', 3, '--study', logged,
           expect=2)                                             # the file keeps it on
     assert sessionlog.path(logged).read_text() != before
 
 
-def test_reads_and_the_export_leave_the_study_tree_byte_identical(logged, tmp_path,
-                                                                  monkeypatch):
-    """Review fix: with the log on, a client polling reads and exporting writes nothing."""
+def _lines(study) -> list[dict]:
+    return [json.loads(x) for x in sessionlog.path(study).read_text().splitlines()]
+
+
+def test_with_the_log_on_status_and_check_change_only_the_log_and_the_rest_nothing(
+        logged, tmp_path, monkeypatch):
+    """Owner decision: ``status`` and ``check`` add a line; other reads and the export none."""
     monkeypatch.setenv(sessionlog.ENV, '1')
+    log = str(sessionlog.path(logged).relative_to(logged))
     before = _snapshot(logged)
-    reads = [('status',), ('status', '--summary'), ('status', '--summary', '--digest'),
-             ('plan',), ('decisions',), ('evidence',), ('explain',), ('check',),
-             ('preview', 'proposal', 'prediction_time', '--value', 'at signup'),
-             ('preview', 'policy', '--rule', 'capacity:10'),        # refused: still a read
-             ('session-report',)]
-    for args in reads:
+    lines = len(_lines(logged))
+    logged_reads = [('status',), ('status', '--summary'), ('status', '--summary', '--digest'),
+                    ('check',)]
+    for args in logged_reads:
         cli.run([*args, '--study', str(logged)])
-    for _ in range(20):
+    after = _snapshot(logged)
+    assert {k: v for k, v in after.items() if k != log} == \
+        {k: v for k, v in before.items() if k != log}               # only the log file moved
+    added = _lines(logged)[lines:]
+    assert [(x['command'], x['options'].get('summary', False), x['options'].get('digest', False))
+            for x in added] == [('status', False, False), ('status', True, False),
+                                ('status', True, True), ('check', False, False)]
+    assert added[0]['current_step'] and added[3]['check']['target']
+    before = after
+    unlogged = [('plan',), ('decisions',), ('evidence',), ('explain',),
+                ('preview', 'proposal', 'prediction_time', '--value', 'at signup'),
+                ('preview', 'policy', '--rule', 'capacity:10'),     # refused: still a read
+                ('session-report',)]
+    for args in unlogged:
+        cli.run([*args, '--study', str(logged)])
+    for _ in range(20):                                             # a slider: no line
         cli.run(['preview', 'proposal', 'prediction_time', '--value', 'at signup',
                  '--study', str(logged)])
-    assert _snapshot(logged) == before
+    assert _snapshot(logged) == before                              # byte-identical
     out = tmp_path / 'pack'
     outcome = cli.run(['export', 'handoff', '--out', str(out), '--study', str(logged)])
     assert outcome.payload['ok'] is True, outcome.payload
-    assert _snapshot(logged) == before
-    assert set(sessionlog.READ_COMMANDS) | set(sessionlog.UNLOGGED) >= {
-        a[0] for a in reads} | {'export'}
+    assert _snapshot(logged) == before                              # byte-identical
+    assert set(sessionlog.LOGGED_READS) == {a[0] for a in logged_reads}
+    assert (set(sessionlog.READ_COMMANDS) - set(sessionlog.LOGGED_READS)) | \
+        set(sessionlog.UNLOGGED) >= {a[0] for a in unlogged} | {'export'}
+
+
+def test_with_the_log_off_every_read_and_the_export_leave_the_tree_byte_identical(
+        tmp_path, synthetic_case_dir, monkeypatch):
+    monkeypatch.delenv(sessionlog.ENV, raising=False)
+    study = tmp_path / 'study'
+    _call('init', '--case', synthetic_case_dir, '--study', study, expect=0)
+    before = _snapshot(study)
+    for args in [('status',), ('status', '--summary', '--digest'), ('check',), ('plan',),
+                 ('decisions',), ('evidence',), ('explain',), ('session-report',),
+                 ('export', 'handoff', '--out', str(tmp_path / 'pack'))]:
+        cli.run([*args, '--study', str(study)])
+    assert _snapshot(study) == before
+    assert not sessionlog.path(study).exists()
+    monkeypatch.setenv(sessionlog.ENV, '0')                         # the panel's reads
+    sessionlog.path(study).touch()
+    before = _snapshot(study)
+    cli.run(['status', '--summary', '--digest', '--study', str(study)])
+    cli.run(['check', '--study', str(study)])
+    assert _snapshot(study) == before
 
 
 def test_the_opt_in_on_a_read_creates_the_empty_log_only(tmp_path, synthetic_case_dir,

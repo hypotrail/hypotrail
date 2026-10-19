@@ -667,10 +667,13 @@ def test_session_report_and_session_log_contract():
     assert cmd_session_report.PAYLOAD_KEYS == SESSION_REPORT_KEYS
     assert (sessionlog.SCHEMA, sessionlog.LOG_FILE, sessionlog.ENV) == tuple(SESSION_LOG.values())
     assert sessionlog.UNLOGGED == ('session-report', 'export')
-    # Review fix: reads write nothing (CLI-CONTRACT §8.6, CLI-CONTRACT-COMPANION R5).
+    # Reads (CLI-CONTRACT §8.6, CLI-CONTRACT-COMPANION R5): only status and check are logged,
+    # when the log is on (owner decision at the companion integration).
     assert sessionlog.READ_COMMANDS == ('status', 'plan', 'preview', 'decisions', 'evidence',
                                         'explain', 'check')
-    assert {'sessionlog.READ_COMMANDS', 'sessionlog.UNLOGGED'} <= DOC_TOKENS
+    assert sessionlog.LOGGED_READS == ('status', 'check')
+    assert {'sessionlog.READ_COMMANDS', 'sessionlog.LOGGED_READS',
+            'sessionlog.UNLOGGED'} <= DOC_TOKENS
     assert 'hypotrail session-report --study DIR [--since REV]' in DOC
     keys = {SESSION_REPORT_SCHEMA, *SESSION_REPORT_KEYS, SESSION_LOG['schema'],
             SESSION_LOG['env']}

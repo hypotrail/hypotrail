@@ -67,7 +67,7 @@ test('SessionReportModel: log status, span, pauses, refusal counts, decisions, g
   const m = toSessionReportModel(payload('session_report.binary'));
   assert.deepEqual(Object.keys(m), ['revision', 'log', 'span', 'pauses', 'refusals', 'decisions', 'gaps']);
   assert.deepEqual(m.log, { enabled: true, note: null });
-  assert.equal(m.span.seconds, 5.7);
+  assert.equal(m.span.seconds, 5.6);
   assert.deepEqual(m.pauses.map(p => [p.pause, p.open]), [[1, false], [2, false], [3, true]]);
   assert.equal(m.decisions.length, 5);
   const raw = JSON.parse(JSON.stringify(payload('session_report.binary')));

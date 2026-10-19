@@ -8,48 +8,50 @@
    "session-report",
    "--json"
   ],
-  "note": ""
+  "note": "Captured with the session log on: mutating commands plus the status and check reads (owner decision, CLI-CONTRACT §8.6)."
  },
  "payload": {
   "schema": "hypotrail.session_report/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 26,
+  "revision": 30,
   "since": null,
   "sources": {
-   "revisions": 26,
+   "revisions": 30,
    "events": 1,
    "session_log": {
     "enabled": true,
-    "entries": 19,
+    "entries": 43,
     "path": ".hypotrail/session-log.jsonl",
     "note": null
    },
    "artifacts_status": "ok"
   },
   "span": {
-   "first": "2026-10-18T22:31:40.383640+00:00",
-   "last": "2026-10-18T22:31:46.127030+00:00",
-   "seconds": 5.7,
-   "revisions": 26
+   "first": "2026-10-19T04:20:44.713928+00:00",
+   "last": "2026-10-19T04:20:50.264119+00:00",
+   "seconds": 5.6,
+   "revisions": 30
   },
   "commands": {
+   "check": 1,
    "decide confirm": 4,
    "decide propose": 5,
    "init": 1,
    "render": 1,
-   "run": 8
+   "run": 10,
+   "status": 21
   },
   "refusals": [],
   "decisions": [
    {
     "proposal_id": "p_1",
     "decision_id": "prediction_time",
-    "proposed_at": "2026-10-18T22:31:40.418294+00:00",
+    "proposed_at": "2026-10-19T04:20:44.741074+00:00",
     "proposed_revision": 2,
     "outcome": "confirmed",
-    "closed_at": "2026-10-18T22:31:40.934073+00:00",
-    "seconds_open": 0.5,
+    "closed_at": "2026-10-19T04:20:45.167690+00:00",
+    "seconds_open": 0.4,
     "basis": "explicit",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -58,10 +60,10 @@
    {
     "proposal_id": "p_2",
     "decision_id": "feature_availability",
-    "proposed_at": "2026-10-18T22:31:41.040573+00:00",
+    "proposed_at": "2026-10-19T04:20:45.272456+00:00",
     "proposed_revision": 4,
     "outcome": "confirmed",
-    "closed_at": "2026-10-18T22:31:41.111462+00:00",
+    "closed_at": "2026-10-19T04:20:45.349073+00:00",
     "seconds_open": 0.1,
     "basis": "explicit",
     "delegation_scope": null,
@@ -71,11 +73,11 @@
    {
     "proposal_id": "p_3",
     "decision_id": "split",
-    "proposed_at": "2026-10-18T22:31:41.158125+00:00",
+    "proposed_at": "2026-10-19T04:20:45.399197+00:00",
     "proposed_revision": 6,
     "outcome": "confirmed",
-    "closed_at": "2026-10-18T22:31:41.204633+00:00",
-    "seconds_open": 0.0,
+    "closed_at": "2026-10-19T04:20:45.452402+00:00",
+    "seconds_open": 0.1,
     "basis": "explicit",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -84,10 +86,10 @@
    {
     "proposal_id": "p_4",
     "decision_id": "policy",
-    "proposed_at": "2026-10-18T22:31:44.440739+00:00",
-    "proposed_revision": 22,
+    "proposed_at": "2026-10-19T04:20:48.660762+00:00",
+    "proposed_revision": 26,
     "outcome": "confirmed",
-    "closed_at": "2026-10-18T22:31:44.515076+00:00",
+    "closed_at": "2026-10-19T04:20:48.765772+00:00",
     "seconds_open": 0.1,
     "basis": "explicit",
     "delegation_scope": null,
@@ -97,8 +99,8 @@
    {
     "proposal_id": "p_5",
     "decision_id": "policy",
-    "proposed_at": "2026-10-18T22:31:45.316691+00:00",
-    "proposed_revision": 26,
+    "proposed_at": "2026-10-19T04:20:49.479824+00:00",
+    "proposed_revision": 30,
     "outcome": "open",
     "closed_at": null,
     "seconds_open": null,
@@ -115,9 +117,9 @@
      "prediction_time",
      "feature_availability"
     ],
-    "opened_at": "2026-10-18T22:31:40.418294+00:00",
-    "closed_at": "2026-10-18T22:31:41.111462+00:00",
-    "seconds": 0.7,
+    "opened_at": "2026-10-19T04:20:44.741074+00:00",
+    "closed_at": "2026-10-19T04:20:45.349073+00:00",
+    "seconds": 0.6,
     "proposals": 2,
     "confirmed": [
      "feature_availability",
@@ -131,9 +133,9 @@
     "decisions": [
      "split"
     ],
-    "opened_at": "2026-10-18T22:31:41.158125+00:00",
-    "closed_at": "2026-10-18T22:31:41.204633+00:00",
-    "seconds": 0.0,
+    "opened_at": "2026-10-19T04:20:45.399197+00:00",
+    "closed_at": "2026-10-19T04:20:45.452402+00:00",
+    "seconds": 0.1,
     "proposals": 1,
     "confirmed": [
      "split"
@@ -147,7 +149,7 @@
      "policy",
      "conclusion"
     ],
-    "opened_at": "2026-10-18T22:31:44.440739+00:00",
+    "opened_at": "2026-10-19T04:20:48.660762+00:00",
     "closed_at": null,
     "seconds": null,
     "proposals": 2,
@@ -164,105 +166,129 @@
     "activity": "split",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-18T22:31:41.326512+00:00",
+    "started_at": "2026-10-19T04:20:45.565240+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:42.366030+00:00",
-    "seconds": 1.0,
+    "ended_at": "2026-10-19T04:20:46.625467+00:00",
+    "seconds": 1.1,
     "slot": "split",
-    "result_id": "040ccd81"
+    "result_id": "48fa370b"
    },
    {
     "execution_id": "e_92ee93de02ea87db530298f4",
     "activity": "eda.target_rate",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-18T22:31:42.453234+00:00",
+    "started_at": "2026-10-19T04:20:46.721554+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:42.590297+00:00",
+    "ended_at": "2026-10-19T04:20:46.840185+00:00",
     "seconds": 0.1,
     "slot": "eda.target_rate",
-    "result_id": "744b2d1c"
+    "result_id": "698ce305"
    },
    {
     "execution_id": "e_cb440fe2f7ec20d54f472663",
     "activity": "eda.special_values",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-18T22:31:42.699940+00:00",
+    "started_at": "2026-10-19T04:20:46.933995+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:42.825250+00:00",
+    "ended_at": "2026-10-19T04:20:47.061873+00:00",
     "seconds": 0.1,
     "slot": "eda.special_values",
-    "result_id": "c183ac33"
+    "result_id": "ea0379b4"
    },
    {
     "execution_id": "e_087f4c7109d76636536c712c",
     "activity": "eda.rate_by",
     "rules": null,
     "column": "job",
-    "started_at": "2026-10-18T22:31:42.945083+00:00",
+    "started_at": "2026-10-19T04:20:47.155491+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:43.160456+00:00",
-    "seconds": 0.2,
+    "ended_at": "2026-10-19T04:20:47.282279+00:00",
+    "seconds": 0.1,
     "slot": "eda.rate_by:job",
-    "result_id": "6f8a27e9"
+    "result_id": "b3d45ce9"
    },
    {
     "execution_id": "e_8101d16893f3425fbb4ff727",
-    "activity": "fit.baseline",
+    "activity": "eda.distribution",
     "rules": null,
-    "column": null,
-    "started_at": "2026-10-18T22:31:43.304783+00:00",
+    "column": "age",
+    "started_at": "2026-10-19T04:20:47.379172+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:43.471306+00:00",
-    "seconds": 0.2,
-    "slot": "fit.baseline",
-    "result_id": "6621babc"
+    "ended_at": "2026-10-19T04:20:47.498662+00:00",
+    "seconds": 0.1,
+    "slot": "eda.distribution:age",
+    "result_id": "fc7224b2"
    },
    {
     "execution_id": "e_8651b2bcef1776e9ebffd170",
-    "activity": "fit.logistic",
+    "activity": "eda.distribution",
     "rules": null,
-    "column": null,
-    "started_at": "2026-10-18T22:31:43.579193+00:00",
+    "column": "job",
+    "started_at": "2026-10-19T04:20:47.633673+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:44.128099+00:00",
-    "seconds": 0.5,
-    "slot": "fit.logistic",
-    "result_id": "d0af48b2"
+    "ended_at": "2026-10-19T04:20:47.766811+00:00",
+    "seconds": 0.1,
+    "slot": "eda.distribution:job",
+    "result_id": "cd9f6331"
    },
    {
     "execution_id": "e_76bdb563530c997e6fdf55cc",
+    "activity": "fit.baseline",
+    "rules": null,
+    "column": null,
+    "started_at": "2026-10-19T04:20:47.877299+00:00",
+    "outcome": "promoted",
+    "ended_at": "2026-10-19T04:20:48.001734+00:00",
+    "seconds": 0.1,
+    "slot": "fit.baseline",
+    "result_id": "44b5d299"
+   },
+   {
+    "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+    "activity": "fit.logistic",
+    "rules": null,
+    "column": null,
+    "started_at": "2026-10-19T04:20:48.108444+00:00",
+    "outcome": "promoted",
+    "ended_at": "2026-10-19T04:20:48.311332+00:00",
+    "seconds": 0.2,
+    "slot": "fit.logistic",
+    "result_id": "2a1021c8"
+   },
+   {
+    "execution_id": "e_40d674998c07527b12a31e29",
     "activity": "policy.evaluation",
     "rules": [
      "threshold:0.2"
     ],
     "column": null,
-    "started_at": "2026-10-18T22:31:44.244263+00:00",
+    "started_at": "2026-10-19T04:20:48.433731+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:44.357456+00:00",
+    "ended_at": "2026-10-19T04:20:48.563450+00:00",
     "seconds": 0.1,
     "slot": "policy.evaluation",
-    "result_id": "ab63c190"
+    "result_id": "340c9a81"
    },
    {
-    "execution_id": "e_3b7e9da2df5de95232824246",
+    "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
     "activity": "policy.evaluation",
     "rules": [
      "capacity:100"
     ],
     "column": null,
-    "started_at": "2026-10-18T22:31:44.641545+00:00",
+    "started_at": "2026-10-19T04:20:48.950958+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-18T22:31:45.214297+00:00",
-    "seconds": 0.6,
+    "ended_at": "2026-10-19T04:20:49.388297+00:00",
+    "seconds": 0.4,
     "slot": "policy.evaluation",
-    "result_id": "ae80b53f"
+    "result_id": "8f1781d8"
    }
   ],
   "renders": [
    {
-    "time": "2026-10-18T22:31:40.924709+00:00",
+    "time": "2026-10-19T04:20:45.154299+00:00",
     "command": "decide",
     "revision": 2,
     "artifacts": {
@@ -272,7 +298,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:40.973331+00:00",
+    "time": "2026-10-19T04:20:45.217516+00:00",
     "command": "decide",
     "revision": 3,
     "artifacts": {
@@ -282,7 +308,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.077666+00:00",
+    "time": "2026-10-19T04:20:45.313164+00:00",
     "command": "decide",
     "revision": 4,
     "artifacts": {
@@ -292,7 +318,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.149435+00:00",
+    "time": "2026-10-19T04:20:45.390205+00:00",
     "command": "decide",
     "revision": 5,
     "artifacts": {
@@ -302,7 +328,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.195214+00:00",
+    "time": "2026-10-19T04:20:45.441959+00:00",
     "command": "decide",
     "revision": 6,
     "artifacts": {
@@ -312,7 +338,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.242362+00:00",
+    "time": "2026-10-19T04:20:45.492814+00:00",
     "command": "decide",
     "revision": 7,
     "artifacts": {
@@ -322,7 +348,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:42.414692+00:00",
+    "time": "2026-10-19T04:20:46.681229+00:00",
     "command": "run",
     "revision": 9,
     "artifacts": {
@@ -332,7 +358,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:42.660711+00:00",
+    "time": "2026-10-19T04:20:46.894663+00:00",
     "command": "run",
     "revision": 11,
     "artifacts": {
@@ -342,7 +368,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:42.890858+00:00",
+    "time": "2026-10-19T04:20:47.115739+00:00",
     "command": "run",
     "revision": 13,
     "artifacts": {
@@ -352,7 +378,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:43.244018+00:00",
+    "time": "2026-10-19T04:20:47.338937+00:00",
     "command": "run",
     "revision": 15,
     "artifacts": {
@@ -362,7 +388,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:43.536563+00:00",
+    "time": "2026-10-19T04:20:47.578902+00:00",
     "command": "run",
     "revision": 17,
     "artifacts": {
@@ -372,7 +398,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:44.197334+00:00",
+    "time": "2026-10-19T04:20:47.836399+00:00",
     "command": "run",
     "revision": 19,
     "artifacts": {
@@ -382,7 +408,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:44.423251+00:00",
+    "time": "2026-10-19T04:20:48.064886+00:00",
     "command": "run",
     "revision": 21,
     "artifacts": {
@@ -392,18 +418,8 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:44.496876+00:00",
-    "command": "decide",
-    "revision": 22,
-    "artifacts": {
-     "notebook": "ok",
-     "report": "ok",
-     "workbench": "ok"
-    }
-   },
-   {
-    "time": "2026-10-18T22:31:44.568355+00:00",
-    "command": "decide",
+    "time": "2026-10-19T04:20:48.381910+00:00",
+    "command": "run",
     "revision": 23,
     "artifacts": {
      "notebook": "ok",
@@ -412,7 +428,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:45.296563+00:00",
+    "time": "2026-10-19T04:20:48.635174+00:00",
     "command": "run",
     "revision": 25,
     "artifacts": {
@@ -422,7 +438,7 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:45.376609+00:00",
+    "time": "2026-10-19T04:20:48.732999+00:00",
     "command": "decide",
     "revision": 26,
     "artifacts": {
@@ -432,9 +448,39 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:46.127030+00:00",
+    "time": "2026-10-19T04:20:48.854353+00:00",
+    "command": "decide",
+    "revision": 27,
+    "artifacts": {
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-19T04:20:49.459021+00:00",
+    "command": "run",
+    "revision": 29,
+    "artifacts": {
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-19T04:20:49.540305+00:00",
+    "command": "decide",
+    "revision": 30,
+    "artifacts": {
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-19T04:20:50.153885+00:00",
     "command": "render",
-    "revision": 26,
+    "revision": 30,
     "artifacts": {
      "notebook": "ok",
      "report": "ok",
@@ -442,24 +488,38 @@
     }
    }
   ],
-  "checks": [],
+  "checks": [
+   {
+    "time": "2026-10-19T04:20:50.264119+00:00",
+    "revision": 30,
+    "clean": true,
+    "codes": {},
+    "counts": {
+     "error": 0,
+     "warning": 0
+    },
+    "in_words": 0,
+    "target": "study",
+    "traced": 0
+   }
+  ],
   "gaps": [],
   "timeline": [
    {
-    "time": "2026-10-18T22:31:40.383640+00:00",
+    "time": "2026-10-19T04:20:44.713928+00:00",
     "source": "revision",
     "revision": 1,
     "action": "init"
    },
    {
-    "time": "2026-10-18T22:31:40.388111+00:00",
+    "time": "2026-10-19T04:20:44.718035+00:00",
     "source": "event",
     "kind": "study_created",
     "revision": 1
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:40.400961+00:00",
+    "time": "2026-10-19T04:20:44.727568+00:00",
     "command": "init",
     "verb": null,
     "exit_code": 0,
@@ -468,7 +528,19 @@
     "options": {}
    },
    {
-    "time": "2026-10-18T22:31:40.418294+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:44.732738+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 1,
+    "options": {},
+    "current_step": "prediction_time",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:44.741074+00:00",
     "source": "revision",
     "revision": 2,
     "action": "decide.propose",
@@ -478,7 +550,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:40.924709+00:00",
+    "time": "2026-10-19T04:20:45.154299+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -496,7 +568,19 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:40.934073+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:45.160157+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 2,
+    "options": {},
+    "current_step": "prediction_time",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:45.167690+00:00",
     "source": "revision",
     "revision": 3,
     "action": "decide.confirm",
@@ -511,7 +595,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:40.973331+00:00",
+    "time": "2026-10-19T04:20:45.217516+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -534,7 +618,19 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.040573+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:45.244118+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 3,
+    "options": {},
+    "current_step": "feature_availability",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:45.272456+00:00",
     "source": "revision",
     "revision": 4,
     "action": "decide.propose",
@@ -544,7 +640,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:41.077666+00:00",
+    "time": "2026-10-19T04:20:45.313164+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -562,7 +658,19 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.111462+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:45.317621+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 4,
+    "options": {},
+    "current_step": "feature_availability",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:45.349073+00:00",
     "source": "revision",
     "revision": 5,
     "action": "decide.confirm",
@@ -577,7 +685,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:41.149435+00:00",
+    "time": "2026-10-19T04:20:45.390205+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -600,7 +708,19 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.158125+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:45.394012+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 5,
+    "options": {},
+    "current_step": "split",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:45.399197+00:00",
     "source": "revision",
     "revision": 6,
     "action": "decide.propose",
@@ -610,7 +730,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:41.195214+00:00",
+    "time": "2026-10-19T04:20:45.441959+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -628,7 +748,19 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.204633+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:45.446475+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 6,
+    "options": {},
+    "current_step": "split",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:45.452402+00:00",
     "source": "revision",
     "revision": 7,
     "action": "decide.confirm",
@@ -643,7 +775,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:41.242362+00:00",
+    "time": "2026-10-19T04:20:45.492814+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -666,7 +798,19 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:41.326512+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:45.497387+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 7,
+    "options": {},
+    "current_step": "split",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:45.565240+00:00",
     "source": "revision",
     "revision": 8,
     "action": "run.reserve",
@@ -675,7 +819,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-18T22:31:42.366030+00:00",
+    "time": "2026-10-19T04:20:46.625467+00:00",
     "source": "revision",
     "revision": 9,
     "action": "run.promote",
@@ -683,11 +827,11 @@
     "execution_id": "e_e1b0acf86b9621b8c13ca17b",
     "slot": "split",
     "status": "promoted",
-    "result_id": "040ccd81"
+    "result_id": "48fa370b"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:42.414692+00:00",
+    "time": "2026-10-19T04:20:46.681229+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -702,10 +846,22 @@
      "workbench": "ok"
     },
     "slot": "split",
-    "result_id": "040ccd81"
+    "result_id": "48fa370b"
    },
    {
-    "time": "2026-10-18T22:31:42.453234+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:46.686510+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 9,
+    "options": {},
+    "current_step": "train_eda",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:46.721554+00:00",
     "source": "revision",
     "revision": 10,
     "action": "run.reserve",
@@ -714,7 +870,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-18T22:31:42.590297+00:00",
+    "time": "2026-10-19T04:20:46.840185+00:00",
     "source": "revision",
     "revision": 11,
     "action": "run.promote",
@@ -722,11 +878,11 @@
     "execution_id": "e_92ee93de02ea87db530298f4",
     "slot": "eda.target_rate",
     "status": "promoted",
-    "result_id": "744b2d1c"
+    "result_id": "698ce305"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:42.660711+00:00",
+    "time": "2026-10-19T04:20:46.894663+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -741,10 +897,22 @@
      "workbench": "ok"
     },
     "slot": "eda.target_rate",
-    "result_id": "744b2d1c"
+    "result_id": "698ce305"
    },
    {
-    "time": "2026-10-18T22:31:42.699940+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:46.901681+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 11,
+    "options": {},
+    "current_step": "train_eda",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:46.933995+00:00",
     "source": "revision",
     "revision": 12,
     "action": "run.reserve",
@@ -753,7 +921,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-18T22:31:42.825250+00:00",
+    "time": "2026-10-19T04:20:47.061873+00:00",
     "source": "revision",
     "revision": 13,
     "action": "run.promote",
@@ -761,11 +929,11 @@
     "execution_id": "e_cb440fe2f7ec20d54f472663",
     "slot": "eda.special_values",
     "status": "promoted",
-    "result_id": "c183ac33"
+    "result_id": "ea0379b4"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:42.890858+00:00",
+    "time": "2026-10-19T04:20:47.115739+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -780,10 +948,22 @@
      "workbench": "ok"
     },
     "slot": "eda.special_values",
-    "result_id": "c183ac33"
+    "result_id": "ea0379b4"
    },
    {
-    "time": "2026-10-18T22:31:42.945083+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:47.123890+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 13,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:47.155491+00:00",
     "source": "revision",
     "revision": 14,
     "action": "run.reserve",
@@ -793,7 +973,7 @@
     "column": "job"
    },
    {
-    "time": "2026-10-18T22:31:43.160456+00:00",
+    "time": "2026-10-19T04:20:47.282279+00:00",
     "source": "revision",
     "revision": 15,
     "action": "run.promote",
@@ -801,11 +981,11 @@
     "execution_id": "e_087f4c7109d76636536c712c",
     "slot": "eda.rate_by:job",
     "status": "promoted",
-    "result_id": "6f8a27e9"
+    "result_id": "b3d45ce9"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:43.244018+00:00",
+    "time": "2026-10-19T04:20:47.338937+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -822,75 +1002,207 @@
      "workbench": "ok"
     },
     "slot": "eda.rate_by:job",
-    "result_id": "6f8a27e9"
+    "result_id": "b3d45ce9"
    },
    {
-    "time": "2026-10-18T22:31:43.304783+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:47.347554+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 15,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:47.379172+00:00",
     "source": "revision",
     "revision": 16,
     "action": "run.reserve",
-    "activity": "fit.baseline",
+    "activity": "eda.distribution",
     "execution_id": "e_8101d16893f3425fbb4ff727",
-    "status": "running"
+    "status": "running",
+    "column": "age"
    },
    {
-    "time": "2026-10-18T22:31:43.471306+00:00",
+    "time": "2026-10-19T04:20:47.498662+00:00",
     "source": "revision",
     "revision": 17,
     "action": "run.promote",
-    "activity": "fit.baseline",
+    "activity": "eda.distribution",
     "execution_id": "e_8101d16893f3425fbb4ff727",
-    "slot": "fit.baseline",
+    "slot": "eda.distribution:age",
     "status": "promoted",
-    "result_id": "6621babc"
+    "result_id": "fc7224b2"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:43.536563+00:00",
+    "time": "2026-10-19T04:20:47.578902+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 17,
-    "options": {},
-    "activity": "fit.baseline",
+    "options": {
+     "column": "age"
+    },
+    "activity": "eda.distribution",
     "status": "promoted",
     "artifacts": {
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
-    "slot": "fit.baseline",
-    "result_id": "6621babc"
+    "slot": "eda.distribution:age",
+    "result_id": "fc7224b2"
    },
    {
-    "time": "2026-10-18T22:31:43.579193+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:47.592322+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 17,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:47.633673+00:00",
     "source": "revision",
     "revision": 18,
     "action": "run.reserve",
-    "activity": "fit.logistic",
+    "activity": "eda.distribution",
     "execution_id": "e_8651b2bcef1776e9ebffd170",
-    "status": "running"
+    "status": "running",
+    "column": "job"
    },
    {
-    "time": "2026-10-18T22:31:44.128099+00:00",
+    "time": "2026-10-19T04:20:47.766811+00:00",
     "source": "revision",
     "revision": 19,
     "action": "run.promote",
-    "activity": "fit.logistic",
+    "activity": "eda.distribution",
     "execution_id": "e_8651b2bcef1776e9ebffd170",
-    "slot": "fit.logistic",
+    "slot": "eda.distribution:job",
     "status": "promoted",
-    "result_id": "d0af48b2"
+    "result_id": "cd9f6331"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:44.197334+00:00",
+    "time": "2026-10-19T04:20:47.836399+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 19,
+    "options": {
+     "column": "job"
+    },
+    "activity": "eda.distribution",
+    "status": "promoted",
+    "artifacts": {
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    },
+    "slot": "eda.distribution:job",
+    "result_id": "cd9f6331"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:47.846742+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 19,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:47.877299+00:00",
+    "source": "revision",
+    "revision": 20,
+    "action": "run.reserve",
+    "activity": "fit.baseline",
+    "execution_id": "e_76bdb563530c997e6fdf55cc",
+    "status": "running"
+   },
+   {
+    "time": "2026-10-19T04:20:48.001734+00:00",
+    "source": "revision",
+    "revision": 21,
+    "action": "run.promote",
+    "activity": "fit.baseline",
+    "execution_id": "e_76bdb563530c997e6fdf55cc",
+    "slot": "fit.baseline",
+    "status": "promoted",
+    "result_id": "44b5d299"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.064886+00:00",
+    "command": "run",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 21,
+    "options": {},
+    "activity": "fit.baseline",
+    "status": "promoted",
+    "artifacts": {
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    },
+    "slot": "fit.baseline",
+    "result_id": "44b5d299"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.076220+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 21,
+    "options": {},
+    "current_step": "models",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:48.108444+00:00",
+    "source": "revision",
+    "revision": 22,
+    "action": "run.reserve",
+    "activity": "fit.logistic",
+    "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+    "status": "running"
+   },
+   {
+    "time": "2026-10-19T04:20:48.311332+00:00",
+    "source": "revision",
+    "revision": 23,
+    "action": "run.promote",
+    "activity": "fit.logistic",
+    "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+    "slot": "fit.logistic",
+    "status": "promoted",
+    "result_id": "2a1021c8"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.381910+00:00",
+    "command": "run",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 23,
     "options": {},
     "activity": "fit.logistic",
     "status": "promoted",
@@ -900,39 +1212,51 @@
      "workbench": "ok"
     },
     "slot": "fit.logistic",
-    "result_id": "d0af48b2"
+    "result_id": "2a1021c8"
    },
    {
-    "time": "2026-10-18T22:31:44.244263+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.395488+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 23,
+    "options": {},
+    "current_step": "policy",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-19T04:20:48.433731+00:00",
     "source": "revision",
-    "revision": 20,
+    "revision": 24,
     "action": "run.reserve",
     "activity": "policy.evaluation",
-    "execution_id": "e_76bdb563530c997e6fdf55cc",
+    "execution_id": "e_40d674998c07527b12a31e29",
     "status": "running",
     "rules": [
      "threshold:0.2"
     ]
    },
    {
-    "time": "2026-10-18T22:31:44.357456+00:00",
+    "time": "2026-10-19T04:20:48.563450+00:00",
     "source": "revision",
-    "revision": 21,
+    "revision": 25,
     "action": "run.promote",
     "activity": "policy.evaluation",
-    "execution_id": "e_76bdb563530c997e6fdf55cc",
+    "execution_id": "e_40d674998c07527b12a31e29",
     "slot": "policy.evaluation",
     "status": "promoted",
-    "result_id": "ab63c190"
+    "result_id": "340c9a81"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:44.423251+00:00",
+    "time": "2026-10-19T04:20:48.635174+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 21,
+    "revision": 25,
     "options": {
      "rules": [
       "threshold:0.2"
@@ -946,12 +1270,24 @@
      "workbench": "ok"
     },
     "slot": "policy.evaluation",
-    "result_id": "ab63c190"
+    "result_id": "340c9a81"
    },
    {
-    "time": "2026-10-18T22:31:44.440739+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.650394+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 25,
+    "options": {},
+    "current_step": "policy",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:48.660762+00:00",
     "source": "revision",
-    "revision": 22,
+    "revision": 26,
     "action": "decide.propose",
     "decision_id": "policy",
     "proposal_id": "p_4",
@@ -959,12 +1295,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:44.496876+00:00",
+    "time": "2026-10-19T04:20:48.732999+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
-    "revision": 22,
+    "revision": 26,
     "options": {},
     "decision_id": "policy",
     "proposal_id": "p_4",
@@ -977,9 +1313,21 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:44.515076+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.752646+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 26,
+    "options": {},
+    "current_step": "policy",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-19T04:20:48.765772+00:00",
     "source": "revision",
-    "revision": 23,
+    "revision": 27,
     "action": "decide.confirm",
     "decision_id": "policy",
     "proposal_id": "p_4",
@@ -992,12 +1340,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:44.568355+00:00",
+    "time": "2026-10-19T04:20:48.854353+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
     "ok": true,
-    "revision": 23,
+    "revision": 27,
     "options": {},
     "decision_id": "policy",
     "proposal_id": "p_4",
@@ -1015,36 +1363,48 @@
     }
    },
    {
-    "time": "2026-10-18T22:31:44.641545+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:48.873923+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 27,
+    "options": {},
+    "current_step": "conclusion",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:48.950958+00:00",
     "source": "revision",
-    "revision": 24,
+    "revision": 28,
     "action": "run.reserve",
     "activity": "policy.evaluation",
-    "execution_id": "e_3b7e9da2df5de95232824246",
+    "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
     "status": "running",
     "rules": [
      "capacity:100"
     ]
    },
    {
-    "time": "2026-10-18T22:31:45.214297+00:00",
+    "time": "2026-10-19T04:20:49.388297+00:00",
     "source": "revision",
-    "revision": 25,
+    "revision": 29,
     "action": "run.promote",
     "activity": "policy.evaluation",
-    "execution_id": "e_3b7e9da2df5de95232824246",
+    "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
     "slot": "policy.evaluation",
     "status": "promoted",
-    "result_id": "ae80b53f"
+    "result_id": "8f1781d8"
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:45.296563+00:00",
+    "time": "2026-10-19T04:20:49.459021+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 25,
+    "revision": 29,
     "options": {
      "rules": [
       "capacity:100"
@@ -1058,12 +1418,24 @@
      "workbench": "ok"
     },
     "slot": "policy.evaluation",
-    "result_id": "ae80b53f"
+    "result_id": "8f1781d8"
    },
    {
-    "time": "2026-10-18T22:31:45.316691+00:00",
+    "source": "session_log",
+    "time": "2026-10-19T04:20:49.473377+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 29,
+    "options": {},
+    "current_step": "conclusion",
+    "next_action": "propose"
+   },
+   {
+    "time": "2026-10-19T04:20:49.479824+00:00",
     "source": "revision",
-    "revision": 26,
+    "revision": 30,
     "action": "decide.propose",
     "decision_id": "policy",
     "proposal_id": "p_5",
@@ -1071,12 +1443,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:45.376609+00:00",
+    "time": "2026-10-19T04:20:49.540305+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
-    "revision": 26,
+    "revision": 30,
     "options": {},
     "decision_id": "policy",
     "proposal_id": "p_5",
@@ -1090,18 +1462,74 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-18T22:31:46.127030+00:00",
+    "time": "2026-10-19T04:20:49.555649+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 30,
+    "options": {
+     "json": true,
+     "summary": true
+    },
+    "current_step": "conclusion",
+    "next_action": "await_user_words"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:49.576310+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 30,
+    "options": {
+     "digest": true,
+     "json": true,
+     "summary": true
+    },
+    "current_step": "conclusion",
+    "next_action": "await_user_words"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:50.153885+00:00",
     "command": "render",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 26,
-    "options": {},
+    "revision": 30,
+    "options": {
+     "json": true
+    },
     "status": "ok",
     "artifacts": {
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
+    }
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-19T04:20:50.264119+00:00",
+    "command": "check",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 30,
+    "options": {
+     "json": true
+    },
+    "check": {
+     "clean": true,
+     "codes": {},
+     "counts": {
+      "error": 0,
+      "warning": 0
+     },
+     "in_words": 0,
+     "target": "study",
+     "traced": 0
     }
    }
   ],

@@ -135,6 +135,8 @@ A navigation request is `{tab, kind, id}`, where `kind` ∈ `result`, `decision`
 
 **Refresh rule (decision CR.1).** The explicit Refresh (the header's button, and Retry of the load-error banner) and every write (W1 to W7) empty the controller's non-preview cache; after the explicit Refresh the webview also reads every shown view again, even at the same version. A watch event keeps the cache: it reads the summary, and a view only when its version moved.
 
+**Session log (integration, owner decision on CLI-CONTRACT §8.6).** Every read above runs with `HYPOTRAIL_SESSION_LOG=0` merged over the host's environment (`lib/cli.js` `READ_ENV`): the engine logs `status` and `check` when the log is on, to observe how often the junior checks, and the panel's own re-reads (on open, on watch, after a write) are not the junior's checks. A write (W1 to W7) inherits the environment, so it is logged like the chat's; W7 (`export`) is never logged by the engine.
+
 **Free text in an argv.** It always uses the `--opt=value` form: `--user-words=`, `--value=`, `--column=`, `--restatement=`, `--rationale=`, and `--reason=`. A value that starts with `-` is therefore never read as an option (CW.7).
 
 ## 6. Views

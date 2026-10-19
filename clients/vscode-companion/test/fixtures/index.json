@@ -86,7 +86,7 @@
    "session-report",
    "--json"
   ],
-  "note": ""
+  "note": "Captured with the session log on: mutating commands plus the status and check reads (owner decision, CLI-CONTRACT §8.6)."
  },
  "decide.propose.binary": {
   "schema": "hypotrail.decide/1",

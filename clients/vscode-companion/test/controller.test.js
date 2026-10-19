@@ -39,6 +39,22 @@ test('ready: init, then the summary; v0 reads without --digest, v1 with it', asy
   }
 });
 
+test('session log: every read runs with HYPOTRAIL_SESSION_LOG=0, every write inherits the environment (CLI-CONTRACT §8.6)', async () => {
+  const { c, runCli } = make({ settings: { stage: 'v3' } });
+  await c.handle({ v: 2, type: 'ready' });
+  await c.handle({ v: 2, type: 'load', view: 'check' });
+  await c.handle({ v: 2, type: 'render' });
+  const reads = runCli.calls.filter(x => x.tail[0] !== 'render');
+  const writes = runCli.calls.filter(x => x.tail[0] === 'render');
+  assert.ok(reads.some(x => x.tail[0] === 'status') && reads.some(x => x.tail[0] === 'check'));
+  for (const call of reads) {
+    assert.equal(call.options.env.HYPOTRAIL_SESSION_LOG, '0', call.tail.join(' '));
+    assert.equal(call.options.env.PATH, process.env.PATH, 'merged over the host environment');
+  }
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].options.env, undefined, 'a write is logged like the chat\'s');
+});
+
 test('stage gate: a message above the active stage is ignored like an invalid one', async () => {
   const { c, posted, runCli } = make({ settings: { stage: 'v0' } });
   for (const m of [{ type: 'render' }, { type: 'load', view: 'decisions' }, { type: 'preview_effects', proposalId: 'p_5', revision: 26 },

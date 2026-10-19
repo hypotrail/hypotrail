@@ -31,7 +31,7 @@ media/views/<view>.js   one view per tab, registered with Hypotrail.register
 media/css/*.css         tokens.css (theme), core.css (frame, components), <view>.css
 ```
 
-Only `lib/cli.js` starts a process. Only `extension.js` requires `vscode`, so the controller and handlers run under `node --test` with a fake CLI.
+Only `lib/cli.js` starts a process. Every read runs with `cli.READ_ENV` (`HYPOTRAIL_SESSION_LOG=0`) merged over the host's environment, so the opt-in session log never records the panel's polling; writes inherit the environment (COMPANION-ADVANCED §5). Only `extension.js` requires `vscode`, so the controller and handlers run under `node --test` with a fake CLI.
 
 ## Message flow
 

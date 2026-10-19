@@ -409,8 +409,9 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     assert pause3['confirmed'] == ['conclusion', 'model_choice']
     assert {d['decision_id'] for d in session['decisions']} >= {'model_choice', 'conclusion'}
     assert session['sources']['session_log']['enabled'] is True
-    # Review fix: reads write nothing, so the word-number checks above left no line.
-    assert session['checks'] == []
+    # Owner decision: with the log on, ``check`` runs are logged (how often the junior
+    # checks), so the word-number check above is in the report.
+    assert any(c.get('in_words') for c in session['checks'])
     session_text = subprocess.run(
         [sys.executable, '-m', 'mlkit.study.cli', 'session-report', '--format', 'text',
          '--study', str(study)], capture_output=True, text=True, cwd=work, env=fk.env(),
@@ -419,13 +420,15 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
         session_text.stdout
     # The session report records what was tried: a refused command that keeps a rule
     # identifier would be left out of the vocabulary check. This walkthrough's refused
-    # ``preview policy --rule capacity:10`` is a read, so it is not logged (review fix:
-    # reads write nothing); everything the engine wrote of its own is in.
+    # ``preview policy --rule capacity:10`` is a preview, which is never logged; the
+    # ``status`` and ``check`` reads are (owner decision, ``sessionlog.LOGGED_READS``), and
+    # everything the engine wrote of its own is in.
     tried = [x for x in session['timeline'] if x['source'] == 'session_log'
              and x.get('ok') is False and BINARY_VOCABULARY.search(json.dumps(x))]
     assert tried == []
-    assert not [x for x in session['timeline'] if x['source'] == 'session_log'
-                and x.get('command') in sessionlog.READ_COMMANDS]
+    logged_reads = {x.get('command') for x in session['timeline'] if x['source'] == 'session_log'
+                    and x.get('command') in sessionlog.READ_COMMANDS}
+    assert logged_reads == set(sessionlog.LOGGED_READS), logged_reads
     own = {**session, 'timeline': [x for x in session['timeline'] if x not in tried]}
     own_text = '\n'.join(line for line in session_text.stdout.splitlines()
                          if not ('REFUSED' in line and BINARY_VOCABULARY.search(line)))

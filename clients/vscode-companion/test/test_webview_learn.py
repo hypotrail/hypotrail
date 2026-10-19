@@ -330,7 +330,7 @@ def test_sr1_session_report_shows_the_log_status_and_no_conversation_content(ope
     assert 'Pause 3: still open' in text and 'policy (p_5): open' in text
     # Log off: the status, the engine note verbatim, and the instruction verbatim.
     raw = copy.deepcopy(payload('session_report.binary'))
-    note = ('The session log is off: refusals, status reads, check runs, and previews were not recorded. '
+    note = ('The session log is off: refused commands, status reads, and check runs were not recorded. '
             'Enable it before a session with HYPOTRAIL_SESSION_LOG=1.')
     raw['sources']['session_log'] = {'enabled': False, 'entries': 0, 'path': '.hypotrail/session-log.jsonl', 'note': note}
     _view_data(panel, 'session_report', model('session_report', raw))
