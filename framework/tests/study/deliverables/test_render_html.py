@@ -50,14 +50,29 @@ def test_report_is_deterministic_and_cites_only_current_results(full_view):
 def test_every_cited_value_equals_the_registry_value(full_view):
     page, _ = render_html.build(full_view)
     by_id = {r['result_id']: r for r in full_view['results'].values()}
+    # WP-A6: a value in percentage points carries data-scale="100" (cite.pts*).
+    seen = 0
     for m in re.finditer(r'<data value="([^"]+)" data-result-id="([0-9a-f]+)" data-path="([^"]+)"'
-                         r'[^>]*>([^<]+)</data>', page):
-        raw, rid, path, shown = m.groups()
+                         r'( data-scale="100")?[^>]*>([^<]+)</data>', page):
+        raw, rid, path, scaled, shown = m.groups()
         item = by_id[rid]
         value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
                              n_rows=item['n_rows'])
         assert float(raw) == float(value)
-        assert cite.shown_matches(cite.parse_numbers(shown)[0], value), (shown, value)
+        assert cite.shown_matches(cite.parse_numbers(shown)[0], value, 100 if scaled else 1), \
+            (shown, value)
+        seen += 1
+    # and every chart value label (an SVG <text> with the same attributes)
+    for m in re.finditer(r'<text [^>]*data-value="([^"]+)" data-result-id="([0-9a-f]+)" '
+                         r'data-path="([^"]+)"[^>]*>(.*?)</text>', page):
+        raw, rid, path, inner = m.groups()
+        item = by_id[rid]
+        value = cite.resolve(item['values'], cite.parse_path(path.replace('&quot;', '"')),
+                             n_rows=item['n_rows'])
+        [tok] = cite.parse_numbers(re.sub(r'<[^>]+>', '', inner))
+        assert float(raw) == float(value) and cite.shown_matches(tok, value), (inner, value)
+        seen += 1
+    assert seen > 50
 
 
 def test_no_fake_decision_controls_and_offline(full_view):

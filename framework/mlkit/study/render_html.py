@@ -28,14 +28,19 @@ import re
 from importlib import resources
 from typing import Any, Mapping
 
-from . import cite, texts
+from . import cite, render_charts, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
 BANNER_END = '<!--/hypotrail:banner-->'
-TEMPLATE_VERSION = 1
+TEMPLATE_VERSION = 2
+# ``structure``: a count recorded in the study state rather than computed by an activity
+# (the sealed final test, the dataset rows); ``data_row``: a cell of the five development
+# rows shown as recorded in the file; ``axis``: a chart tick, exempt only inside an SVG
+# (WP-A6, :mod:`mlkit.study.render_charts`).
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
-                 'identifier', 'parameter', 'environment', 'setting', 'message', 'category')
+                 'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
+                 'structure', 'data_row', 'axis')
 
 e = html.escape
 
@@ -47,7 +52,7 @@ def lit(kind: str, text: Any, tag: str = 'span') -> str:
 
 def _css() -> str:
     base = (resources.files('mlkit') / 'assets' / 'design.css').read_text(encoding='utf-8')
-    return base + REPORT_CSS
+    return base + REPORT_CSS + render_charts.CHART_CSS
 
 
 REPORT_CSS = '''
@@ -70,6 +75,24 @@ q[data-literal]{font-style:italic;color:var(--ink)}
 dl.figures{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 18px;max-width:640px}
 dl.figures dt{color:var(--muted)}dl.figures dd{margin:0;text-align:right}
 .page-footer{max-width:1040px;margin:0 auto 40px;padding:20px 28px 0}
+.card.verdict{border-left:4px solid var(--accent)!important}
+dl.facts{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:4px 18px;max-width:none}
+dl.facts dt{color:var(--muted)}dl.facts dd{margin:0;color:var(--ink)}
+.dictionary td:first-child{white-space:nowrap}
+.verdict .conclusion{font-size:18px;color:var(--ink);margin:4px 0 10px}
+.verdict q{display:block;margin:6px 0 12px;color:var(--ink)}
+.verdict .limits li{margin:4px 0}
+.badge.met{border-color:var(--accent);color:var(--accent)}
+.badge.uncertain,.badge.not_met,.badge.not_assessed{border-style:dashed;border-color:var(--amber);color:var(--amber)}
+.chip{display:inline-block;font-size:11px;font-weight:650;border-radius:999px;padding:1px 9px;margin-right:6px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.chip.delegated_default{border-style:dashed;border-color:var(--amber)}
+.dictionary td:nth-child(2){min-width:220px}
+.rows td,.rows th{white-space:nowrap;font-size:12px}
+details.ledger{margin:12px 0}
+details.annex{margin:28px 0}
+details.annex>summary{font-size:20px;font-weight:700;color:var(--ink)}
+details>summary{cursor:pointer}
+@media (max-width:640px){dl.facts{grid-template-columns:minmax(0,1fr)}dl.facts dd{margin-bottom:8px}}
 '''
 
 THEME_SCRIPT = '''(function(){var b=document.body,k="hypotrail-theme",t=document.querySelector("[data-theme-toggle]");
@@ -81,7 +104,7 @@ if(t){t.addEventListener("click",function(){var d=!b.classList.contains("dark");
 COMPANION_ORIGIN = 'Proposed from the companion.'
 # C10: opening the report at ``#r-<result_id>`` unfolds that annex row (an anchor only).
 ANCHOR_SCRIPT = '''(function(){function o(){var h=window.location.hash;if(h.indexOf("#r-")!==0){return;}
-var n=document.getElementById(h.slice(1));if(n&&n.tagName==="DETAILS"){n.open=true;n.scrollIntoView();}}
+var n=document.getElementById(h.slice(1));if(n&&n.tagName==="DETAILS"){var p=n;while(p){if(p.tagName==="DETAILS"){p.open=true;}p=p.parentElement;}n.scrollIntoView();}}
 o();window.addEventListener("hashchange",o);})();'''
 
 
@@ -173,24 +196,35 @@ def _concern(conf: Mapping) -> str:
             f'{lit("message", concern)}</span>')
 
 
+def _chip(conf: Mapping) -> str:
+    """The basis of a confirmation as a chip (v0.2a, WP-A6; ADR 0005)."""
+    basis = conf.get('basis') or 'explicit'
+    label = _labels().get('basis', {}).get(basis, basis)
+    return f'<span class="chip {e(basis)}" data-basis-chip="{e(basis)}">{e(label)}</span>'
+
+
+def _recorded(conf: Mapping) -> str:
+    labels = _labels()
+    return (f'<span class="small" data-channel="{e(str(conf.get("channel")))}" '
+            f'data-actor="{e(str(conf.get("actor")))}">{e(labels["recorded_at"])} '
+            f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>')
+
+
 def _confirmation(conf: Mapping) -> str:
     labels = _labels()
     if conf.get('basis') == 'delegated_default':
         return (f'<div class="words delegated" data-basis="delegated_default">'
-                f'{_badge("delegated", labels["delegated"])}'
+                f'{_chip(conf)}{_badge("delegated", labels["delegated"])}'
                 f'<strong>{e(labels["delegated_words"])}:</strong> '
                 f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
                 f'<br><span class="small">{e(labels["delegated_note"])}</span>'
-                f'<br><span class="small">Channel {lit("identifier", conf.get("channel"))}, actor '
-                f'{lit("identifier", conf.get("actor"))}, at revision '
-                f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>'
+                f'<br>{_recorded(conf)}'
                 f'<br><span class="small">{e(labels["delegated_restatement"])}: '
                 f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}</div>')
-    return (f'<div class="words" data-basis="explicit"><strong>{e(labels["user_words"])}:</strong> '
+    return (f'<div class="words" data-basis="explicit">{_chip(conf)}'
+            f'<strong>{e(labels["user_words"])}:</strong> '
             f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
-            f'<br><span class="small">Channel {lit("identifier", conf.get("channel"))}, actor '
-            f'{lit("identifier", conf.get("actor"))}, at revision '
-            f'{lit("revision", conf.get("revision"))}. {e(labels["not_authenticated"])}</span>'
+            f'<br>{_recorded(conf)}'
             f'<br><span class="small">{e(labels["restatement"])}: '
             f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}</div>')
 
@@ -302,7 +336,9 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
                              f'{lit("decision_value", d["value"].get("text", ""), "q")}</p>')
                 parts.append(_credit(view, titles))
             else:
-                parts.append(f'<p>Value: {lit("decision_value", _value_text(d["value"]), "code")}</p>')
+                parts.append(f'<p data-value="{e(_value_text(d["value"]))}">'
+                             f'{lit("decision_value", value_words(did, d["value"], view.get("task")))}'
+                             f'</p>')
         if did == 'feature_availability':
             parts.append(_availability_table(view, variables))
         if d['confirmation'] and status in ('confirmed', 'reconfirm_required'):
@@ -318,9 +354,9 @@ def _decisions(view: Mapping, variables: list[dict]) -> str:
                 origin = p.get('origin') if isinstance(p.get('origin'), Mapping) else {}
                 companion = (f'<span class="small" data-origin="webview">{e(COMPANION_ORIGIN)}'
                              f'</span> ' if origin.get('channel') == 'webview' else '')
-                parts.append(f'<div class="feedback">{_badge("proposed", labels["proposal_waiting"])}'
-                             f'{companion}Proposal {lit("identifier", p["proposal_id"], "code")}: '
-                             f'{lit("proposal", p["restatement"])}<br><span class="small">'
+                parts.append(f'<div class="feedback" data-proposal="{e(p["proposal_id"])}">'
+                             f'{_badge("proposed", labels["proposal_waiting"])}'
+                             f'{companion}{lit("proposal", p["restatement"])}<br><span class="small">'
                              f'{lit("proposal", p["rationale"])}</span></div>')
         cards.append(f'<article data-decision="{e(did)}" data-status="{e(status)}">'
                      f'{"".join(parts)}</article>')
@@ -409,11 +445,13 @@ def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
         return (f'<div data-slot="{e(slot)}" data-state="stale"><h4>{e(title)} '
                 f'{_badge("stale", texts.load("steps")["stale"])}</h4>'
                 f'<p class="small">{lit("message", reason or "")}</p></div>')
-    partition = item['partition'] or 'not recorded'
-    return (f'<div data-slot="{e(slot)}" data-state="current"><h4>{e(title)}</h4>'
+    question = item['values'].get('question') if isinstance(item['values'], Mapping) else None
+    asked = f'<p><strong>Question.</strong> {lit("message", question)}</p>' if question else ''
+    return (f'<div data-slot="{e(slot)}" data-state="current">'
+            f'<h4 data-result="{e(item["result_id"])}" '
+            f'data-partition="{e(str(item["partition"]))}">{e(title)}</h4>{asked}'
             f'{_concept(spec.get("glossary")) if spec.get("glossary") else ""}'
-            f'<p class="small">Partition: {lit("identifier", partition)}. Result '
-            f'{lit("identifier", item["result_id"][:12], "code")}.</p>'
+            f'<p class="small">Rows read: {e(_rows_words(item["partition"]))}.</p>'
             f'{_figures(citer, item["result_id"], spec)}</div>')
 
 
@@ -431,6 +469,8 @@ def _evidence(view: Mapping, citer: cite.Citer) -> str:
                  f'<p><strong>Method.</strong> {e(content.get("method", ""))}</p>']
         slots = slots_of_step(step['id'], view['results'], view.get('task'))
         parts += [_result_block(view, citer, slot) for slot in slots]
+        if step['id'] == 'train_eda':
+            parts.append(_looks(view))
         if step['decision']:
             d = view['decisions'][step['decision']]
             parts.append(f'<p><strong>Decision.</strong> '
@@ -510,8 +550,8 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
                 extra = f' <span class="small">{interval}</span>' if interval else ''
                 cells.append(f'<td>{shown}{extra}</td>')
             rows.append(f'<tr data-rule="{e(key)}" data-model="{e(model)}">'
-                        f'<td>{lit("decision_value", key, "code")} {tag}</td>'
-                        f'<td>{lit("identifier", model)}</td>{"".join(cells)}'
+                        f'<td>{lit("decision_value", rule_words(key))} {tag}</td>'
+                        f'<td>{e(_model_name(str(model)))}</td>{"".join(cells)}'
                         f'<td>{_tied(citer, rid, mprefix, mv)}</td></tr>')
         deltas = item.get('deltas') if isinstance(item.get('deltas'), Mapping) else {}
         for model, by_metric in sorted(deltas.items()):
@@ -525,8 +565,8 @@ def _policy(view: Mapping, citer: cite.Citer) -> str:
                 fmt = m.get('fmt', 'auto')
                 paired.append(f'<tr data-rule="{e(key)}" data-model="{e(model)}" '
                               f'data-metric="{e(m["key"])}">'
-                              f'<td>{lit("decision_value", key, "code")}</td>'
-                              f'<td>{lit("identifier", model)}</td><td>{e(m["label"])}</td>'
+                              f'<td>{lit("decision_value", rule_words(key))}</td>'
+                              f'<td>{e(_model_name(str(model)))}</td><td>{e(m["label"])}</td>'
                               f'<td>{citer.num(rid, point, fmt)}</td>'
                               f'<td>{_interval(citer, rid, base, fmt)}</td></tr>')
     table = ''
@@ -587,7 +627,7 @@ def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
             interval = _interval(citer, rid, ['intervals', str(model), m['key']], fmt)
             extra = f' <span class="small">{interval}</span>' if interval else ''
             cells.append(f'<td>{shown}{extra}</td>')
-        rows.append(f'<tr data-model="{e(model)}"><td>{lit("identifier", model)} {tag}</td>'
+        rows.append(f'<tr data-model="{e(model)}"><td>{e(_model_name(str(model)))} {tag}</td>'
                     f'{"".join(cells)}</tr>')
     deltas = values.get('deltas') if isinstance(values.get('deltas'), Mapping) else {}
     for model, by_metric in sorted(deltas.items()):
@@ -600,7 +640,7 @@ def _model_comparison(view: Mapping, citer: cite.Citer) -> str:
                 continue
             fmt = m.get('fmt', 'auto')
             paired.append(f'<tr data-model="{e(model)}" data-metric="{e(m["key"])}">'
-                          f'<td>{lit("identifier", model)}</td><td>{e(m["label"])}</td>'
+                          f'<td>{e(_model_name(str(model)))}</td><td>{e(m["label"])}</td>'
                           f'<td>{citer.num(rid, point, fmt)}</td>'
                           f'<td>{_interval(citer, rid, base, fmt)}</td></tr>')
     table = ''
@@ -635,7 +675,7 @@ def _residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
         for key, _ in RESIDUAL_COLUMNS:
             path = cite.format_path(['residuals', str(model), key])
             cells.append(f'<td>{citer.num(rid, path, "f2") if citer.has(rid, path) else ""}</td>')
-        rows.append(f'<tr data-model="{e(model)}"><td>{lit("identifier", model)}</td>'
+        rows.append(f'<tr data-model="{e(model)}"><td>{e(_model_name(str(model)))}</td>'
                     f'{"".join(cells)}</tr>')
     if rows:
         th = ''.join(f'<th>{e(label)}</th>' for _, label in RESIDUAL_COLUMNS)
@@ -647,7 +687,7 @@ def _residuals(citer: cite.Citer, rid: str, values: Mapping) -> str:
             continue
         models = list(residuals) or sorted({m for g in block.get('groups', [])
                                             for m in (g.get('models') or {})})
-        th = ''.join(f'<th>{lit("identifier", m)}: mean residual</th><th>{lit("identifier", m)}: MAE</th>'
+        th = ''.join(f'<th>{e(_model_name(m))}: mean residual</th><th>{e(_model_name(m))}: MAE</th>'
                      for m in models)
         body = []
         for j, group in enumerate(block.get('groups') or []):
@@ -675,17 +715,23 @@ def _not_yet_defensible(view: Mapping) -> str:
     items = []
     for item in view['not_yet_defensible']:
         details = []
-        for key in ('decisions', 'features', 'results', 'executions', 'slots', 'missing',
-                    'rules'):
+        titles = {s['decision']: s['title'] for s in st.steps(view.get('task')) if s['decision']}
+        if item.get('decisions'):
+            details.append(', '.join(e(titles.get(x, x)) for x in item['decisions']))
+        if item.get('rules'):
+            details.append(', '.join(lit('decision_value', rule_words(x)) for x in item['rules']))
+        for key in ('features', 'missing'):
             if item.get(key):
                 details.append(', '.join(lit('identifier', x, 'code') for x in item[key]))
+        ids = [str(x) for key in ('results', 'executions', 'slots') for x in item.get(key) or []]
         for source in item.get('sources') or []:
             details.append(lit('case', source))
         if isinstance(item.get('column'), str):
             details.append(lit('identifier', item['column'], 'code'))
         more = f' {e(extra[item["id"]])}' if item['id'] in extra else ''
         text = item.get('junior_text') or item['text']      # v0.2a (WP-A1): for the junior
-        items.append(f'<li data-nyd="{e(item["id"])}"><strong>{lit("message", text)}</strong>'
+        refs = f' data-refs="{e(" ".join(ids))}"' if ids else ''
+        items.append(f'<li data-nyd="{e(item["id"])}"{refs}><strong>{lit("message", text)}</strong>'
                      f'{more}{"<br>" + "; ".join(details) if details else ""}</li>')
     return (f'<section class="card" id="not-yet-defensible">'
             f'<h2>{e(labels["sections"]["not_yet_defensible"])}</h2>'
@@ -733,27 +779,431 @@ def _annex(view: Mapping, citer: cite.Citer) -> str:
     exp = (f'<h3>{e(texts.glossary("exposure")["term"])}</h3>{_concept("exposure")}'
            f'<p>Purposes recorded: {", ".join(lit("identifier", p, "code") for p in purposes) or "none"}. '
            f'Validation rows used for selection: {"yes" if used else "no"}.</p>')
-    return (f'<section id="annex"><h2>{e(labels["sections"]["annex"])}</h2>'
-            f'<p class="small">{e(labels["annex_note"])}</p>{"".join(blocks)}{exp}</section>')
+    return (f'<section class="annex-section"><details class="annex" id="annex"><summary>'
+            f'{e(labels["sections"]["annex"])}</summary>'
+            f'<p class="small">{e(labels["annex_note"])}</p>{"".join(blocks)}{exp}</details>'
+            f'</section>')
+
+
+# --- v0.2a (WP-A6): words for recorded values ------------------------------------------------
+
+def rule_words(rule: Any) -> str:
+    """A policy rule in business words (``capacity:100`` -> "Select the 100 highest-scored
+    rows"). The number is the recorded decision value."""
+    text = str(rule)
+    kind, _, param = text.partition(':')
+    if kind == 'capacity' and param:
+        return f'Select the {param} highest-scored rows'
+    if kind == 'threshold' and param:
+        return f'Select every row scored {param} or more'
+    return text
+
+
+def _share_words(share: Any) -> str:
+    if isinstance(share, (int, float)) and not isinstance(share, bool):
+        pct = 100 * share
+        return f'{pct:.0f}%' if abs(pct - round(pct)) < 1e-9 else f'{pct:g}%'
+    return str(share)
+
+
+def value_words(decision_id: str, value: Any, task: str | None) -> str:
+    """A decision value as the junior reads it; the raw value stays in ``data-value``."""
+    if value is None:
+        return ''
+    if decision_id == 'policy':
+        return rule_words(value)
+    if decision_id == 'model_choice':
+        return {'fit.linear': 'Use the linear model',
+                'fit.baseline': 'Keep predicting the training mean (the baseline)'}.get(
+                    value, str(value))
+    if isinstance(value, Mapping):
+        if decision_id == 'split':
+            method = value.get('method')
+            if method == 'ordinal_cutoff':
+                return (f'Rows with {value.get("column")} at {value.get("cutoff")} or later are '
+                        f'validation rows; earlier rows train the models')
+            share = _share_words(value.get('validation_fraction'))
+            kind = 'Stratified random split' if method == 'stratified_random' else 'Random split'
+            seed = f' (seed {value["seed"]})' if 'seed' in value else ''
+            return f'{kind}: {share} of the development rows for validation{seed}'
+        if decision_id == 'success_criterion':
+            if value.get('metric') == 'precision_gain':
+                return (f'Adopt only if the precision beats the baseline by at least '
+                        f'{value.get("min_points")} percentage points at the adopted rule')
+            if value.get('metric') == 'mae_reduction':
+                return (f'Adopt only if the model\'s mean absolute error is at least '
+                        f'{_share_words(value.get("min_share"))} below the mean baseline\'s')
+        if decision_id == 'preprocessing':
+            parts = []
+            missing = value.get('missing')
+            if missing == 'indicator':
+                parts.append('a missing-value indicator for every feature with missing cells')
+            elif isinstance(missing, Mapping) and missing:
+                parts.append('missing-value indicators for ' + ', '.join(sorted(missing)))
+            k = value.get('rare_category_min_rows')
+            if isinstance(k, int) and k > 0:
+                parts.append(f'categories with fewer than {k} training rows grouped')
+            if value.get('caps'):
+                parts.append('values capped for ' + ', '.join(sorted(value['caps'])))
+            if value.get('log_transform'):
+                parts.append('log transform of ' + ', '.join(value['log_transform']))
+            if not parts:
+                return 'Default preparation: nothing added, grouped, capped, or transformed'
+            return 'Preparation: ' + '; '.join(parts)
+    return _value_text(value)
+
+
+def _model_name(model: str) -> str:
+    return _labels().get('model_names', {}).get(model, model)
+
+
+def _rows_words(partition: Any) -> str:
+    return _labels().get('rows_label', {}).get(partition, str(partition or 'not recorded'))
+
+
+# --- v0.2a (WP-A6): verdict card -----------------------------------------------------------
+
+def _limits(view: Mapping, n: int = 3) -> list[str]:
+    out = []
+    for item in view['not_yet_defensible'][:n]:
+        out.append(item.get('junior_text') or item['text'])
+    return out
+
+
+def _binary_figures(view: Mapping, citer: cite.Citer, rule: str | None) -> list[tuple[str, str]]:
+    rid = citer.slot_rid('policy.evaluation')
+    if rid is None or rule is None:
+        return []
+    m = cite.format_path(['rules', rule, 'models', 'fit.logistic'])
+    b = cite.format_path(['rules', rule, 'models', 'fit.baseline'])
+    d = cite.format_path(['rules', rule, 'deltas', 'fit.logistic', 'precision'])
+    iv = cite.format_path(['rules', rule, 'intervals', 'fit.logistic', 'precision'])
+    rows = []
+    if not citer.has(rid, f'{m}.true_positives'):
+        return []
+    rows.append(('Positive rows found by the model',
+                 f'{citer.num(rid, m + ".true_positives", "auto")} among '
+                 f'{citer.num(rid, m + ".selected", "auto")} selected rows (precision '
+                 f'{citer.num(rid, m + ".precision", "pct1")}'
+                 + (f', interval {citer.num(rid, iv + ".low", "pct1")} to '
+                    f'{citer.num(rid, iv + ".high", "pct1")}' if citer.has(rid, iv + '.low')
+                    else '') + ')'))
+    if citer.has(rid, f'{b}.true_positives'):
+        rows.append(('Baseline at the same rule',
+                     f'{citer.num(rid, b + ".true_positives", "auto")} on average without ranking (precision '
+                     f'{citer.num(rid, b + ".precision", "pct1")})'))
+    if citer.has(rid, f'{d}.point'):
+        interval = ''
+        if citer.has(rid, f'{d}.low') and citer.has(rid, f'{d}.high'):
+            interval = (f', interval {citer.num(rid, d + ".low", "pts1")} to '
+                        f'{citer.num(rid, d + ".high", "pts1")}')
+        rows.append(('Precision gain over the baseline',
+                     f'{citer.num(rid, d + ".point", "pts1")} percentage points{interval}'))
+    return rows
+
+
+def _regression_figures(citer: cite.Citer) -> list[tuple[str, str]]:
+    rid = citer.slot_rid('evaluate.regression')
+    if rid is None:
+        return []
+    rows = []
+    for model in ('fit.linear', 'fit.baseline'):
+        path = cite.format_path(['models', model, 'mae'])
+        if not citer.has(rid, path):
+            continue
+        iv = cite.format_path(['intervals', model, 'mae'])
+        interval = (f' (interval {citer.num(rid, iv + ".low", "f2")} to '
+                    f'{citer.num(rid, iv + ".high", "f2")})' if citer.has(rid, iv + '.low')
+                    else '')
+        rows.append((f'Mean absolute error, {_model_name(model).lower()}',
+                     f'{citer.num(rid, path, "f2")}{interval}'))
+    d = cite.format_path(['deltas', 'fit.linear', 'mae'])
+    if citer.has(rid, d + '.point'):
+        interval = (f' (interval {citer.num(rid, d + ".low", "f2")} to '
+                    f'{citer.num(rid, d + ".high", "f2")})' if citer.has(rid, d + '.low')
+                    else '')
+        rows.append(('Difference, linear minus baseline',
+                     f'{citer.num(rid, d + ".point", "f2")}{interval}; negative means a '
+                     f'smaller error'))
+    return rows
+
+
+def _verdict(view: Mapping, citer: cite.Citer) -> str:
+    labels = _labels()
+    card = labels['verdict_card']
+    task = view.get('task') or 'binary'
+    conclusion = view['decisions']['conclusion']
+    parts = [f'<h2>{e(labels["sections"]["verdict"])}</h2>']
+    value = conclusion.get('value') if isinstance(conclusion.get('value'), Mapping) else None
+    if conclusion['status'] == 'confirmed' and value:
+        verdict = labels['verdict'].get(value.get('verdict'), value.get('verdict'))
+        parts.append(f'<p class="conclusion" data-verdict="{e(str(value.get("verdict")))}">'
+                     f'<strong>{e(verdict)}.</strong></p>'
+                     f'{lit("decision_value", value.get("text", ""), "q")}')
+    else:
+        waiting = any(p['decision_id'] == 'conclusion' for p in view['open_proposals'])
+        parts.append(f'<p class="conclusion" data-verdict="none"><strong>'
+                     f'{e(card["not_concluded"])}</strong>'
+                     f'{" " + e(card["proposed"]) if waiting else ""}</p>')
+    rows = []
+    criterion = view.get('criterion')
+    if criterion is not None:
+        sc = view['decisions'].get('success_criterion') or {}
+        if sc.get('status') == 'confirmed':
+            status = criterion.get('status') or 'not_assessed'
+            words = value_words('success_criterion', sc['value'], task)
+            rows.append((card['criterion'],
+                         f'{lit("decision_value", words)}. '
+                         f'{_badge(status, card["status"].get(status, status))}'))
+        else:
+            rows.append((card['criterion'], e(card['criterion_none'])))
+    decision = 'model_choice' if task == 'regression' else 'policy'
+    adopted = view['decisions'].get(decision) or {}
+    if adopted.get('status') == 'confirmed':
+        rows.append((card['rule'], lit('decision_value',
+                                       value_words(decision, adopted['value'], task))))
+    else:
+        rows.append((card['rule'], e(card['rule_none'])))
+    if task == 'regression':
+        figures = _regression_figures(citer)
+    else:
+        rule = (criterion or {}).get('rule')
+        if rule is None and adopted.get('status') == 'confirmed':
+            rule = adopted.get('value')
+        figures = _binary_figures(view, citer, rule)
+        if figures and rule and not (adopted.get('status') == 'confirmed'
+                                     and adopted.get('value') == rule):
+            figures.insert(0, ('Rule of these figures', lit('decision_value', rule_words(rule))))
+    rows += figures
+    if not figures:
+        rows.append((card['figures'], e(card['figures_none'])))
+    parts.append('<dl class="facts">' + ''.join(f'<dt>{e(k)}</dt><dd>{v}</dd>'
+                                                  for k, v in rows) + '</dl>')
+    limits = _limits(view)
+    if limits:
+        parts.append(f'<h3>{e(card["limits"])}</h3><ul class="limits">'
+                     + ''.join(f'<li>{lit("message", t)}</li>' for t in limits)
+                     + f'</ul><p class="small"><a href="#not-yet-defensible">'
+                       f'{e(card["all_limits"])}</a></p>')
+    return f'<section class="card verdict" id="verdict">{"".join(parts)}</section>'
+
+
+# --- v0.2a (WP-A6): the objective and the data -----------------------------------------------
+
+def _fact_value(view: Mapping, fact_id: str):
+    for items in view['facts']['by_status'].values():
+        for f in items:
+            if f['id'] == fact_id:
+                return f
+    return None
+
+
+def _objective(view: Mapping) -> str:
+    labels = _labels()
+    items = []
+    for fid, name in (('decision', 'Decision the study supports'),
+                      ('intended_use', 'Intended use')):
+        f = _fact_value(view, fid)
+        if f:
+            items.append(f'<dt>{e(name)}</dt><dd>{lit("case", f["value"])}</dd>')
+    pt = view['decisions'].get('prediction_time') or {}
+    if pt.get('status') == 'confirmed':
+        items.append(f'<dt>Prediction moment</dt><dd>'
+                     f'{lit("decision_value", value_words("prediction_time", pt["value"], view.get("task")))}'
+                     f'</dd>')
+    if not items:
+        return ''
+    return (f'<section class="card" id="objective"><h2>{e(labels["sections"]["objective"])}</h2>'
+            f'<dl class="facts">{"".join(items)}</dl></section>')
+
+
+def _who_decided(view: Mapping, name: str) -> tuple[str, str, str]:
+    """``(status shown, who decided, css class)`` of one feature's availability."""
+    labels = _labels()
+    decision = view['decisions']['feature_availability']
+    value = decision['value'] if isinstance(decision['value'], dict) else {}
+    status = value.get(name)
+    shown = labels['availability'].get(status or 'missing', status)
+    conf = decision.get('confirmation') or {}
+    confirmed = decision['status'] == 'confirmed'
+    if not confirmed or not status:
+        return shown, labels['availability_basis_open'], 'proposed'
+    if conf.get('basis') == 'delegated_default':
+        return shown, labels['delegated'], 'delegated'
+    basis = (decision.get('feature_basis') or {}).get(name)
+    who = labels['availability_basis'].get(basis or 'default_from_case')
+    return shown, who, 'confirmed' if basis == 'discussed' else 'stale'
+
+
+def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
+          sample: Mapping | None) -> str:
+    labels = _labels()
+    ds = labels['data_section']
+    parts = [f'<h2>{e(labels["sections"]["data"])}</h2>']
+    facts = []
+    unit = _fact_value(view, 'observation_unit')
+    if unit:
+        facts.append((ds['unit'], lit('case', unit['value'])))
+    split_rid = citer.slot_rid('split')
+    final = view.get('final_test') or {}
+    if split_rid and citer.has(split_rid, 'n_rows'):
+        dev = citer.num(split_rid, 'n_rows', 'int')
+    elif final.get('development_rows') is not None:
+        dev = lit('structure', f'{final["development_rows"]:,}')
+    else:
+        dev = lit('structure', f'{view["dataset"].get("rows", ""):,}'
+                  if isinstance(view['dataset'].get('rows'), int) else '')
+    facts.append((ds['development'], dev))
+    if variables:
+        facts.append((ds['columns'], lit('structure', len(variables))))
+    if final.get('status') == 'sealed':
+        sealed = f'{lit("structure", format(final["rows"], ","))} {e(ds["final_test_sealed"])}'
+    else:
+        sealed = e(ds['final_test_absent'])
+    facts.append(('Final test', sealed))
+    target = next((v for v in variables if v.get('role') == 'target'), None)
+    if target:
+        facts.append((ds['target'], f'{lit("identifier", target["name"], "code")}: '
+                                    f'{lit("case", target.get("description", ""))}'))
+    parts.append('<dl class="facts">' + ''.join(f'<dt>{e(k)}</dt><dd>{v}</dd>'
+                                                  for k, v in facts) + '</dl>')
+    # the grouped dictionary
+    quality = citer.slot_rid('eda.quality')
+    missing_index = {}
+    if quality:
+        for i, m in enumerate(citer.results[quality].values.get('missing') or []):
+            if isinstance(m, Mapping):
+                missing_index[m.get('column')] = i
+    groups: dict[str, list[dict]] = {}
+    for v in variables:
+        groups.setdefault(v.get('group') or ds['ungrouped'], []).append(v)
+    head = ds['head']
+    for group, items in groups.items():
+        rows = []
+        for v in items:
+            unit_text = v.get('unit') or ''
+            kind = f'{v.get("type", "")}{", " + unit_text if unit_text else ""}'
+            if v.get('role') == 'feature':
+                shown, who, cls = _who_decided(view, v['name'])
+                stmt = v.get('availability') or {}
+                case_label = labels['fact_status'].get(stmt.get('status'), stmt.get('status') or '')
+                avail = (f'{_badge(cls, shown)}'
+                         f'<br><span class="small">{e(who)}. Case: {e(case_label)}</span>')
+            else:
+                avail = f'<span class="small">{e(v.get("role", ""))}</span>'
+            if v['name'] in missing_index:
+                miss = citer.num(quality, f'missing.{missing_index[v["name"]]}.n_missing', 'int')
+            else:
+                miss = ''
+            rows.append(f'<tr data-variable="{e(v["name"])}" '
+                        f'data-feature-basis="{e(str((view["decisions"]["feature_availability"].get("feature_basis") or {}).get(v["name"], "")))}">'
+                        f'<td>{lit("identifier", v["name"], "code")}</td>'
+                        f'<td>{lit("case", v.get("description", ""))}</td>'
+                        f'<td>{lit("case", kind)}</td><td>{miss}</td><td>{avail}</td></tr>')
+        parts.append(f'<h3>{lit("case", group)}</h3><div class="scroll"><table class="dictionary">'
+                     f'<thead><tr><th>{e(head["name"])}</th><th>{e(head["meaning"])}</th>'
+                     f'<th>{e(head["type"])}</th><th>{e(ds["missing"])}</th>'
+                     f'<th>{e(labels["availability_head"]["status"])}</th></tr></thead>'
+                     f'<tbody>{"".join(rows)}</tbody></table></div>')
+    # five fixed development rows
+    parts.append(f'<h3>{e(ds["rows"])}</h3>')
+    if sample and sample.get('rows'):
+        cols = sample['columns']
+        head_html = ''.join(f'<th>{lit("identifier", c)}</th>' for c in cols)
+        body = ''.join('<tr>' + ''.join(f'<td>{lit("data_row", r["values"].get(c, ""))}</td>'
+                                        for c in cols) + '</tr>' for r in sample['rows'])
+        parts.append(f'<div class="scroll"><table class="rows"><thead><tr>{head_html}</tr>'
+                     f'</thead><tbody>{body}</tbody></table></div>'
+                     f'<p class="small">{e(ds["rows_note"])}</p>')
+    else:
+        parts.append(f'<p class="muted">{e(ds["rows_missing"])}</p>')
+    return f'<section class="card" id="data">{"".join(parts)}</section>'
+
+
+# --- v0.2a (WP-A6): charts -----------------------------------------------------------------
+
+MAX_CHARTS = 5
+
+
+def _charts(view: Mapping, citer: cite.Citer) -> str:
+    labels = _labels()
+    task = view.get('task') or 'binary'
+    out = []
+
+    def values(slot):
+        rid = citer.slot_rid(slot)
+        return (rid, citer.results[rid].values) if rid else (None, None)
+
+    if task == 'regression':
+        rid, v = values('eda.target_summary')
+        if rid:
+            out.append(render_charts.target_distribution(citer, rid, v))
+        group_slots = sorted(s for s in view['results'] if s.startswith('eda.mean_by:'))
+    else:
+        rid, v = values('eda.target_rate')
+        if rid:
+            out.append(render_charts.target_balance(citer, rid, v))
+        group_slots = sorted(s for s in view['results'] if s.startswith('eda.rate_by:'))
+    for slot in group_slots[:1]:
+        rid, v = values(slot)
+        if rid:
+            out.append(render_charts.by_group(citer, rid, v, rate=task != 'regression'))
+    rid, v = values('eda.single_feature_signal')
+    if rid:
+        out.append(render_charts.signal(citer, rid, v))
+    if task == 'regression':
+        rid, v = values('evaluate.regression')
+        if rid:
+            out.append(render_charts.residuals(citer, rid, v))
+            out.append(render_charts.residuals_by(citer, rid, v))
+    else:
+        rid, v = values('policy.evaluation')
+        if rid:
+            out.append(render_charts.selection(citer, rid, v, rule_words))
+    figures = [f for f in out if f][:MAX_CHARTS]
+    body = ''.join(figures) if figures else f'<p class="muted">{e(labels["charts_none"])}</p>'
+    return (f'<section class="card charts" id="charts"><h2>{e(labels["sections"]["charts"])}'
+            f'</h2><p>{e(labels["charts_intro"])}</p>{body}</section>')
+
+
+def _looks(view: Mapping) -> str:
+    looks = view.get('eda_looks') or {}
+    if not looks:
+        return ''
+    labels = _labels()['looks']
+    count = looks.get('target_looks') or 0
+    by = looks.get('by_activity') or {}
+    items = ''.join(f'<li>{lit("identifier", texts.activity(a).get("label", a))}: '
+                    f'{lit("structure", n)}</li>' for a, n in sorted(by.items()))
+    return (f'<details class="ledger" data-looks="{e(str(count))}"><summary>'
+            f'{e(labels["summary"])}: {lit("structure", count)} {e(labels["count"])}</summary>'
+            f'<p class="small">{e(labels["note"])}</p><ul>{items}</ul></details>')
 
 
 # --- page -------------------------------------------------------------------------------
 
 def build(view: Mapping, *, surfaces: Mapping | None = None,
-          variables: list[dict] | None = None) -> tuple[str, list[str]]:
+          variables: list[dict] | None = None,
+          sample: Mapping | None = None) -> tuple[str, list[str]]:
     """``(html, consumed result ids)`` of the report for ``view``.
 
     ``surfaces`` gives the status of each deliverable for the revision banner; the
     report itself is described as written at this revision. ``variables`` is the case
-    variable dictionary (for the availability table). Raises ``untraceable_number``
-    when a cited number cannot be traced.
+    variable dictionary (for the data section and the availability table). ``sample``
+    holds the five fixed development rows of the data section (``{columns, rows}``, read
+    by :mod:`mlkit.study.cmd_render`). Raises ``untraceable_number`` when a cited number
+    cannot be traced.
+
+    Order (v0.2a, WP-A6): the verdict card, the objective, the data, the charts, the
+    plan, the decisions, the evidence by step, the comparison, the limits, the case
+    statements, the surfaces, and the annex (collapsed).
     """
     with texts.task_context(view.get('task')):
-        return _build(view, surfaces=surfaces, variables=variables)
+        return _build(view, surfaces=surfaces, variables=variables, sample=sample)
 
 
-def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | None
-           ) -> tuple[str, list[str]]:
+def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | None,
+           sample: Mapping | None = None) -> tuple[str, list[str]]:
     labels = _labels()
     citer = cite.Citer.from_view(view)
     surfaces = dict(surfaces or {})
@@ -761,9 +1211,10 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
     comparison = (_model_comparison(view, citer) if view.get('task') == 'regression'
                   else _policy(view, citer))
     body = ''.join([
-        _surfaces(view, surfaces), _plan(view), _decisions(view, variables or []), _facts(view),
-        _evidence(view, citer), comparison, _not_yet_defensible(view),
-        _annex(view, citer)])
+        _verdict(view, citer), _objective(view), _data(view, citer, variables or [], sample),
+        _charts(view, citer), _plan(view), _decisions(view, variables or []),
+        _evidence(view, citer), comparison, _not_yet_defensible(view), _facts(view),
+        _surfaces(view, surfaces), _annex(view, citer)])
 
     consumed = sorted({c['result_id'] for c in citer.cited})
     case = view['case']

@@ -80,6 +80,45 @@ def _variables(view: dict) -> list[dict]:
         return []
 
 
+SAMPLE_ROWS = 5
+
+
+def sample_rows(study: Path, view: dict) -> dict | None:
+    """The five fixed development rows of the report's data section (v0.2a, WP-A6): the
+    first development rows by position in the file, target first, as recorded (text).
+
+    The same rows as ``hypotrail data`` (the first five by row key), read with the standard
+    library so that a render never imports pandas. Development rows only: the sealed final
+    test is never read (ADR 0006); ``init`` already recorded their structure as exposure.
+    None when they cannot be read (the report then says so)."""
+    from . import case as c, data as dt, partition, read
+
+    try:
+        snapshot = read.open(study)
+        case = c.load_case(view['case']['path'], verify_data=False)
+        keys = partition.development_keys(snapshot.blob, partition.inputs(snapshot.state))
+        lines = case.dataset_path.read_bytes().decode(case.dataset['encoding']).split('\n')
+        first = 2 if case.dataset['header'] else 1
+        body = lines[1:] if case.dataset['header'] else lines
+        candidates = (sorted(keys, key=lambda k: int(str(k)[1:])) if keys is not None
+                      else [f'L{first + i}' for i in range(len(body))])
+        wanted = candidates[:SAMPLE_ROWS]
+        split = dt._field_splitter(case)
+        names = case.column_names
+        target = case.target_column
+        columns = [target] + [n for n in names if n != target]
+        rows = []
+        for key in wanted:
+            fields = split(body[int(key[1:]) - first].rstrip('\r'))
+            if len(fields) != len(names):
+                return None
+            record = dict(zip(names, fields))
+            rows.append({'row_key': key, 'values': {col: record[col] for col in columns}})
+        return {'columns': columns, 'rows': rows}
+    except Exception:          # the report still renders, without the example rows
+        return None
+
+
 def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> dict:
     from . import render_html
     from .store import atomic_write
@@ -88,7 +127,8 @@ def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> d
     path = study / mf.ARTIFACTS['report']
     try:
         _inject('render_html')
-        page, consumed = render_html.build(view, surfaces=surfaces, variables=_variables(view))
+        page, consumed = render_html.build(view, surfaces=surfaces, variables=_variables(view),
+                                           sample=sample_rows(study, view))
         data = page.encode('utf-8')
         atomic_write(path, data)
     except Exception as exc:
