@@ -13,16 +13,19 @@
 
 ## Every stage
 
-1. **Flag off.** "Hypotrail: open the study panel" and the link `vscode://hypotrail-local.hypotrail-companion/result/<any 64 hex>` both show "Companion disabled (feature flag)". Process Explorer shows no new `python` process. Then turn `hypotrail.companion.enabled` on.
+1. **Flag off.** "Hypotrail: open the study panel" and the link `vscode://hypotrail-local.hypotrail-companion/result/<any 64 hex>` both show "Companion disabled (feature flag)". Process Explorer shows no new `python` process. Then turn `hypotrail.companion.enabled` on. Later, with the panel open, turn it off in the Settings UI: the panel closes and no further `python` process starts (CR.10).
 2. **Untrusted workspace.** In Restricted Mode the command shows "The Hypotrail companion runs the study CLI, so it needs a trusted workspace." and nothing opens.
 3. **CSP.** Open the webview developer tools ("Developer: Open Webview Developer Tools"): no Content-Security-Policy violation in the console, after visiting every tab. Note whether VS Code's injected default styles apply (CW.10's open point).
 4. **Theme tokens (themes).** Text, muted text, links, badges, warning and error cards, chart marks, and the focus outline are legible in each theme.
 5. **The watcher.** Confirm or propose something in the chat (`decide ...` through the agent). The panel refreshes once (the revision in the header moves once), with no flicker loop.
+5a. **Currency (CR.1).** On a Bank study made on a *copy* of the case, change one digit of a data row of the dataset: after the next watch event or Refresh, Evidence shows no result as current and the dataset-changed alert, at the same revision. Delete `reports/study.html` and press Refresh: the deliverable is not shown as up to date (with the engine's currency change) and the checks are read again.
 6. **Keyboard.** Tab reaches every control; the arrow keys, Home, and End move between tabs; Escape closes tooltips and modals and returns focus to the opener.
 
 ## Stage v1
 
 7. Confirm an open proposal in typed words: "Confirm" is disabled until you type; "ok" is refused with the engine's message verbatim; your words confirm, and the success names the decision.
+7a. **Typing while the study changes (CR.3).** Type words in a card, then make the agent record anything (a note on another decision). The card warns "The study changed while you were typing (revision A to B)...". Reload the webview ("Developer: Reload Webviews"): the words and the warning are still there. "Confirm" is refused by the engine as stale; "I read the proposal again at revision B", then "Confirm", records the words.
+7b. **Drafts per study (CR.2).** Type words in a card of study A without confirming, switch to study B with the header's switcher: no card of B shows A's words, even one with the same proposal id.
 8. Withdraw a proposal: the VS Code modal asks first; Cancel records nothing.
 9. Interrupt a run (`HYPOTRAIL_TEST_HOOKS=1 HYPOTRAIL_FAULT=run_after_reserve` on one agent `run`), refresh: the Health card asks for an acknowledgement in your words; "ok" is refused; your words acknowledge it; no Restart button exists.
 10. Regenerate: the report and notebook are rewritten; the deliverables' status follows.
@@ -33,16 +36,16 @@
 ## Stage v2
 
 14. Slider latency (What if?, Bank): move the slider 10 times; record the median time from release to the updated numbers.
-15. EDA: request a distribution of `age` (Bank) and of `weight` (Auto MPG): the chart appears; the exposure ledger in Evidence gains training rows only.
+15. EDA: request a distribution of `age` (Bank) and of `weight` (Auto MPG): the chart appears; the exposure ledger in Evidence gains training rows only. In Bank, `duration` reads "(feature, not available at prediction time)" and still runs on training rows (CR.7).
 16. Propose: a rule the agent has not evaluated says so and offers "Ask the agent"; after the agent evaluates it, "Propose" opens the VS Code modal, and the proposal appears in Decisions as "proposal from this panel". The report (after Regenerate) shows "Proposed from the companion".
-17. A deep link printed in the chat (`vscode://hypotrail-local.hypotrail-companion/result/<id>?study=<path>`) opens the panel on that result, focused and highlighted; a link naming another study asks with the quick pick.
+17. A deep link printed in the chat (`vscode://hypotrail-local.hypotrail-companion/result/<id>?study=<path>`) opens the panel on that result, focused and highlighted; a link naming another study asks with the quick pick. Repeat with a study folder whose name holds `+` and `&` (the path encoded with `encodeURIComponent`): the link opens that study (CR.11).
 18. "Show in report" opens the report at `#r-<id>` (check the fragment in the browser's address bar); "Show in the notebook" opens the generated notebook at the line naming the result.
-19. "Ask the agent about this": "Copy for the chat" puts the template text on the clipboard; paste it in the chat. With `chatInsert` enabled by hand in `settings.json` (it is not contributed): "Insert into the chat" **inserts, and does not send**, in the Copilot chat. Record the VS Code and chat extension versions.
+19. "Ask the agent about this": "Copy for the chat" puts the template text on the clipboard; paste it in the chat. "Insert into the chat" is absent even with `chatInsert` set by hand (CR.8). To verify the insertion, a development build sets `CHAT_INSERT_VERIFIED = true` in `lib/flag.js` and `chatInsert` in `settings.json`: "Insert into the chat" must **insert, and not send**, in the Copilot chat. Record the VS Code and chat extension versions; only that record may justify changing the constant.
 20. Auto MPG: no tab shows threshold, capacity, precision, recall, positive class, policy, calling rule, or selected.
 
 ## Stage v3
 
-21. Export a handoff pack: the folder dialog defaults to `<study>/handoff/`; the outcome lists the files and sizes and the warnings in words; "Open folder" reveals it in the OS file manager; exporting again to the same parent is refused verbatim.
+21. Export a handoff pack: the folder dialog defaults to `<study>/handoff/`; the outcome lists the files and sizes and the warnings in words; "Open folder" reveals the folder the engine reported; exporting again to the same parent is refused verbatim. With an engine that knows `--expected-revision`, make the agent record something between the panel's last refresh and the export: the export is refused as stale (CR.6).
 22. Learning layer: hover and focus a marked term (the term first, then its definition); a concept card collapses after its second full sighting; reload the window: the count and your prediction answers persist; turning `learningLayer` off removes every hover, card, and prediction.
 23. `globalState` dump (from a debug console of the extension host, `context.globalState.keys()` and their values): only `hypotrail.learn.prefs`, `hypotrail.learn.seen`, `hypotrail.learn.predictions`, with no path, words, revision, or id.
 24. Session report: with the session log on (`HYPOTRAIL_SESSION_LOG=1` for one CLI call), "Session report" shows "Session log: on" and no words.
