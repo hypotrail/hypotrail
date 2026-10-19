@@ -15,6 +15,7 @@
     layerIntroEnd: '.',
     layerReading: 'Reading the concepts...',
     layerError: 'The concepts could not be read.',
+    retry: 'Retry',
     cardLabel: 'Concept card, not a decision',
     cardStep: title => `Step: ${title}`,
     cardMissing: 'This text appears once the results it cites are current.',

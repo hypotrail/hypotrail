@@ -37,6 +37,15 @@
     ctx.load(view);
   }
 
+  /** Retry after a load error (CR.1): asked again now, and at the next version anyway. */
+  function retryButton(ctx, view) {
+    return ctx.el('button', { type: 'button', className: 'secondary', 'data-retry': view, text: L().retry, onclick: () => {
+      for (const k of Object.keys(local.requested)) if (k.startsWith(`${view}@`)) delete local.requested[k];
+      ctx.retry(view);
+      loadOnce(ctx, view);
+    } });
+  }
+
   // --- concept cards ------------------------------------------------------------------------
 
   function cardSteps(snap) {
@@ -183,7 +192,7 @@
       ];
     } else if (error) {
       inner = [el('div', { className: 'card alert', role: 'alert', 'data-load-error': 'explain' }, [
-        el('p', { className: 'title', text: c.layerError }), el('p', { text: error.message })])];
+        el('p', { className: 'title', text: c.layerError }), el('p', { text: error.message }), retryButton(ctx, 'explain')])];
     } else {
       // Until `explain` answers (WP-I replaced the WP-0 placeholder, U5 request R1).
       inner = [el('p', { className: 'muted', 'aria-busy': 'true', 'data-learn-loading': true, text: c.layerReading })];
@@ -264,7 +273,7 @@
       ];
     } else if (error) {
       inner = [el('div', { className: 'card alert', role: 'alert', 'data-load-error': 'session_report' }, [
-        el('p', { className: 'title', text: c.reportError }), el('p', { text: error.message })])];
+        el('p', { className: 'title', text: c.reportError }), el('p', { text: error.message }), retryButton(ctx, 'session_report')])];
     } else inner = [el('p', { className: 'muted', 'aria-busy': 'true', text: c.reportReading })];
     const details = el('details', { className: 'ht-report', 'data-session-report': true, open: local.reportOpen ? true : null }, [
       el('summary', { text: c.reportTitle }), ...inner]);
