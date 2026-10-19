@@ -154,6 +154,15 @@ data_section:
     name: Column
     meaning: Meaning
     type: Type and unit
+# Titles of the result slots that activities.yaml does not describe (WP-A4 slots).
+slot_labels:
+  eda.quality: Quality of the development rows (no target read)
+  eda.single_feature_signal: Signal of each feature alone on training rows
+roles:
+  target: The target
+  time: Time column, orders the split
+  group_id: Group identifier, not a model input
+  id: Row identifier, not a model input
 charts_intro: Each chart answers one question and is drawn from registered results only. Training rows are explored; validation rows only compare and choose.
 charts_none: No result to chart yet.
 basis:

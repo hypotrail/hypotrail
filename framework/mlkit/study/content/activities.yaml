@@ -131,28 +131,6 @@ activities:
       - {path: n, label: Validation rows, fmt: int}
       - {path: n_positive, label: Positive rows in validation, fmt: int}
       - {path: bootstrap.replicates, label: Bootstrap replicates, fmt: int}
-  # v0.2a (WP-A6): labels of the WP-A4 slots (both tasks).
-  eda.quality:
-    label: Quality of the development rows (no target read)
-    glossary: development_rows
-    highlights:
-      - {path: n_rows, label: Development rows read, fmt: int}
-      - {path: n_columns, label: Columns read, fmt: int}
-      - {path: n_rows_with_missing, label: Rows with a missing cell, fmt: int}
-      - {path: duplicates.n_rows, label: Rows repeating another row, fmt: int}
-  eda.single_feature_signal:
-    label: Signal of each feature alone on training rows
-    glossary: leakage
-    highlights:
-      - {path: n_rows, label: Training rows read, fmt: int}
-      - {path: folds, label: Folds, fmt: int}
-    tables:
-      - rows: signals
-        columns:
-          - {key: feature, label: Feature, kind: text}
-          - {key: score, label: Score alone (out of fold), fmt: f3}
-          - {key: availability, label: Availability decided, kind: text}
-          - {key: flag, label: Question its availability, kind: text}
 # Metrics of a policy rule, in display order (render_html.policy_section).
 policy_metrics:
   - {key: volume, label: Volume, fmt: auto, glossary: volume}

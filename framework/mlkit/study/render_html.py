@@ -435,7 +435,7 @@ def _table(citer: cite.Citer, rid: str, table: Mapping, items: list) -> str:
 def _result_block(view: Mapping, citer: cite.Citer, slot: str) -> str:
     labels = _labels()
     spec = texts.activity(slot)
-    title = spec.get('label', slot)
+    title = spec.get('label') or labels.get('slot_labels', {}).get(slot, slot)
     item = view['results'].get(slot)
     if item is None:
         return (f'<div data-slot="{e(slot)}" data-state="pending"><h4>{e(title)}</h4>'
@@ -1099,7 +1099,8 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
                 avail = (f'{_badge(cls, shown)}'
                          f'<br><span class="small">{e(who)}. Case: {e(case_label)}</span>')
             else:
-                avail = f'<span class="small">{e(v.get("role", ""))}</span>'
+                role = v.get('role', '')
+                avail = f'<span class="small">{e(labels.get("roles", {}).get(role, role))}</span>'
             if v['name'] in missing_index:
                 miss = citer.num(quality, f'missing.{missing_index[v["name"]]}.n_missing', 'int')
             else:

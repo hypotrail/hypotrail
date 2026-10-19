@@ -44,11 +44,13 @@ from typing import Any, Iterator, Mapping
 
 from .errors import StudyError
 
-FORMATS = ('int', 'pct0', 'pct1', 'pct2', 'pts0', 'pts1', 'pts2', 'f1', 'f2', 'f3', 'f4', 'auto')
-# ``pts<d>``: a difference of two fractions shown in percentage points, without a percent
-# sign ("29.5" points for 0.295). The element carries ``data-scale="100"`` so ``check``
-# compares the shown text with the registry value times 100 (WP-A6).
+FORMATS = ('int', 'pct0', 'pct1', 'pct2', 'f1', 'f2', 'f3', 'f4', 'auto')
+# ``pts<d>`` (WP-A6, the HTML report only; the companion mirrors :data:`FORMATS`): a
+# difference of two fractions shown in percentage points, without a percent sign ("29.5"
+# points for 0.295). The element carries ``data-scale="100"`` so ``check`` compares the
+# shown text with the registry value times 100.
 SCALED_FORMATS = {'pts0': 100, 'pts1': 100, 'pts2': 100}
+REPORT_FORMATS = FORMATS + tuple(SCALED_FORMATS)
 META_PATHS = ('@n_rows',)
 TEMPLATE = re.compile(r'\{\{(r|slot|fact):([^{}|]+?)(?:\|([^{}]*))?\}\}')
 _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
@@ -139,8 +141,9 @@ def leaves(values: Any, prefix: tuple = ()) -> Iterator[tuple[tuple, float]]:
 # --- formatting -------------------------------------------------------------------------
 
 def fmt_number(value: float, fmt: str = 'auto') -> str:
-    if fmt not in FORMATS:
-        raise untraceable(f'Unknown number format {fmt!r}.', fmt=fmt, formats=list(FORMATS))
+    if fmt not in REPORT_FORMATS:
+        raise untraceable(f'Unknown number format {fmt!r}.', fmt=fmt,
+                          formats=list(REPORT_FORMATS))
     if fmt == 'int':
         return f'{round(value):,}'
     if fmt.startswith('pct'):
