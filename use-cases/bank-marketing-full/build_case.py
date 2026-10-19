@@ -12,8 +12,10 @@ The variable dictionary, the scenario facts and the special values are those of
 ``../bank-marketing/case.yaml`` (same columns, same documentation file, copied unchanged as
 ``data/bank-names.txt``), so the two cases say the same things about the same columns.
 What differs: the dataset, the declared row order (``order: {by: line}``: the sealed final
-test is the last 20 % of the rows in time), the verification facts, the prior exposure, and
-the scenario default capacity (``scenario_defaults.capacity_share``, 10 %).
+test is the last 20 % of the rows in time, less the rows of ``bank.csv``), the verification
+facts, the prior exposure (with ``prior_exposed_rows``, the keys of the ``bank.csv`` records
+in ``data/prior-exposed-rows.txt``, generated here), and the scenario default capacity
+(``scenario_defaults.capacity_share``, 10 %).
 
 * ``--check``: exits 1 when the committed ``case.yaml`` differs from a fresh generation
   (also after a change of ``../bank-marketing/case.yaml``);
@@ -44,6 +46,9 @@ HERE = Path(__file__).resolve().parent
 SAMPLE_CASE = HERE.parent / 'bank-marketing'
 DATA = 'data/bank-full.csv'
 NAMES = 'data/bank-names.txt'
+# WP-B6a (review M2): the row keys of the bank-full.csv records that are bank.csv records,
+# one per line; the engine keeps them out of the sealed final test (prior_exposed_rows).
+PRIOR_ROWS = 'data/prior-exposed-rows.txt'
 MIRRORS = ('https://raw.githubusercontent.com/PacktWorkshops/The-Data-Science-Workshop/master/'
            'Chapter03/bank-full.csv',
            'https://raw.githubusercontent.com/fenago/datasets/main/bank-full.csv')
@@ -77,6 +82,17 @@ def inspect(data: bytes) -> dict:
             'sample_not_contained': sum(missing.values()), 'month_runs': runs}
 
 
+def prior_rows_text(data: bytes) -> str:
+    """The row keys (``L<line>``, the header is line 1) of the records of ``bank-full.csv``
+    that are records of ``bank.csv`` (exact record match after csv parsing), in line order.
+    bank-full.csv has no exact duplicate, so each bank.csv record names one line."""
+    _, body = _rows(data)
+    _, sample = _rows((SAMPLE_CASE / 'data' / 'bank.csv').read_bytes())
+    wanted = set(tuple(r) for r in sample)
+    keys = [f'L{i + 2}' for i, r in enumerate(body) if tuple(r) in wanted]
+    return ''.join(f'{k}\n' for k in keys)
+
+
 def verify(data: bytes) -> list[str]:
     s = inspect(data)
     problems = []
@@ -100,6 +116,8 @@ def _sample_document() -> dict:
 def case_document(data: bytes) -> dict:
     s = inspect(data)
     sha = hashlib.sha256(data).hexdigest()
+    prior = prior_rows_text(data).encode('utf-8')
+    n_prior = prior.count(b'\n')
     base = _sample_document()
     assert [v['name'] for v in base['variables']] == s['header']
     names = (HERE / NAMES).read_bytes()
@@ -198,6 +216,13 @@ def case_document(data: bytes) -> dict:
                       f'Those rows are not unseen.',
              'status': 'observed', 'source': 'Fact data_contains_sample'},
         ],
+        'prior_exposed_rows': {
+            'path': PRIOR_ROWS, 'sha256': hashlib.sha256(prior).hexdigest(), 'rows': n_prior,
+            'match': 'row_key', 'status': 'observed',
+            'source': f'Fact data_contains_sample; {PRIOR_ROWS} lists the row keys of the '
+                      f'bank-full.csv records that are bank.csv records (exact record match '
+                      f'after csv parsing, build_case.py). They stay development rows: the '
+                      f'sealed final test holds none of them.'},
         'order': {'by': 'line', 'direction': 'ascending', 'status': 'documented_fact',
                   'source': f'{NAMES}:31: bank-full.csv with all examples, ordered by date '
                             f'(from May 2008 to November 2010)'},
@@ -233,8 +258,11 @@ def main(argv=None) -> int:
             print('MISMATCH', p)
         return 1 if problems else 0
     text = render(case_document(data))
+    prior = prior_rows_text(data)
     if args.check:
-        same = (HERE / 'case.yaml').read_text(encoding='utf-8') == text
+        prior_path = HERE / PRIOR_ROWS
+        same = (HERE / 'case.yaml').read_text(encoding='utf-8') == text and \
+            prior_path.is_file() and prior_path.read_text(encoding='utf-8') == prior
         print('case.yaml is up to date' if same else 'case.yaml differs from a fresh generation')
         return 0 if same else 1
     target = args.out or HERE
@@ -242,6 +270,7 @@ def main(argv=None) -> int:
         (target / 'data').mkdir(parents=True, exist_ok=True)
         for name in (DATA, NAMES):
             shutil.copyfile(HERE / name, target / name)
+    (target / PRIOR_ROWS).write_text(prior, encoding='utf-8')
     (target / 'case.yaml').write_text(text, encoding='utf-8')
     print(f'wrote {target / "case.yaml"}')
     return 0

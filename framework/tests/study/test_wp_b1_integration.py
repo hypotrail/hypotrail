@@ -261,7 +261,7 @@ def test_bank_full_end_to_end_with_temporal_folds_on_the_file_order(tmp_path):
     flow.pauses(split=False)
     split = st.b1_default_value(flow.state(), 'split')
     assert split['method'] == 'temporal_folds'
-    split['folds'] = 3                             # fewer fits on 36,169 rows; still k-fold
+    split['folds'] = 3                             # fewer fits on 37,062 rows; still k-fold
     flow.decide('split', split)
     flow.model_decisions()
     values = flow.run('split')['values']
@@ -269,20 +269,20 @@ def test_bank_full_end_to_end_with_temporal_folds_on_the_file_order(tmp_path):
     folds = _folds(flow)
     lines = sorted((int(k[1:]), f) for k, f in folds.items())
     assert [f for _, f in lines] == sorted(f for _, f in lines)     # contiguous, in file order
-    assert {f for _, f in lines} == {1, 2, 3} and len(lines) == 36169
+    assert {f for _, f in lines} == {1, 2, 3} and len(lines) == 37062   # WP-B6a: + 893
     flow.run('fit.baseline')
     assert flow.run('fit.logistic')['values']['cross_validation']['method'] == 'temporal_folds'
     flow.variant()
     out = flow.run('policy.evaluate', '--rule', 'capacity:500')['values']
-    assert out['evaluation'] == 'out_of_fold' and out['n'] == 36169
-    assert out['rules']['capacity:500']['capacity_share'] == 500 / 36169
-    assert out['gain_points']['n'] == 36169
+    assert out['evaluation'] == 'out_of_fold' and out['n'] == 37062
+    assert out['rules']['capacity:500']['capacity_share'] == 500 / 37062
+    assert out['gain_points']['n'] == 37062
     flow.decide('policy', 'capacity:500',
                 words='Yes, I adopt that rule because the desk can make that many calls')
     opening = _open(flow)
     assert opening['rule'] == 'capacity:500'
     final = _values(flow, 'final_test.evaluation')
-    assert final['n'] == 9042 and final['refit']['n_rows'] == 36169
-    k = max(1, int(np.floor(500 / 36169 * 9042 + 0.5)))
+    assert final['n'] == 8149 and final['refit']['n_rows'] == 37062
+    k = max(1, int(np.floor(500 / 37062 * 8149 + 0.5)))
     assert final['rule_final'] == f'capacity:{k}'
     assert flow.call('check', '--study', flow.study)['clean'] is True

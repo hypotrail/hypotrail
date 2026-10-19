@@ -79,9 +79,14 @@ RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on'
                'order', 'dataset_sha256', 'n_rows', 'development', 'final_test',
                'schema_check', 'created', 'implementation')
 # v0.2b: ``groups`` (WP-B3) only when the case declares ``duplicates: {policy: group}``;
-# ``opening`` (WP-B1) once the final test is opened.
-OPTIONAL_RECORD_KEYS = ('groups', 'opening')
+# ``opening`` (WP-B1) once the final test is opened; ``prior_exposed`` (WP-B6a) only when
+# the case declares ``prior_exposed_rows``.
+OPTIONAL_RECORD_KEYS = ('groups', 'opening', 'prior_exposed')
 GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
+# ``declared_rows``: the keys the case lists; ``excluded_rows``: those of them the final-test
+# rule would otherwise have sealed (temporal: the ones in the tail; stratified: every one,
+# since each could have been drawn), kept on the development side instead.
+PRIOR_EXPOSED_KEYS = ('path', 'sha256', 'declared_rows', 'excluded_rows')
 PART_KEYS = ('n_rows', 'row_keys')
 CHECK_KEYS = ('status', 'n_rows', 'checks', 'reveals')
 CHECK_ITEM_KEYS = ('check', 'column', 'failing_rows')
@@ -219,23 +224,46 @@ def assign(case: Case, index, frame, *, fraction: float = DEFAULT_FRACTION,
     (indexed by row key, all records of ``index``). ``record`` lacks the blob digests,
     the schema check, and ``created``; :func:`seal` completes it."""
     from .data import DUPLICATES_GROUP, duplicate_summary, entity_groups
+    from .case import prior_exposed_keys
     keys = list(index.keys)
     order = case.order
     grouped = case.duplicates_policy == DUPLICATES_GROUP
     groups = entity_groups(index) if grouped else None
     moved = 0
+    # WP-B6a: rows already exposed outside the study (and every copy of them, under
+    # ``duplicates: group``) stay on the development side.
+    declared = prior_exposed_keys(case)
+    held: set[str] = set()
+    if declared is not None:
+        unknown = sorted(set(declared) - set(keys), key=lambda k: (len(k), k))
+        if unknown:
+            raise CaseError('invalid_case', 'The prior-exposed rows file names rows that are '
+                                            'not in the dataset.',
+                            problems=[{'path': 'prior_exposed_rows.path',
+                                       'problem': f'{len(unknown)} row keys are not rows of '
+                                                  f'the dataset (first: {unknown[0]})'}])
+        held = set(declared)
+        if grouped:
+            held_groups = {groups.get(k, k) for k in held}
+            held = {k for k in keys if groups.get(k, k) in held_groups}
     if order:
         ranked_keys, extra = _temporal(case, frame, keys, fraction)
         final = ranked_keys
         if grouped:
             ranked = _ranked_keys(case, frame, keys)
             final, moved = _whole_groups(ranked, final, groups)
+        excluded = sum(1 for k in final if k in held)
+        final = [k for k in final if k not in held]
         method, stratified_on, bins, used_seed = 'temporal', None, None, None
         order_out = {'by': order['by'], 'direction': order['direction'], **extra}
     else:
         strata = _strata(case, frame)
-        final = (grouped_stratified(keys, strata, groups, fraction, seed) if grouped
-                 else _stratified(keys, strata, fraction, seed))
+        eligible = [i for i, k in enumerate(keys) if k not in held]
+        e_keys = [keys[i] for i in eligible]
+        e_strata = [strata[i] for i in eligible]
+        excluded = len(keys) - len(e_keys)
+        final = (grouped_stratified(e_keys, e_strata, groups, fraction, seed) if grouped
+                 else _stratified(e_keys, e_strata, fraction, seed))
         method = 'stratified' if case.task == 'binary' else 'quantile_stratified'
         stratified_on = case.target_column
         bins = None if case.task == 'binary' else QUANTILE_BINS
@@ -255,6 +283,12 @@ def assign(case: Case, index, frame, *, fraction: float = DEFAULT_FRACTION,
               'seed': used_seed, 'stratified_on': stratified_on, 'bins': bins,
               'order': order_out, 'dataset_sha256': index.dataset_sha256, 'n_rows': len(keys),
               'implementation': implementation}
+    if declared is not None:
+        pr = case.prior_exposed_rows
+        record['prior_exposed'] = {'path': pr['path'], 'sha256': pr['sha256'],
+                                   'declared_rows': len(declared), 'excluded_rows': excluded}
+        record['implementation'] += ('; rows the case declares as already exposed '
+                                     '(prior_exposed_rows) kept on the development side')
     if grouped:
         summary = duplicate_summary(case, index)
         record['groups'] = {'policy': DUPLICATES_GROUP, 'n_groups': summary['n_groups'],
@@ -395,8 +429,11 @@ def development_keys(read_blob: Callable[[str], bytes], development: Mapping | N
 
 STATUS_VIEW_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows', 'schema_check',
                     # WP-B1: the opening, and what changed after it.
-                    'opening', 'post_final_test', 'changed_after')
-OPENING_VIEW_KEYS = ('revision', 'model', 'rule', 'result_id', 'user_words')
+                    'opening', 'post_final_test', 'changed_after',
+                    # WP-B6a: rows kept out of the final test as already exposed.
+                    'excluded_prior_exposed')
+# WP-B6a: ``time``, when the final test was opened.
+OPENING_VIEW_KEYS = ('revision', 'model', 'rule', 'result_id', 'user_words', 'time')
 
 
 def changed_after(state: Mapping, started: Mapping | None = None) -> list[str]:
@@ -438,7 +475,7 @@ def final_test_status(state: Mapping, started: Mapping | None = None) -> dict:
     if part is None:
         return {'status': STATUS_ABSENT, 'rows': None, 'method': None, 'fraction': None,
                 'development_rows': None, 'schema_check': None, 'opening': None,
-                'post_final_test': False, 'changed_after': []}
+                'post_final_test': False, 'changed_after': [], 'excluded_prior_exposed': None}
     opening = part.get('opening')
     after = changed_after(state, started)
     return {'status': part['status'], 'rows': part['final_test']['n_rows'],
@@ -446,7 +483,8 @@ def final_test_status(state: Mapping, started: Mapping | None = None) -> dict:
             'development_rows': part['development']['n_rows'],
             'schema_check': part['schema_check']['status'],
             'opening': ({k: opening.get(k) for k in OPENING_VIEW_KEYS} if opening else None),
-            'post_final_test': bool(after), 'changed_after': after}
+            'post_final_test': bool(after), 'changed_after': after,
+            'excluded_prior_exposed': (part.get('prior_exposed') or {}).get('excluded_rows', 0)}
 
 
 def open_record(*, revision: int, execution_id: str, proposal_id: str | None,
@@ -495,6 +533,10 @@ def validate(part: Any) -> list[dict]:
                                     '{' + ', '.join(OPENING_KEYS) + '}'})
     if part['status'] != OPENED and opening is not None:
         problems.append({'path': f'{path}.opening', 'problem': 'a sealed final test has none'})
+    if 'prior_exposed' in part and (not isinstance(part['prior_exposed'], dict)
+                                    or set(part['prior_exposed']) != set(PRIOR_EXPOSED_KEYS)):
+        problems.append({'path': f'{path}.prior_exposed',
+                         'problem': 'must be {' + ', '.join(PRIOR_EXPOSED_KEYS) + '}'})
     if 'groups' in part and (not isinstance(part['groups'], dict)
                              or set(part['groups']) != set(GROUPS_KEYS)):
         problems.append({'path': f'{path}.groups',
