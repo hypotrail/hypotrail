@@ -17,7 +17,7 @@
     hypotrail decide note (--about DECISION | --resolve NOTE_ID | --withdraw NOTE_ID) --text TEXT
                      [--kind hold|correction]
                      --request-id ID --expected-revision REV --study DIR
-    hypotrail mode set guided|training|express --user-words TEXT
+    hypotrail mode set guided|training|express [--user-words TEXT]
                      --request-id ID --expected-revision REV --study DIR      (ADR 0005)
 
 Post-v0.1, read-only, for observed sessions (``cmd_session_report``, ``sessionlog``)::
@@ -225,9 +225,10 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     mode = sub.add_parser('mode', help='set the confirmation mode (ADR 0005)')
     mverbs = mode.add_subparsers(dest='verb', required=True, parser_class=Parser)
     p = mverbs.add_parser('set', parents=[common])
-    p.add_argument('mode', help='guided (training and express arrive in v0.2b)')
-    p.add_argument('--user-words', required=True,
-                   help="the user's verbatim words asking for this mode")
+    p.add_argument('mode', help='guided, training, or express')
+    p.add_argument('--user-words', dest='user_words', default=None,
+                   help="the user's verbatim words asking for this mode (needed unless the "
+                        "change makes confirmations stricter)")
     _mutation(p)
 
     if extension is not None:

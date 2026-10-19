@@ -1,7 +1,9 @@
 """Guided confirmation (ADR 0005, owner remarks R1 and R3 of the first demo).
 
 A confirmation is the junior's reply to one proposal, bound to it by ``decide confirm
-PROPOSAL`` (or ``--proposal``). In the ``guided`` mode, the only mode of v0.2a, the reply is
+PROPOSAL`` (or ``--proposal``). The ``training`` mode (v0.2b) adds concept matching
+(:mod:`mlkit.study.concepts`) after the checks below; ``express`` keeps the guided rules.
+In the ``guided`` mode, the default, the reply is
 accepted when it is bound to the single open proposal of its decision at the current
 revision, and it is not:
 
@@ -27,8 +29,8 @@ beyond the endorsement ("parce que", "because", "car", or any content word); oth
 
 For ``feature_availability``, :func:`availability_warnings` compares the words with the value
 mechanically: a variable named with exclusion words while the value keeps it, or with keep
-words while the value excludes it, is a warning (``words_contradict_value``), never a
-refusal (R3).
+words while the value excludes it, is a warning (``words_contradict_value``) in guided and
+express, and a refusal of the same code in training (R3).
 
 This module holds no state and performs no I/O; :mod:`mlkit.study.commands` calls it.
 """

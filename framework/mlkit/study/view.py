@@ -54,7 +54,10 @@ DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_
 CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'proposal_id',
                           'revision', 'time', 'authenticated', 'basis', 'delegation_scope',
                           # ADR 0005 (R3): the point the agent raised, kept by the junior.
-                          'agent_concern')
+                          'agent_concern',
+                          # v0.2b (WP-B2): the mode in force when the words were accepted
+                          # (``null`` for a confirmation recorded before v0.2b).
+                          'mode')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: the restatement per language (``null`` when none was
