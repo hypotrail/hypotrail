@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 24,
+  "revision": 28,
   "task": "regression",
   "terms": [
    {
@@ -56,7 +56,7 @@
       },
       {
        "text": "96",
-       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
+       "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "222",
-       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
+       "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -116,7 +116,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "6a00b1aa9e4498afebab1f9e8d8dda309a76bc58f0a842979c6c9c9734a38dc9",
+       "result_id": "3640bf3a10283abb1f889c39f4b5d381b052c66eef274234626669ee25aa02ff",
        "path": "train_mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -150,7 +150,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -160,7 +160,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -170,7 +170,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -194,7 +194,7 @@
       },
       {
        "text": "5.69",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "intervals.[fit.linear].mae.low",
        "value": 5.690730215654784,
        "format": "f2"
@@ -204,7 +204,7 @@
       },
       {
        "text": "7.31",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "intervals.[fit.linear].mae.high",
        "value": 7.3058496174077225,
        "format": "f2"
@@ -337,6 +337,44 @@
     "definition": "Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.",
     "example": null,
     "example_status": "none",
+    "steps": [
+     "discover_data"
+    ]
+   },
+   {
+    "id": "permutation_null_band",
+    "term": "Permutation null band",
+    "definition": "The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "data_contingent_decision",
+    "term": "Data-contingent decision",
+    "definition": "A decision chosen after looking at the outcome in the data. It is allowed, but it is recorded with the analyses that motivated it, because a choice adapted to the training rows makes the validation figures slightly optimistic. For example, capping a variable because a chart of the outcome looked odd at its extremes is a data-contingent preparation.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "preprocessing"
+    ]
+   },
+   {
+    "id": "success_criterion",
+    "term": "Success criterion",
+    "definition": "The smallest reduction of the baseline's error that would make the model worth adopting, fixed before any model is fitted, so the result cannot move the bar. The conclusion is read against it. For example, deciding before the models that the linear model must make errors at least a tenth smaller than predicting the training mean for every car, and keeping the mean when it does not.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "success_criterion"
+    ]
+   },
+   {
+    "id": "single_feature_signal",
+    "term": "Single-feature signal",
+    "definition": "How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.",
+    "example": null,
+    "example_status": "none",
     "steps": []
    },
    {
@@ -382,7 +420,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
+       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -392,7 +430,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
+       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -442,7 +480,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -466,7 +504,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -476,7 +514,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -502,7 +540,7 @@
       },
       {
        "text": "7.66",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.linear].rmse",
        "value": 7.664419781686159,
        "format": "f2"
@@ -512,7 +550,7 @@
       },
       {
        "text": "11.92",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.baseline].rmse",
        "value": 11.924502477405836,
        "format": "f2"
@@ -527,6 +565,44 @@
    }
   ],
   "steps": {
+   "discover_data": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Development rows"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The case describes one row as: A vehicle model for a model year. The data card shows the columns grouped with their meaning and availability, and a few development rows."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Nothing is computed and nothing is decided. The rows shown are development rows, already read for their structure when the study was created; the final test stays sealed."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Reading the columns before any decision is how you know what each variable describes and when its value becomes known."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The availability decision that follows relies on this reading."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
    "prediction_time": {
     "concept": {
      "segments": [
@@ -632,7 +708,7 @@
       },
       {
        "text": "222",
-       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
+       "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -642,7 +718,7 @@
       },
       {
        "text": "96",
-       "result_id": "c6495c7ab99305724a685f0f45f67211847f95d561956452c27f6d27559587e3",
+       "result_id": "9655ba07d0021339dc0e690d486bb2c0268c3078a659955e068bb6b48ea86b1a",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -656,6 +732,44 @@
      "segments": [
       {
        "text": "Changing the split refits both models and recomputes the exploration; rows already explored stay exposed."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "success_criterion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Success criterion"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You state the smallest relative reduction of the validation mean absolute error of the mean baseline that would make the model worth using."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The conclusion is read against it. A reduction below it, or whose paired interval includes zero, does not support adopting the model."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it later asks for the conclusion again."
       }
      ]
     },
@@ -690,7 +804,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
+       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -700,7 +814,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "23150b0f7258cd57eb2bab97697492f04349161d30e7c235f56e020655d1993c",
+       "result_id": "804bdb96a99fe63b17d9e13792d783dbb8812c69d41de94fb1c1c3e3cb4d5dff",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -714,6 +828,44 @@
      "segments": [
       {
        "text": "A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "preprocessing": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Data-contingent decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged."
       }
      ]
     },
@@ -748,7 +900,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "6a00b1aa9e4498afebab1f9e8d8dda309a76bc58f0a842979c6c9c9734a38dc9",
+       "result_id": "3640bf3a10283abb1f889c39f4b5d381b052c66eef274234626669ee25aa02ff",
        "path": "validation.mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -758,7 +910,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "2b61f1e671e973345918230d2ebd31ee4103d325d6c05779fc2f7d7b7f30212c",
+       "result_id": "bce018d194ce90370e584aa3cf79b260b29aa50d503598c8ec01de3cf3d3391d",
        "path": "validation.mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -806,7 +958,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -816,7 +968,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -826,7 +978,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -836,7 +988,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -920,7 +1072,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -957,7 +1109,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -967,7 +1119,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -977,7 +1129,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -987,7 +1139,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -997,7 +1149,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "cbe74d99bfcc3e36fdbb70ea7633d2decc8e43373388fad5e85043000f59983d",
+       "result_id": "7b9c2c934fc40ea75f6b4611fe095403d09bef65fafddc966bd5e3b3afee57cf",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"

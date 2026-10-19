@@ -119,6 +119,16 @@ class Study {
       this.decide('feature_availability', availability('regression'));
       this.decide('split', { method: 'ordinal_cutoff', column: 'model_year', cutoff: 79 });
     }
+    this.modelDecisions();
+  }
+
+  /** WP-A4: the success criterion and the engine's default preprocessing, needed before any fit. */
+  modelDecisions() {
+    const decisions = this.view().decisions;
+    if (!decisions.success_criterion) return;   // a study created before WP-A4
+    this.decide('success_criterion', this.task === 'binary'
+      ? { metric: 'precision_gain', min_points: 5 } : { metric: 'mae_reduction', min_share: 0.1 });
+    this.decide('preprocessing', { missing: 'none', rare_category_min_rows: 0, caps: {}, log_transform: [] });
   }
 
   /** The agent's walkthrough up to the fits (binary: and two policy evaluations). */

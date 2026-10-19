@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 30,
+  "revision": 34,
   "since": null,
   "changed": null,
   "goal": {
@@ -41,6 +41,11 @@
   "current_step": "conclusion",
   "plan": [
    {
+    "id": "discover_data",
+    "title": "Discover the data",
+    "status": "done"
+   },
+   {
     "id": "prediction_time",
     "title": "Define the prediction moment",
     "status": "done"
@@ -56,8 +61,18 @@
     "status": "done"
    },
    {
+    "id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "status": "done"
+   },
+   {
     "id": "train_eda",
     "title": "Explore the training partition",
+    "status": "done"
+   },
+   {
+    "id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
     "status": "done"
    },
    {
@@ -78,7 +93,7 @@
   ],
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_5",
+   "proposal_id": "p_7",
    "decision": "policy",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
@@ -86,11 +101,11 @@
   },
   "open_proposals": [
    {
-    "proposal_id": "p_5",
+    "proposal_id": "p_7",
     "decision_id": "policy",
     "value": "capacity:100",
     "restatement": "Call the 100 clients with the highest scores.",
-    "revision": 30,
+    "revision": 34,
     "origin": {
      "channel": "chat"
     }
@@ -173,6 +188,36 @@
     "open_proposals": [],
     "feature_basis": null
    },
+   "success_criterion": {
+    "status": "confirmed",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "preprocessing": {
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
    "policy": {
     "status": "confirmed",
     "value": "threshold:0.2",
@@ -181,7 +226,7 @@
     "user_words": "Yes, call everyone scored at 0.2 or more",
     "reason": null,
     "open_proposals": [
-     "p_5"
+     "p_7"
     ],
     "feature_basis": null
    },
@@ -198,55 +243,55 @@
   },
   "results": {
    "eda.distribution:age": {
-    "result_id": "6057ca76a22f683b2631d854732668e09a4e9b819f527215e9860e55993c07f1",
+    "result_id": "7893f97e971f969bf89e6b8107583c51584e693768a563f2b260a0d4a0087261",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "9390aea25ce9135c013035a4844383bd7a32db38e91d44c59c96c0c58e77760d",
+    "result_id": "cd380c52dc253eeb8b9feafdd3f016e5c3313843b64dad1994d2fb0ac1821d32",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "b55cc7aa0b274432e7904c5fd04b0f47fcf938f7684c79c9f54072380f27306a",
+    "result_id": "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "913957f08b279ea28884004ec426d26f3eac6c8779324d85a1b2ad8bf47aae49",
+    "result_id": "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
+    "result_id": "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "8567dad2d05a9323f15f93d4ffffe2dd43712466b6e76e0a90fb6a0ec27f549d",
+    "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "bd6bf02e4a53642978cb832a27f8b60da391a02f088cbc30ec8664e2abbb9c44",
+    "result_id": "d9eb3c0e4a7c1e9295422f3db575ddcc91a54e0311b42e09254c9b13a27b24eb",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
+    "result_id": "0e0eb6a08293371ed06c001b05d66e87662ad027d288f822425bbdfb502f03f4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+    "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -257,16 +302,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 30,
-     "last_ok_revision": 30,
+     "revision": 34,
+     "last_ok_revision": 34,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 30,
-     "last_ok_revision": 30,
+     "revision": 34,
+     "last_ok_revision": 34,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -335,9 +380,33 @@
    "development_rows": 3617,
    "schema_check": "pass"
   },
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "precision_gain",
+    "min_points": 5
+   },
+   "status": "not_assessed",
+   "gain": null,
+   "low": null,
+   "high": null,
+   "minimum": null,
+   "unit": "percentage points",
+   "rule": null,
+   "result_id": null,
+   "contradicts_verdict": false
+  },
+  "eda_looks": {
+   "target_looks": 3,
+   "results": [
+    "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
+    "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
+    "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942"
+   ]
+  },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1086 validation rows: precision 38.1%, recall 29.6%, result f5d047c3).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1086 validation rows: precision 38.1%, recall 29.6%, result 0e0eb6a0).",
    "Now: Conclude proportionately; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."
@@ -345,7 +414,7 @@
   "recap_audience": "agent",
   "recap_junior": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1086 validation rows: precision 38.1%, recall 29.6%).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept with a doubt contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); policy threshold:0.2 (the logistic model at threshold:0.2 on the 1086 validation rows: precision 38.1%, recall 29.6%).",
    "Now: Conclude proportionately; the report and notebook are up to date.",
    "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact."
@@ -355,16 +424,19 @@
     "id": "frame",
     "title": "Frame the change",
     "steps": [
+     "discover_data",
      "prediction_time",
      "feature_availability",
-     "split"
+     "split",
+     "success_criterion"
     ]
    },
    {
     "id": "evidence",
     "title": "Prepare evidence",
     "steps": [
-     "train_eda"
+     "train_eda",
+     "preprocessing"
     ]
    },
    {
@@ -399,11 +471,15 @@
    {
     "pause": 2,
     "decisions": [
-     "split"
+     "split",
+     "success_criterion",
+     "preprocessing"
     ],
     "status": "closed",
     "confirmed": [
-     "split"
+     "split",
+     "success_criterion",
+     "preprocessing"
     ]
    },
    {
@@ -420,16 +496,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-19T08:50:27.109438+00:00",
+   "boundary_time": "2026-10-19T09:50:26.217739+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 30,
+   "until": 34,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-19T08:50:27.140129+00:00",
+     "time": "2026-10-19T09:50:26.289442+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -450,7 +526,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-19T08:50:27.649598+00:00",
+     "time": "2026-10-19T09:50:26.890120+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -478,7 +554,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-19T08:50:27.765300+00:00",
+     "time": "2026-10-19T09:50:27.070914+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -499,7 +575,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-19T08:50:27.854684+00:00",
+     "time": "2026-10-19T09:50:27.268641+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -527,7 +603,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-19T08:50:27.910734+00:00",
+     "time": "2026-10-19T09:50:27.402376+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -548,7 +624,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-19T08:50:27.969644+00:00",
+     "time": "2026-10-19T09:50:27.536788+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -575,8 +651,106 @@
      "text": "The split was confirmed in the junior's words (channel chat)."
     },
     {
+     "revision": 8,
+     "time": "2026-10-19T09:50:27.642293+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "Success criterion was proposed."
+    },
+    {
      "revision": 9,
-     "time": "2026-10-19T08:50:29.253194+00:00",
+     "time": "2026-10-19T09:50:27.778196+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "Success criterion was confirmed in the junior's words (channel chat)."
+    },
+    {
+     "revision": 10,
+     "time": "2026-10-19T09:50:27.917325+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "Preprocessing was proposed."
+    },
+    {
+     "revision": 11,
+     "time": "2026-10-19T09:50:28.170068+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "Preprocessing was confirmed in the junior's words (channel chat)."
+    },
+    {
+     "revision": 13,
+     "time": "2026-10-19T09:50:29.334210+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -584,8 +758,8 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
-     "execution_id": "e_e1b0acf86b9621b8c13ca17b",
+     "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
+     "execution_id": "e_8101d16893f3425fbb4ff727",
      "rules": null,
      "column": null,
      "channel": null,
@@ -596,8 +770,8 @@
      "text": "The split was computed."
     },
     {
-     "revision": 11,
-     "time": "2026-10-19T08:50:29.455667+00:00",
+     "revision": 15,
+     "time": "2026-10-19T09:50:29.608916+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -605,8 +779,8 @@
      "note_id": null,
      "activity": "eda.target_rate",
      "slot": "eda.target_rate",
-     "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
-     "execution_id": "e_92ee93de02ea87db530298f4",
+     "result_id": "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
+     "execution_id": "e_8651b2bcef1776e9ebffd170",
      "rules": null,
      "column": null,
      "channel": null,
@@ -617,8 +791,8 @@
      "text": "The target rate was computed."
     },
     {
-     "revision": 13,
-     "time": "2026-10-19T08:50:29.732147+00:00",
+     "revision": 17,
+     "time": "2026-10-19T09:50:29.926080+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -626,8 +800,8 @@
      "note_id": null,
      "activity": "eda.special_values",
      "slot": "eda.special_values",
-     "result_id": "913957f08b279ea28884004ec426d26f3eac6c8779324d85a1b2ad8bf47aae49",
-     "execution_id": "e_cb440fe2f7ec20d54f472663",
+     "result_id": "47ccc68d2c4176a7e3e096eeb0c1d64987b0a0fdb85c7f98cb7378f7c612565f",
+     "execution_id": "e_76bdb563530c997e6fdf55cc",
      "rules": null,
      "column": null,
      "channel": null,
@@ -638,8 +812,8 @@
      "text": "The special-value check was computed."
     },
     {
-     "revision": 15,
-     "time": "2026-10-19T08:50:30.076256+00:00",
+     "revision": 19,
+     "time": "2026-10-19T09:50:30.251456+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -647,8 +821,8 @@
      "note_id": null,
      "activity": "eda.rate_by",
      "slot": "eda.rate_by:job",
-     "result_id": "b55cc7aa0b274432e7904c5fd04b0f47fcf938f7684c79c9f54072380f27306a",
-     "execution_id": "e_087f4c7109d76636536c712c",
+     "result_id": "852c5f9ed51d6e415047162f12b8e9c4ed79889ed868d749cb9de17307394942",
+     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
      "rules": null,
      "column": "job",
      "channel": null,
@@ -659,8 +833,8 @@
      "text": "The target rate by group of job was computed."
     },
     {
-     "revision": 17,
-     "time": "2026-10-19T08:50:30.394572+00:00",
+     "revision": 21,
+     "time": "2026-10-19T09:50:30.551831+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -668,8 +842,8 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:age",
-     "result_id": "6057ca76a22f683b2631d854732668e09a4e9b819f527215e9860e55993c07f1",
-     "execution_id": "e_8101d16893f3425fbb4ff727",
+     "result_id": "7893f97e971f969bf89e6b8107583c51584e693768a563f2b260a0d4a0087261",
+     "execution_id": "e_40d674998c07527b12a31e29",
      "rules": null,
      "column": "age",
      "channel": null,
@@ -680,8 +854,8 @@
      "text": "The distribution of age was computed."
     },
     {
-     "revision": 19,
-     "time": "2026-10-19T08:50:30.693235+00:00",
+     "revision": 23,
+     "time": "2026-10-19T09:50:30.884102+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -689,8 +863,8 @@
      "note_id": null,
      "activity": "eda.distribution",
      "slot": "eda.distribution:job",
-     "result_id": "9390aea25ce9135c013035a4844383bd7a32db38e91d44c59c96c0c58e77760d",
-     "execution_id": "e_8651b2bcef1776e9ebffd170",
+     "result_id": "cd380c52dc253eeb8b9feafdd3f016e5c3313843b64dad1994d2fb0ac1821d32",
+     "execution_id": "e_3b7e9da2df5de95232824246",
      "rules": null,
      "column": "job",
      "channel": null,
@@ -701,8 +875,8 @@
      "text": "The distribution of job was computed."
     },
     {
-     "revision": 21,
-     "time": "2026-10-19T08:50:31.171814+00:00",
+     "revision": 25,
+     "time": "2026-10-19T09:50:31.298907+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -710,8 +884,8 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "8567dad2d05a9323f15f93d4ffffe2dd43712466b6e76e0a90fb6a0ec27f549d",
-     "execution_id": "e_76bdb563530c997e6fdf55cc",
+     "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
+     "execution_id": "e_17bb42fe2af6771b4815132d",
      "rules": null,
      "column": null,
      "channel": null,
@@ -722,8 +896,8 @@
      "text": "The baseline model was computed."
     },
     {
-     "revision": 23,
-     "time": "2026-10-19T08:50:31.518416+00:00",
+     "revision": 27,
+     "time": "2026-10-19T09:50:32.355120+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -731,8 +905,8 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "bd6bf02e4a53642978cb832a27f8b60da391a02f088cbc30ec8664e2abbb9c44",
-     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+     "result_id": "d9eb3c0e4a7c1e9295422f3db575ddcc91a54e0311b42e09254c9b13a27b24eb",
+     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
      "rules": null,
      "column": null,
      "channel": null,
@@ -743,8 +917,8 @@
      "text": "The logistic model was computed."
     },
     {
-     "revision": 25,
-     "time": "2026-10-19T08:50:31.796666+00:00",
+     "revision": 29,
+     "time": "2026-10-19T09:50:32.673986+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -752,8 +926,8 @@
      "note_id": null,
      "activity": "policy.evaluation",
      "slot": "policy.evaluation",
-     "result_id": "ee919956fa72a2d599fb58634287b397d0521e9da8ed3d10c1697900fe29aa09",
-     "execution_id": "e_40d674998c07527b12a31e29",
+     "result_id": "2ed1a64acad4af49b28db3818c0d3b8f229135d33164c8fc6ba3a7a4544f039d",
+     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
      "rules": [
       "threshold:0.2"
      ],
@@ -766,12 +940,12 @@
      "text": "The policy evaluation was computed: threshold:0.2 evaluated."
     },
     {
-     "revision": 26,
-     "time": "2026-10-19T08:50:31.894590+00:00",
+     "revision": 30,
+     "time": "2026-10-19T09:50:32.867348+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
-     "proposal_id": "p_4",
+     "proposal_id": "p_6",
      "note_id": null,
      "activity": null,
      "slot": null,
@@ -787,12 +961,12 @@
      "text": "The policy was proposed: threshold:0.2."
     },
     {
-     "revision": 27,
-     "time": "2026-10-19T08:50:31.977646+00:00",
+     "revision": 31,
+     "time": "2026-10-19T09:50:33.053596+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
-     "proposal_id": "p_4",
+     "proposal_id": "p_6",
      "note_id": null,
      "activity": null,
      "slot": null,
@@ -818,8 +992,8 @@
      "text": "The policy was confirmed in the junior's words (channel chat)."
     },
     {
-     "revision": 29,
-     "time": "2026-10-19T08:50:32.710663+00:00",
+     "revision": 33,
+     "time": "2026-10-19T09:50:33.720791+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -827,8 +1001,8 @@
      "note_id": null,
      "activity": "policy.evaluation",
      "slot": "policy.evaluation",
-     "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
-     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
+     "result_id": "0e0eb6a08293371ed06c001b05d66e87662ad027d288f822425bbdfb502f03f4",
+     "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
      "rules": [
       "capacity:100"
      ],
@@ -841,12 +1015,12 @@
      "text": "The policy evaluation was replaced: capacity:100 evaluated. Models unchanged, nothing refitted."
     },
     {
-     "revision": 30,
-     "time": "2026-10-19T08:50:32.878941+00:00",
+     "revision": 34,
+     "time": "2026-10-19T09:50:33.944423+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
-     "proposal_id": "p_5",
+     "proposal_id": "p_7",
      "note_id": null,
      "activity": null,
      "slot": null,
@@ -864,8 +1038,8 @@
    ],
    "truncated": false,
    "counts": {
-    "proposed": 5,
-    "confirmed": 4,
+    "proposed": 7,
+    "confirmed": 6,
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
@@ -877,6 +1051,6 @@
    }
   },
   "task": "binary",
-  "currency": "d66e0f4365009cb2"
+  "currency": "1fb38b26d7130066"
  }
 }

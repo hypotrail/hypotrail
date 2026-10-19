@@ -28,6 +28,8 @@ activity            rows read                      exposure purpose
 ==================  =============================  ===========================================
 split               target column of every         ``structural_inspection`` (stratification)
                     development row
+eda.quality         development rows, every column ``structural_inspection`` (no target)
+                    except the target
 eda.*               training rows only             ``train_eda``
 fit.*               training rows, then validation ``train_fit``, ``validation_model_evaluation``
 policy.evaluation   validation predictions         ``validation_policy_selection``
@@ -69,8 +71,13 @@ MEAN_BY = 'eda.mean_by'
 LINEAR = 'fit.linear'
 REGRESSION_EVALUATION = 'evaluate.regression'
 DISTRIBUTION = 'eda.distribution'
+# v0.2a (WP-A4): the structural quality of the development rows (no target) and the
+# single-feature signal (a legitimacy question), in both tasks.
+QUALITY = 'eda.quality'
+SIGNAL = 'eda.single_feature_signal'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
-              TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION)
+              TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
+              SIGNAL)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
     'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
@@ -78,7 +85,7 @@ TASK_ACTIVITIES = {
 }
 # C8: activities of every task. ``TASK_ACTIVITIES`` is frozen by test_contract_freeze.py,
 # so the shared ones are listed here and added by :func:`task_activities`.
-SHARED_ACTIVITIES = (DISTRIBUTION,)
+SHARED_ACTIVITIES = (DISTRIBUTION, QUALITY, SIGNAL)
 
 
 def task_activities(task: str) -> tuple[str, ...]:
@@ -86,7 +93,8 @@ def task_activities(task: str) -> tuple[str, ...]:
     return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES
 ALIASES = {'policy.evaluate': POLICY}
 CLI_NAMES = ACTIVITIES + tuple(ALIASES)
-EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION)
+EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION, QUALITY,
+       SIGNAL)
 PER_COLUMN = (RATE_BY, MEAN_BY, DISTRIBUTION)
 # C8: the roles a distribution accepts (a feature, the declared time column, the target).
 DISTRIBUTION_ROLES = ('feature', 'time', 'target')
@@ -102,13 +110,18 @@ MODULES = {
     SPECIAL_VALUES: (_BASE, 'mlkit.study.eda'),
     RATE_BY: (_BASE, 'mlkit.study.eda'),
     BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics'),
-    LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical'),
+    LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical',
+               'mlkit.study.governance'),
     POLICY: (_BASE, 'mlkit.study.policy'),
     TARGET_SUMMARY: (_BASE, 'mlkit.study.eda'),
     MEAN_BY: (_BASE, 'mlkit.study.eda'),
-    LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical'),
+    LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical',
+             'mlkit.study.governance'),
     REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression'),
     DISTRIBUTION: (_BASE, 'mlkit.study.eda'),
+    QUALITY: (_BASE, 'mlkit.study.eda'),
+    SIGNAL: (_BASE, 'mlkit.study.eda', 'mlkit.study.fit', 'mlkit.study.metrics',
+             'mlkit.classical'),
 }
 # The regression fit of the baseline also uses the error module.
 REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
@@ -312,7 +325,19 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                               'row_keys': store.put_blob(data),
                               'n_rows': len(rec.parse_row_keys(data)), 'columns': list(columns)})
 
-    if activity == SPLIT:
+    if activity == QUALITY:
+        # WP-A4: the development rows without the target; no split, no decision needed. The
+        # rows read are those of the structural inspection recorded at ``init``.
+        columns = [v['name'] for v in case.document['variables'] if v['name'] != target]
+        params['partition'] = _rows_partition(inputs)
+        inputs['columns'] = columns
+        if with_exposure:
+            keys = partition.development_keys(store.read_blob, inputs.get('development'))
+            if keys is None:
+                from . import data as dt
+                keys = dt.row_index(case).keys
+            expose('structural_inspection', _rows_partition(inputs), keys, columns)
+    elif activity == SPLIT:
         decision = state['decisions']['split']['value']
         inputs.update(decision=decision, target=_target(case))
         previous, since = _previous_split(store, state)
@@ -359,6 +384,20 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                 params['max_groups'] = options['max_groups']
             inputs['special_values'] = feature_special_values(case, [column])
             expose('train_eda', 'train', keys['train'], [column])
+        elif activity == SIGNAL:
+            # WP-A4: every candidate feature alone, out of fold, on training rows; the
+            # availability decision is shown next to each signal, never acted upon.
+            availability = dict(state['decisions']['feature_availability']['value'] or {})
+            candidates = [v['name'] for v in case.document['variables']
+                          if v['role'] == 'feature']
+            inputs['target'] = _target(case)
+            inputs['candidates'] = candidates
+            inputs['availability'] = availability
+            inputs['special_values'] = feature_special_values(case, candidates)
+            from . import eda
+            params = {'folds': eda.SIGNAL_FOLDS, 'seed': eda.SIGNAL_SEED,
+                      'metric': 'roc_auc' if task == 'binary' else 'r2'}
+            expose('train_eda', 'train', keys['train'], candidates + [target])
         elif activity in EDA:
             inputs['target'] = _target(case)
             columns = [target]
@@ -403,6 +442,12 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                         f'Running {activity}')
                 inputs['features'] = features
                 inputs['special_values'] = feature_special_values(case, features)
+                # WP-A4: the confirmed preprocessing, in a study that has the decision (an
+                # earlier study keeps its identities: no key).
+                from . import governance
+                preprocessing = governance.effective_preprocessing(state)
+                if preprocessing is not None:
+                    inputs['preprocessing'] = preprocessing
                 if activity == LINEAR:
                     params = dict(LINEAR_PARAMS, seed=0)
                 else:
@@ -730,13 +775,23 @@ def compute(store, plan_: Mapping) -> dict:
     activity = plan_['activity']
     if activity == SPLIT:
         return compute_split(store, plan_)
+    if activity == QUALITY:
+        from . import eda
+        case, dataset = load(plan_, store)
+        frame = dataset.frame[plan_['inputs']['columns']]     # never the target
+        return eda.compute(activity, case, frame, plan_['params'])
     if activity in EDA:
         from . import eda
         case, dataset = load(plan_, store)
         train = rows(dataset, split_keys(store, plan_['inputs']['results'][SPLIT])['train'])
         if activity == DISTRIBUTION:      # C8: the column only, never the outcome
             train = train[[plan_['params']['column']]]
-        return eda.compute(activity, case, train, plan_['params'])
+        params = plan_['params']
+        if activity == SIGNAL:
+            params = {**params, 'candidates': plan_['inputs']['candidates'],
+                      'availability': plan_['inputs']['availability'],
+                      'special_values': plan_['inputs']['special_values']}
+        return eda.compute(activity, case, train, params)
     if activity in FITS or activity == LINEAR:
         from . import fit
         case, dataset = load(plan_, store)

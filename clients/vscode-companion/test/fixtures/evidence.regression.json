@@ -130,20 +130,27 @@
     "execution_id": "e_ce609b5bf3b974a84907e237",
     "exposure_id": "x_b134d0431844466dbf88b4680a094afc",
     "values": {
-     "max": 43.1,
-     "mean": 20.68285714285714,
-     "median": 19.95,
-     "min": 9.0,
-     "n": 280,
-     "n_missing": 0,
-     "n_rows": 280,
-     "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
      "partition": "train",
-     "q25": 15.5,
-     "q75": 25.0,
-     "sd": 6.299165819008179,
      "target": "mpg",
-     "unit": "mpg"
+     "unit": "mpg",
+     "n_rows": 280,
+     "n_missing": 0,
+     "n": 280,
+     "mean": 20.68285714285714,
+     "sd": 6.299165819008179,
+     "min": 9.0,
+     "q25": 15.5,
+     "median": 19.95,
+     "q75": 25.0,
+     "max": 43.1,
+     "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+     "mean_interval": {
+      "low": 19.74578253659207,
+      "high": 21.384848094038563,
+      "level": 0.95,
+      "method": "t"
+     },
+     "question": "How is the target distributed among the training rows?"
     },
     "headline": {
      "segments": [
@@ -183,10 +190,10 @@
     "execution_id": "e_2b12242f306cde1c5f3670f1",
     "exposure_id": "x_8a5281c94cd644f7a6f60215fadb5ab8",
     "values": {
-     "co_occurrence": [],
-     "n_rows": 280,
-     "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
      "partition": "train",
+     "n_rows": 280,
+     "target": "mpg",
+     "unit": "mpg",
      "special_values": [
       {
        "column": "horsepower",
@@ -199,8 +206,9 @@
        "value": "?"
       }
      ],
-     "target": "mpg",
-     "unit": "mpg"
+     "co_occurrence": [],
+     "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+     "question": "How many training rows carry each special value, and how does the outcome look among them?"
     },
     "headline": null
    },
@@ -226,91 +234,194 @@
     "execution_id": "e_e80fb65ac70384bd8bab0358",
     "exposure_id": "x_6d51aa3118e14d9591f8e6d48c1c4fbd",
     "values": {
-     "binned": false,
-     "binning": null,
-     "column": "model_year",
-     "groups": [
-      {
-       "mean": 17.689655172413794,
-       "n_rows": 29,
-       "sd": 5.33923113964563,
-       "small_count": true,
-       "value": "70"
-      },
-      {
-       "mean": 21.25,
-       "n_rows": 28,
-       "sd": 6.591942331642754,
-       "small_count": true,
-       "value": "71"
-      },
-      {
-       "mean": 18.714285714285715,
-       "n_rows": 28,
-       "sd": 5.435528819257014,
-       "small_count": true,
-       "value": "72"
-      },
-      {
-       "mean": 17.1,
-       "n_rows": 40,
-       "sd": 4.700245492770319,
-       "small_count": false,
-       "value": "73"
-      },
-      {
-       "mean": 22.703703703703702,
-       "n_rows": 27,
-       "sd": 6.42000967417684,
-       "small_count": true,
-       "value": "74"
-      },
-      {
-       "mean": 20.266666666666666,
-       "n_rows": 30,
-       "sd": 4.940566303805552,
-       "small_count": false,
-       "value": "75"
-      },
-      {
-       "mean": 21.573529411764707,
-       "n_rows": 34,
-       "sd": 5.8892973714537264,
-       "small_count": false,
-       "value": "76"
-      },
-      {
-       "mean": 23.375,
-       "n_rows": 28,
-       "sd": 6.67586171438786,
-       "small_count": true,
-       "value": "77"
-      },
-      {
-       "mean": 24.061111111111114,
-       "n_rows": 36,
-       "sd": 6.898044351337259,
-       "small_count": false,
-       "value": "78"
-      }
-     ],
-     "max_groups": 20,
-     "min_group_rows": 30,
-     "n_groups": 9,
-     "n_rows": 280,
-     "note": "Mean target by group on training rows: associations, not effects of the variable.",
-     "other": null,
-     "overall_mean": 20.68285714285714,
      "partition": "train",
+     "column": "model_year",
      "target": "mpg",
      "unit": "mpg",
+     "n_rows": 280,
+     "overall_mean": 20.68285714285714,
+     "binned": false,
+     "binning": null,
+     "groups": [
+      {
+       "value": "70",
+       "n_rows": 29,
+       "mean": 17.689655172413794,
+       "sd": 5.33923113964563,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "71",
+       "n_rows": 28,
+       "mean": 21.25,
+       "sd": 6.591942331642754,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "72",
+       "n_rows": 28,
+       "mean": 18.714285714285715,
+       "sd": 5.435528819257014,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "73",
+       "n_rows": 40,
+       "mean": 17.1,
+       "sd": 4.700245492770319,
+       "small_count": false,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "74",
+       "n_rows": 27,
+       "mean": 22.703703703703702,
+       "sd": 6.42000967417684,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "75",
+       "n_rows": 30,
+       "mean": 20.266666666666666,
+       "sd": 4.940566303805552,
+       "small_count": false,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "76",
+       "n_rows": 34,
+       "mean": 21.573529411764707,
+       "sd": 5.8892973714537264,
+       "small_count": false,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "77",
+       "n_rows": 28,
+       "mean": 23.375,
+       "sd": 6.67586171438786,
+       "small_count": true,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      },
+      {
+       "value": "78",
+       "n_rows": 36,
+       "mean": 24.061111111111114,
+       "sd": 6.898044351337259,
+       "small_count": false,
+       "interval": {
+        "low": 15.863883840267457,
+        "high": 20.31793434155072,
+        "level": 0.95,
+        "method": "t"
+       },
+       "null_band": {
+        "low": 17.504545454545454,
+        "high": 23.722727272727273
+       }
+      }
+     ],
+     "min_group_rows": 30,
      "warnings": [
       "model_year = 70: only 29 training rows; its mean is too noisy to read on its own.",
       "model_year = 71: only 28 training rows; its mean is too noisy to read on its own.",
       "model_year = 72: only 28 training rows; its mean is too noisy to read on its own.",
       "model_year = 74: only 27 training rows; its mean is too noisy to read on its own.",
       "model_year = 77: only 28 training rows; its mean is too noisy to read on its own."
-     ]
+     ],
+     "n_groups": 9,
+     "max_groups": 20,
+     "other": null,
+     "note": "Mean target by group on training rows: associations, not effects of the variable.",
+     "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+     "null_band": {
+      "chart": {
+       "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+       "observed": 6.72782258064516,
+       "null_min": 0.04415322580645409,
+       "null_max": 4.108870967741932,
+       "outside": true
+      },
+      "shuffles": 19,
+      "seed": 20261019,
+      "note": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+     }
     },
     "headline": {
      "segments": [
@@ -542,7 +653,22 @@
     "execution_id": "e_f37508d21e9ebda7c2ebce28",
     "exposure_id": "x_a2cddcaef2d247e7b36d3c7641bc22bd",
     "values": {
-     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "model": "linear",
+     "target": "mpg",
+     "unit": "mpg",
+     "features": [
+      "cylinders",
+      "displacement",
+      "horsepower",
+      "weight",
+      "origin"
+     ],
+     "special_value_indicators": [
+      "horsepower=?"
+     ],
+     "n_train": 280,
+     "n_terms": 8,
+     "intercept": 21.1733701593184,
      "coefficients": {
       "cat__origin_1": -0.9589889210123343,
       "cat__origin_2": -0.026028613048522633,
@@ -553,17 +679,19 @@
       "num__horsepower=?": -0.04984514282715608,
       "num__weight": -4.152726914430051
      },
-     "features": [
-      "cylinders",
-      "displacement",
-      "horsepower",
-      "weight",
-      "origin"
-     ],
-     "intercept": 21.1733701593184,
-     "model": "linear",
-     "n_terms": 8,
-     "n_train": 280,
+     "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+     "train": {
+      "mae": 2.1148445500819997,
+      "mean_residual": -5.075305255429287e-17,
+      "n_rows": 280,
+      "rmse": 2.807014025152431
+     },
+     "validation": {
+      "mae": 6.308647265230509,
+      "mean_residual": 6.190031483897883,
+      "n_rows": 118,
+      "rmse": 7.513230061812575
+     },
      "predictions": {
       "blob": "predictions",
       "features": [
@@ -581,22 +709,21 @@
       "target": "mpg",
       "unit": "mpg"
      },
-     "special_value_indicators": [
-      "horsepower=?"
-     ],
-     "target": "mpg",
-     "train": {
-      "mae": 2.1148445500819997,
-      "mean_residual": -5.075305255429287e-17,
-      "n_rows": 280,
-      "rmse": 2.807014025152431
-     },
-     "unit": "mpg",
-     "validation": {
-      "mae": 6.308647265230509,
-      "mean_residual": 6.190031483897883,
-      "n_rows": 118,
-      "rmse": 7.513230061812575
+     "preprocessing": {
+      "value": {
+       "missing": "none",
+       "rare_category_min_rows": 0,
+       "caps": {},
+       "log_transform": []
+      },
+      "fitted": {
+       "missing_indicators": [],
+       "rare_categories": {},
+       "caps": {},
+       "log_transform": [],
+       "ignored": []
+      },
+      "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
      }
     },
     "headline": {
@@ -1059,10 +1186,12 @@
       "structural_inspection": 398
      },
      "train": {
+      "structural_inspection": 318,
       "train_eda": 280,
       "train_fit": 280
      },
      "validation": {
+      "structural_inspection": 318,
       "validation_model_evaluation": 118
      }
     },

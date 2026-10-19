@@ -130,7 +130,8 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         content = texts.step(step['id'])
         slots = render_html.slots_of_step(step['id'], view['results'], task)
         has_result = any(s in rids for s in slots)
-        pending = not has_result and not step['decision']
+        # WP-A4: step 0 is informational; it is never "not executed".
+        pending = not has_result and not step['decision'] and step['id'] != 'discover_data'
         cells.append((f'step_{step["id"]}_text',
                       _md_cell(_step_markdown(index, step, content, pending))))
         if pending:

@@ -164,11 +164,22 @@ def _decisions(revisions: list[dict], log: list[dict]) -> list[dict]:
     return sorted(out.values(), key=lambda d: (d['proposed_revision'], d['proposal_id']))
 
 
-def _pauses(decisions: list[dict], task: str = 'binary') -> list[dict]:
+def _pause_table(state) -> dict[int, tuple]:
+    """``{pause: decision ids}`` from the study's own plan steps."""
+    out: dict[int, list] = {}
+    for step in st.steps(state):
+        if step.get('pause') and step.get('decision'):
+            out.setdefault(step['pause'], []).append(step['decision'])
+    return {k: tuple(v) for k, v in sorted(out.items())}
+
+
+def _pauses(decisions: list[dict], task: str = 'binary', table: dict | None = None) -> list[dict]:
     """Each pause of the study's task: from its first proposal to the confirmation that
-    closed it."""
+    closed it. ``table`` (``{pause: decision ids}``) is the study's own (v0.2a, WP-A4: the
+    split pause also holds the success criterion and the preprocessing in a study that has
+    them); :data:`TASK_PAUSES` otherwise."""
     out = []
-    for number, ids in TASK_PAUSES.get(task, PAUSES).items():
+    for number, ids in (table or TASK_PAUSES.get(task, PAUSES)).items():
         items = [d for d in decisions if d['decision_id'] in ids]
         if not items:
             out.append({'pause': number, 'decisions': list(ids), 'opened_at': None,
@@ -278,7 +289,7 @@ def report(study_dir, since: int | None = None,
         'commands': dict(sorted(commands.items())),
         'refusals': refusals,
         'decisions': decisions,
-        'pauses': _pauses(decisions, st.task_of(study.state)),
+        'pauses': _pauses(decisions, st.task_of(study.state), _pause_table(study.state)),
         'runs': _runs(revisions),
         'renders': renders,
         'checks': checks,

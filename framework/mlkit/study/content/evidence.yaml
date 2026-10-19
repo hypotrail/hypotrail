@@ -37,3 +37,5 @@ changes:
   policy.parameter: a different threshold or capacity
   policy.rule_type: a switch between a threshold rule and a capacity rule
   model_choice: a different model choice
+  preprocessing: a different preparation of the variables
+  success_criterion: a different success criterion

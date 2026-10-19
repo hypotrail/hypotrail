@@ -36,6 +36,7 @@ def auto(tmp_path_factory):
     flow.init()
     flow.pauses(split=False)
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'fit.baseline', 'fit.linear', 'evaluate.regression'):
         flow.run(activity)
     return flow

@@ -96,6 +96,7 @@ def binary(cap: Capture) -> None:
                                                          month='not_available', campaign='not_available',
                                                          contact='uncertain_included'))
     flow.decide('split', fk.SPLIT)
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_rate', 'eda.special_values'):
         flow.run(activity)
     cap.save('run.rate_by.binary', 'binary', ['run', 'eda.rate_by', '--column=job'], 0,
@@ -201,6 +202,7 @@ def regression(cap: Capture) -> None:
                                    'before its fuel efficiency is measured')
     flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_summary', 'eda.special_values'):
         flow.run(activity)
     flow.run('eda.mean_by', '--column=model_year')

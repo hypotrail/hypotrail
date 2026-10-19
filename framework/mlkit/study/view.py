@@ -22,7 +22,7 @@ from . import audience
 from . import currency
 from . import launch
 from . import partition
-from . import read
+from . import governance, read
 from . import records as rec
 from . import state as st
 from .case import EPISTEMIC_STATUSES
@@ -41,7 +41,10 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # notebooks with it.
              'deliverables',
              # ADR 0005 (v0.2a): the confirmation mode and the study language.
-             'mode', 'language')
+             'mode', 'language',
+             # v0.2a (WP-A4): the success criterion against the current evaluation, and the
+             # ledger of explorations that read the target.
+             'criterion', 'eda_looks')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -77,6 +80,8 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 # v0.2a (ADR 0006): the sealed final test, or ``status: absent``; before
                 # ``recap``, which stays the last key of the summary.
                 'final_test',
+                # v0.2a (WP-A4): the success criterion and the count of target looks.
+                'criterion', 'eda_looks',
                 # Post-v0.1 (T8, F5): the five-line resume recap, generated from state.
                 'recap',
                 # v0.2a (WP-A1): who the recap is written for, and its junior variant.
@@ -85,6 +90,8 @@ SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resoluti
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
 SUMMARY_PRIORITY = ('sources_changed', 'interrupted_executions', 'open_holds',
+                    # v0.2a (WP-A4): an adopting verdict against the success criterion.
+                    'verdict_contradicts_criterion',
                     # Post-v0.1 fixes (D2): the conclusion no longer describes the study.
                     'conclusion_outdated', 'result_integrity',
                     'adopted_rule_not_evaluated',
@@ -423,11 +430,24 @@ def summary(view: dict) -> dict:
            'next_action': view['next_action'], 'open_proposals': proposals,
            'decisions': decisions, 'results': results, 'artifacts': artifacts,
            'executions': executions, 'not_yet_defensible': defensible, 'notes': notes,
-           'holds': _holds(notes, decisions), 'final_test': view['final_test']}
+           'holds': _holds(notes, decisions), 'final_test': view['final_test'],
+           'criterion': _compact_criterion(view.get('criterion')),
+           'eda_looks': ({k: view['eda_looks'][k] for k in ('target_looks', 'results')}
+                         if view.get('eda_looks') else None)}
     out['recap'] = recap(out, view)
     out['recap_audience'] = audience.AGENT
     out['recap_junior'] = recap(out, view, junior=True)
     return {k: out[k] for k in SUMMARY_KEYS}
+
+
+SUMMARY_CRITERION_KEYS = ('decision_status', 'value', 'status', 'gain', 'low', 'high',
+                          'minimum', 'unit', 'rule', 'result_id', 'contradicts_verdict')
+
+
+def _compact_criterion(criterion):
+    if not criterion:
+        return None
+    return {k: criterion.get(k) for k in SUMMARY_CRITERION_KEYS}
 
 
 # --- the resume recap (post-v0.1, T8 and F5) ------------------------------------------
@@ -436,7 +456,9 @@ RECAP_LABELS = ('Goal', 'Decided', 'Now', 'Next', 'Limit')
 DECISION_LABELS = {'prediction_time': 'prediction moment',
                    'feature_availability': 'feature availability', 'split': 'split',
                    'policy': 'policy', 'model_choice': 'model choice',
-                   'conclusion': 'conclusion'}
+                   'conclusion': 'conclusion',
+                   # v0.2a (WP-A4)
+                   'success_criterion': 'success criterion', 'preprocessing': 'preprocessing'}
 # A regression study's model choice (M3), in words: the recap never says "policy".
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
@@ -552,6 +574,17 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
                      f'{errors["result_id"][:RECAP_RID]})')
     elif decision_id == 'conclusion' and isinstance(value, dict):
         text = f'{label} {_spaced(value.get("verdict", ""))}'.strip()
+    elif decision_id == 'success_criterion' and isinstance(value, dict):
+        if 'min_points' in value:
+            text = (f'{label} (precision gain over the baseline of at least '
+                    f'{value["min_points"]} points)')
+        else:
+            text = (f'{label} (validation error at least '
+                    f'{round(100 * value.get("min_share", 0))}% below the mean baseline)')
+    elif decision_id == 'preprocessing' and isinstance(value, dict):
+        text = f'{label} ({preprocessing_words(value)})'
+        if value.get('data_contingent'):
+            text += ' [motivated by a look at the target]'
     else:
         text = label
     notes = []
@@ -560,6 +593,29 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
     if d['status'] == 'reconfirm_required':
         notes.append('to confirm again')
     return text + (f' [{", ".join(notes)}]' if notes else '')
+
+
+def preprocessing_words(value: dict) -> str:
+    """A preprocessing value in words (v0.2a, WP-A4)."""
+    from . import governance
+    if governance.is_default(value):
+        return 'the default: no missing-value indicator, every category kept, no cap, no transform'
+    parts = []
+    missing = value.get('missing')
+    if missing == 'indicator':
+        parts.append('missing-value indicators')
+    elif isinstance(missing, dict):
+        named = sorted(c for c, v in missing.items() if v == 'indicator')
+        if named:
+            parts.append('missing-value indicators for ' + ', '.join(named))
+    if value.get('rare_category_min_rows'):
+        parts.append(f'categories with fewer than {value["rare_category_min_rows"]} training '
+                     f'rows grouped')
+    if value.get('caps'):
+        parts.append('caps on ' + ', '.join(sorted(value['caps'])))
+    if value.get('log_transform'):
+        parts.append('log transform of ' + ', '.join(value['log_transform']))
+    return '; '.join(parts) if parts else 'the default'
 
 
 def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
@@ -761,6 +817,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
                            'text': f'The adopted policy {adopted} has no current evaluation; '
                                    'its figures cannot be cited until it is evaluated again.'})
     defensible.extend(_small_data(state, results))
+    partial = {'decisions': _decisions(state), 'task': st.task_of(state), 'results': results,
+               'open_proposals': [p for p in st.open_proposals(state)]}
+    criterion = governance.assess(partial, lambda r: rec.canonical_rule(r) or r)
+    defensible.extend(_governance_limits(state, criterion))
     return {
         'schema': SCHEMA,
         'study': str(study.study_dir),
@@ -792,7 +852,43 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'deliverables': launch.deliverables(study.study_dir),
         'mode': st.mode_of(state),
         'language': st.language_of(state),
+        'criterion': criterion,
+        'eda_looks': governance.ledger(study.exposure_records(), _target_column(state)),
     }
+
+
+def _target_column(state: dict) -> str | None:
+    """The target column of the study's case, or None when the case file cannot be read
+    (``sources_changed`` already says so)."""
+    from .case import CaseError, case_of
+    try:
+        return case_of(state).target_column
+    except (CaseError, OSError):
+        return None
+
+
+def _governance_limits(state: dict, criterion: dict | None) -> list[dict]:
+    """v0.2a (WP-A4) limits: a verdict that adopts against the success criterion, and a
+    preprocessing motivated by a look at the target."""
+    out = []
+    if criterion and criterion.get('contradicts_verdict'):
+        why = ('the gain does not reach the minimum fixed before the models'
+               if criterion['status'] == 'not_met' else
+               'the paired interval of the gain includes 0')
+        out.append({'id': 'verdict_contradicts_criterion', 'decisions': ['conclusion'],
+                    'status': criterion['status'],
+                    'text': f'The conclusion adopts while the success criterion fixed before '
+                            f'the models is not met: {why}.'})
+    pre = (state['decisions'].get('preprocessing') or {})
+    value = pre.get('value')
+    if pre.get('status') in ('confirmed', 'reconfirm_required') and isinstance(value, dict) \
+            and value.get('data_contingent'):
+        out.append({'id': 'data_contingent_preprocessing', 'decisions': ['preprocessing'],
+                    'results': list(value.get('motivated_by') or []),
+                    'text': 'The preparation of the variables was chosen after looking at the '
+                            'outcome on training rows, so the validation figures may be '
+                            'slightly optimistic.'})
+    return out
 
 
 def _proposal_view(p: dict, language: str) -> dict:
@@ -850,13 +946,17 @@ _COUNT_OF_KIND = {'proposed': 'proposed', 'confirmed': 'confirmed', 'withdrawn':
                   'run_failed': 'runs_failed'}
 
 
-def moments(task: str) -> list[dict]:
-    """The four moments of the plan (``content/steps.yaml``, ``moments``)."""
+def moments(task: str, state: dict | None = None) -> list[dict]:
+    """The four moments of the plan (``content/steps.yaml``, ``moments``). With ``state``,
+    only the steps of that study are listed (a study created before WP-A4 has no success
+    criterion or preprocessing step)."""
     from . import texts
 
     data = texts.load('steps')
     overlay = data.get('regression_moments', {}) if task == st.REGRESSION else {}
-    return [{'id': m['id'], 'title': m['title'], 'steps': list(overlay.get(m['id'], m['steps']))}
+    ids = set(st.step_ids(state if state is not None else task))
+    return [{'id': m['id'], 'title': m['title'],
+             'steps': [s for s in overlay.get(m['id'], m['steps']) if s in ids]}
             for m in data['moments']]
 
 
@@ -1151,7 +1251,7 @@ def with_digest(study: read.Study, built: dict, summary_out: dict, *,
     out = dict(summary_out)
     out['open_proposals'] = [{**p, 'origin': (state['proposals'].get(p['proposal_id']) or {})
                               .get('origin')} for p in summary_out['open_proposals']]
-    out.update({'moments': moments(built['task']), 'pauses': pauses(state),
+    out.update({'moments': moments(built['task'], state), 'pauses': pauses(state),
                 'last_session': session,
                 'digest': digest(study, state, since=session['boundary_revision']
                                  if since is None else since),

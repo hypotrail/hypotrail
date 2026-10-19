@@ -514,8 +514,10 @@ n_rows, n_missing, special_values: [{value, meaning, n_rows, share}],
 numeric: null | {n, min, q25, median, q75, max, mean, sd, n_bins, bin_width,
                  bins: [{low, high, n_rows, share, closed}]},
 groups: null | [{value, n_rows, share, small_count}],
-n_groups, max_groups, other, min_group_rows, warnings, note
+n_groups, max_groups, other, min_group_rows, warnings, note, question
 ```
+
+`question` (v0.2a, WP-A4, CLI-CONTRACT §11.2; additive, last) is the question the analysis answers, as every EDA result carries it.
 
 **Numeric columns.** A column of type `number` or `integer` with more than `eda.MAX_DISTINCT_BEFORE_BINNING` (12) distinct ordinary values is `numeric`. The engine:
 

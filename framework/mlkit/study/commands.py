@@ -60,7 +60,7 @@ from . import case as c
 from . import confirm as cf
 from . import data as dt
 from . import dependencies as dep
-from . import exposure, guard, lock, partition, preconditions, read, view
+from . import exposure, governance, guard, lock, partition, preconditions, read, view
 from . import records as rec
 from . import state as st
 from .errors import StudyError
@@ -479,6 +479,16 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             raise _invalid('model_choice names the model slot you adopt: '
                            + ' or '.join(f'"{m}"' for m in preconditions.MODEL_CHOICES) + '.',
                            choices=list(preconditions.MODEL_CHOICES))
+    elif decision_id == st.SUCCESS_CRITERION:
+        try:
+            governance.check_criterion(value, st.task_of(state))
+        except governance.ValueProblem as exc:
+            raise _invalid(exc.message, **exc.details) from None
+    elif decision_id == st.PREPROCESSING:
+        try:
+            governance.check_preprocessing(value, case_of(state))
+        except governance.ValueProblem as exc:
+            raise _invalid(exc.message, **exc.details) from None
     elif decision_id == 'conclusion':
         verdicts = preconditions.conclusion_verdicts(state)
         if not isinstance(value, Mapping) or set(value) != set(CONCLUSION_KEYS) \
@@ -857,7 +867,7 @@ def _propose(ctx: Context) -> Handler:
     def check(params):
         if params['decision_id'] not in st.ALL_DECISION_IDS:
             raise CommandRefused('unknown_decision', f'Unknown decision {params["decision_id"]!r}.',
-                                 details={'decisions': list(st.DECISION_IDS)})
+                                 details={'decisions': list(st.FULL_DECISION_IDS)})
         for key in ('restatement', 'rationale'):
             if not isinstance(params[key], str) or not params[key].strip():
                 raise _invalid(f'{key} is a non-empty string.', field=key)
@@ -878,6 +888,10 @@ def _propose(ctx: Context) -> Handler:
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
             value = dep.canonical_rule(value)        # L2: one spelling per rule
+        if decision_id == st.PREPROCESSING:
+            # WP-A4: the motivating results are checked, and the engine stamps the value
+            # data-contingent when any of them read the target.
+            value = _normalized_preprocessing(ctx.store, state, value)
         if decision_id == 'conclusion':
             check_conclusion(ctx.store, state, value, params['restatement'],
                              params['rationale'])
@@ -921,6 +935,21 @@ def _propose(ctx: Context) -> Handler:
                 'decision_status': decision['status'], 'superseded': superseded,
                 'restatement': params['restatement']}
     return Handler(PROPOSE_PARAMS, run, check)
+
+
+def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
+    from . import registry
+
+    def lookup(rid):
+        try:
+            return registry.get(store, rid)
+        except StudyError:
+            return None
+    try:
+        return governance.normalize_preprocessing(value, lookup,
+                                                  case_of(state).target_column)
+    except governance.ValueProblem as exc:
+        raise _invalid(exc.message, **exc.details) from None
 
 
 def _confirm(ctx: Context) -> Handler:

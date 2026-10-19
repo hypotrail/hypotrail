@@ -7,7 +7,7 @@
   "argv": [
    "decide",
    "confirm",
-   "p_6",
+   "p_8",
    "--user-words=Yes, call the 100 best-scored clients in each wave",
    "--channel",
    "webview",
@@ -16,7 +16,7 @@
    "--request-id",
    "b-conf",
    "--expected-revision",
-   "31",
+   "35",
    "--json"
   ],
   "note": ""
@@ -28,10 +28,10 @@
   "action": "decide.confirm",
   "request_id": "b-conf",
   "replayed": false,
-  "revision": 32,
+  "revision": 36,
   "result": {
    "decision_id": "policy",
-   "proposal_id": "p_6",
+   "proposal_id": "p_8",
    "status": "confirmed",
    "value": "capacity:100",
    "user_words": "Yes, call the 100 best-scored clients in each wave",
@@ -54,16 +54,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 32,
-    "last_ok_revision": 32,
+    "revision": 36,
+    "last_ok_revision": 36,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 32,
-    "last_ok_revision": 32,
+    "revision": 36,
+    "last_ok_revision": 36,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

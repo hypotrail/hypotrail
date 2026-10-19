@@ -304,8 +304,8 @@ def from_companion_project(path, *, supplement=None) -> dict:
             changed = sorted(overrides[name])
             log(p, f'supplement sets {", ".join(changed)}')
             entry = _merge(entry, overrides[name])
-        order = ('name', 'type', 'role', 'unit', 'format', 'description', 'status', 'source',
-                 'availability', 'special_values')
+        order = ('name', 'type', 'role', 'unit', 'format', 'group', 'description', 'labels',
+                 'status', 'source', 'availability', 'special_values', 'range')
         entry = {k: entry[k] for k in order if k in entry} | {
             k: v for k, v in entry.items() if k not in order}
         a = entry['availability']

@@ -16,13 +16,13 @@
   "ok": true,
   "study": "/studies/auto mpg",
   "action": "run",
-  "request_id": "a11",
+  "request_id": "a15",
   "replayed": false,
-  "revision": 17,
+  "revision": 21,
   "activity": "eda.distribution",
-  "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+  "execution_id": "e_75c47b1ef767a30eb39cdb4d",
   "status": "promoted",
-  "result_id": "c4971962282e4844264c1dae85f0d08ad1b2d1f31c483f5718ce0d3908c5192c",
+  "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -122,20 +122,21 @@
    "other": null,
    "min_group_rows": 30,
    "warnings": [],
-   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes."
+   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+   "question": "How are the values of weight distributed among the training rows?"
   },
   "result": {
-   "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+   "execution_id": "e_75c47b1ef767a30eb39cdb4d",
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "c4971962282e4844264c1dae85f0d08ad1b2d1f31c483f5718ce0d3908c5192c",
-   "input_key": "420b46b1995e55ffb925110025cefa85b60f25adcffc2d0d4aa16163892d2a5a",
+   "result_id": "8ae7a7308e2b9965626687c0e56288fb7475a78e8f9779e9005398bf8994afe0",
+   "input_key": "5ab6d31e41971b299f255fe45014ba01274ceb2a3e926166852c5d9942a3dfd9",
    "reason": null,
-   "started_revision": 16,
+   "started_revision": 20,
    "invalidation": null,
    "exposure_ids": [
-    "x_9026c4c242774bd791a0260347de9b16"
+    "x_0986880953d54a9bbf994551eed2cacf"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -144,16 +145,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 17,
-    "last_ok_revision": 17,
+    "revision": 21,
+    "last_ok_revision": 21,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 17,
-    "last_ok_revision": 17,
+    "revision": 21,
+    "last_ok_revision": 21,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

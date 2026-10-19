@@ -14,7 +14,7 @@
   "schema": "hypotrail.decisions/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 30,
+  "revision": 34,
   "task": "binary",
   "decisions": [
    {
@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-19T08:50:27.649537+00:00",
+     "time": "2026-10-19T09:50:26.890059+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -76,7 +76,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-19T08:50:27.854371+00:00",
+     "time": "2026-10-19T09:50:27.268139+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -104,7 +104,65 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-19T08:50:27.969587+00:00",
+     "time": "2026-10-19T09:50:27.536729+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "pause": 2,
+    "step": "success_criterion",
+    "status": "confirmed",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the success_criterion exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the success_criterion as stated.",
+     "proposal_id": "p_4",
+     "revision": 9,
+     "time": "2026-10-19T09:50:27.778120+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
+    "pause": 2,
+    "step": "preprocessing",
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the preprocessing exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the preprocessing as stated.",
+     "proposal_id": "p_5",
+     "revision": 11,
+     "time": "2026-10-19T09:50:28.169866+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -122,7 +180,8 @@
     "depends_on": [
      "prediction_time",
      "feature_availability",
-     "split"
+     "split",
+     "preprocessing"
     ],
     "reason": null,
     "confirmation": {
@@ -130,16 +189,16 @@
      "channel": "chat",
      "actor": "user",
      "restatement": "You decide the policy as stated.",
-     "proposal_id": "p_4",
-     "revision": 27,
-     "time": "2026-10-19T08:50:31.977584+00:00",
+     "proposal_id": "p_6",
+     "revision": 31,
+     "time": "2026-10-19T09:50:33.053537+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
      "agent_concern": null
     },
     "open_proposals": [
-     "p_5"
+     "p_7"
     ]
    },
    {
@@ -153,6 +212,8 @@
      "prediction_time",
      "feature_availability",
      "split",
+     "success_criterion",
+     "preprocessing",
      "policy"
     ],
     "reason": null,
@@ -169,7 +230,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-19T08:50:27.140099+00:00",
+    "created": "2026-10-19T09:50:26.289407+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -201,7 +262,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-19T08:50:27.765241+00:00",
+    "created": "2026-10-19T09:50:27.070865+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -220,7 +281,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-19T08:50:27.910690+00:00",
+    "created": "2026-10-19T09:50:27.402333+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -229,14 +290,17 @@
    },
    {
     "proposal_id": "p_4",
-    "decision_id": "policy",
-    "value": "threshold:0.2",
-    "restatement": "You decide the policy as stated.",
+    "decision_id": "success_criterion",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "restatement": "You decide the success_criterion as stated.",
     "rationale": "It fits the scenario.",
     "status": "confirmed",
-    "revision": 26,
-    "created": "2026-10-19T08:50:31.894558+00:00",
-    "closed_revision": 27,
+    "revision": 8,
+    "created": "2026-10-19T09:50:27.642261+00:00",
+    "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
      "channel": "chat"
@@ -244,13 +308,50 @@
    },
    {
     "proposal_id": "p_5",
+    "decision_id": "preprocessing",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0
+    },
+    "restatement": "You decide the preprocessing as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 10,
+    "created": "2026-10-19T09:50:27.917292+00:00",
+    "closed_revision": 11,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "policy",
+    "value": "threshold:0.2",
+    "restatement": "You decide the policy as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 30,
+    "created": "2026-10-19T09:50:32.867313+00:00",
+    "closed_revision": 31,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_7",
     "decision_id": "policy",
     "value": "capacity:100",
     "restatement": "Call the 100 clients with the highest scores.",
     "rationale": "The team can make 100 calls per wave.",
     "status": "open",
-    "revision": 30,
-    "created": "2026-10-19T08:50:32.878822+00:00",
+    "revision": 34,
+    "created": "2026-10-19T09:50:33.944387+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -261,7 +362,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-19T08:50:27.649598+00:00",
+    "time": "2026-10-19T09:50:26.890120+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "before the first contact of the campaign, from the client file",
@@ -275,7 +376,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-19T08:50:27.854684+00:00",
+    "time": "2026-10-19T09:50:27.268641+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -306,7 +407,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-19T08:50:27.969644+00:00",
+    "time": "2026-10-19T09:50:27.536788+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -323,10 +424,48 @@
     "superseded_at": null
    },
    {
-    "revision": 27,
-    "time": "2026-10-19T08:50:31.977646+00:00",
-    "decision_id": "policy",
+    "revision": 9,
+    "time": "2026-10-19T09:50:27.778196+00:00",
+    "decision_id": "success_criterion",
     "proposal_id": "p_4",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 11,
+    "time": "2026-10-19T09:50:28.170068+00:00",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_5",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0
+    },
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 31,
+    "time": "2026-10-19T09:50:33.053596+00:00",
+    "decision_id": "policy",
+    "proposal_id": "p_6",
     "value": "threshold:0.2",
     "user_words": "Yes, call everyone scored at 0.2 or more",
     "basis": "restated",

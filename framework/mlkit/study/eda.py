@@ -37,6 +37,18 @@ Both tasks also describe one column at a time (CLI-CONTRACT-COMPANION §8, C8):
   (``discrete`` in value order, ``categorical`` by descending count), with the G.12 fold
   of the smallest groups. Special values and missing cells are counted apart.
 
+v0.2a (WP-A4, review synthesis §3) adds the EDA governance catalog:
+
+* ``eda.quality``: the structural quality of the **development rows without the target**
+  (missing cells and co-missing patterns, repeated rows, cardinality and rare categories,
+  ranges against the ranges the case declares);
+* intervals and counts on every target-related analysis (Wilson for a rate, a t interval
+  for a mean) and a permutation null band per ``eda.rate_by`` / ``eda.mean_by`` chart
+  (:data:`NULL_SHUFFLES` shuffles of the target, seed :data:`NULL_SEED`);
+* ``eda.single_feature_signal``: each candidate feature alone, out of fold on the training
+  rows, raising a legitimacy question only;
+* ``question`` on every analysis: the question it answers.
+
 These are associations on training rows, not effects. pandas is imported by the
 caller (``activities.compute``), never at module import.
 """
@@ -75,7 +87,9 @@ def target_rate(case: c.Case, train) -> dict:
     n, n_positive = int(len(y)), int(y.sum())
     return {'partition': 'train', 'target': case.target_column,
             'positive_label': case.positive_label, 'n_rows': n, 'n_positive': n_positive,
-            'n_negative': n - n_positive, 'rate': _rate(n, n_positive)}
+            'n_negative': n - n_positive, 'rate': _rate(n, n_positive),
+            # v0.2a (WP-A4)
+            'interval': wilson(n_positive, n), 'question': question('eda.target_rate')}
 
 
 def numeric_target(case: c.Case, frame):
@@ -113,7 +127,9 @@ def target_summary(case: c.Case, train) -> dict:
     return {'partition': 'train', 'target': case.target_column, 'unit': case.target_unit,
             'n_rows': int(len(train)), 'n_missing': int(y.isna().sum()), **_moments(present),
             'note': 'Distribution of the target on training rows, in its unit. The mean is what '
-                    'the baseline predicts for every row.'}
+                    'the baseline predicts for every row.',
+            # v0.2a (WP-A4)
+            'mean_interval': mean_interval(present), 'question': question('eda.target_summary')}
 
 
 def _mean(values) -> float | None:
@@ -136,7 +152,8 @@ def special_values(case: c.Case, train) -> dict:
         items.append({'column': s['column'], 'value': s['value'], 'meaning': s['meaning'],
                       'status': s['status'], 'source': s['source'], 'n_rows': n,
                       'share': n / len(train) if len(train) else None,
-                      'n_positive': n_positive, 'rate': _rate(n, n_positive)})
+                      'n_positive': n_positive, 'rate': _rate(n, n_positive),
+                      'interval': wilson(n_positive, n)})
     pairs = []
     for i in range(len(specials)):
         for j in range(i + 1, len(specials)):
@@ -150,7 +167,8 @@ def special_values(case: c.Case, train) -> dict:
     return {'partition': 'train', 'n_rows': int(len(train)), 'special_values': items,
             'co_occurrence': pairs,
             'note': 'Counts on training rows. Special values that always occur together '
-                    'describe one fact twice.'}
+                    'describe one fact twice.',
+            'question': question('eda.special_values')}
 
 
 def _special_values_numeric(case: c.Case, train) -> dict:
@@ -180,7 +198,8 @@ def _special_values_numeric(case: c.Case, train) -> dict:
     return {'partition': 'train', 'n_rows': int(len(train)), 'target': case.target_column,
             'unit': case.target_unit, 'special_values': items, 'co_occurrence': pairs,
             'note': 'Counts on training rows. A missing-value marker is imputed by the model, '
-                    'with an indicator column for a numeric variable.'}
+                    'with an indicator column for a numeric variable.',
+            'question': question('eda.special_values')}
 
 
 def _bins(values, special_mask):
@@ -267,7 +286,8 @@ def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
         n_positive = int(y[mask].sum())
         small = n < MIN_GROUP_ROWS
         groups.append({'value': label, 'n_rows': n, 'n_positive': n_positive,
-                       'rate': _rate(n, n_positive), 'small_count': small})
+                       'rate': _rate(n, n_positive), 'small_count': small,
+                       'interval': wilson(n_positive, n)})
         if small:
             warnings.append(f'{column} = {label}: only {n} training rows; its rate is too noisy '
                             f'to read on its own.')
@@ -277,14 +297,16 @@ def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
         other.update(n_positive=g['n_positive'], rate=g['rate'])
         warnings.insert(0, warning)
     overall = target_rate(case, train)
-    return {'partition': 'train', 'column': column, 'n_rows': int(len(train)),
-            'overall_rate': overall['rate'], 'binned': bool(binned),
-            'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
-            'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
-            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
-            'max_groups': max_groups, 'other': other,
-            'note': 'Rates by group on training rows are associations, not effects of the '
-                    'variable.'}
+    out = {'partition': 'train', 'column': column, 'n_rows': int(len(train)),
+           'overall_rate': overall['rate'], 'binned': bool(binned),
+           'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
+           'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
+           'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
+           'max_groups': max_groups, 'other': other,
+           'note': 'Rates by group on training rows are associations, not effects of the '
+                   'variable.',
+           'question': question('eda.rate_by', column)}
+    return _with_null_band(out, labels, y.astype(float), lambda v: float(v.mean()), 'null_band')
 
 
 def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:
@@ -301,7 +323,7 @@ def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
         small = n < MIN_GROUP_ROWS
         groups.append({'value': label, 'n_rows': n, 'mean': _mean(present),
                        'sd': float(present.std(ddof=1)) if len(present) > 1 else None,
-                       'small_count': small})
+                       'small_count': small, 'interval': mean_interval(present)})
         if small:
             warnings.append(f'{column} = {label}: only {n} training rows; its mean is too noisy '
                             f'to read on its own.')
@@ -309,15 +331,17 @@ def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> d
     if other is not None:
         other.update(mean=next(g['mean'] for g in groups if g['value'] == OTHER_GROUP))
         warnings.insert(0, warning)
-    return {'partition': 'train', 'column': column, 'target': case.target_column,
-            'unit': case.target_unit, 'n_rows': int(len(train)),
-            'overall_mean': _mean(y.dropna()), 'binned': bool(binned),
-            'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
-            'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
-            'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
-            'max_groups': max_groups, 'other': other,
-            'note': 'Mean target by group on training rows: associations, not effects of the '
-                    'variable.'}
+    out = {'partition': 'train', 'column': column, 'target': case.target_column,
+           'unit': case.target_unit, 'n_rows': int(len(train)),
+           'overall_mean': _mean(y.dropna()), 'binned': bool(binned),
+           'binning': (f'{QUANTILE_BINS} training quantile bins' if binned else None),
+           'groups': groups, 'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings,
+           'n_groups': len(groups) + (folded['n_values'] - 1 if folded else 0),
+           'max_groups': max_groups, 'other': other,
+           'note': 'Mean target by group on training rows: associations, not effects of the '
+                   'variable.',
+           'question': question('eda.mean_by', column)}
+    return _with_null_band(out, labels, y, lambda v: float(v.mean()), 'null_band')
 
 
 def _plain(value):
@@ -424,11 +448,304 @@ def distribution(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS)
             'type': variable.get('type'), 'kind': kind, 'n_rows': n_total,
             'n_missing': int(missing.sum()), 'special_values': specials, 'numeric': numeric,
             'groups': groups, 'n_groups': n_groups, 'max_groups': max_groups, 'other': other,
-            'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings, 'note': DISTRIBUTION_NOTE}
+            'min_group_rows': MIN_GROUP_ROWS, 'warnings': warnings, 'note': DISTRIBUTION_NOTE,
+            'question': question('eda.distribution', column)}
+
+
+# --- v0.2a (WP-A4): EDA governance (review synthesis §3) ---------------------------------
+#
+# Every analysis states the question it answers (``question``). Target-related analyses on
+# training rows carry their counts and an interval (Wilson for a rate, a t interval for a
+# mean) and, by chart, a permutation null band: the same chart computed after shuffling the
+# target among the training rows NULL_SHUFFLES times (fixed seed). A pattern inside the band
+# is what chance alone draws. The structural quality overview reads the development rows
+# without the target. The single-feature signal only raises a legitimacy question.
+
+Z95 = 1.959963984540054
+NULL_SHUFFLES = 19
+NULL_SEED = 20261019
+# Rare categories in the quality overview: fewer training-scale rows than a readable group.
+RARE_CATEGORY_ROWS = MIN_GROUP_ROWS
+MAX_MISSING_PATTERNS = 10
+SIGNAL_FOLDS = 5
+SIGNAL_SEED = 20261019
+# A feature whose signal alone reaches these levels, or stands far above the others, raises
+# a legitimacy question. Never a selection rule: no feature is kept or dropped by it.
+SIGNAL_AUC_LEVEL = 0.75
+SIGNAL_AUC_GAP = 0.15
+SIGNAL_R2_LEVEL = 0.8
+SIGNAL_R2_GAP = 0.4
+NULL_BAND_NOTE = (f'The band is the range of the same figure after shuffling the target among '
+                  f'the training rows {NULL_SHUFFLES} times (fixed seed): what chance alone '
+                  f'draws. A pattern inside it is not distinguishable from chance; one above '
+                  f'every shuffle happens by chance about once in {NULL_SHUFFLES + 1} looks.')
+
+QUESTIONS = {
+    'eda.target_rate': 'How often is the outcome positive among the training rows?',
+    'eda.target_summary': 'How is the target distributed among the training rows?',
+    'eda.special_values': 'How many training rows carry each special value, and how does the '
+                          'outcome look among them?',
+    'eda.quality': 'Are there missing cells, repeated rows, rare categories, or values outside '
+                   'their possible range in the development rows?',
+    'eda.single_feature_signal': 'Does any single feature, on its own, predict the outcome so '
+                                 'well that its availability at the prediction moment should be '
+                                 'questioned?',
+}
+
+
+def question(activity: str, column: str | None = None) -> str:
+    if activity == 'eda.rate_by':
+        return (f'Does the positive rate differ across the groups of {column} by more than '
+                f'chance alone draws?')
+    if activity == 'eda.mean_by':
+        return (f'Does the mean target differ across the groups of {column} by more than '
+                f'chance alone draws?')
+    if activity == 'eda.distribution':
+        return f'How are the values of {column} distributed among the training rows?'
+    return QUESTIONS[activity]
+
+
+def wilson(n_positive: int, n: int, z: float = Z95) -> dict | None:
+    """The Wilson score interval of a proportion (95 % by default), or None for n = 0."""
+    if not n:
+        return None
+    p = n_positive / n
+    denominator = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denominator
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denominator
+    return {'low': max(0.0, centre - half), 'high': min(1.0, centre + half),
+            'level': 0.95, 'method': 'wilson'}
+
+
+def mean_interval(values) -> dict | None:
+    """A 95 % t interval of the mean of a float series without missing cells (None below
+    two values)."""
+    n = int(len(values))
+    if n < 2:
+        return None
+    from scipy import stats
+    mean = float(values.mean())
+    half = float(stats.t.ppf(0.975, n - 1)) * float(values.std(ddof=1)) / n ** 0.5
+    return {'low': mean - half, 'high': mean + half, 'level': 0.95, 'method': 't'}
+
+
+def _null_band(labels, order: list, y, statistic) -> dict:
+    """Per group and chart-level permutation band: ``statistic(values)`` of each group is
+    computed on NULL_SHUFFLES permutations of ``y`` (fixed seed)."""
+    import numpy as np
+    rng = np.random.default_rng(NULL_SEED)
+    values = y.to_numpy(dtype=float)
+    masks = {g: (labels == g).to_numpy() for g in order}
+    masks = {g: m for g, m in masks.items() if m.any()}
+    shuffled = {g: [] for g in masks}
+    spreads = []
+    for _ in range(NULL_SHUFFLES):
+        perm = rng.permutation(values)
+        stats_ = {}
+        for g, m in masks.items():
+            v = perm[m]
+            v = v[~np.isnan(v)]
+            stats_[g] = statistic(v) if len(v) else None
+            shuffled[g].append(stats_[g])
+        spreads.append(_spread(stats_, masks))
+    groups = {g: {'low': min(s for s in vals if s is not None) if any(
+        s is not None for s in vals) else None,
+                  'high': max(s for s in vals if s is not None) if any(
+        s is not None for s in vals) else None}
+              for g, vals in shuffled.items()}
+    observed = {}
+    for g, m in masks.items():
+        v = values[m]
+        v = v[~np.isnan(v)]
+        observed[g] = statistic(v) if len(v) else None
+    observed_spread = _spread(observed, masks)
+    finite = [s for s in spreads if s is not None]
+    return {'groups': groups,
+            'chart': {'statistic': 'spread between the largest and the smallest group value '
+                                   f'among groups of at least {MIN_GROUP_ROWS} training rows',
+                      'observed': observed_spread,
+                      'null_min': min(finite) if finite else None,
+                      'null_max': max(finite) if finite else None,
+                      'outside': (observed_spread is not None and bool(finite)
+                                  and observed_spread > max(finite))},
+            'shuffles': NULL_SHUFFLES, 'seed': NULL_SEED, 'note': NULL_BAND_NOTE}
+
+
+def _spread(stats_: dict, masks: dict):
+    large = [s for g, s in stats_.items() if s is not None and masks[g].sum() >= MIN_GROUP_ROWS]
+    pool = large if len(large) >= 2 else [s for s in stats_.values() if s is not None]
+    return (max(pool) - min(pool)) if len(pool) >= 2 else None
+
+
+def _with_null_band(out: dict, labels, y, statistic, band_key: str) -> dict:
+    order = [g['value'] for g in out['groups']]
+    band = _null_band(labels, order, y, statistic)
+    for g in out['groups']:
+        g['null_band'] = band['groups'].get(g['value'])
+    out[band_key] = {k: band[k] for k in ('chart', 'shuffles', 'seed', 'note')}
+    return out
+
+
+def quality(case: c.Case, frame) -> dict:
+    """The structural quality of the development rows, **without the target** (the caller
+    drops the target column): missing cells by column and their co-missing patterns,
+    repeated rows, the cardinality of categorical columns with their rare categories, and the
+    range of numeric columns against the range the case declares, if any. Special values
+    are counted apart from the ordinary values of their column."""
+    import pandas as pd
+    from pandas.api.types import is_numeric_dtype
+
+    n = int(len(frame))
+    columns = [v['name'] for v in case.document['variables']
+               if v['name'] in frame.columns and v['role'] != 'target']
+    data = frame[columns]
+    missing = []
+    for name in columns:
+        k = int(data[name].isna().sum())
+        missing.append({'column': name, 'n_missing': k, 'share': _share(k, n)})
+    mask = data.isna()
+    any_missing = mask.any(axis=1)
+    patterns = {}
+    for row in mask[any_missing].itertuples(index=False):
+        key = tuple(col for col, flag in zip(columns, row) if flag)
+        patterns[key] = patterns.get(key, 0) + 1
+    ordered = sorted(patterns.items(), key=lambda kv: (-kv[1], kv[0]))
+    co_missing = [{'columns': list(k), 'n_rows': v, 'share': _share(v, n)}
+                  for k, v in ordered[:MAX_MISSING_PATTERNS]]
+    duplicated = data.astype(str).duplicated(keep='first')
+    n_dup = int(duplicated.sum())
+    groups = int(data.astype(str)[data.astype(str).duplicated(keep=False)]
+                 .drop_duplicates().shape[0]) if n_dup else 0
+    cardinality, ranges = [], []
+    for v in case.document['variables']:
+        name = v['name']
+        if name not in columns:
+            continue
+        values = data[name]
+        specials = [s for s in case.document['special_values'] if s['column'] == name]
+        special_mask = pd.Series(False, index=values.index)
+        for s in specials:
+            special_mask |= _matches(values, s['value'], case)
+        ordinary = values[~special_mask & values.notna()]
+        numeric = v.get('type') in NUMERIC_TYPES and is_numeric_dtype(ordinary)
+        if not numeric:
+            counts = ordinary.astype(str).value_counts()
+            rare = sorted(((str(k), int(c_)) for k, c_ in counts.items()
+                           if c_ < RARE_CATEGORY_ROWS), key=lambda kv: (kv[1], kv[0]))
+            cardinality.append({'column': name, 'type': v.get('type'),
+                                'n_distinct': int(len(counts)),
+                                'rare': [{'value': k, 'n_rows': c_} for k, c_ in rare],
+                                'rare_rows': RARE_CATEGORY_ROWS})
+        else:
+            declared = v.get('range')
+            low = declared.get('min') if isinstance(declared, dict) else None
+            high = declared.get('max') if isinstance(declared, dict) else None
+            item = {'column': name, 'type': v.get('type'),
+                    'min': _plain(ordinary.min()) if len(ordinary) else None,
+                    'max': _plain(ordinary.max()) if len(ordinary) else None,
+                    'n_special': int(special_mask.sum()),
+                    'declared': ({'min': low, 'max': high} if declared else None),
+                    'n_below': int((ordinary < low).sum()) if low is not None else None,
+                    'n_above': int((ordinary > high).sum()) if high is not None else None}
+            ranges.append(item)
+    return {'partition': 'development', 'n_rows': n, 'n_columns': len(columns),
+            'target_read': False, 'missing': missing,
+            'n_rows_with_missing': int(any_missing.sum()), 'co_missing': co_missing,
+            'duplicates': {'n_rows': n_dup, 'n_groups': groups,
+                           'definition': 'rows identical on every column except the target'},
+            'cardinality': cardinality, 'ranges': ranges,
+            'question': question('eda.quality'),
+            'note': 'Structural reading of the development rows: the target is not read, and '
+                    'nothing here is a rate or an association. A range is checked only against '
+                    'a range the case declares.'}
+
+
+def single_feature_signal(case: c.Case, train, candidates: list, availability: Mapping,
+                          special: list) -> dict:
+    """Out-of-fold signal of each candidate feature alone on the training rows (5 folds,
+    fixed seed): the AUC of a one-feature logistic model (binary) or the R² of a one-feature
+    linear model (regression). A feature whose signal reaches the level, or stands far above
+    the others, raises a legitimacy question: is its value really known at the prediction
+    moment? It never selects or drops a feature."""
+    import numpy as np
+    from sklearn.linear_model import LinearRegression
+    from sklearn.model_selection import KFold, StratifiedKFold, cross_val_predict
+    from mlkit import classical
+    from . import metrics
+    from .fit import design
+
+    binary = case.task == 'binary'
+    if binary:
+        from .activities import positive
+        y = positive(train, case).to_numpy()
+        folds = StratifiedKFold(SIGNAL_FOLDS, shuffle=True, random_state=SIGNAL_SEED)
+    else:
+        y = numeric_target(case, train).to_numpy(dtype=float)
+        folds = KFold(SIGNAL_FOLDS, shuffle=True, random_state=SIGNAL_SEED)
+    signals = []
+    for name in candidates:
+        own = [s for s in special if s['column'] == name]
+        X, _ = design(train, [name], own, case)
+        if binary:
+            spec = {'task': {'kind': 'binary'}, 'model_options': {}}
+            model = classical.pipeline('logistic', X, spec, SIGNAL_SEED)
+            score = cross_val_predict(model, X, y, cv=folds, method='predict_proba')[:, 1]
+            value = metrics.roc_auc(y, score)
+        else:
+            spec = {'task': {'kind': 'regression'}, 'model_options': {}}
+            model = classical.pipeline('ridge', X, spec, SIGNAL_SEED)
+            model.set_params(model=LinearRegression())
+            pred = cross_val_predict(model, X, y, cv=folds)
+            total = float(((y - y.mean()) ** 2).sum())
+            value = 1.0 - float(((y - pred) ** 2).sum()) / total if total else None
+        signals.append({'feature': name, 'availability': availability.get(name),
+                        'score': value})
+    scores = [s['score'] for s in signals if s['score'] is not None]
+    median = float(np.median(scores)) if scores else None
+    top = max(scores) if scores else None
+    level, gap = (SIGNAL_AUC_LEVEL, SIGNAL_AUC_GAP) if binary else (SIGNAL_R2_LEVEL, SIGNAL_R2_GAP)
+    metric = 'roc_auc' if binary else 'r2'
+    questions = []
+    for rank, s in enumerate(sorted(signals, key=lambda s: (-(s['score'] if s['score'] is not None
+                                                              else -np.inf), s['feature'])), 1):
+        s['rank'] = rank
+    signals.sort(key=lambda s: s['rank'])
+    for s in signals:
+        value = s['score']
+        if value is None:
+            s['flag'] = False
+            continue
+        far = median is not None and value == top and value - median >= gap
+        s['flag'] = bool(value >= level or far)
+        if s['flag']:
+            what = (f'ranks the training rows with an out-of-fold AUC of {value:.2f}' if binary
+                    else f'explains {value:.2f} of the variance of the target out of fold (R²)')
+            why = (' on its own' + (f', far above the other features (median {median:.2f})'
+                                    if far else ''))
+            status = s['availability'] or 'no availability decision'
+            questions.append({
+                'feature': s['feature'], 'score': value, 'availability': s['availability'],
+                'text': f'{s["feature"]} {what}{why}. Is its value really known at the '
+                        f'prediction moment, or is it recorded at or after the outcome? '
+                        f'(availability decided: {status})'})
+    return {'partition': 'train', 'n_rows': int(len(train)), 'metric': metric,
+            'folds': SIGNAL_FOLDS, 'seed': SIGNAL_SEED, 'signals': signals, 'median': median,
+            'level': level, 'gap': gap, 'questions': questions,
+            'question': question('eda.single_feature_signal'),
+            'note': 'Each feature alone, scored out of fold on the training rows. A high value '
+                    'only raises a question about when the value is known; it never keeps or '
+                    'drops a feature, and a legitimate feature may score high.'}
 
 
 def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
-    if activity == 'eda.distribution':
+    if activity == 'eda.quality':
+        values = quality(case, train)
+        return {'values': values, 'blobs': {}, 'partition': params['partition'],
+                'n_rows': int(len(train))}
+    if activity == 'eda.single_feature_signal':
+        values = single_feature_signal(case, train, params['candidates'],
+                                       params['availability'], params['special_values'])
+    elif activity == 'eda.distribution':
         values = distribution(case, train, params['column'],
                               params.get('max_groups', MAX_GROUPS))
     elif activity == 'eda.target_rate':

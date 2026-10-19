@@ -43,8 +43,22 @@ REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', '
 BINARY, REGRESSION = 'binary', 'regression'
 TASKS = (BINARY, REGRESSION)
 DEFAULT_TASK = BINARY
+# v0.2a (WP-A4): two decisions follow the split, before any model is seen.
+# ``success_criterion`` fixes, before the models, the gain over the baseline that would make
+# the candidate worth adopting; ``preprocessing`` (EDA governance class b) says how the
+# model prepares the variables (missing-value indicators, rare categories, caps, log
+# transforms), fitted on training rows only. A study created by ``init`` since WP-A4 has the
+# seven decisions; a study created before has the five above and keeps them (it is never
+# migrated): :func:`decision_ids` reads which set a state holds.
+SUCCESS_CRITERION, PREPROCESSING = 'success_criterion', 'preprocessing'
+WP_A4_DECISIONS = (SUCCESS_CRITERION, PREPROCESSING)
+FULL_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
+                     PREPROCESSING, 'policy', 'conclusion')
+FULL_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split',
+                                SUCCESS_CRITERION, PREPROCESSING, 'model_choice', 'conclusion')
 DECISION_IDS_BY_TASK = {BINARY: DECISION_IDS, REGRESSION: REGRESSION_DECISION_IDS}
-ALL_DECISION_IDS = tuple(dict.fromkeys(DECISION_IDS + REGRESSION_DECISION_IDS))
+FULL_DECISION_IDS_BY_TASK = {BINARY: FULL_DECISION_IDS, REGRESSION: FULL_REGRESSION_DECISION_IDS}
+ALL_DECISION_IDS = tuple(dict.fromkeys(FULL_DECISION_IDS + FULL_REGRESSION_DECISION_IDS))
 # The decision of the third pause, per task (the choice made on validation results).
 CHOICE_DECISION = {BINARY: 'policy', REGRESSION: 'model_choice'}
 DECISION_STATUSES = ('open', 'proposed', 'confirmed', 'reconfirm_required', 'superseded')
@@ -116,6 +130,30 @@ REGRESSION_DEPENDS_ON = {
     'conclusion': ('prediction_time', 'feature_availability', 'split', 'model_choice'),
 }
 DEPENDS_ON_BY_TASK = {BINARY: DEPENDS_ON, REGRESSION: REGRESSION_DEPENDS_ON}
+# The same tables for a study with the WP-A4 decisions: the success criterion and the
+# preprocessing rest on no other decision; the choice rests on the preprocessing (its
+# models are fitted with it) and the conclusion on every decision.
+FULL_DEPENDS_ON = {
+    'prediction_time': (),
+    'feature_availability': ('prediction_time',),
+    'split': (),
+    SUCCESS_CRITERION: (),
+    PREPROCESSING: (),
+    'policy': ('prediction_time', 'feature_availability', 'split', PREPROCESSING),
+    'conclusion': ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
+                   PREPROCESSING, 'policy'),
+}
+FULL_REGRESSION_DEPENDS_ON = {
+    'prediction_time': (),
+    'feature_availability': ('prediction_time',),
+    'split': (),
+    SUCCESS_CRITERION: (),
+    PREPROCESSING: (),
+    'model_choice': ('prediction_time', 'feature_availability', 'split', PREPROCESSING),
+    'conclusion': ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
+                   PREPROCESSING, 'model_choice'),
+}
+FULL_DEPENDS_ON_BY_TASK = {BINARY: FULL_DEPENDS_ON, REGRESSION: FULL_REGRESSION_DEPENDS_ON}
 
 DEFAULT_SETTINGS = {'bootstrap': {'replicates': 2000, 'seed': 20261017, 'level': 0.95}}
 
@@ -215,6 +253,65 @@ STEPS_BY_TASK = {BINARY: STEPS, REGRESSION: REGRESSION_STEPS}
 REGRESSION_STEP_IDS = tuple(s['id'] for s in REGRESSION_STEPS)
 REGRESSION_ACTIVITY_SLOTS = tuple(a for s in REGRESSION_STEPS for a in s['activities'])
 ACTIVITY_SLOTS_BY_TASK = {BINARY: ACTIVITY_SLOTS, REGRESSION: REGRESSION_ACTIVITY_SLOTS}
+
+# v0.2a (WP-A4, remark R2). Step 0, "Discover the data", is informational: no decision, no
+# activity, no confirmation. The junior reads the data card (``hypotrail data``) before any
+# proposal; the step is done once the study holds a proposal, and ``next_action`` is
+# ``show_data_card`` until then. Every study shows it (a study created before WP-A4 holds
+# proposals, so it reads as done).
+DISCOVER_DATA = 'discover_data'
+DISCOVER_STEP = {
+    'id': DISCOVER_DATA, 'pause': None, 'decision': None, 'activities': (), 'requires': (),
+    'title': 'Discover the data',
+    'question': 'What does one row describe, which columns are there and what does each one '
+                'mean, and what do a few rows look like?',
+    'expected_output': 'The data card read with you: the row unit, the columns grouped with '
+                       'their meaning and availability, and a few example rows. Nothing is '
+                       'decided at this step.',
+    'completion': 'Done once a first proposal is made.'}
+# The success criterion is fixed at the split pause, before any model is fitted.
+SUCCESS_STEP = {
+    'id': SUCCESS_CRITERION, 'pause': 2, 'decision': SUCCESS_CRITERION, 'activities': (),
+    'requires': ('split',),
+    'title': 'Fix the success criterion before seeing a model',
+    'question': 'How large a gain in precision over the baseline, at the rule you will adopt, '
+                'would make the model worth using? It is fixed now, before any model is '
+                'fitted.',
+    'expected_output': 'A confirmed minimum gain over the baseline, stated before any model '
+                       'result is seen.',
+    'completion': 'Decision success_criterion is confirmed.'}
+REGRESSION_SUCCESS_STEP = dict(
+    SUCCESS_STEP,
+    question='How much smaller than the error of the mean baseline should the validation '
+             'error of the model be for it to be worth using? It is fixed now, before any '
+             'model is fitted.',
+    expected_output='A confirmed minimum relative error reduction over the mean baseline, '
+                    'stated before any model result is seen.')
+# The preprocessing (EDA governance class b) follows the training exploration that motivates
+# it and comes before the models, which apply it.
+PREPROCESSING_STEP = {
+    'id': PREPROCESSING, 'pause': 2, 'decision': PREPROCESSING, 'activities': (),
+    'requires': ('split',),
+    'title': 'Decide how the model prepares the variables',
+    'question': 'How should the model treat missing values, rare categories, extreme values '
+                'and skewed variables? Every parameter is learnt on training rows only.',
+    'expected_output': 'A confirmed preprocessing, with the explorations that motivated it.',
+    'completion': 'Decision preprocessing is confirmed.'}
+
+
+def _models_after_decisions(step: dict) -> dict:
+    return dict(step, requires=('split', SUCCESS_CRITERION, PREPROCESSING))
+
+
+FULL_STEPS = (DISCOVER_STEP, STEPS[0], STEPS[1], STEPS[2], SUCCESS_STEP, STEPS[3],
+              PREPROCESSING_STEP, _models_after_decisions(STEPS[4]), STEPS[5], STEPS[6])
+FULL_REGRESSION_STEPS = (DISCOVER_STEP, REGRESSION_STEPS[0], REGRESSION_STEPS[1],
+                         REGRESSION_STEPS[2], REGRESSION_SUCCESS_STEP, REGRESSION_STEPS[3],
+                         PREPROCESSING_STEP, _models_after_decisions(REGRESSION_STEPS[4]),
+                         REGRESSION_STEPS[5], REGRESSION_STEPS[6])
+FULL_STEPS_BY_TASK = {BINARY: FULL_STEPS, REGRESSION: FULL_REGRESSION_STEPS}
+FULL_STEP_IDS = tuple(s['id'] for s in FULL_STEPS)
+FULL_REGRESSION_STEP_IDS = tuple(s['id'] for s in FULL_REGRESSION_STEPS)
 # Optional slots outside the plan: ``eda.rate_by`` (binary) and ``eda.mean_by``
 # (regression) have one slot per column, ``eda.rate_by:<column>``
 # (``mlkit.study.activities.slot_of``). They are shown with the training EDA step and
@@ -279,18 +376,45 @@ def task_of(state: Mapping | str | None) -> str:
     return DEFAULT_TASK
 
 
+def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
+    """Whether a study has the WP-A4 decisions (``success_criterion``, ``preprocessing``).
+
+    A state answers by the decisions it holds (a study created before WP-A4 has none of
+    them and is never migrated); a task name or ``None`` describes a new study, which has
+    them."""
+    if isinstance(state, Mapping) and isinstance(state.get('decisions'), Mapping):
+        return all(d in state['decisions'] for d in WP_A4_DECISIONS)
+    return True
+
+
 def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
-    """The decisions of a study (or of a task name)."""
-    return DECISION_IDS_BY_TASK[task_of(state)]
+    """The decisions of a study (or of a task name, for a new study)."""
+    table = FULL_DECISION_IDS_BY_TASK if has_wp_a4_decisions(state) else DECISION_IDS_BY_TASK
+    return table[task_of(state)]
 
 
 def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]:
-    return DEPENDS_ON_BY_TASK[task_of(state)][decision_id]
+    table = FULL_DEPENDS_ON_BY_TASK if has_wp_a4_decisions(state) else DEPENDS_ON_BY_TASK
+    return table[task_of(state)][decision_id]
 
 
 def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
-    """The plan steps of a study's task."""
-    return STEPS_BY_TASK[task_of(state)]
+    """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
+    the data" and its own five decisions' steps (the models then need the split only)."""
+    full = FULL_STEPS_BY_TASK[task_of(state)]
+    if has_wp_a4_decisions(state):
+        return full
+    out = []
+    for step in full:
+        if step['decision'] in WP_A4_DECISIONS:
+            continue
+        out.append(dict(step, requires=tuple(r for r in step['requires']
+                                             if r not in WP_A4_DECISIONS)))
+    return tuple(out)
+
+
+def step_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
+    return tuple(s['id'] for s in steps(state))
 
 
 def activity_slots(state: Mapping | str | None = None) -> tuple[str, ...]:
@@ -466,7 +590,7 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
 
 
 def _decision_problems(decision_id: str, d: Any, proposals: dict,
-                       task: str = DEFAULT_TASK) -> list[dict]:
+                       task: Mapping | str = DEFAULT_TASK) -> list[dict]:
     path = f'decisions.{decision_id}'
     problems: list[dict] = []
     if not _keys(d, path, DECISION_KEYS, problems):
@@ -497,7 +621,7 @@ def _decision_problems(decision_id: str, d: Any, proposals: dict,
     return problems
 
 
-def _proposal_problems(pid: Any, p: Any, task: str = DEFAULT_TASK) -> list[dict]:
+def _proposal_problems(pid: Any, p: Any, task: Mapping | str = DEFAULT_TASK) -> list[dict]:
     path = f'proposals.{pid}'
     problems: list[dict] = []
     present = tuple(k for k in PROPOSAL_OPTIONAL_KEYS if isinstance(p, dict) and k in p)
@@ -534,7 +658,7 @@ def _proposal_problems(pid: Any, p: Any, task: str = DEFAULT_TASK) -> list[dict]
     return problems
 
 
-def _notes_problems(notes: Any, task: str = DEFAULT_TASK) -> list[dict]:
+def _notes_problems(notes: Any, task: Mapping | str = DEFAULT_TASK) -> list[dict]:
     if not isinstance(notes, dict):
         return [{'path': 'notes', 'problem': 'must be a mapping'}]
     problems: list[dict] = []
@@ -617,14 +741,17 @@ def validate_state(state: Any) -> list[dict]:
     proposals = state['proposals'] if isinstance(state['proposals'], dict) else {}
     if not isinstance(state['proposals'], dict):
         problems.append({'path': 'proposals', 'problem': 'must be a mapping'})
+    # The decision set is read from the state (WP-A4): the five decisions of a study created
+    # before WP-A4, or the seven of a newer one; anything in between is invalid.
+    scope = state
     for pid, p in proposals.items():
-        problems += _proposal_problems(pid, p, task)
-    if _keys(state['decisions'], 'decisions', decision_ids(task), problems):
-        for decision_id in decision_ids(task):
+        problems += _proposal_problems(pid, p, scope)
+    if _keys(state['decisions'], 'decisions', decision_ids(scope), problems):
+        for decision_id in decision_ids(scope):
             problems += _decision_problems(decision_id, state['decisions'][decision_id],
-                                           proposals, task)
+                                           proposals, scope)
     if 'notes' in present:
-        problems += _notes_problems(state['notes'], task)
+        problems += _notes_problems(state['notes'], scope)
     if 'partition' in present:
         from . import partition
         problems += partition.validate(state['partition'])
@@ -732,6 +859,9 @@ def _confirmed(state: dict, decision_id: str) -> bool:
 
 
 def _step_done(state: dict, step: dict) -> bool:
+    if step['id'] == DISCOVER_DATA:
+        # Informational (WP-A4): done once the study holds a proposal.
+        return bool(state['proposals'])
     if step['decision'] and not _confirmed(state, step['decision']):
         return False
     return all(is_current(state, a) for a in step['activities'])
@@ -787,6 +917,9 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     3. an open proposal waits for the user's verbatim answer to its restatement;
     4. the current step needs a proposal or a result;
     5. otherwise the plan is finished.
+
+    Step 0 (WP-A4) comes first in the plan: while the study holds no proposal, the next
+    action is ``show_data_card`` (informational, nothing to confirm).
     """
     if suspected:
         eid = sorted(suspected)[0]
@@ -817,13 +950,27 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     for step in derive_plan(state):
         if step['status'] == 'done':
             continue
+        if step['id'] == DISCOVER_DATA:
+            # WP-A4 (R2): the junior sees the data before any proposal; nothing to confirm.
+            return {'kind': 'show_data_card', 'step': DISCOVER_DATA,
+                    'message': 'Before proposing anything, show the junior the data card '
+                               '(hypotrail data): the row unit, the grouped columns with their '
+                               'meaning and availability, and the five example rows. It is '
+                               'informational: nothing to confirm. Then propose the prediction '
+                               'moment.'}
         if step['status'] == 'blocked':
             return {'kind': 'blocked', 'step': step['id'], 'requires': step['requires'],
                     'message': f'Step {step["id"]} needs: {", ".join(step["requires"])}.'}
         decide = step['decision'] and not _confirmed(state, step['decision'])
         if decide and (step['decide_first'] or not step['missing_results']):
-            return {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
-                    'message': step['question']}
+            action = {'kind': 'propose', 'step': step['id'], 'decision': step['decision'],
+                      'message': step['question']}
+            if step['decision'] == PREPROCESSING:
+                # WP-A4: the engine's default, the preparation the models used before the
+                # decision existed (results stay comparable).
+                from .governance import DEFAULT_PREPROCESSING
+                action['default_value'] = copy.deepcopy(DEFAULT_PREPROCESSING)
+            return action
         return {'kind': 'run', 'step': step['id'], 'activity': step['missing_results'][0],
                 'message': step['question']}
     return {'kind': 'done', 'message': 'Every step is done. Review what is not yet defensible.'}

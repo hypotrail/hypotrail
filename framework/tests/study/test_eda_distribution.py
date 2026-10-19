@@ -39,6 +39,7 @@ def auto(tmp_path_factory):
     flow.pauses(split=False)
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year',
                           'cutoff': AUTO_CUTOFF})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     flow.run('split')
     return flow
 

@@ -23,9 +23,13 @@ AUDIENCES = (JUNIOR, AGENT)
 DECISION_WORDS = {'prediction_time': 'the prediction moment',
                   'feature_availability': 'the feature availability', 'split': 'the split',
                   'policy': 'the decision policy', 'model_choice': 'the model choice',
-                  'conclusion': 'the conclusion'}
+                  'conclusion': 'the conclusion',
+                  # v0.2a (WP-A4)
+                  'success_criterion': 'the success criterion',
+                  'preprocessing': 'the preparation of the variables'}
 # Plan steps in words (the steps without a decision of their own).
-STEP_WORDS = {'train_eda': 'the exploration of the training rows', 'models': 'the model fits'}
+STEP_WORDS = {'train_eda': 'the exploration of the training rows', 'models': 'the model fits',
+              'discover_data': 'the discovery of the data'}
 
 
 def decision_words(decision_id) -> str:
@@ -69,6 +73,11 @@ def _junior_next(action: Mapping) -> tuple[str, str]:
         needed = join(decision_words(r) for r in action.get('requires') or [])
         return AGENT, (f'This step waits for earlier steps: {needed}.' if needed
                        else 'This step waits for an earlier step.')
+    if kind == 'show_data_card':
+        # WP-A4 (R2): step 0, informational.
+        return AGENT, ('First, look at the data with the assistant: what one row describes, '
+                       'the columns and what each one means, and five example rows. Nothing '
+                       'is decided at this step.')
     if kind in ('propose', 'run'):
         # The step's question, written for the junior (state.STEPS).
         return JUNIOR, message

@@ -258,6 +258,10 @@ def test_no_final_test_row_reaches_any_activity_or_result(tmp_path, monkeypatch,
     walk.decide('feature_availability', fk.availability(case_dir))
     walk.decide('split', {'method': 'random' if regression else 'stratified_random',
                           'validation_fraction': 0.3, 'seed': 7})
+    # WP-A4: the success criterion and the default preprocessing, before any model.
+    walk.decide('success_criterion', fk.criterion(case.task))
+    walk.decide('preprocessing', {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
+                                  'log_transform': []})
     parts = walk.run('split')['values']
     assert parts['n_rows'] == 600 - len(final)
     feature = next(v['name'] for v in case.document['variables'] if v['role'] == 'feature')

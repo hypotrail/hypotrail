@@ -7,7 +7,7 @@
   "argv": [
    "preview",
    "effects",
-   "p_5",
+   "p_7",
    "--json"
   ],
   "note": ""
@@ -16,8 +16,8 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 30,
-  "proposal_id": "p_5",
+  "revision": 34,
+  "proposal_id": "p_7",
   "decision_id": "policy",
   "value": "capacity:100",
   "previous": {
@@ -25,8 +25,8 @@
    "user_words": "Yes, call everyone scored at 0.2 or more",
    "basis": "restated",
    "channel": "chat",
-   "revision": 27,
-   "proposal_id": "p_4"
+   "revision": 31,
+   "proposal_id": "p_6"
   },
   "mutation": "policy.rule_type",
   "row": 6,
@@ -51,7 +51,7 @@
   ],
   "recompute": [],
   "reconfirm_required": [],
-  "supersedes_proposal": "p_4",
+  "supersedes_proposal": "p_6",
   "blocked": [],
   "artifacts_after": {
    "report": "regenerated",

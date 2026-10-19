@@ -51,6 +51,7 @@ def auto_flow(study):
     flow.decide('prediction_time', 'when the technical characteristics of a new model are fixed')
     flow.decide('feature_availability', fk.availability(AUTO, acceleration='uncertain_excluded'))
     flow.decide('split', {'method': 'ordinal_cutoff', 'column': 'model_year', 'cutoff': 79})
+    flow.model_decisions()          # WP-A4: success criterion and default preprocessing
     for activity in ('split', 'eda.target_summary', 'eda.special_values', 'fit.baseline',
                      'fit.linear', 'evaluate.regression'):
         flow.run(activity)
@@ -104,8 +105,9 @@ def test_bank_impact_of_a_feature_set_change(bank):
     assert 'fit.baseline' in impact['kept_slots'] and 'split' in impact['kept_slots']
     assert not set(impact['stale_slots']) & set(impact['kept_slots'])
     assert impact['refit'] == ['fit.logistic'] and impact['reconfirm'] == ['policy']
-    # Rows 1 to 6 of the binary table, each for a confirmed decision.
-    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 5, 6]
+    # Rows 1 to 6 of the binary table, each for a confirmed decision; WP-A4 adds the
+    # preprocessing (row 14) and the success criterion (row 16).
+    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 5, 6, 14, 16]
     split = next(i for i in p['impacts'] if i['mutation'] == 'split')
     assert 'fit.baseline' in split['stale_slots'] and split['kept_slots'] == []
     rule = next(i for i in p['impacts'] if i['mutation'] == 'policy.parameter')
@@ -212,13 +214,15 @@ def test_a_study_before_the_split_cannot_run_eda(tmp_path, synthetic_case_dir):
     p = evidence(flow.study)
     assert p['results'] == [] and p['impacts'] == [] and p['truncated'] is False
     assert all(not a['runnable'] and a['missing'] for a in p['eda_catalog']['activities'])
+    # WP-A4: the structural quality overview runs before the split (not in this catalog).
+    assert not [a for a in p['eda_catalog']['activities'] if a['activity'] == 'eda.quality']
     assert [r['purpose'] for r in p['exposure']['ledger']] == ['structural_inspection', 'sealed']
 
 
 def test_auto_mpg_evidence_holds_no_rule_vocabulary(auto):
     p = evidence(auto.study)
     assert p['task'] == 'regression'
-    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 13]
+    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 13, 14, 16]       # WP-A4: 14, 16
     assert 'validation_policy_selection' not in [r['purpose'] for r in p['exposure']['ledger']]
     choice = next(i for i in p['impacts'] if i['mutation'] == 'model_choice')
     assert choice['stale_slots'] == [] and choice['refit'] == []

@@ -100,8 +100,11 @@ def test_launch_commands_open_the_two_notebooks_with_the_engine(flow):
 # --- audience ---------------------------------------------------------------------------
 
 def test_next_action_messages_carry_their_audience(flow):
+    # WP-A4: step 0 instructs the agent to show the data card; its junior variant names
+    # no command.
     first = flow.view()['next_action']
-    assert first['audience'] == 'junior' and first['junior_message'] == first['message']
+    assert first['kind'] == 'show_data_card' and first['audience'] == 'agent'
+    _junior_clean(first['junior_message'])
     p = flow.call('decide', 'propose', 'prediction_time', '--value', 'at expiry',
                   '--restatement', 'You predict at expiry.', '--rationale', 'Scenario.',
                   '--request-id', flow.rid(), '--expected-revision', flow.rev(),
@@ -117,6 +120,7 @@ def test_next_action_messages_carry_their_audience(flow):
                         ('acknowledge_interruption', {'execution_id': 'e_1'}),
                         ('reconfirm', {'decision': 'feature_availability'}),
                         ('blocked', {'step': 'split', 'requires': ['prediction_time']}),
+                        ('show_data_card', {'step': 'discover_data'}),
                         ('done', {})):
         out = audience.next_action({'kind': kind, 'message': 'agent text', **extra})
         assert out['audience'] == 'agent', kind

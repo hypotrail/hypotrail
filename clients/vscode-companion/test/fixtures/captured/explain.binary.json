@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 30,
+  "revision": 34,
   "task": "binary",
   "terms": [
    {
@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
+       "result_id": "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "8567dad2d05a9323f15f93d4ffffe2dd43712466b6e76e0a90fb6a0ec27f549d",
+       "result_id": "f899d57136baeff239915a49d9918829a79b52e12f813307a672d2de8f62a679",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
+       "result_id": "0e0eb6a08293371ed06c001b05d66e87662ad027d288f822425bbdfb502f03f4",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
+       "result_id": "0e0eb6a08293371ed06c001b05d66e87662ad027d288f822425bbdfb502f03f4",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.2%",
-       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
+       "result_id": "0e0eb6a08293371ed06c001b05d66e87662ad027d288f822425bbdfb502f03f4",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.28153703501690847,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "48.0%",
-       "result_id": "f5d047c3bfe447ca4a48f12fa6044dc0dab65fb5620fb900762ab1f0eb79c59f",
+       "result_id": "0e0eb6a08293371ed06c001b05d66e87662ad027d288f822425bbdfb502f03f4",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.48000980392156856,
        "format": "pct1"
@@ -507,10 +507,94 @@
     "definition": "Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the clients in the development rows feed the exploration, the model fits, and the comparison of call lists, while the sealed clients stay unread.",
     "example": null,
     "example_status": "none",
+    "steps": [
+     "discover_data"
+    ]
+   },
+   {
+    "id": "wilson_interval",
+    "term": "Wilson interval",
+    "definition": "An interval for a proportion, such as a positive rate in a group, that stays inside zero and one and remains sensible for small groups and rates close to zero. It shows how much the rate could move with another sample of the same size. For example, a rate computed on a few dozen clients gets a wide interval, the same rate on a thousand clients a narrow one.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "permutation_null_band",
+    "term": "Permutation null band",
+    "definition": "The range of a chart's figures after shuffling the outcome among the training rows several times with a fixed seed, which breaks any real link between the variable and the outcome. A pattern that stays inside the band is what chance alone draws; one above every shuffle is unlikely to be chance alone. For example, if the rates by job group differ less than they do after shuffling who subscribed, the differences are not evidence of anything.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "data_contingent_decision",
+    "term": "Data-contingent decision",
+    "definition": "A decision chosen after looking at the outcome in the data. It is allowed, but it is recorded with the analyses that motivated it, because a choice adapted to the training rows makes the validation figures slightly optimistic. For example, capping a variable because a chart of the outcome looked odd at its extremes is a data-contingent preparation.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "preprocessing"
+    ]
+   },
+   {
+    "id": "success_criterion",
+    "term": "Success criterion",
+    "definition": "The smallest gain over the baseline that would make the model worth adopting, fixed before any model is fitted, so the result cannot move the bar. The conclusion is read against it. For example, deciding before the models that the call list must beat the baseline's precision by a given number of points, and keeping the baseline when it does not.",
+    "example": null,
+    "example_status": "none",
+    "steps": [
+     "success_criterion"
+    ]
+   },
+   {
+    "id": "single_feature_signal",
+    "term": "Single-feature signal",
+    "definition": "How well one variable alone predicts the outcome, measured out of fold on the training rows. A variable that predicts far better than the others raises a question about when its value becomes known, because a value recorded at or after the outcome would leak it. It never decides which variables to keep. For example, the length of the last call predicts the answer of that call very well, because it is only known once the call has ended.",
+    "example": null,
+    "example_status": "none",
     "steps": []
    }
   ],
   "steps": {
+   "discover_data": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Development rows"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The case describes one row as: A customer contacted during a telephone campaign. The data card shows the columns grouped with their meaning and availability, and a few development rows."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Nothing is computed and nothing is decided. The rows shown are development rows, already read for their structure when the study was created; the final test stays sealed."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Reading the columns before any decision is how you know what each variable describes and when its value becomes known."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The availability decision that follows relies on this reading."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
    "prediction_time": {
     "concept": {
      "segments": [
@@ -616,7 +700,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -626,7 +710,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -636,7 +720,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -646,7 +730,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "44bd26ba17bb6ed2c57d1328de8bfedcef509275effc48a5feeebbcd63d6fea9",
+       "result_id": "b75b543c88c5251e5f2dc4d21d40fffa8ee4af5651a25e1d3a2cd7bc71928efe",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -660,6 +744,44 @@
      "segments": [
       {
        "text": "Changing the split refits both models and recomputes the exploration; rows already explored stay exposed."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "success_criterion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Success criterion"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "You state the smallest gain in precision over the baseline, at the rule you will adopt, that would make the model worth using, in percentage points."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "The conclusion is read against it. A gain below it, or whose paired interval includes zero, does not support adopting the model."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it later asks for the conclusion again."
       }
      ]
     },
@@ -694,7 +816,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
+       "result_id": "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -708,6 +830,44 @@
      "segments": [
       {
        "text": "Special values become explicit indicators in the model instead of ordinary numbers."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "preprocessing": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Data-contingent decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "A preparation chosen after looking at the outcome is stamped data-contingent; the validation figures may then be slightly optimistic."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "Changing it refits the candidate model and asks for the policy and the conclusion again; the exploration is unchanged."
       }
      ]
     },
@@ -854,7 +1014,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ba60f13925875610ed62fd56010e66f25c930b29bbfaaaaf55fd7d9b814f0141",
+       "result_id": "82116c8ad58ca62c7d3eb6a771ecfaa81d25b2c13f58d9d83570a08d3ce84234",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

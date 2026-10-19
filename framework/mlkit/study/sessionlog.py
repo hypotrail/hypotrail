@@ -54,7 +54,7 @@ ENV = 'HYPOTRAIL_SESSION_LOG'
 HOME = '.hypotrail'
 # Commands that never touch the log: the report reads it and must not grow it; an export
 # leaves the study tree byte-identical (CLI-CONTRACT-COMPANION C7).
-UNLOGGED = ('session-report', 'export')
+UNLOGGED = ('session-report', 'export', 'data')
 # Read-only commands. Those not in LOGGED_READS never append a line (the opt-in may still
 # create the empty file); those in LOGGED_READS append one when the log is on.
 READ_COMMANDS = ('status', 'plan', 'preview', 'decisions', 'evidence', 'explain', 'check')

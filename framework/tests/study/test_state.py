@@ -67,8 +67,10 @@ def test_initial_state_is_valid_and_takes_no_decision(state, synthetic_case):
     assert state['dataset']['row_key'] == {'rule': 'source_line', 'format': 'L<line>'}
     assert state['case']['sha256'] == c.sha256_file(synthetic_case.path)
     assert {f['status'] for f in state['facts'].values()} <= set(c.EPISTEMIC_STATUSES)
+    # WP-A4: the policy rests on the preprocessing too (its models are fitted with it).
     assert state['decisions']['policy']['depends_on'] == ['prediction_time',
-                                                           'feature_availability', 'split']
+                                                           'feature_availability', 'split',
+                                                           'preprocessing']
 
 
 def test_bank_initial_state_carries_prior_exposure():
@@ -85,13 +87,19 @@ def test_auto_mpg_initial_state_is_a_regression_study():
     auto = st.initial_state(c.load_case(REPO / 'use-cases/auto-mpg'))
     assert st.validate_state(auto) == []
     assert auto['task'] == 'regression' and st.task_of(auto) == 'regression'
-    assert tuple(auto['decisions']) == st.REGRESSION_DECISION_IDS == (
+    # WP-A4: a new study also fixes the success criterion and the preprocessing before
+    # the models (st.REGRESSION_DECISION_IDS stays the set of a study created before).
+    assert tuple(auto['decisions']) == st.FULL_REGRESSION_DECISION_IDS == (
+        'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'preprocessing', 'model_choice', 'conclusion')
+    assert st.REGRESSION_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'model_choice', 'conclusion')
     assert auto['decisions']['conclusion']['depends_on'] == [
-        'prediction_time', 'feature_availability', 'split', 'model_choice']
-    assert [s['id'] for s in st.derive_plan(auto)] == list(st.REGRESSION_STEP_IDS) == [
-        'prediction_time', 'feature_availability', 'split', 'train_eda', 'models',
-        'model_choice', 'conclusion']
+        'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'preprocessing', 'model_choice']
+    assert [s['id'] for s in st.derive_plan(auto)] == list(st.FULL_REGRESSION_STEP_IDS) == [
+        'discover_data', 'prediction_time', 'feature_availability', 'split', 'success_criterion',
+        'train_eda', 'preprocessing', 'models', 'model_choice', 'conclusion']
     items = {x['id']: x for x in st.not_yet_defensible(auto)}
     assert items['grouped_split_unsupported']['column'] == 'car_name'
     assert items['grouped_split_unsupported']['capability'] == c.CAPABILITY_GROUPED_SPLIT
@@ -189,21 +197,23 @@ def _kinds(state):
 
 
 def test_plan_and_next_action_follow_the_three_pauses(state):
+    """The plan of a new study (WP-A4): step 0, then the three pauses, the success criterion
+    and the preprocessing at the split pause, before the models."""
     plan = st.derive_plan(state)
-    assert [s['id'] for s in plan] == list(st.STEP_IDS)
-    assert [s['pause'] for s in plan] == [1, 1, 2, None, None, 3, 3]
-    assert _kinds(state) == ['ready'] + ['blocked'] * 6
-    assert [s['current'] for s in plan] == [True] + [False] * 6
-    assert st.next_action(state)['kind'] == 'propose'
-    assert st.next_action(state)['decision'] == 'prediction_time'
+    assert [s['id'] for s in plan] == list(st.FULL_STEP_IDS)
+    assert [s['pause'] for s in plan] == [None, 1, 1, 2, 2, None, 2, None, 3, 3]
+    assert _kinds(state) == ['ready', 'ready'] + ['blocked'] * 8
+    assert [s['current'] for s in plan] == [True] + [False] * 9
+    assert st.next_action(state)['kind'] == 'show_data_card'
 
     _proposal(state, 'prediction_time', 'before the first reminder')
-    assert _kinds(state)[0] == 'awaiting_confirmation'
+    assert _kinds(state)[:2] == ['done', 'awaiting_confirmation']
     action = st.next_action(state)
     assert action == {**action, 'kind': 'await_user_words', 'proposal_id': 'p_1'}
 
-    state['proposals'].clear()
+    state['proposals']['p_1']['status'] = 'withdrawn'
     state['decisions']['prediction_time'] = st.empty_decision('prediction_time')
+    assert st.next_action(state)['decision'] == 'prediction_time'   # step 0 stays done
     _confirm(state, 'prediction_time', 'before the first reminder')
     _confirm(state, 'feature_availability', {'holds_open': 'available_at_prediction',
                                              'desk_followups': 'not_available',
@@ -211,9 +221,20 @@ def test_plan_and_next_action_follow_the_three_pauses(state):
     _confirm(state, 'split', 'stratified 70/30, seed 20261017')
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'run', 'activity': 'split'}
     state['current']['split'] = 'r_split'
-    assert _kinds(state)[:4] == ['done', 'done', 'done', 'ready']
+    assert _kinds(state)[:5] == ['done', 'done', 'done', 'done', 'ready']
+    assert st.next_action(state) == {**st.next_action(state), 'kind': 'propose',
+                                     'decision': 'success_criterion'}
+    _confirm(state, 'success_criterion', {'metric': 'precision_gain', 'min_points': 5})
     assert st.next_action(state)['activity'] == 'eda.target_rate'
-    for slot in ('eda.target_rate', 'eda.special_values', 'fit.baseline', 'fit.logistic'):
+    for slot in ('eda.target_rate', 'eda.special_values'):
+        state['current'][slot] = f'r_{slot}'
+    action = st.next_action(state)
+    assert action == {**action, 'kind': 'propose', 'decision': 'preprocessing'}
+    assert action['default_value'] == {'missing': 'none', 'rare_category_min_rows': 0,
+                                       'caps': {}, 'log_transform': []}
+    assert _kinds(state)[7] == 'blocked'                  # the models wait for it
+    _confirm(state, 'preprocessing', action['default_value'])
+    for slot in ('fit.baseline', 'fit.logistic'):
         state['current'][slot] = f'r_{slot}'
     # A policy is evaluated before it is proposed.
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'run',
@@ -223,18 +244,36 @@ def test_plan_and_next_action_follow_the_three_pauses(state):
                                      'decision': 'policy'}
     _confirm(state, 'policy', 'capacity:100')
     _confirm(state, 'conclusion', 'keep_baseline')
-    assert _kinds(state) == ['done'] * 7
+    assert _kinds(state) == ['done'] * 10
     assert st.next_action(state)['kind'] == 'done'
     assert st.validate_state(state) == []
 
     state['stale']['r_policy'] = {'reason': 'split changed', 'since': 9}
-    assert _kinds(state)[5] == 'ready' and st.next_action(state)['activity'] == 'policy.evaluation'
+    assert _kinds(state)[8] == 'ready' and st.next_action(state)['activity'] == 'policy.evaluation'
     state['decisions']['policy'].update(status='reconfirm_required', reason='split changed')
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'reconfirm',
                                      'decision': 'policy'}
     state['executions']['interrupted']['e1'] = {'status': 'interrupted_unknown'}
     assert st.next_action(state) == {**st.next_action(state), 'kind': 'acknowledge_interruption',
                                      'execution_id': 'e1'}
+
+
+def test_a_state_written_before_wp_a4_keeps_its_plan(state):
+    """A study created before WP-A4 holds the five v0.1 decisions: it stays valid, its plan
+    is step 0 then the v0.1 steps, and its models need the split only."""
+    for d in st.WP_A4_DECISIONS:
+        del state['decisions'][d]
+    for d, dec in state['decisions'].items():
+        dec['depends_on'] = list(st.DEPENDS_ON[d])
+    assert st.validate_state(state) == []
+    assert st.decision_ids(state) == st.DECISION_IDS
+    plan = st.derive_plan(state)
+    assert [s['id'] for s in plan] == ['discover_data', *st.STEP_IDS]
+    assert [s['pause'] for s in plan] == [None, 1, 1, 2, None, None, 3, 3]
+    assert next(s for s in plan if s['id'] == 'models')['requires'] == ['split']
+    half = copy.deepcopy(state)
+    half['decisions']['preprocessing'] = st.empty_decision('preprocessing')
+    assert {p['path'] for p in st.validate_state(half)} == {'decisions.preprocessing'}
 
 
 def test_not_yet_defensible_reflects_state(state):

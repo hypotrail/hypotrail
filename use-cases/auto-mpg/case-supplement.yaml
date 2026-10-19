@@ -25,6 +25,9 @@ facts:
     source: 'Structural inspection of data/auto-mpg.data'
 variables:
   horsepower:
+    group: Engine
+    labels:
+      fr: 'Puissance du moteur.'
     special_values:
       - value: '?'
         meaning: Missing value.
@@ -33,9 +36,15 @@ variables:
           data/auto-mpg.names:44 documents 6 missing horsepower values; structural inspection of
           data/auto-mpg.data shows that they are written "?"
   model_year:
+    group: Model
+    labels:
+      fr: 'Année du modèle, codée de 70 à 82 (lue comme 1970 à 1982).'
     description: Model year, coded 70 to 82 (read as 1970 to 1982).
     source: 'data/auto-mpg.names:40'
   car_name:
+    group: Model
+    labels:
+      fr: 'Nom du modèle de voiture. La documentation indique qu''il est unique pour chaque ligne, mais certains noms apparaissent sur plusieurs lignes.'
     type: string
     role: group_id
     description: >-
@@ -44,9 +53,31 @@ variables:
     status: observed
     source: 'data/auto-mpg.names:42; structural inspection of data/auto-mpg.data'
   mpg:
+    group: Outcome
+    labels:
+      fr: 'Miles par gallon : une valeur plus élevée signifie une consommation de carburant plus faible.'
     source: 'data/auto-mpg.names:24-26,34'
   cylinders:
+    group: Engine
+    labels:
+      fr: 'Nombre de cylindres.'
     source: 'data/auto-mpg.names:35'
+  displacement:
+    group: Engine
+    labels:
+      fr: 'Cylindrée du moteur.'
+  weight:
+    group: Body and performance
+    labels:
+      fr: 'Poids du véhicule.'
+  acceleration:
+    group: Body and performance
+    labels:
+      fr: 'Temps d''accélération ; non utilisé par les modèles dans cet exercice.'
+  origin:
+    group: Model
+    labels:
+      fr: 'Code d''origine 1, 2 ou 3.'
 structure:
   group_column:
     value: car_name

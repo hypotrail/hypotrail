@@ -58,7 +58,12 @@ PARTITION_ORDER = ('all', 'development', 'train', 'validation', 'final_test')
 # The EDA activities of each task, in plan order: those of ``activities.task_activities``
 # (the task's own, then the shared ``eda.distribution``), so the catalog cannot drift from
 # what ``run`` accepts (WP-I).
-EDA_CATALOG = {task: tuple(a for a in act.task_activities(task) if a in act.EDA)
+# v0.2a (WP-A4): the structural quality overview and the single-feature signal are not
+# in the companion's catalog: the panel runs a chart of training rows (ADR 0004, W4), and
+# offering these is a decision of the panel's own work package.
+COMPANION_EXCLUDED_EDA = (act.QUALITY, act.SIGNAL)
+EDA_CATALOG = {task: tuple(a for a in act.task_activities(task) if a in act.EDA
+                           and a not in COMPANION_EXCLUDED_EDA)
                for task in (st.BINARY, st.REGRESSION)}
 # The roles of the columns each per-column activity accepts (as ``run`` would accept them).
 PER_COLUMN_ROLES = {act.RATE_BY: ('feature',), act.MEAN_BY: ('feature', 'time'),
@@ -313,7 +318,8 @@ def _impacts(study: read.Study, view: Mapping) -> list[dict]:
     out = []
     for mutation in dependencies.DECISION_MUTATIONS[task]:
         decision_id = dependencies.DECISION_OF_MUTATION[mutation]
-        if state['decisions'][decision_id]['status'] not in ('confirmed', 'reconfirm_required'):
+        if decision_id not in state['decisions'] or \
+                state['decisions'][decision_id]['status'] not in ('confirmed', 'reconfirm_required'):
             continue
         eff = dependencies.effects_for_mutation(state, mutation, store)
         out.append({'decision_id': decision_id, 'mutation': mutation, 'row': eff['row'],

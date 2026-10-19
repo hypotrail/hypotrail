@@ -69,7 +69,13 @@ DATASET_REQUIRED = ('path', 'format', 'sep', 'encoding', 'decimal', 'header', 's
 DATASET_OPTIONAL = ('quotechar', 'na_values')
 VARIABLE_REQUIRED = ('name', 'type', 'role', 'description', 'status', 'source', 'availability',
                      'special_values')
-VARIABLE_OPTIONAL = ('unit', 'format')
+VARIABLE_OPTIONAL = ('unit', 'format', 'group', 'labels', 'range')
+# v0.2a (WP-A4): ``group`` names the group a variable is shown in by the data card
+# (``hypotrail data``); ``labels`` gives the description in another language
+# (``{fr: "..."}``); ``range`` declares the possible values of a numeric variable,
+# ``{min, max, status, source}`` (either bound may be null), checked by ``eda.quality``.
+LABEL_LANGUAGES = ('en', 'fr')
+RANGE_KEYS = ('min', 'max', 'status', 'source')
 STATEMENT_KEYS = ('value', 'status', 'source')
 SPECIAL_VALUE_KEYS = ('value', 'meaning', 'status', 'source')
 STRUCTURE_KEYS = ('row_unit', 'group_column', 'time_column', 'duplicates')
@@ -291,6 +297,31 @@ def _validate_variables(variables: Any, p: _Problems) -> list[dict]:
             if (a['value'] == 'unknown') != (a['status'] == 'unknown'):
                 p.add(f'{path}.availability',
                       'value "unknown" and status "unknown" go together')
+        if 'group' in v:
+            p.text(v['group'], f'{path}.group')
+        if 'labels' in v:
+            labels = v['labels']
+            if not isinstance(labels, dict) or not labels:
+                p.add(f'{path}.labels', 'must map a language to a description')
+            else:
+                for lang, text in labels.items():
+                    if lang not in LABEL_LANGUAGES:
+                        p.add(f'{path}.labels.{lang}',
+                              f'must be one of {", ".join(LABEL_LANGUAGES)}')
+                    p.text(text, f'{path}.labels.{lang}')
+        if 'range' in v:
+            r = v['range']
+            if p.keys(r, f'{path}.range', RANGE_KEYS):
+                p.status(r['status'], f'{path}.range.status')
+                p.text(r['source'], f'{path}.range.source')
+                bounds = [r['min'], r['max']]
+                if v['type'] not in ('numeric', 'integer'):
+                    p.add(f'{path}.range', 'a range is declared for a numeric or integer variable')
+                if any(b is not None and (isinstance(b, bool) or not isinstance(b, (int, float)))
+                       for b in bounds) or bounds == [None, None]:
+                    p.add(f'{path}.range', 'min and max are numbers or null, not both null')
+                elif None not in bounds and bounds[0] > bounds[1]:
+                    p.add(f'{path}.range', 'min must not exceed max')
         if not isinstance(v['special_values'], list):
             p.add(f'{path}.special_values', 'must be a list')
         else:

@@ -153,9 +153,14 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     agent = json.loads((study / '.hypotrail' / af.AGENT_FILE).read_text())
     assert agent['cli']['shell'] in (study / 'CLAUDE.md').read_text()
 
-    # 2. pause 1: prediction moment, then the junior's availability list
+    # 2. step 0 (WP-A4): the data card first, informational; then pause 1, the prediction
+    # moment and the junior's availability list
     chat = Chat(study, work, 'chat1')
-    assert chat.view['current_step'] == 'prediction_time'
+    assert chat.view['current_step'] == 'discover_data'
+    assert chat.view['next_action']['kind'] == 'show_data_card'
+    card = chat('data')
+    assert card['schema'] == 'hypotrail.data/1' and card['rows']['n_rows'] == 5
+    assert Chat(study, work, 'chat1b').view['revision'] == chat.view['revision']   # read-only
     p = chat.propose('prediction_time', junior['prediction_time'], junior['restatement'])
     refused = chat.confirm(p, 'ok', expect=2)
     assert refused['error']['code'] == 'ambiguous_confirmation'
@@ -177,11 +182,21 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     split = chat.run('split')
     assert split['status'] == 'promoted'
     parts = split['values']['partitions']
+    # WP-A4: the success criterion, fixed before any model.
+    assert chat.run('fit.baseline', expect=2)['error']['code'] == 'precondition_missing'
+    p = chat.propose('success_criterion', {'metric': 'precision_gain', 'min_points': 5},
+                     'The model is worth using only if its precision beats the baseline by at '
+                     'least 5 points at the rule you adopt.')
+    chat.confirm(p, 'I confirm: at least 5 points over the baseline.')
 
-    # 4-5. authorised work between pauses: training EDA, then both fits
+    # 4-5. authorised work between pauses: training EDA, the preprocessing, then both fits
     target = chat.run('eda.target_rate')['values']
     specials = chat.run('eda.special_values')['values']
     rate_by = chat.run('eda.rate_by', '--column', junior['rate_by'])
+    default = chat.status()['view']['next_action']['default_value']
+    p = chat.propose('preprocessing', default, 'You keep the default preparation of the '
+                                               'variables: nothing added, nothing grouped.')
+    chat.confirm(p, 'I confirm the default preparation.')
     assert rate_by['result']['slot'] == f'eda.rate_by:{junior["rate_by"]}'
     assert target['n_rows'] == parts['train']['n_rows']
     baseline = chat.run('fit.baseline')
@@ -200,7 +215,8 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     # 7. a new process sees everything without any chat memory
     view = Chat(study, work, 'chat4').view
     decisions = view['decisions']
-    for d in ('prediction_time', 'feature_availability', 'split', 'policy'):
+    for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+              'preprocessing', 'policy'):
         assert decisions[d]['status'] == 'confirmed', d
     assert decisions['prediction_time']['confirmation']['user_words'] == junior['words']
     assert decisions['policy']['value'] == THRESHOLD

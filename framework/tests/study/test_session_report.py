@@ -81,7 +81,9 @@ def test_the_log_is_off_by_default_and_the_report_says_so(tmp_path, synthetic_ca
     assert 'not recorded' in out['sources']['session_log']['note']
     assert out['refusals'] == [] and out['checks'] == []
     assert [p['closed_at'] is not None for p in out['pauses']] == [True, True, False]
-    assert [d['outcome'] for d in out['decisions']] == ['confirmed'] * 3
+    # WP-A4: the split pause also holds the success criterion and the preprocessing.
+    assert [d['outcome'] for d in out['decisions']] == ['confirmed'] * 5
+    assert out['pauses'][1]['decisions'] == ['split', 'success_criterion', 'preprocessing']
 
 
 def test_the_log_records_mutations_refusals_status_and_checks(logged):

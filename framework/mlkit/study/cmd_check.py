@@ -107,7 +107,10 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
             'causal_wording': 'warning', 'forecast_wording': 'warning',
             'artifact_not_current': 'warning', 'untracked_files': 'warning',
             # Post-v0.1 (P7): a recommended default credited to the analyst.
-            'misattributed_delegation': 'error'}
+            'misattributed_delegation': 'error',
+            # v0.2a (WP-A4): the conclusion adopts while the success criterion is not met
+            # or its paired interval includes 0.
+            'verdict_contradicts_criterion': 'warning'}
 FINDING_CODES = tuple(SEVERITY)
 
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|cannot|doesn't|don't|isn't|aren't|without|"
@@ -886,6 +889,23 @@ def untracked_files(study_dir: Path, declared: Iterable[Path] = ()) -> list[str]
     return out
 
 
+def check_criterion(view: Mapping) -> list[dict]:
+    """v0.2a (WP-A4): ``verdict_contradicts_criterion`` (warning) when the conclusion adopts
+    the policy or the model while the success criterion fixed before the models is not met,
+    or met by the point estimate only (its paired interval includes 0)."""
+    c = view.get('criterion')
+    if not c or not c.get('contradicts_verdict'):
+        return []
+    why = ('the gain does not reach the minimum fixed before the models'
+           if c['status'] == 'not_met' else
+           'the paired interval of the gain includes 0, so the gain may be chance')
+    return [finding('verdict_contradicts_criterion', 'decision:conclusion',
+                    f'The conclusion adopts ({c["verdict"]}) while the success criterion is '
+                    f'{" ".join(c["status"].split("_"))}: {why}.',
+                    status=c['status'], verdict=c['verdict'], gain=c['gain'], low=c['low'],
+                    high=c['high'], minimum=c['minimum'], result_id=c['result_id'])]
+
+
 def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
     study = read.open(study_dir)
     view = view_model.build(study)
@@ -914,6 +934,7 @@ def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
         findings += check_notebook(view, study, notebook.read_text(encoding='utf-8'),
                                    mf.ARTIFACTS['notebook'])
     findings += check_features(view)
+    findings += check_criterion(view)
     conclusion = view['decisions']['conclusion']['value']
     if isinstance(conclusion, dict) and isinstance(conclusion.get('text'), str):
         f, t = _check_text(view, conclusion['text'], 'decision:conclusion',

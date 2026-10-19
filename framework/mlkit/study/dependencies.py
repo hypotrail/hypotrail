@@ -89,6 +89,23 @@ MUTATIONS: tuple[dict, ...] = (
      'notes': ('The affected activity and everything downstream of it (registry lineage) '
                'are stale; no decision changes.',)},
     {'row': 12, 'mutation': 'dataset', 'refusal': 'dataset_changed'},
+    # v0.2a (WP-A4). Row 14: the preprocessing parameters changed; the candidate model is
+    # fitted again with them, its evaluation follows, and the choice and conclusion are asked
+    # again. The EDA is unchanged (it never applies the preprocessing). Row 15: only the
+    # motivating results changed; nothing is recomputed. Row 16: the success criterion
+    # changed; the conclusion is judged against it, so it is asked again.
+    {'row': 14, 'mutation': 'preprocessing', 'refit': ('fit.logistic',), 're_eda': (),
+     're_policy': ('policy.evaluation',), 'recompute': (), 'reconfirm': ('policy', 'conclusion'),
+     'blocked_until': (),
+     'notes': ('The constant baseline uses no feature and stays current; the exploration is '
+               'unchanged.',)},
+    {'row': 15, 'mutation': 'preprocessing.motivation', 'refit': (), 're_eda': (),
+     're_policy': (), 'recompute': (), 'reconfirm': (), 'blocked_until': (),
+     're_explain': ('preprocessing',),
+     'notes': ('The parameters are unchanged; only the analyses cited as motivation changed.',)},
+    {'row': 16, 'mutation': 'success_criterion', 'refit': (), 're_eda': (), 're_policy': (),
+     'recompute': (), 'reconfirm': ('conclusion',), 'blocked_until': (),
+     'notes': ('No result changes; the conclusion is judged against the new criterion.',)},
     {'row': '*', 'mutation': 'unknown', 'refit': ('*',), 're_eda': ('*',), 're_policy': ('*',),
      'recompute': ('*',), 'reconfirm': ('*',), 'blocked_until': (),
      'notes': ('Unknown mutation: every current result is stale and every confirmed '
@@ -127,7 +144,13 @@ REGRESSION_MUTATIONS: tuple[dict, ...] = (
      'recompute': (), 'reconfirm': ('conclusion',), 'blocked_until': (),
      'notes': ('No refit and no new evaluation: the stored predictions and the current '
                'evaluation are reused. The previous model choice is superseded.',)},
-    MUTATIONS[12],
+    {'row': 14, 'mutation': 'preprocessing', 'refit': ('fit.linear',), 're_eda': (),
+     're_policy': ('evaluate.regression',), 'recompute': (),
+     'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
+     'notes': ('The mean baseline uses no feature and stays current; the exploration is '
+               'unchanged.',)},
+    BY_MUTATION['preprocessing.motivation'], BY_MUTATION['success_criterion'],
+    BY_MUTATION['unknown'],
 )
 REGRESSION_BY_MUTATION = {m['mutation']: m for m in REGRESSION_MUTATIONS}
 MUTATIONS_BY_TASK = {st.BINARY: MUTATIONS, st.REGRESSION: REGRESSION_MUTATIONS}
@@ -187,6 +210,16 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
         return 'policy.parameter' if before[0] == after[0] else 'policy.rule_type'
     if decision_id == 'model_choice':
         return 'model_choice' if isinstance(old, str) and isinstance(new, str) else 'unknown'
+    if decision_id == 'preprocessing':
+        from . import governance
+        before, after = governance.parameters(old), governance.parameters(new)
+        if before is None or after is None:
+            return 'unknown'
+        return ('preprocessing' if rec.canonical(before) != rec.canonical(after)
+                else 'preprocessing.motivation')
+    if decision_id == 'success_criterion':
+        return 'success_criterion' if isinstance(old, Mapping) and isinstance(new, Mapping) \
+            else 'unknown'
     if decision_id in ('settings.bootstrap', 'usage_label', 'eda_added', 'conclusion',
                        'code_fingerprint'):
         return decision_id
@@ -276,15 +309,18 @@ DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
                         'feature_availability.feature_set': 'feature_availability',
                         'feature_availability.wording': 'feature_availability',
                         'split': 'split', 'policy.parameter': 'policy',
-                        'policy.rule_type': 'policy', 'model_choice': 'model_choice'}
+                        'policy.rule_type': 'policy', 'model_choice': 'model_choice',
+                        'preprocessing': 'preprocessing',
+                        'success_criterion': 'success_criterion'}
 # The rows whose mutation can change a confirmed decision, by task (CC §5 ``impacts``):
 # rows 1 to 6 for a binary study, rows 1 to 4 and 13 for a regression study.
 DECISION_MUTATIONS = {
     st.BINARY: ('prediction_time', 'feature_availability.feature_set',
                 'feature_availability.wording', 'split', 'policy.parameter',
-                'policy.rule_type'),
+                'policy.rule_type', 'preprocessing', 'success_criterion'),
     st.REGRESSION: ('prediction_time', 'feature_availability.feature_set',
-                    'feature_availability.wording', 'split', 'model_choice'),
+                    'feature_availability.wording', 'split', 'model_choice', 'preprocessing',
+                    'success_criterion'),
 }
 
 

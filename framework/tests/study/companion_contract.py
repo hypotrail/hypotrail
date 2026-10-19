@@ -29,7 +29,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
                 'executions', 'not_yet_defensible', 'notes', 'holds',
                 # v0.2a (ADR 0006): the sealed final test, before the recap.
-                'final_test', 'recap',
+                'final_test',
+                # v0.2a (WP-A4): the success criterion and the target-look count.
+                'criterion', 'eda_looks', 'recap',
                 # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
                 'recap_audience', 'recap_junior')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
@@ -43,10 +45,14 @@ CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'a
 MOMENT_KEYS = ('id', 'title', 'steps')
 MOMENTS = (('frame', 'Frame the change'), ('evidence', 'Prepare evidence'),
            ('compare', 'Work and compare'), ('conclude', 'Conclude and hand over'))
+# v0.2a (WP-A4): step 0 and the success criterion frame the change; the preprocessing is
+# prepared with the evidence. A moment lists only the steps of its study.
 MOMENT_STEPS = {
-    'binary': (('prediction_time', 'feature_availability', 'split'), ('train_eda',),
+    'binary': (('discover_data', 'prediction_time', 'feature_availability', 'split',
+                'success_criterion'), ('train_eda', 'preprocessing'),
                ('models', 'policy'), ('conclusion',)),
-    'regression': (('prediction_time', 'feature_availability', 'split'), ('train_eda',),
+    'regression': (('discover_data', 'prediction_time', 'feature_availability', 'split',
+                    'success_criterion'), ('train_eda', 'preprocessing'),
                    ('models', 'model_choice'), ('conclusion',)),
 }
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
@@ -170,7 +176,9 @@ EXPORT_FILES = ('handoff.md', 'handoff.json', 'study.html', 'SHA256SUMS')
 # --- C8 (CC §8) --------------------------------------------------------------------------
 DISTRIBUTION_VALUE_KEYS = ('partition', 'column', 'role', 'type', 'kind', 'n_rows', 'n_missing',
                            'special_values', 'numeric', 'groups', 'n_groups', 'max_groups',
-                           'other', 'min_group_rows', 'warnings', 'note')
+                           'other', 'min_group_rows', 'warnings', 'note',
+                           # v0.2a (WP-A4): the question every analysis answers.
+                           'question')
 DISTRIBUTION_KINDS = ('numeric', 'discrete', 'categorical')
 DISTRIBUTION_NUMERIC_KEYS = ('n', 'min', 'q25', 'median', 'q75', 'max', 'mean', 'sd', 'n_bins',
                              'bin_width', 'bins')

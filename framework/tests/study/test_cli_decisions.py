@@ -101,7 +101,8 @@ def test_init_creates_revision_one_and_never_overwrites(study, work, synthetic_c
     view = _status(study, work)['view']
     assert view['revision'] == 1
     assert all(d['status'] == 'open' for d in view['decisions'].values())
-    assert view['open_proposals'] == [] and view['next_action']['kind'] == 'propose'
+    # WP-A4: step 0 first, the data card, before any proposal.
+    assert view['open_proposals'] == [] and view['next_action']['kind'] == 'show_data_card'
     # ADR 0006: init inspects the 240 development rows and seals 60 final-test rows.
     assert view['exposure']['by_purpose'] == {'structural_inspection': 240, 'sealed': 60}
     assert view['exposure']['rows_exposed'] == 240
@@ -419,7 +420,9 @@ def test_fresh_process_status_restores_everything(study, work, features):
     assert quiet['changed'] is False and quiet['changes_since'] == []
     plan = hyp('plan', '--study', study, cwd=work, expect=0)[1]
     assert plan['schema'] == 'hypotrail.plan/1'
-    assert [s['status'] for s in plan['steps']][:3] == ['done', 'done', 'awaiting_confirmation']
+    # WP-A4: step 0 (discover_data) is done once a proposal exists.
+    assert [s['status'] for s in plan['steps']][:4] == ['done', 'done', 'done',
+                                                        'awaiting_confirmation']
 
 
 def test_a_confirmed_change_applies_the_dependency_table(study, work, features):
@@ -458,7 +461,10 @@ def test_three_pauses_are_preconditions(study, work, features):
                   restatement='Call the 100 highest-scored members.')['result']['proposal_id']
     out = confirm(study, work, pol, 'Yes, call the top hundred.', rid='p2', rev=rev + 3, expect=2)
     assert out['error']['code'] == 'precondition_missing'
-    assert out['error']['details']['missing'][0]['slot'] == 'policy.evaluation'
+    # WP-A4: the success criterion and the preprocessing come first, then the evaluation.
+    missing = out['error']['details']['missing']
+    assert [m.get('decision') for m in missing[:2]] == ['success_criterion', 'preprocessing']
+    assert missing[2]['slot'] == 'policy.evaluation'
     concl = propose(study, work, 'conclusion', value_json={'verdict': 'adopt_policy',
                                                            'text': 'Adopt the model.'},
                     rid='c1', rev=rev + 3)['result']['proposal_id']
@@ -480,6 +486,16 @@ def test_precondition_functions_for_phase_2(study):
     assert pre.missing_for_activity(state, 'split') == []
     state['current']['split'] = 'r_split'
     assert pre.missing_for_activity(state, 'eda.target_rate') == []
+    # WP-A4: every fit and evaluation waits for the success criterion and the preprocessing,
+    # and so does the conclusion.
+    assert [m.get('decision') for m in pre.missing_for_activity(state, 'fit.baseline')] == [
+        'success_criterion', 'preprocessing']
+    assert pre.missing_for_activity(state, 'eda.quality') == []
+    assert {m['decision'] for m in pre.missing_for_decision(
+        state, 'conclusion', {'verdict': 'keep_baseline', 'text': 'x'})} == {
+        'success_criterion', 'preprocessing'}
+    for d in ('success_criterion', 'preprocessing'):
+        state['decisions'][d]['status'] = 'confirmed'
     assert [m['slot'] for m in pre.missing_for_activity(state, 'policy.evaluation')] == [
         'fit.baseline', 'fit.logistic']
     assert pre.missing_for_decision(state, 'conclusion',
@@ -566,7 +582,7 @@ def test_text_format_and_unknown_extension(study, work):
                            '--format', 'text'], capture_output=True, text=True, cwd=work,
                           env=_env(), timeout=60)
     assert proc.returncode == 0 and 'at revision 1' in proc.stdout
-    assert 'next action: propose' in proc.stdout
+    assert 'next action: show_data_card' in proc.stdout       # WP-A4: step 0
     # Extension commands whose module is absent are refused (Phase 3 added render and
     # check, so the refusal is exercised on whichever extension is still missing, and on
     # a module that never exists).
@@ -639,7 +655,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 'plan', 'next_action', 'open_proposals', 'decisions', 'results', 'artifacts',
                 'executions', 'not_yet_defensible', 'notes', 'holds',
                 # v0.2a (ADR 0006): the sealed final test, before the recap.
-                'final_test', 'recap',
+                'final_test',
+                # v0.2a (WP-A4): the success criterion and the target-look count.
+                'criterion', 'eda_looks', 'recap',
                 # v0.2a (WP-A1, CLI-CONTRACT §3): additive keys after ``recap``.
                 'recap_audience', 'recap_junior')
 
@@ -662,7 +680,7 @@ def test_status_summary_is_compact_and_complete(study, work, features):
     assert summary['goal']['prediction_time'] == {'value': PT, 'source': 'decision',
                                                   'status': 'confirmed'}
     assert summary['current_step'] == 'feature_availability'
-    assert summary['plan'][1] == {'id': 'feature_availability',
+    assert summary['plan'][2] == {'id': 'feature_availability',
                                   'title': 'Decide which variables are available at prediction time',
                                   'status': 'awaiting_confirmation'}
     assert summary['next_action']['kind'] == 'await_user_words'

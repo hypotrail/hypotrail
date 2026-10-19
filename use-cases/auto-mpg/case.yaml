@@ -70,7 +70,10 @@ variables:
   type: numeric
   role: target
   unit: mpg
+  group: Outcome
   description: 'Miles per gallon: higher values mean lower fuel consumption.'
+  labels:
+    fr: 'Miles par gallon : une valeur plus élevée signifie une consommation de carburant plus faible.'
   status: documented_fact
   source: data/auto-mpg.names:24-26,34
   availability:
@@ -82,7 +85,10 @@ variables:
   type: integer
   role: feature
   unit: cylinders
+  group: Engine
   description: Number of cylinders.
+  labels:
+    fr: Nombre de cylindres.
   status: documented_fact
   source: data/auto-mpg.names:35
   availability:
@@ -95,7 +101,10 @@ variables:
   type: numeric
   role: feature
   unit: cubic inches (assumed)
+  group: Engine
   description: Engine displacement.
+  labels:
+    fr: Cylindrée du moteur.
   status: scenario_assumption
   source: Unit not specified in auto-mpg.names
   availability:
@@ -108,7 +117,10 @@ variables:
   type: numeric
   role: feature
   unit: horsepower (assumed)
+  group: Engine
   description: Engine horsepower.
+  labels:
+    fr: Puissance du moteur.
   status: scenario_assumption
   source: auto-mpg.names
   availability:
@@ -126,7 +138,10 @@ variables:
   type: numeric
   role: feature
   unit: pounds (assumed)
+  group: Body and performance
   description: Vehicle weight.
+  labels:
+    fr: Poids du véhicule.
   status: scenario_assumption
   source: Unit not specified in auto-mpg.names
   availability:
@@ -139,7 +154,10 @@ variables:
   type: numeric
   role: feature
   unit: seconds (assumed)
+  group: Body and performance
   description: Acceleration time; not used by models in this exercise.
+  labels:
+    fr: Temps d'accélération ; non utilisé par les modèles dans cet exercice.
   status: unknown
   source: Availability before measurement is undocumented
   availability:
@@ -151,7 +169,10 @@ variables:
   type: integer
   role: time
   unit: year (19xx)
+  group: Model
   description: Model year, coded 70 to 82 (read as 1970 to 1982).
+  labels:
+    fr: Année du modèle, codée de 70 à 82 (lue comme 1970 à 1982).
   status: documented_fact
   source: data/auto-mpg.names:40
   availability:
@@ -163,7 +184,10 @@ variables:
 - name: origin
   type: category
   role: feature
+  group: Model
   description: Origin code 1, 2, or 3.
+  labels:
+    fr: Code d'origine 1, 2 ou 3.
   status: unknown
   source: Undocumented codes
   availability:
@@ -175,8 +199,12 @@ variables:
 - name: car_name
   type: string
   role: group_id
+  group: Model
   description: Car model name. The documentation states that it is unique for each instance, but some
     names occur in several rows.
+  labels:
+    fr: Nom du modèle de voiture. La documentation indique qu'il est unique pour chaque ligne, mais certains
+      noms apparaissent sur plusieurs lignes.
   status: observed
   source: data/auto-mpg.names:42; structural inspection of data/auto-mpg.data
   availability:
@@ -227,34 +255,38 @@ migration:
   from_schema: hypotrail.project/1
   from_sha256: 4ba90be566048ea0cf91dfee91e3cd82a0fadeacc31554aad13f9eab36891f64
   supplement: case-supplement.yaml
-  supplement_sha256: 8f4dca9892700ea791c8e6438883203fb1f29a78fe861fdaaf6f484f0d57b69a
+  supplement_sha256: 311a8200d288c4b16504bf86450ab8426d1fe1233248489dc675be1149a33eb4
   tool: mlkit.study.migrate
   tool_version: 1
   rules:
   - 'variables.mpg.status: companion documentation assertion -> documented_fact'
   - 'variables.mpg.availability: companion "no" -> not_available, scenario_assumption'
-  - 'variables.mpg: supplement sets source'
+  - 'variables.mpg: supplement sets group, labels, source'
   - 'variables.cylinders.status: companion documentation assertion -> documented_fact'
   - 'variables.cylinders.availability: companion "yes" -> available_at_prediction, scenario_assumption'
-  - 'variables.cylinders: supplement sets source'
+  - 'variables.cylinders: supplement sets group, labels, source'
   - 'variables.displacement.status: companion proposal -> scenario_assumption'
   - 'variables.displacement.availability: companion "yes" -> available_at_prediction, scenario_assumption'
+  - 'variables.displacement: supplement sets group, labels'
   - 'variables.horsepower.status: companion proposal -> scenario_assumption'
   - 'variables.horsepower.availability: companion "yes" -> available_at_prediction, scenario_assumption'
-  - 'variables.horsepower: supplement sets special_values'
+  - 'variables.horsepower: supplement sets group, labels, special_values'
   - 'variables.weight.status: companion proposal -> scenario_assumption'
   - 'variables.weight.availability: companion "yes" -> available_at_prediction, scenario_assumption'
+  - 'variables.weight: supplement sets group, labels'
   - 'variables.acceleration.role: companion role "excluded" is a tutorial modelling choice; exclusion
     is a study decision, so the case role is "feature"'
+  - 'variables.acceleration: supplement sets group, labels'
   - 'variables.model_year.status: companion documentation assertion -> documented_fact'
   - 'variables.model_year.availability: companion "yes" -> available_at_prediction, scenario_assumption'
-  - 'variables.model_year: supplement sets description, source'
+  - 'variables.model_year: supplement sets description, group, labels, source'
   - 'variables.origin.role: companion role "group" marks a reporting breakdown, not a repeated-entity
     group; the case role is "feature" and no group column is declared from it'
   - 'variables.origin.availability: companion "yes" -> available_at_prediction, scenario_assumption'
+  - 'variables.origin: supplement sets group, labels'
   - 'variables.car_name.status: companion documentation assertion -> documented_fact'
   - 'variables.car_name.availability: companion "yes" -> available_at_prediction, scenario_assumption'
-  - 'variables.car_name: supplement sets description, role, source, status, type'
+  - 'variables.car_name: supplement sets description, group, labels, role, source, status, type'
   - 'facts.target.status: companion documentation assertion -> documented_fact'
   - 'facts.target: supplement sets source'
   - 'facts.observation_unit.status: companion proposal -> scenario_assumption'

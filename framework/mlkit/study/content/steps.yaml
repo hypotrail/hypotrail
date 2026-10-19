@@ -6,6 +6,24 @@
 # come from the registry.
 schema: hypotrail.content.steps/1
 steps:
+  discover_data:
+    concept: development_rows
+    context: "The case describes one row as: {{fact:observation_unit|not stated by the case}}. The data card shows the columns grouped with their meaning and availability, and a few development rows."
+    method: Nothing is computed and nothing is decided. The rows shown are development rows, already read for their structure when the study was created; the final test stays sealed.
+    interpretation: Reading the columns before any decision is how you know what each variable describes and when its value becomes known.
+    consequence: The availability decision that follows relies on this reading.
+  success_criterion:
+    concept: success_criterion
+    context: The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it.
+    method: You state the smallest gain in precision over the baseline, at the rule you will adopt, that would make the model worth using, in percentage points.
+    interpretation: The conclusion is read against it. A gain below it, or whose paired interval includes zero, does not support adopting the model.
+    consequence: Changing it later asks for the conclusion again.
+  preprocessing:
+    concept: data_contingent_decision
+    context: The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
+    interpretation: A preparation chosen after looking at the outcome is stamped data-contingent; the validation figures may then be slightly optimistic.
+    consequence: Changing it refits the candidate model and asks for the policy and the conclusion again; the exploration is unchanged.
   prediction_time:
     concept: prediction_time
     context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
@@ -53,6 +71,18 @@ stale: Stale, not cited.
 # Regression study (M3): steps whose text differs for a numeric target. The others are
 # shared. Templates cite only paths every regression result of the slot has.
 regression_steps:
+  success_criterion:
+    concept: success_criterion
+    context: The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it.
+    method: You state the smallest relative reduction of the validation mean absolute error of the mean baseline that would make the model worth using.
+    interpretation: The conclusion is read against it. A reduction below it, or whose paired interval includes zero, does not support adopting the model.
+    consequence: Changing it later asks for the conclusion again.
+  preprocessing:
+    concept: data_contingent_decision
+    context: The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
+    interpretation: A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic.
+    consequence: Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged.
   prediction_time:
     concept: prediction_time
     context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
@@ -96,10 +126,10 @@ regression_steps:
 moments:
   - id: frame
     title: Frame the change
-    steps: [prediction_time, feature_availability, split]
+    steps: [discover_data, prediction_time, feature_availability, split, success_criterion]
   - id: evidence
     title: Prepare evidence
-    steps: [train_eda]
+    steps: [train_eda, preprocessing]
   - id: compare
     title: Work and compare
     steps: [models, policy]
