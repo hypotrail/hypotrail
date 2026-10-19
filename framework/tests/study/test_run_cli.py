@@ -61,6 +61,15 @@ class Cli:
         return self('run', *args, '--request-id', self.rid(), '--expected-revision', self.rev(),
                     expect=expect)
 
+    def split_pause(self):
+        """The split, then (WP-A4) the success criterion and the default preprocessing."""
+        self.decide('split', fk.SPLIT, 'Yes, split 70/30 with that seed before exploring')
+        self.decide('success_criterion', {'metric': 'precision_gain', 'min_points': 5},
+                    'Yes, at least 5 points over the baseline')
+        self.decide('preprocessing', {'missing': 'none', 'rare_category_min_rows': 0, 'caps': {},
+                                      'log_transform': []},
+                    'Yes, I confirm the default preparation')
+
 
 def _start(tmp_path, work, case_dir):
     cli = Cli(tmp_path / 'study', case_dir, work)
@@ -79,7 +88,7 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
     refused = cli.run('split', expect=2)                            # pause 2 not confirmed
     assert refused['error']['code'] == 'precondition_missing'
     assert cli.run('eda.target_rate', expect=2)['error']['code'] == 'precondition_missing'
-    cli.decide('split', fk.SPLIT, 'Yes, split 70/30 with that seed before exploring')
+    cli.split_pause()
     payloads = {}
     for args in (('split',), ('eda.target_rate',), ('eda.special_values',),
                  ('fit.baseline',), ('fit.logistic',),
@@ -95,7 +104,8 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
         item = view['results'][slot]
         assert item['current'] is True and item['integrity'] == 'ok'
         assert item['result_id'] == payload['result_id'] and item['values'] == payload['values']
-    assert view['plan'][3]['status'] == 'done' and view['plan'][4]['status'] == 'done'
+    steps = {step['id']: step['status'] for step in view['plan']}
+    assert steps['train_eda'] == 'done' and steps['models'] == 'done'
     assert view['next_action']['kind'] == 'propose' and view['next_action']['decision'] == 'policy'
     by_purpose = view['exposure']['by_purpose']
     # ADR 0006: init inspects the development rows; the final test is sealed, not inspected.
@@ -121,7 +131,7 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
 
 def test_a_replay_while_the_execution_runs_reports_it_running(tmp_path, work, cases):
     cli = _start(tmp_path, work, cases['synthetic'])
-    cli.decide('split', fk.SPLIT, 'Yes, split 70/30 with that seed before exploring')
+    cli.split_pause()
     cli.run('split')
     gate = tmp_path / 'gate'
     rev = cli.rev()
@@ -156,7 +166,7 @@ def test_a_replay_while_the_execution_runs_reports_it_running(tmp_path, work, ca
 
 def test_a_decision_taken_during_a_fit_makes_it_late(tmp_path, work, cases):
     cli = _start(tmp_path, work, cases['synthetic'])
-    cli.decide('split', fk.SPLIT, 'Yes, split 70/30 with that seed before exploring')
+    cli.split_pause()
     cli.run('split')
     gate = tmp_path / 'gate'
     proc = fk.spawn('run', 'fit.logistic', '--request-id', 'fit-during', '--expected-revision',
