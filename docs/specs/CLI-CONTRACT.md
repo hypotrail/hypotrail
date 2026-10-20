@@ -518,6 +518,8 @@ hypotrail check --study DIR [--text PATH | --text -] [--allow-user-text PATH | -
 
 An existing file is never overwritten (`skipped_existing`). A template outside the table maps `dot-<name>/` to `.<name>/` and drops a trailing `.in`. The `README.md` is not installed.
 
+**Size and content (v0.3, WP-D).** The three files installed for one task stay within 4,000 words (`test_agent_files.py::test_the_instructions_fit_the_word_budget`). They tell the agent to relay the payloads (`next_action.junior_digest`, `recommended`, `question`, `default_value`, `criterion_options`, `model_families`, `model_selection`, a refusal's `error.message`) instead of restating what the engine already decides or enforces; each remaining rule is stated once, in `CLAUDE.md`, and the skill keeps the pedagogy.
+
 **How the agent invokes the CLI.** Placeholders are replaced at install: `{{HYPOTRAIL}}` by the exact command, `{{STUDY}}` by the absolute study directory, `{{GLOSSARY}}` by the absolute path of the study's copy of the glossary, `.hypotrail/agent/glossary.yaml` (D10, post-acceptance: `init` copies `mlkit/study/content/glossary.yaml` there, never over an existing file, so the agent never reads the engine's source tree), `{{SKILL}}` by the agent's skill path. Every command in the instructions is therefore written in full, for example `uv run --project /abs/framework hypotrail status --json --study /abs/study`. The command is chosen in this order: the shell command in `HYPOTRAIL_CLI` if set; `uv run --project <framework> hypotrail` when the engine is the `framework/` uv project and `uv` is on `PATH` (the locked environment, from any directory); otherwise `env PYTHONPATH=<framework> <python> -m mlkit.study.cli`. It is recorded in `.hypotrail/agent.json`:
 
 ```json

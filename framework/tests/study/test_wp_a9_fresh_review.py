@@ -164,14 +164,16 @@ def test_the_policy_step_carries_the_case_default_share(tmp_path):
 
 
 def test_the_agent_templates_ask_the_capacity_as_a_share():
+    """v0.3 (WP-D): stated once, in CLAUDE.md (rule 9); the skill does not repeat it."""
     root = fk.FRAMEWORK / 'mlkit' / 'study' / 'agent'
     claude = ' '.join((root / 'CLAUDE.md.in').read_text(encoding='utf-8').split())
     skill = ' '.join((root / 'dot-claude/skills/hypotrail-study/SKILL.md')
                      .read_text(encoding='utf-8').split())
+    assert 'scenario_defaults.capacity_share' in claude
+    assert '5, 10 and 20 %' in claude and 'gain_points.points' in claude
+    assert "exercise's assumption" in claude
+    assert 'scenario_defaults.capacity_share' not in skill
     for doc in (claude, skill):
-        assert 'scenario_defaults.capacity_share' in doc
-        assert '5, 10 and 20 %' in doc and 'gain_points.points' in doc
-        assert "exercise's assumption" in doc
         assert 'subscribers' not in doc
     assert 'share:<p>' in claude and 'whole campaign' not in claude
 

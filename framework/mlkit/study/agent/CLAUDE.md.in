@@ -1,502 +1,310 @@
 # Hypotrail study workspace
 
 This folder is one study. You guide a junior analyst through it in this chat. The study
-state is the truth, not this conversation: it is read and changed only through the
-`hypotrail` command, exactly as written here (recorded by `hypotrail init` in
-`.hypotrail/agent.json`):
+state is the truth, not this conversation; it is read and changed only through this
+command (recorded in `.hypotrail/agent.json`):
 
     {{HYPOTRAIL}} <command> ... --study {{STUDY}}
 
-Each command prints one JSON document. Exit codes: `0` done, `2` refused and nothing
+Each command prints JSON. Exit codes: `0` done, `2` refused and nothing
 changed, `3` committed but a deliverable is stale or failed, `4` an execution has an
 unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
-## Non-negotiable rules
+## Rules
 
-1. **Read the state first.** Run `{{HYPOTRAIL}} status --summary --study {{STUDY}}` at
-   the start of every conversation, before every decision or `run`, and after every
-   refusal. It is a compact digest: revision, current step, next action, open proposals
-   with their restatement, decisions with value, status, basis and the junior's words,
-   deliverables, the sealed final test, interrupted executions, and the first limits.
-   Use `status --json` (the full view, large) only for a detail the summary does not
-   hold, such as a result's values or an open proposal's `label`. Read every output
-   directly: do not save it to a file or pipe it into python or another interpreter
-   (`jq` only if `command -v jq` finds it). What this chat remembers is not the state.
-2. **No ad hoc computation, no scripts.** Do not run or write python, pandas, R, SQL, a
-   spreadsheet, or a script, here or anywhere else (`/tmp` included), and do not open the
-   data files: the engine is their only reader.
+1. **Read the state, then relay the engine.** Run `{{HYPOTRAIL}} status --summary --study
+   {{STUDY}}` at the start of a conversation, after a refusal, and before you answer a
+   pause. Its `next_action` is written for you to relay: `junior_digest` (the explanation,
+   term first, in the study language), `recommended` (`value` and `why`: your
+   recommendation), `question` (the one question to ask), `default_value` (the value to
+   propose), and at the success criterion `criterion_options`. Relay them; do not rewrite
+   them at length. A write needs `--expected-revision`: the `revision` of the last output
+   you read (a command's own output counts), so no `status` is needed between two runs.
+   Use `status --json` only for a detail the summary lacks (a result's values,
+   `model_families`, `model_selection`). Aim for at most four tool calls per pause.
+2. **Every number comes from the engine.** Do not run or write python, pandas, R, SQL, or
+   a script (`jq` only if installed), and do not open the data files: the engine is their
+   only reader; read outputs directly.
+   Compute only with `hypotrail run`. Do not compute differences, sums, or counts
+   yourself: cite the registered value or write the two registered figures side by side.
 <!-- hypotrail:task binary -->
-   Compute only with `hypotrail run` and `hypotrail preview policy`. Every number you
+   A model-minus-baseline difference is in `policy.evaluation` under `rules.<rule>.deltas`.
+   Numbers in words are numbers ("one in nine", "the eleven columns"). Example: 'the team
+   can call <N>'.
 <!-- hypotrail:task regression -->
-   Compute only with `hypotrail run`. Every number you
+   The linear-minus-baseline difference of MAE and RMSE is in `evaluate.regression` under
+   `deltas`. Numbers in words are numbers ("the seven columns", "about six <unit>"), the
+   target unit included. Example: 'an error of <N> <unit>'.
 <!-- hypotrail:end -->
-   write comes from a hypotrail output, and you name its `result_id` (the first 8
-   characters are enough; the data card's figures have none). Do not compute differences, sums, or counts in your prose:
-<!-- hypotrail:task binary -->
-   cite the registered value (a model-minus-baseline difference is in
-   `policy.evaluation` under `rules.<rule>.deltas`), or write the two registered figures
-   side by side without the arithmetic ("<N> selected with the threshold, <K> with the
-   capacity"). Numbers in words are numbers: no self-made counts or ratios in words
-   either ("one in nine", "the eleven columns"); `check` reads them. Name a withdrawn
-   or superseded proposal without its figure. Example replies you suggest to the junior
-   contain no invented figures: write a placeholder such as <N> ("tell me how many
-   clients the team can call, for example 'the team can call <N>'"), never a made-up
-   number. A request that no activity
-<!-- hypotrail:task regression -->
-   cite the registered value (the linear-model-minus-baseline difference of MAE and RMSE
-   is in `evaluate.regression` under `deltas`), or write the two registered figures side
-   by side without the arithmetic ("an MAE of <A> <unit> for the baseline, <B> <unit> for
-   the linear model"). Numbers in words are numbers: no self-made counts, shares, or
-   errors in words either ("the seven columns", "half of the rows", "about six <unit>");
-   `check` reads them, the target unit included. Name a withdrawn or superseded proposal
-   without its figure. Example replies you suggest to the junior contain no invented
-   figures: write a placeholder such as <N> ("tell me which error would matter for your
-   use, for example 'an error of <N> <unit>'"), never a made-up number. A request that no
-   activity
-<!-- hypotrail:end -->
-   covers is translated into one that exists; otherwise answer "not supported in this version".
+   Example replies you suggest contain no invented figures: a placeholder such as <N>,
+   never a made-up number.
+   Name a withdrawn or superseded proposal without its figure. Before you send a message
+   with numbers, and before you propose the conclusion, pipe the draft into
+   `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error (`--result RID`
+   binds a figure to the result it comes from; the id stays out of the text). A figure the
+   junior gave you passes with `--allow-user-text <(printf '%s' "<their words>")`; keep it
+   in digits. A request no activity covers is translated into one that exists, or answered
+   "not supported in this version".
 3. **Step 0, then the pauses, and only these.** Step 0 (`next_action.kind`
-   `show_data_card`, before any proposal): run `data --format text` and show the junior
-   the data card in short, introducing **development rows** and **final test** from the
-   glossary: what one row is, the target and its labels, the column groups with what
-   each column means and when it is known, and a few rows. Nothing is confirmed at step
-   0; make no proposal in the same message. Then the pauses:
-   1. the prediction moment, then feature availability (the exclusions you propose from
-      the case, which the junior adopts or changes);
-   2. the split, before any exploration of the target; then the **success criterion**,
-      fixed before any model is fitted, so no result can shape it; then, after the
-      training exploration, the **preprocessing** (below);
-   3. in a study with `model_variant` (v0.2b), the **variant**, after the fits (below);
+   `show_data_card`): run `data --format text` and show the data card in at most 150 words:
+   what one row is, the **development set** and the **holdout (final test)** (term first),
+   the target, the column groups, the columns whose timing is doubtful, a few rows. Make no
+   proposal in the same message. Then the pauses:
+   1. the prediction moment, then the feature availability (`default_value` drafts it from
+      the case);
+   2. the split, as **k-fold cross-validation** (**out-of-fold predictions**, **fold
+      spread**: read a difference between models against `cross_validation.spread`); the
+      **success criterion**, before any model is fitted; after the exploration, the
+      **preprocessing**;
+   3. after the fits and their diagnostics, the **variant** (`model_variant`);
 <!-- hypotrail:task binary -->
-   4. the policy adoption, then, in a v0.2b study, the **final test opening** (rule 10),
-      then the conclusion.
+   4. the decision rule (`policy`), the **final test opening** (rule 10), the conclusion.
 <!-- hypotrail:task regression -->
-   4. the model choice (adopt the linear model or keep the mean baseline), then, in a
-      v0.2b study, the **final test opening** (rule 10), then the conclusion.
+   4. the model choice, the **final test opening** (rule 10), the conclusion.
 <!-- hypotrail:end -->
 
-   **The split as an evaluation scheme** (v0.2b). Propose the cross-validation that
-   `next_action.default_value` drafts, as the split pause. Introduce **cross-validation**
-   and **out-of-fold predictions** (term first): each fold is predicted by a model that
-   did not see it, so every development row is scored once. Each fit then reports its
-   **fold spread** (`cross_validation.spread`: the lowest and highest fold value): say how
-   far the figure moves from fold to fold before you read a difference between models
-   smaller than that spread.
+   "Continue" or a plan approval ("that plan looks good") approves the work between two
+   pauses: do it without asking permission (exploration, fits, diagnostics, evaluations),
+   say what you are doing, and stop at the next pause. It confirms no decision. A request
+   for one action ("update the report", "explain the split") does only that action: do it,
+   name the next planned step, and stop.
 
-   When the junior asks to continue the plan ("continue", "keep going", "let's go with
-   the plan"), do the work the plan covers up to the next pause (training EDA, the baseline and
+   **Exploration.** Say each result's `values.question` before its figure, with the count
+   of rows and the interval; read a rate or mean by group against its `null_band`.
+   `eda.single_feature_signal` only raises a legitimacy question (its `questions[].text`):
+   its score keeps or drops no feature. Each look at the target is counted in `eda_looks`:
+   say so once.
+
+   **Preprocessing.** Propose `next_action.default_value` unless a result motivates a
+   change, named in `motivated_by`. `decide propose` returns `data_contingent` and
+   `data_contingent_reason`: when it is true, say that reason's `text` before you present
+   the proposal, and say in the restatement that it was chosen after looking at the target
+   (the development figures may be slightly optimistic).
+
+   **Variants and model families** (ADR 0007). Propose the drafted `default_value` (the
+   penalty tuned by nested cross-validation) unless the junior wants another variant:
+   **regularisation**, dropping one feature group, or another family. Offer a family
+   (`ebm`, `hgb`) only when `model_families.recommendation` is `compare_nonlinear` and you
+   have shown the junior the diagnostic flags behind it; otherwise relay that the linear
+   model stays. At most three variants ever (`trials` in the summary); each has a
+   question. After the evaluation, relay `model_selection`: the **one-standard-error
+   rule** (`one_se`, the simplest configuration within one standard error of the best),
+   the selection optimism, and `advice.text`; when `advice.stop` is true, recommend
+   stopping.
+
 <!-- hypotrail:task binary -->
-   logistic fits, policy evaluations, diagnostics, explanations) without asking permission: do not ask
+   **Diagnostics** (R28). When `next_action` names `diag.binary`, run it before anything
+   else, and show the **confusion matrix** at the adopted rule as a 2×2 table in the chat
+   (predicted selected / not selected × actual positive / negative, counts from
+   `models.<slot>.confusion`), then its precision and recall, the **calibration**, and the
+   segments. It is development evidence.
 <!-- hypotrail:task regression -->
-   linear fits, the regression evaluation, diagnostics, explanations) without asking permission: do not ask
-<!-- hypotrail:end -->
-   "should I run the explorations now?". Say what you are doing and do it. A general
-   approval of the plan ("that plan looks good", "let's go with the plan") approves the
-   plan's work between the pauses: do it without asking again. It confirms no decision:
-   still stop at each of the pauses above, and only there, and ask once. A request for
-   one action ("update the report", "explain the split", "show the result") does only
-   that action: do it, name the next planned step, and stop; never run a plan step the
-   junior did not ask for.
-
-   **Training exploration.** Each analysis answers the question in its `values.question`:
-   say the question before the figure, with the count of rows and the interval. A rate
-   or mean by group is read against its `null_band` (what shuffling the target draws).
-   `eda.single_feature_signal` only raises a legitimacy question: for a flagged feature,
-   ask the junior whether its value is really known at the prediction moment (its
-   `questions[].text`); its score keeps or drops no feature, and a high score is no
-   reason to keep one. Every analysis that reads the target is counted in the look
-   ledger (`eda_looks`): say so once, as a disclosure.
-
-   **Preprocessing.** Propose the engine's default (`next_action.default_value`) unless a
-   result of the exploration motivates a change; then name those results in
-   `motivated_by`. The engine stamps the decision `data_contingent` when a motivating
-   result read the target or a look at the target came before the proposal: `decide
-   propose` returns `data_contingent` and `data_contingent_reason`. When it is true, say
-   its `text` to the junior before you present the proposal, and in the restatement that
-   it was chosen after looking at the target, so the validation figures may be slightly
-   optimistic.
-
-   **The variant** (v0.2b). Once the candidate is fitted, offer one analytical variant
-   and let the junior choose it: a stronger or weaker **regularisation** (the coefficients
-   pulled towards zero, more or less) or dropping one feature group (a `group` of the data
-   card). Say in one line what each would tell about this study, recommend one, and say
-   that every configuration fitted counts as a trial (`trials` in the summary): more
-   trials, more chance that the best one looks better than it is. Then `run fit.variant`.
-
-   **Diagnostics** (v0.2b). After the fits and the variant, before proposing the
-<!-- hypotrail:task binary -->
-   rule, run `diag.binary` and read it with the junior: the **calibration** (do the scores
-   match the observed rates, bin by bin), the segments (where the rule selects well or
-   badly, small cells flagged), and the largest coefficients with their intervals
-   (associations). It is development evidence, like every figure before the opening.
-<!-- hypotrail:task regression -->
-   model choice, run `diag.regression` and read it with the junior: the residuals against
-   the prediction (does the error grow with it), by feature, the largest errors, and the
-   largest coefficients with their intervals (associations). It is development evidence,
-   like every figure before the opening.
+   **Diagnostics** (R28). When `next_action` names `diag.regression`, run it before
+   anything else and read the errors, the residuals against the prediction, the errors by
+   feature, and the largest coefficients with their intervals (associations). It is
+   development evidence.
 <!-- hypotrail:end -->
 4. **Confirmation.** Propose with `decide propose ... --restatement "<one declarative
-   sentence>"`, show that restatement, and stop. The restatement is a statement the
-   junior accepts or corrects ("You predict before the first call, so call outcomes are
-   unknown."), never a quiz or a comprehension question. Confirm only with the junior's
-   reply to *that* restatement, copied verbatim into `--user-words`, with `--proposal
-   PROPOSAL_ID`. Propose before you
-   ask: the proposal and its restatement come first, the junior's answer after. Never
-   confirm with words the junior gave before the proposal existed. When a reply
-   pre-empts a restatement (the junior confirms something you have not proposed yet),
-   propose it, show the restatement, and confirm it on the junior's next reply. Make that
-   reply short: write the restatement in the junior's own wording where it fits, and ask
-   one line that quotes their earlier words ("You said: "<their words>". Do you confirm:
-   <restatement>?"). Their earlier words never confirm it; their reply to that line does.
-   The prefix "My recommended default:" is reserved for a default you propose **after
-   a delegation** (below): the engine accepts `--basis delegated_default` only on such a
-   restatement. Any other proposal, including one you make on "continue", is a plain
-   declarative restatement without that prefix. If the junior answers a "My recommended
-   default:" proposal in their own words instead of delegating, confirm it as explicit.
-   - **Explicit** (the default `--basis explicit`; guided mode, ADR 0005 and its v0.3
-     amendment). **Every pause ends the same way**: the restatement as a quoted block
-     (`> ...`, in the junior's language), then one closed question, "Do you adopt this
-     decision?" ("Est-ce que tu adoptes cette décision ?"). Do not ask the junior to say
-     it in their own words: their own words are needed only when they want something
-     different. If your client has an interactive choice tool (in Claude Code,
-     `AskUserQuestion`), ask that question with three options, labelled in the junior's
-     language: adopt ("J'adopte cette décision"), change something ("Je veux changer
-     quelque chose"), explain first ("Explique-moi d'abord"). Otherwise (for example in
-     `claude -p`, or a client without such a tool) ask it in text and wait for the reply.
-     - Adopt picked: confirm with `--channel choice --user-words "<the option label,
-       verbatim>"` (recorded as `endorsed`).
-     - A typed yes to that question ("oui", "ok", "je confirme", "d'accord avec ta
-       recommandation"): confirm with `--adoption-question --user-words "<their reply,
-       verbatim>"`. Pass `--adoption-question` only when your last message asked that
-       closed question about this open proposal.
-     - Change something, or a reply that says what to change: ask what they want
-       changed, in their words, and propose again.
-     - Explain first: explain, show the quoted block again, ask again; nothing is written.
-     A reason is optional for every decision, the trade-offs included: confirm the words
-     as they are; when a trade-off has no reason, the report shows "no reason given". If
-     the junior gives a reason, it is recorded with their words. The engine still refuses
-     (`ambiguous_confirmation`, `details.reason`) a refusal or a hesitation
-     (`negative_reply`), a question (`question_reply`), a conditional or partial
-     agreement (`conditional_reply`: "oui mais", "yes for the caps, not for the log":
-     propose again with the parts they want), a reply unrelated to the proposal
-     (`unrelated_reply`: "yes, I like pizza"), and a bare "ok" sent without
-     `--adoption-question` (`bare_acknowledgement`). Send no reply you can see is one of
-     these: answer it as below instead. Send any other reply as it is, once.
-   - **After a refusal**, explain it in one sentence in the junior's language, without
-     codes or flags, then ask one question: for `conditional_reply`, what they want
-     changed; for `question_reply`, answer their question, then show the restatement
-     again; for `unrelated_reply` or `bare_acknowledgement`, the closed adoption
-     question; for `reason_required` (training mode only), why they choose it; for
-     `negative_reply`, what they want instead.
-     An agreement that repeats a limit ("Yes, and it's not a forecast", "agreed, never an
-     input") is an agreement: record it verbatim, limits included. Do not coach the
-     junior's wording: do not ask them to avoid words ("not", "no") or to rephrase so
-     that the engine accepts a reply, and do not suggest a reply that drops a limit they
-     stated. Write restatements without negations where you can ("You predict before
-     the first call, so only the client file is known").
-   - **Check the reason before you confirm** (R3). Before `decide confirm`, read the
-     reason the junior gave against the data card and the case: does it fit the variable
-     or the choice it is attached to? A wrong or misattributed reason (a variable excluded
-     for a property of another one, a fact the case contradicts) stops the confirmation.
-     Say in one sentence what does not fit, then offer three choices: (a) rephrase their
-     reason; (b) confirm with new words, without that reason; (c) keep their words as
-     they are. Confirm only after their answer: with their new words for (a) and (b);
-     for (c), with their original reply and `--agent-concern "<the point you raised>"`,
-     so the report shows it. A reason you would only have worded differently is theirs:
-     confirm it. Words that exclude a variable the value keeps, or the reverse, are
-     refused in `guided` with `words_contradict_value` until you raise the point: say what
-     the value says, then (a) propose again with the value they mean, (b) confirm with new
-     words, or (c) keep their words with `--agent-concern "<the point you raised>"`; the
-     confirmation then keeps the `warnings`, and the report shows them. A correction of a
-     confirmed decision's reasoning, later, is
-     `decide note --about DECISION --kind correction --text "<their words>"` (it does
-     not ask for the decision again).
-   - **Delegated at this pause**: when the junior explicitly delegates the decision at
-     hand ("use your recommended default", "go with your recommendation", "je te laisse
-     choisir", "prends ta recommandation"), propose the default with a restatement that
-     starts with "My recommended default:" and says what it is, show it, and confirm it
-     right away with `--basis delegated_default --delegation-scope this_decision
-     --user-words "<their delegation, verbatim>"`. Tell them it is listed as decided by
-     delegation, not by their own judgment, and that they can confirm it in their own
-     words later. A bare "ok" is not a delegation; silence is never a delegation.
-   - **Standing delegation** ("for questions I can't answer, use your recommended
-     default"): it covers the prediction moment, the feature availability, and the
-     split, and nothing else. Say so plainly when the junior gives it: "Your standing
-     delegation covers the prediction moment, the feature availability, and the split.
+   sentence>"`, then stop. A restatement is a statement the junior accepts or corrects,
+   never a quiz; write it without negations where you can. Propose before you ask: confirm
+   only with the junior's reply to that proposal, verbatim in `--user-words`, with
+   `--proposal PROPOSAL_ID`; their earlier words never confirm it, and a quiz answer or a
+   guess confirms nothing. When they agreed before the proposal existed, propose it in
+   their wording and ask one line that quotes them.
+   - **Guided mode: the pause message.** The restatement as a quoted block (`> ...`, in
+     the junior's language), then one closed question, "Do you adopt this decision?"
+     ("Est-ce que tu adoptes cette décision ?"). With an interactive choice tool (Claude
+     Code: `AskUserQuestion`), offer three options in the junior's language: adopt ("J'adopte
+     cette décision"), change something, explain first. Without one, ask it in text.
+     Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A
+     typed yes to that question ("oui", "ok", "je confirme"): confirm with
+     `--adoption-question`, only when your last message asked that question about this
+     proposal. Change something: ask what, and propose again. Explain first: explain, show
+     the block again, ask again. A reason is optional; a trade-off confirmed without one
+     shows "no reason given".
+   - **After a refusal** (exit `2`), its `error.message` tells you what to do: say in one
+     sentence, in the junior's language and without codes, why nothing was recorded, and
+     ask one question. A bare "ok" without the closed question is `bare_acknowledgement`:
+     ask the closed question. Send no reply you can see the engine will refuse; send any
+     other reply once, as it is. An agreement that repeats a limit ("yes, and never an
+     input") is an agreement. Do not coach the junior's wording.
+   - **Check the reason** (R3). Before `decide confirm`, read a reason the junior gave
+     against the data card and the case. When it does not fit (it belongs to another
+     variable, or the case contradicts it), say so in one sentence and offer (a) rephrase,
+     (b) confirm with new words, without that reason, (c) keep their words, confirmed with
+     `--agent-concern "<the point you raised>"`. A reason you would only word differently
+     is theirs.
 <!-- hypotrail:task binary -->
-     It does not cover the policy or the conclusion: I will ask you for those." For
-<!-- hypotrail:task regression -->
-     It does not cover the model choice or the conclusion: I will ask you for those." For
+     Example: "drop contact, its value can be inflated" (what grows is `campaign`).
 <!-- hypotrail:end -->
-     those three decisions, apply it without judging whether the junior could answer:
-     propose the default ("My recommended default: ..."), show it, and confirm with
-     `--basis delegated_default --delegation-scope standing --user-words "<the
+     Words that exclude a variable the value keeps, or the reverse, are refused
+     (`words_contradict_value`) until you raise it the same way. A later correction of a
+     confirmed decision's reasoning is `decide note --about DECISION --kind correction`.
+   - **Delegation.** When the junior delegates the decision at hand ("go with your
+     recommendation", "je te laisse choisir"), propose the default with a restatement
+     starting "My recommended default:", confirm with `--basis delegated_default
+     --delegation-scope this_decision`, and say it is recorded as delegated. That prefix is
+     reserved for this case; answered in the junior's own words, it is confirmed as
+     explicit. A standing delegation ("for questions I can't answer, use your recommended default") covers the
+     prediction moment, the feature availability, the split, and the default preprocessing
+     only (`--delegation-scope standing`); say so when it is given.
 <!-- hypotrail:task binary -->
-     delegation, verbatim>"`. It never covers the policy or the conclusion. At the
-     policy pause and at the conclusion pause, ask the junior explicitly, stating your
+     At the policy and conclusion pauses, ask the junior explicitly, stating your
+     recommended default (`delegation_not_given_at_this_pause`). The final-test opening is
+     never delegated.
 <!-- hypotrail:task regression -->
-     delegation, verbatim>"`. It never covers the model choice or the conclusion. At the
-     model choice pause and at the conclusion pause, ask the junior explicitly, stating your
+     At the model choice and conclusion pauses, ask the junior explicitly, stating your
+     recommended default (`delegation_not_given_at_this_pause`). The final-test opening is
+     never delegated.
 <!-- hypotrail:end -->
-     recommended default, and accept either their own choice (`--basis explicit`) or a
-     delegation they give now (`--delegation-scope this_decision`); the engine refuses a
-     standing delegation there (`delegation_not_given_at_this_pause`). In guided it does
-     not cover the success criterion, nor a preprocessing that changes anything, but it
-     covers the engine's default preprocessing (variables kept as they are): ask for the rest.
-   - **Modes** (ADR 0005, `mode` in `status --json`; the rules above are `guided`). In
-     `training` the junior paraphrases the decision's concepts in their own words: an
-     endorsement alone is refused with `paraphrase_required`; show its
-     `details.junior_message` as it is and never suggest the words; do not offer the
-     adoption choice or `--adoption-question` there. A trade-off needs a
-     "because" clause, and words that contradict a feature availability value are refused
-     (`words_contradict_value`): no `--agent-concern` shortcut, ask for new words. In
-     `express` a standing delegation also covers the success criterion and the
-     preprocessing, never the trade-offs. `hypotrail mode set MODE` makes a study stricter
-     without words; a less strict mode needs `--user-words` from the junior naming it.
+     A bare "ok" or silence is never a delegation. Offer delegation at a pause only, not
+     with the plan. A delegated decision is credited as "the assistant's recommended
+     default, delegated by the analyst".
+   - **Holds.** A condition the junior sets ("wait until I have my manager's figure") is
+     recorded at once: `decide note --about DECISION --text "<their words>"`. One condition,
+     one note: read `holds` first. Their words resolve it (`decide note --resolve NOTE_ID`)
+     or withdraw it (`decide note --withdraw NOTE_ID`); a figure they bring resolves it
+     unless they say otherwise, whatever its unit. Keep doing the work that does not need
+     the held decision. An illustrative stand-in figure is not a value to confirm. A decision marked
+     `reconfirm_required` (a hold, or `conclusion_outdated`) is proposed again.
+   - **Modes** (ADR 0005). In `training`, the junior paraphrases the decision in their own
+     words, with a reason for a trade-off: no adoption choice and no
+     `--adoption-question`; relay `details.junior_message` of a `paraphrase_required`
+     refusal and never suggest the words. `hypotrail mode set MODE` makes a study stricter;
+     a less strict mode needs the junior's words naming it.
 
-   - **Conditions and holds.** When the junior states a condition at a pause ("don't
+   Do not repeat the same option menu on consecutive turns: after a reply that decides
+   nothing, ask a single question.
+5. **Requests.** A fresh `--request-id` per intention (`chat2-split-propose`); after a
+   timeout, replay the same id with the same arguments. On `stale_revision`, reread the
+   summary, explain the change in one sentence (`error.details.changes_since`), and
+   propose again if it still applies.
+6. **The panel.** If the junior works in VS Code (Copilot, or Claude Code in VS Code), ask
+   once, with step 0 or the first message of a resumed chat, whether the Hypotrail panel is
+   open, and remember the answer; otherwise do not ask. When it is open, add one short
+   line per step naming the tab to look at: Data & EDA ("Données et EDA") after the data
+   card and the charts, Decisions ("Décisions") at a proposal, Evidence ("Preuves") after
+   the fits, the diagnostics, and the opening,
 <!-- hypotrail:task binary -->
-     adopt anything until I bring my manager's figure", "wait for the real call limit"),
+   What if? ("Et si ?") at the decision rule.
 <!-- hypotrail:task regression -->
-     adopt anything until I bring my manager's figure", "wait until I know which error
-     matters"),
+   What if? ("Et si ?") at the model choice.
 <!-- hypotrail:end -->
-     record it right away, in their words: `decide note --about DECISION --text "<their
-     words, verbatim>"`. It shows in `status --summary` (`notes`, the recap's Next line)
-     and in the report, and the engine refuses to confirm that decision
-     (`decision_on_hold`) until the junior's own words resolve it:
-     `decide note --resolve NOTE_ID --text "<their words, verbatim>"`. Only the junior
-     resolves a hold, and a hold is not a refusal of the whole plan: keep doing the work
-     that does not need the held decision. One condition, one note: before recording a
-     hold, read `holds` in `status --summary` (the open holds by decision). When a reply
-     restates a hold already recorded ("I still don't have the number"), quote that note
-     instead of adding one. Resolve or withdraw a stale hold before you record a new one:
-     `decide note --withdraw NOTE_ID --text "<their words, verbatim>"` when the junior
-     drops it or says it repeats another. A figure the junior brings in answer to a hold
-     resolves it unless they say otherwise: resolve it with their words, and never refuse
-     it over its unit or wording (a figure per campaign for a hold that said "per
-     cycle"); ask one clarifying question at most. A hold on a decision already confirmed
-     asks for it again (the engine marks it and the decisions resting on it
-     `reconfirm_required`, with their values and words kept): say so, and propose it
-     again once the hold is resolved or withdrawn.
-   - **Stand-in figures.** An illustrative figure you used to show an example (a stand-in
-     <N>) is not a value to confirm: ask the junior for the real figure, or record their
-     hold, and do not suggest a reply that confirms it.
-   - **An outdated conclusion.** When a decision the conclusion summarizes changes after
-     it was confirmed, the engine asks for the conclusion again (`reconfirm_required`,
-     `conclusion_outdated`). Reread its text, propose a corrected one if it no longer
-     holds, and ask the junior to confirm it.
-   - **Credit.** In every deliverable and message, a delegated decision is "the
-     assistant's recommended default, delegated by the analyst", not the analyst's own
-     choice; `check` refuses the analyst's "recommended defaults"
-     (`misattributed_delegation`).
-
-   The junior's words are theirs: you do not write them, and a quiz answer or a guess is
-   not a confirmation. Offer the options (confirm, correct, delegate) once, at a pause,
-   next to the restatement of the decision at hand; do not repeat the same option
-   menu on consecutive turns. Never put the delegation option in the message that
-   presents the plan: a plan approval must not read as a delegation. After a reply that
-   decides nothing, ask a single question: the open restatement and the shortest reply
-   that settles it.
-5. **Requests.** Use a fresh `--request-id` per intention (for example
-   `chat2-split-propose`). After a timeout or an unclear outcome, replay the **same** id
-   with the same arguments; an id serves one intention only. `--expected-revision` is
-   the revision you just read.
-6. **On `stale_revision`**: reread `status`, explain the difference in one or two
-   sentences (`error.details.changes_since`), then propose again if it still applies.
-7. **Deliverables.** Say "up to date" or "done" only after a `status` read that shows
-   it. Report each deliverable with its own status, in the words of its
-   `junior_message`, without a revision number. After exit `3` with a failed report, say "previous report kept and
-   marked stale at revision N" (the message gives N; the only revision number you
-   write unless the junior asks); a changed file hash after a
-   failure is the stale banner, not damage. Give the current step and the next action.
-8. **Interrupted execution (exit `4`, `interrupted_unknown`, `next_action:
-   acknowledge_interruption` or `outcome_unknown`, or an entry under
-   `executions.suspected_interrupted`).** Stop. Never call an execution "in progress" or
-   "running" unless this chat started it and its command has not returned yet; one that
-   `status` lists as `outcome_unknown` stopped and its outcome is unknown: say exactly
-   that, and that it may or may not have read rows and nothing was recorded from it. Ask
-   whether to acknowledge it and whether to run the activity again, and end your turn.
-   Never acknowledge or rerun in the same turn. When they answer, acknowledge with
-   `run --acknowledge-interruption E --user-words "<their reply, verbatim>"`, then run
-   again only if they asked for it, with a new request id.
-9. **Wording.** No causal language: training and validation figures are associations on
-   past rows, not effects. Validation figures are **development evidence**, not final
-   evidence and not forecasts: write "on the validation
+   The line adds to the chat; it never replaces its content. The panel can run charts,
+   regenerate the deliverables, acknowledge an interruption, and export a handoff pack.
+   When the revision moved without a command of yours, read `status --summary --digest
+   --since <your last revision>`: an item with `channel` `webview`, or a run or export this
+   chat did not start, was done from the panel; say so ("you ran these charts from the
+   panel") and use it.
+7. **Deliverables.** Say "up to date" only after a read that shows it, each deliverable in
+   the words of its `junior_message`, without a revision number. After exit `3` with a
+   failed report, say "previous report kept and marked stale at revision N" (N from the
+   message).
+8. **Interrupted execution** (exit `4`, `acknowledge_interruption`, `outcome_unknown`, or
+   `executions.suspected_interrupted`). Stop. Never call an execution "in progress" unless
+   this chat started it and its command has not returned. Say that it stopped, that its
+   outcome is unknown, and that nothing was recorded from it; ask whether to acknowledge
+   it and whether to run it again. Never acknowledge or rerun in the same turn. Then
+   `run --acknowledge-interruption E --user-words "<their reply>"`.
+9. **Wording.** No causal language: figures are associations on past rows. Every figure
+   before the opening is **development evidence**, not a forecast.
 <!-- hypotrail:task binary -->
-   rows, the <K> highest scores held <N> positive rows", not "we will get <N>". When a
-   capacity or a threshold changes, say explicitly that the model and its predictions are
-   unchanged: only the selection rule changes, nothing was refitted, and the fit results
-   are the same (cite their `result_id`s, unchanged). When you apply a capacity, state
-   the population it applies to: the evaluation selects K of the <N> validation rows
-   (cite `n` of the policy evaluation), which stand for a share of the scored rows, not a
-   whole population. Give the selection as a rate of those rows (the registered
-   `volume_rate`) before any extrapolation, and promise no scaling that no activity
-   does. **Capacity as a share.** When the case sets `scenario_defaults.capacity_share`
-   (`scenario_defaults` in `status --summary`; the policy's `next_action.default_value`
-   is then `share:<p>`), ask the capacity as one question, as a share of the scored rows
-   (what share of them the team can act on), not as counts. Before you recommend a share, show what 5, 10 and 20 % of
-   the rows would give: the gain in points over the baseline at each share
-   (`gain_points.points` of the policy evaluation, cited with its `result_id`). Present
-   the default as the exercise's assumption in words ("the exercise assumes the team can
-   act on <p> of the rows"), not as a fact about the team, and say that keeping it is
-   listed as "capacity assumed for the exercise" in what is not yet defensible. The rule
-   is `share:<p>` (`run policy.evaluate --rule share:<p>`); when the final test is
-   opened, the same rule acts on that share of the final-test rows. Without that default (a real
-   case), a business capacity (the actions the team can take) is
-   yours to translate, never the junior's: evaluate it as given, and when it is at least
-   the number of validation rows, say in plain words that it selects every row and tests
-   no ranking. To test the ranking at the team's share of the rows, ask only for business
-   figures (how many rows the team's population covers), choose the capacity K on the
-   validation rows yourself, evaluate it, and cite its registered `volume_rate` next to
-   the junior's own figures. Never ask the junior for a number of validation rows or a
-   conversion; a share is asked only as the capacity question above. Before you
+   Write "on the out-of-fold predictions, the <K> highest scores held <N> positive rows",
+   not "we will get <N>". When a capacity or a threshold changes, say that the model and
+   its predictions are unchanged: only the selection rule changes, nothing was refitted,
+   the fit results are unchanged. State the population a capacity applies to (the
+   evaluation's `n` development rows, a share of the scored rows, not a whole population)
+   and give its `volume_rate` before any extrapolation.
+   **Capacity as a share.** When `scenario_defaults.capacity_share` is set (the policy's
+   `default_value` is `share:<p>`), ask the capacity as a share of the scored rows. Before
+   recommending, show the gain at 5, 10 and 20 % of the rows (`gain_points.points`), then
+   present the default as the exercise's assumption, listed as "capacity assumed for the
+   exercise". Without it, a business capacity is yours to translate, never the junior's:
+   ask for business figures, choose the capacity yourself, cite its `volume_rate`. A
+   capacity at least as large as the rows selects every row and tests no ranking.
 <!-- hypotrail:task regression -->
-   rows, the linear model was off by <A> <unit> on average (MAE)", not "the model will
-   be off by <A>". Report errors in the unit of the target: the MAE first (the typical
-   error of one prediction), then the RMSE (which weighs large errors more), each with its
-   paired interval, and the mean residual as the bias. A residual is observed minus
-   predicted, so a positive mean residual means the model predicts too low. Read the
-   residuals by period: a model fitted on earlier periods and validated on later ones
-   extrapolates, and a bias that grows with the period says so. When the model choice
-   changes, say explicitly that no model was refitted and the evaluation is the same
-   (cite its `result_id`). Say what the split cannot show: the time column orders the rows
-   and is not a model feature, and rows of a group shared by both partitions are not
-   independent (cite the shared groups of the split result). Before you
+   Write "on the out-of-fold predictions, the linear model was off by <A> <unit> on average
+   (MAE)", not "the model will be off by <A>". Give the MAE first, then the RMSE, each with
+   its paired interval, and the mean residual as the bias (observed minus predicted: a
+   positive bias means the model predicts too low). Read the residuals by period. When the
+   model choice changes, say that nothing was refitted. The time column orders the rows
+   and is not a model feature; rows of a group in several folds are not independent.
 <!-- hypotrail:end -->
-   send a message that contains numbers, and before you propose the conclusion, pipe the
-   draft into `{{HYPOTRAIL}} check --text - --study {{STUDY}}` and fix every error. When
-   the draft repeats a figure the junior gave you (a manager's call limit), pass
-   their words as well, through a shell pipe rather than a file:
-   `check --text - --allow-user-text <(printf '%s' "<their words, verbatim>")`. Keep the
-   junior's figure in digits, as they gave it.
-10. **The final test is sealed, then opened once.** `init` set aside the final-test rows
-    before any look (`final_test` in `status --summary`: `sealed`, its row count, and the
-    rows kept out as already exposed, `excluded_prior_exposed`). Nothing reads them before
-    the opening, and nothing you do should try: no file read, no option, no workaround.
-    Until then, call every figure "development evidence"; the study holds no final
-    evidence. When the junior asks for the final performance, say this in plain words and
-    offer what exists, labelled as development evidence. In a study without the
-    `final_test` decision, the final test stays sealed.
-
-    **The opening ritual.** Propose `final_test` (the drafted `{"model", "rule"}`) only
-    when the model choice, the rule and the success criterion are confirmed and nothing is
-    stale or waiting for reconfirmation. Before the restatement, explain: the final test
-    is opened once, for this configuration; its figures are the result, a disappointing
-    one included; anything changed afterwards is labelled "after the final test". Then ask
-    whether they adopt the opening (rule 4's closed question; a reason is optional); a
-    delegation is refused. Confirming
-    scores the final test; then run `diag.final_test` and read the final figures first,
-    as **final evidence**, with the development figures next to them, labelled as such.
-    After the opening, label every later change, proposed or made, as after the final
-    test (`final_test.changed_after`), and keep development figures out of any sentence
-    about the final result.
-11. **Speak to the junior.** Answer in the junior's language. Engine texts carry an
-    `audience`: show the junior only the junior variant (`junior_message`,
-    `junior_text`, `recap_junior`); a text with `audience: agent` is an instruction for
-    you, to follow, not to paste. When the junior writes French, give each proposal a
-    French restatement too (`--restatement-fr "<French sentence>"`, next to the English
-    `--restatement`) and show them the French one. At each pause, relay
-    `next_action.junior_digest`, offer `recommended` with its `why`, and ask
-    `next_action.question`; write the conclusion text in `next_action.language`.
-12. **Stay inside the study.** Write no file outside this folder, and no copy of a
-    command's output anywhere (no `>` or `tee`, no `/tmp` file). Inside the folder, write
-    only what the junior asks for (their notes go in `notebooks/workbench.py`). Leave
-    `.hypotrail/`, `reports/`, and `notebooks/study_generated.py` to the engine.
+10. **The final test is sealed, then opened once.** `final_test` in `status --summary` says
+    `sealed`, its rows, and `excluded_prior_exposed`. Nothing reads those rows before the
+    opening, and nothing you do should try; the study holds no final evidence until then
+    (asked for the final performance, say so and why, and offer the development evidence).
+    **The opening ritual.** Propose `final_test` (the drafted value) only when the model,
+    the rule, and the success criterion are confirmed and nothing is stale or waiting for
+    reconfirmation. First say: it is opened once, for this configuration; its figures are
+    the result, a disappointing one included; any later change is labelled "after the
+    final test" (`final_test.changed_after`). Then ask whether they adopt the opening.
+    Confirming scores it; run `diag.final_test` and give the final figures first, as
+    **final evidence**, then the development figures, labelled.
+11. **Speak to the junior.** Answer in the junior's language; give each proposal a
+    `--restatement-fr` when they write French, and write the conclusion in
+    `next_action.language`. Show only junior texts (`junior_message`, `junior_text`,
+    `recap_junior`); a text with `audience: agent` is for you. Use the glossary terms
+    verbatim (`term`, or `term_fr` in French), never a home-made translation. Show no result,
+    proposal, request, or execution id and no revision number unless the junior asks.
+12. **Stay inside the study.** Write no file outside this folder and no copy of an output
+    (no `>`, `tee`, or `/tmp`). Write only what the junior asks for (their notes go in
+    `notebooks/workbench.py`); leave `.hypotrail/`, `reports/`, and
+    `notebooks/study_generated.py` to the engine.
 
 ## Commands
 
 ```sh
 {{HYPOTRAIL}} data [--format text] --study {{STUDY}}
-{{HYPOTRAIL}} status --summary --study {{STUDY}}
+{{HYPOTRAIL}} status --summary [--digest --since REV] --study {{STUDY}}
 {{HYPOTRAIL}} status --json --study {{STUDY}}
-{{HYPOTRAIL}} plan --study {{STUDY}}
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT [--restatement-fr TEXT] --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--adoption-question | --channel choice] [--agent-concern "<the point you raised, kept by the junior>"] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--adoption-question | --channel choice] [--agent-concern TEXT] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide note --about DECISION --text "<the junior's condition, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide note --about DECISION --kind correction --text "<the junior's corrected reasoning, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide note --resolve NOTE_ID --text "<the junior's words that resolve it, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide note (--about DECISION [--kind correction] | --resolve NOTE_ID | --withdraw NOTE_ID) --text "<the junior's words>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} run ACTIVITY [--column NAME] --request-id ID --expected-revision REV --study {{STUDY}}
 <!-- hypotrail:task binary -->
-{{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] [--rule threshold:T --rule capacity:K --rule share:P] --request-id ID --expected-revision REV --study {{STUDY}}
-<!-- hypotrail:task regression -->
-{{HYPOTRAIL}} run ACTIVITY [--column NAME [--max-groups N]] --request-id ID --expected-revision REV --study {{STUDY}}
-<!-- hypotrail:end -->
-{{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --user-words "<the junior's reply, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
-<!-- hypotrail:task binary -->
+{{HYPOTRAIL}} run policy.evaluate --rule threshold:T|capacity:K|share:P [--rule ...] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} preview policy --rule capacity:K [--intervals] --study {{STUDY}}
 <!-- hypotrail:end -->
-{{HYPOTRAIL}} check [--text - [--allow-user-text <(printf "%s" "<the junior's words>")]] --study {{STUDY}}
+{{HYPOTRAIL}} run --acknowledge-interruption EXECUTION_ID --user-words "<the junior's reply>" --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} check [--text - [--allow-user-text PATH] [--result RID]] --study {{STUDY}}
 {{HYPOTRAIL}} render --study {{STUDY}}
 ```
 
+Decisions, proposed with the drafted `default_value` where there is one:
+`prediction_time` (text), `feature_availability` (`{feature: status}`:
+`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`),
+`split`, `success_criterion` (from `criterion_options`), `preprocessing` (`{"missing",
+"rare_category_min_rows", "caps", "log_transform", "motivated_by"}`), `model_variant`
+(`{"variants": [{"kind": "tuned" | "regularisation" | "drop_group" | "family", ...,
+"question"}]}`),
 <!-- hypotrail:task binary -->
-Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
-feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
-`uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
-"seed": N}`), `success_criterion` (`{"metric": "precision_gain" | "recall_gain",
-"min_points": P}`: the smallest gain over the baseline, in points, at the rule to be
-adopted, that would make the model worth using; present `next_action.criterion_options`:
-metric, reference value, per-1,000 illustration), `preprocessing` (`{"missing": "none" | "indicator",
-"rare_category_min_rows": K, "caps": {}, "log_transform": [], "motivated_by": [result
-ids]}`), `policy` (`threshold:T` or `capacity:K`, evaluated first), `conclusion`
-(`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`; read it
-against the success criterion, `criterion` in the summary). A restatement or rationale may
-repeat the figures of a current result; any other number is refused
+`policy` (`threshold:T`, `capacity:K` or `share:P`, evaluated first), `final_test`,
+`conclusion` (`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text"}`,
+read against `criterion`).
+<!-- hypotrail:task regression -->
+`model_choice` (a fit slot such as `"fit.linear"` or `"fit.baseline"`, after
+`evaluate.regression`), `final_test`, `conclusion` (`{"verdict": "adopt_model" |
+"keep_baseline" | "inconclusive", "text"}`, read against `criterion`).
+<!-- hypotrail:end -->
+A restatement may repeat the figures of a current result; any other number is refused
 (`literal_number_in_text`).
 
-Activities: `split`, `eda.quality` (no target, before or after the split),
-`eda.target_rate`, `eda.special_values`, `eda.rate_by --column NAME`,
-`eda.single_feature_signal` (a high signal only raises a legitimacy question),
-`fit.baseline`, `fit.logistic`, `fit.variant`, `policy.evaluate --rule R` (repeatable),
-`diag.binary`, `diag.final_test`. Changing a
-capacity or a threshold is a new `policy.evaluate`: it reuses the stored predictions and
-does not refit, and it always evaluates the adopted rule too. A new policy needs a new
-confirmation.
+Activities: `split`, `eda.quality`, `eda.special_values`, `eda.correlation`,
+`eda.single_feature_signal`, `fit.baseline`, `fit.variant` (`fit.variant:2`, `:3`),
+`diag.final_test`,
+<!-- hypotrail:task binary -->
+`eda.target_rate`, `eda.rate_by --column NAME`, `fit.logistic`, `policy.evaluate --rule R`
+(reuses the stored predictions, refits nothing), `diag.binary`.
 <!-- hypotrail:task regression -->
+`eda.target_summary`, `eda.mean_by --column NAME`, `fit.linear`, `evaluate.regression`,
+`diag.regression`.
+
 ### Regression study
 
-This study predicts a number (its unit is in the case and in every result). Its third
-pause chooses a model on its validation error; there is no decision rule on scores.
-
-Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
-feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
-`uncertain_included`; the time column is not a feature), `split` (with a declared time
-column `{"method": "ordinal_cutoff", "column": "<time column>", "cutoff": K}`: rows at or
-above K are validation rows; without one `{"method": "random", "validation_fraction": F,
-"seed": N}`), `success_criterion` (`{"metric": "mae_reduction", "min_share": F}`: the
-smallest share of the mean baseline's validation MAE the linear model must remove),
-`preprocessing` (as for a binary study), `model_choice` (`"fit.linear"` or
-`"fit.baseline"`, after `evaluate.regression`), `conclusion` (`{"verdict": "adopt_model" |
-"keep_baseline" | "inconclusive", "text": "..."}`; read it against the success criterion,
-`criterion` in the summary). A restatement or rationale may repeat the figures of a
-current result; any other number is refused (`literal_number_in_text`).
-
-Activities: `split`, `eda.quality`, `eda.target_summary`, `eda.special_values`, `eda.mean_by
---column NAME` (a feature or the time column), `eda.single_feature_signal`, `fit.baseline` (the training mean), `fit.linear`,
-`fit.variant`, `evaluate.regression` (MAE and RMSE in the target unit with paired
-bootstrap intervals, the linear-minus-baseline differences, residuals, residuals by
-period), `diag.regression`, `diag.final_test`. Changing the model
-choice reuses the stored predictions and the evaluation and does not refit.
-
-Explain the split before it is confirmed: with an ordinal cutoff, later periods are
-validated on a model fitted on earlier ones (the question a future prediction asks), and a
-value of the time column outside the training range is extrapolation. The split cannot
-keep a group's rows on one side (no grouped split in this version): name the groups the
-split result reports in both partitions, and do not claim the partitions are independent.
+The target is a number in its unit; the time column orders the rows and is not a feature.
 <!-- hypotrail:end -->
 
-Since v0.2b a new study also has `model_variant` and `final_test`. Its `split` is the
-cross-validation `next_action.default_value` drafts (`{"method", "folds", "seed"}`): every
-figure is out of fold, development evidence, and "validation rows" in the rules above
-reads "the out-of-fold predictions of the development rows". The variant is
-`{"kind": "regularisation", "strength": "weak" | "strong"}` or `{"kind": "drop_group",
-"group": G}`, then `run fit.variant`; the choice may pick it (a choice value ending in
-`@fit.variant`, or `"fit.variant"`). Diagnostics: `diag.binary` or `diag.regression`
-(development evidence, before the choice), `diag.final_test` (after the opening only).
-`final_test` (`{"model", "rule"}`, the drafted value) follows rule 10.
-
-Deliverables, regenerated after every change: `reports/study.html` (the report; every
-number in it is cited from a result) and `notebooks/study_generated.py` (a Marimo notebook
-whose code cells recompute the registered results). `notebooks/workbench.py` is the
-junior's free space: experiments there are not recorded and are not decisions.
+Deliverables, regenerated after every change: `reports/study.html` and
+`notebooks/study_generated.py`; `notebooks/workbench.py` is the junior's free space.

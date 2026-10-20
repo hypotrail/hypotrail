@@ -147,16 +147,27 @@ def test_instructions_name_only_real_decisions_activities_and_commands():
     assert 'status --json' in resume and 'five lines' in resume
 
 
+def _skill(task: str = 'binary') -> Flat:
+    return Flat(af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
+                               .read_text(), task))
+
+
+def _rule(text: str, n: int) -> Flat:
+    """Rule ``n`` of the numbered rules of ``CLAUDE.md.in``."""
+    return Flat(text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0])
+
+
 def test_instructions_carry_the_acceptance_fixes():
     """The rules added after the Claude Code acceptance run (D1-D3, D6, D7, D10-D12) name
-    the real flags, codes and fields; they must not drift from the engine."""
+    the real flags, codes and fields; they must not drift from the engine. v0.3 (WP-D):
+    each rule is stated once, in ``CLAUDE.md``; the skill keeps the pedagogy."""
     from mlkit.study import commands as c, currency, view
     text = _binary('CLAUDE.md.in')
-    rule1 = text.split('1. **Read the state first.**', 1)[1].split('\n2. ', 1)[0]
+    rule1 = _rule(text, 1)
     assert 'status --summary' in rule1                                    # D3
     for phrase in ('--basis delegated_default', 'My recommended default:',  # D1
-                   'silence is', 'never a delegation',
-                   '`bare_acknowledgement`', 'never a quiz',  # D6 (v0.3 WP-B: no list)
+                   'silence is never a delegation',
+                   '`bare_acknowledgement`', 'never a quiz',                # D6
                    'previous report kept and marked stale at revision N',   # D7
                    'acknowledge_interruption', 'outcome is unknown',        # D2
                    'Never acknowledge or rerun in the same turn',
@@ -174,29 +185,23 @@ def test_instructions_carry_the_acceptance_fixes():
     assert 'status --summary' in resume                                   # D12
     assert resume.index('goal.intended_use') < resume.index('Where we are')
     assert 'goal.prediction_time' in resume and 'unless the' in resume
-    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
-    assert '{{GLOSSARY}}' in skill and '--basis delegated_default' in skill
-
-
-def _rule(text: str, n: int) -> Flat:
-    """Rule ``n`` of the non-negotiable rules of ``CLAUDE.md.in``."""
-    return Flat(text.split(f'\n{n}. **', 1)[1].split(f'\n{n + 1}. **', 1)[0])
+    skill = _skill()
+    assert '{{GLOSSARY}}' in skill
+    assert '--basis delegated_default' not in skill       # WP-D: stated once, in CLAUDE.md
 
 
 def test_instructions_carry_the_rerun_fixes():
     """The rules added after the acceptance rerun (R1-R7) are where the agent reads them,
     and name the engine's real flags and refusal reasons."""
     text = _binary('CLAUDE.md.in')
-    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
     rule4 = _rule(text, 4)
     # R1: which decisions a standing delegation covers; the policy and conclusion pauses.
-    for phrase in ('**Standing delegation**', "for questions I can't answer",
-                   'covers the prediction moment, the feature availability, and the\n     split, '
-                   'and nothing else', 'It never covers the policy or the conclusion',
-                   'ask the junior explicitly, stating your\n     recommended default',
-                   'a\n     delegation they give now', '--delegation-scope standing',
-                   '--delegation-scope this_decision', 'delegation_not_given_at_this_pause',
-                   'without judging whether the junior could answer'):
+    for phrase in ("for questions I can't answer",
+                   'covers the prediction moment, the feature availability, the split, and '
+                   'the default preprocessing only', 'At the policy and conclusion pauses, '
+                   'ask the junior explicitly, stating your recommended default',
+                   '--delegation-scope standing', '--delegation-scope this_decision',
+                   'delegation_not_given_at_this_pause'):
         assert phrase in rule4, phrase
     assert 'reuse it at a later pause only if' not in text            # the old, unclear rule
     assert 'delegation_not_given_at_this_pause' in inspect.getsource(cmd)
@@ -205,58 +210,48 @@ def test_instructions_carry_the_rerun_fixes():
     assert cmd.is_delegation("For questions I can't answer, use your recommended default.")
     assert not cmd.is_negative("For questions I can't answer, use your recommended default.")
     assert '--delegation-scope this_decision|standing' in text         # the command line
-    for phrase in ('--delegation-scope this_decision', '--delegation-scope standing',
-                   'prediction moment, the feature availability, and the split only',
-                   'At the policy and conclusion pauses, ask the junior explicitly'):
-        assert phrase in skill, phrase
     # R6: propose before asking; never confirm with words older than the proposal.
-    for phrase in ('Propose before you\n   ask', 'Never\n   confirm with words the junior gave '
-                   'before the proposal existed', 'confirm it on the junior\'s next reply'):
+    for phrase in ('Propose before you ask', "their earlier words never confirm it",
+                   'confirm only with the junior\'s reply to that proposal'):
         assert phrase in rule4, phrase
-    assert 'never confirm with words the junior wrote\nbefore the proposal existed' in skill
 
 
 def test_instructions_carry_the_rerun_wording_fixes():
     """R2, R4, R5, R7 of the acceptance rerun: scoped requests, no invented figures in
     examples, the five-line "where are we?", and the unchanged model on a new rule."""
     text = _binary('CLAUDE.md.in')
-    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    skill = _skill()
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
     # R2: one requested action is only that action; the plan's work needs "continue".
     rule3 = _rule(text, 3)
-    for phrase in ('When the junior asks to continue the plan', 'without asking permission',
-                   'A request for\n   one action ("update the report"',
-                   'does only\n   that action', 'name the next planned step, and stop',
-                   'never run a plan step the\n   junior did not ask for'):
+    for phrase in ('"Continue" or a plan approval', 'without asking permission',
+                   'A request for one action ("update the report"',
+                   'does only that action', 'name the next planned step, and stop',
+                   'It confirms no decision'):
         assert phrase in rule3, phrase
     # R4: no invented figures in example replies; placeholders instead.
     rule2 = _rule(text, 2)
-    for phrase in ('Example replies you suggest to the junior contain no invented figures',
+    for phrase in ('Example replies you suggest contain no invented figures',
                    'placeholder such as <N>', "'the team can call <N>'",
                    'never a made-up number'):
         assert phrase in rule2, phrase
-    assert 'Do not\ninvent a figure' in skill and 'write <N>' in skill   # WP-A8: was "Never"
+    assert 'Do not invent a figure' in skill and 'write <N>' in skill
     for template in (text, skill, resume):        # the examples themselves use placeholders
         for invented in ('38 subscribers', 'we will get 38', '115 selected', '3,164',
                          '3fa9c2e1', '31 %', 'call 250', 'limit of 100'):
             assert invented not in template, invented
     # R5: a plain "where are we?" gets the resume command's five lines, goal first.
-    resuming = skill.split('## Resuming', 1)[1].split('\n## ', 1)[0]
-    for phrase in ('A plain "where are we?", in any chat, gets the same five-line answer',
-                   'in at most five lines, goal first', '**The goal first**',
-                   'the excluded features by name', 'No revision numbers'):
+    resuming = Flat(skill.split('## Resuming', 1)[1].split('\n## ', 1)[0])
+    for phrase in ('A plain "where are we?" gets the same answer as the resume command',
+                   '`recap_junior`', 'five flat lines, goal first', 'no revision number'):
         assert phrase in resuming, phrase
-    assert resuming.index('**The goal first**') < resuming.index('**Where we are**')
     assert 'five lines' in resume and 'excluded features by name' in resume
     # R7: a new capacity or threshold leaves the model and its predictions unchanged.
     rule9 = _rule(text, 9)
-    for phrase in ('When a\n   capacity or a threshold changes, say explicitly that the model '
-                   'and its predictions are\n   unchanged', 'nothing was refitted',
-                   '`result_id`s, unchanged'):
+    for phrase in ('When a capacity or a threshold changes, say that the model and its '
+                   'predictions are unchanged', 'nothing was refitted',
+                   'the fit results are unchanged'):
         assert phrase in rule9, phrase
-    for phrase in ('**A new capacity or threshold.** The model and its predictions are '
-                   'unchanged', 'cite the\n  fit result ids as unchanged'):
-        assert phrase in skill, phrase
 
 
 def test_unknown_placeholders_are_refused():
@@ -271,30 +266,25 @@ def test_instructions_carry_the_closure_fixes():
     capacity, and the reserved "My recommended default:" prefix."""
     from mlkit.study import view
     text = _binary('CLAUDE.md.in')
-    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
     # F1: never "in progress" unless this chat started it; outcome_unknown is said as such.
     rule8 = _rule(text, 8)
     for phrase in ('outcome_unknown', 'executions.suspected_interrupted',
                    'Never call an execution "in progress"', 'unless this chat started it'):
         assert phrase in rule8, phrase
-    for doc in (skill, resume):
-        assert 'suspected_interrupted' in doc and 'outcome_unknown' in doc
-        assert 'in progress' in doc
+    assert 'suspected_interrupted' in resume and 'outcome_unknown' in resume
+    assert 'in progress' in resume
     assert view.LIVENESS_UNKNOWN == 'outcome_unknown'
     # F2: state the population of a capacity and give it as a rate first.
     rule9 = _rule(text, 9)
-    for phrase in ('state\n   the population it applies to', 'validation rows',
-                   'share of the scored rows', '`volume_rate`', 'before any extrapolation'):
+    for phrase in ('State the population a capacity applies to', 'development rows',
+                   'a share of the scored rows', '`volume_rate`', 'before any extrapolation'):
         assert phrase in rule9, phrase
-    assert 'share of the scored rows' in skill and '`volume_rate`' in skill
     # F4: the prefix is reserved for a default proposed after a delegation.
     rule4 = _rule(text, 4)
-    for phrase in ('reserved for a default you propose **after\n   a delegation**',
-                   'plain\n   declarative restatement without that prefix',
-                   'confirm it as explicit'):
+    for phrase in ('a restatement starting "My recommended default:"',
+                   'That prefix is reserved for this case'):
         assert phrase in rule4, phrase
-    assert 'only when you propose a default\nafter a delegation' in skill
 
 
 def test_instructions_carry_the_p_fix_defects():
@@ -303,37 +293,30 @@ def test_instructions_carry_the_p_fix_defects():
     fields, and the glossary defines the terms with a contextual example."""
     from mlkit.study import texts, view
     text = _binary('CLAUDE.md.in')
-    skill = _binary('dot-claude/skills/hypotrail-study/SKILL.md')
+    skill = _skill()
     rule4, rule9 = _rule(text, 4), _rule(text, 9)
     # D3: a business capacity is the agent's to translate; never ask for validation rows.
-    for phrase in ('is\n   yours to translate, never the junior\'s', '`volume_rate`',
-                   # WP-A9 (H4): a share is asked only as the capacity question.
-                   'Never ask the junior for a number of validation rows or a\n   conversion',
-                   'selects every row and tests\n   no ranking'):
+    for phrase in ("a business capacity is yours to translate, never the junior's",
+                   '`volume_rate`', 'choose the capacity yourself',
+                   'selects every row and tests no ranking'):
         assert phrase in rule9, phrase
-    assert "Translating the team's capacity into\n  validation rows is your job" in skill
     # D3, D5: holds.
-    for phrase in ('One condition, one note', '`holds` in `status --summary`',
+    for phrase in ('One condition, one note', 'read `holds` first',
                    'decide note --withdraw NOTE_ID', 'resolves it unless they say otherwise',
-                   'never refuse it over its unit', 'one clarifying question at most',
+                   'Keep doing the work that does not need the held decision',
                    '`reconfirm_required`'):
         assert phrase in rule4, phrase
     assert 'holds' in view.SUMMARY_KEYS and cmd.ACTION_WITHDRAW_NOTE == 'decide.withdraw_note'
-    assert '--withdraw NOTE_ID' in text or 'decide note --withdraw' in text
     # D2: an outdated conclusion.
-    assert '**An outdated conclusion.**' in rule4 and '`conclusion_outdated`' in rule4
+    assert '`conclusion_outdated`' in rule4
     # D7: an earlier agreement is quoted in a one-line confirmation, never used as one.
-    for phrase in ('ask\n   one line that quotes their earlier words',
-                   'Their earlier words never confirm it'):
-        assert phrase in rule4, phrase
-    assert 'propose it in\ntheir wording and ask one line that quotes them' in skill
+    assert 'propose it in their wording and ask one line that quotes them' in rule4
     # D9: the delegation option only at a pause, never with the plan.
-    for phrase in ('once, at a pause', 'Never put the delegation option in the message that '
-                   'presents the plan'):
-        assert phrase in rule4, phrase
-    assert 'Never offer delegation in the message that presents\nthe plan' in skill
+    assert 'Offer delegation at a pause only, not with the plan' in rule4
     # D11: term first at first use, with the glossary's example.
-    assert 'Define each term at its first use' in skill and '`example`' in skill
+    for phrase in ('## Term first, then this study\'s example', 'at the term\'s first use',
+                   '`example`', '{{GLOSSARY}}'):
+        assert phrase in skill, phrase
     for task, terms in (('binary', ('precision', 'recall', 'stratified_split', 'paired_bootstrap',
                                     'paired_difference', 'confidence_interval')),
                         ('regression', ('paired_bootstrap', 'paired_difference',
@@ -345,9 +328,6 @@ def test_instructions_carry_the_p_fix_defects():
             # no result id (ids only on demand).
             assert re.search(r'<[a-z_]+>', entry['example']), (task, term)
             assert '<result_id>' not in entry['example'], (task, term)
-    regression = af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
-                                .read_text(), 'regression')
-    assert '**precision**' not in regression and '**paired difference**' in regression
 
 
 def test_instructions_carry_the_v0_2a_rules():
@@ -356,83 +336,200 @@ def test_instructions_carry_the_v0_2a_rules():
     test, the audience of engine texts, and the junior's language. Each phrase names a
     real flag, code, or field of the engine."""
     from mlkit.study import audience, confirm, state as st, view
-    import re
     for task in ('binary', 'regression'):
         text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
         rule3, rule4 = _rule(text, 3), _rule(text, 4)
-        # step 0: the data card before any proposal
-        for phrase in ('`show_data_card`', 'data --format text', '**development rows**',
-                       '**final test**', 'make no proposal in the same message'):
+        # step 0: the data card before any proposal, in the R15 vocabulary
+        for phrase in ('`show_data_card`', 'data --format text', '**development set**',
+                       '**holdout (final test)**', 'Make no proposal in the same message'):
             assert phrase in rule3, (task, phrase)
-        # the new pauses and EDA governance
+        # the pauses and EDA governance
         for phrase in ('**success criterion**', 'before any model is fitted',
                        '**preprocessing**', '`next_action.default_value`', '`motivated_by`',
                        '`data_contingent`', '`values.question`', '`null_band`',
                        '`eda.single_feature_signal` only raises a legitimacy question',
-                       'its score keeps or drops no feature', '(`eda_looks`)'):
+                       'its score keeps or drops no feature', '`eda_looks`'):
             assert phrase in rule3, (task, phrase)
-        # guided confirmation: --proposal, the refusal reasons, an answer for each
-        for phrase in ('--proposal PROPOSAL_ID',
-                       # v0.3 (WP-B, R14/R16/R27): the quoted block, one closed question,
-                       # the interactive choice with its text fallback, optional reasons.
-                       'quoted block', '"Do you adopt this decision?"', '`AskUserQuestion`',
-                       'ask it in text', '--channel choice', '--adoption-question',
-                       'A reason is optional for every decision', '"no reason given"',
-                       'Do not ask the junior to say it in their own words',
-                       '`unrelated_reply`', '`conditional_reply`', '`question_reply`',
-                       '`negative_reply`', '`reason_required`',
-                       'explain it in one sentence in the junior\'s language'):
+        # guided confirmation: the quoted block, one closed question, the choice tool with
+        # its text fallback, optional reasons, and the engine's refusal message relayed
+        for phrase in ('--proposal PROPOSAL_ID', 'quoted block',
+                       '"Do you adopt this decision?"',
+                       '"Est-ce que tu adoptes cette décision ?"', '`AskUserQuestion`',
+                       'adopt', 'change something', 'explain first', 'ask it in text',
+                       '--channel choice', '--adoption-question',
+                       'only when your last message asked that question about this proposal',
+                       'A reason is optional', '"no reason given"',
+                       'its `error.message` tells you what to do',
+                       "in the junior's language and without codes",
+                       '`bare_acknowledgement`', 'Send no reply you can see the engine will '
+                       'refuse', 'Do not coach the junior\'s wording'):
             assert phrase in rule4, (task, phrase)
         # R3: the reason is checked before confirming, with three choices
-        check = rule4.split('**Check the reason before you confirm** (R3)', 1)[1]
+        check = Flat(rule4.split('**Check the reason** (R3)', 1)[1])
         for phrase in ('Before `decide confirm`', '(a) rephrase', '(b) confirm with new words',
-                       '(c) keep their words', 'Confirm only after their answer',
-                       '--agent-concern "<the point you raised>"',
+                       '(c) keep their words', '--agent-concern "<the point you raised>"',
                        '`words_contradict_value`',
                        'decide note --about DECISION --kind correction'):
             assert phrase in check, (task, phrase)
+        assert ('"drop contact, its value can be inflated"' in check) == (task == 'binary')
+        # training mode keeps the paraphrase and the reason
+        for phrase in ('**Modes** (ADR 0005)', 'In `training`', 'paraphrases the decision',
+                       'with a reason for a trade-off', 'no adoption choice',
+                       '`paraphrase_required`', 'never suggest the words'):
+            assert phrase in rule4, (task, phrase)
         # the final test, the audience of engine texts, the language
         rule10, rule11 = _rule(text, 10), _rule(text, 11)
-        for phrase in ('`final_test` in `status --summary`', '`sealed`', '"development evidence"',
-                       'no final evidence', 'nothing you do should try'):
+        for phrase in ('`final_test` in `status --summary`', '`sealed`', 'no final evidence',
+                       'nothing you do should try'):
             assert phrase in rule10, (task, phrase)
         assert '**development evidence**' in _rule(text, 9)
         for phrase in ('Answer in the junior\'s language', '`junior_message`', '`junior_text`',
                        '`recap_junior`', '`audience: agent`', '--restatement-fr'):
             assert phrase in rule11, (task, phrase)
-        # round 1 of the v0.2a acceptance run: no bare reply sent to the engine (S6), no
-        # revision number in a status line (S8)
-        assert 'Send no reply you can see is one of these' in rule4, task
         assert 'without a revision number' in _rule(text, 7), task
-        # fewer prohibitions than the 36 "never" of v0.1, and none of the dropped ones
+        # fewer prohibitions than the 36 "never" of v0.1
         assert len(re.findall(r'\bnever\b', text, re.I)) <= 16, task
     assert (confirm.QUESTION_REPLY, confirm.CONDITIONAL_REPLY) == ('question_reply',
                                                                   'conditional_reply')
-    assert 'unrelated_reply' in cmd.REPLY_MESSAGES
+    # The refusal taxonomy left the template (WP-D): the engine's message says what to do,
+    # so every guided refusal reason must carry one.
+    for reason in ('negative_reply', 'question_reply', 'conditional_reply',
+                   'unrelated_reply', 'partial_reply'):
+        assert cmd.REPLY_MESSAGES[reason].strip(), reason
+    assert cmd.CONFIRM_BARE_MESSAGE.strip()
     assert confirm.REASON_REQUIRED == 'reason_required'
     assert st.SUCCESS_CRITERION == 'success_criterion' and st.PREPROCESSING == 'preprocessing'
     assert 'final_test' in view.SUMMARY_KEYS and audience.AGENT == 'agent'
 
 
 def test_the_skill_carries_the_v0_2a_pedagogy():
-    """WP-A8: the skill teaches step 0, EDA governance, the two new decisions, the reason
-    check (a)/(b)/(c), and development evidence, for both tasks; its R3 example names
-    Bank variables only in the binary rendering."""
+    """WP-A8, reduced by WP-D: the skill teaches the pause message, term first, reading the
+    evidence (the leakage detector, intervals, denominators, development against final
+    evidence), resuming, and the conclusion, for both tasks; the rules live in CLAUDE.md."""
     for task in ('binary', 'regression'):
-        skill = Flat(af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
-                                    .read_text(), task))
-        for phrase in ('## Step 0: the data card', '`show_data_card`', 'data --format text',
-                       '## Exploring the training rows', '`values.question`',
-                       'is a leakage detector, not a selection tool', '`eda_looks`',
-                       '## The success criterion and the preprocessing',
-                       '`next_action.default_value`', '`motivated_by`',
-                       '**data-contingent decision**', "**The junior's reasons.**",
-                       '(a) rephrase', '(c) keep their words', '`--agent-concern`',
-                       '**Development evidence, final evidence.**',
+        skill = _skill(task)
+        for phrase in ('## One pause, one message', '`next_action.junior_digest`',
+                       '`recommended.value` with its `why`', 'the closed question',
+                       '## Term first, then this study\'s example',
+                       '## Reading the evidence',
+                       'is a leakage detector, not a selection tool', '`small_count`',
+                       'Development evidence and final evidence are never mixed',
+                       '## Resuming', '## The conclusion',
                        'how the result stands against the success criterion'):
             assert phrase in skill, (task, phrase)
-        assert ('"drop contact, its value can be inflated"' in skill) == (task == 'binary')
         resume = Flat(af.select_task((af.SOURCE / 'dot-claude/commands/hypotrail-resume.md')
                                      .read_text(), task))
-        for doc in (skill, resume):      # S1: the recap quotes the junior's latest words
-            assert "the junior's own words of the latest confirmation" in doc, task
+        # S1: the recap quotes the junior's latest words
+        assert "the junior's own words of the latest confirmation" in resume, task
+        assert len(re.findall(r'\bnever\b', skill, re.I)) <= 7, task
+
+
+# --- v0.3, WP-D: the halved instructions --------------------------------------------------
+
+WORD_BUDGET = 4000            # V0.3-PLAN §2: agent prompt ≤ 4k words
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_instructions_fit_the_word_budget(task):
+    """V0.3-PLAN §2: what the agent loads for a study (CLAUDE.md, the skill and the resume
+    command, as ``init`` installs them for ``task``) stays within 4,000 words."""
+    words = {rel: len(af.select_task((af.SOURCE / rel).read_text(), task).split())
+             for rel in af.templates()}
+    assert set(words) == set(af.TARGETS)
+    assert sum(words.values()) <= WORD_BUDGET, words
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_agent_relays_the_engine_payloads(task):
+    """WP-D: each pause relays ``next_action`` instead of composing; the keys it names are
+    the engine's (WP-C ``junior.ENRICH_KEYS``, WP-F1 view keys); no status before every
+    run; a target of four tool calls per pause."""
+    from mlkit.study import junior, view
+    text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
+    rule1 = _rule(text, 1)
+    for key in ('junior_digest', 'recommended', 'question', 'default_value',
+                'criterion_options', 'model_families', 'model_selection'):
+        assert f'`{key}`' in rule1, key
+    assert set(('junior_digest', 'recommended', 'question')) <= set(junior.ENRICH_KEYS)
+    assert {'model_families', 'model_selection'} <= set(view.VIEW_KEYS)
+    for phrase in ('at most four tool calls per pause', 'a command\'s own output counts',
+                   'no `status` is needed between two runs'):
+        assert phrase in rule1, phrase
+    assert 'before every decision or `run`' not in text           # the v0.2 reading load
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_the_panel_rule(task):
+    """WP-D, R13, R20, R35: one question at step 0, only in VS Code; one line per step
+    naming the tab, never a substitute for the chat; panel actions said as such."""
+    text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
+    rule6 = _rule(text, 6)
+    for phrase in ('If the junior works in VS Code', 'ask once',
+                   'whether the Hypotrail panel is open', 'otherwise do not ask',
+                   'one short line per step naming the tab', 'Data & EDA ("Données et EDA")',
+                   'after the data card and the charts', 'Decisions ("Décisions") at a proposal',
+                   'Evidence ("Preuves") after the fits, the diagnostics, and the opening',
+                   'What if? ("Et si ?")', 'it never replaces its content',
+                   '`status --summary --digest', '`channel` `webview`',
+                   '"you ran these charts from the panel"'):
+        assert phrase in rule6, phrase
+    assert ('at the decision rule' in rule6) == (task == 'binary')
+    from mlkit.study import view
+    assert 'channel' in view.DIGEST_ITEM_KEYS
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_diagnostics_variants_and_r32(task):
+    """WP-D: diagnostics run when ``next_action`` names them, with the confusion matrix in
+    the chat (R28); variants within ADR 0007 (shortlist with its evidence shown, budget,
+    one-standard-error rule, stop advice); ``data_contingent`` said before the proposal
+    (R32)."""
+    from mlkit.study import diagnostics, trials
+    text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
+    rule3 = _rule(text, 3)
+    diag = 'diag.binary' if task == 'binary' else 'diag.regression'
+    assert f'When `next_action` names `{diag}`, run it before' in rule3
+    if task == 'binary':
+        for phrase in ('**confusion matrix** at the adopted rule as a 2×2 table in the chat',
+                       '`models.<slot>.confusion`'):
+            assert phrase in rule3, phrase
+        assert 'confusion' in diagnostics.BINARY_MODEL_KEYS
+    for phrase in ('**Variants and model families** (ADR 0007)',
+                   '`model_families.recommendation` is `compare_nonlinear`',
+                   'shown the junior the diagnostic flags behind it', 'At most three variants',
+                   '**one-standard-error rule**', '`one_se`', '`advice.text`',
+                   'when `advice.stop` is true, recommend stopping'):
+        assert phrase in rule3, phrase
+    assert trials.MAX_VARIANTS == 3 and 'compare_nonlinear' in inspect.getsource(trials)
+    assert {'one_se', 'advice'} <= set(trials.SELECTION_KEYS)
+    pre = Flat(rule3.split('**Preprocessing.**', 1)[1].split('**Variants', 1)[0])
+    for phrase in ('`decide propose` returns `data_contingent`',
+                   "say that reason's `text` before you present the proposal"):
+        assert phrase in pre, phrase
+
+
+@pytest.mark.parametrize('task', af.TASKS)
+def test_standard_vocabulary_and_no_ids(task):
+    """WP-D, R15, R30: glossary terms verbatim (``term``/``term_fr``), no home-made
+    translation, and no result id in junior-facing text (the v0.2 rule to name a
+    ``result_id`` next to each figure is gone from every template)."""
+    from mlkit.study import texts
+    text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
+    rule11 = _rule(text, 11)
+    for phrase in ('Use the glossary terms verbatim (`term`, or `term_fr` in French)',
+                   'never a home-made translation',
+                   'Show no result, proposal, request, or execution id'):
+        assert phrase in rule11, phrase
+    for rel in af.templates():
+        doc = af.select_task((af.SOURCE / rel).read_text(), task)
+        for old in ('name its `result_id`', 'with its `result_id`', 'and their `result_id`',
+                    'cite its `result_id`', '(result <result_id>)', 'adding a\n   `result_id`'):
+            assert old not in doc, (rel, old)
+    for term, en, fr in (('final_test', 'Holdout (final test)',
+                          'échantillon de test final (holdout)'),
+                         ('development_rows', 'Development set (development rows)',
+                          'échantillon de développement'),
+                         ('cross_validation', 'k-fold cross-validation',
+                          'validation croisée à k plis')):
+        entry = texts.glossary(term, task)
+        assert (entry['term'], entry['term_fr']) == (en, fr), term
