@@ -16,7 +16,7 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-hold",
-  "revision": 47,
+  "revision": 49,
   "proposal_id": "p_8",
   "decision_id": "policy",
   "value": "capacity:100",
@@ -31,8 +31,12 @@
   "mutation": "policy.rule_type",
   "row": 6,
   "reason": "policy changed (§3.7 row 6: policy.rule_type)",
-  "stale_results": [],
-  "stale_slots": [],
+  "stale_results": [
+   "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675"
+  ],
+  "stale_slots": [
+   "diag.binary"
+  ],
   "kept_slots": [
    "split",
    "eda.target_rate",
@@ -54,7 +58,9 @@
   "re_policy": [
    "policy.evaluation"
   ],
-  "recompute": [],
+  "recompute": [
+   "diag.binary"
+  ],
   "reconfirm_required": [],
   "supersedes_proposal": "p_7",
   "blocked": [
@@ -80,7 +86,8 @@
    "workbench": "unchanged"
   },
   "notes": [
-   "No refit: predictions are reused."
+   "No refit: predictions are reused.",
+   "The diagnostics are computed at the adopted rule: they are run again at the new one."
   ],
   "recorded": false,
   "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."

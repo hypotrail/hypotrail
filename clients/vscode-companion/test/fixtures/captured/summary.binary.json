@@ -16,7 +16,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 46,
+  "revision": 48,
   "since": null,
   "changed": null,
   "goal": {
@@ -38,7 +38,7 @@
     "status": "confirmed"
    }
   },
-  "current_step": "policy",
+  "current_step": "final_test",
   "plan": [
    {
     "id": "discover_data",
@@ -88,12 +88,12 @@
    {
     "id": "policy",
     "title": "Choose a decision policy",
-    "status": "awaiting_confirmation"
+    "status": "done"
    },
    {
     "id": "final_test",
     "title": "Open the final test once",
-    "status": "blocked"
+    "status": "ready"
    },
    {
     "id": "conclusion",
@@ -119,7 +119,7 @@
     "decision_id": "policy",
     "value": "capacity:100",
     "restatement": "Call the 100 clients with the highest scores.",
-    "revision": 46,
+    "revision": 48,
     "origin": {
      "channel": "chat"
     }
@@ -282,6 +282,12 @@
    }
   },
   "results": {
+   "diag.binary": {
+    "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
    "eda.correlation": {
     "result_id": "dddb1872227a28bc501642ceaedc3d8b963fd23e6414d5fed44edbe6337544cf",
     "current": true,
@@ -372,16 +378,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 46,
-     "last_ok_revision": 46,
+     "revision": 48,
+     "last_ok_revision": 48,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 46,
-     "last_ok_revision": 46,
+     "revision": 48,
+     "last_ok_revision": 48,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -476,18 +482,19 @@
    "judged_status": "not_assessed"
   },
   "eda_looks": {
-   "target_looks": 4,
+   "target_looks": 5,
    "results": [
     "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
     "1e9bbc438ccba1b9f7343f0cb2731c4651b9990d3bbd9975c1c0f316eedde272",
     "5578a456ade1932ea9b7d02e9431ff2b20681adfc53559d7d949c21f9d2e5f50",
-    "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf"
+    "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf",
+    "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result cc9471c9).",
-   "Now: Choose a decision policy; the report and notebook are up to date.",
+   "Now: Open the final test once; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],
@@ -619,16 +626,16 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-20T19:01:09.014311+00:00",
+   "boundary_time": "2026-10-20T19:33:56.835097+00:00",
    "gap_minutes": null
   },
   "digest": {
    "since": 1,
-   "until": 46,
+   "until": 48,
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-20T19:01:09.251907+00:00",
+     "time": "2026-10-20T19:33:57.094253+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -651,7 +658,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-20T19:01:10.724113+00:00",
+     "time": "2026-10-20T19:33:58.319788+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -681,7 +688,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-20T19:01:11.401285+00:00",
+     "time": "2026-10-20T19:33:58.903490+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -704,7 +711,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-20T19:01:12.044327+00:00",
+     "time": "2026-10-20T19:33:59.394284+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -734,7 +741,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-20T19:01:12.837202+00:00",
+     "time": "2026-10-20T19:34:00.203609+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -757,7 +764,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-20T19:01:13.762101+00:00",
+     "time": "2026-10-20T19:34:01.150695+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -787,7 +794,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-20T19:01:14.544373+00:00",
+     "time": "2026-10-20T19:34:01.931450+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -810,7 +817,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-20T19:01:15.499707+00:00",
+     "time": "2026-10-20T19:34:02.621956+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -840,7 +847,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-20T19:01:16.765042+00:00",
+     "time": "2026-10-20T19:34:03.620737+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -863,7 +870,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-20T19:01:17.733459+00:00",
+     "time": "2026-10-20T19:34:04.402975+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -893,7 +900,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-20T19:01:20.249715+00:00",
+     "time": "2026-10-20T19:34:06.737058+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -916,7 +923,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-20T19:01:21.383140+00:00",
+     "time": "2026-10-20T19:34:07.933785+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -939,7 +946,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-20T19:01:22.509703+00:00",
+     "time": "2026-10-20T19:34:09.041298+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -962,7 +969,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-20T19:01:23.918642+00:00",
+     "time": "2026-10-20T19:34:10.354388+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -985,7 +992,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-20T19:01:26.895688+00:00",
+     "time": "2026-10-20T19:34:13.724692+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1008,7 +1015,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-20T19:01:27.956642+00:00",
+     "time": "2026-10-20T19:34:14.822472+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1031,7 +1038,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-20T19:01:29.037269+00:00",
+     "time": "2026-10-20T19:34:16.081013+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1054,7 +1061,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-20T19:01:30.144832+00:00",
+     "time": "2026-10-20T19:34:17.087367+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1077,7 +1084,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-20T19:01:31.261988+00:00",
+     "time": "2026-10-20T19:34:18.276954+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1100,7 +1107,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-20T19:01:33.398444+00:00",
+     "time": "2026-10-20T19:34:19.979214+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1123,7 +1130,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-20T19:01:34.628447+00:00",
+     "time": "2026-10-20T19:34:21.206760+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1146,7 +1153,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-20T19:01:35.703271+00:00",
+     "time": "2026-10-20T19:34:22.429860+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1169,7 +1176,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-20T19:01:36.576426+00:00",
+     "time": "2026-10-20T19:34:23.414759+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1192,7 +1199,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-20T19:01:37.427556+00:00",
+     "time": "2026-10-20T19:34:24.381818+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1225,7 +1232,7 @@
     },
     {
      "revision": 39,
-     "time": "2026-10-20T19:01:38.520737+00:00",
+     "time": "2026-10-20T19:34:25.554883+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1248,7 +1255,7 @@
     },
     {
      "revision": 41,
-     "time": "2026-10-20T19:01:39.610871+00:00",
+     "time": "2026-10-20T19:34:26.894901+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1273,7 +1280,7 @@
     },
     {
      "revision": 42,
-     "time": "2026-10-20T19:01:40.439142+00:00",
+     "time": "2026-10-20T19:34:27.803594+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1296,7 +1303,7 @@
     },
     {
      "revision": 43,
-     "time": "2026-10-20T19:01:41.367006+00:00",
+     "time": "2026-10-20T19:34:28.790455+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1330,7 +1337,30 @@
     },
     {
      "revision": 45,
-     "time": "2026-10-20T19:01:43.571756+00:00",
+     "time": "2026-10-20T19:34:32.712518+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "diag.binary",
+     "slot": "diag.binary",
+     "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+     "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity diag.binary was computed.",
+     "audience": "agent",
+     "junior_text": "An analysis was computed."
+    },
+    {
+     "revision": 47,
+     "time": "2026-10-20T19:34:34.921659+00:00",
      "action": "run.promote",
      "kind": "result_replaced",
      "decision_id": null,
@@ -1339,7 +1369,7 @@
      "activity": "policy.evaluation",
      "slot": "policy.evaluation",
      "result_id": "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
-     "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
+     "execution_id": "e_08e526346896c3129f460359",
      "rules": [
       "capacity:100"
      ],
@@ -1354,8 +1384,8 @@
      "junior_text": "The policy evaluation was replaced for: select the top 100 by score. Models unchanged, nothing refitted."
     },
     {
-     "revision": 46,
-     "time": "2026-10-20T19:01:44.833792+00:00",
+     "revision": 48,
+     "time": "2026-10-20T19:34:36.538175+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1384,14 +1414,14 @@
     "withdrawn": 0,
     "holds_recorded": 0,
     "holds_resolved": 0,
-    "results_added": 14,
+    "results_added": 15,
     "results_replaced": 1,
-    "runs_started": 15,
+    "runs_started": 16,
     "runs_failed": 0,
     "invalidations": 0
    }
   },
   "task": "binary",
-  "currency": "cdeea82ee953edbf"
+  "currency": "c08964f0d1dad492"
  }
 }

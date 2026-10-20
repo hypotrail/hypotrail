@@ -10,7 +10,7 @@
  "payload": {
   "schema": "hypotrail.handoff/1",
   "study": "<study>",
-  "revision": 46,
+  "revision": 48,
   "task": "binary",
   "case": {
    "id": "uci-bank-marketing-v1",
@@ -293,6 +293,27 @@
     "shown": "1,086"
    },
    {
+    "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+    "activity": "diag.binary",
+    "path": "models.[fit.logistic].calibration.brier",
+    "value": 0.08742712462824617,
+    "shown": "0.0874"
+   },
+   {
+    "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+    "activity": "diag.binary",
+    "path": "models.[fit.logistic].roc_auc",
+    "value": 0.7347096774193549,
+    "shown": "0.735"
+   },
+   {
+    "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+    "activity": "diag.binary",
+    "path": "n",
+    "value": 1086,
+    "shown": "1,086"
+   },
+   {
     "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
     "activity": "split",
     "path": "n_rows",
@@ -326,13 +347,28 @@
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
+   },
+   {
+    "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+    "activity": "split",
+    "path": "partitions.train.n_rows",
+    "value": 2531,
+    "shown": "2,531"
+   },
+   {
+    "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+    "activity": "split",
+    "path": "partitions.validation.n_rows",
+    "value": 1086,
+    "shown": "1,086"
    }
   ],
   "exposure": {
    "summary": {
-    "records": 20,
+    "records": 22,
     "rows_exposed": 3617,
     "by_purpose": {
+     "development_diagnostics": 3617,
      "sealed": 904,
      "structural_inspection": 3617,
      "train_eda": 2531,
@@ -348,10 +384,12 @@
       "sealed": 904
      },
      "train": {
+      "development_diagnostics": 2531,
       "train_eda": 2531,
       "train_fit": 2531
      },
      "validation": {
+      "development_diagnostics": 1086,
       "validation_model_evaluation": 1086,
       "validation_policy_selection": 1086
      }
@@ -435,7 +473,7 @@
       "policy.evaluation"
      ],
      "first_revision": 40,
-     "last_revision": 44
+     "last_revision": 46
     },
     {
      "purpose": "sealed",
@@ -447,6 +485,28 @@
      ],
      "first_revision": 1,
      "last_revision": 1
+    },
+    {
+     "purpose": "development_diagnostics",
+     "partition": "train",
+     "rows": 2531,
+     "records": 1,
+     "activities": [
+      "diag.binary"
+     ],
+     "first_revision": 44,
+     "last_revision": 44
+    },
+    {
+     "purpose": "development_diagnostics",
+     "partition": "validation",
+     "rows": 1086,
+     "records": 1,
+     "activities": [
+      "diag.binary"
+     ],
+     "first_revision": 44,
+     "last_revision": 44
     }
    ]
   },
@@ -513,6 +573,7 @@
    "hypotrail run fit.logistic --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run fit.variant --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail run policy.evaluate --rule capacity:100 --rule threshold:0.2 --request-id <new id> --expected-revision <revision> --study <study>",
+   "hypotrail run diag.binary --request-id <new id> --expected-revision <revision> --study <study>",
    "hypotrail render --study <study>",
    "hypotrail check --study <study>"
   ],

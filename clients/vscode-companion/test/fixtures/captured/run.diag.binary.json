@@ -13,13 +13,13 @@
  "payload": {
   "schema": "hypotrail.run/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"-diag",
+  "study": "/studies/bank marketing \"demo\"",
   "action": "run",
-  "request_id": "bd1",
+  "request_id": "b29",
   "replayed": false,
-  "revision": 48,
+  "revision": 45,
   "activity": "diag.binary",
-  "execution_id": "e_58ab52047846c7c88a36253e",
+  "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
   "status": "promoted",
   "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
   "values": {
@@ -2509,18 +2509,18 @@
    }
   },
   "result": {
-   "execution_id": "e_58ab52047846c7c88a36253e",
+   "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
    "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
    "input_key": "63c452f951ef7b3853a3bd9666410e4621e46bfffaa17cef2e1192b8d47ac31b",
    "reason": null,
-   "started_revision": 47,
+   "started_revision": 44,
    "invalidation": null,
    "exposure_ids": [
-    "x_1f6d416a3d7e420ba73215cf3a5d9ac8",
-    "x_8853a74fcba74457b2af5788b2e7dc56"
+    "x_daa9516a4dbf48a28f6d52b22a12f40e",
+    "x_91718690ed6e46f1a946d0d426e849a3"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2529,16 +2529,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 48,
-    "last_ok_revision": 48,
+    "revision": 45,
+    "last_ok_revision": 45,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 48,
-    "last_ok_revision": 48,
+    "revision": 45,
+    "last_ok_revision": 45,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

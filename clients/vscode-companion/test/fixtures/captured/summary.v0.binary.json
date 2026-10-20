@@ -15,7 +15,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 46,
+  "revision": 48,
   "since": null,
   "changed": null,
   "goal": {
@@ -37,7 +37,7 @@
     "status": "confirmed"
    }
   },
-  "current_step": "policy",
+  "current_step": "final_test",
   "plan": [
    {
     "id": "discover_data",
@@ -87,12 +87,12 @@
    {
     "id": "policy",
     "title": "Choose a decision policy",
-    "status": "awaiting_confirmation"
+    "status": "done"
    },
    {
     "id": "final_test",
     "title": "Open the final test once",
-    "status": "blocked"
+    "status": "ready"
    },
    {
     "id": "conclusion",
@@ -118,7 +118,7 @@
     "decision_id": "policy",
     "value": "capacity:100",
     "restatement": "Call the 100 clients with the highest scores.",
-    "revision": 46
+    "revision": 48
    }
   ],
   "decisions": {
@@ -278,6 +278,12 @@
    }
   },
   "results": {
+   "diag.binary": {
+    "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
    "eda.correlation": {
     "result_id": "dddb1872227a28bc501642ceaedc3d8b963fd23e6414d5fed44edbe6337544cf",
     "current": true,
@@ -368,16 +374,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 46,
-     "last_ok_revision": 46,
+     "revision": 48,
+     "last_ok_revision": 48,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 46,
-     "last_ok_revision": 46,
+     "revision": 48,
+     "last_ok_revision": 48,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -472,18 +478,19 @@
    "judged_status": "not_assessed"
   },
   "eda_looks": {
-   "target_looks": 4,
+   "target_looks": 5,
    "results": [
     "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
     "1e9bbc438ccba1b9f7343f0cb2731c4651b9990d3bbd9975c1c0f316eedde272",
     "5578a456ade1932ea9b7d02e9431ff2b20681adfc53559d7d949c21f9d2e5f50",
-    "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf"
+    "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf",
+    "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result cc9471c9).",
-   "Now: Choose a decision policy; the report and notebook are up to date.",
+   "Now: Open the final test once; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],

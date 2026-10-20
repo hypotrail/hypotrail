@@ -17,7 +17,7 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 46,
+  "revision": 48,
   "decision_id": "policy",
   "value": "capacity:100",
   "proposable": true,

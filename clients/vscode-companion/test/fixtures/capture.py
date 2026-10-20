@@ -118,6 +118,9 @@ def binary(cap: Capture) -> None:
     flow.run('fit.logistic')
     flow.run('policy.evaluate', '--rule', 'threshold:0.2')
     flow.decide('policy', 'threshold:0.2', words='Yes, call everyone scored at 0.2 or more')
+    # v0.3 (WP-F1, R28): the plan runs the development diagnostics at the adopted rule
+    # before it moves on, so the captured study follows it (it stays at the final test).
+    cap.save('run.diag.binary', 'binary', ['run', 'diag.binary'], 0, flow.run('diag.binary'))
     flow.run('policy.evaluate', '--rule', 'capacity:100')
     code, out = run('decide', 'propose', 'policy', '--value', 'capacity:100', '--restatement',
                     'Call the 100 clients with the highest scores.', '--rationale',
@@ -161,10 +164,7 @@ def binary(cap: Capture) -> None:
     cap.read('error.export_target_exists', 'binary', study, 'export', 'handoff', f'--out={pack}', '--json',
              expect=(2,))
     assert out['ok'] is True
-    # WP-B4: the development diagnostics (on a clone, so the payloads above are unchanged).
-    diag = fk.clone(study, cap.root / 'binary-diag')
-    cap.save('run.diag.binary', 'binary', ['run', 'diag.binary'], 0,
-             fk.Flow(diag, BANK, prefix='bd').run('diag.binary'))
+    # WP-B4: the development diagnostics are captured above, where the plan runs them.
     # A webview proposal (C9), then its withdrawal and a confirmation on clones.
     web = fk.clone(study, cap.root / 'binary-web')
     code, out = run('decide', 'propose', 'policy', '--value', 'capacity:100', '--restatement',

@@ -20,7 +20,7 @@
   "action": "decide.propose",
   "request_id": "b-web",
   "replayed": false,
-  "revision": 47,
+  "revision": 49,
   "result": {
    "proposal_id": "p_9",
    "decision_id": "policy",
@@ -37,16 +37,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 47,
-    "last_ok_revision": 47,
+    "revision": 49,
+    "last_ok_revision": 49,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 47,
-    "last_ok_revision": 47,
+    "revision": 49,
+    "last_ok_revision": 49,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

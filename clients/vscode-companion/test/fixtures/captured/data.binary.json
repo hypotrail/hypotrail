@@ -14,7 +14,7 @@
   "schema": "hypotrail.data/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 46,
+  "revision": 48,
   "observation_unit": {
    "value": "A customer contacted during a telephone campaign",
    "status": "documented_fact",

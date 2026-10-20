@@ -18,7 +18,7 @@
   "action": "decide.propose",
   "request_id": "b-prop",
   "replayed": false,
-  "revision": 46,
+  "revision": 48,
   "result": {
    "proposal_id": "p_8",
    "decision_id": "policy",
@@ -33,16 +33,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 46,
-    "last_ok_revision": 46,
+    "revision": 48,
+    "last_ok_revision": 48,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 46,
-    "last_ok_revision": 46,
+    "revision": 48,
+    "last_ok_revision": 48,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },
