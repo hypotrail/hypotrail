@@ -14,6 +14,8 @@ import re
 
 import pytest
 
+from conftest import inline_styles_ok
+
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
 RESTATEMENT = 'Call the 100 clients with the highest scores.'
@@ -68,7 +70,7 @@ def wait_until(page, expression, timeout_ms=3000):
 
 def assert_clean(panel):
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
-    assert panel.page.locator('[style]').count() == 0, 'no inline style attribute (CSP)'
+    assert inline_styles_ok(panel.page), 'no inline style attribute (CSP)'
 
 
 # --- DC-12 (WP-E1): the card is read only; the answer is given in the chat --------------------------

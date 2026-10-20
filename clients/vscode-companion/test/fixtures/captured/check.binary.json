@@ -14,7 +14,7 @@
   "schema": "hypotrail.check/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 42,
+  "revision": 46,
   "target": "study",
   "clean": true,
   "counts": {

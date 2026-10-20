@@ -1,0 +1,1137 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "eda.correlation"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "run",
+  "request_id": "b20",
+  "replayed": false,
+  "revision": 31,
+  "activity": "eda.correlation",
+  "execution_id": "e_dc60c4ca476066179e139318",
+  "status": "promoted",
+  "result_id": "0ea92e067a9db326af32184f425c70b4f553691971a4a6356f17ddb1ba3a7b6e",
+  "values": {
+   "partition": "development",
+   "n_rows": 3617,
+   "target_read": false,
+   "columns": [
+    {
+     "name": "age",
+     "kind": "numeric"
+    },
+    {
+     "name": "job",
+     "kind": "categorical"
+    },
+    {
+     "name": "marital",
+     "kind": "categorical"
+    },
+    {
+     "name": "education",
+     "kind": "categorical"
+    },
+    {
+     "name": "default",
+     "kind": "categorical"
+    },
+    {
+     "name": "balance",
+     "kind": "numeric"
+    },
+    {
+     "name": "housing",
+     "kind": "categorical"
+    },
+    {
+     "name": "loan",
+     "kind": "categorical"
+    },
+    {
+     "name": "contact",
+     "kind": "categorical"
+    },
+    {
+     "name": "day",
+     "kind": "numeric"
+    },
+    {
+     "name": "month",
+     "kind": "categorical"
+    },
+    {
+     "name": "duration",
+     "kind": "numeric"
+    },
+    {
+     "name": "campaign",
+     "kind": "numeric"
+    },
+    {
+     "name": "pdays",
+     "kind": "numeric"
+    },
+    {
+     "name": "previous",
+     "kind": "numeric"
+    },
+    {
+     "name": "poutcome",
+     "kind": "categorical"
+    }
+   ],
+   "order": [
+    "loan",
+    "default",
+    "balance",
+    "duration",
+    "age",
+    "marital",
+    "job",
+    "education",
+    "campaign",
+    "day",
+    "previous",
+    "poutcome",
+    "pdays",
+    "housing",
+    "contact",
+    "month"
+   ],
+   "pairs": [
+    {
+     "a": "age",
+     "b": "job",
+     "measure": "eta",
+     "value": 0.4143797631436276,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "marital",
+     "measure": "eta",
+     "value": 0.4513419103270367,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "education",
+     "measure": "eta",
+     "value": 0.23901445377185246,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "default",
+     "measure": "eta",
+     "value": 0.015532871460944408,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "balance",
+     "measure": "spearman",
+     "value": 0.07415711747146678,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "housing",
+     "measure": "eta",
+     "value": 0.15939485984116772,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "loan",
+     "measure": "eta",
+     "value": 0.017223453439309505,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "contact",
+     "measure": "eta",
+     "value": 0.15000696393397725,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "day",
+     "measure": "spearman",
+     "value": -0.021680932815663773,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "month",
+     "measure": "eta",
+     "value": 0.14853165307739633,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "duration",
+     "measure": "spearman",
+     "value": -0.035678304734921326,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "campaign",
+     "measure": "spearman",
+     "value": 0.030090901465617242,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "pdays",
+     "measure": "spearman",
+     "value": -0.07525313443651016,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "previous",
+     "measure": "spearman",
+     "value": 0.007285294398606304,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "age",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.043450965070812045,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "marital",
+     "measure": "cramers_v",
+     "value": 0.19238156869001466,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "education",
+     "measure": "cramers_v",
+     "value": 0.45071485373079534,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "default",
+     "measure": "cramers_v",
+     "value": 0.0,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "balance",
+     "measure": "eta",
+     "value": 0.10328240321922832,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "housing",
+     "measure": "cramers_v",
+     "value": 0.2907851174572462,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "loan",
+     "measure": "cramers_v",
+     "value": 0.09708986236013625,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "contact",
+     "measure": "cramers_v",
+     "value": 0.14291192379199613,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.04806775881232913,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.11279221672284981,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.07867222130892472,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.0817545099124418,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.2625564540293237,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.0704764883176942,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "job",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.03106105732679108,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "education",
+     "measure": "cramers_v",
+     "value": 0.11972047582719737,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "default",
+     "measure": "cramers_v",
+     "value": 0.025699717404863896,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "balance",
+     "measure": "eta",
+     "value": 0.038706401654808015,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "housing",
+     "measure": "cramers_v",
+     "value": 0.03045336870336673,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "loan",
+     "measure": "cramers_v",
+     "value": 0.041697447450684245,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "contact",
+     "measure": "cramers_v",
+     "value": 0.05681939720994575,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.009566158759817471,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.05333204786852951,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.0183587338282054,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.05253776941373652,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.06223241920230722,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.026670498714210608,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "marital",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.0098750304549688,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "default",
+     "measure": "cramers_v",
+     "value": 0.014413757958106555,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "balance",
+     "measure": "eta",
+     "value": 0.09309755886126607,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "housing",
+     "measure": "cramers_v",
+     "value": 0.12565443674592608,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "loan",
+     "measure": "cramers_v",
+     "value": 0.08486551066123525,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "contact",
+     "measure": "cramers_v",
+     "value": 0.12113953568309241,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.012618261954509017,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.11773093686778079,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.026505054829639073,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.04894347886590211,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.18059612875001985,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.04437651081532045,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "education",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.02307902014831067,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "balance",
+     "measure": "eta",
+     "value": 0.16143891732621668,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "housing",
+     "measure": "cramers_v",
+     "value": 0.0,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "loan",
+     "measure": "cramers_v",
+     "value": 0.0520226512330265,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "contact",
+     "measure": "cramers_v",
+     "value": 0.008207965264898243,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.03003034153158249,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.04192674439281172,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.006324982734775518,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.002132244999330724,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.060510653444878666,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.04277555746649477,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "default",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.04242538663127746,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "housing",
+     "measure": "eta",
+     "value": 0.04464086197333214,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "loan",
+     "measure": "eta",
+     "value": 0.09309260736297749,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "contact",
+     "measure": "eta",
+     "value": 0.060163314535716134,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "day",
+     "measure": "spearman",
+     "value": -0.005913148169195573,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "month",
+     "measure": "eta",
+     "value": 0.23649998135671066,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "duration",
+     "measure": "spearman",
+     "value": 0.051376001453166946,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "campaign",
+     "measure": "spearman",
+     "value": -0.04011383743457656,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "pdays",
+     "measure": "spearman",
+     "value": -0.12903239587489054,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "previous",
+     "measure": "spearman",
+     "value": 0.0605779065371487,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "balance",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.06772753546563091,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "loan",
+     "measure": "cramers_v",
+     "value": 0.01657257167687585,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "contact",
+     "measure": "cramers_v",
+     "value": 0.2082531449847844,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.05127523811707641,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.4842416695324288,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.011594108488645389,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.025585195113348103,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.34380845634073026,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.07434961451881102,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "housing",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.1342790144415407,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "contact",
+     "measure": "cramers_v",
+     "value": 0.0,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.004090335525841114,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.16663006469635075,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.02519225959903132,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.00638939578382218,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.004696882113258715,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.03657933569961487,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "loan",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.045249013217584705,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "day",
+     "measure": "eta",
+     "value": 0.060860990310125096,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "month",
+     "measure": "cramers_v",
+     "value": 0.5094521996923552,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.06339207052797478,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.05845912511229528,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.06120621201707053,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.2860271762777836,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "contact",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.20230614518129386,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "day",
+     "b": "month",
+     "measure": "eta",
+     "value": 0.4451432267766,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "day",
+     "b": "duration",
+     "measure": "spearman",
+     "value": -0.06068718038877168,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "day",
+     "b": "campaign",
+     "measure": "spearman",
+     "value": 0.1425515217092418,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "day",
+     "b": "pdays",
+     "measure": "spearman",
+     "value": -0.13569563888737057,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "day",
+     "b": "previous",
+     "measure": "spearman",
+     "value": -0.08300072184086295,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "day",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.08259173440290946,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "month",
+     "b": "duration",
+     "measure": "eta",
+     "value": 0.10290567445360638,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "month",
+     "b": "campaign",
+     "measure": "eta",
+     "value": 0.3104116819550899,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "month",
+     "b": "pdays",
+     "measure": "eta",
+     "value": 0.5061252613655043,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "month",
+     "b": "previous",
+     "measure": "eta",
+     "value": 0.34631765490065947,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "month",
+     "b": "poutcome",
+     "measure": "cramers_v",
+     "value": 0.22697165511506895,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "duration",
+     "b": "campaign",
+     "measure": "spearman",
+     "value": -0.08806198477437589,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "duration",
+     "b": "pdays",
+     "measure": "spearman",
+     "value": -0.07199637575859236,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "duration",
+     "b": "previous",
+     "measure": "spearman",
+     "value": 0.03531573317881773,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "duration",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.09327612390063737,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "campaign",
+     "b": "pdays",
+     "measure": "spearman",
+     "value": 0.12434342019628472,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "campaign",
+     "b": "previous",
+     "measure": "spearman",
+     "value": -0.14029580511954443,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "campaign",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.15092542584678365,
+     "n_rows": 3617,
+     "flag": false
+    },
+    {
+     "a": "pdays",
+     "b": "previous",
+     "measure": "spearman",
+     "value": -0.09243338204945023,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "pdays",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.24179110805537157,
+     "n_rows": 655,
+     "flag": false
+    },
+    {
+     "a": "previous",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.9938389077469781,
+     "n_rows": 3617,
+     "flag": true
+    }
+   ],
+   "flagged": [
+    {
+     "a": "previous",
+     "b": "poutcome",
+     "measure": "eta",
+     "value": 0.9938389077469781
+    }
+   ],
+   "n_flagged": 1,
+   "level": 0.8,
+   "measures": {
+    "spearman": "Spearman's rank correlation (two numeric features, signed)",
+    "cramers_v": "Cramér's V, bias-corrected (two categorical features, unsigned)",
+    "eta": "Correlation ratio of the ranks across the categories (a numeric and a categorical feature, unsigned)"
+   },
+   "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+   "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed."
+  },
+  "result": {
+   "execution_id": "e_dc60c4ca476066179e139318",
+   "activity": "eda.correlation",
+   "slot": "eda.correlation",
+   "status": "promoted",
+   "result_id": "0ea92e067a9db326af32184f425c70b4f553691971a4a6356f17ddb1ba3a7b6e",
+   "input_key": "60c9b53e3b750c3dd673a7c2b40c585f898a02571032b1f5e6853a14c1a3d84e",
+   "reason": null,
+   "started_revision": 30,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_101d3a5e6a38448782176a8898318c94"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 31,
+    "last_ok_revision": 31,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 31,
+    "last_ok_revision": 31,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  }
+ }
+}

@@ -359,16 +359,16 @@ A **segment** (also used by C6) is `{text}`, or `{text, result_id, path, value, 
 
 **`eda_catalog`.** `{activities}`. One item per EDA activity of the task:
 
-- binary: `eda.target_rate`, `eda.special_values`, `eda.rate_by`, `eda.distribution`, `eda.quality`, `eda.single_feature_signal`;
-- regression: `eda.target_summary`, `eda.special_values`, `eda.mean_by`, `eda.distribution`, `eda.quality`, `eda.single_feature_signal`.
+- binary: `eda.target_rate`, `eda.special_values`, `eda.rate_by`, `eda.distribution`, `eda.quality`, `eda.single_feature_signal`, `eda.correlation` (v0.3);
+- regression: `eda.target_summary`, `eda.special_values`, `eda.mean_by`, `eda.distribution`, `eda.quality`, `eda.single_feature_signal`, `eda.correlation` (v0.3).
 
 WP-A9 (M5) added the last two, the structural quality overview and the single-feature signal (before, the catalog left them out), and the item key `partition`. Each item is `{activity, per_column, columns, runnable, missing, partition}`:
 
 - `columns` lists `{name, role, type, slot, result_id}`, with the slot and result id of the current result for that column or `null`. It holds the columns the activity accepts, as `plan` would accept them: `eda.rate_by`, features; `eda.mean_by`, features and the time column; `eda.distribution`, features, the time column, and the target.
 - `runnable` and `missing` come from `preconditions.missing_for_activity`.
-- `partition` is the rows the activity reads: `development` for `eda.quality` (structure only, no target), `train` for every other one.
+- `partition` is the rows the activity reads: `development` for `eda.quality` and `eda.correlation` (structure only, no target), `train` for every other one.
 
-This list is the **only** source of the columns the companion may request. The panel requests only per-column activities whose `partition` is `train` (W4, training-row charts); an item without `partition` (an engine before WP-A9) reads as `train`.
+This list is the **only** source of the columns the companion may request. The panel requests only per-column activities whose `partition` is `train` (W4, training-row charts); an item without `partition` (an engine before WP-A9) reads as `train`. v0.3 (WP-E2): the panel also requests `eda.correlation` (W4 without a column): a catalog item with `per_column: false`, structural (no target), never a look at the outcome.
 
 **`sources`.** `{case: {path, sha256, matches}, dataset: {path, sha256, matches}}`.
 
@@ -516,12 +516,15 @@ hypotrail run eda.distribution --column C --request-id ID --expected-revision RE
 partition ("train"), column, role, type, kind ("numeric" | "discrete" | "categorical"),
 n_rows, n_missing, special_values: [{value, meaning, n_rows, share}],
 numeric: null | {n, min, q25, median, q75, max, mean, sd, n_bins, bin_width,
-                 bins: [{low, high, n_rows, share, closed}]},
+                 bins: [{low, high, n_rows, share, closed}],
+                 zeros: null | {n_rows, share}, skewed, log_bins: null | [{low, high, n_rows, share, closed}]},
 groups: null | [{value, n_rows, share, small_count}],
 n_groups, max_groups, other, min_group_rows, warnings, note, question
 ```
 
 `question` (v0.2a, WP-A4, CLI-CONTRACT §11.2; additive, last) is the question the analysis answers, as every EDA result carries it.
+
+`numeric.zeros`, `numeric.skewed`, `numeric.log_bins` (v0.3, WP-E2, R17; additive, last in `numeric`): the exact zeros counted apart (`null` when a value is negative) and, for a skewed column of non-negative values, bins of its positive values on a logarithmic scale (CLI-CONTRACT §11.2). The panel draws the zeros as a tile beside the log bins.
 
 **Numeric columns.** A column of type `number` or `integer` with more than `eda.MAX_DISTINCT_BEFORE_BINNING` (12) distinct ordinary values is `numeric`. The engine:
 

@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
-  "result_id": "4b9692fc6f469ef9e3a75afb2fefce83648f5f9b346e9cdd56ea8ba214a368bd",
+  "result_id": "ac0433d56d9b26c0a22c01167c7d69c353bfd440341d7d285b3001e522cb0a46",
   "values": {
    "partition": "train",
    "column": "age",
@@ -114,7 +114,13 @@
       "share": 0.002370604504148558,
       "closed": "both"
      }
-    ]
+    ],
+    "zeros": {
+     "n_rows": 0,
+     "share": 0.0
+    },
+    "skewed": false,
+    "log_bins": null
    },
    "groups": null,
    "n_groups": null,
@@ -130,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
-   "result_id": "4b9692fc6f469ef9e3a75afb2fefce83648f5f9b346e9cdd56ea8ba214a368bd",
-   "input_key": "b0be156b0e92ad5bd777e2eca72239bda77be1139514d122e90e31831cdcf2c3",
+   "result_id": "ac0433d56d9b26c0a22c01167c7d69c353bfd440341d7d285b3001e522cb0a46",
+   "input_key": "30c8af54b848b8291d1dcd8d2aaf51c49f313893c8e5c16cdc3b9c64ee78f51e",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_be8b07cbe16d4837b35d3d478696b558"
+    "x_7f0440bebc964158b73f41c3c1a6b4d3"
    ],
    "registry_created": true,
    "nondeterministic": false

@@ -17,15 +17,15 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 42,
+  "revision": 46,
   "decision_id": "policy",
   "value": "capacity:100",
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the rule capacity:100: act on the 100 highest-scored rows. On the 1,086 validation rows the logistic model's selection had precision 38.0% against 11.5% for the baseline, and recall 30.4%. These validation rows were used to choose the rule, so these figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 5355b6b5).",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result b89490b1).",
   "evidence": {
-   "result_id": "5355b6b5e075d07fcd9077166463f3446991fd35721a2ff9ef1973afeed5a8bb",
+   "result_id": "b89490b1bcd70195ed79ccc30f37d47f61e2165f8ac03b6982d1ee37dffb2820",
    "activity": "policy.evaluation",
    "figures": [
     {

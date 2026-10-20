@@ -14,7 +14,7 @@
   "schema": "hypotrail.explain/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 36,
+  "revision": 38,
   "task": "regression",
   "terms": [
    {
@@ -56,7 +56,7 @@
       },
       {
        "text": "96",
-       "result_id": "a9bf2d90a0e263c2df9a2be730283a17d6f6adc0450cd31906d30bdf4d4c164f",
+       "result_id": "30ddfbb28014d3ee7ce1e9545e6d372df788554ee655fb9ee6a1337e30ec3284",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "222",
-       "result_id": "a9bf2d90a0e263c2df9a2be730283a17d6f6adc0450cd31906d30bdf4d4c164f",
+       "result_id": "30ddfbb28014d3ee7ce1e9545e6d372df788554ee655fb9ee6a1337e30ec3284",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -116,7 +116,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "74b33aaae90c1c5680ecb4d8244d80c6e474d0de7a5070d9e27ad4f201e49a24",
+       "result_id": "f6e4d9e8575a1386f64cf4b5d45a0cb820622ae47954344cf132cdb22ca15110",
        "path": "train_mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -150,7 +150,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -160,7 +160,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -170,7 +170,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -194,7 +194,7 @@
       },
       {
        "text": "5.69",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "intervals.[fit.linear].mae.low",
        "value": 5.690730215654784,
        "format": "f2"
@@ -204,7 +204,7 @@
       },
       {
        "text": "7.31",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "intervals.[fit.linear].mae.high",
        "value": 7.3058496174077225,
        "format": "f2"
@@ -484,7 +484,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "8349a3803f85d26765852aab605b217c3983e2d7fe542d80fa6bd4cc696dc289",
+       "result_id": "96ded86d7f05e2e8d3f38f373920c3ea4de677b16e3bddb163da40ffed3f25a8",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -494,7 +494,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "8349a3803f85d26765852aab605b217c3983e2d7fe542d80fa6bd4cc696dc289",
+       "result_id": "96ded86d7f05e2e8d3f38f373920c3ea4de677b16e3bddb163da40ffed3f25a8",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -544,7 +544,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -568,7 +568,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -578,7 +578,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -604,7 +604,7 @@
       },
       {
        "text": "7.66",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.linear].rmse",
        "value": 7.664419781686159,
        "format": "f2"
@@ -614,7 +614,7 @@
       },
       {
        "text": "11.92",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.baseline].rmse",
        "value": 11.924502477405836,
        "format": "f2"
@@ -780,7 +780,7 @@
       },
       {
        "text": "222",
-       "result_id": "a9bf2d90a0e263c2df9a2be730283a17d6f6adc0450cd31906d30bdf4d4c164f",
+       "result_id": "30ddfbb28014d3ee7ce1e9545e6d372df788554ee655fb9ee6a1337e30ec3284",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -790,7 +790,7 @@
       },
       {
        "text": "96",
-       "result_id": "a9bf2d90a0e263c2df9a2be730283a17d6f6adc0450cd31906d30bdf4d4c164f",
+       "result_id": "30ddfbb28014d3ee7ce1e9545e6d372df788554ee655fb9ee6a1337e30ec3284",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -876,7 +876,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "8349a3803f85d26765852aab605b217c3983e2d7fe542d80fa6bd4cc696dc289",
+       "result_id": "96ded86d7f05e2e8d3f38f373920c3ea4de677b16e3bddb163da40ffed3f25a8",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -886,7 +886,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "8349a3803f85d26765852aab605b217c3983e2d7fe542d80fa6bd4cc696dc289",
+       "result_id": "96ded86d7f05e2e8d3f38f373920c3ea4de677b16e3bddb163da40ffed3f25a8",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -972,7 +972,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "74b33aaae90c1c5680ecb4d8244d80c6e474d0de7a5070d9e27ad4f201e49a24",
+       "result_id": "f6e4d9e8575a1386f64cf4b5d45a0cb820622ae47954344cf132cdb22ca15110",
        "path": "validation.mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -982,7 +982,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "9d01527525d629bf9e7a9854f086c3f335393a00f703228911bc04c1ac35a974",
+       "result_id": "31ce55f2af0058f1655eccb972ffd586636b3a5fee1b31f3629cca490f18e9f5",
        "path": "validation.mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1038,7 +1038,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1048,7 +1048,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1058,7 +1058,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -1068,7 +1068,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1160,7 +1160,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1197,7 +1197,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1207,7 +1207,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -1217,7 +1217,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1227,7 +1227,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1237,7 +1237,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+       "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"

@@ -670,7 +670,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2a (WP-A7): the confirmation mode and the notebook launch commands.
                 'mode', 'deliverables', 'trials',
                 # v0.2b (WP-B6a): the scenario defaults, values only.
-                'scenario_defaults')
+                'scenario_defaults',
+                # v0.3 (WP-E2, R21): the study language.
+                'language')
 
 
 def test_status_summary_is_compact_and_complete(study, work, features):

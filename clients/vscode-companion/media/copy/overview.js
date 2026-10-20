@@ -74,7 +74,23 @@
 
     // The journey (§6.1.2)
     journeyTitle: 'The plan',
-    mapTitle: 'Study map',
+    mapTitle: 'The journey',
+    // v0.3 (WP-E2): the journey bar and why a step came back.
+    stepsDone: (done, total) => `${done} of ${total} steps done`,
+    reopenedWhy: 'A step came back: a new proposal or a changed decision asks you to answer again in the chat. The steps after it stay as they are until you do.',
+    // v0.3 (owner addition, I1): how the panel works.
+    guide: {
+      eyebrow: 'About this panel',
+      title: 'How this panel works',
+      lead: 'This panel reads the study through the hypotrail command line and shows it. It keeps nothing of its own: the chat, the report and the notebook stay complete without it.',
+      points: [
+        'Decisions are proposed, confirmed or withdrawn in the chat only. Here you read them, and a button copies a ready question for the chat.',
+        'The panel can run an exploration chart of the engine, regenerate the report and notebook, acknowledge a run that stopped, and export a handoff pack. Nothing else.',
+        'Every figure is an engine value; hover a number to see where it comes from. "Why?" opens the reasons and caveats behind a sentence.',
+        'The language toggle at the top changes the panel only; the study is not touched.',
+      ],
+      tabsLabel: 'What each tab is for',
+    },
     noMoments: 'The study engine does not group the steps into moments yet; the plan is listed in order.',
     marks: { done: '✓', awaiting_confirmation: '●', needs_reconfirmation: '↺', ready: '○', blocked: '○', reopened: '↺' },
     markText: { done: 'done', awaiting_confirmation: 'waiting for you', needs_reconfirmation: 'confirm again', ready: 'ready',

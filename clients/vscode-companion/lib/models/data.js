@@ -62,7 +62,8 @@ function toDataModel(payload) {
       descriptionFr: strOrNull(target.description_fr),
     },
     finalTest: { status: strOrNull(ft.status), rows: int(ft.rows), developmentRows: int(ft.development_rows),
-      method: strOrNull(ft.method), line: strOrNull(ft.line), audience: strOrNull(ft.audience) },
+      // v0.3 (WP-C): the line in the study language (`junior_text`) when the engine sends it.
+      method: strOrNull(ft.method), line: strOrNull(ft.junior_text || ft.line), audience: strOrNull(ft.audience) },
     groups,
     rows: {
       columns, order: strOrNull(rows.order),
@@ -71,7 +72,7 @@ function toDataModel(payload) {
         return { rowKey: str(r && r.row_key), cells: columns.map(c => cell(values[c])) };
       }),
     },
-    note: (() => { const n = obj(p.note); return n.audience === 'agent' ? null : strOrNull(n.text); })(),
+    note: (() => { const n = obj(p.note); return n.audience === 'agent' ? null : strOrNull(n.junior_text || n.text); })(),
     hasFrench: Boolean(target.description_fr) || groups.some(g => g.variables.some(v => v.descriptionFr)),
   };
 }

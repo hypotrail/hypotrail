@@ -27,12 +27,17 @@ const CARD_KEYS = ['slot', 'activity', 'column', 'resultId', 'current', 'kind', 
 const ORDER = {
   'eda.target_rate': 0, 'eda.target_summary': 0, 'eda.special_values': 1, 'eda.single_feature_signal': 2,
   'eda.rate_by': 3, 'eda.mean_by': 3, 'eda.distribution': 4, 'eda.quality': 5,
+  // v0.3 (WP-E2, R28): the predictor matrix after the single-feature signal.
+  'eda.correlation': 2.5,
 };
 const KINDS = {
   'eda.target_rate': 'target_rate', 'eda.target_summary': 'target_summary', 'eda.special_values': 'special_values',
   'eda.rate_by': 'rate_by', 'eda.mean_by': 'mean_by', 'eda.distribution': 'distribution',
-  'eda.single_feature_signal': 'signal', 'eda.quality': 'quality',
+  'eda.single_feature_signal': 'signal', 'eda.quality': 'quality', 'eda.correlation': 'correlation',
 };
+// v0.3 (WP-E2): the catalog activities the panel may run without a column (W4): structural
+// readings of the development rows that never read the target.
+const WHOLE_STUDY = Object.freeze(['eda.correlation']);
 
 // Precision of each number, from framework/mlkit/study/content/activities.yaml (highlights
 // and table columns). `eda.distribution` has no display specification yet (WP-E3 adds it):
@@ -55,7 +60,9 @@ const FMT = Object.freeze({
     n_groups: 'int', n_distinct: 'int', rare_rows: 'int', min: 'auto', max: 'auto', n_special: 'int', n_below: 'int',
     n_above: 'int' },
   'eda.distribution': { n_rows: 'int', n_missing: 'int', share: 'pct1', min_group_rows: 'int', n_values: 'int', n: 'int',
-    min: 'auto', q25: 'auto', median: 'auto', q75: 'auto', max: 'auto', low: 'auto', high: 'auto' },
+    min: 'auto', q25: 'auto', median: 'auto', q75: 'auto', max: 'auto', low: 'auto', high: 'auto', mean: 'auto' },
+  // v0.3 (WP-E2): an association to two decimals, as the level it is compared with.
+  'eda.correlation': { n_rows: 'int', value: 'f2', level: 'f2', n_flagged: 'int' },
 });
 // Class imbalance (§6.3): the term is introduced when the positive share is below or above these.
 const IMBALANCE = Object.freeze({ low: 0.2, high: 0.8 });
@@ -171,6 +178,16 @@ function distribution(v, f) {
     numeric: n ? {
       n: cite(v, 'numeric.n', f.n), min: cite(v, 'numeric.min', f.min), q25: cite(v, 'numeric.q25', f.q25),
       median: cite(v, 'numeric.median', f.median), q75: cite(v, 'numeric.q75', f.q75), max: cite(v, 'numeric.max', f.max),
+      mean: cite(v, 'numeric.mean', f.mean),
+      // v0.3 (WP-E2, R17): the exact zeros apart and log bins of a skewed column (engine keys).
+      zeros: n.zeros && typeof n.zeros === 'object' ? { nRows: cite(v, 'numeric.zeros.n_rows', f.n_rows),
+        share: cite(v, 'numeric.zeros.share', f.share) } : null,
+      skewed: n.skewed === true && Array.isArray(n.log_bins) && n.log_bins.length > 0,
+      logBins: list(n.log_bins).map((b, i) => ({
+        low: num(b && b.low), high: num(b && b.high), closed: str(b && b.closed),
+        lowCited: cite(v, `numeric.log_bins.${i}.low`, f.low), highCited: cite(v, `numeric.log_bins.${i}.high`, f.high),
+        nRows: cite(v, `numeric.log_bins.${i}.n_rows`, f.n_rows), share: cite(v, `numeric.log_bins.${i}.share`, f.share),
+      })),
       bins: list(n.bins).map((b, i) => ({
         low: num(b && b.low), high: num(b && b.high), closed: str(b && b.closed),
         // The edges as cited engine values (WP-I, U4 request: the histogram cites them).
@@ -226,6 +243,21 @@ function quality(v, f) {
   };
 }
 
+/** v0.3 (WP-E2, R28): the predictor-versus-predictor association matrix (no target). */
+function correlation(v, f) {
+  const columns = list(v.columns).filter(c => c && typeof c.name === 'string').map(c => ({ name: c.name, kind: str(c.kind) }));
+  const names = columns.map(c => c.name);
+  const order = list(v.order).filter(n => names.includes(n));
+  return {
+    partition: str(v.partition), targetRead: v.target_read === true, note: str(v.note),
+    nRows: cite(v, 'n_rows', f.n_rows), level: cite(v, 'level', f.level), nFlagged: cite(v, 'n_flagged', f.n_flagged),
+    columns, order: order.length === names.length ? order : names,
+    measures: Object.fromEntries(Object.entries(obj(v.measures)).map(([k, t]) => [k, str(t)])),
+    pairs: list(v.pairs).map((p, i) => ({ a: str(p && p.a), b: str(p && p.b), measure: str(p && p.measure),
+      flag: bool(p && p.flag), value: cite(v, `pairs.${i}.value`, f.value), nRows: cite(v, `pairs.${i}.n_rows`, f.n_rows) })),
+  };
+}
+
 function cardData(activity, values) {
   const v = obj(values);
   const f = FMT[activity];
@@ -237,6 +269,7 @@ function cardData(activity, values) {
     case 'eda.mean_by': return byColumn(v, f, 'mean');
     case 'eda.single_feature_signal': return signal(v, f);
     case 'eda.quality': return quality(v, f);
+    case 'eda.correlation': return correlation(v, f);
     default: return distribution(v, f);
   }
 }
@@ -324,4 +357,10 @@ function requestable(model, activity, column) {
   return a.columns.find(c => c.name === column) || null;
 }
 
-module.exports = { toEdaModel, requestable, EDA_KEYS, CARD_KEYS, FMT, IMBALANCE, ORDER, FIXTURES, EVIDENCE_SCHEMA, ModelError };
+/** v0.3 (WP-E2): the catalog entry that lets the panel run `activity` without a column. */
+function requestableWhole(model, activity) {
+  if (!WHOLE_STUDY.includes(activity)) return null;
+  return list(model && model.catalog).find(x => x.activity === activity && !x.perColumn && x.runnable) || null;
+}
+
+module.exports = { toEdaModel, requestable, requestableWhole, WHOLE_STUDY, EDA_KEYS, CARD_KEYS, FMT, IMBALANCE, ORDER, FIXTURES, EVIDENCE_SCHEMA, ModelError };

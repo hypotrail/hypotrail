@@ -23,7 +23,10 @@
   // document holds no URL literal at all (test/unit.test.js).
   const SVG_NS = ['http:', '', 'www.w3.org', '2000', 'svg'].join('/');
   // v0.3 (WP-E1): no `drafts` key any more; the confirmation words went with W1.
-  const UI_KEYS = ['ackDrafts', 'askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult', 'study'];
+  // v0.3 (WP-E2, R21): `language`, the header's EN | FR choice (UI state only, never a study
+  // write); absent, the panel follows the setting (`auto`: the study language).
+  const UI_KEYS = ['ackDrafts', 'askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult', 'study', 'language'];
+  const LANGUAGES = ['en', 'fr'];
   // The keys that belong to one study (decision CR.2): dropped when `init` names another.
   const STUDY_KEYS = ['ackDrafts', 'askDraft', 'selectedResult'];
   const TAB_ORDER = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
@@ -35,7 +38,7 @@
   const views = [];
   const diagnostics = { dropped: 0, ignored: 0 };
   const state = {
-    init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null },
+    init: { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, task: null, language: 'auto' },
     snapshot: null, data: {}, errors: {}, busy: null, outcomes: {}, lastOutcome: null,
     loadError: null, notice: null, lastRead: null, requested: {}, pendingNav: null,
     // CR.1: `epoch` counts the junior's explicit Refreshes; data read before the last one
@@ -92,6 +95,55 @@
     return append(node, children);
   }
 
+  // --- language (v0.3, WP-E2, R21) -----------------------------------------------------------
+  //
+  // English is the source language: media/copy/*.js. A French translation of the same keys
+  // lives in media/copy-fr/*.js under Hypotrail.copyFr.<view> (test/copy-fr.test.js checks that
+  // every English key has one). Switching swaps each Hypotrail.copy.<view> for the English
+  // object or the French one merged over it; views read Hypotrail.copy.<view> at render time.
+
+  let english = null;
+  let applied = null;
+
+  function isPlain(x) {
+    return Boolean(x) && typeof x === 'object' && !Array.isArray(x);
+  }
+  function merged(en, fr) {
+    if (!isPlain(en) || !isPlain(fr)) return fr === undefined ? en : fr;
+    const out = {};
+    for (const k of Object.keys(en)) out[k] = Object.prototype.hasOwnProperty.call(fr, k) ? merged(en[k], fr[k]) : en[k];
+    return out;
+  }
+
+  /** The panel language: the header choice, else the setting, else the study language. */
+  function language() {
+    if (LANGUAGES.includes(ui.language)) return ui.language;
+    const setting = state.init.language;
+    if (LANGUAGES.includes(setting)) return setting;
+    return studyLanguage();
+  }
+  function studyLanguage() {
+    const l = state.snapshot && state.snapshot.language;
+    return LANGUAGES.includes(l) ? l : 'en';
+  }
+
+  function applyLanguage() {
+    const lang = language();
+    if (!english) english = { ...HT.copy };
+    if (applied !== lang) {
+      const fr = HT.copyFr || {};
+      for (const [ns, en] of Object.entries(english)) HT.copy[ns] = lang === 'fr' && fr[ns] ? merged(en, fr[ns]) : en;
+      applied = lang;
+    }
+    document.documentElement.setAttribute('lang', lang);
+  }
+
+  function setLanguage(lang) {
+    if (!LANGUAGES.includes(lang)) return;
+    uiState.set('language', lang);
+    render();
+  }
+
   // --- state helpers ----------------------------------------------------------------------
 
   function keep() {
@@ -139,6 +191,7 @@
       for (const id of Object.keys(ui[kind])) if (!isDraft(ui[kind][id])) delete ui[kind][id];
     }
     if (ui.study !== undefined && !(typeof ui.study === 'string' && /^[0-9a-f]{16}$/.test(ui.study))) delete ui.study;
+    if (ui.language !== undefined && !LANGUAGES.includes(ui.language)) delete ui.language;
   }
 
   /** `init` names the study (CR.2): the words and the choice of another study are dropped. */
@@ -416,14 +469,24 @@
         state.init.reviewer ? el('span', { className: 'ht-badge ht-badge-reviewer', 'data-reviewer': true, text: c.reviewer }) : null,
       ]),
       el('div', { className: 'ht-meta' }, [
-        atLeast('v1') && snap ? el('button', { type: 'button', className: 'secondary', 'data-stage': 'v1',
+        atLeast('v1') && snap ? el('button', { type: 'button', className: 'ht-ghost', 'data-stage': 'v1',
           'data-switch-study': true, text: c.switchStudy(name), onclick: () => send({ type: 'switch_study' }) }) : null,
-        snap ? el('span', { className: 'ht-mono', 'data-revision': snap.revision, text: c.revision(snap.revision) }) : null,
+        snap ? el('span', { className: 'ht-faint', 'data-revision': snap.revision, text: c.revision(snap.revision) }) : null,
         ageNode,
-        el('button', { type: 'button', className: 'secondary', text: c.refresh, disabled: Boolean(state.busy),
+        el('button', { type: 'button', className: 'ht-ghost', text: c.refresh, disabled: Boolean(state.busy),
           'data-refresh': true, onclick: refreshAll }),
+        languageToggle(),
       ]),
     ]);
+  }
+
+  /** The header's EN | FR toggle (R21): UI state only, nothing is written to the study. */
+  function languageToggle() {
+    const c = C();
+    const lang = language();
+    return el('div', { className: 'ht-seg', role: 'group', 'aria-label': c.languageLabel, 'data-language-toggle': lang },
+      LANGUAGES.map(l => el('button', { type: 'button', lang: l, 'aria-pressed': l === lang ? 'true' : 'false',
+        'data-language': l, title: c.languageNames[l], text: l.toUpperCase(), onclick: () => setLanguage(l) })));
   }
 
   function tablist(list, current) {
@@ -462,7 +525,8 @@
     return el('section', { className: 'ht-alerts', 'aria-label': C().alertsLabel, 'data-stage': 'v1' },
       alerts.map(a => el('div', { className: 'card alert', role: 'alert', 'data-alert': a.id }, [
         // Two-layer copy (WP-A5): the junior variant, else the panel's own words for the id.
-        el('p', { text: a.juniorText || (HT.copy.junior && HT.copy.junior.limitText[a.id]) || (a.audience === 'agent' ? '' : a.text) }),
+        a.juniorText ? HT.components.engineText(a.juniorText, { tag: 'p' })
+          : el('p', { text: (HT.copy.junior && HT.copy.junior.limitText[a.id]) || (a.audience === 'agent' ? '' : a.text) }),
         el('button', { type: 'button', className: 'secondary', text: C().openHealth,
           onclick: () => navigate({ tab: 'overview', kind: 'limit', id: a.id }) }),
       ])));
@@ -474,7 +538,8 @@
     const lines = Array.isArray(snap && snap.recapJunior) ? snap.recapJunior
       : snap && snap.recapAudience !== 'agent' ? snap.recap || [] : [];
     if (!lines.length) return null;
-    const collapsed = ui.recapCollapsed === true;
+    // v0.3 (WP-E2): collapsed by default; the Overview says where the study stands.
+    const collapsed = ui.recapCollapsed !== false;
     const c = C();
     return el('section', { className: 'ht-recap', 'aria-label': c.recapTitle, 'data-stage': 'v1', 'data-recap-strip': true }, [
       el('button', { type: 'button', className: 'ht-link', 'aria-expanded': collapsed ? 'false' : 'true',
@@ -577,6 +642,7 @@
       node.appendChild(el('p', { className: 'muted', text: C().reading }));
       return node;
     }
+    const lead = C().tabLeads && C().tabLeads[tab];
     for (const v of inTab) {
       mounted.push(v);
       let out;
@@ -586,6 +652,12 @@
         out = el('p', { className: 'alert', role: 'alert', text: `${C().viewError} ${String((e && e.message) || e)}` });
       }
       append(node, [out]);
+    }
+    // v0.3 (owner addition, I1): one lead sentence says what the tab is for, under its title.
+    if (lead && tabbed()) {
+      const p = HT.components.lead(lead, { 'data-tab-lead': tab });
+      const h2 = node.querySelector('h2');
+      if (h2 && h2.parentNode === node) h2.after(p); else node.prepend(p);
     }
     return node;
   }
@@ -606,6 +678,7 @@
 
   function render() {
     if (!root) return;
+    applyLanguage();
     const focused = document.activeElement;
     const focusId = focused && focused.id ? focused.id : null;
     const selection = focused && (focused.tagName === 'TEXTAREA' || focused.tagName === 'INPUT') &&
@@ -664,7 +737,7 @@
       case 'init':
         bindStudy(m.study);
         state.init = { stage: m.stage, reviewer: m.reviewer, learningLayer: m.learningLayer, chatInsert: m.chatInsert, task: m.task,
-          marimo: m.marimo || null };
+          marimo: m.marimo || null, language: m.language || 'auto' };
         break;
       case 'snapshot': onSnapshot(m); break;
       case 'view_data':
@@ -719,7 +792,7 @@
   const registered = () => views.map(v => ({ name: v.name, tab: v.tab, stage: v.stage }));
 
   Object.assign(HT, { el, svg, wordsArea, register, send, modal, tooltip, navigate, renderOutcome, start, PALETTE, SVG_NS,
-    diagnostics, registered, _state: state, TAB_ORDER, fresh, version });
+    diagnostics, registered, _state: state, TAB_ORDER, fresh, version, language, studyLanguage, LANGUAGES });
   HT.components = HT.components || {};
   HT.copy = HT.copy || {};
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

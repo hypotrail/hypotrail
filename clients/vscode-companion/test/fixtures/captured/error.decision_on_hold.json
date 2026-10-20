@@ -14,7 +14,7 @@
    "--request-id",
    "b-held",
    "--expected-revision",
-   "43",
+   "47",
    "--json"
   ],
   "note": ""

@@ -19,7 +19,8 @@
     const rid = String(c.resultId || '');
     return HT.el('data', { value: c.value === null || c.value === undefined ? '' : String(c.value), 'data-result-id': rid,
       'data-path': String(c.path || ''), 'data-value': c.value === null || c.value === undefined ? null : String(c.value),
-      title: `result ${rid.slice(0, 8)}... · ${c.path || ''}`, text });
+      // v0.3 (WP-E2): provenance on hover only; never underlined.
+      title: `${HT.copy.core.sourceWord || 'Source'} · ${rid.slice(0, 6)} · ${c.path || ''}`, text });
   }
 
   function valuesTable(container, { columns, rows, caption }) {
@@ -33,17 +34,22 @@
   }
 
   let figures = 0;
-  /** A chart with its accessible name and its "Show values" alternative. */
-  function figure(container, { title, chart, columns, rows, caption }) {
+  /**
+   * A chart with its accessible name, its legend and its "Show values" alternative.
+   * v0.3 (WP-E2): `chart` is an HTML grid (bars, histogram, matrix) or an SVG curve. An SVG
+   * keeps one unit per CSS pixel (width = its viewBox width) and never grows past its
+   * container (max-width: 100%), so a chart never scrolls sideways and its text is never
+   * scaled up. `showTitle: false` keeps the title as the accessible name only (the card's
+   * question is the one visible title, R17). `legend` is a list of [swatch, text] pairs;
+   * `tools` are extra nodes next to the "Show values" toggle.
+   */
+  function figure(container, { title, chart, columns, rows, caption, legend = [], showTitle = true, tools = [] }) {
     figures += 1;
     const id = `ht-values-${figures}`;
     chart.setAttribute('role', 'img');
     chart.setAttribute('aria-label', title);
-    // WP-A5: one SVG unit is one CSS pixel. The chart is drawn at its viewBox size, never
-    // scaled up to the panel's width (the 11 px chart text stays 11 px); a narrow panel
-    // scrolls the chart sideways instead of shrinking it.
     const box = String(chart.getAttribute('viewBox') || '').split(/\s+/).map(Number);
-    if (box.length === 4 && box.every(Number.isFinite)) {
+    if (chart.namespaceURI === HT.SVG_NS && box.length === 4 && box.every(Number.isFinite)) {
       chart.setAttribute('width', String(box[2]));
       chart.setAttribute('height', String(box[3]));
     }
@@ -58,10 +64,42 @@
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.textContent = open ? c.hideValues : c.showValues;
     });
-    const node = HT.el('figure', { className: 'ht-figure' }, [HT.el('figcaption', { text: title }),
-      HT.el('div', { className: 'ht-chart-scroll' }, [chart]), toggle, wrap]);
+    const node = HT.el('figure', { className: 'ht-figure' }, [
+      HT.el('figcaption', { className: showTitle ? null : 'sr-only', text: title }),
+      chart,
+      legend.length ? HT.el('div', { className: 'ht-legend', 'aria-hidden': 'true' },
+        legend.map(([kind, text]) => HT.el('span', {}, [HT.el('i', { className: kind }), text]))) : null,
+      HT.el('div', { className: 'ht-figure-tools' }, [toggle, ...tools]), wrap]);
     if (container) container.appendChild(node);
     return node;
+  }
+
+  /**
+   * v0.3 (WP-E2): an SVG chart drawn at the width of its container and again when that
+   * width changes (ResizeObserver), so a curve is fluid while one SVG unit stays one CSS
+   * pixel. `draw(width)` returns the <svg>; the first drawing uses `initial`. Returns the
+   * host element; the figure's role and name are copied to each new drawing.
+   */
+  function fluid(draw, initial) {
+    const host = HT.el('div', { className: 'ht-fluid' });
+    let width = initial;
+    let current = draw(width);
+    host.appendChild(current);
+    if (typeof ResizeObserver === 'function') {
+      const observer = new ResizeObserver(entries => {
+        const w = Math.floor(entries[0].contentRect.width);
+        if (!w || Math.abs(Math.min(720, Math.max(240, w)) - width) < 8) return;
+        width = Math.max(240, Math.min(720, w));
+        const next = draw(width);
+        for (const a of ['role', 'aria-label']) if (current.hasAttribute(a)) next.setAttribute(a, current.getAttribute(a));
+        const box = String(next.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+        if (box.length === 4) { next.setAttribute('width', String(box[2])); next.setAttribute('height', String(box[3])); }
+        current.replaceWith(next);
+        current = next;
+      });
+      observer.observe(host);
+    }
+    return host;
   }
 
   /**
@@ -73,5 +111,5 @@
     return Math.max(min, Math.min(max, Math.ceil(longest * 6.2)));
   }
 
-  Object.assign(HT.components, { valuesTable, figure, cited, textWidth });
+  Object.assign(HT.components, { valuesTable, figure, cited, textWidth, fluid });
 })(globalThis.Hypotrail = globalThis.Hypotrail || {});

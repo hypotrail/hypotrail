@@ -100,11 +100,13 @@ A tab or control of a later stage is **absent** from the DOM, not merely disable
 │         [Reviewer, read-only] · study switcher (v1) · "revision N" · "read from CLI · <age>" · [Refresh]
 ├ tabs:   Overview · EDA (v2) · Decisions [count] · Evidence (v2) · What if? (v2) · Learn & hand off (v3)
 ├ alert strip (only when present, every tab except Overview; WP-A5): sources changed · execution with unknown outcome · integrity error
-├ recap strip (every tab except Overview, collapsible, remembered per panel in vscode.setState):
+├ recap strip (every tab except Overview, collapsible, remembered per panel in vscode.setState; collapsed by default since v0.3, WP-E2):
 │         Goal / Decided / Now / Next / Limit: summary.recap_junior (WP-A5), its Decided line in the panel's words
 ├ main: the tab
 └ footer: "Reads the hypotrail CLI only · no state of its own · the chat, report and notebook stay complete without it."
 ```
+
+**v0.3 (WP-E2) frame.** The header holds the EN | FR language toggle next to Refresh (§13.2); the revision is a faint word, not monospace. Under the tab bar each tab opens with one lead sentence saying what it is for (`data-tab-lead`, `copy.core.tabLeads`; owner addition, integrator decision I1). The tab bar wraps on a narrow panel instead of scrolling sideways.
 
 **Final-test chip (WP-A7).** From `summary.final_test` (CLI-CONTRACT §4.1), on every tab and every stage: "Final test sealed · N rows" (`ht-st-sealed`, N the engine's count) when sealed, "Final test opened · N rows" when opened (v0.2b), and "No final test" for a study created before the seal (status `absent`); its hover says what it means. An engine without `final_test` gives no chip.
 
@@ -196,6 +198,8 @@ The first block of the Overview at every stage, v0 included (`data-ov="hero"`). 
 
 #### 6.1.2 Study map (A)
 
+**v0.3 (WP-E2): the journey bar replaces the four columns.** One ordered list (`ol.ht-journey`, `data-map`) of every plan step in plan order, at every stage: a segment per step whose tint is its status (done, now, reopened or to confirm again, the sealed final test, to do), the step title, and the sub-label below. Each step carries its moment's title (`data-moment`, and in the hover). A line above says "N of M steps done" (`data-steps-done`); when a step is reopened or must be confirmed again, one note says why a step came back (`data-reopened-why`). The marks and their accessible texts are unchanged (OV-4). OV-3 now reads: every step appears once, in plan order; at most one step has `aria-current="step"` (`test_webview_wp_e2.py`). The four-column text below is kept for the record.
+
 Four columns, from `summary.moments` (CC §1.1). Each column holds the plan steps listed in its moment, with their `title` from `summary.plan`.
 
 | Step status | Mark | Style | Sub-label |
@@ -212,6 +216,10 @@ The pause number comes from `summary.pauses`. The sub-labels are the only text t
 
 - OV-3. The map has 4 columns with the CC §1.1 titles. Every step appears once. The current step has `aria-current="step"`.
 - OV-4. The mark is never the only signal: each mark has an accessible text ("done", "waiting for you", "confirm again", "ready", "blocked").
+
+#### 6.1.2a How this panel works (v0.3, owner addition, I1)
+
+The last card of the Overview at every stage (`data-ov="guide"`): what the panel is (a reader of the CLI with no state of its own; the chat, report and notebook stay complete without it), that decisions are made in the chat only, the writes it can make (W4–W7, in words), that every figure is an engine value with its source on hover and its caveats under "Why?", and that the language toggle changes the panel only. From v1 a "What each tab is for" disclosure lists every visible tab with its lead sentence. No extra tab.
 
 #### 6.1.3 Since your last session (A)
 
@@ -389,7 +397,7 @@ The tab ("Data & EDA") opens on the data card, from the `data` read (§5; CLI-CO
 - the final test's junior line (`final_test.line`) with a sealed chip;
 - the five fixed development rows, the target column first; a column the availability decision leaves out (`not_available`, `uncertain_excluded`) is marked ✗ with a legend (not colour only);
 - the dictionary, grouped in the case's order: column, type (with unit, and the number of values of a non-numeric column), meaning (the description and each special value with its meaning and rows), "Known at the prediction moment?" (the junior's decision in words, else the case's statement and its status), missing cells, examples;
-- "Show French labels" when the case has `labels.fr` (`description_fr`): the descriptions switch to French, marked `lang="fr"`; the button says "Show English labels" to switch back; it is view memory only.
+- "Show French labels" when the case has `labels.fr` (`description_fr`): the descriptions switch to French, marked `lang="fr"`; the button says "Show English labels" to switch back; it is view memory only. (v0.3, WP-E2: replaced by the "Meanings EN | FR" toggle of §6.3.0a, which follows the panel language.)
 
 The `eda.quality` result (development rows, the target not read) follows the data card, titled by its question: missing cells and co-missing patterns, repeated rows, rare categories, and the ranges of numeric columns against a declared range, each figure cited.
 
@@ -399,6 +407,17 @@ The `eda.quality` result (development rows, the target not read) follows the dat
 - DA-4. "Show French labels" swaps every description that has a French label, marked `lang="fr"`, and back.
 - DA-5. Without French labels there is no toggle.
 - DA-6. The data card holds no cited figure and no percentage.
+
+#### 6.3.0a The card pattern and the charts (v0.3, WP-E2)
+
+Every EDA card follows the design system's pattern: an eyebrow (KIND · ROWS), the engine's question as the one visible title (the chart's name stays its accessible name only, R17), the column name and its meaning from the data card under the title (`data-column-meaning`), the chart, one sentence of finding, and a footer with one "Why?" disclosure (the term first, then every caveat: the non-causal sentence, the hollow-point and band legends, the engine's note and warnings) and a faint source line `Source · <activity> · <rid6>` that opens the result in Evidence (`data-chip`). Result ids never appear in the prose.
+
+- **Distribution (R17).** A numeric column draws an HTML histogram with a y axis (the largest count, half of it, 0) and the bins' lower edges on the x axis (at most six labelled). When the engine marks the column skewed (`numeric.skewed`, CLI-CONTRACT §11.2), the exact zeros are a tile apart ("Exactly zero", their share and count, cited to `numeric.zeros`) and the positive values are drawn on the engine's log bins (`numeric.log_bins`), with "log scale" under the axis and the reason under "Why?". A stat row names the median, the IQR, the mean and the maximum (and the missing cells). Missing cells and special values are their own grey bars. A grouped column keeps its bars of counts and shares.
+- **Rate or mean by group.** One row per group: a point at the group's value, its confidence interval with caps, the shuffled-outcome band behind it, the overall value as a dashed rule, and `n` next to the label; a small group is a hollow point and says "small". The finding is the null-band sentence.
+- **Correlation matrix (R28).** From `eda.correlation` (development rows, predictors only, never a target look): the lower triangle in the engine's clustered order, positive (or unsigned) associations in the accent, negative ones in orange, the tint the strength, flagged pairs (|value| ≥ the engine's level) outlined (`data-flag`) and listed with their measure; above eight columns the numbers move to the hover and the values table. The finding names the count of flagged pairs; "Why?" defines collinearity and the three measures.
+- **Run another chart.** Besides the per-column charts, the card offers the whole-study charts of the catalog (`eda.correlation`, W4 without a column, §7), saying that it reads no outcome.
+- **No sideways scroll.** Every chart is an HTML grid (fluid); the dictionary and the five example rows are the only containers that may scroll sideways, inside their card (`data-scroll-ok`). The five rows are behind a "Five example rows" disclosure.
+- **Dictionary meanings (R12 merged into R21).** The Meaning column follows the panel language when the case has `labels.fr`; a "Meanings EN | FR" segmented toggle (`data-french-toggle`, `data-meanings`) switches that column only, view memory only, with a one-line hint.
 
 #### 6.3.1 Exploration amendments (WP-A7)
 
@@ -756,7 +775,7 @@ This is a question, not a confirmation of anything.
 | ~~W1~~ | withdrawn (WP-E1) | Confirm in my words | `A decide confirm <pid> --user-words=<words> --channel webview --actor user --request-id ID --expected-revision R --json --study S` | `pid` matches `^p_[0-9]+$` and is in the last snapshot's open proposals; `words` is non-blank and at most 4000 characters; not reviewer; not busy |
 | ~~W2~~ | withdrawn (WP-E1) | Withdraw (after a modal) | `A decide withdraw <pid> --request-id ID --expected-revision R --json --study S` | as W1, without words; the modal answered "Withdraw" |
 | ~~W3~~ | withdrawn (WP-E1) | Propose this rule or model choice (after a modal) | `A decide propose <d> --value=<v> --restatement=<draft.restatement> --rationale=<draft.rationale> --channel webview --request-id ID --expected-revision <draft.revision> --json --study S` | `d` ∈ {`policy` binary, `model_choice` regression}; `v` is a canonical rule or a fit slot. The controller itself re-runs `preview proposal <d> --value=<v>` **immediately before**, requires `proposable: true` and `draft.revision == R`, and takes the texts from that draft only. The modal: "Create a proposal for "<title>": <v>? It is not a decision. You will confirm it in your own words in Decisions." where `<title>` is the plan step's title of the last summary ("Choose a decision policy", "Choose the model"; the decision id in words when the plan has none; decision CR.9), plus "It replaces the open proposal p_N." when `supersedes_proposal` is set. [Propose]. The draft read just before neither reads nor fills the cache |
-| W4 | v2 | Run on training rows | `A run <activity> --column=<c> --request-id ID --expected-revision R --json --study S` | `activity` ∈ the `eda_catalog.activities[].activity` values with `per_column: true` and `runnable: true` of the evidence read at revision R; `c` is one of that activity's `columns[].name` |
+| W4 | v2 | Run on training rows | `A run <activity> --column=<c> --request-id ID --expected-revision R --json --study S`; v0.3 (WP-E2): `A run eda.correlation --request-id ID --expected-revision R --json --study S` (no column) | `activity` ∈ the `eda_catalog.activities[].activity` values with `per_column: true` and `runnable: true` of the evidence read at revision R; `c` is one of that activity's `columns[].name`. Without a column: `activity` is a whole-study chart the panel knows (`eda.correlation` only, `lib/models/eda.js` `WHOLE_STUDY`) and its catalog entry has `per_column: false` and `runnable: true` |
 | W5 | v1 | Regenerate | `A render --json --study S` | not reviewer; not busy |
 | W6 | v1 | Acknowledge in my words | `A run --acknowledge-interruption <eid> --user-words=<words> --request-id ID --expected-revision R --json --study S` | `eid` is in the snapshot's `executions.interrupted` or `suspected_interrupted`; `words` is non-blank and at most 4000 characters |
 | W7 | v3 | Export a handoff pack | `A export handoff --out=<chosen folder>/revision-<R> --expected-revision R --json --study S` (CR.6; never without `--expected-revision`: an older engine's refusal of the option is shown as such) | `R` is the last snapshot's revision; the folder comes from the VS Code dialog; it is not inside `S/.hypotrail` |
@@ -771,7 +790,7 @@ This is a question, not a confirmation of anything.
 - `decide confirm --basis ...` or `--delegation-scope`;
 - `decide note`, and `decide note --resolve`;
 - `run` of `split`, `fit.*`, `policy.evaluate`, or `evaluate.regression`;
-- `run eda.*` without `--column` (the non-per-column `eda.target_rate`, `eda.target_summary`, and `eda.special_values` are run by the agent as part of the plan);
+- `run eda.*` without `--column`, except `eda.correlation` (v0.3, WP-E2: structural, no target, never a look); the non-per-column `eda.target_rate`, `eda.target_summary`, `eda.special_values`, `eda.quality` and `eda.single_feature_signal` are run by the agent as part of the plan;
 - `run --max-groups`;
 - `check --text`;
 - `init`.
@@ -825,7 +844,7 @@ A unit test enumerates the argv builder module and asserts that exactly the four
 
 | `type` | Fields | Notes |
 |---|---|---|
-| `init` | `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`), `study?` (the study key of §10, 16 hex; never the path; CR.2), `marimo?` (`{kernel, notebook, workbench}`: the engine environment and the two launch commands with study-relative files, display only; WP-A5) | sent once after `ready`, and again when a setting changes |
+| `init` | `stage`, `reviewer` (bool), `learningLayer` (bool), `chatInsert` (bool), `task` (`binary`\|`regression`\|`null`), `study?` (the study key of §10, 16 hex; never the path; CR.2), `marimo?` (`{kernel, notebook, workbench}`: the engine environment and the two launch commands with study-relative files, display only; WP-A5), `language?` (`auto`\|`en`\|`fr`, the setting `hypotrail.companion.language`; v0.3, WP-E2) | sent once after `ready`, and again when a setting changes |
 | `snapshot` | `revision`, `currency?` (CR.1), `model: SummaryModel` | after every summary read |
 | `view_data` | `view`, `revision`, `currency?` (the version the model was read at, CR.1), `model` (the model of §9 for that view), `resultId?` | |
 | `load_error` | `view` (or `null` for the summary), `message`, `detail` | |
@@ -866,7 +885,7 @@ The models are pure functions in `lib/models/*.js`, from CLI payloads to plain o
 
 | Store | Keys | May hold | Must not hold |
 |---|---|---|---|
-| `vscode.setState` (webview, per panel) | `drafts{pid: {text, revision}}`, `ackDrafts{eid: {text, revision}}` (the words and the revision at which the junior started typing them, CR.3), `askDraft`, `tab`, `recapCollapsed`, `evidenceFilter`, `selectedResult`, `study` (the study key of `init`, CR.2) | draft words the junior is typing (never sent until submitted), view navigation | anything read back as a decision, or a number |
+| `vscode.setState` (webview, per panel) | `drafts{pid: {text, revision}}`, `ackDrafts{eid: {text, revision}}` (the words and the revision at which the junior started typing them, CR.3), `askDraft`, `tab`, `recapCollapsed`, `evidenceFilter`, `selectedResult`, `study` (the study key of `init`, CR.2), `language` (`en`\|`fr`, the header's EN \| FR choice; v0.3, WP-E2) | draft words the junior is typing (never sent until submitted), view navigation | anything read back as a decision, or a number |
 | `context.globalState` (extension) | `hypotrail.learn.prefs = {hideCards: bool}`; `hypotrail.learn.seen = {cardId: count ≤ 99}` (at most 500 ids); `hypotrail.learn.predictions = {studyKey: {questionId: choiceId}}` (at most 50 studies, oldest removed first) | learning-layer preferences, seen cards, prediction answers | study values, words, revisions, proposal or result ids, paths |
 | `context.workspaceState` | not used | — | — |
 
@@ -895,7 +914,7 @@ The models are pure functions in `lib/models/*.js`, from CLI payloads to plain o
 
 The v0 rules still apply: CSP, nonce, no command URIs, no local resource roots, `retainContextWhenHidden: false`, `textContent` only, and whitelisted messages. These additions apply on top:
 
-- **Charts are inline SVG.** They are built with `document.createElementNS`. Geometry goes through `setAttribute` on SVG geometry attributes (`x`, `y`, `width`, `height`, `d`, `points`), and colour goes through `fill` and `stroke` attributes that take values from a fixed palette in `media/core.js`. A `style` attribute is never used: an inline style attribute is blocked by the nonce-only `style-src`. Dynamic widths of HTML elements are set with `element.style.setProperty`, which goes through CSSOM and is allowed under that CSP; a Playwright test runs with the real CSP and checks that no CSP violation is reported (`securitypolicyviolation` listener).
+- **Charts are inline SVG.** They are built with `document.createElementNS`. Geometry goes through `setAttribute` on SVG geometry attributes (`x`, `y`, `width`, `height`, `d`, `points`), and colour goes through `fill` and `stroke` attributes that take values from a fixed palette in `media/core.js`. A `style` attribute is never used: an inline style attribute is blocked by the nonce-only `style-src`. Dynamic widths of HTML elements are set with `element.style.setProperty`, which goes through CSSOM and is allowed under that CSP; a Playwright test runs with the real CSP and checks that no CSP violation is reported (`securitypolicyviolation` listener). v0.3 (WP-E2): the fluid HTML charts set only custom properties (`--v`, `--x`, `--a`, `--b`, `--n`) through CSSOM (`HT.el(tag, {css: {...}})`); the stylesheet turns them into widths and positions. Such a write leaves a `style` attribute on the element, so the rule tested is: no `style` attribute in the document the extension serves, none created with `setAttribute('style', ...)` (recorded in the browser tests), and every `style` attribute present holds custom properties only (`test_webview_wp_e2.py`). Width classes (`.w-0` ... `.w-100`) were not used.
 - **No URI is created from study text.** Links are buttons that post messages. The extension opens only these targets:
   - `file:` URIs of the three deliverables;
   - the study's own files named by `check` locations, resolved and required to stay inside the study folder;
@@ -922,7 +941,16 @@ The v0 rules still apply: CSP, nonce, no command URIs, no local resource roots, 
 
 **Motion.** Highlight transitions are disabled under `prefers-reduced-motion: reduce`.
 
-**Theme tokens.** The tokens are defined in `media/css/tokens.css`. Each one maps a VS Code variable first and falls back to the mockup colour (light) or its dark counterpart:
+**v0.3 (WP-E2): the design system.** `media/css/tokens.css` and `media/css/core.css` implement the validated system of `docs/design/companion-v0.3-mockups/ds.css`, which supersedes the token tables below (kept for the record; their names stay as aliases):
+
+- **Two token layers.** Layer 1: the host's `--vscode-*` values with the Light Modern / Dark Modern defaults as fallbacks. Layer 2: `--ht-fg` from `editor-foreground`; surfaces derived with `color-mix` (`--ht-surface` 2.5 % of the foreground into the editor background, `--ht-sunken`, `--ht-line`, `--ht-line-strong`, `--ht-faint`); six semantic hues (accent, warn, bad, seal, info, ok) and the chart roles (mark, reference grey, band, grid, axis, the diverging pair) fixed per theme kind on `body.vscode-light`, `body.vscode-dark`, `body.vscode-high-contrast` and `body.vscode-high-contrast-light` (outside VS Code, `prefers-color-scheme`). In High Contrast the hues are bright, the surfaces are the background, and every card, chip and button takes the theme's contrast border; `forced-colors` keeps the system colours.
+- **Scale.** Spacing 4–32, type caption 11 (uppercase label), meta 12, body 13, title 15, page 18, stat 24, tabular numbers; radii chips 4, cards 8, pills 999; no shadow except the next move's 3 px accent ring.
+- **One card pattern** (eyebrow, title as a question, figure, one sentence, footer with "Why?" and a faint source line), **filled status chips** with a dot, **notes** as tinted blocks.
+- **Recap.** Collapsed by default on every tab except the Overview, which shows where the study stands itself.
+- **Charts are fluid.** Bars, histograms, interval rows, the confusion 2×2 and the correlation matrix are HTML grids sized by CSSOM custom properties (§12): they follow the width of the panel. SVG is kept for curves (gain, calibration, quantile plot), drawn at the width of their container and redrawn when it changes (ResizeObserver), so one SVG unit is still one CSS pixel and chart text is never scaled up; any SVG is at most as wide as its container. **No chart and no page scrolls sideways at any width**; the only sideways scroll is inside the dictionary and the five example rows of the data card. This replaces the v0.2 rule "a narrow panel scrolls a chart sideways".
+- **A11Y-4 (v0.3).** `test_webview_wp_e2.py` runs every tab on the captured payloads under Light Modern, Dark Modern and High Contrast, at 900 and 420 px, in English and in French: no element's right edge passes the viewport outside `data-scroll-ok`, no raw result id, proposal id or rule token in the prose, no underlined number, the style-attribute rule of §12, no CSP violation. The pixel baselines are WP-E3.
+
+**Theme tokens (v0.2, superseded by the paragraph above).** The tokens are defined in `media/css/tokens.css`. Each one maps a VS Code variable first and falls back to the mockup colour (light) or its dark counterpart:
 
 | Token | VS Code variable | Light fallback | Dark fallback |
 |---|---|---|---|
@@ -951,12 +979,22 @@ No remote font is loaded: the mockup's IBM Plex is replaced by the VS Code fonts
 
 - A disabled control is not marked by opacity alone: no fill, a dashed border, muted text.
 - `@media (forced-colors: active)`: buttons, tags, cards, steps keep a border in system colours; chart marks use `CanvasText` and `GrayText`; the current step and the selected tab use `Highlight`.
-- Charts are drawn at their viewBox size (one SVG unit per CSS pixel): chart text is 11 px and never scaled up; a narrow panel scrolls a chart sideways. Intervals sit on a drawn axis, with 0 marked and labelled when the chart compares to 0.
-- Below 600 px every table becomes a list of cards (each cell labelled by its column); the tab bar scrolls sideways instead of wrapping; the page never scrolls sideways at 420 px.
+- Charts follow the width of the panel (v0.3, WP-E2; above): chart text is 11 px and never scaled up, and nothing scrolls sideways. Intervals sit on a drawn axis, with 0 marked and labelled when the chart compares to 0.
+- Below 600 px every table becomes a list of cards (each cell labelled by its column); the tab bar wraps (v0.3; it scrolled sideways before); the page never scrolls sideways at 420 px.
 - A11Y-3. `test_webview_themes.py` runs the views on the captured payloads under the Light+, Dark+ and High Contrast variable sets (`test/themes.py`) at 900 and 420 px: chart text ≤ body text + 2 px; primary buttons have a visible border in High Contrast and under forced colours; no sideways scroll at 420 px; no `agent` text visible in any tab.
 
 - A11Y-1. axe-core is **not** added, because it would be a dependency. Instead, a Playwright test asserts that every interactive element has an accessible name, every `img`-like SVG has `role="img"` and a name, there is no positive `tabindex`, and focus is visible (outline present) for each control.
 - A11Y-2. Computed contrast of text tokens against `--ht-bg` is at least 4.5:1 in both fallback themes. This is tested by computing WCAG contrast in the test.
+
+### 13.2 Panel language (v0.3, WP-E2, R21)
+
+English is the source language; the panel ships a French translation of its own copy (AGENTS.md, owner decision 2026-10-20).
+
+- **Setting.** `hypotrail.companion.language`: `auto` (default; follows the study language, the summary's `language`, CLI-CONTRACT §3), `en`, or `fr`. It reaches the webview in `init.language` (§8.2).
+- **Header toggle.** An EN | FR segmented control next to Refresh (`data-language-toggle`, `data-language`, `aria-pressed`). Pressing it switches the panel at once and keeps the choice in `vscode.setState` (`language`, §10); it sends no message and writes nothing to the study. The choice overrides the setting until the panel's state is cleared.
+- **Copy.** `media/copy/*.js` holds the English strings; `media/copy-fr/*.js` (loaded after them, `lib/html.js`) holds the same keys in French under `Hypotrail.copyFr`. The frame swaps every `Hypotrail.copy.<view>` for the French table merged over the English one before it renders; `document.documentElement.lang` follows. `test/copy-fr.test.js` fails when an English key has no French counterpart of the same kind, or when a French string holds a digit outside a placeholder or an exclamation mark.
+- **Engine texts.** Engine junior texts (questions, notes, warnings, limits, digest texts, deliverable messages, the final-test line, the recap's goal) are shown as the engine sent them. In a French panel, a text whose language is not French (the study language) carries a faint "(en)" marker and `lang="en"` (`data-en-marker`, `HT.components.engineText`). The engine's French variants are WP-C's.
+- **Not translated.** The extension's own messages (`lib/refusals.js`, VS Code notifications and quick picks) stay English in v0.3.
 
 ## 14. Task variants and vocabulary
 
@@ -990,6 +1028,7 @@ This replaces the "verbatim" rule for engine texts shown as content (the refusal
 2. **Engine junior texts** (`audience: junior`, or the `junior_*` variants of CLI-CONTRACT §3.3) may be shown as primary content as they are.
 3. **Layer 2, engine text**: an `audience: agent` text is shown only inside a "Details" disclosure or a hover, labelled when it is an instruction to the assistant. Raw identifiers and recorded tokens are layer 2 as well.
 4. A text without an audience (an engine before v0.2a) is shown as before.
+5. (v0.3, WP-E2) Numbers are cited by `<data>` elements with their provenance in the hover; they are **never underlined**, and no dotted underline marks words in the prose (a glossary term of the learning layer is a hover target with a thin solid border). Result ids, revisions and other provenance appear only in a card's faint source line, in hovers, and under "Details"; never in a sentence. Every caveat of a card goes under its one "Why?" disclosure; a card shows one sentence of finding.
 
 ## 16. Stable test hooks
 
@@ -1006,6 +1045,14 @@ This replaces the "verbatim" rule for engine texts shown as content (the refusal
 | `data-term` | glossary-marked words | glossary id |
 | `data-eda-card` | EDA cards | slot |
 | `data-ledger-row` | ledger rows | `<purpose>:<partition>` |
+| `data-tab-lead` | the lead sentence of a tab (v0.3) | tab id |
+| `data-language-toggle`, `data-language` | the header's EN \| FR toggle (v0.3) | `en`, `fr` |
+| `data-en-marker` | the "(en)" marker of an English engine text in a French panel (v0.3) | — |
+| `data-ov="guide"` | "How this panel works" (v0.3) | — |
+| `data-zero-tile`, `data-log-scale`, `data-numeric-line` | a skewed distribution's zero tile, log scale note, stat row (v0.3) | — |
+| `data-pair`, `data-flag`, `data-collinear` | correlation matrix cells, flagged pairs, the finding (v0.3) | `<a>\|<b>` |
+| `data-whole` | a whole-study chart of "Run another chart" (v0.3) | activity |
+| `data-scroll-ok` | the only containers that may scroll sideways (v0.3) | — |
 
 ## 17. Non-goals
 

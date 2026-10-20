@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import inline_styles_ok
+
 import themes
 
 SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
@@ -81,7 +83,7 @@ def feed_eda(panel, views, task, eda=None):
 def clean(panel):
     assert not (panel.requests or panel.errors or panel.csp or panel.violations()), \
         (panel.requests, panel.errors, panel.csp, panel.violations())
-    assert panel.page.locator('body [style]').count() == 0
+    assert inline_styles_ok(panel.page)
 
 
 # --- the data card -------------------------------------------------------------------------
@@ -108,7 +110,9 @@ def test_da1_the_tab_reads_the_data_card_and_shows_it_first(open_panel, views, t
     assert raw['observation_unit']['value'] in card.locator('[data-fact="unit"]').inner_text()
     rows = card.locator('[data-development-rows]')
     assert rows.get_attribute('data-development-rows') == str(raw['development']['rows'])
-    assert rows.inner_text() == f"{raw['development']['rows']:,} rows · {raw['development']['columns']} columns"
+    # v0.3 (WP-E2): stat tiles, the rows and the columns apart.
+    assert rows.inner_text() == f"{raw['development']['rows']:,}"
+    assert f"{raw['development']['columns']}\nColumns" in card.locator('.eda-facts').inner_text()
     assert card.locator('[data-seal-line]').inner_text().endswith(raw['final_test']['line'])
     assert card.locator('[data-data-note]').inner_text() == raw['note']['text']
     clean(panel)
@@ -126,13 +130,14 @@ def test_da2_five_rows_target_first_and_excluded_columns_marked(open_panel, view
     assert heads == raw['rows']['columns'] and heads[0] == raw['target']['column']
     assert page.locator('[data-five-rows] tbody tr').count() == raw['rows']['n_rows'] == 5
     first = raw['rows']['items'][0]['values']
-    cells = page.locator('[data-five-rows] tbody tr').first.locator('td').all_inner_texts()
+    # v0.3 (WP-E2): the five rows sit in a closed "Five example rows" disclosure: read their text.
+    cells = page.locator('[data-five-rows] tbody tr').first.locator('td').all_text_contents()
     assert cells == ['(missing)' if first[c] is None else str(first[c]) for c in heads]
     decided = {v['name']: (v['decided'] or {}).get('value') for g in raw['groups'] for v in g['variables']}
     excluded = [c for c in heads if decided.get(c) in ('not_available', 'uncertain_excluded')]
     assert excluded, 'the capture excludes columns'
     for name in excluded:
-        assert page.locator(f'[data-five-rows] th[data-column="{name}"]').inner_text() == f'{name} ✗'
+        assert page.locator(f'[data-five-rows] th[data-column="{name}"]').text_content() == f'{name} ✗'
     assert page.locator('[data-excluded-legend]').count() == 1
     clean(panel)
 
@@ -165,15 +170,19 @@ def test_da3_the_dictionary_is_grouped_in_the_case_order(open_panel, views, task
 
 @pytest.mark.parametrize('task', ['binary', 'regression'])
 def test_da4_french_labels_toggle_when_the_case_has_them(open_panel, views, task):
-    """DA-4: "Show French labels" swaps each description for the case's labels.fr, marked lang="fr"."""
+    """DA-4: the Meaning column swaps each description for the case's labels.fr, marked lang="fr"
+    (v0.3, R12 merged into R21: a "Meanings EN | FR" toggle that names the language shown)."""
     panel = open_tab(open_panel, views, task, 'eda')
     feed_eda(panel, views, task)
     page = panel.page
     raw = views[f'raw.data.{task}']
     toggle = page.locator('[data-french-toggle]')
-    assert toggle.inner_text() == 'Show French labels' and toggle.get_attribute('aria-pressed') == 'false'
-    toggle.click()
+    assert toggle.locator('button').all_inner_texts() == ['Meanings EN', 'Meanings FR']
+    assert toggle.get_attribute('aria-pressed') == 'false'
+    assert page.locator('[data-meanings="en"]').get_attribute('aria-pressed') == 'true'
+    page.locator('[data-meanings="fr"]').click()
     assert page.locator('[data-french-toggle]').get_attribute('aria-pressed') == 'true'
+    assert page.locator('[data-meanings="fr"]').get_attribute('aria-pressed') == 'true'
     for g in raw['groups']:
         for v in g['variables']:
             desc = page.locator(f'[data-dictionary] [data-variable="{v["name"]}"] [data-description]')
@@ -182,7 +191,7 @@ def test_da4_french_labels_toggle_when_the_case_has_them(open_panel, views, task
             else:
                 assert desc.inner_text() == v['description']
     shot(page, f'data-card-{task}-french')
-    page.locator('[data-french-toggle]').click()
+    page.locator('[data-meanings="en"]').click()
     assert page.locator('[data-dictionary] [lang="fr"]').count() == 0
     clean(panel)
 
@@ -236,8 +245,9 @@ def test_ed8_intervals_and_the_null_band_are_drawn_and_cited(open_panel, views, 
     card = page.locator(f'[data-eda-card="{slot}"]')
     entry = next(r for r in views[f'raw.evidence.{task}']['results'] if r['slot'] == slot)
     groups = [g for g in entry['values']['groups'] if g.get('interval')]
-    assert card.locator('svg [data-interval]').count() >= len(groups) > 0
-    assert card.locator('svg rect[data-band]').count() >= len([g for g in groups if g.get('null_band')]) > 0
+    # v0.3 (WP-E2): an HTML grid; each group a point inside its interval, the band behind.
+    assert card.locator('[data-chart] [data-interval]').count() >= len(groups) > 0
+    assert card.locator('[data-chart] [data-band]').count() >= len([g for g in groups if g.get('null_band')]) > 0
     band = entry['values']['null_band']['chart']
     line = card.locator('[data-null-band]')
     assert line.get_attribute('data-null-band') == ('outside' if band['outside'] else 'inside')
@@ -260,11 +270,11 @@ def test_ed9_the_leakage_detector_asks_the_legitimacy_question(open_panel, views
     page = panel.page
     card = page.locator('[data-eda-card="eda.single_feature_signal"]')
     values = next(r for r in views[f'raw.evidence.{task}']['results'] if r['slot'] == 'eda.single_feature_signal')['values']
-    assert card.locator('svg.ht-bars g[data-bar]').count() == len(values['signals'])
+    assert card.locator('[data-chart="bars"] [data-bar]').count() == len(values['signals'])
     if values['questions']:
         for q in values['questions']:
             leak = card.locator(f'[data-leak="{q["feature"]}"]')
-            assert leak.locator('strong').first.inner_text() == 'Leakage detector'
+            assert leak.locator('strong').first.inner_text().startswith('Leakage detector')
             score = leak.locator('[data-result-id]')
             assert score.get_attribute('data-path').startswith('questions.')
             assert float(score.get_attribute('data-value')) == q['score']
@@ -288,13 +298,16 @@ def test_ed10_the_quality_check_reads_development_rows_without_the_target(open_p
     page = panel.page
     card = page.locator('[data-quality-card="eda.quality"]')
     values = next(r for r in views[f'raw.evidence.{task}']['results'] if r['slot'] == 'eda.quality')['values']
-    assert ('outcome not read' if task == 'binary' else 'target not read') in card.inner_text()
+    # v0.3 (WP-E2): the eyebrow says it, the "Why?" says it in a sentence.
+    assert card.locator('[data-eyebrow]').text_content() == ('Quality · development rows, no outcome' if task == 'binary'
+                                                           else 'Quality · development rows, no target')
+    assert 'without the target' in card.text_content()
     read = [n for n in card.locator('[data-result-id]').evaluate_all('ns => ns.map(n => n.dataset.path)')]
     assert 'n_rows' in read and 'n_columns' in read
     for r in [c for c in values['cardinality'] if c['rare']]:
-        assert r['column'] in card.locator('[data-quality="rare"]').inner_text()
+        assert r['column'] in card.locator('[data-quality-detail="rare"]').text_content()
     if task == 'binary':
-        assert 'dec (14)' in card.locator('[data-quality="rare"]').inner_text()
+        assert 'dec (14)' in card.locator('[data-quality-detail="rare"]').text_content()
     clean(panel)
 
 
@@ -320,12 +333,13 @@ def test_ed12_run_another_chart_shows_its_question_before_it_runs(open_panel, vi
     assert page.locator('#eda-request-title').inner_text() == 'Run another chart'
     page.locator('#eda-variable').select_option('balance')
     page.locator('#eda-chart').select_option('eda.distribution')
-    q = page.locator('[data-request-question]')
+    # v0.3 (WP-E2): the per-column chart's question (the correlation matrix has its own).
+    q = page.locator('[data-request-question]:not([data-request-question="eda.correlation"])')
     assert q.get_attribute('data-request-question') == 'eda.distribution'
     assert 'How are the values of balance spread on the training rows?' in q.inner_text()
     assert page.locator('[data-one-more-look]').count() == 0
     page.locator('#eda-chart').select_option('eda.rate_by')
-    assert 'Does the outcome rate differ across the values of balance' in page.locator('[data-request-question]').inner_text()
+    assert 'Does the outcome rate differ across the values of balance' in q.inner_text()
     assert page.locator('[data-one-more-look]').count() == 1
     options = page.locator('#eda-chart option').evaluate_all('os => os.map(o => o.value)')
     assert set(options) <= {'eda.distribution', 'eda.rate_by', 'eda.mean_by'}
@@ -483,7 +497,9 @@ def test_a11y3_the_new_views_under_every_theme_and_420px(open_panel, views, task
     sizes = page.evaluate("""() => [...document.querySelectorAll('#panel-eda svg.ht-chart')].filter(s => s.getBoundingClientRect().width > 0)
       .map(svg => { const vb = svg.getAttribute('viewBox').split(/\\s+/).map(Number);
         return svg.getBoundingClientRect().width / vb[2]; })""")
-    assert sizes and max(sizes) <= 1.0001
+    # v0.3 (WP-E2): the bars and histograms are HTML grids; an SVG (the box plot) is never upscaled.
+    assert page.locator('#panel-eda [role="img"][aria-label]').count() > 0
+    assert max(sizes, default=0) <= 1.0001
     chip = page.locator('header [data-final-test]')
     assert float(chip.evaluate('n => parseFloat(getComputedStyle(n).borderTopWidth)')) >= 1
     shot(page, f'eda-{task}-{theme}-{width}')

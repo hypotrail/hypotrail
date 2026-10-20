@@ -1,89 +1,167 @@
-/* Theme tokens of the study panel (COMPANION-ADVANCED §13). Each token maps a VS Code
-   theme variable first and falls back to the mockup colour (light) or its dark
-   counterpart, for a page loaded outside VS Code (the browser tests). No remote font.
-   Frozen by WP-0: views use these tokens, never raw colours. */
+/* Theme tokens of the study panel (COMPANION-ADVANCED §13; v0.3 WP-E2, the validated design
+   system of docs/design/companion-v0.3-mockups/ds.css). Two layers:
+
+   1. Host values: the VS Code theme variables, with the real Light Modern / Dark Modern
+      defaults as fallbacks (a page loaded outside VS Code, the browser tests).
+   2. Hypotrail tokens: text and surfaces DERIVED from the theme (editor foreground, colour-
+      mix surfaces); six semantic hues FIXED per theme kind (body.vscode-light / -dark /
+      -high-contrast / -high-contrast-light), because the theme's charts-* colours are not
+      tuned for fills. Outside VS Code (no body class) `prefers-color-scheme` picks the kind.
+
+   Views use these tokens, never raw colours. No remote font. The older token names of
+   v0.2 (--ht-border, --ht-warn-bg, --ht-st-*, ...) are kept as aliases of the new ones. */
 :root {
-  --ht-bg: var(--vscode-editor-background, #FBFAF7);
-  --ht-surface: var(--vscode-sideBar-background, #FFFFFF);
-  --ht-border: var(--vscode-panel-border, #E3E1DA);
-  --ht-fg: var(--vscode-foreground, #1C1E21);
-  --ht-muted: var(--vscode-descriptionForeground, #5B6066);
-  --ht-accent: #0F6E66;
-  --ht-baseline: #8A8F96;
-  --ht-done-bg: #E3F1EF;
-  --ht-warn-bg: var(--vscode-inputValidation-warningBackground, #FCEFD9);
-  --ht-warn-border: var(--vscode-inputValidation-warningBorder, #EBCB97);
-  --ht-warn-fg: var(--vscode-foreground, #4A2604);
-  --ht-error-bg: var(--vscode-inputValidation-errorBackground, #FBE7E4);
-  --ht-error-border: var(--vscode-inputValidation-errorBorder, #E6B3AB);
-  --ht-error-fg: var(--vscode-errorForeground, #6B1E14);
-  --ht-experiment-bg: #EEE8F7;
-  --ht-experiment-fg: #3A2363;
-  --ht-link: var(--vscode-textLink-foreground, #1D5FAF);
-  --ht-focus: var(--vscode-focusBorder, #1D5FAF);
-  --ht-font: var(--vscode-font-family, system-ui, sans-serif);
-  --ht-mono: var(--vscode-editor-font-family, ui-monospace, monospace);
-  --ht-button-bg: var(--vscode-button-background, #0F6E66);
-  --ht-button-fg: var(--vscode-button-foreground, #FFFFFF);
-  --ht-button2-bg: var(--vscode-button-secondaryBackground, #EEEDE8);
-  --ht-button2-fg: var(--vscode-button-secondaryForeground, #1C1E21);
-  --ht-input-bg: var(--vscode-input-background, #FFFFFF);
-  --ht-input-fg: var(--vscode-input-foreground, #1C1E21);
-  --ht-input-border: var(--vscode-input-border, #8A8F96);
-  --ht-quote-bg: var(--vscode-textBlockQuote-background, #F3F2EE);
-  --ht-quote-border: var(--vscode-textBlockQuote-border, #C9C6BD);
-  /* WP-A5: one status vocabulary (ok, needs you, sealed, error, stale) and the chart marks,
-     mapped to VS Code's chart colours first. A status colour marks a border or a dot; text
-     stays --ht-fg, so contrast never rests on a chart colour. */
-  --ht-st-ok: var(--vscode-charts-green, #2E7D4F);
-  --ht-st-needs: var(--vscode-charts-blue, #1D5FAF);
-  --ht-st-sealed: var(--vscode-charts-purple, #5B3A9A);
-  --ht-st-error: var(--vscode-charts-red, #B3261E);
-  --ht-st-stale: var(--vscode-charts-yellow, #9A6700);
-  --ht-chart-model: var(--vscode-charts-blue, #0F6E66);
-  --ht-chart-baseline: var(--vscode-charts-lines, #8A8F96);
-  --ht-chart-text: var(--vscode-charts-foreground, var(--ht-fg));
-  /* Borders of controls: VS Code's button border, else the contrast border of a high
-     contrast theme, else none (a filled button) or the panel border (a secondary one). */
-  --ht-button-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
-  --ht-button2-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--ht-border)));
-  --ht-card-border: var(--vscode-contrastBorder, var(--ht-border));
+  /* Layer 1: host values (Light Modern fallbacks). */
+  --ht-host-bg: var(--vscode-editor-background, #ffffff);
+  --ht-host-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #3b3b3b));
+  --ht-host-muted: var(--vscode-descriptionForeground, #6b6b6b);
+  --ht-host-line: var(--vscode-panel-border, #e5e5e5);
+  --ht-host-link: var(--vscode-textLink-foreground, #005fb8);
+  --ht-host-focus: var(--vscode-focusBorder, #005fb8);
+  --ht-host-button-bg: var(--vscode-button-background, #005fb8);
+  --ht-host-button-fg: var(--vscode-button-foreground, #ffffff);
+  --ht-host-button2-bg: var(--vscode-button-secondaryBackground, #e5e5e5);
+  --ht-host-button2-fg: var(--vscode-button-secondaryForeground, #3b3b3b);
+  --ht-host-input-bg: var(--vscode-input-background, #ffffff);
+  --ht-host-input-fg: var(--vscode-input-foreground, #3b3b3b);
+  --ht-host-input-border: var(--vscode-input-border, #cecece);
+  --ht-font: var(--vscode-font-family, system-ui, -apple-system, "Segoe UI", Ubuntu, sans-serif);
+  --ht-mono: var(--vscode-editor-font-family, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+
+  /* Semantic hues of a light theme. */
+  --ht-accent: #0f766e; --ht-accent-ink: #0b5d56;
+  --ht-warn: #9c4507; --ht-bad: #b42318; --ht-seal: #6941c6; --ht-info: #175cd3; --ht-ok: #067647;
+  --ht-c-ref: #9aa0a6; --ht-div-neg: #c4320a; --ht-div-pos: #0f766e;
+  --ht-strong-ink: #ffffff;
+  --ht-surface-mix: 2.5%;
+}
+/* Dark kind: VS Code's dark themes, or a dark page outside VS Code. */
+@media (prefers-color-scheme: dark) {
+  body:not(.vscode-light):not(.vscode-high-contrast-light) {
+    --ht-host-bg: var(--vscode-editor-background, #1f1f1f);
+    --ht-host-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
+    --ht-host-muted: var(--vscode-descriptionForeground, #9d9d9d);
+    --ht-host-line: var(--vscode-panel-border, #2b2b2b);
+    --ht-host-link: var(--vscode-textLink-foreground, #4daafc);
+    --ht-host-focus: var(--vscode-focusBorder, #0078d4);
+    --ht-host-button-bg: var(--vscode-button-background, #0078d4);
+    --ht-host-button2-bg: var(--vscode-button-secondaryBackground, #313131);
+    --ht-host-button2-fg: var(--vscode-button-secondaryForeground, #cccccc);
+    --ht-host-input-bg: var(--vscode-input-background, #313131);
+    --ht-host-input-fg: var(--vscode-input-foreground, #cccccc);
+    --ht-host-input-border: var(--vscode-input-border, #3c3c3c);
+  }
+}
+body.vscode-dark {
+  --ht-host-bg: var(--vscode-editor-background, #1f1f1f);
+  --ht-host-fg: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
+  --ht-host-muted: var(--vscode-descriptionForeground, #9d9d9d);
+  --ht-host-line: var(--vscode-panel-border, #2b2b2b);
+  --ht-host-link: var(--vscode-textLink-foreground, #4daafc);
+  --ht-host-button2-bg: var(--vscode-button-secondaryBackground, #313131);
+  --ht-host-button2-fg: var(--vscode-button-secondaryForeground, #cccccc);
+  --ht-host-input-bg: var(--vscode-input-background, #313131);
+  --ht-host-input-fg: var(--vscode-input-foreground, #cccccc);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --ht-bg: var(--vscode-editor-background, #1E1F21);
-    --ht-surface: var(--vscode-sideBar-background, #252628);
-    --ht-border: var(--vscode-panel-border, #3A3C3F);
-    --ht-fg: var(--vscode-foreground, #E6E6E3);
-    --ht-muted: var(--vscode-descriptionForeground, #A3A7AD);
-    --ht-accent: #4FB3A9;
-    --ht-baseline: #7D828A;
-    --ht-done-bg: #1F3A37;
-    --ht-warn-bg: var(--vscode-inputValidation-warningBackground, #3A2C14);
-    --ht-warn-border: var(--vscode-inputValidation-warningBorder, #8A6A2E);
-    --ht-warn-fg: var(--vscode-foreground, #F2DDB8);
-    --ht-error-bg: var(--vscode-inputValidation-errorBackground, #3B1F1B);
-    --ht-error-border: var(--vscode-inputValidation-errorBorder, #8A3B30);
-    --ht-error-fg: var(--vscode-errorForeground, #F4C7BF);
-    --ht-experiment-bg: #2C2340;
-    --ht-experiment-fg: #D9CCF2;
-    --ht-link: var(--vscode-textLink-foreground, #6FA8E8);
-    --ht-focus: var(--vscode-focusBorder, #6FA8E8);
-    --ht-button-bg: var(--vscode-button-background, #2B7A72);
-    --ht-button-fg: var(--vscode-button-foreground, #FFFFFF);
-    --ht-button2-bg: var(--vscode-button-secondaryBackground, #3A3D41);
-    --ht-button2-fg: var(--vscode-button-secondaryForeground, #E6E6E3);
-    --ht-input-bg: var(--vscode-input-background, #2D2E31);
-    --ht-input-fg: var(--vscode-input-foreground, #E6E6E3);
-    --ht-input-border: var(--vscode-input-border, #6B7078);
-    --ht-quote-bg: var(--vscode-textBlockQuote-background, #2B2C2F);
-    --ht-quote-border: var(--vscode-textBlockQuote-border, #5B6066);
-    --ht-st-ok: var(--vscode-charts-green, #89D185);
-    --ht-st-needs: var(--vscode-charts-blue, #6FA8E8);
-    --ht-st-sealed: var(--vscode-charts-purple, #B180D7);
-    --ht-st-error: var(--vscode-charts-red, #F48771);
-    --ht-st-stale: var(--vscode-charts-yellow, #CCA700);
-    --ht-chart-model: var(--vscode-charts-blue, #4FB3A9);
-    --ht-chart-baseline: var(--vscode-charts-lines, #7D828A);
+  body:not(.vscode-light):not(.vscode-high-contrast-light):not(.vscode-high-contrast) {
+    --ht-accent: #2dd4bf; --ht-accent-ink: #5eead4;
+    --ht-warn: #f5a524; --ht-bad: #f97066; --ht-seal: #b692f6; --ht-info: #84adff; --ht-ok: #47cd89;
+    --ht-c-ref: #7d8590; --ht-div-neg: #fb8a5c; --ht-div-pos: #2dd4bf;
+    --ht-strong-ink: #0b1f1d;
+    --ht-surface-mix: 3.5%;
+    --ht-sunken: color-mix(in srgb, #000 22%, var(--ht-bg));
   }
+}
+body.vscode-dark {
+  --ht-accent: #2dd4bf; --ht-accent-ink: #5eead4;
+  --ht-warn: #f5a524; --ht-bad: #f97066; --ht-seal: #b692f6; --ht-info: #84adff; --ht-ok: #47cd89;
+  --ht-c-ref: #7d8590; --ht-div-neg: #fb8a5c; --ht-div-pos: #2dd4bf;
+  --ht-strong-ink: #0b1f1d;
+  --ht-surface-mix: 3.5%;
+  --ht-sunken: color-mix(in srgb, #000 22%, var(--ht-bg));
+}
+/* High contrast (dark): bright hues, no tinted fills that could lower contrast; every card,
+   chip and button gets the theme's contrast border (below and in core.css). */
+body.vscode-high-contrast:not(.vscode-high-contrast-light) {
+  --ht-accent: #2ee6d6; --ht-accent-ink: #7ffff0;
+  --ht-warn: #ffb000; --ht-bad: #ff8a80; --ht-seal: #d5b8ff; --ht-info: #8ec5ff; --ht-ok: #7ee787;
+  --ht-c-ref: #c0c0c0; --ht-div-neg: #ff9e6e; --ht-div-pos: #2ee6d6;
+  --ht-strong-ink: #000000;
+  --ht-surface-mix: 0%;
+  --ht-sunken: var(--ht-bg);
+}
+/* High contrast light: dark hues on white. */
+body.vscode-high-contrast-light {
+  --ht-accent: #00544c; --ht-accent-ink: #003d37;
+  --ht-warn: #7a3300; --ht-bad: #8a0f05; --ht-seal: #3d1f80; --ht-info: #0b3d91; --ht-ok: #024b2b;
+  --ht-c-ref: #5a5a5a; --ht-div-neg: #8a2000; --ht-div-pos: #00544c;
+  --ht-strong-ink: #ffffff;
+  --ht-surface-mix: 0%;
+  --ht-sunken: var(--ht-bg);
+}
+
+/* Layer 2: Hypotrail tokens, derived from layer 1 on <body> (where the theme kind is known). */
+body {
+  --ht-bg: var(--ht-host-bg);
+  --ht-fg: var(--ht-host-fg);
+  --ht-muted: var(--ht-host-muted);
+  --ht-faint: color-mix(in srgb, var(--ht-fg) 72%, var(--ht-bg));
+  --ht-line: var(--ht-host-line);
+  --ht-line-strong: color-mix(in srgb, var(--ht-fg) 18%, var(--ht-bg));
+  --ht-surface: color-mix(in srgb, var(--ht-fg) var(--ht-surface-mix), var(--ht-bg));
+  --ht-sunken: color-mix(in srgb, var(--ht-fg) 5%, var(--ht-bg));
+  --ht-link: var(--ht-host-link);
+  --ht-focus: var(--ht-host-focus);
+  --ht-accent-tint: color-mix(in srgb, var(--ht-accent) 11%, var(--ht-bg));
+  --ht-warn-tint: color-mix(in srgb, var(--ht-warn) 12%, var(--ht-bg));
+  --ht-bad-tint: color-mix(in srgb, var(--ht-bad) 10%, var(--ht-bg));
+  --ht-seal-tint: color-mix(in srgb, var(--ht-seal) 11%, var(--ht-bg));
+  --ht-info-tint: color-mix(in srgb, var(--ht-info) 10%, var(--ht-bg));
+  --ht-ok-tint: color-mix(in srgb, var(--ht-ok) 11%, var(--ht-bg));
+  /* Chart roles: one mark colour, the reference grey, the null band, grid and axis. */
+  --ht-c-mark: var(--ht-accent);
+  --ht-c-band: color-mix(in srgb, var(--ht-fg) 10%, var(--ht-bg));
+  --ht-c-grid: color-mix(in srgb, var(--ht-fg) 8%, var(--ht-bg));
+  --ht-c-axis: color-mix(in srgb, var(--ht-fg) 35%, var(--ht-bg));
+  /* Every card, chip and button keeps a visible border in a high contrast theme. */
+  --ht-contrast: var(--vscode-contrastBorder, transparent);
+  --ht-card-border: var(--vscode-contrastBorder, var(--ht-line));
+  --ht-button-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+  --ht-button2-border: var(--vscode-button-border, var(--vscode-contrastBorder, var(--ht-line-strong)));
+  --ht-button-bg: var(--ht-host-button-bg);
+  --ht-button-fg: var(--ht-host-button-fg);
+  --ht-button2-bg: var(--ht-host-button2-bg);
+  --ht-button2-fg: var(--ht-host-button2-fg);
+  --ht-input-bg: var(--ht-host-input-bg);
+  --ht-input-fg: var(--ht-host-input-fg);
+  --ht-input-border: var(--ht-host-input-border);
+
+  /* Scale: spacing, type, radii. */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+  --t-cap: 11px; --t-meta: 12px; --t-body: var(--vscode-font-size, 13px); --t-title: 15px; --t-h: 18px; --t-num: 24px;
+  --r-chip: 4px; --r-card: 8px; --r-pill: 999px;
+
+  /* v0.2 names, kept as aliases so every view reads the same system. */
+  --ht-border: var(--ht-line);
+  --ht-baseline: var(--ht-c-ref);
+  --ht-done-bg: var(--ht-accent-tint);
+  --ht-warn-bg: var(--ht-warn-tint);
+  --ht-warn-border: color-mix(in srgb, var(--ht-warn) 45%, var(--ht-bg));
+  --ht-warn-fg: var(--ht-fg);
+  --ht-error-bg: var(--ht-bad-tint);
+  --ht-error-border: color-mix(in srgb, var(--ht-bad) 45%, var(--ht-bg));
+  --ht-error-fg: var(--ht-bad);
+  --ht-experiment-bg: var(--ht-seal-tint);
+  --ht-experiment-fg: var(--ht-seal);
+  --ht-quote-bg: var(--ht-sunken);
+  --ht-quote-border: var(--ht-line-strong);
+  --ht-st-ok: var(--ht-ok);
+  --ht-st-needs: var(--ht-info);
+  --ht-st-sealed: var(--ht-seal);
+  --ht-st-error: var(--ht-bad);
+  --ht-st-stale: var(--ht-warn);
+  --ht-chart-model: var(--ht-c-mark);
+  --ht-chart-baseline: var(--ht-c-ref);
+  --ht-chart-text: var(--ht-muted);
 }
