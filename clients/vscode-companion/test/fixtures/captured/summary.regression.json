@@ -581,7 +581,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-20T14:54:20.470155+00:00",
+   "boundary_time": "2026-10-20T16:53:11.807807+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -590,7 +590,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-20T14:54:20.774942+00:00",
+     "time": "2026-10-20T16:53:11.950068+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -613,7 +613,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-20T14:54:21.360584+00:00",
+     "time": "2026-10-20T16:53:12.462189+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -643,7 +643,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-20T14:54:22.082467+00:00",
+     "time": "2026-10-20T16:53:12.923371+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -666,7 +666,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-20T14:54:22.577387+00:00",
+     "time": "2026-10-20T16:53:13.222340+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -696,7 +696,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-20T14:54:23.254667+00:00",
+     "time": "2026-10-20T16:53:13.686852+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -719,7 +719,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-20T14:54:23.973291+00:00",
+     "time": "2026-10-20T16:53:14.246298+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -749,7 +749,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-20T14:54:24.682544+00:00",
+     "time": "2026-10-20T16:53:14.776776+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -772,7 +772,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-20T14:54:25.344278+00:00",
+     "time": "2026-10-20T16:53:15.435722+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -802,7 +802,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-20T14:54:26.144520+00:00",
+     "time": "2026-10-20T16:53:16.047130+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -825,7 +825,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-20T14:54:26.984586+00:00",
+     "time": "2026-10-20T16:53:16.624533+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -855,7 +855,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-20T14:54:28.214389+00:00",
+     "time": "2026-10-20T16:53:17.415246+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -878,7 +878,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-20T14:54:29.143107+00:00",
+     "time": "2026-10-20T16:53:18.318828+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -901,7 +901,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-20T14:54:30.461760+00:00",
+     "time": "2026-10-20T16:53:19.061893+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -924,7 +924,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-20T14:54:31.563496+00:00",
+     "time": "2026-10-20T16:53:19.815564+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -947,7 +947,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-20T14:54:33.243641+00:00",
+     "time": "2026-10-20T16:53:21.378031+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -970,7 +970,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-20T14:54:34.352014+00:00",
+     "time": "2026-10-20T16:53:22.217902+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -993,7 +993,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-20T14:54:35.627323+00:00",
+     "time": "2026-10-20T16:53:23.184098+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1016,7 +1016,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-20T14:54:36.660161+00:00",
+     "time": "2026-10-20T16:53:24.088326+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1039,7 +1039,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-20T14:54:37.448566+00:00",
+     "time": "2026-10-20T16:53:25.063502+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1062,7 +1062,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-20T14:54:38.449196+00:00",
+     "time": "2026-10-20T16:53:25.957682+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1085,7 +1085,7 @@
     },
     {
      "revision": 32,
-     "time": "2026-10-20T14:54:39.171263+00:00",
+     "time": "2026-10-20T16:53:26.526923+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1108,7 +1108,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-20T14:54:39.819110+00:00",
+     "time": "2026-10-20T16:53:27.398043+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1141,7 +1141,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-20T14:54:40.717339+00:00",
+     "time": "2026-10-20T16:53:28.188136+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1164,7 +1164,7 @@
     },
     {
      "revision": 37,
-     "time": "2026-10-20T14:54:41.721496+00:00",
+     "time": "2026-10-20T16:53:28.963006+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1187,7 +1187,7 @@
     },
     {
      "revision": 38,
-     "time": "2026-10-20T14:54:42.513210+00:00",
+     "time": "2026-10-20T16:53:29.759883+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",

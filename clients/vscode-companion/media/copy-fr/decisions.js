@@ -97,8 +97,6 @@
     concern: "Point soulevé par l'agent avant votre confirmation, que vous avez maintenu : ",
     correction: 'Votre correction ultérieure, avec vos mots : ',
     corrections: 'Corrections avec vos mots',
-    // v0.3 (WP-B, R27; French added by WP-E3): a trade-off confirmed without a reason.
-    noReason: 'aucune raison donnée',
     modeTitle: 'Ce qui compte comme votre réponse',
     modeLine: mode => `Cette étude utilise le mode ${mode}.`,
     modeNames: { guided: 'guidé', training: 'entraînement', express: 'express' },
