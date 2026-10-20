@@ -62,6 +62,11 @@ concepts:
     hint: the measure the criterion is about (the precision of the rule)
     terms: [precision, hit rate, taux de reussite, reussite, success rate, taux de succes,
             share positive, part de positifs, correct*, justes, bons]
+  # v0.3 (WP-C, R18): a criterion fixed on recall.
+  recall:
+    hint: the measure the criterion is about (the recall of the rule)
+    terms: [recall, rappel, sensitivity, sensibilite, found, trouve*, reach*, atteint*, missed,
+            manque*, captur*]
   error:
     hint: the measure the criterion is about (the error of the predictions)
     terms: [error*, erreur*, mae, absolute, absolue, ecart*, off by, deviation]

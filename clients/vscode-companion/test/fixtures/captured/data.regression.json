@@ -31,7 +31,8 @@
     "n_extra_rows": 0,
     "definition": "records identical on every column, the target included",
     "line": "No two development rows are identical.",
-    "audience": "junior"
+    "audience": "junior",
+    "junior_text": "No two development rows are identical."
    }
   },
   "target": {
@@ -55,7 +56,8 @@
    "changed_after": [],
    "excluded_prior_exposed": 0,
    "line": "80 rows are set aside as the final test and stay sealed: nothing here reads them.",
-   "audience": "junior"
+   "audience": "junior",
+   "junior_text": "80 rows are set aside as the final test and stay sealed: nothing here reads them."
   },
   "groups": [
    {
@@ -391,7 +393,8 @@
   },
   "note": {
    "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored on training rows after the split.",
-   "audience": "junior"
+   "audience": "junior",
+   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored on training rows after the split."
   }
  }
 }

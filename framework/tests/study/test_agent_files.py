@@ -4,6 +4,7 @@ from __future__ import annotations
 import inspect
 import json
 import os
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -340,7 +341,10 @@ def test_instructions_carry_the_p_fix_defects():
         for term in terms:
             entry = texts.glossary(term, task)
             assert entry and entry['term'] and entry['definition'], (task, term)
-            assert '<result_id>' in entry['example'], (task, term)
+            # v0.3 (WP-C, R23): the example is filled from this study's results but names
+            # no result id (ids only on demand).
+            assert re.search(r'<[a-z_]+>', entry['example']), (task, term)
+            assert '<result_id>' not in entry['example'], (task, term)
     regression = af.select_task((af.SOURCE / 'dot-claude/skills/hypotrail-study/SKILL.md')
                                 .read_text(), 'regression')
     assert '**precision**' not in regression and '**paired difference**' in regression

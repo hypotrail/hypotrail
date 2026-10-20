@@ -499,7 +499,9 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
                            'as chosen.', field='final_test', chosen=chosen, value=dict(value))
     elif decision_id == st.SUCCESS_CRITERION:
         try:
-            governance.check_criterion(value, st.task_of(state))
+            # v0.3 (WP-C, R18): a metric of ``criterion.METRICS_BY_TASK`` and a minimum.
+            from . import criterion
+            criterion.check(value, st.task_of(state))
         except governance.ValueProblem as exc:
             raise _invalid(exc.message, **exc.details) from None
     elif decision_id == st.PREPROCESSING:
@@ -1870,7 +1872,8 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
                                             'n_rows': record['n_rows']},
                     'final_test': partition.final_test_status(snapshot),
                     'plan': st.derive_plan(snapshot),
-                    'next_action': audience.next_action(st.next_action(snapshot)),
+                    'next_action': audience.next_action(st.next_action(snapshot),
+                                                       st.language_of(snapshot)),
                     'agent_instructions': agent,
                     'ignored_sources': ignored,
                     'note': 'Companion files next to the case are not read: their statuses are '
@@ -1907,15 +1910,16 @@ def status(study_dir, since: int | None = None, summary: bool = False,
 
 
 def plan(study_dir) -> Outcome:
-    from . import audience
+    from . import view
 
     study = read.open(study_dir)
     state = study.state
     steps = st.derive_plan(state)
+    # v0.3 (WP-C): the view's next action, with its junior-ready keys (the same as status).
     return Outcome({'schema': SCHEMAS['plan'], 'ok': True, 'study': str(study.study_dir),
                     'revision': study.revision, 'steps': steps,
                     'current_step': next((s['id'] for s in steps if s['current']), None),
-                    'next_action': audience.next_action(st.next_action(state))})
+                    'next_action': view.build(study)['next_action']})
 
 
 def apply(study_dir, *, action: str, params: dict, request_id: str, expected_revision: int,

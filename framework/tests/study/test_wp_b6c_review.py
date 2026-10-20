@@ -243,13 +243,17 @@ def test_the_within_fold_bootstrap_keeps_each_fold_and_its_capacity():
 
 
 # --- M3: no training or validation vocabulary in a cross-validated study ----------------------
+# v0.3 (WP-C, R15) revises M3: the standard words are used, correctly. Under k-fold
+# cross-validation each fold is in turn the validation fold and the others its training folds,
+# so "validation fold" and "training folds" are allowed; "validation rows", "training rows" or
+# "the training partition" (a single split's words) stay refused.
 
 TRAIN_VALIDATION = re.compile(r'validation|training rows?|training partition|training mean|'
                               r'training base rate|training and validation', re.I)
 # Legitimate uses: the name of the scheme itself, and the generic definitions of what a model
 # does with the rows it is fitted on (within a fold, the other folds' rows).
-ALLOWED = re.compile(r'cross-validat\w*|cross_validation|more rows than one validation partition',
-                     re.I)
+ALLOWED = re.compile(r'cross-validat\w*|cross_validation|more rows than one validation set|'
+                     r'validation folds?|training folds?', re.I)
 GENERIC_TERMS = ('overfitting', 'regularisation', 'imputation', 'standardisation')
 
 
@@ -330,7 +334,9 @@ def test_a_cross_validated_study_speaks_of_folds_not_validation_rows(name, reque
     assert not _offending(markdown, _generic_definitions(task)), _offending(markdown)
     # The split question and the regression opening are worded for the scheme and the task.
     split = next(s for s in view['plan'] if s['id'] == 'split')
-    assert split['question'].startswith('How are the development rows divided into folds')
+    # v0.3 (WP-C, R15): the standard words, used correctly.
+    assert split['question'].startswith('How is the development set divided into folds for '
+                                        'k-fold cross-validation')
     opening = next(s for s in view['plan'] if s['id'] == 'final_test')
     if task == 'regression':
         assert opening['question'].startswith('Now that the model is chosen,')
