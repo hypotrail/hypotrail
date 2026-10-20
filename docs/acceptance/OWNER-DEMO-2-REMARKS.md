@@ -103,3 +103,31 @@
 ## R29 — Generated notebook: plain pandas idioms first
 - Owner: the generated notebook should favour pandas for exploration whenever possible, because that is how users work.
 - Direction: every exploration cell written as the idiom a junior would type — `df.head()`, `df.info()`, `df.describe()`, `df.isna().sum()`, `df[col].value_counts(normalize=True)`, `df.groupby(col)[target].agg(['mean','count'])`, `pd.crosstab`, `df.corr(method='spearman')`, `df[col].plot.hist()` / `df.groupby(...).plot.bar()` — then an `assert` against the registry; `nv.*` helpers kept to loading rows (development/training frame) and the engine's narrative cells. Same rule for the workbench starter. Fold-level CV cells stay scikit-learn but with visible pandas frames (per-fold table via DataFrame).
+
+# From the demo-2 chat transcript (integrator analysis, 2026-10-20)
+
+## R30 — Ambiguous term "session de développement"
+- Junior asked "Que veux-tu dire par session de dev ?" after "Quelques sessions de développement sont des copies exactes…". Mixing the row unit (session) with the partition name confuses. Use "les lignes de l'échantillon de développement" (R15) and introduce duplicates only when they matter (at the split), in one sentence.
+
+## R31 — BLOCKER (case design): Online Shoppers scenario is incoherent
+- Junior: "quand tu dis s'est terminée par un achat, c'est après notre relance ?" then "à la fin de la session on connaît déjà le résultat". Correct: the case scores finished sessions to decide follow-ups, but the target is the purchase in that same session, already known at prediction time. Precision "share of selected sessions that bought" is not the business value of a follow-up (you would follow up NON-buyers).
+- The agent handled it honestly (limit recorded, A/B test as next step), but a discovery case must not start with a contradiction.
+- Fix options (decide): (a) reframe as "lookalike scoring": among sessions that did NOT buy, rank by resemblance to buying sessions for retargeting — the model is trained on all sessions, the decision rule applies to non-buyers, and the case says plainly that the evaluation is a proxy; (b) reframe as in-session intent scoring with a documented limitation that the features are end-of-session totals (weak); (c) switch the discovery case. Recommendation: (a), with the scenario, prediction time, decision and limits rewritten in case-supplement, and the agent's step-0 text explaining the proxy.
+
+## R32 — Agent told the junior something the engine contradicted
+- At preprocessing the agent said the choices "ne regardent pas la cible, donc ne rendent pas les résultats plus optimistes"; the engine stamped them data-contingent (target looks before the proposal) and the agent corrected itself only at the end. Fix: the propose payload returns `data_contingent` + why before the agent presents the proposal; instructions: read it and say it.
+
+## R33 — `check` rejects correctly rounded figures (friction + information loss)
+- Seen: "0.87" (registry 0.8658), "0.61" (0.6130), "2.8 points" (0.028), "11.8 points" (0.118), "14.2 %" (0.1416), "-2.4" (-0.0244), "40.2 %" (0.40217), "184" (selected in a segment) all reported untraceable. The agent burned many tool calls and finally DROPPED information from its messages. Fix: accept any rounding of a registered value to the displayed decimals (and percentage/points scaling of shares), keep the anti-hallucination guarantee; trace segment counts. Regression tests with these exact values.
+
+## R34 — Diagnostics marked stale by the first policy adoption
+- diag.binary ran at the scenario-default rule share:0.1; adopting share:0.1 made it stale ("policy confirmed for the first time"). No change in rule → should stay current. Also the end-of-study "Limit: some results are out of date" line is noise for the junior.
+
+## R35 — Agent unaware of panel actions
+- Charts launched from the panel (W4) appeared mid-conversation; the agent guessed "quelqu'un… peut-être un notebook ?". The digest carries the channel (webview) → agent should say "tu as lancé ces graphiques depuis le panneau". Ties to R20.
+
+## R36 — Language of recorded values
+- The study is in French but the conclusion text and restatements stored are English (fr labels exist only for restatements). Conclusion value text should be in the study language.
+
+## R37 — Long English engine questions reach the junior verbatim
+- e.g. the success-criterion junior_message (English paragraph) in a French study. Engine junior texts need fr (ties to R21).
