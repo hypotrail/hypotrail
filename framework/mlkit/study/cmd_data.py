@@ -59,17 +59,20 @@ def _fact(state: Mapping, fact_id: str) -> dict | None:
         if fact else None
 
 
-def _final_test_line(final: Mapping) -> dict:
+def _final_test_line(final: Mapping, lang: str = 'en') -> dict:
+    from . import junior
     if final['status'] == 'absent':
         text = ('This study has no final test: it was created before the final test existed, '
                 'so every row is a development row.')
     else:
         text = (f'{final["rows"]} rows are set aside as the final test and stay sealed: '
                 f'nothing here reads them.')
-    return {**final, 'line': text, 'audience': 'junior'}
+    # v0.3 (WP-C): ``junior_text`` is the line in the study language.
+    return {**final, 'line': text, 'audience': 'junior',
+            'junior_text': junior.final_test_line(final, lang)}
 
 
-def _duplicates(case, dataset) -> dict:
+def _duplicates(case, dataset, lang: str = 'en') -> dict:
     """``{policy, n_groups, n_rows, n_extra_rows, definition, line}`` of the identical
     records among the development rows (structural: content hashes, no value)."""
     from . import data as dt
@@ -82,7 +85,10 @@ def _duplicates(case, dataset) -> dict:
                 f'one side of every split.')
     else:
         line = f'{out["n_rows"]} development rows form {out["n_groups"]} groups of identical rows.'
-    return {**out, 'line': line, 'audience': 'junior'}
+    from . import junior
+    return {**out, 'line': line, 'audience': 'junior',
+            'junior_text': junior.duplicates_line(out, out['policy'] == dt.DUPLICATES_GROUP,
+                                                  lang)}
 
 
 def card(study_dir) -> dict:
@@ -92,8 +98,11 @@ def card(study_dir) -> dict:
     from . import partition, read
     from .activities import matches
 
+    from . import junior
+    from . import state as st
     study = read.open(study_dir)
     state = study.state
+    language = st.language_of(state)
     case = c.case_of(state, verify_data=True)
     keys = partition.development_keys(study.blob, partition.inputs(state))
     dataset = dt.load_development(case, keys)
@@ -147,16 +156,17 @@ def card(study_dir) -> dict:
         'development': {'rows': int(len(frame)), 'columns': len(case.column_names),
                         'partition': 'development' if keys is not None else 'all',
                         # v0.2b (WP-B3): groups of identical records and the case's policy.
-                        'duplicates': _duplicates(case, dataset)},
+                        'duplicates': _duplicates(case, dataset, language)},
         'target': {'column': target, 'task': case.task,
                    'positive_label': target_doc.get('positive_label'),
                    'negative_label': target_doc.get('negative_label'),
                    'unit': variable.get('unit'), 'description': variable['description'],
                    'description_fr': (variable.get('labels') or {}).get('fr')},
-        'final_test': _final_test_line(final),
+        'final_test': _final_test_line(final, language),
         'groups': [{'group': g, 'variables': items} for g, items in groups.items()],
         'rows': rows,
-        'note': {'text': NOTE, 'audience': 'junior'},
+        'note': {'text': NOTE, 'audience': 'junior',
+                 'junior_text': junior.DATA_NOTE_FR if language == 'fr' else NOTE},
     }
     assert tuple(payload) == PAYLOAD_KEYS
     return payload

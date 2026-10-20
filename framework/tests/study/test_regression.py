@@ -325,8 +325,12 @@ def test_regression_view_names_its_task(tmp_path):
     view = flow.view()
     question = view['plan'][1]['question']
     # v0.2a (WP-A1): plus the audience of the message and its junior variant (the question).
-    assert view['next_action'] == {'kind': 'propose', 'step': 'prediction_time',
-                                   'decision': 'prediction_time', 'message': question,
-                                   'audience': 'junior', 'junior_message': question}
+    # v0.3 (WP-C): plus the junior-ready keys (``junior.ENRICH_KEYS``).
+    from mlkit.study import junior
+    core = {k: v for k, v in view['next_action'].items() if k not in junior.ENRICH_KEYS}
+    assert core == {'kind': 'propose', 'step': 'prediction_time',
+                    'decision': 'prediction_time', 'message': question,
+                    'audience': 'junior', 'junior_message': question}
+    assert set(junior.ENRICH_KEYS) <= set(view['next_action'])
     text = json.dumps(view).lower()
     assert not [w for w in BINARY_VOCABULARY if w in text]

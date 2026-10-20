@@ -998,6 +998,10 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
             if value.get('metric') == 'precision_gain':
                 return (f'Adopt only if the precision beats the baseline by at least '
                         f'{value.get("min_points")} percentage points at the adopted rule')
+            if value.get('metric') == 'recall_gain':
+                # v0.3 (WP-C, R18): the junior may fix the criterion on recall.
+                return (f'Adopt only if the recall beats the baseline by at least '
+                        f'{value.get("min_points")} percentage points at the adopted rule')
             if value.get('metric') == 'mae_reduction':
                 return (f'Adopt only if the model\'s mean absolute error is at least '
                         f'{_share_words(value.get("min_share"))} below the mean baseline\'s')
