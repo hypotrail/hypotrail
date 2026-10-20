@@ -83,9 +83,8 @@ train_rows.describe()'''
 STARTER_MISSING = '''# Missing values: cells with no value, counted by column.
 train_rows.isna().sum()'''
 
-STARTER_IDIOMS = '''import pandas as pd
-
-# Idioms to adapt: replace "a_column" and "the_target" with names of your study.
+STARTER_IDIOMS = '''# Idioms to adapt: replace "a_column" and "the_target" with names of your study.
+# For pd.crosstab, copy the imports cell of the generated notebook here first.
 # train_rows["a_column"].value_counts(normalize=True)          # shares of each value
 # train_rows.groupby("a_column")["the_target"].agg(["mean", "count"])
 # pd.crosstab(train_rows["a_column"], train_rows["the_target"], normalize="index")
