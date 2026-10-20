@@ -68,7 +68,11 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           'mode',
                           # WP-A9 (H3): the words_contradict_value warnings kept with the
                           # agent's concern (``[]`` when none).
-                          'warnings')
+                          'warnings',
+                          # v0.3 (WP-B, R27): for a trade-off in the junior's words, whether
+                          # they gave a reason (``null`` otherwise); whether the words answer
+                          # the closed adoption question (``false`` when not recorded).
+                          'reason_given', 'adoption_question')
 PROPOSAL_VIEW_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale',
                       'revision', 'created',
                       # ADR 0005: the restatement per language (``null`` when none was
@@ -233,7 +237,8 @@ def _decisions(state: dict) -> dict:
                   'revision': dec['revision'], 'reason': dec['reason'],
                   'confirmation': ({**{k: conf.get(k) for k in CONFIRMATION_VIEW_KEYS},
                                     'basis': st.confirmation_basis(conf),
-                                    'warnings': list(conf.get('warnings') or [])}
+                                    'warnings': list(conf.get('warnings') or []),
+                                    'adoption_question': bool(conf.get('adoption_question'))}
                                    if isinstance(conf, dict) else None),
                   'open_proposals': sorted(p['proposal_id'] for p in st.open_proposals(state)
                                            if p['decision_id'] == d),
@@ -853,7 +858,7 @@ def _recap_next(summary_out: dict, view: dict, junior: bool = False) -> str:
                          if p['proposal_id'] == nxt.get('proposal_id')), None)
         label = DECISION_LABELS.get(nxt.get('decision'), 'decision')
         restatement = proposal['restatement'] if proposal else ''
-        return f'your answer, in your own words, on the {label}: "{restatement}"'
+        return f'whether you adopt the {label}: "{restatement}"'
     if kind in ('propose', 'run', 'blocked'):
         if nxt.get('step') == summary_out['current_step']:
             return str(nxt.get('message', '')).strip()
@@ -1138,7 +1143,7 @@ def _recap_next_fr(summary_out: dict, view: dict) -> str:
                          if p['proposal_id'] == nxt.get('proposal_id')), None)
         label = audience.decision_words(nxt.get('decision'), FR)
         said = (proposal or {}).get('label') or ''
-        return f'ta réponse sur {label} : « {said} »'
+        return f'si tu adoptes {label} : « {said} »'
     if kind in ('propose', 'run', 'blocked') and nxt.get('step') != summary_out['current_step']:
         titles = {s['id']: s['title'] for s in summary_out['plan']}
         title = junior.step_text(titles.get(nxt.get('step'), ''), FR) or \

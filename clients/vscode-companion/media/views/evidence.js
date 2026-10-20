@@ -236,7 +236,7 @@
     const blocks = [];
     if (u.kind === 'policy') {
       for (const rule of u.rules) {
-        blocks.push(ctx.el('h4', { text: c.binary.rule(rule.rule) }));
+        blocks.push(ctx.el('h4', { title: rule.rule, text: c.binary.rule(HT.copy.junior.ruleShort(rule.rule)) }));
         for (const m of rule.metrics) {
           blocks.push(metricBlock(ctx, u, 'binary', m, x => pct(ctx, x), x => ctx.format.number(x, 'f3'), c.binary.metrics[m.metric], ''));
         }
@@ -390,8 +390,10 @@
     const rows = model.ledger.map(row => ctx.el('tr', { 'data-ledger-row': `${row.purpose}:${row.partition}`,
       className: row.selection ? 'ht-ledger-selection' : row.partition === 'final_test' ? 'ht-ledger-final' : null,
       'data-ledger-final': row.partition === 'final_test' ? 'true' : null }, [
-      ctx.el('td', {}, [row.selection ? HT.terms.mark(c.purposes[row.purpose] || row.purpose, 'selection_on_validation')
-        : c.purposes[row.purpose] || row.purpose,
+      // WP-E1 (R26): an unknown purpose reads as words, never as its token.
+      ctx.el('td', { title: row.purpose }, [row.selection
+        ? HT.terms.mark(c.purposes[row.purpose] || row.purpose.replace(/_/g, ' '), 'selection_on_validation')
+        : c.purposes[row.purpose] || row.purpose.replace(/_/g, ' '),
         row.selection ? ctx.el('span', { className: 'sr-only', text: ` (${c.usedToChoose})` }) : null,
         c.purposeWords[row.purpose] ? ctx.el('div', { className: 'muted ht-ledger-words', text: c.purposeWords[row.purpose] }) : null]),
       ctx.el('td', { 'data-partition': row.partition }, [row.partition === 'validation'
@@ -735,10 +737,15 @@
     const table = ctx.components.valuesTable(null, { caption: t.caption(int(ctx, k.terms.length), int(ctx, k.total)),
       columns: [{ key: 'term', label: t.columns.term }, { key: 'value', label: t.columns.value }, { key: 'interval', label: t.columns.interval },
         { key: 'zero', label: t.columns.zero }],
-      rows: k.terms.map(x => ({ term: x.term,
+      // WP-E1 (R26): the prepared feature in words; the engine's name in the hover.
+      rows: k.terms.map(x => ({ term: HT.copy.junior.featureName(x.term),
         value: x.value === null ? '' : { text: f(x.value), cited: { resultId: d.resultId, path: x.path, value: x.value } },
         interval: x.low === null || x.high === null ? '' : `[${f(x.low)}, ${f(x.high)}]`, zero: x.excludesZero ? t.excludes : t.includes })) });
     table.setAttribute('data-coefficients', String(k.terms.length));
+    for (const [i, tr] of [...table.querySelectorAll('tbody tr')].entries()) {
+      tr.setAttribute('data-coef-term', k.terms[i].term);
+      if (tr.firstChild) tr.firstChild.setAttribute('title', k.terms[i].term);
+    }
     return ctx.el('div', {}, [table, ctx.el('p', { className: 'muted', text: t.note(int(ctx, k.replicates)) })]);
   }
 

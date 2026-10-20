@@ -1,6 +1,6 @@
 'use strict';
 // EffectsModel: a pure projection of `hypotrail.preview_effects/1` (CLI-CONTRACT-COMPANION
-// §3), the engine's dry run of `decide confirm`, for the "If you confirm" section of a
+// §3), the engine's dry run of a confirmation, for the "If you confirm" section of a
 // pending decision card (COMPANION-ADVANCED §6.2.1, §9). The panel predicts nothing: every
 // list here is the engine's. `titles` ({decisionId: title}, from the summary plan) only
 // names the decisions to confirm again; without it a decision is named by its id.

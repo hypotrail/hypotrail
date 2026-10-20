@@ -107,11 +107,7 @@
    "decision": "model_choice",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
-   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide.",
-   "language": "en",
-   "recommended": null,
-   "question": "Do you adopt this decision?",
-   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change."
   },
   "open_proposals": [
    {
@@ -447,7 +443,7 @@
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
    "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 1df7d607); the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
   "recap_audience": "agent",
@@ -455,7 +451,7 @@
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
    "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg); the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
   "mode": "guided",
@@ -574,7 +570,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-20T13:43:51.190492+00:00",
+   "boundary_time": "2026-10-20T13:26:31.173781+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -583,7 +579,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-20T13:43:51.670633+00:00",
+     "time": "2026-10-20T13:26:31.278039+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -606,7 +602,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-20T13:43:52.764228+00:00",
+     "time": "2026-10-20T13:26:31.736867+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -636,7 +632,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-20T13:43:53.854752+00:00",
+     "time": "2026-10-20T13:26:32.105656+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -659,7 +655,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-20T13:43:54.741995+00:00",
+     "time": "2026-10-20T13:26:32.388799+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -689,7 +685,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-20T13:43:55.874931+00:00",
+     "time": "2026-10-20T13:26:32.858226+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -712,7 +708,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-20T13:43:57.223690+00:00",
+     "time": "2026-10-20T13:26:33.341665+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -742,7 +738,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-20T13:43:58.787016+00:00",
+     "time": "2026-10-20T13:26:33.849113+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -765,7 +761,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-20T13:44:00.150863+00:00",
+     "time": "2026-10-20T13:26:34.307105+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -795,7 +791,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-20T13:44:01.596891+00:00",
+     "time": "2026-10-20T13:26:34.737075+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -818,7 +814,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-20T13:44:02.884884+00:00",
+     "time": "2026-10-20T13:26:35.277313+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -848,7 +844,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-20T13:44:04.333133+00:00",
+     "time": "2026-10-20T13:26:35.866569+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -871,7 +867,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-20T13:44:06.217319+00:00",
+     "time": "2026-10-20T13:26:36.467812+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -894,7 +890,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-20T13:44:08.128497+00:00",
+     "time": "2026-10-20T13:26:37.129920+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -917,7 +913,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-20T13:44:09.715079+00:00",
+     "time": "2026-10-20T13:26:37.770454+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -940,7 +936,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-20T13:44:12.870508+00:00",
+     "time": "2026-10-20T13:26:38.986282+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -963,7 +959,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-20T13:44:14.774043+00:00",
+     "time": "2026-10-20T13:26:39.733019+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -986,7 +982,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-20T13:44:16.417494+00:00",
+     "time": "2026-10-20T13:26:40.389872+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1009,7 +1005,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-20T13:44:18.115395+00:00",
+     "time": "2026-10-20T13:26:41.087008+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1032,7 +1028,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-20T13:44:19.803189+00:00",
+     "time": "2026-10-20T13:26:42.081899+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1055,7 +1051,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-20T13:44:21.683054+00:00",
+     "time": "2026-10-20T13:26:42.690616+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1078,7 +1074,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-20T13:44:23.361029+00:00",
+     "time": "2026-10-20T13:26:43.169083+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1111,7 +1107,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-20T13:44:25.444628+00:00",
+     "time": "2026-10-20T13:26:43.910727+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1134,7 +1130,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-20T13:44:27.629167+00:00",
+     "time": "2026-10-20T13:26:44.692194+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1157,7 +1153,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-20T13:44:29.082613+00:00",
+     "time": "2026-10-20T13:26:45.387730+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1194,6 +1190,6 @@
    }
   },
   "task": "regression",
-  "currency": "514c49012e42abd0"
+  "currency": "4d0d0968e9f035f5"
  }
 }

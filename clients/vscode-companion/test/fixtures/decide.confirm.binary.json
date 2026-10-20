@@ -36,6 +36,8 @@
    "agent_concern": null,
    "warnings": [],
    "mode": "guided",
+   "reason_given": null,
+   "adoption_question": false,
    "opening": null
   },
   "artifacts": {

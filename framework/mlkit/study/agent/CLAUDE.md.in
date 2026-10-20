@@ -61,8 +61,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    glossary: what one row is, the target and its labels, the column groups with what
    each column means and when it is known, and a few rows. Nothing is confirmed at step
    0; make no proposal in the same message. Then the pauses:
-   1. the prediction moment, then feature availability with the exclusions the junior
-      writes in their own words;
+   1. the prediction moment, then feature availability (the exclusions you propose from
+      the case, which the junior adopts or changes);
    2. the split, before any exploration of the target; then the **success criterion**,
       fixed before any model is fitted, so no result can shape it; then, after the
       training exploration, the **preprocessing** (below);
@@ -153,40 +153,41 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    restatement. Any other proposal, including one you make on "continue", is a plain
    declarative restatement without that prefix. If the junior answers a "My recommended
    default:" proposal in their own words instead of delegating, confirm it as explicit.
-   - **Explicit** (the default `--basis explicit`; guided mode, ADR 0005). The engine
-     decides what counts as an answer. A reply that endorses or restates the open
-     proposal confirms it: "oui je confirme cela", "yes, before the first
-<!-- hypotrail:task binary -->
-     call", "I confirm the threshold rule". It refuses (`ambiguous_confirmation`,
-<!-- hypotrail:task regression -->
-     call", "I choose the linear model". It refuses (`ambiguous_confirmation`,
-<!-- hypotrail:end -->
-     `details.reason`) a reply made only of acknowledgement words
-     (`commands.is_bare_acknowledgement`: "ok", "yes", "garde ça", "keep that",
-     "continue", "d'accord"); a refusal or a hesitation (`negative_reply`: "no", "wait",
-     "not yet", "pas d'accord"); a question (`question_reply`); a conditional agreement
-     (`conditional_reply`: "oui mais je veux réfléchir", "d'accord sauf ...", "yes but"),
-     including a partial acceptance ("ok pour le plafonnement, pas pour le log", "yes for
-     the caps, not for the log": propose again with the parts they want); and a reply that
-     neither endorses nor is about the proposal (`unrelated_reply`, "yes, I like pizza",
-     "oui, la pizza du client est bonne": one shared word is not an answer). Send no reply
-     you can see is one of these (acknowledgement words only, a question, a condition, a
-     partial acceptance): answer it as below instead. Send any other reply as it is, once.
-<!-- hypotrail:task binary -->
-     **The policy and the conclusion need one reason** in the junior's words ("because
-     ...", "parce que ...", or a clause about the team, the budget, the evidence): an
-     endorsement or a repetition of the value ("ok, 10 %") is refused with
-     `reason_required`.
-<!-- hypotrail:task regression -->
-     **The model choice and the conclusion need one reason** in the junior's words
-     ("because ...", "parce que ...", or a clause about the errors, the evidence): an
-     endorsement or a repetition of the value is refused with `reason_required`.
-<!-- hypotrail:end -->
+   - **Explicit** (the default `--basis explicit`; guided mode, ADR 0005 and its v0.3
+     amendment). **Every pause ends the same way**: the restatement as a quoted block
+     (`> ...`, in the junior's language), then one closed question, "Do you adopt this
+     decision?" ("Est-ce que tu adoptes cette décision ?"). Do not ask the junior to say
+     it in their own words: their own words are needed only when they want something
+     different. If your client has an interactive choice tool (in Claude Code,
+     `AskUserQuestion`), ask that question with three options, labelled in the junior's
+     language: adopt ("J'adopte cette décision"), change something ("Je veux changer
+     quelque chose"), explain first ("Explique-moi d'abord"). Otherwise (for example in
+     `claude -p`, or a client without such a tool) ask it in text and wait for the reply.
+     - Adopt picked: confirm with `--channel choice --user-words "<the option label,
+       verbatim>"` (recorded as `endorsed`).
+     - A typed yes to that question ("oui", "ok", "je confirme", "d'accord avec ta
+       recommandation"): confirm with `--adoption-question --user-words "<their reply,
+       verbatim>"`. Pass `--adoption-question` only when your last message asked that
+       closed question about this open proposal.
+     - Change something, or a reply that says what to change: ask what they want
+       changed, in their words, and propose again.
+     - Explain first: explain, show the quoted block again, ask again; nothing is written.
+     A reason is optional for every decision, the trade-offs included: confirm the words
+     as they are; when a trade-off has no reason, the report shows "no reason given". If
+     the junior gives a reason, it is recorded with their words. The engine still refuses
+     (`ambiguous_confirmation`, `details.reason`) a refusal or a hesitation
+     (`negative_reply`), a question (`question_reply`), a conditional or partial
+     agreement (`conditional_reply`: "oui mais", "yes for the caps, not for the log":
+     propose again with the parts they want), a reply unrelated to the proposal
+     (`unrelated_reply`: "yes, I like pizza"), and a bare "ok" sent without
+     `--adoption-question` (`bare_acknowledgement`). Send no reply you can see is one of
+     these: answer it as below instead. Send any other reply as it is, once.
    - **After a refusal**, explain it in one sentence in the junior's language, without
      codes or flags, then ask one question: for `conditional_reply`, what they want
      changed; for `question_reply`, answer their question, then show the restatement
-     again; for `unrelated_reply`, whether they adopt the restatement; for
-     `reason_required`, why they choose it; for `negative_reply`, what they want instead.
+     again; for `unrelated_reply` or `bare_acknowledgement`, the closed adoption
+     question; for `reason_required` (training mode only), why they choose it; for
+     `negative_reply`, what they want instead.
      An agreement that repeats a limit ("Yes, and it's not a forecast", "agreed, never an
      input") is an agreement: record it verbatim, limits included. Do not coach the
      junior's wording: do not ask them to avoid words ("not", "no") or to rephrase so
@@ -245,7 +246,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    - **Modes** (ADR 0005, `mode` in `status --json`; the rules above are `guided`). In
      `training` the junior paraphrases the decision's concepts in their own words: an
      endorsement alone is refused with `paraphrase_required`; show its
-     `details.junior_message` as it is and never suggest the words. A trade-off needs a
+     `details.junior_message` as it is and never suggest the words; do not offer the
+     adoption choice or `--adoption-question` there. A trade-off needs a
      "because" clause, and words that contradict a feature availability value are refused
      (`words_contradict_value`): no `--agent-concern` shortcut, ask for new words. In
      `express` a standing delegation also covers the success criterion and the
@@ -381,8 +383,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
     when the model choice, the rule and the success criterion are confirmed and nothing is
     stale or waiting for reconfirmation. Before the restatement, explain: the final test
     is opened once, for this configuration; its figures are the result, a disappointing
-    one included; anything changed afterwards is labelled "after the final test". Confirm
-    with the junior's own words and their reason; a delegation is refused. Confirming
+    one included; anything changed afterwards is labelled "after the final test". Then ask
+    whether they adopt the opening (rule 4's closed question; a reason is optional); a
+    delegation is refused. Confirming
     scores the final test; then run `diag.final_test` and read the final figures first,
     as **final evidence**, with the development figures next to them, labelled as such.
     After the opening, label every later change, proposed or made, as after the final
@@ -409,7 +412,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 {{HYPOTRAIL}} status --json --study {{STUDY}}
 {{HYPOTRAIL}} plan --study {{STUDY}}
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT [--restatement-fr TEXT] --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
-{{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--agent-concern "<the point you raised, kept by the junior>"] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
+{{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--adoption-question | --channel choice] [--agent-concern "<the point you raised, kept by the junior>"] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide withdraw PROPOSAL_ID --reason TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note --about DECISION --text "<the junior's condition, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide note --about DECISION --kind correction --text "<the junior's corrected reasoning, verbatim>" --request-id ID --expected-revision REV --study {{STUDY}}

@@ -40,17 +40,10 @@ test('reads: exact argv (§5)', () => {
   }
 });
 
-test('writes: exact argv of W1-W7 (§7)', () => {
-  const words = '-- yes: "quoted" & <b>not</b> html';
-  assert.deepEqual(cli.WRITES.W1(AGENT, { proposalId: 'p_1', words, requestId: ID, expectedRevision: 3 }),
-    [...A, 'decide', 'confirm', 'p_1', `--user-words=${words}`, '--channel', 'webview', '--actor', 'user',
-      '--request-id', ID, '--expected-revision', '3', ...T]);
-  assert.deepEqual(cli.WRITES.W2(AGENT, { proposalId: 'p_1', requestId: ID, expectedRevision: 3 }),
-    [...A, 'decide', 'withdraw', 'p_1', '--request-id', ID, '--expected-revision', '3', ...T]);
-  assert.deepEqual(cli.WRITES.W3(AGENT, { decisionId: 'policy', value: 'capacity:100', restatement: '-Adopt the rule.',
-    rationale: 'Chosen in the panel.', requestId: ID, expectedRevision: 26 }),
-  [...A, 'decide', 'propose', 'policy', '--value=capacity:100', '--restatement=-Adopt the rule.',
-    '--rationale=Chosen in the panel.', '--channel', 'webview', '--request-id', ID, '--expected-revision', '26', ...T]);
+test('writes: exact argv of W4-W7 (§7); W1-W3 are withdrawn (v0.3 narrowing)', () => {
+  // ADR 0004 amendment (R23, I2): the panel has no confirm, withdraw, or propose builder.
+  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W6', 'W7']);
+  for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv']) assert.equal(cli[name], undefined, name);
   assert.deepEqual(cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: '-age', requestId: ID, expectedRevision: 3 }),
     [...A, 'run', 'eda.distribution', '--column=-age', '--request-id', ID, '--expected-revision', '3', ...T]);
   assert.deepEqual(cli.WRITES.W5(AGENT), [...A, 'render', ...T]);
@@ -67,8 +60,7 @@ test('writes: exact argv of W1-W7 (§7)', () => {
 
 test('timeouts and buffer (§7, §11)', () => {
   assert.equal(cli.MAX_BUFFER, 16 * 1024 * 1024);
-  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W1: 120000, W2: 120000, W3: 120000, W4: 300000, W5: 120000,
-    W6: 120000, W7: 120000 });
+  assert.deepEqual({ ...cli.TIMEOUTS }, { read: 30000, W4: 300000, W5: 120000, W6: 120000, W7: 120000 });
 });
 
 test('run: no shell, the buffer, and every failure is a message (never a rejection)', async () => {

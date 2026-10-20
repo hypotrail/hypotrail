@@ -409,12 +409,12 @@ def test_the_opening_refusals(tmp_path):
         flow.state(), {'model': 'fit.variant', 'rule': 'capacity:40'})][:1] == [
         'chosen_configuration']
     p = _propose_final(flow)
-    # Without a reason, or delegated.
-    out = _confirm(flow, p['result']['proposal_id'], 'Yes, I confirm.', expect=2)
-    assert out['error']['code'] == 'reason_required'
+    # Never delegated (v0.3, WP-B: a reason is optional, so the refusal is no longer
+    # reason_required; refused all the same).
     out = _confirm(flow, p['result']['proposal_id'], 'Use your recommended default.', 2,
                    '--basis', 'delegated_default', '--delegation-scope', 'this_decision')
-    assert out['error']['code'] == 'reason_required'
+    assert out['error']['code'] == 'ambiguous_confirmation'
+    assert out['error']['details']['reason'] == 'delegation_not_allowed'
     # A stale fit blocks it.
     s = flow.state()
     fake = {**s}

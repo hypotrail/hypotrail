@@ -46,6 +46,8 @@ async function activate(fake) {
 
 test('reviewer command: a reviewer panel, init says reviewer, writes are refused', async () => {
   process.env.HYPOTRAIL_COMPANION = '1';
+  // v0.3: the panel has no write at v0 (W1-W3 withdrawn); Regenerate (W5) is v1.
+  process.env.HYPOTRAIL_COMPANION_STAGE = 'v1';
   fakeExec();
   const dir = makeStudy('rev');
   const fake = createFake({ folders: [dir] });
@@ -56,7 +58,7 @@ test('reviewer command: a reviewer panel, init says reviewer, writes are refused
   await opened.controller.handle({ v: 2, type: 'ready' });
   const init = fake.calls.panels[0].posted.find(m => m.type === 'init');
   assert.equal(init.reviewer, true);
-  await opened.controller.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Yes, the top 100.', revision: 26 });
+  await opened.controller.handle({ v: 2, type: 'render' });
   assert.equal(fake.calls.panels[0].posted.at(-1).message, 'Read-only reviewer mode.');
   assert.equal(api.current(), opened);
 });

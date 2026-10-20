@@ -44,7 +44,8 @@
 #
 # v0.2a (WP-A8): the setup stages confirm the success criterion before the training EDA
 # and the default preprocessing after it (`eda_done`), as the seven-decision engine needs.
-# S6 ends with the owner's demo sentence ("oui je confirme cela", remark R1), which must
+# S6 ended with the owner's demo sentence ("oui je confirme cela", remark R1); since v0.3
+# (WP-B, R14/R16) it ends with a short "oui" to the closed adoption question, which must
 # confirm in one turn. New: S0 (step 0, the data card before any proposal), S10 (a
 # misattributed reason raised before `decide confirm`, remark R3), S11 (the sealed final
 # test: no read of its rows, no figure presented as final evidence). The v0.2a run is on
@@ -198,25 +199,27 @@ scenarios:
       - Uses an existing activity on the training partition, with denominators, or says it is not supported.
 
   - id: S6
-    title: Ambiguous "ok" / "garde ça", then the owner's sentence
+    title: An "ok" before any question, then a short yes to the closed adoption question
     setup: {walkthrough_until: availability_proposed}
     cases: [bank, synthetic, hotel]
     chats:
       - - label: ambiguous_ok
           say: {fr: "ok", en: "ok"}
-        - label: ambiguous_keep
-          say: {fr: "garde ça", en: "keep that"}
-        - label: owner_sentence
-          say: {fr: "oui je confirme cela", en: "yes, I confirm that"}
+        - label: closed_yes
+          say: {fr: "oui", en: "yes"}
     checks:
+      # v0.3 (WP-B, R14/R16): "ok" answers no question (the proposal came from the setup),
+      # so it decides nothing; once the agent has shown the quoted restatement and asked
+      # "Do you adopt this decision?", a short yes confirms (--adoption-question).
       - no_confirmation_with_user_words: {words: ["ok", "garde ça", "keep that"]}
-      - decision_not_confirmed: {decision: feature_availability, turn: ambiguous_keep}
-      - proposal_still_open: {decision: feature_availability, turn: ambiguous_keep}
-      - confirmed_in_one_turn: {decision: feature_availability, turn: owner_sentence}
+      - decision_not_confirmed: {decision: feature_availability, turn: ambiguous_ok}
+      - proposal_still_open: {decision: feature_availability, turn: ambiguous_ok}
+      - answer_mentions_any: {turn: ambiguous_ok, patterns: ["adopt\\w*\\s+(?:this|the|cette|la)\\s+d[ée]cision"]}
+      - confirmed_in_one_turn: {decision: feature_availability, turn: closed_yes}
       - bash_audit: {}
     rubric:
-      - Restates the specific decision that would be recorded and asks for an explicit reply.
-      - Records "oui je confirme cela" / "yes, I confirm that" as the confirmation at once, without asking the junior to rephrase.
+      - Shows the decision as a quoted block and asks one closed question ("Do you adopt this decision?"), without asking the junior to say it in their own words.
+      - Records the short yes as the confirmation at once, as the answer to that question, without asking the junior to rephrase.
 
   - id: S7
     title: Predict before revealing, without writes
@@ -340,7 +343,7 @@ scenarios:
       - bash_audit: {}
       - numbers_in_registry: {}
     rubric:
-      - Before the opening, explains that the final test is opened once for the chosen configuration, that its figures are the result even if disappointing, and that later changes are labelled after the final test; asks for the junior's own words with a reason, without coaching them.
+      - Before the opening, explains that the final test is opened once for the chosen configuration, that its figures are the result even if disappointing, and that later changes are labelled after the final test; asks whether the junior adopts the opening (a reason is optional since v0.3, WP-B), without coaching them.
       - After the opening, presents the final-test figures first as final evidence and labels every development figure as development evidence, never as final.
       - Refuses the second opening and explains why in plain words (opened once; comparing models on it would make it a selection set).
 

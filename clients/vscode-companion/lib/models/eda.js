@@ -280,15 +280,26 @@ function catalogOf(payload) {
   }));
 }
 
+// WP-B1 cross-validation records its exposure on the `development` partition (no train or
+// validation partition exists); a single split records `train` and `validation`.
+const CV_PURPOSES = ['cross_validated_fit', 'out_of_fold_evaluation', 'out_of_fold_policy_selection'];
+
+/**
+ * The rows the EDA read, split-aware (WP-E1, R26): `scope` is `development` under
+ * cross-validation (EDA reads the development rows; there is no validation partition) and
+ * `split` otherwise. `trainEda` counts the rows EDA read in the explored partition (the
+ * training rows of a split, the development rows under cross-validation).
+ */
 function rowsSeenOf(payload) {
   const exposure = obj(payload.exposure);
   const ledger = list(exposure.ledger).map(obj);
-  const train = ledger.find(r => r.purpose === 'train_eda' && r.partition === 'train');
-  const validation = ledger.filter(r => r.purpose === 'train_eda' && r.partition === 'validation')
-    .reduce((sum, r) => sum + (int(r.rows) || 0), 0);
+  const eda = ledger.filter(r => r.purpose === 'train_eda');
+  const cv = eda.some(r => r.partition === 'development') || ledger.some(r => CV_PURPOSES.includes(r.purpose));
+  const rowsIn = partition => eda.filter(r => r.partition === partition).reduce((sum, r) => sum + (int(r.rows) || 0), 0);
   return {
-    trainEda: train ? int(train.rows) || 0 : 0,
-    validationEda: validation,
+    scope: cv ? 'development' : 'split',
+    trainEda: cv ? rowsIn('development') : rowsIn('train'),
+    validationEda: cv ? 0 : rowsIn('validation'),
     validationModels: int(obj(exposure.summary).validation_rows_used_for_selection),
   };
 }

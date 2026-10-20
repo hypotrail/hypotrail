@@ -8,7 +8,7 @@
                      [--restatement-en TEXT] [--restatement-fr TEXT]
                      --request-id ID --expected-revision REV --study DIR
     hypotrail decide confirm (PROPOSAL | --proposal PROPOSAL) --user-words TEXT
-                     [--channel chat|cli|webview] [--actor NAME]
+                     [--channel chat|cli|webview|choice] [--adoption-question] [--actor NAME]
                      [--basis explicit|delegated_default]
                      [--delegation-scope this_decision|standing] [--agent-concern TEXT]
                      --request-id ID --expected-revision REV --study DIR
@@ -186,7 +186,14 @@ def build_parser(extension: str | None = None, *, listing: bool = False
                    help='the open proposal the words answer (same as the positional PROPOSAL)')
     p.add_argument('--user-words', required=True,
                    help="the user's verbatim reply to the restatement")
-    p.add_argument('--channel', choices=('chat', 'cli', 'webview'), default=cmd.DEFAULT_CHANNEL)
+    p.add_argument('--channel', choices=st.CONFIRMATION_CHANNELS, default=cmd.DEFAULT_CHANNEL,
+                   help='chat (the default), cli, webview, or choice: the junior picked the '
+                        'adoption option of an interactive choice; --user-words is the option '
+                        'label, verbatim (v0.3, R16)')
+    p.add_argument('--adoption-question', action='store_true', dest='adoption_question',
+                   help='the words answer the closed question "Do you adopt this decision?" '
+                        'asked right after the restatement: a short yes ("oui", "ok") then '
+                        'confirms in the guided and express modes (v0.3, R14)')
     p.add_argument('--actor', default=cmd.DEFAULT_ACTOR)
     p.add_argument('--basis', choices=st.REQUEST_BASES, default=cmd.DEFAULT_BASIS,
                    help="explicit (the default): the junior's own reply decides (recorded as "
@@ -277,6 +284,8 @@ def _decide(args) -> cmd.Outcome:
                                               'delegation_scope': args.delegation_scope}
         if args.agent_concern is not None:
             params['agent_concern'] = args.agent_concern
+        if args.adoption_question:     # v0.3 (WP-B): only when given (request identity)
+            params['adoption_question'] = True
     elif args.verb == 'note' and args.resolve is not None:
         action, params = cmd.ACTION_RESOLVE_NOTE, {'note_id': args.resolve,
                                                    'user_words': args.text}

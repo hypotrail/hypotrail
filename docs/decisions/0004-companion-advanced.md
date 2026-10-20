@@ -1,6 +1,6 @@
 # ADR 0004: The advanced companion, staged behind the flag
 
-- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0, the engine work packages E1 to E3, and the client work packages U1 to U5 are done and integrated (WP-I, decisions CI.1 to CI.17): stages v1 to v3 are **implemented behind the flag**, whose default stays off with stage `v0`. They are tested in Node, an offline browser, and on the real CLI with Bank and Auto MPG studies, and **not run inside a real VS Code** yet (the stage exit criteria below stay open). Amended by WP-A5 (v0.2a, 2026-10-19): decision 7, "local launch" (the two Marimo launches), and the two-layer copy of the specification (§15.1).
+- Status: accepted for specification (the owner approved the feature set, 18 October 2026). The open questions are answered (below). WP-0, the engine work packages E1 to E3, and the client work packages U1 to U5 are done and integrated (WP-I, decisions CI.1 to CI.17): stages v1 to v3 are **implemented behind the flag**, whose default stays off with stage `v0`. They are tested in Node, an offline browser, and on the real CLI with Bank and Auto MPG studies, and **not run inside a real VS Code** yet (the stage exit criteria below stay open). Amended by WP-A5 (v0.2a, 2026-10-19): decision 7, "local launch" (the two Marimo launches), and the two-layer copy of the specification (§15.1). Amended by WP-E1 (v0.3, 2026-10-20): decision 8, the **narrowing** that withdraws W1, W2, and W3 (owner decision R23, integrator decision I2); the panel's writes are W4–W7.
 - Date: 18 October 2026
 - Builds on: [ADR 0002](0002-companion-as-cli-client.md), the companion as a client of the CLI, and [ADR 0003](0003-companion-webview-v0.md), companion v0 and decisions CW.1–CW.12
 - Specification: [COMPANION-ADVANCED.md](../specs/COMPANION-ADVANCED.md)
@@ -95,6 +95,22 @@ The owner has approved a larger feature set. Its 11 groups are listed in the sco
    - **What it is not.** It is not a write: nothing in the study changes, so it has no W number, no revision, and no request id. It is not a server of the panel's own (AGENTS.md: Marimo's own local editor server may be used), not `child_process` (still only `lib/cli.js`), and it reads no study state.
    - **Checked.** `scripts/check_layout.py` (`companion_terminal_errors`, tested in `test_check_layout_launch.py`) allows one `createTerminal` call, in `extension.js`, with `shellPath` and `shellArgs`, after `launch.isMarimoLaunch` accepted the argv, and `lib/launch.js` naming exactly `marimo run` of the generated notebook and `marimo edit` of the workbench; `sendText`, a literal shell path, and a pseudo-terminal are refused; `child_process`, `exec`, and `spawn` stay forbidden.
    - **Why at v0.** Opening the deliverables is a read of the junior's own files, already allowed at v0 (Open); the default stage does not move.
+
+8. **Narrowing: decisions in the chat only (amendment, WP-E1, 2026-10-20; owner decision R23 of [OWNER-DEMO-2-REMARKS](../acceptance/OWNER-DEMO-2-REMARKS.md), integrator decision I2 of [V0.3-DECISIONS](../plans/V0.3-DECISIONS.md)).** W1 (confirm), W2 (withdraw), and W3 (propose) are **withdrawn at every stage**. The whitelist of decision 2 is now:
+
+   | Write | Stage | Status |
+   |---|---|---|
+   | confirm, withdraw (W1, W2) | — | **withdrawn** (R23) |
+   | `decide propose` (W3) | — | **withdrawn** (I2) |
+   | `run eda.*` per column, on training rows (W4) | v2 | kept |
+   | `render` (W5) | v1 | kept |
+   | `run --acknowledge-interruption` with typed words (W6) | v1 | kept |
+   | `export handoff`, outside the study state (W7) | v3 | kept |
+
+   - **Why.** The owner decided that, for now, every decision goes through the chat: a second place to answer made the panel harder to follow and let a junior get lost (R23, which supersedes the panel part of R16 and R22). W3 is the same kind of write: it creates a proposal outside the chat, so it goes with W1 and W2 (I2). W4–W7 decide nothing and stay.
+   - **What replaces them.** The pending decision card is read only: the restatement, the value in words, "If you confirm" in words ("Confirming changes nothing already done." when nothing is invalidated; what stays current under Details), "Answer in the chat", and "Ask the agent about this", which copies a ready question for the chat (the agent bridge of group H, a clipboard copy and not a write; it is now offered from v0 for this card). The proposal id, its revision, and its origin are under Details. In What if?, the engine's draft of an evaluated rule or model is shown read only next to "Ask the agent to propose this", which copies a question; the agent proposes it in the chat.
+   - **Checked.** `lib/cli.js` has exactly the builders W4–W7; `lib/protocol.js` has no `confirm`, `withdraw`, or `propose` message (they are dropped as unknown); `scripts/check_layout.py` (`companion_decide_errors`) refuses any client source that invokes `decide confirm`, `decide withdraw`, or `decide propose`, as an argv array or a command string.
+   - **Consequences for this ADR.** The v1 exit criterion "confirm and withdraw" in a real VS Code session, the "Confirmations" and "What if? proposals" measurements for the webview channel, and the first two risks of the table below no longer apply to the panel: confirmations happen in the chat, where the engine's word rules apply unchanged. Proposals recorded with `origin.channel == "webview"` before this amendment stay valid and are shown as such. The default stage does not move. Bringing a decision write back to the panel needs a new explicit owner request and a new amendment.
 
 ## Staging and exit criteria
 

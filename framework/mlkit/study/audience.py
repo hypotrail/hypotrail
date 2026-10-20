@@ -278,11 +278,11 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
     if kind == 'await_user_words':
         if fr:
             return AGENT, (f'Une proposition sur {decision_words(action.get("decision"), lang)} '
-                           'attend ta réponse. Lis sa reformulation et réponds-y ; un simple '
-                           '« ok » ne décide pas.')
+                           'attend ta réponse. Lis sa reformulation et dis si tu l\'adoptes, ou '
+                           'ce que tu changerais.')
         return AGENT, (f'A proposal on {decision_words(action.get("decision"))} is waiting for '
-                       'your answer. Read its restatement and reply in your own words; a bare '
-                       '"ok" does not decide.')
+                       'your answer. Read its restatement and say whether you adopt it, or '
+                       'what you would change.')
     if kind == 'blocked':
         needed = join((decision_words(r, lang) for r in action.get('requires') or []), lang)
         if fr:

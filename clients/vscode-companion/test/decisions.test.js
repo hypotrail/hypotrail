@@ -1,5 +1,5 @@
 'use strict';
-// Decisions tests (scope U, WP-U2; COMPANION-ADVANCED §6.2, §7 W1 W2, INV-4, INV-5, INV-8):
+// Decisions tests (scope U, WP-U2; COMPANION-ADVANCED §6.2, INV-4, INV-8; WP-E1: no W1, no W2):
 // the DecisionsModel and EffectsModel on the WP-0 fixtures, the decisions handler through
 // the real controller with the fixture CLI (test/fixture-cli.js), and the refusal
 // explanations of lib/refusals.js. No process is started; the webview side is in
@@ -7,7 +7,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createController, UNKNOWN_OUTCOME } = require('../lib/controller');
+const { createController } = require('../lib/controller');
 const { toDecisionsModel, DECISIONS_KEYS, availabilityGroups } = require('../lib/models/decisions');
 const { toEffectsModel, EFFECTS_KEYS } = require('../lib/models/effects');
 const { ModelError } = require('../lib/models/common');
@@ -18,26 +18,25 @@ const AGENT = { argv: ['/opt/py env/bin/python', '-m', 'mlkit.study.cli'], study
 const UUIDS = ['0f8fad5b-d9cb-469f-a165-70867728950e', '7c9e6679-7425-40de-944b-e07fc1f90ae7', '9b2e7c1a-4d3f-4a8b-9c6d-1e2f3a4b5c6d'];
 const TAIL = ['--json', '--study', AGENT.studyDir];
 
-function make({ settings = { stage: 'v1' }, route, task = 'binary', withdrawAnswer = true } = {}) {
+function make({ settings = { stage: 'v1' }, route, task = 'binary' } = {}) {
   const posted = [];
-  const asked = [];
   const runCli = fakeCli(route, { agentArgv: AGENT.argv, task });
   let n = 0;
   const c = createController({ agent: AGENT, post: m => posted.push(m), runCli, settings, exists: () => true,
-    confirmWithdraw: async p => { asked.push(p); return withdrawAnswer; }, uuid: () => UUIDS[n++ % UUIDS.length] });
+    uuid: () => UUIDS[n++ % UUIDS.length] });
   const tails = () => runCli.calls.map(x => x.tail);
-  return { c, posted, runCli, asked, tails, last: type => posted.filter(m => m.type === type).at(-1) };
+  return { c, posted, runCli, tails, last: type => posted.filter(m => m.type === type).at(-1) };
 }
 
 // --- models ---------------------------------------------------------------------------------
 
-test('DecisionsModel: keys, history grouped by decision in plan order, newest first (DH-1)', () => {
+test('DecisionsModel: keys, history newest first (DH-1, R25)', () => {
   const m = toDecisionsModel(payload('decisions.binary'));
   assert.deepEqual(Object.keys(m), DECISIONS_KEYS);
   assert.equal(m.revision, 27);
   assert.equal(m.task, 'binary');
   assert.deepEqual(m.history.map(h => `${h.decisionId}:${h.revision}`),
-    ['prediction_time:3', 'feature_availability:5', 'split:7', 'policy:27', 'policy:23']);
+    ['policy:27', 'policy:23', 'split:7', 'feature_availability:5', 'prediction_time:3']);
   const split = m.history.find(h => h.decisionId === 'split');
   assert.equal(split.basis, 'delegated_default');
   assert.equal(split.scope, 'this_decision');
@@ -46,7 +45,7 @@ test('DecisionsModel: keys, history grouped by decision in plan order, newest fi
   assert.equal(old.current, false);
   assert.equal(old.supersededAt, 27);
   assert.equal(m.history.find(h => h.revision === 27).channel, 'webview');
-  assert.equal(m.history[0].title, 'Define the prediction moment');
+  assert.equal(m.history.at(-1).title, 'Define the prediction moment');
   // Proposals that were not confirmed: withdrawn and superseded only.
   assert.deepEqual(m.unconfirmedProposals.map(p => [p.proposalId, p.status, p.closedReason]), [['p_6', 'withdrawn', 'withdrawn']]);
   assert.deepEqual(m.queue, []);
@@ -62,9 +61,10 @@ test('DecisionsModel: keys, history grouped by decision in plan order, newest fi
 
 test('DecisionsModel: a record without basis reads explicit, without channel reads chat (CC §2)', () => {
   const p = JSON.parse(JSON.stringify(payload('decisions.binary')));
+  const { decision_id: id, revision } = p.history[0];
   delete p.history[0].basis;
   delete p.history[0].channel;
-  const h = toDecisionsModel(p).history[0];
+  const h = toDecisionsModel(p).history.find(x => x.decisionId === id && x.revision === revision);
   assert.equal(h.basis, 'explicit');
   assert.equal(h.channel, 'chat');
 });
@@ -87,7 +87,7 @@ test('RQ-1: every reconfirm_required decision is queued once, with its previous 
 
 test('DH-2: words and restatements are copied verbatim, markup included (rendered as text)', () => {
   const m = toDecisionsModel(payload('decisions.binary.injection'));
-  assert.equal(m.history[0].userWords, 'Before the call <img src=x onerror=alert(1)> and <b>nothing</b> else.');
+  assert.ok(m.history.some(h => h.userWords === 'Before the call <img src=x onerror=alert(1)> and <b>nothing</b> else.'));
   const raw = payload('decisions.binary.injection');
   for (const h of raw.history) assert.ok(m.history.some(x => x.userWords === h.user_words));
 });
@@ -204,113 +204,27 @@ test('preview_effects: an engine refusal answers an unavailable preview with the
   assert.match(broken.last('effects').model.message, /printed no JSON/);
 });
 
-// --- handler: W1 and W2 ---------------------------------------------------------------------
+// --- no W1, no W2 (v0.3 narrowing, ADR 0004 amendment; R23, I2) ---------------------------------
 
-test('DC-3: the confirm argv is exactly W1, with a fresh request id per submission, then a refresh', async () => {
-  const { c, posted, tails, last } = make();
-  await c.handle({ v: 2, type: 'ready' });
-  const words = 'Yes: we can make 100 calls per wave, so call the 100 best-scored clients.';
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words, revision: 26 });
-  const confirm = tails().find(t => t[0] === 'decide');
-  assert.deepEqual(confirm, ['decide', 'confirm', 'p_5', `--user-words=${words}`, '--channel', 'webview', '--actor', 'user',
-    '--request-id', UUIDS[0], '--expected-revision', '26', ...TAIL]);
-  assert.ok(!confirm.some(a => a.startsWith('--basis') || a.startsWith('--delegation-scope')), 'INV-4: never a delegation');
-  const o = last('outcome');
-  assert.equal(o.op, 'W1');
-  assert.equal(o.kind, 'ok');
-  assert.equal(o.target, 'p_5');
-  assert.equal(o.recorded.userWords, words);
-  assert.equal(o.recorded.channel, 'webview');
-  assert.equal(o.recorded.decisionId, 'policy');
-  const after = tails().slice(tails().indexOf(confirm) + 1);
-  assert.equal(after[0][0], 'status', 'refreshed after the write');
-  assert.deepEqual(posted.filter(m => m.type === 'busy').map(m => m.busy), [true, false]);
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Again, the 100 best-scored clients per wave.', revision: 26 });
-  const ids = tails().filter(t => t[0] === 'decide').map(t => t[t.indexOf('--request-id') + 1]);
-  assert.equal(new Set(ids).size, 2, 'a new request id per submission');
-});
-
-test('DC-3: a stale revision is the v0 stale display (code, verbatim message, the diff) and a refresh', async () => {
-  const { c, tails, last } = make({ route: t => (t[0] === 'decide' ? 'error.stale_revision' : undefined) });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Yes, the 100 best-scored clients.', revision: 25 });
-  const o = last('outcome');
-  assert.equal(o.kind, 'refused');
-  assert.equal(o.refusal.code, 'stale_revision');
-  assert.equal(o.refusal.engineMessage, 'Revision is stale: reread hypotrail status before deciding');
-  assert.deepEqual(o.refusal.details, ['Revision read by the panel: 25', 'Current revision: 26',
-    'Changed at revision 26: decide.propose (policy)']);
-  assert.match(o.refusal.human, /read the proposal again before answering\. Nothing was recorded\.$/);
-  const i = tails().findIndex(t => t[0] === 'decide');
-  assert.equal(tails()[i + 1][0], 'status');
-});
-
-test('DC-2, INV-5: blank words, a proposal that is not open, or a malformed message never reach the CLI', async () => {
-  const { c, posted, tails } = make();
-  await c.handle({ v: 2, type: 'ready' });
-  const before = tails().length;
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: ' \n\t ', revision: 26 });
-  assert.equal(posted.at(-1).kind, 'invalid');
-  assert.equal(posted.at(-1).message, 'Type your own answer first. Nothing was recorded.');
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_4', words: 'Yes, the linear model.', revision: 26 });
-  assert.equal(posted.filter(m => m.type === 'outcome').at(-1).message, 'This proposal is not open in the panel any more. Nothing was recorded.');
-  for (const bad of [{ basis: 'delegated_default' }, { delegationScope: 'standing' }, { words: 'x'.repeat(4001) }, { revision: 0 }]) {
-    await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Yes, the 100 best-scored clients.', revision: 26, ...bad });
+test('WP-E1: confirm and withdraw are no messages any more: dropped unanswered, no `decide` process, at every stage', async () => {
+  for (const settings of [{ stage: 'v0' }, { stage: 'v1' }, { stage: 'v3' }, { stage: 'v1', reviewer: true }]) {
+    const { c, posted, tails } = make({ settings });
+    await c.handle({ v: 2, type: 'ready' });
+    const before = tails().length;
+    await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Yes: call the 100 best-scored clients.', revision: 26 });
+    await c.handle({ v: 2, type: 'withdraw', proposalId: 'p_5', revision: 26 });
+    assert.equal(c.diagnostics().ignored, 2, JSON.stringify(settings));
+    assert.equal(posted.filter(m => m.type === 'outcome').length, 0);
+    assert.ok(!tails().some(t => t[0] === 'decide'), 'no decide command');
+    assert.equal(tails().length, before);
   }
-  assert.equal(c.diagnostics().ignored, 4);
-  assert.ok(!tails().slice(before).some(t => t[0] === 'decide'));
+  // The handler has no write at all: only the preview of effects.
+  assert.deepEqual(Object.keys(require('../lib/handlers/decisions').types), ['preview_effects']);
 });
 
-test('INV-8: a write without a JSON answer is "outcome unknown", never a success, then a refresh', async () => {
-  const { c, tails, last } = make({ route: t => (t[0] === 'decide' ? { failure: 'The hypotrail CLI timed out.' } : undefined) });
+test('reviewer: effects and history still read', async () => {
+  const { c, tails } = make({ settings: { stage: 'v1', reviewer: true } });
   await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Yes, the 100 best-scored clients.', revision: 26 });
-  const o = last('outcome');
-  assert.equal(o.kind, 'failed');
-  assert.equal(o.target, 'p_5');
-  assert.ok(o.message.endsWith(UNKNOWN_OUTCOME), o.message);
-  assert.equal(o.recorded, undefined);
-  const i = tails().findIndex(t => t[0] === 'decide');
-  assert.equal(tails()[i + 1][0], 'status');
-});
-
-test('INV-4: a typed delegation is refused by the engine and the panel says to delegate in the chat', async () => {
-  const { c, tails, last } = make({ route: t => (t[0] === 'decide' ? 'error.delegation_needs_basis' : undefined) });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Go with your recommended default.', revision: 26 });
-  const argv = tails().find(t => t[0] === 'decide');
-  assert.ok(!argv.some(a => /^--(basis|delegation-scope)/.test(a)));
-  const o = last('outcome');
-  assert.equal(o.refusal.reason, 'delegation_needs_basis');
-  assert.equal(o.refusal.human, 'Your reply hands the choice to the assistant. A delegation is recorded in the chat, not in this panel. Nothing was recorded.');
-  assert.equal(o.refusal.engineMessage, 'The reply delegates the choice; record it with --basis delegated_default in the chat.');
-});
-
-test('W2: the VS Code modal asks first; "Withdraw" runs exactly W2, a cancel records nothing', async () => {
-  const yes = make();
-  await yes.c.handle({ v: 2, type: 'ready' });
-  await yes.c.handle({ v: 2, type: 'withdraw', proposalId: 'p_5', revision: 26 });
-  assert.equal(yes.asked.length, 1);
-  assert.equal(yes.asked[0].proposalId, 'p_5');
-  assert.equal(yes.asked[0].decisionTitle, 'Choose a decision policy');
-  assert.deepEqual(yes.tails().find(t => t[0] === 'decide'), ['decide', 'withdraw', 'p_5', '--request-id', UUIDS[0],
-    '--expected-revision', '26', ...TAIL]);
-  assert.deepEqual(yes.last('outcome').recorded, { proposalId: 'p_5', decisionId: 'policy', status: 'withdrawn' });
-  const no = make({ withdrawAnswer: false });
-  await no.c.handle({ v: 2, type: 'ready' });
-  await no.c.handle({ v: 2, type: 'withdraw', proposalId: 'p_5', revision: 26 });
-  assert.ok(!no.tails().some(t => t[0] === 'decide'));
-  assert.deepEqual(no.last('outcome'), { v: 2, type: 'outcome', op: 'W2', kind: 'cancelled', target: 'p_5', message: 'Nothing was recorded.' });
-});
-
-test('reviewer: W1 and W2 are refused before any modal or process; effects and history still read', async () => {
-  const { c, posted, asked, tails } = make({ settings: { stage: 'v1', reviewer: true } });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_5', words: 'Yes, the 100 best-scored clients.', revision: 26 });
-  await c.handle({ v: 2, type: 'withdraw', proposalId: 'p_5', revision: 26 });
-  assert.deepEqual(posted.filter(m => m.type === 'outcome').map(o => [o.op, o.kind, o.message]),
-    [['W1', 'invalid', 'Read-only reviewer mode.'], ['W2', 'invalid', 'Read-only reviewer mode.']]);
-  assert.equal(asked.length, 0);
   await c.handle({ v: 2, type: 'preview_effects', proposalId: 'p_5', revision: 26 });
   await c.handle({ v: 2, type: 'load', view: 'decisions' });
   assert.deepEqual(tails().map(t => t[0]), ['status', 'preview', 'decisions']);
@@ -330,7 +244,7 @@ test('INV-8: refusal explanations never suggest words: no quotation, no example,
     }
   }
   for (const [command, code, reason] of [['decide confirm', 'ambiguous_confirmation', 'bare_acknowledgement'],
-    ['run', 'ambiguous_confirmation', 'bare_acknowledgement'], ['decide propose', 'stale_revision', null],
+    ['run', 'ambiguous_confirmation', 'bare_acknowledgement'],
     ['run', 'stale_revision', null], ['export', 'export_target_exists', null], ['render', 'read_only', null],
     ['decide confirm', 'nonexistent_code', null]]) {
     const d = refusals.describe(error(command, code, 'engine text', reason ? { reason } : {}));
@@ -339,9 +253,9 @@ test('INV-8: refusal explanations never suggest words: no quotation, no example,
   }
 });
 
-test('refusal contexts: W3 propose, W4 run, W6 acknowledge, W7 export, from the payload command', () => {
-  const p = refusals.describe(error('decide propose', 'stale_revision', 'Revision is stale.'));
-  assert.match(p.human, /look at the draft again before proposing/);
+test('refusal contexts: W4 run, W6 acknowledge, W7 export, from the payload command (no W3 since v0.3)', () => {
+  assert.equal(refusals.BY_CONTEXT.propose, undefined);
+  assert.equal(refusals.contextOf({ command: 'decide propose' }, 'stale_revision', null, {}), null);
   const c = refusals.describe(error('decide confirm', 'stale_revision', 'Revision is stale.'));
   assert.match(c.human, /read the proposal again before answering/);
   const run = refusals.describe(error('run', 'stale_revision', 'Revision is stale.'));
@@ -381,4 +295,26 @@ test('training mode refusals (ADR 0005, WP-B2): paraphrase_required names what i
   }));
   assert.match(contra.human, /the engine stopped the confirmation/);
   assert.deepEqual(contra.details, ['Your words and the proposal disagree about contact']);
+});
+
+test('decisions model (v0.3, WP-B): reason_given reaches the current history row only', () => {
+  const p = JSON.parse(JSON.stringify(payload('decisions.binary')));
+  const policy = p.decisions.find(d => d.decision_id === 'policy');
+  assert.equal(toDecisionsModel(p).decisions.find(d => d.decisionId === 'policy').confirmation.reasonGiven, true);
+  policy.confirmation.reason_given = false;
+  const m = toDecisionsModel(p);
+  const rows = m.history.filter(h => h.decisionId === 'policy');
+  assert.ok(rows.length >= 1);
+  for (const h of rows) {
+    assert.equal(h.reasonGiven, h.current && h.revision === policy.confirmation.revision ? false : null);
+  }
+  delete policy.confirmation.reason_given;
+  assert.equal(toDecisionsModel(p).decisions.find(d => d.decisionId === 'policy').confirmation.reasonGiven, null);
+});
+
+test('refusals (v0.3, WP-B): the delegated final-test opening has its own explanation', () => {
+  const d = refusals.describe({ schema: 'hypotrail.error/1', ok: false, command: 'decide confirm',
+    error: { code: 'ambiguous_confirmation', message: 'engine text', details: { reason: 'delegation_not_allowed' } } });
+  assert.equal(d.reason, 'delegation_not_allowed');
+  assert.match(d.human, /never delegated/);
 });

@@ -5,7 +5,8 @@
   for the log transform."; "all features except X" stays accepted when the value excludes X.
 * H1: an off-topic remark that shares one common noun with the proposal ("oui, la pizza du
   client est bonne") does not confirm; on a trade-off, "je confirme, j'aime la pizza" and
-  "ok, 10%" give no reason (``reason_required``). The owner's sentences still confirm.
+  "ok, 10%" give no reason (recorded as ``reason_given: false`` since v0.3, WP-B; they were
+  ``reason_required`` before). The owner's sentences still confirm.
 * H3: covered in ``test_guided_confirmation.py`` (the guided stop on a contradiction).
 
 Studies live in ``tmp_path`` from the synthetic case.
@@ -174,19 +175,24 @@ def pause3(evaluated, tmp_path, synthetic_case_dir):
     return Flow(fk.clone(evaluated, tmp_path / 'p3'), synthetic_case_dir, prefix='g')
 
 
-@pytest.mark.parametrize('rule, restatement, words, code', (
-    ('capacity:20', 'You call the 20 highest-scored members.', "je confirme, j'aime la pizza",
-     'reason_required'),
-    ('share:0.1', 'You call the top 10% of the scored members.', 'ok, 10%', 'reason_required'),
-    ('capacity:20', 'You call the 20 highest-scored members.', 'yes, 20', 'reason_required'),
-    ('capacity:20', 'You call the 20 highest-scored members.', 'oui, la pizza du client est bonne',
-     'unrelated_reply'),
+@pytest.mark.parametrize('rule, restatement, words', (
+    ('capacity:20', 'You call the 20 highest-scored members.', "je confirme, j'aime la pizza"),
+    ('share:0.1', 'You call the top 10% of the scored members.', 'ok, 10%'),
+    ('capacity:20', 'You call the 20 highest-scored members.', 'yes, 20'),
 ))
-def test_a_non_reason_on_the_policy_is_refused(pause3, rule, restatement, words, code):
+def test_a_non_reason_on_the_policy_is_recorded_as_no_reason(pause3, rule, restatement, words):
+    # v0.3 (WP-B, R27): the guided mode no longer requires a reason; a non-reason is
+    # recorded as "no reason given" (reason_given false) instead of refused.
     pid = _propose(pause3, 'policy', rule, restatement)
+    done = _confirm(pause3, pid, words)['result']
+    assert done['status'] == 'confirmed' and done['reason_given'] is False, words
+
+
+def test_an_off_topic_reply_on_the_policy_is_still_refused(pause3):
+    pid = _propose(pause3, 'policy', 'capacity:20', 'You call the 20 highest-scored members.')
     rev = pause3.rev()
-    out = _confirm(pause3, pid, words, expect=2)
-    assert _reason(out) == code, words
+    out = _confirm(pause3, pid, 'oui, la pizza du client est bonne', expect=2)
+    assert _reason(out) == 'unrelated_reply'
     assert pause3.rev() == rev
 
 
@@ -199,7 +205,8 @@ def test_a_real_reason_confirms_the_policy(pause3, words):
     restatement = ('You call the 20 highest-scored members.' if rule == 'capacity:20'
                    else 'You call the top 10% of the scored members.')
     pid = _propose(pause3, 'policy', rule, restatement)
-    assert _confirm(pause3, pid, words)['result']['status'] == 'confirmed', words
+    done = _confirm(pause3, pid, words)['result']
+    assert done['status'] == 'confirmed' and done['reason_given'] is True, words
 
 
 def test_reason_and_relation_are_pure_functions():

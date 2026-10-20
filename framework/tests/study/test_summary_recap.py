@@ -120,7 +120,8 @@ def test_an_open_proposal_is_quoted_with_its_caveat(flow):
               '--expected-revision', flow.rev(), '--study', flow.study)
     summary = _summary(flow)
     _assert_shape(summary['recap'], summary)
-    assert summary['recap'][3] == ('Next: your answer, in your own words, on the feature '
+    # v0.3 (WP-B, R14): the junior adopts the proposal; own words only to change it.
+    assert summary['recap'][3] == ('Next: whether you adopt the feature '
                                    f'availability: "{restatement}"')
     assert 'illustrative' in summary['recap'][3]
 

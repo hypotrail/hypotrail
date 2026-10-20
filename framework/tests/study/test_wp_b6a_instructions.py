@@ -47,7 +47,9 @@ def test_the_instructions_carry_the_v0_2b_workflow(task):
     # the opening ritual
     rule10 = _rule(text, 10)
     for phrase in ('**The opening ritual.**', 'nothing is stale or waiting for reconfirmation',
-                   'is opened once, for this configuration', "the junior's own words and their reason",
+                   'is opened once, for this configuration',
+                   # v0.3 (WP-B, R27): adopted in the junior's words, a reason optional.
+                   'whether they adopt the opening', 'a reason is optional',
                    'a delegation is refused', 'run `diag.final_test`',
                    'read the final figures first, as **final evidence**',
                    '`final_test.changed_after`', '`excluded_prior_exposed`'):

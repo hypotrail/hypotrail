@@ -106,6 +106,8 @@ def decision_html(study: read.Study, decision_id: str) -> str:
         label = labels['delegated_words'] if delegated else labels['user_words']
         out += (f' — {e(label)}: <q data-literal="user_words">'
                 f'{e(d["confirmation"]["user_words"])}</q>')
+        if d['confirmation'].get('reason_given') is False:     # v0.3 (WP-B, R27)
+            out += f' <em data-reason-given="false">({e(labels["no_reason_given"])})</em>'
         if delegated:
             out += f' <em data-basis="delegated_default">{e(labels["delegated_note"])}</em>'
     return out + '</p>'

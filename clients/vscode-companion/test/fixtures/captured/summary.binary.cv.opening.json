@@ -107,11 +107,7 @@
    "decision": "final_test",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
-   "junior_message": "A proposal on the opening of the final test is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide.",
-   "language": "en",
-   "recommended": null,
-   "question": "Do you adopt this decision?",
-   "junior_digest": "Proposal on the opening of the final test: \"You open the sealed final test once, for the chosen configuration.\" If it suits you, say that you adopt it; otherwise say what you change."
+   "junior_message": "A proposal on the opening of the final test is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change."
   },
   "open_proposals": [
    {
@@ -451,7 +447,7 @@
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (5-fold cross-validation, kfold stratified); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy share:0.1 (the logistic model on the 3617 out-of-fold development rows: precision 36.4%, recall 31.4%, result eb8d58e7).",
    "Now: Explore the development rows; the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the final test: \"You open the sealed final test once, for the chosen configuration.\"",
+   "Next: whether you adopt the final test: \"You open the sealed final test once, for the chosen configuration.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],
   "recap_audience": "agent",
@@ -459,7 +455,7 @@
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (5-fold cross-validation, stratified on the outcome); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the decision policy: select the top 10% by score (the logistic model on the 3617 out-of-fold development rows: precision 36.4%, recall 31.4%).",
    "Now: Open the final test once, waiting for your answer; the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the final test: \"You open the sealed final test once, for the chosen configuration.\"",
+   "Next: whether you adopt the final test: \"You open the sealed final test once, for the chosen configuration.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],
   "mode": "guided",
@@ -581,7 +577,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-20T13:34:08.150197+00:00",
+   "boundary_time": "2026-10-20T13:23:22.951680+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -590,7 +586,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-20T13:34:08.680943+00:00",
+     "time": "2026-10-20T13:23:23.069478+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -613,7 +609,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-20T13:34:10.115462+00:00",
+     "time": "2026-10-20T13:23:23.606859+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -643,7 +639,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-20T13:34:11.428487+00:00",
+     "time": "2026-10-20T13:23:24.269707+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -666,7 +662,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-20T13:34:12.801507+00:00",
+     "time": "2026-10-20T13:23:24.788918+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -696,7 +692,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-20T13:34:14.920378+00:00",
+     "time": "2026-10-20T13:23:25.631330+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -719,7 +715,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-20T13:34:16.851981+00:00",
+     "time": "2026-10-20T13:23:26.321328+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -749,7 +745,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-20T13:34:19.144980+00:00",
+     "time": "2026-10-20T13:23:26.936675+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -772,7 +768,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-20T13:34:21.160652+00:00",
+     "time": "2026-10-20T13:23:27.791721+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -802,7 +798,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-20T13:34:23.437490+00:00",
+     "time": "2026-10-20T13:23:28.541017+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -825,7 +821,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-20T13:34:24.985324+00:00",
+     "time": "2026-10-20T13:23:29.207871+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -855,7 +851,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-20T13:34:27.134168+00:00",
+     "time": "2026-10-20T13:23:30.399237+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -878,7 +874,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-20T13:34:29.382865+00:00",
+     "time": "2026-10-20T13:23:31.611570+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -901,7 +897,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-20T13:34:32.376377+00:00",
+     "time": "2026-10-20T13:23:32.611932+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -924,7 +920,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-20T13:34:46.468711+00:00",
+     "time": "2026-10-20T13:23:38.670410+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -947,7 +943,7 @@
     },
     {
      "revision": 20,
-     "time": "2026-10-20T13:34:48.507754+00:00",
+     "time": "2026-10-20T13:23:39.372024+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -970,7 +966,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-20T13:34:50.379787+00:00",
+     "time": "2026-10-20T13:23:40.271137+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1003,7 +999,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-20T13:35:02.500005+00:00",
+     "time": "2026-10-20T13:23:46.699669+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1026,7 +1022,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-20T13:35:28.980926+00:00",
+     "time": "2026-10-20T13:23:59.457227+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1052,7 +1048,7 @@
     },
     {
      "revision": 26,
-     "time": "2026-10-20T13:35:30.861331+00:00",
+     "time": "2026-10-20T13:24:00.208102+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "policy",
@@ -1075,7 +1071,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-20T13:35:32.759665+00:00",
+     "time": "2026-10-20T13:24:01.210840+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "policy",
@@ -1109,7 +1105,7 @@
     },
     {
      "revision": 28,
-     "time": "2026-10-20T13:35:34.733957+00:00",
+     "time": "2026-10-20T13:24:02.307970+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "final_test",
@@ -1132,7 +1128,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-20T13:38:47.672077+00:00",
+     "time": "2026-10-20T13:25:01.440392+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1169,6 +1165,6 @@
    }
   },
   "task": "binary",
-  "currency": "d5005e1ef97d882f"
+  "currency": "80a3a250f9735e06"
  }
 }

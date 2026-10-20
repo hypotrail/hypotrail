@@ -1,14 +1,13 @@
 'use strict';
 // What if? tests (scope U, WP-U3): the WhatIf, PolicyPreview, and Draft models on the WP-0
 // fixtures, and the What if? handler behind the real controller with the fixture CLI:
-// the debounced, single-flight `preview policy` (WI-2, with fake timers), the draft, and
-// W3 built from a draft re-read immediately before (WI-3). COMPANION-ADVANCED §6.5, §7.
+// the debounced, single-flight `preview policy` (WI-2, with fake timers) and the draft
+// (read only; no W3 since the v0.3 narrowing, WI-3). COMPANION-ADVANCED §6.5, §7.
 // No process is started.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createController } = require('../lib/controller');
-const cli = require('../lib/cli');
 const whatif = require('../lib/handlers/whatif');
 const { toWhatIfModel } = require('../lib/models/whatif');
 const { toPolicyPreviewModel } = require('../lib/models/preview');
@@ -208,7 +207,7 @@ test('preview policy and draft are v2 messages: ignored below, and an invalid ru
   assert.equal(v2.c.diagnostics().ignored, 5);
 });
 
-// --- draft and propose (WI-3) --------------------------------------------------------------
+// --- draft, read only (WI-3) --------------------------------------------------------------
 
 test('draft: `preview proposal` texts posted as draft_result; nothing is written', async () => {
   const { c, of, runCli } = make();
@@ -223,91 +222,21 @@ test('draft: `preview proposal` texts posted as draft_result; nothing is written
   assert.ok(runCli.calls.every(x => !MUTATING.includes(x.tail[0])));
 });
 
-test('WI-3: propose re-reads the draft, asks the modal, then runs exactly W3 with the draft texts', async () => {
-  const asked = [];
-  const host = { confirmModal: async (text, action) => { asked.push([text, action]); return true; } };
-  const { c, of, runCli } = make({ host });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'draft', decisionId: 'policy', value: 'capacity:100', revision: 26 });
-  const before = runCli.calls.length;
-  await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 });
-  const calls = runCli.calls.slice(before).map(x => x.tail[0] + ' ' + x.tail[1]);
-  assert.deepEqual(calls, ['preview proposal', 'decide propose', 'status --summary'], 'a fresh draft, the write, the refresh');
-  const draft = payload('proposal_draft.binary');
-  const argv = runCli.calls[before + 1].argv;
-  assert.deepEqual(argv, cli.proposeArgv(AGENT, { decisionId: 'policy', value: 'capacity:100', restatement: draft.restatement,
-    rationale: draft.rationale, requestId: UUID, expectedRevision: 26 }));
-  assert.ok(argv.includes(`--restatement=${draft.restatement}`) && argv.includes(`--rationale=${draft.rationale}`), 'byte for byte');
-  assert.deepEqual(argv.slice(AGENT.argv.length + 6, AGENT.argv.length + 8), ['--channel', 'webview']);
-  assert.ok(!argv.some(a => /^--basis|^--delegation-scope|^--user-words/.test(a)));
-  // §7 W3: the modal names the decision by its plan title (review finding; decision CR.9).
-  assert.deepEqual(asked, [['Create a proposal for "Choose a decision policy": capacity:100? It is not a decision. You will confirm it in your own words in Decisions. It replaces the open proposal p_5.', 'Propose']]);
-  const outcome = of('outcome').at(-1);
-  assert.equal(outcome.op, 'W3');
-  assert.equal(outcome.kind, 'ok');
-  assert.equal(outcome.target, 'policy');
-  assert.deepEqual(outcome.recorded, { proposalId: 'p_6', decisionId: 'policy', status: 'open', channel: 'webview' });
-  // A second propose reads the draft again: never from the cache.
-  await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 });
-  assert.equal(runCli.calls.filter(x => x.tail[0] === 'preview' && x.tail[1] === 'proposal').length, 3);
-});
-
-test('the draft read before W3 neither reads nor fills the cache: no draft:...:fresh:N entry accumulates (review finding)', async () => {
-  const { c, runCli } = make({ host: { confirmModal: async () => false } });
-  await c.handle({ v: 2, type: 'ready' });
-  const size = c.cacheSize();
-  for (let i = 0; i < 5; i += 1) {
-    await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 });
+test('WI-3 (WP-E1): no W3; propose is no message any more and nothing writes, at every stage and task', async () => {
+  // v0.3 narrowing (ADR 0004 amendment, integrator decision I2): "Ask the agent to propose
+  // this" copies a question (ask_agent, tested in bridge.test.js); the panel proposes nothing.
+  assert.deepEqual(Object.keys(whatif.types), ['preview_policy', 'draft']);
+  assert.equal(whatif.modalText, undefined);
+  for (const [task, message] of [['binary', { decisionId: 'policy', value: 'capacity:100', revision: 26 }],
+    ['regression', { decisionId: 'model_choice', value: 'fit.linear', revision: 22 }]]) {
+    for (const settings of [{ stage: 'v2' }, { stage: 'v3' }, { stage: 'v2', reviewer: true }]) {
+      const { c, of, runCli } = make({ task, settings });
+      await c.handle({ v: 2, type: 'ready' });
+      await c.handle({ v: 2, type: 'propose', ...message });
+      assert.equal(c.diagnostics().ignored, 1, `${task} ${JSON.stringify(settings)}`);
+      assert.equal(of('outcome').length, 0);
+      assert.ok(runCli.calls.every(x => !MUTATING.includes(x.tail[0])), 'nothing writes');
+    }
   }
-  assert.equal(runCli.calls.filter(x => x.tail[0] === 'preview' && x.tail[1] === 'proposal').length, 5, 'one fresh read each time');
-  assert.equal(c.cacheSize(), size, 'the cache did not grow');
-});
-
-test('WI-3: no W3 for an unevaluated rule, another decision, a moved revision, a cancelled modal, or a reviewer', async () => {
-  const cases = [
-    { name: 'unevaluated', message: { decisionId: 'policy', value: 'capacity:150', revision: 26 },
-      route: tail => (tail[1] === 'proposal' ? 'proposal_draft.binary.unevaluated' : undefined), kind: 'invalid', text: /has not evaluated capacity:150/ },
-    { name: 'other decision', message: { decisionId: 'model_choice', value: 'fit.linear', revision: 26 }, kind: 'invalid', text: /proposes only policy/ },
-    { name: 'bad value', message: { decisionId: 'policy', value: 'fit.linear', revision: 26 }, kind: 'invalid', text: /not a value/ },
-    { name: 'moved', message: { decisionId: 'policy', value: 'capacity:100', revision: 25 }, kind: 'invalid', text: /study changed/ },
-    { name: 'draft revision', message: { decisionId: 'policy', value: 'capacity:100', revision: 26 },
-      route: tail => (tail[1] === 'proposal' ? { payload: { ...payload('proposal_draft.binary'), revision: 27 } } : undefined), kind: 'invalid', text: /study changed/ },
-    { name: 'cancelled', message: { decisionId: 'policy', value: 'capacity:100', revision: 26 }, modal: false, kind: 'cancelled', text: /^Nothing was recorded\.$/ },
-    { name: 'no modal host', message: { decisionId: 'policy', value: 'capacity:100', revision: 26 }, modal: null, kind: 'cancelled', text: /^Nothing was recorded\.$/ },
-    { name: 'reviewer', settings: { stage: 'v2', reviewer: true }, message: { decisionId: 'policy', value: 'capacity:100', revision: 26 },
-      kind: 'invalid', text: /^Read-only reviewer mode\.$/ },
-  ];
-  for (const k of cases) {
-    const host = k.modal === null ? {} : { confirmModal: async () => k.modal !== false };
-    const { c, of, runCli } = make({ route: k.route, host, settings: k.settings });
-    await c.handle({ v: 2, type: 'ready' });
-    await c.handle({ v: 2, type: 'propose', ...k.message });
-    assert.ok(!runCli.calls.some(x => x.tail[0] === 'decide'), `${k.name}: no decide`);
-    const o = of('outcome').at(-1);
-    assert.equal(o.op, 'W3', k.name);
-    assert.equal(o.kind, k.kind, k.name);
-    assert.match(o.message, k.text, k.name);
-  }
-});
-
-test('WI-3 (regression): "Propose this model choice" proposes model_choice with the engine draft', async () => {
-  const host = { confirmModal: async () => true };
-  const { c, runCli, of } = make({ host, task: 'regression' });
-  await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 22 });
-  assert.match(of('outcome').at(-1).message, /proposes only model choice/);
-  await c.handle({ v: 2, type: 'propose', decisionId: 'model_choice', value: 'fit.linear', revision: 22 });
-  const draft = payload('proposal_draft.regression');
-  const write = runCli.calls.find(x => x.tail[0] === 'decide');
-  assert.deepEqual(write.argv, cli.proposeArgv(AGENT, { decisionId: 'model_choice', value: 'fit.linear', restatement: draft.restatement,
-    rationale: draft.rationale, requestId: UUID, expectedRevision: 22 }));
-});
-
-test('modal text: without an open proposal there is no "replaces" sentence', () => {
-  assert.equal(whatif.modalText('model_choice', 'fit.linear', { supersedesProposal: null }),
-    'Create a proposal for model choice: fit.linear? It is not a decision. You will confirm it in your own words in Decisions.',
-    'without a plan title, the decision id in words');
-  assert.equal(whatif.modalText('model_choice', 'fit.linear', { supersedesProposal: null }, 'Choose the model'),
-    'Create a proposal for "Choose the model": fit.linear? It is not a decision. You will confirm it in your own words in Decisions.');
   assert.equal(whatif.previewKey(['capacity:100'], true), 'preview:capacity:100:intervals');
 });

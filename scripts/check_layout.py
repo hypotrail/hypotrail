@@ -141,6 +141,20 @@ def companion_terminal_errors(sources):
     return errors
 
 
+# v0.3 narrowing (ADR 0004 amendment; owner decision R23, integrator decision I2): the
+# panel records no decision. No client source may invoke `decide confirm`, `decide
+# withdraw`, or `decide propose`, neither as an argv array ('decide', 'confirm') nor as a
+# command string ("decide confirm"); W4-W7 are its only writes.
+DECIDE_WRITE = re.compile(r"""['"`]decide['"`]\s*,\s*['"`](?:confirm|withdraw|propose)['"`]"""
+                          r'|\bdecide\s+(?:confirm|withdraw|propose)\b')
+
+
+def companion_decide_errors(sources):
+    """Errors of the narrowing rule over ``{relative path: text}`` of the client sources."""
+    return [f'Companion client source invokes a withdrawn decide write (W1-W3): {rel}'
+            for rel, text in sorted(sources.items()) if DECIDE_WRITE.search(text)]
+
+
 def check_companion_client(errors):
     """The companion client stays default-off, dependency-free, and CLI-only."""
     folder = ROOT / COMPANION_CLIENT
@@ -170,8 +184,9 @@ def check_companion_client(errors):
     for path in sources:
         if COMPANION_FORBIDDEN.search(path.read_text(encoding='utf-8')):
             errors.append(f'Companion client source uses a forbidden API: {path.relative_to(ROOT)}')
-    errors.extend(companion_terminal_errors(
-        {p.relative_to(folder).as_posix(): p.read_text(encoding='utf-8') for p in sources}))
+    texts = {p.relative_to(folder).as_posix(): p.read_text(encoding='utf-8') for p in sources}
+    errors.extend(companion_terminal_errors(texts))
+    errors.extend(companion_decide_errors(texts))
     return len(sources)
 
 def main():

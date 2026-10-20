@@ -185,9 +185,7 @@ function panel(study, settings = {}, host = {}) {
     times.push([argv.slice(study.agent.argv.length, study.agent.argv.length + 2).join(' '), Date.now() - start]);
     return res;
   };
-  const c = createController({ agent: study.agent, post: m => posted.push(m), runCli, settings,
-    host: { confirmWithdraw: async () => true, confirmModal: async () => true, ...host },
-    confirmWithdraw: async () => true });
+  const c = createController({ agent: study.agent, post: m => posted.push(m), runCli, settings, host: { ...host } });
   return {
     c, posted, times,
     last: type => posted.filter(m => m.type === type).at(-1),

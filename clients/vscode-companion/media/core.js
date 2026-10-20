@@ -22,9 +22,10 @@
   // The SVG namespace is an identifier, not a resource: it is assembled here so that the
   // document holds no URL literal at all (test/unit.test.js).
   const SVG_NS = ['http:', '', 'www.w3.org', '2000', 'svg'].join('/');
-  const UI_KEYS = ['drafts', 'ackDrafts', 'askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult', 'study'];
+  // v0.3 (WP-E1): no `drafts` key any more; the confirmation words went with W1.
+  const UI_KEYS = ['ackDrafts', 'askDraft', 'tab', 'recapCollapsed', 'evidenceFilter', 'selectedResult', 'study'];
   // The keys that belong to one study (decision CR.2): dropped when `init` names another.
-  const STUDY_KEYS = ['drafts', 'ackDrafts', 'askDraft', 'selectedResult'];
+  const STUDY_KEYS = ['ackDrafts', 'askDraft', 'selectedResult'];
   const TAB_ORDER = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
   // Messages the frame handles itself; the others (effects, preview_policy_result,
   // draft_result, learn_state) are only forwarded to the views' onMessage.
@@ -104,11 +105,9 @@
       keep();
     },
   };
-  // A draft is {text, revision} (decision CR.3): the junior's words and the snapshot
-  // revision at which they started typing them. The revision is what a confirmation
-  // sends, so the engine refuses it as stale when the study moved since; it changes only
-  // when the words are cleared and typed again, or when the junior says they read the
-  // proposal again (`reread`).
+  // A draft is {text, revision} (decision CR.3): the junior's words of an acknowledgement
+  // and the snapshot revision at which they started typing them; the revision changes only
+  // when the words are cleared and typed again. (v0.3: the confirmation drafts went with W1.)
   const isDraft = d => Boolean(d) && typeof d === 'object' && typeof d.text === 'string' && d.text !== '' &&
     (d.revision === null || Number.isInteger(d.revision));
   const draftOf = (kind, id) => (ui[kind] && isDraft(ui[kind][id]) ? ui[kind][id] : null);
@@ -118,18 +117,11 @@
     /** The revision the junior started typing at, or null. */
     revision: (kind, id) => { const d = draftOf(kind, id); return d ? d.revision : null; },
     set(kind, id, text) {
-      if (kind !== 'drafts' && kind !== 'ackDrafts') throw new Error('drafts or ackDrafts');
+      if (kind !== 'ackDrafts') throw new Error('ackDrafts only');
       ui[kind] = ui[kind] || {};
       const before = draftOf(kind, id);
       if (text) ui[kind][id] = { text, revision: before ? before.revision : shownRevision() };
       else delete ui[kind][id];
-      keep();
-    },
-    /** The junior read the proposal again: the draft now names the revision shown. */
-    reread(kind, id) {
-      const d = draftOf(kind, id);
-      if (!d) return;
-      d.revision = shownRevision();
       keep();
     },
     drop(kind, id) {
@@ -142,7 +134,7 @@
   function sanitize() {
     if (!ui || typeof ui !== 'object' || Array.isArray(ui)) ui = {};
     for (const key of Object.keys(ui)) if (!UI_KEYS.includes(key)) delete ui[key];
-    for (const kind of ['drafts', 'ackDrafts']) {
+    for (const kind of ['ackDrafts']) {
       if (!ui[kind] || typeof ui[kind] !== 'object' || Array.isArray(ui[kind])) { delete ui[kind]; continue; }
       for (const id of Object.keys(ui[kind])) if (!isDraft(ui[kind][id])) delete ui[kind][id];
     }
@@ -160,13 +152,13 @@
   /**
    * The only textarea of the panel that holds the junior's words (INV-5). It starts empty
    * and is never filled by the panel; the only value it ever gets is the junior's own draft
-   * for the same key (`drafts` per proposal, `ackDrafts` per execution, `askDraft`), kept
+   * for the same key (`ackDrafts` per execution, `askDraft`), kept
    * in vscode.setState while they type. Views never create a textarea themselves
-   * (test/invariants.test.js). `key` is the proposal or execution id; the other attributes
+   * (test/invariants.test.js). `key` is the execution id; the other attributes
    * (id, aria-describedby, data-*) go on the element. `onInput(text)` runs on each keystroke.
    */
   function wordsArea({ kind, key = '', onInput = null, ...attrs }) {
-    if (!['drafts', 'ackDrafts', 'askDraft'].includes(kind)) throw new Error('drafts, ackDrafts, or askDraft');
+    if (!['ackDrafts', 'askDraft'].includes(kind)) throw new Error('ackDrafts or askDraft');
     const area = el('textarea', { spellcheck: 'true', autocomplete: 'off', 'data-words': kind, ...attrs });
     area.value = kind === 'askDraft' ? String(ui.askDraft || '') : drafts.get(kind, key);
     area.addEventListener('input', () => {
@@ -654,13 +646,9 @@
 
   function onSnapshot(m) {
     const before = state.snapshot ? state.snapshot.revision : null;
-    const open = new Set((m.model.proposals || []).map(p => p.proposalId));
     const executions = m.model.executions || {};
     const listed = new Set([...(executions.interrupted || []), ...(executions.suspected || [])].map(e => e.executionId));
-    // "The study changed while you were typing" is the decision card's own warning, next
-    // to the textarea (CW.9, decision CI.4): the frame does not repeat it.
     if (before !== m.model.revision) state.notice = null;
-    for (const id of Object.keys(ui.drafts || {})) if (!open.has(id)) delete ui.drafts[id];
     for (const id of Object.keys(ui.ackDrafts || {})) if (!listed.has(id)) delete ui.ackDrafts[id];
     keep();
     state.snapshot = m.model;
@@ -697,7 +685,6 @@
       case 'outcome':
         state.lastOutcome = m;
         if (m.target) state.outcomes[m.target] = m;
-        if (m.kind === 'ok' && (m.op === 'W1' || m.op === 'W2') && m.target) drafts.drop('drafts', m.target);
         if (m.kind === 'ok' && m.op === 'W6' && m.target) drafts.drop('ackDrafts', m.target);
         state.notice = null;
         break;

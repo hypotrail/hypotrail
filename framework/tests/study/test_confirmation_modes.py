@@ -279,7 +279,7 @@ def test_training_policy_needs_the_rule_and_a_reason_connector(pause3):
     assert out['error']['code'] == 'paraphrase_required'
     assert [m['concept'] for m in out['error']['details']['missing']] == ['capacity',
                                                                            'rule_number']
-    # Guided accepts any content word as a reason; training wants a reason clause.
+    # Training wants a reason clause (guided and express need no reason, v0.3 WP-B).
     out = _confirm(pause3, pid, 'appeler les 20 meilleurs, le service suit', expect=2)
     assert out['error']['code'] == 'reason_required'
     assert out['error']['details']['mode'] == 'training'
@@ -405,9 +405,10 @@ def test_express_never_covers_the_policy_or_the_conclusion(pause3):
     assert out['error']['details']['standing_covers'] == list(
         st.EXPRESS_STANDING_DELEGATION_DECISIONS)
     assert out['error']['details']['mode'] == 'express'
-    # Express keeps the guided reason rule for its own words.
-    out = _confirm(pause3, pid, 'oui je confirme cela', expect=2)
-    assert out['error']['code'] == 'reason_required'
+    # Express keeps the guided rule for its own words: since v0.3 (WP-B, R27) an
+    # endorsement confirms the policy, a reason is optional.
+    done = _confirm(pause3, pid, 'oui je confirme cela')['result']
+    assert done['basis'] == st.ENDORSED and done['reason_given'] is False
     assert set(st.EXPRESS_STANDING_DELEGATION_DECISIONS) & {'policy', 'model_choice',
                                                            'conclusion', 'final_test'} == set()
 

@@ -5,9 +5,11 @@
 // confirmation must stay their own): no example reply, no quotation, no wording to copy.
 //
 // v0 table, extended by WP-U2 with `export_target_exists` (CLI-CONTRACT-COMPANION §12) and
-// the refusal contexts of W3 (propose), W4 (run an EDA request), W6 (acknowledge an
-// interruption), and W7 (export). The context comes from the payload's `command`, so the
-// frozen `describe(payload)` signature of the controller is unchanged.
+// the refusal contexts of W4 (run an EDA request), W6 (acknowledge an interruption), and
+// W7 (export). The context comes from the payload's `command`, so the frozen
+// `describe(payload)` signature of the controller is unchanged. The confirmation reasons
+// stay: the engine's preview of a confirmation (`preview effects`) can name them. The
+// `propose` context went with W3 (v0.3 narrowing, ADR 0004 amendment).
 
 const NOTHING = 'Nothing was recorded.';
 
@@ -26,6 +28,8 @@ const BY_REASON = {
   not_a_delegation: 'The engine did not read this reply as a delegation.',
   restatement_not_default: 'The proposal does not state that it is the assistant\'s recommended default.',
   delegation_not_given_at_this_pause: 'This decision needs your own words or a delegation given at this pause, in the chat.',
+  // v0.3 (WP-B): the opening of the final test is never delegated.
+  delegation_not_allowed: 'This decision is never delegated: it is recorded only in your own words, in the chat.',
   // ADR 0005 (guided confirmation).
   question_reply: 'Your reply asks a question, so it was not taken as a confirmation. Ask it in the chat first.',
   conditional_reply: 'Your reply sets a condition, keeps a reservation, or accepts only part of the proposal, so it was not taken as a confirmation. Settle it in the chat first.',
@@ -60,8 +64,8 @@ const BY_CODE = {
   unknown_execution: 'The engine does not list this execution as interrupted any more.',
   invalid_request: 'The engine refused the form of this request.',
   invalid_command: 'The engine does not accept this request.',
-  // ADR 0005: the policy, the model choice and the conclusion need a reason.
-  reason_required: 'This decision is a trade-off, so the engine records it only with your reason, in your own words.',
+  // ADR 0005; v0.3 (WP-B, R27): only the training mode needs a reason for a trade-off.
+  reason_required: 'In the training mode this decision is a trade-off, so the engine records it only with your reason, in your own words.',
   // ADR 0005, v0.2b (WP-B2): the training mode.
   paraphrase_required: 'In the training mode, a confirmation says in your own words what the proposal decides, not only that you agree. The lines below name what your reply does not say yet.',
   // WP-A9 (H3): also a stop in the guided mode until the point is raised in the chat.
@@ -74,11 +78,6 @@ const BY_CODE = {
 // `run` refusal about an execution (ambiguous words, unknown execution) is an
 // acknowledgement (W6); any other `run` refusal is an EDA request (W4).
 const BY_CONTEXT = {
-  propose: {
-    stale_revision: 'The study changed after the panel read the draft. The panel has been refreshed: look at the draft again before proposing.',
-    invalid_value: 'The engine does not accept this value as a proposal for this decision.',
-    precondition_missing: 'An earlier step must be confirmed before this decision can be proposed.',
-  },
   run: {
     stale_revision: 'The study changed after the panel showed it. The panel has been refreshed: look at the list again before asking for a chart.',
     precondition_missing: 'An earlier step of the plan must be done before this chart can be computed.',
@@ -107,10 +106,9 @@ function olderEngineExport(context, code, message) {
   return context === 'export' && code === 'invalid_arguments' && /--expected-revision/.test(message);
 }
 
-/** The refusal context of a payload: propose, run, acknowledge, export, or null. */
+/** The refusal context of a payload: run, acknowledge, export, or null. */
 function contextOf(payload, code, reason, details) {
   const command = typeof (payload && payload.command) === 'string' ? payload.command : '';
-  if (command === 'decide propose') return 'propose';
   if (command.startsWith('export')) return 'export';
   if (command === 'run') {
     const aboutExecution = code === 'ambiguous_confirmation' || code === 'unknown_execution' ||
