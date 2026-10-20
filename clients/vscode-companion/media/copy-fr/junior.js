@@ -199,8 +199,9 @@
 
   const nextMove = {
     eyebrow: 'Votre prochaine action',
-    await_user_words: { title: name => `Répondre à la proposition sur ${name}`, action: 'Répondre dans Décisions',
-      lead: "L'assistant l'a proposé dans le chat. Rien ne change tant que vous ne répondez pas avec vos mots." },
+    await_user_words: { title: name => `Répondre à la proposition sur ${name}`, action: 'Voir la proposition',
+      lead: "L'assistant l'a proposé dans le chat. Répondez dans le chat : adoptez la décision ou dites ce que vous changez.",
+      leadTraining: "L'assistant l'a proposé dans le chat. Répondez dans le chat, avec vos mots : dites ce qu'elle décide, ou ce que vous changez." },
     reconfirm: { title: name => `Confirmer de nouveau ${name}`, action: 'Ouvrir dans Décisions',
       lead: "Quelque chose sur quoi elle repose a changé : votre réponse précédente ne vaut plus tant que vous ne la confirmez pas de nouveau." },
     acknowledge_interruption: { title: () => "Une exécution s'est arrêtée avant la fin", action: "Aller à l'exécution",
@@ -218,9 +219,11 @@
     other: { title: () => 'Continuer dans le chat', action: null, lead: "L'assistant guide l'étape suivante dans le chat." },
     finalTest: {
       await: { title: () => 'Ouvrir le test final, dans le chat', action: null,
-        lead: "Une proposition d'ouvrir le test final attend votre réponse. Donnez-la dans le chat, avec vos mots et votre raison : le test final ne s'ouvre qu'une fois, et ce panneau n'a aucune commande pour cela." },
+        lead: "Une proposition d'ouvrir le test final attend votre réponse. Donnez-la dans le chat : le test final ne s'ouvre qu'une fois, et ce panneau n'a aucune commande pour cela.",
+        leadTraining: "Une proposition d'ouvrir le test final attend votre réponse. Donnez-la dans le chat, avec vos mots et votre raison : le test final ne s'ouvre qu'une fois, et ce panneau n'a aucune commande pour cela." },
       propose: { title: () => 'Étape suivante : ouvrir le test final une fois', action: null,
-        lead: "Quand le modèle et la règle sont arrêtés, dites dans le chat que vous ouvrez le test final et pourquoi. Il ne s'ouvre qu'une fois ; rien n'y est plus mesuré ensuite." },
+        lead: "Quand le modèle et la règle sont arrêtés, dites dans le chat que vous ouvrez le test final. Il ne s'ouvre qu'une fois ; rien n'y est plus mesuré ensuite.",
+        leadTraining: "Quand le modèle et la règle sont arrêtés, dites dans le chat que vous ouvrez le test final et pourquoi. Il ne s'ouvre qu'une fois ; rien n'y est plus mesuré ensuite." },
       what: (model, rule2) => `Il mesurerait ${model}${rule2 ? ` avec la règle : ${rule2.charAt(0).toLowerCase()}${rule2.slice(1)}` : ''}, une fois, sur des lignes que personne n'a regardées.`,
     },
     proposalSaid: 'La proposition dit',
@@ -238,7 +241,7 @@
   const limitText = {
     unconfirmed_decisions: "Certaines décisions ne sont pas encore confirmées par vous.",
     open_holds: "Une condition que vous avez posée est encore ouverte.",
-    conclusion_outdated: "La conclusion ne correspond plus à l'étude ; elle demande de nouveau vos mots.",
+    conclusion_outdated: "La conclusion ne correspond plus à l'étude ; elle demande de nouveau votre réponse, dans le chat.",
     inconclusive_without_choice: "L'étude n'est pas concluante et aucun choix n'est confirmé.",
     adopted_rule_not_evaluated: "La règle adoptée n'a pas d'évaluation à jour.",
     interrupted_executions: "Une exécution a une issue inconnue.",
@@ -326,7 +329,10 @@
     line: name => `Cette étude utilise le mode ${name}.`,
     rules: (mode, task, hasFinal) => {
       const choice = regression(task) ? 'le choix du modèle' : 'la règle de décision';
-      const opening = hasFinal ? "L'ouverture du test final demande aussi votre raison, et vous la donnez dans le chat uniquement." : null;
+      // v0.3 (WP-E3): the French rules follow the English ones of ADR 0005 as amended (an
+      // endorsement suffices in the guided and express modes; a reason only in training).
+      const opening = hasFinal ? (mode === 'training' ? "L'ouverture du test final demande aussi votre raison, et vous la donnez dans le chat uniquement."
+        : "L'ouverture du test final se décide dans le chat uniquement.") : null;
       if (mode === 'training') {
         return [
           "Une réponse dit avec vos mots ce que décide la proposition, ses points clés, pas seulement que vous êtes d'accord.",
@@ -338,16 +344,16 @@
       }
       if (mode === 'express') {
         return [
-          "Une réponse est une réplique à la proposition ouverte, avec vos mots, qui va dans son sens, comme en mode guidé.",
+          'Une réponse adopte la proposition ouverte, comme en mode guidé ; une raison est facultative.',
           "Une fois que vous le dites dans le chat, le critère de succès et la préparation des données peuvent être laissés à la valeur par défaut recommandée par l'assistant ; ils restent marqués comme non décidés par vous.",
-          `${choice.charAt(0).toUpperCase()}${choice.slice(1)} et la conclusion sont toujours à vous, avec votre raison.`,
+          `${choice.charAt(0).toUpperCase()}${choice.slice(1)} et la conclusion sont toujours à vous, jamais délégués.`,
           opening,
         ].filter(Boolean);
       }
       return [
-        'Une réponse est une réplique à la proposition ouverte, avec vos mots, qui va dans son sens.',
-        "Ce n'est pas une réponse si c'est seulement « ok », une question, ou une condition comme « oui, mais » ou « sauf si ».",
-        `Pour ${choice} et la conclusion, donnez aussi votre raison : pourquoi cela convient à votre situation.`,
+        "Une réponse adopte la proposition ouverte : « oui, je l'adopte » suffit, ou un oui bref à la question « Adoptez-vous cette décision ? ».",
+        "Ce n'est pas une réponse si elle pose une question ou garde une condition comme « oui, mais » ou « sauf si ».",
+        `Une raison est facultative, aussi pour ${choice} et la conclusion ; sans raison, l'enregistrement indique « aucune raison donnée ».`,
         opening,
         "Quand l'assistant soulève un point sur votre raison, vous pouvez garder vos mots ; le point est enregistré à côté.",
       ].filter(Boolean);

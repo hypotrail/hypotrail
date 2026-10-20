@@ -265,8 +265,11 @@
 
   const nextMove = {
     eyebrow: 'Your next move',
-    await_user_words: { title: name => `Answer the proposal on ${name}`, action: 'Answer in Decisions',
-      lead: 'The assistant proposed this in the chat. Nothing changes until you answer in your own words.' },
+    // v0.3 (WP-E3, R23): decisions are answered in the chat only; the button only shows the
+    // proposal. `leadTraining`: the training mode, where an answer restates in the junior's words.
+    await_user_words: { title: name => `Answer the proposal on ${name}`, action: 'See the proposal',
+      lead: 'The assistant proposed this in the chat. Answer in the chat: adopt the decision or say what you change.',
+      leadTraining: 'The assistant proposed this in the chat. Answer in the chat, in your own words: say what it decides, or what you change.' },
     reconfirm: { title: name => `Confirm ${name} again`, action: 'Open in Decisions',
       lead: 'Something it rests on changed, so your earlier answer no longer holds until you confirm it again.' },
     acknowledge_interruption: { title: () => 'A run stopped before it finished', action: 'Go to the run',
@@ -286,9 +289,11 @@
     // to the chat; it never offers a control that opens it.
     finalTest: {
       await: { title: () => 'Open the final test, in the chat', action: null,
-        lead: 'A proposal to open the final test waits for your answer. Give it in the chat, in your own words: the final test opens once, and this panel has no control for it.' },
+        lead: 'A proposal to open the final test waits for your answer. Give it in the chat: the final test opens once, and this panel has no control for it.',
+        leadTraining: 'A proposal to open the final test waits for your answer. Give it in the chat, in your own words and with your reason: the final test opens once, and this panel has no control for it.' },
       propose: { title: () => 'Next step: open the final test once', action: null,
-        lead: 'When the model and the rule are settled, say in the chat that you open the final test and why. It opens once; nothing is measured on it again.' },
+        lead: 'When the model and the rule are settled, say in the chat that you open the final test. It opens once; nothing is measured on it again.',
+        leadTraining: 'When the model and the rule are settled, say in the chat that you open the final test and why. It opens once; nothing is measured on it again.' },
       what: (model, rule) => `It would measure ${model}${rule ? ` with the rule: ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}, once, on rows nobody has looked at.`,
     },
     proposalSaid: 'The proposal says',
@@ -327,7 +332,7 @@
   const limitText = {
     unconfirmed_decisions: 'Some decisions are not confirmed by you yet.',
     open_holds: 'A condition you set is still open.',
-    conclusion_outdated: 'The conclusion no longer matches the study; it needs your words again.',
+    conclusion_outdated: 'The conclusion no longer matches the study; it needs your answer again, in the chat.',
     inconclusive_without_choice: 'The study is inconclusive and no choice is confirmed.',
     adopted_rule_not_evaluated: 'The adopted rule has no current evaluation.',
     interrupted_executions: 'A run has an unknown outcome.',

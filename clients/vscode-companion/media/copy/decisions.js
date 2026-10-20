@@ -75,7 +75,7 @@
     answerInChatHint: 'Confirm, change, or withdraw this proposal in the chat with your assistant. This panel records no decision.',
     ask: 'Ask the agent about this',
     askQuestion: 'Can you explain this proposal and what confirming it would change in my study?',
-    queueTitle: 'Needs your words again',
+    queueTitle: 'Needs your answer again',
     previously: 'Previously: ',
     openNew: 'Open the new proposal',
     noNewProposal: 'No new proposal yet. Ask the agent to propose it again.',
@@ -119,7 +119,8 @@
     modeOther: 'This mode is described in the chat; the panel shows its name only.',
     // WP-B5: the opening of the final test is a chat act; its card explains and points there.
     finalTestTitle: 'Answer this one in the chat',
-    finalTestBody: 'Opening the final test is decided in the chat, in your own words. This panel has no field and no button for it.',
+    finalTestBody: 'Opening the final test is decided in the chat. This panel has no field and no button for it.',
+    finalTestBodyTraining: 'Opening the final test is decided in the chat, in your own words and with your reason. This panel has no field and no button for it.',
     finalTestOnce: 'The final test opens once. Afterwards it is never measured again, and anything changed is marked as made after it.',
     modeChange: 'The mode changes only in the chat, in your own words; this panel cannot change it.',
     atRevision: rev => `revision ${rev}`,
