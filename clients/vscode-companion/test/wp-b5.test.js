@@ -169,8 +169,10 @@ test('EV-12: diagnostics are read from current diag.* results in the frozen shap
   assert.equal(rm.qq.length, rraw.qq.points.length);
   assert.equal(rm.heteroscedasticity.flag, rraw.heteroscedasticity.flag);
   assert.equal(r[0].smearingApplies, false);
-  // No diagnostic in an evidence captured before any run.
-  assert.deepEqual(toEvidenceModel(payload('captured/evidence.binary')).diagnostics, []);
+  // v0.3 (WP-F1, R28): the main Bank capture runs its development diagnostics where the
+  // plan requires them (at the adopted rule), and nothing else.
+  assert.deepEqual(toEvidenceModel(payload('captured/evidence.binary')).diagnostics
+    .map(x => [x.slot, x.evidence]), [['diag.binary', 'development']]);
 });
 
 test('DC-10: a waiting final_test proposal is not counted on the Decisions badge (a chat act)', () => {
