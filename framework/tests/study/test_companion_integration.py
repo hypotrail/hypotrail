@@ -57,7 +57,9 @@ def test_the_eda_catalog_is_the_eda_activities_of_the_task(task):
     expected = tuple(a for a in act.task_activities(task) if a in act.EDA)
     assert cmd_evidence.EDA_CATALOG[task] == expected
     assert act.QUALITY in expected and act.SIGNAL in expected
-    assert cmd_evidence.DEVELOPMENT_EDA == (act.QUALITY,)
+    # v0.3 (WP-E2): the predictor correlation matrix reads the development rows too (no target).
+    assert cmd_evidence.DEVELOPMENT_EDA == (act.QUALITY, act.CORRELATION)
+    assert act.CORRELATION in expected
     assert act.DISTRIBUTION in expected, 'the shared activity is offered to both tasks'
     assert set(cmd_evidence.PER_COLUMN_ROLES) == set(act.PER_COLUMN)
     assert cmd_evidence.PER_COLUMN_ROLES[act.DISTRIBUTION] == act.DISTRIBUTION_ROLES
