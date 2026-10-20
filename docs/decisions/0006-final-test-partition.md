@@ -1,6 +1,6 @@
 # ADR 0006: A final test sealed at `init`
 
-- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics (WP-B4): on out-of-fold predictions before the opening, on the final test after it (CLI-CONTRACT §13).
+- Status: accepted and implemented in v0.2a (WP-A3); amended and implemented in v0.2b (WP-B1): the opening ritual and cross-validation (see the amendment below). Diagnostics (WP-B4): on out-of-fold predictions before the opening, on the final test after it (CLI-CONTRACT §13). The "one variant" of the WP-B1 amendment (decision 4) is replaced in v0.3 by up to three variants within a trial budget, nested tuning and model families ([ADR 0007](0007-trial-budget-and-model-families.md)).
 - Date: 19 October 2026
 - Sources: [V0.2-REVIEW-SYNTHESIS.md](../plans/V0.2-REVIEW-SYNTHESIS.md) §3 and §4 (owner decision 6, "holdout assigned and sealed at `init`"), [V0.2-IMPLEMENTATION-PLAN.md](../plans/V0.2-IMPLEMENTATION-PLAN.md) WP-A3
 - Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) §4.1, [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md) §Order

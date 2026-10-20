@@ -30,6 +30,7 @@ from mlkit.reliability import CommandRefused
 
 from . import records as rec
 from . import state as st
+from . import trials
 
 POLICY_EVALUATION = 'policy.evaluation'
 REGRESSION_EVALUATION = 'evaluate.regression'
@@ -165,12 +166,15 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
         verdict = value.get('verdict') if isinstance(value, Mapping) else None
         if st.task_of(state) == st.REGRESSION:
             choice = state['decisions']['model_choice']
+            # v0.3 (WP-F1): a chosen variant is a model too.
             if verdict == 'adopt_model' and not (
-                    _confirmed(state, 'model_choice') and choice['value'] == REGRESSION_CANDIDATE):
+                    _confirmed(state, 'model_choice')
+                    and (choice['value'] == REGRESSION_CANDIDATE
+                         or trials.is_variant_slot(choice['value']))):
                 missing.append({**_need_decision(state, 'model_choice'),
                                 'detail': f'Concluding adopt_model needs model_choice confirmed '
-                                          f'as {REGRESSION_CANDIDATE}; otherwise conclude '
-                                          f'keep_baseline.'})
+                                          f'as {REGRESSION_CANDIDATE} or a variant; otherwise '
+                                          f'conclude keep_baseline.'})
         elif verdict == 'adopt_policy' and not _confirmed(state, 'policy'):
             missing.append({**_need_decision(state, 'policy'),
                             'detail': 'Adopt a policy first, or conclude keep_baseline or '
@@ -196,8 +200,11 @@ def final_test_missing(state: Mapping, value: Any = None) -> list[dict]:
                         'detail': 'The final test opens the configuration the study chose; '
                                   'propose it as chosen.'})
     # WP-B4: stale diagnostics describe the choice, they do not make it: they never block.
+    # v0.3 (WP-F1): a variant the decision no longer names is not part of the choice.
+    declared = trials.declared_slots(state)
     stale = sorted(slot for slot, rid in state['current'].items()
-                   if rid in state['stale'] and not slot.startswith(('eda.', 'diag.')))
+                   if rid in state['stale'] and not slot.startswith(('eda.', 'diag.'))
+                   and not (trials.is_variant_slot(slot) and slot not in declared))
     if stale:
         missing.append({'requirement': 'nothing_stale', 'slots': stale,
                         'detail': 'Some results are stale: run them again before opening the '
@@ -208,9 +215,8 @@ def final_test_missing(state: Mapping, value: Any = None) -> list[dict]:
         missing.append({'requirement': 'nothing_to_reconfirm', 'decisions': again,
                         'detail': 'Confirm these decisions again before opening the final test.'})
     task = st.task_of(state)
-    slots = list(FIT_SLOTS[task]) + [VARIANT_FIT,
-                                     POLICY_EVALUATION if task == st.BINARY
-                                     else REGRESSION_EVALUATION]
+    slots = list(FIT_SLOTS[task]) + (declared or [VARIANT_FIT]) + [
+        POLICY_EVALUATION if task == st.BINARY else REGRESSION_EVALUATION]
     for slot in slots:
         if not st.is_current(state, slot):
             missing.append({'requirement': 'result_current', 'slot': slot,
@@ -260,22 +266,32 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
     if not st.is_current(state, SPLIT_SLOT):
         missing.append({'requirement': 'result_current', 'slot': SPLIT_SLOT,
                         'detail': 'Split the data before exploring or fitting it.'})
-    if activity == VARIANT_FIT and st.has_wp_b1_decisions(state) \
-            and not _confirmed(state, st.MODEL_VARIANT):
-        missing.append({**_need_decision(state, st.MODEL_VARIANT),
-                        'detail': 'Name the variant to compare before fitting it.'})
+    if trials.is_variant_slot(activity) and st.has_wp_b1_decisions(state):
+        if not _confirmed(state, st.MODEL_VARIANT):
+            missing.append({**_need_decision(state, st.MODEL_VARIANT),
+                            'detail': 'Name the variant to compare before fitting it.'})
+        elif activity not in trials.declared_slots(state):
+            # v0.3 (WP-F1): variants 2 and 3 exist once the decision names them.
+            missing.append({'requirement': 'variant_declared', 'slot': activity,
+                            'declared': trials.declared_slots(state),
+                            'detail': 'The variant decision does not name this variant.'})
     if activity.startswith(('policy.', 'evaluate.', 'diag.')):
         # WP-B4: the diagnostics read the predictions the evaluation reads.
         for slot in FIT_SLOTS[st.task_of(state)]:
             if not st.is_current(state, slot):
                 missing.append({'requirement': 'result_current', 'slot': slot})
         if st.has_wp_b1_decisions(state):
-            # WP-B1: the evaluation compares the variant the junior named with the candidate.
+            # WP-B1: the evaluation compares the variant the junior named with the candidate
+            # (v0.3, WP-F1: every variant named). The diagnostics run after the first fit,
+            # before any variant is named (R28), and compare the variants once they are.
             if not _confirmed(state, st.MODEL_VARIANT):
-                missing.append({**_need_decision(state, st.MODEL_VARIANT),
-                                'detail': 'Name the variant to compare before evaluating.'})
-            elif not st.is_current(state, VARIANT_FIT):
-                missing.append({'requirement': 'result_current', 'slot': VARIANT_FIT})
+                if not activity.startswith('diag.'):
+                    missing.append({**_need_decision(state, st.MODEL_VARIANT),
+                                    'detail': 'Name the variant to compare before evaluating.'})
+            else:
+                for slot in trials.declared_slots(state):
+                    if not st.is_current(state, slot):
+                        missing.append({'requirement': 'result_current', 'slot': slot})
     return missing
 
 

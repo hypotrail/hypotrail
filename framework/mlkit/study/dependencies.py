@@ -35,6 +35,7 @@ from typing import Any, Mapping
 
 from . import records as rec
 from . import state as st
+from . import trials
 from .errors import StudyError
 
 EFFECT_KEYS = ('refit', 're_eda', 're_policy', 're_chart', 're_explain', 'reconfirm')
@@ -277,9 +278,31 @@ def effects_at(old_state: Mapping, decision_id: str, old: Any, new: Any,
                diag_rule: str | None = None) -> dict:
     """:func:`effects`, with ``diag_rule`` (v0.3, WP-A, R34): the rule the current binary
     diagnostics were computed at, when the caller read it from the registry. Pure."""
-    return _diagnostics_follow_the_rule(old_state, decision_id, old, new,
-                                        _effects(old_state, decision_id, old, new),
-                                        diag_rule=diag_rule)
+    out = _diagnostics_follow_the_rule(old_state, decision_id, old, new,
+                                       _effects(old_state, decision_id, old, new),
+                                       diag_rule=diag_rule)
+    return _diagnostics_follow_the_variants(old_state, decision_id, out)
+
+
+DIAG_SLOTS = ('diag.binary', 'diag.regression')
+
+
+def _diagnostics_follow_the_variants(old_state: Mapping, decision_id: str, out: dict) -> dict:
+    """v0.3 (WP-F1, R28): the development diagnostics describe the candidate and the
+    variants the junior named; a confirmed variant decision that names other variants (its
+    first confirmation included) makes them stale, so they are run again once the variants
+    are fitted. A question reworded changes no variant and keeps them current."""
+    if decision_id != st.MODEL_VARIANT or out['mutation'] == 'unchanged_value':
+        return out
+    slots = [s for s in DIAG_SLOTS if s in old_state.get('current', {})]
+    if not slots:
+        return out
+    out['recompute'] = sorted(set(out['recompute']) | set(slots))
+    out['re_chart'] = sorted(set(out['re_chart']) | set(slots))
+    out['notes'] = list(out['notes']) + ['The diagnostics compare the candidate with the '
+                                         'variants: they are run again once the variants are '
+                                         'fitted.']
+    return out
 
 
 # WP-B4: the binary diagnostics are computed at one rule (the adopted one when there is one).
@@ -313,6 +336,14 @@ def _effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
         return no_effects('first_confirmation', f'{decision_id} confirmed for the first time')
     if decision_id in decisions and rec.canonical(old) == rec.canonical(new):
         return no_effects('unchanged_value', f'{decision_id} confirmed again with the same value')
+    if decision_id == st.MODEL_VARIANT and isinstance(old, Mapping) \
+            and isinstance(new, Mapping) \
+            and [trials.spec_key(v) for v in trials.variants_of(old)] \
+            == [trials.spec_key(v) for v in trials.variants_of(new)]:
+        # v0.3 (WP-F1): the same variants (a v0.2b value restated as a list, or a question
+        # reworded): no model changes.
+        return no_effects('unchanged_value', 'model_variant confirmed again with the same '
+                                             'variants')
     mutation = classify(decision_id, old, new)
     table = BY_MUTATION_BY_TASK[st.task_of(old_state)]
     spec = table.get(mutation, table['unknown'])
@@ -323,7 +354,14 @@ def _effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
                                           'results no longer refer to these bytes. Start a new '
                                           'study on the new data.',
                          details={'mutation': decision_id, 'old': old, 'new': new})
-    return _table_effects(old_state, decision_id, mutation, spec, new)
+    out = _table_effects(old_state, decision_id, mutation, spec, new)
+    if mutation == 'model_variant':
+        # v0.3 (WP-F1): only the variants whose model changed (or that are no longer named)
+        # are fitted again; a variant added is fitted for the first time.
+        out['refit'] = trials.changed_slots(old, new)
+        out['re_chart'] = sorted(set(out['refit'] + out['re_eda'] + out['re_policy']
+                                     + out['recompute']))
+    return out
 
 
 def _table_effects(old_state: Mapping, decision_id: str, mutation: str, spec: Mapping,
@@ -355,8 +393,10 @@ def _table_effects(old_state: Mapping, decision_id: str, mutation: str, spec: Ma
     # later change is shown as made after the final test instead).
     reconfirm = [d for d in reconfirm if d != st.FINAL_TEST]
     if st.has_wp_b1_decisions(old_state) and mutation in VARIANT_REFITS:
-        # The variant is the candidate with one change: what refits the candidate refits it.
-        out['refit'] = sorted(set(out['refit']) | {VARIANT_SLOT})
+        # The variant is the candidate with one change: what refits the candidate refits it
+        # (v0.3, WP-F1: every variant).
+        named = [s for s in trials.VARIANT_SLOTS[1:] if s in old_state.get('current', {})]
+        out['refit'] = sorted(set(out['refit']) | {VARIANT_SLOT} | set(named))
     explain = list(spec.get('re_explain', ())) + reconfirm
     if decision_id in decisions and decision_id not in explain:
         explain.insert(0, decision_id)
@@ -590,13 +630,16 @@ def apply_hold(state: dict, decision_id: str, note_id: str, *, revision: int) ->
 # conclusion were confirmed on evaluations computed from the split and the fits.
 RESTS_ON = {'split': ('policy', 'conclusion'), 'fit.baseline': ('policy', 'conclusion'),
             'fit.logistic': ('policy', 'conclusion'),
-            # WP-B1: the choice compares the variant too.
-            'fit.variant': ('policy', 'conclusion')}
+            # WP-B1: the choice compares the variant too (v0.3, WP-F1: every variant).
+            'fit.variant': ('policy', 'conclusion'), 'fit.variant:2': ('policy', 'conclusion'),
+            'fit.variant:3': ('policy', 'conclusion')}
 # In a regression study the model choice and the conclusion rest on the split and the fits.
 REGRESSION_RESTS_ON = {'split': ('model_choice', 'conclusion'),
                        'fit.baseline': ('model_choice', 'conclusion'),
                        'fit.linear': ('model_choice', 'conclusion'),
-                       'fit.variant': ('model_choice', 'conclusion')}
+                       'fit.variant': ('model_choice', 'conclusion'),
+                       'fit.variant:2': ('model_choice', 'conclusion'),
+                       'fit.variant:3': ('model_choice', 'conclusion')}
 RESTS_ON_BY_TASK = {st.BINARY: RESTS_ON, st.REGRESSION: REGRESSION_RESTS_ON}
 
 

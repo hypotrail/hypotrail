@@ -306,9 +306,18 @@ def test_the_plan_of_a_new_study_names_a_variant_and_may_open_the_final_test(sta
     for slot in ('split', 'eda.target_rate', 'eda.special_values', 'fit.baseline',
                  'fit.logistic'):
         state['current'][slot] = f'r_{slot}'
+    # v0.3 (WP-F1, R28): the diagnostics of the first linear fit come before the variants.
+    assert st.next_action(state) == {**st.next_action(state), 'kind': 'run',
+                                     'activity': 'diag.binary'}
+    state['current']['diag.binary'] = 'r_diag'
     action = st.next_action(state)
+    # v0.3 (WP-F1): the drafted variant is the penalty tuned by nested cross-validation,
+    # declared with its question.
     assert action == {**action, 'kind': 'propose', 'decision': 'model_variant',
-                      'default_value': {'kind': 'regularisation', 'strength': 'strong'}}
+                      'default_value': {'variants': [{
+                          'kind': 'tuned', 'question': 'Does a penalty chosen by nested '
+                                                       'cross-validation rank the rows better '
+                                                       'than the default penalty?'}]}}
     _confirm(state, 'model_variant', action['default_value'])
     assert st.next_action(state)['activity'] == 'fit.variant'
     state['current']['fit.variant'] = 'r_variant'

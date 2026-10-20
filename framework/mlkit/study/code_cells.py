@@ -611,6 +611,47 @@ assert abs(np.mean(({p}score - {p}y) ** 2) - {p}model["calibration"]["brier"]) <
     return name, code
 
 
+def selection_cell(view: Mapping, task: str) -> tuple[str, str] | None:
+    """v0.3 (WP-F1): the comparison of the candidate and the variants, fold by fold, as a
+    pandas table built from the fits' registered per-fold metrics; the mean, the standard
+    error, the one-standard-error pick and the selection optimism recomputed and asserted
+    equal to the ``selection`` the evaluation stored."""
+    slot = 'evaluate.regression' if task == 'regression' else 'policy.evaluation'
+    item = _current(view, slot)
+    selection = (item or {}).get('values', {}).get('selection') if item else None
+    if not isinstance(selection, Mapping) or not selection.get('available'):
+        return None
+    slots = [c.get('slot') for c in selection.get('configurations') or []]
+    if not slots or any(_current(view, s) is None for s in slots):
+        return None
+    metric = selection['metric']
+    best = 'idxmax' if selection.get('direction') == 'higher' else 'idxmin'
+    gap = ('per_fold.max(axis=1) - per_fold[best]' if best == 'idxmax'
+           else 'per_fold[best] - per_fold.min(axis=1)')
+    code = f'''evaluation = nv.values(study, RESULT_IDS[{q(slot)}])
+selection = evaluation["selection"]
+# One column per configuration: its out-of-fold {metric} in each fold, from its fit.
+per_fold = pd.DataFrame({{
+    _slot: [f[{q(metric)}] for f in nv.values(study, RESULT_IDS[_slot])["cross_validation"]["per_fold"]]
+    for _slot in [c["slot"] for c in selection["configurations"]]}})
+per_fold.index = pd.RangeIndex(1, len(per_fold) + 1, name="fold")
+summary = per_fold.agg(["mean", "std"]).T
+summary["se"] = summary["std"] / np.sqrt(len(per_fold))
+best = summary["mean"].{best}()
+optimism = ({gap}).mean()
+print(per_fold)
+print(summary)
+print(f"best mean: {{best}}, one-standard-error pick: {{selection['one_se']['pick']}}, "
+      f"optimism {{optimism:.4f}}")
+
+for _c in selection["configurations"]:
+    assert abs(summary.loc[_c["slot"], "mean"] - _c["mean"]) < TOLERANCE
+    assert abs(summary.loc[_c["slot"], "se"] - _c["se"]) < TOLERANCE
+assert best == selection["best"]
+assert abs(optimism - selection["optimism"]["estimate"]) < TOLERANCE'''
+    return 'recompute_selection', code
+
+
 def cells_by_step(view: Mapping, task: str, target: str | None,
                   positive: Any) -> dict[str, list[tuple[str, str]]]:
     """Step id -> recomputation cells (name, code), in notebook order."""
@@ -639,6 +680,10 @@ def cells_by_step(view: Mapping, task: str, target: str | None,
             policy = policy_cell(view)
             if policy:
                 out['policy'] = [policy]
+    # v0.3 (WP-F1): the variants compared fold by fold, with the variant step.
+    compared = selection_cell(view, task)
+    if compared:
+        out['model_variant'] = [compared]
     # WP-B4: the diagnostics, with the choice they describe and with the final test.
     choice = 'model_choice' if task == 'regression' else 'policy'
     development = diagnostics_cell(view, task)

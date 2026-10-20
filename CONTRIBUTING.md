@@ -16,7 +16,7 @@ The framework is a uv project (`framework/pyproject.toml`, locked by `framework/
 uv sync --project framework --group dev
 ```
 
-Add `--group browser` for local browser tests, then install Chromium with `uv run --project framework python -m playwright install chromium`. The optional EBM baseline (`interpret-core`) is not a core dependency. Do not run `uv init` in this project, and do not reuse an environment copied from another checkout.
+Add `--group browser` for local browser tests, then install Chromium with `uv run --project framework python -m playwright install chromium`. `interpret-core` (MIT, pinned) is a core dependency since v0.3: the study engine fits the Explainable Boosting Machine as a model family ([ADR 0007](docs/decisions/0007-trial-budget-and-model-families.md)); the legacy `mlkit.baselines` EBM baseline uses the same package. Do not run `uv init` in this project, and do not reuse an environment copied from another checkout.
 
 ## Engine checks
 

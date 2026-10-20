@@ -138,11 +138,13 @@ The notebook contains code, results, explanation, and chart exploration. HTML sh
 
 A threshold chosen on validation remains exploratory. Missed observed subscriptions are not causally established lost sales. Historical observations do not establish future-campaign performance.
 
+**Variants and model families (v0.3, [ADR 0007](../decisions/0007-trial-budget-and-model-families.md)).** After the first logistic fit, the engine runs its diagnostics as the next step of the plan; the junior does not have to ask. The diagnostics check whether the linear model misses a shape in a numeric variable, an interaction with a segment, or a calibration slope away from one. The junior then names up to three variants, each with the question it answers. The engine drafts the first: the penalty chosen by nested cross-validation, one trial. It proposes a non-linear family (an Explainable Boosting Machine first, gradient boosting when the case allows a black box) only when the diagnostics flagged something, shows that evidence, and says that this choice is data-contingent. Each variant is compared with the candidate on the same folds, with a paired difference and its noise. The engine names the configuration the one-standard-error rule keeps, states the approximate optimism of picking the best, and advises stopping when the differences stay within the noise between folds or the budget is used. The junior then chooses one configuration and one rule, and the diagnostics run again at the adopted rule, confusion matrix included, before the final test is opened.
+
 **Conclusion and resumption.** Explain use, protocol, trials, results, limits, and next action. Keeping the reference or finding no sufficiently supported improvement are valid outcomes. A fresh chat reconstructs, for example: “Pre-call prediction is confirmed, duration is excluded, EDA and the first comparison are available; the next choice concerns simulated contact volume.” This comes from persistent state.
 
 ## Scientific validity
 
-Fit preprocessing on training data. Tie predictions and metrics to the declared protocol. Record trials, model selection, and threshold exploration. Budget exhaustion is not evidence of convergence.
+Fit preprocessing on training data. Tie predictions and metrics to the declared protocol. Record trials, model selection, and threshold exploration. Budget exhaustion is not evidence of convergence. Hyperparameters are chosen inside each outer fold (nested cross-validation), never on the rows that score them, and every variant confirmed counts against a budget of three, replaced ones included.
 
 Current, stale, and exploratory describe different dimensions. Recalculation can restore freshness without independence. A new split does not erase prior exposure. Public data already explored does not become an unseen final test during a fresh demonstration.
 

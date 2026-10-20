@@ -26,6 +26,7 @@ import hashlib
 import json
 from typing import Any, Mapping
 
+from . import trials
 from .case import EPISTEMIC_STATUSES, Case, require_supported
 from .errors import StudyError
 
@@ -382,16 +383,20 @@ FULL_REGRESSION_STEP_IDS = tuple(s['id'] for s in FULL_REGRESSION_STEPS)
 # final test follows the choice; it is optional for the plan (a study that keeps the
 # baseline opens nothing), so a blocked opening never hides the conclusion
 # (:func:`next_action`).
+# v0.3 (WP-F1, ADR 0007): up to three variants, each declared with its question; the step's
+# activities are the slots of the variants the decision names (:func:`steps`).
 VARIANT_STEP = {
     'id': MODEL_VARIANT, 'pause': 3, 'decision': MODEL_VARIANT, 'activities': ('fit.variant',),
     'requires': ('models',),
-    'title': 'Choose one variant to compare',
-    'question': 'Which single variant of the candidate model should be compared with it under '
-                'the same evaluation: a stronger or weaker regularisation, or the model without '
-                'one group of variables?',
-    'expected_output': 'A confirmed variant and its out-of-fold predictions, evaluated like the '
-                       'candidate.',
-    'completion': 'Decision model_variant is confirmed and the variant fit is current.'}
+    'title': 'Choose the variants to compare',
+    'question': 'Which variants of the candidate model, at most three and each with the '
+                'question it answers, should be compared with it under the same evaluation: '
+                'the penalty chosen by nested cross-validation, a stronger or weaker '
+                'regularisation, the model without one group of variables, or another model '
+                'family when the diagnostics show a pattern the linear model cannot follow?',
+    'expected_output': 'A confirmed list of variants and their out-of-fold predictions, '
+                       'evaluated like the candidate.',
+    'completion': 'Decision model_variant is confirmed and every variant fit is current.'}
 FINAL_TEST_STEP = {
     'id': FINAL_TEST, 'pause': 3, 'decision': FINAL_TEST,
     'activities': ('final_test.evaluation',), 'requires': (),
@@ -600,6 +605,33 @@ def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]
     return table[task_of(state)][decision_id]
 
 
+DIAG_SLOT = {BINARY: 'diag.binary', REGRESSION: 'diag.regression'}
+
+
+def _wp_f1_steps(state: Mapping | str | None, out: tuple) -> tuple:
+    """v0.3 (WP-F1, R28): the variant step runs the slots of the variants the decision
+    names (``fit.variant`` while none is named), and the development diagnostics are part of
+    the plan: after the model fits while no variant is named (the diagnostics of the first
+    linear fit, which the shortlist of families reads), then with the choice (run again
+    once the variants are fitted, and again at the adopted rule)."""
+    if not isinstance(state, Mapping) or not isinstance(state.get('decisions'), Mapping):
+        return out
+    diag = DIAG_SLOT[task_of(state)]
+    decided = trials.confirmed_value(state) is not None
+    slots = tuple(trials.declared_slots(state)) or ('fit.variant',)
+    choice = choice_decision(state)
+    result = []
+    for step in out:
+        if step['id'] == MODEL_VARIANT:
+            step = dict(step, activities=slots)
+        elif step['id'] == 'models' and not decided:
+            step = dict(step, activities=tuple(step['activities']) + (diag,))
+        elif step['id'] == choice:
+            step = dict(step, activities=tuple(step['activities']) + (diag,))
+        result.append(step)
+    return tuple(result)
+
+
 def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
     the data" and its own five decisions' steps (the models then need the split only)."""
@@ -608,7 +640,7 @@ def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
         if uses_cross_validation(state):
             texts = CV_STEP_TEXTS_BY_TASK[task_of(state)]
             out = tuple(dict(s, **texts.get(s['id'], {})) for s in out)
-        return out
+        return _wp_f1_steps(state, out)
     full = FULL_STEPS_BY_TASK[task_of(state)]
     if has_wp_a4_decisions(state):
         return full
@@ -1252,10 +1284,18 @@ CV_KEYS = ('method', 'folds', 'seed')
 DEFAULT_FOLDS = 5
 MIN_FOLDS, MAX_FOLDS = 3, 10
 DEFAULT_CV_SEED = 20261017
-# The variant of the candidate (decision ``model_variant``): one kind, one parameter.
-VARIANT_KINDS = ('regularisation', 'drop_group')
-VARIANT_STRENGTHS = ('weak', 'strong')
+# The variants of the candidate (decision ``model_variant``, :mod:`mlkit.study.trials`): v0.2b
+# had one variant of the first two kinds; v0.3 (WP-F1) names up to three, of four kinds.
+VARIANT_KINDS = trials.KINDS
+VARIANT_STRENGTHS = trials.STRENGTHS
+# The v0.2b draft (kept: a value of this form is still accepted, read as one variant).
 DEFAULT_VARIANT = dict(kind='regularisation', strength='strong')
+
+
+def default_variant(state: Mapping) -> dict:
+    """v0.3 (WP-F1): the engine's drafted variant, the candidate's penalty chosen by nested
+    cross-validation (one trial), with its question in the study language."""
+    return trials.draft(task_of(state), language_of(state))
 
 
 def is_cv_split(value) -> bool:
@@ -1299,7 +1339,7 @@ def b1_default_value(state: Mapping, decision_id: str):
     if decision_id == 'split':
         return {'method': cv_method(state), 'folds': DEFAULT_FOLDS, 'seed': DEFAULT_CV_SEED}
     if decision_id == MODEL_VARIANT:
-        return dict(DEFAULT_VARIANT)
+        return default_variant(state)
     if decision_id == FINAL_TEST:
         return choice_config(state)
     return None

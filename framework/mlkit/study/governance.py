@@ -320,7 +320,7 @@ def _regression_model(decisions: Mapping, proposals: list) -> str:
         candidates.append(choice.get('value'))
     candidates += [p['value'] for p in proposals if p.get('decision_id') == 'model_choice']
     for c in candidates:
-        if c in ('fit.linear', 'fit.variant'):
+        if c == 'fit.linear' or c in ('fit.variant', 'fit.variant:2', 'fit.variant:3'):
             return c
     return 'fit.linear'
 

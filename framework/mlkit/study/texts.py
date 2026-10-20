@@ -183,6 +183,9 @@ def step(step_id: str, task: str | None = None) -> dict:
     return out
 
 
+VARIANT_ORDINALS = {'2': 'second', '3': 'third'}
+
+
 def activity(slot: str, task: str | None = None) -> dict:
     """Display specification of an activity slot (an empty spec for an unknown slot).
 
@@ -205,7 +208,11 @@ def activity(slot: str, task: str | None = None) -> dict:
     base, sep, column = slot.partition(':')
     if sep and base in specs:
         spec = dict(specs[base])
-        spec['label'] = f'{spec.get("label", base)}: {column}'
+        ordinal = VARIANT_ORDINALS.get(column) if base == 'fit.variant' else None
+        # v0.3 (WP-F1): the second and third variants, in words (a digit in a label would
+        # read as an uncited number).
+        spec['label'] = (f'{spec.get("label", base)}, the {ordinal} one' if ordinal
+                         else f'{spec.get("label", base)}: {column}')
         return spec
     return {}
 

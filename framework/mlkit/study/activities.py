@@ -86,6 +86,7 @@ from . import preconditions as pre
 from . import records as rec
 from . import partition
 from . import registry
+from . import trials
 from .errors import StudyError
 
 SPLIT = 'split'
@@ -140,7 +141,10 @@ def task_activities(task: str) -> tuple[str, ...]:
     (WP-B4) the diagnostics."""
     return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES + B1_ACTIVITIES + DIAG_ACTIVITIES[task]
 ALIASES = {'policy.evaluate': POLICY}
-CLI_NAMES = ACTIVITIES + tuple(ALIASES)
+# v0.3 (WP-F1): the second and third variants are run by their slot name
+# (``fit.variant:2``); the first keeps ``fit.variant``.
+VARIANT_SLOT_NAMES = trials.VARIANT_SLOTS[1:]
+CLI_NAMES = ACTIVITIES + tuple(ALIASES) + VARIANT_SLOT_NAMES
 EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION, QUALITY,
        SIGNAL, CORRELATION)
 # The EDA activities that read the development rows without the target and need no split.
@@ -164,21 +168,25 @@ MODULES = {
     BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics'),
     LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical',
                'mlkit.study.governance'),
-    POLICY: (_BASE, 'mlkit.study.policy'),
+    POLICY: (_BASE, 'mlkit.study.policy', 'mlkit.study.trials'),
     TARGET_SUMMARY: (_BASE, 'mlkit.study.eda'),
     MEAN_BY: (_BASE, 'mlkit.study.eda'),
     LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical',
              'mlkit.study.governance'),
-    REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression'),
+    REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression', 'mlkit.study.trials'),
     DISTRIBUTION: (_BASE, 'mlkit.study.eda'),
     QUALITY: (_BASE, 'mlkit.study.eda'),
     CORRELATION: (_BASE, 'mlkit.study.correlation'),
     SIGNAL: (_BASE, 'mlkit.study.eda', 'mlkit.study.fit', 'mlkit.study.metrics',
              'mlkit.classical'),
+    # v0.3 (WP-F1): the model families, their grids, and the versions of the libraries that
+    # fit them (``interpret._version`` and ``sklearn`` hold the version strings).
     VARIANT: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.regression',
-              'mlkit.classical', 'mlkit.study.governance'),
+              'mlkit.classical', 'mlkit.study.governance', 'mlkit.study.families',
+              'mlkit.study.trials', 'interpret._version', 'sklearn'),
     FINAL: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.policy',
-            'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance'),
+            'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance',
+            'mlkit.study.families', 'mlkit.study.trials', 'interpret._version', 'sklearn'),
     DIAG_BINARY: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.fit', 'mlkit.study.metrics',
                   'mlkit.study.policy', 'mlkit.classical', 'mlkit.study.governance'),
     DIAG_REGRESSION: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.fit',
@@ -243,15 +251,32 @@ def slot_of(activity: str, options: Mapping | None = None) -> str:
         if not isinstance(column, str) or not column:
             raise CommandRefused('invalid_arguments', f'{activity} needs --column NAME.')
         return f'{activity}:{column}'
+    if activity == VARIANT:
+        return trials.variant_slot(int((options or {}).get('index') or 1))
     return activity
 
 
 def activity_of(slot: str) -> str:
-    """The activity of a slot (``eda.rate_by:<column>`` -> ``eda.rate_by``)."""
-    for activity in PER_COLUMN:
+    """The activity of a slot (``eda.rate_by:<column>`` -> ``eda.rate_by``,
+    ``fit.variant:2`` -> ``fit.variant``)."""
+    for activity in PER_COLUMN + (VARIANT,):
         if slot.startswith(activity + ':'):
             return activity
     return slot
+
+
+def resolve(activity: str, options: Mapping | None) -> tuple[str, dict]:
+    """v0.3 (WP-F1): a variant slot name (``fit.variant:2``) as its activity and
+    ``{"index": 2}``; any other name is returned as it is."""
+    options = dict(options or {})
+    if activity in VARIANT_SLOT_NAMES:
+        given = options.get('index')
+        index = trials.variant_index(activity)
+        if given not in (None, index):
+            raise CommandRefused('invalid_arguments', f'{activity} is variant {index}.')
+        options['index'] = index
+        return VARIANT, options
+    return activity, options
 
 
 def guard_read_only() -> None:
@@ -276,7 +301,8 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
     options = dict(options or {})
     given = {k for k, v in options.items() if v not in (None, [], ())}
     allowed = {RATE_BY: {'column', 'max_groups'}, MEAN_BY: {'column', 'max_groups'},
-               DISTRIBUTION: {'column', 'max_groups'}, POLICY: {'rules'}}.get(activity, set())
+               DISTRIBUTION: {'column', 'max_groups'}, POLICY: {'rules'},
+               VARIANT: {'index'}}.get(activity, set())
     if given - allowed:
         raise CommandRefused('invalid_arguments',
                              f'{activity} does not take {", ".join(sorted(given - allowed))}.',
@@ -308,6 +334,17 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
                 raise CommandRefused('invalid_arguments', str(exc), details={'rule': rule}) from None
             canonical.append(rec.canonical_rule(rule))
         return {'rules': list(dict.fromkeys(canonical))}
+    if activity == VARIANT:
+        # v0.3 (WP-F1): the first variant has no option, so its identity is unchanged.
+        index = options.get('index')
+        if index in (None, 1):
+            return {}
+        if isinstance(index, bool) or not isinstance(index, int) \
+                or not 1 <= index <= trials.MAX_VARIANTS:
+            raise CommandRefused('invalid_arguments',
+                                 f'A variant is numbered 1 to {trials.MAX_VARIANTS}.',
+                                 details={'index': index})
+        return {'index': index}
     return {}
 
 
@@ -388,6 +425,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
     Refusals: ``precondition_missing`` (pauses, a missing availability decision, or
     missing fits), ``invalid_arguments`` (an unknown ``--column``).
     """
+    activity, options = resolve(activity, options)
     activity = canonical(activity)
     task = state.get('task', 'binary')
     if activity not in task_activities(task):
@@ -403,7 +441,9 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                              f'the variant and the final test existed.',
                              details={'activities': [a for a in task_activities(task)
                                                      if a not in B1_ACTIVITIES], 'task': task})
-    pre.require_activity(state, activity)
+    # v0.3 (WP-F1): a variant's requirements name its slot (its index).
+    pre.require_activity(state, slot_of(activity, options) if activity == VARIANT
+                         else activity)
     case = case_of(state)
     inputs = _base_inputs(state)
     params: dict[str, Any] = {}
@@ -555,7 +595,8 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             inputs['target'] = _target(case)
             features: list[str] = []
             if activity in CANDIDATE_FITS or activity == VARIANT:
-                model_inputs, params = model_plan(state, case, activity)
+                model_inputs, params = model_plan(state, case, activity,
+                                                  index=int(options.get('index') or 1))
                 inputs.update(model_inputs)
                 features = list(inputs['features'])
             elif task == 'regression':
@@ -585,6 +626,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             inputs['residual_columns'] = columns
             params = {'models': models, 'reference': BASELINE,
                       'candidate': LINEAR, 'metrics': ['mae', 'rmse']}
+            _selection_inputs(state, inputs, models)
             if cv:
                 params['evaluation'] = 'out_of_fold'
                 expose('out_of_fold_evaluation', partition.DEVELOPMENT, keys['validation'],
@@ -598,6 +640,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
             params = {'rules': evaluated_rules(state, options['rules']), 'models': models,
                       'reference': BASELINE}
+            _selection_inputs(state, inputs, models)
             if cv:
                 params['evaluation'] = 'out_of_fold'
                 # B6c (H3): a capacity or a share is applied within each fold, so the folds
@@ -616,6 +659,29 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             'params': params,
             'inputs': inputs, 'code': code, 'input_key': key, 'exposures': exposures,
             'case_path': state['case']['path'], 'dataset_sha256': state['dataset']['sha256']}
+
+
+def _selection_inputs(state: Mapping, inputs: dict, models: list) -> None:
+    """v0.3 (WP-F1): an evaluation that compares variants also records the selection among
+    them (:func:`mlkit.study.trials.select`); its inputs name the variants (without their
+    questions) and the budget used."""
+    if not any(trials.is_variant_slot(m) for m in models):
+        return
+    from . import state as st
+    inputs['variants'] = [trials.spec_of(v) for v in
+                          trials.variants_of(state['decisions'][st.MODEL_VARIANT]['value'])]
+    inputs['trial_budget'] = trials.budget(state)
+
+
+def _selection_values(store, plan_: Mapping, models: list, task: str) -> dict | None:
+    """The stored selection of an evaluation (WP-F1), from the fits it compares."""
+    variants = plan_['inputs'].get('variants')
+    if variants is None:
+        return None
+    results = plan_['inputs']['results']
+    fits = {m: registry.get(store, results[m])['output']['values'] for m in models
+            if m != BASELINE and m in results}
+    return trials.select(fits, variants, task, plan_['inputs']['trial_budget'])
 
 
 def adopted_rule(state: Mapping) -> str | None:
@@ -666,21 +732,33 @@ def fold_assignment(store, split_rid: str) -> dict[str, int] | None:
 
 def compared_models(state: Mapping, fits: tuple) -> list[str]:
     """The model slots an evaluation compares: the baseline and the candidate, and (WP-B1)
-    the variant once the junior named it."""
+    the variant once the junior named it (v0.3, WP-F1: every variant the junior named, up to
+    three, in order)."""
     from . import state as st
     models = list(fits)
     if st.has_wp_b1_decisions(state) and \
             state['decisions'][st.MODEL_VARIANT]['status'] == 'confirmed':
-        models.append(VARIANT)
+        models += trials.declared_slots(state)
     return models
 
 
+def variant_pairs(models, candidate: str) -> list[tuple[str, str]]:
+    """The paired comparisons of an evaluation: each variant against the candidate."""
+    return [(m, candidate) for m in models if trials.is_variant_slot(m)]
+
+
 def model_plan(state: Mapping, case: c.Case, activity: str,
-               variant: Mapping | None = None) -> tuple[dict, dict]:
+               variant: Mapping | None = None, index: int = 1) -> tuple[dict, dict]:
     """``(inputs, params)`` of a model fit: the candidate (``fit.logistic`` or
-    ``fit.linear``) or the variant (``fit.variant``, from the confirmed ``model_variant``,
-    or ``variant``). Refusals: ``precondition_missing`` (a feature without an availability
-    decision, no usable feature, a variant that removes every feature or none)."""
+    ``fit.linear``) or a variant (``fit.variant``, the variant ``index`` of the confirmed
+    ``model_variant``, or ``variant``). Refusals: ``precondition_missing`` (a feature without
+    an availability decision, no usable feature, a variant that removes every feature or
+    none, a variant the decision does not declare).
+
+    v0.3 (WP-F1): the question a variant answers is not part of its identity; a ``tuned``
+    variant adds ``tuning`` (the grid of the candidate's penalty), a ``family`` variant adds
+    ``family``, its fixed ``settings``, its ``tuning`` grid, and the library ``versions``;
+    variants 2 and 3 add ``variant_index``."""
     from . import governance, state as st
     task = st.task_of(state)
     availability = state['decisions']['feature_availability']['value'] or {}
@@ -696,8 +774,14 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
                                             'or uncertain_included.'}],
             f'Running {activity}')
     if activity == VARIANT:
-        variant = dict(variant if variant is not None
-                       else state['decisions'][st.MODEL_VARIANT]['value'])
+        if variant is None:
+            declared = trials.variants_of(state['decisions'][st.MODEL_VARIANT]['value'])
+            _refuse([] if index <= len(declared) else [{
+                'requirement': 'variant_declared', 'index': index,
+                'detail': f'The variant decision declares {len(declared)} variant(s); name '
+                          f'variant {index} before fitting it.'}], f'Running {activity}')
+            variant = declared[index - 1]
+        variant = trials.spec_of(variant)
         if variant.get('kind') == 'drop_group':
             group = {v['name'] for v in case.document['variables']
                      if v['role'] == 'feature' and v.get('group') == variant['group']}
@@ -722,14 +806,31 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
         params = dict(LOGISTIC_PARAMS, seed=seed)
     if activity == VARIANT:
         inputs['variant'] = variant
-        if variant.get('kind') == 'regularisation':
+        kind = variant.get('kind')
+        if kind == 'regularisation':
             if task == st.REGRESSION:
                 params.update(model='ridge', estimator='sklearn.linear_model.Ridge',
                               alpha=VARIANT_ALPHA[variant['strength']])
             else:
                 params.update(C=VARIANT_C[variant['strength']], candidate_C=CANDIDATE_C)
-        else:
+        elif kind == 'drop_group':
             params['dropped_group'] = variant['group']
+        elif kind == 'tuned':
+            # WP-F1: the candidate's penalty chosen by nested cross-validation.
+            if task == st.REGRESSION:
+                params.update(model='ridge', estimator='sklearn.linear_model.Ridge')
+            params['tuning'] = trials.grid('linear', task)
+        elif kind == 'family':
+            family = variant['family']
+            settings = dict(trials.EBM_SETTINGS if family == 'ebm' else trials.HGB_SETTINGS)
+            params = {'model': family, 'family': family,
+                      'implementation': trials.CATALOGUE[family]['implementation'],
+                      'preprocessing': LOGISTIC_PARAMS['preprocessing'],
+                      'special_values': LOGISTIC_PARAMS['special_values'],
+                      'settings': settings, 'tuning': trials.grid(family, task),
+                      'seed': params['seed']}
+        if index > 1:
+            params['variant_index'] = index
     return inputs, params
 
 
@@ -746,8 +847,11 @@ def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
     model = config['model']
     inputs['target'] = _target(case)
     inputs['configuration'] = config
-    if model in CANDIDATE_FITS or model == VARIANT:
+    if model in CANDIDATE_FITS:
         model_inputs, model_params = model_plan(state, case, model)
+    elif trials.is_variant_slot(model):
+        model_inputs, model_params = model_plan(state, case, VARIANT,
+                                                index=trials.variant_index(model))
     else:   # the baseline was chosen (regression)
         model_inputs, model_params = {'features': [], 'special_values': []}, {}
     inputs['model_inputs'] = model_inputs
@@ -1522,7 +1626,7 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
     y = first['y']
     predictions = {slot: preds[slot]['prediction'] for slot in models}
     boot = plan_['inputs']['bootstrap']
-    pairs = [(VARIANT, LINEAR)] if VARIANT in models else []
+    pairs = variant_pairs(models, LINEAR)
     paired = regression.paired_bootstrap(y, predictions, int(boot['replicates']),
                                          int(boot['seed']), level=float(boot['level']),
                                          reference=plan_['params']['reference'], pairs=pairs)
@@ -1549,6 +1653,9 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
               'note': 'The model is chosen on these validation rows: these errors are not '
                       'independent evidence of future error. No model was refitted.'}
     out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
+    selection = _selection_values(store, plan_, models, 'regression')
+    if selection is not None:
+        values['selection'] = selection      # v0.3 (WP-F1, additive)
     if pairs or out_of_fold:
         # WP-B1 (additive): the variant against the candidate, and the evaluation scheme.
         values['comparisons'] = paired['comparisons']
@@ -1605,7 +1712,7 @@ def compute_policy(store, plan_: Mapping) -> dict:
     boot = plan_['inputs']['bootstrap']
     y = first['y']
     out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
-    pairs = [(VARIANT, LOGISTIC)] if VARIANT in models else []
+    pairs = variant_pairs(models, LOGISTIC)
     groups = policy_groups(store, plan_, first['row_keys'])
     out = {}
     for rule in plan_['params']['rules']:
@@ -1658,6 +1765,14 @@ def compute_policy(store, plan_: Mapping) -> dict:
             # to the variant can show its own gain points.
             values['gain_points_variant'] = {'model': VARIANT, **policy.gain_points(
                 y, preds[VARIANT]['score'], groups=groups)}
+        extra = [m for m in models if trials.is_variant_slot(m) and m != VARIANT]
+        if extra:
+            # v0.3 (WP-F1, additive): the same for the second and third variants.
+            values['gain_points_variants'] = {m: {'model': m, **policy.gain_points(
+                y, preds[m]['score'], groups=groups)} for m in extra}
+    selection = _selection_values(store, plan_, models, 'binary')
+    if selection is not None:
+        values['selection'] = selection      # v0.3 (WP-F1, additive)
     return {'values': values, 'blobs': {},
             'partition': partition.DEVELOPMENT if out_of_fold else 'validation',
             'n_rows': len(y)}
@@ -1739,11 +1854,25 @@ def compute_diagnostics(store, plan_: Mapping) -> dict:
         else:
             diag = dg.regression_model(y, preds[m]['prediction'], frame, keys, case, features)
         fitted = entry['output']['values']
-        diag['coefficients'] = dg.coefficient_intervals(
-            case, fitted_rows, _model_inputs(entry), entry['params'], binary,
-            fitted.get('coefficients') or {}, replicates=int(boot['replicates']),
-            seed=int(boot['seed']), level=float(boot['level']))
-        diag['coefficients']['scale'] = fitted.get('coefficient_scale')
+        if entry['params'].get('family'):
+            # v0.3 (WP-F1): a model of another family has no coefficients; its own
+            # diagnostics (the EBM's shape functions, the boosting model's permutation
+            # importance) are part of its fit result and are shown here.
+            diag['coefficients'] = None
+            diag['family_diagnostics'] = fitted.get('family_diagnostics')
+        else:
+            fit_params = dict(entry['params'])
+            development = (fitted.get('tuning') or {}).get('development') or {}
+            if fit_params.get('tuning') and development.get('value') is not None:
+                # WP-F1: the penalty the fit chose on these rows, not a new inner search.
+                fit_params['tuned_value'] = development['value']
+            diag['coefficients'] = dg.coefficient_intervals(
+                case, fitted_rows, _model_inputs(entry), fit_params, binary,
+                fitted.get('coefficients') or {}, replicates=int(boot['replicates']),
+                seed=int(boot['seed']), level=float(boot['level']))
+            diag['coefficients']['scale'] = fitted.get('coefficient_scale')
+        if fitted.get('tuning'):
+            diag['tuning'] = fitted['tuning']
         diag['predictions'] = results[m]
         out_models[m] = diag
     cv = params['evaluation'] == 'out_of_fold'
@@ -1760,6 +1889,15 @@ def compute_diagnostics(store, plan_: Mapping) -> dict:
     values['models'] = out_models
     values['coefficient_rows'] = int(len(fitted_rows))
     values['note'] = dg.DEVELOPMENT_NOTE if cv else dg.VALIDATION_NOTE
+    candidate = models[0] if models and models[0] in CANDIDATE_FITS else None
+    if candidate is not None:
+        # v0.3 (WP-F1): what the candidate linear model cannot follow, the evidence the
+        # shortlist of model families reads.
+        features = list(registry.get(store, results[candidate])['inputs'].get('features')
+                        or [])
+        values['linear_checks'] = dg.linear_checks(
+            y, preds[candidate]['score' if binary else 'prediction'], frame, case, features,
+            binary, candidate)
     return {'values': values, 'blobs': {},
             'partition': partition.DEVELOPMENT if cv else 'validation', 'n_rows': len(y)}
 

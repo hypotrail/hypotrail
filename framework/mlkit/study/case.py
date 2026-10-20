@@ -56,7 +56,13 @@ CAPABILITY_GROUPED_SPLIT = 'grouped split (v0.2)'
 TOP_REQUIRED = ('schema', 'id', 'title', 'description', 'provenance', 'dataset', 'target',
                 'row_key', 'facts', 'variables', 'special_values', 'structure', 'task')
 TOP_OPTIONAL = ('prior_exposure', 'migration', 'order', 'duplicates', 'scenario_defaults',
-                'prior_exposed_rows')
+                'prior_exposed_rows', 'constraints')
+# ``constraints`` (v0.3, WP-F1, ADR 0007): what the use case requires of a model, as
+# statements ``{value, status, source}``. ``interpretability`` is ``required`` (a black-box
+# family is never shortlisted), ``preferred`` or ``none`` (the default when absent). The
+# engine's shortlist of model families reads it (:func:`mlkit.study.trials.shortlist`).
+CONSTRAINT_KEYS = ('interpretability',)
+INTERPRETABILITY_VALUES = ('required', 'preferred', 'none')
 # ``prior_exposed_rows`` (v0.2b, WP-B6a): the rows of this dataset that were already seen
 # outside the study (published results, a tutorial), ``{path, sha256, rows, match, status,
 # source}``. ``path`` is a file inside the case directory listing their row keys, one per
@@ -531,6 +537,20 @@ def validate(document: Any) -> list[dict]:
                           'must be "scenario_assumption": a default capacity is an assumption '
                           'of the teaching scenario, never a fact about a business')
                 p.text(share['source'], 'scenario_defaults.capacity_share.source')
+    if 'constraints' in document:
+        cons = document['constraints']
+        if p.keys(cons, 'constraints', (), CONSTRAINT_KEYS):
+            if not cons:
+                p.add('constraints', 'must declare at least one constraint')
+            if 'interpretability' in cons and p.keys(cons['interpretability'],
+                                                     'constraints.interpretability',
+                                                     STATEMENT_KEYS):
+                item = cons['interpretability']
+                if item['value'] not in INTERPRETABILITY_VALUES:
+                    p.add('constraints.interpretability.value',
+                          f'must be one of {", ".join(INTERPRETABILITY_VALUES)}')
+                p.status(item['status'], 'constraints.interpretability.status')
+                p.text(item['source'], 'constraints.interpretability.source')
     if 'migration' in document:
         m = document['migration']
         if p.keys(m, 'migration', MIGRATION_REQUIRED, MIGRATION_OPTIONAL):

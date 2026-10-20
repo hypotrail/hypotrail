@@ -94,10 +94,14 @@ OTHER = '(other values)'
 # The value shapes (CLI-CONTRACT.md §13, frozen by test_contract_freeze.py).
 BINARY_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n', 'n_positive',
                'base_rate', 'rule', 'rule_source', 'segment_columns', 'segment_rule', 'models',
-               'coefficient_rows', 'note')
+               'coefficient_rows', 'note',
+               # v0.3 (WP-F1): the checks of the candidate linear model.
+               'linear_checks')
 REGRESSION_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n', 'target',
                    'unit', 'residual_columns', 'residual_definition', 'target_transform',
-                   'smearing', 'normality_note', 'models', 'coefficient_rows', 'note')
+                   'smearing', 'normality_note', 'models', 'coefficient_rows', 'note',
+                   # v0.3 (WP-F1): the checks of the candidate linear model.
+                   'linear_checks')
 FINAL_BINARY_KEYS = ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n',
                      'model', 'final_evaluation', 'n_positive', 'base_rate', 'rule',
                      'segment_columns', 'segment_rule', 'models', 'note')
@@ -682,3 +686,172 @@ def coefficient_intervals(case, frame, inputs: Mapping, params: Mapping, binary:
             'method': 'percentile bootstrap: the model refitted on prepared rows drawn with '
                       'replacement (the preparation kept as fitted on every row)',
             'note': COEFFICIENT_NOTE}
+
+
+# --- v0.3 (WP-F1): what the linear fit cannot follow ------------------------------------------
+
+CHECK_BINS = 5
+CHECK_ALPHA = 0.01
+MIN_SEGMENT_ROWS = 100
+MIN_SEGMENT_POSITIVES = 10
+SLOPE_BAND = (0.8, 1.2)
+LINEAR_CHECK_KEYS = ('model', 'nonlinearity', 'interaction', 'calibration_slope', 'flags',
+                     'alpha', 'method', 'note')
+LINEAR_CHECKS_NOTE = ('Checks of the candidate linear model on its out-of-fold predictions: a '
+                      'flag is evidence that another model family might follow the data more '
+                      'closely, not proof; choosing a family after seeing it makes that '
+                      'comparison data-contingent.')
+
+
+def _slope(y, x, binary: bool) -> tuple[float | None, float | None]:
+    """``(slope, standard error)`` of ``y`` on ``x``: a logistic regression of the outcome on
+    the logit of the score (the calibration slope, Cox 1958), or the least-squares slope of
+    the target on the prediction."""
+    import numpy as np
+    y = np.asarray(y, dtype=float)
+    x = np.asarray(x, dtype=float)
+    n = len(y)
+    if n < 3 or np.ptp(x) == 0:
+        return None, None
+    if not binary:
+        xc = x - x.mean()
+        sxx = float((xc ** 2).sum())
+        b = float((xc * (y - y.mean())).sum() / sxx)
+        resid = y - y.mean() - b * xc
+        s2 = float((resid ** 2).sum() / max(n - 2, 1))
+        return b, float(np.sqrt(s2 / sxx))
+    if y.min() == y.max():
+        return None, None
+    p = np.clip(x, 1e-6, 1 - 1e-6)
+    z = np.log(p / (1 - p))
+    X = np.column_stack([np.ones(n), z])
+    beta = np.zeros(2)
+    for _ in range(50):
+        mu = 1 / (1 + np.exp(-(X @ beta)))
+        w = mu * (1 - mu)
+        H = X.T @ (X * w[:, None])
+        g = X.T @ (y - mu)
+        try:
+            step = np.linalg.solve(H, g)
+        except np.linalg.LinAlgError:
+            return None, None
+        beta = beta + step
+        if np.max(np.abs(step)) < 1e-10:
+            break
+    mu = 1 / (1 + np.exp(-(X @ beta)))
+    H = X.T @ (X * (mu * (1 - mu))[:, None])
+    try:
+        cov = np.linalg.inv(H)
+    except np.linalg.LinAlgError:
+        return float(beta[1]), None
+    return float(beta[1]), float(np.sqrt(max(cov[1, 1], 0.0)))
+
+
+def linear_checks(y, prediction, frame, case, features, binary: bool, model: str) -> dict:
+    """v0.3 (WP-F1): three checks of the candidate linear model on its out-of-fold
+    predictions, the evidence the shortlist of model families reads
+    (:func:`mlkit.study.trials.shortlist`).
+
+    * **non-linearity** of each numeric feature the model uses: the gap between the observed
+      outcome rate and the mean score (binary), or the mean residual (regression), in
+      :data:`CHECK_BINS` quantile bins of the feature, summed as ``sum((gap / se)^2)`` against
+      a chi-square with as many degrees of freedom as bins; flagged below
+      :data:`CHECK_ALPHA` divided by the number of features checked (Bonferroni);
+    * **interaction** with each categorical segment feature: the calibration slope of the
+      score within each value (at least :data:`MIN_SEGMENT_ROWS` rows, and
+      :data:`MIN_SEGMENT_POSITIVES` rows of each class for a binary target), heterogeneity
+      by Cochran's Q; a score whose effect differs by group is a sign of an interaction;
+    * the overall **calibration slope** (Cox 1958): flagged when it lies outside
+      :data:`SLOPE_BAND` and its 95 % interval excludes 1.
+    """
+    import numpy as np
+    import pandas as pd
+    from scipy.stats import chi2
+    from pandas.api.types import is_numeric_dtype
+    y = np.asarray(y, dtype=float)
+    pred = np.asarray(prediction, dtype=float)
+    resid_sd = float(np.std(y - pred, ddof=1)) if (not binary and len(y) > 1) else None
+    numeric = [f for f in features if case.variables.get(f, {}).get('type') in
+               ('numeric', 'integer') and f in frame and is_numeric_dtype(frame[f])]
+    tested = [f for f in numeric if frame[f].nunique(dropna=True) > CHECK_BINS]
+    nonlin = []
+    for f in tested:
+        values = frame[f].to_numpy(dtype=float)
+        ok = ~np.isnan(values)
+        labels = pd.qcut(pd.Series(values[ok]), CHECK_BINS, duplicates='drop',
+                         labels=False).to_numpy()
+        yy, pp, vv = y[ok], pred[ok], values[ok]
+        bins, stat = [], 0.0
+        for b in sorted(set(labels.tolist())):
+            mask = labels == b
+            n = int(mask.sum())
+            if n < 2:
+                continue
+            gap = float(yy[mask].mean() - pp[mask].mean())
+            if binary:
+                se = float(np.sqrt(np.clip(pp[mask] * (1 - pp[mask]), 1e-12, None).sum()) / n)
+            else:
+                se = float((resid_sd or 0.0) / np.sqrt(n))
+            stat += (gap / se) ** 2 if se > 0 else 0.0
+            bins.append({'bin': int(b) + 1, 'n': n, 'low': float(vv[mask].min()),
+                         'high': float(vv[mask].max()), 'gap': gap, 'se': se})
+        df = len(bins)
+        p_value = float(chi2.sf(stat, df)) if df else None
+        threshold = CHECK_ALPHA / max(len(tested), 1)
+        nonlin.append({'feature': f, 'bins': bins, 'statistic': float(stat), 'df': df,
+                       'p_value': p_value, 'threshold': threshold,
+                       'flagged': bool(p_value is not None and p_value < threshold)})
+    interaction = []
+    seg_cols = segment_columns(case, features)
+    for col in seg_cols:
+        labels = np.asarray(_fold(_labels(frame[col])), dtype=object)
+        groups = []
+        for value in _order(list(labels)):
+            mask = labels == value
+            n = int(mask.sum())
+            positives = float(y[mask].sum()) if binary else None
+            if n < MIN_SEGMENT_ROWS or (binary and (positives < MIN_SEGMENT_POSITIVES
+                                                    or n - positives < MIN_SEGMENT_POSITIVES)):
+                continue
+            slope, se = _slope(y[mask], pred[mask], binary)
+            if slope is None or not se:
+                continue
+            groups.append({'value': value, 'n': n, 'slope': slope, 'se': se})
+        q = p_value = None
+        if len(groups) >= 2:
+            w = np.array([1 / g['se'] ** 2 for g in groups])
+            s = np.array([g['slope'] for g in groups])
+            pooled = float((w * s).sum() / w.sum())
+            q = float((w * (s - pooled) ** 2).sum())
+            p_value = float(chi2.sf(q, len(groups) - 1))
+        threshold = CHECK_ALPHA / max(len(seg_cols), 1)
+        interaction.append({'feature': col, 'groups': groups, 'q': q,
+                            'df': max(len(groups) - 1, 0), 'p_value': p_value,
+                            'threshold': threshold,
+                            'flagged': bool(p_value is not None and p_value < threshold)})
+    slope, se = _slope(y, pred, binary)
+    z = 1.959963984540054
+    low = slope - z * se if slope is not None and se else None
+    high = slope + z * se if slope is not None and se else None
+    cal = {'slope': slope, 'se': se, 'low': low, 'high': high, 'band': list(SLOPE_BAND),
+           'flagged': bool(slope is not None and low is not None
+                           and not SLOPE_BAND[0] <= slope <= SLOPE_BAND[1]
+                           and not low <= 1 <= high),
+           'definition': ('slope of a logistic regression of the outcome on the logit of the '
+                          'score: 1 when the scores are as spread as the outcomes, below 1 '
+                          'when they are too extreme' if binary else
+                          'least-squares slope of the target on the prediction: 1 when the '
+                          'predictions are as spread as the target')}
+    flags = [{'check': 'nonlinearity', 'feature': x['feature'], 'p_value': x['p_value']}
+             for x in nonlin if x['flagged']]
+    flags += [{'check': 'interaction', 'feature': x['feature'], 'p_value': x['p_value']}
+              for x in interaction if x['flagged']]
+    if cal['flagged']:
+        flags.append({'check': 'calibration_slope', 'feature': None, 'p_value': None,
+                      'slope': slope})
+    return {'model': model, 'nonlinearity': nonlin, 'interaction': interaction,
+            'calibration_slope': cal, 'flags': flags, 'alpha': CHECK_ALPHA,
+            'method': ('binned out-of-fold gaps per numeric feature (chi-square, Bonferroni); '
+                       'calibration slope by segment (Cochran\'s Q); overall calibration slope '
+                       '(Cox 1958)'),
+            'note': LINEAR_CHECKS_NOTE}

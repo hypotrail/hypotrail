@@ -196,21 +196,46 @@ def _preprocessing_values(inputs: Mapping, fitted) -> dict:
                                       'unchanged to validation rows.'}}
 
 
-def _fit_predict(case: c.Case, train, test, inputs: Mapping, params: Mapping, binary: bool):
+def _fit_predict(case: c.Case, train, test, inputs: Mapping, params: Mapping, binary: bool,
+                 info: dict | None = None):
     """Fit the model of ``params`` on ``train`` with the model ``inputs`` (features, special
     values, preprocessing), and predict ``test``: ``(prediction, model, indicators,
     fitted, in_sample)`` (``in_sample``: the prediction of ``train`` itself). A binary model scores the positive class; a regression model predicts the
     target. Shared by the train/validation fits, the cross-validated fits (one call per
     fold), and the final evaluation (WP-B1); the candidate's own parameters are unchanged
     since v0.1, the variant's (``C``, ``alpha``) come from :data:`activities.VARIANT_C` and
-    :data:`activities.VARIANT_ALPHA`."""
+    :data:`activities.VARIANT_ALPHA`.
+
+    v0.3 (WP-F1): ``params['family']`` (``ebm`` or ``hgb``; the linear model otherwise) and
+    ``params['tuning']`` (a grid, :func:`mlkit.study.trials.grid`): the hyperparameter is
+    chosen by an inner cross-validation of ``train`` (:func:`mlkit.study.families.choose`)
+    unless ``params['tuned_value']`` fixes it. ``info`` (optional) receives ``tuning`` (the
+    choice), and with ``info['keep']`` the prepared ``X_test``."""
     from .activities import positive
     from mlkit import classical
+    if params.get('tuning') and params.get('tuned_value') is None:
+        from . import families
+        choice = families.choose(case, train, inputs, params, binary)
+        params = {**params, 'tuned_value': choice['value']}
+        if info is not None:
+            info['tuning'] = choice
     features, special = list(inputs['features']), list(inputs['special_values'])
     X_train, indicators = design(train, features, special, case)
     X_test, _ = design(test, features, special, case)
     X_train, X_test, fitted = prepare(case, train, test, X_train, X_test, features,
                                       inputs.get('preprocessing'), special)
+    if info is not None and info.get('keep'):
+        info['X_test'] = X_test
+    family = params.get('family') or 'linear'
+    tuned = params.get('tuned_value')
+    if family != 'linear':
+        from . import families
+        y_train = positive(train, case).to_numpy() if binary else _target(case, train,
+                                                                           'training')
+        model = families.fit_family(family, X_train, y_train, binary, tuned, params['seed'])
+        prediction = families.predict_family(family, model, X_test, binary)
+        in_sample = None if binary else families.predict_family(family, model, X_train, False)
+        return prediction, model, indicators, fitted, in_sample
     if binary:
         y_train = positive(train, case)
         spec = {'task': {'kind': 'binary'}, 'model_options': {}}
@@ -221,6 +246,8 @@ def _fit_predict(case: c.Case, train, test, inputs: Mapping, params: Mapping, bi
             model.set_params(model__tol=float(params['tol']))
         if params.get('C') is not None:
             model.set_params(model__C=float(params['C']))
+        if tuned is not None:
+            model.set_params(model__C=float(tuned))
         model.fit(X_train, y_train.to_numpy())
         classes = list(model.classes_)
         return (model.predict_proba(X_test)[:, classes.index(1)], model, indicators, fitted,
@@ -229,7 +256,9 @@ def _fit_predict(case: c.Case, train, test, inputs: Mapping, params: Mapping, bi
     y_train = _target(case, train, 'training')
     spec = {'task': {'kind': 'regression'}, 'model_options': {}}
     model = classical.pipeline('ridge', X_train, spec, params['seed'])
-    if params.get('alpha') is not None:
+    if tuned is not None:
+        model.set_params(model=Ridge(alpha=float(tuned)))
+    elif params.get('alpha') is not None:
         model.set_params(model=Ridge(alpha=float(params['alpha'])))
     else:
         model.set_params(model=LinearRegression())
@@ -242,10 +271,66 @@ def _variant_values(inputs: Mapping, params: Mapping) -> dict:
     if 'variant' not in inputs:
         return {}
     out = {'variant': dict(inputs['variant'])}
-    for key in ('C', 'candidate_C', 'alpha', 'dropped_group'):
+    for key in ('C', 'candidate_C', 'alpha', 'dropped_group', 'family', 'variant_index'):
         if key in params:
             out[key] = params[key]
     return out
+
+
+TUNING_NOTE = ('The value is chosen inside each outer fold by an inner cross-validation of that '
+               'fold\'s training rows only, so the out-of-fold figures include the choice '
+               '(nested cross-validation). One tuning is one trial.')
+
+
+def _inner_scores(choice: Mapping) -> list[dict]:
+    return [{'value': s['value'], 'mean': s['mean']} for s in choice.get('scores') or []]
+
+
+def tuning_values(params: Mapping, per_fold: list, development: Mapping | None) -> dict | None:
+    """v0.3 (WP-F1): the hyperparameter chosen in each outer fold (``per_fold``: the
+    :func:`mlkit.study.families.choose` results in fold order) and on the rows of the final
+    fit (``development``); None for a model without tuning."""
+    tuning = params.get('tuning')
+    if not tuning:
+        return None
+    out = {k: tuning[k] for k in ('parameter', 'values', 'inner_folds', 'seed', 'metric',
+                                  'method', 'tie', 'meaning') if k in tuning}
+    out['per_fold'] = [{'fold': i, 'value': c['value'], 'inner_scores': _inner_scores(c)}
+                       for i, c in enumerate(per_fold, start=1) if c is not None]
+    out['development'] = ({'value': development['value'],
+                           'inner_scores': _inner_scores(development)}
+                          if development is not None else None)
+    out['note'] = TUNING_NOTE
+    return out
+
+
+def _family_values(case, frame, model, indicators, features, params, binary,
+                   n_positive) -> dict:
+    """The values of a model of another family (WP-F1): no coefficients; the EBM's terms
+    (its own diagnostics) from this fit."""
+    from . import families
+    family = params['family']
+    out = {'model': family, 'family': family, 'features': features,
+           'special_value_indicators': indicators, 'n_train': int(len(frame)),
+           'versions': families.versions(family),
+           'settings': dict(params.get('settings') or {})}
+    if binary:
+        out['n_train_positive'] = int(n_positive)
+    else:
+        out.update(target=case.target_column, unit=case.target_unit)
+    if family == 'ebm':
+        out['family_diagnostics'] = families.ebm_terms(model, binary)
+    return out
+
+
+def _model_values(case, frame, model, indicators, features, params, binary,
+                  n_positive=0) -> dict:
+    if (params.get('family') or 'linear') != 'linear':
+        return _family_values(case, frame, model, indicators, features, params, binary,
+                              n_positive)
+    if binary:
+        return _logistic_values(case, frame, model, indicators, features, n_positive)
+    return _linear_values(case, frame, model, indicators, features, params)
 
 
 def _logistic_values(case, frame, model, indicators, features, n_positive) -> dict:
@@ -266,17 +351,38 @@ def logistic(case: c.Case, train, validation, inputs: Mapping, params: Mapping) 
 
     train, validation = _ordered(train), _ordered(validation)
     features = list(inputs['features'])
+    info = {'keep': params.get('family') == 'hgb'}
     score, model, indicators, fitted, _ = _fit_predict(case, train, validation, inputs,
-                                                       params, binary=True)
+                                                       params, binary=True, info=info)
     y_train = positive(train, case)
     y_val = positive(validation, case).to_numpy()
-    values = {**_logistic_values(case, train, model, indicators, features, y_train.sum()),
+    name = params.get('family') or 'logistic'
+    values = {**_model_values(case, train, model, indicators, features, params, True,
+                              y_train.sum()),
               'validation': _validation_summary(y_val, score),
-              'predictions': _predictions_meta(case, 'logistic', features, y_val),
+              'predictions': _predictions_meta(case, name, features, y_val),
               **_preprocessing_values(inputs, fitted), **_variant_values(inputs, params)}
+    _split_extras(values, params, info, model, y_val, True)
     return {'values': values,
             'blobs': {'predictions': predictions_blob(validation.index, y_val, score)},
             'partition': 'validation', 'n_rows': int(len(validation))}
+
+
+def _split_extras(values: dict, params: Mapping, info: Mapping, model, y_val,
+                  binary: bool) -> None:
+    """WP-F1, train/validation split: the tuning chosen on the training rows, and the
+    permutation importance of a boosting model on the validation rows."""
+    tuning = tuning_values(params, [], info.get('tuning'))
+    if tuning is not None:
+        tuning['note'] = ('The value is chosen by an inner cross-validation of the training '
+                          'rows only; the validation rows never choose it. One tuning is one '
+                          'trial.')
+        values['tuning'] = tuning
+    if params.get('family') == 'hgb':
+        from . import families
+        imp = families.permutation_importance(model, info['X_test'], y_val, binary,
+                                              params['seed'])
+        values['family_diagnostics'] = families.combine_importance([(len(y_val), imp)], binary)
 
 
 PREDICTION_SEMANTICS = 'A prediction of the target, in its unit.'
@@ -344,7 +450,8 @@ def mean_baseline(case: c.Case, train, validation) -> dict:
 def _linear_values(case, train, model, indicators, features, params) -> dict:
     names = [str(n) for n in model['preprocess'].get_feature_names_out()]
     coef = model['model'].coef_
-    return {'model': 'ridge' if params.get('alpha') is not None else 'linear',
+    return {'model': 'ridge' if params.get('alpha') is not None or params.get('tuning')
+            else 'linear',
             'target': case.target_column, 'unit': case.target_unit,
             'features': features, 'special_value_indicators': indicators,
             'n_train': int(len(train)), 'n_terms': len(names),
@@ -361,15 +468,18 @@ def linear(case: c.Case, train, validation, inputs: Mapping, params: Mapping) ->
 
     train, validation = _ordered(train), _ordered(validation)
     features = list(inputs['features'])
+    info = {'keep': params.get('family') == 'hgb'}
     prediction, model, indicators, fitted, in_sample = _fit_predict(
-        case, train, validation, inputs, params, binary=False)
+        case, train, validation, inputs, params, binary=False, info=info)
     y_train = _target(case, train, 'training')
     y_val = _target(case, validation, 'validation')
-    values = {**_linear_values(case, train, model, indicators, features, params),
+    name = params.get('family') or 'linear'
+    values = {**_model_values(case, train, model, indicators, features, params, False),
               'train': _errors(y_train, in_sample),
               'validation': _errors(y_val, prediction),
-              'predictions': _regression_meta(case, 'linear', features, y_val),
+              'predictions': _regression_meta(case, name, features, y_val),
               **_preprocessing_values(inputs, fitted), **_variant_values(inputs, params)}
+    _split_extras(values, params, info, model, y_val, False)
     return {'values': values,
             'blobs': {'predictions': regression_blob(validation.index, y_val, prediction)},
             'partition': 'validation', 'n_rows': int(len(validation))}
@@ -434,15 +544,24 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
         y = _target(case, frame, 'development')
     oof = np.zeros(n, dtype=float)
     candidate = activity != 'fit.baseline'
+    family = params.get('family') or 'linear'
+    choices, importances = [], []
     for i in range(1, k + 1):
         test = fold == i
         if not candidate:
             oof[test] = y.mean() if binary else y[~test].mean()
             continue
-        pred = _fit_predict(case, frame.loc[[kk for kk, t in zip(keys, ~test) if t]],
-                                     frame.loc[[kk for kk, t in zip(keys, test) if t]],
-                                     inputs, params, binary)[0]
+        info = {'keep': family == 'hgb'}
+        pred, fold_model = _fit_predict(case, frame.loc[[kk for kk, t in zip(keys, ~test) if t]],
+                                        frame.loc[[kk for kk, t in zip(keys, test) if t]],
+                                        inputs, params, binary, info=info)[:2]
         oof[test] = pred
+        choices.append(info.get('tuning'))
+        if family == 'hgb':
+            # WP-F1: the boosting model's own diagnostic, on the rows it did not see.
+            from . import families
+            importances.append((int(test.sum()), families.permutation_importance(
+                fold_model, info['X_test'], y[test], binary, params['seed'])))
     per_fold = []
     for i in range(1, k + 1):
         test = fold == i
@@ -484,18 +603,28 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
         return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'development',
                 'n_rows': n}
     # One more fit on every development row: its coefficients and preparation are shown.
+    full_info: dict = {}
     _, model, indicators, fitted, in_sample = _fit_predict(case, frame, frame, inputs, params,
-                                                           binary)
+                                                           binary, info=full_info)
     if binary:
-        values = {**_logistic_values(case, frame, model, indicators, features, y.sum()),
+        values = {**_model_values(case, frame, model, indicators, features, params, True,
+                                  y.sum()),
                   'validation': _validation_summary(y, oof),
-                  'predictions': _cv_meta(_predictions_meta(case, 'logistic', features, y))}
+                  'predictions': _cv_meta(_predictions_meta(case, family if family != 'linear'
+                                                            else 'logistic', features, y))}
         blob = predictions_blob(keys, y, oof)
     else:
-        values = {**_linear_values(case, frame, model, indicators, features, params),
+        values = {**_model_values(case, frame, model, indicators, features, params, False),
                   'train': _errors(y, in_sample), 'validation': _errors(y, oof),
-                  'predictions': _cv_meta(_regression_meta(case, 'linear', features, y))}
+                  'predictions': _cv_meta(_regression_meta(case, family if family != 'linear'
+                                                           else 'linear', features, y))}
         blob = regression_blob(keys, y, oof)
+    tuning = tuning_values(params, choices, full_info.get('tuning'))
+    if tuning is not None:
+        values['tuning'] = tuning
+    if importances:
+        from . import families
+        values['family_diagnostics'] = families.combine_importance(importances, binary)
     pre = _preprocessing_values(inputs, fitted)
     if pre:
         pre['preprocessing']['note'] = ('Parameters learnt, in each fold, on the rows of the '
@@ -503,8 +632,9 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
                                         'shown here as learnt on every development row.')
     values.update(pre)
     # B6c (M3): the coefficients come from the fit on every development row.
-    values['coefficient_scale'] = values['coefficient_scale'].replace(
-        'of the training rows', 'of the development rows')
+    if 'coefficient_scale' in values:
+        values['coefficient_scale'] = values['coefficient_scale'].replace(
+            'of the training rows', 'of the development rows')
     values.update(_variant_values(inputs, params))
     values.update(common)
     return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'development',
@@ -557,12 +687,15 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
               'refit': {'n_rows': int(len(development)),
                         'features': list(model_inputs.get('features') or [])},
               'evaluation': 'final_test'}
+    final_info: dict = {}
+    if (model_params or {}).get('family'):
+        values['family'] = model_params['family']      # WP-F1 (additive)
     if binary:
         y_dev = positive(development, case).to_numpy()
         y = positive(final, case).to_numpy()
         base = np.full(n, float(y_dev.mean()))
         score = base if chosen == 'fit.baseline' else _fit_predict(
-            case, development, final, model_inputs, model_params, True)[0]
+            case, development, final, model_inputs, model_params, True, info=final_info)[0]
         from .records import capacity_of
         rule = params['rule']
         if capacity_of(rule) is not None and params.get('capacity_share') is not None:
@@ -593,7 +726,7 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
         y = _target(case, final, 'final test')
         base = np.full(n, float(y_dev.mean()))
         pred = base if chosen == 'fit.baseline' else _fit_predict(
-            case, development, final, model_inputs, model_params, False)[0]
+            case, development, final, model_inputs, model_params, False, info=final_info)[0]
         predictions = {'fit.baseline': base}
         if chosen != 'fit.baseline':
             predictions[chosen] = pred
@@ -614,6 +747,12 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
                       residuals={s: regression.residual_summary(y, p)
                                  for s, p in predictions.items()})
         blob = regression_blob(final.index, y, pred)
+    tuning = tuning_values(model_params or {}, [], final_info.get('tuning'))
+    if tuning is not None:
+        # WP-F1 (additive): the hyperparameter chosen on every development row.
+        tuning['note'] = ('The value is chosen by an inner cross-validation of the development '
+                          'rows only, before the final-test rows are scored.')
+        values['tuning'] = tuning
     status, includes = criterion_status(gain, low, high, minimum)
     values['criterion'] = {'metric': criterion.get('metric'), 'minimum': minimum,
                            'unit': unit, 'gain': gain, 'low': low, 'high': high,

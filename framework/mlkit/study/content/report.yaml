@@ -281,6 +281,9 @@ model_names:
   fit.baseline: Baseline (no ranking)
   fit.linear: Linear model
   fit.variant: Variant
+  # v0.3 (WP-F1): the second and third variants.
+  "fit.variant:2": Second variant
+  "fit.variant:3": Third variant
 rows_label:
   train: training rows
   validation: validation rows

@@ -158,7 +158,10 @@ reason_domain:
                rapport*]
   model_variant: [variant*, regulari*, penal*, weak, strong, faible*, fort*, drop*, group*,
                   groupe*, simpl*, compar*, overfit*, surajust*, stabl*, robust*, error*,
-                  erreur*, precis*, auc, better, mieux, check*, verif*, test*]
+                  erreur*, precis*, auc, better, mieux, check*, verif*, test*,
+                  # v0.3 (WP-F1): tuning, the families, the questions of the variants.
+                  tun*, nested, imbriqu*, famil*, boost*, ebm, explainable, nonlin*, non-lin*,
+                  shape*, forme*, interaction*, question*, budget*, trial*, essai*]
   conclusion: [evidence*, preuve*, result*, gain*, precision, baseline, reference, criterion,
                critere*, interval*, intervalle*, uncertain*, incertain*, validation, test*,
                risk*, risque*, limit*, enough, assez, suffisant*, insuffisant*, sample*,

@@ -439,6 +439,7 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     act.guard_read_only()
     hooks = dict(hooks or {})
     store = _store(study_dir)
+    activity, options = act.resolve(activity, options)    # v0.3 (WP-F1): fit.variant:2
     activity = act.canonical(activity)
     options = act.normalize_options(activity, options)
     eid = execution_id(request_id)

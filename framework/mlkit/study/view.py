@@ -50,7 +50,11 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # (``{capacity_share: {value, status, source}}``), or ``null``.
              'scenario_defaults',
              # v0.2b (WP-B1): the number of model configurations evaluated so far.
-             'trials')
+             'trials',
+             # v0.3 (WP-F1, ADR 0007): the candidate and the variants compared fold by fold
+             # (one-standard-error rule, selection optimism, advice to stop), and the
+             # engine's shortlist of model families; ``null`` in a study without variants.
+             'selection', 'model_families')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -643,7 +647,8 @@ DECISION_LABELS = {'prediction_time': 'prediction moment',
                    'model_variant': 'variant', 'final_test': 'final test'}
 # A regression study's model choice (M3), in words: the recap never says "policy".
 MODEL_CHOICE_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
-                      'fit.variant': 'the variant'}
+                      'fit.variant': 'the variant', 'fit.variant:2': 'the second variant',
+                      'fit.variant:3': 'the third variant'}
 # The limit quoted by the recap: the most urgent of ``not_yet_defensible`` that the other
 # lines do not already say (unconfirmed decisions are the "Decided" and "Next" lines).
 RECAP_LIMIT_SKIP = ('unconfirmed_decisions', 'open_holds', 'conclusion_outdated')
@@ -719,7 +724,8 @@ def _policy_headline(view: dict, summary_out: dict) -> dict | None:
     where = ('out-of-fold development rows' if item['values'].get('evaluation') == 'out_of_fold'
              else 'validation rows')
     rows = f' on the {n} {where}' if isinstance(n, int) else f' on the {where}'
-    named = 'the variant' if slot == 'fit.variant' else 'the logistic model'
+    named = audience.MODEL_WORDS.get(slot, 'the variant') if slot != 'fit.logistic' \
+        else 'the logistic model'
     return {'rule': rule, 'adopted': adopted is not None and (rec.canonical_policy(adopted)
                                                               or adopted) == (
                                                                   rec.canonical_policy(chosen)
@@ -1124,7 +1130,26 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'eda_looks': governance.ledger(study.exposure_records(), _target_column(state)),
         'scenario_defaults': defaults,
         'trials': trials(study.exposure_records()),
+        **_wp_f1(state, results),
     }
+
+
+def _wp_f1(state: dict, results: dict) -> dict:
+    """v0.3 (WP-F1): ``selection`` and ``model_families`` (null before WP-B1)."""
+    from . import trials as tr
+    from .case import CaseError, case_of
+    if not st.has_wp_b1_decisions(state):
+        return {'selection': None, 'model_families': None}
+    task = st.task_of(state)
+    try:
+        document = case_of(state).document
+    except (CaseError, OSError):
+        document = None
+    diag = results.get(st.DIAG_SLOT[task]) or {}
+    values = diag.get('values') if diag.get('integrity') == 'ok' else None
+    return {'selection': tr.selection(results, state, task),
+            'model_families': tr.shortlist(document, values, task, st.language_of(state),
+                                           diag.get('result_id'))}
 
 
 # WP-B1: the activities whose runs are model configurations (the baseline is not a trial),

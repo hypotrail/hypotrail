@@ -142,7 +142,9 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
                          details={'missing': missing})
     models, scores, y, keys = {}, {}, None, None
     # WP-B1: the variant, once fitted, is previewed with the candidate it is compared with.
-    slots = FITS + (('fit.variant',) if state['current'].get('fit.variant') else ())
+    # v0.3 (WP-F1): every variant fitted.
+    slots = FITS + tuple(s for s in ('fit.variant', 'fit.variant:2', 'fit.variant:3')
+                         if state['current'].get(s))
     for slot in slots:
         entry = study.current(slot)
         sha = entry['blobs'].get('predictions')
@@ -171,8 +173,8 @@ def preview_policy(study_dir, rules, *, intervals: bool = False) -> dict:
                                               int(settings['seed']),
                                               level=float(settings['level']),
                                               reference=FITS[0],
-                                              pairs=[('fit.variant', 'fit.logistic')]
-                                              if 'fit.variant' in scores else [],
+                                              pairs=[(s, 'fit.logistic') for s in slots
+                                                     if s.startswith('fit.variant')],
                                               groups=groups)
                 for rule in rules}
     decision = state['decisions']['policy']

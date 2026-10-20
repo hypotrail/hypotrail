@@ -28,7 +28,7 @@ import re
 from importlib import resources
 from typing import Any, Mapping
 
-from . import audience, cite, render_charts, render_diagnostics, texts
+from . import audience, cite, render_charts, render_diagnostics, render_trials, texts
 from . import state as st
 
 BANNER_START = '<!--hypotrail:banner-->'
@@ -140,6 +140,7 @@ def slots_of_step(step_id: str, results: Mapping, task: str | None = None) -> li
     step = next(s for s in st.steps(task) if s['id'] == step_id)
     slots = list(step['activities'])
     family = {'train_eda': 'eda.', 'models': 'fit.', 'policy': 'policy.',
+              'model_variant': 'fit.variant',      # v0.3 (WP-F1): every variant
               'model_choice': 'evaluate.'}.get(step_id)
     if family:
         slots += sorted(s for s in results if s.startswith(family) and s not in slots)
@@ -675,6 +676,13 @@ def _comparison_rows(citer: cite.Citer, rid: str, rules: Mapping | None, metrics
     """WP-B1: the variant against the candidate, paired on the same rows (cited)."""
     labels = _labels()
     rows = []
+    # v0.3 (WP-F1): with several variants, each row names its model.
+    named = set()
+    for key, item in (rules or {'': None}).items():
+        source = item if rules else citer.results[rid].values
+        if isinstance(source, Mapping) and isinstance(source.get('comparisons'), Mapping):
+            named |= set(source['comparisons'])
+    several = len(named) > 1
     for key, item in (rules or {'': None}).items():
         prefix = ['rules', key] if rules else []
         source = item if rules else citer.results[rid].values
@@ -689,12 +697,14 @@ def _comparison_rows(citer: cite.Citer, rid: str, rules: Mapping | None, metrics
                     continue
                 fmt = m.get('fmt', 'auto')
                 rule = (f'<td>{lit("decision_value", rule_words(key))}</td>' if rules else '')
+                if several:
+                    rule += f'<td>{e(_model_name(str(model)))}</td>'
                 rows.append(f'<tr data-model="{e(model)}" data-metric="{e(m["key"])}">{rule}'
                             f'<td>{e(m["label"])}</td><td>{citer.num(rid, point, fmt)}</td>'
                             f'<td>{_interval(citer, rid, base, fmt)}</td></tr>')
     if not rows:
         return ''
-    rule_head = '<th>Rule</th>' if rules else ''
+    rule_head = ('<th>Rule</th>' if rules else '') + ('<th>Model</th>' if several else '')
     return (f'<h3>{e(labels["comparison_heading"])}</h3><div class="scroll">'
             f'<table class="paired" id="variant-comparison"><thead><tr>{rule_head}'
             '<th>Metric</th><th>Difference</th><th>Interval</th></tr></thead>'
@@ -945,15 +955,21 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
         # WP-B1: a rule applied to the variant says so.
         rule, sep, model = str(value).partition('@')
         words = rule_words(rule)
-        return f'{words}, with the variant' if sep and model == 'fit.variant' else words
+        # v0.3 (WP-F1): the second and third variants are named as such.
+        return f'{words}, with {audience.model_words(model)}' if sep and model else words
     if decision_id == 'model_choice':
         return {'fit.linear': 'Use the linear model',
                 'fit.variant': 'Use the variant of the linear model',
+                'fit.variant:2': 'Use the second variant',
+                'fit.variant:3': 'Use the third variant',
                 'fit.baseline': 'Keep predicting the training mean (the baseline)'}.get(
                     value, str(value))
     if isinstance(value, Mapping):
         if decision_id == 'model_variant':
             from .audience import variant_words
+            from . import trials
+            if trials.is_list_value(value):
+                return 'Compare the model with: ' + variant_words(value)
             return 'Compare the model with a variant: ' + variant_words(value)
         if decision_id == 'final_test':
             model = _model_name(str(value.get('model')))
@@ -1071,7 +1087,7 @@ def _regression_figures(citer: cite.Citer, chosen: str = 'fit.linear') -> list[t
     if rid is None:
         return []
     rows = []
-    for model in ('fit.linear', 'fit.variant', 'fit.baseline'):
+    for model in ('fit.linear', 'fit.variant', 'fit.variant:2', 'fit.variant:3', 'fit.baseline'):
         path = cite.format_path(['models', model, 'mae'])
         if not citer.has(rid, path):
             continue
@@ -1152,8 +1168,8 @@ def _verdict(view: Mapping, citer: cite.Citer) -> str:
         model = (criterion or {}).get('model') or 'fit.logistic'
         if rule is None and adopted.get('status') == 'confirmed':
             rule = str(adopted.get('value')).partition('@')[0]
-            model = 'fit.variant' if '@fit.variant' in str(adopted.get('value')) \
-                else 'fit.logistic'
+            from .records import policy_model
+            model = policy_model(adopted.get('value'))
         figures = _binary_figures(view, citer, rule, model)
         if figures and rule and not (adopted.get('status') == 'confirmed'
                                      and str(adopted.get('value')).partition('@')[0] == rule):
@@ -1507,7 +1523,8 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
     body = ''.join([
         _verdict(view, citer), _objective(view), _data(view, citer, variables or [], sample),
         _charts(view, citer), _plan(view), _decisions(view, variables or []),
-        _evidence(view, citer), comparison, render_diagnostics.section(view, citer),
+        _evidence(view, citer), comparison, render_trials.section(view, citer),
+        render_diagnostics.section(view, citer),
         _not_yet_defensible(view), _facts(view),
         _surfaces(view, surfaces), _annex(view, citer)])
 

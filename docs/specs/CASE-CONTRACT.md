@@ -53,6 +53,7 @@ Top-level keys, in this order. Unknown keys are refused.
 | `duplicates` | no | v0.2b: how identical records are treated, see [Duplicates](#duplicates) |
 | `scenario_defaults` | no | v0.2b: defaults of a teaching scenario, see [Scenario defaults](#scenario-defaults) |
 | `prior_exposed_rows` | no | v0.2b: rows already seen outside the study, kept out of the final test, see [Prior-exposed rows](#prior-exposed-rows) |
+| `constraints` | no | v0.3: what the use case requires of a model, see [Constraints](#constraints) |
 | `migration` | no | See [Migration block](#migration-block) |
 
 ### Dataset
@@ -174,6 +175,18 @@ scenario_defaults:
 ```
 
 Optional (v0.2b, WP-B3, remark R6), for **teaching cases only**. `capacity_share` is the share of the scored rows the exercise assumes the team can act on (`0 < value <= 1`); its status must be `scenario_assumption` (`invalid_case` otherwise): a default capacity is never a fact about a business, and a real business case declares no default (a team figure, or an explicit per-decision delegation, is required). It is not a decision either: the view shows it (`view.scenario_defaults`), the agent asks the capacity as a share and shows the gain at 5, 10 and 20 % (`policy.evaluation` values `gain_points`), and when the adopted policy is `share:p` with `p` equal to this value, `not_yet_defensible` lists `capacity_assumed_for_exercise`.
+
+### Constraints
+
+```yaml
+constraints:
+  interpretability:
+    value: required
+    status: documented_fact
+    source: 'The credit policy requires a model whose effect of each variable can be read.'
+```
+
+Optional (v0.3, WP-F1, [ADR 0007](../decisions/0007-trial-budget-and-model-families.md)). What the use case requires of a model, as statements `{value, status, source}`. The only key is `interpretability` (`case.CONSTRAINT_KEYS`), with a value of `required`, `preferred` or `none` (`case.INTERPRETABILITY_VALUES`). Absent means `none`, which is not a claim that interpretability does not matter. It only means the case states nothing. The engine's shortlist of model families reads it (`view.model_families.constraints`, CLI-CONTRACT §14). `required` excludes the black-box family (histogram gradient boosting). `preferred` and `none` keep every family, and the interpretable non-linear family (the Explainable Boosting Machine) is listed first. A constraint is never a decision: the junior still names each variant. An empty `constraints` mapping, an unknown key, or a value outside the list is `invalid_case`. No committed case declares constraints in v0.3.
 
 ### Prior-exposed rows
 

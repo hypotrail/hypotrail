@@ -286,7 +286,8 @@ def parse_rule(rule: Any) -> tuple[str, float | int] | None:
 # dropped, so a policy value written before WP-B1 is unchanged.
 POLICY_MODEL_SEP = '@'
 POLICY_CANDIDATE = 'fit.logistic'
-POLICY_MODELS = ('fit.logistic', 'fit.variant')
+# v0.3 (WP-F1): the second and third variants (``capacity:100@fit.variant:2``).
+POLICY_MODELS = ('fit.logistic', 'fit.variant', 'fit.variant:2', 'fit.variant:3')
 
 
 def canonical_policy(value: Any) -> str | None:

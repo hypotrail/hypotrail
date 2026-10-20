@@ -159,7 +159,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.2b (WP-B3, R6): the teaching scenario's defaults from the case, or null.
              'scenario_defaults',
              # v0.2b (WP-B1): the configurations evaluated so far.
-             'trials')
+             'trials',
+             # v0.3 (WP-F1): the selection among the variants and the model families.
+             'selection', 'model_families')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -1078,7 +1080,8 @@ def test_wp_b1_contract_constants():
     assert st.B1_STEP_IDS == B1_STEP_IDS and st.WP_B1_DECISIONS == ('model_variant', 'final_test')
     assert st.CV_METHODS == CV_METHODS and st.CV_KEYS == ('method', 'folds', 'seed')
     assert (st.DEFAULT_FOLDS, st.MIN_FOLDS, st.MAX_FOLDS) == (5, 3, 10)
-    assert st.VARIANT_KINDS == ('regularisation', 'drop_group')
+    # v0.3 (WP-F1, ADR 0007): two more kinds, in a list of at most three variants.
+    assert st.VARIANT_KINDS == ('regularisation', 'drop_group', 'tuned', 'family')
     assert st.VARIANT_STRENGTHS == ('weak', 'strong')
     assert act.B1_ACTIVITIES == ('fit.variant', 'final_test.evaluation')
     assert act.VARIANT_C == {'weak': 10.0, 'strong': 0.1}
@@ -1089,7 +1092,8 @@ def test_wp_b1_contract_constants():
     assert partition.STATUS_VIEW_KEYS == FINAL_TEST_STATUS_KEYS
     assert governance.FINAL_CRITERION_KEYS == ('status', 'gain', 'low', 'high', 'minimum',
                                                'unit', 'interval_includes_zero', 'result_id')
-    assert rec.POLICY_MODELS == ('fit.logistic', 'fit.variant')
+    assert rec.POLICY_MODELS == ('fit.logistic', 'fit.variant', 'fit.variant:2',
+                                 'fit.variant:3')
     keys = (set(B1_DECISION_IDS) | set(B1_STEP_IDS) | set(CV_METHODS) | set(TRIALS_KEYS)
             | set(OPENING_RESULT_KEYS) | set(st.VARIANT_KINDS) | set(st.VARIANT_STRENGTHS)
             | set(act.B1_ACTIVITIES) | set(partition.OPENING_KEYS)
@@ -1100,6 +1104,55 @@ def test_wp_b1_contract_constants():
                'data.load_final_test', 'activities.CAPABILITY_FOLDS'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
     assert f'`{act.CAPABILITY_FOLDS}`' in DOC
+
+
+def test_wp_f1_contract_constants():
+    """v0.3 (WP-F1, ADR 0007): the variant budget, the slots of the variants, the grids of
+    nested tuning, the model families, the selection and shortlist shapes, the linear checks;
+    every name is documented in CLI-CONTRACT.md §14."""
+    from mlkit.study import activities as act, case as c, diagnostics as dg, families, trials
+    assert trials.MAX_VARIANTS == 3 and trials.VARIANT_SLOTS == (
+        'fit.variant', 'fit.variant:2', 'fit.variant:3')
+    assert act.VARIANT_SLOT_NAMES == ('fit.variant:2', 'fit.variant:3')
+    assert set(act.VARIANT_SLOT_NAMES) <= set(act.CLI_NAMES)
+    assert trials.KINDS == ('regularisation', 'drop_group', 'tuned', 'family')
+    assert trials.FAMILIES == ('linear', 'ebm', 'hgb')
+    assert trials.VARIANT_FAMILIES == ('ebm', 'hgb')
+    assert trials.INTERPRETABILITY == ('required', 'preferred', 'none')
+    assert trials.INNER_FOLDS == 3 and trials.INNER_SEED == 20261020
+    assert {k: v['values'] for k, v in trials.GRIDS.items()} == {
+        ('linear', 'binary'): (0.01, 0.1, 1.0, 10.0, 100.0),
+        ('linear', 'regression'): (100.0, 10.0, 1.0, 0.1, 0.01),
+        ('ebm', 'binary'): (0, 3), ('ebm', 'regression'): (0, 3),
+        ('hgb', 'binary'): (2, 4), ('hgb', 'regression'): (2, 4)}
+    assert trials.EBM_SETTINGS == {'outer_bags': 1, 'inner_bags': 0, 'max_rounds': 500,
+                                   'learning_rate': 0.05, 'n_jobs': 1}
+    assert trials.SELECTION_KEYS == ('available', 'metric', 'direction', 'folds',
+                                     'configurations', 'best', 'one_se', 'optimism', 'advice',
+                                     'budget', 'trials', 'note')
+    assert trials.SHORTLIST_KEYS == ('constraints', 'evidence', 'families', 'shortlist',
+                                     'recommendation', 'text', 'texts', 'data_contingent',
+                                     'catalogue')
+    assert dg.LINEAR_CHECK_KEYS == ('model', 'nonlinearity', 'interaction', 'calibration_slope',
+                                    'flags', 'alpha', 'method', 'note')
+    assert (dg.CHECK_BINS, dg.CHECK_ALPHA, dg.SLOPE_BAND) == (5, 0.01, (0.8, 1.2))
+    assert c.CONSTRAINT_KEYS == ('interpretability',)
+    keys = (set(trials.KINDS) | set(trials.FAMILIES) | set(trials.SELECTION_KEYS)
+            | set(trials.CONFIGURATION_KEYS) | set(trials.SHORTLIST_KEYS)
+            | set(dg.LINEAR_CHECK_KEYS) | set(trials.INTERPRETABILITY)
+            | {'variant_index', 'variant_declared', 'inputs.trial_budget',
+               'tuning', 'family_diagnostics', 'ebm_terms', 'permutation_importance',
+               'gain_points_variants', 'run_diagnostics', 'stay_linear',
+               'compare_nonlinear', 'fold_noise', 'budget_exhausted', 'may_continue',
+               'no_variant', 'not_available', 'trials.select', 'trials.shortlist',
+               'trials.selection', 'trials.draft', 'trials.used_specs', 'trials.changed_slots',
+               'families.choose', 'families.ebm_terms', 'families.permutation_importance',
+               'diagnostics.linear_checks', 'render_trials.section',
+               'code_cells.selection_cell', 'recompute_selection', 'interpret._version',
+               'state.default_variant', 'activities.resolve'})
+    assert not sorted(k for k in keys if k not in DOC_TOKENS)
+    assert all(f'`{slot}`' in DOC for slot in trials.VARIANT_SLOTS)
+    assert families.MAX_SHAPE_POINTS == 40
 
 
 def test_wp_b4_contract_constants():
@@ -1122,11 +1175,12 @@ def test_wp_b4_contract_constants():
     assert dg.BINARY_KEYS == ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n',
                               'n_positive', 'base_rate', 'rule', 'rule_source',
                               'segment_columns', 'segment_rule', 'models', 'coefficient_rows',
-                              'note')
+                              'note', 'linear_checks')
     assert dg.REGRESSION_KEYS == ('question', 'evidence', 'purpose', 'partition', 'evaluation',
                                   'n', 'target', 'unit', 'residual_columns',
                                   'residual_definition', 'target_transform', 'smearing',
-                                  'normality_note', 'models', 'coefficient_rows', 'note')
+                                  'normality_note', 'models', 'coefficient_rows', 'note',
+                                  'linear_checks')
     assert dg.BINARY_MODEL_KEYS == ('confusion', 'curve', 'roc_auc', 'average_precision',
                                     'calibration', 'segments', 'examples', 'coefficients',
                                     'predictions')

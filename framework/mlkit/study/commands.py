@@ -66,6 +66,7 @@ from . import dependencies as dep
 from . import exposure, governance, guard, lock, partition, preconditions, read, view
 from . import records as rec
 from . import state as st
+from . import trials
 from .errors import StudyError
 from .store import StudyStore
 
@@ -469,12 +470,19 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
         if dep.parse_policy(value) is None:
             raise _invalid('policy is "threshold:<t in [0, 1]>", "capacity:<k >= 1>", or '
                            '"share:<p in (0, 1]>"'
-                           + (', optionally followed by "@fit.variant" to apply it to the '
-                              'variant' if st.has_wp_b1_decisions(state) else '') + '.')
+                           + (', optionally followed by "@fit.variant" (or "@fit.variant:2", '
+                              '"@fit.variant:3") to apply it to a variant'
+                              if st.has_wp_b1_decisions(state) else '') + '.')
         if rec.policy_model(value) != rec.POLICY_CANDIDATE \
                 and not st.has_wp_b1_decisions(state):
             raise _invalid('This study has no variant: its policy applies to the logistic '
                            'model.', models=[rec.POLICY_CANDIDATE])
+        named = trials.declared_slots(state)
+        if rec.policy_model(value) in trials.VARIANT_SLOTS[1:] \
+                and rec.policy_model(value) not in named:
+            # v0.3 (WP-F1): a rule applies to a variant the decision names.
+            raise _invalid('The policy names a variant the variant decision does not declare.',
+                           models=[rec.POLICY_CANDIDATE] + named)
     elif decision_id == 'model_choice':
         choices = model_choices(state)
         if value not in choices:
@@ -533,10 +541,10 @@ VARIANT_KEYS = {'regularisation': ('kind', 'strength'), 'drop_group': ('kind', '
 
 def model_choices(state: Mapping) -> tuple[str, ...]:
     """The model slots a regression study may choose: the candidate and the baseline, and
-    (WP-B1) the variant."""
+    (WP-B1) the variant (v0.3, WP-F1: every variant the decision names)."""
     if st.has_wp_b1_decisions(state):
-        return preconditions.MODEL_CHOICES[:1] + ('fit.variant',) \
-            + preconditions.MODEL_CHOICES[1:]
+        named = tuple(trials.declared_slots(state)) or ('fit.variant',)
+        return preconditions.MODEL_CHOICES[:1] + named + preconditions.MODEL_CHOICES[1:]
     return preconditions.MODEL_CHOICES
 
 
@@ -550,23 +558,32 @@ def variant_groups(case: c.Case) -> dict[str, list[str]]:
 
 
 def validate_variant(state: Mapping, value: Any) -> None:
-    """Refuse a ``model_variant`` value that does not fit the study (``invalid_value``):
-    ``{"kind": "regularisation", "strength": "weak" | "strong"}`` or ``{"kind":
-    "drop_group", "group": <a variable group of the case>}``."""
-    if not isinstance(value, Mapping) or value.get('kind') not in VARIANT_KEYS \
-            or set(value) != set(VARIANT_KEYS[value['kind']]):
-        raise _invalid('model_variant is {"kind": "regularisation", "strength": "weak" or '
-                       '"strong"} or {"kind": "drop_group", "group": <a group of variables>}.',
-                       kinds=list(st.VARIANT_KINDS), strengths=list(st.VARIANT_STRENGTHS),
-                       groups=sorted(variant_groups(case_of(state))))
-    if value['kind'] == 'regularisation' and value['strength'] not in st.VARIANT_STRENGTHS:
-        raise _invalid('strength is "weak" or "strong".', field='strength',
-                       strengths=list(st.VARIANT_STRENGTHS))
-    if value['kind'] == 'drop_group':
-        groups = variant_groups(case_of(state))
-        if value['group'] not in groups:
-            raise _invalid(f'{value["group"]!r} is not a group of candidate features of this '
-                           f'case.', field='group', groups=sorted(groups))
+    """Refuse a ``model_variant`` value that does not fit the study (``invalid_value``).
+
+    v0.3 (WP-F1, ADR 0007): ``{"variants": [...]}``, one to three variants each declared with
+    its ``question``, of the kinds ``regularisation`` (``strength``), ``drop_group``
+    (``group``), ``tuned`` (the penalty by nested cross-validation) and ``family``
+    (``family``: ``ebm`` or ``hgb``); a v0.2b value (one variant of the first two kinds, no
+    question) is still accepted. The budget counts every distinct variant the study ever
+    confirmed: a value that would bring it above three is refused (``budget`` in the
+    details), whatever the list holds."""
+    groups = variant_groups(case_of(state))
+    problem = trials.check_value(value, groups, st.task_of(state))
+    if problem is None and not trials.is_list_value(value) \
+            and trials.variants_of(value)[0]['kind'] not in VARIANT_KEYS:
+        problem = 'A variant of kind tuned or family is declared in a list, with its question.'
+    if problem is not None:
+        raise _invalid(problem + ' model_variant is {"variants": [{"kind": ..., "question": '
+                       '...}, ...]} (at most three).', kinds=list(st.VARIANT_KINDS),
+                       strengths=list(st.VARIANT_STRENGTHS), groups=sorted(groups),
+                       families=list(trials.VARIANT_FAMILIES), max=trials.MAX_VARIANTS)
+    used = trials.used_specs(state, value)
+    if len(used) > trials.MAX_VARIANTS:
+        raise _invalid(f'The trial budget is {trials.MAX_VARIANTS} variants: this value would '
+                       f'bring the variants confirmed in this study to {len(used)}. Choose among '
+                       f'the variants already compared.',
+                       budget={'max': trials.MAX_VARIANTS, 'used': len(trials.used_specs(state)),
+                               'would_use': len(used)})
 
 
 def split_methods(state: Mapping) -> list[str]:
@@ -1106,6 +1123,19 @@ def data_contingency(store, state: Mapping, decision_id: str,
     look_results, motivating_results_reading_target, text}``; None when the value is not
     data-contingent. Any other decision: ``(None, None)`` (not assessed).
     """
+    if decision_id == st.MODEL_VARIANT and isinstance(value, Mapping):
+        # v0.3 (WP-F1): a model family proposed after the diagnostics of the linear fit
+        # flagged a pattern is data-contingent; the other variants are not assessed further.
+        from . import registry
+        slot = st.DIAG_SLOT[st.task_of(state)]
+        rid = state['current'].get(slot)
+        diag = None
+        if rid is not None:
+            try:
+                diag = registry.get(store, rid)['output']['values']
+            except StudyError:
+                diag = None
+        return trials.data_contingency(value, diag, rid)
     if decision_id != st.PREPROCESSING or not isinstance(value, Mapping):
         return None, None
     contingent = bool(value.get('data_contingent'))

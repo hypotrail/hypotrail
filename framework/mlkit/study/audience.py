@@ -64,6 +64,9 @@ def activity_words(activity) -> str:
     """An activity id (or a slot, ``eda.rate_by:job``) in words: "an outcome rate by group
     (job)"; an unknown activity reads "an analysis"."""
     base, sep, column = str(activity or '').partition(':')
+    if base == 'fit.variant' and column in ('2', '3'):
+        # v0.3 (WP-F1): the second and third variants, in words.
+        return {'2': 'the second variant model', '3': 'the third variant model'}[column]
     words = ACTIVITY_WORDS.get(base, 'an analysis')
     return f'{words} ({column})' if sep and column else words
 
@@ -71,7 +74,9 @@ def activity_words(activity) -> str:
 # Recorded values in words (v0.2a, WP-A7): a rule, a model slot, a verdict. The numbers are
 # the value's own; nothing is computed.
 MODEL_WORDS = {'fit.linear': 'the linear model', 'fit.baseline': 'the mean baseline',
-               'fit.logistic': 'the logistic model', 'fit.variant': 'the variant'}
+               'fit.logistic': 'the logistic model', 'fit.variant': 'the variant',
+               # v0.3 (WP-F1)
+               'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant'}
 VERDICT_WORDS = {'adopt_policy': 'adopt the policy', 'adopt_model': 'adopt the chosen model',
                  'keep_baseline': 'keep the baseline', 'inconclusive': 'inconclusive'}
 
@@ -111,9 +116,13 @@ def policy_words(value) -> str:
 
 
 def variant_words(value) -> str:
-    """A ``model_variant`` value in words (WP-B1)."""
+    """A ``model_variant`` value in words (WP-B1; v0.3, WP-F1: a list of variants, each in
+    words, :func:`mlkit.study.trials.value_words`)."""
     if not isinstance(value, Mapping):
         return str(value)
+    from . import trials
+    if trials.is_list_value(value) or value.get('kind') in ('tuned', 'family'):
+        return trials.value_words(value)
     if value.get('kind') == 'regularisation':
         return {'weak': 'weaker regularisation', 'strong': 'stronger regularisation'}.get(
             value.get('strength'), 'another regularisation')

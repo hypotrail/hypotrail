@@ -389,7 +389,9 @@ def signal(citer: cite.Citer, rid: str, values: Mapping) -> str:
 # --- 4. binary: positives found at each rule -------------------------------------------------
 
 SELECTION_LEGEND = {'fit.logistic': 'Model (logistic, the candidate)',
-                    'fit.variant': 'Model (the variant, adopted with the rule)'}
+                    'fit.variant': 'Model (the variant, adopted with the rule)',
+                    'fit.variant:2': 'Model (the second variant, adopted with the rule)',
+                    'fit.variant:3': 'Model (the third variant, adopted with the rule)'}
 
 
 def selection(citer: cite.Citer, rid: str, values: Mapping, rule_words,
