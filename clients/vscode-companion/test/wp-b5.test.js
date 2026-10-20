@@ -16,7 +16,6 @@ const { toSummaryModel } = require('../lib/models/summary');
 const { toEvidenceModel } = require('../lib/models/evidence');
 const { toWhatIfModel } = require('../lib/models/whatif');
 const { toScenarioModel } = require('../lib/models/scenario');
-const { FINAL_TEST_IN_CHAT } = require('../lib/handlers/decisions');
 const { fakeCli, payload } = require('./fixture-cli');
 
 const AGENT = { argv: ['/opt/py/bin/python', '-m', 'mlkit.study.cli'], studyDir: '/studies/bank marketing "demo"' };
@@ -200,7 +199,7 @@ test('WI-6: the gain points and each evaluated rule\'s share are the engine valu
   assert.throws(() => toScenarioModel(payload('summary.binary')), /hypotrail.status\/1/);
 });
 
-test('WI-7: a share rule passes the protocol, the preview argv and W3 with the engine draft, byte for byte', async () => {
+test('WI-7: a share rule passes the protocol, the preview argv and the engine draft, byte for byte (no W3 since v0.3)', async () => {
   for (const rule of ['share:0.1', 'share:0.05', 'share:1']) {
     assert.ok(protocol.validateIncoming({ v: 2, type: 'preview_policy', rules: [rule], intervals: true, seq: 1 }), rule);
     assert.deepEqual(cli.previewPolicyArgv(AGENT, { rules: [rule] }).slice(AGENT.argv.length, AGENT.argv.length + 4),
@@ -213,18 +212,16 @@ test('WI-7: a share rule passes the protocol, the preview argv and W3 with the e
   const draft = payload('captured/proposal_draft.binary.share');
   const summary = { ...payload('captured/summary.binary.cv'), revision: draft.revision };
   const route = tail => (tail[0] === 'status' ? { payload: summary } : tail[1] === 'proposal' ? 'captured/proposal_draft.binary.share' : undefined);
-  const { c, of, runCli } = make({ route, host: { confirmModal: async () => true } });
+  const { c, of, runCli } = make({ route });
   await c.handle({ v: 2, type: 'ready' });
-  await c.handle({ v: 2, type: 'propose', decisionId: 'policy', value: 'share:0.2', revision: draft.revision });
-  const write = runCli.calls.find(x => x.tail[0] === 'decide');
-  assert.deepEqual(write.argv, cli.proposeArgv(AGENT, { decisionId: 'policy', value: 'share:0.2', restatement: draft.restatement,
-    rationale: draft.rationale, requestId: UUID, expectedRevision: draft.revision }));
-  assert.equal(of('outcome').at(-1).op, 'W3');
+  await c.handle({ v: 2, type: 'draft', decisionId: 'policy', value: 'share:0.2', revision: draft.revision });
+  assert.equal(of('draft_result').at(-1).model.restatement, draft.restatement, 'byte for byte');
+  assert.ok(!runCli.calls.some(x => x.tail[0] === 'decide'), 'the panel proposes nothing');
 });
 
 // --- the opening of the final test is a chat act (OV-10, DC-10) ---------------------------------
 
-test('DC-10, OV-10: a confirm of the final_test proposal is refused by the controller and runs nothing', async () => {
+test('DC-10, OV-10: a confirm of the final_test proposal is dropped (no W1 since v0.3) and runs nothing', async () => {
   const summary = payload('captured/summary.binary.cv.opening');
   const proposal = summary.open_proposals.find(p => p.decision_id === 'final_test');
   assert.ok(proposal, 'the capture waits for the opening');
@@ -234,12 +231,8 @@ test('DC-10, OV-10: a confirm of the final_test proposal is refused by the contr
   await c.handle({ v: 2, type: 'confirm', proposalId: proposal.proposal_id,
     words: 'Yes, I open the final test now, because everything is chosen', revision: summary.revision });
   assert.ok(!runCli.calls.some(x => x.tail[0] === 'decide'), 'no decide confirm');
-  const o = of('outcome').at(-1);
-  assert.equal(o.op, 'W1');
-  assert.equal(o.kind, 'invalid');
-  assert.equal(o.message, FINAL_TEST_IN_CHAT);
-  assert.match(FINAL_TEST_IN_CHAT, /in the chat/);
-  // Withdrawing stays possible (W2 is not the opening).
+  assert.equal(of('outcome').length, 0);
+  assert.equal(c.diagnostics().ignored, 1);
   assert.equal(summary.next_action.decision, 'final_test');
 });
 

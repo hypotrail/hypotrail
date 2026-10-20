@@ -120,7 +120,7 @@ data[data-result-id] { text-decoration: underline dotted; }
 .ht-details ul { margin-top: 4px; }
 .ht-stale { opacity: 0.7; }
 .ht-error-state { padding: 16px; }
-.ht-value-words[title] { text-decoration: underline dotted var(--ht-muted); text-underline-offset: 3px; }
+/* WP-E1 (R25): no dotted underline on words; the citation style stays on numbers only. */
 
 /* WP-A5: below 600 px every table of the panel becomes a list of cards; each cell is
    labelled by its column (data-label, set by core.js from the table head). */

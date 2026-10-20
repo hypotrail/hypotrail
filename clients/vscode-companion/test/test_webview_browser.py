@@ -14,8 +14,6 @@ Run: ``uv run --project framework python -m pytest -q clients/vscode-companion/t
 """
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from conftest import NONCE
@@ -42,23 +40,11 @@ SUMMARY = {
                'user_words': 'wait for <i>my</i> manager', 'resolution_words': None}],
     'recap': ['Goal: g', 'Decided: nothing yet.', 'Now: n', 'Next: x', 'Limit: l'],
 }
-ENGINE_MESSAGE = ('A bare acknowledgement is not a decision. Restate the proposal and ask the '
-                  'user to answer it in their own words.')
 
 
 @pytest.fixture(scope='module')
 def summary_model(model) -> dict:
     return model('summary', SUMMARY)
-
-
-@pytest.fixture(scope='module')
-def refusal(node) -> dict:
-    payload = {'schema': 'hypotrail.error/1', 'ok': False, 'command': 'decide confirm',
-               'error': {'code': 'ambiguous_confirmation', 'message': ENGINE_MESSAGE,
-                         'details': {'reason': 'bare_acknowledgement', 'user_words': 'ok'}}}
-    return json.loads(node("let s='';process.stdin.on('data',d=>s+=d).on('end',()=>"
-                           "process.stdout.write(JSON.stringify(require('./lib/refusals')"
-                           ".describe(JSON.parse(s)))))", json.dumps(payload)))
 
 
 @pytest.fixture
@@ -101,7 +87,8 @@ def test_csp_blocks_a_script_without_the_nonce(opened):
     assert panel.violations(), 'and fired securitypolicyviolation'
 
 
-def test_proposal_textarea_starts_empty_and_confirm_needs_typed_words(opened, summary_model):
+def test_the_proposal_card_is_read_only_and_asks_the_agent(opened, summary_model):
+    """WP-E1 (R23, ADR 0004 amendment): the v0 card has no words field and no write control."""
     page, requests, errors, _csp, _panel = opened
     _snapshot(page, summary_model)
     card = page.locator('[data-proposal-card="p_1"]')
@@ -110,24 +97,15 @@ def test_proposal_textarea_starts_empty_and_confirm_needs_typed_words(opened, su
         'You predict <b>before</b> the first reminder.'
     assert page.locator('b, i').count() == 0
     assert 'wait for <i>my</i> manager' in card.locator('[data-hold="n_1"]').inner_text()
-    area = page.get_by_label('Your answer, in your own words')
-    assert area.input_value() == ''
-    confirm = card.locator('button[data-action="confirm"]')
-    assert confirm.is_disabled()
-    area.fill('   ')
-    assert confirm.is_disabled()
-    area.fill('Yes, before the first reminder is sent')
-    assert confirm.is_enabled()
-    confirm.click()
-    assert _posted(page)[-1] == {'v': 2, 'type': 'confirm', 'proposalId': 'p_1',
-                                 'words': 'Yes, before the first reminder is sent',
-                                 'revision': 3}
-    # No delegation control, no other mutating control.
+    assert page.locator('textarea').count() == 0
+    assert page.locator('[data-write], button[data-action]').count() == 0
+    assert card.locator('[data-answer-in-chat="p_1"] .title').inner_text() == 'Answer in the chat'
+    # No delegation control.
     assert page.locator('button').filter(has_text='delegat').count() == 0
-    actions = page.locator('button[data-action]').evaluate_all('bs => bs.map(b => b.dataset.action)')
-    assert sorted(set(actions)) == ['confirm', 'withdraw']
-    writes = page.locator('button[data-write]').evaluate_all('bs => bs.map(b => b.dataset.write)')
-    assert sorted(set(writes)) == ['confirm', 'withdraw']
+    card.locator('[data-ask-proposal="p_1"]').click()
+    assert _posted(page)[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_1'},
+                                 'question': 'Can you explain this proposal and what confirming it would change in my study?',
+                                 'mode': 'copy'}
     assert requests == [] and errors == []
 
 
@@ -150,43 +128,19 @@ def test_panel_shows_recap_plan_artifacts_and_limits(opened, summary_model):
     assert _posted(page)[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'report'}
 
 
-def test_refusal_is_rendered_verbatim_with_the_human_message(opened, summary_model, refusal):
-    page, requests, errors, _csp, _panel = opened
-    _snapshot(page, summary_model)
-    page.get_by_label('Your answer, in your own words').fill('ok')
-    _send(page, {'type': 'outcome', 'op': 'W1', 'kind': 'refused', 'target': 'p_1', 'exitCode': 2,
-                 'refusal': refusal})
-    alert = page.locator('[data-outcome="refused"]')
-    assert alert.get_attribute('role') == 'alert'
-    assert alert.get_attribute('data-reason') == 'bare_acknowledgement'
-    assert alert.locator('[data-engine-message]').inner_text() == ENGINE_MESSAGE
-    assert alert.locator('[data-human]').inner_text() == refusal['human']
-    assert refusal['human'].endswith('Nothing was recorded.')
-    # The junior's own text stays for them to edit; the panel adds nothing to it.
-    assert page.get_by_label('Your answer, in your own words').input_value() == 'ok'
-    assert requests == [] and errors == []
-
-
-def test_busy_disables_the_buttons_and_a_new_revision_warns_a_typing_junior(opened, summary_model):
+def test_a_new_revision_redraws_and_malformed_messages_are_ignored(opened, summary_model):
     page, *_ = opened
     _snapshot(page, summary_model)
-    page.get_by_label('Your answer, in your own words').fill('Yes, before the reminder')
-    _send(page, {'type': 'busy', 'busy': True, 'op': 'W1', 'target': 'p_1'})
-    assert page.locator('button[data-action="confirm"]').is_disabled()
-    assert page.locator('button[data-action="withdraw"]').is_disabled()
-    _send(page, {'type': 'busy', 'busy': False, 'op': 'W1', 'target': 'p_1'})
     _snapshot(page, {**summary_model, 'revision': 4})
-    # One warning, next to the textarea (WP-I, decision CI.4; the frame no longer repeats it).
-    assert 'revision 3 to 4' in page.locator('[data-typing-warning="p_1"]').inner_text()
     assert page.locator('[data-notice]').count() == 0
-    assert page.get_by_label('Your answer, in your own words').input_value() == \
-        'Yes, before the reminder'
     # Unknown or malformed messages are ignored.
     _send(page, {'type': 'eval', 'code': 'window.__x = 1'})
     _send(page, {'type': 'snapshot', 'revision': 5, 'model': None})
+    _send(page, {'type': 'busy', 'busy': True, 'op': 'W1', 'target': 'p_1'})
     page.evaluate('m => window.postMessage(m, "*")', {'type': 'snapshot', 'model': summary_model})
     assert page.locator('[data-proposal-card="p_1"]').count() == 1
     assert page.locator('[data-revision]').get_attribute('data-revision') == '4'
+    assert page.evaluate('window.__x === undefined')
 
 
 def test_dark_scheme_changes_the_colours(open_panel):

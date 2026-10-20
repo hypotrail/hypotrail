@@ -17,7 +17,6 @@ import pytest
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
 RESTATEMENT = 'Call the 100 clients with the highest scores.'
-WORDS = 'Yes: we can make 100 calls per wave, so call the 100 best-scored clients.'
 
 
 @pytest.fixture(scope='module')
@@ -40,16 +39,6 @@ def decisions(model):
     return lambda name: model('decisions', name)
 
 
-@pytest.fixture(scope='module')
-def describe(node):
-    def run(name_or_payload):
-        from conftest import read_payload
-        data = read_payload(name_or_payload) if isinstance(name_or_payload, str) else name_or_payload
-        return json.loads(node("let s='';process.stdin.on('data',d=>s+=d).on('end',()=>process.stdout.write("
-                               "JSON.stringify(require('./lib/refusals').describe(JSON.parse(s)))))", json.dumps(data)))
-    return run
-
-
 def opened(open_panel, summary, stage='v1', theme='light', reviewer=False, task=None):
     panel = open_panel(color_scheme=theme)
     panel.init(stage=stage, reviewer=reviewer, task=task)
@@ -64,16 +53,8 @@ def card(panel, pid='p_5'):
     return panel.page.locator(f'[data-proposal-card="{pid}"]')
 
 
-def area(panel, pid='p_5'):
-    return panel.page.locator(f'#words-{pid}')
-
-
 def effects_message(model, revision=None):
     return {'type': 'effects', 'proposalId': model['proposalId'], 'revision': revision or model['revision'], 'model': model}
-
-
-def textarea_values(page):
-    return page.locator('textarea').evaluate_all('ts => ts.map(t => t.value)')
 
 
 def wait_until(page, expression, timeout_ms=3000):
@@ -90,94 +71,67 @@ def assert_clean(panel):
     assert panel.page.locator('[style]').count() == 0, 'no inline style attribute (CSP)'
 
 
-# --- DC-1, DC-2, DC-5: the answer is the junior's own -------------------------------------------
+# --- DC-12 (WP-E1): the card is read only; the answer is given in the chat --------------------------
 
 @pytest.mark.parametrize('theme', THEMES)
-def test_dc1_dc5_textarea_starts_empty_confirm_needs_typed_words(open_panel, binary, effects, theme):
+def test_dc12_the_card_is_read_only_answer_in_the_chat_and_ask_the_agent(open_panel, binary, effects, theme):
+    """DC-12 (WP-E1, R23): no words field, no Confirm, no Withdraw. DC-1, DC-2, DC-3 and DC-5
+    are withdrawn with W1 and W2: the card holds no textarea and no write control at all."""
     panel = opened(open_panel, binary, theme=theme)
     page = panel.page
     c = card(panel)
-    assert c.locator('[data-restatement="p_5"]').inner_text() == RESTATEMENT
-    words = page.get_by_label('Your answer to this proposal, in your own words')
-    assert words.input_value() == ''
-    confirm = c.locator('button[data-action="confirm"]')
-    assert confirm.inner_text() == 'Confirm in my words'
-    assert confirm.is_disabled()
-    # DC-5: no preview text ever goes into the textarea.
+    block = c.locator('[data-restatement-block="p_5"]')
+    assert block.locator('.dc-lead').inner_text() == 'The assistant proposes:'
+    assert block.locator('[data-restatement="p_5"]').inner_text() == RESTATEMENT
+    assert block.locator('[data-proposed-value="p_5"]').inner_text() == 'In short: Select the top 100 by score'
     panel.send(effects_message(effects('preview_effects.binary.reconfirm')))
-    panel.snapshot(binary)
-    assert textarea_values(page) == ['']
-    assert page.locator('textarea[placeholder]').count() == 0
-    assert RESTATEMENT not in page.locator('textarea').evaluate('t => t.value + t.defaultValue + t.textContent')
-    assert confirm.is_disabled()
-    words.fill('  \n ')
-    assert confirm.is_disabled()
-    words.fill(WORDS)
-    assert confirm.is_enabled()
-    confirm.click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'confirm', 'proposalId': 'p_5', 'words': WORDS, 'revision': 26}
-    hint = page.locator('#hint-p_5').inner_text()
-    assert '"ok" or "yes" alone is not enough' in hint and 'Nothing is filled in for you' in hint
-    assert words.get_attribute('aria-describedby') == 'hint-p_5'
+    assert page.locator('textarea').count() == 0
+    assert page.locator('#panel-decisions [data-write]').count() == 0
+    assert c.locator('button[data-action]').count() == 0
+    buttons = c.locator('button').evaluate_all('bs => bs.map(b => b.innerText)')
+    assert not [b for b in buttons if re.search(r'confirm|withdraw|propose', b, re.I)], buttons
+    note = c.locator('[data-answer-in-chat="p_5"]')
+    assert note.get_attribute('role') == 'note'
+    assert note.locator('.title').inner_text() == 'Answer in the chat'
+    assert 'This panel records no decision.' in note.inner_text()
+    ask = c.locator('[data-ask-proposal="p_5"]')
+    assert ask.inner_text() == 'Ask the agent about this'
+    assert ask.get_attribute('data-ask-direct') == 'true'
+    ask.click()
+    # One press copies a ready question: no modal, no field (§6.8, WP-E1).
+    assert page.locator('[role="dialog"]').count() == 0
+    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_5'},
+                                  'question': 'Can you explain this proposal and what confirming it would change in my study?',
+                                  'mode': 'copy'}
+    assert not any(m['type'] in ('confirm', 'withdraw', 'propose') for m in panel.posted())
     assert_clean(panel)
 
 
-def test_dc1_words_stay_on_their_card_and_are_dropped_after_a_confirmation(open_panel, binary, model, payload):
-    raw = copy.deepcopy(payload('summary.binary'))
-    raw['open_proposals'].append({'proposal_id': 'p_7', 'decision_id': 'conclusion', 'value': 'adopt_policy',
-                                  'restatement': 'You adopt the rule for the next wave.', 'revision': 26, 'origin': None})
-    two = model('summary', raw)
-    panel = opened(open_panel, two)
-    page = panel.page
-    area(panel, 'p_5').fill(WORDS)
-    assert area(panel, 'p_7').input_value() == '', 'the words of one card never appear in another'
-    panel.snapshot(two)
-    assert area(panel, 'p_5').input_value() == WORDS, 'a refresh keeps the junior\'s own draft'
-    assert area(panel, 'p_7').input_value() == ''
-    # A successful confirmation: the card is gone, the outcome says what was recorded.
-    panel.send({'type': 'outcome', 'op': 'W1', 'kind': 'ok', 'target': 'p_5', 'exitCode': 0, 'revision': 27,
-                'recorded': {'userWords': WORDS, 'channel': 'webview', 'decisionId': 'policy', 'proposalId': 'p_5'},
-                'artifacts': [{'name': 'report', 'status': 'ok', 'message': 'The report is up to date.'}]})
-    after = copy.deepcopy(raw)
-    after['revision'] = 27
-    after['open_proposals'] = [after['open_proposals'][1]]
-    panel.snapshot(model('summary', after))
-    assert card(panel, 'p_5').count() == 0
-    last = page.locator('[data-last-outcome="p_5"]')
-    assert last.locator('[data-outcome="ok"]').count() == 1
-    assert WORDS in last.inner_text()
-    assert last.locator('.title').inner_text() == 'Confirmed the decision rule in your words (channel webview).'
-    assert last.locator('[data-recorded-words]').inner_text() == f'Recorded: “{WORDS}”'
-    assert 'The report is up to date.' in last.inner_text()
-    assert textarea_values(page) == ['']
-    assert 'p_5' not in json.dumps((panel.state() or {}).get('drafts', {}))
-    assert_clean(panel)
-
-
-def test_dc2_confirm_is_disabled_while_busy_and_when_the_engine_would_refuse(open_panel, binary, effects):
+def test_a_confirmation_made_in_the_chat_removes_the_card(open_panel, binary, model, payload):
     panel = opened(open_panel, binary)
-    page = panel.page
+    assert card(panel).count() == 1
+    raw = copy.deepcopy(payload('summary.binary'))
+    raw.update({'revision': 27, 'open_proposals': []})
+    panel.snapshot(model('summary', raw))
+    assert card(panel).count() == 0
+    assert panel.page.locator('[data-nothing-waiting]').inner_text() == \
+        'Nothing is waiting for your answer. The assistant proposes decisions in the chat.'
+    assert (panel.state() or {}).get('drafts') is None, 'no confirmation drafts are kept any more'
+    assert_clean(panel)
+
+
+def test_a_blocked_preview_says_the_chat_confirmation_would_be_refused(open_panel, binary, effects):
+    panel = opened(open_panel, binary)
     c = card(panel)
-    area(panel).fill(WORDS)
-    confirm = c.locator('button[data-action="confirm"]')
-    assert confirm.is_enabled()
-    panel.send({'type': 'busy', 'busy': True, 'op': 'W1', 'target': 'p_5'})
-    assert confirm.is_disabled() and c.locator('button[data-action="withdraw"]').is_disabled()
-    assert confirm.get_attribute('aria-busy') == 'true' and confirm.inner_text() == 'Working...'
-    panel.send({'type': 'busy', 'busy': False, 'op': 'W1', 'target': 'p_5'})
-    assert confirm.is_enabled()
     panel.send(effects_message(effects('preview_effects.binary.blocked')))
     blocked = c.locator('[data-blocked="p_5"]')
     assert blocked.get_attribute('role') == 'status'
-    assert blocked.inner_text().startswith('The engine will refuse a confirmation now:')
-    assert blocked.locator('[data-blocked-code="decision_on_hold"] code').inner_text() == 'decision_on_hold'
+    assert blocked.inner_text().startswith('If you confirm it in the chat now, the engine will refuse it:')
+    item = blocked.locator('[data-blocked-code="decision_on_hold"]')
+    assert item.get_attribute('title').startswith('decision_on_hold'), 'the code is in the hover'
     assert blocked.locator('[data-engine-message]').inner_text() == \
         "This decision is on hold in the junior's own words; resolve the note first."
-    assert confirm.is_disabled()
-    assert confirm.get_attribute('aria-describedby') == blocked.get_attribute('id')
-    assert area(panel).input_value() == WORDS, 'the junior keeps their text'
-    confirm.click(force=True)
-    assert not any(m['type'] == 'confirm' for m in panel.posted())
+    assert 'decision_on_hold' not in blocked.inner_text()
     assert_clean(panel)
 
 
@@ -220,18 +174,23 @@ def test_previews_are_read_for_visible_cards_at_most_three_at_once(open_panel, m
 
 
 @pytest.mark.parametrize('theme', THEMES)
-def test_dc4_kept_fits_the_conclusion_to_confirm_again_and_regenerated(open_panel, binary, effects, theme):
+def test_dc4_the_conclusion_to_confirm_again_in_words_kept_and_regenerated_under_details(open_panel, binary, effects, theme):
     panel = opened(open_panel, binary, theme=theme)
     panel.send(effects_message(effects('preview_effects.binary.reconfirm')))
     section = card(panel).locator('[data-effects="p_5"]')
     assert section.locator('h4').inner_text() == 'If you confirm'
-    boxes = section.locator('[data-effects-box]')
-    assert boxes.evaluate_all('bs => bs.map(b => b.dataset.effectsBox)') == ['kept', 'reconfirm', 'regenerated']
-    assert section.locator('[data-effects-box="kept"]').inner_text() == 'Kept\nboth models and their predictions, nothing refitted'
-    assert section.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nthe conclusion'
-    assert section.locator('[data-effects-box="regenerated"]').inner_text() == 'Regenerated\nreport and notebook'
+    # R22: what a confirmation invalidates, in words; the rest under Details.
+    invalidated = section.locator('[data-effects-invalidated] [data-effects-box]')
+    assert invalidated.evaluate_all('bs => bs.map(b => b.dataset.effectsBox)') == ['reconfirm']
+    assert section.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again: the conclusion'
+    assert section.locator('[data-effects-nothing]').count() == 0
+    details = section.locator('details[data-effects-details="p_5"]')
+    assert details.get_attribute('open') is None
+    assert details.locator('[data-effects-box="kept"]').text_content() == \
+        'Kept: both models and their predictions, nothing refitted'
+    assert details.locator('[data-effects-box="regenerated"]').text_content() == 'Regenerated: report and notebook'
     # WP-A5: the engine's note on the preview is kept, verbatim, under Details.
-    assert section.locator('details [data-effects-note]').text_content() == \
+    assert details.locator('[data-effects-note]').text_content() == \
         'Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm.'
     assert section.locator('[data-effects-first]').count() == 0
     panel.snapshot({**binary, 'revision': 27})
@@ -250,20 +209,24 @@ def test_dc4_first_confirmation_and_a_split_change(open_panel, binary, effects, 
     panel.send(effects_message(effects('preview_effects.binary.first'), revision=26))
     panel.send(effects_message(effects('preview_effects.binary.split')))
     first = card(panel, 'p_1').locator('[data-effects]')
-    assert first.locator('[data-effects-first]').inner_text() == 'Nothing recorded so far is invalidated.'
-    assert first.locator('[data-effects-box="kept"]').inner_text() == 'Kept\nnothing'
-    assert first.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nnothing'
+    # R22: nothing invalidated is one line; the rest is under Details.
+    assert first.locator('[data-effects-nothing]').inner_text() == 'Confirming changes nothing already done.'
+    assert first.locator('[data-effects-invalidated]').count() == 0
+    assert first.locator('[data-effects-first]').text_content() == \
+        'This is the first decision of the study, so nothing recorded so far is invalidated.'
+    assert first.locator('[data-effects-box="kept"]').text_content() == 'Kept: nothing'
     split = card(panel, 'p_8').locator('[data-effects]')
     stale = split.locator('[data-effects-box="stale"]').inner_text()
+    assert stale.startswith('Becomes stale: ')
     assert 'the logistic model' in stale and 'fit.logistic' not in stale, 'slots in words (WP-A5)'
-    assert split.locator('[data-effects-box="stale"] .dc-box-title').inner_text() == 'Becomes stale'
-    assert split.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again\nthe decision rule'
-    assert 'fit.baseline' not in split.locator('[data-effects-box="kept"]').inner_text()
+    assert split.locator('[data-effects-box="reconfirm"]').inner_text() == 'To confirm again: the decision rule'
+    assert 'fit.baseline' not in split.locator('[data-effects-box="kept"]').text_content()
+    assert split.locator('[data-effects-nothing]').count() == 0
     assert split.locator('.dc-notes').inner_text() == 'Changing the split does not make explored rows unseen.'
     assert_clean(panel)
 
 
-def test_an_unavailable_preview_says_so_and_does_not_block(open_panel, binary):
+def test_an_unavailable_preview_says_so(open_panel, binary):
     panel = opened(open_panel, binary)
     message = ('The engine could not preview this confirmation. preview effects is reserved for the advanced '
                'companion and is not implemented in this version. Nothing was read or written.')
@@ -271,8 +234,7 @@ def test_an_unavailable_preview_says_so_and_does_not_block(open_panel, binary):
         'available': False, 'proposalId': 'p_5', 'message': message, 'code': 'unsupported_capability', 'reason': 'not_implemented'}})
     missing = card(panel).locator('[data-effects-missing]')
     assert missing.inner_text() == f'The impact preview is not available. {message}'
-    area(panel).fill(WORDS)
-    assert card(panel).locator('button[data-action="confirm"]').is_enabled()
+    assert card(panel).locator('[data-answer-in-chat="p_5"]').count() == 1
     assert_clean(panel)
 
 
@@ -283,15 +245,20 @@ def test_card_head_pause_origin_holds_and_resolved_conditions(open_panel, binary
     c = card(panel)
     assert c.locator('[data-pause]').inner_text() == 'Pause 3 · business trade-off'
     assert c.locator('h3').first.inner_text() == 'Choose a decision policy'
-    assert c.locator('[data-origin]').inner_text() == 'proposal by the agent · not a decision yet'
-    # WP-A5: the proposal id and the recorded value are in the hover and under Details.
-    made = c.locator('[data-made-at="p_5"]')
-    assert made.inner_text() == 'Proposed at revision 26' and made.get_attribute('title') == 'p_5'
+    # WP-E1 (R22): the origin, the proposal id and the revision are under Details only.
+    details = c.locator('details[data-value-details="p_5"]')
+    assert details.get_attribute('open') is None
+    assert details.locator('[data-origin]').text_content() == 'Proposed by the agent; not a decision yet.'
+    assert details.locator('[data-made-at="p_5"]').text_content() == 'Proposal p_5, made at revision 26'
+    assert details.locator('code').text_content() == 'capacity:100'
     value = c.locator('[data-proposed-value="p_5"]')
     assert value.inner_text() == 'In short: Select the top 100 by score'
     assert value.locator('[data-value-raw]').get_attribute('data-value-raw') == 'capacity:100'
-    assert c.locator('[data-value-details="p_5"] code').text_content() == 'capacity:100'
-    assert 'p_5' not in c.locator('h3, [data-proposed-value], [data-made-at]').all_inner_texts().__str__()
+    shown = ' '.join(c.locator(':scope > :not(details)').all_inner_texts())
+    assert 'p_5' not in shown and 'revision 26' not in shown, 'no internal id or revision in the card text'
+    # R25: words carry no dotted underline (citation style on numbers only).
+    deco = value.locator('[data-value-raw]').evaluate('n => getComputedStyle(n).textDecorationLine')
+    assert deco == 'none', deco
     assert c.locator('[data-resolved-note="n_1"]').inner_text() == \
         ('Your condition, resolved: “don\'t adopt anything until I bring my manager\'s figure” → '
          '“my manager says the team can make 100 calls per wave”')
@@ -309,8 +276,9 @@ def test_card_head_pause_origin_holds_and_resolved_conditions(open_panel, binary
 def test_dc6_a_proposal_from_this_panel_and_the_regression_pause(open_panel, regression):
     panel = opened(open_panel, regression, task='regression')
     c = card(panel, 'p_4')
-    assert c.locator('[data-origin]').inner_text() == 'proposal from this panel · not a decision yet'
-    assert c.locator('[data-origin]').get_attribute('data-origin') == 'webview'
+    origin = c.locator('[data-origin]')
+    assert origin.text_content() == 'Proposed from this panel by an earlier version; not a decision yet.'
+    assert origin.get_attribute('data-origin') == 'webview'
     assert c.locator('[data-pause]').inner_text() == 'Pause 3 · model choice'
     assert_clean(panel)
 
@@ -327,123 +295,28 @@ def test_availability_is_shown_as_status_groups(open_panel, binary, model, paylo
     assert_clean(panel)
 
 
-# --- stale revision while typing, refusals, outcome unknown, withdraw --------------------------------
-
-def test_a_revision_that_moves_while_typing_warns_and_keeps_the_text(open_panel, binary):
-    # Decision CR.3 (review finding M1): the draft keeps the revision at which the junior
-    # started typing; Confirm sends it, so the engine's stale_revision guard sees the
-    # change. The warning stays, typing more does not hide it, until the junior says they
-    # read the proposal again.
-    panel = opened(open_panel, binary)
-    page = panel.page
-    area(panel).fill('Yes, the 100 best-scored')
-    panel.snapshot({**binary, 'revision': 27})
-    warning = card(panel).locator('[data-typing-warning="p_5"]')
-    assert warning.locator('[data-typing-text]').inner_text() == (
-        'The study changed while you were typing (revision 26 to 27). Read the proposal again before you answer. '
-        'A confirmation now names revision 26, so the engine refuses it.')
-    assert warning.get_attribute('role') == 'status'
-    assert area(panel).input_value() == 'Yes, the 100 best-scored'
-    # One warning only, the card's (WP-I, decision CI.4: the frame's duplicate is gone).
-    assert page.locator('[data-notice]').count() == 0
-    area(panel).press('End')
-    area(panel).type(' clients.')
-    assert card(panel).locator('[data-typing-warning]').count() == 1, 'typing more does not hide it'
-    card(panel).locator('button[data-action="confirm"]').click()
-    assert panel.posted()[-1]['type'] == 'confirm'
-    assert panel.posted()[-1]['revision'] == 26, 'the revision the junior started typing at'
-    reread = warning.locator('button[data-reread="p_5"]')
-    assert reread.inner_text() == 'I read the proposal again at revision 27'
-    reread.click()
-    assert card(panel).locator('[data-typing-warning]').count() == 0
-    assert area(panel).input_value() == 'Yes, the 100 best-scored clients.'
-    card(panel).locator('button[data-action="confirm"]').click()
-    assert panel.posted()[-1]['revision'] == 27
-    assert panel.state()['drafts']['p_5'] == {'text': 'Yes, the 100 best-scored clients.', 'revision': 27}
-    assert_clean(panel)
-
-
-@pytest.mark.parametrize('theme', THEMES)
-def test_inv8_refusal_is_shown_verbatim_with_an_explanation_that_suggests_no_words(open_panel, binary, describe, theme):
-    panel = opened(open_panel, binary, theme=theme)
-    area(panel).fill('ok')
-    for fixture in ('error.bare_acknowledgement', 'error.delegation_needs_basis', 'error.stale_revision'):
-        refusal = describe(fixture)
-        panel.send({'type': 'outcome', 'op': 'W1', 'kind': 'refused', 'target': 'p_5', 'exitCode': 2, 'refusal': refusal})
-        region = card(panel).locator('[data-card-outcome="p_5"] [data-outcome="refused"]')
-        assert region.get_attribute('role') == 'alert'
-        assert region.get_attribute('data-code') == refusal['code']
-        assert region.locator('[data-engine-message]').inner_text() == refusal['engineMessage']
-        assert region.locator('[data-human]').inner_text() == refusal['human']
-        assert not re.search(r'["“”]', refusal['human']), 'the explanation quotes no words to type'
-        assert panel.page.locator('[data-outcome="refused"]').count() == 1, 'shown once, on its card'
-        assert area(panel).input_value() == 'ok', 'the junior\'s own text stays, nothing is added'
-    assert 'Changed at revision 26: decide.propose (policy)' in card(panel).locator('[data-card-outcome]').inner_text()
-    assert_clean(panel)
-
-
-def test_outcome_unknown_is_never_shown_as_a_success(open_panel, binary, model, payload):
-    panel = opened(open_panel, binary)
-    message = ('The hypotrail CLI timed out. The outcome is unknown: the refreshed panel shows whether anything was recorded.')
-    area(panel).fill(WORDS)
-    panel.send({'type': 'outcome', 'op': 'W1', 'kind': 'failed', 'target': 'p_5', 'exitCode': None, 'message': message})
-    region = card(panel).locator('[data-card-outcome="p_5"] [data-outcome="failed"]')
-    assert region.get_attribute('role') == 'alert'
-    assert message in region.inner_text()
-    assert panel.page.locator('[data-outcome="ok"]').count() == 0
-    assert area(panel).input_value() == WORDS
-    # The refresh shows the proposal confirmed: the unknown outcome stays visible with a hint.
-    raw = copy.deepcopy(payload('summary.binary'))
-    raw.update({'revision': 27, 'open_proposals': []})
-    panel.snapshot(model('summary', raw))
-    last = panel.page.locator('[data-last-outcome="p_5"]')
-    assert message in last.inner_text()
-    assert last.locator('[data-unknown-hint]').inner_text().startswith('Look at the history below')
-    assert panel.page.locator('[data-nothing-waiting]').inner_text() == \
-        'Nothing is waiting for your answer. The assistant proposes decisions in the chat.'
-    assert_clean(panel)
-
-
-def test_withdraw_asks_the_extension_which_shows_the_modal(open_panel, binary):
-    panel = opened(open_panel, binary)
-    withdraw = card(panel).locator('button[data-action="withdraw"]')
-    assert withdraw.inner_text() == 'Withdraw proposal'
-    withdraw.click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'withdraw', 'proposalId': 'p_5', 'revision': 26}
-    panel.send({'type': 'outcome', 'op': 'W2', 'kind': 'cancelled', 'target': 'p_5', 'message': 'Nothing was recorded.'})
-    cancelled = card(panel).locator('[data-outcome="cancelled"]').inner_text()
-    assert cancelled.startswith('Cancelled.') and cancelled.endswith('Nothing was recorded.')
-    assert_clean(panel)
 
 
 # --- INV-4: no delegation control; v2 extras ------------------------------------------------------
 
-def test_inv4_no_delegation_control_and_ask_the_agent_never_sends_the_words(open_panel, binary):
+def test_inv4_no_delegation_control_and_no_write_control_at_v2(open_panel, binary):
     panel = opened(open_panel, binary, stage='v2')
     page = panel.page
-    area(panel).fill(WORDS)
     buttons = page.locator('#panel-decisions button').evaluate_all('bs => bs.map(b => b.innerText)')
     assert not [b for b in buttons if re.search(r'delegat|default|recommend', b, re.I)], buttons
-    writes = page.locator('#panel-decisions [data-write]').evaluate_all('ns => ns.map(n => n.dataset.write)')
-    assert sorted(set(writes)) == ['confirm', 'withdraw']
-    ask = card(panel).locator('[data-ask="p_5"]')
-    assert ask.inner_text() == 'Ask the agent about this' and ask.get_attribute('data-stage') == 'v2'
+    assert page.locator('#panel-decisions [data-write]').count() == 0, 'WP-E1: the tab writes nothing'
+    ask = card(panel).locator('[data-ask-proposal="p_5"]')
+    assert ask.inner_text() == 'Ask the agent about this' and ask.get_attribute('data-stage') is None, 'offered at every stage'
     ask.click()
-    # WP-I: the shared helper of §6.8 opens the modal (an empty question), then copies.
-    dialog = page.locator('[role="dialog"]')
-    assert dialog.locator('textarea').input_value() == ''
-    assert dialog.locator('[data-ask-about="proposal:p_5"]').count() == 1
-    dialog.get_by_role('button', name='Copy for the chat').click()
-    sent = panel.posted()[-1]
-    assert sent == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'proposal', 'id': 'p_5'}, 'question': '', 'mode': 'copy'}
-    assert WORDS not in json.dumps(panel.posted())
-    assert 'delegation' in card(panel).locator('#hint-p_5').inner_text(), 'the hint says to delegate in the chat'
+    assert panel.posted()[-1]['type'] == 'ask_agent'
+    assert panel.posted()[-1]['about'] == {'kind': 'proposal', 'id': 'p_5'}
     assert_clean(panel)
 
 
 def test_v1_has_no_v2_control(open_panel, binary):
     panel = opened(open_panel, binary, stage='v1')
-    assert panel.page.locator('[data-ask], [data-evidence], [data-stage="v2"]').count() == 0
+    assert panel.page.locator('[data-evidence], [data-stage="v2"]').count() == 0
+    assert card(panel).locator('[data-ask-proposal="p_5"]').count() == 1, 'the card asks the agent at every stage'
     assert_clean(panel)
 
 
@@ -512,10 +385,15 @@ def test_dh1_history_basis_channel_superseded_and_unconfirmed(open_panel, binary
     page = panel.page
     panel.view_data('decisions', decisions('decisions.binary'), revision=26)
     rows = page.locator('[data-history-row]')
+    # R25: newest first; the revision and the time are in the hover of the decision.
     assert rows.evaluate_all('rs => rs.map(r => r.dataset.historyRow)') == [
-        'prediction_time:3', 'feature_availability:5', 'split:7', 'policy:27', 'policy:23']
+        'policy:27', 'policy:23', 'split:7', 'feature_availability:5', 'prediction_time:3']
     assert page.locator('table[data-history] th').evaluate_all('ts => ts.map(t => t.innerText)') == \
-        ['Decision', 'Your words', 'How', 'When']
+        ['Decision', 'Your words', 'How']
+    assert page.locator('table[data-history] .ht-mono').count() == 0, 'no monospace revision'
+    when = page.locator('[data-history-row="split:7"] td[data-when]')
+    assert when.get_attribute('title').startswith('revision 7 · '), when.get_attribute('title')
+    assert 'revision 7' not in page.locator('[data-history-row="split:7"]').inner_text()
     split = page.locator('[data-history-row="split:7"]')
     basis = split.locator('[data-basis]')
     # WP-A7: the basis is a chip of one vocabulary, the channel in words beside it.
@@ -533,16 +411,19 @@ def test_dh1_history_basis_channel_superseded_and_unconfirmed(open_panel, binary
     old = page.locator('[data-history-row="policy:23"]')
     assert old.get_attribute('data-current') == 'false'
     assert 'muted' in old.get_attribute('class')
-    assert 'superseded at revision 27' in old.inner_text()
+    superseded = old.locator('[data-superseded]')
+    assert superseded.inner_text().strip() == '· superseded'
+    assert superseded.get_attribute('title') == 'superseded at revision 27'
     assert old.locator('[data-words-cell]').inner_text() == '“Yes, call everyone scored at 0.2 or more”'
-    assert 'revision 23' in old.inner_text()
+    assert old.locator('td[data-when]').get_attribute('title').startswith('revision 23')
     assert page.locator('[data-not-authenticated]').inner_text() == 'Recorded words, not an authenticated signature.'
     details = page.locator('details[data-unconfirmed]')
     assert details.locator('summary').inner_text() == 'Proposals that were not confirmed'
     assert details.get_attribute('open') is None
     details.locator('summary').click()
     proposal = details.locator('[data-unconfirmed-proposal="p_6"]')
-    assert 'p_6 · withdrawn' in proposal.inner_text()
+    assert 'withdrawn' in proposal.inner_text() and 'p_6' not in proposal.inner_text()
+    assert proposal.locator('[title="p_6"]').count() == 1, 'the proposal id is in the hover'
     assert proposal.locator('blockquote').inner_text() == 'Call every client scored at 0.5 or more.'
     # WP-A5: the value in words; the status groups in the hover.
     fa = page.locator('[data-history-row="feature_availability:5"] .dc-history-value')
@@ -596,8 +477,8 @@ def test_reviewer_mode_renders_no_answer_control(open_panel, binary, decisions):
     panel.view_data('decisions', decisions('decisions.binary.reconfirm'), revision=26)
     assert page.locator('textarea').count() == 0
     assert page.locator('#panel-decisions [data-write]').count() == 0
-    assert card(panel).locator('[data-reviewer-note]').inner_text() == 'Read-only reviewer mode: this panel records no answer.'
-    assert card(panel).locator('[data-ask="p_5"]').count() == 1, 'the agent bridge stays'
+    assert card(panel).locator('[data-answer-in-chat="p_5"]').count() == 1
+    assert card(panel).locator('[data-ask-proposal="p_5"]').count() == 1, 'the agent bridge stays'
     assert page.locator('[data-history-row]').count() > 0
     assert_clean(panel)
 
@@ -607,9 +488,15 @@ def test_v0_keeps_the_v0_cards_and_reads_nothing_more(open_panel, binary):
     page = panel.page
     page.wait_for_timeout(200)
     assert [m['type'] for m in panel.posted()] == ['ready']
-    assert page.get_by_label('Your answer, in your own words').input_value() == ''
-    assert page.locator('[data-effects], [data-history], [data-pause], [data-origin]').count() == 0
+    assert page.locator('textarea').count() == 0, 'WP-E1: no words field at v0 either'
+    assert page.locator('[data-write]').count() == 0
+    assert page.locator('[data-effects], [data-history], [data-pause]').count() == 0
     assert card(panel).locator('h3').inner_text() == 'Choose a decision policy', 'no raw decision id (WP-A5)'
+    assert card(panel).locator('[data-answer-in-chat="p_5"] .title').inner_text() == 'Answer in the chat'
+    ask = card(panel).locator('[data-ask-proposal="p_5"]')
+    assert ask.inner_text() == 'Ask the agent about this'
+    ask.click()
+    assert panel.posted()[-1]['type'] == 'ask_agent', 'the bridge is v0 since WP-E1'
     assert_clean(panel)
 
 
@@ -628,8 +515,8 @@ def test_inv12_regression_decisions_tab_holds_no_decision_rule_vocabulary(open_p
     text = page.locator('body').inner_text()
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text).group(0)
     assert card(panel, 'p_4').locator('[data-explore]').inner_text() == 'explore the errors →'
-    assert card(panel, 'p_4').locator('[data-effects-box="kept"]').inner_text() == \
-        'Kept\nboth models and their predictions, nothing refitted'
+    assert card(panel, 'p_4').locator('[data-effects-box="kept"]').text_content() == \
+        'Kept: both models and their predictions, nothing refitted'
     assert page.locator('[data-choose="model_choice"]').inner_text() == 'Choose in What if?'
     assert_clean(panel)
 
@@ -649,11 +536,11 @@ def test_a11y_names_labels_headings_focus_and_no_positive_tabindex(open_panel, b
     assert page.locator('#panel-decisions h2').count() >= 3
     assert card(panel).get_attribute('aria-labelledby') == 'title-p_5'
     assert card(panel).locator('[data-effects]').get_attribute('aria-labelledby') == 'effects-p_5'
-    page.locator('#words-p_5').focus()
+    page.locator('[data-ask-proposal="p_5"]').focus()
     page.keyboard.press('Tab')
     page.keyboard.press('Shift+Tab')
     outline = page.evaluate('getComputedStyle(document.activeElement).outlineStyle')
-    assert page.evaluate('document.activeElement.id') == 'words-p_5'
+    assert page.evaluate('document.activeElement.dataset.askProposal') == 'p_5'
     assert outline != 'none', 'focus is visible'
     assert_clean(panel)
 

@@ -1,6 +1,6 @@
 'use strict';
-// Stage v1 on the real CLI (scope S, WP-I; COMPANION-ADVANCED §3.2 v1, §6.1, §6.2, §7 W1, W2,
-// W5, W6, §11). The controller and real `hypotrail` processes on temporary Bank Marketing
+// Stage v1 on the real CLI (scope S, WP-I; COMPANION-ADVANCED §3.2 v1, §6.1, §6.2, §7 W5,
+// W6, §11; no W1/W2 since the v0.3 narrowing). The controller and real `hypotrail` processes on temporary Bank Marketing
 // (binary) and Auto MPG (regression) studies created from the committed cases, outside the
 // repository, in paths with spaces and quotes. The chat agent is played by direct CLI
 // calls. Not a VS Code session. Needs framework/.venv.
@@ -44,18 +44,16 @@ test('v1 open: one summary read with the digest; the decisions read is cached pe
   report(t, p, 'v1 Bank reads');
 });
 
-test('W1: a bare "ok" is refused verbatim; a hold blocks with effects.blocked; typed words confirm with channel webview', { skip }, async () => {
+test('no W1 (v0.3): a hold blocks in effects.blocked; the panel drops a confirm; the chat confirms and the panel shows it', { skip }, async () => {
   const p = panel(bank, { stage: 'v1' });
   await p.send({ type: 'ready' });
   let rev = p.snapshot().revision;
-  await p.send({ type: 'confirm', proposalId: 'p_1', words: 'ok', revision: rev });
-  const bare = p.last('outcome');
-  assert.equal(bare.kind, 'refused');
-  assert.deepEqual([bare.refusal.code, bare.refusal.reason], ['ambiguous_confirmation', 'bare_acknowledgement']);
-  const direct = bank.hyp(['decide', 'confirm', 'p_1', '--user-words', 'ok', '--channel', 'webview', '--request-id', 'direct-ok',
-    '--expected-revision', rev]);
-  assert.equal(bare.refusal.engineMessage, direct.error.message, 'the engine message, verbatim');
-  // The junior's condition, recorded in the chat, blocks the confirmation.
+  // ADR 0004 amendment (R23, I2): the panel records no decision; a confirm is dropped.
+  await p.send({ type: 'confirm', proposalId: 'p_1', words: WORDS, revision: rev });
+  assert.equal(p.posted.filter(m => m.type === 'outcome').length, 0);
+  assert.ok(!p.commands().some(x => x.startsWith('decide')), 'no decide command');
+  assert.equal(bank.rev(), rev, 'nothing recorded');
+  // The junior's condition, recorded in the chat, blocks the confirmation (the engine's preview says so).
   const note = bank.hyp(['decide', 'note', '--about', 'prediction_time', '--text', 'only once I have checked the client file schedule',
     '--request-id', bank.rid(), '--expected-revision', rev]);
   assert.equal(note.ok, true, JSON.stringify(note));
@@ -65,34 +63,33 @@ test('W1: a bare "ok" is refused verbatim; a hold blocks with effects.blocked; t
   const effects = p.last('effects');
   assert.equal(effects.proposalId, 'p_1');
   assert.deepEqual(effects.model.blocked.map(b => b.code), ['decision_on_hold']);
-  await p.send({ type: 'confirm', proposalId: 'p_1', words: WORDS, revision: rev });
-  assert.equal(p.last('outcome').refusal.code, 'decision_on_hold');
-  assert.equal(bank.view().decisions.prediction_time.status !== 'confirmed', true, 'nothing recorded');
   const resolve = bank.hyp(['decide', 'note', '--resolve', 'n_1', '--text', 'I checked the client file schedule and it holds',
     '--request-id', bank.rid(), '--expected-revision', rev]);
   assert.equal(resolve.ok, true, JSON.stringify(resolve));
   await p.send({ type: 'refresh' });
-  // A stale revision is refused, then the revision the junior now sees confirms.
-  await p.send({ type: 'confirm', proposalId: 'p_1', words: WORDS, revision: rev });
-  assert.equal(p.last('outcome').refusal.code, 'stale_revision');
   rev = p.snapshot().revision;
   await p.send({ type: 'preview_effects', proposalId: 'p_1', revision: rev });
   assert.deepEqual(p.last('effects').model.blocked, []);
-  await p.send({ type: 'confirm', proposalId: 'p_1', words: WORDS, revision: rev });
-  const ok = p.last('outcome');
-  assert.equal(ok.kind, 'ok', JSON.stringify(ok));
-  assert.deepEqual([ok.recorded.userWords, ok.recorded.channel, ok.recorded.decisionId], [WORDS, 'webview', 'prediction_time']);
+  // The chat confirms; the panel reads it on its next refresh.
+  const confirm = bank.hyp(['decide', 'confirm', 'p_1', '--user-words', WORDS, '--request-id', bank.rid(), '--expected-revision', rev]);
+  assert.equal(confirm.ok, true, JSON.stringify(confirm));
+  await p.send({ type: 'refresh' });
+  assert.ok(!p.snapshot().proposals.some(x => x.proposalId === 'p_1'), 'the card is gone');
   const conf = bank.view().decisions.prediction_time.confirmation;
-  // ADR 0005: own words that repeat the proposal are recorded as restated (was explicit).
-  assert.deepEqual([conf.user_words, conf.channel, conf.actor, conf.basis], [WORDS, 'webview', 'user', 'restated']);
+  assert.deepEqual([conf.user_words, conf.channel], [WORDS, 'chat']);
+  await p.send({ type: 'load', view: 'decisions' });
+  assert.equal(p.last('view_data').model.history[0].decisionId, 'prediction_time', 'newest first (R25)');
 });
 
-test('W2: withdraw after the modal; the proposal is withdrawn in the state', { skip }, async () => {
+test('no W2 (v0.3): a withdrawal in the chat reaches the panel', { skip }, async () => {
   const pid = bank.propose('feature_availability', require('./realstudy').availability('binary'));
   const p = panel(bank, { stage: 'v1' });
   await p.send({ type: 'ready' });
   await p.send({ type: 'withdraw', proposalId: pid, revision: p.snapshot().revision });
-  assert.equal(p.last('outcome').kind, 'ok');
+  assert.equal(p.posted.filter(m => m.type === 'outcome').length, 0, 'the panel withdraws nothing');
+  const out = bank.hyp(['decide', 'withdraw', pid, '--request-id', bank.rid(), '--expected-revision', p.snapshot().revision]);
+  assert.equal(out.ok, true, JSON.stringify(out));
+  await p.send({ type: 'refresh' });
   const state = JSON.parse(fs.readFileSync(path.join(bank.studyDir, '.hypotrail', 'state.json'), 'utf8'));
   assert.equal(state.proposals[pid].status, 'withdrawn');
   assert.ok(!p.snapshot().proposals.some(x => x.proposalId === pid), 'refreshed: no longer open');
@@ -136,8 +133,7 @@ test('reviewer mode refuses every write of the study before any process starts (
   await p.send({ type: 'ready' });
   const before = p.commands().length;
   const rev = p.snapshot().revision;
-  for (const m of [{ type: 'confirm', proposalId: 'p_1', words: WORDS, revision: rev }, { type: 'withdraw', proposalId: 'p_1', revision: rev },
-    { type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: rev }, { type: 'render' },
+  for (const m of [{ type: 'render' },
     { type: 'run_eda', activity: 'eda.distribution', column: 'age', revision: rev },
     { type: 'acknowledge', executionId: 'e_1', words: 'I know it stopped', revision: rev }]) {
     await p.send(m);
@@ -155,8 +151,11 @@ test('v1 on Auto MPG: the regression study reads, decides, and holds no decision
   await p.send({ type: 'load', view: 'decisions' });
   const decisions = p.last('view_data').model;
   assert.ok(decisions.decisions.some(d => d.decisionId === 'model_choice'));
-  await p.send({ type: 'confirm', proposalId: 'p_1', words: 'Yes, once the technical characteristics of the model are fixed', revision: p.snapshot().revision });
-  assert.equal(p.last('outcome').kind, 'ok');
+  const confirm = auto.hyp(['decide', 'confirm', 'p_1', '--user-words', 'Yes, once the technical characteristics of the model are fixed',
+    '--request-id', auto.rid(), '--expected-revision', p.snapshot().revision]);
+  assert.equal(confirm.ok, true, JSON.stringify(confirm));
+  await p.send({ type: 'refresh' });
+  await p.send({ type: 'load', view: 'decisions' });
   await p.send({ type: 'load', view: 'check' });
   const shown = p.posted.filter(m => m.type === 'snapshot' || m.type === 'view_data' || m.type === 'effects' || m.type === 'outcome');
   const words = strings(shown).filter(s => FORBIDDEN.test(s));

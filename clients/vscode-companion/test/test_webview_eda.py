@@ -250,7 +250,56 @@ def test_ed2_banner_counts_training_rows_and_zero_validation(open_panel, model, 
     assert models.get_attribute('data-value') == str(p['exposure']['summary']['validation_rows_used_for_selection'])
     banner = page.locator('.eda-banner').inner_text()
     assert banner.startswith('Training rows only. Every chart is a registered result, computed by the engine.')
-    assert 'rows seen in EDA · train ' in banner
+    seen = page.locator('[data-rows-scope="split"]')
+    assert seen.inner_text() == (f"Rows seen in EDA: {cite.fmt_number(ledger[('train_eda', 'train')], 'int')} "
+                                 'training rows · 0 validation rows.')
+    assert 'ht-mono' not in (seen.get_attribute('class') or ''), 'prose, not monospace (R26)'
+
+
+def test_ed2_cross_validation_counts_the_development_rows_read_never_train_0(open_panel, model, payload):
+    """WP-E1 (R26): under cross-validation EDA reads the development rows; there is no
+    validation partition, so the banner names neither "train 0" nor unexplored validation rows."""
+    raw = payload('captured/evidence.binary.cv')
+    rows = next(r['rows'] for r in raw['exposure']['ledger'] if r['purpose'] == 'train_eda')
+    panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', 'captured/evidence.binary.cv'))
+    page = panel.page
+    seen = page.locator('[data-rows-scope="development"]')
+    assert seen.inner_text() == f"Rows seen in EDA: {cite.fmt_number(rows, 'int')} development rows."
+    assert page.locator('[data-rows-seen="development"]').get_attribute('data-value') == str(rows)
+    assert page.locator('[data-rows-seen="train"], [data-rows-seen="validation"]').count() == 0
+    banner = page.locator('.eda-banner').inner_text()
+    assert banner.startswith('Development rows only.')
+    assert 'Development rows used to compare and choose, out of fold:' in banner
+    text = page.locator('#panel-eda').inner_text()
+    assert 'train 0' not in text and 'validation rows stay unexplored' not in text
+    assert 'Validation rows are never used here' not in text
+    assert page.locator('.eda-section-title').inner_text() == 'Exploration of the development rows'
+    assert panel.clean()
+
+
+def test_the_quality_ranges_drop_meaningless_cells(open_panel, model, payload):
+    """WP-E1 (R26): no "0 / 0" and no "no declared range" cell in the ranges table."""
+    raw = copy.deepcopy(payload('evidence.binary'))
+    quality = next(r for r in raw['results'] if r.get('slot') == 'eda.quality')
+    ranges = quality['values']['ranges']
+    assert ranges, 'the fixture has numeric ranges'
+    for r in ranges:
+        r['declared'] = None
+    panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', raw))
+    table = panel.page.locator('[data-quality-card="eda.quality"] table')
+    heads = table.locator('th').all_inner_texts()
+    assert 'Outside the declared range' not in heads, heads
+    text = table.inner_text()
+    assert '0 / 0' not in text and 'no declared range' not in text
+    # A column that declares a range reads "none" when nothing is outside it.
+    ranges[0].update({'declared': {'min': 0, 'max': 200}, 'n_below': 0, 'n_above': 0})
+    panel.view_data('eda', model('eda', raw))
+    heads = table.locator('th').all_inner_texts()
+    assert heads[-1] == 'Outside the declared range'
+    first = table.locator('tbody tr').first.locator('td').last
+    assert first.inner_text() == 'none'
+    assert '0 / 0' not in table.inner_text() and 'no declared range' not in table.inner_text()
+    assert panel.clean()
 
 
 def test_request_lists_only_catalog_columns_and_posts_w4(open_panel, model, payload):

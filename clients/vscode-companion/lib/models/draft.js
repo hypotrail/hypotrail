@@ -1,9 +1,9 @@
 'use strict';
 // DraftModel: a pure projection of `hypotrail.proposal_draft/1` (`preview proposal`,
-// CLI-CONTRACT-COMPANION §4) for "Propose this rule" and "Propose this model choice"
-// (COMPANION-ADVANCED §6.5, §7 W3, §9). WP-U3. The restatement and the rationale are the
-// engine's texts, passed through byte for byte: the panel never writes a restatement, and
-// the W3 argv takes them from a draft re-read immediately before the proposal.
+// CLI-CONTRACT-COMPANION §4) for the What if? draft card (COMPANION-ADVANCED §6.5, §9).
+// WP-U3. The restatement and the rationale are the engine's texts, passed through byte for
+// byte: the panel never writes a restatement. Since the v0.3 narrowing (no W3) the draft is
+// shown read only, next to "Ask the agent to propose this".
 //
 // Keys (§9): proposable, missing, restatement, rationale, evidence, supersedesProposal,
 // note; plus revision, decisionId, value.

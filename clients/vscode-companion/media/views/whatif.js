@@ -5,11 +5,12 @@
 // Capacity), a slider and a number input bound to it; each move asks `preview_policy` (the
 // controller debounces it and keeps the latest; this view drops an answer whose `seq` is
 // not its latest), a release asks it again with paired intervals. The comparison, the
-// intervals, and the "Propose this rule" area update in place, so the slider is never
-// re-created under the pointer. Regression: the residual explorer (no slider, none of the
-// decision-rule vocabulary). "Propose ..." is enabled only when the engine's draft says
-// `proposable`; it sends `propose` with identifiers only, and the controller builds W3 from
-// a draft it reads again.
+// intervals, and the "Ask the agent to propose this" area update in place, so the slider is
+// never re-created under the pointer. Regression: the residual explorer (no slider, none of
+// the decision-rule vocabulary). The panel proposes nothing (v0.3 narrowing, ADR 0004
+// amendment, integrator decision I2): for a value the engine evaluated, it shows the
+// engine's draft and copies a ready question for the chat; the agent proposes it there.
+// Rules are named in words ("top 20%"), the recorded token in the hover (R26).
 (function (HT) {
   'use strict';
   const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
@@ -50,6 +51,9 @@
     if (kind === 'share') return { min: 0.01, max: 1, step: 0.01 };
     return kind === 'capacity' ? { min: 1, max: Math.max(1, n || 1), step: 1 } : { min: 0, max: 1, step: 0.01 };
   }
+
+  /** A rule token in words (`share:0.2` -> "top 20%"; WP-E1, R26). */
+  const ruleWords = rule => HT.copy.junior.ruleShort(rule);
 
   /** A share (0 to 1) as the percentage of the junior's own parameter (no figure of results). */
   const percent = p => HT.copy.junior.sharePercent(p) || '';
@@ -116,34 +120,26 @@
     return ctx.el('p', { 'data-delta-sentence': side, text: side === 'one_side' ? c.oneSide : side === 'includes_zero' ? c.includesZero : C().binary.undefinedDelta });
   }
 
-  function outcomeBlock(ctx, decisionId) {
-    const o = ctx.outcome(decisionId);
-    if (!o || o.op !== 'W3') return null;
-    const node = ctx.el('div', { 'data-propose-outcome': o.kind }, [ctx.renderOutcome(o)]);
-    if (o.kind === 'ok' && o.recorded && o.recorded.proposalId) {
-      node.appendChild(ctx.el('button', { type: 'button', className: 'secondary', text: C().common.openDecisions,
-        onclick: () => ctx.navigate({ tab: 'decisions', kind: 'proposal', id: o.recorded.proposalId }) }));
-    }
-    return node;
-  }
-
-  /** The draft card and the propose button, or why the value cannot be proposed. */
+  /**
+   * The engine's draft and "Ask the agent to propose this" (a ready question copied for the
+   * chat, no write; WP-E1), or why the value cannot be proposed yet.
+   */
   function proposeArea(ctx, decisionId, value, evaluated, t) {
     const common = C().common;
     const kids = [];
+    const words = decisionId === 'policy' ? ruleWords(value) : (t.fits && t.fits[value]) || value;
     if (!evaluated) {
       kids.push(ctx.el('p', { 'data-not-evaluated': value, text: t.notEvaluated }));
       if (decisionId === 'policy') {
         // The shared agent-bridge helper of media/terms.js (§6.8; WP-I).
-        kids.push(HT.askButton(ctx, { kind: 'decision', id: 'policy' }, t.askAbout(value),
-          { label: t.askEvaluate(value), attrs: { 'data-ask-agent': 'evaluate' }, question: t.askEvaluateQuestion(value) }));
+        kids.push(HT.askButton(ctx, { kind: 'decision', id: 'policy' }, t.askAbout(words),
+          { label: t.askEvaluate(words), attrs: { 'data-ask-agent': 'evaluate' }, question: t.askEvaluateQuestion(words, value) }));
       }
     } else {
       const draft = currentDraft(ctx, decisionId, value);
       if (!draft) {
         askDraft(ctx, decisionId, value);
         kids.push(ctx.el('p', { className: 'muted', 'aria-busy': 'true', text: common.readingDraft }));
-        if (!ctx.reviewer) kids.push(ctx.el('button', { type: 'button', 'data-write': 'propose', disabled: true, text: t.propose }));
       } else if (!draft.proposable) {
         kids.push(ctx.el('p', { 'data-not-evaluated': value, text: t.notEvaluated }));
       } else {
@@ -152,18 +148,14 @@
           ctx.el('blockquote', { 'data-draft-restatement': true, text: draft.restatement }),
           ctx.el('p', { className: 'muted', text: draft.rationale }),
         ]));
-        const busy = ctx.busy;
-        // This area is also updated in place (draft_result), outside the frame's render that
-        // removes write controls in reviewer mode: it never builds one for a reviewer.
-        if (!ctx.reviewer) kids.push(ctx.el('div', { className: 'ht-wi-propose' }, [
-          ctx.el('button', { type: 'button', 'data-write': 'propose', 'aria-describedby': 'ht-wi-propose-hint', disabled: busy,
-            'aria-busy': busy && ctx.busyOp === 'W3' ? 'true' : null, text: busy && ctx.busyOp === 'W3' ? HT.copy.core.working : t.propose,
-            onclick: () => ctx.send({ type: 'propose', decisionId, value, revision: draft.revision }) }),
+        kids.push(ctx.el('div', { className: 'ht-wi-propose' }, [
+          HT.askButton(ctx, { kind: 'decision', id: decisionId }, t.askAbout(words),
+            { label: t.propose, attrs: { 'data-ask-propose': value, 'aria-describedby': 'ht-wi-propose-hint' },
+              question: t.askProposeQuestion(words, value), direct: true }),
           ctx.el('span', { id: 'ht-wi-propose-hint', className: 'muted', text: common.proposeHint }),
         ]));
       }
     }
-    kids.push(outcomeBlock(ctx, decisionId));
     return ctx.el('section', { className: 'ht-wi-propose-area', 'data-propose-area': value, 'aria-live': 'polite' }, kids);
   }
 
@@ -280,7 +272,7 @@
     const t = C().binary;
     const common = C().common;
     const p = S.preview;
-    const kids = [ctx.el('h3', { id: 'ht-wi-cmp-h', text: t.comparisonTitle(p ? p.rule : S.rule) })];
+    const kids = [ctx.el('h3', { id: 'ht-wi-cmp-h', title: p ? p.rule : S.rule, text: t.comparisonTitle(ruleWords(p ? p.rule : S.rule)) })];
     if (!p) {
       kids.push(ctx.el('p', { className: 'muted', text: S.pending ? common.updating : t.noPreview }));
       return ctx.el('section', { className: 'card ht-wi-comparison', 'data-experiment': true, 'aria-labelledby': 'ht-wi-cmp-h' }, kids);
@@ -292,7 +284,7 @@
     const body = ctx.el('div', { className: stale ? 'ht-pending' : null, 'data-preview-rule': p.rule });
     for (const metric of ['precision', 'recall']) {
       ctx.components.bars(body, {
-        title: t.metricAt(t.metrics[metric], p.rule, rowsWord(model)), max: 1, unit: t.metrics[metric], rule: null,
+        title: t.metricAt(t.metrics[metric], ruleWords(p.rule), rowsWord(model)), max: 1, unit: t.metrics[metric], rule: null,
         items: fits.map(fit => {
           const v = entry.models[fit][metric];
           return { label: fitName(t, fit), value: v === null ? 0 : v, valueText: v === null ? t.notDefined : fmt(ctx, v, 'pct1'), small: false, cited: null,
@@ -314,7 +306,7 @@
       const delta = candidate && entry.deltas && entry.deltas[candidate] ? entry.deltas[candidate].precision : null;
       const box = ctx.el('div', { className: 'ht-wi-intervals', 'data-intervals': p.rule });
       const interval = r => (r.low === null || r.high === null ? '' : `[${fmt(ctx, r.low, 'pct1')}, ${fmt(ctx, r.high, 'pct1')}]`);
-      intervals(ctx, box, { title: t.metricAt(t.metrics.precision, p.rule, rowsWord(model)), zero: false,
+      intervals(ctx, box, { title: t.metricAt(t.metrics.precision, ruleWords(p.rule), rowsWord(model)), zero: false,
         rows: fits.map(fit => {
           const point = entry.models[fit].precision;
           const r = entry.intervals[fit].precision;
@@ -360,7 +352,7 @@
         { key: 'tp', label: t.positives(model.targetLabel) }, { key: 'precision', label: t.columns.precision },
         { key: 'recall', label: t.columns.recall }, { key: 'status', label: t.columns.status }],
       rows: model.evaluatedRules.map(r => ({
-        rule: r.rule,
+        rule: ruleWords(r.rule),
         selected: cite(r.selected, r.paths.selected, x => count(ctx, x)),
         tp: cite(r.truePositives, r.paths.truePositives, x => count(ctx, x)),
         precision: cite(r.precision, r.paths.precision, x => fmt(ctx, x, 'pct1')),
@@ -379,7 +371,7 @@
    * WP-B5: the gain curve of the registered points (the engine's gain points at 5, 10 and
    * 20 % and every evaluated rule with the share it acts on), with the junior's rule and the
    * case's scenario share as marks. "Try this share" moves the slider (a preview, read only);
-   * proposing stays the W3 path below, for a rule the engine evaluated.
+   * proposing is asked of the agent in the chat (the area below).
    */
   function gainView(ctx, model) {
     const t = C().binary;
@@ -397,9 +389,9 @@
       rule: p.rule, source: g.sourcePoint });
     for (const r of gain.rules) {
       const known = byShare.get(r.share);
-      if (known && known.rule === r.rule) { known.source = g.sourceRule(r.rule); known.evaluated = r.rule; continue; }
+      if (known && known.rule === r.rule) { known.source = g.sourceRule(ruleWords(r.rule)); known.evaluated = r.rule; continue; }
       byShare.set(`${r.share}|${r.rule}`, { share: r.share, recall: r.recall, precision: r.precision, paths: r.paths, rule: r.rule,
-        source: g.sourceRule(r.rule), evaluated: r.rule });
+        source: g.sourceRule(ruleWords(r.rule)), evaluated: r.rule });
     }
     const rows = [...byShare.values()].sort((a, b) => a.share - b.share);
     const adopted = adoptedRule(ctx.snapshot) || proposalRule(ctx.snapshot);
@@ -645,7 +637,6 @@
     stage: 'v2',
     // WP-B5: `scenario`, the case's teaching share (status --json), for the gain curve.
     views: ['scenario', 'whatif'],
-    outcomes: ['W3'],
     render,
     onMessage(m, ctx) {
       if (m.type === 'preview_policy_result') {

@@ -6,16 +6,16 @@
   'use strict';
   const regression = task => task === 'regression';
   HT.copy.decisions = {
-    waitingTitle: 'Waiting for your words',
+    waitingTitle: 'Waiting for your answer',
     nothingWaiting: 'Nothing is waiting for your answer. The assistant proposes decisions in the chat.',
     // v0 wording, kept at stage v0 (CA.11: v0 behaves as before).
     nothingWaitingV0: 'No open proposal. The assistant proposes decisions in the chat.',
     pause: (n, task) => `Pause ${n} · ${({ 1: 'framing', 2: 'evaluation design', 3: regression(task) ? 'model choice' : 'business trade-off' })[n] || ''}`,
-    byAgent: 'proposal by the agent · not a decision yet',
-    byPanel: 'proposal from this panel · not a decision yet',
-    // WP-A5: the proposal id is in the hover (title) and under Details, not in the text.
-    madeAt: (pid, rev) => (rev === null || rev === undefined ? 'Proposed in the chat' : `Proposed at revision ${rev}`),
-    restatedAs: 'The assistant restated it as:',
+    // WP-E1 (R22): the origin, the proposal id and the revision are under Details only.
+    byAgent: 'Proposed by the agent; not a decision yet.',
+    byPanel: 'Proposed from this panel by an earlier version; not a decision yet.',
+    madeAt: (pid, rev) => (rev === null || rev === undefined ? `Proposal ${pid}` : `Proposal ${pid}, made at revision ${rev}`),
+    restatedAs: 'The assistant proposes:',
     proposedValue: 'In short: ',
     recordedValue: 'Recorded value: ',
     details: 'Details',
@@ -39,7 +39,9 @@
     effectsTitleOpening: 'If you open it in the chat',
     effectsLoading: 'Reading what a confirmation would change...',
     effectsUpdating: 'Updating...',
-    effectsFirst: 'Nothing recorded so far is invalidated.',
+    // WP-E1 (R22): one line when a confirmation invalidates nothing.
+    effectsNothing: 'Confirming changes nothing already done.',
+    effectsFirst: 'This is the first decision of the study, so nothing recorded so far is invalidated.',
     kept: 'Kept',
     keptFits: 'both models and their predictions, nothing refitted',
     toConfirmAgain: 'To confirm again',
@@ -66,28 +68,13 @@
     }),
     supersedes: pid => `It replaces the open proposal ${pid}.`,
     supersedesOpen: 'It replaces the proposal that is open now.',
-    blockedTitle: 'The engine will refuse a confirmation now:',
+    blockedTitle: 'If you confirm it in the chat now, the engine will refuse it:',
     effectsMissing: 'The impact preview is not available.',
-    answerLabel: 'Your answer to this proposal, in your own words',
-    answerLabelV0: 'Your answer, in your own words',
-    answerHint: 'Say what you accept and why it fits your situation. "ok" or "yes" alone is not enough. ' +
-      'Nothing is filled in for you. What you type is recorded verbatim, with channel "webview".',
-    answerHintV0: 'What you type is recorded verbatim as your confirmation, with channel "webview". ' +
-      'The engine checks it like an answer in the chat: an acknowledgement alone is not a decision. ' +
-      'To hand the choice to the assistant, say so in the chat; this panel does not record delegations.',
-    noDelegation: 'To hand the choice to the assistant, say so in the chat; this panel does not record delegations.',
-    typing: (before, after) => `The study changed while you were typing (revision ${before} to ${after}). ` +
-      `Read the proposal again before you answer. A confirmation now names revision ${before}, so the engine refuses it.`,
-    reread: revision => `I read the proposal again at revision ${revision}`,
-    reviewerNote: 'Read-only reviewer mode: this panel records no answer.',
-    confirm: 'Confirm in my words',
-    withdraw: 'Withdraw proposal',
+    // WP-E1 (R23, ADR 0004 amendment): decisions are made in the chat only.
+    answerInChat: 'Answer in the chat',
+    answerInChatHint: 'Confirm, change, or withdraw this proposal in the chat with your assistant. This panel records no decision.',
     ask: 'Ask the agent about this',
-    working: 'Working...',
-    confirmed: (name, channel) => `Confirmed ${name} in your words (channel ${channel}).`,
-    recorded: 'Recorded: ',
-    lastOutcomeTitle: 'Last answer from this panel',
-    unknownHint: 'Look at the history below: a confirmation recorded in your words appears there.',
+    askQuestion: 'Can you explain this proposal and what confirming it would change in my study?',
     queueTitle: 'Needs your words again',
     previously: 'Previously: ',
     openNew: 'Open the new proposal',
@@ -96,8 +83,8 @@
     askAbout: title => `${title}, open`,
     chooseInWhatIf: 'Choose in What if?',
     historyTitle: 'Decision history',
-    historyCaption: 'Confirmations recorded in the study, grouped by decision, newest first.',
-    columns: ['Decision', 'Your words', 'How', 'When'],
+    historyCaption: 'Confirmations recorded in the study, newest first. The revision and the time are in the hover of each decision.',
+    columns: ['Decision', 'Your words', 'How'],
     basis: (basis, scope) => (basis === 'delegated_default'
       ? (scope === 'standing' ? 'delegated (standing)' : scope === 'this_decision' ? 'delegated (this decision)' : 'delegated')
       : basis === 'explicit' ? 'explicit' : basis),
@@ -132,15 +119,14 @@
     finalTestBody: 'Opening the final test is decided in the chat, in your own words and with your reason. This panel has no field and no button for it.',
     finalTestOnce: 'The final test opens once. Afterwards it is never measured again, and anything changed is marked as made after it.',
     modeChange: 'The mode changes only in the chat, in your own words; this panel cannot change it.',
-    // WP-A7: the reason the guided rule asks for at a trade-off, said before typing.
-    reasonHint: 'This decision is a trade-off: say why it fits your situation, not only that you agree.',
-    reasonDecisions: ['policy', 'model_choice', 'conclusion', 'final_test'],
     atRevision: rev => `revision ${rev}`,
+    superseded: 'superseded',
     supersededAt: rev => (rev === null || rev === undefined ? 'superseded' : `superseded at revision ${rev}`),
     noHistory: 'No confirmation is recorded yet.',
     notAuthenticated: 'Recorded words, not an authenticated signature.',
     unconfirmedTitle: 'Proposals that were not confirmed',
-    proposalStatus: (pid, status, reason) => `${pid} · ${status}${reason && reason !== status ? ' · ' + reason : ''}`,
+    // WP-E1: the proposal id is in the hover, not in the text.
+    proposalStatus: (status, reason) => `${status}${reason && reason !== status ? ' · ' + String(reason).replace(/_/g, ' ') : ''}`,
     historyError: 'The decision history could not be read.',
     retry: 'Retry',
   };

@@ -102,6 +102,8 @@
       out_of_fold_evaluation: 'Model evaluation on out-of-fold predictions',
       out_of_fold_policy_selection: 'Rule selection on out-of-fold predictions',
       final_evaluation: 'Final test, measured once',
+      // WP-B4's diagnostics, named in words (WP-E1, R26).
+      development_diagnostics: 'Diagnostics of the models',
     },
     // WP-B5: what each purpose did with the rows, in words (the ledger's second line).
     purposeWords: {
@@ -115,6 +117,7 @@
       out_of_fold_evaluation: 'Models were compared on predictions of rows they did not learn from; these rows still helped to choose.',
       out_of_fold_policy_selection: 'Rules were compared on out-of-fold predictions; these rows helped to choose.',
       final_evaluation: 'The chosen configuration was measured once on these rows.',
+      development_diagnostics: 'The models\' predictions on these rows were examined (errors, calibration, coefficients); nothing was chosen.',
     },
     partitions: {
       development: 'development rows', final_test: 'final test', validation: 'validation rows', train: 'training rows',

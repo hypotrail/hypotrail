@@ -494,12 +494,19 @@
       : [q.rareNone]));
     const ranges = el('div', { className: 'eda-table' });
     if (d.ranges.length) {
+      // WP-E1 (R26): the "outside the declared range" column exists only when a column
+      // declares a range; a column without one has an empty cell, and none outside reads
+      // "none" (never "0 / 0").
+      const declared = d.ranges.some(r => r.declared);
+      const zero = x => !x || x.value === 0;
+      const outside = r => (!r.declared ? '' : zero(r.nBelow) && zero(r.nAbove) ? q.noneOutside
+        : q.outsideCounts(text(ctx, r.nBelow) || '0', text(ctx, r.nAbove) || '0'));
       ctx.components.valuesTable(ranges, {
         caption: q.rangesCaption,
         columns: [{ key: 'column', label: c.columnHead }, { key: 'min', label: q.lowest }, { key: 'max', label: q.highest },
-          { key: 'outside', label: q.outside }],
+          ...(declared ? [{ key: 'outside', label: q.outside }] : [])],
         rows: d.ranges.map(r => ({ column: r.column, min: cell(ctx, r.min, rid), max: cell(ctx, r.max, rid),
-          outside: r.declared ? `${text(ctx, r.nBelow)} / ${text(ctx, r.nAbove)}` : q.noRange })),
+          ...(declared ? { outside: outside(r) } : {}) })),
       });
     }
     return el('section', { className: 'card eda-card eda-quality', 'aria-labelledby': id, 'data-quality-card': card.slot,
@@ -626,10 +633,17 @@
         ? el('p', { className: 'eda-banner-seal', 'data-banner-seal': true }, [el('span', { className: 'ht-status ht-st-sealed', text: c.sealedChip }),
           ` ${c.sealedRows(fmt(ft.rows))}`]) : null,
       ft && ft.status === 'absent' ? el('p', { className: 'eda-banner-seal', 'data-banner-seal': 'absent', text: c.noFinalTest }) : null,
-      el('p', { className: 'ht-mono eda-seen' }, [`${c.rowsSeen} · ${c.train} `,
-        el('span', { 'data-rows-seen': 'train', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
-        ` · ${c.validation} `,
-        el('span', { 'data-rows-seen': 'validation', 'data-value': String(seen.validationEda || 0), text: fmt(seen.validationEda || 0) })]),
+      // WP-E1 (R26): split-aware; under cross-validation EDA reads the development rows and
+      // there is no validation partition. Prose, not monospace.
+      seen.scope === 'development'
+        ? el('p', { className: 'eda-seen', 'data-rows-scope': 'development' }, [`${c.rowsSeen}: `,
+          el('span', { 'data-rows-seen': 'development', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
+          ` ${c.development}.`])
+        : el('p', { className: 'eda-seen', 'data-rows-scope': 'split' }, [`${c.rowsSeen}: `,
+          el('span', { 'data-rows-seen': 'train', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
+          ` ${c.train} · `,
+          el('span', { 'data-rows-seen': 'validation', 'data-value': String(seen.validationEda || 0), text: fmt(seen.validationEda || 0) }),
+          ` ${c.validation}.`]),
       looks !== null ? el('p', { className: 'eda-looks', 'data-looks': String(looks) }, [
         el('strong', {}, [c.looksLead, el('span', { 'data-looks-count': true, text: fmt(looks) })]), ` ${c.looksText}`]) : null,
       Number.isInteger(seen.validationModels) ? el('p', { className: 'muted' }, [`${c.validationModels} `,
@@ -650,7 +664,11 @@
       const data = ctx.data('eda');
       const error = ctx.error('eda');
       const task = taskOf(data && data.model, ctx, model);
-      const c = ctx.copy.eda[task];
+      // WP-E1 (R26): under cross-validation the exploration reads the development rows; the
+      // strings that name the rows or the validation partition take their `cv` variant.
+      const base = ctx.copy.eda[task];
+      const cv = Boolean(data && data.model && data.model.rowsSeen && data.model.rowsSeen.scope === 'development');
+      const c = cv ? { ...base, ...base.cv } : base;
       const out = [el('h2', { text: c.heading }), dataSection(ctx, c, task)];
       if (!data) {
         if (error) {

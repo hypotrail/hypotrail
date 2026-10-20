@@ -60,9 +60,6 @@
     notPromotedTitle: 'Computed, not used.',
     recordedWords: 'Recorded in your words: ',
     done: {
-      W1: 'Confirmed in your words (channel webview).',
-      W2: 'Withdrew the proposal. Nothing is confirmed.',
-      W3: 'Proposal recorded. It is not a decision yet: confirm it in your own words in Decisions.',
       W4: 'Ran on training rows.',
       W5: 'Regenerated the report and notebook.',
       W6: 'Acknowledged in your words.',
