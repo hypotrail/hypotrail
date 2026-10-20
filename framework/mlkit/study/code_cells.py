@@ -626,29 +626,29 @@ def selection_cell(view: Mapping, task: str) -> tuple[str, str] | None:
         return None
     metric = selection['metric']
     best = 'idxmax' if selection.get('direction') == 'higher' else 'idxmin'
-    gap = ('per_fold.max(axis=1) - per_fold[best]' if best == 'idxmax'
-           else 'per_fold[best] - per_fold.min(axis=1)')
-    code = f'''evaluation = nv.values(study, RESULT_IDS[{q(slot)}])
-selection = evaluation["model_selection"]
+    gap = ('_per_fold.max(axis=1) - _per_fold[_best]' if best == 'idxmax'
+           else '_per_fold[_best] - _per_fold.min(axis=1)')
+    code = f'''_evaluation = nv.values(study, RESULT_IDS[{q(slot)}])
+_selection = _evaluation["model_selection"]
 # One column per configuration: its out-of-fold {metric} in each fold, from its fit.
-per_fold = pd.DataFrame({{
+_per_fold = pd.DataFrame({{
     _slot: [f[{q(metric)}] for f in nv.values(study, RESULT_IDS[_slot])["cross_validation"]["per_fold"]]
-    for _slot in [c["slot"] for c in selection["configurations"]]}})
-per_fold.index = pd.RangeIndex(1, len(per_fold) + 1, name="fold")
-summary = per_fold.agg(["mean", "std"]).T
-summary["se"] = summary["std"] / np.sqrt(len(per_fold))
-best = summary["mean"].{best}()
-optimism = ({gap}).mean()
-print(per_fold)
-print(summary)
-print(f"best mean: {{best}}, one-standard-error pick: {{selection['one_se']['pick']}}, "
-      f"optimism {{optimism:.4f}}")
+    for _slot in [c["slot"] for c in _selection["configurations"]]}})
+_per_fold.index = pd.RangeIndex(1, len(_per_fold) + 1, name="fold")
+_summary = _per_fold.agg(["mean", "std"]).T
+_summary["se"] = _summary["std"] / np.sqrt(len(_per_fold))
+_best = _summary["mean"].{best}()
+_optimism = ({gap}).mean()
+print(_per_fold)
+print(_summary)
+print(f"best mean: {{_best}}, one-standard-error pick: {{_selection['one_se']['pick']}}, "
+      f"optimism {{_optimism:.4f}}")
 
-for _c in selection["configurations"]:
-    assert abs(summary.loc[_c["slot"], "mean"] - _c["mean"]) < TOLERANCE
-    assert abs(summary.loc[_c["slot"], "se"] - _c["se"]) < TOLERANCE
-assert best == selection["best"]
-assert abs(optimism - selection["optimism"]["estimate"]) < TOLERANCE'''
+for _c in _selection["configurations"]:
+    assert abs(_summary.loc[_c["slot"], "mean"] - _c["mean"]) < TOLERANCE
+    assert abs(_summary.loc[_c["slot"], "se"] - _c["se"]) < TOLERANCE
+assert _best == _selection["best"]
+assert abs(_optimism - _selection["optimism"]["estimate"]) < TOLERANCE'''
     return 'recompute_selection', code
 
 

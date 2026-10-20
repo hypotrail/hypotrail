@@ -722,12 +722,13 @@ def _slope(y, x, binary: bool) -> tuple[float | None, float | None]:
         return b, float(np.sqrt(s2 / sxx))
     if y.min() == y.max():
         return None, None
+    from scipy.special import expit
     p = np.clip(x, 1e-6, 1 - 1e-6)
     z = np.log(p / (1 - p))
     X = np.column_stack([np.ones(n), z])
     beta = np.zeros(2)
     for _ in range(50):
-        mu = 1 / (1 + np.exp(-(X @ beta)))
+        mu = expit(X @ beta)
         w = mu * (1 - mu)
         H = X.T @ (X * w[:, None])
         g = X.T @ (y - mu)
@@ -738,7 +739,7 @@ def _slope(y, x, binary: bool) -> tuple[float | None, float | None]:
         beta = beta + step
         if np.max(np.abs(step)) < 1e-10:
             break
-    mu = 1 / (1 + np.exp(-(X @ beta)))
+    mu = expit(X @ beta)
     H = X.T @ (X * (mu * (1 - mu))[:, None])
     try:
         cov = np.linalg.inv(H)
