@@ -10,12 +10,18 @@ Template version 2 (v0.2a, WP-A6) adds a starter cell that loads the development
 training rows with :func:`mlkit.study.notebook_view.training_frame` (never the sealed final
 test), so a cell copied from the generated notebook has rows to run on.
 
+Template version 3 (v0.3, WP-F2, R29) writes the starter as the pandas a junior types: a
+cell each for ``head()``, ``info()``, ``describe()`` and ``isna().sum()`` on those rows,
+and a cell of commented idioms for a rate or mean by group (``groupby``, ``pd.crosstab``,
+``value_counts``, ``plot.hist``) to adapt. Nothing in it asserts against the registry: the
+generated notebook does that, and the workbench is free space.
+
 Bump :data:`TEMPLATE_VERSION` when the cells change: an existing workbench is then
 left intact and ``workbench.candidate.py`` is written next to it.
 """
 from __future__ import annotations
 
-TEMPLATE_VERSION = 2
+TEMPLATE_VERSION = 3
 EXPERIMENT_LABEL = 'Experiment, not adopted'
 
 SETUP = '''import os
@@ -67,6 +73,26 @@ STARTER = '''# The training rows of the current split: development rows only, th
 train_rows = nv.training_frame(study)
 train_rows.head()'''
 
+# v3 (WP-F2, R29): the first looks, as a junior types them.
+STARTER_INFO = '''# Columns, types, and how many cells hold a value.
+train_rows.info()'''
+
+STARTER_DESCRIBE = '''# Summary statistics of the numeric columns: count, mean, spread, and quartiles.
+train_rows.describe()'''
+
+STARTER_MISSING = '''# Missing values: cells with no value, counted by column.
+train_rows.isna().sum()'''
+
+STARTER_IDIOMS = '''import pandas as pd
+
+# Idioms to adapt: replace "a_column" and "the_target" with names of your study.
+# train_rows["a_column"].value_counts(normalize=True)          # shares of each value
+# train_rows.groupby("a_column")["the_target"].agg(["mean", "count"])
+# pd.crosstab(train_rows["a_column"], train_rows["the_target"], normalize="index")
+# train_rows["a_column"].plot.hist(bins=10)                    # a numeric column
+# train_rows.select_dtypes("number").corr(method="spearman")
+train_rows.dtypes.to_frame("type")'''
+
 NOTES = '''mo.md(
     """
 ## Your notes
@@ -111,6 +137,9 @@ def cells(template_version: int = TEMPLATE_VERSION,
                ('controls', CONTROLS), ('experiment', EXPERIMENT)]
     if template_version >= 2:
         out.append(('training_rows', STARTER))
+    if template_version >= 3:
+        out += [('first_look_info', STARTER_INFO), ('first_look_describe', STARTER_DESCRIBE),
+                ('first_look_missing', STARTER_MISSING), ('idioms', STARTER_IDIOMS)]
     return out + [('your_notes', NOTES)]
 
 

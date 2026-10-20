@@ -32,7 +32,11 @@ This module generates text only: it imports neither pandas nor scikit-learn.
 from __future__ import annotations
 
 import json
+import keyword
+import re
 from typing import Any, Mapping
+
+from .correlation import MIN_PAIR_ROWS
 
 
 def q(text: Any) -> str:
@@ -42,6 +46,7 @@ def q(text: Any) -> str:
 TOLERANCE = 1e-9
 FIT_TOLERANCE = 1e-6
 SPECIAL_SUFFIX = ' (special value)'
+OTHER_GROUP = '(other values)'      # eda.OTHER_GROUP: folded groups
 
 IMPORTS = '''import numpy as np
 import pandas as pd
@@ -83,40 +88,118 @@ def is_cv(view: Mapping) -> bool:
     return bool(item) and 'folds' in (item.get('blobs') or {})
 
 
+def _ident(column: str, suffix: str, taken: set[str]) -> str:
+    """A Python name for a cell variable about ``column`` (``<column>_<suffix>``), unique in
+    the notebook (Marimo refuses a name defined by two cells)."""
+    base = re.sub(r'\W+', '_', str(column)).strip('_').lower() or 'column'
+    if base[0].isdigit():
+        base = f'column_{base}'
+    name, n = f'{base}_{suffix}', 2
+    while name in taken or keyword.iskeyword(name):
+        name, n = f'{base}_{suffix}_{n}', n + 1
+    taken.add(name)
+    return name
+
+
+def _special_mask(frame: str, column: str, value: Any, na_values: tuple) -> str:
+    """The pandas expression a junior would type for the rows of ``frame`` holding the case
+    special value ``value`` in ``column`` (as ``activities.matches`` reads it: a value the
+    case lists as missing is a missing cell)."""
+    if str(value) in {str(v) for v in na_values}:
+        return f'{frame}[{q(column)}].isna()'
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return f'{frame}[{q(column)}] == {value!r}'
+    return f'{frame}[{q(column)}] == {q(value)}'
+
+
+def rows_cell(view: Mapping) -> tuple[str, str]:
+    """The development rows, loaded once; every exploration cell reads them."""
+    return 'explore_rows', '''# Development rows: the rows you may explore and fit on. The final test stays sealed and
+# is never loaded here. "partition" says what the split does with each row.
+development = nv.development_frame(study, RESULT_IDS["split"])
+development.head()'''
+
+
+def quality_cells(view: Mapping, case: Mapping) -> list[tuple[str, str]]:
+    """WP-F2 (R29): the structural look of ``eda.quality`` as a junior types it
+    (``info``, ``isna().sum()``, ``duplicated().sum()``, ``describe()``), each figure
+    asserted against the registry. The target is left out, as the engine leaves it out."""
+    item = _current(view, 'eda.quality')
+    if item is None:
+        return []
+    v = item['values']
+    if not isinstance(v.get('missing'), list) or not isinstance(v.get('ranges'), list):
+        return []
+    na = tuple(case.get('na_values') or ())
+    # describe() reads every value; the registry's range leaves special values out. The
+    # minimum and maximum are compared only where the column has no special value other
+    # than a missing-value marker.
+    special = {s['column'] for s in case.get('special_values') or []
+               if str(s['value']) not in {str(x) for x in na}}
+    plain = [r['column'] for r in v['ranges'] if r['column'] not in special
+             and r.get('min') is not None]
+    info = '''quality = nv.values(study, RESULT_IDS["eda.quality"])
+# Structural inspection: the columns, their types, and how many cells hold a value, read
+# without the target (so this is not a look at the outcome).
+quality_columns = [_item["column"] for _item in quality["missing"]]
+structure = development[quality_columns]
+structure.info()
+
+assert structure.shape == (quality["n_rows"], quality["n_columns"])'''
+    missing = '''# Missing values: cells with no value, counted by column.
+missing_counts = structure.isna().sum()
+# Duplicated rows: rows identical to an earlier one on every column except the target.
+duplicate_rows = structure.duplicated().sum()
+print(f"{duplicate_rows} duplicated rows")
+
+for _item in quality["missing"]:
+    assert missing_counts[_item["column"]] == _item["n_missing"], _item["column"]
+assert duplicate_rows == quality["duplicates"]["n_rows"]
+missing_counts.to_frame("missing cells")'''
+    describe = f'''# Summary statistics of the numeric columns: count, mean, spread, and quartiles.
+numeric_summary = structure.describe()
+
+# Where a column has no special value, its smallest and largest values are the
+# registry's range.
+_plain = {json.dumps(plain)}
+for _item in quality["ranges"]:
+    if _item["column"] in _plain:
+        assert numeric_summary.loc["min", _item["column"]] == _item["min"]
+        assert numeric_summary.loc["max", _item["column"]] == _item["max"]
+numeric_summary'''
+    return [('explore_info', info), ('explore_missing', missing),
+            ('explore_describe', describe)]
+
+
 def split_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     item = _current(view, 'split')
     # The registry entry must hold what the cell reads: the row keys of both partitions.
     if item is None or not {'train', 'validation'} <= set(item.get('blobs') or {}):
         return None
     if is_cv(view):
-        code = f'''# The development rows only: the final test stays sealed and is never loaded.
-# Cross-validation: every development row is explored, and each fold is predicted by a
+        code = f'''# Cross-validation: every development row is explored, and each fold is predicted by a
 # model fitted on the other folds. "folds" says which fold each row belongs to.
-development = nv.development_frame(study, RESULT_IDS["split"])
 split = nv.values(study, RESULT_IDS["split"])
 folds = nv.folds(study, RESULT_IDS["split"])
 train = development
 validation = development
 fold_counts = folds.value_counts().sort_index()
-print(fold_counts)
 
 assert len(development) == split["n_rows"]
 for _item in split["fold_rows"]:
-    assert fold_counts[_item["fold"]] == _item["n_rows"]'''
+    assert fold_counts[_item["fold"]] == _item["n_rows"]
+fold_counts.to_frame("rows")'''
         return 'recompute_split', code
-    code = f'''# The development rows only: the final test stays sealed and is never loaded.
+    code = f'''split = nv.values(study, RESULT_IDS["split"])
 # "partition" says whether each row trains the models or validates them.
-development = nv.development_frame(study, RESULT_IDS["split"])
-split = nv.values(study, RESULT_IDS["split"])
-
 train = development[development["partition"] == "train"]
 validation = development[development["partition"] == "validation"]
 partition_counts = development["partition"].value_counts()
-print(partition_counts)
 
 assert len(development) == split["n_rows"]
 assert partition_counts["train"] == split["partitions"]["train"]["n_rows"]
-assert partition_counts["validation"] == split["partitions"]["validation"]["n_rows"]'''
+assert partition_counts["validation"] == split["partitions"]["validation"]["n_rows"]
+partition_counts.to_frame("rows")'''
     return 'recompute_split', code
 
 
@@ -125,31 +208,78 @@ def target_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[s
         if _current(view, 'eda.target_summary') is None:
             return None
         code = f'''target_summary = nv.values(study, RESULT_IDS["eda.target_summary"])
+# The distribution of the target {q(target)} on the training rows: count, mean, standard
+# deviation, quartiles.
 train_target = pd.to_numeric(train[{q(target)}])
-print(train_target.describe())
+target_described = train_target.describe()
 
-assert train_target.count() == target_summary["n"]
-assert abs(train_target.mean() - target_summary["mean"]) < TOLERANCE
-assert abs(train_target.median() - target_summary["median"]) < TOLERANCE
-assert abs(train_target.std() - target_summary["sd"]) < TOLERANCE'''
+assert target_described["count"] == target_summary["n"]
+assert abs(target_described["mean"] - target_summary["mean"]) < TOLERANCE
+assert abs(target_described["50%"] - target_summary["median"]) < TOLERANCE
+assert abs(target_described["std"] - target_summary["sd"]) < TOLERANCE
+target_described'''
         return 'recompute_target', code
     if _current(view, 'eda.target_rate') is None:
         return None
     code = f'''target_rate = nv.values(study, RESULT_IDS["eda.target_rate"])
-# 1 when the outcome is the positive label {q(str(positive))}, else 0.
+# Positive rate: the share of training rows whose outcome is {q(str(positive))}.
+outcome_shares = train[{q(target)}].astype(str).value_counts(normalize=True)
+# 1 when the outcome is {q(str(positive))}, else 0: its mean is the positive rate.
 train_positive = {_positive_expr("train", target, positive)}.astype(int)
-print(f"{{train_positive.sum()}} positive rows of {{len(train)}} training rows: "
-      f"rate {{train_positive.mean():.4f}}")
 
-assert train_positive.sum() == target_rate["n_positive"]
 assert len(train) == target_rate["n_rows"]
-assert abs(train_positive.mean() - target_rate["rate"]) < TOLERANCE'''
+assert train_positive.sum() == target_rate["n_positive"]
+assert abs(outcome_shares[{q(str(positive))}] - target_rate["rate"]) < TOLERANCE
+outcome_shares.to_frame("share of training rows")'''
     return 'recompute_target', code
 
 
-def group_slot(view: Mapping, task: str) -> str | None:
+def special_cell(view: Mapping, task: str, case: Mapping) -> tuple[str, str] | None:
+    """WP-F2: the rows carrying each special value, with the positive rate (binary) or the
+    mean target (regression) among them, as boolean masks a junior types."""
+    item = _current(view, 'eda.special_values')
+    if item is None:
+        return None
+    specials = item['values'].get('special_values')
+    if not isinstance(specials, list) or not specials:
+        return None
+    na = tuple(case.get('na_values') or ())
+    rows = ''.join(f'    {q(str(s["column"]) + " = " + str(s["value"]))}: '
+                   f'{_special_mask("train", s["column"], s["value"], na)},'
+                   + ('  # read as a missing cell' if str(s['value']) in {str(x) for x in na}
+                      else '') + '\n'
+                   for s in specials)
+    if task == 'regression':
+        among, check = ('"mean target": {_name: train_target[_mask].mean() '
+                        'for _name, _mask in special_rows.items()},',
+                        '''    if _item["mean_target"] is not None:
+        assert abs(train_target[_mask].mean() - _item["mean_target"]) < TOLERANCE''')
+    else:
+        among, check = ('"positive rate": {_name: train_positive[_mask].mean() '
+                        'for _name, _mask in special_rows.items()},',
+                        '    assert train_positive[_mask].sum() == _item["n_positive"]')
+    code = f'''special = nv.values(study, RESULT_IDS["eda.special_values"])
+# Special value: a code that stands for a fact rather than a quantity (documented by the
+# case). The training rows that carry each one:
+special_rows = {{
+{rows}}}
+special_table = pd.DataFrame({{
+    "rows": {{_name: _mask.sum() for _name, _mask in special_rows.items()}},
+    {among}
+}})
+
+for _item, _mask in zip(special["special_values"], special_rows.values()):
+    assert _mask.sum() == _item["n_rows"]
+{check}
+special_table'''
+    return 'explore_special_values', code
+
+
+def group_slot(view: Mapping, task: str, na_values: tuple = ()) -> str | None:
     """The first rate_by (binary) or mean_by (regression) slot that plain code recomputes
-    exactly: not binned, not folded, without a missing-value group."""
+    exactly: not binned, not folded, without a missing-value group (nor a special value the
+    case reads as missing: ``groupby`` leaves missing cells out)."""
+    missing = {'(missing)'} | {f'{v}{SPECIAL_SUFFIX}' for v in na_values}
     prefix = 'eda.mean_by:' if task == 'regression' else 'eda.rate_by:'
     for slot in sorted(s for s in view['results'] if s.startswith(prefix)):
         item = _current(view, slot)
@@ -158,47 +288,171 @@ def group_slot(view: Mapping, task: str) -> str | None:
         v = item['values']
         groups = v.get('groups') or []
         if v.get('binned') or v.get('other') or any(
-                g.get('value') == '(missing)' for g in groups if isinstance(g, Mapping)):
+                g.get('value') in missing for g in groups if isinstance(g, Mapping)):
             continue
         return slot
     return None
 
 
-def group_cell(view: Mapping, task: str, target: str, positive: Any) -> tuple[str, str] | None:
-    slot = group_slot(view, task)
+def group_cell(view: Mapping, task: str, target: str, positive: Any,
+               case: Mapping | None = None) -> tuple[str, str] | None:
+    slot = group_slot(view, task, tuple((case or {}).get('na_values') or ()))
     if slot is None:
         return None
     column = slot.split(':', 1)[1]
     if task == 'regression':
         code = f'''by_group = nv.values(study, RESULT_IDS[{q(slot)}])
-# The mean of the target in each group of {q(column)}, on training rows.
+# Mean by group: the mean of the target in each group of {q(column)}, on training rows.
 group_means = (
     train.assign(target=pd.to_numeric(train[{q(target)}]))
-    .groupby(train[{q(column)}].astype(str))["target"]
-    .agg(["size", "mean"])
+    .groupby({q(column)})["target"]
+    .agg(["mean", "count"])
 )
-print(group_means)
 
+# The registry names each group as text.
+_by_name = group_means.rename(index=str)
 for _group in by_group["groups"]:
     _value = _group["value"].removesuffix({q(SPECIAL_SUFFIX)})
-    assert group_means.loc[_value, "size"] == _group["n_rows"]
-    assert abs(group_means.loc[_value, "mean"] - _group["mean"]) < TOLERANCE'''
+    assert _by_name.loc[_value, "count"] == _group["n_rows"]
+    assert abs(_by_name.loc[_value, "mean"] - _group["mean"]) < TOLERANCE
+group_means'''
         return 'recompute_by_group', code
     code = f'''by_group = nv.values(study, RESULT_IDS[{q(slot)}])
-# The positive rate in each group of {q(column)}, on training rows.
+# Rate by group: the positive rate in each group of {q(column)}, on training rows.
 group_rates = (
     train.assign(positive=train_positive)
-    .groupby(train[{q(column)}].astype(str))["positive"]
-    .agg(["size", "sum", "mean"])
+    .groupby({q(column)})["positive"]
+    .agg(["mean", "count"])
 )
-print(group_rates)
+# The same counts as a contingency table: one row per group, one column per outcome.
+outcome_table = pd.crosstab(train[{q(column)}], train[{q(target)}].astype(str))
+print(outcome_table)
 
+# The registry names each group as text.
+_rates, _table = group_rates.rename(index=str), outcome_table.rename(index=str)
 for _group in by_group["groups"]:
     _value = _group["value"].removesuffix({q(SPECIAL_SUFFIX)})
-    assert group_rates.loc[_value, "size"] == _group["n_rows"]
-    assert group_rates.loc[_value, "sum"] == _group["n_positive"]
-    assert abs(group_rates.loc[_value, "mean"] - _group["rate"]) < TOLERANCE'''
+    assert _rates.loc[_value, "count"] == _group["n_rows"]
+    assert _table.loc[_value, {q(str(positive))}] == _group["n_positive"]
+    assert abs(_rates.loc[_value, "mean"] - _group["rate"]) < TOLERANCE
+group_rates'''
     return 'recompute_by_group', code
+
+
+def group_chart_cell(task: str, column: str) -> tuple[str, str]:
+    if task == 'regression':
+        return 'explore_by_group_chart', (
+            f'group_means["mean"].plot.bar(xlabel={q(column)}, ylabel="mean target", '
+            f'title="Training rows: mean target by group")')
+    return 'explore_by_group_chart', (
+        f'group_rates["mean"].plot.bar(xlabel={q(column)}, ylabel="positive rate", '
+        f'title="Training rows: positive rate by group")')
+
+
+def distribution_slots(view: Mapping) -> list[str]:
+    return [s for s in sorted(view['results']) if s.startswith('eda.distribution:')
+            and _current(view, s) is not None]
+
+
+def distribution_cells(view: Mapping, slot: str, case: Mapping,
+                       taken: set[str]) -> list[tuple[str, str]]:
+    """WP-F2: one column's training distribution, as ``value_counts(normalize=True)`` for
+    groups or ``describe()`` and a histogram for a numeric column, asserted against the
+    registry. Folded groups and log-scale bins are left to the engine view."""
+    v = _current(view, slot)['values']
+    column = v.get('column')
+    kind = v.get('kind')
+    if not isinstance(column, str):
+        return []
+    rid = f'RESULT_IDS[{q(slot)}]'
+    if kind in ('categorical', 'discrete') and isinstance(v.get('groups'), list):
+        shares = _ident(column, 'shares', taken)
+        registered = _ident(column, 'distribution', taken)
+        # A categorical column's groups are named as text by the registry.
+        lookup = f'{shares}.rename(index=str)' if kind == 'categorical' else shares
+        code = f'''{registered} = nv.values(study, {rid})
+# Distribution: how the training rows spread over the values of {q(column)}, as shares
+# (missing cells included in the total).
+{shares} = train[{q(column)}].value_counts(normalize=True, dropna=False)
+
+_shares = {lookup}
+for _group in {registered}["groups"]:
+    if _group["value"] != {q(OTHER_GROUP)}:
+        assert abs(_shares.loc[_group["value"]] - _group["share"]) < TOLERANCE
+{shares}.to_frame("share of training rows")'''
+        return [(f'explore_{registered}', code)]
+    numeric = v.get('numeric')
+    if kind != 'numeric' or not isinstance(numeric, Mapping) or not numeric.get('n'):
+        return []
+    na = tuple(case.get('na_values') or ())
+    special = [s['value'] for s in v.get('special_values') or []
+               if str(s['value']) not in {str(x) for x in na}]
+    ordinary = _ident(column, 'values', taken)
+    registered = _ident(column, 'distribution', taken)
+    described = _ident(column, 'described', taken)
+    if special:
+        select = (f'# Special values set aside: {", ".join(str(x) for x in special)}. Missing '
+                  f'cells too.\n'
+                  f'{ordinary} = train[{q(column)}][~train[{q(column)}].isin('
+                  f'{special!r})].dropna()')
+    else:
+        select = f'{ordinary} = train[{q(column)}].dropna()'
+    code = f'''{registered} = nv.values(study, {rid})["numeric"]
+# Summary statistics of {q(column)} on the training rows: count, mean, standard deviation,
+# quartiles.
+{select}
+{described} = {ordinary}.describe()
+
+assert {described}["count"] == {registered}["n"]
+for _stat, _key in [("mean", "mean"), ("std", "sd"), ("min", "min"), ("25%", "q25"),
+                    ("50%", "median"), ("75%", "q75"), ("max", "max")]:
+    if {registered}[_key] is not None:
+        assert abs({described}[_stat] - {registered}[_key]) < TOLERANCE, _stat
+# Bins of equal width from the minimum to the maximum, as the histogram below draws.
+_counts, _edges = np.histogram({ordinary}, bins={registered}["n_bins"])
+assert [int(_n) for _n in _counts] == [_bin["n_rows"] for _bin in {registered}["bins"]]
+{described}'''
+    chart = (f'{ordinary}.plot.hist(bins={int(numeric.get("n_bins") or 10)}, '
+             f'xlabel={q(column)}, title="Training rows by value")')
+    return [(f'explore_{registered}', code), (f'explore_{registered}_chart', chart)]
+
+
+def correlation_cell(view: Mapping, case: Mapping) -> tuple[str, str] | None:
+    """WP-F2: ``eda.correlation``'s Spearman pairs as ``df.corr(method="spearman")`` on the
+    numeric features of the development rows (special values set aside), compared with the
+    registry. Cramér's V and the correlation ratio stay in the engine view."""
+    item = _current(view, 'eda.correlation')
+    if item is None:
+        return None
+    v = item['values']
+    numeric = [c['name'] for c in v.get('columns') or [] if c.get('kind') == 'numeric']
+    if len(numeric) < 2:
+        return None
+    na = {str(x) for x in case.get('na_values') or ()}
+    specials = [s for s in (item.get('inputs') or {}).get('special_values') or []
+                if s['column'] in numeric and str(s['value']) not in na]
+    lines = ''.join(f'numeric_features[{q(s["column"])}] = numeric_features[{q(s["column"])}]'
+                    f'.mask(numeric_features[{q(s["column"])}] == {s["value"]!r})\n'
+                    for s in specials if isinstance(s['value'], (int, float))
+                    and not isinstance(s['value'], bool))
+    if len(lines.splitlines()) != len(specials):
+        return None                # a text special value in a numeric column: engine view only
+    aside = ('# Special values are codes, not quantities: set aside (missing) before ranking.\n'
+             + lines) if lines else ''
+    code = f'''correlation = nv.values(study, RESULT_IDS["eda.correlation"])
+# Spearman's rank correlation: how closely two numeric features rise and fall together
+# (from -1 to 1), read on the development rows without the target.
+numeric_features = development[{json.dumps(numeric)}].apply(pd.to_numeric, errors="coerce")
+{aside}spearman = numeric_features.corr(method="spearman", min_periods={MIN_PAIR_ROWS})
+
+for _pair in correlation["pairs"]:
+    if _pair["measure"] == "spearman":
+        _value = spearman.loc[_pair["a"], _pair["b"]]
+        assert pd.isna(_value) == (_pair["value"] is None), (_pair["a"], _pair["b"])
+        if _pair["value"] is not None:
+            assert abs(_value - _pair["value"]) < TOLERANCE, (_pair["a"], _pair["b"])
+spearman.round(2)'''
+    return 'explore_correlation', code
 
 
 PIPELINE = '''numeric = X_train.select_dtypes("number").columns.tolist()
@@ -281,6 +535,19 @@ CV_PIPELINE = '''def _prepare_columns(_X):
     )'''
 
 
+def _per_fold_asserts(item: Mapping, column: str, key: str) -> str:
+    """The per-fold table's asserts against the fit's ``cross_validation.per_fold``, when
+    the registry holds it."""
+    cv = (item.get('values') or {}).get('cross_validation')
+    if not isinstance(cv, Mapping) or not isinstance(cv.get('per_fold'), list):
+        return ''
+    return ('for _item in candidate["cross_validation"]["per_fold"]:\n'
+            '    assert fold_table.loc[_item["fold"], "rows"] == _item["n_rows"]\n'
+            f'    if _item.get({q(key)}) is not None:\n'
+            f'        assert abs(fold_table.loc[_item["fold"], {q(column)}] - _item[{q(key)}])'
+            ' < FIT_TOLERANCE\n')
+
+
 def cv_fit_cell(view: Mapping, task: str, target: str, positive: Any,
                 slot: str, item: Mapping) -> tuple[str, str] | None:
     """WP-B1: the candidate's out-of-fold metric, recomputed fold by fold: each fold is
@@ -295,6 +562,7 @@ print(nv.preprocessing_words(study, RESULT_IDS[{q(slot)}]))
     if task == 'regression':
         code = head + f'''y_validation = pd.to_numeric(development[{q(target)}])
 prediction = np.zeros(len(development))
+fold_rows = []
 for _fold in sorted(folds.unique()):
     _held = (folds == _fold).to_numpy()
     _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], development[~_held],
@@ -302,10 +570,15 @@ for _fold in sorted(folds.unique()):
     _model = Pipeline([("prepare", _prepare_columns(_X_fit)), ("model", LinearRegression())])
     _model.fit(_X_fit, y_validation[~_held])
     prediction[_held] = _model.predict(_X_held)
+    fold_rows.append({{"fold": _fold, "rows": int(_held.sum()),
+                      "mae": mean_absolute_error(y_validation[_held], prediction[_held])}})
+# One row per fold: its rows and the error of its out-of-fold predictions.
+fold_table = pd.DataFrame(fold_rows).set_index("fold")
 validation_mae = mean_absolute_error(y_validation, prediction)
 print(f"Out-of-fold mean absolute error: {{validation_mae:.4f}}")
 
-assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE'''
+assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE
+{_per_fold_asserts(item, 'mae', 'mae')}fold_table'''
         return 'recompute_model', code
     seed = (item.get('params') or {}).get('seed')
     if not isinstance(seed, int):
@@ -313,6 +586,7 @@ assert abs(validation_mae - candidate["validation"]["mae"]) < FIT_TOLERANCE'''
     solver = _solver_arg(item)
     code = head + f'''y_validation = {_positive_expr("development", target, positive)}.astype(int)
 score = np.zeros(len(development))
+fold_rows = []
 for _fold in sorted(folds.unique()):
     _held = (folds == _fold).to_numpy()
     _X_fit, _X_held = nv.model_inputs(study, RESULT_IDS[{q(slot)}], development[~_held],
@@ -323,10 +597,16 @@ for _fold in sorted(folds.unique()):
     ])
     _model.fit(_X_fit, y_validation[~_held])
     score[_held] = _model.predict_proba(_X_held)[:, 1]
+    _y = y_validation[_held]
+    fold_rows.append({{"fold": _fold, "rows": int(_held.sum()),
+                      "auc": roc_auc_score(_y, score[_held]) if _y.nunique() == 2 else None}})
+# One row per fold: its rows and the AUC of its out-of-fold predictions.
+fold_table = pd.DataFrame(fold_rows).set_index("fold")
 validation_auc = roc_auc_score(y_validation, score)
 print(f"Out-of-fold AUC: {{validation_auc:.4f}}")
 
-assert abs(validation_auc - candidate["validation"]["roc_auc"]) < FIT_TOLERANCE'''
+assert abs(validation_auc - candidate["validation"]["roc_auc"]) < FIT_TOLERANCE
+{_per_fold_asserts(item, 'auc', 'roc_auc')}fold_table'''
     return 'recompute_model', code
 
 
@@ -611,21 +891,42 @@ assert abs(np.mean(({p}score - {p}y) ** 2) - {p}model["calibration"]["brier"]) <
     return name, code
 
 
-def cells_by_step(view: Mapping, task: str, target: str | None,
-                  positive: Any) -> dict[str, list[tuple[str, str]]]:
-    """Step id -> recomputation cells (name, code), in notebook order."""
+def cells_by_step(view: Mapping, task: str, target: str | None, positive: Any,
+                  case: Mapping | None = None,
+                  steps: tuple | list = ()) -> dict[str, list[tuple[str, str]]]:
+    """Step id -> recomputation cells (name, code), in notebook order.
+
+    ``case`` holds what the cells need from the case beyond the registry (``na_values``,
+    ``special_values``); ``steps`` the plan's step ids. The development rows and their
+    structural look go with ``discover_data`` (or with ``split`` in a plan without it)."""
     out: dict[str, list[tuple[str, str]]] = {}
+    case = case or {}
     if target is None:
         return out
     split = split_cell(view, task)
     if split is None:
         return out
-    out['split'] = [split]
+    first = 'discover_data' if 'discover_data' in steps else 'split'
+    out[first] = [rows_cell(view)] + quality_cells(view, case)
+    out.setdefault('split', []).append(split)
+    taken: set[str] = set()
     target_code = target_cell(view, task, target, positive)
-    group_code = group_cell(view, task, target, positive)
+    eda = [target_code] if target_code else []
+    if target_code:        # these cells read ``train_positive`` or ``train_target``
+        special = special_cell(view, task, case)
+        if special:
+            eda.append(special)
+    group_code = group_cell(view, task, target, positive, case)
     if task != 'regression' and target_code is None:
         group_code = None          # a binary group cell reads ``train_positive``
-    eda = [c for c in (target_code, group_code) if c]
+    if group_code:
+        column = group_slot(view, task, tuple(case.get('na_values') or ())).split(':', 1)[1]
+        eda += [group_code, group_chart_cell(task, column)]
+    for slot in distribution_slots(view):
+        eda += distribution_cells(view, slot, case, taken)
+    correlation = correlation_cell(view, case)
+    if correlation:
+        eda.append(correlation)
     if eda:
         out['train_eda'] = eda
     fit = fit_cell(view, task, target, positive)

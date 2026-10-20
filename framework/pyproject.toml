@@ -15,6 +15,7 @@ dependencies = [
     "scipy",
     "pyyaml>=6.0",
     "marimo==0.25.1",
+    "matplotlib>=3.8",
 ]
 # interpret-core (optional EBM baseline) is intentionally not a core dependency.
 
