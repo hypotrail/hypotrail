@@ -16,7 +16,7 @@
    "--request-id",
    "b-conf",
    "--expected-revision",
-   "43",
+   "47",
    "--json"
   ],
   "note": ""
@@ -28,7 +28,7 @@
   "action": "decide.confirm",
   "request_id": "b-conf",
   "replayed": false,
-  "revision": 44,
+  "revision": 48,
   "result": {
    "decision_id": "policy",
    "proposal_id": "p_9",
@@ -56,16 +56,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 44,
-    "last_ok_revision": 44,
+    "revision": 48,
+    "last_ok_revision": 48,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 44,
-    "last_ok_revision": 44,
+    "revision": 48,
+    "last_ok_revision": 48,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

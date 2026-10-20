@@ -748,7 +748,7 @@ def test_wp_a4_contract_constants():
     assert governance.CRITERION_KEYS == {'binary': ('metric', 'min_points'),
                                          'regression': ('metric', 'min_share')}
     assert act.SHARED_ACTIVITIES == ('eda.distribution', 'eda.quality',
-                                     'eda.single_feature_signal')
+                                     'eda.single_feature_signal', 'eda.correlation')
     keys = (set(FULL_DECISION_IDS) | set(FULL_STEP_IDS) | set(DATA_PAYLOAD_KEYS)
             | set(DATA_VARIABLE_KEYS) | set(PREPROCESSING_KEYS) | set(CRITERION_VIEW_KEYS)
             | set(EDA_LOOKS_KEYS) | set(act.SHARED_ACTIVITIES)

@@ -30,8 +30,11 @@ media/protocol.js       generated copy of lib/protocol.js (never edit)
 media/format.js         port of cite.fmt_number (cross-tested with Python)
 media/core.js           webview runtime: frame, tabs, live region, modal, tooltip, send(), setState
 media/terms.js          glossary marks and hovers; Hypotrail.askAgent / askButton (the one "Ask the agent" helper)
-media/components/*.js   bars, intervalRows, histogram, boxplot, valuesTable, figure, segments, cited, curve (WP-B5)
+media/components/*.js   bars, intervalRows, histogram, boxplot, valuesTable, figure, segments, cited, curve (WP-B5);
+                        v0.3 (WP-E2): card, why, source, chip, lead, engineText, corr, fluid; the charts are
+                        HTML grids sized by CSSOM custom properties, curves redrawn at their container's width
 media/copy/<view>.js    panel-owned English strings (copy/core.js for the frame)
+media/copy-fr/<view>.js the French translation of the same keys (v0.3, WP-E2, R21; test/copy-fr.test.js)
 media/copy/junior.js    the junior-facing copy keyed by kind/code/id, and decision values in words (WP-A5,
                         two-layer copy, COMPANION-ADVANCED §15.1)
 media/views/<view>.js   one view per tab, registered with Hypotrail.register
@@ -81,7 +84,7 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, 
 - Every write control carries `data-write`; the frame removes all of them in reviewer mode.
 - A stage-gated element carries `data-stage` (or comes from `ctx.gate`); a later-stage tab is absent, not disabled.
 - Navigation targets carry `data-nav="<kind>:<id>"` (§4.2); `navigate` scrolls to, focuses, and highlights them.
-- Copy lives in `media/copy/<view>.js`; it has no digits outside placeholders and, in a regression study, none of the words of INV-12.
+- Copy lives in `media/copy/<view>.js`; it has no digits outside placeholders and, in a regression study, none of the words of INV-12. Every key has its French counterpart in `media/copy-fr/<view>.js` (v0.3); the frame swaps the tables when the panel language changes, so views read `Hypotrail.copy.<view>` at render time, never once at load.
 - "Ask the agent about this" is `Hypotrail.askButton`; no view writes the clipboard or calls `navigator.clipboard` (§12, CI.5).
 - `ctx.placeholder()` is kept in the API but every tab now has its real view; loading states carry `aria-busy="true"`.
 
@@ -93,7 +96,7 @@ Extension to webview: `init` (stage, reviewer, learningLayer, chatInsert, task, 
 
 ## How a view is changed or added
 
-1. Edit `media/views/<view>.js` (keep `HT.register('<view>', {tab, stage, ...})`), `media/copy/<view>.js` and `media/css/<view>.css`.
+1. Edit `media/views/<view>.js` (keep `HT.register('<view>', {tab, stage, ...})`), `media/copy/<view>.js` (and its French twin in `media/copy-fr/`) and `media/css/<view>.css`.
 2. Write `lib/models/<view>.js` with its `to<Name>Model` and `FIXTURES`.
 3. Fill `lib/handlers/<view>.js`: `loads` for its data views, `types` for its messages, `commands` if it serves an extension command.
 4. Test: `test/<view>.test.js` (fake CLI from `test/fixture-cli.js`), `test/test_webview_<view>.py` (the `open_panel` fixture of `test/conftest.py`).

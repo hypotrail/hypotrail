@@ -408,6 +408,7 @@
   "trials": {
    "count": 2
   },
-  "scenario_defaults": null
+  "scenario_defaults": null,
+  "language": "en"
  }
 }

@@ -10,6 +10,7 @@
 // - learningLayer: `hypotrail.companion.learningLayer` (default true; effective from v3);
 //   HYPOTRAIL_COMPANION_LEARNING=0 or 1 overrides it.
 // - reviewer: `hypotrail.companion.reviewer` (default false); HYPOTRAIL_COMPANION_REVIEWER=1.
+// - language: `hypotrail.companion.language` (default auto; v0.3 WP-E2, R21);
 // - chatInsert: `hypotrail.companion.chatInsert` (default false). It is NOT contributed in
 //   package.json (hidden) and has no environment override, until a real VS Code session
 //   verifies that the chat insertion does not send (integrator decision CA.8). Until then
@@ -27,7 +28,9 @@ const DISABLED_MESSAGE = 'Companion disabled (feature flag)';
 const STAGES = ['v0', 'v1', 'v2', 'v3'];
 // CR.8: false until a real VS Code session shows that the chat insertion does not send.
 const CHAT_INSERT_VERIFIED = false;
-const DEFAULTS = Object.freeze({ stage: 'v0', learningLayer: true, reviewer: false, chatInsert: false });
+const DEFAULTS = Object.freeze({ stage: 'v0', learningLayer: true, reviewer: false, chatInsert: false, language: 'auto' });
+// v0.3 (WP-E2, R21): the panel language; `auto` follows the study language.
+const LANGUAGES = Object.freeze(['auto', 'en', 'fr']);
 
 function setting(vscode, key, fallback) {
   try {
@@ -79,13 +82,18 @@ function chatInsert(vscode) {
   return CHAT_INSERT_VERIFIED && setting(vscode, 'chatInsert', DEFAULTS.chatInsert) === true;
 }
 
-/** {stage, reviewer, learningLayer, chatInsert}; `forceReviewer` for the reviewer command. */
+function language(vscode) {
+  const value = setting(vscode, 'language', DEFAULTS.language);
+  return LANGUAGES.includes(value) ? value : DEFAULTS.language;
+}
+
+/** {stage, reviewer, learningLayer, chatInsert, language}; `forceReviewer` for the reviewer command. */
 function settings(vscode, env = process.env, { forceReviewer = false } = {}) {
   return { stage: stage(vscode, env), reviewer: forceReviewer || reviewer(vscode, env),
-    learningLayer: learningLayer(vscode, env), chatInsert: chatInsert(vscode) };
+    learningLayer: learningLayer(vscode, env), chatInsert: chatInsert(vscode), language: language(vscode) };
 }
 
 module.exports = {
-  isEnabled, stage, normalizeStage, stageRank, stageAtLeast, learningLayer, reviewer, chatInsert, settings,
+  isEnabled, stage, normalizeStage, stageRank, stageAtLeast, learningLayer, reviewer, chatInsert, language, settings, LANGUAGES,
   CHAT_INSERT_VERIFIED, SETTING_SECTION, SETTING_KEY, ENV_VAR, STAGE_ENV, LEARNING_ENV, REVIEWER_ENV, DISABLED_MESSAGE, STAGES, DEFAULTS,
 };

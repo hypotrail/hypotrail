@@ -30,7 +30,8 @@
     "mode",
     "deliverables",
     "trials",
-    "scenario_defaults"
+    "scenario_defaults",
+    "language"
    ]
   },
   "hypotrail.summary/1+digest": {
@@ -63,6 +64,7 @@
     "deliverables",
     "trials",
     "scenario_defaults",
+    "language",
     "moments",
     "pauses",
     "last_session",
@@ -671,7 +673,10 @@
     "sd",
     "n_bins",
     "bin_width",
-    "bins"
+    "bins",
+    "zeros",
+    "skewed",
+    "log_bins"
    ],
    "values.numeric.bins[]": [
     "low",

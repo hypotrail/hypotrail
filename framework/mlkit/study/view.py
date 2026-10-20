@@ -106,7 +106,10 @@ SUMMARY_KEYS = ('goal', 'current_step', 'plan', 'next_action', 'open_proposals',
                 'trials',
                 # v0.2b (WP-B6a, companion request): the teaching scenario's defaults, as
                 # values only (``{capacity_share: 0.1}``), or ``null``.
-                'scenario_defaults')
+                'scenario_defaults',
+                # v0.3 (WP-E2, R21): the study language (ADR 0005), which the panel's
+                # language setting `auto` follows.
+                'language')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # The limits that matter first when a chat resumes; the others are named, not quoted.
@@ -577,6 +580,7 @@ def summary(view: dict) -> dict:
     out['trials'] = ({k: view['trials'][k] for k in SUMMARY_TRIALS_KEYS}
                      if view.get('trials') else None)
     out['scenario_defaults'] = _compact_scenario(view.get('scenario_defaults'))
+    out['language'] = view.get('language')
     return {k: out[k] for k in SUMMARY_KEYS}
 
 

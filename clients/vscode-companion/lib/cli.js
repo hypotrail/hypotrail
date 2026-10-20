@@ -139,8 +139,10 @@ const READS = Object.freeze({
 
 /** W4. `run <eda.activity> --column=<c> ...` (training rows; the activity from the catalog). */
 function runEdaArgv(agent, { activity, column, requestId: id, expectedRevision }) {
+  // v0.3 (WP-E2): a whole-study chart (`eda.correlation`) has no column.
+  const columnArg = column === undefined ? [] : [`--column=${text(column, 'the column', { max: 200 })}`];
   return [...agent.argv, 'run', match(activity, EDA_ACTIVITY, 'the activity'),
-    `--column=${text(column, 'the column', { max: 200 })}`, ...mutation(id, expectedRevision), ...tail(agent)];
+    ...columnArg, ...mutation(id, expectedRevision), ...tail(agent)];
 }
 
 /** W5. `render --json --study S` (no revision). */

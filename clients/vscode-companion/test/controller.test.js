@@ -32,7 +32,9 @@ test('ready: init, then the summary; v0 reads without --digest, v1 with it', asy
       study: studyKey(AGENT.studyDir),
       // WP-A5: what "Open in Marimo" runs, for display (lib/launch.js display).
       marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
-        workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' } });
+        workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
+      // v0.3 (WP-E2, R21): the panel language setting, `auto` by default.
+      language: 'auto' });
     assert.equal(runCli.calls[0].tail.includes('--digest'), digest);
     const snap = posted.find(m => m.type === 'snapshot');
     assert.equal(snap.revision, revision);
@@ -265,7 +267,8 @@ test('settings: updateSettings posts init again; navigate validates its target',
   assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null,
     study: studyKey(AGENT.studyDir),
     marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
-        workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' } });
+        workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
+    language: 'auto' });
   assert.equal(c.navigate({ tab: 'evidence', kind: 'result', id: 'a'.repeat(64) }), true);
   assert.equal(c.navigate({ tab: 'nowhere', kind: 'result', id: 'x' }), false);
   assert.equal(await c.command('go_to_result', {}), undefined, 'no handler registers it in WP-0');
@@ -273,7 +276,11 @@ test('settings: updateSettings posts init again; navigate validates its target',
 
 test('flag: stage, learning layer, reviewer, chatInsert and their overrides', () => {
   const fake = (settings = {}) => createFake({ settings });
-  assert.deepEqual(flag.settings(fake(), {}), { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false });
+  assert.deepEqual(flag.settings(fake(), {}), { stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false,
+    language: 'auto' });
+  // v0.3 (WP-E2, R21): the panel language; an unknown value reads as auto.
+  assert.equal(flag.language(fake({ 'hypotrail.companion.language': 'fr' })), 'fr');
+  assert.equal(flag.language(fake({ 'hypotrail.companion.language': 'de' })), 'auto');
   assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'v2' }), {}), 'v2');
   assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'v2' }), { HYPOTRAIL_COMPANION_STAGE: 'v1' }), 'v1');
   assert.equal(flag.stage(fake({ 'hypotrail.companion.stage': 'v7' }), {}), 'v3', 'a higher stage reads as the highest known');

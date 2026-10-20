@@ -207,7 +207,7 @@
         question: 'At the rule, who is acted on by mistake, and who is missed?',
         actedOn: 'acted on', notActedOn: 'not acted on', positive: 'positive outcome', negative: 'negative outcome',
         tp: 'reached', fp: 'acted on by mistake', fn: 'missed', tn: 'correctly left out',
-        precision: 'Precision ', recall: ', recall ', specificity: ', specificity ',
+        precision: 'Precision ', recall: 'Recall ', specificity: 'Specificity ',
         expected: 'Counts are expected values: the cut splits rows with the same score.',
       },
       gain: { question: 'If you act on the top share of the scores, what share of the positive outcomes do you reach?' },

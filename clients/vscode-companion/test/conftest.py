@@ -25,6 +25,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import warnings
@@ -47,6 +48,14 @@ except ImportError:  # pragma: no cover - the gate installs the browser group
 
 STUB = """
 (() => {
+  // v0.3 (WP-E2): record every setAttribute('style', ...): the CSP forbids inline style
+  // attributes; CSSOM writes of custom properties are the one allowed way to size a mark.
+  window.__styleAttrs = [];
+  const setAttribute = Element.prototype.setAttribute;
+  Element.prototype.setAttribute = function (name, value) {
+    if (String(name).toLowerCase() === 'style') window.__styleAttrs.push(String(value));
+    return setAttribute.call(this, name, value);
+  };
   window.__posted = [];
   window.__csp = [];
   window.__state = null;
@@ -71,6 +80,14 @@ def _require_tools():
         pytest.skip('Playwright is not installed')
     if NODE is None:  # pragma: no cover
         pytest.skip('Node.js is not installed')
+
+
+def inline_styles_ok(page) -> bool:
+    """v0.3 (WP-E2, COMPANION-ADVANCED §12): no style attribute was created with setAttribute,
+    and every style attribute in the body holds CSSOM custom properties only (--v, --x ...)."""
+    styles = page.evaluate("() => [...document.querySelectorAll('body [style]')].map(n => n.getAttribute('style'))")
+    custom = re.compile(r'(\s*--[a-z-]+:\s*[^;]+;?)+\s*')
+    return page.evaluate('window.__styleAttrs') == [] and all(custom.fullmatch(s) for s in styles)
 
 
 def run_node(code: str, stdin: str = '') -> str:

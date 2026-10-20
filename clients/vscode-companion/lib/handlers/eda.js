@@ -8,11 +8,13 @@
 //               read at the revision the junior saw, and the column is one of its columns.
 //               Anything else is `invalid` and no `run` starts (ED-1, INV-13). There is no
 //               partition argument: the engine reads training rows only (CC §8).
+//               v0.3 (WP-E2): `run eda.correlation` without a column, when the catalog
+//               lists it as a runnable whole-study entry (structural, no target).
 //
 // The cache key is `evidence`, shared with the Evidence and What if? loaders: the
 // controller caches the payload and projects it with toEdaModel (COMPANION-ADVANCED §5).
 
-const { toEdaModel, requestable } = require('../models/eda');
+const { toEdaModel, requestable, requestableWhole } = require('../models/eda');
 const { toDataModel } = require('../models/data');
 
 const KEY = 'evidence';
@@ -29,7 +31,8 @@ function readCatalog(ctx) {
 
 async function runEda(message, ctx) {
   const { activity, column, revision } = message;
-  const slot = `${activity}:${column}`;
+  const whole = column === undefined;
+  const slot = whole ? activity : `${activity}:${column}`;
   const shown = await readCatalog(ctx);
   if (!shown.ok) {
     ctx.invalid('W4', `${MESSAGES.unread} ${shown.message}`.trim(), slot);
@@ -40,12 +43,12 @@ async function runEda(message, ctx) {
     await ctx.refresh();
     return;
   }
-  const entry = shown.model.catalog.find(a => a.activity === activity && a.perColumn);
-  if (!entry || !entry.columns.some(c => c.name === column)) {
+  const entry = shown.model.catalog.find(a => a.activity === activity && a.perColumn === !whole);
+  if (!entry || (!whole && !entry.columns.some(c => c.name === column))) {
     ctx.invalid('W4', MESSAGES.notInCatalog, slot);
     return;
   }
-  if (!requestable(shown.model, activity, column)) {
+  if (whole ? !requestableWhole(shown.model, activity) : !requestable(shown.model, activity, column)) {
     ctx.invalid('W4', MESSAGES.notRunnable, slot);
     return;
   }

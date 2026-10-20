@@ -39,7 +39,9 @@ SUMMARY_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'goal',
                 # v0.2b (WP-B1): the trial count.
                 'trials',
                 # v0.2b (WP-B6a): the scenario defaults, values only.
-                'scenario_defaults')
+                'scenario_defaults',
+                # v0.3 (WP-E2, R21): the study language.
+                'language')
 # With ``--digest`` only: four keys after ``recap`` (CC §1), then ``task`` (integrator
 # decision CA.3, ADR 0004 open question 7), then ``currency`` (review fix H1, CC §1.5).
 # Without ``--digest`` the summary is unchanged.
@@ -149,9 +151,9 @@ EDA_CATALOG_ITEM_KEYS = ('activity', 'per_column', 'columns', 'runnable', 'missi
 EDA_CATALOG_COLUMN_KEYS = ('name', 'role', 'type', 'slot', 'result_id')
 EDA_CATALOG_ACTIVITIES = {
     'binary': ('eda.target_rate', 'eda.special_values', 'eda.rate_by', 'eda.distribution',
-               'eda.quality', 'eda.single_feature_signal'),
+               'eda.quality', 'eda.single_feature_signal', 'eda.correlation'),
     'regression': ('eda.target_summary', 'eda.special_values', 'eda.mean_by', 'eda.distribution',
-                   'eda.quality', 'eda.single_feature_signal'),
+                   'eda.quality', 'eda.single_feature_signal', 'eda.correlation'),
 }
 SOURCES_KEYS = ('case', 'dataset')
 SOURCE_KEYS = ('path', 'sha256', 'matches')
@@ -192,7 +194,9 @@ DISTRIBUTION_VALUE_KEYS = ('partition', 'column', 'role', 'type', 'kind', 'n_row
                            'question')
 DISTRIBUTION_KINDS = ('numeric', 'discrete', 'categorical')
 DISTRIBUTION_NUMERIC_KEYS = ('n', 'min', 'q25', 'median', 'q75', 'max', 'mean', 'sd', 'n_bins',
-                             'bin_width', 'bins')
+                             'bin_width', 'bins',
+                             # v0.3 (WP-E2, R17): the exact zeros and the log bins of a skewed column.
+                             'zeros', 'skewed', 'log_bins')
 DISTRIBUTION_BIN_KEYS = ('low', 'high', 'n_rows', 'share', 'closed')
 DISTRIBUTION_GROUP_KEYS = ('value', 'n_rows', 'share', 'small_count')
 DISTRIBUTION_SPECIAL_KEYS = ('value', 'meaning', 'n_rows', 'share')

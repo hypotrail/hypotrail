@@ -14,7 +14,7 @@
    "--request-id",
    "b-deleg",
    "--expected-revision",
-   "42",
+   "46",
    "--json"
   ],
   "note": ""

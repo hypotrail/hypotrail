@@ -125,7 +125,28 @@ HIGH_CONTRAST = {
     '--vscode-charts-purple': '#b180d7',
 }
 
+# v0.3 (WP-E2): the current defaults, Light Modern and Dark Modern (VS Code 1.9x), which the
+# design system was drawn against (docs/design/companion-v0.3-mockups/ds.css).
+LIGHT_MODERN = {**LIGHT_PLUS,
+    '--vscode-editor-background': '#ffffff', '--vscode-editor-foreground': '#3b3b3b',
+    '--vscode-sideBar-background': '#f8f8f8', '--vscode-panel-border': '#e5e5e5',
+    '--vscode-foreground': '#3b3b3b', '--vscode-descriptionForeground': '#6b6b6b',
+    '--vscode-textLink-foreground': '#005fb8', '--vscode-focusBorder': '#005fb8',
+    '--vscode-button-background': '#005fb8', '--vscode-button-foreground': '#ffffff',
+    '--vscode-button-secondaryBackground': '#e5e5e5', '--vscode-button-secondaryForeground': '#3b3b3b',
+    '--vscode-input-border': '#cecece', '--vscode-widget-border': '#e5e5e5'}
+DARK_MODERN = {**DARK_PLUS,
+    '--vscode-editor-background': '#1f1f1f', '--vscode-editor-foreground': '#cccccc',
+    '--vscode-sideBar-background': '#181818', '--vscode-panel-border': '#2b2b2b',
+    '--vscode-foreground': '#cccccc', '--vscode-descriptionForeground': '#9d9d9d',
+    '--vscode-textLink-foreground': '#4daafc', '--vscode-focusBorder': '#0078d4',
+    '--vscode-button-background': '#0078d4', '--vscode-button-foreground': '#ffffff',
+    '--vscode-button-secondaryBackground': '#313131', '--vscode-button-secondaryForeground': '#cccccc',
+    '--vscode-input-background': '#313131', '--vscode-input-border': '#3c3c3c', '--vscode-widget-border': '#313131'}
+
 THEMES = {
+    'light-modern': ('vscode-light', 'light', LIGHT_MODERN),
+    'dark-modern': ('vscode-dark', 'dark', DARK_MODERN),
     'light': ('vscode-light', 'light', LIGHT_PLUS),
     'dark': ('vscode-dark', 'dark', DARK_PLUS),
     'hc': ('vscode-high-contrast', 'dark', HIGH_CONTRAST),

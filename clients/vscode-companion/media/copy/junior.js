@@ -377,6 +377,8 @@
     'evaluate.regression': 'The model comparison',
     // WP-A7: the quality check (development rows) and the leakage detector.
     'eda.quality': 'The data quality check', 'eda.single_feature_signal': 'The single-feature signal check',
+    // v0.3 (WP-E2, R28).
+    'eda.correlation': 'The correlation matrix',
   };
   ACTIVITY['policy.evaluation'] = ACTIVITY['policy.evaluate'];
   const activity = (a, task) => {

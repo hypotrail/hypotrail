@@ -1,21 +1,22 @@
-// Data & EDA view (COMPANION-ADVANCED §6.3; stage v2; WP-A7). The tab opens on the data card
-// (`hypotrail data`: what one row describes, the grouped dictionary, five fixed rows with the
-// target first, the sealed final test) and the structural quality check of the development
-// rows; then the exploration of the training rows: a gallery of the registered EDA results
-// only, each card titled by the question it answers, with its intervals and n, the shuffled-
-// outcome null band, and the single-feature signal (the leakage detector). Every chart is an
-// engine result, every number is an engine value cited with its result id (INV-7), and bar
-// lengths are geometry (INV-14). "Run another chart" offers only the per-column training-row
-// activities and columns of the engine's `eda_catalog` and sends `run_eda` (W4); the
-// controller checks it again before any `run`. There is no partition control: free
-// exploration belongs in the workbench notebook. Owned by WP-U4; WP-A7 added the data card.
+// Data & EDA view (COMPANION-ADVANCED §6.3; stage v2; WP-A7; v0.3 WP-E2 design system). The
+// tab opens on the data card (`hypotrail data`: what one row describes, the grouped
+// dictionary, five fixed rows with the target first, the sealed final test) and the structural
+// quality check of the development rows; then the exploration: a gallery of the registered
+// EDA results only, one card each (an eyebrow, the question it answers as its title, the
+// column's meaning, the chart, one sentence, and a footer with "Why?" and a faint source
+// line). Every chart is an engine result, every number is an engine value cited with its
+// result id (INV-7), and bar lengths are geometry (INV-14). "Run another chart" offers the
+// per-column training-row activities and the whole-study `eda.correlation` of the engine's
+// `eda_catalog` and sends `run_eda` (W4); the controller checks it again before any `run`.
+// There is no partition control: free exploration belongs in the workbench notebook.
 (function (HT) {
   'use strict';
   const el = HT.el;
   const arr = x => (Array.isArray(x) ? x : []);
-  const str = x => (typeof x === 'string' ? x : '');
   // The per-column activities the panel may request: each reads training rows only.
   const PER_COLUMN = ['eda.distribution', 'eda.rate_by', 'eda.mean_by'];
+  // v0.3 (WP-E2): the whole-study charts the panel may request (no column, no target).
+  const WHOLE = ['eda.correlation'];
   // Activities whose run reads the outcome, so each run is one more look (CLI-CONTRACT §11.2).
   const READS_TARGET = ['eda.rate_by', 'eda.mean_by'];
   const EXCLUDED = ['not_available', 'uncertain_excluded'];
@@ -23,8 +24,8 @@
 
   // View memory (in this webview only; nothing here is study state): the Request choice,
   // the last W4 outcome (rendered in the Request card, `outcomes: ['W4']`), and the language
-  // of the dictionary's labels.
-  const memory = { column: null, activity: null, outcome: null, french: false };
+  // of the dictionary's meanings (null: the panel language).
+  const memory = { column: null, activity: null, outcome: null, meanings: null };
 
   function taskOf(data, ctx, model) {
     const t = (data && data.task) || ctx.task || (model && model.task);
@@ -66,22 +67,64 @@
     const top = Math.max(0, ...values.filter(v => typeof v === 'number' && Number.isFinite(v)));
     return top > 0 ? Math.ceil(top / step - 1e-9) * step : step;
   }
+  /** Rounded axis positions: 0, half, max (geometry of the axis, never a figure). */
+  function ticks(ctx, max, task) {
+    const f = v => (task === 'binary' ? ctx.format.number(v, 'pct0') : ctx.format.number(v, Math.abs(max) >= 10 ? 'int' : 'f1'));
+    return [0, max / 2, max].map(v => ({ value: v, text: f(v) }));
+  }
 
-  /**
-   * A card's head (WP-A7): its title is the question the result answers (the engine's
-   * `values.question`), then the name of the chart and the chip of its result id.
-   */
-  function header(ctx, c, card, title, id) {
-    const rid8 = card.resultId.slice(0, 8);
-    return el('div', { className: 'eda-card-head' }, [
-      el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null,
-        text: card.question || title }),
-      el('div', { className: 'eda-card-meta' }, [
-        card.question ? el('span', { className: 'muted eda-chart-name', text: title }) : null,
-        el('button', { type: 'button', className: 'ht-link ht-mono eda-chip', 'data-chip': card.resultId,
-          'aria-label': c.chipLabel(rid8), text: c.chip(card.slot || card.activity, rid8),
-          onclick: () => ctx.navigate({ tab: 'evidence', kind: 'result', id: card.resultId }) }),
-      ]),
+  /** The panel language of the dictionary's meanings (R12 merged into R21). */
+  function meaningsFr(d) {
+    if (!d || !d.hasFrench) return false;
+    return (memory.meanings || HT.language()) === 'fr';
+  }
+
+  /** A column's meaning from the data card, in the panel language when the case has it. */
+  function meaningOf(ctx, column) {
+    const entry = ctx.data('data');
+    const d = entry && entry.model;
+    if (!d || !column) return null;
+    if (d.target && d.target.column === column) return meaningsFr(d) && d.target.descriptionFr ? d.target.descriptionFr : d.target.description;
+    for (const g of arr(d.groups)) {
+      for (const v of arr(g.variables)) {
+        if (v.name === column) return meaningsFr(d) && v.descriptionFr ? v.descriptionFr : v.description;
+      }
+    }
+    return null;
+  }
+
+  /** The card's sub-line: the column name (code) and its meaning. */
+  function subLine(ctx, column) {
+    if (!column) return null;
+    const meaning = meaningOf(ctx, column);
+    return el('p', { className: 'ht-sub', 'data-column-meaning': column }, [el('code', { text: column }), meaning ? ` · ${meaning}` : '']);
+  }
+
+  /** The faint source line, which opens the result in Evidence (the former result chip). */
+  function sourceButton(ctx, c, card) {
+    const rid6 = card.resultId.slice(0, 6);
+    return el('button', { type: 'button', className: 'ht-link ht-src', 'data-chip': card.resultId,
+      'aria-label': c.chipLabel(rid6), title: card.resultId,
+      text: `${HT.copy.core.sourceWord} · ${card.activity} · ${rid6}`,
+      onclick: () => ctx.navigate({ tab: 'evidence', kind: 'result', id: card.resultId }) });
+  }
+
+  /** One EDA card in the pattern of the design system. */
+  function edaCard(ctx, c, card, { id, eyebrow, title, sub = null, body = [], finding = null, why = [], wide = false, attrs = {} }) {
+    const w = ctx.components.why(why);
+    return el('section', { className: `card eda-card${wide ? ' eda-wide' : ''}`, 'aria-labelledby': id,
+      'data-eda-card': card.slot, 'data-activity': card.activity, 'data-current': card.current ? 'true' : 'false',
+      'data-nav': `result:${card.resultId}`, ...attrs }, [
+      el('div', { className: 'ht-card-h' }, [el('div', {}, [
+        el('span', { className: 'ht-cap', 'data-eyebrow': true, text: eyebrow }),
+        // The engine's question as it sent it ("(en)" in a French panel when it is English).
+        el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null },
+          [card.question ? ctx.components.engineText(card.question) : title]),
+        sub,
+      ])]),
+      ...body,
+      finding ? el('p', { className: 'ht-finding', 'data-finding': true }, Array.isArray(finding) ? finding : [finding]) : null,
+      el('div', { className: 'ht-card-f' }, [w, sourceButton(ctx, c, card)]),
     ]);
   }
 
@@ -95,6 +138,7 @@
       case 'mean_by': return c.byTitle(card.column || '');
       case 'signal': return c.signalTitle;
       case 'quality': return c.qualityTitle;
+      case 'correlation': return c.corr.title;
       default: return c.distributionTitle(card.column || '');
     }
   }
@@ -107,24 +151,27 @@
     return terms[id] || null;
   }
 
+  /** An engine text (a note, a warning) as the engine sent it, "(en)" in a French panel. */
+  function engine(ctx, t, attrs) {
+    return t ? ctx.components.engineText(t, { tag: 'p', attrs }) : null;
+  }
+
   // --- the data card (WP-A7) -------------------------------------------------------------
 
   /** A variable's availability in words: the junior's decision when there is one, else the case. */
   function knownCell(c, v) {
-    if (v.role === 'target') return el('span', { className: 'ht-status ht-st-neutral', 'data-known': 'target', text: c.data.target });
+    if (v.role === 'target') return el('span', { className: 'ht-status ht-st-accent', 'data-known': 'target', text: c.data.target });
     if (v.decided && v.decided.value) {
       const excluded = EXCLUDED.includes(v.decided.value);
       return el('span', {}, [
         el('span', { className: `ht-status ${excluded ? 'ht-st-error' : v.decided.value === 'uncertain_included' ? 'ht-st-stale' : 'ht-st-ok'}`,
-          'data-known': v.decided.value, title: v.decided.value, text: c.data.availability[v.decided.value] || v.decided.value }),
-        el('span', { className: 'muted eda-known-source', text: ` ${c.data.yourDecision}` }),
+          'data-known': v.decided.value, title: c.data.yourDecision, text: c.data.availability[v.decided.value] || v.decided.value }),
       ]);
     }
     const a = v.availability || {};
     const stated = a.value && a.value !== 'unknown' ? (c.data.availability[a.value] || a.value) : c.data.notDocumented;
-    return el('span', { title: a.source || null }, [
+    return el('span', { title: [a.status ? c.data.factStatus[a.status] || a.status : '', a.source || ''].filter(Boolean).join(' · ') || null }, [
       el('span', { className: 'ht-status ht-st-neutral', 'data-known': a.value || 'unknown', text: stated }),
-      a.status ? el('span', { className: 'muted eda-known-source', text: ` ${c.data.factStatus[a.status] || a.status}` }) : null,
     ]);
   }
 
@@ -135,18 +182,19 @@
     return parts.filter(Boolean).join(' · ');
   }
 
-  function meaningCell(ctx, c, v) {
-    const fr = memory.french && v.descriptionFr;
+  function meaningCell(ctx, c, v, fr) {
+    const french = fr && v.descriptionFr;
     return el('div', {}, [
-      el('span', { lang: fr ? 'fr' : null, 'data-description': fr ? 'fr' : 'en', text: fr ? v.descriptionFr : v.description }),
-      ...v.specialValues.map(s => el('div', { className: 'muted eda-special-line', 'data-special': `${v.name}:${s.value}` }, [
+      el('span', { lang: french ? 'fr' : 'en', 'data-description': french ? 'fr' : 'en', text: french ? v.descriptionFr : v.description }),
+      v.examples.length ? el('div', { className: 'ht-sub', text: c.data.examples(v.examples.join(' · ')) }) : null,
+      ...v.specialValues.map(s => el('div', { className: 'ht-sub eda-special-line', 'data-special': `${v.name}:${s.value}` }, [
         c.data.special, el('code', { text: s.value }), `: ${s.meaning}`,
         Number.isInteger(s.nRows) ? ` (${c.data.rows(count(ctx, s.nRows))})` : '',
       ])),
     ]);
   }
 
-  function dictionary(ctx, c, d) {
+  function dictionary(ctx, c, d, fr) {
     const head = c.data.columns;
     const rows = [];
     for (const g of d.groups) {
@@ -154,16 +202,15 @@
         el('th', { scope: 'colgroup', colspan: String(head.length), text: g.group })]));
       for (const v of g.variables) {
         rows.push(el('tr', { 'data-variable': v.name, 'data-role': v.role }, [
-          el('td', { className: 'eda-name' }, [el('code', { text: v.name })]),
-          el('td', { className: 'muted', text: typeText(ctx, c, v) }),
-          el('td', {}, [meaningCell(ctx, c, v)]),
+          el('td', { className: 'eda-name' }, [el('span', { className: 'colname', text: v.name }),
+            el('div', { className: 'ht-sub', text: typeText(ctx, c, v) })]),
+          el('td', { className: 'eda-meaning' }, [meaningCell(ctx, c, v, fr)]),
           el('td', {}, [knownCell(c, v)]),
           el('td', { className: 'eda-num', 'data-missing-cell': v.name, text: count(ctx, v.nMissing) }),
-          el('td', { className: 'muted', text: v.examples.join(', ') }),
         ]));
       }
     }
-    return el('div', { className: 'eda-scroll' }, [el('table', { className: 'eda-dictionary', 'data-dictionary': true }, [
+    return el('div', { className: 'eda-scroll', 'data-scroll-ok': true }, [el('table', { className: 'ht-tbl eda-dictionary', 'data-dictionary': true }, [
       el('caption', { className: 'sr-only', text: c.data.dictionaryCaption }),
       el('thead', {}, [el('tr', {}, head.map(h => el('th', { scope: 'col', text: h })))]),
       el('tbody', {}, rows),
@@ -176,7 +223,7 @@
     for (const g of d.groups) for (const v of g.variables) decided[v.name] = v.decided ? v.decided.value : null;
     const excluded = name => EXCLUDED.includes(decided[name]);
     const cols = d.rows.columns;
-    const table = el('table', { className: 'eda-rows', 'data-five-rows': true }, [
+    const table = el('table', { className: 'ht-tbl eda-rows', 'data-five-rows': true }, [
       el('caption', { className: 'sr-only', text: c.data.rowsCaption }),
       el('thead', {}, [el('tr', {}, cols.map((name, i) => el('th', { scope: 'col', className: [i === 0 ? 'eda-target-col' : '',
         excluded(name) ? 'eda-excluded' : ''].join(' ').trim() || null, 'data-column': name,
@@ -186,8 +233,14 @@
         text: v === null ? c.data.missingCell : v }))))),
     ]);
     const anyExcluded = cols.some(excluded);
-    return [el('div', { className: 'eda-scroll' }, [table]),
-      anyExcluded ? el('p', { className: 'muted', 'data-excluded-legend': true, text: c.data.excludedLegend }) : null];
+    return el('details', { className: 'ht-details eda-five', 'data-five-rows-box': true }, [
+      el('summary', { text: c.data.rowsTitle }),
+      el('div', { className: 'eda-scroll', 'data-scroll-ok': true }, [table]),
+      anyExcluded ? el('p', { className: 'ht-sub', 'data-excluded-legend': true, text: c.data.excludedLegend }) : null]);
+  }
+
+  function stat(value, label, attrs = {}) {
+    return el('div', { className: 'ht-stat', ...attrs }, [el('div', { className: 'ht-stat-v' }, value), el('div', { className: 'ht-stat-l', text: label })]);
   }
 
   function dataCard(ctx, c, entry, task) {
@@ -197,36 +250,42 @@
     const named = [t.positiveLabel, t.negativeLabel].every(x => x !== null && t.description.includes(x));
     const labels = t.positiveLabel !== null && t.negativeLabel !== null && !named ? ` (${t.positiveLabel} / ${t.negativeLabel})` : '';
     const unit = d.observationUnit;
-    const french = memory.french && d.hasFrench;
-    const tDescription = french && t.descriptionFr ? t.descriptionFr : t.description;
-    const toggle = d.hasFrench ? el('button', { type: 'button', className: 'secondary', 'data-french-toggle': true,
-      'aria-pressed': french ? 'true' : 'false', text: french ? c.data.englishLabels : c.data.frenchLabels,
-      onclick: () => { memory.french = !memory.french; ctx.rerender(); } }) : null;
+    const fr = meaningsFr(d);
+    const tDescription = fr && t.descriptionFr ? t.descriptionFr : t.description;
+    // R12 merged into R21: the meanings follow the panel language; this toggle names which
+    // language the Meaning column shows and switches it for this view only.
+    const toggle = d.hasFrench ? el('div', { className: 'ht-seg', role: 'group', 'aria-label': c.data.meaningsLabel,
+      'data-french-toggle': true, 'aria-pressed': fr ? 'true' : 'false' }, ['en', 'fr'].map(l => el('button', {
+      type: 'button', lang: l, 'aria-pressed': (fr ? 'fr' : 'en') === l ? 'true' : 'false', 'data-meanings': l,
+      text: c.data.meaningsButton(l), onclick: () => { memory.meanings = l; ctx.rerender(); } }))) : null;
+    const ft = d.finalTest;
+    const sealedRows = ft && Number.isInteger(ft.rows) ? ft.rows : null;
     return el('section', { className: 'card eda-data', 'aria-labelledby': 'eda-data-title', 'data-data-card': true }, [
-      el('div', { className: 'eda-card-head' }, [
-        el('h3', { id: 'eda-data-title', text: c.data.title }),
+      el('div', { className: 'ht-card-h' }, [
+        el('div', {}, [el('span', { className: 'ht-cap', text: c.data.eyebrow }),
+          el('h3', { id: 'eda-data-title', 'data-fact': 'unit' }, [c.data.oneRowIs(unit.value || c.data.notStated)])]),
         el('span', { className: 'ht-status ht-st-neutral', text: c.data.structural }),
       ]),
-      el('div', { className: 'eda-facts' }, [
-        el('div', { className: 'eda-fact', 'data-fact': 'unit' }, [el('strong', { text: c.data.oneRow }),
-          el('span', { text: unit.value || c.data.notStated }),
-          unit.status ? el('span', { className: 'muted', title: unit.source || null, text: c.data.factStatus[unit.status] || unit.status }) : null]),
-        el('div', { className: 'eda-fact', 'data-fact': 'size' }, [
-          el('strong', { 'data-development-rows': String(d.development.rows),
-            text: c.data.size(count(ctx, d.development.rows), count(ctx, d.development.columns)) }),
-          el('span', { text: d.development.partition === 'all' ? c.data.allRows : c.data.developmentOnly })]),
-        el('div', { className: 'eda-fact', 'data-fact': 'target' }, [el('strong', {}, [c.data.targetLead, el('code', { text: t.column })]),
-          el('span', { lang: french && t.descriptionFr ? 'fr' : null, text: `${tDescription}${labels}` }),
-          el('span', { className: 'muted', text: task === 'regression' ? c.data.targetLaterRegression : c.data.targetLater })]),
+      el('div', { className: 'ht-grid ht-g4 eda-facts' }, [
+        stat([el('span', { 'data-development-rows': String(d.development.rows), text: count(ctx, d.development.rows) })],
+          d.development.partition === 'all' ? c.data.allRowsLabel : c.data.developmentRows, { 'data-fact': 'size' }),
+        stat([count(ctx, d.development.columns)], c.data.columnsLabel),
+        sealedRows !== null && ft.status === 'sealed'
+          ? stat([count(ctx, sealedRows), el('small', { text: c.data.sealedWord })], c.data.finalTestLabel) : null,
       ]),
+      el('div', { className: 'ht-note', 'data-fact': 'target' }, [el('span', {}, [
+        el('strong', {}, [c.data.targetLead, el('code', { text: t.column })]), ': ',
+        el('span', { lang: fr && t.descriptionFr ? 'fr' : null, text: `${tDescription}${labels}` }), '. ',
+        el('span', { className: 'muted', text: task === 'regression' ? c.data.targetLater : c.data.targetLater })])]),
       d.finalTest.line && d.finalTest.audience !== 'agent'
-        ? el('p', { className: 'eda-seal-line', 'data-seal-line': d.finalTest.status || '' }, [
-          el('span', { className: 'ht-status ht-st-sealed', text: c.data.sealed }), ` ${d.finalTest.line}`]) : null,
-      el('h4', { text: c.data.rowsTitle }),
-      ...fiveRows(ctx, c, d),
-      el('div', { className: 'eda-dictionary-head' }, [el('h4', { text: c.data.dictionaryTitle(count(ctx, d.development.columns)) }), toggle]),
-      dictionary(ctx, c, d),
-      d.note ? el('p', { className: 'muted', 'data-data-note': true, text: d.note }) : null,
+        ? el('p', { className: 'eda-seal-line ht-sub', 'data-seal-line': d.finalTest.status || '' }, [
+          el('span', { className: 'ht-status ht-st-sealed', text: c.data.sealed }), ' ',
+          ctx.components.engineText(d.finalTest.line)]) : null,
+      el('div', { className: 'ht-section-h' }, [el('h4', { text: c.data.dictionaryTitle(count(ctx, d.development.columns)) }), toggle]),
+      d.hasFrench ? el('p', { className: 'ht-sub', 'data-meanings-hint': true, text: c.data.meaningsHint }) : null,
+      dictionary(ctx, c, d, fr),
+      fiveRows(ctx, c, d),
+      d.note ? el('p', { className: 'ht-sub', 'data-data-note': true }, [ctx.components.engineText(d.note)]) : null,
     ]);
   }
 
@@ -249,33 +308,34 @@
   function targetRate(ctx, c, card) {
     const d = card.data;
     const rid = card.resultId;
-    const W = 420;
-    const share = d.rate ? Math.max(0, Math.min(1, d.rate.value)) : 0;
-    const chart = ctx.svg('svg', { viewBox: `0 0 ${W} 28`, width: '100%', class: 'ht-chart eda-stack' }, [
-      ctx.svg('rect', { x: 0, y: 0, height: 28, width: Math.max(1, share * W), fill: 'accent', 'data-segment': 'positive' }),
-      ctx.svg('rect', { x: share * W, y: 0, height: 28, width: Math.max(0, W - share * W), fill: 'baseline', 'data-segment': 'other' }),
-    ]);
-    const box = el('div');
-    ctx.components.figure(box, {
-      title: c.targetChart(d.target), chart,
-      columns: [{ key: 'label', label: c.groupHead }, { key: 'rows', label: c.rowsHead }, { key: 'rate', label: c.measureHead }],
-      rows: [{ label: d.positiveLabel, rows: cell(ctx, d.nPositive, rid), rate: cell(ctx, d.rate, rid) },
-        { label: c.otherRows.trim(), rows: cell(ctx, d.nNegative, rid), rate: '' }],
-    });
+    const items = [
+      { label: d.positiveLabel, value: d.rate ? d.rate.value : 0, small: false, valueText: text(ctx, d.rate),
+        cited: d.rate ? { resultId: rid, path: d.rate.path, value: d.rate.value } : null },
+      { label: c.otherLabel, value: d.rate ? 1 - d.rate.value : 0, small: false, tone: 'baseline',
+        valueText: text(ctx, d.nNegative), cited: d.nNegative ? { resultId: rid, path: d.nNegative.path, value: d.nNegative.value } : null },
+    ];
+    const box = el('div', { className: 'eda-stack' });
+    ctx.components.bars(box, { title: c.targetChart(d.target), items, max: 1, unit: c.measureHead });
+    box.querySelector('[data-chart]').setAttribute('data-target-bars', 'true');
     const term = d.imbalanced ? [c.imbalanceTerm, c.imbalanceText] : [c.baseRateTerm, c.baseRateText];
     const example = ctx.learningLayer ? explainTerm(ctx, 'base_rate') : null;
-    return [
-      box,
-      el('p', { className: 'eda-split' }, [
-        el('span', {}, weave(c.targetLine, [num(ctx, d.nPositive, rid), d.positiveLabel, num(ctx, d.rate, rid), num(ctx, d.nRows, rid)])),
-        el('span', {}, [num(ctx, d.nNegative, rid), c.otherRows]),
-      ]),
-      d.interval ? el('p', { 'data-interval-line': true }, weave(c.intervalLine,
-        [num(ctx, d.interval.low, rid), num(ctx, d.interval.high, rid)])) : null,
-      el('p', { 'data-term': d.imbalanced ? 'class_imbalance' : 'base_rate' }, [el('strong', { text: term[0] }), term[1]]),
-      example && Array.isArray(example.example) && example.example.length
-        ? ctx.components.segments(el('p', { className: 'muted', 'data-example': 'base_rate' }), example.example) : null,
-    ];
+    return {
+      body: [
+        el('div', { className: 'ht-stat' }, [el('div', { className: 'ht-stat-v' }, [num(ctx, d.rate, rid)]),
+          el('div', { className: 'ht-stat-l' }, weave(c.targetOf, [num(ctx, d.nRows, rid)]))]),
+        d.interval ? el('p', { className: 'ht-sub', 'data-interval-line': true }, weave(c.intervalLine,
+          [num(ctx, d.interval.low, rid), num(ctx, d.interval.high, rid)])) : null,
+        box,
+      ],
+      finding: el('span', { 'data-term': d.imbalanced ? 'class_imbalance' : 'base_rate' }, [el('strong', { text: term[0] }), term[1]]),
+      why: [
+        el('p', { className: 'eda-split' }, [
+          el('span', {}, weave(c.targetLine, [num(ctx, d.nPositive, rid), d.positiveLabel, num(ctx, d.rate, rid), num(ctx, d.nRows, rid)])),
+          ' · ', el('span', {}, [num(ctx, d.nNegative, rid), c.otherRows])]),
+        example && Array.isArray(example.example) && example.example.length
+          ? ctx.components.segments(el('p', { 'data-example': 'base_rate' }), example.example) : null,
+      ],
+    };
   }
 
   function targetSummary(ctx, c, card) {
@@ -289,53 +349,59 @@
         max: cell(ctx, d.max, rid) },
     });
     const term = explainTerm(ctx, 'target_distribution');
-    return [
-      box,
-      el('p', {}, weave(c.summaryLine, [num(ctx, d.median, rid), num(ctx, d.q25, rid), num(ctx, d.q75, rid), num(ctx, d.min, rid),
-        num(ctx, d.max, rid), num(ctx, d.mean, rid), num(ctx, d.nRows, rid)])),
-      d.meanInterval ? el('p', { 'data-interval-line': true }, weave(c.meanIntervalLine,
+    return {
+      body: [box, statRow(ctx, c, d, rid, true)],
+      finding: d.meanInterval ? el('span', { 'data-interval-line': true }, weave(c.meanIntervalLine,
         [num(ctx, d.meanInterval.low, rid), num(ctx, d.meanInterval.high, rid)])) : null,
-      el('p', { 'data-term': 'target_distribution' }, [el('strong', { text: c.summaryTerm }),
-        term && typeof term.definition === 'string' ? `: ${term.definition}` : null]),
-      d.note ? el('p', { className: 'muted', 'data-note': true, text: d.note }) : null,
-    ];
+      why: [
+        el('p', { 'data-term': 'target_distribution' }, [el('strong', { text: c.summaryTerm }),
+          term && typeof term.definition === 'string' ? `: ${term.definition}` : null]),
+        el('p', {}, weave(c.summaryLine, [num(ctx, d.median, rid), num(ctx, d.q25, rid), num(ctx, d.q75, rid), num(ctx, d.min, rid),
+          num(ctx, d.max, rid), num(ctx, d.mean, rid), num(ctx, d.nRows, rid)])),
+        engine(ctx, d.note, { 'data-note': true }),
+      ],
+    };
   }
 
   function specialValues(ctx, c, card, task) {
     const d = card.data;
     const rid = card.resultId;
-    const out = [];
+    const body = [];
+    const why = [];
     for (const t of d.together) {
       const [before, after] = c.together(`${t.a.column} = ${t.a.value}`, `${t.b.column} = ${t.b.value}`);
-      out.push(el('p', { className: 'eda-together', 'data-together': `${t.a.column}:${t.b.column}` }, [before, num(ctx, t.nBoth, rid), after]));
+      body.push(el('p', { className: 'ht-note eda-together', 'data-together': `${t.a.column}:${t.b.column}` }, [before, num(ctx, t.nBoth, rid), after]));
     }
     if (task === 'binary' && d.rows.some(r => r.rate)) {
       const items = d.rows.filter(r => r.rate).map(r => ({
         label: `${r.column} = ${r.value}`, value: r.rate.value, small: false,
         interval: r.interval ? { low: r.interval.low.value, high: r.interval.high.value } : null,
-        valueText: `${text(ctx, r.rate)}${r.interval ? ` [${range(ctx, r.interval)}]` : ''} ${c.ofRows} ${text(ctx, r.nRows)}`,
+        valueText: `${text(ctx, r.rate)} · n ${text(ctx, r.nRows)}`,
         cited: { resultId: rid, path: r.rate.path, value: r.rate.value },
       }));
-      out.push(ctx.components.bars(el('div'), { title: c.specialChart, items,
-        max: axisMax(items.flatMap(i => [i.value, i.interval ? i.interval.high : null]), 0.05), unit: c.specialMeasureHead }));
+      const max = axisMax(items.flatMap(i => [i.value, i.interval ? i.interval.high : null]), 0.05);
+      body.push(ctx.components.bars(el('div'), { title: c.specialChart, items, max, unit: c.specialMeasureHead,
+        ticks: ticks(ctx, max, task), point: true }));
     }
     const measure = task === 'binary' ? 'rate' : 'meanTarget';
-    ctx.components.valuesTable(out[out.push(el('div', { className: 'eda-table' })) - 1], {
+    const table = el('div', { className: 'eda-table' });
+    ctx.components.valuesTable(table, {
       caption: c.specialTable,
       columns: [{ key: 'column', label: c.columnHead }, { key: 'value', label: c.codeHead }, { key: 'meaning', label: c.meaningHead },
         { key: 'rows', label: c.rowsHead }, { key: 'share', label: c.shareHead }, { key: 'measure', label: c.specialMeasureHead }],
       rows: d.rows.map(r => ({ column: r.column, value: r.value, meaning: r.meaning, rows: cell(ctx, r.nRows, rid),
         share: cell(ctx, r.share, rid), measure: cell(ctx, r[measure], rid) })),
     });
-    if (d.note) out.push(el('p', { className: 'muted', 'data-note': true, text: d.note }));
-    return out;
+    body.push(table);
+    why.push(engine(ctx, d.note, { 'data-note': true }));
+    return { body, why };
   }
 
   /** The null band of a by-column chart in words: is the spread more than chance draws? */
   function nullBandLine(ctx, c, band, rid) {
     if (!band || !band.observed || !band.nullMax) return null;
     const parts = band.outside ? c.bandOutside : c.bandInside;
-    return el('p', { className: `eda-band-line ${band.outside ? 'eda-band-outside' : ''}`.trim(), 'data-null-band': band.outside ? 'outside' : 'inside' },
+    return el('span', { className: `eda-band-line ${band.outside ? 'eda-band-outside' : ''}`.trim(), 'data-null-band': band.outside ? 'outside' : 'inside' },
       weave(parts, [num(ctx, band.observed, rid), num(ctx, band.shuffles, rid), num(ctx, band.nullMax, rid)]));
   }
 
@@ -346,21 +412,19 @@
     const groups = [...d.groups, ...(d.other ? [{ ...d.other, label: c.other }] : [])];
     const pair = iv => (iv ? { low: iv.low.value, high: iv.high.value } : null);
     const items = groups.filter(g => g.value).map(g => ({
-      label: g.label, value: g.value.value, small: g.small, interval: pair(g.interval), band: pair(g.band),
-      valueText: task === 'binary' ? `${text(ctx, g.value)}${g.interval ? ` [${range(ctx, g.interval)}]` : ''} ${c.ofRows} ${text(ctx, g.nRows)}`
-        : `${text(ctx, g.value)}${g.interval ? ` [${range(ctx, g.interval)}]` : ''} · ${text(ctx, g.nRows)} ${c.rows}`,
+      label: g.label, sub: g.nRows ? `n ${text(ctx, g.nRows)}` : '', value: g.value.value, small: g.small,
+      interval: pair(g.interval), band: pair(g.band),
+      valueText: `${text(ctx, g.value)}${g.interval ? ` · ${range(ctx, g.interval)}` : ''}`,
       cited: { resultId: rid, path: g.value.path, value: g.value.value },
     }));
     const step = task === 'binary' ? 0.05 : 5;
     const max = axisMax(items.flatMap(i => [i.value, i.interval && i.interval.high, i.band && i.band.high]), step);
-    const scaleText = c.scale(ctx.format.number(0, task === 'binary' ? 'pct0' : 'int'),
-      task === 'binary' ? ctx.format.number(max, 'pct0') : `${ctx.format.number(max, 'int')}${d.unit ? ' ' + d.unit : ''}`);
     const chart = ctx.components.bars(el('div'), {
-      title: c.byChart(column), items, max,
+      title: c.byChart(column), items, max, point: true, ticks: ticks(ctx, max, task),
       rule: d.overall ? { value: d.overall.value, label: `${c.overall} ${text(ctx, d.overall)}` } : null,
       unit: c.measureHead,
     });
-    const counts = el('details', { className: 'eda-counts' }, [el('summary', { text: c.countsSummary })]);
+    const counts = el('details', { className: 'ht-details eda-counts' }, [el('summary', { text: c.countsSummary })]);
     ctx.components.valuesTable(counts, {
       caption: c.byChart(column),
       columns: [{ key: 'label', label: c.groupHead }, { key: 'rows', label: c.rowsHead },
@@ -372,36 +436,64 @@
     });
     const anyBand = items.some(i => i.band);
     const anyInterval = items.some(i => i.interval);
-    return [
-      chart,
-      el('p', { className: 'muted eda-scale', 'aria-hidden': 'true', 'data-literal': 'axis', text: scaleText }),
-      anyInterval || anyBand ? el('p', { className: 'muted eda-legend', 'data-legend': true },
-        [anyInterval ? c.intervalLegend : '', anyInterval && anyBand ? ' ' : '', anyBand ? c.bandLegend : '']) : null,
-      nullBandLine(ctx, c, d.nullBand, rid),
-      el('p', {}, weave(c.overallLine, [num(ctx, d.overall, rid), num(ctx, d.nRows, rid)])),
-      el('p', { className: 'muted', 'data-hatch-caption': true }, weave(c.hatch, [num(ctx, d.minGroupRows, rid)])),
-      el('p', { className: 'eda-noncausal', 'data-noncausal': true, text: c.nonCausal(column) }),
-      d.warnings.length ? el('ul', { className: 'eda-warnings', 'data-warnings': true }, d.warnings.map(w => el('li', { text: w }))) : null,
-      d.note ? el('p', { className: 'muted', 'data-note': true, text: d.note }) : null,
-      counts,
-    ];
+    return {
+      body: [chart, counts],
+      finding: nullBandLine(ctx, c, d.nullBand, rid) || el('span', {}, weave(c.overallLine, [num(ctx, d.overall, rid), num(ctx, d.nRows, rid)])),
+      why: [
+        el('p', {}, weave(c.overallLine, [num(ctx, d.overall, rid), num(ctx, d.nRows, rid)])),
+        anyInterval || anyBand ? el('p', { className: 'eda-legend', 'data-legend': true },
+          [anyInterval ? c.intervalLegend : '', anyInterval && anyBand ? ' ' : '', anyBand ? c.bandLegend : '']) : null,
+        el('p', { 'data-hatch-caption': true }, weave(c.hatch, [num(ctx, d.minGroupRows, rid)])),
+        el('p', { className: 'eda-noncausal', 'data-noncausal': true, text: c.nonCausal(column) }),
+        d.warnings.length ? el('ul', { className: 'eda-warnings', 'data-warnings': true },
+          d.warnings.map(w => ctx.components.engineText(w, { tag: 'li' }))) : null,
+        engine(ctx, d.note, { 'data-note': true }),
+      ],
+    };
+  }
+
+  /** Median, IQR, mean, max and missing, named with their standard terms (R17). */
+  function statRow(ctx, c, n, rid, withMin) {
+    const item = (label, node) => (node ? el('span', {}, [`${label} `, el('strong', {}, [node])]) : null);
+    const iqr = n.q25 && n.q75 ? el('span', {}, [num(ctx, n.q25, rid), '–', num(ctx, n.q75, rid)]) : null;
+    return el('p', { className: 'ht-statrow', 'data-numeric-line': true }, [
+      item(c.stats.median, num(ctx, n.median, rid)), item(c.stats.iqr, iqr), item(c.stats.mean, num(ctx, n.mean, rid)),
+      withMin ? item(c.stats.min, num(ctx, n.min, rid)) : null, item(c.stats.max, num(ctx, n.max, rid)),
+    ]);
   }
 
   function distribution(ctx, c, card) {
     const d = card.data;
     const rid = card.resultId;
     const column = card.column || d.column;
-    // The glossary term, for the learning layer's hover (§6.7; WP-I).
-    const out = [el('p', { className: 'muted', 'data-term-line': 'distribution' }, [HT.terms.mark(c.distribution, 'distribution'), c.distributionOnTrain])];
+    const body = [];
+    let finding = null;
+    const why = [el('p', { 'data-term-line': 'distribution' }, [el('strong', {}, [HT.terms.mark(c.distribution, 'distribution')]), c.distributionOnTrain])];
     if (d.numeric) {
       const n = d.numeric;
-      out.push(ctx.components.histogram(el('div'), {
-        title: c.distributionChart(column), axisLabel: column,
-        bins: n.bins.map(b => ({ low: b.low, high: b.high, count: b.nRows ? b.nRows.value : 0, countText: cell(ctx, b.nRows, rid),
-          lowText: cell(ctx, b.lowCited, rid), highText: cell(ctx, b.highCited, rid) })),
+      // R17: a skewed column shows its exact zeros apart and its positive values on log bins.
+      const skewed = n.skewed && n.logBins.length > 0;
+      const bins = skewed ? n.logBins : n.bins;
+      const edge = b => (b.lowCited ? ctx.format.number(b.lowCited.value, 'auto') : String(b.low));
+      const zeros = skewed && n.zeros && n.zeros.nRows ? n.zeros : null;
+      body.push(ctx.components.histogram(el('div'), {
+        title: c.distributionChart(column), showTitle: false,
+        axisLabel: skewed ? c.logAxis : c.linearAxis,
+        zero: zeros ? { label: c.zeroLabel, share: zeros.share ? zeros.share.value : 0, valueText: num(ctx, zeros.share, rid),
+          rowsText: el('span', {}, weave(c.zeroRows, [num(ctx, zeros.nRows, rid), num(ctx, d.nRows, rid)])) } : null,
+        bins: bins.map((b, i) => ({ low: b.low, high: b.high, count: b.nRows ? b.nRows.value : 0, countText: cell(ctx, b.nRows, rid),
+          lowText: cell(ctx, b.lowCited, rid), highText: cell(ctx, b.highCited, rid),
+          edgeText: i === 0 && skewed ? `${edge(b)}` : edge(b) })),
       }));
-      out.push(el('p', { 'data-numeric-line': true }, weave(c.numericLine, [num(ctx, n.median, rid), num(ctx, n.q25, rid),
+      const missing = d.nMissing && d.nMissing.value > 0 ? num(ctx, d.nMissing, rid) : null;
+      const row = statRow(ctx, c, n, rid, false);
+      if (missing) row.appendChild(el('span', {}, [`${c.stats.missing} `, el('strong', {}, [missing])]));
+      body.push(row);
+      if (skewed) why.push(el('p', { 'data-log-scale': true, text: c.logWhy }));
+      why.push(el('p', {}, weave(c.numericLine, [num(ctx, n.median, rid), num(ctx, n.q25, rid),
         num(ctx, n.q75, rid), num(ctx, n.min, rid), num(ctx, n.max, rid), num(ctx, n.n, rid)])));
+      why.push(el('p', { text: c.statTerms }));
+      finding = zeros ? el('span', {}, weave(c.zeroFinding, [num(ctx, zeros.share, rid)])) : null;
     } else {
       const groups = [...d.groups, ...(d.other ? [{ ...d.other, label: c.other, small: false }] : [])];
       const items = groups.filter(g => g.nRows).map(g => ({
@@ -409,21 +501,28 @@
         valueText: g.share ? `${text(ctx, g.nRows)} · ${text(ctx, g.share)}` : text(ctx, g.nRows),
         cited: { resultId: rid, path: g.nRows.path, value: g.nRows.value },
       }));
-      out.push(ctx.components.bars(el('div'), { title: c.groupsChart(column), items, max: 0, unit: c.rowsHead }));
+      body.push(ctx.components.bars(el('div'), { title: c.groupsChart(column), items, max: 0, unit: c.rowsHead }));
       if (groups.some(g => g.small)) {
-        out.push(el('p', { className: 'muted', 'data-hatch-caption': true }, weave(c.distributionHatch, [num(ctx, d.minGroupRows, rid)])));
+        why.push(el('p', { 'data-hatch-caption': true }, weave(c.distributionHatch, [num(ctx, d.minGroupRows, rid)])));
       }
     }
-    const extra = [];
-    if (d.specials.length) {
-      extra.push(c.specialsLine);
-      d.specials.forEach((s, i) => extra.push(i ? ' · ' : ' ', `${column} = ${s.value} `, num(ctx, s.nRows, rid), ` ${c.rows}`));
+    // Missing and special values as their own bars (R17).
+    const own = [...d.specials.filter(s => s.nRows).map(s => ({ label: `${column} = ${s.value}`, value: s.nRows.value, small: false,
+      tone: 'baseline', valueText: s.share ? `${text(ctx, s.nRows)} · ${text(ctx, s.share)}` : text(ctx, s.nRows),
+      cited: { resultId: rid, path: s.nRows.path, value: s.nRows.value } }))];
+    if (d.nMissing && d.nMissing.value > 0) {
+      own.push({ label: c.missingLabel, value: d.nMissing.value, small: false, tone: 'baseline', valueText: text(ctx, d.nMissing),
+        cited: { resultId: rid, path: d.nMissing.path, value: d.nMissing.value } });
     }
-    if (d.nMissing && d.nMissing.value > 0) extra.push(extra.length ? ' · ' : '', `${c.missingLine} `, num(ctx, d.nMissing, rid), ` ${c.rows}`);
-    if (extra.length) out.push(el('p', { className: 'muted', 'data-specials-line': true }, extra));
-    if (d.warnings.length) out.push(el('ul', { className: 'eda-warnings', 'data-warnings': true }, d.warnings.map(w => el('li', { text: w }))));
-    if (d.note) out.push(el('p', { className: 'muted', 'data-note': true, text: d.note }));
-    return out;
+    if (own.length) {
+      const box = el('div', { 'data-specials-line': true, className: 'eda-specials' });
+      const top = d.nRows ? d.nRows.value : 0;
+      ctx.components.bars(box, { title: c.specialsChart(column), items: own, max: top, unit: c.rowsHead, showTitle: false });
+      body.push(el('p', { className: 'ht-sub', text: c.specialsLine }), box);
+    }
+    if (d.warnings.length) why.push(el('ul', { className: 'eda-warnings', 'data-warnings': true }, d.warnings.map(w => ctx.components.engineText(w, { tag: 'li' }))));
+    why.push(engine(ctx, d.note, { 'data-note': true }));
+    return { body, finding, why };
   }
 
   /**
@@ -441,64 +540,122 @@
       value: Math.max(0, s.score.value), small: false, tone: s.flag ? null : 'baseline',
       valueText: text(ctx, s.score), cited: { resultId: rid, path: s.score.path, value: s.score.value },
     }));
-    const out = [ctx.components.bars(el('div'), { title: c.signalChart(metric), items, max: 1,
+    const body = [ctx.components.bars(el('div'), { title: c.signalChart(metric), items, max: 1,
+      ticks: [0, 0.5, 1].map(v => ({ value: v, text: ctx.format.number(v, 'f1') })),
       rule: d.level ? { value: d.level.value, label: `${c.level} ${text(ctx, d.level)}` } : null, unit: metric })];
-    out.push(el('p', { className: 'muted', 'data-signal-legend': true }, weave(c.signalLegend(metric),
-      [num(ctx, d.folds, rid), num(ctx, d.nRows, rid), num(ctx, d.median, rid)])));
+    let finding = null;
     if (d.questions.length) {
       for (const q of d.questions) {
         const decided = q.availability ? (EXCLUDED.includes(q.availability) ? c.leakExcluded
           : c.leakKept) : c.leakUndecided;
-        out.push(el('div', { className: 'eda-leak', role: 'note', 'data-leak': q.feature }, [
-          el('strong', { text: c.leakTitle }),
-          el('p', {}, [el('code', { text: q.feature }), ...weave(c.leakLine(metric), [num(ctx, q.score, rid)])]),
-          el('p', { text: c.leakQuestion }),
-          el('p', { 'data-leak-decision': q.availability || 'none' }, [el('span', { className: 'ht-status ht-st-neutral',
-            text: q.availability ? (c.availabilityWords[q.availability] || q.availability) : c.noDecision }), ` ${decided}`]),
+        body.push(el('div', { className: 'ht-note ht-note-warn eda-leak', role: 'note', 'data-leak': q.feature }, [
+          el('div', {}, [
+            el('p', {}, [el('strong', { text: `${c.leakTitle}: ` }), el('code', { text: q.feature }), ...weave(c.leakLine(metric), [num(ctx, q.score, rid)])]),
+            el('p', { text: c.leakQuestion }),
+            el('p', { 'data-leak-decision': q.availability || 'none' }, [el('span', { className: 'ht-status ht-st-neutral',
+              text: q.availability ? (c.availabilityWords[q.availability] || q.availability) : c.noDecision }), ` ${decided}`]),
+          ]),
         ]));
       }
     } else {
-      out.push(el('p', { 'data-no-leak': true }, weave(c.noLeak(metric), [num(ctx, d.level, rid)])));
+      finding = el('span', { 'data-no-leak': true }, weave(c.noLeak(metric), [num(ctx, d.level, rid)]));
     }
-    if (d.note) out.push(el('p', { className: 'muted', 'data-note': true, text: d.note }));
-    return out;
+    return { body, finding, why: [
+      el('p', { 'data-signal-legend': true }, weave(c.signalLegend(metric), [num(ctx, d.folds, rid), num(ctx, d.nRows, rid), num(ctx, d.median, rid)])),
+      engine(ctx, d.note, { 'data-note': true })] };
+  }
+
+  /**
+   * v0.3 (WP-E2, R28): the predictor-versus-predictor association matrix, read on the
+   * development rows without the target (never a look at the outcome). The lower triangle in
+   * the engine's clustered order, the flagged pairs (|value| >= the level) outlined and named.
+   */
+  function correlation(ctx, c, card) {
+    const d = card.data;
+    const rid = card.resultId;
+    const k = c.corr;
+    const byPair = {};
+    for (const p of d.pairs) { byPair[`${p.a}|${p.b}`] = p; byPair[`${p.b}|${p.a}`] = p; }
+    const two = v => ctx.format.number(v, 'f2').replace(/^(-?)0\./, '$1.');
+    const flagged = d.pairs.filter(p => p.flag && p.value).sort((x, y) => Math.abs(y.value.value) - Math.abs(x.value.value));
+    const box = el('div');
+    ctx.components.corr(box, {
+      order: d.order, title: k.chart,
+      cell: (a, b) => {
+        const p = byPair[`${a}|${b}`];
+        if (!p || !p.value) return null;
+        return { value: p.value.value, text: two(p.value.value), flag: p.flag, measure: p.measure,
+          cited: { resultId: rid, path: p.value.path, value: p.value.value } };
+      },
+      legend: [['pos', k.legendPos], ['neg', k.legendNeg]],
+      columns: [{ key: 'a', label: k.first }, { key: 'b', label: k.second }, { key: 'measure', label: k.measure },
+        { key: 'value', label: k.value }, { key: 'rows', label: c.rowsHead }],
+      rows: d.pairs.map(p => ({ a: p.a, b: p.b, measure: k.measures[p.measure] || p.measure, value: cell(ctx, p.value, rid),
+        rows: cell(ctx, p.nRows, rid) })),
+    });
+    const body = [box, el('div', { className: 'ht-ramp', 'aria-hidden': 'true' }, [el('span', { text: '−1' }), el('i'), el('span', { text: '+1' }),
+      el('span', {}, [k.outlined, ` |r| ≥ ${text(ctx, d.level)}`])])];
+    if (flagged.length) {
+      body.push(el('ul', { className: 'eda-flagged', 'data-flagged': String(flagged.length) }, flagged.slice(0, 8).map(p => el('li', {}, [
+        el('code', { text: p.a }), ' · ', el('code', { text: p.b }), ' ', num(ctx, p.value, rid), el('span', { className: 'ht-sub', text: ` (${k.measuresShort[p.measure] || p.measure})` })]))));
+    }
+    const finding = flagged.length ? el('span', { 'data-collinear': 'some' }, weave(k.findingSome, [num(ctx, d.level, rid), num(ctx, d.nFlagged, rid)]))
+      : el('span', { 'data-collinear': 'none' }, weave(k.findingNone, [num(ctx, d.level, rid)]));
+    return { body, finding, why: [
+      el('p', {}, [el('strong', { text: k.term }), k.termText]),
+      el('p', { text: k.measuresText }),
+      el('p', {}, weave(k.rowsRead, [num(ctx, d.nRows, rid)])),
+      el('p', { text: k.notALook }),
+      engine(ctx, d.note, { 'data-note': true }),
+    ] };
   }
 
   /** The structural quality of the development rows (WP-A7): the target is not read. */
   function qualityCard(ctx, c, card, i) {
     const id = `eda-quality-${i}`;
-    const head = header(ctx, c, card, titleOf(c, card), id);
+    const q = c.quality;
     if (!card.current || !card.data) {
       return el('section', { className: 'card eda-card eda-quality', 'aria-labelledby': id, 'data-quality-card': card.slot,
-        'data-current': 'false' }, [head, el('p', { className: 'status status-stale', 'data-stale': true, text: c.stale })]);
+        'data-current': 'false' }, [el('div', { className: 'ht-card-h' }, [el('div', {}, [
+        el('span', { className: 'ht-cap', text: q.eyebrow }), el('h3', { id, text: titleOf(c, card) })])]),
+      el('p', { className: 'status status-stale', 'data-stale': true, text: c.stale }), sourceButton(ctx, c, card)]);
     }
     const d = card.data;
     const rid = card.resultId;
-    const q = c.quality;
-    const lines = [];
-    lines.push(el('p', { 'data-quality': 'missing' }, d.missing.length
-      ? [q.missingSome, ...d.missing.flatMap((m, k) => [k ? '; ' : ' ', el('code', { text: m.column }), ' ', num(ctx, m.nMissing, rid),
-        ' (', num(ctx, m.share, rid), ')']), '. ', ...weave(q.rowsWithMissing, [num(ctx, d.nRowsWithMissing, rid)])]
-      : [q.missingNone]));
-    for (const m of d.coMissing) {
-      lines.push(el('p', { className: 'muted', 'data-quality': 'co-missing' }, [q.together, m.columns.join(', '), ': ', num(ctx, m.nRows, rid), ` ${c.rows}`]));
+    const chips = [];
+    chips.push(el('span', { className: `ht-status ${d.missing.length ? 'ht-st-stale' : 'ht-st-ok'}`, 'data-quality': 'missing' },
+      d.missing.length ? weave(q.chipMissing, [num(ctx, d.nRowsWithMissing, rid)]) : [q.chipNoMissing]));
+    const dup = d.duplicates.nRows && d.duplicates.nRows.value > 0;
+    chips.push(el('span', { className: `ht-status ${dup ? 'ht-st-stale' : 'ht-st-ok'}`, 'data-quality': 'duplicates' },
+      dup ? weave(q.chipDuplicates, [num(ctx, d.duplicates.nRows, rid)]) : [q.chipNoRepeat]));
+    const rareCount = d.rare.reduce((s, r) => s + r.rare.length, 0);
+    chips.push(el('span', { className: `ht-status ${rareCount ? 'ht-st-stale' : 'ht-st-ok'}`, 'data-quality': 'rare' },
+      rareCount ? [q.chipRare(ctx.format.number(rareCount, 'int'))] : [q.chipNoRare]));
+    const declared = d.ranges.some(r => r.declared);
+    const zero = x => !x || x.value === 0;
+    const outsideAny = d.ranges.some(r => r.declared && !(zero(r.nBelow) && zero(r.nAbove)));
+    if (declared) chips.push(el('span', { className: `ht-status ${outsideAny ? 'ht-st-error' : 'ht-st-ok'}`, 'data-quality': 'ranges',
+      text: outsideAny ? q.chipOutside : q.chipInRange }));
+    const why = [];
+    why.push(el('p', {}, weave(q.read, [num(ctx, d.nRows, rid), num(ctx, d.nColumns, rid)])));
+    if (d.missing.length) {
+      why.push(el('p', { 'data-quality-detail': 'missing' }, [q.missingSome, ...d.missing.flatMap((m, k) => [k ? '; ' : ' ', el('code', { text: m.column }), ' ',
+        num(ctx, m.nMissing, rid), ' (', num(ctx, m.share, rid), ')']), '.']));
     }
-    lines.push(el('p', { 'data-quality': 'duplicates' }, d.duplicates.nRows && d.duplicates.nRows.value > 0
-      ? [...weave(q.duplicatesSome, [num(ctx, d.duplicates.nRows, rid), num(ctx, d.duplicates.nGroups, rid)]), ` (${d.duplicates.definition}).`]
-      : [q.duplicatesNone, d.duplicates.definition ? ` (${d.duplicates.definition}).` : '.']));
-    lines.push(el('p', { 'data-quality': 'rare' }, d.rare.length
-      ? [...weave(q.rareSome, [num(ctx, d.rare[0].rareRows, rid)]), ...d.rare.flatMap((r, k) => [k ? '; ' : ' ', el('code', { text: r.column }), ': ',
+    for (const m of d.coMissing) {
+      why.push(el('p', { 'data-quality': 'co-missing' }, [q.together, m.columns.join(', '), ': ', num(ctx, m.nRows, rid), ` ${c.rows}`]));
+    }
+    if (dup) why.push(el('p', {}, [...weave(q.duplicatesSome, [num(ctx, d.duplicates.nRows, rid), num(ctx, d.duplicates.nGroups, rid)]), ` (${d.duplicates.definition}).`]));
+    if (d.rare.length) {
+      why.push(el('p', { 'data-quality-detail': 'rare' }, [...weave(q.rareSome, [num(ctx, d.rare[0].rareRows, rid)]), ...d.rare.flatMap((r, k) => [k ? '; ' : ' ', el('code', { text: r.column }), ': ',
         // A column with many rare values (a name per row) lists the first few, then their count.
         ...r.rare.slice(0, RARE_SHOWN).flatMap((x, j) => [j ? ', ' : '', `${x.value} (`, num(ctx, x.nRows, rid), ')']),
-        r.rare.length > RARE_SHOWN ? q.rareMore(ctx.format.number(r.rare.length, 'int')) : '']), '.']
-      : [q.rareNone]));
-    const ranges = el('div', { className: 'eda-table' });
+        r.rare.length > RARE_SHOWN ? q.rareMore(ctx.format.number(r.rare.length, 'int')) : '']), '.']));
+    }
+    const ranges = el('details', { className: 'ht-details eda-ranges' }, [el('summary', { text: q.rangesTitle })]);
     if (d.ranges.length) {
       // WP-E1 (R26): the "outside the declared range" column exists only when a column
-      // declares a range; a column without one has an empty cell, and none outside reads
-      // "none" (never "0 / 0").
-      const declared = d.ranges.some(r => r.declared);
-      const zero = x => !x || x.value === 0;
+      // declares a range; none outside reads "none" (never "0 / 0").
       const outside = r => (!r.declared ? '' : zero(r.nBelow) && zero(r.nAbove) ? q.noneOutside
         : q.outsideCounts(text(ctx, r.nBelow) || '0', text(ctx, r.nAbove) || '0'));
       ctx.components.valuesTable(ranges, {
@@ -509,34 +666,51 @@
           ...(declared ? { outside: outside(r) } : {}) })),
       });
     }
+    why.push(engine(ctx, d.note, { 'data-note': true }));
     return el('section', { className: 'card eda-card eda-quality', 'aria-labelledby': id, 'data-quality-card': card.slot,
       'data-current': 'true', 'data-nav': `result:${card.resultId}` }, [
-      head,
-      el('p', {}, [el('span', { className: 'ht-status ht-st-neutral', text: q.tag }), ' ',
-        ...weave(q.read, [num(ctx, d.nRows, rid), num(ctx, d.nColumns, rid)])]),
-      ...lines,
-      d.ranges.length ? el('h4', { text: q.rangesTitle }) : null,
-      ranges,
-      d.note ? el('p', { className: 'muted', 'data-note': true, text: d.note }) : null,
+      el('div', { className: 'ht-card-h' }, [el('div', {}, [
+        el('span', { className: 'ht-cap', 'data-eyebrow': true, text: q.eyebrow }),
+        el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null },
+          [card.question ? ctx.components.engineText(card.question) : titleOf(c, card)])])]),
+      el('div', { className: 'ht-chips eda-chips' }, chips),
+      d.ranges.length ? ranges : null,
+      el('div', { className: 'ht-card-f' }, [ctx.components.why(why), sourceButton(ctx, c, card)]),
     ]);
+  }
+
+  function eyebrowOf(c, card) {
+    const e = c.eyebrows;
+    switch (card.kind) {
+      case 'target_rate': return e.targetRate;
+      case 'target_summary': return e.targetSummary;
+      case 'special_values': return e.special;
+      case 'rate_by': return e.rateBy;
+      case 'mean_by': return e.meanBy;
+      case 'signal': return e.signal;
+      case 'correlation': return e.correlation;
+      default: return e.distribution;
+    }
   }
 
   function cardNode(ctx, c, card, i, task) {
     const id = `eda-card-${i}`;
-    const wide = card.kind === 'rate_by' || card.kind === 'mean_by' || card.kind === 'signal'
+    const wide = card.kind === 'rate_by' || card.kind === 'mean_by' || card.kind === 'correlation'
+      || (card.kind === 'distribution' && card.data && card.data.numeric && card.data.numeric.skewed)
       || (card.kind === 'special_values' && card.current);
-    let body;
+    let parts;
     if (!card.current || !card.data) {
-      body = [el('p', { className: 'status status-stale', 'data-stale': true, text: c.stale })];
-    } else if (card.kind === 'target_rate') body = targetRate(ctx, c, card);
-    else if (card.kind === 'target_summary') body = targetSummary(ctx, c, card);
-    else if (card.kind === 'special_values') body = specialValues(ctx, c, card, task);
-    else if (card.kind === 'rate_by' || card.kind === 'mean_by') body = byColumn(ctx, c, card, task);
-    else if (card.kind === 'signal') body = signal(ctx, c, card, task);
-    else body = distribution(ctx, c, card);
-    return el('section', { className: `card eda-card${wide ? ' eda-wide' : ''}`, 'aria-labelledby': id, 'data-eda-card': card.slot,
-      'data-activity': card.activity, 'data-current': card.current ? 'true' : 'false', 'data-nav': `result:${card.resultId}` },
-    [header(ctx, c, card, titleOf(c, card), id), ...body]);
+      parts = { body: [el('p', { className: 'status status-stale', 'data-stale': true, text: c.stale })] };
+    } else if (card.kind === 'target_rate') parts = targetRate(ctx, c, card);
+    else if (card.kind === 'target_summary') parts = targetSummary(ctx, c, card);
+    else if (card.kind === 'special_values') parts = specialValues(ctx, c, card, task);
+    else if (card.kind === 'rate_by' || card.kind === 'mean_by') parts = byColumn(ctx, c, card, task);
+    else if (card.kind === 'signal') parts = signal(ctx, c, card, task);
+    else if (card.kind === 'correlation') parts = correlation(ctx, c, card);
+    else parts = distribution(ctx, c, card);
+    const column = ['rate_by', 'mean_by', 'distribution'].includes(card.kind) ? card.column : null;
+    return edaCard(ctx, c, card, { id, eyebrow: eyebrowOf(c, card), title: titleOf(c, card), sub: subLine(ctx, column),
+      body: parts.body || [], finding: parts.finding || null, why: parts.why || [], wide });
   }
 
   // --- Run another chart --------------------------------------------------------------------
@@ -559,12 +733,31 @@
     return out;
   }
 
+  /** v0.3 (WP-E2): the whole-study charts of the catalog (the correlation matrix). */
+  function wholeStudy(ctx, c, data) {
+    const model = data.model;
+    const entries = arr(model.catalog).filter(a => !a.perColumn && WHOLE.includes(a.activity) && a.runnable);
+    return entries.map(entry => {
+      const shown = model.cards.find(k => k.activity === entry.activity && k.current);
+      const working = ctx.busyOp === 'W4';
+      return el('div', { className: 'eda-whole', 'data-whole': entry.activity }, [
+        el('p', { className: 'ht-sub', 'data-request-question': entry.activity }, [`${c.answers} ${c.corr.request}`]),
+        el('p', { className: 'ht-sub', text: c.corr.noLook }),
+        shown ? el('button', { type: 'button', className: 'secondary', 'data-show-card': shown.slot, text: c.showIt,
+          onclick: () => ctx.navigate({ tab: 'eda', kind: 'result', id: shown.resultId }) })
+          : el('button', { type: 'button', className: 'secondary', 'data-write': 'run_eda', 'data-activity': entry.activity,
+            disabled: ctx.busy ? true : null, 'aria-busy': working ? 'true' : null, text: working ? c.working : c.corr.run,
+            onclick: () => ctx.send({ type: 'run_eda', activity: entry.activity, revision: data.revision }) }),
+      ]);
+    });
+  }
+
   function requestCard(ctx, c, data, task) {
     const model = data.model;
     // Training-row charts only (WP-A7): the per-column activities of the catalog.
     const perColumn = arr(model.catalog).filter(a => a.perColumn && PER_COLUMN.includes(a.activity));
     const runnable = perColumn.filter(a => a.runnable);
-    const out = [el('h3', { id: 'eda-request-title', text: c.requestTitle })];
+    const out = [el('span', { className: 'ht-cap', text: c.requestEyebrow }), el('h3', { id: 'eda-request-title', text: c.requestTitle })];
     if (!runnable.length) {
       const missing = [...new Set(perColumn.flatMap(a => a.missing))];
       out.push(el('p', { 'data-not-runnable': true, text: missing.length ? `${c.notAvailable} ${missing.join('; ')}` : c.nothingToRequest }));
@@ -577,7 +770,8 @@
       if (!charts.some(a => a.activity === memory.activity)) memory.activity = charts.length ? charts[0].activity : null;
       const label = activity => (activity === 'eda.distribution' ? c.distribution : c.byChartLabel);
       const unavailable = notAtPrediction(ctx);
-      const tags = col => [col.role, unavailable.has(col.name) ? c.notAtPrediction : null].filter(Boolean);
+      const roleWord = r => (c.roles && c.roles[r]) || r;
+      const tags = col => [roleWord(col.role), unavailable.has(col.name) ? c.notAtPrediction : null].filter(Boolean);
       const variable = el('select', { id: 'eda-variable', 'data-request': 'column',
         onchange: e => { memory.column = e.target.value; memory.activity = null; ctx.rerender(); } },
       columns.map(col => el('option', { value: col.name, selected: col.name === memory.column ? true : null,
@@ -598,26 +792,28 @@
       // WP-A7: the question the chart answers is said before it runs; a chart that reads the
       // outcome is one more look.
       const question = entry ? c.requestQuestion(entry.activity, memory.column) : null;
-      out.push(el('label', { for: 'eda-variable', text: c.variable }), variable,
-        unavailable.has(memory.column) ? el('p', { className: 'muted', 'data-not-at-prediction': memory.column,
-          text: c.notAtPredictionHint(memory.column) }) : null,
-        el('label', { for: 'eda-chart', text: c.chart }), chart,
-        question ? el('p', { className: 'eda-request-question', 'data-request-question': entry.activity }, [
-          el('span', { className: 'muted', text: c.answers }), ` ${question}`]) : null,
-        entry && READS_TARGET.includes(entry.activity) && !shown
-          ? el('p', { className: 'muted', 'data-one-more-look': true, text: c.oneMoreLook }) : null,
-        el('div', {}, [action]));
+      out.push(el('div', { className: 'eda-request-row' }, [
+        el('div', {}, [el('label', { for: 'eda-variable', text: c.variable }), variable]),
+        el('div', {}, [el('label', { for: 'eda-chart', text: c.chart }), chart]),
+        el('div', { className: 'eda-request-go' }, [action])]),
+      unavailable.has(memory.column) ? el('p', { className: 'ht-sub', 'data-not-at-prediction': memory.column,
+        text: c.notAtPredictionHint(memory.column) }) : null,
+      question ? el('p', { className: 'ht-sub eda-request-question', 'data-request-question': entry.activity }, [
+        `${c.answers} ${question}`]) : null,
+      entry && READS_TARGET.includes(entry.activity) && !shown
+        ? el('p', { className: 'ht-sub', 'data-one-more-look': true, text: c.oneMoreLook }) : null);
     }
-    out.push(el('p', { className: 'muted', 'data-hint': true }, [c.hint]),
-      el('button', { type: 'button', className: 'secondary', 'data-open': 'workbench', text: c.openWorkbench,
-        onclick: () => ctx.send({ type: 'open_artifact', artifact: 'workbench' }) }));
+    out.push(...wholeStudy(ctx, c, data));
+    out.push(el('div', { className: 'ht-card-f' }, [ctx.components.why([el('p', { 'data-hint': true, text: c.hint })]),
+      el('button', { type: 'button', className: 'ht-link', 'data-open': 'workbench', text: c.openWorkbench,
+        onclick: () => ctx.send({ type: 'open_artifact', artifact: 'workbench' }) })]));
     const o = memory.outcome;
     if (o) {
       const region = el('div', { 'data-eda-outcome': o.kind }, [ctx.renderOutcome(o)]);
       if (o.recorded && o.recorded.slot) region.appendChild(el('p', { className: 'muted', text: c.recorded(o.recorded.slot, o.recorded.status || '') }));
       out.push(region);
     }
-    return el('section', { className: 'card eda-card eda-request', 'aria-labelledby': 'eda-request-title', 'data-eda-request': task }, out);
+    return el('section', { className: 'card eda-card eda-request eda-wide', 'aria-labelledby': 'eda-request-title', 'data-eda-request': task }, out);
   }
 
   // --- the tab --------------------------------------------------------------------------------
@@ -627,28 +823,32 @@
     const fmt = n => ctx.format.number(n, 'int');
     const ft = model && model.finalTest;
     const looks = model && model.edaLooks && Number.isInteger(model.edaLooks.targetLooks) ? model.edaLooks.targetLooks : null;
-    return el('div', { className: 'eda-banner', role: 'note' }, [
-      el('p', {}, [el('strong', { text: c.bannerLead }), ` ${c.bannerText}`]),
-      ft && ft.status === 'sealed' && Number.isInteger(ft.rows)
-        ? el('p', { className: 'eda-banner-seal', 'data-banner-seal': true }, [el('span', { className: 'ht-status ht-st-sealed', text: c.sealedChip }),
-          ` ${c.sealedRows(fmt(ft.rows))}`]) : null,
-      ft && ft.status === 'absent' ? el('p', { className: 'eda-banner-seal', 'data-banner-seal': 'absent', text: c.noFinalTest }) : null,
-      // WP-E1 (R26): split-aware; under cross-validation EDA reads the development rows and
-      // there is no validation partition. Prose, not monospace.
-      seen.scope === 'development'
-        ? el('p', { className: 'eda-seen', 'data-rows-scope': 'development' }, [`${c.rowsSeen}: `,
-          el('span', { 'data-rows-seen': 'development', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
-          ` ${c.development}.`])
-        : el('p', { className: 'eda-seen', 'data-rows-scope': 'split' }, [`${c.rowsSeen}: `,
-          el('span', { 'data-rows-seen': 'train', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
-          ` ${c.train} · `,
-          el('span', { 'data-rows-seen': 'validation', 'data-value': String(seen.validationEda || 0), text: fmt(seen.validationEda || 0) }),
-          ` ${c.validation}.`]),
-      looks !== null ? el('p', { className: 'eda-looks', 'data-looks': String(looks) }, [
-        el('strong', {}, [c.looksLead, el('span', { 'data-looks-count': true, text: fmt(looks) })]), ` ${c.looksText}`]) : null,
-      Number.isInteger(seen.validationModels) ? el('p', { className: 'muted' }, [`${c.validationModels} `,
-        el('span', { 'data-rows-seen': 'validation-models', 'data-value': String(seen.validationModels), text: fmt(seen.validationModels) })]) : null,
-    ]);
+    const why = [el('p', { text: c.bannerText })];
+    // WP-E1 (R26): split-aware; under cross-validation EDA reads the development rows and
+    // there is no validation partition. Prose, not monospace.
+    why.push(seen.scope === 'development'
+      ? el('p', { className: 'eda-seen', 'data-rows-scope': 'development' }, [`${c.rowsSeen}: `,
+        el('span', { 'data-rows-seen': 'development', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
+        ` ${c.development}.`])
+      : el('p', { className: 'eda-seen', 'data-rows-scope': 'split' }, [`${c.rowsSeen}: `,
+        el('span', { 'data-rows-seen': 'train', 'data-value': String(seen.trainEda || 0), text: fmt(seen.trainEda || 0) }),
+        ` ${c.train} · `,
+        el('span', { 'data-rows-seen': 'validation', 'data-value': String(seen.validationEda || 0), text: fmt(seen.validationEda || 0) }),
+        ` ${c.validation}.`]));
+    if (looks !== null) why.push(el('p', { text: c.looksText }));
+    if (Number.isInteger(seen.validationModels)) {
+      why.push(el('p', {}, [`${c.validationModels} `,
+        el('span', { 'data-rows-seen': 'validation-models', 'data-value': String(seen.validationModels), text: fmt(seen.validationModels) })]));
+    }
+    return el('div', { className: 'ht-note ht-note-seal eda-banner', role: 'note' }, [el('div', {}, [
+      el('p', {}, [el('strong', { text: c.bannerLead }), ' ',
+        ft && ft.status === 'sealed' && Number.isInteger(ft.rows)
+          ? el('span', { className: 'eda-banner-seal', 'data-banner-seal': true }, [c.sealedRows(fmt(ft.rows))]) : null,
+        ft && ft.status === 'absent' ? el('span', { className: 'eda-banner-seal', 'data-banner-seal': 'absent', text: c.noFinalTest }) : null,
+        looks !== null ? el('span', { className: 'eda-looks', 'data-looks': String(looks) }, [' ',
+          el('strong', {}, [c.looksLead, el('span', { 'data-looks-count': true, text: fmt(looks) })])]) : null]),
+      ctx.components.why(why, c.bannerWhy),
+    ])]);
   }
 
   HT.register('eda', {
@@ -668,13 +868,13 @@
       // strings that name the rows or the validation partition take their `cv` variant.
       const base = ctx.copy.eda[task];
       const cv = Boolean(data && data.model && data.model.rowsSeen && data.model.rowsSeen.scope === 'development');
-      const c = cv ? { ...base, ...base.cv } : base;
+      const c = cv ? { ...base, ...base.cv, eyebrows: { ...base.eyebrows, ...(base.cv.eyebrows || {}) } } : base;
       const out = [el('h2', { text: c.heading }), dataSection(ctx, c, task)];
       if (!data) {
         if (error) {
           out.push(el('div', { className: 'card alert', role: 'alert', 'data-eda-error': true }, [
             el('p', { className: 'title', text: c.loadError }), el('p', { text: error.message }),
-            error.detail ? el('details', {}, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: error.detail })]) : null,
+            error.detail ? el('details', { className: 'ht-details' }, [el('summary', { text: c.loadErrorDetail }), el('pre', { text: error.detail })]) : null,
             el('button', { type: 'button', className: 'secondary', text: c.retry, onclick: () => { ctx.retry('eda'); ctx.load('eda'); } }),
           ]));
           return out;
@@ -691,12 +891,12 @@
       // belongs with the data card, before the training-row exploration.
       cards.filter(k => k.kind === 'quality').forEach((card, i) => out.push(qualityCard(ctx, c, card, i)));
       const gallery = cards.filter(k => k.kind !== 'quality');
-      out.push(el('h3', { className: 'eda-section-title', text: c.explorationTitle }));
+      out.push(el('h3', { className: 'ht-section eda-section-title', text: c.explorationTitle }));
       out.push(banner(ctx, c, data, model));
       if (ctx.snapshot && !ctx.fresh(data)) out.push(el('p', { className: 'muted', 'data-updating': true, text: c.updating }));
       if (error) out.push(el('p', { className: 'alert', role: 'alert', 'data-eda-error': true, text: `${c.loadError} ${error.message}` }));
       const grid = el('div', { className: 'eda-gallery', 'aria-label': c.galleryLabel });
-      if (!gallery.length) out.push(el('p', { className: 'muted', 'data-eda-empty': true, text: c.empty }));
+      if (!gallery.length) out.push(el('div', { className: 'ht-empty', 'data-eda-empty': true, text: c.empty }));
       gallery.forEach((card, i) => grid.appendChild(cardNode(ctx, c, card, i, task)));
       grid.appendChild(requestCard(ctx, c, data, task));
       out.push(grid);

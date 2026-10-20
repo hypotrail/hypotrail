@@ -12,6 +12,8 @@ import re
 
 import pytest
 
+from conftest import inline_styles_ok
+
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
 # The panel's writes (W4-W7), and the message types W1-W3 had before the v0.3 narrowing.
@@ -61,7 +63,7 @@ def test_wi1_the_banner_is_on_every_state(open_panel, model, payload, binary, sc
     assert banner_ok(page) and page.locator('[data-no-evaluation]').count() == 1, 'empty'
     panel.view_data('whatif', model('whatif', 'evidence.binary'))
     assert banner_ok(page) and page.locator('[data-slider]').count() == 1, 'populated'
-    assert page.locator('[style]').count() == 0
+    assert inline_styles_ok(page)
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
@@ -91,7 +93,7 @@ def test_sandbox_starts_at_the_proposed_rule_and_shows_the_experiment(open_panel
     panel.send({'type': 'preview_policy_result', 'seq': 1, 'revision': 26, 'model': model('preview', 'preview.binary')})
     cmp = page.locator('.ht-wi-comparison')
     assert cmp.get_attribute('data-experiment') is not None
-    values = cmp.locator('.ht-bars .ht-value').all_text_contents()
+    values = cmp.locator('[data-chart="bars"] .ht-value').all_text_contents()
     # WP-B1: the fixture's study has a variant; the panel lists it as one more model (its
     # dedicated view is WP-B5).
     assert values == ['36.0%', '35.0%', '11.5%', '23.1%', '22.4%', '7.4%']
@@ -114,7 +116,7 @@ def test_sandbox_starts_at_the_proposed_rule_and_shows_the_experiment(open_panel
     assert heading.inner_text() == 'Model and baseline at top 100 rows' and heading.get_attribute('title') == 'capacity:100'
     assert 'capacity:100' not in page.locator('#panel-whatif').inner_text()
     assert rows.first.locator('data[data-result-id]').count() == 4
-    assert page.locator('.ht-wi-evaluated th').all_inner_texts()[2] == 'Positives (y)'
+    assert page.locator('.ht-wi-evaluated th').all_text_contents()[2] == 'Positives (y)'
     # The engine's draft, read only, then "Ask the agent to propose this rule": a ready
     # question copied for the chat (WP-E1, integrator decision I2: no W3).
     draft = model('draft', 'proposal_draft.binary')
@@ -254,7 +256,7 @@ def test_wi4_regression_renders_the_residual_explorer_without_rule_vocabulary(op
     assert sent(panel, 'draft')[-1]['value'] == 'fit.baseline'
     assert page.locator('[data-ask-propose]').count() == 0, 'offered only once the engine says the new value is proposable'
     assert not [m for m in panel.posted() if m['type'] in WRITES], 'choosing a model writes nothing'
-    assert page.locator('[style]').count() == 0
+    assert inline_styles_ok(page)
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 

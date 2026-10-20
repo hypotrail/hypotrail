@@ -14,7 +14,7 @@
   "schema": "hypotrail.decisions/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 36,
+  "revision": 38,
   "task": "regression",
   "decisions": [
    {
@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-20T08:41:52.689156+00:00",
+     "time": "2026-10-20T11:28:27.639786+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -68,7 +68,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-20T08:41:53.277403+00:00",
+     "time": "2026-10-20T11:28:28.425994+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -98,7 +98,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-20T08:41:54.396985+00:00",
+     "time": "2026-10-20T11:28:29.500656+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -127,7 +127,7 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-20T08:41:55.583585+00:00",
+     "time": "2026-10-20T11:28:30.337308+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -161,7 +161,7 @@
      "restatement": "You decide the preprocessing as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-20T08:41:56.821690+00:00",
+     "time": "2026-10-20T11:28:31.340905+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -189,8 +189,8 @@
      "actor": "user",
      "restatement": "You decide the model_variant as stated.",
      "proposal_id": "p_6",
-     "revision": 31,
-     "time": "2026-10-20T08:42:05.083532+00:00",
+     "revision": 33,
+     "time": "2026-10-20T11:28:41.554359+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -271,7 +271,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-20T08:41:52.269865+00:00",
+    "created": "2026-10-20T11:28:27.286774+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -293,7 +293,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-20T08:41:52.997328+00:00",
+    "created": "2026-10-20T11:28:28.038408+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -312,7 +312,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-20T08:41:53.724351+00:00",
+    "created": "2026-10-20T11:28:28.990485+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -330,7 +330,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-20T08:41:54.951233+00:00",
+    "created": "2026-10-20T11:28:29.938609+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -353,7 +353,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-20T08:41:56.224726+00:00",
+    "created": "2026-10-20T11:28:30.826915+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -370,9 +370,9 @@
     "restatement": "You decide the model_variant as stated.",
     "rationale": "It fits the scenario.",
     "status": "confirmed",
-    "revision": 30,
-    "created": "2026-10-20T08:42:04.573868+00:00",
-    "closed_revision": 31,
+    "revision": 32,
+    "created": "2026-10-20T11:28:41.059907+00:00",
+    "closed_revision": 33,
     "closed_reason": "confirmed",
     "origin": {
      "channel": "chat"
@@ -385,8 +385,8 @@
     "restatement": "Adopt the linear model.",
     "rationale": "Lower error on later years.",
     "status": "open",
-    "revision": 36,
-    "created": "2026-10-20T08:42:07.663120+00:00",
+    "revision": 38,
+    "created": "2026-10-20T11:28:44.182738+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -397,7 +397,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-20T08:41:52.689410+00:00",
+    "time": "2026-10-20T11:28:27.639864+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
@@ -411,7 +411,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-20T08:41:53.277494+00:00",
+    "time": "2026-10-20T11:28:28.426079+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -432,7 +432,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-20T08:41:54.397179+00:00",
+    "time": "2026-10-20T11:28:29.500794+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -450,7 +450,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-20T08:41:55.583662+00:00",
+    "time": "2026-10-20T11:28:30.337410+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -467,7 +467,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-20T08:41:56.821789+00:00",
+    "time": "2026-10-20T11:28:31.341042+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
@@ -488,8 +488,8 @@
     "superseded_at": null
    },
    {
-    "revision": 31,
-    "time": "2026-10-20T08:42:05.083615+00:00",
+    "revision": 33,
+    "time": "2026-10-20T11:28:41.554444+00:00",
     "decision_id": "model_variant",
     "proposal_id": "p_6",
     "value": {

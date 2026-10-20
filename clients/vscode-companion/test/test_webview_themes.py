@@ -20,6 +20,8 @@ import re
 
 import pytest
 
+from conftest import inline_styles_ok
+
 import themes
 
 THEMES = ['light', 'dark', 'hc']
@@ -65,7 +67,7 @@ def clean(panel):
         (panel.requests, panel.errors, panel.csp, panel.violations())
     # The theme variables sit on <html> through CSSOM, as VS Code sets them; no element of
     # the panel has a style attribute (CSP).
-    assert panel.page.locator('body [style]').count() == 0
+    assert inline_styles_ok(panel.page)
 
 
 def result_ids(raw):
@@ -165,7 +167,7 @@ def test_chart_text_is_never_larger_than_body_text_plus_2px(open_panel, views, t
             seen += 1
             assert chart['scale'] <= 1.0001, chart
             assert chart['max'] <= chart['body'] + 2, chart
-        # A narrow panel scrolls a chart sideways, never the page.
+        # v0.3 (WP-E2): nothing scrolls sideways, neither a chart nor the page.
         assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), tab
     assert seen > 0, 'charts were drawn'
     clean(panel)
@@ -176,22 +178,23 @@ def test_baseline_is_grey_model_is_the_accent_and_intervals_have_a_zero_axis(ope
     feed(panel, views, 'regression')
     page = panel.page
     page.locator('[role="tab"][data-tab="evidence"]').click()
-    lines = page.locator('svg.ht-intervals line[data-tone]')
+    # v0.3 (WP-E2): interval rows are an HTML grid; each interval is a line (its background colour).
+    lines = page.locator('.ht-intervals [data-interval][data-tone]')
     if lines.count() == 0:
         page.locator('[role="tab"][data-tab="whatif"]').click()
-        lines = page.locator('svg.ht-intervals line[data-tone]')
+        lines = page.locator('.ht-intervals [data-interval][data-tone]')
     assert lines.count() > 0, 'interval charts are drawn'
-    tones = lines.evaluate_all('ls => ls.map(l => [l.dataset.tone, getComputedStyle(l).stroke])')
+    tones = lines.evaluate_all('ls => ls.filter(l => l.getBoundingClientRect().width > 0).map(l => [l.dataset.tone, getComputedStyle(l).backgroundColor])')
     base = {s for t, s in tones if t == 'baseline'}
     accent = {s for t, s in tones if t == 'model'}
     assert base and accent and not (base & accent), tones
     for colour in base:
         r, g, b = [int(x) for x in re.findall(r'\d+', colour)[:3]]
         assert max(r, g, b) - min(r, g, b) <= 24, f'the baseline is grey, not a hue: {colour}'
-    zero = page.locator('svg.ht-intervals [data-zero]')
+    zero = page.locator('.ht-intervals [data-zero]')
     if zero.count():
-        assert page.locator('svg.ht-intervals text[data-literal="axis"]').first.text_content() == '0'
-    assert page.locator('svg.ht-intervals line[data-axis]').count() > 0, 'intervals sit on a drawn axis'
+        assert page.locator('.ht-intervals [data-axis] [data-literal="axis"]').first.text_content() == '0'
+    assert page.locator('.ht-intervals [data-axis]').count() > 0, 'intervals sit on a drawn axis'
     clean(panel)
 
 
@@ -252,7 +255,8 @@ def test_disabled_is_not_opacity_only(open_panel, model, theme):
 
 
 @pytest.mark.parametrize('theme', THEMES)
-def test_420px_no_sideways_scroll_tables_are_cards_and_the_tab_bar_scrolls(open_panel, views, theme):
+def test_420px_no_sideways_scroll_tables_are_cards_and_the_tab_bar_wraps(open_panel, views, theme):
+    """A11Y-3 (v0.3, WP-E2: the tab bar wraps instead of scrolling sideways, §13)."""
     panel = panel_for(open_panel, theme, 420, views['summary.binary'])
     feed(panel, views, 'binary')
     page = panel.page
@@ -260,8 +264,8 @@ def test_420px_no_sideways_scroll_tables_are_cards_and_the_tab_bar_scrolls(open_
         page.locator(f'[role="tab"][data-tab="{tab}"]').click()
         assert page.evaluate('document.scrollingElement.scrollWidth <= window.innerWidth + 1'), tab
     tabs = page.locator('.ht-tabs')
-    assert tabs.evaluate('t => getComputedStyle(t).overflowX') == 'auto'
-    assert tabs.evaluate('t => getComputedStyle(t).flexWrap') == 'nowrap'
+    assert tabs.evaluate('t => getComputedStyle(t).flexWrap') == 'wrap'
+    assert tabs.evaluate('t => t.scrollWidth <= t.clientWidth + 1'), 'every tab is visible, none hidden sideways'
     page.locator('[role="tab"][data-tab="decisions"]').click()
     table = page.locator('table[data-history]')
     assert table.evaluate('t => getComputedStyle(t.querySelector("tbody tr")).display') == 'block'

@@ -20,6 +20,8 @@ import re
 from pathlib import Path
 
 import pytest
+
+from conftest import inline_styles_ok
 import yaml
 
 from mlkit.study import cite
@@ -100,15 +102,18 @@ def test_gallery_shows_the_registered_eda_results_in_order(open_panel, model, ta
     slots = page.locator('[data-eda-card]').evaluate_all('cs => cs.map(c => c.dataset.edaCard)')
     assert slots == ORDER[task]
     assert [c['slot'] for c in eda['cards'] if c['kind'] != 'quality'] == ORDER[task]
-    # Each card names its activity and result id; the chip opens Evidence.
+    # Each card names its activity and result id in its faint source line (v0.3, WP-E2: six
+    # characters, never in the prose); the source line opens Evidence.
     for card in eda['cards']:
         hook = "data-quality-card" if card["kind"] == "quality" else "data-eda-card"
         chip = page.locator(f'[{hook}="{card["slot"]}"] [data-chip]')
         assert chip.get_attribute('data-chip') == card['resultId']
-        assert card['resultId'][:8] in chip.inner_text()
+        assert card['resultId'][:6] in chip.inner_text()
+        assert card['activity'] in chip.inner_text()
     assert page.locator('#panel-eda [data-placeholder]').count() == 0
-    assert page.locator('[style]').count() == 0, 'no inline style attribute (CSP)'
-    assert page.locator('#panel-eda svg[role="img"]').count() >= 3
+    assert inline_styles_ok(page), 'no inline style attribute (CSP)'
+    # v0.3 (WP-E2): the charts are HTML grids (and SVG for the box plot), each an image with a name.
+    assert page.locator('#panel-eda [role="img"][aria-label]').count() >= 3
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
@@ -142,10 +147,11 @@ def test_ed4_every_number_is_the_engine_value_cited_with_its_result_and_precisio
     assert seen_cards == set(ORDER[task]), 'every card cites its numbers'
     # A rate or a mean is shown with its denominator (the rows of its group).
     bar = 'eda.rate_by:job' if task == 'binary' else 'eda.mean_by:model_year'
-    texts = panel.page.locator(f'[data-eda-card="{bar}"] svg text[data-result-id]').evaluate_all('ns => ns.map(n => n.textContent)')
-    # WP-A7: the confidence interval follows the value, in brackets.
-    pattern = r'^\S+ \[\S+\] of [\d,]+$' if task == 'binary' else r'^\S+ \[\S+\] · [\d,]+ rows$'
-    assert texts and all(re.match(pattern, t) for t in texts), texts
+    texts = panel.page.locator(f'[data-eda-card="{bar}"] .ht-val data[data-result-id]').evaluate_all('ns => ns.map(n => n.textContent)')
+    # WP-A7, v0.3 (WP-E2): the confidence interval follows the value; n follows the group's label.
+    assert texts and all(re.match(r'^\S+ · \S+–\S+$', t) for t in texts), texts
+    labels = panel.page.locator(f'[data-eda-card="{bar}"] [data-bar] .ht-lab').all_text_contents()
+    assert labels and all(re.search(r' n [\d,]+$', t) for t in labels), labels
 
 
 def test_model_formats_follow_activities_yaml(node):
@@ -172,14 +178,16 @@ def test_ed3_small_groups_are_hatched_and_say_small(open_panel, model, payload, 
         card = page.locator(f'[data-eda-card="{entry["slot"]}"]')
         small = [g['value'] for g in entry['values']['groups'] if g['small_count']]
         assert small, entry['slot']
-        bars = card.locator('svg [data-small="true"]')
+        bars = card.locator('[data-bar][data-small="true"]')
         assert bars.count() == len(small), entry['slot']
         for i in range(bars.count()):
-            # WP-A7: the bar's own rect, not the shuffled-outcome band behind it.
-            assert bars.nth(i).locator('rect:not([data-band])').get_attribute('data-hatched') == 'true'
-            assert bars.nth(i).locator('rect:not([data-band])').get_attribute('fill').startswith('url(#ht-hatch-')
-            assert '(small)' in bars.nth(i).locator('text').first.text_content()
-        caption = card.locator('[data-hatch-caption]').inner_text()
+            # WP-A7: the group's own mark, not the shuffled-outcome band behind it. v0.3 (WP-E2): a
+            # hatched bar (distribution) or a hollow point (rate or mean by group), in HTML.
+            mark = bars.nth(i).locator('[data-hatched="true"]')
+            assert mark.count() == 1
+            assert 'ht-hatch' in mark.get_attribute('class') or mark.get_attribute('data-point') is not None
+            assert '(small)' in bars.nth(i).locator('.ht-lab').text_content()
+        caption = card.locator('[data-hatch-caption]').text_content()
         assert f"fewer than {entry['values']['min_group_rows']} rows" in caption
         # Not colour only: the values table says "small" too.
         assert card.locator('table td', has_text=re.compile(r'^small$')).count() >= len(small)
@@ -193,18 +201,20 @@ def test_every_by_column_card_has_the_fixed_non_causal_caption(open_panel, model
     assert by
     for card in by:
         node = panel.page.locator(f'[data-eda-card="{card["slot"]}"] [data-noncausal]')
-        assert node.inner_text() == NON_CAUSAL[task].format(c=card['column'])
-        warnings = panel.page.locator(f'[data-eda-card="{card["slot"]}"] [data-warnings] li').all_inner_texts()
+        # v0.3 (WP-E2): the caveats are under the card's "Why?" (closed): read their text.
+        assert node.text_content() == NON_CAUSAL[task].format(c=card['column'])
+        assert node.evaluate('n => n.closest("details.ht-why") !== null')
+        warnings = panel.page.locator(f'[data-eda-card="{card["slot"]}"] [data-warnings] li').all_text_contents()
         assert warnings == card['data']['warnings'], 'engine warnings verbatim'
-        assert panel.page.locator(f'[data-eda-card="{card["slot"]}"] [data-note]').inner_text() == card['data']['note']
+        assert panel.page.locator(f'[data-eda-card="{card["slot"]}"] [data-note]').text_content() == card['data']['note']
 
 
 def test_ed6_regression_cards_and_no_decision_rule_or_binary_vocabulary(open_panel, model):
     panel, _ = open_eda(open_panel, model, 'regression')
     page = panel.page
     assert page.locator('[data-eda-card="eda.target_summary"] svg.ht-boxplot').count() == 1
-    assert page.locator('[data-eda-card="eda.mean_by:model_year"] svg.ht-bars').count() == 1
-    text = page.locator('#panel-eda').inner_text()
+    assert page.locator('[data-eda-card="eda.mean_by:model_year"] [data-chart="intervals"]').count() == 1
+    text = page.locator('#panel-eda').text_content()  # v0.3: also the closed "Why?" texts
     assert not FORBIDDEN.search(text), FORBIDDEN.search(text).group(0)
     # The panel's own copy has no binary vocabulary; engine texts (notes, warnings,
     # table cells of meanings and labels) are task-aware already and shown verbatim.
@@ -244,14 +254,16 @@ def test_ed2_banner_counts_training_rows_and_zero_validation(open_panel, model, 
     page = panel.page
     train = page.locator('[data-rows-seen="train"]')
     assert train.get_attribute('data-value') == str(ledger[('train_eda', 'train')])
-    assert train.inner_text() == cite.fmt_number(ledger[('train_eda', 'train')], 'int')
-    assert page.locator('[data-rows-seen="validation"]').inner_text() == '0'
+    assert train.text_content() == cite.fmt_number(ledger[('train_eda', 'train')], 'int')
+    assert page.locator('[data-rows-seen="validation"]').text_content() == '0'
     models = page.locator('[data-rows-seen="validation-models"]')
     assert models.get_attribute('data-value') == str(p['exposure']['summary']['validation_rows_used_for_selection'])
-    banner = page.locator('.eda-banner').inner_text()
-    assert banner.startswith('Training rows only. Every chart is a registered result, computed by the engine.')
+    # v0.3 (WP-E2): one sentence, the counts and the reasons under "Why all of them?".
+    banner = page.locator('.eda-banner').text_content()
+    assert banner.startswith('Training rows only.')
+    assert 'Every chart is a registered result, computed by the engine.' in banner
     seen = page.locator('[data-rows-scope="split"]')
-    assert seen.inner_text() == (f"Rows seen in EDA: {cite.fmt_number(ledger[('train_eda', 'train')], 'int')} "
+    assert seen.text_content() == (f"Rows seen in EDA: {cite.fmt_number(ledger[('train_eda', 'train')], 'int')} "
                                  'training rows · 0 validation rows.')
     assert 'ht-mono' not in (seen.get_attribute('class') or ''), 'prose, not monospace (R26)'
 
@@ -264,16 +276,16 @@ def test_ed2_cross_validation_counts_the_development_rows_read_never_train_0(ope
     panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', 'captured/evidence.binary.cv'))
     page = panel.page
     seen = page.locator('[data-rows-scope="development"]')
-    assert seen.inner_text() == f"Rows seen in EDA: {cite.fmt_number(rows, 'int')} development rows."
+    assert seen.text_content() == f"Rows seen in EDA: {cite.fmt_number(rows, 'int')} development rows."
     assert page.locator('[data-rows-seen="development"]').get_attribute('data-value') == str(rows)
     assert page.locator('[data-rows-seen="train"], [data-rows-seen="validation"]').count() == 0
-    banner = page.locator('.eda-banner').inner_text()
+    banner = page.locator('.eda-banner').text_content()
     assert banner.startswith('Development rows only.')
     assert 'Development rows used to compare and choose, out of fold:' in banner
     text = page.locator('#panel-eda').inner_text()
     assert 'train 0' not in text and 'validation rows stay unexplored' not in text
     assert 'Validation rows are never used here' not in text
-    assert page.locator('.eda-section-title').inner_text() == 'Exploration of the development rows'
+    assert page.locator('.eda-section-title').text_content() == 'Exploration of the development rows'
     assert panel.clean()
 
 
@@ -287,18 +299,19 @@ def test_the_quality_ranges_drop_meaningless_cells(open_panel, model, payload):
         r['declared'] = None
     panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', raw))
     table = panel.page.locator('[data-quality-card="eda.quality"] table')
-    heads = table.locator('th').all_inner_texts()
+    # v0.3 (WP-E2): the ranges table sits in a closed disclosure: read its text.
+    heads = table.locator('th').all_text_contents()
     assert 'Outside the declared range' not in heads, heads
-    text = table.inner_text()
+    text = table.text_content()
     assert '0 / 0' not in text and 'no declared range' not in text
     # A column that declares a range reads "none" when nothing is outside it.
     ranges[0].update({'declared': {'min': 0, 'max': 200}, 'n_below': 0, 'n_above': 0})
     panel.view_data('eda', model('eda', raw))
-    heads = table.locator('th').all_inner_texts()
+    heads = table.locator('th').all_text_contents()
     assert heads[-1] == 'Outside the declared range'
     first = table.locator('tbody tr').first.locator('td').last
-    assert first.inner_text() == 'none'
-    assert '0 / 0' not in table.inner_text() and 'no declared range' not in table.inner_text()
+    assert first.text_content() == 'none'
+    assert '0 / 0' not in table.text_content() and 'no declared range' not in table.text_content()
     assert panel.clean()
 
 
@@ -338,7 +351,7 @@ def test_request_lists_only_catalog_columns_and_posts_w4(open_panel, model, payl
     # Free exploration: the workbench.
     page.locator('[data-open="workbench"]').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_artifact', 'artifact': 'workbench'}
-    assert 'For free exploration, use your workbench notebook' in page.locator('[data-hint]').inner_text()
+    assert 'For free exploration, use your workbench notebook' in page.locator('[data-hint]').text_content()
     assert panel.clean()
 
 
@@ -463,7 +476,7 @@ def test_learning_layer_adds_the_explain_example_and_definition_when_already_rea
     assert not any(m.get('view') == 'explain' for m in panel.posted())
     panel.view_data('explain', {'terms': terms, 'steps': [], 'predictions': []}, revision=26)
     example = page.locator('[data-example="base_rate"]')
-    assert example.inner_text() == 'Here 11.5%'
+    assert example.text_content() == 'Here 11.5%'
     assert example.locator('data').get_attribute('data-result-id') == rid
     panel.init(stage='v2', task='binary', learningLayer=False)
     assert page.locator('[data-example]').count() == 0
@@ -471,7 +484,7 @@ def test_learning_layer_adds_the_explain_example_and_definition_when_already_rea
     reg, _ = open_eda(open_panel, model, 'regression')
     reg.view_data('explain', {'terms': {'target_distribution': {'term': 'Target distribution',
                   'definition': 'How the target values spread.', 'example': None}}, 'steps': [], 'predictions': []}, revision=22)
-    assert reg.page.locator('[data-term="target_distribution"]').inner_text() == 'Target distribution: How the target values spread.'
+    assert reg.page.locator('[data-term="target_distribution"]').text_content() == 'Target distribution: How the target values spread.'
 
 
 def test_cr7_a_feature_not_available_at_prediction_time_is_labelled_and_still_runs_on_training_rows(open_panel, model, payload):

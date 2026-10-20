@@ -35,7 +35,9 @@ const SUMMARY_KEYS = ['study', 'revision', 'task', 'recap', 'goal', 'currentStep
   // and the confirmation mode (CLI-CONTRACT §3, §11.2, §11.4, §5.2).
   'criterion', 'edaLooks', 'mode',
   // WP-B5: the count of model configurations evaluated so far (CLI-CONTRACT §12, a disclosure).
-  'trials'];
+  'trials',
+  // v0.3 (WP-E2, R21): the study language (`en`, `fr`), which the panel's `auto` follows.
+  'language'];
 // The statuses of the success criterion (CLI-CONTRACT §11.4).
 const CRITERION_STATUSES = ['met', 'uncertain', 'not_met', 'not_assessed'];
 const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
@@ -322,6 +324,7 @@ function toSummaryModel(summary) {
     mode: strOrNull(summary.mode),
     trials: summary.trials && typeof summary.trials === 'object' && !Array.isArray(summary.trials)
       ? { count: int(summary.trials.count) } : null,
+    language: summary.language === 'fr' || summary.language === 'en' ? summary.language : null,
   };
 }
 

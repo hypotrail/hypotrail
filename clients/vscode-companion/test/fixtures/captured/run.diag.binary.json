@@ -17,11 +17,11 @@
   "action": "run",
   "request_id": "bd1",
   "replayed": false,
-  "revision": 44,
+  "revision": 48,
   "activity": "diag.binary",
   "execution_id": "e_58ab52047846c7c88a36253e",
   "status": "promoted",
-  "result_id": "9864825bcc2bafe59e09071a6c956971218e5dcbdd775a95cdf3c3ed798dba0a",
+  "result_id": "441df9ff97c64106e229aef9306f2310dc86162a8ae905bcc06806dc148a08c7",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1156,7 +1156,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "75160d6e61aa66d718dadcc7ca26341dc560692c1659f21bc7a15efaa05d6887"
+     "predictions": "77d4a9bd85447d56b1c1df88df05f4f9f5b222f172d25f53a5d56442c2473826"
     },
     "fit.variant": {
      "confusion": {
@@ -2275,7 +2275,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "b581d617656fe77882805d22add8b419a0a839a261534b2c1b41f818dc205436"
+     "predictions": "f2736e1d208f53d52eb22c56cee0113fbb2fe3e623eb2d7207a61b68e841fa31"
     }
    },
    "coefficient_rows": 2531,
@@ -2286,14 +2286,14 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "9864825bcc2bafe59e09071a6c956971218e5dcbdd775a95cdf3c3ed798dba0a",
-   "input_key": "5c11d6efe51815f4f1a07da11c221745259d02e57f2a093f441e2738541e6c69",
+   "result_id": "441df9ff97c64106e229aef9306f2310dc86162a8ae905bcc06806dc148a08c7",
+   "input_key": "453981fc4b16759abf18fef155e9fadc6f529612900b4e32abe82917c83b7d85",
    "reason": null,
-   "started_revision": 43,
+   "started_revision": 47,
    "invalidation": null,
    "exposure_ids": [
-    "x_88684a97aed143daaac7203a0578f437",
-    "x_0294742eb34d422abd70557a4fae28c3"
+    "x_b6e0d74988644edb8a06702273ddf09e",
+    "x_fd1a355869574223bb2a9d205796b4b4"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2302,16 +2302,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 44,
-    "last_ok_revision": 44,
+    "revision": 48,
+    "last_ok_revision": 48,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 44,
-    "last_ok_revision": 44,
+    "revision": 48,
+    "last_ok_revision": 48,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

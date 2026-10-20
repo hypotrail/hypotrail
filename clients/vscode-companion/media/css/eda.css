@@ -1,65 +1,50 @@
-/* EDA view styles (COMPANION-ADVANCED §6.3, mockup EDA.dc.html). Tokens of tokens.css only;
-   no inline style attribute. Owned by WP-U4. */
-.eda-banner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px;
-  margin: 8px 0; padding: 10px 14px; border: 1px solid var(--ht-border); border-radius: 6px;
-  background: var(--ht-done-bg); color: var(--ht-fg); }
-.eda-banner p { margin: 0; }
-.eda-banner .muted { flex-basis: 100%; }
-.eda-seen { font-size: 0.93em; }
-.eda-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
-.eda-card { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.eda-card p { margin: 0; }
+/* EDA view styles (COMPANION-ADVANCED §6.3; v0.3 WP-E2, docs/design/companion-v0.3-mockups/
+   eda.html). Tokens of tokens.css and the card pattern of core.css only; no inline style. */
+.eda-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--s3); margin: var(--s3) 0; }
+.eda-gallery > .card { margin: 0; }
+.eda-card { display: flex; flex-direction: column; min-width: 0; }
+.eda-card > .ht-card-f { margin-top: auto; }
+.eda-card > .ht-figure + .ht-card-f, .eda-card > .ht-finding + .ht-card-f { margin-top: var(--s3); }
 .eda-wide { grid-column: 1 / -1; }
-.eda-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
-.eda-card-head h3 { margin: 0; }
-.eda-chip { font-size: 0.8em; color: var(--ht-muted); margin: 0; }
-.eda-split { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
-.eda-together { padding: 8px 10px; border-radius: 6px; background: var(--ht-quote-bg); }
-.eda-noncausal { padding: 8px 10px; border-radius: 6px; background: var(--ht-quote-bg); }
-.eda-warnings { color: var(--ht-warn-fg); }
-.eda-scale { font-size: 0.85em; }
-.eda-table { overflow-x: auto; }
-.eda-counts summary { cursor: pointer; color: var(--ht-link); }
-.eda-request select { width: 100%; max-width: 360px; }
-.eda-request label { margin-top: 4px; }
+.eda-question { margin: 0; }
+.ht-chips, .eda-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--s1) 0 var(--s2); }
 .eda-skeleton { min-height: 120px; }
-.eda-stack { max-width: 640px; }
-
-/* WP-A7: the data card, the quality check, the question per chart, the leakage detector. */
-.eda-data, .eda-quality { margin: 8px 0 12px; display: flex; flex-direction: column; gap: 8px; }
-.eda-data h4, .eda-quality h4 { margin: 6px 0 0; font-size: 0.95em; }
-.eda-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
-.eda-fact { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 6px;
-  border: 1px solid var(--ht-card-border); background: var(--ht-bg); }
-.eda-seal-line, .eda-banner-seal { margin: 0; }
-.eda-scroll { overflow-x: auto; max-width: 100%; }
-.eda-rows, .eda-dictionary { border-collapse: collapse; font-size: 0.93em; }
-.eda-rows th, .eda-rows td, .eda-dictionary th, .eda-dictionary td { border-bottom: 1px solid var(--ht-border);
-  padding: 3px 8px; text-align: left; vertical-align: top; }
+.eda-stack { max-width: 520px; }
+.eda-banner { margin: var(--s2) 0 var(--s3); }
+.eda-banner details.ht-why { margin-top: var(--s1); }
+.eda-seal-line { margin: var(--s2) 0; }
+.eda-facts { margin: var(--s1) 0 var(--s3); }
+/* The dictionary and the five rows are the only containers that may scroll sideways, inside
+   the card (data-scroll-ok); the page never does. */
+.eda-scroll { overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.eda-dictionary .colname { font-weight: 600; overflow-wrap: anywhere; }
+.eda-dictionary td.eda-meaning { min-width: 12ch; }
 .eda-rows td { white-space: nowrap; }
-.eda-target-col { font-weight: 600; background: var(--ht-done-bg); }
+.eda-target-col { font-weight: 600; background: var(--ht-accent-tint); }
 .eda-excluded { color: var(--ht-muted); }
-.eda-group-row th { background: var(--ht-quote-bg); font-weight: 600; text-align: left; padding: 4px 8px; }
-.eda-dictionary-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
-.eda-dictionary-head button { margin: 0; }
+.eda-group-row th { background: var(--ht-sunken); font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 600; color: var(--ht-muted); padding: 5px 8px; text-align: left; }
 .eda-num { text-align: right; }
-.eda-name code { white-space: nowrap; overflow-wrap: normal; }
-.eda-known-source, .eda-special-line { font-size: 0.9em; }
-.eda-section-title { margin: 20px 0 4px; font-size: 1.05em; }
-.eda-card-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
-.eda-question { font-weight: 600; }
-.eda-chart-name { font-size: 0.85em; }
-.eda-looks { flex-basis: 100%; }
-.eda-band-line { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--ht-card-border); }
-.eda-band-outside { border-color: var(--ht-st-stale); }
-.eda-leak { padding: 8px 10px; border-radius: 6px; border: 1px solid var(--ht-warn-border); background: var(--ht-warn-bg);
-  color: var(--ht-warn-fg); display: flex; flex-direction: column; gap: 4px; }
-.eda-request-question { padding: 6px 10px; border-radius: 6px; background: var(--ht-quote-bg); }
-.eda-legend { font-size: 0.9em; }
+.eda-five { margin-top: var(--s3); }
+.eda-band-outside { font-weight: 500; }
+.eda-leak p { margin: 0 0 var(--s1); }
+.eda-flagged { list-style: none; padding: 0; margin: var(--s2) 0 0; font-size: var(--t-meta); }
+.eda-flagged li { margin: 2px 0; }
+.eda-request-row { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: flex-end; }
+.eda-request-row label { margin: 0 0 2px; font-size: var(--t-meta); font-weight: 500; color: var(--ht-muted); }
+.eda-request-row > div { min-width: 0; max-width: 100%; }
+.eda-request-row select { width: 100%; max-width: 320px; }
+.eda-request-go button { margin: 0; }
+.eda-request-question { margin-top: var(--s2); }
+.eda-whole { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--ht-line); }
+.eda-whole button { margin-top: var(--s1); }
+.ht-empty { text-align: center; padding: var(--s5) var(--s4); color: var(--ht-muted); border: 1px dashed var(--ht-line-strong);
+  border-radius: var(--r-card); margin: var(--s3) 0; }
 @media (max-width: 600px) {
   .eda-group-row th { display: block; }
   .eda-rows td { white-space: normal; }
+  table.ht-cardable.eda-dictionary .eda-group-row { border: 0; padding: 0; }
 }
 @media (forced-colors: active) {
-  .eda-leak, .eda-band-line, .eda-fact { border: 1px solid CanvasText; }
+  .eda-leak, .eda-banner { border: 1px solid CanvasText; }
 }

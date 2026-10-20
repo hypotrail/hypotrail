@@ -67,7 +67,9 @@ function protocolFactory() {
     },
     run_eda: {
       stage: 'v2', write: 'W4',
-      fields: { activity: { t: 'str', re: '^eda\\.[a-z_]+$' }, column: { t: 'str', min: 1, max: 200 }, revision: rev },
+      // v0.3 (WP-E2): `column` is absent for a whole-study chart of the catalog
+      // (`eda.correlation`); the controller checks which form the catalog entry takes.
+      fields: { activity: { t: 'str', re: '^eda\\.[a-z_]+$' }, column: { t: 'str', min: 1, max: 200, opt: true }, revision: rev },
     },
     render: { stage: 'v1', write: 'W5', fields: {} },
     acknowledge: {
@@ -144,6 +146,9 @@ function protocolFactory() {
         // CR.2: the study the panel shows (lib/localstore.js studyKey, never the path). The
         // webview keeps the junior's draft words for this study only.
         study: { t: 'str', re: STUDY_KEY, opt: true },
+        // v0.3 (WP-E2, R21): the panel language setting (`hypotrail.companion.language`):
+        // `auto` follows the study language, else `en` or `fr`. UI only, no study write.
+        language: { t: 'enum', values: ['auto', 'en', 'fr'], opt: true },
         // WP-A5 (local launch): what "Open in Marimo" runs, for display only (the commands
         // with study-relative files, and the engine environment the notebooks run in).
         marimo: {

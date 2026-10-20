@@ -111,6 +111,9 @@ def binary(cap: Capture) -> None:
     cap.save('run.eda_distribution.binary', 'binary', ['run', 'eda.distribution', '--column=age'], 0,
              flow.run('eda.distribution', '--column=age'))
     flow.run('eda.distribution', '--column=job')
+    # v0.3 (WP-E2): a skewed column (zeros apart, log bins) and the predictor matrix (R17, R28).
+    flow.run('eda.distribution', '--column=previous')
+    cap.save('run.eda_correlation.binary', 'binary', ['run', 'eda.correlation'], 0, flow.run('eda.correlation'))
     flow.run('fit.baseline')
     flow.run('fit.logistic')
     flow.run('policy.evaluate', '--rule', 'threshold:0.2')
@@ -295,6 +298,7 @@ def regression(cap: Capture) -> None:
     flow.run('eda.mean_by', '--column=model_year')
     cap.save('run.eda_distribution.regression', 'regression', ['run', 'eda.distribution', '--column=weight'], 0,
              flow.run('eda.distribution', '--column=weight'))
+    flow.run('eda.correlation')       # v0.3 (WP-E2, R28)
     flow.run('fit.baseline')
     flow.run('fit.linear')
     flow.run('evaluate.regression')
