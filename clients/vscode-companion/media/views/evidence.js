@@ -107,7 +107,8 @@
       'data-current': r.current ? 'true' : 'false', onclick: () => choose(ctx, r.resultId),
     }, [
       ctx.el('span', { className: 'ht-ev-slot' }, [
-        r.slot || r.activity,
+        // v0.3 (WP-E3): the slot is an engine identifier, so it reads as code, not as prose.
+        ctx.el('code', { text: r.slot || r.activity }),
         r.current ? null : ctx.el('span', { className: 'ht-ev-badge', 'data-stale': true,
           text: r.integrity && r.integrity !== 'ok' ? c.integrityBadge : c.staleBadge }),
       ]),
@@ -403,7 +404,7 @@
       ctx.el('td', { 'data-partition': row.partition }, [row.partition === 'validation'
         ? HT.terms.mark(partitionWords(row.partition), 'validation_partition') : partitionWords(row.partition)]),
       ctx.el('td', { 'data-rows': row.rows === null ? '' : String(row.rows), text: int(ctx, row.rows) }),
-      ctx.el('td', { text: row.activities.join(', ') }),
+      ctx.el('td', {}, row.activities.flatMap((a, i) => [i ? ', ' : null, ctx.el('code', { text: a })])),
     ]));
     return ctx.el('section', { className: 'card ht-ev-ledger', 'aria-labelledby': 'ht-ev-ledger-h', 'data-ledger': true }, [
       ctx.el('h3', { id: 'ht-ev-ledger-h' }, [HT.terms.mark(c.ledgerTitle, 'exposure')]),
@@ -468,7 +469,7 @@
             ctx.el('span', { className: 'sr-only', text: ` (${done ? c.done : c.notYet})` })]);
         });
       if (items.length) kids.push(ctx.el('div', { className: 'ht-ev-before' }, [ctx.el('p', { text: c.before }), ctx.el('ul', {}, items)]));
-      kids.push(ctx.el('p', { className: 'ht-ev-chat', 'data-open-in-chat': true, text: c.openInChat }));
+      kids.push(ctx.el('p', { className: 'ht-ev-chat', 'data-open-in-chat': true, text: summary.mode === 'training' ? c.openInChatTraining : c.openInChat }));
     }
     if ((state === 'opened' || state === 'changed') && ft.opening) {
       const fe = model.finalEvaluation && model.finalEvaluation.current ? model.finalEvaluation : null;

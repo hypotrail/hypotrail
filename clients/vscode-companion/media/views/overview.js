@@ -156,10 +156,13 @@
     const title = opening ? spec.title() : kind === 'await_user_words' || kind === 'reconfirm' ? spec.title(name)
       : kind === 'propose' || kind === 'run' || kind === 'blocked' ? spec.title(step ? str(step.title) : c.nextStep) : spec.title();
     const eyebrow = [N.eyebrow, pause ? c.pause(pause, task) : null].filter(Boolean).join(' · ');
+    // v0.3 (WP-E3, R23): the answer is given in the chat; only the training mode asks for the
+    // junior's own words (ADR 0005). An unknown or absent mode reads as guided, the default.
+    const lead = model.mode === 'training' && spec.leadTraining ? spec.leadTraining : spec.lead;
     const children = [
       el('p', { className: 'ov-eyebrow', 'data-hero-eyebrow': true, text: eyebrow }),
       el('h2', { id: 'ov-hero-title', 'data-hero-title': kind, text: title }),
-      el('p', { className: 'ov-hero-lead', 'data-hero-lead': true, text: spec.lead }),
+      el('p', { className: 'ov-hero-lead', 'data-hero-lead': true, text: lead }),
     ];
     if (proposal) {
       children.push(el('blockquote', { className: 'ov-hero-quote', 'data-hero-restatement': proposal.proposalId, text: proposal.restatement }));
@@ -196,7 +199,7 @@
     if (actions.length) children.push(el('div', { className: 'ov-hero-actions' }, actions));
     // Layer 2: the engine's own words, for whoever wants them.
     const engine = [];
-    if (next.juniorMessage && next.juniorMessage !== spec.lead) engine.push({ id: 'next_action', text: next.juniorMessage });
+    if (next.juniorMessage && next.juniorMessage !== lead) engine.push({ id: 'next_action', text: next.juniorMessage });
     if (next.audience === 'agent' && next.message) engine.push({ id: 'next_action.agent', label: N.engineSays, text: next.message });
     else if (next.message && next.message !== next.juniorMessage) engine.push({ id: 'next_action', text: next.message });
     if (proposal && proposal.value) engine.push({ id: proposal.proposalId, label: N.engineLabel, text: `${proposal.value} (${proposal.proposalId})` });

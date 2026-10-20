@@ -16,7 +16,7 @@
 .ov-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--ht-accent-ink); }
 .ov-hero-lead { margin: 0 0 var(--s2); color: var(--ht-fg); }
-.ov-hero-quote { font-size: 14px; }
+.ov-hero-quote { font-size: var(--t-body); }
 .ov-hero-short, .ov-hero-why, .ov-hero-support { margin: 6px 0; }
 .ov-hero-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
 .ov-hero-actions button { margin: 0; }

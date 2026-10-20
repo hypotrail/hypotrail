@@ -3,13 +3,13 @@
 .dc-card { border: 2px solid var(--ht-st-needs); border-radius: 10px; padding: 16px 18px; }
 .dc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .dc-head-main { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.dc-head h3 { font-size: 1.2em; margin: 0; }
-.dc-pill { font-size: 0.85em; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--ht-done-bg); color: var(--ht-fg); }
-.dc-origin { font-size: 0.9em; }
+.dc-head h3 { font-size: var(--t-title); margin: 0; }
+.dc-pill { font-size: var(--t-cap); font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--ht-done-bg); color: var(--ht-fg); }
+.dc-origin { font-size: var(--t-meta); }
 .dc-value p { margin: 6px 0; }
 .dc-groups { list-style: none; padding-left: 0; margin: 4px 0 8px; }
 .dc-group { font-weight: 600; }
-.dc-card h4 { font-size: 0.93em; margin: 12px 0 6px; color: var(--ht-muted); }
+.dc-card h4 { font-size: var(--t-meta); margin: 12px 0 6px; color: var(--ht-muted); }
 .dc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .dc-chip { margin: 0; padding: 4px 10px; border: 1px solid var(--ht-button2-border); border-radius: 6px; background: var(--ht-surface);
   color: var(--ht-fg); }
@@ -20,21 +20,21 @@
 .dc-blocked { margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--ht-error-bg); border: 1px solid var(--ht-error-border);
   color: var(--ht-error-fg); }
 .dc-blocked ul { margin: 4px 0 0; }
-.dc-notes { margin: 8px 0 0; font-size: 0.93em; }
-.dc-caption { font-size: 0.9em; margin: 6px 0 0; }
+.dc-notes { margin: 8px 0 0; font-size: var(--t-meta); }
+.dc-caption { font-size: var(--t-meta); margin: 6px 0 0; }
 .dc-answer { margin-top: 12px; }
 .dc-actions { display: flex; flex-wrap: wrap; }
 .dc-queue { border-color: var(--ht-warn-border); }
 .dc-history { width: 100%; border-collapse: collapse; }
 .dc-history th, .dc-history td { text-align: left; vertical-align: top; padding: 8px 8px 8px 0; border-bottom: 1px solid var(--ht-border); }
-.dc-history th { font-size: 0.9em; color: var(--ht-muted); }
+.dc-history th { font-size: var(--t-cap); color: var(--ht-muted); }
 .dc-decision { font-weight: 600; }
 .dc-basis { color: var(--ht-fg); }
 /* WP-A7: the basis is a status chip of one vocabulary (core.css); delegated in the stale tone. */
 .dc-basis-cell { white-space: nowrap; }
 .dc-basis.dc-delegated { color: var(--ht-warn-fg); background: var(--ht-warn-bg); }
-.dc-channel { font-size: 0.9em; }
-.dc-concern, .dc-correction { margin: 4px 0 0; font-size: 0.93em; }
+.dc-channel { font-size: var(--t-meta); }
+.dc-concern, .dc-correction { margin: 4px 0 0; font-size: var(--t-meta); }
 .dc-correction { color: var(--ht-fg); border-left: 3px solid var(--ht-st-needs); padding-left: 6px; }
 .dc-mode { margin: 8px 0 12px; }
 .dc-mode h3 { margin-bottom: 4px; }

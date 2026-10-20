@@ -329,7 +329,8 @@
       v1 ? effectsSection(p, ctx, c) : null,
       opening ? el('div', { className: 'hold dc-final-chat', role: 'note', 'data-final-test-chat': id }, [
         el('p', { className: 'title', text: c.finalTestTitle }),
-        el('p', { text: c.finalTestBody }),
+        // v0.3 (WP-E3): own words and a reason only in the training mode (ADR 0005, decision 8).
+        el('p', { text: str(model.mode) === 'training' ? c.finalTestBodyTraining : c.finalTestBody }),
         el('p', { className: 'muted', text: c.finalTestOnce }),
       ]) : el('div', { className: 'dc-answer', role: 'note', 'data-answer-in-chat': id }, [
         el('p', { className: 'title', text: c.answerInChat }),

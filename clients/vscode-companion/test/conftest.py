@@ -72,6 +72,13 @@ STUB = """
 """
 
 
+def pytest_addoption(parser):
+    # v0.3 (WP-E3): rewrite the pixel baselines that differ (test_webview_gate.py). Any
+    # baseline change is reviewed by the owner from the diff images before it is committed.
+    parser.addoption('--update-baselines', action='store_true', default=False,
+                     help='rewrite the panel pixel baselines that differ (owner review required)')
+
+
 def _require_tools():
     if playwright is None:  # pragma: no cover
         warnings.warn('the companion webview browser tests did not run: Playwright is not '
@@ -222,8 +229,10 @@ class Panel:
 def open_panel(browser, page_file):
     contexts = []
 
-    def opener(color_scheme='light') -> Panel:
-        context = browser.new_context(offline=True, color_scheme=color_scheme)
+    def opener(color_scheme='light', **options) -> Panel:
+        # `options`: further context options (the pixel baselines fix the locale, the time
+        # zone, the scale and reduced motion; WP-E3).
+        context = browser.new_context(offline=True, color_scheme=color_scheme, **options)
         contexts.append(context)
         requests, errors, csp = [], [], []
         context.route('**/*', lambda route: route.continue_() if route.request.url.startswith('file:')
