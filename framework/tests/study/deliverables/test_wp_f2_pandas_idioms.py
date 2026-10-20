@@ -88,6 +88,35 @@ def test_a_changed_per_fold_figure_fails_the_notebook(cv_study, tmp_path):
     assert proc.returncode != 0 and 'AssertionError' in proc.stderr
 
 
+# --- the study language ----------------------------------------------------------------------
+
+def test_a_french_study_reads_its_notebook_narrative_in_french(tmp_path):
+    """WP-F2 on WP-C: step titles, questions and term names in the study language; the code,
+    its asserts, and the texts without a French source are unchanged; ``check`` stays clean."""
+    from mlkit.study import junior, texts
+    case_dir = fk.make_case(tmp_path / 'case', task='binary', n_rows=600)['case'].parent
+    f = fk.Flow(tmp_path / 'study', case_dir, prefix='fr')
+    f.call('init', '--case', case_dir, '--study', f.study, '--lang', 'fr')
+    f.pauses()
+    f.run('split')
+    for activity in ('eda.target_rate', 'eda.special_values', 'eda.quality'):
+        f.run(activity)
+    f.call('render', '--study', f.study)
+    source = (f.study / rn.GENERATED).read_text(encoding='utf-8')
+    for step in f.view()['plan']:
+        assert junior.step_text(step['title'], 'fr') in source, step['id']
+        assert junior.step_text(step['title'], 'fr') != step['title'], step['id']
+    term = texts.glossary('development_rows')['term_fr']
+    assert f'**{term[:1].upper() + term[1:]}.**' in source
+    assert rn.RECOMPUTE_NOTE_FR in source and rn.RECOMPUTE_NOTE not in source
+    assert 'structure.isna().sum()' in source
+    assert f.call('check', '--study', f.study)['findings'] == []
+    proc = subprocess.run([sys.executable, str(f.study / rn.GENERATED)], cwd=tmp_path,
+                          env=fk.env(), capture_output=True, text=True, timeout=300,
+                          stdin=subprocess.DEVNULL)
+    assert proc.returncode == 0, proc.stderr
+
+
 # --- generation helpers ----------------------------------------------------------------------
 
 def test_cell_variable_names_are_unique_identifiers():

@@ -93,18 +93,31 @@ def _md_cell(text: str) -> str:
 RECOMPUTE_NOTE = ('Each code cell below is the pandas (or scikit-learn) you would type on the '
                   'development rows, then an `assert` that its figure equals the registry. '
                   'Copy any of them to your workbench to experiment.')
+# WP-F2: the notebook narrative is in the study language where the engine provides French
+# (WP-C: step titles and questions, glossary term names). Definitions, methods, and code
+# comments have no French source yet and stay English.
+RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que tu "
+                     "taperais sur l'échantillon de développement, suivi d'un `assert` qui "
+                     "vérifie que son résultat est celui du registre. Copie-les dans ton "
+                     "workbench pour expérimenter.")
 
 
 def _step_markdown(index: int, step: Mapping, content: Mapping, pending: bool,
-                   recompute: bool = False) -> str:
-    lines = [f'## {index}. {step["title"]}', '', f'**Question.** {step["question"]}']
+                   recompute: bool = False, lang: str = 'en') -> str:
+    from . import junior
+
+    fr = lang == junior.FR
+    title = junior.step_text(step['title'], lang)
+    question = junior.step_text(step['question'], lang)
+    lines = [f'## {index}. {title}', '', f'**Question.** {question}']
     term = texts.glossary(content.get('concept')) if content.get('concept') else None
     if term:
-        lines += ['', f'**{term["term"]}.** {term["definition"]}']
+        name = term['term_fr'] if fr and term.get('term_fr') else term['term']
+        lines += ['', f'**{name[:1].upper() + name[1:]}.** {term["definition"]}']
     if content.get('method'):
         lines += ['', f'**Method.** {content["method"]}']
     if recompute:
-        lines += ['', RECOMPUTE_NOTE]
+        lines += ['', RECOMPUTE_NOTE_FR if fr else RECOMPUTE_NOTE]
     if pending:
         lines += ['', f'_{texts.load("steps")["pending"]}_']
     return '\n'.join(lines)
@@ -173,7 +186,8 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         pending = not has_result and not step['decision'] and step['id'] != 'discover_data'
         code = recompute.get(step['id'], [])
         cells.append((f'step_{step["id"]}_text',
-                      _md_cell(_step_markdown(index, step, content, pending, bool(code)))))
+                      _md_cell(_step_markdown(index, step, content, pending, bool(code),
+                                              view.get('language') or 'en'))))
         if pending:
             continue
         cells += code
