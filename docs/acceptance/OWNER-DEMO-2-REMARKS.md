@@ -131,3 +131,9 @@
 
 ## R37 — Long English engine questions reach the junior verbatim
 - e.g. the success-criterion junior_message (English paragraph) in a French study. Engine junior texts need fr (ties to R21).
+
+## R38 — Candidate discovery case with a clear timeline: Hotel booking demand (proposal, to decide)
+- Source: Antonio, de Almeida & Nunes (2019), "Hotel booking demand datasets", Data in Brief 22:41–49, open access CC BY 4.0 (article; confirm the data-file wording). Mirror reachable: rfordatascience/tidytuesday 2020-02-11 hotels.csv; verified here: 119,390 rows = 40,060 Resort (paper H1) + 79,330 City (H2), 32 columns, cancellation rate 27.8 % (Resort) / 41.7 % (City).
+- Scenario: at booking time (or N days before arrival), predict whether a booking will be cancelled; action: with limited staff, call / ask a deposit from the top share of at-risk bookings. Target strictly after the prediction moment.
+- Built-in leakage traps with an obvious timeline: reservation_status / reservation_status_date (the outcome itself), assigned_room_type (at check-in), booking_changes and days_in_waiting_list (accumulate after booking). Temporal final test by arrival date (2015–2017). Suggest Resort Hotel only (40k rows) for the discovery case.
+- Alternatives considered: keep Bank Marketing (clear "before the call" timeline, already built); default of credit card clients (UCI 350, clear 6-month history → next month, but credit risk, coded columns); iFood campaign response and IBM Telco churn (no verifiable licence → cannot ship).
