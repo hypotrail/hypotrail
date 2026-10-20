@@ -13,6 +13,8 @@ import re
 
 import pytest
 
+from conftest import inline_styles_ok
+
 expect = pytest.importorskip('playwright.sync_api').expect
 
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
@@ -94,7 +96,7 @@ def test_learn_tab_renders_cards_predictions_handoff_and_report_offline(open_pan
     assert learn.locator('[data-write="export"]').inner_text() == 'Export a handoff pack'
     assert learn.locator('[data-reviewer-line]').count() == 1
     assert learn.locator('details[data-session-report] > summary').inner_text() == 'Session report (for an observed session)'
-    assert page.locator('[style]').count() == 0, 'no inline style attribute (CSP)'
+    assert inline_styles_ok(page), 'no inline style attribute (CSP)'
     if task == 'regression':
         text = page.locator('body').inner_text()
         assert not FORBIDDEN.search(text), FORBIDDEN.search(text).group(0)

@@ -14,7 +14,7 @@
    "--request-id",
    "b-stale",
    "--expected-revision",
-   "41",
+   "45",
    "--json"
   ],
   "note": ""
@@ -27,8 +27,8 @@
    "code": "stale_revision",
    "message": "Revision is stale: reread hypotrail status before deciding",
    "details": {
-    "expected_revision": 41,
-    "current_revision": 42,
+    "expected_revision": 45,
+    "current_revision": 46,
     "changes_since": [
      {
       "action": "decide.propose",
@@ -49,9 +49,9 @@
        "status": "open",
        "superseded": []
       },
-      "revision": 42,
-      "state_sha256": "84568111df017dc3bea91f8ac7508bb078858bf2b5a49e17ac9ee9941c539854",
-      "time": "2026-10-20T13:22:06.607362+00:00"
+      "revision": 46,
+      "state_sha256": "fcb72876e0f314b9f08e9c1f36869093f822bcc370252d29ee5cb45a78e9a607",
+      "time": "2026-10-20T14:40:10.449057+00:00"
      }
     ]
    }

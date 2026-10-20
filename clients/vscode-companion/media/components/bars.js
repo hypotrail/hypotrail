@@ -1,89 +1,76 @@
-// Horizontal bars (COMPANION-ADVANCED §6.3, §6.5). Frozen by WP-0:
-//   bars(container, {items: [{label, value, valueText, small, cited: {resultId, path, value} | null}],
-//                    max, rule: {value, label} | null, title, unit})
-// Geometry only (INV-14): a bar's length is value / max of the plot width. The texts are
-// the engine's values formatted by the view (valueText); a `small` bar is hatched AND
-// carries the text "small" (never colour alone). Cited values carry data-result-id,
-// data-path and data-value. Returns the figure element.
-//
-// WP-A5: an item with `tone: 'baseline'` (a reference such as the baseline model) is drawn
-// in the baseline grey; every other bar is the model accent.
-//
-// WP-I: the label and value columns are as wide as their longest text (an estimate of
-// the 11 px font, bounded), and the plot keeps its width, so a long label is not clipped;
-// `labelWidth` and `valueWidth` (viewBox units) override the estimate.
-//
-// WP-A7 (additive): an item may carry `interval: {low, high}` (a line across the bar's end,
-// with end ticks: the engine's interval of the value) and `band: {low, high}` (a grey band
-// behind the bar: the range a null model draws, such as the shuffled-outcome band). Both
-// are geometry of engine values; the value text sits after the furthest of them.
+// Horizontal bars (COMPANION-ADVANCED §6.3, §6.5). Signature (frozen by WP-0, extended):
+//   bars(container, {items: [{label, sub?, value, valueText, small, tone?, interval?, band?,
+//                    cited: {resultId, path, value} | null}], max, rule: {value, label} | null,
+//                    title, unit, ticks?: [{value, text}], point?: bool})
+// v0.3 (WP-E2): an HTML grid, fluid at every width (no sideways scroll): a label column, a
+// track, and a value column. Geometry only (INV-14): a bar's length is value / max of the
+// track, set as the custom property --v through CSSOM. A `small` bar is hatched AND carries
+// the text "small" (never colour alone). `tone: 'baseline'` draws a reference in grey.
+// `interval: {low, high}` draws the engine's interval with end caps; `band: {low, high}` a
+// grey band behind it (the range a null model draws). With `point: true` each row is a
+// point inside its interval instead of a bar (rate by group: point + interval + band + n).
+// `rule` is a dashed vertical line (the overall rate), named in the legend. `ticks` are
+// rounded positions of the axis (aria-hidden, data-literal="axis"). Cited values carry
+// data-result-id, data-path and data-value. Returns the figure element.
 (function (HT) {
   'use strict';
-  const PLOT = 210;
-  const ROW = 24;
-  let charts = 0;
+  const ok = v => typeof v === 'number' && Number.isFinite(v);
 
-  function hatch(id) {
-    return HT.svg('defs', {}, [HT.svg('pattern', { id, width: 6, height: 6, patternUnits: 'userSpaceOnUse',
-      patternTransform: 'rotate(45)' }, [
-      HT.svg('rect', { width: 6, height: 6, fill: 'surface' }),
-      HT.svg('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: 'accent', 'stroke-width': 3 })])]);
+  function pct(v, top) {
+    return Math.max(0, Math.min(100, ((Number(v) || 0) / top) * 100));
   }
 
-  function bars(container, { items, max, rule = null, title, unit = '', labelWidth = null, valueWidth = null }) {
-    charts += 1;
-    const id = `ht-hatch-${charts}`;
-    const fit = HT.components.textWidth;
-    const LABEL = labelWidth || fit(items.map(i => (i.small ? `${i.label} (${HT.copy.core.small})` : i.label)), 60, 320) + 6;
-    const VALUE = valueWidth || fit(items.map(i => i.valueText), 40, 200) + 8;
-    const plot = PLOT;
-    const W = LABEL + plot + VALUE;
-    const top = max > 0 ? max : Math.max(0, ...items.map(i => Number(i.value) || 0)) || 1;
-    const height = items.length * ROW + (rule ? 18 : 6);
-    const x = v => LABEL + Math.max(0, Math.min(1, (Number(v) || 0) / top)) * plot;
-    const chart = HT.svg('svg', { viewBox: `0 0 ${W} ${height}`, width: '100%', class: 'ht-chart ht-bars' }, [
-      hatch(id),
-      ...items.map((item, i) => {
-        const y = i * ROW + 4;
-        const ok = v => typeof v === 'number' && Number.isFinite(v);
-        const iv = item.interval && ok(item.interval.low) && ok(item.interval.high) ? item.interval : null;
-        const band = item.band && ok(item.band.low) && ok(item.band.high) ? item.band : null;
-        const end = Math.max(x(item.value), iv ? x(iv.high) : 0, band ? x(band.high) : 0);
-        const text = HT.svg('text', { x: end + 4, y: y + 13, class: 'ht-value', text: item.valueText });
-        if (item.cited) {
-          text.setAttribute('data-result-id', String(item.cited.resultId || ''));
-          text.setAttribute('data-path', String(item.cited.path || ''));
-          text.setAttribute('data-value', String(item.cited.value));
-        }
-        const mid = y + (ROW - 8) / 2;
-        return HT.svg('g', { 'data-bar': item.label, 'data-small': item.small ? 'true' : null }, [
-          HT.svg('text', { x: LABEL - 6, y: y + 13, class: 'ht-label', 'text-anchor': 'end',
-            text: item.small ? `${item.label} (${HT.copy.core.small})` : item.label }),
-          band ? HT.svg('rect', { x: x(band.low), y: y - 2, height: ROW - 4, width: Math.max(1, x(band.high) - x(band.low)),
-            fill: 'baseline', class: 'ht-band', 'data-band': true }) : null,
-          HT.svg('rect', { x: LABEL, y, height: ROW - 8, width: Math.max(1, x(item.value) - LABEL),
-            fill: item.small ? `url(#${id})` : item.tone === 'baseline' ? 'baseline' : 'accent',
-            'data-hatched': item.small ? 'true' : null, 'data-tone': item.tone === 'baseline' ? 'baseline' : 'model' }),
-          iv ? HT.svg('g', { 'data-interval': true }, [
-            HT.svg('line', { x1: x(iv.low), x2: x(iv.high), y1: mid, y2: mid, stroke: 'fg', 'stroke-width': 1.5 }),
-            HT.svg('line', { x1: x(iv.low), x2: x(iv.low), y1: mid - 4, y2: mid + 4, stroke: 'fg', 'stroke-width': 1.5 }),
-            HT.svg('line', { x1: x(iv.high), x2: x(iv.high), y1: mid - 4, y2: mid + 4, stroke: 'fg', 'stroke-width': 1.5 }),
-          ]) : null,
-          text,
-        ]);
-      }),
-      rule ? HT.svg('g', { 'data-rule': true }, [
-        HT.svg('line', { x1: x(rule.value), x2: x(rule.value), y1: 0, y2: items.length * ROW + 4, stroke: 'fg',
-          'stroke-dasharray': '3 3' }),
-        HT.svg('text', { x: x(rule.value), y: items.length * ROW + 16, class: 'ht-muted-text', 'text-anchor': 'middle',
-          text: rule.label }),
-      ]) : null,
-    ]);
+  function valueNode(item) {
+    if (!item.cited) return document.createTextNode(item.valueText);
+    return HT.components.cited(item.valueText, item.cited);
+  }
+
+  function bars(container, { items, max, rule = null, title, unit = '', ticks = null, point = false, showTitle = true }) {
+    const top = max > 0 ? max : Math.max(0, ...items.map(i => Math.max(Number(i.value) || 0,
+      i.interval && ok(i.interval.high) ? i.interval.high : 0))) || 1;
+    const small = HT.copy.core.small;
+    const rows = items.map(item => {
+      const iv = item.interval && ok(item.interval.low) && ok(item.interval.high) ? item.interval : null;
+      const band = item.band && ok(item.band.low) && ok(item.band.high) ? item.band : null;
+      const ref = item.tone === 'baseline';
+      const track = HT.el('div', { className: 'ht-trk' }, [
+        band ? HT.el('span', { className: 'ht-band', 'data-band': true, 'aria-hidden': 'true',
+          css: { '--a': pct(band.low, top).toFixed(2), '--b': pct(band.high, top).toFixed(2) } }) : null,
+        point ? null : HT.el('span', {
+          className: `ht-bar${item.small ? ' ht-hatch' : ref ? ' ht-ref' : ''}`, 'aria-hidden': 'true',
+          'data-hatched': item.small ? 'true' : null, 'data-tone': ref ? 'baseline' : 'model',
+          css: { '--v': pct(item.value, top).toFixed(2) } }),
+        rule && ok(rule.value) ? HT.el('span', { className: 'ht-vline', 'data-rule': true, 'aria-hidden': 'true',
+          css: { '--x': pct(rule.value, top).toFixed(2) } }) : null,
+        iv ? HT.el('span', { className: `ht-ci${ref ? ' ht-ref' : ''}`, 'data-interval': true, 'aria-hidden': 'true',
+          css: { '--a': pct(iv.low, top).toFixed(2), '--b': pct(iv.high, top).toFixed(2) } }) : null,
+        point && ok(item.value) ? HT.el('span', { className: `ht-pt${ref ? ' ht-ref' : ''}`, 'data-point': true,
+          'data-hatched': item.small ? 'true' : null, 'data-tone': ref ? 'baseline' : 'model', 'aria-hidden': 'true',
+          css: { '--x': pct(item.value, top).toFixed(2) } }) : null,
+      ]);
+      return HT.el('div', { className: 'ht-row', 'data-bar': item.label, 'data-small': item.small ? 'true' : null }, [
+        HT.el('div', { className: 'ht-lab' }, [item.label, item.small ? HT.el('small', { text: ` (${small})` }) : null,
+          item.sub ? HT.el('small', { text: ` ${item.sub}` }) : null]),
+        track,
+        HT.el('div', { className: 'ht-val ht-value' }, [valueNode(item)]),
+      ]);
+    });
+    const axis = ticks && ticks.length ? [HT.el('div', { 'aria-hidden': 'true' }),
+      HT.el('div', { className: 'ht-axis', 'aria-hidden': 'true' }, ticks.map((t, i) => HT.el('span', {
+        className: i === 0 && pct(t.value, top) < 4 ? 'ht-first' : pct(t.value, top) > 96 ? 'ht-last' : null,
+        'data-literal': 'axis', text: t.text, css: { '--x': pct(t.value, top).toFixed(2) } }))),
+      HT.el('div', { 'aria-hidden': 'true' })] : [];
+    const chart = HT.el('div', { className: 'ht-hbars', 'data-chart': point ? 'intervals' : 'bars' }, [...rows, ...axis]);
+    const legend = [];
+    if (items.some(i => i.interval)) legend.push(['ci', HT.copy.core.legendInterval]);
+    if (items.some(i => i.band)) legend.push(['band', HT.copy.core.legendBand]);
+    if (rule && rule.label) legend.push(['line', rule.label]);
+    if (items.some(i => i.small)) legend.push([point ? 'hollow' : 'hatch', HT.copy.core.legendSmall]);
     return HT.components.figure(container, {
-      title, chart,
+      title, chart, legend, showTitle,
       columns: [{ key: 'label', label: '' }, { key: 'value', label: unit || '' }, { key: 'small', label: '' }],
       rows: items.map(i => ({ label: i.label, value: { text: i.valueText, cited: i.cited || null },
-        small: i.small ? HT.copy.core.small : '' })),
+        small: i.small ? small : '' })),
     });
   }
 

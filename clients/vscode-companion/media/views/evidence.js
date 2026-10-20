@@ -26,6 +26,10 @@
   let copyNote = null;
 
   const C = () => HT.copy.evidence;
+  // v0.3 (WP-E2, R26): a rule token in an engine headline ("threshold:0.2") reads in words.
+  const RULE_TOKEN = /\b(?:threshold|capacity|share):[0-9.]+/g;
+  const ruleWordsIn = segments => (segments || []).map(seg => (seg && typeof seg.text === 'string' && typeof seg.resultId !== 'string'
+    ? { ...seg, text: seg.text.replace(RULE_TOKEN, t => HT.copy.junior.ruleShort(t) || t) } : seg));
   const int = (ctx, n) => (n === null || n === undefined ? '' : ctx.format.number(n, 'int'));
   const pct = (ctx, x) => ctx.format.number(x, 'pct1');
   const signed = (text, x) => (x > 0 ? `+${text}` : text);
@@ -96,7 +100,7 @@
   function resultRow(ctx, r, sel) {
     const c = C();
     const right = r.current && r.headline
-      ? ctx.components.segments(ctx.el('span', { className: 'ht-ev-headline' }), r.headline)
+      ? ctx.components.segments(ctx.el('span', { className: 'ht-ev-headline' }), ruleWordsIn(r.headline))
       : ctx.el('span', { className: 'ht-ev-headline muted', text: r.current ? '' : c.notCited });
     return ctx.el('li', {}, [ctx.el('button', {
       type: 'button', className: 'ht-ev-item', 'data-result-item': r.resultId, 'aria-pressed': r.resultId === sel ? 'true' : 'false',
@@ -154,7 +158,7 @@
       const parts = [detail.partition, detail.nRows !== null ? c.rows(int(ctx, detail.nRows)) : null,
         task === 'binary' && detail.nPositive !== null ? c.positives(int(ctx, detail.nPositive)) : null].filter(Boolean);
       add(c.facts.evaluatedOn, parts.join(' · '));
-      if (detail.headline && detail.headline.length) add(c.facts.headline, ctx.components.segments(ctx.el('span'), detail.headline));
+      if (detail.headline && detail.headline.length) add(c.facts.headline, ctx.components.segments(ctx.el('span'), ruleWordsIn(detail.headline)));
     } else if (detail.partition) {
       add(c.facts.evaluatedOn, detail.partition);
     }
@@ -653,24 +657,26 @@
   function diagConfusion(ctx, d, m) {
     const t = C().diag.confusion;
     const count = x => ctx.format.number(x, Number.isInteger(x) ? 'int' : 'f1');
-    const cell = (k, label) => ctx.el('td', { 'data-cell': k }, [citeCell(ctx, d, m.confusion[k], count),
-      ctx.el('div', { className: 'muted', text: label })]);
+    // v0.3 (WP-E2, R28): a plain 2 x 2 at the rule, counts in the cells (each cell names its
+    // row and column in words, so a narrow panel needs no table head), and the engine's rates
+    // (precision down the acted-on column, recall and specificity along the rows).
+    const column = k => (k === 'tp' || k === 'fp' ? t.actedOn : t.notActedOn);
+    const cell = (k, label, cls) => ctx.el('div', { className: `ht-cell ${cls}`, 'data-cell': k, 'data-label': column(k) }, [
+      ctx.el('span', { className: 'ht-n' }, [citeCell(ctx, d, m.confusion[k], count)]),
+      ctx.el('span', { className: 'ht-w', text: label })]);
+    const rate = (label, v) => ctx.el('span', { className: 'ht-w' }, [label, citeCell(ctx, d, v, x => pct(ctx, x))]);
     return ctx.el('div', {}, [
       ctx.el('p', { className: 'ht-ev-diag-question', text: t.question }),
-      ctx.el('table', { className: 'ht-values ht-confusion', 'data-confusion': d.evidence }, [
-        ctx.el('caption', { className: 'sr-only', text: t.question }),
-        // An empty head cell first, so the narrow-panel cards label each count by its column.
-        ctx.el('thead', {}, [ctx.el('tr', {}, [ctx.el('th', { scope: 'col', text: '' }), ctx.el('th', { scope: 'col', text: t.actedOn }),
-          ctx.el('th', { scope: 'col', text: t.notActedOn })])]),
-        ctx.el('tbody', {}, [
-          ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.positive }), cell('tp', t.tp), cell('fn', t.fn)]),
-          ctx.el('tr', {}, [ctx.el('th', { scope: 'row', text: t.negative }), cell('fp', t.fp), cell('tn', t.tn)]),
-        ]),
+      ctx.el('div', { className: 'ht-cm', role: 'group', 'aria-label': t.question, 'data-confusion': d.evidence }, [
+        ctx.el('div', { className: 'ht-hd', 'aria-hidden': 'true' }),
+        ctx.el('div', { className: 'ht-hd', text: t.actedOn }),
+        ctx.el('div', { className: 'ht-hd', text: t.notActedOn }),
+        ctx.el('div', { className: 'ht-rh', text: t.positive }), cell('tp', t.tp, 'ht-tp'), cell('fn', t.fn, 'ht-fn'),
+        ctx.el('div', { className: 'ht-rh', text: t.negative }), cell('fp', t.fp, 'ht-fp'), cell('tn', t.tn, 'ht-tn'),
       ]),
-      ctx.el('p', { 'data-confusion-rates': true }, [t.precision, citeCell(ctx, d, m.confusion.precision, x => pct(ctx, x)),
-        t.recall, citeCell(ctx, d, m.confusion.recall, x => pct(ctx, x)), t.specificity,
-        citeCell(ctx, d, m.confusion.specificity, x => pct(ctx, x)), '.',
-        m.confusion.selection === 'expected' ? ` ${t.expected}` : '']),
+      ctx.el('p', { className: 'ht-statrow', 'data-confusion-rates': true }, [
+        rate(t.precision, m.confusion.precision), rate(t.recall, m.confusion.recall), rate(t.specificity, m.confusion.specificity),
+        m.confusion.selection === 'expected' ? ctx.el('span', { text: t.expected }) : null]),
     ]);
   }
 

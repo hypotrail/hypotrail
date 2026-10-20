@@ -10,6 +10,8 @@ import re
 
 import pytest
 
+from conftest import inline_styles_ok
+
 LOGISTIC = 'd0af48b239d736c2c2b888841085499145e3fa4cfb56b13540251fa0af3883f5'
 EVALUATION = 'ae80b53fe0f22e164e785d0939fef003c1b90c0482f5dd6f702ac28791426d02'
 STALE = 'b7e3c1d09a4f5e6b8c2d1f0e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
@@ -85,7 +87,7 @@ def test_ev1_registry_filters_and_stale_results_carry_no_figure(open_panel, mode
     page.locator('[role="tab"][data-tab="evidence"]').click()
     assert panel.state()['evidenceFilter'] == 'all'
     assert len(loads(panel)) == 1, 'a filter change reads nothing'
-    assert page.locator('[style]').count() == 0
+    assert inline_styles_ok(page)
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
@@ -141,7 +143,7 @@ def test_detail_facts_lineage_ev6_and_ledger_ev2(open_panel, model, binary, sche
     assert page.locator('[data-limit]').evaluate_all('xs => xs.map(x => x.dataset.limit)') == [
         'validation_is_not_independent', 'public_data_already_explored']
     assert page.locator('[data-split-unseen]').count() == 0
-    assert page.locator('[style]').count() == 0
+    assert inline_styles_ok(page)
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
@@ -180,7 +182,7 @@ def test_ev5_intervals_have_a_values_table_and_the_chance_sentence(open_panel, m
     assert sentences[2][0] == 'undefined'
     assert unc.locator('[data-bootstrap]').inner_text() == 'Paired bootstrap, 2,000 replicates, 95% level.'
     figure = unc.locator('.ht-figure').first
-    assert figure.locator('svg[role="img"]').get_attribute('aria-label') == 'Precision with its interval (95%)'
+    assert figure.locator('[role="img"]').get_attribute('aria-label') == 'Precision with its interval (95%)'
     figure.get_by_role('button', name='Show values').click()
     cells = figure.locator('table tbody tr').first.locator('td').all_inner_texts()
     assert cells == ['logistic model', '36.0%', '[26.0%, 47.0%]']

@@ -16,6 +16,28 @@
     reviewer: 'Reviewer, read-only',
     switchStudy: name => `Study: ${name} ▾`,
     revision: n => `revision ${n}`,
+    // v0.3 (WP-E2, R21): the header's language toggle (UI state only).
+    languageLabel: 'Panel language',
+    languageNames: { en: 'English', fr: 'Français' },
+    // v0.3 (owner addition, I1): one lead sentence at the top of each tab.
+    tabLeads: {
+      overview: 'Where the study stands, what waits for you, and what you cannot claim yet. Decisions are made in the chat; this panel only shows them.',
+      eda: 'First what the data are, read without looking at what is predicted. Then charts on the training rows, each answering one question.',
+      decisions: 'Every decision of the study, as recorded. You answer a proposal in the chat; here you read what it says and what it would change.',
+      evidence: 'Where every figure comes from: which rows were read, for what, and how sure each figure is.',
+      whatif: 'Try a rule or a model on the figures already computed. Nothing here is recorded or decided.',
+      learn: 'The terms of the study explained on its own figures, and the pack to hand the study to someone else.',
+    },
+    // v0.3 (WP-E2): the card pattern (one sentence + "Why?", the faint source line) and the
+    // legends of the charts.
+    why: 'Why?',
+    sourceWord: 'Source',
+    legendInterval: 'confidence interval',
+    legendBand: 'what chance alone draws',
+    legendSmall: 'too few rows to read alone',
+    binFrom: 'From',
+    binTo: 'To',
+    rowsWord: 'Rows',
     readAge: age => `read from CLI · ${age}`,
     justNow: 'just now',
     secondsAgo: s => `${s} s ago`,

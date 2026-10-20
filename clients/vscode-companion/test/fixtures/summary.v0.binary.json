@@ -433,6 +433,7 @@
   },
   "scenario_defaults": {
    "capacity_share": 0.1
-  }
+  },
+  "language": "en"
  }
 }

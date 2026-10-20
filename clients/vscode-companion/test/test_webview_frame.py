@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import inline_styles_ok
+
 TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn']
 STAGE_TABS = {'v0': [], 'v1': ['overview', 'decisions'],
               'v2': ['overview', 'eda', 'decisions', 'evidence', 'whatif'], 'v3': TABS}
@@ -174,12 +176,17 @@ def test_components_render_geometry_hatch_values_and_citations(open_panel):
       HT.components.segments(box, [{text: 'Rate '}, {text: '11.5%', resultId: 'b'.repeat(64), path: 'rate', value: 0.1154}]);
     }""")
     probe = page.locator('#probe')
-    assert probe.locator('svg[role="img"]').count() == 4
-    assert probe.locator('svg[role="img"]').first.get_attribute('aria-label') == 'Outcome rate by job, training rows'
+    # v0.3 (WP-E2): bars, interval rows and the histogram are HTML grids, the box plot an SVG;
+    # each is an image with its accessible name.
+    assert probe.locator('[role="img"]').count() == 4
+    assert probe.locator('[role="img"]').first.get_attribute('aria-label') == 'Outcome rate by job, training rows'
     small = probe.locator('[data-small="true"]')
-    assert small.locator('rect').get_attribute('data-hatched') == 'true'
-    assert '(small)' in small.locator('text').first.text_content()
-    cited = probe.locator('svg text[data-result-id]')
+    assert small.locator('.ht-bar').get_attribute('data-hatched') == 'true'
+    assert '(small)' in small.locator('.ht-lab').text_content()
+    # Geometry: the bar's length is value / max, a custom property written through CSSOM.
+    bar = probe.locator('[data-bar="retired"] .ht-bar')
+    assert bar.get_attribute('style') == '--v: 93.20;'
+    cited = probe.locator('.ht-val data[data-result-id]')
     assert cited.get_attribute('data-value') == '0.233'
     toggle = probe.locator('.ht-figure').first.locator('button[aria-controls]')
     assert toggle.inner_text() == 'Show values'
@@ -188,9 +195,9 @@ def test_components_render_geometry_hatch_values_and_citations(open_panel):
     assert toggle.get_attribute('aria-expanded') == 'true'
     assert probe.locator('table.ht-values').first.is_visible()
     data = probe.locator('data[data-result-id="' + 'b' * 64 + '"]')
-    assert data.inner_text() == '11.5%' and data.get_attribute('title') == 'result bbbbbbbb... · rate'
+    assert data.inner_text() == '11.5%' and data.get_attribute('title') == 'Source · bbbbbb · rate'
     assert probe.locator('[data-zero]').count() == 1
-    assert page.locator('[style]').count() == 0, 'no inline style attribute (CSP)'
+    assert inline_styles_ok(page), 'no inline style attribute (CSP)'
     assert panel.clean(), (panel.errors, panel.violations())
 
 
@@ -225,19 +232,43 @@ def _contrast(a: str, b: str) -> float:
     return (la + 0.05) / (lb + 0.05)
 
 
-def test_text_tokens_contrast_at_least_4_5_to_1_in_both_fallback_themes():
-    # A11Y-2: WCAG contrast of the text tokens against --ht-bg, computed here.
-    css = (Path(__file__).resolve().parents[1] / 'media' / 'css' / 'tokens.css').read_text()
-    light, dark = css.split('@media (prefers-color-scheme: dark)')
+CONTRAST = """pairs => {
+  const probe = document.createElement('span');
+  document.body.appendChild(probe);
+  const rgb = value => {
+    probe.style.setProperty('color', value);
+    const c = getComputedStyle(probe).color;
+    const m = c.match(/color\\(srgb ([0-9.]+) ([0-9.]+) ([0-9.]+)/) || c.match(/rgba?\\((\\d+), (\\d+), (\\d+)/);
+    const scale = c.startsWith('color(') ? 1 : 255;
+    return [1, 2, 3].map(i => Number(m[i]) / scale);
+  };
+  const lum = c => { const l = c.map(x => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2]; };
+  const out = pairs.map(([fg, bg]) => { const a = lum(rgb(`var(${fg})`)), b = lum(rgb(`var(${bg})`));
+    return [fg, bg, (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)]; });
+  probe.remove();
+  return out;
+}"""
+# The text tokens and the tinted chips (text on its tint) of the v0.3 design system.
+TEXT_PAIRS = [['--ht-fg', '--ht-bg'], ['--ht-muted', '--ht-bg'], ['--ht-link', '--ht-bg'], ['--ht-faint', '--ht-bg'],
+              ['--ht-fg', '--ht-surface'], ['--ht-muted', '--ht-surface'],
+              ['--ht-accent-ink', '--ht-accent-tint'], ['--ht-warn', '--ht-warn-tint'], ['--ht-bad', '--ht-bad-tint'],
+              ['--ht-seal', '--ht-seal-tint'], ['--ht-ok', '--ht-ok-tint'], ['--ht-info', '--ht-info-tint'],
+              ['--ht-error-fg', '--ht-error-bg'], ['--ht-experiment-fg', '--ht-experiment-bg']]
 
-    def token(block, name):
-        m = re.search(rf'--ht-{name}:\s*(?:var\([^,]+,\s*)?(#[0-9A-Fa-f]{{6}})', block)
-        return m.group(1)
-    for block in (light, dark):
-        bg = token(block, 'bg')
-        for name in ('fg', 'muted', 'link', 'accent', 'warn-fg', 'error-fg'):
-            assert _contrast(token(block, name), bg) >= 4.5, (name, token(block, name), bg)
-        assert _contrast(token(block, 'experiment-fg'), token(block, 'experiment-bg')) >= 4.5
+
+@pytest.mark.parametrize('scheme, theme', [('light', None), ('dark', None), ('light', 'light-modern'),
+                                           ('dark', 'dark-modern'), ('dark', 'hc')])
+def test_text_tokens_contrast_at_least_4_5_to_1_in_both_fallback_themes(open_panel, scheme, theme):
+    """A11Y-2 (v0.3, WP-E2): WCAG contrast of the text tokens against their background, computed
+    in the browser from the resolved tokens (colour-mix surfaces included), in both fallback
+    themes and under the Modern and High Contrast variable sets."""
+    import themes
+    panel = open_panel(color_scheme=scheme)
+    if theme:
+        themes.apply(panel.page, theme)
+    for fg, bg, ratio in panel.page.evaluate(CONTRAST, TEXT_PAIRS):
+        assert ratio >= 4.5, (scheme, theme, fg, bg, round(ratio, 2))
 
 
 def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, model):
@@ -249,6 +280,10 @@ def test_recap_strip_shows_the_junior_recap_with_decisions_in_words(open_panel, 
     panel.snapshot(binary)
     page = panel.page
     page.locator('[role="tab"][data-tab="decisions"]').click()
+    # v0.3 (WP-E2): the strip is collapsed by default; the junior opens it.
+    toggle = page.locator('[data-recap-strip] button')
+    assert toggle.get_attribute('aria-expanded') == 'false' and page.locator('[data-recap-strip] li').count() == 0
+    toggle.click()
     lines = page.locator('[data-recap-strip] li').all_inner_texts()
     junior = binary['recapJunior']
     assert [l.split(':')[0] for l in lines] == ['Goal', 'Decided', 'Now', 'Next', 'Limit']

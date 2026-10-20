@@ -39,7 +39,7 @@ const launch = require('./launch');
 const HANDLERS_DIR = path.join(__dirname, 'handlers');
 const MAX_READS = 2;
 const MAX_PREVIEWS = 1;
-const DEFAULT_SETTINGS = Object.freeze({ stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false });
+const DEFAULT_SETTINGS = Object.freeze({ stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, language: 'auto' });
 const UNKNOWN_OUTCOME = 'The outcome is unknown: the refreshed panel shows whether anything was recorded.';
 const REVIEWER_REFUSAL = 'Read-only reviewer mode.';
 // Reviewer mode refuses every write of the study. The handoff export (W7) writes no study
@@ -156,7 +156,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     // `study` (CR.2): the study key, so the webview keeps draft words for this study only.
     send({ type: 'init', stage: active.stage, reviewer: active.reviewer === true, learningLayer: active.learningLayer !== false,
       chatInsert: active.chatInsert === true, task: snapshot ? snapshot.task : null, study: studyKey(agent.studyDir),
-      marimo: launch.display(agent) });
+      marimo: launch.display(agent),
+      language: ['auto', 'en', 'fr'].includes(active.language) ? active.language : 'auto' });
   }
 
   async function waitForWrite() {

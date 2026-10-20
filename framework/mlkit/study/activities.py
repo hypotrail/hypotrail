@@ -104,6 +104,9 @@ DISTRIBUTION = 'eda.distribution'
 # single-feature signal (a legitimacy question), in both tasks.
 QUALITY = 'eda.quality'
 SIGNAL = 'eda.single_feature_signal'
+# v0.3 (WP-E2, R28): the predictor-versus-predictor association matrix of the development
+# rows, without the target (structural, like the quality check; never a target look).
+CORRELATION = 'eda.correlation'
 # v0.2b (WP-B1): the variant of the candidate, and the one evaluation of the final test.
 VARIANT = 'fit.variant'
 FINAL = 'final_test.evaluation'
@@ -114,7 +117,7 @@ DIAG_REGRESSION = 'diag.regression'
 DIAG_FINAL = 'diag.final_test'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
               TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
-              SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL)
+              SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL, CORRELATION)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
     'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
@@ -122,7 +125,7 @@ TASK_ACTIVITIES = {
 }
 # C8: activities of every task. ``TASK_ACTIVITIES`` is frozen by test_contract_freeze.py,
 # so the shared ones are listed here and added by :func:`task_activities`.
-SHARED_ACTIVITIES = (DISTRIBUTION, QUALITY, SIGNAL)
+SHARED_ACTIVITIES = (DISTRIBUTION, QUALITY, SIGNAL, CORRELATION)
 # WP-B1: activities of every task in a study created since WP-B1.
 B1_ACTIVITIES = (VARIANT, FINAL)
 # WP-B4: the diagnostics of each task. ``diag.final_test`` needs a final test (WP-B1).
@@ -139,7 +142,9 @@ def task_activities(task: str) -> tuple[str, ...]:
 ALIASES = {'policy.evaluate': POLICY}
 CLI_NAMES = ACTIVITIES + tuple(ALIASES)
 EDA = (TARGET_RATE, SPECIAL_VALUES, RATE_BY, TARGET_SUMMARY, MEAN_BY, DISTRIBUTION, QUALITY,
-       SIGNAL)
+       SIGNAL, CORRELATION)
+# The EDA activities that read the development rows without the target and need no split.
+STRUCTURAL_EDA = (QUALITY, CORRELATION)
 PER_COLUMN = (RATE_BY, MEAN_BY, DISTRIBUTION)
 # C8: the roles a distribution accepts (a feature, the declared time column, the target).
 DISTRIBUTION_ROLES = ('feature', 'time', 'target')
@@ -167,6 +172,7 @@ MODULES = {
     REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression'),
     DISTRIBUTION: (_BASE, 'mlkit.study.eda'),
     QUALITY: (_BASE, 'mlkit.study.eda'),
+    CORRELATION: (_BASE, 'mlkit.study.correlation'),
     SIGNAL: (_BASE, 'mlkit.study.eda', 'mlkit.study.fit', 'mlkit.study.metrics',
              'mlkit.classical'),
     VARIANT: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.regression',
@@ -419,6 +425,19 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         inputs['columns'] = columns
         if case.duplicates_policy:
             inputs['duplicates'] = case.duplicates_policy   # record groups reported (WP-B3)
+        if with_exposure:
+            keys = partition.development_keys(store.read_blob, inputs.get('development'))
+            if keys is None:
+                from . import data as dt
+                keys = dt.row_index(case).keys
+            expose('structural_inspection', _rows_partition(inputs), keys, columns)
+    elif activity == CORRELATION:
+        # v0.3 (WP-E2): the candidate features of the development rows, never the target;
+        # no split and no decision needed, recorded as a structural inspection.
+        columns = [v['name'] for v in case.document['variables'] if v['role'] == 'feature']
+        params['partition'] = _rows_partition(inputs)
+        inputs['columns'] = columns
+        inputs['special_values'] = feature_special_values(case, columns)
         if with_exposure:
             keys = partition.development_keys(store.read_blob, inputs.get('development'))
             if keys is None:
@@ -1374,6 +1393,12 @@ def compute(store, plan_: Mapping) -> dict:
             # development rows; no value is read).
             out['values']['duplicates']['records'] = dt.duplicate_summary(case, dataset.index)
         return out
+    if activity == CORRELATION:
+        from . import correlation
+        case, dataset = load(plan_, store)
+        columns = plan_['inputs']['columns']
+        frame = dataset.frame[columns]                        # never the target
+        return correlation.compute(case, frame, {**plan_['params'], 'columns': columns})
     if activity in EDA:
         from . import eda
         case, dataset = load(plan_, store)

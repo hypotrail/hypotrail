@@ -7,7 +7,8 @@
 // Frozen by WP-0 (docs/plans/COMPANION-ADVANCED-PLAN.md §2.2 item 5). Order:
 //   CSS: media/css/tokens.css, media/css/core.css, then the other media/css/*.css (a-z);
 //   JS:  media/protocol.js, media/format.js, media/core.js, media/components/*.js (a-z),
-//        media/copy/core.js, the other media/copy/*.js (a-z), media/terms.js (if present),
+//        media/copy/core.js, the other media/copy/*.js (a-z), media/copy-fr/*.js (a-z; v0.3
+//        WP-E2, the French translation of the same keys), media/terms.js (if present),
 //        media/views/*.js (a-z), then `Hypotrail.start();`.
 // A file that contains `</script` or `</style` is refused.
 
@@ -48,7 +49,8 @@ function files(media = MEDIA) {
   const has = rel => fs.existsSync(path.join(media, rel));
   const css = ['css/tokens.css', 'css/core.css', ...listDir('css', '.css').filter(f => f !== 'css/tokens.css' && f !== 'css/core.css')];
   const js = ['protocol.js', 'format.js', 'core.js', ...listDir('components', '.js'), 'copy/core.js',
-    ...listDir('copy', '.js').filter(f => f !== 'copy/core.js'), ...(has('terms.js') ? ['terms.js'] : []),
+    ...listDir('copy', '.js').filter(f => f !== 'copy/core.js'), ...listDir('copy-fr', '.js'),
+    ...(has('terms.js') ? ['terms.js'] : []),
     ...listDir('views', '.js')];
   return { css, js };
 }

@@ -413,8 +413,59 @@ def _numeric_bins(ordinary, n_total: int) -> dict:
              'share': _share(int(counts[i]), n_total),
              'closed': 'both' if i == DISTRIBUTION_BINS - 1 else 'left'}
             for i in range(DISTRIBUTION_BINS)]
-    return {**out, 'n_bins': DISTRIBUTION_BINS, 'bin_width': (high - low) / DISTRIBUTION_BINS,
-            'bins': bins}
+    out = {**out, 'n_bins': DISTRIBUTION_BINS, 'bin_width': (high - low) / DISTRIBUTION_BINS,
+           'bins': bins}
+    out.update(_skew_bins(ordinary, n_total))
+    return out
+
+
+# v0.3 (WP-E2, R17): a skewed column of non-negative values (many exact zeros, or a long
+# right tail) collapses into one fixed-width bar. Its exact zeros are counted apart and its
+# positive values get bins on a logarithmic scale (edges 1, 3, 10, 30, ... between the
+# smallest and the largest positive value).
+SKEW_ZERO_SHARE = 0.2
+SKEW_TAIL_RATIO = 10
+
+
+def _log_edges(low: float, high: float) -> list:
+    import math
+    edges = [low]
+    k = math.floor(math.log10(low))
+    while True:
+        for m in (1, 3):
+            e = m * 10.0 ** k
+            if low < e < high and not math.isclose(e, edges[-1]):
+                edges.append(e)
+        if 10.0 ** (k + 1) >= high:
+            break
+        k += 1
+    edges.append(high)
+    return edges
+
+
+def _skew_bins(ordinary, n_total: int) -> dict:
+    """``{"zeros", "skewed", "log_bins"}`` of a numeric column (additive keys, v0.3)."""
+    import numpy as np
+    values = ordinary.to_numpy(dtype=float)
+    if not len(values) or values.min() < 0:
+        return {'zeros': None, 'skewed': False, 'log_bins': None}
+    n_zero = int((values == 0).sum())
+    positive = values[values > 0]
+    zeros = {'n_rows': n_zero, 'share': _share(n_zero, n_total)}
+    q75 = float(np.quantile(values, 0.75))
+    tail = q75 > 0 and float(values.max()) >= SKEW_TAIL_RATIO * q75
+    skewed = len(positive) > 1 and (n_zero / len(values) >= SKEW_ZERO_SHARE or tail) \
+        and float(positive.max()) > float(positive.min())
+    if not skewed:
+        return {'zeros': zeros, 'skewed': False, 'log_bins': None}
+    edges = _log_edges(float(positive.min()), float(positive.max()))
+    index = np.clip(np.searchsorted(edges, positive, side='right') - 1, 0, len(edges) - 2)
+    counts = np.bincount(index, minlength=len(edges) - 1)
+    log_bins = [{'low': float(edges[i]), 'high': float(edges[i + 1]), 'n_rows': int(counts[i]),
+                 'share': _share(int(counts[i]), n_total),
+                 'closed': 'both' if i == len(edges) - 2 else 'left'}
+                for i in range(len(edges) - 1)]
+    return {'zeros': zeros, 'skewed': True, 'log_bins': log_bins}
 
 
 def distribution(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS) -> dict:

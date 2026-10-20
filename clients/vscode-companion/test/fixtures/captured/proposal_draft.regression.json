@@ -17,15 +17,15 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 36,
+  "revision": 38,
   "decision_id": "model_choice",
   "value": "fit.linear",
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the linear model. On the 96 validation rows its mean absolute error is 6.48 mpg against 10.27 for the training mean (paired difference -3.79, interval -4.38 to -3.16). These rows were used to choose, so the figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view (result 1df7d607).",
+  "rationale": "Chosen by the junior in the companion's What if? view (result c06a58a8).",
   "evidence": {
-   "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+   "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
    "activity": "evaluate.regression",
    "figures": [
     {

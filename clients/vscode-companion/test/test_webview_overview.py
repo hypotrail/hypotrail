@@ -10,6 +10,8 @@ import re
 
 import pytest
 
+from conftest import inline_styles_ok
+
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 MOMENTS = ['Frame the change', 'Prepare evidence', 'Work and compare', 'Conclude and hand over']
 INTERRUPTED = 'e_4c1d9a7b2e3f5a6b7c8d9e0f'
@@ -60,7 +62,7 @@ def opened(open_panel, summary, stage='v1', scheme='light', **init):
 
 def assert_clean(panel):
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
-    assert panel.page.locator('[style]').count() == 0, 'no inline style attribute (CSP)'
+    assert inline_styles_ok(panel.page), 'no inline style attribute (CSP)'
 
 
 def expand(page):
@@ -137,11 +139,14 @@ def test_ov2_without_a_recap_there_is_no_recap_details(open_panel, binary):
 
 @pytest.mark.parametrize('scheme', THEMES)
 def test_ov3_ov4_study_map_has_four_moments_every_step_once_and_text_marks(open_panel, regression, scheme):
+    """OV-3 (v0.3, WP-E2): the journey bar lists every step once, in plan order, each with its
+    moment (one of the four) in its hover."""
     panel = opened(open_panel, regression, scheme=scheme)
     page = panel.page
-    assert page.locator('[data-moment] h3').evaluate_all('hs => hs.map(h => h.textContent)') == MOMENTS
+    moments = page.locator('[data-map] [data-step]').evaluate_all('ss => ss.map(s => s.dataset.moment)')
+    assert set(moments) == set(MOMENTS)
     steps = page.locator('[data-map] [data-step]').evaluate_all('ss => ss.map(s => s.dataset.step)')
-    assert sorted(steps) == sorted(s['id'] for s in regression['plan'])
+    assert steps == [s['id'] for s in regression['plan']]
     assert len(steps) == len(set(steps))
     current = page.locator('[data-step][aria-current="step"]')
     assert current.count() == 1 and current.get_attribute('data-step') == 'model_choice'
@@ -571,7 +576,7 @@ def test_v0_shows_the_v0_subset_only(open_panel, health):
     page = panel.page
     # WP-A5: v0 has the next move, the plan, where we are, the limits, and the deliverables.
     assert page.locator('#panel-overview [data-ov]').evaluate_all('ss => ss.map(s => s.dataset.ov)') == \
-        ['hero', 'map', 'where', 'limits', 'deliverables']
+        ['hero', 'map', 'where', 'limits', 'deliverables', 'guide']
     assert page.locator('[data-recap-details] li').count() == 5
     for hook in ['[data-digest]', '[data-check]', '[data-write="render"]', '[data-ov="health"]',
                  '[data-write="acknowledge"]', '[data-stage]']:
@@ -606,9 +611,10 @@ def test_a11y_names_labels_headings_and_tabindex(open_panel, health, scheme):
         }).map(e => e.outerHTML)""")
     assert unnamed == []
     assert page.locator('#panel-overview [tabindex]:not([tabindex="-1"]):not([tabindex="0"])').count() == 0
-    assert page.locator('#panel-overview h2').all_inner_texts() == [
-        'A run stopped before it finished', 'Needs attention', 'Study map', 'Since your last session',
-        'What you cannot claim yet', 'Where we are', 'Your deliverables']
+    # v0.3 (WP-E2): section titles are uppercase captions in CSS; the text is unchanged.
+    assert page.locator('#panel-overview h2').all_text_contents() == [
+        'A run stopped before it finished', 'Needs attention', 'The journey', 'Since your last session',
+        'What you cannot claim yet', 'Where we are', 'Your deliverables', 'How this panel works']
     assert page.locator('#panel-overview section[aria-labelledby]').count() >= 5
     button = page.get_by_role('button', name='Open the report in the browser')
     button.focus()

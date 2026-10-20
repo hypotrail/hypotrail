@@ -15,7 +15,7 @@
   "schema": "hypotrail.summary/1",
   "ok": true,
   "study": "/studies/auto mpg",
-  "revision": 36,
+  "revision": 38,
   "since": null,
   "changed": null,
   "goal": {
@@ -114,7 +114,7 @@
     "decision_id": "model_choice",
     "value": "fit.linear",
     "restatement": "Adopt the linear model.",
-    "revision": 36
+    "revision": 38
    }
   ],
   "decisions": {
@@ -252,68 +252,74 @@
    }
   },
   "results": {
+   "eda.correlation": {
+    "result_id": "451dcf5fdc74d0b25339e72da92a3b3d2d567486256c778ae8bc35e3d80628dd",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
    "eda.distribution:weight": {
-    "result_id": "db955cf4318f588216a3cc779a2f6c8cd8d9e20908f3d38fb74d86b76395a0f0",
+    "result_id": "59d48f8511d33674cf92f69cd30ea031722265cc73a2683ca9b884582272dc45",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "6035bf457ec88c6401211983615415f7ff26b4ba3be2e7b9e1d1a96f8217afed",
+    "result_id": "f2b0ffd95b4ecea9422e8c2573f5dfee93709776b1e1b035ad7a8ce08f27aaed",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "6037f045cfc48aa4bd91dd3d1e259758c49e4dbdc05ae049039b3a2ac513e35c",
+    "result_id": "021575783f3550a114096de59987c1359811dcfe17c6773e433b7575543ca36e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "246d12c266f570e3ba1ebe3f8631bdcf5857aac2168ec2668872ed1df989ae18",
+    "result_id": "27fb1e0eb06a199113fee6d3e3857ce98519781f36a997ce1c9acadf89f28a4a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "cfbe0c8c036ef1209127b5c720499f94577638f0651368c78e2387363158f428",
+    "result_id": "ebfb4ebb310724b0c8a9a426f68a2f713d5f765da40ebe87bed2c755903f10ff",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "8349a3803f85d26765852aab605b217c3983e2d7fe542d80fa6bd4cc696dc289",
+    "result_id": "96ded86d7f05e2e8d3f38f373920c3ea4de677b16e3bddb163da40ffed3f25a8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+    "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "74b33aaae90c1c5680ecb4d8244d80c6e474d0de7a5070d9e27ad4f201e49a24",
+    "result_id": "f6e4d9e8575a1386f64cf4b5d45a0cb820622ae47954344cf132cdb22ca15110",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "9d01527525d629bf9e7a9854f086c3f335393a00f703228911bc04c1ac35a974",
+    "result_id": "31ce55f2af0058f1655eccb972ffd586636b3a5fee1b31f3629cca490f18e9f5",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "1c4f001d3ee79b71a28eade4c2f340a557e61a60cfc3975468a9c96b5f74981d",
+    "result_id": "eb435770d2c35f438bfab0b190670f1b8d2c3372ee4a9585e4169a752539fb34",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "a9bf2d90a0e263c2df9a2be730283a17d6f6adc0450cd31906d30bdf4d4c164f",
+    "result_id": "30ddfbb28014d3ee7ce1e9545e6d372df788554ee655fb9ee6a1337e30ec3284",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -324,16 +330,16 @@
    "items": {
     "notebook": {
      "status": "ok",
-     "revision": 36,
-     "last_ok_revision": 36,
+     "revision": 38,
+     "last_ok_revision": 38,
      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
      "audience": "agent",
      "junior_message": "The generated notebook is up to date."
     },
     "report": {
      "status": "ok",
-     "revision": 36,
-     "last_ok_revision": 36,
+     "revision": 38,
+     "last_ok_revision": 38,
      "message": "The report (reports/study.html) is up to date.",
      "audience": "agent",
      "junior_message": "The report is up to date."
@@ -419,7 +425,7 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "1df7d607a2c16a3f6f4021707dce2c85b71b9b667510f5840e25846595fde105",
+   "result_id": "c06a58a8a1ccb0b239c9ef38946194d7d55beb2bef05487104fbea63ac75b3a5",
    "contradicts_verdict": false,
    "final_test": null,
    "model": "fit.linear",
@@ -429,16 +435,16 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "8349a3803f85d26765852aab605b217c3983e2d7fe542d80fa6bd4cc696dc289",
-    "cfbe0c8c036ef1209127b5c720499f94577638f0651368c78e2387363158f428",
-    "246d12c266f570e3ba1ebe3f8631bdcf5857aac2168ec2668872ed1df989ae18",
-    "6035bf457ec88c6401211983615415f7ff26b4ba3be2e7b9e1d1a96f8217afed"
+    "96ded86d7f05e2e8d3f38f373920c3ea4de677b16e3bddb163da40ffed3f25a8",
+    "ebfb4ebb310724b0c8a9a426f68a2f713d5f765da40ebe87bed2c755903f10ff",
+    "27fb1e0eb06a199113fee6d3e3857ce98519781f36a997ce1c9acadf89f28a4a",
+    "f2b0ffd95b4ecea9422e8c2573f5dfee93709776b1e1b035ad7a8ce08f27aaed"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 1df7d607); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result c06a58a8); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
@@ -484,6 +490,7 @@
   "trials": {
    "count": 2
   },
-  "scenario_defaults": null
+  "scenario_defaults": null,
+  "language": "en"
  }
 }

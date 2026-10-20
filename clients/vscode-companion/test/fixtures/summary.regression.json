@@ -413,6 +413,7 @@
    "count": 2
   },
   "scenario_defaults": null,
+  "language": "en",
   "moments": [
    {
     "id": "frame",

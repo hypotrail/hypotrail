@@ -19,7 +19,7 @@
    "code": "export_target_exists",
    "message": "The export folder exists and is not empty; nothing was written.",
    "details": {
-    "path": "/tmp/capture/packs/revision-42"
+    "path": "/tmp/capture/packs/revision-46"
    }
   }
  }

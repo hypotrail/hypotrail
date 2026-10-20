@@ -1219,7 +1219,13 @@
         "share": 0.0022123893805309734,
         "closed": "both"
        }
-      ]
+      ],
+      "zeros": {
+       "n_rows": 0,
+       "share": 0.0
+      },
+      "skewed": false,
+      "log_bins": null
      },
      "groups": null,
      "n_groups": null,

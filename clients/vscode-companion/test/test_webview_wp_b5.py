@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import inline_styles_ok
+
 import themes
 
 SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
@@ -94,7 +96,7 @@ def open_tab(open_panel, summary, tab, theme='light', width=900, stage='v2', **i
 def clean(panel):
     assert not (panel.requests or panel.errors or panel.csp or panel.violations()), \
         (panel.requests, panel.errors, panel.csp, panel.violations())
-    assert panel.page.locator('body [style]').count() == 0
+    assert inline_styles_ok(panel.page)
 
 
 def no_sideways(page):
@@ -207,7 +209,7 @@ def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_p
     assert dev.locator('[data-path="cross_validation.spread.roc_auc.min"]').first.inner_text().count('–') == 1
     variant = dev.locator('[data-variant="regularisation"]')
     assert 'more regularisation' in variant.inner_text()
-    assert variant.locator('svg.ht-intervals line[data-tone="baseline"]').count() >= 1
+    assert variant.locator('.ht-intervals [data-interval][data-tone="baseline"]').count() >= 1
     assert variant.locator('[data-zero]').count() >= 1
     sentences = variant.locator('[data-variant-sentence]').evaluate_all('ns => ns.map(n => n.dataset.variantSentence)')
     assert sentences and set(sentences) <= {'one_side', 'includes_zero'}
@@ -217,7 +219,7 @@ def test_ev9_ev10_ev11_development_and_final_evidence_are_apart_and_cited(open_p
     crit = final.locator('[data-final-criterion]')
     assert crit.get_attribute('data-final-criterion') == fe['values']['criterion']['status']
     assert crit.locator('data[data-path="criterion.gain"]').get_attribute('data-result-id') == fe['result_id']
-    assert final.locator('[data-final-metric="precision"] svg.ht-intervals').count() == 2
+    assert final.locator('[data-final-metric="precision"] .ht-intervals').count() == 2
     # The registry lists the final-test results apart.
     assert page.locator('[data-final-results]').count() == 1
     items = page.locator('[data-results-partition="final_test"] [data-result-item]').evaluate_all('ns => ns.map(n => n.dataset.resultItem)')
@@ -432,10 +434,10 @@ def test_a11y3_wp_b5_views_in_every_theme_and_at_420px(open_panel, views, theme,
     panel.view_data('evidence', views['evidence.diagnostics'])
     no_sideways(page)
     charts_unscaled(page)
-    # The confusion counts keep their column as a label when the table turns into cards.
-    tp = page.locator('[data-confusion="development"] td[data-cell="tp"]').first
+    # The confusion counts keep their column as a label (v0.3: a 2 x 2 grid, each cell named).
+    tp = page.locator('[data-confusion="development"] [data-cell="tp"]').first
     assert tp.get_attribute('data-label') == 'acted on'
-    assert page.locator('[data-confusion="final"] td[data-cell="fn"]').first.get_attribute('data-label') == 'not acted on'
+    assert page.locator('[data-confusion="final"] [data-cell="fn"]').first.get_attribute('data-label') == 'not acted on'
     shot(page, f'evidence-{theme}-{width}')
     page.locator('[role="tab"][data-tab="whatif"]').click()
     panel.view_data('scenario', views['scenario'])

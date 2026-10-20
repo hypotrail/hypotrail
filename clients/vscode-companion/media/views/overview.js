@@ -226,39 +226,66 @@
     }
   }
 
-  function stepItem(step, model, currentId) {
+  /**
+   * v0.3 (WP-E2): one step of the journey bar. The segment's tint is the status (done,
+   * now, reopened, sealed, to do); the mark's words are never colour alone (OV-4).
+   */
+  function stepItem(step, model, currentId, momentTitle) {
     const c = copy();
     const status = displayStatus(step, model);
     const current = currentId === step.id;
     const label = subLabel(step, status);
-    return el('li', { className: `ov-step ov-step-${status}`, 'data-step': step.id, 'data-status': step.status,
-      'data-display-status': status, 'data-nav': `step:${step.id}`, 'aria-current': current ? 'step' : null }, [
-      el('span', { className: 'ov-mark', 'aria-hidden': 'true', text: c.marks[status] }),
+    const tone = status === 'done' ? 'ht-j-done' : current ? 'ht-j-now'
+      : status === 'reopened' || status === 'needs_reconfirmation' ? 'ht-j-reopened'
+        : step.id === 'final_test' ? 'ht-j-seal' : 'ht-j-todo';
+    return el('li', { className: `ov-step ov-step-${status} ${tone}`, 'data-step': step.id, 'data-status': step.status,
+      'data-display-status': status, 'data-nav': `step:${step.id}`, 'aria-current': current ? 'step' : null,
+      'data-moment': momentTitle || null, title: momentTitle || null }, [
       el('span', { className: 'sr-only', 'data-mark-text': true, text: `${c.markText[status]}: ` }),
-      el('span', { className: 'ov-step-title', text: str(step.title) }),
+      el('strong', { className: 'ov-step-title' }, [el('span', { className: 'ov-mark', 'aria-hidden': 'true', text: `${c.marks[status]} ` }),
+        str(step.title)]),
       label ? el('span', { className: 'ov-sub', 'data-sub': true, text: label }) : null,
     ]);
   }
 
-  function studyMap(model) {
+  /** The journey bar (replaces the four-column map): every plan step in plan order. */
+  function journey(model, title) {
     const c = copy();
     const plan = arr(model.plan);
-    const byId = Object.fromEntries(plan.map(s => [s.id, s]));
-    const moments = arr(model.moments);
+    const momentOf = {};
+    for (const m of arr(model.moments)) for (const sid of arr(m.steps)) momentOf[sid] = str(m.title);
     const currentId = currentStepId(model);
-    let body;
-    if (moments.length) {
-      body = el('div', { className: 'ov-map', 'data-map': true }, moments.map(m => {
-        const id = `ov-moment-${str(m.id)}`;
-        return el('section', { className: 'ov-moment', 'data-moment': str(m.id), 'aria-labelledby': id }, [
-          el('h3', { id, className: 'ov-moment-title', text: str(m.title) }),
-          el('ol', { className: 'ov-steps' }, arr(m.steps).filter(sid => byId[sid]).map(sid => stepItem(byId[sid], model, currentId))),
-        ]);
-      }));
-    } else {
-      body = el('ol', { className: 'ov-steps ov-steps-flat', 'data-map': true }, plan.map(s => stepItem(s, model, currentId)));
-    }
-    return section('ov-map', c.mapTitle, [body], { 'data-ov': 'map' });
+    const done = plan.filter(s => s.status === 'done').length;
+    const statuses = plan.map(s => displayStatus(s, model));
+    const reopened = statuses.some(st => st === 'reopened' || st === 'needs_reconfirmation');
+    return section('ov-map', title, [
+      el('p', { className: 'ht-sub', 'data-steps-done': `${done}/${plan.length}`, text: c.stepsDone(String(done), String(plan.length)) }),
+      el('ol', { className: 'ht-journey ov-steps', 'data-map': true },
+        plan.map(s => stepItem(s, model, currentId, momentOf[s.id] || null))),
+      reopened ? el('p', { className: 'ht-note ht-note-warn', 'data-reopened-why': true, text: c.reopenedWhy }) : null,
+    ], { 'data-ov': 'map' });
+  }
+
+  function studyMap(model) {
+    return journey(model, copy().mapTitle);
+  }
+
+  /**
+   * v0.3 (owner addition, I1): "How this panel works": what the panel is, what it never
+   * does, and one line per tab (the same lead sentence each tab shows at its top).
+   */
+  function panelGuide(model, ctx) {
+    const g = copy().guide;
+    const leads = HT.copy.core.tabLeads || {};
+    const tabs = ctx.atLeast('v1') ? HT.TAB_ORDER.filter(t => HT.registered().some(v => v.tab === t && ctx.atLeast(v.stage))) : [];
+    return el('section', { className: 'card ov-guide', 'aria-labelledby': 'ov-guide-title', 'data-ov': 'guide' }, [
+      el('span', { className: 'ht-cap', text: g.eyebrow }),
+      el('h2', { id: 'ov-guide-title', text: g.title }),
+      el('p', { text: g.lead }),
+      el('ul', { className: 'ov-guide-list' }, g.points.map(t => el('li', { text: t }))),
+      tabs.length ? ctx.components.why([el('dl', { className: 'ov-guide-tabs' }, tabs.flatMap(t => [
+        el('dt', { text: HT.copy.core.tabs[t] }), el('dd', { text: leads[t] || '' })]))], g.tabsLabel) : null,
+    ]);
   }
 
   // --- Where we are (§6.1.1) ----------------------------------------------------------------
@@ -374,7 +401,7 @@
     const decided = arr(model.plan).filter(s => DECISIONS.includes(s.id) && model.decisions && model.decisions[s.id]
       && ['confirmed', 'reconfirm_required'].includes(model.decisions[s.id].status));
     const rows = [];
-    if (goal) rows.push(el('div', { className: 'ov-recap-row', 'data-recap-line': 'Goal' }, [el('dt', { text: c.goal }), el('dd', { text: goal })]));
+    if (goal) rows.push(el('div', { className: 'ov-recap-row', 'data-recap-line': 'Goal' }, [el('dt', { text: c.goal }), el('dd', {}, [HT.components.engineText(goal)])]));
     rows.push(el('div', { className: 'ov-recap-row', 'data-recap-line': 'Decided' }, [
       el('dt', { text: c.decided }),
       el('dd', {}, [decided.length ? el('ul', { className: 'ov-decided', 'data-decided': true }, decided.map(s => {
@@ -414,9 +441,9 @@
       if (item.kind === 'result_replaced' || item.kind === 'result_added') group = 'evaluated';
       // Two-layer copy: the panel's words, else the engine's junior variant (WP-A7), else
       // the engine text when it is written for the junior; never an `agent` text.
-      const text = J().digestText(item, task, item.noteId ? notes[item.noteId] : null) || str(item.juniorText)
-        || (item.audience === 'agent' ? J().digestFallback : str(item.text));
-      return { item, group, text };
+      const own = J().digestText(item, task, item.noteId ? notes[item.noteId] : null);
+      const text = own || str(item.juniorText) || (item.audience === 'agent' ? J().digestFallback : str(item.text));
+      return { item, group, text, fromEngine: !own && text !== J().digestFallback };
     });
     // Newest first inside each group; groups in a fixed order (needs you first).
     const order = J().GROUP_ORDER;
@@ -426,12 +453,12 @@
 
   function digestItem(row) {
     const c = copy();
-    const { item, group, text } = row;
+    const { item, group, text, fromEngine } = row;
     const kept = Array.isArray(item.refit) && item.refit.length === 0 && arr(item.keptFits).length > 0;
     return el('li', { className: 'ov-digest-item', 'data-digest-item': str(item.kind), 'data-group': group, 'data-text': text,
       title: str(item.text) || null }, [
       el('span', { className: `ht-tag ht-tag-${group}`, 'data-chip': group, text: J().groups[group] }), ' ',
-      el('span', { 'data-digest-text': true, text }),
+      fromEngine ? HT.components.engineText(text, { attrs: { 'data-digest-text': true } }) : el('span', { 'data-digest-text': true, text }),
       kept ? [' ', el('strong', { 'data-kept-fits': true, text: c.keptFits })] : null,
     ]);
   }
@@ -509,7 +536,8 @@
     for (const i of arr(nyd.top)) {
       if (seen.has(i.id)) continue;
       seen.add(i.id);
-      items.push({ id: i.id, text: i.juniorText || J().limitText[i.id] || J().limitFallback(i.id), engine: i.text, audience: i.audience });
+      items.push({ id: i.id, text: i.juniorText || J().limitText[i.id] || J().limitFallback(i.id), engine: i.text, audience: i.audience,
+        fromEngine: Boolean(i.juniorText) });
     }
     for (const id of arr(nyd.more)) {
       if (seen.has(id)) continue;
@@ -532,7 +560,8 @@
         navUsed.add(i.id);
         return el('li', { 'data-nyd': i.id, 'data-severity': i.severity, 'data-nav': nav }, [
           el('span', { className: `ht-tag ht-sev-${i.severity}`, 'data-chip': i.severity, text: J().severityLabel[i.severity] }), ' ',
-          el('span', { 'data-limit-text': true, text: i.text }),
+          i.fromEngine ? HT.components.engineText(i.text, { attrs: { 'data-limit-text': true } })
+            : el('span', { 'data-limit-text': true, text: i.text }),
         ]);
       })),
       details(c.limitsDetails, items.filter(i => i.engine && i.engine !== i.text)
@@ -591,7 +620,9 @@
         el('div', {}, [
           el('span', { className: `ht-status ${a.name === 'workbench' ? 'ht-st-neutral' : STATUS_CLASS[a.status] || 'ht-st-stale'}`,
             'data-status-chip': status, text: c.statusChip[status] || status }), ' ',
-          el('span', { className: 'ov-deliverable-status', 'data-message': true, title: a.message || null, text }),
+          a.juniorMessage && text === a.juniorMessage
+            ? HT.components.engineText(text, { attrs: { className: 'ov-deliverable-status', 'data-message': true, title: a.message || null } })
+            : el('span', { className: 'ov-deliverable-status', 'data-message': true, title: a.message || null, text }),
         ]),
       ]),
       el('div', { className: 'ov-deliverable-actions' }, buttons),
@@ -781,7 +812,7 @@
         navUsed.add(a.id);
         return el('li', { 'data-nav': nav, 'data-health-alert': a.id }, [
           el('span', { className: 'ht-tag ht-sev-blocking', text: J().severityLabel.blocking }), ' ',
-          a.juniorText || J().limitText[a.id] || J().limitFallback(a.id)]);
+          a.juniorText ? HT.components.engineText(a.juniorText) : J().limitText[a.id] || J().limitFallback(a.id)]);
       })));
     }
     return section('ov-health', c.healthTitle, children, { 'data-ov': 'health', 'data-nav': 'limit:health' });
@@ -790,16 +821,13 @@
   // --- registration -------------------------------------------------------------------------
 
   function journeyV0(model) {
-    const c = copy();
-    const currentId = currentStepId(model);
-    return section('ov-map', c.journeyTitle, [
-      el('ol', { className: 'ov-steps ov-steps-flat', 'data-map': true }, arr(model.plan).map(s => stepItem(s, model, currentId))),
-    ], { 'data-ov': 'map' });
+    return journey(model, copy().journeyTitle);
   }
 
   function renderV0(model, ctx) {
     const navUsed = new Set();
-    return [hero(model, ctx), journeyV0(model), whereWeAre(model, ctx), limits(model, navUsed), deliverables(model, ctx)];
+    return [hero(model, ctx), journeyV0(model), whereWeAre(model, ctx), limits(model, navUsed), deliverables(model, ctx),
+      panelGuide(model, ctx)];
   }
 
   function renderV1(model, ctx) {
@@ -813,6 +841,7 @@
       gate(el('div', { className: 'ov-grid' }, [sinceSection(model, ctx), limits(model, navUsed)])),
       gate(whereWeAre(model, ctx)),
       gate(deliverables(model, ctx)),
+      panelGuide(model, ctx),
     ];
   }
 

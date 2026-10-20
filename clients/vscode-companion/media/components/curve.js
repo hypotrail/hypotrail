@@ -13,14 +13,26 @@
 // cited numbers. Returns the figure element.
 (function (HT) {
   'use strict';
-  const W = 380;
-  const H = 266;
+  // v0.3 (WP-E2): the width follows the container (ResizeObserver, values-table.js `fluid`),
+  // from 240 to 720 px; one SVG unit stays one CSS pixel, so the 11 px text is never scaled.
+  const W0 = 380;
   // WP-E1 (R26): the y-axis label is written horizontally above the axis, so it is never
   // clipped by the viewBox nor overlapped by the tick texts (it was rotated at x = 12).
   const M = { left: 52, right: 26, top: 28, bottom: 44 };
 
   function curve(container, { title, points, xDomain = [0, 1], yDomain = [0, 1], xTicks = [], yTicks = [], xLabel = '',
-    yLabel = '', diagonal = null, marks = [], columns, rows }) {
+    yLabel = '', diagonal = null, marks = [], columns, rows, legend = [] }) {
+    const draw = W => draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks });
+    const host = HT.components.fluid(draw, W0);
+    const svg = host.firstChild;
+    const node = HT.components.figure(container, { title, chart: svg, columns, rows, legend });
+    node.replaceChild(host, svg);
+    host.appendChild(svg);
+    return node;
+  }
+
+  function draw1(W, { points, xDomain, yDomain, xTicks, yTicks, xLabel, yLabel, diagonal, marks }) {
+    const H = Math.round(Math.max(220, Math.min(320, W * 0.7)));
     const pw = W - M.left - M.right;
     const ph = H - M.top - M.bottom;
     const clamp = (v, [a, b]) => Math.min(b, Math.max(a, v));
@@ -69,7 +81,7 @@
         p.label ? HT.svg('text', { x: x(p.x) + 7, y: y(p.y) + 15, class: 'ht-value', text: p.label }) : null,
       ])),
     ]);
-    return HT.components.figure(container, { title, chart, columns, rows });
+    return chart;
   }
 
   HT.components.curve = curve;

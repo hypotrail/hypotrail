@@ -15,13 +15,13 @@
   "ok": true,
   "study": "/studies/auto mpg",
   "action": "run",
-  "request_id": "a24",
+  "request_id": "a25",
   "replayed": false,
-  "revision": 38,
+  "revision": 40,
   "activity": "diag.regression",
-  "execution_id": "e_952532c3c79c0a600a6ca16b",
+  "execution_id": "e_bad9a6f0e28076da5c45d47f",
   "status": "promoted",
-  "result_id": "110a3f6fb9e6885c6ee9b797f7ac89ac7c3d77884c4fac52d89743f5c3f0abd1",
+  "result_id": "159cc9f5a6cfae2514d781d427e057bd1fb172d4f4e826eab9027f4831190473",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1253,7 +1253,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "9d01527525d629bf9e7a9854f086c3f335393a00f703228911bc04c1ac35a974"
+     "predictions": "31ce55f2af0058f1655eccb972ffd586636b3a5fee1b31f3629cca490f18e9f5"
     },
     "fit.variant": {
      "errors": {
@@ -2461,25 +2461,25 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "1c4f001d3ee79b71a28eade4c2f340a557e61a60cfc3975468a9c96b5f74981d"
+     "predictions": "eb435770d2c35f438bfab0b190670f1b8d2c3372ee4a9585e4169a752539fb34"
     }
    },
    "coefficient_rows": 222,
    "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence."
   },
   "result": {
-   "execution_id": "e_952532c3c79c0a600a6ca16b",
+   "execution_id": "e_bad9a6f0e28076da5c45d47f",
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "110a3f6fb9e6885c6ee9b797f7ac89ac7c3d77884c4fac52d89743f5c3f0abd1",
-   "input_key": "b76bb676d9094e83be411a280d4ab9708cfb8f63a870486f5d569e83abed91cf",
+   "result_id": "159cc9f5a6cfae2514d781d427e057bd1fb172d4f4e826eab9027f4831190473",
+   "input_key": "cf2af573c03b892f388b25cf1983feb64c5452f334b7163bfbc9ced02575158b",
    "reason": null,
-   "started_revision": 37,
+   "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_4f9e9c32cbcd45adbd48e5237ed96f81",
-    "x_108b9111e4db4535be2fb3bd735fe6c9"
+    "x_ed2c30d02bd54e3692bc1675275b31ca",
+    "x_6c9ea768c27743cd92f00957a54f1b12"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2488,16 +2488,16 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 38,
-    "last_ok_revision": 38,
+    "revision": 40,
+    "last_ok_revision": 40,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 38,
-    "last_ok_revision": 38,
+    "revision": 40,
+    "last_ok_revision": 40,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
    },

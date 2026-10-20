@@ -58,7 +58,7 @@
             "v3"
           ],
           "default": "v0",
-          "description": "Which feature set of the panel is active; each stage includes the earlier ones. v0: recap, plan, deliverables, confirm or withdraw a proposal in your own words. v1 to v3 are experimental (ADR 0004). HYPOTRAIL_COMPANION_STAGE overrides it."
+          "description": "Which feature set of the panel is active; each stage includes the earlier ones. v0: recap, plan, deliverables; decisions are made in the chat. v1 to v3 are experimental (ADR 0004). HYPOTRAIL_COMPANION_STAGE overrides it."
         },
         "hypotrail.companion.learningLayer": {
           "type": "boolean",
@@ -69,6 +69,16 @@
           "type": "boolean",
           "default": false,
           "description": "Open the panel read-only: no control that writes to the study is shown."
+        },
+        "hypotrail.companion.language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "fr"
+          ],
+          "default": "auto",
+          "description": "Language of the panel's own text. auto follows the study language; en is English, fr is French. The header's EN | FR toggle overrides it for this panel only. Nothing is written to the study."
         }
       }
     }

@@ -67,7 +67,7 @@ EDA_CATALOG = {task: tuple(a for a in act.task_activities(task) if a in act.EDA)
                for task in (st.BINARY, st.REGRESSION)}
 # The EDA activities that read the development rows (structure only, no target); every
 # other one reads the training rows.
-DEVELOPMENT_EDA = (act.QUALITY,)
+DEVELOPMENT_EDA = act.STRUCTURAL_EDA
 # The roles of the columns each per-column activity accepts (as ``run`` would accept them).
 PER_COLUMN_ROLES = {act.RATE_BY: ('feature',), act.MEAN_BY: ('feature', 'time'),
                     act.DISTRIBUTION: act.DISTRIBUTION_ROLES}

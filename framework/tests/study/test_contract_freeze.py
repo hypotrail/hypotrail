@@ -50,7 +50,9 @@ SUMMARY_PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'changed',
                         # v0.2b (WP-B1): the trial count.
                         'trials',
                         # v0.2b (WP-B6a): the scenario defaults, values only.
-                        'scenario_defaults')
+                        'scenario_defaults',
+                        # v0.3 (WP-E2, R21): the study language.
+                        'language')
 SUMMARY_NOTE_KEYS = ('note_id', 'decision_id', 'status', 'user_words', 'resolution_words')
 SUMMARY_HOLD_KEYS = ('decision_id', 'status', 'notes')
 # Post-v0.1 fixes (D5): a hold may be withdrawn in the junior's words.
@@ -762,7 +764,7 @@ def test_wp_a4_contract_constants():
     assert governance.CRITERION_KEYS == {'binary': ('metric', 'min_points'),
                                          'regression': ('metric', 'min_share')}
     assert act.SHARED_ACTIVITIES == ('eda.distribution', 'eda.quality',
-                                     'eda.single_feature_signal')
+                                     'eda.single_feature_signal', 'eda.correlation')
     keys = (set(FULL_DECISION_IDS) | set(FULL_STEP_IDS) | set(DATA_PAYLOAD_KEYS)
             | set(DATA_VARIABLE_KEYS) | set(PREPROCESSING_KEYS) | set(CRITERION_VIEW_KEYS)
             | set(EDA_LOOKS_KEYS) | set(act.SHARED_ACTIVITIES)

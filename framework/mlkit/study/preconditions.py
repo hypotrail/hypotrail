@@ -221,7 +221,7 @@ def final_test_missing(state: Mapping, value: Any = None) -> list[dict]:
 ACTIVITY_DECISIONS = ('prediction_time', 'feature_availability', 'split')
 # v0.2a (WP-A4): the structural quality overview reads the development rows without the
 # target, so it needs no decision and no split (it can run right after ``init``).
-NO_REQUIREMENT_ACTIVITIES = ('eda.quality',)
+NO_REQUIREMENT_ACTIVITIES = ('eda.quality', 'eda.correlation')
 # The fits (and what reads them) need the success criterion and the preprocessing when the
 # study has them: the criterion is fixed before any model is seen, and the models apply the
 # preprocessing.
