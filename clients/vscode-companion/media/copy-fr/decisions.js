@@ -90,7 +90,10 @@
       delegated_default: "Vous avez confié ce choix à la valeur par défaut recommandée par l'assistant, dans le chat.",
       explicit: "Enregistré avec vos propres mots avant que la règle guidée ne nomme les types de réponse.",
     },
-    channelWords: channel => (channel === 'webview' ? 'dans ce panneau' : channel === 'chat' ? 'dans le chat' : channel),
+    channelWords: channel => (channel === 'webview' ? 'dans ce panneau' : channel === 'chat' ? 'dans le chat'
+      : channel === 'choice' ? 'choisie comme option dans le chat' : channel),
+    // v0.3 (WP-B, R27): a trade-off confirmed without a reason.
+    noReason: 'aucune raison donnée',
     concern: "Point soulevé par l'agent avant votre confirmation, que vous avez maintenu : ",
     correction: 'Votre correction ultérieure, avec vos mots : ',
     corrections: 'Corrections avec vos mots',

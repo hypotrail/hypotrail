@@ -1,0 +1,401 @@
+"""The success criterion as a metric and a minimum (v0.3, WP-C; remarks R18 and R19).
+
+``governance`` (whose source is part of every fit's code fingerprint, so editing it would
+make the results of existing studies stale) keeps the v0.2 rules: a binary criterion
+``{"metric": "precision_gain", "min_points": p}``, a regression one ``{"metric":
+"mae_reduction", "min_share": f}``. This module widens them without touching the fits:
+
+* :data:`METRICS_BY_TASK`: a binary criterion may also name ``recall_gain``, the recall of
+  the chosen model minus the baseline's at the adopted rule, in points. With a fixed number
+  of rows acted on (a capacity or a share), precision = TP / k and recall = TP / P both move
+  with the true positives only, so the two metrics (and the lift) rank configurations
+  identically; with a threshold they differ, and the junior chooses;
+* :func:`check` validates a value (``governance.ValueProblem``);
+* :func:`assess` is ``governance.assess`` with the metric the value names: for
+  ``recall_gain`` the gain, its paired interval and the status are read from the recall
+  deltas the policy evaluation (and the final-test evaluation) already store;
+* :func:`options` is the ``next_action.criterion_options`` payload: the metric options in
+  words, the default by action type, the reference value (the base rate of the development
+  rows, read from the split result: the stratification already read it) and an illustrative
+  translation of candidate minimums per 1,000 actions on the development rows.
+
+AUC and average precision (AP) judge the ranking over every cut-off: they are diagnostics,
+never a business criterion. An expected value needs a cost and a value per action; no case
+declares them, so it is listed as not available. Every value recorded before v0.3 names a
+metric of :data:`METRICS_BY_TASK` and stays valid as it is.
+
+Pure: no file, no pandas, numpy, or scikit-learn.
+"""
+from __future__ import annotations
+
+import copy
+from typing import Any, Callable, Mapping
+
+from . import governance
+
+BINARY, REGRESSION = 'binary', 'regression'
+EN, FR = 'en', 'fr'
+METRICS_BY_TASK = {BINARY: ('precision_gain', 'recall_gain'), REGRESSION: ('mae_reduction',)}
+DEFAULT_METRIC = dict(governance.CRITERION_METRICS)
+# The policy evaluation's metric each binary criterion metric reads.
+DELTA_METRIC = {'precision_gain': 'precision', 'recall_gain': 'recall'}
+# Candidate minimums shown as options (the junior may give any other).
+CANDIDATE_POINTS = (2, 5, 10)
+CANDIDATE_SHARES = (0.05, 0.1, 0.2)
+SCALE = 1000
+OPTIONS_KEYS = ('task', 'action', 'default_metric', 'metrics', 'not_criteria', 'equivalence',
+                'reference', 'candidates', 'scale', 'illustrative', 'text')
+METRIC_KEYS = ('metric', 'value_key', 'unit', 'default', 'term', 'explanation')
+
+
+def _t(lang: str, en: str, fr: str) -> str:
+    return fr if lang == FR else en
+
+
+def _num(x: float, lang: str, digits: int = 1) -> str:
+    text = f'{x:.{digits}f}'
+    return text.replace('.', ',') if lang == FR else text
+
+
+def _int(n: int, lang: str) -> str:
+    text = f'{n:,}'
+    return text.replace(',', ' ') if lang == FR else text
+
+
+# --- validation and assessment -------------------------------------------------------------
+
+def check(value: Any, task: str) -> None:
+    """Refuse a criterion value that does not fit the task (``governance.ValueProblem``)."""
+    if task == BINARY and isinstance(value, Mapping) and value.get('metric') == 'recall_gain':
+        governance.check_criterion(dict(value, metric='precision_gain'), task)
+        return
+    try:
+        governance.check_criterion(value, task)
+    except governance.ValueProblem as exc:
+        if task == BINARY:
+            raise governance.ValueProblem(
+                'success_criterion is {"metric": "precision_gain" | "recall_gain", '
+                '"min_points": p}: the minimum gain of that metric over the baseline at the '
+                'adopted rule, in percentage points.', **dict(exc.details,
+                                                             metrics=list(METRICS_BY_TASK[task])))
+        raise governance.ValueProblem(exc.message, **dict(exc.details,
+                                                          metrics=list(METRICS_BY_TASK[task])))
+
+
+def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict | None:
+    """``governance.assess`` with the metric the confirmed value names. For ``recall_gain``
+    the development gain is the recall delta of the same rule and model, and the final-test
+    criterion is read from the recall delta of the final evaluation."""
+    out = governance.assess(view, canonical)
+    if out is None:
+        return None
+    value = out.get('value')
+    metric = value.get('metric') if isinstance(value, Mapping) else None
+    if metric not in DELTA_METRIC or metric == 'precision_gain':
+        return out
+    out['metric'] = metric
+    results = view.get('results') or {}
+    out.update(gain=None, low=None, high=None, interval_includes_zero=None,
+               status='not_assessed')
+    item = results.get('policy.evaluation')
+    if governance._citable(item) and out.get('rule'):
+        rules = item['values'].get('rules') or {}
+        raw = next((r for r in rules if canonical(r) == out['rule']), None)
+        delta = (((rules.get(raw) or {}).get('deltas') or {}).get(out.get('model')) or {}) \
+            .get(DELTA_METRIC[metric]) if raw is not None else None
+        if isinstance(delta, Mapping) and isinstance(delta.get('point'), (int, float)):
+            out.update(gain=100 * delta['point'],
+                       low=100 * delta['low'] if delta.get('low') is not None else None,
+                       high=100 * delta['high'] if delta.get('high') is not None else None)
+    else:
+        out.update(result_id=None)
+    if out['gain'] is not None:
+        out['status'], out['interval_includes_zero'] = _status(out['gain'], out['low'],
+                                                               out['high'], out['minimum'])
+    final = _final(results, metric)
+    out['final_test'] = final if isinstance(value, Mapping) else None
+    judged_on, judged = 'development', out['status']
+    if final and final.get('status') and governance._same_configuration(results, out,
+                                                                        canonical):
+        judged_on, judged = 'final_test', final['status']
+    out['judged_on'], out['judged_status'] = judged_on, judged
+    out['contradicts_verdict'] = out.get('verdict') in governance.ADOPT_VERDICTS \
+        and judged in ('not_met', 'uncertain')
+    return out
+
+
+def _status(gain, low, high, minimum) -> tuple[str, bool | None]:
+    """As ``fit.criterion_status`` (kept apart: this module stays free of numpy)."""
+    if gain is None or minimum is None:
+        return 'not_assessed', None
+    includes = low is not None and high is not None and low <= 0 <= high
+    if gain < minimum - 1e-12:
+        return 'not_met', includes
+    return ('uncertain' if includes else 'met'), includes
+
+
+def _final(results: Mapping, metric: str) -> dict | None:
+    item = results.get('final_test.evaluation')
+    if not governance._citable(item):
+        return None
+    values = item['values']
+    crit = values.get('criterion') if isinstance(values.get('criterion'), Mapping) else {}
+    delta = ((values.get('deltas') or {}).get(values.get('model')) or {}).get(
+        DELTA_METRIC[metric])
+    if not isinstance(delta, Mapping) or not isinstance(delta.get('point'), (int, float)):
+        return None
+    gain = 100 * delta['point']
+    low = 100 * delta['low'] if delta.get('low') is not None else None
+    high = 100 * delta['high'] if delta.get('high') is not None else None
+    status, includes = _status(gain, low, high, crit.get('minimum'))
+    return {'status': status, 'gain': gain, 'low': low, 'high': high,
+            'minimum': crit.get('minimum'), 'unit': 'percentage points',
+            'interval_includes_zero': includes, 'result_id': item['result_id']}
+
+
+# --- words ---------------------------------------------------------------------------------
+
+def value_words(value: Any, lang: str = EN, cv: bool = False) -> str | None:
+    """A criterion value in words, naming its metric (a value recorded before v0.3 reads
+    the same way: its metric is named)."""
+    if not isinstance(value, Mapping):
+        return None
+    metric = value.get('metric')
+    if metric in DELTA_METRIC and isinstance(value.get('min_points'), (int, float)):
+        name = {'precision_gain': _t(lang, 'precision', 'précision'),
+                'recall_gain': _t(lang, 'recall', 'rappel')}[metric]
+        points = _num(float(value['min_points']), lang, 1).rstrip('0').rstrip('.,')
+        return _t(lang, f'{name} gain over the baseline of at least {points} points',
+                  f'gain de {name} sur le modèle de référence d\'au moins {points} points')
+    if metric == 'mae_reduction' and isinstance(value.get('min_share'), (int, float)):
+        pct = round(100 * value['min_share'])
+        error = (_t(lang, 'out-of-fold error', 'erreur hors pli') if cv
+                 else _t(lang, 'validation error', 'erreur de validation'))
+        return _t(lang, f'{error} at least {pct}% below the mean baseline',
+                  f'{error} au moins {pct} % sous celle de la moyenne de référence')
+    return None
+
+
+# --- the options of the criterion question (R18, R19) -------------------------------------
+
+def action_of(view: Mapping) -> str:
+    """The action type the criterion is fixed for: ``share`` (the case's scenario share),
+    ``capacity``, ``threshold`` (from the adopted or proposed policy), or ``not_decided``."""
+    decisions = view.get('decisions') or {}
+    candidates = [(decisions.get('policy') or {}).get('value')]
+    candidates += [p.get('value') for p in view.get('open_proposals') or []
+                   if p.get('decision_id') == 'policy']
+    for c in candidates:
+        if isinstance(c, str):
+            kind = c.split('@')[0].partition(':')[0]
+            if kind in ('share', 'capacity', 'threshold'):
+                return kind
+    share = ((view.get('scenario_defaults') or {}).get('capacity_share') or {})
+    if isinstance(share, Mapping) and share.get('value') is not None:
+        return 'share'
+    return 'not_decided'
+
+
+def _scenario_share(view: Mapping) -> float | None:
+    share = ((view.get('scenario_defaults') or {}).get('capacity_share') or {})
+    value = share.get('value') if isinstance(share, Mapping) else None
+    return float(value) if isinstance(value, (int, float)) else None
+
+
+def _reference(view: Mapping, lang: str, cv: bool) -> dict | None:
+    """The base rate of the development rows (cross-validation) or of the training rows,
+    from the current split result (its stratification read the target)."""
+    item = (view.get('results') or {}).get('split')
+    if not governance._citable(item):
+        return None
+    part = ((item['values'].get('partitions') or {}).get('train') or {})
+    rate, n = part.get('rate'), part.get('n_rows')
+    if not isinstance(rate, (int, float)) or not isinstance(n, int):
+        return None
+    pct = _num(100 * rate, lang)
+    rows = (_t(lang, 'development rows', "lignes de l'échantillon de développement") if cv
+            else _t(lang, 'training rows', "lignes du jeu d'entraînement"))
+    return {'what': 'base_rate', 'value': rate, 'percent': round(100 * rate, 1), 'n_rows': n,
+            'rows': 'development' if cv else 'training', 'result_id': item['result_id'],
+            'text': _t(lang, f'Without a model, {pct}% of the {_int(n, lang)} {rows} are '
+                             f'positive: acting on rows at random finds positives at that rate.',
+                       f'Sans modèle, {pct} % des {_int(n, lang)} {rows} sont positives : '
+                       f'agir sur des lignes au hasard trouve des positifs à ce taux.')}
+
+
+def _metric_items(task: str, action: str, lang: str) -> list[dict]:
+    if task == REGRESSION:
+        return [{'metric': 'mae_reduction', 'value_key': 'min_share', 'unit': 'share',
+                 'default': True,
+                 'term': _t(lang, 'Mean absolute error (MAE)', 'erreur absolue moyenne (MAE)'),
+                 'explanation': _t(
+                     lang, 'The average size of an error, in the unit of the target; the '
+                           'criterion is the share of the mean baseline\'s MAE the model must '
+                           'remove.',
+                     'La taille moyenne d\'une erreur, dans l\'unité de la cible ; le critère '
+                     'est la part de la MAE de la moyenne de référence que le modèle doit '
+                     'retirer.')}]
+    threshold = action == 'threshold'
+    return [
+        {'metric': 'precision_gain', 'value_key': 'min_points', 'unit': 'percentage points',
+         'default': True,
+         'term': _t(lang, 'Precision', 'précision'),
+         'explanation': _t(
+             lang, 'Among the rows acted on, the share that turn out positive: it counts the '
+                   'actions that were not wasted. The gain is read in points over the baseline, '
+                   'whose precision is the base rate.',
+             'Parmi les lignes sur lesquelles on agit, la part qui se révèle positive : elle '
+             'compte les actions qui ne sont pas perdues. Le gain se lit en points au-dessus du '
+             'modèle de référence, dont la précision est le taux de base.')},
+        {'metric': 'recall_gain', 'value_key': 'min_points', 'unit': 'percentage points',
+         'default': False,
+         'term': _t(lang, 'Recall', 'rappel'),
+         'explanation': _t(
+             lang, 'Among all positive rows, the share the rule reaches: it counts the positives '
+                   'not missed. ' + ('With a threshold it differs from precision: choose the one '
+                                     'that matters more for the action.' if threshold else
+                                     'At a fixed number of actions it ranks configurations as '
+                                     'precision does.'),
+             'Parmi toutes les lignes positives, la part que la règle atteint : il compte les '
+             'positifs qu\'on ne manque pas. ' + (
+                 'Avec un seuil, il diffère de la précision : choisis celui qui compte le plus '
+                 'pour l\'action.' if threshold else
+                 'À nombre d\'actions fixé, il classe les configurations comme la précision.'))},
+    ]
+
+
+def _not_criteria(lang: str, task: str) -> list[dict]:
+    out = [{'metric': 'expected_value', 'available': False,
+            'why': _t(lang, 'An expected value needs a cost and a value per action; this case '
+                            'declares none.',
+                      'Une valeur attendue demande un coût et une valeur par action ; ce cas '
+                      'n\'en déclare aucun.')}]
+    if task == BINARY:
+        out += [{'metric': 'auc', 'available': False,
+                 'why': _t(lang, 'AUC judges the ranking over every cut-off, not the result of '
+                                 'the rule you adopt: a ranking diagnostic, not a business '
+                                 'criterion.',
+                           "L'AUC juge le classement sur tous les seuils, pas le résultat de la "
+                           'règle adoptée : un diagnostic du classement, pas un critère '
+                           'métier.')},
+                {'metric': 'average_precision', 'available': False,
+                 'why': _t(lang, 'Average precision (AP) also judges the whole ranking: a '
+                                 'diagnostic, not a business criterion.',
+                           "L'average precision (AP, aire sous la courbe précision-rappel) "
+                           'juge aussi tout le classement : un diagnostic, pas un critère '
+                           'métier.')}]
+    return out
+
+
+def _candidates(task: str, reference: dict | None, share: float | None, lang: str,
+                unit: str | None) -> list[dict]:
+    out = []
+    if task == REGRESSION:
+        for f in CANDIDATE_SHARES:
+            pct = round(100 * f)
+            u = f' {unit}' if unit else ''
+            out.append({'value': {'metric': 'mae_reduction', 'min_share': f},
+                        'per_1000': None,
+                        'text': _t(lang, f'{pct}% less error: if the mean baseline errs by E{u} '
+                                         f'on average, the model must err by at most '
+                                         f'{_num(1 - f, lang, 2)} E{u}.',
+                                   f'{pct} % d\'erreur en moins : si la moyenne de référence se '
+                                   f'trompe de E{u} en moyenne, le modèle doit se tromper d\'au '
+                                   f'plus {_num(1 - f, lang, 2)} E{u}.')})
+        return out
+    rate = reference['value'] if reference else None
+    for p in CANDIDATE_POINTS:
+        item = {'value': {'metric': 'precision_gain', 'min_points': p}, 'per_1000': None,
+                'text': None}
+        if rate is not None and rate + p / 100 <= 1:
+            base = round(SCALE * rate)
+            with_min = round(SCALE * (rate + p / 100))
+            item['per_1000'] = {'reference': base, 'with_minimum': with_min,
+                                'extra': with_min - base}
+            item['text'] = _t(
+                lang, f'+{p} points: acting on {_int(SCALE, lang)} rows, the baseline finds '
+                      f'about {_int(base, lang)} positives, a model at the minimum about '
+                      f'{_int(with_min, lang)}, so about {_int(with_min - base, lang)} more.',
+                f'+{p} points : en agissant sur {_int(SCALE, lang)} lignes, le modèle de '
+                f'référence trouve environ {_int(base, lang)} positifs, un modèle au minimum '
+                f'environ {_int(with_min, lang)}, soit environ {_int(with_min - base, lang)} de '
+                f'plus.')
+        else:
+            item['text'] = _t(lang, f'+{p} points of precision over the baseline.',
+                              f'+{p} points de précision au-dessus du modèle de référence.')
+        out.append(item)
+    return out
+
+
+def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
+    """The ``criterion_options`` of ``next_action`` at the success criterion (R18, R19)."""
+    from . import texts
+    task = view.get('task') or BINARY
+    cv = texts.scheme_of(view) == texts.CROSS_VALIDATION
+    action = action_of(view) if task == BINARY else 'model_choice'
+    reference = _reference(view, lang, cv) if task == BINARY else None
+    share = _scenario_share(view)
+    metrics = _metric_items(task, action, lang)
+    default = DEFAULT_METRIC[task]
+    if task == BINARY and action == 'threshold':
+        # A threshold leaves the number of actions free: precision stays the default, recall
+        # is the alternative the junior weighs.
+        default = 'precision_gain'
+    equivalence = None
+    if task == BINARY:
+        equivalence = _t(
+            lang, 'With a fixed number of rows acted on (a capacity or a share), precision is '
+                  'TP/k and recall is TP/P: both move with the true positives only, so '
+                  'precision, recall and lift rank configurations identically. With a '
+                  'threshold the number acted on changes, and they differ.',
+            'Avec un nombre fixé de lignes sur lesquelles on agit (une capacité ou une part), '
+            'la précision vaut VP/k et le rappel VP/P : les deux ne bougent qu\'avec les vrais '
+            'positifs, donc précision, rappel et lift classent les configurations de la même '
+            'façon. Avec un seuil, le nombre d\'actions change et ils diffèrent.')
+    candidates = _candidates(task, reference, share, lang, unit)
+    if task == BINARY:
+        illustrative = _t(lang, 'Illustrative, per 1,000 actions, from the development rows; '
+                                'the real gain is measured later, out of fold, and on the '
+                                'holdout (final test).',
+                          'Illustratif, pour 1 000 actions, calculé sur l\'échantillon de '
+                          'développement ; le vrai gain se mesure plus tard, hors pli, puis sur '
+                          "l'échantillon de test final (holdout).")
+        lead = {'share': _t(lang, 'Your action acts on a fixed share of the rows, so the '
+                                  'default metric is the precision gain at that share.',
+                            "Ton action porte sur une part fixée des lignes : le critère par "
+                            'défaut est le gain de précision à cette part.'),
+                'capacity': _t(lang, 'Your action acts on a fixed number of rows, so the '
+                                     'default metric is the precision gain at that capacity.',
+                               "Ton action porte sur un nombre fixé de lignes : le critère par "
+                               'défaut est le gain de précision à cette capacité.'),
+                'threshold': _t(lang, 'Your action acts on every row above a score threshold: '
+                                      'choose precision (fewer wasted actions) or recall (fewer '
+                                      'missed positives).',
+                                "Ton action porte sur chaque ligne au-dessus d'un seuil de "
+                                'score : choisis la précision (moins d\'actions perdues) ou le '
+                                'rappel (moins de positifs manqués).'),
+                'not_decided': _t(lang, 'The action type is not decided yet; the default metric '
+                                        'is the precision gain, which suits a capacity or a '
+                                        'share.',
+                                  "Le type d'action n'est pas encore décidé ; le critère par "
+                                  'défaut est le gain de précision, adapté à une capacité ou '
+                                  'une part.')}[action]
+    else:
+        illustrative = None
+        lead = _t(lang, f'The criterion is a share of the mean baseline\'s mean absolute error, '
+                        f'in {unit or "the unit of the target"}; the baseline\'s error is known '
+                        f'once the models are fitted.',
+                  f'Le critère est une part de l\'erreur absolue moyenne de la moyenne de '
+                  f'référence, en {unit or "unité de la cible"} ; l\'erreur de référence est '
+                  f'connue une fois les modèles ajustés.')
+    out = {'task': task, 'action': action, 'default_metric': default,
+           'metrics': [dict(m, default=m['metric'] == default) for m in metrics],
+           'not_criteria': _not_criteria(lang, task), 'equivalence': equivalence,
+           'reference': reference, 'candidates': candidates,
+           'scale': SCALE if task == BINARY else None, 'illustrative': illustrative,
+           'text': lead}
+    return {k: copy.deepcopy(out[k]) for k in OPTIONS_KEYS}
+
+
+__all__ = ['METRICS_BY_TASK', 'DEFAULT_METRIC', 'DELTA_METRIC', 'check', 'assess', 'options',
+           'value_words', 'action_of']

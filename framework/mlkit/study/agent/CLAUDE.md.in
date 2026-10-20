@@ -396,7 +396,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
     `junior_text`, `recap_junior`); a text with `audience: agent` is an instruction for
     you, to follow, not to paste. When the junior writes French, give each proposal a
     French restatement too (`--restatement-fr "<French sentence>"`, next to the English
-    `--restatement`) and show them the French one.
+    `--restatement`) and show them the French one. At each pause, relay
+    `next_action.junior_digest`, offer `recommended` with its `why`, and ask
+    `next_action.question`; write the conclusion text in `next_action.language`.
 12. **Stay inside the study.** Write no file outside this folder, and no copy of a
     command's output anywhere (no `>` or `tee`, no `/tmp` file). Inside the folder, write
     only what the junior asks for (their notes go in `notebooks/workbench.py`). Leave
@@ -432,9 +434,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 Decisions: `prediction_time` (text), `feature_availability` (`{feature: status}` for every
 feature; `available_at_prediction`, `not_available`, `uncertain_excluded`,
 `uncertain_included`), `split` (`{"method": "stratified_random", "validation_fraction": F,
-"seed": N}`), `success_criterion` (`{"metric": "precision_gain", "min_points": P}`: the
-smallest precision gain over the baseline, in points, at the rule to be adopted, that
-would make the model worth using), `preprocessing` (`{"missing": "none" | "indicator",
+"seed": N}`), `success_criterion` (`{"metric": "precision_gain" | "recall_gain",
+"min_points": P}`: the smallest gain over the baseline, in points, at the rule to be
+adopted, that would make the model worth using; present `next_action.criterion_options`:
+metric, reference value, per-1,000 illustration), `preprocessing` (`{"missing": "none" | "indicator",
 "rare_category_min_rows": K, "caps": {}, "log_transform": [], "motivated_by": [result
 ids]}`), `policy` (`threshold:T` or `capacity:K`, evaluated first), `conclusion`
 (`{"verdict": "adopt_policy" | "keep_baseline" | "inconclusive", "text": "..."}`; read it
