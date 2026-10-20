@@ -818,14 +818,16 @@ class _Stub:
 
 
 @pytest.mark.parametrize('case,data', [('shoppers', 'online_shoppers_intention.csv'),
-                                       ('bank-full', 'bank-full.csv')])
+                                       ('bank-full', 'bank-full.csv'),
+                                       ('hotel', 'hotel-resort.csv')])
 def test_v02b_case_workspaces_are_neutral(tmp_path, case, data):
     setup = _load('study_setup')
     info = setup.prepare_case(case, tmp_path)
     assert (tmp_path / info['data']).is_file() and info['data'].endswith(data)
     assert (tmp_path / 'case' / 'case.yaml').is_file()
     readme = (tmp_path / 'README.md').read_text().lower()
-    for hint in ('pagevalues', 'leak', 'duration', 'final test', 'cross-validation'):
+    for hint in ('pagevalues', 'leak', 'duration', 'final test', 'cross-validation',
+                 'reservation_status', 'assigned', 'waiting list', 'booking_changes'):
         assert hint not in readme
     if case == 'bank-full':
         assert (tmp_path / 'case/data/prior-exposed-rows.txt').is_file()
@@ -840,6 +842,26 @@ def test_v02b_scenario_parameters_and_case_wording():
     shoppers = sc.build_chats(sc.scenario('S13'), 'shoppers', 'en', Path('/tmp/i'))
     assert 'calibrated' in shoppers[0][1]['say']
     assert sc._fill('{new_rule}', sc.SCENARIOS['case_params']['shoppers']) == 'share:0.05'
+
+
+def test_v03_hotel_is_the_discovery_case_of_the_scenarios():
+    """WP-G: the scenarios that ran on Online Shoppers run on Hotel booking demand, with
+    case wording, and the setup knows the junior's words for it."""
+    sc = _load('scenarios')
+    setup = _load('study_setup')
+    for s in sc.SCENARIOS['scenarios']:
+        assert 'shoppers' not in s.get('cases', []), s['id']
+    for sid in ('S0', 'S1', 'S6', 'S8', 'S10', 'S11', 'S12', 'S13'):
+        assert 'hotel' in sc.scenario(sid)['cases'], sid
+    s8 = sc.build_chats(sc.scenario('S8'), 'hotel', 'en', Path('/tmp/i'))
+    assert '5% of the bookings' in s8[0][0]['say']
+    s10 = sc.build_chats(sc.scenario('S10'), 'hotel', 'fr', Path('/tmp/i'))
+    assert 'previous_cancellations' in s10[0][0]['say']
+    junior = setup.JUNIOR['hotel']
+    assert junior['act'] == 'contact' and junior['unit'] == 'bookings'
+    assert set(junior['exclusions']) == {'country', 'deposit_type', 'adr',
+                                         'required_car_parking_spaces',
+                                         'total_of_special_requests'}
 
 
 def test_wp_b6b_s12_checks_on_stub_runs(tmp_path):

@@ -32,6 +32,7 @@ BANK = REPO_ROOT / 'use-cases' / 'bank-marketing'
 AUTO_MPG = REPO_ROOT / 'use-cases' / 'auto-mpg'
 BANK_FULL = REPO_ROOT / 'use-cases' / 'bank-marketing-full'
 SHOPPERS = REPO_ROOT / 'use-cases' / 'online-shoppers'
+HOTEL = REPO_ROOT / 'use-cases' / 'hotel-booking'
 
 SPLIT = {'method': 'stratified_random', 'validation_fraction': 0.3, 'seed': 20261017}
 THRESHOLD = 'threshold:0.2'
@@ -90,6 +91,37 @@ JUNIOR = {
         'policy_words': 'Yes, follow up the top 10% of sessions, because the budget covers '
                         'one session in ten.',
     },
+    # v0.3 (WP-G): the discovery case. The outcome columns and what the hotel records after
+    # the booking are `not_available` in the case; five columns have an uncertain timing.
+    'hotel': {
+        'prediction_time': 'when the booking is entered in the hotel system, before anyone '
+                           'contacts the customer',
+        'restatement': 'You score each booking when it is entered, from what the booking '
+                       'request and the guest history hold at that moment.',
+        'words': 'Yes, when the booking is entered, before we contact anyone.',
+        'exclusions': {'country': 'uncertain_excluded', 'deposit_type': 'uncertain_excluded',
+                       'adr': 'uncertain_included',
+                       'required_car_parking_spaces': 'uncertain_included',
+                       'total_of_special_requests': 'uncertain_included'},
+        'availability_words': 'Leave out the outcome and what the hotel records after the '
+                              'booking: the reservation status and its date, the assigned room, '
+                              'the booking changes and the waiting list. Leave out country and '
+                              'deposit type, we do not know when they are set; keep the price '
+                              'and the requests but list them as doubts.',
+        'rate_by': 'market_segment',
+        # S10: the junior also drops previous_cancellations with the reason that belongs to
+        # booking_changes (it counts what happens after the booking, until check-in).
+        'exclusions_s10': {'country': 'uncertain_excluded', 'deposit_type': 'uncertain_excluded',
+                           'adr': 'uncertain_included',
+                           'required_car_parking_spaces': 'uncertain_included',
+                           'total_of_special_requests': 'uncertain_included',
+                           'previous_cancellations': 'not_available'},
+        'restatement_s10': 'You exclude the outcome columns, the columns recorded after the '
+                           'booking, country, deposit_type and previous_cancellations, keep adr '
+                           'and the requests as stated doubts, and keep the other variables.',
+        'policy_words': 'Yes, contact the top 10% of bookings, because the team can handle one '
+                        'new booking in ten.',
+    },
     # Regression generality case (Auto MPG), words of test_regression_walkthrough.py.
     'auto-mpg': {
         'prediction_time': 'when the technical characteristics of a new model are fixed, '
@@ -127,6 +159,7 @@ JUNIOR['bank'].update(act='call', unit='clients',
                       policy_words='Yes, call the top 10% of clients, because the call team '
                                    'can contact one client in ten.')
 JUNIOR['shoppers'].update(act='follow up', unit='sessions')
+JUNIOR['hotel'].update(act='contact', unit='bookings')
 JUNIOR['bank-full'] = dict(JUNIOR['bank'])
 
 # v0.2b (WP-B6b): a new study has nine decisions. After the fits come the variant
@@ -239,6 +272,30 @@ ends**, we would like to rank the sessions and follow up the most promising ones
 
 This is a learning exercise on public data: the scenario is an assumption for the
 exercise, not a decision taken by the shop.
+"""
+
+
+HOTEL_README = """\
+# Resort hotel bookings: which new bookings to contact first
+
+## Files
+
+- `case/data/hotel-resort.csv`: one row per booking of a resort hotel in Portugal, for
+  arrivals from July 2015 to August 2017, in arrival order; comma-separated, header on the
+  first line. The target column is `is_canceled` (`1` = the booking was cancelled).
+- `case/case.yaml`: the case description used by the study tool.
+
+The data are the public "Hotel booking demand" data set (Antonio, de Almeida and Nunes,
+2019; CC BY 4.0), Resort Hotel only. Do not modify these files.
+
+## Scenario
+
+Cancelled bookings cost the hotel revenue. The reservations team has limited staff and can
+contact only some new bookings, to reconfirm them or ask for a deposit. **When a booking is
+entered**, we would like to rank it and contact the bookings most at risk first.
+
+This is a learning exercise on public data: the scenario is an assumption for the
+exercise, not a decision taken by the hotel.
 """
 
 
@@ -368,15 +425,16 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
                 'target': 'mpg', 'positive': None, 'case_yaml': 'case/case.yaml',
                 'files': ['README.md', 'case/case.yaml', 'case/data/auto-mpg.data',
                           'case/data/auto-mpg.names']}
-    if case in ('bank-full', 'shoppers'):
-        src = BANK_FULL if case == 'bank-full' else SHOPPERS
+    if case in ('bank-full', 'shoppers', 'hotel'):
+        src = {'bank-full': BANK_FULL, 'shoppers': SHOPPERS, 'hotel': HOTEL}[case]
         (dest / 'data').mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src / 'case.yaml', dest / 'case.yaml')
         names = sorted(p.name for p in (src / 'data').iterdir() if p.is_file())
         for name in names:
             shutil.copyfile(src / 'data' / name, dest / 'data' / name)
-        (ws / 'README.md').write_text(BANK_FULL_README if case == 'bank-full'
-                                      else SHOPPERS_README, encoding='utf-8')
+        readme = {'bank-full': BANK_FULL_README, 'shoppers': SHOPPERS_README,
+                  'hotel': HOTEL_README}[case]
+        (ws / 'README.md').write_text(readme, encoding='utf-8')
         doc = yaml.safe_load((src / 'case.yaml').read_text(encoding='utf-8'))
         target = doc['target']
         return {'case': case, 'data': f"case/{doc['dataset']['path']}",

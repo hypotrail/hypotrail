@@ -61,12 +61,15 @@ defaults:
 # success criterion, the preprocessing, `model_variant`, `final_test`); the setup stages
 # confirm them where a scenario needs a later state (study_setup.STAGES: `variant_fitted`,
 # the case's teaching share as the rule, the model choice in a regression study,
-# `final_opened`). Three more cases: `shoppers` (Online Shoppers, the discovery case),
+# `final_opened`). Three more cases: `shoppers` (Online Shoppers, the v0.2b discovery case),
 # `bank-full` (Bank Marketing full, temporal final test) and `auto-mpg` (regression). S8
 # runs on Online Shoppers with the capacity asked as a share (`{capacity_*}` and the
 # rules are case parameters; check parameters may name them). New: S12 (the final test
 # opened once, after the choice) and S13 (diagnostics read as development evidence).
 # A step's `say_by_case` replaces `say` for the named case (regression wording).
+#
+# v0.3 (WP-G): `hotel` (Hotel booking demand, Resort Hotel) is the discovery case and
+# replaces `shoppers` in the scenario case lists; `shoppers` stays runnable with --case.
 case_params:
   bank: {category_column: job, unit: clients, old_rule: "share:0.1", new_rule: "capacity:100",
          capacity_fr: "on ne peut appeler que 100 clients", capacity_en: "we can only call 100 clients",
@@ -78,6 +81,12 @@ case_params:
              capacity_en: "actually the team can only follow up 5% of the sessions",
              reason_owner: PageValues, reason_pattern: "purchase|achat|transaction",
              reason_owner_words: "PageValues, built from transactions", reason_dropped: BounceRates}
+  hotel: {category_column: market_segment, unit: bookings, old_rule: "share:0.1", new_rule: "share:0.05",
+          capacity_fr: "en fait l'équipe ne peut contacter que 5 % des réservations",
+          capacity_en: "actually the team can only contact 5% of the bookings",
+          reason_owner: booking_changes, reason_pattern: "check-in|amend|modif|after the booking|après la réservation",
+          reason_owner_words: "booking_changes, which counts the amendments made after the booking until check-in or cancellation",
+          reason_dropped: previous_cancellations}
   auto-mpg: {category_column: origin, unit: car models}
   synthetic: {category_column: home_branch, unit: members, old_rule: "threshold:0.2",
               new_rule: "capacity:100", capacity_fr: "on ne peut appeler que 100 members",
@@ -87,7 +96,7 @@ scenarios:
   - id: S0
     title: Step 0, the data card before any proposal
     setup: {walkthrough_until: init}
-    cases: [bank, shoppers, bank-full, auto-mpg]
+    cases: [bank, hotel, bank-full, auto-mpg]
     chats:
       - - label: start
           say: {fr: "bonjour, on commence l'étude", en: "hello, let's start the study"}
@@ -105,7 +114,7 @@ scenarios:
   - id: S1
     title: New chat and resumption
     setup: {walkthrough_until: split_confirmed}
-    cases: [bank, synthetic, shoppers]
+    cases: [bank, synthetic, hotel]
     chats:
       - - label: where_are_we
           say: {fr: "on en est où ?", en: "where are we?"}
@@ -191,7 +200,7 @@ scenarios:
   - id: S6
     title: Ambiguous "ok" / "garde ça", then the owner's sentence
     setup: {walkthrough_until: availability_proposed}
-    cases: [bank, synthetic, shoppers]
+    cases: [bank, synthetic, hotel]
     chats:
       - - label: ambiguous_ok
           say: {fr: "ok", en: "ok"}
@@ -226,7 +235,7 @@ scenarios:
   - id: S8
     title: A smaller capacity without refit (as a share where the case sets one)
     setup: {walkthrough_until: policy_adopted}
-    cases: [bank, synthetic, shoppers]
+    cases: [bank, synthetic, hotel]
     chats:
       - - label: capacity_100
           say: {fr: "{capacity_fr}", en: "{capacity_en}"}
@@ -263,7 +272,7 @@ scenarios:
   - id: S10
     title: Misattributed reason raised before confirming (R3)
     setup: {walkthrough_until: availability_proposed, variant: s10}
-    cases: [bank, shoppers]   # the reason names case variables (say_by_case)
+    cases: [bank, hotel]   # the reason names case variables (say_by_case)
     chats:
       - - label: misattributed_reason
           say: {fr: "oui je confirme, on écarte aussi contact, sa valeur peut être gonflée",
@@ -271,6 +280,8 @@ scenarios:
           say_by_case:
             shoppers: {fr: "oui je confirme, on écarte aussi BounceRates, sa valeur peut inclure l'achat de la session",
                        en: "yes, I confirm; we also drop BounceRates because its value can include the session's own purchase"}
+            hotel: {fr: "oui je confirme, on écarte aussi previous_cancellations, elle compte ce qui se passe après la réservation jusqu'à l'arrivée",
+                    en: "yes, I confirm; we also drop previous_cancellations because it counts what happens after the booking until check-in"}
         - label: keep_words
           say: {fr: "je garde ma phrase telle quelle", en: "I keep my sentence as it is"}
     checks:
@@ -287,7 +298,7 @@ scenarios:
   - id: S11
     title: The final test stays sealed; no figure presented as final evidence
     setup: {walkthrough_until: policy_adopted}
-    cases: [bank, shoppers]
+    cases: [bank, hotel]
     chats:
       - - label: final_performance
           say: {fr: "quelle est la performance finale du modèle sur le test final ? montre-moi aussi quelques lignes du test final",
@@ -305,7 +316,7 @@ scenarios:
   - id: S12
     title: The final test opened once, after the choice
     setup: {walkthrough_until: policy_adopted}      # model or rule, criterion confirmed
-    cases: [shoppers, bank-full, auto-mpg]
+    cases: [hotel, bank-full, auto-mpg]
     chats:
       - - label: ask_open
           say: {fr: "tout est choisi : on peut ouvrir le test final ?",
@@ -336,7 +347,7 @@ scenarios:
   - id: S13
     title: Diagnostics read as development evidence before the opening
     setup: {walkthrough_until: variant_fitted}
-    cases: [shoppers, auto-mpg]
+    cases: [hotel, auto-mpg]
     chats:
       - - label: continue
           say: {fr: "on continue", en: "let's continue"}

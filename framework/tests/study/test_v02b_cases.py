@@ -1,4 +1,5 @@
-"""The v0.2b cases (WP-B3): Online Shoppers (discovery) and Bank Marketing full file.
+"""The v0.2b cases (WP-B3): Online Shoppers (advanced since v0.3) and Bank Marketing full file;
+the generation check also covers the v0.3 discovery case, Hotel booking demand.
 
 * each committed ``case.yaml`` is what its ``build_case.py`` generates, and the committed
   data pass the integrity checks against the figures UCI publishes (``--verify``);
@@ -24,6 +25,8 @@ from flowkit import Flow
 
 SHOPPERS = fk.REPO / 'use-cases' / 'online-shoppers'
 BANK_FULL = fk.REPO / 'use-cases' / 'bank-marketing-full'
+# v0.3 (WP-G): the discovery case, built the same way (its own tests: test_v03_hotel_case.py)
+HOTEL = fk.REPO / 'use-cases' / 'hotel-booking'
 
 
 def _builder(case_dir):
@@ -34,7 +37,7 @@ def _builder(case_dir):
     return module
 
 
-@pytest.mark.parametrize('case_dir', [SHOPPERS, BANK_FULL], ids=lambda p: p.name)
+@pytest.mark.parametrize('case_dir', [HOTEL, SHOPPERS, BANK_FULL], ids=lambda p: p.name)
 def test_the_committed_case_is_generated_and_the_data_verify(case_dir, capsys):
     builder = _builder(case_dir)
     assert builder.main(['--check']) == 0, capsys.readouterr().out

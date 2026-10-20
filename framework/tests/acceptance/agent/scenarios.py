@@ -839,7 +839,7 @@ def main(argv=None) -> None:
     sub = p.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('run')
     r.add_argument('--id', required=True)
-    r.add_argument('--case', choices=['bank', 'bank-full', 'shoppers', 'auto-mpg', 'synthetic'],
+    r.add_argument('--case', choices=['bank', 'bank-full', 'hotel', 'shoppers', 'auto-mpg', 'synthetic'],
                    required=True)
     r.add_argument('--lang', choices=['en', 'fr'], default='en')
     r.add_argument('--out', required=True)

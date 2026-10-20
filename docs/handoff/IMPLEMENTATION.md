@@ -10,7 +10,8 @@ The promise is unchanged: *do your ML study with an agent; Hypotrail guarantees 
 
 | Case | Role | Final test sealed at `init` |
 |---|---|---|
-| [Online Shoppers](../../use-cases/online-shoppers/README.md) (`use-cases/online-shoppers/case.yaml`) | **Discovery case**: which finished sessions to follow up when the budget covers 10 % of them; the leakage question is `PageValues` | 2,466 rows, stratified (9,864 development rows); 125 identical rows kept together (`duplicates: {policy: group}`) |
+| [Hotel booking demand](../../use-cases/hotel-booking/README.md) (`use-cases/hotel-booking/case.yaml`, Resort Hotel) | **Discovery case from v0.3**: which new bookings to contact or ask a deposit from when the team handles 10 % of them; prediction when the booking is entered; leakage traps `reservation_status` and its date, `assigned_room_type`, `booking_changes`, `days_in_waiting_list`, and five columns of uncertain timing | 8,011 rows, **temporal** by arrival date (32,049 development rows); 6,092 identical rows kept together (`duplicates: {policy: group}`) |
+| [Online Shoppers](../../use-cases/online-shoppers/README.md) (`use-cases/online-shoppers/case.yaml`) | **Advanced case since v0.3** (the v0.2b discovery case; its target is known at its prediction moment, R31): which finished sessions to follow up when the budget covers 10 % of them; the leakage question is `PageValues` | 2,466 rows, stratified (9,864 development rows); 125 identical rows kept together (`duplicates: {policy: group}`) |
 | [Bank Marketing](../../use-cases/bank-marketing/README.md) (`bank.csv`) | v0.1/v0.2a reference and regression check | 904 rows, stratified (3,617 development rows) |
 | [Bank Marketing full](../../use-cases/bank-marketing-full/README.md) (`bank-full.csv`, in time order) | Generality: a **temporal** final test, the last fifth of the campaigns less the 893 `bank.csv` rows already public (`prior_exposed_rows`) | 8,149 rows (37,062 development rows) |
 | [Auto MPG](../../use-cases/auto-mpg/README.md) | Regression (MAE and RMSE in mpg) | 80 rows, stratified on target quantiles (318 development rows) |
@@ -35,8 +36,8 @@ The engine guarantees, with tests, everything v0.1 did (revisions and idempotent
 
 ```sh
 uv sync --project framework --group dev
-uv run --project framework hypotrail init --case use-cases/online-shoppers/case.yaml --study ~/studies/shoppers
-cd ~/studies/shoppers && claude          # then talk to the agent
+uv run --project framework hypotrail init --case use-cases/hotel-booking/case.yaml --study ~/studies/hotel
+cd ~/studies/hotel && claude          # then talk to the agent
 ```
 
 Commands (`hypotrail --help` lists them): `init`, `status [--summary|--json]`, `plan`, `decide propose|confirm|withdraw|note`, `mode set`, `run <activity>`, `render`, `check`, `preview policy|effects|proposal`, `data`, `decisions`, `evidence`, `explain`, `export handoff`, `session-report`. Exit codes: 0, 2 refusal, 3 stale or failed deliverable, 4 unknown outcome. Contracts: [CLI-CONTRACT.md](../specs/CLI-CONTRACT.md) (v0.2 additions in §3.3, §4.1, §5.2–5.3, §11–§13), [CASE-CONTRACT.md](../specs/CASE-CONTRACT.md), [CLI-CONTRACT-COMPANION.md](../specs/CLI-CONTRACT-COMPANION.md).
@@ -68,6 +69,7 @@ Not proven (details in the checklist's "Not proven" section):
 - **No human junior, no GitHub Copilot, no real VS Code session.** All agentic evidence is Claude Code with scripted or simulated juniors; Copilot instruction files are generated but untested (owner decision for v0.2).
 - **Short scenarios, N = 3.** No agent run went from step 0 to the conclusion in v0.2; E1 (the full conversation) was not rerun. The setup confirms the preprocessing, the variant and the rule by direct CLI calls, so the agent's proposals at those pauses are only exercised in S8 and S13. Two fixes (the S13 calibration binding; the S1 recap that quoted older words) are not confirmed by a run.
 - **Lexical heuristics.** Guided, training and partial-refusal rules, the reason check, the contradiction warning, `check`'s number binding and evidence scopes, `feature_basis` name matching and the graders are word lists (English and French). "oui, la pizza du client est bonne pour la campagne" would still pass the relation check. Each `check` fix of v0.2b widened the pool a figure may match.
+- **Hotel booking demand data** (v0.3) are derived from the tidytuesday mirror (the authors' files were unreachable), checked against the counts the article publishes but **not compared byte for byte** with the authors' files. The article's variable table could not be read: descriptions come from the tidytuesday dictionary, and the article states that every value is the one of the day before arrival, not at booking (fact `snapshot_limit` in the case).
 - **Online Shoppers data** come from one public GitHub mirror (UCI was unreachable), checked against UCI's published counts but **not compared byte for byte** with the UCI archive (owner TODO, in the case README). Its variable descriptions are `scenario_assumption` (recalled, not read from the source). Bank full comes from two byte-identical mirrors, same caveat.
 
 Known behaviour worth a decision (all in [the owner review](../plans/V0.2-OWNER-REVIEW.md)):
@@ -90,7 +92,7 @@ Platform: POSIX only (`fcntl`); editable install only; absolute paths recorded a
 
 ## Legacy and preservation
 
-The legacy pilot (`framework/mlkit/pilot.py`) is unchanged; `mlkit/study/` imports none of it (`test_isolation`). `use-cases/*/project.json` and `results.json` remain companion tutorial contracts; `case.yaml` is generated from them (Bank, Auto MPG) or by `build_case.py` (Online Shoppers, Bank full), never importing tutorial choices as decisions. v0.1 and v0.2a studies keep their decision sets, result identities and partitions. Do not reset existing study state; test in temporary studies.
+The legacy pilot (`framework/mlkit/pilot.py`) is unchanged; `mlkit/study/` imports none of it (`test_isolation`). `use-cases/*/project.json` and `results.json` remain companion tutorial contracts; `case.yaml` is generated from them (Bank, Auto MPG) or by `build_case.py` (Hotel booking, Online Shoppers, Bank full), never importing tutorial choices as decisions. v0.1 and v0.2a studies keep their decision sets, result identities and partitions. Do not reset existing study state; test in temporary studies.
 
 ## Next work (v0.3 candidates, each needs an owner decision)
 
@@ -102,5 +104,5 @@ From the [review synthesis §4](../plans/V0.2-REVIEW-SYNTHESIS.md#v03-and-later-
 4. **Privacy / redaction mode** (a `privacy` case field that masks example rows), then **case drafting from the junior's own CSV**.
 5. **Model info sheet** (Kapoor & Narayanan 2023) and a manager brief export.
 6. **Engine-served pedagogy**: `next_action` carries the term, the misconception and the question, so the agent prompt shrinks (about 4,300 words, 16 "never"); key for **Copilot portability** and a Copilot acceptance run.
-7. A full-conversation agent run (E1) on Online Shoppers, with N > 3, before trusting pass rates.
+7. A full-conversation agent run (E1) on Hotel booking demand (the discovery case since v0.3), with N > 3, before trusting pass rates.
 8. Later: counterfactual leakage branch ("what if `PageValues` were included?"), pilot designer, forward temporal backtest, more model families under a complexity budget, a grouped split by a group column, a multi-study portfolio, a local learning record, Online Retail II as an advanced cross-sell case, publication of the trap benchmark.

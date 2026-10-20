@@ -8,7 +8,7 @@ A developer new to ML starts from an intention, understands the data, reviews a 
 
 Fluidity means understanding the next action, retaining valid decisions, and resuming without reconstructing history. It is not measured by confirmation counts, arbitrary percentages, or chart volume.
 
-Initial scope: local supervised tabular learning, first Bank Marketing, then Auto MPG (since v0.2b, Online Shoppers is the discovery case, Bank Marketing full validates generality on scoring, and Auto MPG covers regression; owner decision, AGENTS.md). The visual companion, webview, overnight autonomy, cloud execution, and senior mode are outside this milestone. Unsupported tasks must be identified; a universal-looking sequence must not hide different evidence requirements.
+Initial scope: local supervised tabular learning, first Bank Marketing, then Auto MPG (since v0.3, Hotel booking demand (Resort Hotel) is the discovery case, Bank Marketing full validates generality on scoring, Auto MPG covers regression, and Online Shoppers, the v0.2b discovery case, is an advanced case with a documented scenario limitation; owner decision 2026-10-20, AGENTS.md). The visual companion, webview, overnight autonomy, cloud execution, and senior mode are outside this milestone. Unsupported tasks must be identified; a universal-looking sequence must not hide different evidence requirements.
 
 ## Three surfaces with distinct responsibilities
 

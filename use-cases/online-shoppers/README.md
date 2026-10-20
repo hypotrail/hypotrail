@@ -1,6 +1,10 @@
 # Online Shoppers Purchasing Intention
 
-Discovery case from v0.2b: the first study a junior runs. It is a **binary** scoring study on real sessions of an online shop, with a leakage question to settle (`PageValues`) and a follow-up budget stated as a share.
+**Advanced case since v0.3** (the discovery case of v0.2b). It is a **binary** scoring study on real sessions of an online shop, with a leakage question to settle (`PageValues`) and a follow-up budget stated as a share. The discovery case is now [Hotel booking demand](../hotel-booking/README.md) (owner decision R38, 2026-10-20).
+
+## Scenario limitation (owner demo 2, remark R31)
+
+The scenario is incoherent, and a junior noticed it during owner demo 2: the case scores **finished** sessions to decide which ones to follow up, but the target, `Revenue`, is the purchase **in that same session**, which is already known when the session ends, the prediction moment. A score is not needed to know which finished sessions bought, and a follow-up would go to the sessions that did **not** buy; the precision "share of selected sessions that bought" is therefore not the value of a follow-up. The data record no follow-up and no later purchase, so nothing in them measures what a follow-up does. Use this case only with a junior who can discuss that limit (a lookalike reading, "rank the non-buying sessions by their resemblance to buying ones", is one way to reframe it; it is not implemented). The rest of this README describes the case as built in v0.2b, unchanged.
 
 ## Data and licence
 
