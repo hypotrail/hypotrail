@@ -50,9 +50,13 @@ Lead with the professional term, then a brief explanation and data-specific exam
 
 Activity order adapts. Evaluation design must precede detailed EDA when required for validity. Summarize completed work when resuming rather than replaying it.
 
+The engine's glossary gives each concept a canonical English term and its usual French term, used verbatim by every engine text (v0.3, remark R15): training set / jeu d'entraînement, validation set / jeu de validation, fold / pli, k-fold cross-validation / validation croisée à k plis, out-of-fold predictions / prédictions hors pli, holdout (final test) / échantillon de test final, confidence interval / intervalle de confiance, average precision (AP) / average precision (AP, aire sous la courbe précision-rappel), sample / échantillon, development set / échantillon de développement. Under k-fold cross-validation each fold is in turn the validation fold and the other folds its training folds. Fold spread is not a confidence interval; where both appear, each is named. A study in French gets every engine junior text in French (English stays the source).
+
 ## Guidance loop
 
 At each meaningful step, identify the current plan position and question, completed action, available evidence, useful observation, interpretation, limitation, and recommended next action. Ask one main question at a time and offer a reasoned default when possible.
+
+The engine drafts this for each pause (v0.3, WP-C): `next_action` carries a short digest in the study language (term first, then the study's example), the recommended default with one line of why, and the one question to ask, so the agent relays rather than composes. The success criterion is a metric and a minimum: the metric is explained and defaulted by the action type (a capacity or share action reads precision at that share, which ranks configurations as recall and lift do; a threshold action lets the junior weigh precision against recall; AUC and average precision are ranking diagnostics, not business criteria), and the question states the reference value (the base rate of the development rows) and translates candidate minimums per 1,000 actions, labelled illustrative.
 
 An optional teaching question can illuminate a consequential choice. It must not become a gate at every chart. Requests such as “explain differently,” “show the calculation,” or “let me try” change depth without losing the study's place.
 

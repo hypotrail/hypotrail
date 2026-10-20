@@ -220,7 +220,9 @@ def concept_map(state: Mapping, proposal: Mapping) -> list[dict]:
                 items.append(_number_concept('min_gain', _fraction_forms(share, complement=False)))
             return items
         points = value.get('min_points')
-        items.append(_terms_concept('precision'))
+        # v0.3 (WP-C, R18): the metric the criterion names.
+        items.append(_terms_concept('recall' if value.get('metric') == 'recall_gain'
+                                    else 'precision'))
         if isinstance(points, (int, float)) and not isinstance(points, bool):
             items.append(_number_concept('min_gain', {round(float(points), 6)}))
         return items

@@ -116,7 +116,8 @@
   function criterion(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
-    if (typeof v.min_points === 'number') return `N'adopter que si la précision bat la référence d'au moins ${v.min_points} points`;
+    // v0.3 (WP-C, R18): the criterion names its metric (precision by default, or recall).
+    if (typeof v.min_points === 'number') return `N'adopter que si ${v.metric === 'recall_gain' ? 'le rappel' : 'la précision'} bat la référence d'au moins ${v.min_points} points`;
     if (typeof v.min_share === 'number') {
       return `N'adopter que si l'erreur de validation est inférieure d'au moins ${Math.round(100 * v.min_share)} % à la référence moyenne`;
     }

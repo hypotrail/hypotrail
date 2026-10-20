@@ -177,7 +177,9 @@
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
     if (typeof v.min_points === 'number') {
-      return `Adopt only if precision beats the baseline by at least ${v.min_points} points`;
+      // v0.3 (WP-C, R18): the criterion names its metric (precision by default, or recall).
+      const metric = v.metric === 'recall_gain' ? 'recall' : 'precision';
+      return `Adopt only if ${metric} beats the baseline by at least ${v.min_points} points`;
     }
     if (typeof v.min_share === 'number') {
       return `Adopt only if the validation error is at least ${Math.round(100 * v.min_share)}% below the mean baseline`;

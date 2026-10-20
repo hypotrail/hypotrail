@@ -172,7 +172,10 @@ def test_a_policy_adopted_after_the_conclusion_outdates_it(evaluated):
     assert 'after the conclusion' in state['decisions']['conclusion']['reason']
     item = _limits(b)['conclusion_outdated']
     assert item['decisions'] == ['conclusion'] and item['reason']
-    assert view.build(b.study)['next_action'] == {
+    # v0.3 (WP-C): the junior-ready keys apart (``junior.ENRICH_KEYS``).
+    from mlkit.study import junior
+    assert {k: v for k, v in view.build(b.study)['next_action'].items()
+            if k not in junior.ENRICH_KEYS} == {
         'kind': 'reconfirm', 'decision': 'conclusion',
         'message': f'Decision conclusion must be confirmed again: '
                    f'{state["decisions"]["conclusion"]["reason"]}',

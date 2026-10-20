@@ -331,15 +331,20 @@ SUCCESS_STEP = {
     'id': SUCCESS_CRITERION, 'pause': 2, 'decision': SUCCESS_CRITERION, 'activities': (),
     'requires': ('split',),
     'title': 'Fix the success criterion before seeing a model',
-    # WP-A9 (M6): the terms first, then the question.
-    'question': 'Precision is the share of the rows a rule selects that turn out positive. The '
-                'baseline gives every row the same score, so its precision is the overall '
-                'positive rate. The rule says which rows you act on: the top share or number '
-                'of scores, or the rows above a score threshold. How many percentage points of '
-                'precision above the baseline, at the rule you will adopt, would make the '
-                'model worth using? It is fixed now, before any model is fitted.',
-    'expected_output': 'A confirmed minimum gain over the baseline, stated before any model '
-                       'result is seen.',
+    # WP-A9 (M6): the terms first, then the question. v0.3 (WP-C, R18): a metric and a
+    # minimum; the metric options and the reference value are in
+    # ``next_action.criterion_options`` (``governance.criterion_options``).
+    'question': 'Precision is the share of the rows a rule selects that turn out positive; '
+                'recall is the share of all positive rows the rule reaches. The baseline gives '
+                'every row the same score, so its precision is the overall positive rate. The '
+                'rule says which rows you act on: the top share or number of scores, or the '
+                'rows above a score threshold. With a fixed number of rows acted on, precision, '
+                'recall and lift rank the models the same way; with a threshold they differ. '
+                'Choose the metric first. How many percentage points above the baseline, at '
+                'the rule you will adopt, would make the model worth using? It is fixed now, '
+                'before any model is fitted.',
+    'expected_output': 'A confirmed metric and minimum gain over the baseline, stated before '
+                       'any model result is seen.',
     'completion': 'Decision success_criterion is confirmed.'}
 REGRESSION_SUCCESS_STEP = dict(
     SUCCESS_STEP,
@@ -429,8 +434,12 @@ B1_REGRESSION_STEPS = tuple(
 # rows" or "validation rows" to name. Merged over the step (``steps``).
 CV_STEP_TEXTS = {
     'split': {
-        'question': 'How are the development rows divided into folds, each predicted by a model '
-                    'fitted on the other folds, before any exploration of the target?',
+        # v0.3 (WP-C, R15): the standard words, used correctly: each fold is in turn the
+        # validation fold, the other folds are its training folds.
+        'question': 'How is the development set divided into folds for k-fold '
+                    'cross-validation, before any exploration of the target? Each fold is in '
+                    'turn the validation fold, predicted by a model fitted on the other folds, '
+                    'the training folds.',
         'expected_output': 'A confirmed cross-validation and a recorded fold assignment.'},
     'train_eda': {
         'title': 'Explore the development rows',
@@ -442,8 +451,8 @@ CV_STEP_TEXTS = {
                            'their exposure recorded.'},
     'preprocessing': {
         'question': 'How should the model treat missing values, rare categories, extreme values '
-                    'and skewed variables? Every parameter is learnt only on the rows each model '
-                    'is fitted on, the other folds.'},
+                    'and skewed variables? Every parameter is learnt only on the training folds '
+                    'of each model, never on its validation fold.'},
     'models': {
         'question': 'How much does a simple model improve on a constant baseline, measured out '
                     'of fold on the development rows?',
