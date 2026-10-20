@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_58ab52047846c7c88a36253e",
   "status": "promoted",
-  "result_id": "441df9ff97c64106e229aef9306f2310dc86162a8ae905bcc06806dc148a08c7",
+  "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1156,7 +1156,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "77d4a9bd85447d56b1c1df88df05f4f9f5b222f172d25f53a5d56442c2473826"
+     "predictions": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6"
     },
     "fit.variant": {
      "confusion": {
@@ -2275,25 +2275,252 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "f2736e1d208f53d52eb22c56cee0113fbb2fe3e623eb2d7207a61b68e841fa31"
+     "predictions": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af"
     }
    },
    "coefficient_rows": 2531,
-   "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence."
+   "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence.",
+   "linear_checks": {
+    "model": "fit.logistic",
+    "nonlinearity": [
+     {
+      "feature": "age",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 254,
+        "low": 19.0,
+        "high": 32.0,
+        "gap": -0.0066537338936135115,
+        "se": 0.018937307428818842
+       },
+       {
+        "bin": 2,
+        "n": 188,
+        "low": 33.0,
+        "high": 36.0,
+        "gap": -0.005649762403139066,
+        "se": 0.020572395366495914
+       },
+       {
+        "bin": 3,
+        "n": 246,
+        "low": 37.0,
+        "high": 43.0,
+        "gap": -0.004356425491056998,
+        "se": 0.01829438628700297
+       },
+       {
+        "bin": 4,
+        "n": 188,
+        "low": 44.0,
+        "high": 50.0,
+        "gap": 0.007156548303688268,
+        "se": 0.020421375518237826
+       },
+       {
+        "bin": 5,
+        "n": 210,
+        "low": 51.0,
+        "high": 81.0,
+        "gap": 0.032245240522067176,
+        "se": 0.022411190962352216
+       }
+      ],
+      "statistic": 2.4485359800890905,
+      "df": 5,
+      "p_value": 0.7842249191034423,
+      "level": 0.0025,
+      "flagged": false
+     },
+     {
+      "feature": "balance",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 218,
+        "low": -3313.0,
+        "high": 8.0,
+        "gap": -0.024567837134776407,
+        "se": 0.019410385135573572
+       },
+       {
+        "bin": 2,
+        "n": 217,
+        "low": 9.0,
+        "high": 252.0,
+        "gap": -0.020795325934245323,
+        "se": 0.0200074258248181
+       },
+       {
+        "bin": 3,
+        "n": 218,
+        "low": 255.0,
+        "high": 712.0,
+        "gap": 0.0057960474258026695,
+        "se": 0.019384760586566574
+       },
+       {
+        "bin": 4,
+        "n": 216,
+        "low": 725.0,
+        "high": 1852.0,
+        "gap": 0.02052257742423573,
+        "se": 0.020187327567844894
+       },
+       {
+        "bin": 5,
+        "n": 217,
+        "low": 1868.0,
+        "high": 26394.0,
+        "gap": 0.03900924580558576,
+        "se": 0.021423262931726986
+       }
+      ],
+      "statistic": 7.120826861859552,
+      "df": 5,
+      "p_value": 0.21180824607645435,
+      "level": 0.0025,
+      "flagged": false
+     },
+     {
+      "feature": "pdays",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 1086,
+        "low": -1.0,
+        "high": 871.0,
+        "gap": 0.003953082117089793,
+        "se": 0.008986200241441766
+       }
+      ],
+      "statistic": 0.19351716289609003,
+      "df": 1,
+      "p_value": 0.6600052937661847,
+      "level": 0.0025,
+      "flagged": false
+     },
+     {
+      "feature": "previous",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 1086,
+        "low": 0.0,
+        "high": 22.0,
+        "gap": 0.003953082117089793,
+        "se": 0.008986200241441766
+       }
+      ],
+      "statistic": 0.19351716289609003,
+      "df": 1,
+      "p_value": 0.6600052937661847,
+      "level": 0.0025,
+      "flagged": false
+     }
+    ],
+    "interaction": [
+     {
+      "feature": "job",
+      "groups": [
+       {
+        "value": "admin.",
+        "n": 134,
+        "slope": 1.421370064320799,
+        "se": 0.3334249131687318
+       },
+       {
+        "value": "blue-collar",
+        "n": 224,
+        "slope": 1.1985046372829469,
+        "se": 0.3796882237124419
+       },
+       {
+        "value": "management",
+        "n": 223,
+        "slope": 1.0288084840488427,
+        "se": 0.292813010904183
+       },
+       {
+        "value": "services",
+        "n": 103,
+        "slope": 1.7021058420373854,
+        "se": 0.6143022501544373
+       },
+       {
+        "value": "technician",
+        "n": 169,
+        "slope": 1.6171526987984186,
+        "se": 0.48525672667604214
+       }
+      ],
+      "q": 1.9135426365096873,
+      "df": 4,
+      "p_value": 0.7516567641459094,
+      "level": 0.005,
+      "flagged": false
+     },
+     {
+      "feature": "marital",
+      "groups": [
+       {
+        "value": "divorced",
+        "n": 120,
+        "slope": 1.202790653142492,
+        "se": 0.35458089870629167
+       },
+       {
+        "value": "married",
+        "n": 688,
+        "slope": 1.293000701304089,
+        "se": 0.16532274079574302
+       },
+       {
+        "value": "single",
+        "n": 278,
+        "slope": 0.6746163164517149,
+        "se": 0.19370715496914093
+       }
+      ],
+      "q": 6.101439577686868,
+      "df": 2,
+      "p_value": 0.04732484823101833,
+      "level": 0.005,
+      "flagged": false
+     }
+    ],
+    "calibration_slope": {
+     "slope": 1.1055958163720294,
+     "se": 0.1177808118668114,
+     "low": 0.8747496670431912,
+     "high": 1.3364419657008675,
+     "band": [
+      0.8,
+      1.2
+     ],
+     "flagged": false,
+     "definition": "slope of a logistic regression of the outcome on the logit of the score: 1 when the scores are as spread as the outcomes, below 1 when they are too extreme"
+    },
+    "flags": [],
+    "alpha": 0.01,
+    "method": "binned out-of-fold gaps per numeric feature (chi-square, Bonferroni); calibration slope by segment (Cochran's Q); overall calibration slope (Cox 1958)",
+    "note": "Checks of the candidate linear model on its out-of-fold predictions: a flag is evidence that another model family might follow the data more closely, not proof; choosing a family after seeing it makes that comparison data-contingent."
+   }
   },
   "result": {
    "execution_id": "e_58ab52047846c7c88a36253e",
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "441df9ff97c64106e229aef9306f2310dc86162a8ae905bcc06806dc148a08c7",
-   "input_key": "453981fc4b16759abf18fef155e9fadc6f529612900b4e32abe82917c83b7d85",
+   "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+   "input_key": "63c452f951ef7b3853a3bd9666410e4621e46bfffaa17cef2e1192b8d47ac31b",
    "reason": null,
    "started_revision": 47,
    "invalidation": null,
    "exposure_ids": [
-    "x_522c1ba6cd9b4759a3a7b175577a9f49",
-    "x_24ae50224691441db753453f7c2c0b8c"
+    "x_1f6d416a3d7e420ba73215cf3a5d9ac8",
+    "x_8853a74fcba74457b2af5788b2e7dc56"
    ],
    "registry_created": true,
    "nondeterministic": false
