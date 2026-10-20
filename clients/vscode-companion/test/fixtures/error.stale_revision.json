@@ -33,7 +33,9 @@
        "proposal_id": "p_5",
        "restatement": "Call the 100 clients with the highest scores.",
        "status": "open",
-       "superseded": []
+       "superseded": [],
+       "data_contingent": null,
+       "data_contingent_reason": null
       },
       "revision": 26,
       "state_sha256": "0000000000000000000000000000000000000000000000000000000000000000",

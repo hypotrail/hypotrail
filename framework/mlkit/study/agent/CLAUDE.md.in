@@ -110,8 +110,11 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    **Preprocessing.** Propose the engine's default (`next_action.default_value`) unless a
    result of the exploration motivates a change; then name those results in
    `motivated_by`. The engine stamps the decision `data_contingent` when a motivating
-   result read the target: say in the restatement that it was chosen after looking at the
-   target, so the validation figures may be slightly optimistic.
+   result read the target or a look at the target came before the proposal: `decide
+   propose` returns `data_contingent` and `data_contingent_reason`. When it is true, say
+   its `text` to the junior before you present the proposal, and in the restatement that
+   it was chosen after looking at the target, so the validation figures may be slightly
+   optimistic.
 
    **The variant** (v0.2b). Once the candidate is fitted, offer one analytical variant
    and let the junior choose it: a stronger or weaker **regularisation** (the coefficients

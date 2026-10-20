@@ -40,6 +40,8 @@
       },
       "request_id": "b-prop",
       "result": {
+       "data_contingent": null,
+       "data_contingent_reason": null,
        "decision_id": "policy",
        "decision_status": "confirmed",
        "proposal_id": "p_8",
@@ -48,8 +50,8 @@
        "superseded": []
       },
       "revision": 42,
-      "state_sha256": "10f657f8a70f4c902f567ca5cdaed5466bf7673bef8c5bd9c9445d9af40e3e3a",
-      "time": "2026-10-19T22:16:31.741719+00:00"
+      "state_sha256": "617477fef1f2dca967849861de803343fd81d9c7449d995e4216365b564dcb87",
+      "time": "2026-10-20T08:36:54.041747+00:00"
      }
     ]
    }

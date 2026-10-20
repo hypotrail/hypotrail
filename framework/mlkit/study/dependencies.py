@@ -270,8 +270,16 @@ def effects(old_state: Mapping, decision_id: str, old: Any, new: Any) -> dict:
     has no effect). For ``code_fingerprint``, ``old`` and ``new`` are
     ``{"activity", "fingerprint"}``. Pure: ``old_state`` is only read.
     """
+    return effects_at(old_state, decision_id, old, new)
+
+
+def effects_at(old_state: Mapping, decision_id: str, old: Any, new: Any,
+               diag_rule: str | None = None) -> dict:
+    """:func:`effects`, with ``diag_rule`` (v0.3, WP-A, R34): the rule the current binary
+    diagnostics were computed at, when the caller read it from the registry. Pure."""
     return _diagnostics_follow_the_rule(old_state, decision_id, old, new,
-                                        _effects(old_state, decision_id, old, new))
+                                        _effects(old_state, decision_id, old, new),
+                                        diag_rule=diag_rule)
 
 
 # WP-B4: the binary diagnostics are computed at one rule (the adopted one when there is one).
@@ -279,12 +287,17 @@ DIAG_BINARY_SLOT = 'diag.binary'
 
 
 def _diagnostics_follow_the_rule(old_state: Mapping, decision_id: str, old: Any, new: Any,
-                                 out: dict) -> dict:
-    """A policy confirmed with another rule (a first adoption included) makes the current
-    binary diagnostics stale: they were computed at another rule, or at a proposed one."""
+                                 out: dict, *, diag_rule: str | None = None) -> dict:
+    """A policy confirmed with another rule than the one the current binary diagnostics
+    were computed at makes them stale. v0.3 (WP-A, R34): the diagnostics are keyed on the
+    rule they were computed at (``diag_rule``): adopting that same rule, a first adoption
+    included (the scenario's share, a proposed rule), keeps them current. Without
+    ``diag_rule``, the rule is taken to be the previously adopted one."""
     if decision_id != 'policy' or DIAG_BINARY_SLOT not in old_state.get('current', {}):
         return out
-    if rec.policy_rule(old) == rec.policy_rule(new) and old is not None:
+    computed_at = rec.canonical_rule(diag_rule) if diag_rule is not None else (
+        rec.policy_rule(old) if old is not None else None)
+    if computed_at is not None and computed_at == rec.policy_rule(new):
         return out
     if DIAG_BINARY_SLOT not in out['recompute']:
         out['recompute'] = sorted(set(out['recompute']) | {DIAG_BINARY_SLOT})

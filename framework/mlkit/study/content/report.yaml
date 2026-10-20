@@ -242,9 +242,9 @@ diagnostics:
   rule: Rule of these figures
   rule_source:
     adopted: the rule you adopted
-    proposed: the proposed rule, not adopted yet
-    scenario_default: the teaching scenario's share, no rule proposed yet
-    engine_default: a default share, no rule proposed yet
+    proposed: the rule proposed when these figures were computed
+    scenario_default: the teaching scenario's share, before any rule was proposed
+    engine_default: a default share, before any rule was proposed
   confusion_heading: Confusion matrix at the rule
   confusion_rows: Actual outcome
   confusion_selected: Selected by the rule

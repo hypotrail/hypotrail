@@ -55,6 +55,12 @@ of digits (R3): a run of 6 or more digits that follows "result", "result_id", "r
 registry; a number that traces to a figure is still traced as that figure. A minus sign
 may be ``-`` or the Unicode minus U+2212.
 
+v0.3 (WP-A): the tracing core lives in :mod:`mlkit.study.numtrace`, shared with ``decide
+propose`` (a text one accepts, the other accepts). A bare "points" is percentage points too;
+a sentence that names a result (a slot such as ``diag.binary``, a result id or its prefix) or
+a group label binds its numbers to it, and ``--result RESULT`` binds the whole draft; a
+diagnostic's segment figures are citable with their group named.
+
 Numbers written in words (final acceptance F3, :mod:`mlkit.study.wordnum`): in a draft
 (``--text``) and in the conclusion, common English and French forms used quantitatively
 ("one call in nine", "un sur neuf", "the eleven kept columns", "three quarters of the
@@ -97,28 +103,22 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from . import cite, governance, manifest as mf, read, view as view_model, wordnum
+from . import cite, governance, manifest as mf, numtrace, read, view as view_model, wordnum
 from . import commands as cmd
 from .errors import StudyError
+from .numtrace import (  # noqa: F401 - the tracing core, re-exported
+    SEVERITY, FINDING_CODES, EXEMPT_BEFORE, REVISION_SPAN, RULE_IDENTIFIER, RESULT_ID_DIGITS,
+    RESULT_ID_LEAD, PERCENTAGE_POINTS, LIST_MARKER, ISO_DATE, HEADING_ORDINAL, STRUCTURE_NOUNS,
+    _STRUCTURE_NOUN, STRUCTURE_AFTER, USABLE_STATUSES, EXCLUDED_STATUSES, finding,
+    LOCATION_KEYS, location, _walk_numbers, INTERNAL_SEGMENTS, INTERNAL_BY_SLOT, METRIC_WORDS,
+    RATE_WORDS, RATE_SEGMENTS, COUNT_NOUNS, COUNT_SEGMENTS, internal_path, DIAGNOSTIC_SLOTS,
+    INTERVAL_WORDS, MODEL_WORDS, RANGE_AFTER, RANGE_BEFORE, BASELINE_WORDS, INTERVAL_PARENTS,
+    SENTENCE_END, FINAL_SCOPE, DEVELOPMENT_SCOPE, FINAL_SLOTS, RULE_WORDS, DIAG_BOUNDS,
+    CHOICE_CHANGES, Binding, scope_of, final_item, _sentence_around, binding, _bound,
+    group_labels, CRITERION_FIGURES, criterion_items, _is_difference, Pool, data_card_figures,
+    _rule_spaced, _retired_note, _masked, _exempt, _result_id_prefix, _trace_words, trace_text,)
 
 SCHEMA = 'hypotrail.check/1'
-SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
-            'value_mismatch': 'error', 'stale_result_cited': 'error',
-            'feature_without_status': 'error', 'excluded_feature_used': 'error',
-            'untraceable_number': 'error', 'stale_number': 'error',
-            'causal_wording': 'warning', 'forecast_wording': 'warning',
-            'artifact_not_current': 'warning', 'untracked_files': 'warning',
-            # Post-v0.1 (P7): a recommended default credited to the analyst.
-            'misattributed_delegation': 'error',
-            # v0.2a (WP-A4): the conclusion adopts while the success criterion is not met
-            # or its paired interval includes 0.
-            'verdict_contradicts_criterion': 'warning',
-            # B6c (H4): the conclusion keeps the baseline while the criterion is met on the
-            # final test.
-            'verdict_keeps_baseline_against_criterion': 'warning',
-            # B6c (H2): a final-test figure in a text after the choice changed.
-            'final_test_figure_outdated': 'error'}
-FINDING_CODES = tuple(SEVERITY)
 
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|cannot|doesn't|don't|isn't|aren't|without|"
                       r"neither|nor)\b", re.IGNORECASE)
@@ -147,49 +147,6 @@ MISATTRIBUTED_DEFAULT = re.compile(
     r"|\b(?:defaults?|recommendations?)\s+(?:recommended|chosen|proposed|set|picked)\s+by\s+"
     r"(?:the\s+)?(?:analyst|junior|user|trainee)\b",
     re.IGNORECASE)
-EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'
-                           r'request|req-|expected-revision|section|§|row|'
-                           r'exit|exit code|exit status|exited with|exited with code)'
-                           r'\s*[#:=]?\s*$', re.IGNORECASE)
-# "revision 26 instead of 24", "revision 24 to 26", "revisions 24 and 26": every number of
-# the comparison that follows "revision" is a revision too (D4). "and" and "or" continue
-# only after the plural, so "at revision 26 and 115 clients" still checks 115.
-REVISION_SPAN = re.compile(
-    r'\brevision\s*[#:=]?\s*\d+(?:\s*(?:instead of|rather than|not|vs\.?|versus|to|->|\u2192)'
-    r'\s*(?:revision\s*)?\d+(?![.,]\d))+'
-    r'|\brevisions\s*\d+(?:\s*(?:,|and|or|to|-|\u2013)\s*\d+(?![.,]\d))+', re.IGNORECASE)
-# A rule written as an identifier ("capacity:100", "threshold:0.2") names a rule; it is
-# traced when it can be and never reported as a claim (D4).
-RULE_IDENTIFIER = re.compile(r'\b(?:threshold|capacity|share)\s*:\s*(-?\d+(?:\.\d+)?)',
-                             re.IGNORECASE)
-# A result id prefix made only of digits ("(result 52659681)") is an identifier, not a
-# figure (R3): at least this many digits, after one of these words or as the start of a
-# registry ``result_id``.
-RESULT_ID_DIGITS = re.compile(r'\d{6,}')
-RESULT_ID_LEAD = re.compile(r'\b(?:results?(?:[ _-]?ids?)?|rids?|ids?|executions?(?:[ _-]?ids?)?)'
-                            r'\s*[#:=]?\s*[`(\[]?\s*$', re.IGNORECASE)
-# "29.5 percentage points": a difference of two rates, read as a percentage of a registered
-# difference (``deltas``), never of a rate (D4).
-PERCENTAGE_POINTS = re.compile(r'\s*(?:percentage[- ]points?|pp\b|p\.p\.|points? de pourcentage)',
-                               re.IGNORECASE)
-LIST_MARKER = re.compile(r'^\s*\d+[.)]\s', re.MULTILINE)
-ISO_DATE = re.compile(r'\b\d{4}-\d{2}-\d{2}(?:[T ][\d:.]+(?:Z|[+-]\d{2}:?\d{2})?)?\b')
-HEADING_ORDINAL = re.compile(r'^(\s*#{1,6}\s+)\d+\.', re.MULTILINE)
-# D8: nouns that name the study's own structure, by the view count they refer to.
-STRUCTURE_NOUNS = {
-    'features': ('columns', 'column', 'features', 'feature', 'variables', 'variable', 'inputs',
-                 'predictors', 'colonnes', 'colonne'),
-    'groups': ('groups', 'groupes'),
-    'steps': ('steps', 'étapes'),
-    'pauses': ('pauses', 'decision points'),
-    'decisions': ('decisions', 'décisions'),
-}
-_STRUCTURE_NOUN = '|'.join(re.escape(n) for nouns in STRUCTURE_NOUNS.values()
-                           for n in sorted(nouns, key=len, reverse=True))
-STRUCTURE_AFTER = re.compile(rf"\s+(?:[^\W\d_][\w'’-]*\s+)?(?P<noun>{_STRUCTURE_NOUN})(?![\w])",
-                             re.IGNORECASE)
-USABLE_STATUSES = ('available_at_prediction', 'uncertain_included')
-EXCLUDED_STATUSES = ('not_available', 'uncertain_excluded')
 SENTENCE = re.compile(r'(?<=[.!?])\s+|\n+')
 INLINE_CODE = re.compile(r'`[^`\n]*`')
 # The default folder of ``hypotrail export handoff`` (CLI-CONTRACT-COMPANION C7): its
@@ -201,26 +158,6 @@ OWN_NOTEBOOKS = re.compile(r'^notebooks/(study_generated(\.user-edits-[^/]+)?|wo
 # (R7, v0.2a): neither is a computation outside hypotrail.
 IGNORED_DIRS = {'.hypotrail', '__marimo__', '__pycache__', '.claude', '.github', '.git',
                 'reports', '.venv', '.vscode'}
-
-
-def finding(code: str, where: str, message: str, *, location: dict | None = None,
-            **details) -> dict:
-    """One finding. ``location`` (CLI-CONTRACT-COMPANION C10, optional) is
-    ``{path, anchor, line}``: the study-relative file, the nearest enclosing HTML ``id``, and
-    the 1-based line; ``where`` is unchanged."""
-    out = {'code': code, 'severity': SEVERITY[code], 'where': where, 'message': message}
-    if details:
-        out['details'] = details
-    if location is not None:
-        out['location'] = location
-    return out
-
-
-LOCATION_KEYS = ('path', 'anchor', 'line')
-
-
-def location(path: str | None, anchor: str | None = None, line: int | None = None) -> dict:
-    return {'path': path, 'anchor': anchor, 'line': line}
 
 
 def _text_locator(path: str | None, text: str, first_line: int = 1):
@@ -254,652 +191,6 @@ def _sentences(text: str):
         yield pos, text[pos:m.start()]
         pos = m.end()
     yield pos, text[pos:]
-
-
-# --- number pools -----------------------------------------------------------------------
-
-def _walk_numbers(value: Any) -> Iterable[float]:
-    if cite.is_number(value):
-        yield float(value)
-    elif isinstance(value, str):
-        for tok in cite.parse_numbers(value):
-            yield tok.value / 100 if tok.percent else tok.value
-        for word in wordnum.parse(value):         # F3: "one in ten" written by the junior
-            yield word.value / 100 if word.kind in ('percent', 'points') else word.value
-    elif isinstance(value, Mapping):
-        for v in value.values():
-            yield from _walk_numbers(v)
-    elif isinstance(value, list):
-        for v in value:
-            yield from _walk_numbers(v)
-
-
-# WP-A9 (H2): paths of a result that a free text never cites. They are a result's internals
-# (null-band shuffles, the quality card's value ranges, bootstrap replicate counts, seeds,
-# settings, coefficients, tie-breaking details), and a figure that happens to equal one of
-# them was traced to it ("La précision du modèle est de 10 %" traced to a null band). The
-# rendered deliverables cite by path (``data-result-id``) and are not affected.
-INTERNAL_SEGMENTS = frozenset({
-    'null_band', 'undefined_replicates', 'replicates', 'seed', 'shuffles', 'max_groups',
-    'min_group_rows', 'iterations', 'n_terms', 'coefficients', 'intercept', 'cut',
-    'tied_at_cut', 'folds', 'rank', 'bin_width', 'n_bins', 'fitted', 'preprocessing',
-    'questions', 'co_occurrence',
-    # WP-B1 (WP-A9 merge): per-fold metrics and fold sizes, the variant's penalty, the
-    # final test's refit details and rule parameters.
-    'per_fold', 'fold_rows', 'C', 'candidate_C', 'refit', 'parameter'})
-INTERNAL_BY_SLOT = {'eda.quality': frozenset({'ranges', 'rare', 'rare_rows'})}
-# WP-A9 (H2): words near a number that name what it measures, and the path segments a
-# matching registry value must contain ("précision ... 10 %" binds to a precision). A count
-# noun ("50 clients") binds a number without a percent sign to a count.
-METRIC_WORDS = (
-    (re.compile(r'\b(?:precision|pr[ée]cision|hit\s+rate|taux\s+de\s+r[ée]ussite)\b', re.I),
-     ('precision',)),
-    (re.compile(r'\b(?:recall|rappel|couverture|coverage)\b', re.I), ('recall',)),
-    (re.compile(r'\b(?:auc|roc)\b', re.I), ('roc_auc',)),
-    (re.compile(r'\blift\b', re.I), ('lift',)),
-    # WP-B6b: "la précision gagne 21,4 points" (the French verb) names a gain too.
-    (re.compile(r'\b(?:gain|gains|gagn\w*)\b', re.I), ('gain_points', 'deltas', 'gain')),
-    (re.compile(r'\b(?:mae|rmse|error|errors|erreur|erreurs|residual\w*|r[ée]sidu\w*)\b', re.I),
-     ('mae', 'rmse', 'error', 'residual')),
-    (re.compile(r'\b(?:missing|manquant\w*|absent\w*)\b', re.I), ('missing',)),
-    (re.compile(r'\b(?:calibra\w*|brier)\b', re.I), ('calibration', 'brier')),
-    (re.compile(r'\b(?:distinct\w*|modalit[ée]s?|categor\w*|cat[ée]gor\w*)\b', re.I),
-     ('n_distinct', 'groups', 'n_groups')),
-)
-RATE_WORDS = re.compile(r'\b(?:rate|rates|taux|share|part|proportion|pourcentage|percentage)\b',
-                        re.I)
-RATE_SEGMENTS = ('rate', 'share', 'precision', 'recall', 'fraction', 'missing', 'gain', 'lift',
-                 'deltas', 'interval', 'level', 'average_precision', 'roc_auc', 'point',
-                 # WP-B6b (round 2): a calibration bin's observed rate and its interval
-                 # bounds (``calibration.bins.N.low``).
-                 'calibration')
-COUNT_NOUNS = re.compile(
-    r'\b(?:clients?|customers?|rows?|lignes?|calls?|appels?|sessions?|observations?|people|'
-    r'personnes?|subscribers?|souscripteurs?|souscriptions?|positives?|positifs?|contacts?|'
-    r'members?|membres?|cases?|cas|individus?|records?|enregistrements?|visits?|visites?|'
-    r'buyers?|acheteurs?|cars?|voitures?)\b', re.I)
-COUNT_SEGMENTS = frozenset({'n', 'n_rows', 'n_positive', 'n_negative', 'selected', 'volume',
-                            'true_positives', 'false_positives', 'false_negatives', 'capacity',
-                            'n_train', 'n_train_positive', 'n_special', 'n_missing', 'n_a',
-                            'n_b', 'n_both', 'n_either', 'n_groups', 'n_distinct', 'rows',
-                            'development_rows', 'n_rows_with_missing', '@n_rows', 'point',
-                            'low', 'high'})
-_NEAR_BEFORE, _NEAR_AFTER = 60, 30
-
-
-def internal_path(slot: str, path: str) -> bool:
-    """WP-A9 (H2): a result path a free text never cites (:data:`INTERNAL_SEGMENTS`)."""
-    if not path or path in cite.META_PATHS:
-        return False
-    try:
-        segments = cite.parse_path(path)
-    except Exception:      # noqa: BLE001 - an unreadable path is not cited either
-        return True
-    internal = INTERNAL_SEGMENTS
-    if slot.startswith(DIAGNOSTIC_SLOTS):
-        # WP-B6b: a diagnostic's coefficients and their bootstrap intervals are what the
-        # agent is asked to read with the junior (CLAUDE.md, "Diagnostics"); a fit's raw
-        # coefficients stay internal. The refit check of the point stays internal.
-        # The scatter points are drawn, never shown as figures (WP-B4).
-        internal = (internal - {'coefficients'}) | {'point_check', 'scatter'}
-    if internal & set(segments):
-        return True
-    return bool(INTERNAL_BY_SLOT.get(slot, frozenset()) & set(segments))
-
-
-DIAGNOSTIC_SLOTS = ('diag.',)
-
-
-INTERVAL_WORDS = re.compile(r'\b(?:intervals?|intervalles?|between|entre|ranges?|fourchette|'
-                            r'ci|ic|bounds?|bornes?|resamples?|bootstrap)\b|[\[\]–]'
-                            r'|\d\s*%?\s*(?:to|à|-)\s*[-−]?\d', re.I)
-# WP-B6b: "model year(s)" (a time column) names no model.
-MODEL_WORDS = re.compile(r'\b(?:model(?![\s_-]+years?\b)|mod[èe]le|logisti\w*|linear|'
-                         r'lin[ée]aire)\b', re.I)
-# WP-B6b: the first bound of a range written after the number ("3.49 à 4.18", "40% to 54%").
-RANGE_AFTER = re.compile(r'\s*%?\s*(?:to|à|-|–)\s*[-−]?\d', re.I)
-# ... and the second bound ("3.44 à 4.13"): the number follows a bound and a range word.
-RANGE_BEFORE = re.compile(r'\d\s*%?\s*(?:to|à|-|–)\s*[-−]?$', re.I)
-BASELINE_WORDS = re.compile(r'\b(?:baseline|r[ée]f[ée]rence|constant\w*|base|mean|moyenne)\b',
-                            re.I)
-INTERVAL_PARENTS = frozenset({'interval', 'intervals', 'deltas'})
-SENTENCE_END = re.compile(r'[.!?](?=\s|$)|[;\n]')
-
-
-# B6c (H2): the evidence a sentence speaks of. A figure said of the final test traces to the
-# final evidence only (the one final evaluation and its diagnostics); a figure said of the
-# development evidence (out of fold, cross-validated, validation) never traces to it.
-FINAL_SCOPE = re.compile(r"\b(?:final[- ]test\w*|tests?[- ]finals?|final evaluation|"
-                         r"[ée]valuation finale|sealed rows|lignes scell[ée]es)\b", re.I)
-DEVELOPMENT_SCOPE = re.compile(r"\b(?:out[- ]of[- ]fold|hors[- ]pli\w*|cross[- ]validat\w*|"
-                               r"validation crois[ée]e|development|d[ée]veloppement|"
-                               r"validation)\b", re.I)
-FINAL_SLOTS = ('final_test.evaluation', 'diag.final_test')
-# B6c (H2): a percentage right after a rule word ("la règle des 20 %", "the top 20%") is the
-# rule's share: it matches the rule the evidence of the sentence evaluated.
-RULE_WORDS = re.compile(r"\b(?:rules?|r[èe]gles?|top|share|capacit\w*|meilleur\w*|best|"
-                        r"premi[èe]r\w*)\b[^\d]{0,14}$", re.I)
-# B6c (H2): the bounds of a diagnostic's segments and intervals are internals unless the
-# words speak of an interval.
-DIAG_BOUNDS = ('low', 'high', 'precision_low', 'precision_high', 'recall_low', 'recall_high')
-# B6c (H2): decisions whose change after the opening means the final test no longer measured
-# the configuration a text would claim.
-CHOICE_CHANGES = ('policy', 'model_choice', 'model_variant', 'preprocessing',
-                  'feature_availability', 'split')
-
-
-@dataclasses.dataclass(frozen=True)
-class Binding:
-    """WP-A9 (H2): what the words near a number say it measures. ``segments``: path
-    segments a matching value must hold (None: any). ``interval``: interval words are near,
-    so an interval's bound may match (without them only point values do). ``model``: a model
-    is named and the baseline is not, so the baseline's values do not match. B6c (H2):
-    ``scope`` is ``final`` or ``development`` when the sentence speaks of one evidence only;
-    ``rule`` when the number is a rule's share ("la règle des 20 %")."""
-    segments: tuple | None = None
-    interval: bool = False
-    model: bool = False
-    scope: str | None = None
-    rule: bool = False
-
-
-def scope_of(sentence: str) -> str | None:
-    """B6c (H2): ``final``, ``development``, or None (both, or neither, named)."""
-    final = bool(FINAL_SCOPE.search(sentence))
-    development = bool(DEVELOPMENT_SCOPE.search(FINAL_SCOPE.sub(' ', sentence)))
-    if final and not development:
-        return 'final'
-    if development and not final:
-        return 'development'
-    return None
-
-
-def final_item(item: Mapping) -> bool:
-    """B6c (H2): a pool item of the final evidence: the final evaluation, its diagnostics,
-    or the criterion judged on the final test (WP-B6b's ``criterion.final_test`` items)."""
-    return item.get('slot') in FINAL_SLOTS or (
-        item.get('slot') == 'criterion'
-        and str(item.get('path') or '').startswith('criterion.final_test'))
-
-
-def _sentence_around(text: str, start: int, end: int) -> str:
-    ends = [m.end() for m in SENTENCE_END.finditer(text, 0, start)]
-    lo = ends[-1] if ends else 0
-    m = SENTENCE_END.search(text, end)
-    return text[lo:m.start() if m else len(text)]
-
-
-def binding(text: str, start: int, end: int, percent: bool) -> Binding:
-    """WP-A9 (H2): the :class:`Binding` of a number at ``text[start:end]``, from the words
-    near it in its sentence (:data:`METRIC_WORDS`, a count noun after a number without a
-    percent sign, interval and model words)."""
-    lo = max(0, start - _NEAR_BEFORE)
-    hi = min(len(text), end + _NEAR_AFTER)
-    before, after = text[lo:start], text[end:hi]
-    # The clause: a sentence end (never the point of a decimal number), a semicolon.
-    ends = [m.end() for m in SENTENCE_END.finditer(before)]
-    if ends:
-        before = before[ends[-1]:]
-    stops = [i for i in (after.find('. '), after.find('\n'), after.find(';'), after.find(','),
-                         after.find(':'), after.find('('), after.find(')')) if i >= 0]
-    if stops:
-        after = after[:min(stops)]
-    # The words that name what a number measures: before it in its clause, or the first
-    # three words after it ("42 % precision", "50 clients").
-    soon = ' '.join(after.split()[:3])
-    named = before + ' ' + soon
-    near = before + ' ' + after
-    # A count noun right after the number, or after one qualifying word ("90 validation
-    # rows", "50 clients").
-    count = not percent and bool(COUNT_NOUNS.search(' '.join(soon.split()[:2])))
-    out: list[str] = []
-    if not count:
-        for pattern, segments in METRIC_WORDS:
-            if pattern.search(named):
-                out.extend(segments)
-        if RATE_WORDS.search(named):
-            out.extend(RATE_SEGMENTS)
-    return Binding(segments=('#count',) if count else (tuple(dict.fromkeys(out)) or None),
-                   interval=bool(INTERVAL_WORDS.search(near) or RANGE_AFTER.match(text, end)
-                                 or RANGE_BEFORE.search(text, max(0, start - 20), start)),
-                   model=bool(MODEL_WORDS.search(named)) and not BASELINE_WORDS.search(near),
-                   scope=scope_of(_sentence_around(text, start, end)),
-                   rule=percent and bool(RULE_WORDS.search(text[max(0, start - 30):start])))
-
-
-def _bound(item: Mapping, bind: Binding | None) -> bool:
-    """A registry item a number with the binding ``bind`` may match."""
-    if bind is None:
-        return True
-    path = item['path']
-    try:
-        segments = cite.parse_path(path) if path not in cite.META_PATHS else [path]
-    except Exception:      # noqa: BLE001
-        return False
-    slot = str(item.get('slot') or '')
-    # B6c (H2): the evidence the sentence speaks of.
-    if bind.scope == 'final' and not final_item(item):
-        return False
-    if bind.scope == 'development' and final_item(item):
-        return False
-    if bind.rule:
-        # A rule's share matches the share of a rule that evidence evaluated.
-        return segments[-1] == 'capacity_share'
-    if slot.startswith('diag.') and not bind.interval and (
-            'segments' in segments or segments[-1] in DIAG_BOUNDS):
-        return False
-    if not bind.interval and segments[-1] in ('low', 'high') \
-            and INTERVAL_PARENTS & set(segments[:-1]):
-        return False
-    if bind.model and any(seg == 'fit.baseline' or seg.startswith('baseline')
-                          for seg in segments):
-        return False
-    if bind.segments is None:
-        return True
-    if bind.segments == ('#count',):
-        return segments[-1] in COUNT_SEGMENTS
-    return any(b in seg for seg in segments for b in bind.segments)
-
-
-def group_labels(values: Any) -> list[str]:
-    """WP-B6b: the text labels of a result's groups (``groups: [{value|label: "<text>"}]``,
-    as the EDA, the residuals by period and the diagnostics by variable print them)."""
-    out: list[str] = []
-    if isinstance(values, Mapping):
-        for key, v in values.items():
-            if key == 'groups' and isinstance(v, list):
-                out += [g[k] for g in v if isinstance(g, Mapping)
-                        for k in ('value', 'label') if isinstance(g.get(k), str)]
-            out += group_labels(v)
-    elif isinstance(values, list):
-        for v in values:
-            out += group_labels(v)
-    return out
-
-
-CRITERION_FIGURES = ('gain', 'low', 'high')
-
-
-def criterion_items(criterion: Mapping | None) -> list[dict]:
-    """WP-B6b: the citable figures of ``view.criterion`` (development, then final test),
-    as pool items of the result each was read from."""
-    if not isinstance(criterion, Mapping):
-        return []
-    metric = criterion.get('metric') or 'criterion'
-    out = []
-    for prefix, block in (('criterion', criterion),
-                          ('criterion.final_test', criterion.get('final_test'))):
-        if not isinstance(block, Mapping) or not isinstance(block.get('result_id'), str):
-            continue
-        for key in CRITERION_FIGURES:
-            value = block.get(key)
-            if cite.is_number(value):
-                out.append({'result_id': block['result_id'], 'slot': 'criterion',
-                            'path': f'{prefix}.{metric}.{key}', 'value': value})
-    return out
-
-
-def _is_difference(path: str) -> bool:
-    """True when a value path addresses a registered difference (``deltas``)."""
-    if not path or path in cite.META_PATHS:
-        return False
-    return any('delta' in seg or 'difference' in seg for seg in cite.parse_path(path))
-
-
-class Pool:
-    """Numbers a text may cite: current results, then literals, then stale results.
-
-    Literals are recorded values a text may repeat: decision and proposal values, the
-    rules evaluated by the current policy evaluation, the junior's recorded words, settings,
-    case statements, ``user_texts`` (text the junior wrote, passed with
-    ``--allow-user-text``), the sealed final test's counts, and (WP-A8) the figures of the
-    data card (``data_card``, the ``hypotrail data`` payload).
-    """
-
-    def __init__(self, view: Mapping, user_texts: Iterable[str] = (),
-                 result_ids: Iterable[str] | None = None, retired: Iterable[Mapping] = (),
-                 data_card: Mapping | None = None):
-        self.current, self.stale, self.literal = [], [], []
-        # Withdrawn and superseded proposals (F3): never literals; only named in the
-        # finding when an untraceable number repeats one of their figures.
-        self.retired = []
-        for p in retired:
-            for v in _walk_numbers(_rule_spaced(p.get('value'))):
-                self.retired.append({'proposal_id': p.get('proposal_id'),
-                                     'status': p.get('status'), 'value': v})
-        # Result ids a digit-only prefix may abbreviate (R3): the registry when known,
-        # else the results of the view.
-        self.result_ids = tuple(result_ids) if result_ids is not None else tuple(
-            item['result_id'] for item in view['results'].values()
-            if isinstance(item.get('result_id'), str))
-        # Target units of the results (a regression study, M3): "about six litres" is read.
-        self.units = wordnum.unit_nouns(sorted({
-            item['values']['unit'] for item in view['results'].values()
-            if isinstance(item.get('values'), Mapping)
-            and isinstance(item['values'].get('unit'), str)}))
-        for slot, item in sorted(view['results'].items()):
-            if item['values'] is None:
-                continue
-            bucket = self.current if item['current'] and item['integrity'] == 'ok' else self.stale
-            leaves = list(cite.leaves(item['values']))
-            if cite.is_number(item['n_rows']):
-                leaves.append((('@n_rows',), item['n_rows']))
-            for segments, value in leaves:
-                path = cite.format_path(segments)
-                if internal_path(slot, path):
-                    continue
-                bucket.append({'result_id': item['result_id'], 'slot': slot,
-                               'path': path, 'value': value})
-        # WP-B6b: the success criterion as ``status`` shows it (``view.criterion``): the
-        # gain and its interval on the development evidence (in points for a scoring study,
-        # a share of the baseline's MAE for a regression), and on the final test once
-        # opened. The path names the metric ("precision_gain", "mae_reduction") so that a
-        # number bound to "precision" or "MAE" may match it.
-        self.current.extend(criterion_items(view.get('criterion')))
-        # WP-B6b: the bounds a group label prints ("81 to 82 year (19xx)", "(2166.8,
-        # 2584.4]") are literals of a current result: a text that names the group repeats
-        # them.
-        for slot, item in sorted(view['results'].items()):
-            if item['values'] is not None and item['current'] and item['integrity'] == 'ok':
-                for label in group_labels(item['values']):
-                    self._literal('group_label', f'{slot}:{label}', label)
-        for d in view['decisions'].values():
-            if d['value'] is not None and d['decision_id'] != 'conclusion':
-                self._literal('decision', d['decision_id'], d['value'])
-        for p in view['open_proposals']:
-            if p['decision_id'] != 'conclusion':
-                self._literal('proposal', p['proposal_id'], p['value'])
-        for d in view['decisions'].values():
-            conf = d.get('confirmation')
-            if isinstance(conf, Mapping) and isinstance(conf.get('user_words'), str):
-                self._literal('user_words', d['decision_id'], conf['user_words'])
-        # P2: the junior's recorded conditions and the words that resolved them.
-        for n in view.get('notes') or []:
-            self._literal('user_words', n['note_id'], n['user_words'])
-            if isinstance(n.get('resolution'), Mapping):
-                self._literal('user_words', n['note_id'], n['resolution'].get('user_words'))
-        for slot, item in sorted(view['results'].items()):
-            if item.get('activity') == 'policy.evaluation' and item['current'] \
-                    and isinstance(item.get('params'), Mapping):
-                for rule in item['params'].get('rules') or []:
-                    self._literal('rule', slot, rule)
-        for i, text in enumerate(user_texts):
-            self._literal('user_text', f'user_text:{i + 1}', text)
-        # D8: counts of the study's own structure, matched only before a structural noun.
-        self.structure: list[dict] = []
-
-        def count(kind: str, source: str, value) -> None:
-            if isinstance(value, int) and not isinstance(value, bool):
-                self.structure.append({'kind': kind, 'id': source, 'value': value})
-        for slot, item in sorted(view['results'].items()):
-            values = item.get('values')
-            if not (item['current'] and item['integrity'] == 'ok' and isinstance(values, Mapping)):
-                continue
-            if isinstance(values.get('features'), list):
-                count('features', f'{slot}.features', len(values['features']))
-            if isinstance(values.get('groups'), list):
-                count('groups', f'{slot}.groups', len(values['groups']))
-        availability = [('decision', view['decisions'].get('feature_availability', {})
-                         .get('value'))]
-        availability += [(p['proposal_id'], p['value']) for p in view['open_proposals']
-                         if p['decision_id'] == 'feature_availability']
-        for source, value in availability:
-            if not isinstance(value, Mapping):
-                continue
-            count('features', f'feature_availability.{source}.all', len(value))
-            count('features', f'feature_availability.{source}.usable',
-                  sum(v in USABLE_STATUSES for v in value.values()))
-            count('features', f'feature_availability.{source}.excluded',
-                  sum(v in EXCLUDED_STATUSES for v in value.values()))
-            for status in sorted(set(value.values())):
-                count('features', f'feature_availability.{source}.{status}',
-                      sum(v == status for v in value.values()))
-        plan = view.get('plan') or []
-        count('steps', 'plan.steps', len(plan))
-        count('pauses', 'plan.pauses', len({s['pause'] for s in plan if s.get('pause')}))
-        count('decisions', 'decisions', len(view['decisions']))
-        self._literal('setting', 'settings', view['settings'])
-        self._literal('case', 'dataset.rows', view['dataset'].get('rows'))
-        # WP-A8: the sealed final test's counts (state, ADR 0006) and the data card's figures
-        # (step 0 shows them before any result exists): row and column counts, missing,
-        # distinct and special-value counts, and the example cells it prints.
-        final = view.get('final_test') or {}
-        for key in ('rows', 'development_rows'):
-            self._literal('final_test', f'final_test.{key}', final.get(key))
-        # B6c (H2): the choices changed after the opening; a final-test figure then no
-        # longer describes the configuration the study holds.
-        self.changed_after = sorted(set(final.get('changed_after') or []) & set(CHOICE_CHANGES))
-        for source, value in data_card_figures(data_card):
-            self._literal('data_card', source, value)
-        for items in view['facts']['by_status'].values():
-            for f in items:
-                self._literal('case', f['id'], f['value'])
-
-    def _literal(self, kind: str, source: str, value: Any) -> None:
-        for v in _walk_numbers(_rule_spaced(value)):
-            self.literal.append({'source': kind, 'id': source, 'value': v})
-
-    def trace_words(self, word: wordnum.WordNumber) -> tuple[str, dict | None]:
-        """Where a number written in words comes from (F3), like :meth:`trace`: a ratio
-        or a fraction matches at its own precision (:meth:`wordnum.WordNumber.matches`),
-        percentage points only a registered difference."""
-        points = word.kind == 'points'
-        for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
-                              (self.stale, 'stale')):
-            if points and label == 'literal':
-                continue
-            for item in bucket:
-                if points and not _is_difference(item['path']):
-                    continue
-                if word.matches(item['value'], literal=label == 'literal'):
-                    return label, item
-        return 'none', None
-
-    def structure_match(self, text: str, end: int, value: float) -> dict | None:
-        """The structure count (D8) a number ending at ``end`` refers to, when a structural
-        noun follows it and the count matches; None otherwise."""
-        m = STRUCTURE_AFTER.match(text, end)
-        if m is None or value != int(value):
-            return None
-        noun = m.group('noun').lower()
-        kind = next(k for k, nouns in STRUCTURE_NOUNS.items() if noun in nouns)
-        return next((item for item in self.structure
-                     if item['kind'] == kind and item['value'] == int(value)), None)
-
-    def retired_match(self, value: float, *, percent: bool = False) -> dict | None:
-        """The withdrawn or superseded proposal whose figure ``value`` repeats, if any."""
-        for item in self.retired:
-            v = 100 * item['value'] if percent else item['value']
-            if abs(v - value) < 1e-9:
-                return item
-        return None
-
-    def trace(self, tok: cite.Token, *, difference: bool = False,
-              bind: 'Binding | None' = None) -> tuple[str, dict | None]:
-        """Where ``tok`` comes from. ``difference``: the token is written in percentage
-        points, so only a registered difference (``deltas``) can match it. ``bind`` (WP-A9,
-        H2): the path segments the words near the number name (:func:`binding`); a result
-        whose path holds none of them is not a match."""
-        for bucket, label in ((self.current, 'current'), (self.literal, 'literal'),
-                              (self.stale, 'stale')):
-            if difference and label == 'literal':
-                continue
-            if label == 'literal' and bind is not None and bind.scope == 'final' \
-                    and bind.rule:
-                continue
-            for item in bucket:
-                if difference and not _is_difference(item['path']):
-                    continue
-                if label != 'literal' and not _bound(item, bind):
-                    continue
-                if cite.shown_matches(tok, item['value']) or (
-                        not tok.percent and label == 'literal'
-                        and abs(item['value'] - tok.value) < 1e-9):
-                    return label, item
-        return 'none', None
-
-
-def data_card_figures(card: Mapping | None) -> list[tuple[str, Any]]:
-    """``(source, value)`` of every figure the data card shows (WP-A8): what ``check`` lets
-    a text repeat after step 0. Example cells are quoted data, never statistics."""
-    if not isinstance(card, Mapping):
-        return []
-    dev = card.get('development') or {}
-    out = [('data.development.rows', dev.get('rows')),
-           ('data.development.columns', dev.get('columns'))]
-    for group in card.get('groups') or []:
-        for v in group.get('variables') or []:
-            name = v.get('name')
-            out += [(f'data.{name}.n_missing', v.get('n_missing')),
-                    (f'data.{name}.n_distinct', v.get('n_distinct')),
-                    (f'data.{name}.examples', v.get('examples'))]
-            out += [(f'data.{name}.special_values', s.get('n_rows'))
-                    for s in v.get('special_values') or []]
-    for item in (card.get('rows') or {}).get('items') or []:
-        out.append((f'data.rows.{item.get("row_key")}', item.get('values')))
-    return [(source, value) for source, value in out if value is not None]
-
-
-def _rule_spaced(value: Any) -> Any:
-    """A rule identifier with its colon spaced ("capacity 100"), so its figure is read."""
-    if isinstance(value, str) and ':' in value:     # "capacity:100", "threshold:0.3"
-        return value.replace(':', ' ')
-    return value
-
-
-def _retired_note(pool: 'Pool', value: float, percent: bool = False) -> tuple[str, dict]:
-    item = pool.retired_match(value, percent=percent)
-    if item is None:
-        return '', {}
-    return (f' It repeats a figure of the {item["status"]} proposal {item["proposal_id"]}, '
-            'which is no longer on the table: name that proposal without its figure.',
-            {'retired_proposal': item['proposal_id'], 'proposal_status': item['status']})
-
-
-def _masked(text: str) -> str:
-    """``text`` with exempt numbers (dates, list markers, revision comparisons) blanked,
-    same length."""
-    text = ISO_DATE.sub(lambda m: ' ' * len(m.group(0)), text)
-    text = LIST_MARKER.sub(lambda m: re.sub(r'\d', ' ', m.group(0)), text)
-    text = REVISION_SPAN.sub(lambda m: re.sub(r'\d', ' ', m.group(0)), text)
-    return text
-
-
-def _exempt(text: str, tok: cite.Token) -> bool:
-    return bool(EXEMPT_BEFORE.search(text[max(0, tok.start - 24):tok.start]))
-
-
-def _result_id_prefix(pool: Pool, text: str, tok: cite.Token) -> bool:
-    """True when ``tok`` is an all-digit result id prefix (R3): 6 or more digits, no sign,
-    decimals or percent, after "result" / "rid" / "id" / "execution", or the start of a
-    registry ``result_id``."""
-    body = text[tok.start:tok.end]
-    if tok.percent or not RESULT_ID_DIGITS.fullmatch(body):
-        return False
-    if RESULT_ID_LEAD.search(text[max(0, tok.start - 24):tok.start]):
-        return True
-    return any(rid.startswith(body) for rid in pool.result_ids)
-
-
-def _trace_words(pool: Pool, masked: str, word: wordnum.WordNumber, where: str,
-                 findings: list, traced: list, locate=None) -> None:
-    """Trace one number written in words (F3) and record a finding or a trace."""
-    at = locate(word.start) if locate else None
-    label, item = pool.trace_words(word)
-    shown = word.text.strip()
-    structure = (pool.structure_match(masked, word.end, word.value)
-                 if label in ('none', 'stale') and word.kind == 'count' else None)
-    if structure is not None:
-        traced.append({'text': shown, 'source': 'structure', 'id': structure['id'],
-                       'value': structure['value'], 'in_words': True})
-        return
-    if label == 'current':
-        traced.append({'text': shown, 'result_id': item['result_id'], 'slot': item['slot'],
-                       'path': item['path'], 'value': item['value'], 'in_words': True})
-    elif label == 'literal':
-        traced.append({'text': shown, 'source': item['source'], 'id': item['id'],
-                       'value': item['value'], 'in_words': True})
-    elif label == 'stale':
-        findings.append(finding('stale_number', where,
-                                f'"{shown}" (a number written in words) matches only a stale '
-                                'result; recompute before citing it.', number=shown,
-                                in_words=True, result_id=item['result_id'], path=item['path'],
-                                location=at))
-    else:
-        note, extra = _retired_note(pool, word.value)
-        findings.append(finding('untraceable_number', where,
-                                f'"{shown}" is a number written in words ({word.kind}) that '
-                                'matches no current registry value. Cite the registered figure '
-                                'with its result_id instead of computing or rounding it into '
-                                'words.' + note, number=shown, in_words=True, kind=word.kind,
-                                value=word.value, location=at, **extra))
-
-
-def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dict], list[dict]]:
-    """Trace every number of ``text``. ``locate`` (optional) maps an offset of ``text`` to
-    the ``location`` of a finding (C10)."""
-    findings, traced = [], []
-    masked = _masked(text)
-    identifiers = {m.start(1) for m in RULE_IDENTIFIER.finditer(masked)}
-    items = sorted([(t.start, 0, t) for t in cite.parse_numbers(masked)]
-                   + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
-                   key=lambda x: x[:2])
-    for _, in_words, tok in items:
-        if _exempt(masked, tok):
-            continue
-        if in_words:
-            _trace_words(pool, masked, tok, where, findings, traced, locate)
-            continue
-        difference = not tok.percent and bool(PERCENTAGE_POINTS.match(masked, tok.end))
-        if difference:
-            tok = dataclasses.replace(tok, percent=True)
-        bind = binding(masked, tok.start, tok.end, tok.percent)
-        label, item = pool.trace(tok, difference=difference, bind=bind)
-        if label in ('none', 'stale') and tok.start in identifiers:
-            traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'rule',
-                           'value': tok.value})
-            continue
-        structure = (pool.structure_match(masked, tok.end, tok.value)
-                     if label in ('none', 'stale') and not tok.percent else None)
-        if structure is not None:
-            traced.append({'text': tok.text.strip(), 'source': 'structure',
-                           'id': structure['id'], 'value': structure['value']})
-            continue
-        if label in ('none', 'stale') and _result_id_prefix(pool, masked, tok):
-            traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'result_id',
-                           'value': tok.value})
-            continue
-        if label == 'current' and final_item(item) \
-                and getattr(pool, 'changed_after', None):
-            findings.append(finding(
-                'final_test_figure_outdated', where,
-                f'{tok.text.strip()} is a figure of the final test, which measured the '
-                f'configuration chosen before {", ".join(pool.changed_after)} changed after the '
-                f'opening: it does not describe the configuration the study now holds. Say so, '
-                f'or cite development evidence of the current choice.',
-                number=tok.text.strip(), result_id=item['result_id'], path=item['path'],
-                changed_after=list(pool.changed_after),
-                location=locate(tok.start) if locate else None))
-        elif label == 'current':
-            traced.append({'text': tok.text.strip(), 'result_id': item['result_id'],
-                           'slot': item['slot'], 'path': item['path'], 'value': item['value']})
-        elif label == 'literal':
-            traced.append({'text': tok.text.strip(), 'source': item['source'], 'id': item['id'],
-                           'value': item['value']})
-        elif label == 'stale':
-            findings.append(finding('stale_number', where,
-                                    f'{tok.text.strip()} matches only a stale result; recompute '
-                                    'before citing it.', number=tok.text.strip(),
-                                    result_id=item['result_id'], path=item['path'],
-                                    location=locate(tok.start) if locate else None))
-        else:
-            note, extra = _retired_note(pool, tok.value, percent=tok.percent)
-            findings.append(finding('untraceable_number', where,
-                                    f'{tok.text.strip()} matches no current registry value at its '
-                                    'displayed precision. Cite a result instead of computing.'
-                                    + note, number=tok.text.strip(),
-                                    location=locate(tok.start) if locate else None, **extra))
-    return findings, traced
 
 
 def wording(text: str, where: str, locate=None) -> list[dict]:
@@ -1358,6 +649,10 @@ def configure(parser: argparse.ArgumentParser) -> None:
                         metavar='PATH',
                         help="text the junior wrote (- for stdin); the draft may repeat its "
                              "numbers (repeatable, with --text)")
+    parser.add_argument('--result', action='append', default=None, metavar='RESULT',
+                        help='a result the draft speaks of (a result id, a prefix of 6 or more '
+                             'characters, or a slot): its numbers bind to that result '
+                             '(repeatable, with --text)')
 
 
 def _read_text(arg: str) -> str:
@@ -1402,9 +697,11 @@ def _data_card(study_dir) -> dict | None:
 
 
 def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = (),
-              text_path: str | None = None) -> dict:
+              text_path: str | None = None, scope: Iterable[str] | None = None) -> dict:
     """The ``hypotrail.check/1`` payload. ``text_path`` names the file ``text`` was read
-    from, for the ``location`` of its findings (C10; stdin and None give a null path)."""
+    from, for the ``location`` of its findings (C10; stdin and None give a null path).
+    ``scope`` (v0.3, WP-A, ``--result``): results the numbers of the text bind to, unless a
+    sentence names others."""
     study_dir = Path(study_dir).resolve()
     if text is None:
         view, findings, traced = check_study(study_dir)
@@ -1412,12 +709,17 @@ def run_check(study_dir, text: str | None = None, user_texts: Iterable[str] = ()
     else:
         study = read.open(study_dir)
         view = view_model.build(study)
-        findings, traced = _check_text(view, text, user_texts=user_texts,
-                                       result_ids=registry_ids(study),
-                                       retired=retired_proposals(study),
-                                       locate=_text_locator(
-                                           text_location_path(study_dir, text_path), text),
-                                       data_card=_data_card(study_dir))
+        # v0.3 (WP-A): the pool ``decide propose`` traces a proposal's texts with.
+        pool = numtrace.study_pool(study, view=view, user_texts=user_texts, scope=scope)
+        if pool.unknown_scope:
+            raise StudyError('invalid_arguments',
+                             f'--result names no result of the view: '
+                             f'{", ".join(pool.unknown_scope)}.',
+                             details={'results': pool.unknown_scope,
+                                      'slots': sorted(pool.slots)})
+        locate = _text_locator(text_location_path(study_dir, text_path), text)
+        findings, traced = trace_text(pool, text, 'text', locate)
+        findings += wording(text, 'text', locate) + attribution(text, 'text', locate)
         target = 'text'
     counts = {'error': sum(f['severity'] == 'error' for f in findings),
               'warning': sum(f['severity'] == 'warning' for f in findings)}
@@ -1434,6 +736,10 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
     if [args.text, *user].count('-') > 1:
         raise StudyError('invalid_arguments', 'Only one of --text and --allow-user-text can read '
                                               'stdin (-).')
+    scope = list(args.result or [])
+    if scope and args.text is None:
+        raise StudyError('invalid_arguments', '--result goes with --text: it names the results '
+                                              'the draft speaks of.')
     text = _read_text(args.text) if args.text is not None else None
     return cmd.Outcome(run_check(args.study, text, [_read_text(u) for u in user],
-                                 text_path=args.text))
+                                 text_path=args.text, scope=scope or None))
