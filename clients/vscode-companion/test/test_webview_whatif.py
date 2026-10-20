@@ -14,6 +14,7 @@ import pytest
 
 FORBIDDEN = re.compile(r'\b(threshold|capacity|precision|recall|positive class|policy|calling rule|decision rule|selected)\b', re.I)
 THEMES = ['light', 'dark']
+# The panel's writes (W4-W7), and the message types W1-W3 had before the v0.3 narrowing.
 WRITES = {'confirm', 'withdraw', 'propose', 'run_eda', 'render', 'acknowledge', 'export_handoff'}
 
 
@@ -104,23 +105,36 @@ def test_sandbox_starts_at_the_proposed_rule_and_shows_the_experiment(open_panel
     assert cmp.locator('data[data-result-id]').count() == 0, 'preview values are never cited as results'
     # Rules already evaluated: cited values of the current evaluation, with their status.
     rows = page.locator('[data-evaluated-rule]')
+    # WP-E1 (R26): the rule in words; the token stays on the row.
     assert rows.evaluate_all('xs => xs.map(x => [...x.cells].map(c => c.textContent))') == [
-        ['capacity:100', '100', '36', '36.0%', '23.1%', 'proposed'],
-        ['threshold:0.2', '115', '40', '34.8%', '25.6%', 'adopted']]
+        ['top 100 rows', '100', '36', '36.0%', '23.1%', 'proposed'],
+        ['score at least 0.2', '115', '40', '34.8%', '25.6%', 'adopted']]
+    assert rows.evaluate_all('xs => xs.map(x => x.dataset.evaluatedRule)') == ['capacity:100', 'threshold:0.2']
+    heading = page.locator('#ht-wi-cmp-h')
+    assert heading.inner_text() == 'Model and baseline at top 100 rows' and heading.get_attribute('title') == 'capacity:100'
+    assert 'capacity:100' not in page.locator('#panel-whatif').inner_text()
     assert rows.first.locator('data[data-result-id]').count() == 4
     assert page.locator('.ht-wi-evaluated th').all_inner_texts()[2] == 'Positives (y)'
-    # The engine's draft: "Draft only", the texts verbatim, then Propose (identifiers only).
+    # The engine's draft, read only, then "Ask the agent to propose this rule": a ready
+    # question copied for the chat (WP-E1, integrator decision I2: no W3).
     draft = model('draft', 'proposal_draft.binary')
     panel.send({'type': 'draft_result', 'decisionId': 'policy', 'value': 'capacity:100', 'revision': 26, 'model': draft})
     card = page.locator('[data-draft="capacity:100"]')
-    assert card.locator('.ht-wi-label').inner_text() == 'Draft only'
+    assert card.locator('.ht-wi-label').inner_text() == 'What the agent would propose'
     assert card.locator('[data-draft-restatement]').text_content() == draft['restatement']
-    button = page.locator('[data-write="propose"]')
-    assert button.is_enabled() and button.inner_text() == 'Propose this rule'
-    assert page.locator('#ht-wi-propose-hint').inner_text() == 'Creates a proposal only. You will confirm it in your own words in Decisions.'
+    assert page.locator('[data-write]').count() == 0, 'the tab writes nothing'
+    button = page.locator('[data-ask-propose="capacity:100"]')
+    assert button.inner_text() == 'Ask the agent to propose this rule'
+    assert page.locator('#ht-wi-propose-hint').inner_text() == \
+        'Copies a question for the chat. The agent proposes it there, and you answer in the chat.'
     button.click()
-    assert panel.posted()[-1] == {'v': 2, 'type': 'propose', 'decisionId': 'policy', 'value': 'capacity:100', 'revision': 26}
-    assert page.locator('textarea').count() == 0, 'no words are typed to propose'
+    assert page.locator('[role="dialog"]').count() == 0, 'one press copies, no modal'
+    assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'decision', 'id': 'policy'},
+                                  'question': 'Could you propose the decision rule "top 100 rows" (capacity:100)? '
+                                              'I looked at it in the What if? tab, and I will answer your proposal in the chat.',
+                                  'mode': 'copy'}
+    assert page.locator('textarea').count() == 0, 'no words are typed'
+    assert not [m for m in panel.posted() if m['type'] in ('propose', 'confirm')]
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
@@ -145,10 +159,10 @@ def test_wi2_wi3_slider_moves_send_previews_only_and_an_unevaluated_rule_cannot_
     page.evaluate("() => document.getElementById('ht-wi-slider').dispatchEvent(new Event('change'))")
     assert sent(panel, 'preview_policy')[-1] == {'v': 2, 'type': 'preview_policy', 'rules': ['capacity:120'], 'intervals': True, 'seq': 22}
     area = page.locator('[data-propose-area="capacity:120"]')
-    assert area.locator('[data-not-evaluated]').inner_text() == ('This rule has not been evaluated by the engine yet, so it cannot be '
-                                                                   'proposed here.')
-    assert area.locator('[data-write="propose"]').count() == 0
-    assert area.get_by_role('button', name='Ask the agent to evaluate capacity:120').count() == 1
+    assert area.locator('[data-not-evaluated]').inner_text() == ('This rule has not been evaluated by the engine yet, so the agent '
+                                                                   'cannot propose it yet.')
+    assert area.locator('[data-write], [data-ask-propose]').count() == 0
+    assert area.get_by_role('button', name='Ask the agent to evaluate the rule "top 120 rows"').count() == 1
     assert not [m for m in panel.posted()[before:] if m['type'] in WRITES or m['type'] == 'draft'], 'no write, no draft'
     # The number input is bound to the slider; Page Up moves by a tenth of the range.
     page.locator('#ht-wi-number').fill('300')
@@ -172,14 +186,15 @@ def test_ask_the_agent_for_an_unevaluated_rule_uses_an_empty_question(open_panel
     panel.view_data('whatif', model('whatif', 'evidence.binary'))
     page.locator('#ht-wi-number').fill('150')
     page.locator('#ht-wi-number').dispatch_event('change')
-    page.get_by_role('button', name='Ask the agent to evaluate capacity:150').click()
+    page.get_by_role('button', name='Ask the agent to evaluate the rule "top 150 rows"').click()
     dialog = page.locator('[role="dialog"]')
     assert not panel.errors, panel.errors
     assert dialog.locator('textarea').input_value() == ''
     assert dialog.get_by_role('button', name='Insert into the chat').count() == 0, 'chatInsert is off'
     dialog.get_by_role('button', name='Copy for the chat').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'decision', 'id': 'policy'},
-                                  'question': 'Could you evaluate the rule capacity:150, so that I can compare it with the rules already evaluated?',
+                                  'question': 'Could you evaluate the rule "top 150 rows" (capacity:150), so that I can compare it '
+                                              'with the rules already evaluated?',
                                   'mode': 'copy'}
 
 
@@ -225,8 +240,9 @@ def test_wi4_regression_renders_the_residual_explorer_without_rule_vocabulary(op
     assert sent(panel, 'draft') == [{'v': 2, 'type': 'draft', 'decisionId': 'model_choice', 'value': 'fit.linear', 'revision': 22}]
     draft = model('draft', 'proposal_draft.regression')
     panel.send({'type': 'draft_result', 'decisionId': 'model_choice', 'value': 'fit.linear', 'revision': 22, 'model': draft})
-    button = page.locator('[data-write="propose"]')
-    assert button.inner_text() == 'Propose this model choice' and button.is_enabled()
+    button = page.locator('[data-ask-propose="fit.linear"]')
+    assert button.inner_text() == 'Ask the agent to propose this model'
+    assert page.locator('[data-write]').count() == 0
     assert page.locator('[data-draft-restatement]').text_content() == draft['restatement']
     for toggle in page.locator('#panel-whatif .ht-figure button[aria-controls]').all():
         toggle.click()
@@ -236,13 +252,13 @@ def test_wi4_regression_renders_the_residual_explorer_without_rule_vocabulary(op
     page.locator('#ht-wi-fit-fit-baseline').check()
     assert page.locator('[data-residuals="fit.baseline"]').count() == 1
     assert sent(panel, 'draft')[-1]['value'] == 'fit.baseline'
-    assert button.is_disabled(), 'disabled until the engine says the new value is proposable'
+    assert page.locator('[data-ask-propose]').count() == 0, 'offered only once the engine says the new value is proposable'
     assert not [m for m in panel.posted() if m['type'] in WRITES], 'choosing a model writes nothing'
     assert page.locator('[style]').count() == 0
     assert panel.clean(), (panel.requests, panel.errors, panel.csp, panel.violations())
 
 
-def test_reviewer_mode_has_no_propose_control_and_the_outcome_links_to_decisions(open_panel, model, binary):
+def test_reviewer_mode_has_no_write_control_and_keeps_the_ask_button(open_panel, model, binary):
     panel = opened(open_panel, binary, reviewer=True)
     page = panel.page
     panel.view_data('whatif', model('whatif', 'evidence.binary'))
@@ -250,15 +266,8 @@ def test_reviewer_mode_has_no_propose_control_and_the_outcome_links_to_decisions
                 'model': model('draft', 'proposal_draft.binary')})
     assert page.locator('[data-draft="capacity:100"]').count() == 1, 'the draft is readable'
     assert page.locator('[data-write]').count() == 0
-    reviewer = panel
-    panel = opened(open_panel, binary)
-    page = panel.page
-    panel.view_data('whatif', model('whatif', 'evidence.binary'))
-    panel.send({'type': 'outcome', 'op': 'W3', 'kind': 'ok', 'target': 'policy', 'revision': 27,
-                'recorded': {'proposalId': 'p_6', 'decisionId': 'policy', 'status': 'open', 'channel': 'webview'}})
-    outcome = page.locator('[data-propose-outcome="ok"]')
-    assert 'It is not a decision yet' in outcome.inner_text()
-    assert page.locator('#outcome [data-outcome]').count() == 0, 'the view renders its own W3 outcome'
-    outcome.get_by_role('button', name='Open Decisions').click()
-    assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'decisions'
-    assert reviewer.clean() and panel.clean()
+    assert page.locator('[data-ask-propose="capacity:100"]').count() == 1, 'copying a question is not a write'
+    # WP-E1: an outcome of the withdrawn W3 is not a valid message any more.
+    panel.send({'type': 'outcome', 'op': 'W3', 'kind': 'ok', 'target': 'policy', 'revision': 27})
+    assert page.locator('[data-propose-outcome]').count() == 0
+    assert panel.clean()

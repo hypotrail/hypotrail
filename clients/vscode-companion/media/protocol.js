@@ -9,7 +9,9 @@
   // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
   const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data',
     'scenario'];
-  const WRITE_OPS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'];
+  // v0.3 narrowing (ADR 0004 amendment, R23, I2): W1 confirm, W2 withdraw and W3 propose
+  // are withdrawn; decisions are made in the chat only. The remaining ids keep their numbers.
+  const WRITE_OPS = ['W4', 'W5', 'W6', 'W7'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];
   const ARTIFACTS = ['report', 'notebook', 'workbench'];
@@ -41,8 +43,6 @@
       check: m => (m.resultId !== undefined && m.view !== 'evidence' ? 'resultId is for view evidence only'
         : m.since !== undefined && m.view !== 'summary' ? 'since is for view summary only' : null),
     },
-    confirm: { stage: 'v0', write: 'W1', fields: { proposalId: pid, words, revision: rev } },
-    withdraw: { stage: 'v0', write: 'W2', fields: { proposalId: pid, revision: rev } },
     preview_effects: { stage: 'v1', fields: { proposalId: pid, revision: rev } },
     preview_policy: {
       stage: 'v2',
@@ -54,10 +54,6 @@
     },
     draft: {
       stage: 'v2',
-      fields: { decisionId: { t: 'enum', values: ['policy', 'model_choice'] }, value: { t: 'str', min: 1, max: 64 }, revision: rev },
-    },
-    propose: {
-      stage: 'v2', write: 'W3',
       fields: { decisionId: { t: 'enum', values: ['policy', 'model_choice'] }, value: { t: 'str', min: 1, max: 64 }, revision: rev },
     },
     run_eda: {
@@ -94,8 +90,10 @@
       stage: 'v3',
       fields: { kind: { t: 'enum', values: ['reveal_export'] }, path: { t: 'str', min: 1, max: 4096 } },
     },
+    // WP-E1 (v0.3): from v0, because the proposal card's "Ask the agent about this" replaces
+    // the withdrawn W1/W2 field at every stage. It copies a question; it writes no study state.
     ask_agent: {
-      stage: 'v2',
+      stage: 'v0',
       fields: {
         about: { t: 'obj', fields: { kind: { t: 'enum', values: NAV_KINDS }, id: { t: 'str', min: 1, max: 100 } } },
         question: { t: 'str', max: 2000 },

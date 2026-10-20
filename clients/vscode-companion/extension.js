@@ -1,9 +1,10 @@
 'use strict';
 // Hypotrail study companion (ADR 0002, ADR 0003, ADR 0004). A VS Code webview that is one
 // more client of the `hypotrail` CLI. It has no state, database, server, socket, or
-// language-model integration of its own. Its writes are the whitelist W1-W7 of
-// COMPANION-ADVANCED §7, each gated by `hypotrail.companion.stage` (default "v0": confirm
-// and withdraw only).
+// language-model integration of its own. Its writes are the whitelist W4-W7 of
+// COMPANION-ADVANCED §7, each gated by `hypotrail.companion.stage` (default "v0": no
+// write; W1-W3, confirm, withdraw and propose, were withdrawn by the v0.3 narrowing of
+// ADR 0004: decisions are made in the chat only).
 //
 // Behind a feature flag, off by default. Activation only registers the commands and the
 // URI handler; with the flag off each of them shows one message and does nothing else:
@@ -121,13 +122,6 @@ function host(context, agent) {
       if (Number.isInteger(line) && line > 0 && vscode.Range) shown.selection = new vscode.Range(line - 1, 0, line - 1, 0);
       await vscode.window.showTextDocument(file, shown);
     },
-    confirmWithdraw: async proposal => {
-      const answer = await vscode.window.showWarningMessage(
-        `Withdraw proposal ${proposal.proposalId} (${proposal.decisionTitle})? Nothing is confirmed; the assistant can propose again in the chat.`,
-        { modal: true }, 'Withdraw');
-      return answer === 'Withdraw';
-    },
-    confirmModal: async (message, action) => (await vscode.window.showWarningMessage(message, { modal: true }, action)) === action,
     pickFolder: async defaultPath => {
       const uris = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, canSelectMany: false,
         defaultUri: defaultPath ? vscode.Uri.file(defaultPath) : undefined, openLabel: 'Export here' });

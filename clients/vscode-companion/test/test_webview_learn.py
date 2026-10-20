@@ -347,10 +347,10 @@ def test_sr1_session_report_shows_the_log_status_and_no_conversation_content(ope
 def test_ab_ask_the_agent_modal_sends_only_the_cited_object_and_the_question(open_panel, fixtures, chat_insert):
     panel = _open(open_panel, fixtures, chatInsert=chat_insert)
     page = panel.page
-    # Draft confirmation words typed in a decision card stay in that card (AB-1).
+    # AB-1: since WP-E1 a decision card has no words field at all; the bridge sends only
+    # the cited object and the typed question.
     page.locator('[role="tab"][data-tab="decisions"]').click()
-    draft = 'Yes: call the 100 best-scored clients, DRAFT-WORDS-XYZ.'
-    page.locator('[data-proposal-card="p_5"] textarea').fill(draft)
+    assert page.locator('[data-proposal-card="p_5"] textarea').count() == 0
     page.locator('[role="tab"][data-tab="learn"]').click()
     page.locator('[data-concept-card="binary:conclusion"] [data-ask="step:conclusion"]').click()
     dialog = page.locator('[role="dialog"]')
@@ -365,7 +365,7 @@ def test_ab_ask_the_agent_modal_sends_only_the_cited_object_and_the_question(ope
     ask = _posted(panel, 'ask_agent')[-1]
     assert ask == {'v': 2, 'type': 'ask_agent', 'about': {'kind': 'step', 'id': 'conclusion'},
                    'question': 'Why is this step needed?', 'mode': 'copy'}
-    assert all(draft not in json.dumps(m) for m in panel.posted() if m['type'] != 'confirm'), 'draft words never sent'
+    assert not [m for m in panel.posted() if m['type'] in ('confirm', 'withdraw', 'propose')]
     assert 'askDraft' not in (panel.state() or {}), 'the question is not kept for another object'
     assert page.locator('[role="dialog"]').count() == 0
     if chat_insert:

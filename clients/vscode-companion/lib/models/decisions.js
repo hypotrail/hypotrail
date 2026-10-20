@@ -2,7 +2,7 @@
 // DecisionsModel: a pure projection of `hypotrail.decisions/1` (CLI-CONTRACT-COMPANION §2)
 // for the Decisions tab (COMPANION-ADVANCED §6.2.2, §6.2.3, §9). Nothing is computed from
 // raw state: the history, the queue, and the proposals are the engine's lists, reordered
-// for display only (the history is grouped by decision in plan order, newest first).
+// for display only (the history newest first, R25; the queue in plan order).
 // Words, restatements, and reasons are copied verbatim; the webview sets them as text.
 //
 // Owned by WP-U2.
@@ -77,8 +77,8 @@ function toDecisionsModel(payload) {
     const c = d && d.confirmation;
     if (h.current && c && c.agentConcern && c.revision === h.revision) h.agentConcern = c.agentConcern;
   }
-  // Grouped by decision in plan order; newest first within a group (§6.2.3).
-  history.sort((a, b) => rank(a.decisionId) - rank(b.decisionId) || (b.revision || 0) - (a.revision || 0) || b.index - a.index);
+  // Newest first (§6.2.3, R25): the most recent confirmation sits next to the cards.
+  history.sort((a, b) => (b.revision || 0) - (a.revision || 0) || b.index - a.index);
   for (const h of history) delete h.index;
 
   const queue = list(p.reconfirm_queue).map(q => {

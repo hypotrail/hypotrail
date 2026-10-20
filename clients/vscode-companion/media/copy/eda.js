@@ -62,8 +62,9 @@
     rangesCaption: 'Lowest and highest ordinary value of each numeric column, development rows',
     lowest: 'Lowest',
     highest: 'Highest',
-    outside: 'Below / above the declared range',
-    noRange: 'no declared range',
+    outside: 'Outside the declared range',
+    noneOutside: 'none',
+    outsideCounts: (below, above) => `${below} below, ${above} above`,
   });
   // The strings of the shared copy that name what is predicted: "outcome" (binary) or
   // "target" (regression).
@@ -104,10 +105,21 @@
     noLeak: () => ['No single column stands out: none reaches the level of ', ' or stands far above the others.'],
     bannerLead: 'Training rows only.',
     bannerText: 'Every chart is a registered result, computed by the engine.',
-    rowsSeen: 'rows seen in EDA',
-    train: 'train',
-    validation: 'validation',
+    rowsSeen: 'Rows seen in EDA',
+    train: 'training rows',
+    validation: 'validation rows',
+    development: 'development rows',
     validationModels: 'Validation rows seen for model evaluation and selection:',
+    // WP-E1 (R26): under cross-validation (no validation partition) the exploration reads
+    // the development rows; these strings replace their split variants.
+    cv: {
+      explorationTitle: 'Exploration of the development rows',
+      bannerLead: 'Development rows only.',
+      validationModels: 'Development rows used to compare and choose, out of fold:',
+      run: 'Run on development rows',
+      hint: 'Runs an engine EDA activity and records which rows were seen. Under cross-validation the same development rows also fit and measure the models, so each chart is one more look at them; the final-test rows are never read here. For free exploration, use your workbench notebook, marked as an experiment.',
+      distributionOnTrain: ' on the development rows; the final-test rows are never read here.',
+    },
     loading: 'Reading the registered EDA results...',
     loadError: 'The EDA results could not be read.',
     loadErrorDetail: 'Details from the CLI',

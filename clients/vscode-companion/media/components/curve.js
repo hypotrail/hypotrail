@@ -14,8 +14,10 @@
 (function (HT) {
   'use strict';
   const W = 380;
-  const H = 250;
-  const M = { left: 52, right: 26, top: 12, bottom: 44 };
+  const H = 266;
+  // WP-E1 (R26): the y-axis label is written horizontally above the axis, so it is never
+  // clipped by the viewBox nor overlapped by the tick texts (it was rotated at x = 12).
+  const M = { left: 52, right: 26, top: 28, bottom: 44 };
 
   function curve(container, { title, points, xDomain = [0, 1], yDomain = [0, 1], xTicks = [], yTicks = [], xLabel = '',
     yLabel = '', diagonal = null, marks = [], columns, rows }) {
@@ -39,8 +41,7 @@
       ...yTicks.map(t => HT.svg('text', { x: M.left - 6, y: y(t.value) + 4, class: 'ht-muted-text', 'text-anchor': 'end',
         'aria-hidden': 'true', 'data-literal': 'axis', text: t.text })),
       xLabel ? HT.svg('text', { x: M.left + pw / 2, y: H - 6, class: 'ht-label', 'text-anchor': 'middle', text: xLabel }) : null,
-      yLabel ? HT.svg('text', { x: 12, y: M.top + ph / 2, class: 'ht-label', 'text-anchor': 'middle',
-        transform: `rotate(-90 12 ${M.top + ph / 2})`, text: yLabel }) : null,
+      yLabel ? HT.svg('text', { x: 4, y: 12, class: 'ht-label', 'text-anchor': 'start', 'data-axis-label': 'y', text: yLabel }) : null,
       // The reference diagonal.
       // y = x, up to the smaller of the two domains (the axes may be cut to the points' range).
       diagonal ? HT.svg('line', { x1: x(diagonalStart), y1: y(diagonalStart), x2: x(diagonalEnd), y2: y(diagonalEnd),

@@ -236,13 +236,16 @@ def test_forced_colors_keep_button_borders(open_panel, views):
 
 
 @pytest.mark.parametrize('theme', THEMES)
-def test_disabled_is_not_opacity_only(open_panel, views, theme):
-    panel = panel_for(open_panel, theme, 900, views['summary.binary'])
+def test_disabled_is_not_opacity_only(open_panel, model, theme):
+    # WP-E1: the Decisions card has no write control any more; the acknowledgement of an
+    # interrupted execution (W6, Overview) stays disabled until words are typed.
+    panel = panel_for(open_panel, theme, 900, model('summary', 'summary.binary.health'))
     page = panel.page
-    page.locator('[role="tab"][data-tab="decisions"]').click()
-    confirm = page.locator('button[data-action="confirm"]').first
-    assert confirm.is_disabled()
-    state = page.evaluate(BORDERS, 'button[data-action="confirm"]')[0]
+    page.locator('[role="tab"][data-tab="overview"]').click()
+    selector = 'button[data-write="acknowledge"]'
+    button = page.locator(selector).first
+    assert button.is_disabled()
+    state = page.evaluate(BORDERS, selector)[0]
     assert float(state['opacity']) == 1.0
     assert state['style'] == 'dashed', 'a disabled control has a dashed border'
     clean(panel)

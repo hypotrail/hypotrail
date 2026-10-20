@@ -112,7 +112,7 @@ function semaphore(limit) {
 }
 
 function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SETTINGS, host = {},
-  openArtifact = host.openArtifact || (async () => {}), confirmWithdraw = host.confirmWithdraw || (async () => true),
+  openArtifact = host.openArtifact || (async () => {}),
   exists = target => fs.existsSync(target), uuid = () => crypto.randomUUID(), log = () => {},
   handlers = loadHandlers() }) {
   let active = { ...DEFAULT_SETTINGS, ...settings };
@@ -196,7 +196,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
    * version of the last snapshot: `<revision>:<currency>`, CR.1) and holds the CLI
    * payload: each caller projects it with its own `modelFn`, so loaders of one command
    * share one process and one cache entry. `group: 'preview'` uses the single preview
-   * slot. `cache: false` neither reads nor fills the cache (the draft read before W3).
+   * slot. `cache: false` neither reads nor fills the cache (the deliverables read of Overview).
    */
   async function read(key, argv, modelFn, { group = key.startsWith('preview:') ? 'preview' : 'read', timeoutMs, cache: useCache = true } = {}) {
     const version = versionOf(snapshot);
@@ -294,7 +294,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
   }
 
   /**
-   * ctx.write: one whitelisted write (W1-W7). `argv(requestId)` builds it with lib/cli.js;
+   * ctx.write: one whitelisted write (W4-W7). `argv(requestId)` builds it with lib/cli.js;
    * `record(payload)` returns the `recorded` object of a success. Exclusive: reads wait;
    * a second write while one runs is `invalid`. Always refreshes after the outcome.
    */
@@ -360,7 +360,6 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     invalid,
     host,
     openArtifact,
-    confirmWithdraw,
     exists,
     uuid,
     log,

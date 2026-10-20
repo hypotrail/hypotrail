@@ -2,7 +2,7 @@
 // Integration tests (scope S): the panel controller drives the REAL hypotrail CLI on a
 // temporary study created from the synthetic case, outside the repository, in a folder
 // whose path holds spaces and quotes. The CLI argv is the one `hypotrail init` recorded
-// in .hypotrail/agent.json. The chat agent's part (propose, note) is played by direct
+// in .hypotrail/agent.json. The chat's part (propose, note, confirm, withdraw) is played by direct
 // CLI calls. No VS Code is involved: the controller has no `vscode` dependency.
 //
 // Needs the framework environment (`uv sync --project framework --group dev`).
@@ -46,7 +46,7 @@ function status() {
 
 function controller(settings) {
   const posted = [];
-  const c = createController({ agent, post: m => posted.push(m), confirmWithdraw: async () => true, settings });
+  const c = createController({ agent, post: m => posted.push(m), settings });
   return { c, posted, outcome: () => posted.filter(m => m.type === 'outcome').at(-1), snapshot: () => posted.filter(m => m.type === 'snapshot').at(-1) };
 }
 
@@ -83,66 +83,54 @@ test('the panel reads the real study through the argv recorded by init', { skip 
   assert.ok(model.notYetDefensible.top.length > 0);
 });
 
-test('a bare "ok" is refused by the engine and shown verbatim; nothing is recorded', { skip }, async () => {
-  const { c, outcome, snapshot } = controller();
+test('the panel records no decision: confirm and withdraw messages are dropped; the state is unchanged (WP-E1)', { skip }, async () => {
+  // v0.3 narrowing (ADR 0004 amendment, R23, I2): decisions are made in the chat only.
+  const { c, posted, snapshot } = controller();
   await c.handle({ v: 2, type: 'ready' });
   const rev = snapshot().model.revision;
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'ok', revision: rev });
-  const o = outcome();
-  assert.equal(o.op, 'W1');
-  assert.equal(o.kind, 'refused');
-  assert.equal(o.exitCode, 2);
-  assert.equal(o.refusal.code, 'ambiguous_confirmation');
-  assert.equal(o.refusal.reason, 'bare_acknowledgement');
-  // Same message as the CLI gives the chat agent for the same words.
-  const direct = hyp('decide', 'confirm', 'p_1', '--user-words', 'ok', '--channel', 'webview',
-    '--request-id', 'direct-ok', '--expected-revision', String(rev));
-  assert.equal(o.refusal.engineMessage, direct.error.message);
-  assert.equal(snapshot().model.revision, rev, 'refreshed, unchanged');
+  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'Yes, we predict before the first reminder is sent.', revision: rev });
+  await c.handle({ v: 2, type: 'withdraw', proposalId: 'p_1', revision: rev });
+  assert.equal(c.diagnostics().ignored, 2);
+  assert.equal(posted.filter(m => m.type === 'outcome').length, 0);
+  assert.ok(!c.diagnostics().commands.some(x => x.startsWith('decide')), 'no decide command');
+  await c.refresh();
+  assert.equal(snapshot().model.revision, rev, 'unchanged');
   assert.equal(status().view.decisions.prediction_time.confirmation, null);
 });
 
-test('a hold blocks the confirmation (decision_on_hold) until the junior resolves it in the chat', { skip }, async () => {
+test('a hold is shown on the card, and the engine\'s preview says a confirmation would be refused (decision_on_hold)', { skip }, async () => {
   const note = hyp('decide', 'note', '--about', 'prediction_time', '--text',
     'wait until I check with my manager about the reminder schedule', '--request-id', 'chat-2', '--expected-revision', '2');
   assert.equal(note.ok, true, JSON.stringify(note));
-  const { c, outcome, snapshot } = controller();
+  const { c, posted, snapshot } = controller({ stage: 'v1' });
   await c.handle({ v: 2, type: 'ready' });
   const model = snapshot().model;
   assert.deepEqual(model.proposals[0].holds.map(h => h.userWords), ['wait until I check with my manager about the reminder schedule']);
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words: 'Yes, we predict before the first reminder is sent.', revision: model.revision });
-  assert.equal(outcome().refusal.code, 'decision_on_hold');
-  assert.deepEqual(outcome().refusal.details, ['On hold (n_1): "wait until I check with my manager about the reminder schedule"']);
+  await c.handle({ v: 2, type: 'preview_effects', proposalId: 'p_1', revision: model.revision });
+  const effects = posted.filter(m => m.type === 'effects').at(-1);
+  assert.ok(effects.model.blocked.some(b => b.code === 'decision_on_hold'), JSON.stringify(effects.model.blocked));
   const resolve = hyp('decide', 'note', '--resolve', 'n_1', '--text',
     'Yes, my manager checked the reminder schedule and agrees with this prediction moment',
     '--request-id', 'chat-3', '--expected-revision', String(model.revision));
   assert.equal(resolve.ok, true, JSON.stringify(resolve));
 });
 
-test('a stale revision is refused with the diff, then the typed words confirm with channel webview', { skip }, async () => {
-  const { c, outcome, snapshot } = controller();
+test('a confirmation made in the chat reaches the panel: the card is gone, the decision reads confirmed', { skip }, async () => {
+  const { c, snapshot } = controller();
   await c.handle({ v: 2, type: 'ready' });
   const rev = snapshot().model.revision;
   assert.equal(snapshot().model.holds.length, 0);
   const words = 'Yes, I confirm: we predict before the first reminder is sent, "as stated".';
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words, revision: rev - 1 });
-  assert.equal(outcome().refusal.code, 'stale_revision');
-  assert.ok(outcome().refusal.details.includes(`Current revision: ${rev}`));
-  await c.handle({ v: 2, type: 'confirm', proposalId: 'p_1', words, revision: rev });
-  const o = outcome();
-  assert.equal(o.op, 'W1');
-  assert.equal(o.kind, 'ok', JSON.stringify(o));
-  assert.equal(o.revision, rev + 1);
-  assert.equal(o.recorded.channel, 'webview');
-  assert.equal(o.recorded.userWords, words);
+  const confirm = hyp('decide', 'confirm', 'p_1', `--user-words=${words}`, '--request-id', 'chat-confirm',
+    '--expected-revision', String(rev));
+  assert.equal(confirm.ok, true, JSON.stringify(confirm));
+  await c.refresh();
   const confirmation = status().view.decisions.prediction_time.confirmation;
-  assert.equal(confirmation.channel, 'webview');
-  assert.equal(confirmation.actor, 'user');
+  assert.equal(confirmation.channel, 'chat');
   assert.equal(confirmation.user_words, words);
-  assert.equal(confirmation.basis, 'restated');   // ADR 0005: own words repeating the proposal
-  assert.equal(confirmation.authenticated, false);
   assert.equal(snapshot().model.revision, rev + 1);
   assert.equal(snapshot().model.proposals.length, 0);
+  assert.equal(snapshot().model.decisions.prediction_time.status, 'confirmed');
 });
 
 test('a change made in the chat reaches the panel through the file watch', { skip }, async () => {
@@ -166,13 +154,14 @@ test('a change made in the chat reaches the panel through the file watch', { ski
   }
 });
 
-test('withdraw through the panel', { skip }, async () => {
-  const { c, outcome, snapshot } = controller();
+test('a withdrawal made in the chat reaches the panel', { skip }, async () => {
+  const { c, snapshot } = controller();
   await c.handle({ v: 2, type: 'ready' });
   const p = snapshot().model.proposals[0];
-  await c.handle({ v: 2, type: 'withdraw', proposalId: p.proposalId, revision: snapshot().model.revision });
-  assert.equal(outcome().op, 'W2');
-  assert.equal(outcome().kind, 'ok', JSON.stringify(outcome()));
+  const withdraw = hyp('decide', 'withdraw', p.proposalId, '--request-id', 'chat-withdraw',
+    '--expected-revision', String(snapshot().model.revision));
+  assert.equal(withdraw.ok, true, JSON.stringify(withdraw));
+  await c.refresh();
   assert.equal(snapshot().model.proposals.length, 0);
 });
 
