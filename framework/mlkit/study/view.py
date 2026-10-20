@@ -23,6 +23,8 @@ from . import currency
 from . import launch
 from . import partition
 from . import governance, read
+from . import criterion as criterion_mod
+from . import junior
 from . import records as rec
 from . import state as st
 from . import texts
@@ -299,7 +301,7 @@ def _artifacts(study: read.Study, state: dict) -> dict:
                        'stale_reason': currency.stale_reason(item, state, current, file),
                        'message': currency.message(name, item, state, current, file)}
         # v0.2a (WP-A1): the message names paths and asks for a render (agent).
-        items[name].update(audience.artifact(name, items[name]))
+        items[name].update(audience.artifact(name, items[name], st.language_of(state)))
     return {'manifest': read.ARTIFACTS_FILE,
             'status': currency.overall(i['status'] for i in items.values()), 'items': items}
 
@@ -499,6 +501,7 @@ def summary(view: dict) -> dict:
     interrupted and late executions, the first limits of ``not_yet_defensible``, and
     ``recap``, five lines a new chat may quote (:func:`recap`). The full view stays in ``hypotrail status --json``.
     """
+    lang = view.get('language') or audience.EN
     pt = view['decisions']['prediction_time']
     if pt['value'] is not None:
         prediction_time = {'value': pt['value'], 'source': 'decision', 'status': pt['status']}
@@ -550,9 +553,12 @@ def summary(view: dict) -> dict:
                      key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
     defensible = {'top': [{'id': x['id'], 'text': x['text'],
                            'audience': x.get('audience', audience.JUNIOR),
-                           # Compact: null when ``text`` is already written for the junior.
-                           'junior_text': (audience.junior_text(x)
-                                           if x.get('audience') == audience.AGENT else None)}
+                           # Compact: null when ``text`` is already written for the junior
+                           # (v0.3, WP-C: and in the study language).
+                           'junior_text': (x.get('junior_text') or audience.junior_text(x, lang)
+                                           if x.get('audience') == audience.AGENT
+                                           or (x.get('junior_text') or x['text']) != x['text']
+                                           else None)}
                           for x in ordered[:SUMMARY_TOP]],
                   'more': [x['id'] for x in ordered[SUMMARY_TOP:]]}
     plan = [{'id': step['id'], 'title': step['title'], 'status': step['status']}
@@ -782,7 +788,9 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
                 else f'{label} {_spaced(verdict)}'.strip())
     elif decision_id == 'success_criterion' and isinstance(value, dict):
         if 'min_points' in value:
-            text = (f'{label} (precision gain over the baseline of at least '
+            # v0.3 (WP-C, R18): the metric is named (precision or recall).
+            name = 'recall' if value.get('metric') == 'recall_gain' else 'precision'
+            text = (f'{label} ({name} gain over the baseline of at least '
                     f'{value["min_points"]} points)')
         else:
             # B6c (M3): the error the criterion reads, in the study's scheme.
@@ -930,7 +938,10 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
 
     ``junior`` (v0.2a, WP-A1): the variant written for the junior (``recap_junior``): no
     result id, the junior variant of an agent instruction, and holds in the second person.
+    v0.3 (WP-C): in the study language (:func:`_recap_junior_fr` for a French study).
     """
+    if junior and view.get('language') == audience.FR:
+        return _recap_junior_fr(summary_out, view)
     goal = summary_out['goal']
     use = _fact_value(goal['intended_use']) or 'not stated in the case'
     pt = goal['prediction_time']
@@ -992,6 +1003,214 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
              f'Next: {nxt}',
              f'Limit: {limit}']
     # P3: one flat line each (no nested list, no line break), never a revision number.
+    return [' '.join(line.split()) for line in lines]
+
+
+# --- the junior recap in French (v0.3, WP-C, R21, R37) ------------------------------------
+
+FR = audience.FR
+
+
+def _comma(number: str) -> str:
+    """A decimal number as French writes it (``12.5`` as ``12,5``)."""
+    return ','.join(number.split('.'))
+
+
+def _pct_fr(value) -> str | None:
+    return _comma(f'{100 * value:.1f}') + ' %' if isinstance(value, (int, float)) \
+        and not isinstance(value, bool) else None
+
+
+def _headline_fr(view: dict, summary_out: dict, short: bool) -> dict | None:
+    """The French junior text of :func:`_policy_headline` (no result id, the rule in words)."""
+    head = _policy_headline(view, summary_out)
+    if head is None:
+        return None
+    item = view['results']['policy.evaluation']
+    by_rule = {rec.canonical_rule(r) or r: r for r in (item['values'].get('rules') or {})}
+    rule = by_rule.get(head['rule'], head['rule'])
+    decision = summary_out['decisions'].get('policy') or {}
+    chosen = decision.get('value') if head['adopted'] else next(
+        (p['value'] for p in summary_out['open_proposals'] if p['decision_id'] == 'policy'),
+        None)
+    slot = rec.policy_model(chosen) if isinstance(chosen, str) else 'fit.logistic'
+    model = ((item['values']['rules'][rule] or {}).get('models') or {}).get(slot) or {}
+    figures = ', '.join(f'{name} {v}' for name, v in (('précision', _pct_fr(model.get('precision'))),
+                                                      ('rappel', _pct_fr(model.get('recall'))))
+                        if v)
+    n = item['values'].get('n')
+    where = ("lignes de l'échantillon de développement, hors pli"
+             if item['values'].get('evaluation') == 'out_of_fold' else 'lignes du jeu de validation')
+    rows = f' sur les {n} {where}' if isinstance(n, int) else f' sur les {where}'
+    named = 'la variante' if slot == 'fit.variant' else 'le modèle logistique'
+    text = f'{named}{rows} : {figures}' if short else \
+        f'{named}, {audience.rule_words(head["rule"], FR)},{rows} : {figures}'
+    return {'adopted': head['adopted'], 'text': text}
+
+
+def _recap_decision_fr(decision_id: str, d: dict, view: dict, summary_out: dict,
+                       cv: bool) -> str:
+    label = audience.decision_words(decision_id, FR)
+    value = d['value']
+    if decision_id == 'feature_availability' and isinstance(value, dict):
+        parts = []
+        excluded = sorted(value.get('not_available', []) + value.get('uncertain_excluded', []))
+        doubtful = sorted(value.get('uncertain_included', []))
+        if excluded:
+            parts.append('exclues : ' + ', '.join(excluded))
+        if doubtful:
+            parts.append('gardées malgré un doute : ' + ', '.join(doubtful))
+        text = f'{label} ({"; ".join(parts) if parts else "toutes les variables gardées"})'
+    elif decision_id == 'split' and isinstance(value, dict) and value.get('method') in \
+            st.CV_METHODS:
+        method = audience.CV_METHOD_WORDS_FR.get(value['method'], _spaced(value['method']))
+        text = f'{label} (validation croisée à {value.get("folds")} plis, {method})'
+    elif decision_id == 'split' and isinstance(value, dict):
+        fraction = value.get('validation_fraction')
+        if value.get('method') == 'ordinal_cutoff' and value.get('column') is not None:
+            text = (f'{label} (selon {value["column"]}, jeu de validation à partir de '
+                    f'{value.get("cutoff")})')
+        elif isinstance(fraction, (int, float)) and not isinstance(fraction, bool):
+            text = f'{label} (aléatoire, {round(100 * fraction):d} % pour le jeu de validation)'
+        else:
+            text = label
+    elif decision_id == 'model_variant' and isinstance(value, dict):
+        text = f'{label} ({audience.variant_words(value, FR)})'
+    elif decision_id == 'final_test' and isinstance(value, dict):
+        text = (f"l'échantillon de test final, ouvert une fois "
+                f'({audience.model_words(value.get("model"), FR)}'
+                + (f', {audience.rule_words(value["rule"], FR)})' if value.get('rule') else ')'))
+    elif decision_id == 'policy' and isinstance(value, str):
+        text = f'{label} : {audience.policy_words(value, FR)}'
+        head = _headline_fr(view, summary_out, short=True)
+        if head and head['adopted']:
+            text += f' ({head["text"]})'
+    elif decision_id == 'model_choice' and isinstance(value, str):
+        text = f'{label} : {audience.model_words(value, FR)}'
+        errors = _regression_errors(view)
+        mae = (errors or {}).get('mae', {}).get(value)
+        if mae is not None:
+            where = 'hors pli' if cv else 'de validation'
+            text += f' (MAE {where} {_comma(mae)} {errors["unit"]})'
+    elif decision_id == 'conclusion' and isinstance(value, dict):
+        text = f'{label} : {audience.verdict_words(value.get("verdict", ""), FR)}'
+    elif decision_id == 'success_criterion' and isinstance(value, dict):
+        from . import criterion as criterion_words
+        words = criterion_words.value_words(value, FR, cv)
+        text = f'{label} ({words})' if words else label
+    elif decision_id == 'preprocessing' and isinstance(value, dict):
+        from . import governance as gov
+        text = f'{label} ({"par défaut, rien ne change" if gov.is_default(value) else "modifiée"})'
+        if value.get('data_contingent'):
+            text += ' [choisie après un regard sur le résultat]'
+    else:
+        text = label
+    notes = []
+    if d['basis'] == st.DELEGATED_DEFAULT:
+        notes.append("déléguée à l'assistant")
+    if d['status'] == 'reconfirm_required':
+        notes.append('à confirmer à nouveau')
+    return text + (f' [{", ".join(notes)}]' if notes else '')
+
+
+def _deliverables_line_fr(items: dict) -> str:
+    words = {'report': 'le rapport', 'notebook': 'le notebook'}
+    unwritten = [words[n] for n in ('report', 'notebook')
+                 if n not in items or items[n].get('status') == 'not_rendered']
+    behind = sorted(audience.ARTIFACT_WORDS_FR.get(name, name) for name, item in items.items()
+                    if item.get('status') not in ('ok', 'not_rendered') and name != 'workbench')
+    if not unwritten and not behind:
+        return 'le rapport et le notebook sont à jour'
+    parts = []
+    if behind:
+        parts.append(', '.join(behind) + ' pas à jour')
+    if unwritten:
+        parts.append(' et '.join(unwritten) + ' pas encore écrits' if len(unwritten) > 1
+                     else unwritten[0] + ' pas encore écrit')
+    return '; '.join(parts)
+
+
+def _recap_next_fr(summary_out: dict, view: dict) -> str:
+    nxt = summary_out['next_action'] or {}
+    kind = nxt.get('kind')
+    if kind == 'await_user_words':
+        proposal = next((p for p in view.get('open_proposals') or []
+                         if p['proposal_id'] == nxt.get('proposal_id')), None)
+        label = audience.decision_words(nxt.get('decision'), FR)
+        said = (proposal or {}).get('label') or ''
+        return f'ta réponse sur {label} : « {said} »'
+    if kind in ('propose', 'run', 'blocked') and nxt.get('step') != summary_out['current_step']:
+        titles = {s['id']: s['title'] for s in summary_out['plan']}
+        title = junior.step_text(titles.get(nxt.get('step'), ''), FR) or \
+            audience.decision_words(nxt.get('step'), FR)
+        return f'{title} : {nxt.get("junior_message", "")}'.strip()
+    return str(nxt.get('junior_message') or '').strip() or \
+        "plus rien dans le plan ; relis ce qui n'est pas encore défendable."
+
+
+def _recap_junior_fr(summary_out: dict, view: dict) -> list[str]:
+    """``recap_junior`` of a French study: the five lines of :func:`recap` (``junior``) in
+    French. The case's own statements (intended use, the prediction moment it states) and
+    the recorded values are quoted as they are written."""
+    goal = summary_out['goal']
+    use = _fact_value(goal['intended_use'])
+    use = f'« {use} »' if use else "non indiqué par le cas"
+    pt = goal['prediction_time']
+    if pt is None:
+        moment = 'pas encore décidé'
+    elif pt['source'] == 'decision' and pt['status'] == 'confirmed':
+        moment = f'« {pt["value"]} »'
+    else:
+        moment = f'« {pt["value"]} » (selon le cas, pas encore décidé)'
+    cv = texts.scheme_of(view) == texts.CROSS_VALIDATION
+    decided = [_recap_decision_fr(d, item, view, summary_out, cv)
+               for d, item in summary_out['decisions'].items()
+               if item['status'] in ('confirmed', 'reconfirm_required')]
+    titles = {s['id']: s['title'] for s in summary_out['plan']}
+    nxt = summary_out['next_action'] or {}
+    kind = nxt.get('kind')
+    if kind in ('await_user_words', 'reconfirm'):
+        decision = nxt.get('decision')
+        title = junior.step_text(titles.get(decision), FR) if titles.get(decision) \
+            else _capital_first(audience.decision_words(decision, FR))
+        step = (f'{title}, en attente de ta réponse' if kind == 'await_user_words'
+                else f'{title}, en attente de ta nouvelle confirmation')
+    elif kind in ('outcome_unknown', 'acknowledge_interruption'):
+        named = (f'une exécution de {audience.activity_words(nxt["activity"], FR)}'
+                 if nxt.get('activity') else 'une exécution')
+        step = f'{named} s\'est arrêtée et son résultat est inconnu, en attente de ton accord'
+    elif summary_out['current_step']:
+        step = junior.step_text(titles.get(summary_out['current_step'], ''), FR)
+    else:
+        step = 'toutes les étapes sont faites'
+    errors = _regression_errors(view)
+    chosen = summary_out['decisions'].get('model_choice') or {}
+    if errors and chosen.get('status') not in ('confirmed', 'reconfirm_required'):
+        named = '; '.join(f'{audience.model_words(slot, FR)} {_comma(mae)} '
+                          f'{errors["unit"]}' for slot, mae in sorted(errors['mae'].items()))
+        step += f' (MAE {"hors pli" if cv else "de validation"} : {named})'
+    head = _headline_fr(view, summary_out, short=False) \
+        if st.task_of(view.get('task')) == st.BINARY else None
+    if head and not head['adopted']:
+        step += f' (dernière évaluation de la règle : {head["text"]})'
+    limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP
+              and x.get('junior') is not False]
+    rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
+    limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
+    limit = audience.junior_text(limits[0], FR) if limits else 'aucune enregistrée.'
+    following = _recap_next_fr(summary_out, view).rstrip()
+    holds = summary_out.get('holds') or []
+    if holds:
+        said = '; '.join('; '.join(f'« {n["user_words"]} »' for n in h['notes'])
+                         + f' ({audience.decision_words(h["decision_id"], FR)})' for h in holds)
+        following += ('' if following.endswith(('.', '»', '?')) else '.') + (
+            f' En suspens, selon tes mots : {said} ; rien de ce qui est en suspens n\'est '
+            'confirmé tant que tu ne le lèves pas.')
+    lines = [f'Objectif : {use} ; la prédiction est faite {moment}.',
+             'Décidé : ' + (' ; '.join(decided) if decided else 'rien pour l\'instant') + '.',
+             f'Maintenant : {step} ; {_deliverables_line_fr(summary_out["artifacts"]["items"])}.',
+             f'Ensuite : {following}',
+             f'Limite : {limit}']
     return [' '.join(line.split()) for line in lines]
 
 
@@ -1074,12 +1293,14 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     defensible.extend(_assumed_capacity(state, defaults))
     partial = {'decisions': _decisions(state), 'task': st.task_of(state), 'results': results,
                'open_proposals': [p for p in st.open_proposals(state)]}
-    criterion = governance.assess(partial, lambda r: rec.canonical_rule(r) or r)
+    # v0.3 (WP-C, R18): the metric the confirmed criterion names (``criterion.assess``).
+    criterion = criterion_mod.assess(partial, lambda r: rec.canonical_rule(r) or r)
     started = {slot: r['started_revision'] for slot, r in results.items()
                if r['integrity'] == 'ok' and r['current']}
     final_test = partition.final_test_status(state, started)
     defensible.extend(_governance_limits(state, criterion, final_test))
-    return {
+    language = st.language_of(state)
+    out = {
         'schema': SCHEMA,
         'study': str(study.study_dir),
         'revision': state['revision'],
@@ -1090,7 +1311,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'current_step': next((s['id'] for s in plan if s['current']), None),
         # v0.2a (WP-A1): every message for a surface says who it is written for.
         'next_action': audience.next_action(_with_default_rule(st.next_action(state, suspected),
-                                                               defaults)),
+                                                               defaults), language),
         'open_proposals': [_proposal_view(p, st.language_of(state))
                            for p in sorted(st.open_proposals(state),
                                            key=lambda p: (p['revision'], p['proposal_id']))],
@@ -1103,7 +1324,7 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'executions': executions,
         'artifacts': _artifacts(study, state),
         'exposure': study.exposure_summary(),
-        'not_yet_defensible': [audience.limit(x) for x in defensible],
+        'not_yet_defensible': [audience.limit(x, language) for x in defensible],
         'settings': state['settings'],
         'task': st.task_of(state),
         'notes': [{k: n[k] for k in NOTE_VIEW_KEYS} for n in st.notes(state)],
@@ -1116,6 +1337,17 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'scenario_defaults': defaults,
         'trials': trials(study.exposure_records()),
     }
+    # v0.3 (WP-C): what the agent relays at this pause (``junior_digest``, ``recommended``,
+    # ``question``, ``criterion_options``), in the study language.
+    return junior.enrich(out, state, _case_or_none(state))
+
+
+def _case_or_none(state: dict):
+    from .case import CaseError, case_of
+    try:
+        return case_of(state)
+    except (CaseError, OSError):
+        return None
 
 
 # WP-B1: the activities whose runs are model configurations (the baseline is not a trial),

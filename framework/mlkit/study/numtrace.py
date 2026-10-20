@@ -601,6 +601,15 @@ class Pool:
         for p in view['open_proposals']:
             if p['decision_id'] != 'conclusion':
                 self._literal('proposal', p['proposal_id'], p['value'], forms=True)
+        # v0.3 (WP-C, R19): the engine's illustrative translation of the criterion options
+        # (per 1,000 actions, from the development rows) may be repeated as it is given.
+        options = (view.get('next_action') or {}).get('criterion_options') or {}
+        for cand in options.get('candidates') or []:
+            if isinstance(cand.get('per_1000'), Mapping):
+                self._literal('criterion_option', 'per_1000', cand['per_1000'])
+                self._literal('criterion_option', 'value', cand.get('value'))
+        if options.get('scale'):
+            self._literal('criterion_option', 'scale', options['scale'])
         if proposed is not None:
             # ``decide propose`` (v0.3, WP-A): the value being proposed may be repeated by
             # its own restatement, rationale and labels, as an open proposal's value may.

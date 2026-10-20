@@ -47,7 +47,7 @@
    },
    {
     "id": "validation_partition",
-    "term": "Validation partition",
+    "term": "Validation set",
     "definition": "Rows held apart from model fitting and used to compare models and choose one. Once used to choose, they are no longer independent evidence.",
     "example": {
      "segments": [
@@ -317,16 +317,16 @@
    },
    {
     "id": "cross_validation",
-    "term": "Cross-validation",
-    "definition": "Dividing the development rows into several folds, fitting on all folds but one and measuring on the one left out, in turn. Every development row is measured once, so the estimate rests on more rows than one validation partition; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.",
+    "term": "k-fold cross-validation",
+    "definition": "Dividing the development set into k folds; each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. Every development row is measured once, so the estimate rests on more rows than one validation set; a choice made with it is still optimistic. For example, with five folds of the cars, each model is fitted five times and its error measured each time on cars it did not see.",
     "example": null,
     "example_status": "none",
     "steps": []
    },
    {
     "id": "out_of_fold",
-    "term": "Out-of-fold prediction",
-    "definition": "The prediction for a development row made by the model fitted on the other folds, so by a model that never saw that row. Every development row gets one, and the errors and the model choice are read on them; they are development evidence, because the choice is made on them. For example, a car in the third fold is predicted by the model fitted on the other folds' cars.",
+    "term": "Out-of-fold predictions",
+    "definition": "The prediction for a development row made by the model fitted on the training folds, the folds other than the row's own validation fold, so by a model that never saw that row. Every development row gets one, and the errors and the model choice are read on them; they are development evidence, because the choice is made on them. For example, a car in the third fold is predicted by the model fitted on the other folds' cars.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -334,14 +334,14 @@
    {
     "id": "fold_spread",
     "term": "Fold spread",
-    "definition": "How much a figure moves from one fold to another, given as its lowest and highest fold value. A difference between two models smaller than the spread is not a difference this study can see. For example, if the mean error ranges widely across folds, a small gain of the variant over the candidate says little.",
+    "definition": "How much a figure moves from one validation fold to another, given as its lowest and highest fold value. It is not a confidence interval, since it describes the folds of this development set, while a confidence interval describes how a figure could move with another sample. A difference between two models smaller than the spread is not a difference this study can see. For example, if the mean error ranges widely across folds, a small gain of the variant over the candidate says little.",
     "example": null,
     "example_status": "none",
     "steps": []
    },
    {
     "id": "final_test",
-    "term": "Final test (holdout)",
+    "term": "Holdout (final test)",
     "definition": "Rows set apart and sealed before any look at the data, opened once, after the model is chosen, to measure it on rows that played no part in any choice. It is the study's only independent evidence. For example, the cars sealed at the start are predicted once by the chosen model; any change made after that opening is reported as made after the final test.",
     "example": null,
     "example_status": "none",
@@ -349,7 +349,7 @@
    },
    {
     "id": "development_rows",
-    "term": "Development rows",
+    "term": "Development set (development rows)",
     "definition": "Every row outside the sealed final test, the rows the study may explore, split into training and validation rows, and use to choose. What they show is development evidence, not final evidence. For example, the cars in the development rows feed the exploration, the model fits, and the comparison of models, while the sealed cars stay unread.",
     "example": null,
     "example_status": "none",
@@ -413,6 +413,30 @@
     "id": "example_errors",
     "term": "Example errors",
     "definition": "The rows with the largest errors, shown with their values so a person can read what the model saw. They are examples to understand, not a sample to count. For example, the cars the model predicts worst can reveal a group of cars it was not fitted to describe.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "training_set",
+    "term": "Training set",
+    "definition": "The rows a model is fitted on. Under k-fold cross-validation each model's training set is the training folds, every fold but the one it is measured on. For example, with five folds of the clients, each model learns from four folds of clients.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "fold",
+    "term": "Fold",
+    "definition": "One of the k parts the development set is divided into for k-fold cross-validation. Each fold is in turn the validation fold, measured by a model fitted on the other folds, the training folds. For example, with five folds the clients of the third fold are scored by a model that learnt from the clients of the four other folds.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "sample",
+    "term": "Sample",
+    "definition": "A set of rows drawn from the population the study is about; a figure computed on it would move with another sample of the same size. For example, the development set is one sample of the clients, and the holdout another one.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -617,7 +641,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Development rows"
+       "text": "Development set (development rows)"
       }
      ]
     },
@@ -731,7 +755,7 @@
     "concept": {
      "segments": [
       {
-       "text": "Validation partition"
+       "text": "Validation set"
       }
      ]
     },

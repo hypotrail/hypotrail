@@ -107,7 +107,11 @@
    "decision": "model_choice",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
-   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide.",
+   "language": "en",
+   "recommended": null,
+   "question": "Do you adopt this decision?",
+   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
   },
   "open_proposals": [
    {
@@ -570,7 +574,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-20T08:41:52.075365+00:00",
+   "boundary_time": "2026-10-20T13:43:51.190492+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -579,7 +583,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-20T08:41:52.269948+00:00",
+     "time": "2026-10-20T13:43:51.670633+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -602,7 +606,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-20T08:41:52.689410+00:00",
+     "time": "2026-10-20T13:43:52.764228+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -632,7 +636,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-20T08:41:52.997414+00:00",
+     "time": "2026-10-20T13:43:53.854752+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -655,7 +659,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-20T08:41:53.277494+00:00",
+     "time": "2026-10-20T13:43:54.741995+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -685,7 +689,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-20T08:41:53.724407+00:00",
+     "time": "2026-10-20T13:43:55.874931+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -708,7 +712,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-20T08:41:54.397179+00:00",
+     "time": "2026-10-20T13:43:57.223690+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -738,7 +742,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-20T08:41:54.951283+00:00",
+     "time": "2026-10-20T13:43:58.787016+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -761,7 +765,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-20T08:41:55.583662+00:00",
+     "time": "2026-10-20T13:44:00.150863+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -791,7 +795,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-20T08:41:56.224826+00:00",
+     "time": "2026-10-20T13:44:01.596891+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -814,7 +818,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-20T08:41:56.821789+00:00",
+     "time": "2026-10-20T13:44:02.884884+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -844,7 +848,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-20T08:41:57.400100+00:00",
+     "time": "2026-10-20T13:44:04.333133+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -867,7 +871,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-20T08:41:58.088493+00:00",
+     "time": "2026-10-20T13:44:06.217319+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -890,7 +894,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-20T08:41:58.740467+00:00",
+     "time": "2026-10-20T13:44:08.128497+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -913,7 +917,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-20T08:41:59.407233+00:00",
+     "time": "2026-10-20T13:44:09.715079+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -936,7 +940,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-20T08:42:01.028642+00:00",
+     "time": "2026-10-20T13:44:12.870508+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -959,7 +963,7 @@
     },
     {
      "revision": 23,
-     "time": "2026-10-20T08:42:01.759288+00:00",
+     "time": "2026-10-20T13:44:14.774043+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -982,7 +986,7 @@
     },
     {
      "revision": 25,
-     "time": "2026-10-20T08:42:02.621439+00:00",
+     "time": "2026-10-20T13:44:16.417494+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1005,7 +1009,7 @@
     },
     {
      "revision": 27,
-     "time": "2026-10-20T08:42:03.338005+00:00",
+     "time": "2026-10-20T13:44:18.115395+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1028,7 +1032,7 @@
     },
     {
      "revision": 29,
-     "time": "2026-10-20T08:42:04.057944+00:00",
+     "time": "2026-10-20T13:44:19.803189+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1051,7 +1055,7 @@
     },
     {
      "revision": 30,
-     "time": "2026-10-20T08:42:04.573931+00:00",
+     "time": "2026-10-20T13:44:21.683054+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1074,7 +1078,7 @@
     },
     {
      "revision": 31,
-     "time": "2026-10-20T08:42:05.083615+00:00",
+     "time": "2026-10-20T13:44:23.361029+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "model_variant",
@@ -1107,7 +1111,7 @@
     },
     {
      "revision": 33,
-     "time": "2026-10-20T08:42:06.070355+00:00",
+     "time": "2026-10-20T13:44:25.444628+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1130,7 +1134,7 @@
     },
     {
      "revision": 35,
-     "time": "2026-10-20T08:42:07.137835+00:00",
+     "time": "2026-10-20T13:44:27.629167+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -1153,7 +1157,7 @@
     },
     {
      "revision": 36,
-     "time": "2026-10-20T08:42:07.663180+00:00",
+     "time": "2026-10-20T13:44:29.082613+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_choice",
@@ -1190,6 +1194,6 @@
    }
   },
   "task": "regression",
-  "currency": "b9425a71d2dc4a9c"
+  "currency": "514c49012e42abd0"
  }
 }

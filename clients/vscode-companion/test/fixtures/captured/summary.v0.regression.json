@@ -106,7 +106,11 @@
    "decision": "model_choice",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
-   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide.",
+   "language": "en",
+   "recommended": null,
+   "question": "Do you adopt this decision?",
+   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
   },
   "open_proposals": [
    {
