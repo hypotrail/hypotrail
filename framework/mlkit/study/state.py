@@ -1300,6 +1300,37 @@ def delegated_decisions(state: dict) -> list[str]:
     return out
 
 
+def cited_stale_results(state: Mapping) -> list[dict]:
+    """v0.3 (WP-A, R34): ``[{result_id, decision_id, proposal_id}]`` for each stale result a
+    decision value (confirmed, to reconfirm, or proposed) or an open proposal names."""
+    stale = set(state.get('stale') or {})
+
+    def named(node) -> set:
+        if isinstance(node, str):
+            return {node} & stale
+        if isinstance(node, Mapping):
+            return set().union(*(named(v) for v in node.values())) if node else set()
+        if isinstance(node, (list, tuple)):
+            return set().union(*(named(v) for v in node)) if node else set()
+        return set()
+
+    out = []
+    for d, dec in sorted((state.get('decisions') or {}).items()):
+        if dec.get('status') in ('confirmed', 'reconfirm_required', 'proposed'):
+            out += [{'result_id': rid, 'decision_id': d, 'proposal_id': dec.get('proposal_id')}
+                    for rid in sorted(named(dec.get('value')))]
+    for p in open_proposals(state):
+        out += [{'result_id': rid, 'decision_id': p['decision_id'],
+                 'proposal_id': p['proposal_id']} for rid in sorted(named(p.get('value')))]
+    seen, unique = set(), []
+    for item in out:
+        key = (item['result_id'], item['decision_id'], item['proposal_id'])
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    return unique
+
+
 def not_yet_defensible(state: dict) -> list[dict]:
     """What the study cannot claim yet, from state only (plan §6)."""
     items = []
@@ -1396,7 +1427,12 @@ def not_yet_defensible(state: dict) -> list[dict]:
                       'text': 'Decided by delegation to the assistant\'s default, not by the '
                               'junior\'s own judgment: ' + ', '.join(delegated) + '.'})
     if state['stale']:
+        # v0.3 (WP-A, R34): a stale result reaches the junior only when a junior surface
+        # cites it (a decision or an open proposal names it, as ``motivated_by`` does);
+        # otherwise it is the agent's to recompute, and not a limit of the study for them.
+        cited = cited_stale_results(state)
         items.append({'id': 'stale_results', 'results': sorted(state['stale']),
+                      'cited_by': cited, 'junior': bool(cited),
                       'text': 'Some results are stale and must be recomputed before they are cited.'})
     if state['executions']['interrupted']:
         items.append({'id': 'interrupted_executions',

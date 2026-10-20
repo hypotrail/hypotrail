@@ -98,7 +98,9 @@ PAYLOAD_KEYS = {
 }
 RESULT_KEYS_BY_ACTION = {
     'decide.propose': ('proposal_id', 'decision_id', 'status', 'decision_status', 'superseded',
-                       'restatement'),
+                       'restatement',
+                       # v0.3 (WP-A, R32): said before the proposal is presented.
+                       'data_contingent', 'data_contingent_reason'),
     'decide.confirm': ('decision_id', 'proposal_id', 'status', 'value', 'user_words', 'channel',
                        'actor', 'invalidation', 'basis', 'delegation_scope',
                        # ADR 0005 (R3): the agent's concern, and the contradiction warnings.

@@ -334,78 +334,57 @@ def _value_numbers(value: Any, *, percents_only: bool = False) -> set[float]:
     return found
 
 
-def literal_numbers(text: str, value: Any, pool=None) -> list[str]:
-    """Numbers written in ``text`` that come neither from ``value`` nor from ``pool``.
-
-    A proposal's restatement and rationale may repeat the numbers of the proposed
-    value, and the figures of current registry results it rests on ("115 selected"),
-    traced with the matcher of ``hypotrail check`` (``pool`` is a
-    :class:`mlkit.study.cmd_check.Pool` of the current results). A percentage ("100%",
-    "30 percent") comes from a result, or from a fraction of the value ("30%" for a
-    validation fraction of 0.3), never from another number of the value: "capacity:100"
-    does not allow "100% precision" (review fix L3). Any other number is free text and
-    is refused; it is reported as written, with ``%`` for a percentage.
-    """
-    from . import cite
-
+def literal_numbers(text: str, value: Any) -> list[str]:
+    """Numbers written in ``text`` that do not come from ``value`` (digits glued to letters
+    count, review fix L4; identifiers do not). A percentage ("100%", "30 percent") comes
+    from a fraction of the value ("30%" for a validation fraction of 0.3), never from
+    another number of the value (review fix L3). Reported as written, with ``%`` for a
+    percentage. ``decide propose`` traces its texts with :func:`check_proposal_texts`."""
     masked = mask_identifiers(text)
     plain = {round(n, 6) for n in _value_numbers(value)}
     percents = {round(n, 6) for n in _value_numbers(value, percents_only=True)}
-    tokens = cite.parse_numbers(masked) if pool is not None else []
     out = set()
     for m in NUMBER.finditer(masked):
         number = round(float(m.group().replace(',', '.')), 6)
         percent = bool(PERCENT_AFTER.match(masked, m.end()))
         if number in (percents if percent else plain):
             continue
-        if any(t.start <= m.start() < t.end and pool.trace(t)[0] == 'current' for t in tokens):
-            continue
         out.add(m.group() + ('%' if percent else ''))
     return sorted(out)
 
 
-def current_results_pool(store: StudyStore, state: Mapping, *, literals: bool = False):
-    """A number pool of the current, verified registry results: what a proposal's text may
-    cite besides its own value (D5). Current means current by state, lineage and code
-    (:meth:`mlkit.study.read.Study.currency`).
+def check_proposal_texts(store: StudyStore, texts, value: Any) -> None:
+    """Refuse a proposal whose texts hold a number ``hypotrail check`` would not trace
+    (``literal_number_in_text``, ``details.field``, ``details.numbers`` as written,
+    ``details.findings``).
 
-    ``literals`` (the conclusion text, review fix M1) also admits the recorded values a
-    report may repeat: the confirmed decisions other than the conclusion, the junior's
-    recorded words, and the rules of the current policy evaluation; never the proposed
-    conclusion itself.
+    v0.3 (WP-A): one tracer for both commands (:mod:`mlkit.study.numtrace`): the pool of
+    ``check --text`` plus the proposed value, so a text ``check`` accepts is accepted here
+    (a proposal's texts may repeat its own value, D5, and cite current results, rounded to
+    the decimals they show). ``texts`` is ``[(field, text)]``.
     """
-    from . import cmd_check
+    from . import numtrace
 
-    study = read.open(store.study_dir)
-    results = {}
-    for slot, rid in sorted(state['current'].items()):
-        if not st.is_current(state, slot) or not study.currency(rid)['current']:
+    pool = None
+    for key, text in texts:
+        if not literal_numbers(text, value) and not _has_number(text):
             continue
-        try:
-            entry = study.result(rid)
-        except StudyError:
-            continue
-        results[slot] = {'result_id': rid, 'values': entry['output']['values'],
-                         'n_rows': entry['n_rows'], 'current': True, 'integrity': 'ok',
-                         'activity': entry['activity'], 'params': entry['params']}
-    decisions = {}
-    if literals:
-        decisions = {d: {'decision_id': d, 'value': dec['value'],
-                         'confirmation': dec['confirmation']}
-                     for d, dec in state['decisions'].items()
-                     if d != 'conclusion' and dec['status'] == 'confirmed'}
-    # B6c (H2): what changed after the final test was opened (a final-test figure then no
-    # longer describes the choice).
-    started = {}
-    for slot, item in results.items():
-        try:
-            started[slot] = study.result(item['result_id'])['started_revision']
-        except (StudyError, KeyError):
-            continue
-    final = partition.final_test_status(state, started)
-    return cmd_check.Pool({'results': results, 'decisions': decisions, 'open_proposals': [],
-                           'settings': {}, 'dataset': {}, 'facts': {'by_status': {}},
-                           'final_test': {'changed_after': final.get('changed_after') or []}})
+        pool = pool or numtrace.study_pool(store.study_dir, proposed=value)
+        findings = numtrace.number_findings(pool, text, key)
+        if findings:
+            numbers = sorted({f['details']['number'] for f in findings})
+            raise CommandRefused('literal_number_in_text',
+                                 f'The {key} contains numbers that are neither part of the '
+                                 f'proposed value nor a figure of a current result. Repeat '
+                                 f'only registered figures, or cite results by their '
+                                 f'result_id.', details={'field': key, 'numbers': numbers,
+                                                         'findings': findings})
+
+
+def _has_number(text: str) -> bool:
+    """A number in digits or in words (``check`` traces both)."""
+    from . import cite, wordnum
+    return bool(cite.parse_numbers(text) or wordnum.parse(text))
 
 
 def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatement: str,
@@ -413,19 +392,19 @@ def check_conclusion(store: StudyStore, state: Mapping, value: Mapping, restatem
     """Review fix M1: the conclusion text is traced when it is proposed.
 
     Every number of ``value.text`` must match a current result (or a recorded literal,
-    :func:`current_results_pool`); the proposed value is no whitelist for itself
+    :func:`mlkit.study.numtrace.study_pool`); the proposed value is no whitelist for itself
     (``literal_number_in_text``, ``details.field`` ``value.text``). Causal or forecast
     wording in the text, the restatement, or the rationale is refused
     (``causal_or_forecast_wording``, ``details.findings`` as ``hypotrail check`` reports
     them).
     """
-    from . import cmd_check
+    from . import cmd_check, numtrace
 
-    findings, _ = cmd_check.trace_text(current_results_pool(store, state, literals=True),
-                                       mask_identifiers(value['text']), 'value.text')
-    numbers = [f['details']['number'] for f in findings
-               if f['code'] in ('untraceable_number', 'stale_number',
-                                'final_test_figure_outdated')]
+    # v0.3 (WP-A): the pool of ``hypotrail check`` (the conclusion is never a literal of
+    # itself), so a text ``check`` accepts is accepted here.
+    findings = numtrace.number_findings(numtrace.study_pool(store.study_dir), value['text'],
+                                        'value.text')
+    numbers = [f['details']['number'] for f in findings]
     if numbers:
         raise CommandRefused('literal_number_in_text',
                              'The conclusion text contains numbers that are not figures of a '
@@ -1045,21 +1024,10 @@ def _propose(ctx: Context) -> Handler:
         if decision_id == 'conclusion':
             check_conclusion(ctx.store, state, value, params['restatement'],
                              params['rationale'])
-        pool = None
         labels = dict(params.get('labels') or {})
         texts = [('restatement', params['restatement']), ('rationale', params['rationale'])]
         texts += [(f'labels.{lang}', text) for lang, text in sorted(labels.items())]
-        for key, text in texts:
-            if not literal_numbers(text, value):
-                continue
-            pool = pool or current_results_pool(ctx.store, state)
-            found = literal_numbers(text, value, pool)
-            if found:
-                raise CommandRefused('literal_number_in_text',
-                                     f'The {key} contains numbers that are neither part of the '
-                                     f'proposed value nor a figure of a current result. Repeat '
-                                     f'only registered figures, or cite results by their '
-                                     f'result_id.', details={'field': key, 'numbers': found})
+        check_proposal_texts(ctx.store, texts, value)
         revision = state['revision'] + 1
         superseded = []
         for p in st.open_proposals(state):
@@ -1081,9 +1049,12 @@ def _propose(ctx: Context) -> Handler:
         if decision['status'] in ('open', 'proposed'):
             decision.update(status='proposed', value=copy.deepcopy(value), proposal_id=pid,
                             revision=revision)
+        contingent, why = data_contingency(ctx.store, state, decision_id, value)
         return {'proposal_id': pid, 'decision_id': decision_id, 'status': 'open',
                 'decision_status': decision['status'], 'superseded': superseded,
-                'restatement': params['restatement']}
+                'restatement': params['restatement'],
+                # v0.3 (WP-A, R32): said before the proposal is presented.
+                'data_contingent': contingent, 'data_contingent_reason': why}
     return Handler(PROPOSE_PARAMS, run, check)
 
 
@@ -1114,6 +1085,47 @@ def _normalized_preprocessing(store, state: Mapping, value: Mapping) -> dict:
         return governance.normalize_preprocessing(value, lookup, target, looks_before=looks)
     except governance.ValueProblem as exc:
         raise _invalid(exc.message, **exc.details) from None
+
+
+def data_contingency(store, state: Mapping, decision_id: str,
+                     value: Any) -> tuple[bool | None, dict | None]:
+    """v0.3 (WP-A, R32): ``(data_contingent, data_contingent_reason)`` of a proposal.
+
+    The engine assesses it for the preprocessing (WP-A4, WP-A9 M1): the value it recorded
+    says whether a motivating result read the target, or any look at the target came before
+    the proposal. The reason names them: ``{target_looks_before, looks_by_activity,
+    look_results, motivating_results_reading_target, text}``; None when the value is not
+    data-contingent. Any other decision: ``(None, None)`` (not assessed).
+    """
+    if decision_id != st.PREPROCESSING or not isinstance(value, Mapping):
+        return None, None
+    contingent = bool(value.get('data_contingent'))
+    if not contingent:
+        return False, None
+    from . import registry
+    target = case_of(state).target_column
+    looks = governance.ledger(read.open(store.study_dir).exposure_records(), target)
+    motivating = []
+    for rid in value.get('motivated_by') or []:
+        try:
+            if governance.uses_target(registry.get(store, rid), target):
+                motivating.append(rid)
+        except StudyError:
+            continue
+    parts = []
+    if looks['target_looks']:
+        named = ', '.join(f'{a} ({n})' if n > 1 else a
+                          for a, n in looks['by_activity'].items())
+        parts.append(f'{looks["target_looks"]} look(s) at the target came before this proposal '
+                     f'({named})')
+    if motivating:
+        parts.append(f'{len(motivating)} motivating result(s) read the target')
+    text = ('This preprocessing is data-contingent: ' + '; '.join(parts) + '. Say so to the '
+            'junior before presenting it: a choice made after looking at the outcome makes '
+            'the development figures more optimistic.')
+    return True, {'target_looks_before': looks['target_looks'],
+                  'looks_by_activity': looks['by_activity'], 'look_results': looks['results'],
+                  'motivating_results_reading_target': motivating, 'text': text}
 
 
 def _confirm(ctx: Context) -> Handler:
@@ -1394,6 +1406,19 @@ def refusal_dict(exc: Exception) -> dict:
             'details': details}
 
 
+def _diagnostic_rule(store, state: Mapping) -> str | None:
+    """v0.3 (WP-A, R34): the rule the current binary diagnostics were computed at (their
+    registry entry's ``params.rule``), or None when there are none or it cannot be read."""
+    from . import registry
+    rid = state.get('current', {}).get(dep.DIAG_BINARY_SLOT)
+    if rid is None or store is None:
+        return None
+    try:
+        return (registry.get(store, rid).get('params') or {}).get('rule')
+    except (StudyError, OSError, ValueError, AttributeError):
+        return None
+
+
 def confirmation_plan(state: Mapping, store, proposal_id: str, *,
                       basis: str = DEFAULT_BASIS) -> dict:
     """What confirming the open proposal ``proposal_id`` would do, whatever the words.
@@ -1456,7 +1481,8 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
             plan['supersedes_proposal'] = decision['proposal_id']
     if not valid:
         return plan
-    eff = dep.effects(copy.deepcopy(state), decision_id, old, value)
+    eff = dep.effects_at(copy.deepcopy(state), decision_id, old, value,
+                         _diagnostic_rule(store, state) if decision_id == 'policy' else None)
     outdated = dep.outdates_conclusion(
         state, decision_id, was_confirmed=decision['status'] == 'confirmed', old=old,
         new=value, old_basis=st.confirmation_basis(decision['confirmation']) if had else None,
@@ -1880,8 +1906,14 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
                'replayed': bool(receipt.get('replayed')), 'revision': receipt['revision'],
                'result': receipt['result'], 'artifacts': None}
     if action == ACTION_CONFIRM:
-        payload['result'] = {**payload['result'],
-                             'opening': _opening(store, payload, request_id)}
+        opening = _opening(store, payload, request_id)
+        payload['result'] = {**payload['result'], 'opening': opening}
+        if opening is not None and not payload['replayed']:
+            # v0.3 (WP-A): the opening runs the final evaluation after the confirmation
+            # commits; the payload's revision is the study's revision after both, so the
+            # next command's --expected-revision is the one this output gives.
+            payload['revision'] = max(payload['revision'],
+                                      read.open(store.study_dir).state['revision'])
     code = EXIT_OK
     if not payload['replayed']:
         artifacts = after_commit(store.study_dir, payload)

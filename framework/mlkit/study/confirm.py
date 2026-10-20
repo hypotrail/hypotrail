@@ -543,11 +543,30 @@ def needs_reason(state: Mapping, decision_id: str) -> bool:
     return decision_id in REASON_DECISIONS[st.task_of(state)]
 
 
-def restates(words: str, *, value: Any, texts: Iterable[str]) -> bool:
-    """The reply repeats content of the proposal: a word or a number of its value,
-    restatement or labels, endorsement words left out."""
+# v0.3 (WP-A, R25 note): words that point at the proposal without saying any of its
+# content ("je confirme ce choix", "I confirm this decision"): they never make a reply a
+# restatement.
+GENERIC_REFERENCE_WORDS = frozenset("""
+    choix choice choices decision decisions proposition propositions proposal proposals
+    option options chose choses thing things cela ceci ca it this that these those ce cet
+    cette ces celui celle ceux celles idee idea plan approche approach solution solutions
+    recommandation recommendation recommendations suggestion suggestions
+""".split())
+
+
+def _without_generic(words: str) -> str:
+    """``words`` with :data:`GENERIC_REFERENCE_WORDS` blanked."""
     cmd = _cmd()
-    return cmd.relates(_without_endorsement(words), value=value,
+    return re.sub(r'[^\W_]+', lambda m: ' ' if cmd._fold(m.group()) in GENERIC_REFERENCE_WORDS
+                  else m.group(), words)
+
+
+def restates(words: str, *, value: Any, texts: Iterable[str]) -> bool:
+    """The reply repeats content of the proposal: a content word or a number of its value,
+    restatement or labels, endorsement words and generic references ("ce choix", v0.3
+    WP-A) left out."""
+    cmd = _cmd()
+    return cmd.relates(_without_generic(_without_endorsement(words)), value=value,
                        texts=tuple(t for t in texts if t))
 
 

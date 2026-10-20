@@ -964,7 +964,9 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
         # D10: before a rule is adopted, "Now" gives the latest evaluated figures.
         step += (f' (latest policy evaluation: '
                  f'{headline["junior_text" if junior else "text"]})')
-    limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP]
+    limits = [x for x in view['not_yet_defensible'] if x['id'] not in RECAP_LIMIT_SKIP
+              # v0.3 (WP-A, R34): a limit marked not for the junior stays in the agent's.
+              and not (junior and x.get('junior') is False)]
     rank = {k: i for i, k in enumerate(SUMMARY_PRIORITY)}
     limits.sort(key=lambda x: rank.get(x['id'], len(SUMMARY_PRIORITY)))
     if limits:

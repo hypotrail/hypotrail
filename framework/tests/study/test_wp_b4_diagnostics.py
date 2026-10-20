@@ -153,8 +153,9 @@ def test_the_rule_follows_the_proposal_then_the_adoption(tmp_path):
               'Yes, I adopt that rule because the desk can make that many calls',
               '--request-id', flow.rid(), '--expected-revision', flow.rev(),
               '--study', flow.study)
-    # A first adoption makes the diagnostics stale: they said "proposed".
-    assert not st.is_current(flow.state(), 'diag.binary')
+    # v0.3 (WP-A, R34, owner remark): adopting the rule they were computed at keeps the
+    # diagnostics current (before v0.3 a first adoption made them stale).
+    assert st.is_current(flow.state(), 'diag.binary')
     again = flow.run('diag.binary')
     assert again['values']['rule_source'] == 'adopted'
     # Another rule adopted later: stale again; the stale diagnostics never block the opening.

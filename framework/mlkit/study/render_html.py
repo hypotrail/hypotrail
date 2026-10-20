@@ -814,6 +814,10 @@ def _not_yet_defensible(view: Mapping) -> str:
     extra = labels['not_yet_defensible_extra']
     items = []
     for item in view['not_yet_defensible']:
+        if item.get('junior') is False:
+            # v0.3 (WP-A, R34): stale results no junior surface cites are the agent's to
+            # recompute, not a limit of the study.
+            continue
         details = []
         titles = {s['decision']: s['title'] for s in st.steps(view.get('task')) if s['decision']}
         if item.get('decisions'):
