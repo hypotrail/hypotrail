@@ -121,6 +121,12 @@ JUNIOR = {
                            'and the requests as stated doubts, and keep the other variables.',
         'policy_words': 'Yes, contact the top 10% of bookings, because the team can handle one '
                         'new booking in ten.',
+        # S2 (WP-H): an earlier, different prediction moment that the junior corrects in a
+        # second chat.
+        'prediction_time_s2': 'a week before arrival, from the booking and its changes so far',
+        'restatement_s2': 'You score each booking a week before arrival, from the booking and '
+                          'what changed in it since.',
+        'words_s2': 'Yes, a week before arrival, with what we know at that point.',
     },
     # Regression generality case (Auto MPG), words of test_regression_walkthrough.py.
     'auto-mpg': {
@@ -134,6 +140,11 @@ JUNIOR = {
                               'other characteristics and the origin.',
         'mean_by': 'model_year',
         'choice_words': 'Yes, adopt the linear model, because it errs less than the mean.',
+        # S10 (WP-H): the junior also drops weight with the reason that belongs to
+        # acceleration (the case lists its availability as unknown).
+        'exclusions_s10': {'acceleration': 'uncertain_excluded', 'weight': 'uncertain_excluded'},
+        'restatement_s10': 'You exclude acceleration and weight, and keep the other '
+                           'characteristics and the origin.',
     },
     'synthetic': {
         'prediction_time': 'when the membership expires, before any reminder is sent',
@@ -478,10 +489,13 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
     raise ValueError(f'unknown case {case!r}')
 
 
-def init_study(workspace: Path, info: dict) -> dict:
-    """``hypotrail init`` in the workspace; returns the init payload."""
+def init_study(workspace: Path, info: dict, lang: str | None = None) -> dict:
+    """``hypotrail init`` in the workspace; returns the init payload. ``lang`` is the study
+    language (v0.3, WP-H: a French run is a French study, so the engine's junior texts come
+    in French, as ``init --lang fr`` gives them to a French junior)."""
     ws = Path(workspace)
-    _, payload = hyp('init', '--case', ws / info['case_yaml'], '--study', ws)
+    extra = ('--lang', lang) if lang else ()
+    _, payload = hyp('init', '--case', ws / info['case_yaml'], *extra, '--study', ws)
     return payload
 
 
@@ -492,9 +506,11 @@ def enable_session_log(workspace: Path) -> None:
 
 
 def prepare_study(case: str, workspace: Path, hidden_dir: Path | None = None,
-                  seed: int = 20261018, session_log: bool = False) -> dict:
+                  seed: int = 20261018, session_log: bool = False,
+                  lang: str | None = None) -> dict:
     info = prepare_case(case, workspace, hidden_dir, seed)
-    init = init_study(workspace, info)
+    init = init_study(workspace, info, lang)
+    info['lang'] = lang or 'en'
     if session_log:
         enable_session_log(workspace)
         info['session_log'] = True
@@ -665,6 +681,12 @@ class Setup:
                 p = self.propose('policy', rule, f"You {j['act']} the top {pct} of "
                                                  f"{j['unit']}, ranked by the model's score.")
                 self.confirm(p, j['policy_words'])
+            # v0.3 (WP-F1, R28): the diagnostics at the adopted rule (or of the chosen model)
+            # are the next step after the choice; the agent runs them when ``next_action``
+            # names them, so a study past the choice has them.
+            na = self.view().get('next_action') or {}
+            if str(na.get('activity') or '').startswith('diag.'):
+                self.run(na['activity'])
         if stop >= 8:
             value = self.default_value('final_test')
             p = self.propose('final_test', value, 'You open the sealed final test once, for the '

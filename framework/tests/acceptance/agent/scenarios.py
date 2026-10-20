@@ -34,6 +34,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import e1  # noqa: E402  (loads runner, graders, study_setup, graders_b)
+import graders_v03 as gv  # noqa: E402  (v0.3, WP-H)
 
 runner, graders, study_setup, gb = e1.runner, e1.graders, e1.study_setup, e1.graders_b
 SCENARIOS = yaml.safe_load((HERE / 'scenarios.yaml').read_text(encoding='utf-8'))
@@ -95,7 +96,7 @@ def run_scenario(sid: str, case: str, lang: str, out: Path, *, caps: runner.Caps
     setup_log = {}
 
     def prepare(ws: Path) -> dict:
-        info = study_setup.prepare_study(case, ws, hidden)
+        info = study_setup.prepare_study(case, ws, hidden, lang=lang)
         st = study_setup.Setup(ws, case, (s.get('setup') or {}).get('variant'))
         st.advance(s['setup']['walkthrough_until'])
         setup_log.update({'stage': s['setup']['walkthrough_until'], 'calls': st.log,
@@ -113,8 +114,12 @@ def run_scenario(sid: str, case: str, lang: str, out: Path, *, caps: runner.Caps
             fh.write(msg + '\n')
 
     simulator = e1.junior_responder(out, log=logger)
+    adopter = (adopter_responder(lang, log=logger, **(s.get('adopter') or {}))
+               if 'adopter' in s else None)
 
     def responder(ws, turn, step, nxt, answered):
+        if adopter is not None:
+            return adopter(ws, turn, step, nxt, answered)
         # A step marked answer_with_simulator gets one simulated junior answer: the
         # junior's own words in reply to the restatement the agent just made.
         if not step.get('answer_with_simulator') or answered:
@@ -760,6 +765,139 @@ def c_no_final_diagnostic_claim(ctx):
     return _ok(not claims, claims=claims)
 
 
+# --------------------------------------------------------------------------- v0.3 (WP-H)
+
+def _replies(ctx) -> list[str]:
+    return [t.get('final_text') or '' for t in ctx.run['turns']]
+
+
+def _final_texts(ctx) -> dict:
+    return {t['index']: t.get('final_text') or '' for t in ctx.run['turns']}
+
+
+def _lang(ctx) -> str:
+    return ctx.run['meta'].get('lang') or 'en'
+
+
+def c_guided_confirmations(ctx):
+    """WP-B (R14, R16, R27): confirmations in the junior's words verbatim, a short yes only
+    after the closed adoption question, no refused attempt, no reason asked by the engine."""
+    return _r(gv.guided_confirmations(ctx.run, ctx.events, gb.confirm_attempts(ctx.events)))
+
+
+def c_no_reason_requested(ctx):
+    """WP-B (R27): in guided mode the agent never asks for a reason or for own words."""
+    return _r(gv.asks_for_reason(_replies(ctx)))
+
+
+def c_data_contingent_said_first(ctx):
+    """R32: a data-contingent preprocessing is announced before it is shown."""
+    return _r(gv.data_contingent_first(ctx.events, _final_texts(ctx)))
+
+
+def c_diagnostics_when_required(ctx):
+    """R28: diagnostics after the fits and after the choice, before the next pause."""
+    return _r(gv.diagnostics_when_required(ctx.events))
+
+
+def c_confusion_matrix_shown(ctx):
+    """R28 (binary studies): the confusion matrix as a 2x2 table after ``diag.binary``."""
+    return _r(gv.confusion_shown(ctx.events, _final_texts(ctx)))
+
+
+def c_variant_budget_and_families(ctx):
+    """ADR 0007: at most three variants with their questions, a family only when the
+    shortlist recommends it."""
+    return _r(gv.variant_budget(ctx.run, ctx.events))
+
+
+def c_replies_in_study_language(ctx):
+    """R36/R37: every reply in the junior's language; no engine text left in the other
+    language outside quotations."""
+    return _r(gv.replies_in_language(_replies(ctx), _lang(ctx)))
+
+
+def c_restatements_in_study_language(ctx):
+    """Rule 11: a French study's proposals carry ``--restatement-fr``."""
+    return _r(gv.restatements_in_language(ctx.events, _lang(ctx)))
+
+
+def c_no_raw_ids(ctx):
+    """R15/R30, rule 11: no result, proposal, execution or request id and no revision
+    number in a reply to the junior."""
+    snaps = [ctx.before] + [(t.get('after') or {}).get('snapshot') or {} for t in ctx.run['turns']]
+    ids = {e['result_id'] for s in snaps for e in s.get('registry') or [] if e.get('result_id')}
+    return _r(gv.raw_ids(_replies(ctx), ids, gv.request_ids(ctx.events)))
+
+
+def c_glossary_vocabulary(ctx, step0_turn=None):
+    """R15/R30: glossary terms used verbatim, no home-made term; step 0 names the
+    development set and the holdout (final test)."""
+    step0 = ctx.answer(step0_turn) if step0_turn else None
+    return _r(gv.glossary_vocabulary(_replies(ctx), _lang(ctx), step0))
+
+
+def c_reached_conclusion(ctx):
+    """S14: the study went from step 0 to a confirmed conclusion, the final test opened."""
+    d = (ctx.final.get('decisions') or {})
+    status = {k: (v or {}).get('status') for k, v in d.items()}
+    return _ok(status.get('conclusion') == 'confirmed'
+               and _final_status(ctx.final) == 'opened',
+               decisions=status, final_test=_final_status(ctx.final),
+               stopped=ctx.run.get('stopped'))
+
+
+# The scripted junior of S14: it adopts every proposal ("oui"), asks once to have one
+# pause explained first, gives the success criterion's middle option when asked to
+# choose it, and otherwise says "let's continue". It reads the agent's last reply and
+# the study's next action (to know which pause is open), never the evidence.
+ADOPTER = {
+    'fr': {'adopt': 'oui', 'explain': "explique-moi d'abord", 'continue': 'on continue',
+           'criterion': {'binary': 'le gain de précision, au moins 5 points',
+                         'regression': "au moins 10 % d'erreur en moins que la référence"}},
+    'en': {'adopt': 'yes', 'explain': 'explain first', 'continue': "let's continue",
+           'criterion': {'binary': 'the precision gain, at least 5 points',
+                         'regression': 'at least 10% less error than the baseline'}},
+}
+
+
+def adopter_responder(lang: str, explain_at: str = 'split', max_turns: int = 20, log=print):
+    words = ADOPTER[lang]
+    state = {'explained': False, 'n': 1}
+
+    def respond(ws, turn, step, nxt, answered):
+        snap = (turn.get('after') or {}).get('snapshot') or {}
+        decisions = snap.get('decisions') or {}
+        if (decisions.get('conclusion') or {}).get('status') == 'confirmed':
+            return None
+        if state['n'] >= max_turns or turn.get('result_subtype') not in ('success', None):
+            return None
+        reply = turn.get('final_text') or ''
+        open_ids = [p['decision_id'] for p in snap.get('open_proposals') or []]
+        na = snap.get('next_action') or {}
+        asked = bool(gv.ADOPTION_RE.search(reply))
+        if open_ids or asked:
+            if not state['explained'] and explain_at in open_ids:
+                state['explained'] = True
+                say, label = words['explain'], f'explain_{explain_at}'
+            else:
+                say, label = words['adopt'], f"adopt_{(open_ids or ['pause'])[0]}"
+        elif (na.get('decision') or na.get('decision_id')) == 'success_criterion' \
+                or na.get('step') == 'success_criterion':
+            task = 'regression' if 'model_choice' in decisions else 'binary'
+            say, label = words['criterion'][task], 'criterion_choice'
+        else:
+            say, label = words['continue'], 'continue'
+        state['n'] += 1
+        log(f'[scripted junior {state["n"]}] {say}')
+        return {'say': say, 'label': f'{label}_{state["n"]}'}
+    return respond
+
+
+def metrics(ctx) -> dict:
+    return gv.smoothness(ctx.run, ctx.events)
+
+
 CHECKS = {name[2:]: fn for name, fn in globals().items() if name.startswith('c_') and callable(fn)}
 
 
@@ -787,9 +925,17 @@ def grade(run_dir: Path) -> dict:
     review_path = Path(run_dir) / 'review' / 'rubric' / 'reviewer.json'
     rubric = json.loads(review_path.read_text())['structured_output'] if review_path.is_file() else None
     costs = runner.recompute_turn_costs(ctx.run['turns'])
+    try:
+        smooth = metrics(ctx)
+    except Exception as exc:     # a metric bug is reported, never hidden
+        smooth = {'error': f'{type(exc).__name__}: {exc}'}
     out = {'scenario': ctx.sid, 'title': s['title'], 'case': ctx.case['case'],
            'lang': ctx.run['meta'].get('lang'), 'ok': all(r['ok'] for r in results),
            'failed': [r['check'] for r in results if not r['ok']], 'checks': results,
+           # WP-H (plan section 2): smoothness measured on every run; the targets are
+           # judged on the full-study scenario only.
+           'metrics': smooth,
+           'targets': gv.targets(smooth) if s.get('targets') and 'error' not in smooth else None,
            'rubric': rubric, 'cost_usd': round(sum(costs), 4), 'wall_s': ctx.run.get('wall_s'),
            'turns': [{k: t.get(k) for k in ('index', 'chat', 'label', 'wall_s', 'agent_turns',
                                              'result_subtype', 'tool_calls', 'models', 'cli_version')}
@@ -823,13 +969,18 @@ def review(run_dir: Path, model: str = 'opus', budget: float = 2.0) -> dict:
 
 
 def summary(run_dirs: list[Path]) -> str:
-    lines = ['| Scenario | Case | Lang | Verdict | Failed checks | Rubric | Cost |', '|---|---|---|---|---|---|---|']
+    lines = ['| Scenario | Case | Lang | Verdict | Failed checks | Rubric | Turns | Refusals '
+             '(seen) | Tools/pause | Words/reply | Cost |',
+             '|---|---|---|---|---|---|---|---|---|---|---|']
     for d in run_dirs:
         gr = json.loads((Path(d) / 'grade.json').read_text())
         rub = gr.get('rubric') or {}
         rv = ', '.join(i['verdict'] for i in rub.get('items', [])) or '-'
+        m = gr.get('metrics') or {}
         lines.append(f"| {gr['scenario']} {gr['title']} | {gr['case']} | {gr['lang']} | "
                      f"{'pass' if gr['ok'] else 'FAIL'} | {', '.join(gr['failed']) or '-'} | {rv} | "
+                     f"{m.get('junior_turns')} | {m.get('refusals')} ({m.get('refusals_visible')}) | "
+                     f"{m.get('tool_calls_per_pause_mean')} | {m.get('words_per_reply_mean')} | "
                      f"${gr['cost_usd']:.2f} |")
     return '\n'.join(lines)
 

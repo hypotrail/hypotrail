@@ -171,7 +171,17 @@ def compact_snapshot(ws: Path) -> dict:
             'invalidations': [{k: i.get(k) for k in ('revision', 'decision_id', 'mutation', 'row')}
                               for i in view.get('invalidations') or []],
             # WP-B6b (S12, S13): the final test's state and its opening record.
-            'final_test': _final_test_digest(view.get('final_test'))}
+            'final_test': _final_test_digest(view.get('final_test')),
+            # WP-H (v0.3): the study language, the proposals' ids, and the family shortlist's
+            # recommendation (ADR 0007: a family is offered only on `compare_nonlinear`).
+            'language': view.get('language'),
+            'model_families': ({'recommendation': (view.get('model_families') or {})
+                                .get('recommendation')}
+                               if isinstance(view.get('model_families'), dict) else None),
+            'proposal_ids': sorted({p.get('proposal_id') for p in view.get('proposals') or []
+                                    if isinstance(p, dict) and p.get('proposal_id')}
+                                   | {p.get('proposal_id') for p in view.get('open_proposals') or []
+                                      if p.get('proposal_id')})}
 
 
 def _final_test_digest(ft) -> dict | None:
