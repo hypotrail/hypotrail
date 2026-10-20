@@ -80,6 +80,12 @@ PROPOSAL_STATUSES = ('open', 'confirmed', 'withdrawn', 'superseded')
 AVAILABILITY_DECISIONS = ('available_at_prediction', 'not_available', 'uncertain_excluded',
                           'uncertain_included')
 CHANNELS = ('chat', 'cli', 'webview')
+# v0.3 (WP-B, R16): ``choice`` is a confirmation channel only: the junior picked the adoption
+# option of an interactive choice the agent offered in the chat (Claude Code's
+# AskUserQuestion, or the client's equivalent); the option label is the recorded words.
+# A proposal never comes from it.
+CHOICE_CHANNEL = 'choice'
+CONFIRMATION_CHANNELS = CHANNELS + (CHOICE_CHANNEL,)
 CONFIRMATION_KEYS = ('user_words', 'proposal_id', 'restatement', 'authenticated', 'channel',
                      'actor', 'revision', 'time')
 # How the user decided (D1). ``explicit``: their own reply to the restatement.
@@ -118,7 +124,11 @@ EXPRESS_STANDING_DELEGATION_DECISIONS = STANDING_DELEGATION_DECISIONS + (
 # confirmation; a confirmation recorded before has none. ``mode`` (v0.2b, WP-B2): the
 # confirmation mode in force when the words were accepted; a confirmation recorded before
 # has none (it was guided, or v0.1 rules).
-CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mode', 'warnings')
+CONFIRMATION_OPTIONAL_KEYS = ('basis', 'delegation_scope', 'agent_concern', 'mode', 'warnings',
+                              # v0.3 (WP-B, R27): whether the junior's words give a reason,
+                              # for the trade-offs only; and whether they answer the closed
+                              # adoption question (written only when true).
+                              'reason_given', 'adoption_question')
 
 # Confirmation modes (ADR 0005). ``guided`` is the default (v0.2a); ``training`` and
 # ``express`` are implemented in v0.2b (WP-B2). ``MODE_STRICTNESS`` orders them: lowering the
@@ -389,7 +399,7 @@ FINAL_TEST_STEP = {
     'question': 'Now that the model and the rule are chosen, do you open the sealed final test, '
                 'once, to measure the chosen configuration on rows nothing has seen? After '
                 'this, any change is made after the final test.',
-    'expected_output': 'A confirmed opening in your own words, with a reason, and the one '
+    'expected_output': 'A confirmed opening in your own words, and the one '
                        'evaluation of the chosen configuration on the final test.',
     'completion': 'Decision final_test is confirmed and the final evaluation is recorded.'}
 
@@ -722,7 +732,8 @@ def _sha256_file(path) -> str:
 def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, revision: int,
                  time: str | None = None, basis: str = DEFAULT_BASIS,
                  delegation_scope: str | None = None, agent_concern: str | None = None,
-                 mode: str | None = None, warnings: list | None = None) -> dict:
+                 mode: str | None = None, warnings: list | None = None,
+                 reason_given: bool | None = None, adoption_question: bool = False) -> dict:
     """The confirmation record of ``proposal`` (plan §3.2, §9 bis).
 
     ``user_words`` is the user's verbatim reply to the proposal's restatement.
@@ -734,6 +745,9 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
     ``mode`` is the confirmation mode in force (v0.2b); the record omits it when None.
     ``warnings`` (WP-A9, H3) are the ``words_contradict_value`` warnings the words raised
     and the junior kept; the record omits them when there are none.
+    ``reason_given`` (v0.3, WP-B) says, for a trade-off confirmed in the junior's own words,
+    whether the words give a reason; the record omits it otherwise. ``adoption_question``
+    (v0.3, WP-B) is written, true, when the words answer the closed adoption question.
     """
     record = {'user_words': user_words, 'proposal_id': proposal['proposal_id'],
               'restatement': proposal['restatement'], 'authenticated': False,
@@ -744,6 +758,10 @@ def confirmation(*, user_words: str, proposal: dict, channel: str, actor: str, r
         record['mode'] = mode
     if warnings:
         record['warnings'] = [dict(w) for w in warnings]
+    if reason_given is not None:
+        record['reason_given'] = bool(reason_given)
+    if adoption_question:
+        record['adoption_question'] = True
     problems = _confirmation_problems(record, 'confirmation')
     if problems:
         raise StudyError('invalid_confirmation', 'The confirmation is incomplete.',
@@ -816,8 +834,12 @@ def _confirmation_problems(c: Any, path: str) -> list[dict]:
     if c['authenticated'] is not False:
         problems.append({'path': f'{path}.authenticated',
                          'problem': 'must be false: user words are not authenticated'})
-    if c['channel'] not in CHANNELS:
-        problems.append({'path': f'{path}.channel', 'problem': f'must be one of {", ".join(CHANNELS)}'})
+    if c['channel'] not in CONFIRMATION_CHANNELS:
+        problems.append({'path': f'{path}.channel',
+                         'problem': f'must be one of {", ".join(CONFIRMATION_CHANNELS)}'})
+    for key in ('reason_given', 'adoption_question'):
+        if key in present and not isinstance(c[key], bool):
+            problems.append({'path': f'{path}.{key}', 'problem': 'must be true or false'})
     if type(c['revision']) is not int or c['revision'] < 0:
         problems.append({'path': f'{path}.revision', 'problem': 'must be a revision number'})
     return problems

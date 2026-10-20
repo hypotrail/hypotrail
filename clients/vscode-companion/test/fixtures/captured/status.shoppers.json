@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-20T08:41:51.883227+00:00",
+   "updated": "2026-10-20T12:53:17.050091+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -236,7 +236,7 @@
      "id": "final_test",
      "title": "Open the final test once",
      "question": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
-     "expected_output": "A confirmed opening in your own words, with a reason, and the one evaluation of the chosen configuration on the final test.",
+     "expected_output": "A confirmed opening in your own words, and the one evaluation of the chosen configuration on the final test.",
      "completion": "Decision final_test is confirmed and the final evaluation is recorded.",
      "pause": 3,
      "decision": "final_test",

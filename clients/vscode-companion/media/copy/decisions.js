@@ -70,7 +70,7 @@
     effectsMissing: 'The impact preview is not available.',
     answerLabel: 'Your answer to this proposal, in your own words',
     answerLabelV0: 'Your answer, in your own words',
-    answerHint: 'Say what you accept and why it fits your situation. "ok" or "yes" alone is not enough. ' +
+    answerHint: 'Say that you adopt it, or what you would change; a reason is optional. "ok" or "yes" alone is not enough here. ' +
       'Nothing is filled in for you. What you type is recorded verbatim, with channel "webview".',
     answerHintV0: 'What you type is recorded verbatim as your confirmation, with channel "webview". ' +
       'The engine checks it like an answer in the chat: an acknowledgement alone is not a decision. ' +
@@ -112,7 +112,10 @@
       delegated_default: 'You handed this choice to the assistant\'s recommended default, in the chat.',
       explicit: 'Recorded in your own words before the guided rule named the kinds of answer.',
     },
-    channelWords: channel => (channel === 'webview' ? 'in this panel' : channel === 'chat' ? 'in the chat' : channel),
+    channelWords: channel => (channel === 'webview' ? 'in this panel' : channel === 'chat' ? 'in the chat'
+      : channel === 'choice' ? 'chosen as an option in the chat' : channel),
+    // v0.3 (WP-B, R27): a trade-off confirmed without a reason.
+    noReason: 'no reason given',
     concern: 'Point raised by the agent before you confirmed, kept by you: ',
     correction: 'Your later correction, in your words: ',
     corrections: 'Corrections in your words',
@@ -121,19 +124,19 @@
     modeLine: mode => `This study uses the ${mode} mode.`,
     modeNames: { guided: 'guided', training: 'training', express: 'express' },
     modeRules: task => [
-      'An answer is a reply to the open proposal, in your own words, that agrees with it.',
-      'It is not an answer when it is only "ok", asks a question, or keeps a condition such as "yes, but" or "unless".',
-      `For ${regression(task) ? 'the model choice' : 'the decision rule'} and the conclusion, also give your reason: why it fits your situation.`,
+      'An answer adopts the open proposal: "yes, I adopt it" is enough, or a short yes to the question "Do you adopt this decision?".',
+      'It is not an answer when it asks a question or keeps a condition such as "yes, but" or "unless".',
+      `A reason is optional, also for ${regression(task) ? 'the model choice' : 'the decision rule'} and the conclusion; without one, the record says "no reason given".`,
       'When the assistant raises a point about your reason, you may keep your words; the point is recorded next to them.',
     ],
     modeOther: 'This mode is described in the chat; the panel shows its name only.',
     // WP-B5: the opening of the final test is a chat act; its card explains and points there.
     finalTestTitle: 'Answer this one in the chat',
-    finalTestBody: 'Opening the final test is decided in the chat, in your own words and with your reason. This panel has no field and no button for it.',
+    finalTestBody: 'Opening the final test is decided in the chat, in your own words. This panel has no field and no button for it.',
     finalTestOnce: 'The final test opens once. Afterwards it is never measured again, and anything changed is marked as made after it.',
     modeChange: 'The mode changes only in the chat, in your own words; this panel cannot change it.',
     // WP-A7: the reason the guided rule asks for at a trade-off, said before typing.
-    reasonHint: 'This decision is a trade-off: say why it fits your situation, not only that you agree.',
+    reasonHint: 'This decision is a trade-off: a reason is optional; without one, the record says "no reason given".',
     reasonDecisions: ['policy', 'model_choice', 'conclusion', 'final_test'],
     atRevision: rev => `revision ${rev}`,
     supersededAt: rev => (rev === null || rev === undefined ? 'superseded' : `superseded at revision ${rev}`),

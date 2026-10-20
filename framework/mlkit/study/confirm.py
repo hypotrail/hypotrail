@@ -1,4 +1,5 @@
-"""Guided confirmation (ADR 0005, owner remarks R1 and R3 of the first demo).
+"""Guided confirmation (ADR 0005, owner remarks R1 and R3 of the first demo; v0.3 WP-B,
+owner remarks R14, R16 and R27 of the second demo).
 
 A confirmation is the junior's reply to one proposal, bound to it by ``decide confirm
 PROPOSAL`` (or ``--proposal``). The ``training`` mode (v0.2b) adds concept matching
@@ -14,23 +15,34 @@ revision, and it is not:
   "yes but", "unless", "sauf si": :func:`is_conditional`);
 * a bare acknowledgement (``bare_acknowledgement``: "ok", "oui", "sure, sounds good"),
   unless it is an explicit first-person endorsement ("je confirme", "I agree",
-  :data:`ENDORSEMENT`).
+  :data:`ENDORSEMENT`), or it answers the closed adoption question (below).
 
 Then the reply must hold an explicit endorsement expression (:data:`ENDORSEMENT`) or
-repeat content of the proposal (:func:`restates`); otherwise ``unrelated_reply``: a bare
-agreement word followed by unrelated content ("yes, I like pizza") is never a decision. The recorded basis says which
-kind of reply it was: ``restated`` when the reply repeats content of the proposal's value,
-restatement or labels (:func:`restates`), else ``endorsed``.
+agree and be about the proposal (:func:`relates_to`); otherwise ``unrelated_reply``: a bare
+agreement word followed by unrelated content ("yes, I like pizza") is never a decision.
 
-The choice of the third pause (``policy``, or ``model_choice`` in a regression study) and the
-``conclusion`` are business trade-offs: they need one reason (:func:`has_reason`), a clause
-beyond the endorsement ("parce que", "because", "car", or any content word); otherwise
-``reason_required``.
+**The closed adoption question (v0.3, WP-B, R14/R16).** When the agent showed the
+restatement and asked the one closed question "Do you adopt this decision?", it says so
+(``decide confirm --adoption-question``, or ``--channel choice`` when the junior picked the
+adoption option of an interactive choice). A short affirmative then answers that question
+and confirms: "oui", "ok", "ok pour moi", "vas-y", "d'accord avec ta recommandation"
+(:func:`closed_affirmative`). Negations, conditions, questions and unrelated content are
+still refused.
+
+**Reasons (v0.3, WP-B, R27).** In ``guided`` and ``express`` an endorsement suffices for
+every decision, the trade-offs included (:data:`REASON_DECISIONS`: the choice of the third
+pause, the final-test opening and the conclusion). A reason is optional: when the words
+give one (:func:`has_reason`) the record says ``reason_given: true``; otherwise
+``reason_given: false`` and the surfaces show "no reason given". Only the ``training`` mode
+requires a reason connector (``reason_required``, :func:`needs_reason`). The recorded basis
+says which kind of reply it was: ``restated`` when the reply repeats content of the
+proposal's value, restatement or labels (:func:`restates`), else ``endorsed``; always
+``endorsed`` through ``--channel choice`` (the words are an option label the agent wrote).
 
 For ``feature_availability``, :func:`availability_warnings` compares the words with the value
 mechanically: a variable named with exclusion words while the value keeps it, or with keep
-words while the value excludes it, is a warning (``words_contradict_value``) in guided and
-express, and a refusal of the same code in training (R3).
+words while the value excludes it, is a warning (``words_contradict_value``) in express, a
+refusal in guided until the agent raised the point, and a refusal in training (R3).
 
 This module holds no state and performs no I/O; :mod:`mlkit.study.commands` calls it.
 """
@@ -128,8 +140,9 @@ REASON_CONNECTOR = re.compile(r"""
   | \bparce\s+qu | \bcar\b | \bpuisqu | \bvu\s+qu | \betant\s+donne | \bcomme\s+(?:le|la|les|on|nous)\b
   | \bafin\s+de\b | \bpour\s+que\b
 """, re.IGNORECASE | re.VERBOSE)
-# The decisions that need a reason, per task: the choice of the third pause and the
-# conclusion (owner rule R1, "hybrid").
+# The trade-offs, per task: the choice of the third pause, the final-test opening and the
+# conclusion. v0.3 (WP-B, R27): only the training mode requires a reason for them; every
+# mode records whether the junior's words give one (``reason_given``).
 REASON_DECISIONS = {st.BINARY: ('policy', 'conclusion', st.FINAL_TEST),
                     st.REGRESSION: ('model_choice', 'conclusion', st.FINAL_TEST)}
 
@@ -526,21 +539,55 @@ def topic_of(state: Mapping, proposal: Mapping) -> Topic:
     return topic
 
 
-def guided_problem(state: Mapping, proposal: Mapping, words: str) -> str | None:
-    """The guided rule that depends on the proposal (ADR 0005, WP-A9): ``unrelated_reply``
-    unless the reply holds an explicit endorsement or agrees and is about the proposal
-    (:func:`relates_to`); then, for the trade-offs, ``reason_required`` unless it gives a
-    reason (:func:`has_reason`). None when the words confirm."""
-    topic = topic_of(state, proposal)
-    if not is_endorsement(words) and not relates_to(words, topic):
+# Possessives a closed answer may hold ("d'accord avec ta recommandation"): no content.
+POSSESSIVES = frozenset('ta ton tes ma mon mes sa son ses votre vos notre nos'.split())
+
+
+def closed_affirmative(words: str) -> bool:
+    """v0.3 (WP-B, R14/R16): a short affirmative that answers the closed adoption question
+    ("Do you adopt this decision?"): an explicit endorsement, a bare acknowledgement ("oui",
+    "ok", "ok pour moi", "vas-y", "allons-y"), or an agreement whose only other words point
+    at the proposal ("d'accord avec ta recommandation", "oui, cette décision"). The checks
+    of :meth:`commands.reply_problem` (negative, question, conditional) come first."""
+    cmd = _cmd()
+    if is_endorsement(words) or cmd.is_bare_acknowledgement(words):
+        return True
+    rest = [w for w in content_beyond_endorsement(words)
+            if w not in GENERIC_REFERENCE_WORDS and w not in POSSESSIVES]
+    return agrees(words) and not rest
+
+
+def guided_problem(state: Mapping, proposal: Mapping, words: str, *,
+                   closed: bool = False) -> str | None:
+    """The guided rule that depends on the proposal (ADR 0005, WP-A9; v0.3 WP-B):
+    ``unrelated_reply`` unless the reply holds an explicit endorsement, or agrees and is about
+    the proposal (:func:`relates_to`), or, when it answers the closed adoption question
+    (``closed``), is a short affirmative (:func:`closed_affirmative`). None when the words
+    confirm. No decision needs a reason in this mode (R27)."""
+    if is_endorsement(words) or (closed and closed_affirmative(words)):
+        return None
+    if not relates_to(words, topic_of(state, proposal)):
         return 'unrelated_reply'
-    if needs_reason(state, proposal['decision_id']) and not has_reason(words, topic):
-        return REASON_REQUIRED
     return None
 
 
 def needs_reason(state: Mapping, decision_id: str) -> bool:
+    """The training mode requires a reason connector for the trade-offs (v0.3, WP-B:
+    guided and express never require one)."""
+    return st.mode_of(state) == st.TRAINING and is_trade_off(state, decision_id)
+
+
+def is_trade_off(state: Mapping, decision_id: str) -> bool:
+    """``decision_id`` is one of the task's :data:`REASON_DECISIONS`."""
     return decision_id in REASON_DECISIONS[st.task_of(state)]
+
+
+def reason_given(state: Mapping, proposal: Mapping, words: str) -> bool | None:
+    """v0.3 (WP-B, R27): for a trade-off, whether the junior's words give a reason
+    (:func:`has_reason`); None for any other decision (not recorded)."""
+    if not is_trade_off(state, proposal['decision_id']):
+        return None
+    return has_reason(words, topic_of(state, proposal))
 
 
 # v0.3 (WP-A, R25 note): words that point at the proposal without saying any of its

@@ -101,7 +101,8 @@ PROPOSE_PARAMS = frozenset({'decision_id', 'value', 'restatement', 'rationale'})
 # ADR 0005 adds ``labels`` (a restatement per language) to a proposal, ``agent_concern`` to a
 # confirmation, and ``kind`` (``correction``) to a note, on the same terms.
 OPTIONAL_PARAMS = {'decide.propose': frozenset({'channel', 'labels'}),
-                   'decide.confirm': frozenset({'agent_concern'}),
+                   # v0.3 (WP-B): ``adoption_question`` only when true.
+                   'decide.confirm': frozenset({'agent_concern', 'adoption_question'}),
                    'decide.note': frozenset({'kind'})}
 CONFIRM_PARAMS = frozenset({'proposal_id', 'user_words', 'channel', 'actor', 'basis',
                             'delegation_scope'})
@@ -137,7 +138,7 @@ ACKNOWLEDGEMENT_WORDS = frozenset("""
     approved confirm confirmed correct right exactly perfect good great sounds sound looks lgtm
     keep that this one it is s let lets please thanks thank you so alright all done nice cool
     oui ouais d accord daccord garde ça ca vas parfait c est cest bon très tres bien super
-    merci valide validé go entendu compris understood noted
+    merci valide validé go entendu compris understood noted allons allez
 """.split())
 # Grammatical words that carry no content of their own (English and French).
 FILLER_WORDS = frozenset("""
@@ -850,6 +851,14 @@ def reply_problem(words: Any, *, value: Any = None, restatement: str | None = No
     return None if relates(words, value=value, texts=texts, topic=topic) else 'unrelated_reply'
 
 
+# v0.3 (WP-B, R14/R16): a bare "oui" to a proposal is refused unless it answers the closed
+# adoption question; the refusal says how to ask it.
+CONFIRM_BARE_MESSAGE = ('A bare acknowledgement is not a decision on its own. Show the '
+                        'restatement and ask the one closed question "Do you adopt this '
+                        'decision?": in the guided and express modes a short yes to that '
+                        'question confirms, sent with --adoption-question (or --channel choice '
+                        'for the adoption option of an interactive choice). In the training '
+                        'mode the junior says what the proposal decides.')
 REPLY_MESSAGES = {
     'missing_user_words': "A confirmation needs the user's own words in reply to the restatement.",
     'negative_reply': 'These words refuse, hesitate, or disagree: nothing is confirmed. Ask what '
@@ -1133,6 +1142,11 @@ def _confirm(ctx: Context) -> Handler:
         words = params['user_words']
         # ADR 0005: the reply rules of every mode (the training rules follow in ``run``).
         reason = cf.reply_problem(words)
+        # v0.3 (WP-B, R14/R16): a short affirmative that answers the closed adoption
+        # question (``--adoption-question``, or the adoption option of ``--channel choice``)
+        # is not a bare acknowledgement; ``run`` checks it is a short affirmative.
+        if reason == 'bare_acknowledgement' and answers_adoption_question(params):
+            reason = None
         if reason == 'missing_user_words':
             raise _ambiguous('missing_user_words', REPLY_MESSAGES[reason])
         if reason == 'negative_reply':
@@ -1142,7 +1156,7 @@ def _confirm(ctx: Context) -> Handler:
         if reason == 'conditional_reply':
             raise _ambiguous('conditional_reply', REPLY_MESSAGES[reason], user_words=words)
         if reason == 'bare_acknowledgement':
-            raise _ambiguous('bare_acknowledgement', REPLY_MESSAGES[reason], user_words=words)
+            raise _ambiguous('bare_acknowledgement', CONFIRM_BARE_MESSAGE, user_words=words)
         concern = params.get('agent_concern')
         if concern is not None and (not isinstance(concern, str) or not concern.strip()):
             raise _invalid('agent_concern is a non-empty string: the point you raised with the '
@@ -1167,8 +1181,13 @@ def _confirm(ctx: Context) -> Handler:
                              'proposal as your recommended default and confirm it with --basis '
                              'delegated_default, so the study shows it was delegated.',
                              user_words=words)
-        if params['channel'] not in st.CHANNELS:
-            raise _invalid(f'channel is one of {", ".join(st.CHANNELS)}.')
+        if params['channel'] not in st.CONFIRMATION_CHANNELS:
+            raise _invalid(f'channel is one of {", ".join(st.CONFIRMATION_CHANNELS)}.')
+        if params.get('adoption_question') not in (None, True):
+            raise _invalid('adoption_question is true when given.', field='adoption_question')
+        if params['channel'] == st.CHOICE_CHANNEL and params['basis'] == st.DELEGATED_DEFAULT:
+            raise _invalid('The choice channel records the adoption option the junior picked; '
+                           'it is never a delegation.', field='channel')
         if not isinstance(params['actor'], str) or not params['actor'].strip():
             raise _invalid('actor is a non-empty string.')
 
@@ -1192,13 +1211,13 @@ def _confirm(ctx: Context) -> Handler:
             if decision_id == st.FINAL_TEST and st.final_test_opened(state):
                 raise final_test_opened_refusal(state)
             if decision_id == st.FINAL_TEST and params['basis'] == st.DELEGATED_DEFAULT:
-                # WP-B1: the opening is the junior's own act, with a reason; never delegated.
-                raise CommandRefused('reason_required',
-                                     'The final test is opened only in the junior\'s own words, '
-                                     'with a reason ("because ..."); it cannot be delegated.',
-                                     details={'decision_id': decision_id, 'proposal_id': pid,
-                                              'user_words': params['user_words'],
-                                              'mode': st.mode_of(state)})
+                # WP-B1: the opening is the junior's own act, never delegated. v0.3 (WP-B,
+                # R27): a reason is optional, so the refusal is no longer reason_required.
+                raise _ambiguous('delegation_not_allowed',
+                                 'The final test is opened only in the junior\'s own words; it '
+                                 'cannot be delegated. Ask them whether they adopt the opening.',
+                                 decision_id=decision_id, proposal_id=pid,
+                                 user_words=params['user_words'], mode=st.mode_of(state))
         if params['basis'] == st.DELEGATED_DEFAULT and not states_default(proposal['restatement']):
             raise _ambiguous('restatement_not_default',
                              f'Proposal {pid} does not say it is the assistant\'s recommended '
@@ -1249,34 +1268,34 @@ def _confirm(ctx: Context) -> Handler:
         warnings = cf.availability_warnings(words, value) \
             if decision_id == 'feature_availability' and not delegated else []
         concern = params.get('agent_concern')
+        closed = answers_adoption_question(params)
+        reason_given = None
         if delegated:
             basis_recorded = st.DELEGATED_DEFAULT
         elif mode == st.TRAINING:
             # v0.2b (WP-B2): the training rules, concept matching and a stop on a contradiction.
             _check_training(state, proposal, words)
             basis_recorded = st.RESTATED
+            reason_given = cf.reason_given(state, proposal, words)
         else:
-            # Guided rule (ADR 0005, WP-A9): an explicit endorsement expression, or a reply
-            # that agrees and is about the proposal; "yes, I like pizza" and "oui, la pizza
-            # du client est bonne" are never decisions. The trade-offs need a reason.
-            problem = cf.guided_problem(state, proposal, words)
+            # Guided rule (ADR 0005, WP-A9; v0.3 WP-B): an explicit endorsement expression,
+            # a reply that agrees and is about the proposal, or a short affirmative to the
+            # closed adoption question; "yes, I like pizza" and "oui, la pizza du client est
+            # bonne" are never decisions. No decision needs a reason (R27).
+            problem = cf.guided_problem(state, proposal, words, closed=closed)
             if problem == 'unrelated_reply':
                 raise _ambiguous('unrelated_reply', REPLY_MESSAGES['unrelated_reply'],
                                  proposal_id=pid, user_words=words,
-                                 restatement=proposal['restatement'])
-            if problem == cf.REASON_REQUIRED:
-                raise CommandRefused(
-                    'reason_required',
-                    f'The {decision_id} is a trade-off: an endorsement or a repetition of the '
-                    f'value does not record why. Ask the junior for one reason in their own '
-                    f'words ("because ...", "parce que ...") and confirm with that reply.',
-                    details={'decision_id': decision_id, 'proposal_id': pid, 'user_words': words,
-                             'mode': mode})
+                                 restatement=proposal['restatement'],
+                                 channel=params['channel'])
             if warnings and mode == st.GUIDED and concern is None:
                 # WP-A9 (H3): in the guided mode the contradiction is the one stop of R3; the
                 # agent raises it, and the junior's kept words are recorded with the concern.
                 raise _contradiction_refusal(decision_id, pid, words, mode, warnings)
-            basis_recorded = cf.recorded_basis(words, proposal)
+            # R16: an option label is the agent's wording, never a restatement by the junior.
+            basis_recorded = st.ENDORSED if params['channel'] == st.CHOICE_CHANNEL \
+                else cf.recorded_basis(words, proposal)
+            reason_given = cf.reason_given(state, proposal, words)
         # C3: the part of a confirmation that does not depend on the words is one function,
         # shared with ``preview effects``: the refusals left (changed sources, value,
         # preconditions, in that order) and the effects to apply.
@@ -1290,14 +1309,25 @@ def _confirm(ctx: Context) -> Handler:
                                      user_words=words, channel=params['channel'],
                                      actor=params['actor'], basis=basis_recorded,
                                      delegation_scope=params['delegation_scope'],
-                                     agent_concern=concern, mode=mode, warnings=warnings)
+                                     agent_concern=concern, mode=mode, warnings=warnings,
+                                     reason_given=reason_given,
+                                     adoption_question=closed and not delegated)
         return {'decision_id': decision_id, 'proposal_id': pid, 'status': 'confirmed',
                 'value': copy.deepcopy(value), 'user_words': words,
                 'channel': params['channel'], 'actor': params['actor'],
                 'invalidation': {k: record[k] for k in INVALIDATION_RESULT_KEYS},
                 'basis': basis_recorded, 'delegation_scope': params['delegation_scope'],
-                'agent_concern': concern, 'warnings': warnings, 'mode': mode}
+                'agent_concern': concern, 'warnings': warnings, 'mode': mode,
+                'reason_given': reason_given, 'adoption_question': closed and not delegated}
     return Handler(CONFIRM_PARAMS, run, check)
+
+
+def answers_adoption_question(params: Mapping) -> bool:
+    """v0.3 (WP-B, R14/R16): the words answer the closed adoption question asked right
+    after the restatement: ``--adoption-question``, or the adoption option picked through
+    ``--channel choice``."""
+    return params.get('adoption_question') is True \
+        or params.get('channel') == st.CHOICE_CHANNEL
 
 
 def _check_training(state: Mapping, proposal: Mapping, words: str) -> None:
@@ -1504,7 +1534,9 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
 def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, user_words: str,
                         channel: str, actor: str, basis: str, delegation_scope: str | None,
                         time: str | None = None, agent_concern: str | None = None,
-                        mode: str | None = None, warnings: list | None = None) -> dict:
+                        mode: str | None = None, warnings: list | None = None,
+                        reason_given: bool | None = None,
+                        adoption_question: bool = False) -> dict:
     """Apply a :func:`confirmation_plan` to ``state`` in memory; the invalidation record."""
     decision_id, value = plan['decision_id'], plan['value']
     proposal = state['proposals'][proposal_id]
@@ -1519,7 +1551,8 @@ def _apply_confirmation(state: dict, plan: Mapping, proposal_id: str, *, store, 
                                    delegation_scope=delegation_scope,
                                    agent_concern=agent_concern,
                                    mode=mode if mode is not None else st.mode_of(state),
-                                   warnings=warnings)
+                                   warnings=warnings, reason_given=reason_given,
+                                   adoption_question=adoption_question)
     proposal.update(status='confirmed', closed_revision=revision, closed_reason='confirmed')
     decision.update(status='confirmed', value=copy.deepcopy(value), proposal_id=proposal_id,
                     confirmation=confirmation, revision=revision, reason=None)
@@ -1907,7 +1940,12 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
                'result': receipt['result'], 'artifacts': None}
     if action == ACTION_CONFIRM:
         opening = _opening(store, payload, request_id)
-        payload['result'] = {**payload['result'], 'opening': opening}
+        result = dict(payload['result'])
+        # v0.3 (WP-B): the two new keys come last (additive, after ``opening``); a receipt
+        # recorded before v0.3 reads as no reason flag and no adoption question.
+        late = {'reason_given': result.pop('reason_given', None),
+                'adoption_question': bool(result.pop('adoption_question', False))}
+        payload['result'] = {**result, 'opening': opening, **late}
         if opening is not None and not payload['replayed']:
             # v0.3 (WP-A): the opening runs the final evaluation after the confirmation
             # commits; the payload's revision is the study's revision after both, so the

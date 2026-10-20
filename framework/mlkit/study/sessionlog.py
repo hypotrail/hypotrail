@@ -70,7 +70,9 @@ SAFE_VALUE_FLAGS = ('--basis', '--delegation-scope', '--rule', '--column', '--ch
                     '--limit', '--result', '--term')
 SAFE_SWITCHES = ('--summary', '--json', '--intervals',
                  # Advanced companion (CLI-CONTRACT-COMPANION R5).
-                 '--digest')
+                 '--digest',
+                 # v0.3 (WP-B): the words answer the closed adoption question.
+                 '--adoption-question')
 # ``preview proposal DECISION --value V`` (R5): the value is logged only when it is an
 # identifier, a rule (``threshold:t``, ``capacity:k``) or a model slot (``fit.<name>``);
 # any other text is dropped. ``preview`` kinds are logged as the ``verb``.

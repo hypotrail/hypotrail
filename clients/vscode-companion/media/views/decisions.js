@@ -483,6 +483,7 @@
                 [readable(ctx, h.decisionId, Object.fromEntries(h.groups.flatMap(g => g.columns.map(col => [col, g.status]))))])
                 : el('span', { className: 'dc-history-value' }, [readable(ctx, h.decisionId, h.value)])]),
             el('td', { 'data-words-cell': true }, [quote(h.userWords),
+              h.reasonGiven === false ? el('span', { className: 'muted dc-no-reason', 'data-no-reason': h.decisionId, text: ` (${c.noReason})` }) : null,
               h.agentConcern ? el('p', { className: 'hold dc-concern', 'data-agent-concern': h.decisionId },
                 [c.concern, quote(h.agentConcern)]) : null,
               ...(h.current ? corrections(data, h.decisionId, c) : [])]),

@@ -39,7 +39,9 @@
      "delegation_scope": null,
      "agent_concern": null,
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
     },
     "open_proposals": []
    },
@@ -72,7 +74,9 @@
      "delegation_scope": null,
      "agent_concern": null,
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
     },
     "open_proposals": []
    },
@@ -102,7 +106,9 @@
      "delegation_scope": null,
      "agent_concern": null,
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
     },
     "open_proposals": []
    },

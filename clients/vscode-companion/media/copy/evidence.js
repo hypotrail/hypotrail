@@ -133,7 +133,7 @@
     sealedRows: n => `${n} rows nobody has read`,
     developmentRows: n => `${n} development rows · explored, fitted, compared`,
     finalRows: n => `${n} final-test rows`,
-    openInChat: 'Opening it is a chat act: tell the assistant, in your own words and with your reason. This panel has no button for it.',
+    openInChat: 'Opening it is a chat act: tell the assistant, in your own words. This panel has no button for it.',
     before: 'Before it can be opened:',
     beforeItem: { choice: task => (task === 'regression' ? 'the model choice confirmed' : 'the decision rule confirmed'),
       model_variant: 'the variant compared', success_criterion: 'the success criterion confirmed' },

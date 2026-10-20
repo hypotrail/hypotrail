@@ -16,7 +16,7 @@ const TOO_LONG = `Your answer is longer than ${MAX_WORDS} characters. Nothing wa
 const EFFECTS_UNAVAILABLE = 'The engine could not preview this confirmation.';
 // WP-B5 (ADR 0006 amendment): opening the final test is a chat act. The panel never sends
 // a confirmation of `final_test`, whatever the webview asks (a narrowing of W1).
-const FINAL_TEST_IN_CHAT = 'The final test is opened in the chat, in your own words and with your reason; this panel does not open it. Nothing was recorded.';
+const FINAL_TEST_IN_CHAT = 'The final test is opened in the chat, in your own words; this panel does not open it. Nothing was recorded.';
 
 function openProposal(ctx, proposalId) {
   const snapshot = ctx.snapshot();

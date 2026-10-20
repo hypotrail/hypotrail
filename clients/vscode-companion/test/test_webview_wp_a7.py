@@ -356,7 +356,8 @@ def test_dc7_the_mode_line_says_what_counts_as_an_answer(open_panel, views):
     assert mode.count() == 1
     text = mode.inner_text()
     assert 'This study uses the guided mode.' in text
-    assert 'For the decision rule and the conclusion, also give your reason' in text
+    # v0.3 (WP-B, R27): a reason is optional in the guided mode.
+    assert 'A reason is optional, also for the decision rule and the conclusion' in text
     assert 'changes only in the chat' in text
     assert mode.locator('button, select, input, textarea, [data-write]').count() == 0
     card = page.locator('[data-proposal-card][data-decision="policy"]')
@@ -367,7 +368,8 @@ def test_dc7_the_mode_line_says_what_counts_as_an_answer(open_panel, views):
 def test_dc7_regression_mode_names_the_model_choice(open_panel, views):
     panel = open_tab(open_panel, views, 'regression', 'decisions', stage='v1')
     text = panel.page.locator('[data-mode="guided"]').inner_text()
-    assert 'For the model choice and the conclusion' in text and not FORBIDDEN.search(text)
+    # v0.3 (WP-B, R27): the reason is optional, also for the model choice.
+    assert 'also for the model choice and the conclusion' in text and not FORBIDDEN.search(text)
     clean(panel)
 
 

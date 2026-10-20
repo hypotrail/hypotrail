@@ -26,6 +26,8 @@ const BY_REASON = {
   not_a_delegation: 'The engine did not read this reply as a delegation.',
   restatement_not_default: 'The proposal does not state that it is the assistant\'s recommended default.',
   delegation_not_given_at_this_pause: 'This decision needs your own words or a delegation given at this pause, in the chat.',
+  // v0.3 (WP-B): the opening of the final test is never delegated.
+  delegation_not_allowed: 'This decision is never delegated: it is recorded only in your own words, in the chat.',
   // ADR 0005 (guided confirmation).
   question_reply: 'Your reply asks a question, so it was not taken as a confirmation. Ask it in the chat first.',
   conditional_reply: 'Your reply sets a condition, keeps a reservation, or accepts only part of the proposal, so it was not taken as a confirmation. Settle it in the chat first.',
@@ -60,8 +62,8 @@ const BY_CODE = {
   unknown_execution: 'The engine does not list this execution as interrupted any more.',
   invalid_request: 'The engine refused the form of this request.',
   invalid_command: 'The engine does not accept this request.',
-  // ADR 0005: the policy, the model choice and the conclusion need a reason.
-  reason_required: 'This decision is a trade-off, so the engine records it only with your reason, in your own words.',
+  // ADR 0005; v0.3 (WP-B, R27): only the training mode needs a reason for a trade-off.
+  reason_required: 'In the training mode this decision is a trade-off, so the engine records it only with your reason, in your own words.',
   // ADR 0005, v0.2b (WP-B2): the training mode.
   paraphrase_required: 'In the training mode, a confirmation says in your own words what the proposal decides, not only that you agree. The lines below name what your reply does not say yet.',
   // WP-A9 (H3): also a stop in the guided mode until the point is raised in the chat.

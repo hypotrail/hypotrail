@@ -260,13 +260,16 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     adopted = chat.confirm(p, 'Yes: our desk can make 100 calls, take the top 100.')
     assert adopted['result']['invalidation']['mutation'] == 'policy.rule_type'
 
-    # 8b. WP-B1: the final test, opened once in the junior's words with a reason
+    # 8b. WP-B1: the final test, opened once in the junior's words (a reason is optional
+    # since v0.3, WP-B; a condition is still refused)
     value = chat.status()['view']['next_action']['default_value']
     assert value == {'model': 'fit.logistic', 'rule': CAPACITY}
     p = chat.propose('final_test', value, 'You open the sealed final test once, for the model '
                                           'and the rule you chose.')
-    assert chat.confirm(p, 'Yes, I confirm.', expect=2)['error']['code'] == 'reason_required'
+    assert chat.confirm(p, 'Yes, but not before Monday.', expect=2)['error']['code'] == \
+        'ambiguous_confirmation'
     opened = chat.confirm(p, 'Yes, open it now, because the model and the rule are fixed.')
+    assert opened['result']['reason_given'] is True
     assert opened['result']['opening']['status'] == 'promoted'
     final_test = fk.read.open(study).current('final_test.evaluation')['output']['values']
     # the capacity keeps its share of the rows it was chosen on (the validation rows here)

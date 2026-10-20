@@ -39,7 +39,9 @@
      "delegation_scope": null,
      "agent_concern": null,
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
     },
     "open_proposals": []
    },
@@ -84,7 +86,9 @@
      "delegation_scope": null,
      "agent_concern": "Your reason says contact can be inflated; inflation applies to campaign (it counts the last contact), not to contact (a channel).",
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
     },
     "open_proposals": []
    },
@@ -117,7 +121,9 @@
      "delegation_scope": "this_decision",
      "agent_concern": null,
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
     },
     "open_proposals": []
    },
@@ -145,7 +151,9 @@
      "delegation_scope": null,
      "agent_concern": null,
      "mode": "guided",
-     "warnings": []
+     "warnings": [],
+     "reason_given": true,
+     "adoption_question": false
     },
     "open_proposals": []
    },

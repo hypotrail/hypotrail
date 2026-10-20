@@ -138,7 +138,9 @@ def test_instructions_name_only_real_decisions_activities_and_commands():
               'fit.logistic', 'policy.evaluate'):
         assert f'`{a}' in text and a in act.CLI_NAMES, a
     for phrase in ('status --json', '--user-words', '--restatement', 'check --text -',
-                   'stale_revision', '--request-id', 'garde ça', 'not supported in this version'):
+                   # v0.3 (WP-B): the template names the refusal kinds, not phrase lists.
+                   'stale_revision', '--request-id', '`bare_acknowledgement`',
+                   'not supported in this version'):
         assert phrase in text, phrase
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
     assert 'status --json' in resume and 'five lines' in resume
@@ -153,7 +155,7 @@ def test_instructions_carry_the_acceptance_fixes():
     assert 'status --summary' in rule1                                    # D3
     for phrase in ('--basis delegated_default', 'My recommended default:',  # D1
                    'silence is', 'never a delegation',
-                   'commands.is_bare_acknowledgement', 'never a quiz',       # D6
+                   '`bare_acknowledgement`', 'never a quiz',  # D6 (v0.3 WP-B: no list)
                    'previous report kept and marked stale at revision N',   # D7
                    'acknowledge_interruption', 'outcome is unknown',        # D2
                    'Never acknowledge or rerun in the same turn',
@@ -366,7 +368,13 @@ def test_instructions_carry_the_v0_2a_rules():
                        'its score keeps or drops no feature', '(`eda_looks`)'):
             assert phrase in rule3, (task, phrase)
         # guided confirmation: --proposal, the refusal reasons, an answer for each
-        for phrase in ('--proposal PROPOSAL_ID', '"oui je confirme cela"',
+        for phrase in ('--proposal PROPOSAL_ID',
+                       # v0.3 (WP-B, R14/R16/R27): the quoted block, one closed question,
+                       # the interactive choice with its text fallback, optional reasons.
+                       'quoted block', '"Do you adopt this decision?"', '`AskUserQuestion`',
+                       'ask it in text', '--channel choice', '--adoption-question',
+                       'A reason is optional for every decision', '"no reason given"',
+                       'Do not ask the junior to say it in their own words',
                        '`unrelated_reply`', '`conditional_reply`', '`question_reply`',
                        '`negative_reply`', '`reason_required`',
                        'explain it in one sentence in the junior\'s language'):

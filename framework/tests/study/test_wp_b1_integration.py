@@ -188,13 +188,15 @@ def test_express_never_delegates_the_variant_or_the_opening(chosen):
     for scope in ('standing', 'this_decision'):
         out = _confirm(flow, pid, STANDING, '--basis', 'delegated_default',
                        '--delegation-scope', scope, expect=2)
-        assert out['error']['code'] == 'reason_required'
+        assert out['error']['code'] == 'ambiguous_confirmation'
+        assert out['error']['details']['reason'] == 'delegation_not_allowed'
         assert out['error']['details']['mode'] == 'express'
     assert flow.state()['partition']['status'] == 'sealed'
-    # Express keeps the guided reason rule for the junior's own words.
-    out = _confirm(flow, pid, 'oui je confirme cela', expect=2)
-    assert out['error']['code'] == 'reason_required'
-    assert _confirm(flow, pid, OPEN_WORDS)['result']['mode'] == 'express'
+    # Express keeps the guided rule for the junior's own words: since v0.3 (WP-B, R27) an
+    # endorsement opens it, a reason is optional and its absence is recorded.
+    done = _confirm(flow, pid, 'oui je confirme cela')['result']
+    assert done['mode'] == 'express' and done['reason_given'] is False
+    assert flow.state()['partition']['status'] == 'opened'
 
 
 # --- the v0.2b cases end to end --------------------------------------------------------------

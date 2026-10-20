@@ -50,7 +50,9 @@
    "agent_concern": null,
    "warnings": [],
    "mode": "guided",
-   "opening": null
+   "opening": null,
+   "reason_given": true,
+   "adoption_question": false
   },
   "artifacts": {
    "report": {

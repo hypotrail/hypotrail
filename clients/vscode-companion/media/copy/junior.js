@@ -248,7 +248,7 @@
     // to the chat; it never offers a control that opens it.
     finalTest: {
       await: { title: () => 'Open the final test, in the chat', action: null,
-        lead: 'A proposal to open the final test waits for your answer. Give it in the chat, in your own words and with your reason: the final test opens once, and this panel has no control for it.' },
+        lead: 'A proposal to open the final test waits for your answer. Give it in the chat, in your own words: the final test opens once, and this panel has no control for it.' },
       propose: { title: () => 'Next step: open the final test once', action: null,
         lead: 'When the model and the rule are settled, say in the chat that you open the final test and why. It opens once; nothing is measured on it again.' },
       what: (model, rule) => `It would measure ${model}${rule ? ` with the rule: ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}, once, on rows nobody has looked at.`,
@@ -392,10 +392,11 @@
     title: 'How your answers are read',
     names: { guided: 'guided', training: 'training', express: 'express' },
     line: name => `This study uses the ${name} mode.`,
-    // `finalTest`: the study has the opening of a final test (WP-B1), which also needs a reason.
+    // `finalTest`: the study has the opening of a final test (WP-B1); a reason only in training (v0.3, WP-B).
     rules: (mode, task, finalTest) => {
       const choice = regression(task) ? 'the model choice' : 'the decision rule';
-      const opening = finalTest ? 'Opening the final test also needs your reason, and you give it in the chat only.' : null;
+      const opening = finalTest ? (mode === 'training' ? 'Opening the final test also needs your reason, and you give it in the chat only.'
+        : 'Opening the final test is decided in the chat only.') : null;
       if (mode === 'training') {
         return [
           'An answer says in your own words what the proposal decides, its key points, not only that you agree.',
@@ -407,16 +408,16 @@
       }
       if (mode === 'express') {
         return [
-          'An answer is a reply to the open proposal, in your own words, that agrees with it, as in the guided mode.',
+          'An answer adopts the open proposal, as in the guided mode; a reason is optional.',
           'Once you say so in the chat, the success criterion and the data preparation may be left to the assistant\'s recommended default; they stay marked as not decided by you.',
-          `${choice.charAt(0).toUpperCase()}${choice.slice(1)} and the conclusion are always yours, with your reason.`,
+          `${choice.charAt(0).toUpperCase()}${choice.slice(1)} and the conclusion are always yours, never delegated.`,
           opening,
         ].filter(Boolean);
       }
       return [
-        'An answer is a reply to the open proposal, in your own words, that agrees with it.',
-        'It is not an answer when it is only "ok", asks a question, or keeps a condition such as "yes, but" or "unless".',
-        `For ${choice} and the conclusion, also give your reason: why it fits your situation.`,
+        'An answer adopts the open proposal: "yes, I adopt it" is enough, or a short yes to the question "Do you adopt this decision?".',
+        'It is not an answer when it asks a question or keeps a condition such as "yes, but" or "unless".',
+        `A reason is optional, also for ${choice} and the conclusion; without one, the record says "no reason given".`,
         opening,
         'When the assistant raises a point about your reason, you may keep your words; the point is recorded next to them.',
       ].filter(Boolean);

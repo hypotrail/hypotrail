@@ -157,6 +157,8 @@ def _decisions(view: Mapping) -> tuple[list[dict], list[str]]:
             lines += _value_lines(d, dec['value'])
         if conf:
             lines.append(f'- The junior\'s words: "{conf["user_words"]}"')
+            if conf.get('reason_given') is False:    # v0.3 (WP-B, R27)
+                lines.append('- No reason given')
             basis = BASIS_WORDS.get(conf['basis'], conf['basis'])
             if conf.get('delegation_scope'):
                 basis += f' (scope: {" ".join(conf["delegation_scope"].split("_"))})'

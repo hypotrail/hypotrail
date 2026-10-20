@@ -179,13 +179,13 @@ def pause3(fitted, tmp_path, synthetic_case_dir):
 
 @pytest.mark.parametrize('words', ('oui je confirme cela', 'je confirme', 'I agree',
                                    "je suis d'accord, tout à fait"))
-def test_the_policy_needs_a_reason(pause3, words):
+def test_an_endorsement_confirms_the_policy_without_a_reason(pause3, words):
+    # v0.3 (WP-B, R27): replaces the R1 "hybrid" rule (the policy needed a reason in guided).
     pid = _propose(pause3, 'policy', 'capacity:20', 'You call the 20 highest-scored members.')
-    rev = pause3.rev()
-    out = _confirm(pause3, pid, words, expect=2)
-    assert out['error']['code'] == 'reason_required', words
-    assert out['error']['details']['decision_id'] == 'policy'
-    assert pause3.rev() == rev
+    done = _confirm(pause3, pid, words)['result']
+    assert done['status'] == 'confirmed' and done['reason_given'] is False, words
+    conf = pause3.state()['decisions']['policy']['confirmation']
+    assert conf['reason_given'] is False and conf['user_words'] == words
 
 
 @pytest.mark.parametrize('words', ('je confirme parce que le centre a cette capacité',
@@ -193,7 +193,8 @@ def test_the_policy_needs_a_reason(pause3, words):
                                    'oui, vingt appels car le service ne peut pas en faire davantage'))
 def test_a_reason_confirms_the_policy(pause3, words):
     pid = _propose(pause3, 'policy', 'capacity:20', 'You call the 20 highest-scored members.')
-    assert _confirm(pause3, pid, words)['result']['status'] == 'confirmed', words
+    done = _confirm(pause3, pid, words)['result']
+    assert done['status'] == 'confirmed' and done['reason_given'] is True, words
 
 
 def test_a_delegation_needs_no_reason(pause3):

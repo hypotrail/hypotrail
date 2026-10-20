@@ -109,7 +109,11 @@ RESULT_KEYS_BY_ACTION = {
                        'mode',
                        # WP-B1: the opening of the final test that a final_test confirmation
                        # runs (null for any other decision).
-                       'opening'),
+                       'opening',
+                       # v0.3 (WP-B, R27, R14/R16): whether a trade-off's words give a
+                       # reason (null otherwise), and whether they answer the closed
+                       # adoption question.
+                       'reason_given', 'adoption_question'),
     'decide.withdraw': ('proposal_id', 'decision_id', 'status', 'decision_status'),
     # Post-v0.1 (P2).
     # Post-v0.1 fixes (D1): the decisions a hold on a confirmed decision asks for again.
@@ -132,7 +136,8 @@ ACTION_PARAMS = {'decide.propose': {'decision_id', 'value', 'restatement', 'rati
                  'study.set_mode': {'mode', 'user_words'}}
 # ADR 0005: optional parameters, carried only when given (a replay stays a replay).
 OPTIONAL_ACTION_PARAMS = {'decide.propose': {'channel', 'labels'},
-                          'decide.confirm': {'agent_concern'}, 'decide.note': {'kind'}}
+                          'decide.confirm': {'agent_concern', 'adoption_question'},
+                          'decide.note': {'kind'}}
 VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan', 'current_step',
              'next_action', 'open_proposals', 'decisions', 'facts', 'structure', 'results',
              'stale', 'invalidations', 'executions', 'artifacts', 'exposure',
@@ -164,7 +169,10 @@ CONFIRMATION_VIEW_KEYS = ('user_words', 'channel', 'actor', 'restatement', 'prop
                           # v0.2b (WP-B2): the mode in force when the words were accepted.
                           'mode',
                           # WP-A9 (H3): the words_contradict_value warnings kept.
-                          'warnings')
+                          'warnings',
+                          # v0.3 (WP-B, R27, R14/R16): a trade-off's reason, the closed
+                          # adoption question.
+                          'reason_given', 'adoption_question')
 # Post-acceptance contract (D1): how the user decided. ADR 0005 adds the two recorded kinds
 # of own words of the guided mode; ``explicit`` stays readable and is the request default.
 CONFIRMATION_BASES = ('explicit', 'endorsed', 'restated', 'delegated_default')
@@ -334,7 +342,7 @@ ERROR_CODES = {
     'decision_on_hold', 'unknown_note', 'note_not_open', 'misattributed_delegation',
     # Advanced companion (CLI-CONTRACT-COMPANION §12, WP-E2): export handoff.
     'export_target_exists',
-    # ADR 0005: the policy, the model choice and the conclusion need a reason.
+    # ADR 0005: a trade-off needs a reason (only in the training mode since v0.3, WP-B).
     'reason_required',
     # v0.2b (WP-B2): the training mode, a paraphrase on the proposal's concepts, and a
     # stop on words that contradict the value.
@@ -353,7 +361,10 @@ AMBIGUOUS_REASONS = {'missing_user_words', 'bare_acknowledgement', 'proposal_not
                      # at that pause.
                      'delegation_not_given_at_this_pause',
                      # ADR 0005 (guided mode): a question, a conditional agreement.
-                     'question_reply', 'conditional_reply'}
+                     'question_reply', 'conditional_reply',
+                     # v0.3 (WP-B): the final-test opening is never delegated (it was
+                     # reason_required while a reason was mandatory).
+                     'delegation_not_allowed'}
 REGISTRY_ENTRY_KEYS = ('schema', 'result_id', 'input_key', 'activity', 'params', 'inputs', 'code',
                        'output', 'blobs', 'partition', 'n_rows', 'exposure_id', 'execution_id',
                        'started_revision', 'environment', 'created')
@@ -714,10 +725,13 @@ def test_actions_and_their_parameters():
         assert isinstance(built[action], reliability.Handler)
     assert set(reliability.REQUEST_KEYS) == {'request_id', 'expected_revision', 'action', 'params'}
     assert cmd.DEFAULT_CHANNEL == 'chat' and st.CHANNELS == ('chat', 'cli', 'webview')
+    # v0.3 (WP-B, R16): ``choice`` is a confirmation channel only.
+    assert st.CONFIRMATION_CHANNELS == ('chat', 'cli', 'webview', 'choice')
     assert st.CONFIRMATION_BASES == CONFIRMATION_BASES and cmd.DEFAULT_BASIS == 'explicit'
     assert st.REQUEST_BASES == REQUEST_BASES
     assert st.CONFIRMATION_OPTIONAL_KEYS == ('basis', 'delegation_scope', 'agent_concern',
-                                            'mode', 'warnings')
+                                            'mode', 'warnings', 'reason_given',
+                                            'adoption_question')
     assert {a: set(p) for a, p in cmd.OPTIONAL_PARAMS.items()} == OPTIONAL_ACTION_PARAMS
     assert not set(CONFIRMATION_BASES) - DOC_TOKENS
     assert st.DELEGATION_SCOPES == DELEGATION_SCOPES
@@ -1033,10 +1047,15 @@ def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_
                                          'concepts.concept_map', 'concepts.check',
                                          'concepts.has_reason_connector',
                                          'concepts.mode_named', 'content/concepts.yaml',
+                                         # v0.3 (WP-B).
+                                         'reason_given', 'adoption_question', 'choice',
+                                         'delegation_not_allowed', 'confirm.closed_affirmative',
+                                         'state.CONFIRMATION_CHANNELS',
                                          'state.EXPRESS_STANDING_DELEGATION_DECISIONS',
                                          'state.MODE_STRICTNESS'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
     for line in ('hypotrail mode set guided|training|express [--user-words TEXT]',
+                 '[--channel chat|cli|webview|choice] [--adoption-question]',
                  '[--agent-concern TEXT]', '--proposal PROPOSAL', '[--kind hold|correction]',
                  '[--restatement-fr TEXT]', 'hypotrail init --case CASE --study DIR [--lang en|fr]'):
         assert line in DOC, line

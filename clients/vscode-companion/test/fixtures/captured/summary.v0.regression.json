@@ -106,7 +106,7 @@
    "decision": "model_choice",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
-   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change."
   },
   "open_proposals": [
    {
@@ -439,7 +439,7 @@
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
    "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 1df7d607); the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
   "recap_audience": "agent",
@@ -447,7 +447,7 @@
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: the prediction moment; the feature availability (excluded acceleration); the split (ordinal cutoff on model_year, validation from 79); the success criterion (validation error at least 10% below the mean baseline); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation).",
    "Now: Choose the model, waiting for your answer (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg); the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the model choice: \"Adopt the linear model.\"",
+   "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
   "mode": "guided",

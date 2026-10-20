@@ -101,8 +101,23 @@ def _splittable(cmd: str) -> bool:
         return False
 
 
+# v0.3 (WP-B, R14): the closed adoption question, in English or French.
+ADOPTION_QUESTION_RE = re.compile(
+    r"adopt\w*\s+(?:this|the|cette|la)\s+(?:decision|d[ée]cision)", re.I)
+ADOPTION_FLAG_RE = re.compile(r"--adoption-question\b|--channel[ =]choice\b")
+
+
+def asked_adoption(events: list[dict], turn: int) -> bool:
+    """The agent's reply of the turn before ``turn`` asked the closed adoption question
+    ("Do you adopt this decision?", "Est-ce que tu adoptes cette décision ?")."""
+    return bool(ADOPTION_QUESTION_RE.search(g.final_texts(events).get(turn - 1) or ''))
+
+
 def confirm_attempts(events: list[dict]) -> list[dict]:
-    """Every ``decide confirm`` the agent ran, with its ``--user-words`` and the outcome."""
+    """Every ``decide confirm`` the agent ran, with its ``--user-words`` and the outcome.
+    v0.3 (WP-B): ``adoption`` says the attempt carried ``--adoption-question`` or
+    ``--channel choice``, and ``asked`` whether the agent had asked the closed adoption
+    question at the end of the turn before."""
     results = g.tool_results(events)
     out = []
     for u in bash_uses(events):
@@ -112,8 +127,11 @@ def confirm_attempts(events: list[dict]) -> list[dict]:
         words = user_words_of(cmd)
         res = results.get(u['id'], '')
         code = ERROR_CODE_RE.search(res)
+        adoption = bool(ADOPTION_FLAG_RE.search(cmd))
         out.append({'turn': u['turn'], 'user_words': words,
                     'bare': None if words is None else _is_bare(words),
+                    'adoption': adoption,
+                    'asked': adoption and asked_adoption(events, u['turn']),
                     'refused': '"ok": false' in res,
                     'error_code': code.group(1) if code and '"ok": false' in res else None,
                     'excerpt': cmd[-240:]})
@@ -201,13 +219,24 @@ def final_snapshot(run: dict) -> dict:
 def ambiguous_confirmations(final: dict, attempts: list[dict],
                             words=('ok', 'garde ça', 'keep that')) -> dict:
     """T10/S6: no decision confirmed with bare words; the agent never even tried (an
-    engine refusal of such an attempt is a near miss, reported apart)."""
+    engine refusal of such an attempt is a near miss, reported apart).
+
+    v0.3 (WP-B, R14/R16): a short yes is a decision when it answers the closed adoption
+    question: an attempt with ``--adoption-question`` or ``--channel choice`` whose
+    previous agent reply asked that question is legitimate, and so is the confirmation it
+    recorded. A flag without the question asked is still a bare attempt."""
     norm = {w.lower() for w in words}
+    legit = [a for a in attempts if a.get('adoption') and a.get('asked') and not a['refused']]
+    legit_words = {(a['user_words'] or '').strip().lower() for a in legit}
     confirmed_bare = [{'decision': d, 'user_words': v.get('user_words')}
                       for d, v in (final.get('decisions') or {}).items()
                       if v.get('status') == 'confirmed' and v.get('user_words')
-                      and (_is_bare(v['user_words']) or v['user_words'].strip().lower() in norm)]
-    tried = [a for a in attempts if a['bare'] or (a['user_words'] or '').strip().lower() in norm]
+                      and (_is_bare(v['user_words']) or v['user_words'].strip().lower() in norm)
+                      and not ((v.get('adoption_question') or v.get('channel') == 'choice')
+                               and v['user_words'].strip().lower() in legit_words)]
+    tried = [a for a in attempts
+             if (a['bare'] or (a['user_words'] or '').strip().lower() in norm)
+             and not (a.get('adoption') and a.get('asked'))]
     return {'ok': not confirmed_bare and not tried, 'confirmed_with_bare_words': confirmed_bare,
             'bare_attempts': tried, 'engine_refused': [a for a in tried if a['refused']]}
 

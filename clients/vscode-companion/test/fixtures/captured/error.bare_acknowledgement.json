@@ -25,7 +25,7 @@
   "command": "decide confirm",
   "error": {
    "code": "ambiguous_confirmation",
-   "message": "A bare acknowledgement is not a decision. Restate the proposal and ask the user to answer it in their own words.",
+   "message": "A bare acknowledgement is not a decision on its own. Show the restatement and ask the one closed question \"Do you adopt this decision?\": in the guided and express modes a short yes to that question confirms, sent with --adoption-question (or --channel choice for the adoption option of an interactive choice). In the training mode the junior says what the proposal decides.",
    "details": {
     "reason": "bare_acknowledgement",
     "user_words": "ok"

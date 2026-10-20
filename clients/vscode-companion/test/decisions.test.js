@@ -382,3 +382,25 @@ test('training mode refusals (ADR 0005, WP-B2): paraphrase_required names what i
   assert.match(contra.human, /the engine stopped the confirmation/);
   assert.deepEqual(contra.details, ['Your words and the proposal disagree about contact']);
 });
+
+test('decisions model (v0.3, WP-B): reason_given reaches the current history row only', () => {
+  const p = JSON.parse(JSON.stringify(payload('decisions.binary')));
+  const policy = p.decisions.find(d => d.decision_id === 'policy');
+  assert.equal(toDecisionsModel(p).decisions.find(d => d.decisionId === 'policy').confirmation.reasonGiven, true);
+  policy.confirmation.reason_given = false;
+  const m = toDecisionsModel(p);
+  const rows = m.history.filter(h => h.decisionId === 'policy');
+  assert.ok(rows.length >= 1);
+  for (const h of rows) {
+    assert.equal(h.reasonGiven, h.current && h.revision === policy.confirmation.revision ? false : null);
+  }
+  delete policy.confirmation.reason_given;
+  assert.equal(toDecisionsModel(p).decisions.find(d => d.decisionId === 'policy').confirmation.reasonGiven, null);
+});
+
+test('refusals (v0.3, WP-B): the delegated final-test opening has its own explanation', () => {
+  const d = refusals.describe({ schema: 'hypotrail.error/1', ok: false, command: 'decide confirm',
+    error: { code: 'ambiguous_confirmation', message: 'engine text', details: { reason: 'delegation_not_allowed' } } });
+  assert.equal(d.reason, 'delegation_not_allowed');
+  assert.match(d.human, /never delegated/);
+});

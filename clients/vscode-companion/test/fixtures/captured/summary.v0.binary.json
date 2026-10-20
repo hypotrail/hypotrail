@@ -106,7 +106,7 @@
    "decision": "policy",
    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
    "audience": "agent",
-   "junior_message": "A proposal on the decision policy is waiting for your answer. Read its restatement and reply in your own words; a bare \"ok\" does not decide."
+   "junior_message": "A proposal on the decision policy is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change."
   },
   "open_proposals": [
    {
@@ -468,7 +468,7 @@
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 5355b6b5).",
    "Now: Open the final test once; the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
+   "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],
   "recap_audience": "agent",
@@ -476,7 +476,7 @@
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
    "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (stratified random, 30% for validation); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the decision policy: select every row scored 0.2 or more (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%).",
    "Now: Choose a decision policy, waiting for your answer; the report and notebook are up to date.",
-   "Next: your answer, in your own words, on the policy: \"Call the 100 clients with the highest scores.\"",
+   "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],
   "mode": "guided",

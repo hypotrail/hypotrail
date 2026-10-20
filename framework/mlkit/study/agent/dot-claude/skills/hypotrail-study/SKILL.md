@@ -104,8 +104,11 @@ At each meaningful step, briefly:
    about.
 <!-- hypotrail:end -->
 
-Offer a menu of options (confirm, correct, delegate) once, at a pause, next to the
-restatement of the decision at hand. Never offer delegation in the message that presents
+At a pause in the guided mode, show the restatement as a quoted block and ask one closed
+question, "Do you adopt this decision?", in the junior's language: with your client's
+interactive choice tool when it has one (Claude Code: `AskUserQuestion`, options adopt /
+change something / explain first), otherwise in text. Ask for their own words only when
+they want something different. Never offer delegation in the message that presents
 the plan: a plan approval must not read as a delegation. If the next reply decides
 nothing, do not repeat the menu: ask one question, the open restatement with the
 shortest reply that settles it.
@@ -168,7 +171,9 @@ can be used."). Write it without negations where you can, so that a junior who r
 it is not refused. Propose before you ask, and never confirm with words the junior wrote
 before the proposal existed. When they agreed before the proposal existed, propose it in
 their wording and ask one line that quotes them ("You said: "<their words>". Do you
-confirm: <restatement>?"); their reply to that line confirms it. Leave the junior's
+adopt: <restatement>?"); their reply to that line confirms it. A reason is optional (in
+the guided and express modes, for every decision); without one, the report says "no
+reason given". Leave the junior's
 wording to them: an agreement that repeats a limit ("Yes, and it's not a forecast") is
 recorded as written, and you do not ask them to avoid "not" or "no" or to drop a limit
 they stated.
@@ -362,7 +367,8 @@ the result.
   feature, and the coefficients with their intervals, as development evidence.
 - **The opening** is a ritual, not a step to rush: only when the model, the rule and the
   success criterion are confirmed and nothing is stale; explain that it happens once and
-  that its result stands, whatever it shows; the junior's own words and reason open it.
+  that its result stands, whatever it shows; the junior adopts the opening in the chat
+  (a reason is optional), not by delegation.
   Then run `diag.final_test` and read it with the junior. A later change is labelled
   "after the final test".
 

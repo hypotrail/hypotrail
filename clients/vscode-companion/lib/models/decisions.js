@@ -51,6 +51,8 @@ function toDecisionsModel(payload) {
         revision: int(c.revision), time: strOrNull(c.time),
         // ADR 0005 (R3; WP-A7 shows it): the point the agent raised and the junior kept, verbatim.
         agentConcern: strOrNull(c.agent_concern),
+        // v0.3 (WP-B, R27): false when a trade-off was confirmed without a reason.
+        reasonGiven: typeof c.reason_given === 'boolean' ? c.reason_given : null,
       } : null,
       openProposals: list(d && d.open_proposals).map(x => (typeof x === 'string' ? x : str(x && x.proposal_id))).filter(Boolean),
     };
@@ -68,7 +70,7 @@ function toDecisionsModel(payload) {
     channel: str(h && h.channel) || 'chat', actor: strOrNull(h && h.actor),
     revision: int(h && h.revision), time: strOrNull(h && h.time),
     current: bool(h && h.current), supersededAt: int(h && h.superseded_at), index,
-    agentConcern: null,
+    agentConcern: null, reasonGiven: null,
   }));
   // WP-A7: the agent's concern belongs to the confirmation the decision holds now (the
   // history records carry none): the current row of that confirmation shows it.
@@ -76,6 +78,7 @@ function toDecisionsModel(payload) {
     const d = decisions.find(x => x.decisionId === h.decisionId);
     const c = d && d.confirmation;
     if (h.current && c && c.agentConcern && c.revision === h.revision) h.agentConcern = c.agentConcern;
+    if (h.current && c && c.revision === h.revision) h.reasonGiven = c.reasonGiven;
   }
   // Grouped by decision in plan order; newest first within a group (§6.2.3).
   history.sort((a, b) => rank(a.decisionId) - rank(b.decisionId) || (b.revision || 0) - (a.revision || 0) || b.index - a.index);

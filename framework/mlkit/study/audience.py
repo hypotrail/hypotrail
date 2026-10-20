@@ -177,8 +177,8 @@ def _junior_next(action: Mapping) -> tuple[str, str]:
                        'it.')
     if kind == 'await_user_words':
         return AGENT, (f'A proposal on {decision_words(action.get("decision"))} is waiting for '
-                       'your answer. Read its restatement and reply in your own words; a bare '
-                       '"ok" does not decide.')
+                       'your answer. Read its restatement and say whether you adopt it, or '
+                       'what you would change.')
     if kind == 'blocked':
         needed = join(decision_words(r) for r in action.get('requires') or [])
         return AGENT, (f'This step waits for earlier steps: {needed}.' if needed

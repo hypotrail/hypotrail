@@ -87,6 +87,10 @@ hold_withdrawn: Condition withdrawn
 hold_withdrawn_by: Withdrawn in your words
 agent_concern: Point raised by the agent
 agent_concern_kept: kept by the user, who confirmed these words
+# v0.3 (WP-B, R27): a trade-off confirmed without a reason; and the option of an
+# interactive choice in the chat.
+no_reason_given: no reason given
+adoption_option: chosen as an option in the chat
 # WP-A9 (M6): the case's structure statements in words (never the raw keys).
 structure_words:
   time_column: time column

@@ -369,8 +369,9 @@ def cv_bank(tmp_path_factory):
                '--restatement', 'You open the sealed final test once.', '--rationale', 'r',
                '--request-id', f.rid(), '--expected-revision', f.rev(), '--study', f.study)
     pid = p['result']['proposal_id']
-    for words, code in (('ok, open the final test', 'reason_required'),
-                        ('oui, la pizza du client est bonne', 'ambiguous_confirmation')):
+    # v0.3 (WP-B, R27): no reason is required any more; off-topic words are still refused.
+    for words, code in (('oui, la pizza du client est bonne', 'ambiguous_confirmation'),
+                        ('ok, but not yet', 'ambiguous_confirmation')):
         out = f.call('decide', 'confirm', pid, '--user-words', words, '--request-id', f.rid(),
                      '--expected-revision', f.rev(), '--study', f.study, expect=2)
         assert out['error']['code'] == code, (words, out['error'])

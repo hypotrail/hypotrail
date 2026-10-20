@@ -216,6 +216,20 @@ def _warnings(conf: Mapping) -> str:
     return ''.join(lines)
 
 
+def _reason_note(conf: Mapping) -> str:
+    """v0.3 (WP-B, R27): "no reason given" for a trade-off confirmed without a reason, and
+    the interactive-choice channel (R16) in words."""
+    labels = _labels()
+    out = ''
+    if conf.get('channel') == 'choice':
+        out += (f' <span class="small" data-channel-words="choice">'
+                f'({e(labels["adoption_option"])})</span>')
+    if conf.get('reason_given') is False:
+        out += (f'<br><span class="small muted" data-reason-given="false">'
+                f'{e(labels["no_reason_given"])}</span>')
+    return out
+
+
 def _chip(conf: Mapping) -> str:
     """The basis of a confirmation as a chip (v0.2a, WP-A6; ADR 0005)."""
     basis = conf.get('basis') or 'explicit'
@@ -244,7 +258,7 @@ def _confirmation(conf: Mapping) -> str:
                 f'{_warnings(conf)}</div>')
     return (f'<div class="words" data-basis="explicit">{_chip(conf)}'
             f'<strong>{e(labels["user_words"])}:</strong> '
-            f'<q data-literal="user_words">{e(conf["user_words"])}</q>'
+            f'<q data-literal="user_words">{e(conf["user_words"])}</q>{_reason_note(conf)}'
             f'<br>{_recorded(conf)}'
             f'<br><span class="small">{e(labels["restatement"])}: '
             f'{lit("proposal", conf.get("restatement", ""))}</span>{_concern(conf)}'

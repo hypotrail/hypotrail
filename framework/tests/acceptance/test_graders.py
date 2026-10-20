@@ -237,6 +237,28 @@ def test_arm_b_confirm_attempts_and_ambiguity():
     amb = gb.ambiguous_confirmations(final, attempts)
     assert not amb['ok'] and len(amb['engine_refused']) == 1
     assert gb.ambiguous_confirmations(final, attempts[1:])['ok']
+    # v0.3 (WP-B, R14/R16): a short yes answers the closed adoption question when the agent
+    # asked it at the end of the turn before; a flag without the question stays a failure.
+    t = Transcript()
+    t.end('> Tu prédis avant le premier appel.\n\nEst-ce que tu adoptes cette décision ?')
+    t.new_turn(2).tool('Bash', '{"ok": true}', command='hypotrail decide confirm --proposal '
+                       'p_1 --user-words "oui" --adoption-question --request-id c')
+    yes = {'decisions': {'prediction_time': {'status': 'confirmed', 'user_words': 'oui',
+                                             'adoption_question': True}}}
+    attempts = gb.confirm_attempts(t.events)
+    assert attempts[0]['adoption'] and attempts[0]['asked']
+    assert gb.ambiguous_confirmations(yes, attempts)['ok']
+    t = Transcript()
+    t.end('Here is the data card.')
+    t.new_turn(2).tool('Bash', '{"ok": true}', command='hypotrail decide confirm --proposal '
+                       'p_1 --user-words "oui" --adoption-question --request-id c')
+    attempts = gb.confirm_attempts(t.events)
+    assert attempts[0]['adoption'] and not attempts[0]['asked']
+    assert not gb.ambiguous_confirmations(yes, attempts)['ok']
+    # a bare yes recorded without the closed question is still a failure
+    assert not gb.ambiguous_confirmations(
+        {'decisions': {'prediction_time': {'status': 'confirmed', 'user_words': 'oui'}}},
+        [])['ok']
     assert gb.claims_up_to_date('The report is not up to date.') == []
     assert gb.claims_up_to_date('Everything is up to date.')
     # a claim scoped to a deliverable whose status is ok is accurate (S3 rerun, D7)
@@ -418,9 +440,10 @@ def test_scenarios_contract():
     assert set(doc['defaults']['cases']) == {'bank', 'synthetic'}
     said = [step['say'] for s in doc['scenarios'] for chat in s['chats'] for step in chat]
     flat = {v for d in said for v in d.values()}
-    for verbatim in ('ok', 'garde ça', 'keep that', 'essaie une random forest', 'try a random forest',
+    # v0.3 (WP-B): S6 ends with a short "oui" to the closed adoption question; "garde ça"
+    # and "keep that" stay in the E1 personas.
+    for verbatim in ('ok', 'oui', 'essaie une random forest', 'try a random forest',
                      'calcule le taux par {category_column}', 'compute the rate by {category_column}',
-                     'oui je confirme cela',                                     # owner demo, R1
                      'oui je confirme, on écarte aussi contact, sa valeur peut être gonflée'):
         assert verbatim in flat
     assert all({'fr', 'en'} <= set(d) for d in said)
