@@ -1,7 +1,7 @@
 """The "Variants and model families" section of the HTML report (v0.3, WP-F1, ADR 0007).
 
 Fed by the view only. Every number is cited from the registry (:class:`mlkit.study.cite.Citer`):
-the selection among the configurations from the ``selection`` the current evaluation stored
+the selection among the configurations from the ``model_selection`` the current evaluation stored
 (``policy.evaluation`` or ``evaluate.regression``), the tuning and each family's own
 diagnostics from the variants' fit results, the flags of the linear fit from the current
 development diagnostics. Counts that describe the study rather than a result (the variant
@@ -168,13 +168,13 @@ def _selection(view: Mapping, citer: cite.Citer, lab: Mapping, lang: str) -> str
     slot = 'evaluate.regression' if view.get('task') == 'regression' else 'policy.evaluation'
     rid = citer.slot_rid(slot)
     values = citer.results[rid].values if rid else None
-    sel = values.get('selection') if isinstance(values, Mapping) else None
+    sel = values.get('model_selection') if isinstance(values, Mapping) else None
     if not isinstance(sel, Mapping) or not sel.get('available'):
         return f'<p class="muted" data-selection="pending">{e(lab["pending"])}</p>'
     fmt = 'f3' if sel.get('metric') == 'roc_auc' else 'f2'
     rows = []
     for i, c in enumerate(sel.get('configurations') or []):
-        p = ['selection', 'configurations', str(i)]
+        p = ['model_selection', 'configurations', str(i)]
         diff = ''
         if c.get('difference'):
             d = p + ['difference']
@@ -202,7 +202,7 @@ def _selection(view: Mapping, citer: cite.Citer, lab: Mapping, lang: str) -> str
              f'{e((one.get("texts") or {}).get(lang) or "")} '
              f'<span class="small">{_lit("message", one.get("source") or "")}</span></p>',
              f'<p data-optimism="estimate"><strong>{e(lab["optimism"])}:</strong> '
-             f'{_num(citer, rid, ["selection", "optimism", "estimate"], fmt)}. '
+             f'{_num(citer, rid, ["model_selection", "optimism", "estimate"], fmt)}. '
              f'{e((opt.get("texts") or {}).get(lang) or "")} '
              f'<span class="small">{_lit("message", opt.get("source") or "")}</span></p>',
              f'<p class="notice" data-advice="{e(str(advice.get("code")))}"><strong>'
@@ -265,11 +265,11 @@ def _families(view: Mapping, citer: cite.Citer, lab: Mapping) -> str:
 
 def section(view: Mapping, citer: cite.Citer) -> str:
     """The section, or '' in a study without the variant decision."""
-    if view.get('selection') is None and view.get('model_families') is None:
+    if view.get('model_selection') is None and view.get('model_families') is None:
         return ''
     lang = view.get('language') if view.get('language') in LABELS else 'en'
     lab = LABELS[lang]
-    budget = (view.get('selection') or {}).get('budget') or {}
+    budget = (view.get('model_selection') or {}).get('budget') or {}
     parts = [f'<section class="card" id="variants" lang="{lang}"><h2>{e(lab["heading"])}</h2>'
              f'<p>{e(lab["intro"])}</p>']
     if budget:

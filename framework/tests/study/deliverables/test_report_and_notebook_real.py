@@ -347,6 +347,8 @@ def _cv(study: Path, case_dir: Path, task: str) -> Path:
     else:
         f.run('policy.evaluate', '--rule', 'capacity:100')
         f.decide('policy', 'capacity:100', 'Yes, call the top 100 because the desk has 100 slots')
+    # v0.3 (WP-F1, R28): the plan runs the diagnostics before the opening is drafted.
+    f.run('diag.regression' if task == 'regression' else 'diag.binary')
     value = f.view()['next_action']['default_value']
     p = f.call('decide', 'propose', 'final_test', '--value-json', json.dumps(value),
                '--restatement', 'You open the sealed final test once for the chosen configuration.',

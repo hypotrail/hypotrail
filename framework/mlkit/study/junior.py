@@ -70,7 +70,7 @@ def _steps_fr() -> dict[str, str]:
         st.DISCOVER_STEP['title']: 'Découvrir les données',
         st.SUCCESS_STEP['title']: 'Fixer le critère de succès avant de voir un modèle',
         st.PREPROCESSING_STEP['title']: 'Décider comment le modèle prépare les variables',
-        st.VARIANT_STEP['title']: 'Choisir une variante à comparer',
+        st.VARIANT_STEP['title']: 'Choisir les variantes à comparer',
         st.FINAL_TEST_STEP['title']: "Ouvrir une fois l'échantillon de test final",
         cv['train_eda']['title']: "Explorer l'échantillon de développement",
         # questions
@@ -138,10 +138,14 @@ def _steps_fr() -> dict[str, str]:
                                            'extrêmes et les variables asymétriques ? Chaque '
                                            "paramètre est appris sur le jeu d'entraînement "
                                            'seulement.',
-        st.VARIANT_STEP['question']: 'Quelle variante unique du modèle candidat comparer avec '
-                                     'lui, sous la même évaluation : une régularisation plus '
-                                     'forte ou plus faible, ou le modèle sans un groupe de '
-                                     'variables ?',
+        st.VARIANT_STEP['question']: 'Quelles variantes du modèle candidat, trois au plus et '
+                                     'chacune avec la question à laquelle elle répond, comparer '
+                                     'avec lui sous la même évaluation : la pénalité choisie '
+                                     'par validation croisée imbriquée, une régularisation plus '
+                                     'forte ou plus faible, le modèle sans un groupe de '
+                                     'variables, ou une autre famille de modèles quand les '
+                                     'diagnostics montrent une forme que le modèle linéaire ne '
+                                     'suit pas ?',
         st.FINAL_TEST_STEP['question']: 'Maintenant que le modèle et la règle sont choisis, '
                                         "ouvres-tu l'échantillon de test final scellé, une "
                                         'seule fois, pour mesurer la configuration choisie '
@@ -527,10 +531,12 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
             'ni transformation) : les résultats restent comparables et rien n\'est ajusté sur '
             'le résultat.'),
         'model_variant': _t(
-            lang, 'A stronger regularisation is the simplest check that the candidate is not '
-                  'fitting noise; it counts as one more trial.',
-            'Une régularisation plus forte est le contrôle le plus simple que le candidat '
-            'n\'apprend pas du bruit ; elle compte comme un essai de plus.'),
+            lang, 'The penalty chosen by nested cross-validation is the simplest check that '
+                  'the candidate is not fitting noise; it counts as one trial of the budget of '
+                  'three.',
+            'La pénalité choisie par validation croisée imbriquée est le contrôle le plus '
+            'simple que le candidat n\'apprend pas du bruit ; elle compte comme un essai du '
+            'budget de trois.'),
         'policy': _t(
             lang, 'The teaching scenario assumes this share of the scored rows; a real team '
                   'would give its own capacity.',
@@ -593,8 +599,10 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                   'parameter for a reason you can state?',
                             'Gardes-tu la préparation par défaut, ou changes-tu un paramètre '
                             'pour une raison que tu peux énoncer ?'),
-        'model_variant': _t(lang, 'Which single variant should be compared with the candidate?',
-                            'Quelle variante unique comparer au candidat ?'),
+        'model_variant': _t(lang, 'Which variants, at most three, should be compared with '
+                                  'the candidate, and which question does each answer?',
+                            'Quelles variantes, trois au plus, comparer au candidat, et à '
+                            'quelle question chacune répond-elle ?'),
         'policy': _t(lang, 'Which rule turns the scores into actions?',
                      'Quelle règle transforme les scores en actions ?'),
         'model_choice': _t(lang, 'Which model do you choose, given the errors and their '
@@ -737,16 +745,21 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                    'développement un peu optimistes.')]
     if decision == 'model_variant':
         trials = (view.get('trials') or {}).get('count')
-        return [_t(lang, 'Variant: one change of the candidate model (a stronger or weaker '
-                         'regularisation, or the model without one group of variables), '
-                         'compared under the same evaluation. Each configuration compared on '
-                         'the same rows is a trial; the more trials, the more the best of them '
-                         'may owe to chance.',
-                   'Variante : un seul changement du modèle candidat (une régularisation plus '
-                   'forte ou plus faible, ou le modèle sans un groupe de variables), comparé '
-                   'sous la même évaluation. Chaque configuration comparée sur les mêmes lignes '
-                   'est un essai ; plus il y a d\'essais, plus le meilleur peut devoir au '
-                   'hasard.'),
+        families = (view.get('model_families') or {})
+        shortlist = families.get('texts', {}).get(lang) if families else None
+        return [_t(lang, 'Variant: one change of the candidate model (the penalty chosen by '
+                         'nested cross-validation, a stronger or weaker regularisation, the '
+                         'model without one group of variables, or another model family), '
+                         'compared under the same evaluation; at most three, each with its '
+                         'question. Each configuration compared on the same rows is a trial; '
+                         'the more trials, the more the best of them may owe to chance.',
+                   'Variante : un seul changement du modèle candidat (la pénalité choisie par '
+                   'validation croisée imbriquée, une régularisation plus forte ou plus faible, '
+                   'le modèle sans un groupe de variables, ou une autre famille de modèles), '
+                   'comparé sous la même évaluation ; trois au plus, chacune avec sa question. '
+                   'Chaque configuration comparée sur les mêmes lignes est un essai ; plus il y '
+                   'a d\'essais, plus le meilleur peut devoir au hasard.'),
+                shortlist or '',
                 _t(lang, f'Trials so far: {trials}.', f'Essais jusqu\'ici : {trials}.')
                 if isinstance(trials, int) else '']
     if decision == 'policy':

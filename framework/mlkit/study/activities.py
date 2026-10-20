@@ -1655,7 +1655,7 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
     out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
     selection = _selection_values(store, plan_, models, 'regression')
     if selection is not None:
-        values['selection'] = selection      # v0.3 (WP-F1, additive)
+        values['model_selection'] = selection      # v0.3 (WP-F1, additive)
     if pairs or out_of_fold:
         # WP-B1 (additive): the variant against the candidate, and the evaluation scheme.
         values['comparisons'] = paired['comparisons']
@@ -1772,7 +1772,7 @@ def compute_policy(store, plan_: Mapping) -> dict:
                 y, preds[m]['score'], groups=groups)} for m in extra}
     selection = _selection_values(store, plan_, models, 'binary')
     if selection is not None:
-        values['selection'] = selection      # v0.3 (WP-F1, additive)
+        values['model_selection'] = selection      # v0.3 (WP-F1, additive)
     return {'values': values, 'blobs': {},
             'partition': partition.DEVELOPMENT if out_of_fold else 'validation',
             'n_rows': len(y)}

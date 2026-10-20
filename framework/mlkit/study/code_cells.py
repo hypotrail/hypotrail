@@ -615,10 +615,10 @@ def selection_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     """v0.3 (WP-F1): the comparison of the candidate and the variants, fold by fold, as a
     pandas table built from the fits' registered per-fold metrics; the mean, the standard
     error, the one-standard-error pick and the selection optimism recomputed and asserted
-    equal to the ``selection`` the evaluation stored."""
+    equal to the ``model_selection`` the evaluation stored."""
     slot = 'evaluate.regression' if task == 'regression' else 'policy.evaluation'
     item = _current(view, slot)
-    selection = (item or {}).get('values', {}).get('selection') if item else None
+    selection = (item or {}).get('values', {}).get('model_selection') if item else None
     if not isinstance(selection, Mapping) or not selection.get('available'):
         return None
     slots = [c.get('slot') for c in selection.get('configurations') or []]
@@ -629,7 +629,7 @@ def selection_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     gap = ('per_fold.max(axis=1) - per_fold[best]' if best == 'idxmax'
            else 'per_fold[best] - per_fold.min(axis=1)')
     code = f'''evaluation = nv.values(study, RESULT_IDS[{q(slot)}])
-selection = evaluation["selection"]
+selection = evaluation["model_selection"]
 # One column per configuration: its out-of-fold {metric} in each fold, from its fit.
 per_fold = pd.DataFrame({{
     _slot: [f[{q(metric)}] for f in nv.values(study, RESULT_IDS[_slot])["cross_validation"]["per_fold"]]

@@ -204,11 +204,16 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     used = logistic['values']['features']
     for feature, status in junior['exclusions'].items():
         assert (feature in used) == (status == 'uncertain_included'), feature
+    # v0.3 (WP-F1, R28): the diagnostics of the first linear fit come next, by the plan.
+    action = chat.status()['view']['next_action']
+    assert (action['kind'], action['activity']) == ('run', 'diag.binary')
+    chat.run('diag.binary')
     # WP-B1: one variant to compare, named in the junior's words and fitted the same way.
+    # v0.3 (WP-F1): the engine drafts the tuned penalty; a v0.2b value stays accepted.
     default = chat.status()['view']['next_action']['default_value']
-    assert default == {'kind': 'regularisation', 'strength': 'strong'}
-    p = chat.propose('model_variant', default, 'You compare the model with a more strongly '
-                                               'regularised variant of it.')
+    assert default['variants'][0]['kind'] == 'tuned'
+    p = chat.propose('model_variant', {'kind': 'regularisation', 'strength': 'strong'},
+                     'You compare the model with a more strongly regularised variant of it.')
     chat.confirm(p, 'I confirm the stronger regularisation as the variant.')
     variant = chat.run('fit.variant')
     assert variant['values']['C'] == 0.1 and variant['values']['features'] == used
@@ -219,6 +224,10 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert evaluation['status'] == 'promoted'
     p = chat.propose('policy', THRESHOLD, 'You call every client whose score is at least 0.2.')
     chat.confirm(p, 'Yes, call everyone scored 0.2 or more.')
+    # v0.3 (WP-F1, R28): the diagnostics run again at the adopted rule.
+    action = chat.status()['view']['next_action']
+    assert (action['kind'], action['activity']) == ('run', 'diag.binary')
+    chat.run('diag.binary')
 
     # 7. a new process sees everything without any chat memory
     view = Chat(study, work, 'chat4').view
@@ -259,6 +268,9 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     assert chat.status()['view']['decisions']['policy']['value'] == THRESHOLD
     adopted = chat.confirm(p, 'Yes: our desk can make 100 calls, take the top 100.')
     assert adopted['result']['invalidation']['mutation'] == 'policy.rule_type'
+    # v0.3 (WP-F1, R28): the diagnostics follow the adopted rule before the opening.
+    assert chat.status()['view']['next_action']['activity'] == 'diag.binary'
+    chat.run('diag.binary')
 
     # 8b. WP-B1: the final test, opened once in the junior's words (a reason is optional
     # since v0.3, WP-B; a condition is still refused)

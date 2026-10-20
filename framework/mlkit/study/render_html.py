@@ -1027,8 +1027,12 @@ def value_words(decision_id: str, value: Any, task: str | None) -> str:
     return _value_text(value)
 
 
+# v0.3 (WP-F1): the second and third variants (no digit in the teaching texts).
+MODEL_NAMES_EXTRA = {'fit.variant:2': 'Second variant', 'fit.variant:3': 'Third variant'}
+
+
 def _model_name(model: str) -> str:
-    return _labels().get('model_names', {}).get(model, model)
+    return _labels().get('model_names', {}).get(model, MODEL_NAMES_EXTRA.get(model, model))
 
 
 def _rows_words(partition: Any) -> str:

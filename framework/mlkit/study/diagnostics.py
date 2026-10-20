@@ -799,7 +799,7 @@ def linear_checks(y, prediction, frame, case, features, binary: bool, model: str
         p_value = float(chi2.sf(stat, df)) if df else None
         threshold = CHECK_ALPHA / max(len(tested), 1)
         nonlin.append({'feature': f, 'bins': bins, 'statistic': float(stat), 'df': df,
-                       'p_value': p_value, 'threshold': threshold,
+                       'p_value': p_value, 'level': threshold,
                        'flagged': bool(p_value is not None and p_value < threshold)})
     interaction = []
     seg_cols = segment_columns(case, features)
@@ -827,7 +827,7 @@ def linear_checks(y, prediction, frame, case, features, binary: bool, model: str
         threshold = CHECK_ALPHA / max(len(seg_cols), 1)
         interaction.append({'feature': col, 'groups': groups, 'q': q,
                             'df': max(len(groups) - 1, 0), 'p_value': p_value,
-                            'threshold': threshold,
+                            'level': threshold,
                             'flagged': bool(p_value is not None and p_value < threshold)})
     slope, se = _slope(y, pred, binary)
     z = 1.959963984540054

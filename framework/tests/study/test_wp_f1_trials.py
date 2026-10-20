@@ -137,7 +137,7 @@ def test_selection_one_standard_error_rule_optimism_and_advice():
     # One standard error of the best: the tuned linear model is within it, the candidate is
     # not; the simplest within it is kept (a linear model before the boosting one).
     threshold = boost.mean() - boost.std(ddof=1) / np.sqrt(5)
-    assert out['one_se']['threshold'] == pytest.approx(threshold)
+    assert out['one_se']['bound'] == pytest.approx(threshold)
     assert by['fit.variant']['within_one_se'] and not by['fit.logistic']['within_one_se']
     assert by['fit.variant:2']['within_one_se']
     assert out['one_se']['pick'] == 'fit.variant'
@@ -345,8 +345,10 @@ def test_three_variants_are_compared_chosen_and_opened(tmp_path):
     evaluation = _values(flow, 'policy.evaluation')
     assert set(evaluation['rules']['capacity:30']['comparisons']) == set(trials.VARIANT_SLOTS)
     assert set(evaluation['gain_points_variants']) == {'fit.variant:2', 'fit.variant:3'}
-    stored = evaluation['selection']
-    live = flow.view()['selection']
+    stored = evaluation['model_selection']
+    # The within-fold rule scope of B6c keeps its own key.
+    assert evaluation['selection']['scope'] == 'within_fold'
+    live = flow.view()['model_selection']
     assert stored['available'] and len(stored['configurations']) == 4
     assert [c['mean'] for c in stored['configurations']] == \
         [c['mean'] for c in live['configurations']]
@@ -402,7 +404,7 @@ def test_a_regression_study_chooses_a_tuned_ridge(tmp_path):
     variant = _values(flow, 'fit.variant')
     assert variant['model'] == 'ridge' and variant['tuning']['parameter'] == 'alpha'
     _run_next(flow, 'evaluate.regression')
-    selection = _values(flow, 'evaluate.regression')['selection']
+    selection = _values(flow, 'evaluate.regression')['model_selection']
     assert selection['metric'] == 'mae' and selection['direction'] == 'lower'
     _run_next(flow, 'diag.regression')
     flow.decide('model_choice', 'fit.variant',
@@ -438,7 +440,7 @@ def test_a_v02b_variant_is_one_trial_and_restating_it_refits_nothing(tmp_path):
     flow.decide('model_variant', legacy)       # the diagnostics are not required to name it
     flow.run('fit.variant')
     first = flow.state()['current']['fit.variant']
-    budget = flow.view()['selection']['budget']
+    budget = flow.view()['model_selection']['budget']
     assert budget == {'max': 3, 'declared': 1, 'used': 1, 'remaining': 2, 'legacy': True}
     flow.decide('model_variant', {'variants': [{**legacy, 'question': 'Is a stronger penalty '
                                                 'as good?'}, TUNED]})
@@ -449,3 +451,21 @@ def test_a_v02b_variant_is_one_trial_and_restating_it_refits_nothing(tmp_path):
     refused = flow.call('run', 'fit.variant:3', '--request-id', flow.rid(),
                         '--expected-revision', flow.rev(), '--study', flow.study, expect=2)
     assert refused['error']['code'] == 'precondition_missing'
+
+
+def test_results_computed_before_wp_f1_stay_current(tmp_path):
+    """The pre-WP-F1 sources of the modules WP-F1 changed are declared equivalent
+    (``code_compat``): an earlier fit, evaluation or opened final test is not "code
+    changed"; any other digest still is."""
+    from mlkit.study import code_compat, read
+    case_dir = fk.make_case(tmp_path / 'case', n_rows=200)['case'].parent
+    Flow(tmp_path / 'study', case_dir).init()
+    study = read.open(tmp_path / 'study')
+    now = registry.code_fingerprint(['mlkit.study.metrics'])['modules']
+    old = {m: next(iter(shas)) for m, shas in code_compat.EQUIVALENT.items()}
+    assert set(old) == {'mlkit.study.activities', 'mlkit.study.fit', 'mlkit.study.governance',
+                        'mlkit.study.diagnostics'}
+    assert study.code_changed({'code': {'modules': {**old, **now}}}) == []
+    other = {**old, 'mlkit.study.fit': '0' * 64}
+    assert study.code_changed({'code': {'modules': other}}) == ['mlkit.study.fit']
+    assert not code_compat.equivalent('mlkit.study.eda', old['mlkit.study.fit'])

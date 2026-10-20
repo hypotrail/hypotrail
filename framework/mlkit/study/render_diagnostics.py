@@ -60,8 +60,9 @@ def _labels() -> dict:
 
 
 def _model_name(model: str) -> str:
+    from .render_html import MODEL_NAMES_EXTRA      # v0.3 (WP-F1)
     names = texts.report().get('model_names') or {}
-    return names.get(model, model)
+    return names.get(model, MODEL_NAMES_EXTRA.get(model, model))
 
 
 def _concept(term_id: str) -> str:

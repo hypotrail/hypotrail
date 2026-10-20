@@ -329,6 +329,9 @@ def test_regression_walkthrough(name, cases, tmp_path, capsys):
     preview = chat('preview', 'policy', '--rule', 'capacity:10', expect=2)
     assert preview['error']['code'] == 'unsupported_capability'
     _check_words_in_the_target_unit(study, work, ev, chat.status()['view'])
+    # v0.3 (WP-F1, R28): the diagnostics are part of the choice step, run by the plan.
+    assert chat.status()['view']['next_action']['activity'] == 'diag.regression'
+    chat.run('diag.regression')
 
     # 7. pause 3: the model choice, from the paired MAE difference
     assert chat.propose('policy', 'capacity:10', 'x', expect=2)['error']['code'] == \

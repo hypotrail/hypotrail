@@ -381,6 +381,12 @@ TEXTS = {
               'for them.',
         'fr': 'Les diagnostics du modèle linéaire ne sont pas encore calculés : la liste '
               'courte les attend.'},
+    'shortlist.old_diagnostics': {
+        'en': 'The diagnostics of the linear model were computed before the engine checked for '
+              'shapes, interactions and calibration: run them again to draft the shortlist.',
+        'fr': 'Les diagnostics du modèle linéaire ont été calculés avant que le moteur ne '
+              'vérifie les formes, les interactions et la calibration : relancez-les pour '
+              'établir la liste courte.'},
     'excluded.interpretability': {
         'en': 'excluded: the case requires an interpretable model, and gradient boosting is a '
               'black box',
@@ -527,7 +533,7 @@ def select(fits: Mapping, variants: list, task: str, bud: Mapping,
         c['within_one_se'] = bool(sign * (c['mean'] - threshold) >= -1e-12)
     eligible = [c for c in configs if c['within_one_se']]
     pick = min(eligible, key=lambda c: (c['complexity'], configs.index(c)))
-    out['one_se'] = {'pick': pick['slot'], 'best': best['slot'], 'threshold': threshold,
+    out['one_se'] = {'pick': pick['slot'], 'best': best['slot'], 'bound': threshold,
                      'se_of_best': best['se'], 'source': ONE_SE_SOURCE,
                      'text': text('one_se', language), 'texts': texts('one_se'),
                      'simplicity': 'the linear family first, then fewer features, then a '
@@ -599,7 +605,11 @@ def shortlist(case_document: Mapping | None, diag: Mapping | None, task: str,
                          'diagnostics': entry['diagnostics'], 'default': entry['default'],
                          'allowed': allowed, 'excluded_reason': why, 'motivated': motivated,
                          'words': FAMILY_WORDS[_lang(language)][name]})
-    if checks is None:
+    if checks is None and isinstance(diag, Mapping):
+        # Diagnostics computed before v0.3 (still current, ``code_compat``) have no checks.
+        recommendation, key = 'rerun_diagnostics', 'shortlist.old_diagnostics'
+        listed = ['linear']
+    elif checks is None:
         recommendation, key = 'run_diagnostics', 'shortlist.no_diagnostics'
         listed = ['linear']
     elif not flags:

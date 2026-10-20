@@ -56,7 +56,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.3 (WP-F1, ADR 0007): the candidate and the variants compared fold by fold
              # (one-standard-error rule, selection optimism, advice to stop), and the
              # engine's shortlist of model families; ``null`` in a study without variants.
-             'selection', 'model_families')
+             'model_selection', 'model_families')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -1367,11 +1367,11 @@ def _case_or_none(state: dict):
 
 
 def _wp_f1(state: dict, results: dict) -> dict:
-    """v0.3 (WP-F1): ``selection`` and ``model_families`` (null before WP-B1)."""
+    """v0.3 (WP-F1): ``model_selection`` and ``model_families`` (null before WP-B1)."""
     from . import trials as tr
     from .case import CaseError, case_of
     if not st.has_wp_b1_decisions(state):
-        return {'selection': None, 'model_families': None}
+        return {'model_selection': None, 'model_families': None}
     task = st.task_of(state)
     try:
         document = case_of(state).document
@@ -1379,7 +1379,7 @@ def _wp_f1(state: dict, results: dict) -> dict:
         document = None
     diag = results.get(st.DIAG_SLOT[task]) or {}
     values = diag.get('values') if diag.get('integrity') == 'ok' else None
-    return {'selection': tr.selection(results, state, task),
+    return {'model_selection': tr.selection(results, state, task),
             'model_families': tr.shortlist(document, values, task, st.language_of(state),
                                            diag.get('result_id'))}
 

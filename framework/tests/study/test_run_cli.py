@@ -109,7 +109,12 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
         assert item['result_id'] == payload['result_id'] and item['values'] == payload['values']
     steps = {step['id']: step['status'] for step in view['plan']}
     assert steps['train_eda'] == 'done' and steps['models'] == 'done'
-    assert view['next_action']['kind'] == 'propose' and view['next_action']['decision'] == 'policy'
+    # v0.3 (WP-F1, R28): the diagnostics are part of the choice step, before the rule.
+    assert view['next_action']['kind'] == 'run' and \
+        view['next_action']['activity'] == 'diag.binary'
+    assert cli.run('diag.binary')['status'] == 'promoted'
+    after = cli('status')['view']['next_action']
+    assert after['kind'] == 'propose' and after['decision'] == 'policy'
     by_purpose = view['exposure']['by_purpose']
     # ADR 0006: init inspects the development rows; the final test is sealed, not inspected.
     n = view['final_test']['development_rows']

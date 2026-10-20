@@ -289,7 +289,7 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
                     missing.append({**_need_decision(state, st.MODEL_VARIANT),
                                     'detail': 'Name the variant to compare before evaluating.'})
             else:
-                for slot in trials.declared_slots(state):
+                for slot in trials.declared_slots(state) or [VARIANT_FIT]:
                     if not st.is_current(state, slot):
                         missing.append({'requirement': 'result_current', 'slot': slot})
     return missing
