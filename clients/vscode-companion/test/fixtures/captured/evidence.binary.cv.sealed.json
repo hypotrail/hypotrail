@@ -18,7 +18,7 @@
   "task": "binary",
   "results": [
    {
-    "result_id": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+    "result_id": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
     "activity": "split",
     "slot": "split",
     "promoted": true,
@@ -30,16 +30,16 @@
     "params": {},
     "upstream": {},
     "downstream": [
-     "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
-     "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
-     "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
-     "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9"
+     "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
+     "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
+     "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
+     "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2"
     ],
-    "created": "2026-10-20T14:41:03.502954+00:00",
+    "created": "2026-10-20T15:52:45.749113+00:00",
     "started_revision": 12,
     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-    "exposure_id": "x_d21e752365a145f2aedc685fcaf04a9b",
+    "exposure_id": "x_3a0832d74642412d95c0a3ced03e82b8",
     "values": {
      "method": "kfold_stratified",
      "folds": 5,
@@ -100,7 +100,7 @@
      "segments": [
       {
        "text": "5",
-       "result_id": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+       "result_id": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
        "path": "folds",
        "value": 5,
        "format": "int"
@@ -110,7 +110,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+       "result_id": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
        "path": "n_rows",
        "value": 3617,
        "format": "int"
@@ -122,7 +122,7 @@
     }
    },
    {
-    "result_id": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+    "result_id": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
     "activity": "eda.target_rate",
     "slot": "eda.target_rate",
     "promoted": true,
@@ -133,13 +133,13 @@
     "n_rows": 3617,
     "params": {},
     "upstream": {
-     "split": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31"
+     "split": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc"
     },
     "downstream": [],
-    "created": "2026-10-20T14:41:04.739505+00:00",
+    "created": "2026-10-20T15:52:47.890755+00:00",
     "started_revision": 14,
     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-    "exposure_id": "x_ac842c682bdd485fabbe08602d1bde6c",
+    "exposure_id": "x_d0a9809a36a84326aff2a12a9431d6a1",
     "values": {
      "partition": "train",
      "target": "y",
@@ -163,7 +163,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+       "result_id": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
        "path": "rate",
        "value": 0.11528891346419685,
        "format": "pct1"
@@ -173,7 +173,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+       "result_id": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
        "path": "n_rows",
        "value": 3617,
        "format": "int"
@@ -185,7 +185,7 @@
     }
    },
    {
-    "result_id": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+    "result_id": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
     "activity": "fit.baseline",
     "slot": "fit.baseline",
     "promoted": true,
@@ -198,15 +198,15 @@
      "model": "constant_prior"
     },
     "upstream": {
-     "split": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31"
+     "split": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc"
     },
     "downstream": [
-     "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba"
+     "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de"
     ],
-    "created": "2026-10-20T14:41:06.417243+00:00",
+    "created": "2026-10-20T15:52:50.323663+00:00",
     "started_revision": 16,
     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-    "exposure_id": "x_e302ff56f6674b6b9b6aa0c73389e290",
+    "exposure_id": "x_415c2adc4b5a4ef391add422cc0aca09",
     "values": {
      "model": "constant_prior",
      "train_rate": 0.11528891346419685,
@@ -297,7 +297,7 @@
       },
       {
        "text": "0.500",
-       "result_id": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+       "result_id": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
        "path": "validation.roc_auc",
        "value": 0.5,
        "format": "f3"
@@ -307,7 +307,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+       "result_id": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
        "path": "validation.n_rows",
        "value": 3617,
        "format": "int"
@@ -319,7 +319,7 @@
     }
    },
    {
-    "result_id": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+    "result_id": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
     "activity": "fit.logistic",
     "slot": "fit.logistic",
     "promoted": true,
@@ -339,16 +339,16 @@
      "tol": 1e-08
     },
     "upstream": {
-     "split": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31"
+     "split": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc"
     },
     "downstream": [
-     "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
-     "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9"
+     "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
+     "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2"
     ],
-    "created": "2026-10-20T14:41:10.437642+00:00",
+    "created": "2026-10-20T15:52:59.292376+00:00",
     "started_revision": 18,
     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-    "exposure_id": "x_ba4f2cf8b1974ce5a2aac5c917f531a3",
+    "exposure_id": "x_d1d6118a422642dbb0166716d6df7473",
     "values": {
      "model": "logistic",
      "features": [
@@ -525,7 +525,7 @@
       },
       {
        "text": "0.715",
-       "result_id": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+       "result_id": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
        "path": "validation.roc_auc",
        "value": 0.7153657074340528,
        "format": "f3"
@@ -535,7 +535,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+       "result_id": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
        "path": "validation.n_rows",
        "value": 3617,
        "format": "int"
@@ -547,7 +547,7 @@
     }
    },
    {
-    "result_id": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+    "result_id": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
     "activity": "fit.variant",
     "slot": "fit.variant",
     "promoted": true,
@@ -569,16 +569,16 @@
      "tol": 1e-08
     },
     "upstream": {
-     "split": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31"
+     "split": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc"
     },
     "downstream": [
-     "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
-     "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9"
+     "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
+     "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2"
     ],
-    "created": "2026-10-20T14:41:16.134779+00:00",
+    "created": "2026-10-20T15:53:14.012167+00:00",
     "started_revision": 22,
     "execution_id": "e_8b6b767c3df161e7401893c1",
-    "exposure_id": "x_b81696d981b84981a0f200adc1e667cf",
+    "exposure_id": "x_f1b81cd3b7e34776bef31c46d95c7039",
     "values": {
      "model": "logistic",
      "features": [
@@ -757,7 +757,7 @@
     "headline": null
    },
    {
-    "result_id": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+    "result_id": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
     "activity": "policy.evaluation",
     "slot": "policy.evaluation",
     "promoted": true,
@@ -781,15 +781,15 @@
      "selection": "within_fold"
     },
     "upstream": {
-     "fit.baseline": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
-     "fit.logistic": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "fit.variant": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1"
+     "fit.baseline": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
+     "fit.logistic": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
+     "fit.variant": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952"
     },
     "downstream": [],
-    "created": "2026-10-20T14:41:27.929814+00:00",
+    "created": "2026-10-20T15:53:35.279050+00:00",
     "started_revision": 24,
     "execution_id": "e_a633b01aa452bb85d7c21822",
-    "exposure_id": "x_4258ea97326146178d0767b6386e9e57",
+    "exposure_id": "x_771a18d400fd466180a364cb044cb7a3",
     "values": {
      "rules": {
       "share:0.1": {
@@ -1468,9 +1468,9 @@
      "n": 3617,
      "n_positive": 417,
      "predictions": {
-      "fit.baseline": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
-      "fit.logistic": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-      "fit.variant": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1"
+      "fit.baseline": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
+      "fit.logistic": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
+      "fit.variant": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952"
      },
      "reference": "fit.baseline",
      "bootstrap": {
@@ -1540,9 +1540,123 @@
       }
      },
      "selection": {
-      "scope": "within_fold",
+      "available": true,
+      "metric": "roc_auc",
+      "direction": "higher",
       "folds": 5,
-      "note": "Under cross-validation each fold is scored by a model fitted on the other folds, so scores of different folds are not on the same scale (with temporal folds, each period is scored by a model of other periods). A capacity or a share is therefore applied within each fold: the best-scored share of each fold's rows, by that fold's model, and the counts are summed; by_fold gives each fold's precision. A threshold reads the scores as they are."
+      "configurations": [
+       {
+        "slot": "fit.logistic",
+        "kind": "candidate",
+        "family": "linear",
+        "question": null,
+        "words": null,
+        "per_fold": [
+         0.7367373511904762,
+         0.7410528273809524,
+         0.691660391566265,
+         0.7050451807228916,
+         0.7046498493975903
+        ],
+        "mean": 0.7158291200516351,
+        "sd": 0.021787533231140493,
+        "se": 0.009743681073373155,
+        "difference": null,
+        "within_one_se": true,
+        "complexity": [
+         0,
+         12,
+         1
+        ]
+       },
+       {
+        "slot": "fit.variant",
+        "kind": "regularisation",
+        "family": "linear",
+        "question": null,
+        "words": "stronger regularisation",
+        "per_fold": [
+         0.7343005952380952,
+         0.7416852678571428,
+         0.6906814759036145,
+         0.7090173192771084,
+         0.7117093373493976
+        ],
+        "mean": 0.7174787991250717,
+        "sd": 0.0205663913653962,
+        "se": 0.009197569828978123,
+        "difference": {
+         "against": "fit.logistic",
+         "mean": 0.0016496790734366051,
+         "sd": 0.0038504248470430133,
+         "se": 0.0017219623400484814,
+         "low": -7.228326661187627e-05,
+         "high": 0.0033716414134850863,
+         "within_fold_noise": true,
+         "definition": "per-fold paired difference (this configuration minus the candidate), mean plus or minus one standard error"
+        },
+        "within_one_se": true,
+        "complexity": [
+         0,
+         12,
+         0
+        ]
+       }
+      ],
+      "best": "fit.variant",
+      "one_se": {
+       "pick": "fit.variant",
+       "best": "fit.variant",
+       "threshold": 0.7082812292960936,
+       "se_of_best": 0.009197569828978123,
+       "source": "Hastie, Tibshirani & Friedman (2009), The Elements of Statistical Learning, 2nd ed., §7.10 (the one-standard-error rule)",
+       "text": "The one-standard-error rule keeps the simplest configuration whose mean is within one standard error of the best one.",
+       "texts": {
+        "en": "The one-standard-error rule keeps the simplest configuration whose mean is within one standard error of the best one.",
+        "fr": "La règle d'une erreur type retient la configuration la plus simple dont la moyenne est à moins d'une erreur type de la meilleure."
+       },
+       "simplicity": "the linear family first, then fewer features, then a stronger penalty; a tie keeps the candidate"
+      },
+      "optimism": {
+       "estimate": 0.000683134323006307,
+       "metric": "roc_auc",
+       "configurations": 2,
+       "per_fold": [
+        0.00243675595238102,
+        0.0,
+        0.0009789156626505147,
+        0.0,
+        0.0
+       ],
+       "method": "mean over folds of (the fold's best configuration minus the configuration best on the mean), in the direction of the metric",
+       "source": "Tibshirani & Tibshirani (2009), A bias correction for the minimum error rate in cross-validation, Annals of Applied Statistics 3(2): 822-829",
+       "text": "Choosing the best of several configurations on the same folds flatters it: the optimism is the average gap, fold by fold, between that fold's best configuration and the one chosen.",
+       "texts": {
+        "en": "Choosing the best of several configurations on the same folds flatters it: the optimism is the average gap, fold by fold, between that fold's best configuration and the one chosen.",
+        "fr": "Choisir la meilleure de plusieurs configurations sur les mêmes plis la flatte : l'optimisme est l'écart moyen, pli par pli, entre la meilleure configuration du pli et celle retenue."
+       },
+       "note": "Approximate: an estimate of how much the best mean owes to having chosen it among these configurations."
+      },
+      "advice": {
+       "code": "fold_noise",
+       "stop": true,
+       "noise": 0.009743681073373155,
+       "largest_difference": 0.0016496790734366051,
+       "text": "The differences between the variants and the candidate stay within the noise between folds: another variant is unlikely to show a difference that chance would not explain. Stop here and choose.",
+       "texts": {
+        "en": "The differences between the variants and the candidate stay within the noise between folds: another variant is unlikely to show a difference that chance would not explain. Stop here and choose.",
+        "fr": "Les écarts entre les variantes et le candidat restent dans le bruit entre les plis : une autre variante a peu de chances de montrer un écart que le hasard n'expliquerait pas. Arrêtez-vous ici et choisissez."
+       }
+      },
+      "budget": {
+       "max": 3,
+       "declared": 1,
+       "used": 1,
+       "remaining": 2,
+       "legacy": true
+      },
+      "trials": 2,
+      "note": "Development evidence: every configuration is compared on the same out-of-fold predictions of the development rows. The fold standard errors ignore the overlap of the folds' training rows (Bengio & Grandvalet 2004), so they understate the noise: the advice errs towards stopping late, not early. The final test, opened once, is not affected by this choice."
      },
      "gain_points_variant": {
       "model": "fit.variant",
@@ -1595,7 +1709,7 @@
       },
       {
        "text": "36.4%",
-       "result_id": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+       "result_id": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
        "path": "rules.[share:0.1].models.[fit.logistic].precision",
        "value": 0.3638888888888889,
        "format": "pct1"
@@ -1605,7 +1719,7 @@
       },
       {
        "text": "31.4%",
-       "result_id": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+       "result_id": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
        "path": "rules.[share:0.1].models.[fit.logistic].recall",
        "value": 0.31414868105515587,
        "format": "pct1"
@@ -1615,7 +1729,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+       "result_id": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
        "path": "n",
        "value": 3617,
        "format": "int"
@@ -1627,7 +1741,7 @@
     }
    },
    {
-    "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+    "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
     "activity": "diag.binary",
     "slot": "diag.binary",
     "promoted": true,
@@ -1655,15 +1769,15 @@
      ]
     },
     "upstream": {
-     "fit.logistic": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "fit.variant": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
-     "split": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31"
+     "fit.logistic": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
+     "fit.variant": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "split": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc"
     },
     "downstream": [],
-    "created": "2026-10-20T14:42:15.504877+00:00",
+    "created": "2026-10-20T15:57:07.131736+00:00",
     "started_revision": 29,
     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
-    "exposure_id": "x_169434996f0c49c79cfcef37bac5f98c",
+    "exposure_id": "x_ada96c80fcce4a40a18ab3afe684285e",
     "values": {
      "question": "Where does the model err at the rule, and can its score be read as a probability?",
      "evidence": "development",
@@ -2800,7 +2914,7 @@
         "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
         "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
        },
-       "predictions": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9"
+       "predictions": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0"
       },
       "fit.variant": {
        "confusion": {
@@ -3921,11 +4035,262 @@
         "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
         "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
        },
-       "predictions": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1"
+       "predictions": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952"
       }
      },
      "coefficient_rows": 3617,
-     "note": "Development evidence: computed on the out-of-fold predictions of the development rows, on which the model and the rule were chosen. These figures describe the choice; only the final test is independent evidence."
+     "note": "Development evidence: computed on the out-of-fold predictions of the development rows, on which the model and the rule were chosen. These figures describe the choice; only the final test is independent evidence.",
+     "linear_checks": {
+      "model": "fit.logistic",
+      "nonlinearity": [
+       {
+        "feature": "age",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 853,
+          "low": 19.0,
+          "high": 32.0,
+          "gap": 0.008731801444340326,
+          "se": 0.01019113276369028
+         },
+         {
+          "bin": 2,
+          "n": 626,
+          "low": 33.0,
+          "high": 36.0,
+          "gap": -0.003907995292236302,
+          "se": 0.011525086060518813
+         },
+         {
+          "bin": 3,
+          "n": 702,
+          "low": 37.0,
+          "high": 42.0,
+          "gap": -0.0036836554853329068,
+          "se": 0.010721922879570885
+         },
+         {
+          "bin": 4,
+          "n": 776,
+          "low": 43.0,
+          "high": 51.0,
+          "gap": -0.006279634238554446,
+          "se": 0.010456380961734875
+         },
+         {
+          "bin": 5,
+          "n": 660,
+          "low": 52.0,
+          "high": 87.0,
+          "gap": 0.002200362547684437,
+          "se": 0.013113770421669037
+         }
+        ],
+        "statistic": 1.3559477366584907,
+        "df": 5,
+        "p_value": 0.929070782808754,
+        "threshold": 0.0025,
+        "flagged": false
+       },
+       {
+        "feature": "balance",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 729,
+          "low": -3313.0,
+          "high": 20.0,
+          "gap": -0.016146352416858634,
+          "se": 0.010723902119604292
+         },
+         {
+          "bin": 2,
+          "n": 719,
+          "low": 21.0,
+          "high": 259.0,
+          "gap": -0.01642110788998205,
+          "se": 0.011055402842945743
+         },
+         {
+          "bin": 3,
+          "n": 724,
+          "low": 260.0,
+          "high": 712.0,
+          "gap": -0.00728481240422818,
+          "se": 0.010917379165665604
+         },
+         {
+          "bin": 4,
+          "n": 721,
+          "low": 714.0,
+          "high": 1929.0,
+          "gap": 0.007813354483297091,
+          "se": 0.01128546402730238
+         },
+         {
+          "bin": 5,
+          "n": 724,
+          "low": 1931.0,
+          "high": 71188.0,
+          "gap": 0.030681466331109325,
+          "se": 0.011723150029660456
+         }
+        ],
+        "statistic": 12.247363654503665,
+        "df": 5,
+        "p_value": 0.03155111449795323,
+        "threshold": 0.0025,
+        "flagged": false
+       },
+       {
+        "feature": "pdays",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 3617,
+          "low": -1.0,
+          "high": 871.0,
+          "gap": -0.0002778162729521333,
+          "se": 0.004984353232474179
+         }
+        ],
+        "statistic": 0.0031066886916269695,
+        "df": 1,
+        "p_value": 0.9555507838484727,
+        "threshold": 0.0025,
+        "flagged": false
+       },
+       {
+        "feature": "previous",
+        "bins": [
+         {
+          "bin": 1,
+          "n": 3617,
+          "low": 0.0,
+          "high": 25.0,
+          "gap": -0.0002778162729521333,
+          "se": 0.004984353232474179
+         }
+        ],
+        "statistic": 0.0031066886916269695,
+        "df": 1,
+        "p_value": 0.9555507838484727,
+        "threshold": 0.0025,
+        "flagged": false
+       }
+      ],
+      "interaction": [
+       {
+        "feature": "job",
+        "groups": [
+         {
+          "value": "admin.",
+          "n": 377,
+          "slope": 0.9352611997396505,
+          "se": 0.17425093029731223
+         },
+         {
+          "value": "blue-collar",
+          "n": 734,
+          "slope": 0.8702690586343164,
+          "se": 0.1764224992911077
+         },
+         {
+          "value": "entrepreneur",
+          "n": 144,
+          "slope": 1.0507512197039561,
+          "se": 0.45255796711733
+         },
+         {
+          "value": "management",
+          "n": 761,
+          "slope": 1.0297488301753073,
+          "se": 0.15524898550080496
+         },
+         {
+          "value": "retired",
+          "n": 188,
+          "slope": 0.5991981480476289,
+          "se": 0.17784407746479153
+         },
+         {
+          "value": "self-employed",
+          "n": 154,
+          "slope": 1.15908737986088,
+          "se": 0.37545276368968966
+         },
+         {
+          "value": "services",
+          "n": 344,
+          "slope": 1.2404595960844809,
+          "se": 0.2588970792158661
+         },
+         {
+          "value": "technician",
+          "n": 623,
+          "slope": 0.8519410303806466,
+          "se": 0.14392573394625693
+         },
+         {
+          "value": "unemployed",
+          "n": 101,
+          "slope": 1.512571729827002,
+          "se": 0.4980259744351435
+         }
+        ],
+        "q": 7.500136265046116,
+        "df": 8,
+        "p_value": 0.4837532987294676,
+        "threshold": 0.005,
+        "flagged": false
+       },
+       {
+        "feature": "marital",
+        "groups": [
+         {
+          "value": "divorced",
+          "n": 433,
+          "slope": 1.25921652009641,
+          "se": 0.19759261114621648
+         },
+         {
+          "value": "married",
+          "n": 2229,
+          "slope": 0.9518937370486349,
+          "se": 0.07508157595643071
+         },
+         {
+          "value": "single",
+          "n": 955,
+          "slope": 0.7475327152153196,
+          "se": 0.11463454803700214
+         }
+        ],
+        "q": 5.385827022786213,
+        "df": 2,
+        "p_value": 0.06768345530725907,
+        "threshold": 0.005,
+        "flagged": false
+       }
+      ],
+      "calibration_slope": {
+       "slope": 0.9345650238435238,
+       "se": 0.0590648858750207,
+       "low": 0.8187999747775146,
+       "high": 1.0503300729095328,
+       "band": [
+        0.8,
+        1.2
+       ],
+       "flagged": false,
+       "definition": "slope of a logistic regression of the outcome on the logit of the score: 1 when the scores are as spread as the outcomes, below 1 when they are too extreme"
+      },
+      "flags": [],
+      "alpha": 0.01,
+      "method": "binned out-of-fold gaps per numeric feature (chi-square, Bonferroni); calibration slope by segment (Cochran's Q); overall calibration slope (Cox 1958)",
+      "note": "Checks of the candidate linear model on its out-of-fold predictions: a flag is evidence that another model family might follow the data more closely, not proof; choosing a family after seeing it makes that comparison data-contingent."
+     }
     },
     "headline": {
      "segments": [
@@ -3934,7 +4299,7 @@
       },
       {
        "text": "0.0907",
-       "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+       "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
        "path": "models.[fit.logistic].calibration.brier",
        "value": 0.09071934025194879,
        "format": "f4"
@@ -3944,7 +4309,7 @@
       },
       {
        "text": "0.715",
-       "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+       "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
        "path": "models.[fit.logistic].roc_auc",
        "value": 0.7153657074340528,
        "format": "f3"
@@ -3954,7 +4319,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+       "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
        "path": "n",
        "value": 3617,
        "format": "int"
@@ -4024,43 +4389,43 @@
      "status": "confirmed"
     },
     {
-     "id": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+     "id": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
      "kind": "result",
      "label": "split",
      "status": "current"
     },
     {
-     "id": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+     "id": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
      "kind": "result",
      "label": "eda.target_rate",
      "status": "current"
     },
     {
-     "id": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "id": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "kind": "result",
      "label": "fit.baseline",
      "status": "current"
     },
     {
-     "id": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+     "id": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "kind": "result",
      "label": "fit.logistic",
      "status": "current"
     },
     {
-     "id": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "id": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
      "kind": "result",
      "label": "fit.variant",
      "status": "current"
     },
     {
-     "id": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "id": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "kind": "result",
      "label": "policy.evaluation",
      "status": "current"
     },
     {
-     "id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "kind": "result",
      "label": "diag.binary",
      "status": "current"
@@ -4081,176 +4446,176 @@
    "edges": [
     {
      "from": "dataset",
-     "to": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+     "to": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
      "role": "rows"
     },
     {
      "from": "decision:split",
-     "to": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+     "to": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+     "to": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
      "role": "rows"
     },
     {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
-     "to": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
+     "to": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "to": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "role": "rows"
     },
     {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
-     "to": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
+     "to": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "role": "rows"
-    },
-    {
-     "from": "decision:feature_availability",
-     "to": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "role": "features"
-    },
-    {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
-     "to": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "role": "split"
-    },
-    {
-     "from": "dataset",
-     "to": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "to": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "role": "rows"
     },
     {
      "from": "decision:feature_availability",
-     "to": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "to": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "role": "features"
     },
     {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
-     "to": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
+     "to": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "to": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "role": "rows"
+    },
+    {
+     "from": "decision:feature_availability",
+     "to": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "role": "features"
+    },
+    {
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
+     "to": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "role": "split"
+    },
+    {
+     "from": "dataset",
+     "to": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "role": "rows"
     },
     {
      "from": "decision:policy",
-     "to": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "to": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "role": "rule"
     },
     {
-     "from": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
-     "to": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "from": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
+     "to": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "role": "fit.baseline"
     },
     {
-     "from": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "to": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "from": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
+     "to": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "role": "fit.logistic"
     },
     {
-     "from": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
-     "to": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "from": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "to": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "role": "fit.variant"
     },
     {
      "from": "dataset",
-     "to": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "to": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "role": "rows"
     },
     {
-     "from": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
-     "to": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "from": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
+     "to": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "role": "fit.logistic"
     },
     {
-     "from": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
-     "to": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "from": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
+     "to": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "role": "fit.variant"
     },
     {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
-     "to": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
+     "to": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "role": "split"
     },
     {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+     "from": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+     "from": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+     "from": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "from": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "from": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+     "from": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+     "from": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "from": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "from": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "from": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "from": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "from": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "from": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "to": "artifact:notebook",
      "role": "consumed"
     }
@@ -4298,9 +4663,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_67b1b3b269ab4228ad2711f33c822334",
+     "exposure_id": "x_1d096f9e3c594026b1374f71191e2c3f",
      "revision": 1,
-     "time": "2026-10-20T14:40:54.911891+00:00",
+     "time": "2026-10-20T15:52:31.733918+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -4328,9 +4693,9 @@
      ]
     },
     {
-     "exposure_id": "x_0303101653b34241b9c170d2ab3f4c24",
+     "exposure_id": "x_a0d0a9fca6b0424586c97cd79d07856b",
      "revision": 1,
-     "time": "2026-10-20T14:40:54.918778+00:00",
+     "time": "2026-10-20T15:52:31.737691+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -4358,11 +4723,11 @@
      ]
     },
     {
-     "exposure_id": "x_d21e752365a145f2aedc685fcaf04a9b",
+     "exposure_id": "x_3a0832d74642412d95c0a3ced03e82b8",
      "revision": 12,
-     "time": "2026-10-20T14:41:03.515968+00:00",
+     "time": "2026-10-20T15:52:45.773943+00:00",
      "activity": "split",
-     "result_id": "6809cf25031c4e0efbe78118e97413d264d97529bad5c2fc01083396c3607e31",
+     "result_id": "e542b503e3398620bf64592240794e05b4a7d13aa45b8962a9ff14655697c4bc",
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
      "purpose": "structural_inspection",
      "partition": "development",
@@ -4372,11 +4737,11 @@
      ]
     },
     {
-     "exposure_id": "x_ac842c682bdd485fabbe08602d1bde6c",
+     "exposure_id": "x_d0a9809a36a84326aff2a12a9431d6a1",
      "revision": 14,
-     "time": "2026-10-20T14:41:04.758757+00:00",
+     "time": "2026-10-20T15:52:47.908636+00:00",
      "activity": "eda.target_rate",
-     "result_id": "2e858e2caf599dbe62e630dcd8d47d6954a2d1448df98c1816f976990e966dd4",
+     "result_id": "2cda04759fd557a45579c9b96c53972a9e95b35246464c15111f9d1c138dba76",
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
      "purpose": "train_eda",
      "partition": "development",
@@ -4386,11 +4751,11 @@
      ]
     },
     {
-     "exposure_id": "x_0b3e6929d3ea4f97b7587ce630d56df1",
+     "exposure_id": "x_a2978faf010e419f964e6ea2e98a2452",
      "revision": 16,
-     "time": "2026-10-20T14:41:06.432535+00:00",
+     "time": "2026-10-20T15:52:50.330651+00:00",
      "activity": "fit.baseline",
-     "result_id": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "result_id": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "purpose": "cross_validated_fit",
      "partition": "development",
@@ -4400,11 +4765,11 @@
      ]
     },
     {
-     "exposure_id": "x_e302ff56f6674b6b9b6aa0c73389e290",
+     "exposure_id": "x_415c2adc4b5a4ef391add422cc0aca09",
      "revision": 16,
-     "time": "2026-10-20T14:41:06.440494+00:00",
+     "time": "2026-10-20T15:52:50.337419+00:00",
      "activity": "fit.baseline",
-     "result_id": "08b87ae7bd70b94bbccd0ebb7bd154f30102144efaded0164f819b892caff5f3",
+     "result_id": "fad76cdf0d008b0af7830eae1ed1186b6678d888526c3e198728c6c61906a51d",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
@@ -4414,11 +4779,11 @@
      ]
     },
     {
-     "exposure_id": "x_74dae67b848944fabab477d6a3f80ee6",
+     "exposure_id": "x_3493d6580755438f8c1835f9e8b00a01",
      "revision": 18,
-     "time": "2026-10-20T14:41:10.456353+00:00",
+     "time": "2026-10-20T15:52:59.312548+00:00",
      "activity": "fit.logistic",
-     "result_id": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+     "result_id": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
      "purpose": "cross_validated_fit",
      "partition": "development",
@@ -4440,11 +4805,11 @@
      ]
     },
     {
-     "exposure_id": "x_ba4f2cf8b1974ce5a2aac5c917f531a3",
+     "exposure_id": "x_d1d6118a422642dbb0166716d6df7473",
      "revision": 18,
-     "time": "2026-10-20T14:41:10.469020+00:00",
+     "time": "2026-10-20T15:52:59.322519+00:00",
      "activity": "fit.logistic",
-     "result_id": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9",
+     "result_id": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0",
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
@@ -4466,11 +4831,11 @@
      ]
     },
     {
-     "exposure_id": "x_d237a9b85dad46f6bfc2a9ae7fb0e051",
+     "exposure_id": "x_a7e6f8246a7844d6b639f2fa917b09de",
      "revision": 22,
-     "time": "2026-10-20T14:41:16.151682+00:00",
+     "time": "2026-10-20T15:53:14.037977+00:00",
      "activity": "fit.variant",
-     "result_id": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "result_id": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
      "execution_id": "e_8b6b767c3df161e7401893c1",
      "purpose": "cross_validated_fit",
      "partition": "development",
@@ -4492,11 +4857,11 @@
      ]
     },
     {
-     "exposure_id": "x_b81696d981b84981a0f200adc1e667cf",
+     "exposure_id": "x_f1b81cd3b7e34776bef31c46d95c7039",
      "revision": 22,
-     "time": "2026-10-20T14:41:16.164516+00:00",
+     "time": "2026-10-20T15:53:14.046481+00:00",
      "activity": "fit.variant",
-     "result_id": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1",
+     "result_id": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952",
      "execution_id": "e_8b6b767c3df161e7401893c1",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
@@ -4518,11 +4883,11 @@
      ]
     },
     {
-     "exposure_id": "x_4258ea97326146178d0767b6386e9e57",
+     "exposure_id": "x_771a18d400fd466180a364cb044cb7a3",
      "revision": 24,
-     "time": "2026-10-20T14:41:27.955512+00:00",
+     "time": "2026-10-20T15:53:35.297302+00:00",
      "activity": "policy.evaluation",
-     "result_id": "1f7192098a0a619b7e011a4a1adfbb00b392457dcbeaa252a8c40bd3d04411ba",
+     "result_id": "2f1f41a1e533b89f6a6db3df3874dffab67109e5db00d858b81b5a62e4f615de",
      "execution_id": "e_a633b01aa452bb85d7c21822",
      "purpose": "out_of_fold_policy_selection",
      "partition": "development",
@@ -4532,11 +4897,11 @@
      ]
     },
     {
-     "exposure_id": "x_169434996f0c49c79cfcef37bac5f98c",
+     "exposure_id": "x_ada96c80fcce4a40a18ab3afe684285e",
      "revision": 29,
-     "time": "2026-10-20T14:42:15.528567+00:00",
+     "time": "2026-10-20T15:57:07.160813+00:00",
      "activity": "diag.binary",
-     "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+     "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
      "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
      "purpose": "development_diagnostics",
      "partition": "development",

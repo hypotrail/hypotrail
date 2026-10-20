@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
   "status": "promoted",
-  "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
+  "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1158,7 +1158,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "09a6131e4f55a77c79dcdcbcb7bc98b3b1e5cfe7d84d7b6602eaff6af1d15ef9"
+     "predictions": "18633d22ccb52c084ff3addb600a42dd4d35dc3522c6cf030a787ace8859c6d0"
     },
     "fit.variant": {
      "confusion": {
@@ -2279,24 +2279,275 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "7e9ab5be1c62efd5a508b24a35e6f002be07fc6581bf5714707c1f9fc83194b1"
+     "predictions": "3c84a919e7e99f6cf58ab29a298b810c7a0b74b27a9f5af71187e22122b6a952"
     }
    },
    "coefficient_rows": 3617,
-   "note": "Development evidence: computed on the out-of-fold predictions of the development rows, on which the model and the rule were chosen. These figures describe the choice; only the final test is independent evidence."
+   "note": "Development evidence: computed on the out-of-fold predictions of the development rows, on which the model and the rule were chosen. These figures describe the choice; only the final test is independent evidence.",
+   "linear_checks": {
+    "model": "fit.logistic",
+    "nonlinearity": [
+     {
+      "feature": "age",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 853,
+        "low": 19.0,
+        "high": 32.0,
+        "gap": 0.008731801444340326,
+        "se": 0.01019113276369028
+       },
+       {
+        "bin": 2,
+        "n": 626,
+        "low": 33.0,
+        "high": 36.0,
+        "gap": -0.003907995292236302,
+        "se": 0.011525086060518813
+       },
+       {
+        "bin": 3,
+        "n": 702,
+        "low": 37.0,
+        "high": 42.0,
+        "gap": -0.0036836554853329068,
+        "se": 0.010721922879570885
+       },
+       {
+        "bin": 4,
+        "n": 776,
+        "low": 43.0,
+        "high": 51.0,
+        "gap": -0.006279634238554446,
+        "se": 0.010456380961734875
+       },
+       {
+        "bin": 5,
+        "n": 660,
+        "low": 52.0,
+        "high": 87.0,
+        "gap": 0.002200362547684437,
+        "se": 0.013113770421669037
+       }
+      ],
+      "statistic": 1.3559477366584907,
+      "df": 5,
+      "p_value": 0.929070782808754,
+      "threshold": 0.0025,
+      "flagged": false
+     },
+     {
+      "feature": "balance",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 729,
+        "low": -3313.0,
+        "high": 20.0,
+        "gap": -0.016146352416858634,
+        "se": 0.010723902119604292
+       },
+       {
+        "bin": 2,
+        "n": 719,
+        "low": 21.0,
+        "high": 259.0,
+        "gap": -0.01642110788998205,
+        "se": 0.011055402842945743
+       },
+       {
+        "bin": 3,
+        "n": 724,
+        "low": 260.0,
+        "high": 712.0,
+        "gap": -0.00728481240422818,
+        "se": 0.010917379165665604
+       },
+       {
+        "bin": 4,
+        "n": 721,
+        "low": 714.0,
+        "high": 1929.0,
+        "gap": 0.007813354483297091,
+        "se": 0.01128546402730238
+       },
+       {
+        "bin": 5,
+        "n": 724,
+        "low": 1931.0,
+        "high": 71188.0,
+        "gap": 0.030681466331109325,
+        "se": 0.011723150029660456
+       }
+      ],
+      "statistic": 12.247363654503665,
+      "df": 5,
+      "p_value": 0.03155111449795323,
+      "threshold": 0.0025,
+      "flagged": false
+     },
+     {
+      "feature": "pdays",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 3617,
+        "low": -1.0,
+        "high": 871.0,
+        "gap": -0.0002778162729521333,
+        "se": 0.004984353232474179
+       }
+      ],
+      "statistic": 0.0031066886916269695,
+      "df": 1,
+      "p_value": 0.9555507838484727,
+      "threshold": 0.0025,
+      "flagged": false
+     },
+     {
+      "feature": "previous",
+      "bins": [
+       {
+        "bin": 1,
+        "n": 3617,
+        "low": 0.0,
+        "high": 25.0,
+        "gap": -0.0002778162729521333,
+        "se": 0.004984353232474179
+       }
+      ],
+      "statistic": 0.0031066886916269695,
+      "df": 1,
+      "p_value": 0.9555507838484727,
+      "threshold": 0.0025,
+      "flagged": false
+     }
+    ],
+    "interaction": [
+     {
+      "feature": "job",
+      "groups": [
+       {
+        "value": "admin.",
+        "n": 377,
+        "slope": 0.9352611997396505,
+        "se": 0.17425093029731223
+       },
+       {
+        "value": "blue-collar",
+        "n": 734,
+        "slope": 0.8702690586343164,
+        "se": 0.1764224992911077
+       },
+       {
+        "value": "entrepreneur",
+        "n": 144,
+        "slope": 1.0507512197039561,
+        "se": 0.45255796711733
+       },
+       {
+        "value": "management",
+        "n": 761,
+        "slope": 1.0297488301753073,
+        "se": 0.15524898550080496
+       },
+       {
+        "value": "retired",
+        "n": 188,
+        "slope": 0.5991981480476289,
+        "se": 0.17784407746479153
+       },
+       {
+        "value": "self-employed",
+        "n": 154,
+        "slope": 1.15908737986088,
+        "se": 0.37545276368968966
+       },
+       {
+        "value": "services",
+        "n": 344,
+        "slope": 1.2404595960844809,
+        "se": 0.2588970792158661
+       },
+       {
+        "value": "technician",
+        "n": 623,
+        "slope": 0.8519410303806466,
+        "se": 0.14392573394625693
+       },
+       {
+        "value": "unemployed",
+        "n": 101,
+        "slope": 1.512571729827002,
+        "se": 0.4980259744351435
+       }
+      ],
+      "q": 7.500136265046116,
+      "df": 8,
+      "p_value": 0.4837532987294676,
+      "threshold": 0.005,
+      "flagged": false
+     },
+     {
+      "feature": "marital",
+      "groups": [
+       {
+        "value": "divorced",
+        "n": 433,
+        "slope": 1.25921652009641,
+        "se": 0.19759261114621648
+       },
+       {
+        "value": "married",
+        "n": 2229,
+        "slope": 0.9518937370486349,
+        "se": 0.07508157595643071
+       },
+       {
+        "value": "single",
+        "n": 955,
+        "slope": 0.7475327152153196,
+        "se": 0.11463454803700214
+       }
+      ],
+      "q": 5.385827022786213,
+      "df": 2,
+      "p_value": 0.06768345530725907,
+      "threshold": 0.005,
+      "flagged": false
+     }
+    ],
+    "calibration_slope": {
+     "slope": 0.9345650238435238,
+     "se": 0.0590648858750207,
+     "low": 0.8187999747775146,
+     "high": 1.0503300729095328,
+     "band": [
+      0.8,
+      1.2
+     ],
+     "flagged": false,
+     "definition": "slope of a logistic regression of the outcome on the logit of the score: 1 when the scores are as spread as the outcomes, below 1 when they are too extreme"
+    },
+    "flags": [],
+    "alpha": 0.01,
+    "method": "binned out-of-fold gaps per numeric feature (chi-square, Bonferroni); calibration slope by segment (Cochran's Q); overall calibration slope (Cox 1958)",
+    "note": "Checks of the candidate linear model on its out-of-fold predictions: a flag is evidence that another model family might follow the data more closely, not proof; choosing a family after seeing it makes that comparison data-contingent."
+   }
   },
   "result": {
    "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "15462aadaf80d09579b5963177d9ebbff5d3919c0fb757f9a21a8798796587f9",
-   "input_key": "3f6a7c5066cd7c871fc96656b42e86f5e820124de34cb6a7910ef4e48ae6b01a",
+   "result_id": "4bf019d9625431d793488f1bb781a11f379d48f0211bf2bf3f54272d215098e2",
+   "input_key": "b61b69492bb4ed8a715ef2f8b29dfe526d411521edeb27e73fdd1ddfc8e1bb8e",
    "reason": null,
    "started_revision": 29,
    "invalidation": null,
    "exposure_ids": [
-    "x_169434996f0c49c79cfcef37bac5f98c"
+    "x_ada96c80fcce4a40a18ab3afe684285e"
    ],
    "registry_created": true,
    "nondeterministic": false

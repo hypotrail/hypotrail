@@ -37,7 +37,7 @@
     "status": "confirmed"
    }
   },
-  "current_step": "final_test",
+  "current_step": "policy",
   "plan": [
    {
     "id": "discover_data",
@@ -81,18 +81,18 @@
    },
    {
     "id": "model_variant",
-    "title": "Choose one variant to compare",
+    "title": "Choose the variants to compare",
     "status": "done"
    },
    {
     "id": "policy",
     "title": "Choose a decision policy",
-    "status": "done"
+    "status": "awaiting_confirmation"
    },
    {
     "id": "final_test",
     "title": "Open the final test once",
-    "status": "ready"
+    "status": "blocked"
    },
    {
     "id": "conclusion",
@@ -275,85 +275,85 @@
   },
   "results": {
    "eda.correlation": {
-    "result_id": "0ea92e067a9db326af32184f425c70b4f553691971a4a6356f17ddb1ba3a7b6e",
+    "result_id": "95e912d6d75038c55e4525001675b7e84fff3568fcd964e5551c64688b1c77e0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:age": {
-    "result_id": "ac0433d56d9b26c0a22c01167c7d69c353bfd440341d7d285b3001e522cb0a46",
+    "result_id": "c8f8fb1d06c741545083f8d283ff6d0e94795cdadbc3e2842640a8463c7904cf",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "129be7ad4295a72b2c7a468db297429aa1101960d308914cebc938a5ae88172f",
+    "result_id": "a8c1b5ea600da387648e7d2713b5e20a176a4e766732bd1868ea27b1701b1efa",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:previous": {
-    "result_id": "577c9045aa96251ec91e7201e6da0c6aa26b0894309a03ef886d932c88f38bf2",
+    "result_id": "5b7e56304bd3e8b4924040a16269757ff6ff5ba44558a39e37e3c90f68f083b3",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "d5eee8323a13d2ee9966a85066a2ac2e31e5ba93c4f3a465a8be1e9d27fde83d",
+    "result_id": "d9cc16484c0d0bbed1cdfa5c6bd5a52908557cbd087492f5882cf63faeb7c438",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "4906ded85c9d2580567e90210bf0d9112cf7293b631e904315badd1ef9e4d130",
+    "result_id": "d074a49434183ba864fae16d56d69a1199039f64df565747e09c3c4f9585ba8b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "44620e282e3916c1bf0bd6a77d79affdfa76669aea28c1f821a9f1b932ee40f8",
+    "result_id": "8a614534e97db28e4b25fa949daa11466456dc7afe48c7fb526e75f09ce66f04",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "516ceea092f10b4e060763fe2145f6827b6335cd935a2002942ac31d9038c583",
+    "result_id": "838142b2a5917be6fed30cc628932036887fcaea2da5e5105daa6ec0545573a8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "3e2a0ed5f46259f75822f6756dcdb901c54d1b7cec99fb069ef13ed0d5ed0fcc",
+    "result_id": "3483a31d016e35b9784ba00962234799b0ee2402e86ff2c1996e1a24528248b6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "287739ad6008c40dff058a189b037cebf9cb1f8c7db85388ddd3abe7c06573e8",
+    "result_id": "12287d51b373be70af8bd2d275eb7511cd16fd8823d30ef35e45523d21700d07",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "77d4a9bd85447d56b1c1df88df05f4f9f5b222f172d25f53a5d56442c2473826",
+    "result_id": "b2f05739bb517fe414715600f1aef2e5b162f124591bda1e92b0571062876c95",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "f2736e1d208f53d52eb22c56cee0113fbb2fe3e623eb2d7207a61b68e841fa31",
+    "result_id": "de09db7d253d4603d0c5747b0f38767ff2f332c6893566d37f66f384b6e5ccf2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "b89490b1bcd70195ed79ccc30f37d47f61e2165f8ac03b6982d1ee37dffb2820",
+    "result_id": "c1aedd81b21c63b6125db58e134c64aff3ee56d84adbe5531629d7be029205c3",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "631c4c110281ec5443bfa13b4b92a080574a5bc0a30a0c607a387cac29fc9080",
+    "result_id": "d378837a351624a4a3d293139cc7cdb95659b1b1ab002d5de1c3d3e290368bb2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -470,16 +470,16 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "3e2a0ed5f46259f75822f6756dcdb901c54d1b7cec99fb069ef13ed0d5ed0fcc",
-    "516ceea092f10b4e060763fe2145f6827b6335cd935a2002942ac31d9038c583",
-    "44620e282e3916c1bf0bd6a77d79affdfa76669aea28c1f821a9f1b932ee40f8",
-    "4906ded85c9d2580567e90210bf0d9112cf7293b631e904315badd1ef9e4d130"
+    "3483a31d016e35b9784ba00962234799b0ee2402e86ff2c1996e1a24528248b6",
+    "838142b2a5917be6fed30cc628932036887fcaea2da5e5105daa6ec0545573a8",
+    "8a614534e97db28e4b25fa949daa11466456dc7afe48c7fb526e75f09ce66f04",
+    "d074a49434183ba864fae16d56d69a1199039f64df565747e09c3c4f9585ba8b"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result b89490b1).",
-   "Now: Open the final test once; the report and notebook are up to date.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result c1aedd81).",
+   "Now: Choose a decision policy; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
   ],

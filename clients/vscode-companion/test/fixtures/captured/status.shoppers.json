@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-20T14:43:26.450119+00:00",
+   "updated": "2026-10-20T16:01:40.346023+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -174,12 +174,14 @@
      "decision": null,
      "activities": [
       "fit.baseline",
-      "fit.logistic"
+      "fit.logistic",
+      "diag.binary"
      ],
      "decide_first": true,
      "missing_results": [
       "fit.baseline",
-      "fit.logistic"
+      "fit.logistic",
+      "diag.binary"
      ],
      "requires": [
       "split",
@@ -191,10 +193,10 @@
     },
     {
      "id": "model_variant",
-     "title": "Choose one variant to compare",
-     "question": "Which single variant of the candidate model should be compared with it under the same evaluation: a stronger or weaker regularisation, or the model without one group of variables?",
-     "expected_output": "A confirmed variant and its out-of-fold predictions, evaluated like the candidate.",
-     "completion": "Decision model_variant is confirmed and the variant fit is current.",
+     "title": "Choose the variants to compare",
+     "question": "Which variants of the candidate model, at most three and each with the question it answers, should be compared with it under the same evaluation: the penalty chosen by nested cross-validation, a stronger or weaker regularisation, the model without one group of variables, or another model family when the diagnostics show a pattern the linear model cannot follow?",
+     "expected_output": "A confirmed list of variants and their out-of-fold predictions, evaluated like the candidate.",
+     "completion": "Decision model_variant is confirmed and every variant fit is current.",
      "pause": 3,
      "decision": "model_variant",
      "activities": [
@@ -219,11 +221,13 @@
      "pause": 3,
      "decision": "policy",
      "activities": [
-      "policy.evaluation"
+      "policy.evaluation",
+      "diag.binary"
      ],
      "decide_first": false,
      "missing_results": [
-      "policy.evaluation"
+      "policy.evaluation",
+      "diag.binary"
      ],
      "requires": [
       "models",
@@ -702,6 +706,98 @@
     "count": 0,
     "results": [],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
+   },
+   "selection": {
+    "available": false,
+    "metric": "roc_auc",
+    "direction": "higher",
+    "folds": null,
+    "configurations": [],
+    "best": null,
+    "one_se": null,
+    "optimism": null,
+    "advice": {
+     "code": "not_available",
+     "text": "The comparison across folds needs a cross-validation of the development rows.",
+     "texts": {
+      "en": "The comparison across folds needs a cross-validation of the development rows.",
+      "fr": "La comparaison entre plis demande une validation croisée des lignes de développement."
+     }
+    },
+    "budget": {
+     "max": 3,
+     "declared": 0,
+     "used": 0,
+     "remaining": 3,
+     "legacy": false
+    },
+    "trials": 0,
+    "note": "Development evidence: every configuration is compared on the same out-of-fold predictions of the development rows. The fold standard errors ignore the overlap of the folds' training rows (Bengio & Grandvalet 2004), so they understate the noise: the advice errs towards stopping late, not early. The final test, opened once, is not affected by this choice."
+   },
+   "model_families": {
+    "constraints": {
+     "interpretability": "none",
+     "declared": false
+    },
+    "evidence": {
+     "source": null,
+     "checked": false,
+     "flags": [],
+     "checks": null
+    },
+    "families": [
+     {
+      "family": "linear",
+      "model": "logistic regression",
+      "interpretability": "glass_box",
+      "implementation": "scikit-learn (LogisticRegression, LinearRegression, Ridge)",
+      "diagnostics": "coefficients with bootstrap intervals",
+      "default": true,
+      "allowed": true,
+      "excluded_reason": null,
+      "motivated": false,
+      "words": "the linear model"
+     },
+     {
+      "family": "ebm",
+      "model": "Explainable Boosting Machine",
+      "interpretability": "glass_box",
+      "implementation": "interpret-core (InterpretML, MIT licence)",
+      "diagnostics": "a shape function per feature and the pairwise interaction terms",
+      "default": false,
+      "allowed": true,
+      "excluded_reason": null,
+      "motivated": false,
+      "words": "an Explainable Boosting Machine"
+     },
+     {
+      "family": "hgb",
+      "model": "histogram gradient boosting",
+      "interpretability": "black_box",
+      "implementation": "scikit-learn (HistGradientBoostingClassifier, HistGradientBoostingRegressor)",
+      "diagnostics": "permutation importance on the out-of-fold rows",
+      "default": false,
+      "allowed": true,
+      "excluded_reason": null,
+      "motivated": false,
+      "words": "histogram gradient boosting"
+     }
+    ],
+    "shortlist": [
+     "linear"
+    ],
+    "recommendation": "run_diagnostics",
+    "text": "The diagnostics of the linear model are not computed yet: the shortlist waits for them.",
+    "texts": {
+     "en": "The diagnostics of the linear model are not computed yet: the shortlist waits for them.",
+     "fr": "Les diagnostics du modèle linéaire ne sont pas encore calculés : la liste courte les attend."
+    },
+    "data_contingent": false,
+    "catalogue": [
+     "linear",
+     "ebm",
+     "hgb"
+    ]
    }
   }
  }
