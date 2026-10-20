@@ -278,8 +278,12 @@ def test_ev12_diagnostics_render_when_present_each_number_cited(open_panel, view
     panel.view_data('evidence', views['evidence.sealed'])
     assert page.locator('[data-diag-final="sealed"]').count() == 1
     assert page.locator('[data-diag="diag.binary"] [data-after-opening]').count() == 0
-    # Without diag.* results the section is absent.
-    panel.view_data('evidence', views['evidence.split'])
+    # Without diag.* results the section is absent. v0.3 (WP-F1, R28): the Bank capture now
+    # runs its development diagnostics, so they are taken out of its model here.
+    without = copy.deepcopy(views['evidence.split'])
+    assert without['diagnostics']
+    without['diagnostics'] = []
+    panel.view_data('evidence', without)
     assert page.locator('[data-ev="diagnostics"]').count() == 0
 
 
