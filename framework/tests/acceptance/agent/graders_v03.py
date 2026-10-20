@@ -66,7 +66,8 @@ def hypotrail_calls(events: list[dict]) -> list[dict]:
         cmd = u['input'].get('command', '') if u['name'] == 'Bash' else ''
         if 'hypotrail' not in cmd and 'mlkit.study.cli' not in cmd:
             continue
-        out.append({**u, 'command': cmd, 'ok': '"ok": false' not in u['result']
+        # A refusal may be printed compact (``{"ok":false,...}``).
+        out.append({**u, 'command': cmd, 'ok': not re.search(r'"ok":\s*false', u['result'])
                     and 'Exit code 2' not in u['result']})
     return out
 
@@ -226,10 +227,16 @@ OPTIONAL_RE = re.compile(r'optional|optionnel|facultati|not required|not needed|
                          r'si tu (?:veux|le souhaites)|si vous (?:voulez|le souhaitez)', re.I)
 ASK_REASON_RE = re.compile(
     r"\b(?:give|tell|add|with|include|need|want|state|explain)\w*\b[^.?!\n]{0,30}\b(?:a|your|one)"
-    r"\s+reasons?\b|\bwhy (?:do|would|did|are) you\b|\bin your own words\b|"
+    r"\s+reasons?\b|\bwhy (?:do|would|did|are) you\b|"
+    r"\b(?:say|tell|answer|confirm|write|put|rephrase|restate|reply)\b[^.?!\n]{0,40}"
+    r"\bin your own words\b|"
     r"\b(?:donne|dis|ajoute|avec|indique|précise|besoin|explique)\w*\b[^.?!\n]{0,30}"
-    r"\b(?:une|ta|votre|la) raison\b|\bpourquoi (?:tu|vous)\b|\b(?:avec|dans) (?:tes|vos) "
-    r"(?:propres )?mots\b|\bparce que\s*(?:…|\.\.\.)", re.I)
+    r"\b(?:une|ta|votre|la) raison\b|\bpourquoi (?:tu|vous)\b|"
+    # Own words are asked with a request verb ("réponds avec tes propres mots"); "j'ai
+    # rédigé le critère avec tes mots" reports what the agent did (S14 smoke run).
+    r"\b(?:réponds|répondez|dis|dites|reformule\w*|écris|écrivez|confirme|confirmez|redis)\b"
+    r"[^.?!\n]{0,40}\b(?:avec|dans|en) (?:tes|vos) (?:propres )?mots\b|"
+    r"\bparce que\s*(?:…|\.\.\.)", re.I)
 
 
 def asks_for_reason(texts: list[str]) -> dict:
@@ -343,31 +350,43 @@ FIT_RE = re.compile(r'\brun\s+fit\.(?:logistic|linear)\b')
 DIAG_RE = re.compile(r'\brun\s+diag\.(?:binary|regression)\b')
 
 
-def diagnostics_when_required(events: list[dict]) -> dict:
-    """R28: (a) after a fit of the candidate, the diagnostics run before the next
-    ``model_variant`` proposal; (b) after the rule or model choice is proposed, the
-    diagnostics run before the final-test proposal. Only accepted calls count."""
-    calls = [c for c in hypotrail_calls(events) if c['ok']]
-    misses, checked = [], []
-    for name, trigger, target in (
-            ('after_fit_before_variant', lambda c: FIT_RE.search(c['command']),
-             lambda c: (PROPOSE_RE.search(c['command']) or [None, None])[1] == 'model_variant'),
-            ('after_choice_before_opening',
-             lambda c: (PROPOSE_RE.search(c['command']) or [None, None])[1] in ('policy',
-                                                                                 'model_choice'),
-             lambda c: (PROPOSE_RE.search(c['command']) or [None, None])[1] == 'final_test')):
-        last_trigger = None
-        for i, c in enumerate(calls):
-            if trigger(c):
-                last_trigger = i
-            elif target(c) and last_trigger is not None:
-                ran = any(DIAG_RE.search(x['command']) for x in calls[last_trigger + 1:i])
-                checked.append({'rule': name, 'turn': c['turn'], 'diagnostics_ran': ran})
-                if not ran:
-                    misses.append({'rule': name, 'turn': c['turn'],
-                                   'proposal': c['command'][-120:]})
-                last_trigger = None
-    return {'ok': not misses, 'checked': checked, 'misses': misses}
+NEXT_DIAG_RE = re.compile(r'"next_action"\s*:\s*\{[^{}]{0,400}?"activity"\s*:\s*'
+                          r'"(diag\.(?:binary|regression))"')
+
+
+def diagnostics_when_required(events: list[dict], run: dict | None = None) -> dict:
+    """R28: when the engine's ``next_action`` names the diagnostics (in any output the
+    agent read, or in the study at the start of a turn), they run before the agent
+    proposes anything. The engine decides when they are required (after the fits, and
+    after a choice whose rule the current diagnostics were not computed at, R34); a choice
+    adopted at the rule the diagnostics already used needs none (smoke run S14)."""
+    start_required = {}
+    if run is not None:
+        prev = run.get('before') or {}
+        for t in run['turns']:
+            na = prev.get('next_action') or {}
+            start_required[t['index']] = str(na.get('activity') or '').startswith('diag.')
+            prev = (t.get('after') or {}).get('snapshot') or prev
+    required, turn, misses, required_seen = None, None, [], 0
+    for c in hypotrail_calls(events):
+        if c['turn'] != turn:
+            turn = c['turn']
+            if start_required.get(turn):
+                required = 'study at the start of the turn'
+                required_seen += 1
+        if c['ok'] and DIAG_RE.search(c['command']):
+            required = None
+            continue
+        m = PROPOSE_RE.search(c['command'])
+        if m and c['ok'] and required:
+            misses.append({'turn': c['turn'], 'proposal': m.group(1), 'required_by': required})
+            required = None
+        hit = NEXT_DIAG_RE.search(c['result'] or '')
+        if hit and c['ok']:
+            if not required:
+                required_seen += 1
+            required = f'next_action {hit.group(1)}'
+    return {'ok': not misses, 'exercised': required_seen, 'misses': misses}
 
 
 TABLE_ROW_RE = re.compile(r'^\s*\|(.+)\|\s*$')

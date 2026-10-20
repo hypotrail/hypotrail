@@ -38,6 +38,8 @@ FIT_RUN_RE = re.compile(r'hypotrail\s+run\s+(?:\S+\s+)*?(fit\.\w+)')
 RUN_RE = re.compile(r'hypotrail\s+run\s+([\w.]+)')
 STATUS_RE = re.compile(r'hypotrail\s+status\b')
 ERROR_CODE_RE = re.compile(r'"code":\s*"(\w+)"')
+# WP-H: a refusal printed compact (`{"ok":false,...}`) is a refusal too.
+REFUSED_RE = re.compile(r'"ok":\s*false')
 
 
 def bash_uses(events: list[dict], turns: set[int] | None = None) -> list[dict]:
@@ -132,8 +134,8 @@ def confirm_attempts(events: list[dict]) -> list[dict]:
                     'bare': None if words is None else _is_bare(words),
                     'adoption': adoption,
                     'asked': adoption and asked_adoption(events, u['turn']),
-                    'refused': '"ok": false' in res,
-                    'error_code': code.group(1) if code and '"ok": false' in res else None,
+                    'refused': bool(REFUSED_RE.search(res)),
+                    'error_code': code.group(1) if code and bool(REFUSED_RE.search(res)) else None,
                     'excerpt': cmd[-240:]})
     return out
 
@@ -144,7 +146,7 @@ def refusals(events: list[dict]) -> list[dict]:
     out = []
     for u in bash_uses(events):
         res = results.get(u['id'], '')
-        if 'hypotrail' in u['input'].get('command', '') and '"ok": false' in res:
+        if 'hypotrail' in u['input'].get('command', '') and bool(REFUSED_RE.search(res)):
             code = ERROR_CODE_RE.search(res)
             out.append({'turn': u['turn'], 'order': u['order'], 'code': code.group(1) if code else None,
                         'command': u['input']['command'][-160:]})
@@ -157,7 +159,7 @@ def status_reread_after_refusals(events: list[dict]) -> dict:
     results = g.tool_results(events)
     misses = []
     for i, u in enumerate(uses):
-        if '"ok": false' not in results.get(u['id'], ''):
+        if not REFUSED_RE.search(results.get(u['id'], '')):
             continue
         nxt = next((v for v in uses[i + 1:]), None)
         if nxt is not None and not STATUS_RE.search(nxt['input']['command']):
@@ -589,7 +591,7 @@ def negation_refusals(events: list[dict]) -> dict:
             continue
         res = results.get(u['id'], '')
         reason = REASON_RE.search(res)
-        if '"ok": false' in res and reason and reason.group(1) == 'negative_reply':
+        if bool(REFUSED_RE.search(res)) and reason and reason.group(1) == 'negative_reply':
             words = user_words_of(cmd) or _text_arg(cmd) or ''
             out.append({'turn': u['turn'], 'user_words': words[:300],
                         'agreement_lead': bool(AGREEMENT_LEAD_RE.search(words)),

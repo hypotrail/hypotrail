@@ -1033,6 +1033,9 @@ def test_wp_h_no_reason_asked_in_guided_mode():
             'Est-ce que tu adoptes cette décision ? Une raison est facultative.',
             'Do you adopt this decision? You may add a reason if you want.']
     assert gv.asks_for_reason(fine)['ok']
+    # Smoke run S14 (Hotel fr), verbatim: the agent reports what it did, asks nothing.
+    assert gv.asks_for_reason(["J'ai rédigé le critère avec tes mots, « le gain de précision, "
+                               "au moins 5 points » :"])['ok']
     for text in ('Réponds avec tes propres mots et une raison.',
                  'Confirm it in your own words, please.',
                  'Pourquoi tu choisis cette règle ?',
@@ -1089,21 +1092,39 @@ def test_wp_h_r32_data_contingent_said_before_the_proposal():
 
 def test_wp_h_r28_diagnostics_and_confusion_matrix():
     gv = _gv()
+    needs = '{"ok": true, "next_action": {"kind": "run", "activity": "diag.binary"}}'
     t = Transcript().new_turn(3)
     t.tool('Bash', '{"ok": true}', command='hypotrail run fit.logistic --request-id f')
+    t.tool('Bash', needs, command='hypotrail status --summary --study s')
     t.tool('Bash', '{"ok": true}', command='hypotrail run diag.binary --request-id d')
     t.tool('Bash', '{"ok": true}', command="hypotrail decide propose model_variant --value-json '{}'")
-    t.new_turn(6).tool('Bash', '{"ok": true}',
-                       command='hypotrail decide propose policy --value share:0.1')
-    t.new_turn(7).tool('Bash', '{"ok": true}', command='hypotrail run diag.binary --request-id d2')
+    # Smoke run S14 (Hotel fr): the rule adopted is the one the diagnostics used, so the
+    # engine's next action is the opening, and no new diagnostic is required.
+    t.new_turn(6).tool('Bash', '{"ok":true,"next_action":{"kind":"propose","activity":null,'
+                               '"decision":"final_test"}}',
+                       command='hypotrail decide confirm --proposal p_8 --user-words oui')
     t.tool('Bash', '{"ok": true}', command="hypotrail decide propose final_test --value-json '{}'")
-    assert gv.diagnostics_when_required(t.events)['ok']
+    r = gv.diagnostics_when_required(t.events)
+    assert r['ok'] and r['exercised'] == 1
     skip = Transcript().new_turn(3)
     skip.tool('Bash', '{"ok": true}', command='hypotrail run fit.logistic')
+    skip.tool('Bash', needs, command='hypotrail status --summary --study s')
     skip.tool('Bash', '{"ok": true}',
               command="hypotrail decide propose model_variant --value-json '{}'")
     r = gv.diagnostics_when_required(skip.events)
-    assert not r['ok'] and r['misses'][0]['rule'] == 'after_fit_before_variant'
+    assert not r['ok'] and r['misses'][0]['proposal'] == 'model_variant'
+    # Required by the study at the start of the turn (the setup or an earlier turn).
+    late = Transcript().new_turn(2).tool(
+        'Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    run = _snapshot_run([('on continue', '', {'next_action': {'activity': 'diag.binary'}}, 0),
+                         ('oui', '', {}, 1)])
+    assert not gv.diagnostics_when_required(late.events, run)['ok']
+    # A compact refusal (``{"ok":false,...}``) is a refusal.
+    compact = Transcript().new_turn(1).tool(
+        'Bash', '{"ok":false,"error":{"code":"literal_number_in_text"}}',
+        command="hypotrail decide propose final_test --value-json '{}'")
+    assert gv.refusal_codes(compact.events)[0]['code'] == 'literal_number_in_text'
+    assert _load('graders_b').refusals(compact.events)[0]['code'] == 'literal_number_in_text'
     table = ('| | Annulée | Pas annulée |\n|---|---|---|\n| Sélectionnée | 412 | 389 |\n'
              '| Pas sélectionnée | 1 233 | 5 977 |')
     assert len(gv.confusion_tables(table)) == 1

@@ -570,7 +570,7 @@ def c_no_automatic_restart(ctx):
             m, rq = gb.RUN_RE.search(cmd), REQUEST_ID_RE.search(cmd)
             if m and m.group(1) == activity and (rq is None or rq.group(1) != first_rid):
                 res = results.get(u['id'], '')
-                refused = '"ok": false' in res
+                refused = bool(gb.REFUSED_RE.search(res))
                 code = gb.ERROR_CODE_RE.search(res) if refused else None
                 attempts.append({'turn': u['turn'], 'request_id': rq.group(1) if rq else None,
                                  'refused': refused, 'code': code.group(1) if code else None})
@@ -797,7 +797,7 @@ def c_data_contingent_said_first(ctx):
 
 def c_diagnostics_when_required(ctx):
     """R28: diagnostics after the fits and after the choice, before the next pause."""
-    return _r(gv.diagnostics_when_required(ctx.events))
+    return _r(gv.diagnostics_when_required(ctx.events, ctx.run))
 
 
 def c_confusion_matrix_shown(ctx):
