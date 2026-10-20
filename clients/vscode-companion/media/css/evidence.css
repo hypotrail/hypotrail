@@ -10,7 +10,7 @@
 .ht-ev-item[aria-pressed="true"] { background: var(--ht-done-bg); font-weight: 600; border-radius: 6px; }
 .ht-ev-item[data-current="false"] { color: var(--ht-muted); }
 .ht-ev-headline { color: var(--ht-muted); text-align: right; }
-.ht-ev-badge { margin-left: 6px; font-size: 0.8em; padding: 1px 6px; border-radius: 4px; background: var(--ht-button2-bg); color: var(--ht-button2-fg); }
+.ht-ev-badge { margin-left: 6px; font-size: var(--t-cap); padding: 1px 6px; border-radius: 4px; background: var(--ht-button2-bg); color: var(--ht-button2-fg); }
 .ht-ev-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
 .ht-ev-head h2 { border: none; margin: 0; padding: 0; }
 .ht-ev-fullid summary { cursor: pointer; color: var(--ht-muted); }
@@ -28,7 +28,7 @@
 .ht-chip { display: inline-flex; flex-direction: column; padding: 6px 10px; border: 1px solid var(--ht-border); border-radius: 8px; background: var(--ht-surface); }
 .ht-chip-self { border: 2px solid var(--ht-accent); font-weight: 600; }
 .ht-chip-warn { border-color: var(--ht-warn-border); background: var(--ht-warn-bg); }
-.ht-chip-status { font-size: 0.85em; color: var(--ht-muted); font-weight: 400; }
+.ht-chip-status { font-size: var(--t-cap); color: var(--ht-muted); font-weight: 400; }
 .ht-ev-impacts { margin: 10px 0; padding: 8px 12px 8px 28px; background: var(--ht-quote-bg); border-radius: 8px; }
 .ht-ledger { width: 100%; }
 .ht-ledger-selection { background: var(--ht-warn-bg); color: var(--ht-warn-fg); }
@@ -41,7 +41,7 @@
 .ht-ev-final-changed, .ht-ev-final-interrupted { border-left-color: var(--ht-warn-border); }
 .ht-ev-final-absent { border-left-color: var(--ht-border); }
 .ht-ev-final-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
-.ht-ev-final-count { font-size: 1.15em; }
+.ht-ev-final-count { font-size: var(--t-title); }
 .ht-ev-partitions { margin: 6px 0; padding-left: 20px; }
 .ht-ev-before ul { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .ht-ev-before p { margin: 6px 0 0; }
@@ -50,8 +50,8 @@
 .ht-ev-trials .title { font-weight: 600; margin: 0; }
 .ht-ledger-final { background: var(--ht-quote-bg); }
 .ht-ledger-final td:first-child { border-left: 3px solid var(--ht-st-sealed); }
-.ht-ledger-words { font-size: 0.9em; }
-.ht-ev-list-head { margin: 10px 0 2px; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ht-muted); }
+.ht-ledger-words { font-size: var(--t-cap); }
+.ht-ev-list-head { margin: 10px 0 2px; font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ht-muted); }
 .ht-ev-development h4, .ht-ev-final-evidence h4, .ht-ev-diagnostics h4 { margin: 12px 0 4px; }
 .ht-ev-variant { margin-top: 8px; }
 .ht-ev-diag { margin: 8px 0 14px; }

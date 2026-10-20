@@ -90,35 +90,53 @@ def _md_cell(text: str) -> str:
     return 'mo.md(\n    r"""\n' + text + '\n"""\n)'
 
 
-RECOMPUTE_NOTE = ('The code cells below recompute the registered result from the development '
-                  'rows with pandas and scikit-learn, and check that it equals the registry. '
+RECOMPUTE_NOTE = ('Each code cell below is the pandas (or scikit-learn) you would type on the '
+                  'development rows, then an `assert` that its figure equals the registry. '
                   'Copy any of them to your workbench to experiment.')
+# WP-F2: the notebook narrative is in the study language where the engine provides French
+# (WP-C: step titles and questions, glossary term names). Definitions, methods, and code
+# comments have no French source yet and stay English.
+RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que tu "
+                     "taperais sur l'échantillon de développement, suivi d'un `assert` qui "
+                     "vérifie que son résultat est celui du registre. Copie-les dans ton "
+                     "workbench pour expérimenter.")
 
 
 def _step_markdown(index: int, step: Mapping, content: Mapping, pending: bool,
-                   recompute: bool = False) -> str:
-    lines = [f'## {index}. {step["title"]}', '', f'**Question.** {step["question"]}']
+                   recompute: bool = False, lang: str = 'en') -> str:
+    from . import junior
+
+    fr = lang == junior.FR
+    title = junior.step_text(step['title'], lang)
+    question = junior.step_text(step['question'], lang)
+    lines = [f'## {index}. {title}', '', f'**Question.** {question}']
     term = texts.glossary(content.get('concept')) if content.get('concept') else None
     if term:
-        lines += ['', f'**{term["term"]}.** {term["definition"]}']
+        name = term['term_fr'] if fr and term.get('term_fr') else term['term']
+        lines += ['', f'**{name[:1].upper() + name[1:]}.** {term["definition"]}']
     if content.get('method'):
         lines += ['', f'**Method.** {content["method"]}']
     if recompute:
-        lines += ['', RECOMPUTE_NOTE]
+        lines += ['', RECOMPUTE_NOTE_FR if fr else RECOMPUTE_NOTE]
     if pending:
         lines += ['', f'_{texts.load("steps")["pending"]}_']
     return '\n'.join(lines)
 
 
-def _target(view: Mapping) -> tuple[str | None, object]:
-    """``(target column, positive label)`` of the study's case, or ``(None, None)``."""
+def _target(view: Mapping) -> tuple[str | None, object, dict]:
+    """``(target column, positive label, case facts)`` of the study's case, or
+    ``(None, None, {})``. The facts are what the exploration cells need beyond the registry:
+    the values the case reads as missing and its special values."""
     from . import case as c
 
     try:
         case = c.load_case(view['case']['path'], verify_data=False)
     except Exception:          # the notebook still renders, without recomputation cells
-        return None, None
-    return case.target_column, case.positive_label
+        return None, None, {}
+    facts = {'na_values': list(case.dataset.get('na_values') or ()),
+             'special_values': [{'column': s['column'], 'value': s['value']}
+                                for s in case.document.get('special_values') or []]}
+    return case.target_column, case.positive_label, facts
 
 
 # The generated text depends on the revision only through the header comment and the
@@ -155,8 +173,9 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         ('load_study', 'study = nv.open_study(STUDY_DIR)\ncited = nv.citer(study, RESULT_IDS)'),
         ('banner', 'mo.Html(nv.banner_html(study, GENERATED_REVISION, RESULT_IDS))'),
     ]
-    target, positive = _target(view)
-    recompute = code_cells.cells_by_step(view, task, target, positive)
+    target, positive, facts = _target(view)
+    recompute = code_cells.cells_by_step(view, task, target, positive, facts,
+                                         [step['id'] for step in view['plan']])
     if recompute:
         cells.append(('recompute_imports', code_cells.imports(task)))
     for index, step in enumerate(view['plan'], start=1):
@@ -167,7 +186,8 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
         pending = not has_result and not step['decision'] and step['id'] != 'discover_data'
         code = recompute.get(step['id'], [])
         cells.append((f'step_{step["id"]}_text',
-                      _md_cell(_step_markdown(index, step, content, pending, bool(code)))))
+                      _md_cell(_step_markdown(index, step, content, pending, bool(code),
+                                              view.get('language') or 'en'))))
         if pending:
             continue
         cells += code

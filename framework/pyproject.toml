@@ -16,6 +16,7 @@ dependencies = [
     "pyyaml>=6.0",
     "marimo==0.25.1",
     "interpret-core==0.7.3",
+    "matplotlib>=3.8",
 ]
 # interpret-core (MIT) is a core dependency since v0.3 (WP-F1, ADR 0007): the study engine
 # fits the Explainable Boosting Machine as a model family; pinned, and its version is part

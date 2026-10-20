@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_bad9a6f0e28076da5c45d47f",
   "status": "promoted",
-  "result_id": "0f3e17c58f696be0cbd73e5277522cd670ef3de63009d58673b6b79063b9226f",
+  "result_id": "159cc9f5a6cfae2514d781d427e057bd1fb172d4f4e826eab9027f4831190473",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1253,7 +1253,7 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "072d4ac00cfad749e6aae684fab99521d67ca14eda769369d46340345a83e1c3"
+     "predictions": "31ce55f2af0058f1655eccb972ffd586636b3a5fee1b31f3629cca490f18e9f5"
     },
     "fit.variant": {
      "errors": {
@@ -2461,229 +2461,25 @@
       "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "7417d54cacb0bf021f6b293b57e8c68801470126db748b00e55099249200b886"
+     "predictions": "eb435770d2c35f438bfab0b190670f1b8d2c3372ee4a9585e4169a752539fb34"
     }
    },
    "coefficient_rows": 222,
-   "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence.",
-   "linear_checks": {
-    "model": "fit.linear",
-    "nonlinearity": [
-     {
-      "feature": "displacement",
-      "bins": [
-       {
-        "bin": 1,
-        "n": 23,
-        "low": 79.0,
-        "high": 97.0,
-        "gap": 9.318892528112674,
-        "se": 0.8856693408010375
-       },
-       {
-        "bin": 2,
-        "n": 17,
-        "low": 98.0,
-        "high": 112.0,
-        "gap": 7.551953529285083,
-        "se": 1.0301751469704132
-       },
-       {
-        "bin": 3,
-        "n": 19,
-        "low": 119.0,
-        "high": 140.0,
-        "gap": 6.033709225576356,
-        "se": 0.9744481344628303
-       },
-       {
-        "bin": 4,
-        "n": 20,
-        "low": 141.0,
-        "high": 173.0,
-        "gap": 5.211174459838862,
-        "se": 0.949774556629196
-       },
-       {
-        "bin": 5,
-        "n": 17,
-        "low": 181.0,
-        "high": 351.0,
-        "gap": 3.075987175148054,
-        "se": 1.0301751469704132
-       }
-      ],
-      "statistic": 241.8093460357827,
-      "df": 5,
-      "p_value": 3.1417594680037027e-50,
-      "level": 0.0033333333333333335,
-      "flagged": true
-     },
-     {
-      "feature": "horsepower",
-      "bins": [
-       {
-        "bin": 1,
-        "n": 20,
-        "low": 48.0,
-        "high": 67.0,
-        "gap": 9.89886247287317,
-        "se": 0.949774556629196
-       },
-       {
-        "bin": 2,
-        "n": 18,
-        "low": 68.0,
-        "high": 76.0,
-        "gap": 6.912332121643374,
-        "se": 1.0011502875416114
-       },
-       {
-        "bin": 3,
-        "n": 17,
-        "low": 77.0,
-        "high": 86.0,
-        "gap": 5.629125497123319,
-        "se": 1.0301751469704132
-       },
-       {
-        "bin": 4,
-        "n": 18,
-        "low": 88.0,
-        "high": 96.0,
-        "gap": 5.024595848748707,
-        "se": 1.0011502875416114
-       },
-       {
-        "bin": 5,
-        "n": 19,
-        "low": 100.0,
-        "high": 155.0,
-        "gap": 4.004817890581631,
-        "se": 0.9744481344628303
-       }
-      ],
-      "statistic": 228.2327658220951,
-      "df": 5,
-      "p_value": 2.5583877348250105e-47,
-      "level": 0.0033333333333333335,
-      "flagged": true
-     },
-     {
-      "feature": "weight",
-      "bins": [
-       {
-        "bin": 1,
-        "n": 20,
-        "low": 1755.0,
-        "high": 2085.0,
-        "gap": 8.515288210043412,
-        "se": 0.949774556629196
-       },
-       {
-        "bin": 2,
-        "n": 19,
-        "low": 2110.0,
-        "high": 2385.0,
-        "gap": 8.823675868118912,
-        "se": 0.9744481344628303
-       },
-       {
-        "bin": 3,
-        "n": 20,
-        "low": 2395.0,
-        "high": 2670.0,
-        "gap": 6.088231078870741,
-        "se": 0.949774556629196
-       },
-       {
-        "bin": 4,
-        "n": 18,
-        "low": 2678.0,
-        "high": 3015.0,
-        "gap": 4.946704238175386,
-        "se": 1.0011502875416114
-       },
-       {
-        "bin": 5,
-        "n": 19,
-        "low": 3035.0,
-        "high": 4360.0,
-        "gap": 3.4269779497359814,
-        "se": 0.9744481344628303
-       }
-      ],
-      "statistic": 240.24802628638457,
-      "df": 5,
-      "p_value": 6.792414746000168e-50,
-      "level": 0.0033333333333333335,
-      "flagged": true
-     }
-    ],
-    "interaction": [
-     {
-      "feature": "origin",
-      "groups": [],
-      "q": null,
-      "df": 0,
-      "p_value": null,
-      "level": 0.01,
-      "flagged": false
-     }
-    ],
-    "calibration_slope": {
-     "slope": 1.5807115874559536,
-     "se": 0.10480756197030992,
-     "low": 1.3752925406866963,
-     "high": 1.786130634225211,
-     "band": [
-      0.8,
-      1.2
-     ],
-     "flagged": true,
-     "definition": "least-squares slope of the target on the prediction: 1 when the predictions are as spread as the target"
-    },
-    "flags": [
-     {
-      "check": "nonlinearity",
-      "feature": "displacement",
-      "p_value": 3.1417594680037027e-50
-     },
-     {
-      "check": "nonlinearity",
-      "feature": "horsepower",
-      "p_value": 2.5583877348250105e-47
-     },
-     {
-      "check": "nonlinearity",
-      "feature": "weight",
-      "p_value": 6.792414746000168e-50
-     },
-     {
-      "check": "calibration_slope",
-      "feature": null,
-      "p_value": null,
-      "slope": 1.5807115874559536
-     }
-    ],
-    "alpha": 0.01,
-    "method": "binned out-of-fold gaps per numeric feature (chi-square, Bonferroni); calibration slope by segment (Cochran's Q); overall calibration slope (Cox 1958)",
-    "note": "Checks of the candidate linear model on its out-of-fold predictions: a flag is evidence that another model family might follow the data more closely, not proof; choosing a family after seeing it makes that comparison data-contingent."
-   }
+   "note": "Development evidence: computed on the validation predictions, on which the model and the rule were chosen. These figures describe the choice; they are not independent evidence."
   },
   "result": {
    "execution_id": "e_bad9a6f0e28076da5c45d47f",
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "0f3e17c58f696be0cbd73e5277522cd670ef3de63009d58673b6b79063b9226f",
-   "input_key": "159d305bb4e900de5a11cde6bd2b1e63ad4b411dc4bc918aa0ab28bc227cae85",
+   "result_id": "159cc9f5a6cfae2514d781d427e057bd1fb172d4f4e826eab9027f4831190473",
+   "input_key": "cf2af573c03b892f388b25cf1983feb64c5452f334b7163bfbc9ced02575158b",
    "reason": null,
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_7f7afcb373d5424eba673279b45a9b48",
-    "x_1de2e38a895e49e6bbc5f0b63e9446f0"
+    "x_047a4ac155ac4073a3a23e02aa09c811",
+    "x_c404eab465c443e1a9005edf33a72f80"
    ],
    "registry_created": true,
    "nondeterministic": false

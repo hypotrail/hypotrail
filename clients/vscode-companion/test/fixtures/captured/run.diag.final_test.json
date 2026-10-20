@@ -21,7 +21,7 @@
   "activity": "diag.final_test",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "3af18821a38e1c469f85b8de36204c34b618c2e24d9a8bd23d6f6ade539e8b4e",
+  "result_id": "87afa8c2ee526f942c5d8a84b572a34f61fb188fbdad68af40362511134628f6",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "8f6ab3ce99d237041ce81e337a98de7bb6cc2b36998ac7204e47cc8354fee196",
+   "final_evaluation": "10f2df2561cef82548f36c66030dd41bb075f071f37f10a48a6f256a1ad8f04a",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -843,7 +843,7 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "8f6ab3ce99d237041ce81e337a98de7bb6cc2b36998ac7204e47cc8354fee196"
+     "predictions": "10f2df2561cef82548f36c66030dd41bb075f071f37f10a48a6f256a1ad8f04a"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -853,13 +853,13 @@
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "3af18821a38e1c469f85b8de36204c34b618c2e24d9a8bd23d6f6ade539e8b4e",
-   "input_key": "e36da105a2f4e7e2689ed163fd6114e343beaddab3523b57b650a5cc53ce53c0",
+   "result_id": "87afa8c2ee526f942c5d8a84b572a34f61fb188fbdad68af40362511134628f6",
+   "input_key": "c537d066e51d22901fc4d4812b9b58c162a22ee81ea5e9708a71fdbf87760669",
    "reason": null,
    "started_revision": 34,
    "invalidation": null,
    "exposure_ids": [
-    "x_5a42c2fcf89a47d29675775d5940b60f"
+    "x_a08d438552354438ad95ecad7572ad74"
    ],
    "registry_created": true,
    "nondeterministic": false

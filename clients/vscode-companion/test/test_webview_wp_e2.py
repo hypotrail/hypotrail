@@ -6,148 +6,23 @@ engine (``test/fixtures/captured``): the split Bank study, the cross-validated B
 final test was opened, and Auto MPG; under the Light Modern, Dark Modern and High Contrast
 variable sets (``themes.py``), at 900 and 420 px, in English and in French.
 
-Structural assertions (the pixel baselines are WP-E3):
-
-* nothing scrolls sideways and no element's right edge passes the viewport, except inside the
-  dictionary and the five example rows (``data-scroll-ok``);
-* no raw result id, proposal id or rule token in the prose (the faint source lines,
-  ``.ht-src``, are the only place an id prefix shows);
-* no number is underlined;
-* a style attribute exists only where CSSOM set custom properties (``--v``, ``--x`` ...):
-  none is in the document the extension serves, none is created with ``setAttribute``
-  (``STYLE_GUARD`` records any such call), and every one holds custom properties only.
-
-With ``HYPOTRAIL_SHOTS=<dir>`` the tests also write one screenshot per tab, theme, width and
-language there, for a person to look at; nothing is asserted on them. Requirement ids: R12,
+The structural matrix (every tab, three widths, three themes, both languages) and the pixel
+baselines moved to the WP-E3 gate, ``test_webview_gate.py``; the cases and the page probes are
+shared in ``panel_cases.py``. Requirement ids: R12,
 R17, R21, R26, R28, I1, A11Y-3. This is not a VS Code session.
 """
 from __future__ import annotations
 
 import copy
-import os
 import re
-from pathlib import Path
 
 import pytest
 
-import themes
-
-SHOTS = os.environ.get('HYPOTRAIL_SHOTS')
-THEMES = ['light-modern', 'dark-modern', 'hc']
-WIDTHS = [900, 420]
-LANGS = ['en', 'fr']
-TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn']
-
-# Records every setAttribute('style', ...) of the page (the CSP forbids inline style
-# attributes; CSSOM writes of custom properties are the one allowed way to size a mark).
-STYLE_GUARD = """() => {
-  window.__styleAttrs = [];
-  const original = Element.prototype.setAttribute;
-  Element.prototype.setAttribute = function (name, value) {
-    if (String(name).toLowerCase() === 'style') window.__styleAttrs.push(String(value));
-    return original.call(this, name, value);
-  };
-}"""
-
-OVERFLOW = """() => {
-  const vw = document.documentElement.clientWidth;
-  const out = [];
-  for (const n of document.querySelectorAll('#app *')) {
-    if (n.closest('[data-scroll-ok], [hidden], details:not([open]) > :not(summary), .sr-only')) continue;
-    // A table head clipped to one pixel on a narrow panel (its cells are labelled instead).
-    const head = n.closest('thead');
-    if (head && head.getBoundingClientRect().width <= 1) continue;
-    const r = n.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
-    if (r.right > vw + 1) out.push(`${n.tagName.toLowerCase()}.${n.className && n.className.baseVal === undefined ? n.className : ''} ${Math.round(r.right)} > ${vw}: ${(n.textContent || '').slice(0, 40)}`);
-  }
-  return {scroll: document.scrollingElement.scrollWidth, vw, out: out.slice(0, 10)};
-}"""
-
-PROSE = """() => {
-  const out = [];
-  const walker = document.createTreeWalker(document.getElementById('app'), NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const n = walker.currentNode;
-    const p = n.parentElement;
-    if (!n.textContent.trim() || !p) continue;
-    if (p.closest('.ht-src, code, pre, [hidden], .sr-only, option, [data-scroll-ok]')) continue;
-    const d = p.closest('details');
-    if (d && !d.open && !p.closest('summary')) continue;
-    const r = p.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) continue;
-    out.push(n.textContent);
-  }
-  return out.join(' \\n ');
-}"""
-
-UNDERLINED = """() => [...document.querySelectorAll('data[data-result-id]')]
-  .filter(n => getComputedStyle(n).textDecorationLine !== 'none').length"""
-
-STYLE_ATTRS = """() => [...document.querySelectorAll('#app [style]')].map(n => n.getAttribute('style'))"""
-
-
-def shot(page, name):
-    if SHOTS:
-        Path(SHOTS).mkdir(parents=True, exist_ok=True)
-        page.screenshot(path=str(Path(SHOTS) / f'{name}.png'), full_page=True)
-        # Readable parts of a tall page, 1600 px each (screenshots do not touch the DOM).
-        width, height = page.evaluate('[document.documentElement.scrollWidth, document.documentElement.scrollHeight]')
-        if height > 1600:
-            (Path(SHOTS) / 'parts').mkdir(exist_ok=True)
-            for i, top in enumerate(range(0, height, 1600)):
-                page.screenshot(path=str(Path(SHOTS) / 'parts' / f'{name}.p{i + 1}.png'), full_page=True,
-                                clip={'x': 0, 'y': top, 'width': width, 'height': min(1600, height - top)})
-
+from panel_cases import TABS, load_views, open_case
 
 @pytest.fixture(scope='module')
 def views(model, payload):
-    out = {}
-    for key, s in [('binary', 'summary.binary'), ('regression', 'summary.regression'), ('cv', 'summary.binary.cv')]:
-        out[f'summary.{key}'] = model('summary', f'captured/{s}')
-    for key, task, ev, dec in [('binary', 'binary', 'evidence.binary', 'decisions.binary'),
-                               ('regression', 'regression', 'evidence.regression', 'decisions.regression'),
-                               ('cv', 'binary', 'evidence.binary.cv', 'decisions.binary.cv')]:
-        out[f'evidence.{key}'] = model('evidence', f'captured/{ev}')
-        out[f'eda.{key}'] = model('eda', f'captured/{ev}')
-        out[f'whatif.{key}'] = model('whatif', f'captured/{ev}')
-        out[f'decisions.{key}'] = model('decisions', f'captured/{dec}')
-        out[f'data.{key}'] = model('data', f'captured/data.{task}')
-        out[f'explain.{key}'] = model('explain', f'captured/explain.{task}')
-    out['raw.evidence.binary'] = payload('captured/evidence.binary')
-    out['raw.summary.binary'] = payload('captured/summary.binary')
-    return out
-
-
-def open_case(open_panel, views, case='binary', theme='light-modern', width=900, lang='en', stage='v3'):
-    panel = open_panel(color_scheme=themes.scheme(theme))
-    panel.page.evaluate(STYLE_GUARD)
-    panel.page.set_viewport_size({'width': width, 'height': 900})
-    themes.apply(panel.page, theme)
-    summary = views[f'summary.{case}']
-    panel.init(stage=stage, task=summary['task'])
-    panel.snapshot(summary)
-    if lang:
-        # The toggle is UI state: press it as the junior would.
-        panel.page.locator(f'[data-language="{lang}"]').click()
-    for view in ['decisions', 'evidence', 'eda', 'whatif', 'explain', 'data']:
-        panel.view_data(view, views[f'{view}.{case}'])
-    return panel
-
-
-def structural(panel, where):
-    page = panel.page
-    o = page.evaluate(OVERFLOW)
-    assert o['scroll'] <= o['vw'] + 1 and not o['out'], (where, o)
-    prose = page.evaluate(PROSE)
-    assert not re.search(r'\b[0-9a-f]{12,64}\b', prose), (where, re.search(r'\b[0-9a-f]{12,64}\b', prose).group(0))
-    assert not re.search(r'\bp_\d+\b|\b(capacity|threshold|share):[0-9.]+', prose), where
-    assert page.evaluate(UNDERLINED) == 0, where
-    styles = page.evaluate(STYLE_ATTRS)
-    assert all(re.fullmatch(r'(\s*--[a-z-]+:\s*[^;]+;?)+\s*', s) for s in styles), (where, [s for s in styles if '--' not in s][:3])
-    assert page.evaluate('window.__styleAttrs') == [], where
-    assert not (panel.requests or panel.errors or panel.csp or panel.violations()), \
-        (where, panel.requests, panel.errors, panel.csp, panel.violations())
+    return load_views(model, payload)
 
 
 def test_the_served_document_holds_no_style_attribute(page_file):
@@ -155,32 +30,6 @@ def test_the_served_document_holds_no_style_attribute(page_file):
     body = html[html.index('<body>'):]
     assert ' style=' not in body.split('<script')[0]
     assert "setAttribute('style'" not in html and 'setAttribute("style"' not in html
-
-
-@pytest.mark.parametrize('lang', LANGS)
-@pytest.mark.parametrize('width', WIDTHS)
-@pytest.mark.parametrize('theme', THEMES)
-def test_every_tab_fits_and_keeps_ids_out_of_the_prose(open_panel, views, theme, width, lang):
-    """A11Y-3, A11Y-4, R26: every tab at 900 and 420 px, three themes, both languages."""
-    for case in ['binary', 'cv']:
-        panel = open_case(open_panel, views, case=case, theme=theme, width=width, lang=lang)
-        page = panel.page
-        for tab in TABS:
-            page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-            page.wait_for_timeout(30)
-            structural(panel, f'{case}/{tab}/{theme}/{width}/{lang}')
-            assert page.locator(f'#panel-{tab} [data-tab-lead="{tab}"]').count() == 1, (tab, 'one lead sentence per tab (I1)')
-            if case == 'binary' or tab in ('overview', 'evidence'):
-                shot(page, f'{tab}-{case}-{theme}-{width}-{lang}')
-
-
-@pytest.mark.parametrize('width', WIDTHS)
-def test_regression_tabs_fit_in_french(open_panel, views, width):
-    panel = open_case(open_panel, views, case='regression', theme='light-modern', width=width, lang='fr')
-    for tab in TABS:
-        panel.page.locator(f'[role="tab"][data-tab="{tab}"]').click()
-        structural(panel, f'regression/{tab}/{width}')
-        shot(panel.page, f'{tab}-regression-light-modern-{width}-fr')
 
 
 # --- R21: the panel language ---------------------------------------------------------------

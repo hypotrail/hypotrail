@@ -354,7 +354,7 @@ def test_rq1_every_decision_to_confirm_again_is_listed_once_with_its_previous_wo
     raw = payload('decisions.binary.reconfirm')
     assert queue.evaluate_all('qs => qs.map(q => q.dataset.queueItem)') == [q['decision_id'] for q in raw['reconfirm_queue']]
     item = panel.page.locator('[data-queue-item="conclusion"]')
-    assert panel.page.locator('#h-dc-queue').inner_text() == 'Needs your words again'
+    assert panel.page.locator('#h-dc-queue').inner_text() == 'Needs your answer again'  # WP-E3: mode-neutral (R23)
     assert item.locator('h3').inner_text() == 'Conclude proportionately'
     assert item.locator('[data-queue-reason]').inner_text() == 'policy changed: capacity:100 replaces threshold:0.2'
     assert item.locator('[data-previous]').inner_text() == \

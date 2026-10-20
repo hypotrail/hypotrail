@@ -140,7 +140,9 @@ def test_le2_a_card_seen_for_two_seconds_is_counted_once_and_collapses_after_two
         assert not [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen'], 'a card partly out of view is not seen'
     card.scroll_into_view_if_needed()
     page.locator('[data-concept-card="binary:conclusion"][data-seen-timing]').wait_for()
-    page.clock.pause_at((page.evaluate('() => Date.now()') + 1) / 1000)   # seconds in the Python API
+    # Pause a little ahead of now: the clock still runs between the read and the pause, and
+    # pausing at a time it has already passed is refused ("Cannot fast-forward to the past").
+    page.clock.pause_at((page.evaluate('() => Date.now()') + 100) / 1000)   # seconds in the Python API
     page.clock.run_for(1500)
     assert not [m for m in _posted(panel, 'learn_set') if m['key'] == 'seen'], 'not before two seconds'
     page.clock.run_for(600)
