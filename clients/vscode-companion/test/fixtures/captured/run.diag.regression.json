@@ -2478,8 +2478,8 @@
    "started_revision": 37,
    "invalidation": null,
    "exposure_ids": [
-    "x_4f9e9c32cbcd45adbd48e5237ed96f81",
-    "x_108b9111e4db4535be2fb3bd735fe6c9"
+    "x_e33c6ebc9ba54bc78ede87932a1178cb",
+    "x_bbba1ebff1d145008f3a370b1ee2a8ec"
    ],
    "registry_created": true,
    "nondeterministic": false
