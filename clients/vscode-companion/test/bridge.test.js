@@ -154,16 +154,19 @@ test('AB-2: with chatInsert true, the chat input gets the text unsent; a throwin
   assert.match(bridge.FELL_BACK, /copied instead/);
 });
 
-test('the bridge is stage v2, stays in reviewer mode, and a missing clipboard says nothing was sent', async () => {
+test('the bridge is stage v0 (WP-E1), stays in reviewer mode, and a missing clipboard says nothing was sent', async () => {
   const host = recordingHost();
-  const v1 = make({ host, settings: { stage: 'v1' } });
-  await v1.c.handle({ v: 2, type: 'ask_agent', about: { kind: 'decision', id: 'policy' }, question: '', mode: 'copy' });
-  assert.equal(host.calls.clipboard.length, 0);
-  assert.equal(v1.c.diagnostics().ignored, 1);
+  // WP-E1: the read-only proposal card asks the agent at every stage, so the bridge is v0.
+  const v0 = make({ host, settings: { stage: 'v0' } });
+  await v0.c.handle({ v: 2, type: 'ask_agent', about: { kind: 'proposal', id: 'p_7' }, question: '', mode: 'copy' });
+  assert.equal(host.calls.clipboard.length, 1);
+  assert.equal(v0.c.diagnostics().ignored, 0);
+  assert.match(host.calls.clipboard[0], /^About: proposal p_7/m);
+  assert.match(host.calls.clipboard[0], new RegExp(bridge.CLOSING));
   const reviewer = make({ host, settings: { reviewer: true } });
   await reviewer.c.handle({ v: 2, type: 'ready' });
   await reviewer.c.handle({ v: 2, type: 'ask_agent', about: { kind: 'decision', id: 'policy' }, question: '', mode: 'copy' });
-  assert.equal(host.calls.clipboard.length, 1);
+  assert.equal(host.calls.clipboard.length, 2);
   const none = make({ host: {} });
   await none.c.handle({ v: 2, type: 'ask_agent', about: { kind: 'decision', id: 'policy' }, question: '', mode: 'copy' });
   assert.deepEqual(none.notices().at(-1), { v: 2, type: 'notice', politeness: 'assertive', text: bridge.FAILED });

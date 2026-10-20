@@ -1,5 +1,5 @@
 'use strict';
-// What if? handler (COMPANION-ADVANCED §6.5, §7 W3, §11; CLI-CONTRACT-COMPANION §4). WP-U3.
+// What if? handler (COMPANION-ADVANCED §6.5, §11; CLI-CONTRACT-COMPANION §4). WP-U3.
 //
 //   loads.whatif     `evidence --json` projected by toWhatIfModel (the shared key `evidence`).
 //   loads.scenario   WP-B5: `status --json` projected by toScenarioModel (the teaching
@@ -8,12 +8,11 @@
 //                    one `preview policy` at a time, cached per (revision, rules, intervals)
 //                    under a `preview:` key (the 64 most recent). The answer carries the
 //                    request's `seq`; the webview drops one that is not its latest.
-//   draft            `preview proposal <d> --value=<v>`: the engine's draft texts (read only).
-//   propose          W3. The controller re-reads the draft immediately before (never the
-//                    cache), requires `proposable` and the revision the junior saw, asks
-//                    the host's modal, then runs `decide propose` with the draft's texts,
-//                    byte for byte, and `--channel webview`. It creates a proposal only.
-// Nothing here runs `policy.evaluate`, a fit, or any other write (INV-13, WI-2).
+//   draft            `preview proposal <d> --value=<v>`: the engine's draft texts (read only),
+//                    shown so the junior sees what the agent would propose before asking.
+// Nothing here writes: W3 (a proposal made from the panel) was withdrawn by the v0.3
+// narrowing (ADR 0004 amendment, integrator decision I2); "Ask the agent to propose this"
+// copies a question for the chat instead. No `policy.evaluate`, no fit (INV-13, WI-2).
 
 const { toWhatIfModel } = require('../models/whatif');
 const { toPolicyPreviewModel } = require('../models/preview');
@@ -23,7 +22,6 @@ const { toScenarioModel } = require('../models/scenario');
 const DEBOUNCE_MS = 300;
 const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
 const FIT_SLOT = /^fit\.[a-z_]+$/;
-const DECISION_OF_TASK = { binary: 'policy', regression: 'model_choice' };
 const NOTHING = 'Nothing was recorded.';
 
 const sliders = new WeakMap();   // ctx -> {timer, latest (debouncing), queued (due), running}
@@ -91,15 +89,15 @@ function valueOk(decisionId, value) {
   return decisionId === 'policy' ? RULE.test(value) : FIT_SLOT.test(value);
 }
 
-/** `preview proposal`; `fresh` (the read before W3) neither reads nor fills the cache. */
-async function readDraft(ctx, decisionId, value, { fresh = false } = {}) {
+/** `preview proposal`, cached per version like any read. */
+async function readDraft(ctx, decisionId, value) {
   let argv;
   try {
     argv = ctx.cli.previewProposalArgv(ctx.agent, { decisionId, value });
   } catch (e) {
     return { ok: false, message: e.message };
   }
-  return ctx.read(`draft:${decisionId}:${value}`, argv, toDraftModel, fresh ? { cache: false } : {});
+  return ctx.read(`draft:${decisionId}:${value}`, argv, toDraftModel);
 }
 
 async function draft(message, ctx) {
@@ -115,64 +113,6 @@ async function draft(message, ctx) {
   }
   ctx.post({ type: 'draft_result', decisionId, value, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
     model: out.model });
-}
-
-/** §7 W3: the decision is named by its plan title (CR.9), else by its id in words. */
-function modalText(decisionId, value, model, planTitle = null) {
-  const title = planTitle ? `"${planTitle}"` : decisionId.replace(/_/g, ' ');
-  const replaces = model.supersedesProposal ? ` It replaces the open proposal ${model.supersedesProposal}.` : '';
-  return `Create a proposal for ${title}: ${value}? It is not a decision. You will confirm it in your own words in Decisions.${replaces}`;
-}
-
-async function propose(message, ctx) {
-  const { decisionId, value, revision } = message;
-  const snapshot = ctx.snapshot();
-  const expected = snapshot ? DECISION_OF_TASK[snapshot.task] : null;
-  if (decisionId !== expected) {
-    ctx.invalid('W3', `The panel proposes only ${expected ? expected.replace(/_/g, ' ') : 'the choice of the third pause'} in this study. ${NOTHING}`, decisionId);
-    return;
-  }
-  if (!valueOk(decisionId, value)) {
-    ctx.invalid('W3', `${value} is not a value the panel can propose. ${NOTHING}`, decisionId);
-    return;
-  }
-  if (!snapshot || revision !== snapshot.revision) {
-    ctx.invalid('W3', `The study changed since you looked at this value. Read it again. ${NOTHING}`, decisionId);
-    await ctx.refresh();
-    return;
-  }
-  const out = await readDraft(ctx, decisionId, value, { fresh: true });
-  if (!out.ok) {
-    ctx.invalid('W3', `The draft could not be read: ${out.message} ${NOTHING}`, decisionId);
-    return;
-  }
-  const model = out.model;
-  if (!model.proposable || model.decisionId !== decisionId || model.value !== value) {
-    ctx.invalid('W3', `The engine has not evaluated ${value}, so it cannot be proposed here. ${NOTHING}`, decisionId);
-    return;
-  }
-  if (model.revision !== revision) {
-    ctx.invalid('W3', `The study changed since you looked at this value. Read it again. ${NOTHING}`, decisionId);
-    await ctx.refresh();
-    return;
-  }
-  const ask = ctx.host && typeof ctx.host.confirmModal === 'function' ? ctx.host.confirmModal : null;
-  const step = (snapshot.plan || []).find(s => s.id === decisionId);
-  if (!ask || !(await ask(modalText(decisionId, value, model, step && step.title ? step.title : null), 'Propose'))) {
-    ctx.post({ type: 'outcome', op: 'W3', kind: 'cancelled', target: decisionId, message: NOTHING });
-    return;
-  }
-  await ctx.write('W3', {
-    target: decisionId,
-    argv: requestId => ctx.cli.proposeArgv(ctx.agent, { decisionId, value, restatement: model.restatement,
-      rationale: model.rationale, requestId, expectedRevision: model.revision }),
-    record: p => {
-      const r = p.result || {};
-      return { proposalId: typeof r.proposal_id === 'string' ? r.proposal_id : null,
-        decisionId: typeof r.decision_id === 'string' ? r.decision_id : decisionId,
-        status: typeof r.status === 'string' ? r.status : null, channel: 'webview' };
-    },
-  });
 }
 
 const loads = {
@@ -193,7 +133,7 @@ const loads = {
 };
 
 module.exports = {
-  types: { preview_policy: previewPolicy, draft, propose },
+  types: { preview_policy: previewPolicy, draft },
   loads,
-  DEBOUNCE_MS, previewKey, settled, modalText,
+  DEBOUNCE_MS, previewKey, settled,
 };

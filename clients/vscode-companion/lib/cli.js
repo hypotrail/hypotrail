@@ -5,9 +5,12 @@
 // through a shell. Free text (the junior's words, a draft's texts, a column) is passed as
 // `--option=value`, so a text that begins with "-" is never read as an option (CW.7).
 //
-// Frozen by WP-0 (COMPANION-ADVANCED §5 and §7). The seven write builders W1-W7 are the
+// Frozen by WP-0 (COMPANION-ADVANCED §5 and §7). The four write builders W4-W7 are the
 // whole whitelist of writes: their names, signatures, and argv order do not change
-// without the integrator. test/invariants.test.js enumerates WRITES.
+// without the integrator. test/invariants.test.js enumerates WRITES. W1 (confirm), W2
+// (withdraw) and W3 (propose) were withdrawn by the v0.3 narrowing (ADR 0004 amendment,
+// owner decision R23, integrator decision I2): decisions are made in the chat only, and
+// this module has no `decide` write at all (scripts/check_layout.py checks it).
 
 const childProcess = require('child_process');
 const path = require('path');
@@ -17,8 +20,7 @@ const READ_TIMEOUT_MS = 30000;
 const WRITE_TIMEOUT_MS = 120000;
 const EDA_TIMEOUT_MS = 300000;
 const TIMEOUTS = Object.freeze({
-  read: READ_TIMEOUT_MS, W1: WRITE_TIMEOUT_MS, W2: WRITE_TIMEOUT_MS, W3: WRITE_TIMEOUT_MS,
-  W4: EDA_TIMEOUT_MS, W5: WRITE_TIMEOUT_MS, W6: WRITE_TIMEOUT_MS, W7: WRITE_TIMEOUT_MS,
+  read: READ_TIMEOUT_MS, W4: EDA_TIMEOUT_MS, W5: WRITE_TIMEOUT_MS, W6: WRITE_TIMEOUT_MS, W7: WRITE_TIMEOUT_MS,
 });
 const MAX_WORDS = 4000;
 const PROPOSAL_ID = /^p_[0-9]+$/;
@@ -133,28 +135,7 @@ const READS = Object.freeze({
   session_report: sessionReportArgv, view: viewArgv, data: dataArgv,
 });
 
-// --- writes W1-W7 (COMPANION-ADVANCED §7) ---------------------------------------------------
-
-/** W1. `decide confirm <pid> --user-words=<words> --channel webview --actor user ...` */
-function confirmArgv(agent, { proposalId, words, requestId: id, expectedRevision }) {
-  return [...agent.argv, 'decide', 'confirm', match(proposalId, PROPOSAL_ID, 'the proposal id'),
-    `--user-words=${text(words, 'the words')}`, '--channel', 'webview', '--actor', 'user',
-    ...mutation(id, expectedRevision), ...tail(agent)];
-}
-
-/** W2. `decide withdraw <pid> ...` (no reason from the panel). */
-function withdrawArgv(agent, { proposalId, requestId: id, expectedRevision }) {
-  return [...agent.argv, 'decide', 'withdraw', match(proposalId, PROPOSAL_ID, 'the proposal id'),
-    ...mutation(id, expectedRevision), ...tail(agent)];
-}
-
-/** W3. `decide propose <d> --value=<v> --restatement=<draft> --rationale=<draft> --channel webview ...` */
-function proposeArgv(agent, { decisionId, value, restatement, rationale, requestId: id, expectedRevision }) {
-  if (!DRAFT_DECISIONS.includes(decisionId)) throw new ArgvError('the panel proposes policy or model_choice only');
-  return [...agent.argv, 'decide', 'propose', decisionId, `--value=${text(value, 'the value', { max: 64 })}`,
-    `--restatement=${text(restatement, 'the restatement')}`, `--rationale=${text(rationale, 'the rationale')}`,
-    '--channel', 'webview', ...mutation(id, expectedRevision), ...tail(agent)];
-}
+// --- writes W4-W7 (COMPANION-ADVANCED §7) ---------------------------------------------------
 
 /** W4. `run <eda.activity> --column=<c> ...` (training rows; the activity from the catalog). */
 function runEdaArgv(agent, { activity, column, requestId: id, expectedRevision }) {
@@ -190,8 +171,7 @@ function exportArgv(agent, { parent, revision: rev }) {
 }
 
 const WRITES = Object.freeze({
-  W1: confirmArgv, W2: withdrawArgv, W3: proposeArgv, W4: runEdaArgv, W5: renderArgv,
-  W6: acknowledgeArgv, W7: exportArgv,
+  W4: runEdaArgv, W5: renderArgv, W6: acknowledgeArgv, W7: exportArgv,
 });
 
 /**
@@ -236,5 +216,5 @@ module.exports = {
   ArgvError, TOO_LARGE,
   statusArgv, decisionsArgv, previewEffectsArgv, evidenceArgv, previewPolicyArgv, previewProposalArgv,
   checkArgv, explainArgv, sessionReportArgv, viewArgv, dataArgv,
-  confirmArgv, withdrawArgv, proposeArgv, runEdaArgv, renderArgv, acknowledgeArgv, exportArgv,
+  runEdaArgv, renderArgv, acknowledgeArgv, exportArgv,
 };

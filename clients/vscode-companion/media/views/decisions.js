@@ -1,17 +1,18 @@
 // Decisions view (COMPANION-ADVANCED §6.2). Owned by WP-U2.
 //
-//   v0  the pending decision cards of the v0 panel (confirm in the junior's own words,
-//       withdraw) and the open holds, unchanged in behaviour (decision CA.11);
-//   v1  the Decisions tab: cards with the pause, the origin, the holds and resolved
-//       conditions, and "If you confirm" (the engine's `preview effects`, read when a card
-//       becomes visible, at most three at once); the reconfirmation queue; the history;
-//   v2  evidence chips and "Ask the agent" on the cards and the queue.
+//   v0  the pending decision cards, read only, and the open holds;
+//   v1  the Decisions tab: cards with the pause, the holds and resolved conditions, and
+//       "If you confirm" in words (the engine's `preview effects`, read when a card becomes
+//       visible, at most three at once); the reconfirmation queue; the history, newest
+//       first (R25);
+//   v2  evidence chips on the cards and "Ask the agent" on the queue.
 //
-// The words textarea comes from Hypotrail.wordsArea: it starts empty and the panel never
-// fills it (INV-5); a restatement, a preview, or an earlier answer never goes into it.
-// "Confirm" stays disabled until the junior has typed a non-blank character, while a
-// write runs, and while the engine's preview says a confirmation would be refused. There
-// is no delegation control (INV-4). Study text is always set as text (INV-9).
+// v0.3 narrowing (WP-E1; ADR 0004 amendment, owner decision R23, integrator decision I2):
+// the panel records no decision. There is no words field, no "Confirm" and no "Withdraw":
+// each card says "Answer in the chat" and offers "Ask the agent about this", which copies a
+// ready question to the clipboard (at every stage). The proposal id, the revision and the
+// origin are under "Details" (R22). There is no delegation control (INV-4). Study text is
+// always set as text (INV-9).
 (function (HT) {
   'use strict';
   const el = HT.el;
@@ -26,7 +27,7 @@
   // `effectsEpoch` is the epoch each preview was asked at.
   const view = {
     ctx: null, effects: {}, asked: {}, inflight: new Set(), waiting: [], requested: {}, effectsEpoch: {},
-    lastOutcome: null, observer: null,
+    observer: null,
   };
 
   const copyOf = ctx => ctx.copy.decisions;
@@ -224,192 +225,128 @@
     return list.length ? list.join(c.and) : c.nothing;
   }
 
-  function box(kind, title, body) {
-    return el('div', { className: `dc-box dc-box-${kind}`, 'data-effects-box': kind }, [
-      el('div', { className: 'dc-box-title', text: title }), el('div', { text: body })]);
+  /** One effect in words: "To confirm again: the conclusion". */
+  function effectLine(kind, title, body) {
+    return el('li', { className: `dc-effect dc-effect-${kind}`, 'data-effects-box': kind }, [
+      el('span', { className: 'dc-box-title', text: `${title}: ` }), body]);
   }
 
-  /** "If you confirm" (v1), from the engine's preview only. */
+  /**
+   * "If you confirm" (v1), from the engine's preview only, in words (R22): what a
+   * confirmation would invalidate, or "Confirming changes nothing already done." when it
+   * invalidates nothing. What stays current and what is regenerated are under Details.
+   */
   function effectsSection(p, ctx, c) {
     const id = p.proposalId;
     const entry = view.effects[id];
     const fresh = ctx.fresh(entry);
     const titleId = `effects-${id}`;
+    const wrap = parts => el('div', { className: 'dc-effects', 'aria-labelledby': titleId, 'data-effects': id }, parts);
     // WP-B5: the opening of the final test is answered in the chat; its preview says so.
     const parts = [el('h4', { id: titleId, text: str(p.decisionId) === 'final_test' ? c.effectsTitleOpening : c.effectsTitle })];
     if (!entry) {
       parts.push(el('p', { className: 'muted', 'aria-busy': 'true', 'data-effects-loading': true, text: c.effectsLoading }));
-      return { node: el('div', { className: 'dc-effects', 'aria-labelledby': titleId, 'data-effects': id }, parts), blocked: null };
+      return wrap(parts);
     }
     if (!fresh) parts.push(el('p', { className: 'muted', 'aria-busy': 'true', 'data-effects-updating': true, text: c.effectsUpdating }));
     const m = entry.model;
-    let blocked = null;
     if (!m.available) {
       parts.push(el('p', { className: 'muted', 'data-effects-missing': true }, [c.effectsMissing, ' ', str(m.message)]));
-    } else {
-      if (m.firstConfirmation) parts.push(el('p', { 'data-effects-first': true, text: c.effectsFirst }));
-      const naming = c.decisionNames(taskOf(ctx));
-      const kept = m.kept.fitsAllKept ? c.keptFits : names(arr(m.kept.slots).map(x => slotWords(ctx, x)), c);
-      const boxes = [
-        box('kept', c.kept, kept),
-        box('reconfirm', c.toConfirmAgain, names(arr(m.reconfirm).map(r => naming[r.id] || str(r.title) || str(r.id)), c)),
-        box('regenerated', c.regenerated, names(arr(m.regenerated).map(n => c.artefactNames[n] || n), c)),
-      ];
-      if (arr(m.stale).length) boxes.push(box('stale', c.becomesStale, arr(m.stale).map(x => slotWords(ctx, x)).join(', ')));
-      if (arr(m.refit).length) boxes.push(box('refit', c.refitted, arr(m.refit).map(x => slotWords(ctx, x)).join(', ')));
-      parts.push(el('div', { className: 'dc-boxes' }, boxes));
-      if (m.supersedesProposal) parts.push(el('p', { 'data-supersedes': m.supersedesProposal, title: m.supersedesProposal, text: c.supersedesOpen }));
-      if (arr(m.blocked).length) {
-        blocked = `blocked-${id}`;
-        parts.push(el('div', { id: blocked, role: 'status', className: 'dc-blocked', 'data-blocked': id }, [
-          el('p', { className: 'dc-box-title', text: c.blockedTitle }),
-          el('ul', {}, arr(m.blocked).map(b => el('li', { 'data-blocked-code': str(b.code) }, [
-            el('code', { text: `${str(b.code)}${b.reason ? ' (' + str(b.reason) + ')' : ''}` }), ' ',
-            el('span', { 'data-engine-message': true, text: str(b.message) })]))),
-        ]));
-      }
-      if (arr(m.notes).length) parts.push(el('ul', { className: 'muted dc-notes' }, arr(m.notes).map(n => el('li', { text: str(n) }))));
-      // The engine's note on the preview (layer 2): under Details.
-      if (m.note) {
-        parts.push(el('details', { className: 'ht-details' }, [el('summary', { text: c.details }),
-          el('p', { className: 'muted dc-caption', 'data-effects-note': true, text: str(m.note) })]));
-      }
+      return wrap(parts);
     }
-    return { node: el('div', { className: 'dc-effects', 'aria-labelledby': titleId, 'data-effects': id }, parts), blocked };
+    const naming = c.decisionNames(taskOf(ctx));
+    const reconfirm = arr(m.reconfirm).map(r => naming[r.id] || str(r.title) || str(r.id));
+    const stale = arr(m.stale).map(x => slotWords(ctx, x));
+    const refit = arr(m.refit).map(x => slotWords(ctx, x));
+    const invalidated = [];
+    if (reconfirm.length) invalidated.push(effectLine('reconfirm', c.toConfirmAgain, names(reconfirm, c)));
+    if (stale.length) invalidated.push(effectLine('stale', c.becomesStale, stale.join(', ')));
+    if (refit.length) invalidated.push(effectLine('refit', c.refitted, refit.join(', ')));
+    if (invalidated.length) {
+      parts.push(el('ul', { className: 'dc-effects-list', 'data-effects-invalidated': String(invalidated.length) }, invalidated));
+    } else {
+      parts.push(el('p', { 'data-effects-nothing': true, text: c.effectsNothing }));
+    }
+    if (m.supersedesProposal) parts.push(el('p', { 'data-supersedes': m.supersedesProposal, text: c.supersedesOpen }));
+    if (arr(m.blocked).length) {
+      parts.push(el('div', { id: `blocked-${id}`, role: 'status', className: 'dc-blocked', 'data-blocked': id }, [
+        el('p', { className: 'dc-box-title', text: c.blockedTitle }),
+        el('ul', {}, arr(m.blocked).map(b => el('li', { 'data-blocked-code': str(b.code),
+          title: `${str(b.code)}${b.reason ? ' (' + str(b.reason) + ')' : ''}` }, [
+          el('span', { 'data-engine-message': true, text: str(b.message) })]))),
+      ]));
+    }
+    if (arr(m.notes).length) parts.push(el('ul', { className: 'muted dc-notes' }, arr(m.notes).map(n => el('li', { text: str(n) }))));
+    // What stays current, what is regenerated, and the engine's note (layer 2): Details.
+    const kept = m.kept.fitsAllKept ? c.keptFits : names(arr(m.kept.slots).map(x => slotWords(ctx, x)), c);
+    parts.push(el('details', { className: 'ht-details', 'data-effects-details': id }, [el('summary', { text: c.details }),
+      el('ul', { className: 'dc-effects-list' }, [
+        effectLine('kept', c.kept, kept),
+        effectLine('regenerated', c.regenerated, names(arr(m.regenerated).map(n => c.artefactNames[n] || n), c)),
+      ]),
+      m.firstConfirmation ? el('p', { className: 'muted', 'data-effects-first': true, text: c.effectsFirst }) : null,
+      m.note ? el('p', { className: 'muted dc-caption', 'data-effects-note': true, text: str(m.note) }) : null]));
+    return wrap(parts);
   }
 
-  /**
-   * A W1 success in the words of §6.2.4 ("Confirmed <decision> in your words (channel
-   * webview)." and what was recorded, verbatim); every other outcome is the frame's v0
-   * rendering (refusals verbatim with their explanation, INV-8).
-   */
-  function outcomeNode(o, ctx, c) {
-    if (!o) return null;
-    // §6.2.4 (a v0 text): the confirmed decision is named whenever the outcome says which
-    // one; the frame's generic text (copy/core.js done.W1) is the fallback (decision CI.8).
-    if (!(o.op === 'W1' && o.kind === 'ok' && o.recorded && o.recorded.decisionId)) return ctx.renderOutcome(o);
-    const rec = o.recorded || {};
-    const decision = str(rec.decisionId);
-    const step = arr(ctx.snapshot && ctx.snapshot.plan).find(s => s.id === decision);
-    const name = c.decisionNames(taskOf(ctx))[decision] || (step ? step.title : decision);
-    return el('div', { className: 'card success', role: 'status', 'data-outcome': 'ok', 'data-op': 'W1' }, [
-      el('p', { className: 'title', text: c.confirmed(name, str(rec.channel) || 'webview') }),
-      typeof rec.userWords === 'string' ? el('p', { 'data-recorded-words': true }, [c.recorded, quote(rec.userWords)]) : null,
-      arr(o.artifacts).length ? el('ul', {}, arr(o.artifacts).map(a => el('li', { text: str(a.message) }))) : null,
-      o.message ? el('p', { text: str(o.message) }) : null,
-    ]);
-  }
-
-
-  // --- the pending decision card ---------------------------------------------------------
+  // --- the pending decision card (read only) ---------------------------------------------
 
   function proposalCard(p, model, ctx, c) {
     const id = str(p.proposalId);
     const v1 = ctx.atLeast('v1');
     const task = taskOf(ctx);
-    const effects = v1 ? effectsSection(p, ctx, c) : null;
-    const blocked = effects ? effects.blocked : null;
-    const busyHere = ctx.busy && ctx.busyTarget === id;
-    // WP-B5: the opening of the final test is answered in the chat only; its card explains
-    // and offers no words field and no confirmation (the controller refuses one too).
+    // WP-B5: the opening of the final test has its own note (it is opened once, in the chat).
     const opening = str(p.decisionId) === 'final_test';
-    const describedBy = [`hint-${id}`, blocked].filter(Boolean).join(' ');
-    let area = null;
-    let typing = null;
-    const confirm = el('button', { type: 'button', 'data-action': 'confirm', 'data-write': 'confirm', 'data-proposal': id,
-      'aria-describedby': blocked || null, text: busyHere && ctx.busyOp === 'W1' ? c.working : c.confirm });
-    const withdraw = el('button', { type: 'button', className: 'secondary', 'data-action': 'withdraw', 'data-write': 'withdraw',
-      'data-proposal': id, text: busyHere && ctx.busyOp === 'W2' ? c.working : c.withdraw });
-    if (busyHere) (ctx.busyOp === 'W2' ? withdraw : confirm).setAttribute('aria-busy', 'true');
-    const sync = () => {
-      const typed = Boolean(area && area.value.trim());
-      confirm.disabled = ctx.busy || !typed || Boolean(blocked);
-      withdraw.disabled = ctx.busy;
-    };
-    if (!ctx.reviewer && !opening) {
-      area = ctx.wordsArea({ kind: 'drafts', key: id, id: `words-${id}`, name: `words-${id}`, rows: '3',
-        'aria-describedby': describedBy, 'data-proposal': id, 'data-write': 'confirm',
-        onInput: () => {
-          // Words cleared and typed again start at the revision shown (CR.3).
-          if (typing && !area.value.trim()) { typing.remove(); typing = null; }
-          sync();
-        } });
-    }
-    confirm.addEventListener('click', () => {
-      if (!area || !area.value.trim() || ctx.busy || blocked) return;
-      // The revision the junior started typing at (CR.3): the engine refuses a stale one.
-      const typedAt = ctx.drafts.revision('drafts', id);
-      ctx.send({ type: 'confirm', proposalId: id, words: area.value, revision: Number.isInteger(typedAt) ? typedAt : model.revision });
-    });
-    withdraw.addEventListener('click', () => {
-      if (ctx.busy) return;
-      ctx.send({ type: 'withdraw', proposalId: id, revision: model.revision });
-    });
-    sync();
-
-    // CR.3: the warning comes from the stored draft, so it survives a reload, and stays
-    // until the junior says they read the proposal again.
-    const typedAt = ctx.drafts.revision('drafts', id);
-    typing = area && area.value.trim() && Number.isInteger(typedAt) && typedAt < model.revision
-      ? el('div', { className: 'hold dc-typing', role: 'status', 'data-typing-warning': id }, [
-        el('p', { 'data-typing-text': true, text: c.typing(typedAt, model.revision) }),
-        el('button', { type: 'button', className: 'secondary', 'data-reread': id, text: c.reread(model.revision),
-          onclick: () => { ctx.drafts.reread('drafts', id); ctx.rerender(); } }),
-      ]) : null;
     const groups = v1 ? availabilityGroups(p.decisionId, str(p.value)) : null;
     const pause = v1 ? pauseOf(ctx, p.decisionId) : null;
-    const holds = arr(p.holds).map(h => el('p', { className: 'hold dc-hold', 'data-hold': str(h.noteId) }, v1
-      ? [c.holdOpen, quote(h.userWords), c.holdSentence]
-      : [c.holdOpen, quote(h.userWords), c.holdSentence]));
+    const holds = arr(p.holds).map(h => el('p', { className: 'hold dc-hold', 'data-hold': str(h.noteId) },
+      [c.holdOpen, quote(h.userWords), c.holdSentence]));
     const resolved = v1 ? arr(p.resolvedNotes).map(n => el('p', { className: 'dc-resolved', 'data-resolved-note': str(n.noteId) },
       [c.holdResolved, quote(n.userWords), ' → ', quote(n.resolutionWords || '')])) : [];
-    const outcome = ctx.outcome(id);
     const fromPanel = p.origin && p.origin.channel === 'webview';
+    const revision = Number.isInteger(p.revision) ? p.revision : null;
 
-    const head = v1
-      ? el('div', { className: 'dc-head' }, [
-        el('div', { className: 'dc-head-main' }, [
-          pause ? el('span', { className: 'dc-pill', 'data-pause': pause, text: c.pause(pause, task) }) : null,
-          el('h3', { id: `title-${id}`, text: str(p.decisionTitle) }),
-        ]),
-        el('span', { className: 'muted dc-origin', 'data-origin': fromPanel ? 'webview' : 'agent' },
-          [HT.terms.mark(fromPanel ? c.byPanel : c.byAgent, 'proposal')]),
-      ])
-      : el('h3', { id: `title-${id}`, text: str(p.decisionTitle) });
+    const head = el('div', { className: 'dc-head' }, [
+      el('div', { className: 'dc-head-main' }, [
+        pause ? el('span', { className: 'dc-pill', 'data-pause': pause, text: c.pause(pause, task) }) : null,
+        el('h3', { id: `title-${id}`, text: str(p.decisionTitle) }),
+      ]),
+    ]);
 
     const card = el('article', { className: 'card dc-card', 'data-proposal-card': id, 'data-decision': str(p.decisionId),
       'data-nav': `proposal:${id}`, 'aria-labelledby': `title-${id}` }, [
       head,
-      el('p', { className: 'muted', 'data-made-at': id, title: id, text: c.madeAt(id, Number.isInteger(p.revision) ? p.revision : null) }),
-      v1 ? null : el('p', { text: c.restatedAs }),
-      el('blockquote', { text: str(p.restatement), 'data-restatement': id }),
-      el('div', { className: 'dc-value' }, [el('p', { 'data-proposed-value': id }, [c.proposedValue, readable(ctx, p.decisionId, p.value)]),
-        groups ? groupsList(groups, c) : null,
-        el('details', { className: 'ht-details', 'data-value-details': id }, [el('summary', { text: c.details }),
-          el('p', {}, [c.recordedValue, el('code', { text: str(p.value) }), ` · ${id}`])])]),
+      // The restatement block (R14, R22): what the assistant proposes, then the value in words.
+      el('div', { className: 'dc-restatement', 'data-restatement-block': id }, [
+        el('p', { className: 'dc-lead', text: c.restatedAs }),
+        el('blockquote', { text: str(p.restatement), 'data-restatement': id }),
+        el('div', { className: 'dc-value' }, [el('p', { 'data-proposed-value': id }, [c.proposedValue, readable(ctx, p.decisionId, p.value)]),
+          groups ? groupsList(groups, c) : null]),
+      ]),
       v1 && ctx.atLeast('v2') ? evidenceChips(p, ctx, c) : null,
       ...holds,
       ...resolved,
-      effects ? effects.node : null,
+      v1 ? effectsSection(p, ctx, c) : null,
       opening ? el('div', { className: 'hold dc-final-chat', role: 'note', 'data-final-test-chat': id }, [
         el('p', { className: 'title', text: c.finalTestTitle }),
         el('p', { text: c.finalTestBody }),
         el('p', { className: 'muted', text: c.finalTestOnce }),
-      ]) : area ? el('div', { className: 'dc-answer' }, [
-        el('label', { for: `words-${id}`, text: v1 ? c.answerLabel : c.answerLabelV0 }),
-        area,
-        v1 && c.reasonDecisions.includes(str(p.decisionId))
-          ? el('p', { className: 'dc-reason-hint', 'data-reason-hint': id, text: c.reasonHint }) : null,
-        el('p', { id: `hint-${id}`, className: 'muted', text: v1 ? `${c.answerHint} ${c.noDelegation}` : c.answerHintV0 }),
-        typing,
-      ]) : el('p', { className: 'muted', 'data-reviewer-note': true, text: c.reviewerNote }),
-      el('div', { className: 'dc-actions' }, [
-        ctx.reviewer || opening ? null : confirm,
-        ctx.reviewer ? null : withdraw,
-        // The shared agent-bridge helper of media/terms.js: a modal, then copy (§6.8; WP-I).
-        HT.askButton(ctx, { kind: 'proposal', id }, c.askAbout(str(p.decisionTitle)), { label: c.ask, attrs: { 'data-ask': id } }),
+      ]) : el('div', { className: 'dc-answer', role: 'note', 'data-answer-in-chat': id }, [
+        el('p', { className: 'title', text: c.answerInChat }),
+        el('p', { className: 'muted', text: c.answerInChatHint }),
       ]),
-      el('div', { className: 'dc-outcome', 'data-card-outcome': id }, [outcomeNode(outcome, ctx, c)]),
+      el('div', { className: 'dc-actions' }, [
+        // The shared agent-bridge helper of media/terms.js: a ready question, copied (§6.8).
+        HT.askButton(ctx, { kind: 'proposal', id }, c.askAbout(str(p.decisionTitle)),
+          { label: c.ask, attrs: { 'data-ask-proposal': id }, question: c.askQuestion, stage: 'v0', direct: true }),
+      ]),
+      // Internal details (R22): the proposal id, the revision it was made at, its origin,
+      // and the recorded value.
+      el('details', { className: 'ht-details', 'data-value-details': id }, [el('summary', { text: c.details }),
+        el('p', { 'data-made-at': id, text: c.madeAt(id, revision) }),
+        // The glossary term "proposal" (§6.7): marked only when the learning layer is on.
+        el('p', { 'data-origin': fromPanel ? 'webview' : 'agent' }, [HT.terms.mark(fromPanel ? c.byPanel : c.byAgent, 'proposal')]),
+        el('p', {}, [c.recordedValue, el('code', { text: str(p.value) })])]),
     ]);
     // A deep link to the decision (CLI-CONTRACT-COMPANION §11) lands on its open card.
     return v1 ? el('div', { className: 'dc-card-wrap', 'data-nav': `decision:${str(p.decisionId)}` }, [card]) : card;
@@ -476,9 +413,12 @@
         el('tbody', {}, rows.map(h => {
           const nav = navSeen.has(h.decisionId) ? null : `decision:${h.decisionId}`;
           navSeen.add(h.decisionId);
+          // R25: the revision and the time are internal: in the hover of the decision.
+          const when = [Number.isInteger(h.revision) ? c.atRevision(h.revision) : null, h.time ? ctx.format.localTime(h.time) : null]
+            .filter(Boolean).join(' · ');
           return el('tr', { className: h.current ? '' : 'muted dc-superseded', 'data-history-row': `${h.decisionId}:${h.revision}`,
             'data-current': h.current ? 'true' : 'false', 'data-nav': nav }, [
-            el('td', {}, [el('span', { className: 'dc-decision', text: str(h.title) }), ' ',
+            el('td', { 'data-when': when || null, title: when || null }, [el('span', { className: 'dc-decision', text: str(h.title) }), ' ',
               h.groups ? el('span', { className: 'dc-history-value', title: groupsText(h.groups, c) },
                 [readable(ctx, h.decisionId, Object.fromEntries(h.groups.flatMap(g => g.columns.map(col => [col, g.status]))))])
                 : el('span', { className: 'dc-history-value' }, [readable(ctx, h.decisionId, h.value)])]),
@@ -487,12 +427,9 @@
               h.agentConcern ? el('p', { className: 'hold dc-concern', 'data-agent-concern': h.decisionId },
                 [c.concern, quote(h.agentConcern)]) : null,
               ...(h.current ? corrections(data, h.decisionId, c) : [])]),
-            el('td', { 'data-basis-cell': true }, [basisChip(c, h.basis, h.scope, str(h.channel))]),
-            el('td', {}, [
-              el('span', { className: 'ht-mono', text: c.atRevision(h.revision) }), ' · ',
-              el('span', { 'data-time': true, text: ctx.format.localTime(h.time) }),
-              h.current ? null : el('span', { className: 'dc-superseded-at', 'data-superseded': true }, [' · ', c.supersededAt(h.supersededAt)]),
-            ]),
+            el('td', { 'data-basis-cell': true }, [basisChip(c, h.basis, h.scope, str(h.channel)),
+              h.current ? null : el('span', { className: 'muted dc-superseded-at', 'data-superseded': true,
+                title: c.supersededAt(h.supersededAt), text: ` · ${c.superseded}` })]),
           ]);
         })),
       ]));
@@ -506,7 +443,7 @@
         el('summary', { text: c.unconfirmedTitle }),
         el('ul', {}, unconfirmed.map(u => el('li', { 'data-unconfirmed-proposal': str(u.proposalId) }, [
           el('p', {}, [el('span', { className: 'dc-decision', text: str(u.title) }), ' ',
-            el('span', { className: 'muted', text: c.proposalStatus(str(u.proposalId), str(u.status), u.closedReason) })]),
+            el('span', { className: 'muted', title: str(u.proposalId), text: c.proposalStatus(str(u.status), u.closedReason) })]),
           el('blockquote', { text: str(u.restatement) }),
           el('p', {}, [c.proposedValue, u.groups ? el('code', { text: groupsText(u.groups, c) }) : readable(ctx, u.decisionId, u.value)]),
         ]))),
@@ -515,22 +452,10 @@
     return section('h-dc-history', c.historyTitle, children, stale ? { 'aria-busy': 'true' } : null);
   }
 
-  /** The last W1/W2 answer whose card is gone (a confirmation, a withdrawal, an unknown outcome). */
-  function lastOutcomeSection(model, ctx, c) {
-    const o = view.lastOutcome;
-    if (!o || !o.target || arr(model.proposals).some(p => p.proposalId === o.target)) return null;
-    return el('div', { className: 'dc-last', 'data-last-outcome': o.target, 'aria-label': c.lastOutcomeTitle, role: 'region' }, [
-      outcomeNode(o, ctx, c),
-      o.kind === 'failed' && ctx.atLeast('v1') ? el('p', { className: 'muted', 'data-unknown-hint': true, text: c.unknownHint }) : null,
-    ]);
-  }
-
   HT.register('decisions', {
     tab: 'decisions',
     stage: 'v0',
     views: [],
-    // The cards render their own W1 and W2 outcomes (and the last one whose card is gone).
-    outcomes: ['W1', 'W2'],
     render(model, ctx) {
       const c = copyOf(ctx);
       const v1 = ctx.atLeast('v1');
@@ -540,7 +465,7 @@
       const proposals = arr(model.proposals);
       const cards = proposals.map(p => proposalCard(p, model, ctx, c));
       const articles = cards.map(n => (n.matches('[data-proposal-card]') ? n : n.querySelector('[data-proposal-card]')));
-      const out = [lastOutcomeSection(model, ctx, c),
+      const out = [
         section('h-proposals', c.waitingTitle, cards.length ? cards
           : [el('p', { className: 'muted', 'data-nothing-waiting': true, text: v1 ? c.nothingWaiting : c.nothingWaitingV0 })])];
       if (arr(model.holds).length) {
@@ -565,7 +490,6 @@
         drainEffects();
         return true;
       }
-      if (m.type === 'outcome' && (m.op === 'W1' || m.op === 'W2')) view.lastOutcome = m;
       if (m.type === 'snapshot') {
         // Previews of proposals that are no longer open are dropped.
         const open = new Set(arr(m.model && m.model.proposals).map(p => p.proposalId));

@@ -300,10 +300,8 @@ test('RV-2: reviewer mode refuses every write type with "Read-only reviewer mode
   const { c, runCli, posted } = make({ settings: { stage: 'v3', reviewer: true }, route: health() });
   await c.handle({ v: 2, type: 'ready' });
   const before = runCli.calls.length;
+  // v0.3 narrowing: W1-W3 are no message types any more (protocol.test.js); W4-W6 remain.
   const writes = [
-    [{ type: 'confirm', proposalId: 'p_5', words: 'Yes, call the top 100.', revision: 26 }, 'W1'],
-    [{ type: 'withdraw', proposalId: 'p_5', revision: 26 }, 'W2'],
-    [{ type: 'propose', decisionId: 'policy', value: 'capacity:100', revision: 26 }, 'W3'],
     [{ type: 'run_eda', activity: 'eda.distribution', column: 'age', revision: 26 }, 'W4'],
     [{ type: 'render' }, 'W5'],
     [{ type: 'acknowledge', executionId: INTERRUPTED, words: 'I know it stopped.', revision: 26 }, 'W6'],

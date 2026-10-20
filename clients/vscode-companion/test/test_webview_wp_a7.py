@@ -361,7 +361,9 @@ def test_dc7_the_mode_line_says_what_counts_as_an_answer(open_panel, views):
     assert 'changes only in the chat' in text
     assert mode.locator('button, select, input, textarea, [data-write]').count() == 0
     card = page.locator('[data-proposal-card][data-decision="policy"]')
-    assert card.locator('[data-reason-hint]').inner_text().startswith('This decision is a trade-off')
+    # WP-E1: the card has no words field, so no reason hint; it points to the chat.
+    assert card.locator('[data-reason-hint]').count() == 0
+    assert card.locator('[data-answer-in-chat]').count() == 1
     clean(panel)
 
 

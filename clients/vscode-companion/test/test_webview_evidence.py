@@ -171,7 +171,9 @@ def test_ev5_intervals_have_a_values_table_and_the_chance_sentence(open_panel, m
     page.locator(f'[data-result-item="{EVALUATION}"]').click()
     show(panel, model('evidence', p), EVALUATION)
     unc = page.locator('[data-uncertainty="policy"]')
-    assert unc.locator('h4').all_inner_texts() == ['Rule capacity:100', 'Rule threshold:0.2']
+    # WP-E1 (R26): the rule in words, the token in the hover.
+    assert unc.locator('h4').all_inner_texts() == ['Rule top 100 rows', 'Rule score at least 0.2']
+    assert unc.locator('h4').evaluate_all('hs => hs.map(h => h.title)') == ['capacity:100', 'threshold:0.2']
     sentences = unc.locator('[data-delta-sentence]').evaluate_all('xs => xs.map(x => [x.dataset.deltaSentence, x.textContent])')
     assert sentences[0] == ['one_side', 'On these rows the interval stays on one side of zero.']
     assert sentences[1] == ['includes_zero', 'The interval includes zero: on these rows the difference could be chance.']

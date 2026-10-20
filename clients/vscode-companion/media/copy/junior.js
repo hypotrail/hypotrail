@@ -114,6 +114,44 @@
     return null;
   }
 
+  /**
+   * WP-E1 (R26): a rule token as a short label for headings and table cells:
+   * `share:0.2` -> "top 20%", `capacity:100` -> "top 100 rows", `threshold:0.35` ->
+   * "score at least 0.35". The numbers are the rule's own; anything else is returned as is.
+   */
+  function ruleShort(value) {
+    const [v, model] = str(value).split('@');
+    const tail = model === 'fit.variant' ? ', variant' : '';
+    let m = v.match(/^share:([0-9.]+)$/);
+    if (m && sharePercent(m[1])) return `top ${sharePercent(m[1])}${tail}`;
+    m = v.match(/^capacity:([0-9]+)$/);
+    if (m) return `top ${m[1]} rows${tail}`;
+    m = v.match(/^threshold:([0-9.]+)$/);
+    if (m) return `score at least ${m[1]}${tail}`;
+    return str(value);
+  }
+
+  /**
+   * WP-E1 (R26): a prepared feature name of the engine's preprocessing as words:
+   * `num__age` -> "age", `cat__poutcome_success` -> "poutcome = success" (split at the last
+   * underscore: a category value rarely holds one, a column name often does),
+   * `num__horsepower=?` and `miss__missingindicator_x` -> "x (missing)". Anything else is
+   * returned as is.
+   */
+  function featureName(term) {
+    const t = str(term);
+    const m = t.match(/^([a-z]+)__(.+)$/);
+    if (!m) return t;
+    const [, kind, rest] = m;
+    if (rest.endsWith('=?')) return `${rest.slice(0, -2)} (missing)`;
+    if (kind === 'miss') return `${rest.replace(/^missingindicator_/, '')} (missing)`;
+    if (kind === 'cat') {
+      const cut = rest.lastIndexOf('_');
+      return cut > 0 && cut < rest.length - 1 ? `${rest.slice(0, cut)} = ${rest.slice(cut + 1)}` : rest;
+    }
+    return rest;
+  }
+
   // WP-B1: the variant and the opening of the final test in words.
   function variant(raw) {
     const v = parse(raw);
@@ -470,7 +508,7 @@
   };
 
   HT.copy.junior = {
-    decidedLine, sharePercent, modes, finalTest: finalTestCopy, finalTestState, changedName,
+    decidedLine, sharePercent, ruleShort, featureName, modes, finalTest: finalTestCopy, finalTestState, changedName,
     decisionName, why, value, availability, modelName, nextMove,
     SEVERITY, SEVERITY_ORDER, severityLabel, limitText, limitFallback,
     GROUP_OF_KIND, groups, GROUP_ORDER, digestText,

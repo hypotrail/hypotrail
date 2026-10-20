@@ -22,10 +22,6 @@ const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 /** One valid call of each write builder. */
 const SAMPLES = {
-  W1: () => cli.WRITES.W1(AGENT, { proposalId: 'p_1', words: '-- yes: before the call', requestId: UUID, expectedRevision: 3 }),
-  W2: () => cli.WRITES.W2(AGENT, { proposalId: 'p_1', requestId: UUID, expectedRevision: 3 }),
-  W3: () => cli.WRITES.W3(AGENT, { decisionId: 'policy', value: 'capacity:100', restatement: 'Adopt the rule capacity:100.',
-    rationale: 'Chosen in the panel.', requestId: UUID, expectedRevision: 3 }),
   W4: () => cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: 'age', requestId: UUID, expectedRevision: 3 }),
   W5: () => cli.WRITES.W5(AGENT),
   W6: () => cli.WRITES.W6(AGENT, { executionId: 'e_1', words: 'I know it stopped.', requestId: UUID, expectedRevision: 3 }),
@@ -52,20 +48,22 @@ test('INV-2: no vscode.lm, network module, socket, browser storage, or workspace
   }
 });
 
-test('INV-3, INV-13: exactly seven write builders W1-W7, each a whitelisted argv', () => {
-  assert.deepEqual(Object.keys(cli.WRITES), ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']);
+test('INV-3, INV-13: exactly four write builders W4-W7 (W1-W3 withdrawn, v0.3), each a whitelisted argv', () => {
+  assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W6', 'W7']);
   const builders = Object.entries(cli).filter(([k, v]) => typeof v === 'function' && /Argv$/.test(k)).map(([k]) => k);
   const writes = Object.values(cli.WRITES).map(fn => fn.name);
   const reads = Object.values(cli.READS).map(fn => fn.name);
   assert.deepEqual(builders.sort(), [...writes, ...reads].sort(), 'every argv builder is a listed read or write');
-  assert.equal(new Set(writes).size, 7);
+  assert.equal(new Set(writes).size, 4);
   assert.deepEqual(Object.keys(cli.READS), ['summary', 'decisions', 'effects', 'evidence', 'preview', 'draft', 'check',
     'explain', 'session_report', 'view', 'data']);
   for (const [w, sample] of Object.entries(SAMPLES)) {
     const tail = sample().slice(AGENT.argv.length);
     const verbs = tail.slice(0, 2).join(' ');
-    assert.ok(['decide confirm', 'decide withdraw', 'decide propose', 'run eda.distribution', 'render --json',
-      'run --acknowledge-interruption', 'export handoff'].includes(verbs), `${w}: ${verbs}`);
+    assert.ok(['run eda.distribution', 'render --json', 'run --acknowledge-interruption', 'export handoff'].includes(verbs),
+      `${w}: ${verbs}`);
+    // ADR 0004 amendment (R23, I2): no write of the panel is a `decide` command.
+    assert.notEqual(tail[0], 'decide', w);
     if (w === 'W5') {
       assert.ok(!tail.includes('--request-id') && !tail.includes('--expected-revision'), `${w} has no revision`);
     } else if (w === 'W7') {
@@ -96,11 +94,9 @@ test('INV-4, INV-13: no builder emits a delegation, a note, a fit, a split, or a
     () => cli.WRITES.W4(AGENT, { activity: 'fit.logistic', column: 'age', requestId: UUID, expectedRevision: 3 }),
     () => cli.WRITES.W4(AGENT, { activity: 'split', column: 'age', requestId: UUID, expectedRevision: 3 }),
     () => cli.WRITES.W4(AGENT, { activity: 'policy.evaluate', column: 'x', requestId: UUID, expectedRevision: 3 }),
-    () => cli.WRITES.W3(AGENT, { decisionId: 'split', value: 'x', restatement: 'r', rationale: 'r', requestId: UUID, expectedRevision: 3 }),
-    () => cli.WRITES.W3(AGENT, { decisionId: 'conclusion', value: 'x', restatement: 'r', rationale: 'r', requestId: UUID, expectedRevision: 3 }),
-    () => cli.WRITES.W1(AGENT, { proposalId: 'p_1', words: '   ', requestId: UUID, expectedRevision: 3 }),
-    () => cli.WRITES.W1(AGENT, { proposalId: 'p_1', words: 'yes\0--basis', requestId: UUID, expectedRevision: 3 }),
-    () => cli.WRITES.W1(AGENT, { proposalId: 'p_1', words: 'yes', requestId: 'not-a-uuid', expectedRevision: 3 }),
+    () => cli.WRITES.W6(AGENT, { executionId: 'e_1', words: '   ', requestId: UUID, expectedRevision: 3 }),
+    () => cli.WRITES.W6(AGENT, { executionId: 'e_1', words: 'yes\0--basis', requestId: UUID, expectedRevision: 3 }),
+    () => cli.WRITES.W6(AGENT, { executionId: 'e_1', words: 'yes', requestId: 'not-a-uuid', expectedRevision: 3 }),
     () => cli.WRITES.W7(AGENT, { parent: path.join(AGENT.studyDir, '.hypotrail'), revision: 3 }),
   ];
   for (const fn of bad) assert.throws(fn, cli.ArgvError);

@@ -5,9 +5,11 @@
 // confirmation must stay their own): no example reply, no quotation, no wording to copy.
 //
 // v0 table, extended by WP-U2 with `export_target_exists` (CLI-CONTRACT-COMPANION §12) and
-// the refusal contexts of W3 (propose), W4 (run an EDA request), W6 (acknowledge an
-// interruption), and W7 (export). The context comes from the payload's `command`, so the
-// frozen `describe(payload)` signature of the controller is unchanged.
+// the refusal contexts of W4 (run an EDA request), W6 (acknowledge an interruption), and
+// W7 (export). The context comes from the payload's `command`, so the frozen
+// `describe(payload)` signature of the controller is unchanged. The confirmation reasons
+// stay: the engine's preview of a confirmation (`preview effects`) can name them. The
+// `propose` context went with W3 (v0.3 narrowing, ADR 0004 amendment).
 
 const NOTHING = 'Nothing was recorded.';
 
@@ -76,11 +78,6 @@ const BY_CODE = {
 // `run` refusal about an execution (ambiguous words, unknown execution) is an
 // acknowledgement (W6); any other `run` refusal is an EDA request (W4).
 const BY_CONTEXT = {
-  propose: {
-    stale_revision: 'The study changed after the panel read the draft. The panel has been refreshed: look at the draft again before proposing.',
-    invalid_value: 'The engine does not accept this value as a proposal for this decision.',
-    precondition_missing: 'An earlier step must be confirmed before this decision can be proposed.',
-  },
   run: {
     stale_revision: 'The study changed after the panel showed it. The panel has been refreshed: look at the list again before asking for a chart.',
     precondition_missing: 'An earlier step of the plan must be done before this chart can be computed.',
@@ -109,10 +106,9 @@ function olderEngineExport(context, code, message) {
   return context === 'export' && code === 'invalid_arguments' && /--expected-revision/.test(message);
 }
 
-/** The refusal context of a payload: propose, run, acknowledge, export, or null. */
+/** The refusal context of a payload: run, acknowledge, export, or null. */
 function contextOf(payload, code, reason, details) {
   const command = typeof (payload && payload.command) === 'string' ? payload.command : '';
-  if (command === 'decide propose') return 'propose';
   if (command.startsWith('export')) return 'export';
   if (command === 'run') {
     const aboutExecution = code === 'ambiguous_confirmation' || code === 'unknown_execution' ||

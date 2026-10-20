@@ -16,12 +16,7 @@
 .dc-chip-static { display: inline-block; }
 .dc-hold { padding: 8px 12px; border-radius: 6px; background: var(--ht-warn-bg); border: 1px solid var(--ht-warn-border); color: var(--ht-warn-fg); }
 .dc-resolved { padding: 8px 12px; border-radius: 6px; background: var(--ht-done-bg); color: var(--ht-fg); }
-.dc-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
-.dc-box { padding: 8px 12px; border: 1px solid var(--ht-card-border); border-radius: 8px; background: var(--ht-surface); }
-.dc-box p { margin: 0; }
 .dc-box-title { font-weight: 600; }
-.dc-box-reconfirm, .dc-box-stale { border-left: 4px solid var(--ht-st-stale); }
-.dc-box-kept { border-left: 4px solid var(--ht-st-ok); }
 .dc-blocked { margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--ht-error-bg); border: 1px solid var(--ht-error-border);
   color: var(--ht-error-fg); }
 .dc-blocked ul { margin: 4px 0 0; }
@@ -29,7 +24,6 @@
 .dc-caption { font-size: 0.9em; margin: 6px 0 0; }
 .dc-answer { margin-top: 12px; }
 .dc-actions { display: flex; flex-wrap: wrap; }
-.dc-outcome:empty { display: none; }
 .dc-queue { border-color: var(--ht-warn-border); }
 .dc-history { width: 100%; border-collapse: collapse; }
 .dc-history th, .dc-history td { text-align: left; vertical-align: top; padding: 8px 8px 8px 0; border-bottom: 1px solid var(--ht-border); }
@@ -46,11 +40,13 @@
 .dc-mode h3 { margin-bottom: 4px; }
 .dc-mode p { margin: 4px 0; }
 .dc-mode-rules { margin: 4px 0; }
-.dc-reason-hint { margin: 4px 0; padding: 4px 8px; border-left: 3px solid var(--ht-st-needs); }
 tr.dc-superseded, tr.dc-superseded .dc-basis, tr.dc-superseded .dc-decision { color: var(--ht-muted); }
 details[data-unconfirmed] { margin-top: 8px; }
 .dc-history-value { display: block; }
-.dc-actions button[data-action="confirm"] { font-weight: 600; }
+/* WP-E1: the read-only card says where to answer; its effects are a list in words. */
+.dc-answer .title, .dc-final-chat .title { font-weight: 600; margin: 0 0 4px; }
+.dc-answer p { margin: 0 0 4px; }
+.dc-effects-list { margin: 4px 0; padding-left: 18px; }
+.dc-lead { margin: 8px 0 4px; }
 
-/* WP-B5: the opening of the final test is answered in the chat; its card says so. */
-.dc-final-chat .title { font-weight: 600; margin: 0 0 4px; }
+/* WP-B5: the opening of the final test is answered in the chat; its card says so (above). */

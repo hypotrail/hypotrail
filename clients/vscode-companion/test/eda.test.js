@@ -48,13 +48,28 @@ test('EdaModel: keys, gallery order, and the catalog of both fixtures', () => {
   assert.deepEqual(b.cards.map(c => c.kind), ['target_rate', 'special_values', 'signal', 'rate_by', 'distribution', 'quality']);
   assert.deepEqual(b.catalog.map(a => [a.activity, a.perColumn, a.runnable]), [['eda.target_rate', false, true],
     ['eda.special_values', false, true], ['eda.rate_by', true, true], ['eda.distribution', true, true]]);
-  assert.deepEqual(b.rowsSeen, { trainEda: 3164, validationEda: 0, validationModels: 1357 });
+  assert.deepEqual(b.rowsSeen, { scope: 'split', trainEda: 3164, validationEda: 0, validationModels: 1357 });
   const r = toEdaModel(payload('evidence.regression'));
   assert.equal(r.task, 'regression');
   assert.deepEqual(r.cards.map(c => c.kind), ['target_summary', 'special_values', 'signal', 'mean_by', 'distribution', 'quality']);
-  assert.deepEqual(r.rowsSeen, { trainEda: 280, validationEda: 0, validationModels: 118 });
+  assert.deepEqual(r.rowsSeen, { scope: 'split', trainEda: 280, validationEda: 0, validationModels: 118 });
   assert.throws(() => toEdaModel(payload('decisions.binary')), ModelError);
   assert.throws(() => toEdaModel({ schema: 'hypotrail.evidence/1', ok: false }), ModelError);
+});
+
+test('EdaModel rows seen under cross-validation: the development rows EDA read, never "train 0" (WP-E1, R26)', () => {
+  // The captured cross-validated Bank study records EDA on the `development` partition.
+  const raw = payload('captured/evidence.binary.cv');
+  const ledger = raw.exposure.ledger.find(r => r.purpose === 'train_eda');
+  assert.equal(ledger.partition, 'development');
+  const m = toEdaModel(raw);
+  assert.equal(m.rowsSeen.scope, 'development');
+  assert.equal(m.rowsSeen.trainEda, ledger.rows);
+  assert.ok(m.rowsSeen.trainEda > 0);
+  assert.equal(m.rowsSeen.validationEda, 0);
+  assert.equal(m.rowsSeen.validationModels, raw.exposure.summary.validation_rows_used_for_selection);
+  // A split study keeps its two partitions.
+  assert.equal(toEdaModel(payload('captured/evidence.binary')).rowsSeen.scope, 'split');
 });
 
 test('EdaModel: every number is an engine value at its path, with a format of FMT (INV-14, ED-4)', () => {

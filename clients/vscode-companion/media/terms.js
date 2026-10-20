@@ -5,9 +5,12 @@
 //   Hypotrail.terms.MAP                      {glossary id: [places where the copy marks it]}
 //   Hypotrail.terms.mark(text, id)           a <span data-term="id"> for a word of the copy
 //   Hypotrail.askAgent(ctx, about, shown, {question?})   the "Ask the agent about this" modal
-//   Hypotrail.askButton(ctx, about, shown, {label?, attrs?, question?})
-//                                            its button (stage v2, kept in reviewer mode);
-//                                            the one helper of every tab (WP-I, §6.8)
+//   Hypotrail.askButton(ctx, about, shown, {label?, attrs?, question?, stage?, direct?})
+//                                            its button (stage v2 unless `stage` says
+//                                            otherwise, kept in reviewer mode); the one
+//                                            helper of every tab (WP-I, §6.8). `direct`
+//                                            (WP-E1) copies the ready question at once,
+//                                            without the modal.
 //
 // Hovers. With the learning layer on (stage v3, `learningLayer`), every `[data-term]` in the
 // panel whose id is in `explain.terms` (the task filter) gets a tooltip on hover and on
@@ -138,10 +141,23 @@
     return sent;
   }
 
-  function askButton(ctx, about, shown, { label = null, attrs = {}, question = '' } = {}) {
-    if (!ctx.atLeast('v2')) return null;
-    return HT.el('button', { type: 'button', className: 'secondary', 'data-ask': `${about.kind}:${about.id}`, ...attrs, 'data-stage': 'v2',
-      text: label || HT.copy.learn.ask, onclick: () => { askAgent(ctx, about, shown, { question }); } });
+  /**
+   * WP-E1 (v0.3): a ready question, copied at once (no modal, no field). The extension
+   * builds the text from the fixed template of lib/bridge.js and puts it on the clipboard;
+   * nothing is sent and nothing is written to the study.
+   */
+  function copyQuestion(about, question) {
+    return HT.send({ type: 'ask_agent', about: { kind: about.kind, id: String(about.id).slice(0, 100) },
+      question: String(question || '').slice(0, 2000), mode: 'copy' });
+  }
+
+  function askButton(ctx, about, shown, { label = null, attrs = {}, question = '', stage = 'v2', direct = false } = {}) {
+    if (!ctx.atLeast(stage)) return null;
+    return HT.el('button', { type: 'button', className: 'secondary', 'data-ask': `${about.kind}:${about.id}`, ...attrs,
+      // A v0 control is gated by nothing: it carries no data-stage (a later-stage marker).
+      'data-stage': stage === 'v0' ? null : stage,
+      'data-ask-direct': direct ? 'true' : null, text: label || HT.copy.learn.ask,
+      onclick: () => { if (direct) copyQuestion(about, question); else askAgent(ctx, about, shown, { question }); } });
   }
 
   HT.askAgent = askAgent;
