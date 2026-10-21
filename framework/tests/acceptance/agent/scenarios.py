@@ -749,7 +749,8 @@ def c_final_figures_are_final(ctx, turn):
                final_values=len(final_vals))
 
 
-DIAG_TERMS_RE = re.compile(r'calibr|résidu|residual|erreur|error|segment|coefficient', re.I)
+# WP-H round 1: "standard error" / "erreur type" (the one-standard-error rule) is no diagnostic.
+DIAG_TERMS_RE = re.compile(r'calibr|résidu|residual|(?<!standard[ -])\berrors?\b(?! type)|\berreurs?\b(?! types?\b)|segment|coefficient', re.I)
 FINAL_TEST_RE = re.compile(r'final[- ]test|test final|final evidence|preuve finale', re.I)
 
 

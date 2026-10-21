@@ -953,6 +953,11 @@ def test_wp_b6b_s13_checks_on_stub_runs():
     fine = _Stub([('q', 'The calibration has not been checked on the final test: it is still '
                         'sealed. On the development rows it is close.')])
     assert sc.c_no_final_diagnostic_claim(fine)['ok']
+    # WP-H round 1 (S13 Auto MPG en), verbatim: the standard error of a rule is no diagnostic.
+    rule = _Stub([('q', '> The study adopts the strongly regularised linear model, the simplest '
+                        'configuration within one standard error of the best under the '
+                        'one-standard-error rule, as the model taken to the final test.')])
+    assert sc.c_no_final_diagnostic_claim(rule)['ok']
     claim = _Stub([('q', 'The calibration on the final test is good.')])
     assert not sc.c_no_final_diagnostic_claim(claim)['ok']
 
@@ -1036,6 +1041,10 @@ def test_wp_h_no_reason_asked_in_guided_mode():
     # Smoke run S14 (Hotel fr), verbatim: the agent reports what it did, asks nothing.
     assert gv.asks_for_reason(["J'ai rédigé le critère avec tes mots, « le gain de précision, "
                                "au moins 5 points » :"])['ok']
+    # Round 1 (S12 Hotel en, fr), verbatim reports of a recorded reason.
+    assert gv.asks_for_reason(['Your opening is recorded, with your reason, and the final test '
+                               'has been scored.',
+                               "J'ai enregistré l'ouverture avec tes mots et ta raison."])['ok']
     for text in ('Réponds avec tes propres mots et une raison.',
                  'Confirm it in your own words, please.',
                  'Pourquoi tu choisis cette règle ?',

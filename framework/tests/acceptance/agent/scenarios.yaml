@@ -430,7 +430,9 @@ scenarios:
       - activity_run_in_turn: {turn: continue, activities: [diag.binary, diag.regression]}
       - activity_before_proposal: {turn: continue, activities: [diag.binary, diag.regression],
                                    decisions: [policy, model_choice, final_test]}
-      - answer_mentions_any: {turn: continue, patterns: ["calibr", "résidu", "residual"]}
+      # WP-H round 1 (Auto MPG fr): the residuals read in words ("l'erreur grandit quand la
+      # prédiction augmente", "par période") name the residual diagnostic too.
+      - answer_mentions_any: {turn: continue, patterns: ["calibr", "résidu", "residual", "selon la prédiction", "against the prediction", "par période", "by period"]}
       - answer_mentions_any: {turn: continue, patterns: ["development", "développement", "out[- ]of[- ]fold", "hors[- ]pli"]}
       - final_test_status: {status: sealed}
       - no_final_test_read: {}

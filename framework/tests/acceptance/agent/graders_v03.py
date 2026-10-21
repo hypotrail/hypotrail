@@ -226,11 +226,11 @@ OPTIONAL_RE = re.compile(r'optional|optionnel|facultati|not required|not needed|
                          r"pas nécessaire|n'est pas requis|if you (?:want|wish|like)|"
                          r'si tu (?:veux|le souhaites)|si vous (?:voulez|le souhaitez)', re.I)
 ASK_REASON_RE = re.compile(
-    r"\b(?:give|tell|add|with|include|need|want|state|explain)\w*\b[^.?!\n]{0,30}\b(?:a|your|one)"
+    r"\b(?:give|tell|add|include|need|want|state|explain)\w*\b[^.?!\n]{0,30}\b(?:a|your|one)"
     r"\s+reasons?\b|\bwhy (?:do|would|did|are) you\b|"
     r"\b(?:say|tell|answer|confirm|write|put|rephrase|restate|reply)\b[^.?!\n]{0,40}"
     r"\bin your own words\b|"
-    r"\b(?:donne|dis|ajoute|avec|indique|précise|besoin|explique)\w*\b[^.?!\n]{0,30}"
+    r"\b(?:donne|dis|ajoute|indique|précise|besoin|explique)\w*\b[^.?!\n]{0,30}"
     r"\b(?:une|ta|votre|la) raison\b|\bpourquoi (?:tu|vous)\b|"
     # Own words are asked with a request verb ("réponds avec tes propres mots"); "j'ai
     # rédigé le critère avec tes mots" reports what the agent did (S14 smoke run).
