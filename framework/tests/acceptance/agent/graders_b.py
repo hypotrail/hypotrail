@@ -103,13 +103,13 @@ def _splittable(cmd: str) -> bool:
 
 # v0.3 (WP-B, R14): the closed adoption question, in English or French.
 ADOPTION_QUESTION_RE = re.compile(
-    r"adopt\w*\s+(?:this|the|cette|la)\s+(?:decision|d[ée]cision)", re.I)
+    r"adopt\w*(?:-vous)?\s+(?:this|the|cette|la)\s+(?:decision|d[ée]cision)", re.I)
 ADOPTION_FLAG_RE = re.compile(r"--adoption-question\b|--channel[ =]choice\b")
 
 
 def asked_adoption(events: list[dict], turn: int) -> bool:
     """The agent's reply of the turn before ``turn`` asked the closed adoption question
-    ("Do you adopt this decision?", "Est-ce que tu adoptes cette décision ?")."""
+    ("Do you adopt this decision?", "Adoptez-vous cette décision ?")."""
     return bool(ADOPTION_QUESTION_RE.search(g.final_texts(events).get(turn - 1) or ''))
 
 

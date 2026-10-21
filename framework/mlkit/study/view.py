@@ -1153,14 +1153,14 @@ def _recap_next_fr(summary_out: dict, view: dict) -> str:
                          if p['proposal_id'] == nxt.get('proposal_id')), None)
         label = audience.decision_words(nxt.get('decision'), FR)
         said = (proposal or {}).get('label') or ''
-        return f'si tu adoptes {label} : « {said} »'
+        return f'si vous adoptez {label} : « {said} »'
     if kind in ('propose', 'run', 'blocked') and nxt.get('step') != summary_out['current_step']:
         titles = {s['id']: s['title'] for s in summary_out['plan']}
         title = junior.step_text(titles.get(nxt.get('step'), ''), FR) or \
             audience.decision_words(nxt.get('step'), FR)
         return f'{title} : {nxt.get("junior_message", "")}'.strip()
     return str(nxt.get('junior_message') or '').strip() or \
-        "plus rien dans le plan ; relis ce qui n'est pas encore défendable."
+        "plus rien dans le plan ; relisez ce qui n'est pas encore défendable."
 
 
 def _recap_junior_fr(summary_out: dict, view: dict) -> list[str]:
@@ -1188,12 +1188,12 @@ def _recap_junior_fr(summary_out: dict, view: dict) -> list[str]:
         decision = nxt.get('decision')
         title = junior.step_text(titles.get(decision), FR) if titles.get(decision) \
             else _capital_first(audience.decision_words(decision, FR))
-        step = (f'{title}, en attente de ta réponse' if kind == 'await_user_words'
-                else f'{title}, en attente de ta nouvelle confirmation')
+        step = (f'{title}, en attente de votre réponse' if kind == 'await_user_words'
+                else f'{title}, en attente de votre nouvelle confirmation')
     elif kind in ('outcome_unknown', 'acknowledge_interruption'):
         named = (f'une exécution de {audience.activity_words(nxt["activity"], FR)}'
                  if nxt.get('activity') else 'une exécution')
-        step = f'{named} s\'est arrêtée et son résultat est inconnu, en attente de ton accord'
+        step = f'{named} s\'est arrêtée et son résultat est inconnu, en attente de votre accord'
     elif summary_out['current_step']:
         step = junior.step_text(titles.get(summary_out['current_step'], ''), FR)
     else:
@@ -1219,8 +1219,8 @@ def _recap_junior_fr(summary_out: dict, view: dict) -> list[str]:
         said = '; '.join('; '.join(f'« {n["user_words"]} »' for n in h['notes'])
                          + f' ({audience.decision_words(h["decision_id"], FR)})' for h in holds)
         following += ('' if following.endswith(('.', '»', '?')) else '.') + (
-            f' En suspens, selon tes mots : {said} ; rien de ce qui est en suspens n\'est '
-            'confirmé tant que tu ne le lèves pas.')
+            f' En suspens, selon vos mots : {said} ; rien de ce qui est en suspens n\'est '
+            'confirmé tant que vous ne le levez pas.')
     lines = [f'Objectif : {use} ; la prédiction est faite {moment}.',
              'Décidé : ' + (' ; '.join(decided) if decided else 'rien pour l\'instant') + '.',
              f'Maintenant : {step} ; {_deliverables_line_fr(summary_out["artifacts"]["items"])}.',

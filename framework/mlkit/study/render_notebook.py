@@ -96,9 +96,9 @@ RECOMPUTE_NOTE = ('Each code cell below is the pandas (or scikit-learn) you woul
 # WP-F2: the notebook narrative is in the study language where the engine provides French
 # (WP-C: step titles and questions, glossary term names). Definitions, methods, and code
 # comments have no French source yet and stay English.
-RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que tu "
-                     "taperais sur l'échantillon de développement, suivi d'un `assert` qui "
-                     "vérifie que son résultat est celui du registre. Copie-les dans ton "
+RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que vous "
+                     "taperiez sur l'échantillon de développement, suivi d'un `assert` qui "
+                     "vérifie que son résultat est celui du registre. Copiez-les dans votre "
                      "workbench pour expérimenter.")
 
 

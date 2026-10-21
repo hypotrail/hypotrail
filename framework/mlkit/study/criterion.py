@@ -258,8 +258,8 @@ def _metric_items(task: str, action: str, lang: str) -> list[dict]:
                                      'precision does.'),
              'Parmi toutes les lignes positives, la part que la règle atteint : il compte les '
              'positifs qu\'on ne manque pas. ' + (
-                 'Avec un seuil, il diffère de la précision : choisis celui qui compte le plus '
-                 'pour l\'action.' if threshold else
+                 'Avec un seuil, il diffère de la précision : choisissez celui qui compte le '
+                 'plus pour l\'action.' if threshold else
                  'À nombre d\'actions fixé, il classe les configurations comme la précision.'))},
     ]
 
@@ -362,17 +362,17 @@ def options(view: Mapping, lang: str = EN, unit: str | None = None) -> dict:
                           "l'échantillon de test final (holdout).")
         lead = {'share': _t(lang, 'Your action acts on a fixed share of the rows, so the '
                                   'default metric is the precision gain at that share.',
-                            "Ton action porte sur une part fixée des lignes : le critère par "
+                            "Votre action porte sur une part fixée des lignes : le critère par "
                             'défaut est le gain de précision à cette part.'),
                 'capacity': _t(lang, 'Your action acts on a fixed number of rows, so the '
                                      'default metric is the precision gain at that capacity.',
-                               "Ton action porte sur un nombre fixé de lignes : le critère par "
+                               "Votre action porte sur un nombre fixé de lignes : le critère par "
                                'défaut est le gain de précision à cette capacité.'),
                 'threshold': _t(lang, 'Your action acts on every row above a score threshold: '
                                       'choose precision (fewer wasted actions) or recall (fewer '
                                       'missed positives).',
-                                "Ton action porte sur chaque ligne au-dessus d'un seuil de "
-                                'score : choisis la précision (moins d\'actions perdues) ou le '
+                                "Votre action porte sur chaque ligne au-dessus d'un seuil de "
+                                'score : choisissez la précision (moins d\'actions perdues) ou le '
                                 'rappel (moins de positifs manqués).'),
                 'not_decided': _t(lang, 'The action type is not decided yet; the default metric '
                                         'is the precision gain, which suits a capacity or a '

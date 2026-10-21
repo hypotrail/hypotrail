@@ -354,7 +354,7 @@ def test_instructions_carry_the_v0_2a_rules():
         # its text fallback, optional reasons, and the engine's refusal message relayed
         for phrase in ('--proposal PROPOSAL_ID', 'quoted block',
                        '"Do you adopt this decision?"',
-                       '"Est-ce que tu adoptes cette décision ?"', '`AskUserQuestion`',
+                       '"Adoptez-vous cette décision ?"', '`AskUserQuestion`',
                        'adopt', 'change something', 'explain first', 'ask it in text',
                        '--channel choice', '--adoption-question',
                        'only when your last message asked that question about this proposal',

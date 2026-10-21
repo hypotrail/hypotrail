@@ -115,13 +115,14 @@ def _steps_fr() -> dict[str, str]:
                                      'de toutes les lignes positives que la règle atteint. Le '
                                      'modèle de référence donne le même score à chaque ligne, '
                                      'donc sa précision est le taux de base. La règle dit sur '
-                                     'quelles lignes tu agis : la meilleure part ou le meilleur '
-                                     'nombre de scores, ou les lignes au-dessus d\'un seuil de '
-                                     'score. Avec un nombre fixé de lignes, précision, rappel '
-                                     'et lift classent les modèles de la même façon ; avec un '
-                                     'seuil, ils diffèrent. Choisis d\'abord la métrique. '
+                                     'quelles lignes vous agissez : la meilleure part ou le '
+                                     'meilleur nombre de scores, ou les lignes au-dessus d\'un '
+                                     'seuil de score. Avec un nombre fixé de lignes, précision, '
+                                     'rappel et lift classent les modèles de la même façon ; '
+                                     'avec un seuil, ils diffèrent. Choisissez d\'abord la '
+                                     'métrique. '
                                      'Combien de points de pourcentage au-dessus du modèle de '
-                                     'référence, à la règle que tu adopteras, rendraient le '
+                                     'référence, à la règle que vous adopterez, rendraient le '
                                      'modèle utile ? Le critère est fixé maintenant, avant '
                                      'tout ajustement de modèle.',
         st.REGRESSION_SUCCESS_STEP['question']: "L'erreur absolue moyenne (MAE) est la taille "
@@ -147,11 +148,11 @@ def _steps_fr() -> dict[str, str]:
                                      'diagnostics montrent une forme que le modèle linéaire ne '
                                      'suit pas ?',
         st.FINAL_TEST_STEP['question']: 'Maintenant que le modèle et la règle sont choisis, '
-                                        "ouvres-tu l'échantillon de test final scellé, une "
+                                        "ouvrez-vous l'échantillon de test final scellé, une "
                                         'seule fois, pour mesurer la configuration choisie '
                                         "sur des lignes que rien n'a vues ? Ensuite, tout "
                                         "changement est fait après le test final.",
-        b1_final_regression['question']: 'Maintenant que le modèle est choisi, ouvres-tu '
+        b1_final_regression['question']: 'Maintenant que le modèle est choisi, ouvrez-vous '
                                          "l'échantillon de test final scellé, une seule fois, "
                                          "pour le mesurer sur des lignes que rien n'a vues ? "
                                          'Ensuite, tout changement est fait après le test '
@@ -244,18 +245,18 @@ def limit_fr(item: Mapping) -> str:
     kind = item.get('id')
     cols = ', '.join(str(c) for c in item.get('features') or [])
     if kind == 'unconfirmed_decisions':
-        return f'Pas encore confirmé par toi : {_named(item.get("decisions"))}.'
+        return f'Pas encore confirmé par vous : {_named(item.get("decisions"))}.'
     if kind == 'open_holds':
-        return ("Tu as posé une condition qui n'est pas encore levée : rien de ce qu'elle "
-                'couvre ne peut être confirmé tant que tes propres mots ne la lèvent pas : '
+        return ("Vous avez posé une condition qui n'est pas encore levée : rien de ce qu'elle "
+                'couvre ne peut être confirmé tant que vos propres mots ne la lèvent pas : '
                 f'{_named(item.get("decisions"))}.')
     if kind == 'conclusion_outdated':
         return ('La conclusion a été confirmée avant qu\'une décision qu\'elle résume ne '
-                'change : son texte peut ne plus décrire l\'étude ; on te demandera de la '
+                'change : son texte peut ne plus décrire l\'étude ; on vous demandera de la '
                 'confirmer à nouveau.')
     if kind == 'delegated_decisions':
-        return ("Tu as délégué ces décisions à la recommandation de l'assistant ; elles ne "
-                f'sont donc pas ton propre jugement : {_named(item.get("decisions"))}.')
+        return ("Vous avez délégué ces décisions à la recommandation de l'assistant ; elles "
+                f'ne sont donc pas votre propre jugement : {_named(item.get("decisions"))}.')
     if kind == 'stale_results':
         return ('Certains résultats ne sont plus à jour et sont recalculés avant d\'être '
                 'cités.')
@@ -299,7 +300,7 @@ def limit_fr(item: Mapping) -> str:
                 'échantillons.')
     if kind == 'uncertain_features_included':
         return ('Ces variables sont utilisées alors que leur disponibilité au moment de la '
-                f'prédiction est incertaine : {cols}. Vérifie qu\'elles sont connues à ce '
+                f'prédiction est incertaine : {cols}. Vérifiez qu\'elles sont connues à ce '
                 'moment-là.')
     if kind == 'inconclusive_without_choice':
         return ("La conclusion est non concluante et rien n'est adopté : l'étude ne recommande "
@@ -317,7 +318,7 @@ def limit_fr(item: Mapping) -> str:
                 'peuvent pas être cités.')
     if kind == 'sources_changed':
         return ('Le fichier du cas ou des données a changé depuis le début de l\'étude : aucun '
-                'résultat ne décrit le fichier actuel. Commence une nouvelle étude sur les '
+                'résultat ne décrit le fichier actuel. Commencez une nouvelle étude sur les '
                 'nouvelles données.')
     if kind == 'code_changed':
         return ('Le code de certaines analyses a changé après leur calcul : ces résultats ne '
@@ -338,7 +339,7 @@ def limit_fr(item: Mapping) -> str:
         pct = audience.share_percent(share, FR) if share is not None else ''
         return (f'Capacité supposée pour l\'exercice : agir sur les {pct} meilleurs scores est '
                 "une hypothèse du scénario pédagogique, pas un chiffre d'une équipe réelle. "
-                "Avec une vraie équipe, demande combien elle peut traiter et évalue cette "
+                "Avec une vraie équipe, demandez combien elle peut traiter et évaluez cette "
                 'capacité.')
     if kind == 'final_test_sealed':
         return ("L'échantillon de test final est encore scellé : chaque chiffre jusqu'ici est "
@@ -361,8 +362,8 @@ def limit_fr(item: Mapping) -> str:
                 f"n'est pas atteint : {why}.")
     if kind == 'verdict_keeps_baseline_against_criterion':
         return ('La conclusion garde le modèle de référence alors que le critère de succès est '
-                'atteint sur le test final : dis pourquoi (un coût, un risque, une limite que '
-                'le critère ne capture pas), ou reconsidère le verdict.')
+                'atteint sur le test final : dites pourquoi (un coût, un risque, une limite que '
+                'le critère ne capture pas), ou reconsidérez le verdict.')
     if kind == 'data_contingent_preprocessing':
         return ('La préparation des variables a été choisie après avoir regardé le résultat '
                 'dans les données de développement : les chiffres de développement peuvent '
@@ -506,7 +507,7 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
         return {'value': fact['value'],
                 'why': _t(lang, 'The case states this moment; confirm it fits how the score '
                                 'will be used.',
-                          'Le cas indique ce moment ; vérifie qu\'il correspond à l\'usage du '
+                          'Le cas indique ce moment ; vérifiez qu\'il correspond à l\'usage du '
                           'score.')}
     if value is None:
         return None
@@ -545,7 +546,7 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
         'final_test': _t(
             lang, 'This is the configuration you chose; the holdout (final test) measures it '
                   'once.',
-            "C'est la configuration que tu as choisie ; l'échantillon de test final (holdout) "
+            "C'est la configuration que vous avez choisie ; l'échantillon de test final (holdout) "
             'la mesure une fois.'),
     }.get(decision)
     if why is None:
@@ -560,11 +561,11 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
     if kind == 'await_user_words':
         if mode == st.TRAINING:
             return _t(lang, 'In your own words, what do you keep, and why?',
-                      'Avec tes mots, que retiens-tu, et pourquoi ?')
-        return _t(lang, 'Do you adopt this decision?', 'Est-ce que tu adoptes cette décision ?')
+                      'Avec vos mots, que retenez-vous, et pourquoi ?')
+        return _t(lang, 'Do you adopt this decision?', 'Adoptez-vous cette décision ?')
     if kind == 'reconfirm':
         return _t(lang, f'Do you confirm {audience.decision_words(decision)} again?',
-                  f'Confirmes-tu à nouveau {audience.decision_words(decision, FR)} ?')
+                  f'Confirmez-vous à nouveau {audience.decision_words(decision, FR)} ?')
     if kind in ('outcome_unknown', 'acknowledge_interruption'):
         return _t(lang, 'May this run be recorded as interrupted?',
                   'Peut-on enregistrer cette exécution comme interrompue ?')
@@ -582,7 +583,7 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                    'Quelles colonnes sont connues à ce moment-là, et lesquelles '
                                    'faut-il exclure ?'),
         'split': _t(lang, 'Do you evaluate with this k-fold cross-validation?',
-                    'Évalues-tu avec cette validation croisée à k plis ?') if cv else
+                    'Évaluez-vous avec cette validation croisée à k plis ?') if cv else
         _t(lang, 'How should the rows be divided between the training set and the validation '
                  'set?',
            "Comment répartir les lignes entre le jeu d'entraînement et le jeu de validation ?"),
@@ -597,8 +598,8 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                                  'le modèle utile ?')),
         'preprocessing': _t(lang, 'Do you keep the default preparation, or change one '
                                   'parameter for a reason you can state?',
-                            'Gardes-tu la préparation par défaut, ou changes-tu un paramètre '
-                            'pour une raison que tu peux énoncer ?'),
+                            'Gardez-vous la préparation par défaut, ou changez-vous un '
+                            'paramètre pour une raison que vous pouvez énoncer ?'),
         'model_variant': _t(lang, 'Which variants, at most three, should be compared with '
                                   'the candidate, and which question does each answer?',
                             'Quelles variantes, trois au plus, comparer au candidat, et à '
@@ -607,13 +608,13 @@ def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> st
                      'Quelle règle transforme les scores en actions ?'),
         'model_choice': _t(lang, 'Which model do you choose, given the errors and their '
                                  'intervals?',
-                           'Quel modèle choisis-tu, compte tenu des erreurs et de leurs '
+                           'Quel modèle choisissez-vous, compte tenu des erreurs et de leurs '
                            'intervalles ?'),
         'final_test': _t(lang, 'Do you open the holdout (final test) now, once?',
-                         "Ouvres-tu maintenant l'échantillon de test final (holdout), une "
+                         "Ouvrez-vous maintenant l'échantillon de test final (holdout), une "
                          'seule fois ?'),
         'conclusion': _t(lang, 'What do you conclude, for which use, and with which limits?',
-                         'Que conclus-tu, pour quel usage, et avec quelles limites ?'),
+                         'Que concluez-vous, pour quel usage, et avec quelles limites ?'),
     }
     return questions.get(decision)
 
@@ -858,18 +859,18 @@ def _digest(action: Mapping, view: Mapping, state: Mapping, ctx: dict, lang: str
             if label else junior_message
         if mode == st.TRAINING:
             tail = _t(lang, 'Reply in your own words: what you keep and why.',
-                      'Réponds avec tes mots : ce que tu retiens et pourquoi.')
+                      'Répondez avec vos mots : ce que vous retenez et pourquoi.')
         else:
             tail = _t(lang, 'If it suits you, say that you adopt it; otherwise say what you '
                             'change.',
-                      'Si elle te convient, dis que tu l\'adoptes ; sinon dis ce que tu '
-                      'changes.')
+                      'Si elle vous convient, dites que vous l\'adoptez ; sinon dites ce que '
+                      'vous changez.')
         return _fit([head, tail])
     if kind == 'run':
         activity = action.get('activity')
         return _fit([_t(lang, f'Next: {audience.activity_words(activity)}, run without asking '
                               f'you.',
-                        f'Ensuite : {audience.activity_words(activity, FR)}, lancé sans te '
+                        f'Ensuite : {audience.activity_words(activity, FR)}, lancé sans vous '
                         f'demander.'), junior_message])
     if kind == 'done':
         return _fit([junior_message, _criterion_status_words(view, lang) or ''])

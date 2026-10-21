@@ -53,7 +53,8 @@ class FrenchFlow(Flow):
     def propose(self, decision, value):
         return self.call('decide', 'propose', decision, '--value-json', json.dumps(value),
                          '--restatement', f'You decide the {decision} as stated.',
-                         '--restatement-fr', f'Tu décides {audience.decision_words(decision, "fr")} '
+                         '--restatement-fr', 'Vous décidez '
+                                             f'{audience.decision_words(decision, "fr")} '
                                              'comme indiqué.',
                          '--rationale', 'It fits the scenario.', '--request-id', self.rid(),
                          '--expected-revision', self.rev(), '--study', self.study)
@@ -134,7 +135,7 @@ def test_a_french_study_emits_no_english_junior_text(french):
     assert nxt['kind'] == 'show_data_card' and nxt['language'] == 'fr'
     flow.propose('prediction_time', 'quand la fiche est créée, avant le résultat')
     _assert_french(flow, seen)                      # await_user_words
-    assert flow.view()['next_action']['question'] == 'Est-ce que tu adoptes cette décision ?'
+    assert flow.view()['next_action']['question'] == 'Adoptez-vous cette décision ?'
     p = flow.view()['open_proposals'][0]
     flow.call('decide', 'confirm', p['proposal_id'], '--user-words',
               fk.default_words('prediction_time'), '--request-id', flow.rid(),

@@ -263,7 +263,7 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         if fr:
             return AGENT, (f'Une exécution de {activity_words(action.get("activity"), lang)} '
                            "s'est arrêtée avant la fin, et son résultat est inconnu. Elle n'est "
-                           'pas en cours et ne redémarre pas seule ; on te demandera avant de '
+                           'pas en cours et ne redémarre pas seule ; on vous demandera avant de '
                            "l'enregistrer comme interrompue.")
         return AGENT, (f'A run of {activity_words(action.get("activity"))} stopped before it '
                        'finished, and its outcome is unknown. It is not in progress and does '
@@ -274,7 +274,7 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
             named = (f'Une exécution de {activity_words(action["activity"], lang)}'
                      if action.get('activity') else 'Une exécution')
             return AGENT, (f'{named} a été interrompue et son résultat est inconnu. Elle ne '
-                           "redémarre pas seule ; on te demandera avant de l'enregistrer comme "
+                           "redémarre pas seule ; on vous demandera avant de l'enregistrer comme "
                            'interrompue.')
         named = (f'A run of {activity_words(action["activity"])}' if action.get('activity')
                  else 'A run')
@@ -283,17 +283,17 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
                        'interrupted.')
     if kind == 'reconfirm':
         if fr:
-            return AGENT, (f'Ta réponse sur {decision_words(action.get("decision"), lang)} doit '
-                           'être confirmée à nouveau : un élément dont elle dépend a changé '
-                           'après ta confirmation.')
+            return AGENT, (f'Votre réponse sur {decision_words(action.get("decision"), lang)} '
+                           'doit être confirmée à nouveau : un élément dont elle dépend a '
+                           'changé après votre confirmation.')
         return AGENT, (f'Your answer on {decision_words(action.get("decision"))} must be '
                        'confirmed again: something it depends on changed after you confirmed '
                        'it.')
     if kind == 'await_user_words':
         if fr:
             return AGENT, (f'Une proposition sur {decision_words(action.get("decision"), lang)} '
-                           'attend ta réponse. Lis sa reformulation et dis si tu l\'adoptes, ou '
-                           'ce que tu changerais.')
+                           'attend votre réponse. Lisez sa reformulation et dites si vous '
+                           "l'adoptez, ou ce que vous changeriez.")
         return AGENT, (f'A proposal on {decision_words(action.get("decision"))} is waiting for '
                        'your answer. Read its restatement and say whether you adopt it, or '
                        'what you would change.')
@@ -307,7 +307,7 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
     if kind == 'show_data_card':
         # WP-A4 (R2): step 0, informational.
         if fr:
-            return AGENT, ("D'abord, regarde les données avec l'assistant : ce que décrit une "
+            return AGENT, ("D'abord, regardez les données avec l'assistant : ce que décrit une "
                            'ligne, les colonnes et ce que chacune signifie, et cinq lignes '
                            "d'exemple. Rien n'est décidé à cette étape.")
         return AGENT, ('First, look at the data with the assistant: what one row describes, '
@@ -322,8 +322,8 @@ def _junior_next(action: Mapping, lang: str = EN) -> tuple[str, str]:
         return JUNIOR, message
     if kind == 'done':
         if fr:
-            return AGENT, ("Toutes les étapes du plan sont faites. Avant de t'appuyer sur la "
-                           'conclusion, lis les limites que le rapport énumère.')
+            return AGENT, ("Toutes les étapes du plan sont faites. Avant de vous appuyer sur la "
+                           'conclusion, lisez les limites que le rapport énumère.')
         return AGENT, ('Every step of the plan is done. Before relying on the conclusion, read '
                        'the limits the report lists.')
     return AGENT, message
@@ -419,18 +419,18 @@ def artifact(name: str, item: Mapping, lang: str = EN) -> dict:
     if lang == FR:
         label = ARTIFACT_WORDS_FR.get(name, ' '.join(str(name).split('_')))
         if item.get('generated') is False or name == 'workbench':
-            junior = (f"{_capital(label)} est ton espace libre : il est créé une fois, jamais "
+            junior = (f"{_capital(label)} est votre espace libre : il est créé une fois, jamais "
                       "écrasé, et n'est pas suivi par l'étude.")
         elif status == 'ok':
             junior = f'{_capital(label)} est à jour.'
         elif status == 'not_rendered':
             junior = f"{_capital(label)} n'a pas encore été écrit."
         elif status == 'failed':
-            junior = (f'La dernière mise à jour de « {label} » a échoué ; ne t\'y fie pas tant '
-                      "qu'il n'est pas réécrit.")
+            junior = (f'La dernière mise à jour de « {label} » a échoué ; ne vous y fiez '
+                      "pas tant qu'il n'est pas réécrit.")
         else:
             junior = (f"{_capital(label)} n'est plus à jour : l'étude a changé après son "
-                      "écriture. Ne t'y fie pas tant qu'il n'est pas réécrit.")
+                      "écriture. Ne vous y fiez pas tant qu'il n'est pas réécrit.")
         return {'audience': AGENT, 'junior_message': junior}
     label = ARTIFACT_WORDS.get(name, ' '.join(str(name).split('_')))
     if item.get('generated') is False or name == 'workbench':
