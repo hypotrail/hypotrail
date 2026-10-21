@@ -122,8 +122,8 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      panel, and never word a proposal in the past tense ("j'ai examiné… pour exclure"):
      nothing is decided yet. For a list decision (feature availability), the block names
      every column it excludes with its reason, and what it keeps. With an interactive
-     choice tool (Claude Code: `AskUserQuestion`), send that message first, then offer
-     three options in the junior's language: adopt ("J'adopte cette décision", its
+     choice tool ({{CHOICE_TOOL}}), use it at every pause: send that message first,
+     then offer one single-choice question with three options in the junior's language: adopt ("J'adopte cette décision", its
      description the decision in one line, e.g. "J'exclus les 4 colonnes connues après la
      réservation"), change something, explain first. Without one, ask it in text.
      Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A

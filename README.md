@@ -23,6 +23,8 @@ uv run --project framework marimo run  ~/studies/hotel/notebooks/study_generated
 uv run --project framework marimo edit ~/studies/hotel/notebooks/workbench.py         # your experiments
 ```
 
+With GitHub Copilot instead (VS Code 1.109 or later, for the interactive choice picker): open the study folder in VS Code (`code ~/studies/hotel`), open the Chat view, pick the agent **Hypotrail** in the agent picker (installed by `init` as `.github/agents/hypotrail.agent.md`; it reads `.github/copilot-instructions.md` and the skill), and say what you want to do. At each decision it shows the decision as a quoted block, then a picker "Adoptez-vous cette décision ?" with three options. Check that `vscode/askQuestions` is enabled in the chat tools picker. The Copilot files are generated from the Claude Code instructions and are not covered by the automated acceptance runs.
+
 Optional study panel (VS Code 1.90 or later, flag off by default): `HYPOTRAIL_COMPANION=1 HYPOTRAIL_COMPANION_STAGE=v3 code --extensionDevelopmentPath="$PWD/clients/vscode-companion" ~/studies/hotel`, then "Hypotrail: open the study panel". Its "Open in Marimo (read)" and "Open in Marimo (edit)" buttons run the two commands above in a VS Code terminal. See [its README](clients/vscode-companion/README.md); a step-by-step demo is in [the owner review guide](docs/plans/V0.2-OWNER-REVIEW.md#owner-demo-2-script).
 
 | Directory | Purpose |

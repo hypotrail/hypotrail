@@ -18,7 +18,8 @@ import flowkit as fk
 CLAUDE_TARGETS = {'CLAUDE.md', '.claude/skills/hypotrail-study/SKILL.md',
                   '.claude/commands/hypotrail-resume.md'}
 COPILOT_TARGETS = {'.github/copilot-instructions.md', '.github/skills/hypotrail-study/SKILL.md',
-                   '.github/prompts/hypotrail-resume.prompt.md'}
+                   '.github/prompts/hypotrail-resume.prompt.md',
+                   '.github/agents/hypotrail.agent.md'}
 
 
 class Flat(str):
@@ -83,7 +84,13 @@ def test_init_installs_both_agents_with_the_exact_invocation(study):
         text = (target / rel).read_text()
         assert text.startswith('---\n'), rel                # front matter stays first
         assert 'Not tested with GitHub Copilot' in text.split('\n---\n', 1)[1].splitlines()[0]
-    assert 'mode: agent' in (target / '.github/prompts/hypotrail-resume.prompt.md').read_text()
+    assert 'agent: Hypotrail' in (target / '.github/prompts/hypotrail-resume.prompt.md').read_text()
+    # the Copilot custom agent may use VS Code's choice picker; Claude Code's copy names its own
+    agent = (target / '.github/agents/hypotrail.agent.md').read_text()
+    assert agent.startswith('---\nname: Hypotrail\n') and "'vscode/askQuestions'" in agent
+    assert '#tool:vscode/askQuestions' in agent and '--channel choice' in agent
+    assert '#tool:vscode/askQuestions' in copilot and '`AskUserQuestion`' not in copilot
+    assert '`AskUserQuestion`' in (target / 'CLAUDE.md').read_text()
     skill = (target / '.claude/skills/hypotrail-study/SKILL.md').read_text()
     # D10: the glossary is copied into the study; the instructions point there, never into
     # the engine's source tree (agents may not read it).
@@ -354,7 +361,7 @@ def test_instructions_carry_the_v0_2a_rules():
         # its text fallback, optional reasons, and the engine's refusal message relayed
         for phrase in ('--proposal PROPOSAL_ID', 'quoted block',
                        '"Do you adopt this decision?"',
-                       '"Adoptez-vous cette décision ?"', '`AskUserQuestion`',
+                       '"Adoptez-vous cette décision ?"', '{{CHOICE_TOOL}}', 'use it at every pause',
                        'adopt', 'change something', 'explain first', 'ask it in text',
                        '--channel choice', '--adoption-question',
                        'only when your last message asked that question about this proposal',
