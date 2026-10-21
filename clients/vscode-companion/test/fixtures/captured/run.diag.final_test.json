@@ -21,7 +21,7 @@
   "activity": "diag.final_test",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "090298b4ae9d807a503babe245bb447005d0aa01b6777380141a96f4fd49ea67",
+  "result_id": "469b07c747ab6a5d15f2f5d0b44aedbd5f3fc9e54de0dda46a14c51e1ec49137",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "8f6ab3ce99d237041ce81e337a98de7bb6cc2b36998ac7204e47cc8354fee196",
+   "final_evaluation": "24dd1c4a576d64c1e84ed7115bd5755f9cb5cdc79d25576aafd53837e4bbf614",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -843,7 +843,7 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "8f6ab3ce99d237041ce81e337a98de7bb6cc2b36998ac7204e47cc8354fee196"
+     "predictions": "24dd1c4a576d64c1e84ed7115bd5755f9cb5cdc79d25576aafd53837e4bbf614"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -853,13 +853,13 @@
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "090298b4ae9d807a503babe245bb447005d0aa01b6777380141a96f4fd49ea67",
-   "input_key": "95ae838231e6f44638bff879b041db7f46e5ff1eece1bd8cb177197854628084",
+   "result_id": "469b07c747ab6a5d15f2f5d0b44aedbd5f3fc9e54de0dda46a14c51e1ec49137",
+   "input_key": "faa13f9a4b456d95e7291b44d66bff974f963145215e93b7199c2be2bfdd1e66",
    "reason": null,
    "started_revision": 34,
    "invalidation": null,
    "exposure_ids": [
-    "x_c8c8518245144823b37a9be70d7e2d60"
+    "x_39232647ec054c02b70363c3eaebb439"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -890,6 +890,18 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "train_eda",
+   "activity": "eda.special_values",
+   "message": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "audience": "junior",
+   "junior_message": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted."
   }
  }
 }

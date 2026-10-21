@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_bad9a6f0e28076da5c45d47f",
   "status": "promoted",
-  "result_id": "32d80e903e29b786f4daf71e84b90bfe94b78abee22514735c894b893c823673",
+  "result_id": "1d6272bd8755e426ce5400153f17620bbb2368968bbd795fd1649e371f5c963c",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1175,73 +1175,79 @@
        {
         "term": "num__weight",
         "value": -4.061984545313062,
-        "low": -5.234536471318423,
-        "high": -3.193852854834811,
+        "low": -4.975802987169089,
+        "high": -3.148166103457031,
+        "std_error": 0.46624246622086557,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "num__horsepower",
         "value": -1.1866635219111468,
-        "low": -2.429091988823104,
-        "high": -0.215620553363709,
+        "low": -2.3031650030845583,
+        "high": -0.07016204073773946,
+        "std_error": 0.5696540803709819,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__origin_3",
         "value": 1.1406405002541518,
-        "low": 0.08594501308905975,
-        "high": 2.244493358101246,
+        "low": 0.0008203333440128802,
+        "high": 2.2804606671642897,
+        "std_error": 0.5815515876316579,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__origin_1",
         "value": -0.9522927696704008,
-        "low": -1.9570374795654415,
-        "high": 0.0704453845757341,
-        "excludes_zero": false,
+        "low": -1.7871619188214076,
+        "high": -0.11742362051939081,
+        "std_error": 0.4259614746680806,
+        "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "num__displacement",
         "value": 0.41888510741149876,
-        "low": -1.1697864980786072,
-        "high": 2.233370233743727,
+        "low": -1.3255373866643845,
+        "high": 2.1633076014873778,
+        "std_error": 0.8900278310395822,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__cylinders",
         "value": -0.37022387198762724,
-        "low": -1.3176608300311516,
-        "high": 0.4977653692299574,
+        "low": -1.3849745497064594,
+        "high": 0.644526805731213,
+        "std_error": 0.517739451195563,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__origin_2",
         "value": -0.1883477305837519,
-        "low": -1.244668540690834,
-        "high": 0.6081908425667397,
+        "low": -1.1806996206798284,
+        "high": 0.8040041595123248,
+        "std_error": 0.5063112883316336,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__horsepower=?",
         "value": -0.04154318702939566,
-        "low": -0.13708834218603827,
-        "high": 0.06947948902390343,
+        "low": -0.13700034795827704,
+        "high": 0.053913973899486545,
+        "std_error": 0.0487035280657378,
         "excludes_zero": false,
         "inside_interval": true
        }
       ],
       "n_rows": 222,
-      "replicates": 100,
-      "seed": 20261019,
       "level": 0.95,
-      "skipped_replicates": 0,
+      "penalty": 0.0,
       "point_check": {
        "consistent": true,
        "max_difference": 3.9968028886505635e-15,
@@ -1249,11 +1255,11 @@
        "misaligned_terms": [],
        "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
       },
-      "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
-      "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+      "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+      "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "072d4ac00cfad749e6aae684fab99521d67ca14eda769369d46340345a83e1c3"
+     "predictions": "0fee5b813bd57cc64151cf8dccdd73aa7891d4194e158f751374d08711161620"
     },
     "fit.variant": {
      "errors": {
@@ -2383,73 +2389,79 @@
        {
         "term": "num__weight",
         "value": -3.1876711076603237,
-        "low": -3.8617364269120182,
-        "high": -2.5988972569181388,
+        "low": -3.7483544627035434,
+        "high": -2.6269877526171004,
+        "std_error": 0.2860681928167153,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "num__horsepower",
         "value": -1.0461027069104654,
-        "low": -1.8405225157720457,
-        "high": -0.3563429278094127,
+        "low": -1.786412748651713,
+        "high": -0.3057926651692302,
+        "std_error": 0.37771614559283373,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__origin_3",
         "value": 0.9061642971091335,
-        "low": 0.076051148851047,
-        "high": 1.7792515684501842,
+        "low": 0.0884935705036135,
+        "high": 1.7238350237146447,
+        "std_error": 0.41718660804749386,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__origin_1",
         "value": -0.7060718689819638,
-        "low": -1.3772328856492302,
-        "high": 0.03606694017006684,
-        "excludes_zero": false,
+        "low": -1.3802675839348786,
+        "high": -0.031876154029053416,
+        "std_error": 0.3439837263699142,
+        "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "num__cylinders",
         "value": -0.5206655589928507,
-        "low": -1.0970833182950004,
-        "high": 0.028234952981895427,
+        "low": -1.1537101318734755,
+        "high": 0.11237901388768656,
+        "std_error": 0.32298785991679235,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__displacement",
         "value": -0.4706630199042758,
-        "low": -1.154202670568835,
-        "high": 0.267107702958422,
+        "low": -1.20089557776469,
+        "high": 0.2595695379562316,
+        "std_error": 0.3725744777049182,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__origin_2",
         "value": -0.20009242812717776,
-        "low": -1.0235986726361677,
-        "high": 0.41958434204012324,
+        "low": -0.9306795653975317,
+        "high": 0.5304947091431793,
+        "std_error": 0.37275538889139487,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__horsepower=?",
         "value": -0.04053541390734935,
-        "low": -0.11053329184909746,
-        "high": 0.03449637062558004,
+        "low": -0.10576861209120123,
+        "high": 0.02469778427650468,
+        "std_error": 0.03328285555163468,
         "excludes_zero": false,
         "inside_interval": true
        }
       ],
       "n_rows": 222,
-      "replicates": 100,
-      "seed": 20261019,
       "level": 0.95,
-      "skipped_replicates": 0,
+      "penalty": 10.0,
       "point_check": {
        "consistent": true,
        "max_difference": 4.657385588302532e-14,
@@ -2457,11 +2469,11 @@
        "misaligned_terms": [],
        "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
       },
-      "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
-      "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+      "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+      "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "7417d54cacb0bf021f6b293b57e8c68801470126db748b00e55099249200b886"
+     "predictions": "bc7d847a11472d5faa5a9a284aeb69385e865bb2a27d3bc9a1133dd8289333fc"
     }
    },
    "coefficient_rows": 222,
@@ -2676,14 +2688,14 @@
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "32d80e903e29b786f4daf71e84b90bfe94b78abee22514735c894b893c823673",
-   "input_key": "a3c96eacac4bf6b9516f8aae0ea5599339e40c4413ffc11a6115047fde02f0c7",
+   "result_id": "1d6272bd8755e426ce5400153f17620bbb2368968bbd795fd1649e371f5c963c",
+   "input_key": "3c10eb478ede51654cf588c38932d85323b33f61b5927a2f0ae7fb92a767d200",
    "reason": null,
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_33a59e39d0f344478cc12d2b8728333c",
-    "x_9da43c0442a34087be595ce9d361f3b8"
+    "x_f4b3360dffbd47bba1b8bc6de7c5b819",
+    "x_3ddab7a4a58e4a03848835b8d82a428a"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2714,6 +2726,18 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "await_user_words",
+   "proposal_id": "p_7",
+   "decision": "model_choice",
+   "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
+   "audience": "agent",
+   "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
+   "language": "en",
+   "recommended": null,
+   "question": "Do you adopt this decision?",
+   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
   }
  }
 }

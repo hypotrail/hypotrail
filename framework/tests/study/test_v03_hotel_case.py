@@ -58,6 +58,12 @@ def test_the_case_states_the_booking_timeline():
     assert facts['prediction_time']['status'] == 'scenario_assumption'
     labels = data.load_dataset(case).frame['is_canceled'].astype(str).value_counts().to_dict()
     assert labels == {'0': 28938, '1': 11122}
+    # v0.3 (WP-J): the interpretability the use case asks of a model, a stated assumption.
+    interp = case.document['constraints']['interpretability']
+    assert (interp['value'], interp['status']) == ('preferred', 'scenario_assumption')
+    from mlkit.study import trials
+    assert trials.constraints_of(case.document) == {'interpretability': 'preferred',
+                                                    'declared': True}
 
 
 @pytest.fixture(scope='module')

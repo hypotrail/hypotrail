@@ -577,14 +577,28 @@ def case_of(state, *, verify_data: bool = False) -> Case:
     return load_case(state['case']['path'], verify_data=verify_data)
 
 
+# v0.3 (WP-J): committed case files whose new version only adds statements that no result
+# reads (``constraints``, which only the view's shortlist of model families reads, at view
+# time): a study recorded with the earlier digest keeps its decisions and results.
+# ``(recorded sha256, current sha256): reason``.
+EQUIVALENT_CASE_FILES = {
+    ('f7ab68b7ecd87167379dadf8d9175f934c29f057868dc2dab85dbd5adce8d8ef',
+     'a9c8e4626b1a8eb1669a17a0b39a37c5bad57b89959413f4e9a5435a367ba62f'):
+        'use-cases/hotel-booking/case.yaml: constraints.interpretability added (v0.3, WP-J)',
+}
+
+
 def source_changes(state) -> list[dict]:
     """The case and dataset files whose bytes differ from the digests recorded in
     ``state`` (plan §3.7 row 12): ``[{label, path, expected_sha256, actual_sha256}]``,
-    empty when both match. ``actual_sha256`` is None for a missing file."""
+    empty when both match. ``actual_sha256`` is None for a missing file. A case file whose
+    change is listed in :data:`EQUIVALENT_CASE_FILES` is not a change (v0.3, WP-J)."""
     out = []
     for label in ('case', 'dataset'):
         path, expected = Path(state[label]['path']), state[label]['sha256']
         actual = sha256_file(path) if path.is_file() else None
+        if label == 'case' and (expected, actual) in EQUIVALENT_CASE_FILES:
+            continue
         if actual != expected:
             out.append({'label': label, 'path': str(path), 'expected_sha256': expected,
                         'actual_sha256': actual})

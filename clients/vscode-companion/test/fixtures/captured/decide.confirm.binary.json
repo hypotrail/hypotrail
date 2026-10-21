@@ -42,7 +42,7 @@
     "row": 6,
     "reason": "policy changed (§3.7 row 6: policy.rule_type)",
     "stale_results": [
-     "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675"
+     "0b3872a562ff792c97f7f3293bbbecdab6e87df4c3c46c29e34b48e50f98c05c"
     ],
     "stale_slots": [
      "diag.binary"
@@ -84,6 +84,19 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "policy",
+   "activity": "diag.binary",
+   "message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "default_value": "share:0.1",
+   "audience": "junior",
+   "junior_message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?"
   }
  }
 }

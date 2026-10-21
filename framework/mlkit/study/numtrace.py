@@ -174,7 +174,22 @@ COUNT_SEGMENTS = frozenset({'n', 'n_rows', 'n_positive', 'n_negative', 'selected
                             'n_b', 'n_both', 'n_either', 'n_groups', 'n_distinct', 'rows',
                             'development_rows', 'n_rows_with_missing', '@n_rows', 'point',
                             'low', 'high'})
+GROUP_COUNT_SEGMENTS = COUNT_SEGMENTS - {'point', 'low', 'high', '@n_rows'}
 _NEAR_BEFORE, _NEAR_AFTER = 60, 30
+
+
+def _rule_texts(values: Any):
+    """v0.3 (WP-J): the engine's rule texts inside a result (string values of a key ending
+    in ``_rule``, such as a diagnostic's ``small_cell_rule``)."""
+    if isinstance(values, Mapping):
+        for k, v in values.items():
+            if isinstance(v, str) and str(k).endswith('_rule'):
+                yield v
+            elif isinstance(v, (Mapping, list)):
+                yield from _rule_texts(v)
+    elif isinstance(values, list):
+        for v in values:
+            yield from _rule_texts(v)
 
 
 def internal_path(slot: str, path: str) -> bool:
@@ -236,6 +251,30 @@ DIAG_BOUNDS = ('low', 'high', 'precision_low', 'precision_high', 'recall_low', '
 # the configuration a text would claim.
 CHOICE_CHANGES = ('policy', 'model_choice', 'model_variant', 'preprocessing',
                   'feature_availability', 'split')
+# v0.3 (WP-J): a percentage that names an interval's level ("MAE (95% interval)",
+# « intervalle de confiance à 95 % », "95% CI") is that level, whatever metric the clause
+# names: it matches a registered ``level`` or the bootstrap setting, never a metric's value.
+LEVEL_AFTER = re.compile(r'\s*(?:-\s*)?(?:confidence\s+)?(?:intervals?\b|ci\b|confidence\b|'
+                         r'bootstrap\b|level\b)', re.I)
+LEVEL_BEFORE = re.compile(r'(?:intervalles?(?:\s+de\s+confiance)?|\bic|\bci|confidence(?:\s+level)?|'
+                          r'niveau(?:\s+de\s+confiance)?|level)\s*(?:à|at|de|of|:)?\s*$', re.I)
+LEVEL_BINDING = ('level',)
+# v0.3 (WP-J): a number right after a threshold word ("fewer than 30 rows", « moins de 30
+# lignes ») may be one of the thresholds the engine applied and states (``min_group_rows``,
+# ``max_groups``, the numbers of a ``*_rule`` text such as a diagnostic's small-cell rule),
+# which are internals otherwise.
+THRESHOLD_BEFORE = re.compile(r'(?:\b(?:fewer|less|more|greater)\s+than|\bat\s+(?:least|most)|'
+                              r'\bunder|\bbelow|\babove|\bover|\bmoins\s+de|\bplus\s+de|'
+                              r'\bau\s+(?:moins|plus)|\bmin(?:imum)?(?:\s+(?:of|de))?|'
+                              r'\bmax(?:imum)?(?:\s+(?:of|de))?|\bseuil(?:\s+de)?|'
+                              r'\bthreshold(?:\s+of)?|[<>≤≥])\s*$', re.I)
+THRESHOLD_SEGMENTS = frozenset({'min_group_rows', 'max_groups', 'min_rows',
+                                'min_segment_rows', 'min_segment_positives'})
+# v0.3 (WP-J): "333 of 459", « 333 étudiants sur 459 »: two counts of one group, the group
+# named in another language or in an earlier sentence; both must be counts of the same group
+# of a current result.
+PAIR_SEPARATOR = re.compile(r'\s*(?:[^\W\d_][\w\'’-]*\s+){0,2}(?:sur|of|out\s+of|parmi|among|/)'
+                            r'\s*$', re.I)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -547,6 +586,9 @@ class Pool:
         # matching): the slots and result ids of the view, and the group labels.
         self.slots: dict[str, str] = {}
         self.labels: dict[str, re.Pattern] = {}
+        # v0.3 (WP-J): thresholds the engine states, and the counts of each group.
+        self.thresholds: list[dict] = []
+        self.group_counts: dict[tuple[str, str], list[dict]] = {}
         for slot, item in sorted(view['results'].items()):
             if item['values'] is None:
                 continue
@@ -565,8 +607,16 @@ class Pool:
                 if isinstance(item['values'], Mapping) else None
             selection_metric = selection.get('metric') if isinstance(selection, Mapping) \
                 else None
+            current = bucket is self.current
+            if current:
+                for text in _rule_texts(item['values']):
+                    for v in _walk_numbers(text):
+                        self.thresholds.append({'source': 'threshold', 'id': slot, 'value': v})
             for segments, value, labels in leaves:
                 path = cite.format_path(segments)
+                if current and segments and segments[-1] in THRESHOLD_SEGMENTS:
+                    self.thresholds.append({'source': 'threshold', 'id': f'{slot}:{path}',
+                                            'value': value})
                 if internal_path(slot, path):
                     continue
                 entry = {'result_id': item['result_id'], 'slot': slot, 'path': path,
@@ -582,6 +632,11 @@ class Pool:
                         and segments[0] == 'model_selection':
                     entry['metric'] = selection_metric
                 bucket.append(entry)
+                if current and labels and len(segments) > 1 \
+                        and segments[-1] in GROUP_COUNT_SEGMENTS:
+                    # v0.3 (WP-J): the counts of one group, for "333 of 459".
+                    key = (item['result_id'], cite.format_path(segments[:-1]))
+                    self.group_counts.setdefault(key, []).append(entry)
         self.scope, self.unknown_scope = None, []
         if scope is not None:
             found = set()
@@ -748,6 +803,25 @@ class Pool:
         return next((item for item in self.structure
                      if item['kind'] == kind and item['value'] == int(value)), None)
 
+    def threshold_match(self, tok: cite.Token) -> dict | None:
+        """v0.3 (WP-J): the stated engine threshold a number after a threshold word repeats."""
+        if tok.percent:
+            return None
+        return next((t for t in self.thresholds if abs(t['value'] - tok.value) < 1e-9), None)
+
+    def pair_match(self, a: cite.Token, b: cite.Token) -> tuple[dict, dict] | None:
+        """v0.3 (WP-J): two counts of one group of a current result ("333 of 459"), the
+        first smaller than the second; None when no group holds both."""
+        if a.percent or b.percent or a.decimals or b.decimals or not a.value < b.value:
+            return None
+        for key in sorted(self.group_counts):
+            items = self.group_counts[key]
+            first = next((i for i in items if abs(i['value'] - a.value) < 1e-9), None)
+            second = next((i for i in items if abs(i['value'] - b.value) < 1e-9), None)
+            if first is not None and second is not None:
+                return first, second
+        return None
+
     def retired_match(self, value: float, *, percent: bool = False) -> dict | None:
         """The withdrawn or superseded proposal whose figure ``value`` repeats, if any."""
         for item in self.retired:
@@ -799,7 +873,7 @@ class Pool:
                 if label != 'literal' and not _bound(item, bind):
                     continue
                 if label == 'literal' and bind is not None \
-                        and bind.segments not in (None, ('#count',)) \
+                        and bind.segments not in (None, ('#count',), LEVEL_BINDING) \
                         and (item['source'] == 'setting'
                              or (tok.percent and item['source'] in STRUCTURAL_LITERALS)):
                     # v0.3 (WP-A): a figure said of a metric ("95% precision") is no
@@ -938,6 +1012,15 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
     items = sorted([(t.start, 0, t) for t in cite.parse_numbers(masked) + glued_numbers(masked)]
                    + [(w.start, 1, w) for w in wordnum.parse(masked, pool.units)],
                    key=lambda x: x[:2])
+    # v0.3 (WP-J): "333 of 459" (two counts of one group, its name in another language or
+    # in an earlier sentence).
+    paired: dict[int, dict] = {}
+    digits = [t for _, w, t in items if not w]
+    for a, b in zip(digits, digits[1:]):
+        if a.end <= b.start and PAIR_SEPARATOR.fullmatch(masked[a.end:b.start] + ' '):
+            found = pool.pair_match(a, b)
+            if found:
+                paired[a.start], paired[b.start] = found
     for _, in_words, tok in items:
         if _exempt(masked, tok):
             continue
@@ -952,13 +1035,31 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
         if difference:
             tok = dataclasses.replace(tok, percent=True)
         bind = binding(masked, tok.start, tok.end, tok.percent)
+        if tok.percent and not difference and (
+                LEVEL_AFTER.match(masked, tok.end)
+                or LEVEL_BEFORE.search(masked[max(0, tok.start - 40):tok.start])):
+            # v0.3 (WP-J): "95% interval" names the interval's level.
+            bind = dataclasses.replace(bind, segments=LEVEL_BINDING, rule=False)
         # v0.3 (WP-A): the results and groups the sentence names bind its numbers.
         bounds = _sentence_bounds(masked, tok.start, tok.end)
         if bounds not in scopes:
             scopes[bounds] = pool.sentence_scope(masked[bounds[0]:bounds[1]])
+            if not scopes[bounds][1] and bounds[0] > 0:
+                # v0.3 (WP-J): a sentence that names no group speaks of the group the
+                # sentence before it named ("Students are 459. 333 of them are called.").
+                before = _sentence_bounds(masked, max(0, bounds[0] - 2), max(0, bounds[0] - 2))
+                inherited = pool.sentence_scope(masked[before[0]:before[1]])[1]
+                scopes[bounds] = (scopes[bounds][0], inherited)
         results, labels = scopes[bounds]
         bind = dataclasses.replace(bind, results=results, labels=labels)
         label, item = pool.trace(tok, difference=difference, bind=bind)
+        if label in ('none', 'stale') and tok.start in paired:
+            label, item = 'current', paired[tok.start]
+        if label in ('none', 'stale') and THRESHOLD_BEFORE.search(
+                masked[max(0, tok.start - 24):tok.start]):
+            threshold = pool.threshold_match(tok)
+            if threshold is not None:
+                label, item = 'literal', threshold
         if label in ('none', 'stale') and tok.start in identifiers:
             traced.append({'text': tok.text.strip(), 'source': 'identifier', 'id': 'rule',
                            'value': tok.value})

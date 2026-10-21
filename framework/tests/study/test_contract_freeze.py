@@ -95,7 +95,9 @@ PAYLOAD_KEYS = {
     'status': ('schema', 'ok', 'study', 'revision', 'since', 'changed', 'changes_since', 'view'),
     'plan': ('schema', 'ok', 'study', 'revision', 'steps', 'current_step', 'next_action'),
     'decide': ('schema', 'ok', 'study', 'action', 'request_id', 'replayed', 'revision', 'result',
-               'artifacts'),
+               'artifacts',
+               # v0.3 (WP-J): the next action after the write, as status gives it.
+               'next_action'),
     'error': ('schema', 'ok', 'command', 'error'),
 }
 RESULT_KEYS_BY_ACTION = {
@@ -1171,7 +1173,13 @@ def test_wp_b4_contract_constants():
     assert dg.RULE_SOURCES == ('adopted', 'proposed', 'scenario_default', 'engine_default')
     assert dg.DEFAULT_RULE == 'share:0.1' and len(dg.CURVE_SHARES) == 20
     assert (dg.CALIBRATION_BINS, dg.MAX_SEGMENT_COLUMNS, dg.MAX_EXAMPLES,
-            dg.COEFFICIENT_REPLICATES, dg.SCATTER_POINTS) == (10, 2, 5, 100, 150)
+            dg.SCATTER_POINTS) == (10, 2, 5, 150)
+    # v0.3 (WP-J): Wald intervals from a sandwich covariance replace the 100-refit bootstrap.
+    assert (dg.COEFFICIENT_INTERVALS, dg.COEFFICIENT_LEVEL) == ('wald_sandwich', 0.95)
+    assert dg.COEFFICIENT_KEYS == ('terms', 'n_rows', 'level', 'penalty', 'point_check',
+                                   'method', 'note')
+    assert dg.COEFFICIENT_TERM_KEYS == ('term', 'value', 'low', 'high', 'std_error',
+                                        'excludes_zero', 'inside_interval')
     assert dg.BINARY_KEYS == ('question', 'evidence', 'purpose', 'partition', 'evaluation', 'n',
                               'n_positive', 'base_rate', 'rule', 'rule_source',
                               'segment_columns', 'segment_rule', 'models', 'coefficient_rows',

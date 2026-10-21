@@ -155,6 +155,10 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('--digest', action='store_true',
                    help='with --summary: add moments, pauses, last_session, and digest '
                         '(CLI-CONTRACT-COMPANION §1)')
+    p.add_argument('--fields', default=None, metavar='KEY[,KEY...]',
+                   help='with --summary: print only these keys of the summary (for example '
+                        'next_action,criterion), after schema, ok, study and revision; read '
+                        'them as they are instead of piping the JSON into a script')
     sub.add_parser('plan', parents=[common], help='read-only plan with step statuses')
 
     decide = sub.add_parser('decide', help='propose, confirm, or withdraw a decision, or '
@@ -314,8 +318,12 @@ def dispatch(args) -> cmd.Outcome:
     if args.command == 'status':
         if args.digest and not args.summary:
             raise ArgumentError('--digest requires --summary')
+        if args.fields is not None and not args.summary:
+            raise ArgumentError('--fields requires --summary')
+        fields = None if args.fields is None else [
+            f.strip() for f in args.fields.split(',') if f.strip()]
         return cmd.status(args.study, since=args.since, summary=args.summary,
-                          digest=args.digest)
+                          digest=args.digest, fields=fields)
     if args.command == 'plan':
         return cmd.plan(args.study)
     if args.command == 'decide':

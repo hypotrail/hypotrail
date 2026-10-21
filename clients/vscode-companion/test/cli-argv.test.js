@@ -45,15 +45,15 @@ test('writes: exact argv of W4-W7 (§7); W1-W3 are withdrawn (v0.3 narrowing)', 
   assert.deepEqual(Object.keys(cli.WRITES), ['W4', 'W5', 'W6', 'W7']);
   for (const name of ['confirmArgv', 'withdrawArgv', 'proposeArgv']) assert.equal(cli[name], undefined, name);
   assert.deepEqual(cli.WRITES.W4(AGENT, { activity: 'eda.distribution', column: '-age', requestId: ID, expectedRevision: 3 }),
-    [...A, 'run', 'eda.distribution', '--column=-age', '--request-id', ID, '--expected-revision', '3', ...T]);
-  assert.deepEqual(cli.WRITES.W5(AGENT), [...A, 'render', ...T]);
+    [...A, 'run', 'eda.distribution', '--column=-age', '--channel=webview', '--request-id', ID, '--expected-revision', '3', ...T]);
+  assert.deepEqual(cli.WRITES.W5(AGENT), [...A, 'render', '--channel=webview', ...T]);
   assert.deepEqual(cli.WRITES.W6(AGENT, { executionId: 'e_4c1d', words: 'I know it stopped.', requestId: ID, expectedRevision: 3 }),
-    [...A, 'run', '--acknowledge-interruption', 'e_4c1d', '--user-words=I know it stopped.', '--request-id', ID,
+    [...A, 'run', '--acknowledge-interruption', 'e_4c1d', '--user-words=I know it stopped.', '--channel=webview', '--request-id', ID,
       '--expected-revision', '3', ...T]);
   // CR.6: the export names the revision the junior saw, so the engine refuses a stale one;
   // there is no form without the option (an unknown `legacy` flag changes nothing).
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }),
-    [...A, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--expected-revision', '26', ...T]);
+    [...A, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--channel=webview', '--expected-revision', '26', ...T]);
   assert.deepEqual(cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26, legacy: true }),
     cli.WRITES.W7(AGENT, { parent: '/tmp/hand off', revision: 26 }));
 });

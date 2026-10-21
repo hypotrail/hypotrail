@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
+       "result_id": "77d141663fc6364296f4dddd557a0eda1224dd6c28a1fb87180d57a5d19b05e7",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "5c67966289b4594422c255132f62dc9408eafa8013ff14912c83463b0f2079fa",
+       "result_id": "f80678e7e7eb8dbf1cee35e3371943b5d95bdd2d85c2b70635e0ac92bc535937",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
+       "result_id": "931008382f37f2e20c97ef1d695ebb935eb2be4d8f6b8ec55954018e4e2666bb",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
+       "result_id": "931008382f37f2e20c97ef1d695ebb935eb2be4d8f6b8ec55954018e4e2666bb",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.3%",
-       "result_id": "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
+       "result_id": "931008382f37f2e20c97ef1d695ebb935eb2be4d8f6b8ec55954018e4e2666bb",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.2828227931488801,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "47.8%",
-       "result_id": "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
+       "result_id": "931008382f37f2e20c97ef1d695ebb935eb2be4d8f6b8ec55954018e4e2666bb",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.4783043478260867,
        "format": "pct1"
@@ -448,7 +448,7 @@
    {
     "id": "overfitting",
     "term": "Overfitting",
-    "definition": "A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.",
+    "definition": "A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises which months of the training clients had many subscriptions can score those clients well and the next campaign badly; the gap between training and validation figures reveals it.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -456,7 +456,7 @@
    {
     "id": "regularisation",
     "term": "Regularisation",
-    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training rows for steadier predictions on new rows. For example, in a logistic model of client subscriptions with many job and month categories, regularisation keeps a rare category from getting an extreme weight from a handful of clients.",
+    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training set for steadier predictions on new rows. For example, in a logistic model of client subscriptions with many job and month categories, regularisation keeps a rare category from getting an extreme weight from a handful of clients.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -472,7 +472,7 @@
    {
     "id": "imputation",
     "term": "Imputation",
-    "definition": "Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, a client whose account balance is missing would get the median balance of the training clients, never a figure computed with validation clients.",
+    "definition": "Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, a client whose account balance is missing would get the median balance of the training clients, never a figure computed with validation clients.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -480,7 +480,7 @@
    {
     "id": "standardisation",
     "term": "Standardisation",
-    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on training rows. It puts features on one scale, so their weights and a penalty treat them alike. For example, a client's age in years and account balance in euros are rescaled so that the weight on balance is not tiny only because euro amounts are large numbers.",
+    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, a client's age in years and account balance in euros are rescaled so that the weight on balance is not tiny only because euro amounts are large numbers.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -709,7 +709,7 @@
     "method": {
      "segments": [
       {
-       "text": "You state the moment in your own words; the agent restates it and records your answer. No data are read."
+       "text": "You state the moment; the agent restates it and records your answer. No data are read."
       }
      ]
     },
@@ -796,7 +796,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -806,7 +806,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -816,7 +816,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -826,7 +826,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+       "result_id": "9ed071f9613d00e5abd0d2b79b085d450d75a1514175ac25c7055c892e5356b2",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -912,7 +912,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
+       "result_id": "77d141663fc6364296f4dddd557a0eda1224dd6c28a1fb87180d57a5d19b05e7",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -1104,7 +1104,7 @@
    {
     "id": "binary.train_eda.rare",
     "step": "train_eda",
-    "question": "Is the positive outcome common or rare in the training rows?",
+    "question": "Is the positive outcome common or rare in the rows explored?",
     "choices": [
      {
       "id": "common",
@@ -1126,13 +1126,13 @@
       },
       {
        "text": "11.5%",
-       "result_id": "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
+       "result_id": "77d141663fc6364296f4dddd557a0eda1224dd6c28a1fb87180d57a5d19b05e7",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
       },
       {
-       "text": " of the training rows. A model has to beat this base rate to be useful."
+       "text": " of the rows explored. A model has to beat this base rate to be useful."
       }
      ]
     },

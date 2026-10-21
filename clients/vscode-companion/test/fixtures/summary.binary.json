@@ -647,7 +647,8 @@
     "runs_started": 1,
     "runs_failed": 0,
     "invalidations": 1
-   }
+   },
+   "channel_actions": []
   },
   "task": "binary",
   "currency": "4ce452f7cc22efbc"

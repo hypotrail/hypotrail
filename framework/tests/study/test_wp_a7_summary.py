@@ -97,7 +97,7 @@ def test_every_digest_item_has_an_audience_and_a_junior_variant(binary, tmp_path
     by_kind = {i['kind']: i for i in items}
     confirmed, hold = by_kind['confirmed'], by_kind['hold_recorded']
     assert confirmed['audience'] == 'agent'
-    assert confirmed['junior_text'] == 'You confirmed the policy in your own words.'
+    assert confirmed['junior_text'] == 'You confirmed the policy.'
     assert hold['junior_text'] == ('You put the policy on hold: "wait for my manager\'s '
                                    'figure". The policy needs confirmation again: you put the '
                                    'policy on hold.')

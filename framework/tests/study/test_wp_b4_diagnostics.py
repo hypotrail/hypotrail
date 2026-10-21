@@ -124,9 +124,16 @@ def test_binary_diagnostics_read_the_out_of_fold_predictions(tmp_path):
         coef = d['coefficients']
         fitted = study.current(model)['output']['values']['coefficients']
         assert {t['term']: t['value'] for t in coef['terms']} == pytest.approx(fitted)
-        assert coef['replicates'] + coef['skipped_replicates'] == dg.COEFFICIENT_REPLICATES
-        inside = [t['low'] <= t['value'] <= t['high'] for t in coef['terms']]
-        assert sum(inside) >= 0.8 * len(inside)
+        # v0.3 (WP-J): Wald intervals from a sandwich covariance, centred on the refit.
+        assert tuple(coef) == dg.COEFFICIENT_KEYS + ('scale',)
+        assert coef['method'] == dg.COEFFICIENT_METHOD and coef['level'] == 0.95
+        for t in coef['terms']:
+            assert tuple(t) == dg.COEFFICIENT_TERM_KEYS
+            assert t['std_error'] > 0
+            assert t['high'] - t['low'] == pytest.approx(2 * 1.959964 * t['std_error'],
+                                                         rel=1e-5)
+        assert coef['point_check']['consistent'] is True
+        assert all(t['inside_interval'] for t in coef['terms'])
         assert coef['scale'].startswith('per standard deviation')
     # Exposure: one record on the development rows, read with the target: a look.
     [record] = _records(flow, 'diag.binary')

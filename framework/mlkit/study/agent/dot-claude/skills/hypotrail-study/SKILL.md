@@ -32,13 +32,16 @@ ids) in the first conversation and when it changes:
 
 ## One pause, one message
 
-A pause message stays under about 150 words, in this order:
+A pause message has at most 150 words; aim for 120 and count them before sending. No
+heading, no recap of earlier steps, no list of options the engine did not give. In this
+order:
 
 1. **Where we are**: the step title and what was just done, in one line.
-2. **The explanation**: `next_action.junior_digest`, shortened if needed, never extended
-   with figures it does not hold.
-3. **The recommendation**: `recommended.value` with its `why`. When `recommended` is null
-   (the success criterion), present the options and let the junior choose.
+2. **The explanation**: `next_action.junior_digest`, cut to two or three sentences, never
+   extended with figures it does not hold.
+3. **The recommendation**: `recommended.value` with its `why`, in one sentence (the
+   success criterion has one too). When `recommended` is null (the model choice, the
+   conclusion), present the options and let the junior choose.
 4. **The decision**: the quoted restatement and the closed question (CLAUDE.md rule 4).
 5. **The panel line**, when the panel is open (CLAUDE.md rule 6).
 

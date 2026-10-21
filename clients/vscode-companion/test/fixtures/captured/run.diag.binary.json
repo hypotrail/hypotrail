@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
   "status": "promoted",
-  "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+  "result_id": "0b3872a562ff792c97f7f3293bbbecdab6e87df4c3c46c29e34b48e50f98c05c",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -846,317 +846,352 @@
        {
         "term": "cat__poutcome_success",
         "value": 1.336193548504178,
-        "low": 0.9941320965435829,
-        "high": 1.8899797930699016,
+        "low": 0.9379245252035354,
+        "high": 1.734462571805376,
+        "std_error": 0.2032022151643682,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__poutcome_failure",
         "value": -0.8445494549191536,
-        "low": -1.1866556517918037,
-        "high": -0.5196739902536774,
+        "low": -1.1724401791364256,
+        "high": -0.5166587307019306,
+        "std_error": 0.16729425989641022,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_unemployed",
         "value": -0.766190357302201,
-        "low": -1.351368819914153,
-        "high": -0.2651345191917427,
+        "low": -1.3736492611333344,
+        "high": -0.15873145347365136,
+        "std_error": 0.30993370726268443,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_student",
         "value": 0.7115358785130389,
-        "low": 0.012495813408763087,
-        "high": 1.2650221193077487,
+        "low": 0.09786240039164407,
+        "high": 1.3252093566359493,
+        "std_error": 0.31310446669567954,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_retired",
         "value": 0.6533427088446462,
-        "low": 0.1865953512733138,
-        "high": 1.2020431636286464,
+        "low": 0.184177748073531,
+        "high": 1.122507669616029,
+        "std_error": 0.23937427650301865,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__contact_unknown",
         "value": -0.6491778760911625,
-        "low": -0.9891976855565203,
-        "high": -0.3943314938997571,
+        "low": -0.9402841205122321,
+        "high": -0.35807163175968015,
+        "std_error": 0.1485263232755729,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_housemaid",
         "value": 0.4885625750646005,
-        "low": -0.003776947843663475,
-        "high": 0.9907137157230135,
+        "low": -0.055158839371029555,
+        "high": 1.0322839895035674,
+        "std_error": 0.27741398246401655,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_entrepreneur",
         "value": -0.4390323966380503,
-        "low": -1.0447719482303175,
-        "high": 0.2327376685277902,
+        "low": -1.100032036414754,
+        "high": 0.22196724313729638,
+        "std_error": 0.33725091123607687,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__poutcome_other",
         "value": -0.36889217985932526,
-        "low": -0.7919074053937097,
-        "high": -0.10012160020584644,
+        "low": -0.7348306605863801,
+        "high": -0.002953699132641263,
+        "std_error": 0.18670673727341194,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__education_unknown",
         "value": -0.3585511010499962,
-        "low": -1.0179255950565675,
-        "high": 0.11778656796783268,
+        "low": -0.8320037412426615,
+        "high": 0.11490153914173828,
+        "std_error": 0.24156190824256674,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__contact_cellular",
         "value": 0.34383510773809417,
-        "low": 0.1182307912050121,
-        "high": 0.5572131427443929,
+        "low": 0.1243714010188926,
+        "high": 0.5632988145033206,
+        "std_error": 0.11197333648644352,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "num__pdays=-1",
         "value": -0.3175079866038967,
-        "low": -0.4394550371526305,
-        "high": -0.20048398369850273,
+        "low": -0.44521014226670774,
+        "high": -0.18980583094146664,
+        "std_error": 0.06515535829735591,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__default_no",
         "value": -0.3105176058772145,
-        "low": -0.6642886649300691,
-        "high": 0.255921551398707,
+        "low": -0.7192716774724017,
+        "high": 0.0982364657154024,
+        "std_error": 0.20855182789995233,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__default_yes",
         "value": 0.31051760587720634,
-        "low": -0.25592155139870854,
-        "high": 0.6642886649300709,
+        "low": -0.09823646571524575,
+        "high": 0.7192716774722541,
+        "std_error": 0.20855182789987467,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__contact_telephone",
         "value": 0.3053427683530615,
-        "low": 0.03480828460220077,
-        "high": 0.6393891264007422,
-        "excludes_zero": true,
+        "low": -0.013333095533923478,
+        "high": 0.6240186322836302,
+        "std_error": 0.16259271416334764,
+        "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_services",
         "value": -0.3020232951957189,
-        "low": -0.8290359839325752,
-        "high": 0.16866822649074387,
+        "low": -0.7379177744316747,
+        "high": 0.13387118404052079,
+        "std_error": 0.2223992291054213,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_blue-collar",
         "value": -0.2921393051830068,
-        "low": -0.7102627223602412,
-        "high": 0.1502303115529993,
+        "low": -0.6928256391754846,
+        "high": 0.10854702880515438,
+        "std_error": 0.2044355596076674,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__education_tertiary",
         "value": 0.279825874545479,
-        "low": -0.07223939420956428,
-        "high": 0.6261589087597609,
+        "low": -0.01031004507947858,
+        "high": 0.5699617941712418,
+        "std_error": 0.14803125053006863,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__loan_no",
         "value": 0.24117338283418738,
-        "low": 0.0677549242887175,
-        "high": 0.42345921559543254,
+        "low": 0.035862704342251,
+        "high": 0.4464840613269315,
+        "std_error": 0.10475227101712314,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__loan_yes",
         "value": -0.24117338283418246,
-        "low": -0.423459215595433,
-        "high": -0.06775492428871445,
+        "low": -0.4464840613265652,
+        "high": -0.03586270434262001,
+        "std_error": 0.10475227101693556,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_technician",
         "value": -0.2291625877029829,
-        "low": -0.5739358870295315,
-        "high": 0.10851202739530288,
+        "low": -0.5633521448878769,
+        "high": 0.10502696948167256,
+        "std_error": 0.17050800923936327,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__marital_divorced",
         "value": 0.21683296584047487,
-        "low": -0.04568828636732758,
-        "high": 0.4485031122884377,
+        "low": -0.027541931560295108,
+        "high": 0.46120786324250185,
+        "std_error": 0.12468336118877518,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__housing_yes",
         "value": -0.2105720836138011,
-        "low": -0.3523521477320741,
-        "high": -0.08510800320729253,
+        "low": -0.3486324050891476,
+        "high": -0.0725117621396337,
+        "std_error": 0.0704402338837648,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__housing_no",
         "value": 0.21057208361379606,
-        "low": 0.08510800320729695,
-        "high": 0.3523521477320715,
+        "low": 0.07251176213982663,
+        "high": 0.34863240508897914,
+        "std_error": 0.0704402338836726,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__marital_married",
         "value": -0.1842677398641632,
-        "low": -0.37275654175638034,
-        "high": -0.0562481408292156,
+        "low": -0.3682048212914569,
+        "high": -0.0003306584377660293,
+        "std_error": 0.09384717417142238,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__education_secondary",
         "value": 0.17028027116251554,
-        "low": -0.07397368990320136,
-        "high": 0.42733237692303344,
+        "low": -0.07230758439131352,
+        "high": 0.41286812671679796,
+        "std_error": 0.12377158839017342,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_admin.",
         "value": 0.15074709362553942,
-        "low": -0.24274390714805075,
-        "high": 0.544912525870775,
+        "low": -0.23583964857807752,
+        "high": 0.5373338358307583,
+        "std_error": 0.19724175814135614,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__poutcome_unknown",
         "value": -0.12275191372571352,
-        "low": -0.16989792094325046,
-        "high": -0.07750920829921076,
+        "low": -0.17212290486998852,
+        "high": -0.07338092258154091,
+        "std_error": 0.02518974406349091,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_unknown",
         "value": 0.0942927970003512,
-        "low": -1.0757710163458702,
-        "high": 0.9646988890405682,
+        "low": -0.8623426839682186,
+        "high": 1.0509282779693727,
+        "std_error": 0.48808829576186835,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__education_primary",
         "value": -0.09155504465799887,
-        "low": -0.4491526082789173,
-        "high": 0.3587490480091941,
+        "low": -0.45381876250258113,
+        "high": 0.2707086731862528,
+        "std_error": 0.18483182379977747,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_management",
         "value": -0.0749787712415918,
-        "low": -0.37331422343015047,
-        "high": 0.32144680427343464,
+        "low": -0.4019952615579375,
+        "high": 0.25203771907507255,
+        "std_error": 0.1668482139957517,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__age",
         "value": 0.041432775994825935,
-        "low": -0.10573732137456364,
-        "high": 0.18989278293473502,
+        "low": -0.12184621273665397,
+        "high": 0.20471176472673575,
+        "std_error": 0.08330713728395968,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__marital_single",
         "value": -0.032565225976320146,
-        "low": -0.18959210181826971,
-        "high": 0.20514948354246307,
+        "low": -0.26009405301926636,
+        "high": 0.19496360106628083,
+        "std_error": 0.11608826939550522,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__balance",
         "value": 0.031912082002247044,
-        "low": -0.06493302148351307,
-        "high": 0.13032014308931153,
+        "low": -0.06015084531192968,
+        "high": 0.1239750093164006,
+        "std_error": 0.04697174439956336,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__pdays",
         "value": -0.023270758294740783,
-        "low": -0.1863403896888174,
-        "high": 0.08949855625377484,
+        "low": -0.16047779745645305,
+        "high": 0.11393628086736898,
+        "std_error": 0.07000487776519501,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__previous",
         "value": 0.022538954443788253,
-        "low": -0.12964923277472745,
-        "high": 0.1485351414037664,
+        "low": -0.11152202786046506,
+        "high": 0.15659993674819717,
+        "std_error": 0.06839971722020766,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_self-employed",
         "value": 0.005045660215379513,
-        "low": -0.6406136053125993,
-        "high": 0.48413225505626706,
+        "low": -0.5477497481974996,
+        "high": 0.5578410686289663,
+        "std_error": 0.28204365629859157,
         "excludes_zero": false,
         "inside_interval": true
        }
       ],
       "n_rows": 2531,
-      "replicates": 100,
-      "seed": 20261019,
       "level": 0.95,
-      "skipped_replicates": 0,
+      "penalty": 1.0,
       "point_check": {
        "consistent": true,
-       "max_difference": 4.4794834508365966e-11,
+       "max_difference": 4.479361326303888e-11,
        "tolerance": 0.0001,
        "misaligned_terms": [],
        "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
       },
-      "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
-      "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+      "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+      "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6"
+     "predictions": "b70458f4635b1ff4bb7466e17323ebc0a098f273952c0699e155b94b74232039"
     },
     "fit.variant": {
      "confusion": {
@@ -1965,305 +2000,340 @@
        {
         "term": "cat__poutcome_success",
         "value": 0.8736691280828087,
-        "low": 0.6594335016385523,
-        "high": 1.1808648590363522,
+        "low": 0.6201059319221683,
+        "high": 1.127232324243447,
+        "std_error": 0.129371354861984,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__poutcome_failure",
         "value": -0.5797600669978065,
-        "low": -0.7915894944695754,
-        "high": -0.3454727072454229,
+        "low": -0.8011007999576076,
+        "high": -0.3584193340380011,
+        "std_error": 0.11293102052165796,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__contact_unknown",
         "value": -0.5150628840942344,
-        "low": -0.7381373737581188,
-        "high": -0.3282054787127225,
+        "low": -0.7162627732010357,
+        "high": -0.3138629949877304,
+        "std_error": 0.10265489095396231,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_retired",
         "value": 0.428752315605801,
-        "low": 0.15745965381985608,
-        "high": 0.7435558818491125,
+        "low": 0.14549201099301162,
+        "high": 0.7120126202185919,
+        "std_error": 0.14452321922602218,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_student",
         "value": 0.3304760182833804,
-        "low": 0.030980005992169622,
-        "high": 0.5912436903680166,
+        "low": 0.02214918362023144,
+        "high": 0.6388028529465333,
+        "std_error": 0.1573125001761225,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__contact_cellular",
         "value": 0.3099244399518792,
-        "low": 0.11504297203040247,
-        "high": 0.4691911849089697,
+        "low": 0.13053789451284434,
+        "high": 0.48931098539109597,
+        "std_error": 0.09152542947426792,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "num__pdays=-1",
         "value": -0.2923729982457271,
-        "low": -0.3985599494220297,
-        "high": -0.18511148453635656,
+        "low": -0.4034771448735781,
+        "high": -0.18126885161788406,
+        "std_error": 0.05668683072965749,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_unemployed",
         "value": -0.2889393859717757,
-        "low": -0.46288921321613014,
-        "high": -0.11610560846090776,
+        "low": -0.4991753338340218,
+        "high": -0.0787034381095311,
+        "std_error": 0.10726520972862753,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_blue-collar",
         "value": -0.24696156397113092,
-        "low": -0.5136503795398859,
-        "high": 0.05028610339769369,
+        "low": -0.510835388682514,
+        "high": 0.016912260740221896,
+        "std_error": 0.13463197629791726,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_housemaid",
         "value": 0.2365534858894058,
-        "low": -0.038697755490837364,
-        "high": 0.5046870441139162,
+        "low": -0.06560536557964114,
+        "high": 0.5387123373584597,
+        "std_error": 0.1541655121484073,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__housing_no",
         "value": 0.228112810935056,
-        "low": 0.12331194919750496,
-        "high": 0.3540720532459418,
+        "low": 0.10728127609849933,
+        "high": 0.34894434577162925,
+        "std_error": 0.06164987509447558,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__housing_yes",
         "value": -0.22811281093505592,
-        "low": -0.3540720532459428,
-        "high": -0.1233119491975039,
+        "low": -0.3489443457716327,
+        "high": -0.10728127609849887,
+        "std_error": 0.061649875094476565,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__loan_yes",
         "value": -0.20975715807455136,
-        "low": -0.3550447633660479,
-        "high": -0.06687839153666605,
+        "low": -0.37103591578037465,
+        "high": -0.04847840036873177,
+        "std_error": 0.08228659249760086,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__loan_no",
         "value": 0.20975715807455023,
-        "low": 0.0668783915366662,
-        "high": 0.3550447633660476,
+        "low": 0.048478400368740626,
+        "high": 0.3710359157803666,
+        "std_error": 0.08228659249759654,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__job_entrepreneur",
         "value": -0.20529680585773027,
-        "low": -0.42518381632275143,
-        "high": 0.09138455438196859,
+        "low": -0.47292000735658823,
+        "high": 0.06232639564112785,
+        "std_error": 0.13654495878997563,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__contact_telephone",
         "value": 0.2051384441423559,
-        "low": 0.017071187651715728,
-        "high": 0.4434960373467086,
-        "excludes_zero": true,
+        "low": -0.025661366174977607,
+        "high": 0.43593825445980416,
+        "std_error": 0.11775716907959044,
+        "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_services",
         "value": -0.18691316835738583,
-        "low": -0.4707259766593675,
-        "high": 0.08081970465854407,
+        "low": -0.4485375515321043,
+        "high": 0.07471121481733498,
+        "std_error": 0.133484280955354,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__education_tertiary",
         "value": 0.1848579120122844,
-        "low": -0.06502505350963805,
-        "high": 0.3832526661034278,
+        "low": -0.012788184821697496,
+        "high": 0.38250400884627256,
+        "std_error": 0.10084169831333242,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__poutcome_other",
         "value": -0.18087459716408136,
-        "low": -0.432531695691609,
-        "high": -0.014969842046200669,
-        "excludes_zero": true,
+        "low": -0.41386828498727496,
+        "high": 0.05211909065911369,
+        "std_error": 0.11887651490589565,
+        "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__education_unknown",
         "value": -0.16987884440767204,
-        "low": -0.4827662255583418,
-        "high": 0.11139477523798735,
+        "low": -0.41443846398515155,
+        "high": 0.07468077516980587,
+        "std_error": 0.12477760892880373,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__marital_married",
         "value": -0.16281516110615446,
-        "low": -0.32508907793367686,
-        "high": -0.03832024588551211,
+        "low": -0.3214556915141038,
+        "high": -0.004174630698210363,
+        "std_error": 0.0809405334277992,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__default_no",
         "value": -0.1615394399556354,
-        "low": -0.3596534205377519,
-        "high": 0.1001139180994684,
+        "low": -0.4066856568014239,
+        "high": 0.08360677689015289,
+        "std_error": 0.12507689874889055,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__default_yes",
         "value": 0.16153943995563488,
-        "low": -0.10011391809946807,
-        "high": 0.359653420537752,
+        "low": -0.08360677689014662,
+        "high": 0.40668565680141894,
+        "std_error": 0.1250768987488877,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__marital_divorced",
         "value": 0.15512244374103715,
-        "low": -0.04467183457306076,
-        "high": 0.32502675867864783,
+        "low": -0.04104384130970354,
+        "high": 0.35128872879177897,
+        "std_error": 0.10008667842780579,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_technician",
         "value": -0.14671620503702565,
-        "low": -0.41130527474190204,
-        "high": 0.10675044290458487,
+        "low": -0.38606363440713776,
+        "high": 0.09263122433308896,
+        "std_error": 0.12211827934495502,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_admin.",
         "value": 0.13242627183771422,
-        "low": -0.14394883215257617,
-        "high": 0.3970919684213663,
+        "low": -0.13530464321304553,
+        "high": 0.4001571868884824,
+        "std_error": 0.13659991569365118,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__poutcome_unknown",
         "value": -0.11303446392092073,
-        "low": -0.1540874516237138,
-        "high": -0.07156603908609643,
+        "low": -0.155988490896059,
+        "high": -0.07008043694578603,
+        "std_error": 0.02191572259181923,
         "excludes_zero": true,
         "inside_interval": true
        },
        {
         "term": "cat__education_primary",
         "value": -0.10145158250216474,
-        "low": -0.3281605796634201,
-        "high": 0.18720379043129487,
+        "low": -0.33384843933717356,
+        "high": 0.1309452743328376,
+        "std_error": 0.11857200370421211,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__education_secondary",
         "value": 0.08647251489755238,
-        "low": -0.0823022130561355,
-        "high": 0.2509654014844594,
+        "low": -0.09011660521621237,
+        "high": 0.2630616350113181,
+        "std_error": 0.09009814542852712,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__age",
         "value": 0.07235172873449781,
-        "low": -0.039795799370304696,
-        "high": 0.20609142269631767,
+        "low": -0.06296707323240384,
+        "high": 0.20767053070140823,
+        "std_error": 0.06904147373843782,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__pdays",
         "value": -0.055055437858073236,
-        "low": -0.20286822003202298,
-        "high": 0.057958665413305924,
+        "low": -0.18318837495859286,
+        "high": 0.07307749924244933,
+        "std_error": 0.06537514878396612,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_management",
         "value": -0.05151237812597987,
-        "low": -0.27861230880544774,
-        "high": 0.2036758340605809,
+        "low": -0.2838419038529639,
+        "high": 0.1808171476010078,
+        "std_error": 0.1185376504668308,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__balance",
         "value": 0.03602201435397825,
-        "low": -0.06026739762384439,
-        "high": 0.12381801274457115,
+        "low": -0.05188777006656604,
+        "high": 0.12393179877452323,
+        "std_error": 0.04485275500670718,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "num__previous",
         "value": 0.030538458239871235,
-        "low": -0.07949269391011972,
-        "high": 0.14376873459959488,
+        "low": -0.08342631198991128,
+        "high": 0.1445032284696556,
+        "std_error": 0.058146359386561715,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_self-employed",
         "value": -0.013657846123044201,
-        "low": -0.295916448060987,
-        "high": 0.24634057194432105,
+        "low": -0.30024375678481585,
+        "high": 0.27292806453872587,
+        "std_error": 0.14621998818464219,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__job_unknown",
         "value": 0.011789261827771413,
-        "low": -0.2279851419730218,
-        "high": 0.25876235538973097,
+        "low": -0.24281115330527545,
+        "high": 0.26638967696082,
+        "std_error": 0.1299005579394843,
         "excludes_zero": false,
         "inside_interval": true
        },
        {
         "term": "cat__marital_single",
         "value": 0.007692717365116455,
-        "low": -0.1255354464208688,
-        "high": 0.19351747045853224,
+        "low": -0.17395076548498806,
+        "high": 0.18933620021522757,
+        "std_error": 0.09267694931278762,
         "excludes_zero": false,
         "inside_interval": true
        }
       ],
       "n_rows": 2531,
-      "replicates": 100,
-      "seed": 20261019,
       "level": 0.95,
-      "skipped_replicates": 0,
+      "penalty": 10.0,
       "point_check": {
        "consistent": true,
        "max_difference": 1.4865886299730846e-13,
@@ -2271,11 +2341,11 @@
        "misaligned_terms": [],
        "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
       },
-      "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
-      "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+      "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+      "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af"
+     "predictions": "bff23d7da0f2645b2e3841c2e13a78699cd08d72f70cbca5d3f1dc5bfc5f29f6"
     }
    },
    "coefficient_rows": 2531,
@@ -2513,14 +2583,14 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
-   "input_key": "63c452f951ef7b3853a3bd9666410e4621e46bfffaa17cef2e1192b8d47ac31b",
+   "result_id": "0b3872a562ff792c97f7f3293bbbecdab6e87df4c3c46c29e34b48e50f98c05c",
+   "input_key": "2210d8979060d2258eebddaf9f0631f9420c528c433b4efffed28b804edde734",
    "reason": null,
    "started_revision": 44,
    "invalidation": null,
    "exposure_ids": [
-    "x_daa9516a4dbf48a28f6d52b22a12f40e",
-    "x_91718690ed6e46f1a946d0d426e849a3"
+    "x_1a7477761e284dbe915a977583aafa2f",
+    "x_1343e88d0a8d431da5f3aa76e80237e8"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2551,6 +2621,28 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "propose",
+   "step": "final_test",
+   "decision": "final_test",
+   "message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+   "default_value": {
+    "model": "fit.logistic",
+    "rule": "threshold:0.2"
+   },
+   "audience": "junior",
+   "junior_message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+   "language": "en",
+   "recommended": {
+    "value": {
+     "model": "fit.logistic",
+     "rule": "threshold:0.2"
+    },
+    "why": "This is the configuration you chose; the holdout (final test) measures it once."
+   },
+   "question": "Do you open the holdout (final test) now, once?",
+   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows."
   }
  }
 }

@@ -56,7 +56,7 @@
       },
       {
        "text": "96",
-       "result_id": "b26567fa94e8302e35c925d611831e06d4071db037495f044b9a15075f8a31d7",
+       "result_id": "dfaf027aa894aa7277708f5b012cadc355473e2b458ee3c5512ef783e3c14b6e",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "222",
-       "result_id": "b26567fa94e8302e35c925d611831e06d4071db037495f044b9a15075f8a31d7",
+       "result_id": "dfaf027aa894aa7277708f5b012cadc355473e2b458ee3c5512ef783e3c14b6e",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -116,7 +116,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "7fdcaa993b1ce5e3beb5b743ded0e11e9f1b999738e8096fc710a877847086b9",
+       "result_id": "63756944d2a54b69b8e0d59de9a752c521627eb4bd8a4c5ce942af17ce8285e6",
        "path": "train_mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -150,7 +150,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -160,7 +160,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -170,7 +170,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -194,7 +194,7 @@
       },
       {
        "text": "5.69",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "intervals.[fit.linear].mae.low",
        "value": 5.690730215654784,
        "format": "f2"
@@ -204,7 +204,7 @@
       },
       {
        "text": "7.31",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "intervals.[fit.linear].mae.high",
        "value": 7.3058496174077225,
        "format": "f2"
@@ -278,7 +278,7 @@
    {
     "id": "overfitting",
     "term": "Overfitting",
-    "definition": "A model that fits the noise of its training rows as well as their pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.",
+    "definition": "A model that fits the noise of its training set as well as its pattern. It looks better on the rows it was fitted on than on new rows. For example, a model that memorises the fuel efficiency of the car names it was fitted on predicts those cars well and later model years badly; the gap between training and validation errors reveals it.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -286,7 +286,7 @@
    {
     "id": "regularisation",
     "term": "Regularisation",
-    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training rows for steadier predictions on new rows. For example, with few cars and closely related features such as weight and displacement, a penalty keeps their weights from offsetting each other with large opposite values.",
+    "definition": "A penalty on large model weights during fitting. It trades a little fit on the training set for steadier predictions on new rows. For example, with few cars and closely related features such as weight and displacement, a penalty keeps their weights from offsetting each other with large opposite values.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -302,7 +302,7 @@
    {
     "id": "imputation",
     "term": "Imputation",
-    "definition": "Filling a missing value with a substitute, such as the median of the training rows, before fitting. The substitute is computed on training rows only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.",
+    "definition": "Filling a missing value with a substitute, such as the median of the training set, before fitting. The substitute is computed on the training set only, and an indicator can record that the value was missing. For example, the cars whose engine power is missing get the median engine power of the training cars, never a figure computed with validation cars.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -310,7 +310,7 @@
    {
     "id": "standardisation",
     "term": "Standardisation",
-    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on training rows. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.",
+    "definition": "Rescaling a numeric column to a mean of zero and a standard deviation of one, with both computed on the training set. It puts features on one scale, so their weights and a penalty treat them alike. For example, weight in pounds and acceleration in seconds are rescaled so that the weight given to a car's weight is not tiny only because pounds are large numbers.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -484,7 +484,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "a2aae7df6aefe09b7a10c8ba8715e4b0f404405dc8c72966d1127feca6c6725a",
+       "result_id": "082968bd99bc7e451e3d8061cb36c1964d1e994bac3a42a872aded514cb8da96",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -494,7 +494,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "a2aae7df6aefe09b7a10c8ba8715e4b0f404405dc8c72966d1127feca6c6725a",
+       "result_id": "082968bd99bc7e451e3d8061cb36c1964d1e994bac3a42a872aded514cb8da96",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -544,7 +544,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -568,7 +568,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -578,7 +578,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -604,7 +604,7 @@
       },
       {
        "text": "7.66",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.linear].rmse",
        "value": 7.664419781686159,
        "format": "f2"
@@ -614,7 +614,7 @@
       },
       {
        "text": "11.92",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.baseline].rmse",
        "value": 11.924502477405836,
        "format": "f2"
@@ -693,7 +693,7 @@
     "method": {
      "segments": [
       {
-       "text": "You state the moment in your own words; the agent restates it and records your answer. No data are read."
+       "text": "You state the moment; the agent restates it and records your answer. No data are read."
       }
      ]
     },
@@ -780,7 +780,7 @@
       },
       {
        "text": "222",
-       "result_id": "b26567fa94e8302e35c925d611831e06d4071db037495f044b9a15075f8a31d7",
+       "result_id": "dfaf027aa894aa7277708f5b012cadc355473e2b458ee3c5512ef783e3c14b6e",
        "path": "partitions.train.n_rows",
        "value": 222,
        "format": "int"
@@ -790,7 +790,7 @@
       },
       {
        "text": "96",
-       "result_id": "b26567fa94e8302e35c925d611831e06d4071db037495f044b9a15075f8a31d7",
+       "result_id": "dfaf027aa894aa7277708f5b012cadc355473e2b458ee3c5512ef783e3c14b6e",
        "path": "partitions.validation.n_rows",
        "value": 96,
        "format": "int"
@@ -876,7 +876,7 @@
       },
       {
        "text": "20.57",
-       "result_id": "a2aae7df6aefe09b7a10c8ba8715e4b0f404405dc8c72966d1127feca6c6725a",
+       "result_id": "082968bd99bc7e451e3d8061cb36c1964d1e994bac3a42a872aded514cb8da96",
        "path": "mean",
        "value": 20.565315315315317,
        "format": "f2"
@@ -886,7 +886,7 @@
       },
       {
        "text": "6.20",
-       "result_id": "a2aae7df6aefe09b7a10c8ba8715e4b0f404405dc8c72966d1127feca6c6725a",
+       "result_id": "082968bd99bc7e451e3d8061cb36c1964d1e994bac3a42a872aded514cb8da96",
        "path": "sd",
        "value": 6.195978453412262,
        "format": "f2"
@@ -972,7 +972,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "7fdcaa993b1ce5e3beb5b743ded0e11e9f1b999738e8096fc710a877847086b9",
+       "result_id": "63756944d2a54b69b8e0d59de9a752c521627eb4bd8a4c5ce942af17ce8285e6",
        "path": "validation.mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -982,7 +982,7 @@
       },
       {
        "text": "6.48",
-       "result_id": "072d4ac00cfad749e6aae684fab99521d67ca14eda769369d46340345a83e1c3",
+       "result_id": "0fee5b813bd57cc64151cf8dccdd73aa7891d4194e158f751374d08711161620",
        "path": "validation.mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1038,7 +1038,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1048,7 +1048,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1058,7 +1058,7 @@
       },
       {
        "text": "-3.16",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
@@ -1068,7 +1068,7 @@
       },
       {
        "text": "6.39",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1138,7 +1138,7 @@
    {
     "id": "regression.models.sign",
     "step": "models",
-    "question": "Fitted on the training rows only, will the linear model predict the validation rows too low or too high on average?",
+    "question": "Fitted without the rows it predicts, will the linear model predict them too low or too high on average?",
     "choices": [
      {
       "id": "too_low",
@@ -1156,11 +1156,11 @@
     "reveal": {
      "segments": [
       {
-       "text": "The mean residual of the linear model on the validation rows is "
+       "text": "The mean residual of the linear model on the rows it predicted is "
       },
       {
        "text": "6.39",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.linear].mean_residual",
        "value": 6.394515464632113,
        "format": "f2"
@@ -1175,7 +1175,7 @@
    {
     "id": "regression.model_choice.beats_mean",
     "step": "model_choice",
-    "question": "Will the linear model's validation error be below the training mean's?",
+    "question": "Will the linear model's error be below the mean baseline's?",
     "choices": [
      {
       "id": "yes",
@@ -1193,11 +1193,11 @@
     "reveal": {
      "segments": [
       {
-       "text": "The validation MAE is "
+       "text": "The MAE of the evaluated rows is "
       },
       {
        "text": "6.48",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.linear].mae",
        "value": 6.476590382656274,
        "format": "f2"
@@ -1207,7 +1207,7 @@
       },
       {
        "text": "10.27",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "models.[fit.baseline].mae",
        "value": 10.268806306306304,
        "format": "f2"
@@ -1217,7 +1217,7 @@
       },
       {
        "text": "-3.79",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.point",
        "value": -3.792215923650031,
        "format": "f2"
@@ -1227,7 +1227,7 @@
       },
       {
        "text": "-4.38",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.low",
        "value": -4.375861635363238,
        "format": "f2"
@@ -1237,13 +1237,13 @@
       },
       {
        "text": "-3.16",
-       "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+       "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
        "path": "deltas.[fit.linear].mae.high",
        "value": -3.159283658688826,
        "format": "f2"
       },
       {
-       "text": " on resamples of the validation rows."
+       "text": " on resamples of the evaluated rows."
       }
      ]
     },

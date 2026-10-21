@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
-  "result_id": "1173166a09562549e9d70525cc5d7cc5b98f22eb584d13a8697671f1e333b75f",
+  "result_id": "5cefc2ed4ce39e972f47cc5f62b81b2a622d4d3e25dd97de0196bf8c4c217846",
   "values": {
    "partition": "train",
    "column": "age",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
-   "result_id": "1173166a09562549e9d70525cc5d7cc5b98f22eb584d13a8697671f1e333b75f",
-   "input_key": "e9b0ec1191be497f2591423fb63f9280c40630517e17638af93c85ab4a23bd9e",
+   "result_id": "5cefc2ed4ce39e972f47cc5f62b81b2a622d4d3e25dd97de0196bf8c4c217846",
+   "input_key": "29b22f66aacb15bd0956fd252d7f992ba5fb5dfaf1d0a40d6ca3b413f9fa0be3",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_74cb9ee5152c4d82a287dae0ca426923"
+    "x_a4df2eb507c54dcdb6db4d1062898e80"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -173,6 +173,18 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "models",
+   "activity": "fit.baseline",
+   "message": "How much does a simple model improve on a constant baseline on validation?",
+   "audience": "junior",
+   "junior_message": "How much does a simple model improve on a constant baseline on validation?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?"
   }
  }
 }

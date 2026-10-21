@@ -907,7 +907,7 @@ def _plan_diagnostics(store, state: Mapping, case: c.Case, activity: str, inputs
     """WP-B4: the identity and reads of ``diag.binary`` / ``diag.regression`` (inputs in
     place); returns the params. The predictions of the candidate and the variant are read
     back from their fits; the rows they scored are read for the segments, the examples and
-    the residuals by feature, and the rows their coefficients come from for the bootstrap."""
+    the residuals by feature, and the rows their coefficients come from for their intervals."""
     from . import diagnostics, state as st
     task = st.task_of(state)
     expected = DIAG_REGRESSION if task == st.REGRESSION else DIAG_BINARY
@@ -929,8 +929,7 @@ def _plan_diagnostics(store, state: Mapping, case: c.Case, activity: str, inputs
                 features.append(f)
     params: dict[str, Any] = {
         'models': models, 'evaluation': 'out_of_fold' if cv else 'validation',
-        'coefficients': {'replicates': diagnostics.COEFFICIENT_REPLICATES,
-                         'seed': diagnostics.COEFFICIENT_SEED,
+        'coefficients': {'intervals': diagnostics.COEFFICIENT_INTERVALS,
                          'level': diagnostics.COEFFICIENT_LEVEL},
         'segments': diagnostics.segment_columns(case, features)}
     if task == st.BINARY:
@@ -1040,7 +1039,8 @@ def load(plan_: Mapping, store):
         path = os.path.join(path, c.CASE_FILE)
     expected = plan_['inputs'].get('case_sha256')
     actual = c.sha256_file(path) if os.path.isfile(path) else None
-    if expected is not None and actual != expected:
+    if expected is not None and actual != expected \
+            and (expected, actual) not in c.EQUIVALENT_CASE_FILES:     # v0.3 (WP-J)
         raise StudyError('dataset_changed', 'The case file changed after this execution was '
                                             'reserved; its result would not describe the '
                                             'recorded case.',
@@ -1818,7 +1818,7 @@ def _regression_extras(case: c.Case, params: Mapping) -> dict:
 def compute_diagnostics(store, plan_: Mapping) -> dict:
     """The development diagnostics of the candidate and the variant (WP-B4): read their
     stored predictions back, and the rows those predictions describe; refit only for the
-    bootstrap of the coefficients."""
+    intervals of the coefficients (one refit, WP-J)."""
     from . import diagnostics as dg
     inputs, params = plan_['inputs'], plan_['params']
     case, dataset = load(plan_, store)
@@ -1868,8 +1868,8 @@ def compute_diagnostics(store, plan_: Mapping) -> dict:
                 fit_params['tuned_value'] = development['value']
             diag['coefficients'] = dg.coefficient_intervals(
                 case, fitted_rows, _model_inputs(entry), fit_params, binary,
-                fitted.get('coefficients') or {}, replicates=int(boot['replicates']),
-                seed=int(boot['seed']), level=float(boot['level']))
+                fitted.get('coefficients') or {}, level=float(boot['level']),
+                intercept=fitted.get('intercept'))
             diag['coefficients']['scale'] = fitted.get('coefficient_scale')
         if fitted.get('tuning'):
             diag['tuning'] = fitted['tuning']

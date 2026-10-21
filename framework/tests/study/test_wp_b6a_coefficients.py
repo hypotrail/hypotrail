@@ -91,19 +91,23 @@ def test_a_point_that_is_not_the_fit_on_the_same_design_is_flagged(tmp_path):
     case, frame, entry = _inputs(flow, case_dir)
     point = dict(entry['output']['values']['coefficients'])
     same = dg.coefficient_intervals(case, frame, activities._model_inputs(entry), entry['params'],
-                                    True, point, replicates=20)
+                                    True, point)
     assert same['point_check']['consistent'] is True
     term = sorted(point)[0]
     point[term] += 0.5
     off = dg.coefficient_intervals(case, frame, activities._model_inputs(entry), entry['params'],
-                                   True, point, replicates=20)
+                                   True, point)
     check = off['point_check']
     assert check['consistent'] is False and check['note'] == dg.POINT_INCONSISTENT_NOTE
     assert check['max_difference'] == pytest.approx(0.5, abs=1e-6)
-    # The intervals are those of the same design: unchanged by the stored point.
+    # The intervals are those of the same design: unchanged by the stored point. v0.3
+    # (WP-J): the refit starts from the stored point, so they agree up to the Newton
+    # solver's tolerance (1e-8), not to the last bit.
     a = {t['term']: (t['low'], t['high']) for t in same['terms']}
     b = {t['term']: (t['low'], t['high']) for t in off['terms']}
-    assert a == b
+    assert a.keys() == b.keys()
+    for term in a:
+        assert b[term] == pytest.approx(a[term], abs=1e-6), term
 
 
 def test_a_fit_recorded_with_the_old_solver_is_flagged_not_hidden(tmp_path):
@@ -118,7 +122,7 @@ def test_a_fit_recorded_with_the_old_solver_is_flagged_not_hidden(tmp_path):
     names = [str(n) for n in model['preprocess'].get_feature_names_out()]
     point = dict(zip(names, (float(v) for v in model['model'].coef_[0])))
     out = dg.coefficient_intervals(case, frame, activities._model_inputs(entry), params, True,
-                                   point, replicates=20)
+                                   point)
     check = out['point_check']
     assert check['misaligned_terms'] == []
     assert check['consistent'] == (check['max_difference'] <= dg.POINT_TOLERANCE)

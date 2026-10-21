@@ -26,6 +26,7 @@ from __future__ import annotations
 
 # The integrator tip before WP-F1 (9fa1b2a): the digests of the modules WP-F1 changed.
 WP_F1_BASE = 'v0.3 before WP-F1 (integrator tip 9fa1b2a)'
+WP_J_BASE = 'v0.3 before WP-J (integrator tip edc0dd3)'
 EQUIVALENT: dict[str, dict[str, str]] = {
     'mlkit.study.activities': {
         '312bf5b3e72f130bfdb7a0d5216486a739c4fa57e4fac10be7fb249a96d96ecd': WP_F1_BASE},
@@ -34,11 +35,30 @@ EQUIVALENT: dict[str, dict[str, str]] = {
     'mlkit.study.governance': {
         '38d02a4e1a2bb7a0a8805cb485f25484c3b973965aff604d18aa2c394cb4e447': WP_F1_BASE},
     'mlkit.study.diagnostics': {
-        'ca4a6a3b886c9e35cb07a1c7823c34c14de70d8866b6476c3932508f4a674d9b': WP_F1_BASE},
+        'ca4a6a3b886c9e35cb07a1c7823c34c14de70d8866b6476c3932508f4a674d9b': WP_F1_BASE,
+        '3d3244edc2b3bc7a7b5cb6e5519e18751ed2ad8eb7d3066ef5585242ac52059d': WP_J_BASE},
 }
+EQUIVALENT['mlkit.study.activities'][
+    'b04e5fad6c3ae1e9d563d086a879422cce372e79593bec2b31eaebb098d3f30e'] = WP_J_BASE
+
+# v0.3 (WP-J): the coefficient intervals of the development diagnostics changed (Wald
+# intervals from a sandwich covariance instead of a 100-refit percentile bootstrap), so no
+# earlier digest of these two modules holds for those two activities: their results read
+# "code changed" and are run again (about 20 s on the Hotel case). Every other activity of
+# these modules computes what it computed before: WP-J changed only the coefficient
+# intervals and the diagnostics' ``coefficients`` params (the final-test diagnostics never
+# had coefficients).
+WP_J_CHANGED = frozenset({'diag.binary', 'diag.regression'})
+NOT_FOR: dict[str, dict[str, frozenset]] = {
+    module: {sha: WP_J_CHANGED for sha in shas}
+    for module, shas in EQUIVALENT.items()
+    if module in ('mlkit.study.activities', 'mlkit.study.diagnostics')}
 
 
-def equivalent(module: str, sha: str | None) -> bool:
-    """Whether a result computed with ``module`` at digest ``sha`` holds under the current
-    source of that module (an earlier version declared equivalent)."""
-    return sha is not None and sha in EQUIVALENT.get(module, {})
+def equivalent(module: str, sha: str | None, activity: str | None = None) -> bool:
+    """Whether a result of ``activity`` computed with ``module`` at digest ``sha`` holds
+    under the current source of that module (an earlier version declared equivalent, and not
+    revoked for that activity by a later change)."""
+    if sha is None or sha not in EQUIVALENT.get(module, {}):
+        return False
+    return activity is None or activity not in NOT_FOR.get(module, {}).get(sha, ())

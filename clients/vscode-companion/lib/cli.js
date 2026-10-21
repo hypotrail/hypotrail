@@ -137,23 +137,27 @@ const READS = Object.freeze({
 
 // --- writes W4-W7 (COMPANION-ADVANCED §7) ---------------------------------------------------
 
+// v0.3 (WP-J, R35): every write says it comes from the panel, so the engine records it and
+// the agent can tell the junior "you ran ... from the panel" (digest `channel_actions`).
+const CHANNEL = '--channel=webview';
+
 /** W4. `run <eda.activity> --column=<c> ...` (training rows; the activity from the catalog). */
 function runEdaArgv(agent, { activity, column, requestId: id, expectedRevision }) {
   // v0.3 (WP-E2): a whole-study chart (`eda.correlation`) has no column.
   const columnArg = column === undefined ? [] : [`--column=${text(column, 'the column', { max: 200 })}`];
   return [...agent.argv, 'run', match(activity, EDA_ACTIVITY, 'the activity'),
-    ...columnArg, ...mutation(id, expectedRevision), ...tail(agent)];
+    ...columnArg, CHANNEL, ...mutation(id, expectedRevision), ...tail(agent)];
 }
 
 /** W5. `render --json --study S` (no revision). */
 function renderArgv(agent) {
-  return [...agent.argv, 'render', ...tail(agent)];
+  return [...agent.argv, 'render', CHANNEL, ...tail(agent)];
 }
 
 /** W6. `run --acknowledge-interruption <eid> --user-words=<words> ...` */
 function acknowledgeArgv(agent, { executionId, words, requestId: id, expectedRevision }) {
   return [...agent.argv, 'run', '--acknowledge-interruption', match(executionId, EXECUTION_ID, 'the execution id'),
-    `--user-words=${text(words, 'the words')}`, ...mutation(id, expectedRevision), ...tail(agent)];
+    `--user-words=${text(words, 'the words')}`, CHANNEL, ...mutation(id, expectedRevision), ...tail(agent)];
 }
 
 /**
@@ -168,7 +172,7 @@ function exportArgv(agent, { parent, revision: rev }) {
   const inside = path.resolve(agent.studyDir, '.hypotrail');
   const out = path.join(folder, `revision-${revision(rev)}`);
   if (out === inside || out.startsWith(inside + path.sep)) throw new ArgvError('the folder must not be inside .hypotrail');
-  return [...agent.argv, 'export', 'handoff', `--out=${out}`, '--expected-revision', String(revision(rev)),
+  return [...agent.argv, 'export', 'handoff', `--out=${out}`, CHANNEL, '--expected-revision', String(revision(rev)),
     ...tail(agent)];
 }
 

@@ -67,6 +67,10 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--user-words', default=None,
                         help="with --acknowledge-interruption: the junior's verbatim reply after "
                              'being told the outcome is unknown')
+    # v0.3 (WP-J, R35): where the run came from; the study panel passes webview. No argparse
+    # choices: a value outside state.CHANNELS is invalid_value (details.field).
+    parser.add_argument('--channel', default=None,
+                        help='chat (the default), cli, or webview: where the run came from')
     parser.add_argument('--request-id', required=True,
                         help='fresh per intent; replay the same one after a timeout')
     parser.add_argument('--expected-revision', required=True, type=int,
@@ -143,10 +147,11 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
             return executions.acknowledge(args.study, args.acknowledge,
                                           request_id=args.request_id,
                                           expected_revision=args.expected_revision,
-                                          user_words=args.user_words)
+                                          user_words=args.user_words, channel=args.channel)
         options = {'column': args.column, 'rules': args.rule, 'max_groups': args.max_groups}
         return executions.run(args.study, args.activity, options, request_id=args.request_id,
-                              expected_revision=args.expected_revision, hooks=test_hooks())
+                              expected_revision=args.expected_revision, hooks=test_hooks(),
+                              channel=args.channel)
     except (CommandRefused, StudyError) as exc:
         if exc.code == 'interrupted_execution_pending':
             return cmd.Outcome(cmd.error_payload('run', exc), cmd.EXIT_UNKNOWN_OUTCOME)

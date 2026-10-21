@@ -85,6 +85,9 @@ def configure(parser: argparse.ArgumentParser) -> None:
                         help='a new or empty folder (default <study>/handoff/revision-<n>/)')
     parser.add_argument('--expected-revision', default=None, type=int, metavar='REV',
                         help='refuse with stale_revision unless the study is at REV')
+    # v0.3 (WP-J, R35): the study panel passes webview; recorded as an event.
+    parser.add_argument('--channel', default=None,
+                        help='chat (the default), cli, or webview: where the export came from')
 
 
 # --- the target folder -----------------------------------------------------------------
@@ -504,6 +507,11 @@ def export_handoff(study_dir, *, out=None, expected_revision=None) -> tuple[dict
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
+    from .cmd_render import record_channel
+    from .executions import channel_param
+    channel = getattr(args, 'channel', None)
+    channel_param(channel)                       # refused before anything is written
     payload, code = export_handoff(args.study, out=args.out,
                                    expected_revision=args.expected_revision)
+    record_channel(args.study, 'export', channel, payload.get('revision'))
     return cmd.Outcome(payload, code)

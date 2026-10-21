@@ -64,7 +64,9 @@ from .store import StudyStore, atomic_write_json
 SCHEMA = 'hypotrail.run/1'
 PAYLOAD_KEYS = ('schema', 'ok', 'study', 'action', 'request_id', 'replayed', 'revision',
                 'activity', 'execution_id', 'status', 'result_id', 'values', 'result',
-                'artifacts')
+                'artifacts',
+                # v0.3 (WP-J): the next action after the run, as status gives it.
+                'next_action')
 RESERVE, PROMOTE, FAIL, RECOVER, ACKNOWLEDGE = ('run.reserve', 'run.promote', 'run.fail',
                                                'run.recover', 'run.acknowledge')
 STATUSES = ('running', 'promoted', 'late_not_promoted', 'already_current', 'failed',
@@ -296,8 +298,25 @@ def _apply(store: StudyStore, state: dict, request_id: str, action: str, params:
     request = {'request_id': request_id,
                'expected_revision': state['revision'] if expected_revision is None
                else expected_revision, 'action': action, 'params': dict(params)}
-    return reliability.apply_command(store, state, request,
-                                     cmd.handlers(cmd.Context(store, request_id)))
+    available = cmd.handlers(cmd.Context(store, request_id))
+    optional = OPTIONAL_PARAMS.get(action, frozenset()) & set(params)
+    if optional and action in available:
+        handler = available[action]
+        available[action] = Handler(handler.params | optional, handler.run, handler.check)
+    return reliability.apply_command(store, state, request, available)
+
+
+# v0.3 (WP-J, R35): the channel a run or an acknowledgement came from, recorded only when it
+# is not the chat, so every earlier request keeps its identity (a replay stays a replay).
+OPTIONAL_PARAMS = {RESERVE: frozenset({'channel'}), ACKNOWLEDGE: frozenset({'channel'})}
+
+
+def channel_param(channel: str | None) -> dict:
+    """``{'channel': channel}`` for a channel other than the chat (checked), else ``{}``."""
+    if channel in (None, cmd.DEFAULT_CHANNEL):
+        return {}
+    cmd.check_channel(channel)
+    return {'channel': channel}
 
 
 # --- recovery ---------------------------------------------------------------------------
@@ -382,6 +401,8 @@ def _outcome(store: StudyStore, payload: dict, *, render: bool) -> cmd.Outcome:
             if code == cmd.EXIT_OK and any(a.get('status') in ('stale', 'failed')
                                            for a in artifacts.values()):
                 code = cmd.EXIT_ARTIFACT_STALE
+    # v0.3 (WP-J): the next action after the run, as ``status`` gives it.
+    payload['next_action'] = cmd.refreshed_next_action(store.study_dir)
     return cmd.Outcome(payload, code)
 
 
@@ -429,7 +450,7 @@ Hook = Callable[[dict], None]
 
 def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         expected_revision: int, hooks: Mapping[str, Hook] | None = None,
-        render: bool = True) -> cmd.Outcome:
+        render: bool = True, channel: str | None = None) -> cmd.Outcome:
     """Run one activity (reserve, compute, promote) and describe the outcome.
 
     ``hooks`` (tests only) maps ``after_reserve`` and ``before_promote`` to callables
@@ -443,7 +464,8 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
     activity = act.canonical(activity)
     options = act.normalize_options(activity, options)
     eid = execution_id(request_id)
-    params = {'activity': activity, 'options': options, 'execution_id': eid}
+    params = {'activity': activity, 'options': options, 'execution_id': eid,
+              **channel_param(channel)}
     with store.writing() as state:
         recover(store, state, hooks)
         if request_id in state['receipts']:
@@ -454,7 +476,7 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
         if expected_revision == state['revision']:
             shortcut = _already_current(store, state, activity, options, request_id)
             if shortcut is not None:
-                return cmd.Outcome(shortcut)
+                return _outcome(store, shortcut, render=False)
         lease = lock.acquire_lease(store.study_dir, eid, activity=activity, request_id=request_id)
         try:
             receipt = _apply(store, state, request_id, RESERVE, params, expected_revision)
@@ -531,7 +553,7 @@ def _already_current(store, state, activity, options, request_id) -> dict | None
 
 
 def acknowledge(study_dir, execution: str, *, request_id: str, expected_revision: int,
-                user_words: str) -> cmd.Outcome:
+                user_words: str, channel: str | None = None) -> cmd.Outcome:
     """Acknowledge an interrupted execution with the junior's words; never restarts it."""
     guard.assert_writable()
     store = _store(study_dir)
@@ -543,7 +565,8 @@ def acknowledge(study_dir, execution: str, *, request_id: str, expected_revision
             # missed, so the acknowledgement applies to the revision recovery produced.
             expected_revision = state['revision']
         receipt = _apply(store, state, request_id, ACKNOWLEDGE,
-                         {'execution_id': execution, 'user_words': user_words},
+                         {'execution_id': execution, 'user_words': user_words,
+                          **channel_param(channel)},
                          expected_revision)
         replayed = bool(receipt.get('replayed'))
         r = receipt['result']

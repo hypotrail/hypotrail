@@ -91,7 +91,7 @@ A list of three items `{pause, decisions, status, confirmed}`:
 
 ### 1.4 `digest`
 
-`{since, until, items, truncated, counts}`.
+`{since, until, items, truncated, counts, channel_actions}` (`channel_actions` since v0.3, WP-J; additive, last).
 
 **`since` and `until`.** `since` is `--since REV` when given; otherwise it is `last_session.boundary_revision`. `until` is the current revision. `--since` below 0 or above the current revision is refused with `invalid_arguments`.
 
@@ -105,7 +105,7 @@ A list of three items `{pause, decisions, status, confirmed}`:
 | `decision_id`, `proposal_id`, `note_id` | Identifiers from the params and the result |
 | `activity`, `slot`, `result_id`, `execution_id` | For `run.*` actions; `result_id` is the full id |
 | `rules`, `column` | Rule identifiers and the column of the activity |
-| `channel`, `basis`, `delegation_scope` | For `confirmed` |
+| `channel`, `basis`, `delegation_scope` | For `confirmed`; v0.3 (WP-J, R35): `channel` also for a run item (its reservation's channel, `null` when the run gave none) and for `interruption_acknowledged` (the acknowledgement's channel). A run started from the panel (`webview`) adds to `text` "It was started from the study panel (channel webview)." and to `junior_text` "You ran it from the study panel." |
 | `superseded` | Proposal ids that a `proposed` item superseded |
 | `invalidation` | `null`, or `{mutation, row, stale_slots, reconfirm_required, refit, kept_fits}`. `refit` and `kept_fits` are computed from the invalidation's `effects`: `kept_fits` lists the `fit.*` slots that were current before and are still current |
 | `text` | One flat English sentence from `content/digest.yaml` (below) |
@@ -122,9 +122,11 @@ A list of three items `{pause, decisions, status, confirmed}`:
 
 A regression study's texts never use the vocabulary of a decision rule (CLI-CONTRACT §4 recap rule): its sentences come from the template's `regression` overlay.
 
-**`junior_text`** (WP-A7). The same sentence written for the junior: "You confirmed the policy in your own words.", "The policy evaluation was replaced for: call the top 20 by score; call the top 30 by score. Models unchanged, nothing refitted.", "You put the policy on hold: \"...\". The policy needs confirmation again: you put the policy on hold." It holds no rule or model token, no channel, no activity id, and never "the junior".
+**`junior_text`** (WP-A7). The same sentence written for the junior: "You confirmed the policy.", "The policy evaluation was replaced for: call the top 20 by score; call the top 30 by score. Models unchanged, nothing refitted.", "You put the policy on hold: \"...\". The policy needs confirmation again: you put the policy on hold." It holds no rule or model token, no channel, no activity id, and never "the junior".
 
 **`counts`.** `{proposed, confirmed, withdrawn, holds_recorded, holds_resolved, results_added, results_replaced, runs_started, runs_failed, invalidations}`.
+
+**`channel_actions`** (v0.3, WP-J, R35). The writes made outside the chat, oldest first, at most `view.DIGEST_MAX_ITEMS`: each `{action, channel, revision, activity, time}` (`view.CHANNEL_ACTION_KEYS`), `action` one of `run` (a reservation after `since` recorded with `run --channel C`), `acknowledge` (`run --acknowledge-interruption ... --channel C`), `render` and `export` (`render --channel C`, `export handoff --channel C`, which commit no revision: a `channel_action` event of `.hypotrail/events.jsonl` at revision `since` or later). `channel` is `cli` or `webview`; a request with `--channel chat`, or none, records nothing (its identity is unchanged, a replay stays a replay). The study panel passes `--channel=webview` on every write (W4 to W7, COMPANION-ADVANCED §7), so an agent can say "you ran these charts from the panel". A channel outside `state.CHANNELS` is `invalid_value` before anything is written.
 
 **Refusals.** `study_missing`, `integrity_error`, and `invalid_arguments`.
 

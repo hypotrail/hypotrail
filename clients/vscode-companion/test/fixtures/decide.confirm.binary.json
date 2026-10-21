@@ -66,6 +66,19 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "policy",
+   "activity": "diag.binary",
+   "message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "default_value": "share:0.1",
+   "audience": "junior",
+   "junior_message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?"
   }
  }
 }

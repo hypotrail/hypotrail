@@ -10,6 +10,7 @@ A resort hotel loses revenue when bookings are cancelled. Its reservations team 
 - **Target**: `is_canceled`, 1 when the booking was cancelled, 0 otherwise (`positive_label: '1'`). It is strictly after the prediction moment.
 - **Prediction moment**: the day the booking is entered in the PMS, the start of `lead_time`.
 - **Action**: contact, or ask a deposit from, the top share of new bookings by score. `scenario_defaults.capacity_share` is **10 %** (`scenario_assumption`), as in the other teaching cases: the team can handle one new booking in ten. The agent asks the capacity as a share and shows 5, 10 and 20 %; keeping the default is listed as "capacity assumed for the exercise". The data record no contact and no deposit request made because of a score, so they say nothing about whether either prevents a cancellation (fact `causal_effect`).
+- **Interpretability**: `constraints.interpretability` is **`preferred`** (`scenario_assumption`, v0.3): the team contacts a customer or asks a deposit because of the score and should be able to say which booking details raised it; no rule of the hotel is known that requires a readable model. The engine's shortlist of model families then lists the Explainable Boosting Machine before gradient boosting and excludes neither (CASE-CONTRACT, "Constraints").
 
 ## What is known when the booking is entered
 

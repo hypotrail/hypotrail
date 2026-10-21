@@ -169,6 +169,18 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "models",
+   "activity": "fit.baseline",
+   "message": "How much does a simple model improve on a constant baseline on validation?",
+   "audience": "junior",
+   "junior_message": "How much does a simple model improve on a constant baseline on validation?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?"
   }
  }
 }

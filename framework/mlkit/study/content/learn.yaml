@@ -13,12 +13,12 @@ predictions:
   - id: binary.train_eda.rare
     task: binary
     step: train_eda
-    question: Is the positive outcome common or rare in the training rows?
+    question: Is the positive outcome common or rare in the rows explored?
     choices:
       - {id: common, label: Common}
       - {id: rare, label: Rare}
       - {id: not_sure, label: Not sure}
-    reveal: "It occurs in {{slot:eda.target_rate:rate|pct1}} of the training rows. A model has to beat this base rate to be useful."
+    reveal: "It occurs in {{slot:eda.target_rate:rate|pct1}} of the rows explored. A model has to beat this base rate to be useful."
   - id: binary.policy.beats_baseline
     task: binary
     step: policy
@@ -27,16 +27,16 @@ predictions:
       - {id: 'yes', label: 'Yes'}
       - {id: 'no', label: 'No'}
       - {id: not_sure, label: Not sure}
-    reveal: "At <rule>, the logistic model's precision is {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} and the baseline's {{slot:policy.evaluation:rules.[<rule>].models.[fit.baseline].precision|pct1}}. The paired difference is {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, between {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} and {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} on resamples of the validation rows."
+    reveal: "At <rule>, the logistic model's precision is {{slot:policy.evaluation:rules.[<rule>].models.[fit.logistic].precision|pct1}} and the baseline's {{slot:policy.evaluation:rules.[<rule>].models.[fit.baseline].precision|pct1}}. The paired difference is {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.point|pct1}}, between {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.low|pct1}} and {{slot:policy.evaluation:rules.[<rule>].deltas.[fit.logistic].precision.high|pct1}} on resamples of the evaluated rows."
   - id: regression.models.sign
     task: regression
     step: models
-    question: Fitted on the training rows only, will the linear model predict the validation rows too low or too high on average?
+    question: Fitted without the rows it predicts, will the linear model predict them too low or too high on average?
     choices:
       - {id: too_low, label: Too low}
       - {id: too_high, label: Too high}
       - {id: not_sure, label: Not sure}
-    reveal: "The mean residual of the linear model on the validation rows is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>: <sign>"
+    reveal: "The mean residual of the linear model on the rows it predicted is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}} <unit>: <sign>"
     sign:
       ref: "slot:evaluate.regression:models.[fit.linear].mean_residual"
       positive: on average it predicted too low (observed minus predicted is positive).
@@ -45,9 +45,9 @@ predictions:
   - id: regression.model_choice.beats_mean
     task: regression
     step: model_choice
-    question: Will the linear model's validation error be below the training mean's?
+    question: Will the linear model's error be below the mean baseline's?
     choices:
       - {id: 'yes', label: 'Yes'}
       - {id: 'no', label: 'No'}
       - {id: not_sure, label: Not sure}
-    reveal: "The validation MAE is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit> for the linear model and {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline. The paired difference is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of the validation rows."
+    reveal: "The MAE of the evaluated rows is {{slot:evaluate.regression:models.[fit.linear].mae|f2}} <unit> for the linear model and {{slot:evaluate.regression:models.[fit.baseline].mae|f2}} <unit> for the mean baseline. The paired difference is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} <unit>, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of the evaluated rows."

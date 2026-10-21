@@ -509,6 +509,8 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
                                 'will be used.',
                           'Le cas indique ce moment ; vérifiez qu\'il correspond à l\'usage du '
                           'score.')}
+    if decision == st.SUCCESS_CRITERION:
+        return _recommended_criterion(action, lang)
     if value is None:
         return None
     why = {
@@ -552,6 +554,55 @@ def _recommended(action: Mapping, view: Mapping, state: Mapping, lang: str) -> d
     if why is None:
         return None
     return {'value': copy.deepcopy(value), 'why': why}
+
+
+def _recommended_criterion(action: Mapping, lang: str) -> dict | None:
+    """v0.3 (WP-J): the middle option of ``criterion_options`` (+5 points of the default
+    metric, or 10 % less error), said to be a convention and not a value derived from the
+    case's costs, so that the criterion costs one adoption, not a question and an answer."""
+    options = action.get('criterion_options') or {}
+    candidates = options.get('candidates') or []
+    if len(candidates) < 2 or not isinstance(candidates[1].get('value'), Mapping):
+        return None
+    middle = candidates[1]
+    value = dict(middle['value'])
+    if options.get('task') == st.REGRESSION:
+        pct = round(100 * float(value['min_share']))
+        why = _t(lang, f'The middle option, {pct}% less error than the mean baseline: a moderate '
+                       'bar chosen by convention, not from the costs of this case. Keep it, or '
+                       'name the minimum your team needs.',
+                 f"L'option du milieu, {pct} % d'erreur en moins que la moyenne de référence : "
+                 'un seuil modéré, choisi par convention et non à partir des coûts de ce cas. '
+                 "Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+        return {'value': value, 'why': why}
+    default = options.get('default_metric')
+    if isinstance(default, str) and default != value.get('metric'):
+        value['metric'] = default
+    points = value.get('min_points')
+    per = middle.get('per_1000')
+    extra = (_t(lang, f' On {SCALE_1000} actions, about {per["extra"]} more positives than the '
+                      'baseline.',
+                f' Sur {SCALE_1000_FR} actions, environ {per["extra"]} positifs de plus que le '
+                'modèle de référence.')
+             if isinstance(per, Mapping) and isinstance(per.get('extra'), int) else '')
+    metric = audience_metric(value['metric'], lang)
+    why = _t(lang, f'The middle option, +{points} points of {metric} over the baseline: a '
+                   'moderate bar chosen by convention, not from the costs of this case.'
+                   f'{extra} Keep it, or name the minimum your team needs.',
+             f"L'option du milieu, +{points} points de {metric} au-dessus du modèle de "
+             'référence : un seuil modéré, choisi par convention et non à partir des coûts de '
+             f"ce cas.{extra} Gardez-le, ou indiquez le minimum dont votre équipe a besoin.")
+    return {'value': value, 'why': why}
+
+
+SCALE_1000, SCALE_1000_FR = '1,000', '1 000'
+
+
+def audience_metric(metric: str, lang: str) -> str:
+    """The metric of a gain in words: precision or recall (précision, rappel)."""
+    if metric == 'recall_gain':
+        return _t(lang, 'recall', 'rappel')
+    return _t(lang, 'precision', 'précision')
 
 
 def _question(action: Mapping, view: Mapping, lang: str, cv: bool = False) -> str | None:

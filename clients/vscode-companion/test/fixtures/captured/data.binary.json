@@ -669,9 +669,9 @@
    ]
   },
   "note": {
-   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored on training rows after the split.",
+   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration.",
    "audience": "junior",
-   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored on training rows after the split."
+   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration."
   }
  }
 }

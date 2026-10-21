@@ -104,7 +104,7 @@
    "kind": "await_user_words",
    "proposal_id": "p_7",
    "decision": "model_choice",
-   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
+   "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
    "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
    "language": "en",
@@ -257,73 +257,73 @@
   },
   "results": {
    "eda.correlation": {
-    "result_id": "61457a5bdb0ff1ed358a1300a48ad44cd64e4733330fef640b088734b3dfe1ae",
+    "result_id": "5b36ee72642113fda3064839118ba63eb25e4d5a79b9befcc80b138fe3ea33a6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:weight": {
-    "result_id": "8048bbed995410d13848f30abd06009e37adb86137ee0ad26c6a831a1770ca07",
+    "result_id": "6ccbc397ff6fcb5eb23ce5dc398666a5a9df75201fa2cf3a8a8169b5921dbe51",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "6c92221f86928c84ebec262a329ce11fa4e4d5d2f5131baece8240f148acd8b5",
+    "result_id": "640cbb5069ce4e3548675c95b811df519a179393fe9a19a74aee42842c354b33",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "3953f32cffec1cf68e412c5f666075aa29c2a3424de4576545475e8bb19ac343",
+    "result_id": "fcdfb0b722b7e52344334685344444efa101a904982db2075534e3b2cb913a9b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "0e879a3aa7a7129277902d9e7bcc5ee489950161cae5f63f4271d0fd10f570f2",
+    "result_id": "e442c6d83cea0f33d702e758f0197d48260d80c4bc6094c511b10709f2339aef",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "640c8b61c4a54d529054a41c55ff4b3e3c12db4f183d579c6b38a7eebd795579",
+    "result_id": "a160727b7f145fbb8931333c4bdb84e1c4c8647ab47d0c9eeef47a2b6b8eb3b6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "a2aae7df6aefe09b7a10c8ba8715e4b0f404405dc8c72966d1127feca6c6725a",
+    "result_id": "082968bd99bc7e451e3d8061cb36c1964d1e994bac3a42a872aded514cb8da96",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+    "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "7fdcaa993b1ce5e3beb5b743ded0e11e9f1b999738e8096fc710a877847086b9",
+    "result_id": "63756944d2a54b69b8e0d59de9a752c521627eb4bd8a4c5ce942af17ce8285e6",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "072d4ac00cfad749e6aae684fab99521d67ca14eda769369d46340345a83e1c3",
+    "result_id": "0fee5b813bd57cc64151cf8dccdd73aa7891d4194e158f751374d08711161620",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "7417d54cacb0bf021f6b293b57e8c68801470126db748b00e55099249200b886",
+    "result_id": "bc7d847a11472d5faa5a9a284aeb69385e865bb2a27d3bc9a1133dd8289333fc",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "b26567fa94e8302e35c925d611831e06d4071db037495f044b9a15075f8a31d7",
+    "result_id": "dfaf027aa894aa7277708f5b012cadc355473e2b458ee3c5512ef783e3c14b6e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -429,7 +429,7 @@
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "a143d64308947dc3b8db2df0eb8aef4d3ba754107bc1dd1eb6ba21e5e715d181",
+   "result_id": "ca5323ee7343b8c35e01ec5800cd955c4e666e1ed4cea40986fefcbf07c5ba61",
    "contradicts_verdict": false,
    "final_test": null,
    "model": "fit.linear",
@@ -439,16 +439,16 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "a2aae7df6aefe09b7a10c8ba8715e4b0f404405dc8c72966d1127feca6c6725a",
-    "640c8b61c4a54d529054a41c55ff4b3e3c12db4f183d579c6b38a7eebd795579",
-    "0e879a3aa7a7129277902d9e7bcc5ee489950161cae5f63f4271d0fd10f570f2",
-    "6c92221f86928c84ebec262a329ce11fa4e4d5d2f5131baece8240f148acd8b5"
+    "082968bd99bc7e451e3d8061cb36c1964d1e994bac3a42a872aded514cb8da96",
+    "a160727b7f145fbb8931333c4bdb84e1c4c8647ab47d0c9eeef47a2b6b8eb3b6",
+    "e442c6d83cea0f33d702e758f0197d48260d80c4bc6094c511b10709f2339aef",
+    "640cbb5069ce4e3548675c95b811df519a179393fe9a19a74aee42842c354b33"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result a143d643); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result ca5323ee); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
