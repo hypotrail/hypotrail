@@ -1914,6 +1914,8 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
 
 
 SUMMARY_FIXED_KEYS = ('schema', 'ok', 'study', 'revision')
+# WP-H3: keys of the full view that ``status --summary --fields`` also gives.
+FIELDS_FROM_VIEW = ('model_selection', 'model_families')
 
 
 def status(study_dir, since: int | None = None, summary: bool = False,
@@ -1936,12 +1938,18 @@ def status(study_dir, since: int | None = None, summary: bool = False,
                    'changed': None if since is None else study.revision > since, **out}
         if fields is not None:
             # v0.3 (WP-J): ``--fields``: only the keys asked for, so an agent reads a short
-            # document instead of piping the summary into a script.
+            # document instead of piping the summary into a script. WP-H3: the full view's
+            # ``model_selection`` and ``model_families`` (not in the summary) may be asked
+            # for too; every round-3 full study asked for them this way and was refused.
+            for key in FIELDS_FROM_VIEW:
+                if key in fields and key not in payload:
+                    payload[key] = built.get(key)
             unknown = [f for f in fields if f not in payload]
             if unknown or not fields:
+                keys = list(payload) + [k for k in FIELDS_FROM_VIEW if k not in payload]
                 raise StudyError('invalid_arguments',
-                                 f'--fields names keys of the summary: {", ".join(payload)}.',
-                                 details={'unknown': unknown, 'keys': list(payload)})
+                                 f'--fields names keys of the summary: {", ".join(keys)}.',
+                                 details={'unknown': unknown, 'keys': keys})
             payload = {**{k: payload[k] for k in SUMMARY_FIXED_KEYS},
                        **{k: payload[k] for k in fields if k not in SUMMARY_FIXED_KEYS}}
         return Outcome(payload)

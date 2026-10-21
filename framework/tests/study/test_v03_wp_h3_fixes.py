@@ -46,6 +46,9 @@ def test_a_french_thousands_group_is_one_number():
         '12 345,5 mpg.')]
     assert tokens == [('37 062', 37062.0, 0), ('8 149', 8149.0, 0),
                       ('12 345,5', 12345.5, 1)]
+    # At the end of a sentence (S14 Bank full fr, round-3 re-run: « il en compte 37 062. »).
+    assert [(t.text, t.value) for t in cite.parse_numbers('Il en compte 37 062. Ensuite')] == \
+        [('37 062', 37062.0)]
     # Not a group: one to three digits then a space and three digits only.
     assert [t.text for t in cite.parse_numbers('en 5 plis, de 2 à 3, 1 2345')] == \
         ['5', '2', '3', '1', '2345']
@@ -57,6 +60,7 @@ def test_a_french_thousands_group_is_one_number():
 def test_check_traces_french_grouped_counts_and_refuses_others():
     # S14 Bank full fr round 3.
     assert _refused("L'échantillon de développement (37 062 lignes) est découpé en plis.") == []
+    assert _refused("L'échantillon de développement en compte 37 062.") == []
     assert _refused('Parmi les 32 818 lignes où pdays vaut -1, 2 266 sont positives.') == []
     assert _refused("L'échantillon de développement compte 37 063 lignes.") == ['37 063']
     # Before WP-H3 the group read as two numbers, "37" and "062".
@@ -91,3 +95,27 @@ def test_the_regression_success_step_names_the_glossary_partitions():
     for text in (cv_fr, holdout_fr):
         assert "lignes d'entraînement" not in text
         assert "moyenne du jeu d'entraînement" not in text
+
+
+def test_status_fields_gives_the_views_model_selection_and_families(tmp_path):
+    """Round 3: every full study asked ``status --summary --fields model_families,...`` and
+    was refused (the two keys live in the full view only). They are now given."""
+    import flowkit as fk
+    from flowkit import Flow
+
+    case_dir = fk.make_case(tmp_path / 'case', task='binary', n_rows=300)['case'].parent
+    flow = Flow(tmp_path / 'study', case_dir)
+    flow.call('init', '--case', case_dir, '--study', flow.study)
+    out = flow.call('status', '--summary', '--fields', 'model_families,model_selection,trials',
+                    '--study', flow.study)
+    assert tuple(out) == ('schema', 'ok', 'study', 'revision', 'model_families',
+                          'model_selection', 'trials')
+    full = flow.call('status', '--study', flow.study)['view']
+    assert out['model_families'] == full['model_families']
+    assert out['model_selection'] == full['model_selection']
+    # Not in the plain summary, and an unknown key is still refused, naming them as allowed.
+    assert 'model_families' not in flow.call('status', '--summary', '--study', flow.study)
+    bad = flow.call('status', '--summary', '--fields', 'model_family', '--study', flow.study,
+                    expect=2)
+    assert bad['error']['details']['unknown'] == ['model_family']
+    assert 'model_families' in bad['error']['details']['keys']

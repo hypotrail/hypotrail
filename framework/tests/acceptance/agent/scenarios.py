@@ -866,14 +866,18 @@ ADOPTER = {
                        ('regression', True): "j'adopte le modèle",
                        ('binary', False): 'on garde le modèle de référence',
                        ('regression', False): 'on garde le modèle de référence'},
-           'interrupted': "oui, enregistre l'arrêt et relance-le"},
+           'interrupted': "oui, enregistre l'arrêt et relance-le",
+           # WP-H3 (S14 Auto MPG fr re-run): the model choice asked as an open question,
+           # the linear model recommended; the junior names it (no delegation there).
+           'model_choice': 'le modèle linéaire'},
     'en': {'adopt': 'yes', 'explain': 'explain first', 'continue': "let's continue",
            'criterion': {'binary': 'the precision gain, at least 5 points',
                          'regression': 'at least 10% less error than the baseline'},
            'verdict': {('binary', True): 'I adopt the rule', ('regression', True): 'I adopt the model',
                        ('binary', False): 'we keep the baseline',
                        ('regression', False): 'we keep the baseline'},
-           'interrupted': 'yes, record that it stopped and run it again'},
+           'interrupted': 'yes, record that it stopped and run it again',
+           'model_choice': 'the linear model'},
 }
 INTERRUPTED_RE = re.compile(r'interromp|interrupt|outcome is unknown|issue (?:est )?inconnue|'
                             r'résultat (?:est )?inconnu', re.I)
@@ -908,6 +912,8 @@ def adopter_responder(lang: str, explain_at: str = 'split', max_turns: int = 20,
             task = 'regression' if 'model_choice' in decisions else 'binary'
             met = ((snap.get('criterion') or {}).get('judged_status')) == 'met'
             say, label = words['verdict'][(task, met)], 'verdict'
+        elif (na.get('decision') or na.get('decision_id')) == 'model_choice':
+            say, label = words['model_choice'], 'model_choice'
         elif na.get('kind') == 'acknowledge_interruption' or INTERRUPTED_RE.search(reply):
             say, label = words['interrupted'], 'interrupted'
         else:

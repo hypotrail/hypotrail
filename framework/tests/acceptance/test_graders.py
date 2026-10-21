@@ -1259,6 +1259,14 @@ def test_wp_h_scripted_adopter_and_case_parameters():
     crit = {'next_action': {'decision': 'success_criterion', 'kind': 'propose'}, 'decisions': {}}
     assert 'au moins 5 points' in say(None, turn(crit), {}, None, 0)['say']
     assert say(None, turn({}, 'Est-ce que tu adoptes cette décision ?'), {}, None, 0)['say'] == 'oui'
+    # WP-H3 (S14 Auto MPG fr re-run): the model choice asked as an open question, nothing
+    # proposed; the junior names the recommended model instead of "on continue".
+    choice = {'next_action': {'decision': 'model_choice', 'kind': 'propose'},
+              'decisions': {'model_choice': {'status': 'open'}}}
+    assert say(None, turn(choice, 'Adoptez-vous le modèle linéaire, ou préférez-vous un autre '
+                                  'modèle ?'), {}, None, 0)['say'] == 'le modèle linéaire'
+    proposed = {**choice, 'open_proposals': [{'decision_id': 'model_choice'}]}
+    assert say(None, turn(proposed), {}, None, 0)['say'] == 'oui'
     # Round 1 (S14 Bank full): the conclusion asked as an open question gets the verdict the
     # criterion supports; an interrupted run gets an answer about it.
     ask = {'next_action': {'kind': 'propose', 'decision': 'conclusion'}, 'decisions': {},

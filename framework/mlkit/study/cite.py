@@ -65,7 +65,7 @@ _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 # ("37 062", "37 062,5"); such a group is one number, its decimals after a comma.
 _SPACE = '[ \u00a0\u202f\u2009]'
 NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|'
-                    rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?![\d.]|,\d{{3}})(?:,\d+)?|'
+                    rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?!\d|\.\d|,\d{{3}})(?:,\d+)?|'
                     r'\d+(?:[.,]\d+)?)'
                     r'(?![\w])(\s?%)?')
 SPACE_GROUPED = re.compile(rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?:,(\d+))?')

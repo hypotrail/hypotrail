@@ -20,9 +20,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    propose), and at the success criterion `criterion_options`. Relay them; do not rewrite
    them at length. Every `decide` and `run` output ends with the refreshed `next_action`
    and its `revision`: read them there; no `status` is needed after a write. For a short
-   read, ask for keys only: `status --summary --fields next_action,criterion`. Use
-   `status --json` only for a detail the summary lacks (a result's values,
-   `model_families`, `model_selection`). Use at most four tool calls per pause.
+   read, ask for keys only: `status --summary --fields next_action,criterion` (it also
+   gives `model_families` and `model_selection`). Use `status --json` only for a result's
+   values. `--fields` belongs to `status --summary` only. Use at most four tool calls per
+   pause.
 2. **Every number comes from the engine.** Do not run or write python, pandas, R, SQL, or
    a script, and do not open the data files: the engine is their only reader. Never pipe
    a command's JSON into `python3`, `jq`, or another program: read it as printed, or ask
