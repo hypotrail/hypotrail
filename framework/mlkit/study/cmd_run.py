@@ -1,6 +1,6 @@
 """``hypotrail run``: execute one activity, or acknowledge an interrupted execution.
 
-    hypotrail run ACTIVITY [--column X [--max-groups N]] [--rule RULE ...]
+    hypotrail run ACTIVITY [--column X [--max-groups N]] [--rule RULE ...] [--channel C]
                   --request-id ID --expected-revision REV --study DIR
     hypotrail run --acknowledge-interruption EXECUTION_ID --user-words TEXT
                   --request-id ID --expected-revision REV --study DIR

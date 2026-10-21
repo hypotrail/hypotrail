@@ -1,7 +1,7 @@
 """``hypotrail`` command-line interface (plan §4, ``docs/specs/CLI-CONTRACT.md``).
 
     hypotrail init --case CASE --study DIR [--lang en|fr]
-    hypotrail status --study DIR [--since REV] [--json] [--summary]
+    hypotrail status --study DIR [--since REV] [--json] [--summary [--fields KEY,...]]
     hypotrail plan --study DIR
     hypotrail decide propose DECISION (--value TEXT | --value-json JSON)
                      --restatement TEXT --rationale TEXT [--lang en|fr]

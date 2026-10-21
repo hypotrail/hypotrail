@@ -112,7 +112,9 @@ def test_next_action_messages_carry_their_audience(flow):
     assert p['ok']
     action = flow.view()['next_action']
     assert action['kind'] == 'await_user_words' and action['audience'] == 'agent'
-    assert 'record the user' in action['message']           # the agent's text is unchanged
+    # v0.3 (WP-J): guided mode asks the closed question; own words only in training.
+    assert 'record the reply verbatim' in action['message']
+    assert 'own words' not in action['message']
     _junior_clean(action['junior_message'])
     assert 'whether you adopt it' in action['junior_message']     # v0.3 (WP-B, R14)
     assert flow.call('plan', '--study', flow.study)['next_action'] == action
