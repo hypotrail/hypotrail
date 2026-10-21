@@ -1940,7 +1940,7 @@ def status(study_dir, since: int | None = None, summary: bool = False,
             # v0.3 (WP-J): ``--fields``: only the keys asked for, so an agent reads a short
             # document instead of piping the summary into a script. WP-H3: the full view's
             # ``model_selection`` and ``model_families`` (not in the summary) may be asked
-            # for too; every round-3 full study asked for them this way and was refused.
+            # for too; round-3 full studies asked for them this way and were refused.
             for key in FIELDS_FROM_VIEW:
                 if key in fields and key not in payload:
                     payload[key] = built.get(key)

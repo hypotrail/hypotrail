@@ -2,7 +2,7 @@
 
 **Claude Code acceptance, not Copilot acceptance.** This report measures an agent's behaviour against the installed v0.3 instructions and engine. It says nothing about a human junior's understanding, about GitHub Copilot, or about a real VS Code session.
 
-It follows the [v0.2b run](claude-code-2026-10-19-v0.2b.md) and reuses its method, isolation and budget guard. It covers the v0.3 engine and instructions at integrator tip `455b996` (WP-A to WP-G and WP-D merged) on the new discovery case (Hotel booking demand, Resort Hotel), on Bank Marketing full (temporal holdout) and on Auto MPG (regression), and it measures the plan's section-2 smoothness targets on a new end-to-end scenario, S14. Raw transcripts, workspaces and grader outputs were kept outside the repository. Excerpts are verbatim agent replies, shortened with "…".
+It follows the [v0.2b run](claude-code-2026-10-19-v0.2b.md) and reuses its method, isolation and budget guard. It covers the v0.3 engine and instructions at integrator tip `455b996` (WP-A to WP-G and WP-D merged) on the new discovery case (Hotel booking demand, Resort Hotel), on Bank Marketing full (temporal holdout) and on Auto MPG (regression), and it measures the plan's section-2 smoothness targets on a new end-to-end scenario, S14. Raw transcripts, workspaces and grader outputs were kept outside the repository. Excerpts are verbatim agent replies, shortened with "…". [Round 3](#round-3-wp-h3-21-october-2026) (WP-H3, tip `3773b3c` with WP-J and WP-K, French "vous") is at the end; the sections before it report rounds 1 and 2.
 
 **French phrasing used by these runs.** All French runs used the "tu" register of the tip (closed question « Est-ce que tu adoptes cette décision ? »). The owner has since chosen "vous" everywhere; the graders now accept both forms of the closed question, its options and the reason requests (`test_wp_h_the_closed_question_in_tu_and_vous_forms`), so the next round grades either.
 
@@ -198,3 +198,136 @@ uv run --project framework python $A/scenarios.py summary $RUNS/S14-hotel-fr-1
 ```
 
 Cases: `hotel`, `bank-full`, `auto-mpg`, `bank`, `shoppers` (and `synthetic`). The runs of this report were driven by a small batch script (run, review, grade per job, a cost ledger, the $90 guard), five, three or one at a time as stated above; run Hotel S13/S14/S2 one at a time on a 4-core machine.
+
+## Round 3 (WP-H3), 21 October 2026
+
+Integrator tip `3773b3c`, which adds the following since round 2:
+- the French "vous" register;
+- WP-J: `diag.binary` in about 14 s instead of about 4 min; `decide` and `run` return the refreshed `next_action`; `status --summary --fields`; a recommended default for the success criterion; `check` fixes; a pause message of at most 150 words; no piping JSON into `python3`/`jq`;
+- WP-K (panel only).
+
+This round uses the same harness, isolation and budget guard as rounds 1–2, with Claude Code CLI 2.1.304, `claude -p`, `opus`. All agent turns ran on `claude-opus-5-5`, and the repo guard reports an unchanged repository in all 33 runs. Runs went three at a time; the load peaked at 8.3 on 4 cores and no run timed out. S14 took 8–25 min.
+
+Scope:
+- S14 on all three cases, N = 3 (fr, en, fr);
+- S2, S12 and S13 on Hotel; S12 and S13 on Bank full; S13 on Auto MPG;
+- S10 on Auto MPG, after the scenario was made a valid test (below).
+
+After the 30 runs, the fixes below were committed and the two S14 runs whose failures came from fixed engine defects were re-run once. One of them, S14 Bank full fr 1, was re-run a second time, because the re-run exposed a bug in the first version of the number fix.
+
+Verdicts are given with the graders as they stand at the end of the round; "orig." is the verdict at the time of the run when it differs. An engine fix counts only through a re-run.
+
+### Results
+
+| Case | Scenario | Round 2 (latest before) | Round 3 | Main failure in round 3 |
+|---|---|---|---|---|
+| Hotel | S2 | 1/3 | **0/3** | no `status` after an `invalid_value` refusal (3 runs, agent) |
+| Hotel | S12 | 2/3 (1b) | **2/3** | fr 3: asked for the conclusion « avec vos mots » (`no_reason_requested`) |
+| Hotel | S13 | 1/3 | **3/3** (orig. 2/3) | grader: « À l'ouverture, … mesureront » read as a final claim (fixed) |
+| Hotel | S14 | 1/3 | **2/3** (orig. 1/3) | en 2: three honest figures `check` refuses (limitation); grader: "Do you adopt the opening of the final test?" not seen as the closed question (fixed) |
+| Bank full | S12 | 2/3 (1b) | **3/3** | |
+| Bank full | S13 | 1/3 (1b) | **3/3** | |
+| Bank full | S14 | 1/3 | **2/3** with the re-run (round 3: 1/3) | en 2: fold sizes; fr 1: « 37 062 » and an interval's lower bound refused (engine, fixed; re-run passes) |
+| Auto MPG | S10 | 0/3 (not a valid test) | **3/3** | |
+| Auto MPG | S13 | 2/3 (1b) | **2/3** (orig. 1/3) | en 2: "3.34 mpg lower" (a negative paired difference written as a magnitude, limitation); grader: future reading (fixed) |
+| Auto MPG | S14 | 1/3 | **0/3** | fr 1: « ses lignes d'entraînement » under cross-validation (re-run: a model choice asked as an open question, then a 20-turn loop); en 2 and fr 3: honest figures `check` refuses (limitations) |
+
+**Totals:**
+- Round 3: **19 of 30** with the final graders (17 with the graders of the time).
+- **20 of 30** when the S14 Bank full fr 1 re-run replaces its round-3 run.
+- Round 2's 21 re-runs: 13 of 21.
+- By scenario, against round 2: S10 Auto MPG is a valid test for the first time (3/3); S13 is 8/9 across the cases (round 2 and 1b: 4/9); S12 is 5/6. S2 failed in all three runs, the same way as in round 2.
+
+### S14 against the plan's targets
+
+These are the nine round-3 S14 runs; the re-runs are listed below the table. "Words per pause" counts the reply of each turn that ends at a pause (an open proposal or the closed question). The skill asks for at most 150 words there.
+
+| Run | Junior turns to the conclusion (target ≤ 12) | Refusals (visible; target 0) | Tool calls per pause, mean (max; target ≤ 4) | Words per pause, mean (max; pauses > 150) | Words per reply, mean | Cost |
+|---|---|---|---|---|---|---|
+| Hotel fr 1 | 15 | 2 (0) | 5.2 (13) | 171 (226; 7/10) | 174 | $3.06 |
+| Hotel en 2 | 13 | 1 (0) | 4.6 (13) | 185 (237; 7/10) | 187 | $2.49 |
+| Hotel fr 3 | 13 | 1 (0) | 5.0 (11) | 210 (292; 9/10) | 206 | $2.73 |
+| Bank full fr 1 | 13 | 3 (0) | 4.7 (8) | 200 (348; 7/10) | 204 | $2.57 |
+| Bank full en 2 | 13 | 2 (0) | 4.3 (8) | 192 (294; 9/10) | 189 | $2.13 |
+| Bank full fr 3 | 13 | 2 (0) | 4.4 (7) | 208 (329; 7/10) | 205 | $2.42 |
+| Auto MPG fr 1 | 13 | 1 (0) | 4.3 (9) | 169 (300; 6/10) | 175 | $2.20 |
+| Auto MPG en 2 | 15 | 2 (0) | 4.6 (8) | 151 (244; 5/10) | 153 | $2.25 |
+| Auto MPG fr 3 | 13 | 1 (0) | 4.3 (8) | 172 (278; 5/10) | 176 | $2.18 |
+
+Re-runs:
+- **Bank full fr 1, second re-run** (all fixes): pass, 16 turns, 2 refusals (0 visible), 5.0 tool calls per pause (max 9), 191 words per pause, $2.64.
+- **Bank full fr 1, first re-run:** failed on « 37 062. », which the first number fix refused at the end of a sentence ($2.63).
+- **Auto MPG fr 1 re-run:** asked the model choice as an open question; the scripted junior answered « on continue » until the turn limit, and the conclusion was not reached ($1.97).
+
+Against round 2 (13–17 turns; 4.2–5.4 calls; words per reply 185–246, and 192–249 per pause message on the same measure):
+- **Junior turns: not met, unchanged.** 13 in 7 of 9 runs (round 2: 7 of 9), and 15 in two:
+  - Hotel fr 1 asked « Je les lance ? » before the diagnostics and the variant's fit;
+  - Auto MPG en 2 asked the model choice as an open question twice.
+
+  The recommended criterion saved its turn: it is proposed at turn 6 and confirmed at 7, together with the preprocessing's proposal. The conclusion now costs one more turn: after the opening, the agents ask for the verdict first (« Quel verdict retenez-vous ? »), then proposes it, and the junior's yes is turn 13. The Bank full runs fell from 14–17 to 13. The second Bank full fr 1 re-run took 16: three times it ended a turn with « Dites « on continue » et je lance … » instead of running the next step.
+- **Visible refusals: met, 0 in 9 of 9.** Two counted at first; both were the metric's own false positive on « Le moteur signale… », fixed. The engine refused 15 calls (round 2: 6). 11 of them were `invalid_arguments` on `--fields`, in 8 of 9 runs:
+  - mostly `status --summary --fields model_families,…`, a key that was only in the full view;
+  - also `--fields` passed to `run` or `check`.
+
+  Fixed (H3.5); the second Bank full fr 1 re-run had none.
+- **Tool calls per pause: not met, unchanged** (4.3–5.2; maximum 13). The data card (6–8), the fits with their diagnostics (6–13) and the opening with the final diagnostics (6–9) still take more than four.
+- **Words: down, not met.** The mean words per pause message fell from 192–249 to 151–210, and words per reply from 185–246 to 153–206. Still 5 to 9 of the 10 pause messages of each run exceed 150 words.
+
+Other checks:
+- **No JSON pipes.** No run piped JSON into `python3` or `jq`: 0 of 33 Bash histories, against 13 of 21 round-2 runs (into `jq` or `python3`; the grader then flagged only `python3`).
+- **"vous" everywhere.** Every reply of every French run uses "vous" and no "tu" form outside quoted blocks (22–46 "vous" forms per S14 run), including the closed question « Adoptez-vous cette décision ? ».
+- **Study language.** One reply was in English in a French study: the Auto MPG fr re-run, turn 4, « The variable availability is recorded. Next step: … ». No other French reply was.
+
+### What the round shows, with excerpts
+
+**S10 Auto MPG, now a valid test (3/3).** The setup's reason was rewritten (decision H3.1): weight is dropped "because it gives away the measured fuel efficiency", which belongs to the target. In every run, the agent named the target, waited, and recorded its remark when the junior kept the sentence:
+
+> « Sur la fiche des données, `weight` est le **poids du véhicule** (en livres). La consommation mesurée, c'est `mpg`, la cible. Votre raison ne correspond donc pas à cette colonne … » (S10 Auto MPG fr r3 1)
+
+**Fast diagnostics.** No run was interrupted. The S13 Hotel runs took 7–8 min, against 1b's time-outs. S14 Hotel took 21–25 min, mostly in the fits and the evaluation.
+
+**S2 Hotel (0/3), the same agent behaviour as round 2.** The prediction moment changes in a second chat. The agent then proposes the feature availability again with only the changed columns, the engine refuses it (`invalid_value`: "Every candidate feature needs exactly one availability status"), and the agent corrects the value and proposes again without reading `status`. Rule 1 asks for that read. The study was never at risk (nothing changed between the two calls), but the rule was not followed. Not fixed.
+
+**S12 Hotel fr 3.** At the conclusion pause the agent asked « Dites-moi la conclusion avec vos mots et je la mettrai en forme pour que vous l'adoptiez. ». Guided mode asks for no own words, and the rule asks the agent to state its recommended verdict. Not fixed.
+
+**`check` still refuses honest figures (6 round-3 runs).** None was fabricated:
+- "Precision is 73.6% of the 3,205 selected": a count in a precision sentence.
+- "the variant's precision … is 69.2%, against 73.6% for the logistic model": two models in one sentence, and only the logistic model binds.
+- "Top twentieth | 85.4%".
+- "Fold 1 holds 226 positive rows out of 7,413": fold sizes.
+- "missing on 6 rows, where the mean is 28 mpg": the word "missing" binds the mean to missing-value counts.
+- "Its MAE is 3.34 mpg lower than the baseline's": a negative difference written as a magnitude.
+
+These are reported as limitations (H3.8).
+
+### Fixes made in round 3
+
+| Where | Fix | Found by | Confirmed by |
+|---|---|---|---|
+| Scenario | S10 Auto MPG reason rewritten (target's reason), setup proposes `not_available` | round 1 report | S10 Auto MPG 3/3 |
+| Engine `cite` | a space-grouped French number is one number (also before a full stop) | S14 Bank full fr 1 | its second re-run (pass) |
+| Engine `numtrace` | the first bound of a range is not an interval level | S14 Bank full fr 1 | its second re-run |
+| Engine `state`/`junior` | regression success step names the training folds (CV) or the training set, EN and FR | S14 Auto MPG fr 1 | not confirmed (the re-run stopped at the model choice) |
+| Engine `commands`, rule 1 | `--fields` also gives `model_families` and `model_selection`; `--fields` only on `status --summary` | 8 of 9 S14 runs | Bank full fr 1 second re-run: no `invalid_arguments` |
+| Harness | the scripted junior names the linear model at an open model choice | S14 Auto MPG fr 1 re-run | unit test only |
+| Graders | the opening's closed question; « à l'ouverture » and a French future; "errors over time"; « le moteur » refusal talk | S13 Hotel fr 3, S13 Auto MPG fr 1/en 2, S14 Hotel en 2 and fr 1 | unit tests, re-grade |
+
+### Cost
+
+| Item | Cost |
+|---|---|
+| Round 3 agents (30 runs) and rubric reviews | $35.73 |
+| Re-runs (3 S14 runs) and rubric reviews | $7.56 |
+| **Total** | **$43.29** (guard $45) |
+
+Per run: S14 $1.97–3.06; S10 $0.27–0.28; S2 $0.88–0.96; S12 $0.47–0.55; S13 $0.48–0.76.
+
+### What round 3 does not show
+
+- **Everything in "What this does not show" above still holds:** no human, no Copilot, no real VS Code; a scripted junior who adopts everything; heuristic graders and `check`; N = 3.
+- **Three of the fixes have no confirming run.**
+  - The regression wording (H3.4): the Auto MPG fr re-run stopped at the model choice before reaching the conclusion, and the glossary check that failed in fr 1 passed there for unrelated reasons.
+  - The scripted junior's answer to an open model choice.
+  - The `--fields` keys, which only the Bank full re-run exercised.
+- **Re-runs are single runs.** The S14 Bank full fr 1 pass is one run. Its 16 turns show that the agent can trade tool calls per pause for extra turns, which the two targets cannot both reward.
+- **The smoothness targets are still not met.** Junior turns stay at 13 even on a junior who adopts everything, and tool calls per pause stay above 4. The pause messages are shorter but mostly still over the 150 words the skill asks for.

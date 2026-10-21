@@ -98,8 +98,8 @@ def test_the_regression_success_step_names_the_glossary_partitions():
 
 
 def test_status_fields_gives_the_views_model_selection_and_families(tmp_path):
-    """Round 3: every full study asked ``status --summary --fields model_families,...`` and
-    was refused (the two keys live in the full view only). They are now given."""
+    """Round 3: full studies asked ``status --summary --fields model_families,...`` and were
+    refused (the two keys live in the full view only). They are now given."""
     import flowkit as fk
     from flowkit import Flow
 

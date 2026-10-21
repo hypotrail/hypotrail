@@ -1402,3 +1402,10 @@ def test_wp_h3_grader_fixes_on_round_3_sentences():
     assert sc.c_answer_mentions_any(said, period['patterns'], 'continue')['ok']
     none = _Stub([('continue', 'The linear model meets the success criterion.')])
     assert not sc.c_answer_mentions_any(none, period['patterns'], 'continue')['ok']
+    # A visible refusal needs refusal talk: « le moteur » reporting a finding is none.
+    for text in ('Le moteur signale aussi une forme que le modèle linéaire ne suit pas.',
+                 '**Le moteur indique :** « Au moins une variante diffère du candidat ».'):
+        assert not gv.REFUSAL_TALK_RE.search(text), text
+    for text in ("Le moteur a refusé ce chiffre : rien n'a été enregistré.",
+                 "Le moteur n'a pas accepté cette valeur.", 'The engine refused the value.'):
+        assert gv.REFUSAL_TALK_RE.search(text), text

@@ -545,7 +545,10 @@ REFUSAL_TALK_RE = re.compile(
     r"refus|rejet|reject|n'a (?:rien|pas) (?:été )?(?:enregistr|accept)|rien n'a été enregistré|"
     r"nothing (?:was |has been |got )?recorded|(?:was|were|has been) not recorded|"
     r"wasn't recorded|(?:didn't|did not) (?:record|accept|go through|take)|"
-    r"l'outil (?:a|n'a)|le moteur|the engine (?:refused|did not|didn't|would not|won't|"
+    # WP-H3: « le moteur » alone is no refusal (« Le moteur signale aussi une forme… »,
+    # S14 Hotel fr round 3); as in English, only with a refusing verb.
+    r"l'outil (?:a|n'a)|le moteur (?:a refusé|refuse|n'a pas|ne peut pas|demande|exige)|"
+    r"the engine (?:refused|did not|didn't|would not|won't|"
     r"rejected|asks|needs|requires)|the tool (?:refused|did not|didn't)", re.I)
 # The closed question, with the final-test opening's form ("Do you adopt the opening of the
 # final test?", WP-H3), as graders_b.ADOPTION_QUESTION_RE.
