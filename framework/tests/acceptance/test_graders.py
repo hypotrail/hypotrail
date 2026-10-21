@@ -436,8 +436,9 @@ def test_scenarios_contract():
     doc = yaml.safe_load((AGENT / 'scenarios.yaml').read_text(encoding='utf-8'))
     ids = [s['id'] for s in doc['scenarios']]
     # WP-A8: S0 (step 0), S10 (reason check, R3), S11 (sealed final test) join S1-S9;
-    # WP-B6b: S12 (the final test opened once) and S13 (diagnostics before the opening).
-    assert ids == [f'S{i}' for i in range(0, 14)]
+    # WP-B6b: S12 (the final test opened once) and S13 (diagnostics before the opening);
+    # WP-H: S14 (a whole study, adopting each proposal).
+    assert ids == [f'S{i}' for i in range(0, 15)]
     assert doc['defaults']['requires'] == ['hypotrail_cli', 'claude_cli']
     assert set(doc['defaults']['cases']) == {'bank', 'synthetic'}
     said = [step['say'] for s in doc['scenarios'] for chat in s['chats'] for step in chat]
@@ -881,7 +882,7 @@ def test_v03_hotel_is_the_discovery_case_of_the_scenarios():
     s8 = sc.build_chats(sc.scenario('S8'), 'hotel', 'en', Path('/tmp/i'))
     assert '5% of the bookings' in s8[0][0]['say']
     s10 = sc.build_chats(sc.scenario('S10'), 'hotel', 'fr', Path('/tmp/i'))
-    assert 'previous_cancellations' in s10[0][0]['say']
+    assert 'arrival_date_week_number' in s10[0][0]['say']
     junior = setup.JUNIOR['hotel']
     assert junior['act'] == 'contact' and junior['unit'] == 'bookings'
     assert set(junior['exclusions']) == {'country', 'deposit_type', 'adr',
@@ -954,6 +955,14 @@ def test_wp_b6b_s13_checks_on_stub_runs():
     fine = _Stub([('q', 'The calibration has not been checked on the final test: it is still '
                         'sealed. On the development rows it is close.')])
     assert sc.c_no_final_diagnostic_claim(fine)['ok']
+    # WP-H round 1 (S13 Auto MPG en), verbatim: the standard error of a rule is no diagnostic.
+    rule = _Stub([('q', '> The study adopts the strongly regularised linear model, the simplest '
+                        'configuration within one standard error of the best under the '
+                        'one-standard-error rule, as the model taken to the final test.')])
+    assert sc.c_no_final_diagnostic_claim(rule)['ok']
+    # Round 2 (S13 Hotel fr), verbatim: a future reading is no claim.
+    assert sc.c_no_final_diagnostic_claim(_Stub([('q', 'La calibration sur le test final '
+                                                       "viendra au moment de l'ouverture.")]))['ok']
     claim = _Stub([('q', 'The calibration on the final test is good.')])
     assert not sc.c_no_final_diagnostic_claim(claim)['ok']
 
@@ -975,3 +984,315 @@ def test_wp_b6b_round1_grader_fixes_future_and_required_openings():
         stub = _Stub([('q', text)])
         assert not (sc.c_answer_no_final_evidence_claim(stub)['ok']
                     and sc.c_no_final_diagnostic_claim(stub)['ok']), text
+
+
+# --------------------------------------------------------------------------- WP-H (v0.3)
+
+def _gv():
+    return _load('graders_v03')
+
+
+def _snapshot_run(turns, before=None, lang='fr'):
+    """A run record: ``turns`` is a list of (utterance, reply, snapshot, tool_calls)."""
+    return {'meta': {'lang': lang}, 'before': before or {},
+            'turns': [{'index': i + 1, 'label': f't{i + 1}', 'utterance': u, 'final_text': r,
+                       'tool_calls': n, 'after': {'snapshot': s}}
+                      for i, (u, r, s, n) in enumerate(turns)]}
+
+
+def test_wp_h_replies_in_the_study_language_quotations_excepted():
+    gv = _gv()
+    fr = ("Voici la carte des données. Chaque ligne est une réservation de l'hôtel, et la cible "
+          "est `is_canceled`. Le cas dit : « Bookings of a resort hotel in Portugal, one row per "
+          "booking » et c'est une citation.\n> You score each booking when it is entered.")
+    assert gv.replies_in_language([fr], 'fr')['ok']
+    leaked = fr + ("\nThe baseline gives every row the same score, so its precision is the "
+                   "overall positive rate of the development rows.")
+    r = gv.replies_in_language([leaked], 'fr')
+    assert not r['ok'] and 'baseline gives every row' in r['foreign_sentences'][0]['sentence']
+    assert not gv.replies_in_language(['This is the data card and the target is the column '
+                                       'that says whether the booking was cancelled.'], 'fr')['ok']
+    assert gv.replies_in_language(['On continue ?'], 'fr')['ok']          # too short to judge
+
+
+def test_wp_h_french_restatements_and_raw_ids():
+    gv = _gv()
+    t = Transcript()
+    t.tool('Bash', '{"ok": true}', command="hypotrail decide propose split --value-json '{}' "
+           "--restatement 'x' --restatement-fr 'y' --request-id chat1-split-propose")
+    t.tool('Bash', '{"ok": true}', command="hypotrail decide propose policy --value share:0.1 "
+           "--restatement 'x' --request-id chat1-policy-propose")
+    r = gv.restatements_in_language(t.events, 'fr')
+    assert not r['ok'] and r['without_french_restatement'][0]['decision'] == 'policy'
+    assert gv.restatements_in_language(t.events, 'en')['ok']
+    rid = 'a3f9c0d2e4b5a6c7d8e9f00112233445566778899aabbccddeeff0011223344'
+    reqs = gv.request_ids(t.events)
+    assert 'chat1-split-propose' in reqs
+    clean = ['La précision est de 41,2 % sur les plis de validation.',
+             'Le rapport précédent est conservé et marqué périmé à la révision 12.']
+    assert gv.raw_ids(clean, {rid}, reqs)['ok']
+    for text in ('Proposition p_3 enregistrée.', 'Résultat a3f9c0d2 enregistré.',
+                 "L'exécution e_0123abcd4567 a été interrompue.", 'Révision 14 : tout est à jour.',
+                 'Requête chat1-split-propose envoyée.'):
+        assert not gv.raw_ids([text], {rid}, reqs)['ok'], text
+
+
+def test_wp_h_no_reason_asked_in_guided_mode():
+    gv = _gv()
+    fine = ['> Tu exclus les colonnes enregistrées après la réservation.\n'
+            'Est-ce que tu adoptes cette décision ? Une raison est facultative.',
+            'Do you adopt this decision? You may add a reason if you want.']
+    assert gv.asks_for_reason(fine)['ok']
+    # Smoke run S14 (Hotel fr), verbatim: the agent reports what it did, asks nothing.
+    assert gv.asks_for_reason(["J'ai rédigé le critère avec tes mots, « le gain de précision, "
+                               "au moins 5 points » :"])['ok']
+    # Round 1 (S12 Hotel en, fr), verbatim reports of a recorded reason.
+    assert gv.asks_for_reason(['Your opening is recorded, with your reason, and the final test '
+                               'has been scored.',
+                               "J'ai enregistré l'ouverture avec tes mots et ta raison."])['ok']
+    for text in ('Réponds avec tes propres mots et une raison.',
+                 'Confirm it in your own words, please.',
+                 'Pourquoi tu choisis cette règle ?',
+                 'Please give me a reason for this choice.'):
+        assert not gv.asks_for_reason([text])['ok'], text
+
+
+def test_wp_h_guided_confirmations_verbatim_after_the_closed_question():
+    gv, gb = _gv(), _load('graders_b')
+    question = '> Tu gardes le découpage.\nEst-ce que tu adoptes cette décision ?'
+    t = Transcript().new_turn(1).end(question)
+    t.new_turn(2).tool('Bash', '{"ok": true}', command='hypotrail decide confirm --proposal p_4 '
+                       '--user-words "oui" --adoption-question --request-id c1')
+    t.end('Enregistré.')
+    snap = {'decisions': {'split': {'status': 'confirmed', 'user_words': 'oui',
+                                    'confirmed_revision': 9, 'adoption_question': True}}}
+    run = _snapshot_run([('on continue', question, {}, 0), ('oui', 'Enregistré.', snap, 1)])
+    r = gv.guided_confirmations(run, t.events, gb.confirm_attempts(t.events))
+    assert r['ok'], r
+    # The agent's own words recorded as the junior's: not verbatim.
+    snap_bad = {'decisions': {'split': dict(snap['decisions']['split'],
+                                            user_words='Oui, je fixe la validation croisée.')}}
+    run_bad = _snapshot_run([('on continue', '', {}, 0), ('oui', '', snap_bad, 1)])
+    assert not gv.guided_confirmations(run_bad, t.events,
+                                       gb.confirm_attempts(t.events))['ok']
+    # A refused attempt, and a reason refusal, are what the junior must not meet.
+    t2 = Transcript().new_turn(2).tool(
+        'Bash', '{"ok": false, "error": {"code": "ambiguous_confirmation", "details": '
+                '{"reason": "reason_required"}}}',
+        command='hypotrail decide confirm --proposal p_4 --user-words "oui je confirme"')
+    r = gv.guided_confirmations(run, t2.events, gb.confirm_attempts(t2.events))
+    assert not r['ok'] and r['refused_attempts'] and r['reason_or_paraphrase_refusals']
+
+
+def test_wp_h_the_closed_question_in_tu_and_vous_forms():
+    """The French register moves to "vous" (owner decision, 2026-10-20): both forms of the
+    closed question count, in every grader that looks for it."""
+    gv, gb = _gv(), _load('graders_b')
+    sc = _load('scenarios')
+    s6 = next(c for c in sc.scenario('S6')['checks'] if 'answer_mentions_any' in c)
+    import re as _re
+    for text in ('Est-ce que tu adoptes cette décision ?', 'Adoptes-tu cette décision ?',
+                 'Adoptez-vous cette décision ?', 'Est-ce que vous adoptez cette décision ?',
+                 'Do you adopt this decision?'):
+        assert gv.ADOPTION_RE.search(text) and gb.ADOPTION_QUESTION_RE.search(text), text
+        assert any(_re.search(p, text, _re.I) for p in s6['answer_mentions_any']['patterns'])
+    for text in ('Dites-moi avec vos propres mots ce que vous changez.',
+                 'Donnez-moi votre raison.', 'Pourquoi vous choisissez cette règle ?'):
+        assert not gv.asks_for_reason([text])['ok'], text
+    assert gv.asks_for_reason(["J'ai enregistré l'ouverture avec vos mots et votre raison."])['ok']
+
+
+def test_wp_h_r32_data_contingent_said_before_the_proposal():
+    gv = _gv()
+    t = Transcript().new_turn(5).tool(
+        'Bash', '{"ok": true, "result": {"proposal_id": "p_6", "data_contingent": true}}',
+        command="hypotrail decide propose preprocessing --value-json '{}'")
+    good = {5: "Ce choix est dépendant des données : il vient après avoir regardé la cible.\n"
+               "> Tu gardes la préparation par défaut.\nEst-ce que tu adoptes cette décision ?"}
+    r = gv.data_contingent_first(t.events, good)
+    assert r['ok'] and r['exercised'] == 1
+    late = {5: "> Tu gardes la préparation par défaut.\nEst-ce que tu adoptes cette décision ?\n"
+               "Note : ce choix vient après avoir regardé la cible."}
+    assert not gv.data_contingent_first(t.events, late)['ok']
+    assert not gv.data_contingent_first(t.events, {5: '> Préparation par défaut.'})['ok']
+    plain = Transcript().new_turn(5).tool(
+        'Bash', '{"ok": true, "result": {"data_contingent": false}}',
+        command="hypotrail decide propose preprocessing --value-json '{}'")
+    r = gv.data_contingent_first(plain.events, {5: '> x'})
+    assert r['ok'] and r['exercised'] == 0
+
+
+def test_wp_h_r28_diagnostics_and_confusion_matrix():
+    gv = _gv()
+    needs = '{"ok": true, "next_action": {"kind": "run", "activity": "diag.binary"}}'
+    t = Transcript().new_turn(3)
+    t.tool('Bash', '{"ok": true}', command='hypotrail run fit.logistic --request-id f')
+    t.tool('Bash', needs, command='hypotrail status --summary --study s')
+    t.tool('Bash', '{"ok": true}', command='hypotrail run diag.binary --request-id d')
+    t.tool('Bash', '{"ok": true}', command="hypotrail decide propose model_variant --value-json '{}'")
+    # Smoke run S14 (Hotel fr): the rule adopted is the one the diagnostics used, so the
+    # engine's next action is the opening, and no new diagnostic is required.
+    t.new_turn(6).tool('Bash', '{"ok":true,"next_action":{"kind":"propose","activity":null,'
+                               '"decision":"final_test"}}',
+                       command='hypotrail decide confirm --proposal p_8 --user-words oui')
+    t.tool('Bash', '{"ok": true}', command="hypotrail decide propose final_test --value-json '{}'")
+    r = gv.diagnostics_when_required(t.events)
+    assert r['ok'] and r['exercised'] == 1
+    skip = Transcript().new_turn(3)
+    skip.tool('Bash', '{"ok": true}', command='hypotrail run fit.logistic')
+    skip.tool('Bash', needs, command='hypotrail status --summary --study s')
+    skip.tool('Bash', '{"ok": true}',
+              command="hypotrail decide propose model_variant --value-json '{}'")
+    r = gv.diagnostics_when_required(skip.events)
+    assert not r['ok'] and r['misses'][0]['proposal'] == 'model_variant'
+    # Required by the study at the start of the turn (the setup or an earlier turn).
+    late = Transcript().new_turn(2).tool(
+        'Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    run = _snapshot_run([('on continue', '', {'next_action': {'activity': 'diag.binary'}}, 0),
+                         ('oui', '', {}, 1)])
+    assert not gv.diagnostics_when_required(late.events, run)['ok']
+    # Round 1 (S14 Hotel en): the diagnostic ran in the background across two turns; the
+    # agent read its task output, where the next action had become the proposal.
+    waited = Transcript().new_turn(2)
+    waited.tool('Read', '{"revision":35,"na":{"kind":"propose","step":"policy"}}',
+                file_path='/tmp/x/tasks/b1.output')
+    waited.tool('Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    assert gv.diagnostics_when_required(waited.events, run)['ok']
+    # The agent's jq rename of next_action ("na") still names the run.
+    renamed = Transcript().new_turn(1)
+    renamed.tool('Bash', '{"revision":31,"na":{"kind":"run","step":"policy","activity":'
+                         '"diag.binary"}}', command='hypotrail status --summary | jq')
+    renamed.tool('Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    assert not gv.diagnostics_when_required(renamed.events)['ok']
+    # A compact refusal (``{"ok":false,...}``) is a refusal.
+    compact = Transcript().new_turn(1).tool(
+        'Bash', '{"ok":false,"error":{"code":"literal_number_in_text"}}',
+        command="hypotrail decide propose final_test --value-json '{}'")
+    assert gv.refusal_codes(compact.events)[0]['code'] == 'literal_number_in_text'
+    assert _load('graders_b').refusals(compact.events)[0]['code'] == 'literal_number_in_text'
+    table = ('| | Annulée | Pas annulée |\n|---|---|---|\n| Sélectionnée | 412 | 389 |\n'
+             '| Pas sélectionnée | 1 233 | 5 977 |')
+    assert len(gv.confusion_tables(table)) == 1
+    assert gv.confusion_shown(t.events, {7: table})['ok']
+    assert not gv.confusion_shown(t.events, {7: 'Précision 51 %, rappel 25 %.'})['ok']
+    assert gv.confusion_shown(Transcript().events, {})['exercised'] is False
+
+
+def test_wp_h_variant_budget_and_families():
+    gv = _gv()
+
+    def run_with(value, recommendation):
+        t = Transcript().new_turn(2).tool(
+            'Bash', '{"ok": true}',
+            command=f"hypotrail decide propose model_variant --value-json '{json.dumps(value)}'")
+        snap = {'model_families': {'recommendation': recommendation}}
+        return gv.variant_budget(_snapshot_run([('on continue', '', snap, 1),
+                                                ('oui', '', snap, 1)]), t.events)
+    tuned = {'variants': [{'kind': 'tuned', 'question': 'Does tuning the penalty help?'}]}
+    assert run_with(tuned, 'keep_linear')['ok']
+    family = {'variants': [{'kind': 'family', 'family': 'ebm', 'question': 'Is it non-linear?'}]}
+    assert run_with(family, 'compare_nonlinear')['ok']
+    r = run_with(family, 'keep_linear')
+    assert not r['ok'] and r['problems'][0]['problem'] == 'family_without_recommendation'
+    four = {'variants': [{'kind': 'regularisation', 'strength': 'strong', 'question': 'q'}] * 4}
+    assert not run_with(four, 'keep_linear')['ok']
+    unasked = {'variants': [{'kind': 'regularisation', 'strength': 'strong'}]}
+    assert not run_with(unasked, 'keep_linear')['ok']
+
+
+def test_wp_h_glossary_vocabulary():
+    gv = _gv()
+    step0 = ("L'**échantillon de développement** sert à tout apprendre ; l'**échantillon de "
+             "test final (holdout)** reste scellé.")
+    assert gv.glossary_vocabulary([step0], 'fr', step0)['ok']
+    r = gv.glossary_vocabulary(['La précision moyenne est de 0,41.'], 'fr')
+    assert not r['ok'] and r['home_made_terms'][0]['term'] == 'précision moyenne'
+    r = gv.glossary_vocabulary(['On the validation rows the model is better.'], 'en',
+                               'Here is the data card.')
+    assert not r['ok'] and r['step0_terms_missing']
+
+
+def test_wp_h_smoothness_metrics_and_targets():
+    gv = _gv()
+    open_pt = {'open_proposals': [{'proposal_id': 'p_1', 'decision_id': 'prediction_time'}]}
+    confirmed = {'decisions': {'prediction_time': {'status': 'confirmed', 'confirmed_revision': 3}},
+                 'open_proposals': [{'proposal_id': 'p_2', 'decision_id': 'feature_availability'}]}
+    done = {'decisions': {'prediction_time': {'status': 'confirmed', 'confirmed_revision': 3},
+                          'feature_availability': {'status': 'confirmed', 'confirmed_revision': 5},
+                          'conclusion': {'status': 'confirmed', 'confirmed_revision': 9}}}
+    run = _snapshot_run([
+        ('bonjour', 'Voici la carte des données. ' * 10, {}, 2),
+        ('on continue', '> Tu prédis à la saisie.\nEst-ce que tu adoptes cette décision ?',
+         open_pt, 3),
+        ('oui', "Le moteur a refusé ma première tentative ; c'est enregistré. Est-ce que tu "
+                'adoptes cette décision ?', confirmed, 5),
+        ('oui', 'Conclusion enregistrée.', done, 2)])
+    t = Transcript().new_turn(3).tool(
+        'Bash', '{"ok": false, "error": {"code": "stale_revision"}}',
+        command='hypotrail decide confirm --proposal p_1 --user-words "oui"')
+    m = gv.smoothness(run, t.events)
+    assert m['junior_turns'] == 4 and m['junior_turns_to_conclusion'] == 4
+    assert m['turns_to_pause']['prediction_time'] == 2
+    assert m['turns_to_pause']['feature_availability'] == 3
+    assert m['turns_to_confirm'] == {'prediction_time': 3, 'feature_availability': 4,
+                                     'conclusion': 4}
+    assert m['refusals'] == 1 and m['refusals_visible'] == 1
+    assert m['pauses'] == 2 and m['tool_calls_per_pause'] == [5, 5]
+    assert m['tool_calls'] == 12 and m['words_per_reply_max'] >= 40
+    tg = gv.targets(m)
+    assert tg['junior_turns_to_conclusion']['met'] and not tg['refusals_visible']['met']
+    assert not tg['tool_calls_per_pause_mean']['met']
+
+
+def test_wp_h_scripted_adopter_and_case_parameters():
+    """S14's scripted junior adopts, asks once to explain the split first, gives the
+    criterion's middle option, continues otherwise, and stops at the conclusion."""
+    sc = _load('scenarios')
+    say = sc.adopter_responder('fr', log=lambda *_: None)
+
+    def turn(snapshot, text='', subtype='success'):
+        return {'after': {'snapshot': snapshot}, 'final_text': text, 'result_subtype': subtype}
+    assert say(None, turn({}, 'Voici la carte des données.'), {}, None, 0)['say'] == 'on continue'
+    split = {'open_proposals': [{'decision_id': 'split'}]}
+    assert say(None, turn(split), {}, None, 0)['say'] == "explique-moi d'abord"
+    assert say(None, turn(split), {}, None, 1)['say'] == 'oui'
+    crit = {'next_action': {'decision': 'success_criterion', 'kind': 'propose'}, 'decisions': {}}
+    assert 'au moins 5 points' in say(None, turn(crit), {}, None, 0)['say']
+    assert say(None, turn({}, 'Est-ce que tu adoptes cette décision ?'), {}, None, 0)['say'] == 'oui'
+    # Round 1 (S14 Bank full): the conclusion asked as an open question gets the verdict the
+    # criterion supports; an interrupted run gets an answer about it.
+    ask = {'next_action': {'kind': 'propose', 'decision': 'conclusion'}, 'decisions': {},
+           'criterion': {'judged_status': 'met'}}
+    assert say(None, turn(ask, 'Que conclus-tu ?'), {}, None, 0)['say'] == "j'adopte la règle"
+    ask['criterion'] = {'judged_status': 'not_met'}
+    assert say(None, turn(ask), {}, None, 0)['say'] == 'on garde le modèle de référence'
+    assert 'relance' in say(None, turn({}, "Le diagnostic s'est interrompu ; son issue est "
+                                           'inconnue.'), {}, None, 0)['say']
+    done = {'decisions': {'conclusion': {'status': 'confirmed'}}}
+    assert say(None, turn(done), {}, None, 0) is None
+    assert say(None, turn({}, subtype='error_max_budget_usd'), {}, None, 0) is None
+    en = sc.adopter_responder('en', log=lambda *_: None)
+    reg = {'next_action': {'decision': 'success_criterion'}, 'decisions': {'model_choice': {}}}
+    assert en(None, turn(reg), {}, None, 0)['say'] == 'at least 10% less error than the baseline'
+    s14 = sc.scenario('S14')
+    assert s14['targets'] and s14['adopter']['explain_at'] == 'split'
+    assert set(s14['cases']) == {'hotel', 'bank-full', 'auto-mpg'}
+    for sid in ('S0', 'S6', 'S10', 'S12', 'S13', 'S14'):
+        assert {'hotel', 'bank-full', 'auto-mpg'} <= set(sc.scenario(sid)['cases']), sid
+    for s in sc.SCENARIOS['scenarios']:
+        assert 'hotel' in s.get('cases', sc.SCENARIOS['defaults']['cases']), s['id']
+    s10 = sc.build_chats(sc.scenario('S10'), 'auto-mpg', 'en', Path('/tmp/i'))
+    assert 'drop weight' in s10[0][0]['say']
+    s2 = sc.build_chats(sc.scenario('S2'), 'hotel', 'fr', Path('/tmp/i'))
+    assert 'réservation est saisie' in s2[1][0]['say']
+    setup = _load('study_setup')
+    assert setup.JUNIOR['hotel']['prediction_time_s2'] and setup.JUNIOR['auto-mpg']['exclusions_s10']
+
+
+def test_wp_h_french_run_is_a_french_study(tmp_path):
+    """A French run initialises the study with ``--lang fr`` so the engine's junior texts
+    come in French."""
+    setup = _load('study_setup')
+    info = setup.prepare_study('auto-mpg', tmp_path / 'ws', lang='fr')
+    assert info['lang'] == 'fr'
+    assert setup.status(tmp_path / 'ws')['view']['language'] == 'fr'

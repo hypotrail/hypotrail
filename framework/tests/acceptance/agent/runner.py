@@ -305,8 +305,10 @@ class Conversation:
         if watcher:
             watcher.start()
         try:
+            # stdin closed: `claude -p` otherwise waits 3 s for piped input on every turn.
             p = subprocess.run(cmd, cwd=self.workspace, env=env, capture_output=True,
-                               text=True, timeout=self.caps.timeout_s_per_turn)
+                               stdin=subprocess.DEVNULL, text=True,
+                               timeout=self.caps.timeout_s_per_turn)
             stdout, stderr, code, timed_out = p.stdout, p.stderr, p.returncode, False
         except subprocess.TimeoutExpired as exc:
             stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or '')

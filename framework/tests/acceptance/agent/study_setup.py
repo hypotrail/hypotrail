@@ -109,18 +109,26 @@ JUNIOR = {
                               'deposit type, we do not know when they are set; keep the price '
                               'and the requests but list them as doubts.',
         'rate_by': 'market_segment',
-        # S10: the junior also drops previous_cancellations with the reason that belongs to
-        # booking_changes (it counts what happens after the booking, until check-in).
+        # S10: the junior also drops arrival_date_week_number with the reason that belongs to
+        # the outcome (reservation_status, is_canceled). WP-H round 1: the earlier reason for
+        # previous_cancellations ("counts what happens after the booking") fits the case's
+        # day-before-arrival snapshot fact, so it was no misattribution.
         'exclusions_s10': {'country': 'uncertain_excluded', 'deposit_type': 'uncertain_excluded',
                            'adr': 'uncertain_included',
                            'required_car_parking_spaces': 'uncertain_included',
                            'total_of_special_requests': 'uncertain_included',
-                           'previous_cancellations': 'not_available'},
+                           'arrival_date_week_number': 'not_available'},
         'restatement_s10': 'You exclude the outcome columns, the columns recorded after the '
-                           'booking, country, deposit_type and previous_cancellations, keep adr '
-                           'and the requests as stated doubts, and keep the other variables.',
+                           'booking, country, deposit_type and arrival_date_week_number, keep '
+                           'adr and the requests as stated doubts, and keep the other variables.',
         'policy_words': 'Yes, contact the top 10% of bookings, because the team can handle one '
                         'new booking in ten.',
+        # S2 (WP-H): an earlier, different prediction moment that the junior corrects in a
+        # second chat.
+        'prediction_time_s2': 'a week before arrival, from the booking and its changes so far',
+        'restatement_s2': 'You score each booking a week before arrival, from the booking and '
+                          'what changed in it since.',
+        'words_s2': 'Yes, a week before arrival, with what we know at that point.',
     },
     # Regression generality case (Auto MPG), words of test_regression_walkthrough.py.
     'auto-mpg': {
@@ -134,6 +142,11 @@ JUNIOR = {
                               'other characteristics and the origin.',
         'mean_by': 'model_year',
         'choice_words': 'Yes, adopt the linear model, because it errs less than the mean.',
+        # S10 (WP-H): the junior also drops weight with the reason that belongs to
+        # acceleration (the case lists its availability as unknown).
+        'exclusions_s10': {'acceleration': 'uncertain_excluded', 'weight': 'uncertain_excluded'},
+        'restatement_s10': 'You exclude acceleration and weight, and keep the other '
+                           'characteristics and the origin.',
     },
     'synthetic': {
         'prediction_time': 'when the membership expires, before any reminder is sent',
@@ -316,7 +329,7 @@ def cli_env(extra: dict | None = None) -> dict:
 
 
 def hyp(*args, cwd: Path | None = None, stdin: str | None = None, extra_env=None,
-        expect: int | tuple | None = 0, timeout: int = 600) -> tuple[int, dict]:
+        expect: int | tuple | None = 0, timeout: int = 1800) -> tuple[int, dict]:
     """One CLI process: ``(exit code, payload)``."""
     proc = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', *map(str, args)],
                           input=stdin, capture_output=True, text=True,
@@ -478,10 +491,13 @@ def prepare_case(case: str, workspace: Path, hidden_dir: Path | None = None,
     raise ValueError(f'unknown case {case!r}')
 
 
-def init_study(workspace: Path, info: dict) -> dict:
-    """``hypotrail init`` in the workspace; returns the init payload."""
+def init_study(workspace: Path, info: dict, lang: str | None = None) -> dict:
+    """``hypotrail init`` in the workspace; returns the init payload. ``lang`` is the study
+    language (v0.3, WP-H: a French run is a French study, so the engine's junior texts come
+    in French, as ``init --lang fr`` gives them to a French junior)."""
     ws = Path(workspace)
-    _, payload = hyp('init', '--case', ws / info['case_yaml'], '--study', ws)
+    extra = ('--lang', lang) if lang else ()
+    _, payload = hyp('init', '--case', ws / info['case_yaml'], *extra, '--study', ws)
     return payload
 
 
@@ -492,9 +508,11 @@ def enable_session_log(workspace: Path) -> None:
 
 
 def prepare_study(case: str, workspace: Path, hidden_dir: Path | None = None,
-                  seed: int = 20261018, session_log: bool = False) -> dict:
+                  seed: int = 20261018, session_log: bool = False,
+                  lang: str | None = None) -> dict:
     info = prepare_case(case, workspace, hidden_dir, seed)
-    init = init_study(workspace, info)
+    init = init_study(workspace, info, lang)
+    info['lang'] = lang or 'en'
     if session_log:
         enable_session_log(workspace)
         info['session_log'] = True
@@ -512,11 +530,14 @@ class Setup:
     """Direct CLI driver that takes a study through the walkthrough stages."""
 
     def __init__(self, study: Path, case: str, variant: str | None = None,
-                 split: str = 'cv'):
+                 split: str = 'cv', diagnostics: bool = True):
         """``split``: ``cv`` (the engine's drafted cross-validation in a v0.2b study) or
-        ``holdout`` (the stratified 30 % validation split, still accepted by v0.2b)."""
+        ``holdout`` (the stratified 30 % validation split, still accepted by v0.2b).
+        ``diagnostics``: run the diagnostics the plan requires (WP-H); S13 turns it off,
+        since running them is what it tests."""
         self.study, self.case, self.variant, self.n = Path(study), case, variant, 0
         self.split = split
+        self.diagnostics = diagnostics
         self.junior = JUNIOR[case]
         self.log: list[dict] = []
 
@@ -547,6 +568,14 @@ class Setup:
     def run(self, activity, *options):
         return self.call('run', activity, *options, '--request-id', self.rid(f'run-{activity}'),
                          '--expected-revision', self.rev())
+
+    def run_required_diagnostics(self) -> None:
+        """Run ``diag.binary``/``diag.regression`` when the engine's next action names them."""
+        if not self.diagnostics:
+            return
+        na = self.view().get('next_action') or {}
+        if str(na.get('activity') or '').startswith('diag.'):
+            self.run(na['activity'])
 
     def availability_value(self) -> dict:
         case_yaml = Path(status(self.study)['view']['case']['path'])
@@ -639,6 +668,10 @@ class Setup:
         if stop >= 4:
             self.run('fit.baseline')
             self.run('fit.linear' if regression else 'fit.logistic')
+            # v0.3 (WP-F1, R28): the diagnostics follow the fits when the plan asks for
+            # them (WP-H round 1: without them every later stage started with the
+            # diagnostics owed, and a scenario about something else ran them first).
+            self.run_required_diagnostics()
         has_variant = self.has_decision('model_variant')
         if stop >= 5 and has_variant:
             p = self.propose('model_variant', VARIANT,
@@ -652,6 +685,7 @@ class Setup:
                 self.run('evaluate.regression')
             else:
                 self.run('policy.evaluate', '--rule', rule)
+            self.run_required_diagnostics()
         if stop >= 7:
             if regression:
                 p = self.propose('model_choice', 'fit.linear', 'You adopt the linear model.')
@@ -665,6 +699,10 @@ class Setup:
                 p = self.propose('policy', rule, f"You {j['act']} the top {pct} of "
                                                  f"{j['unit']}, ranked by the model's score.")
                 self.confirm(p, j['policy_words'])
+            # v0.3 (WP-F1, R28): the diagnostics at the adopted rule (or of the chosen model)
+            # are the next step after the choice; the agent runs them when ``next_action``
+            # names them, so a study past the choice has them.
+            self.run_required_diagnostics()
         if stop >= 8:
             value = self.default_value('final_test')
             p = self.propose('final_test', value, 'You open the sealed final test once, for the '

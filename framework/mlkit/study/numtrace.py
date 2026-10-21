@@ -558,6 +558,13 @@ class Pool:
                 leaves.append((('@n_rows',), item['n_rows'], ()))
             metric = item['values'].get('metric') if isinstance(item['values'], Mapping) \
                 else None
+            # v0.3 (WP-H): the variant comparison an evaluation stores (``model_selection``,
+            # ADR 0007) states its metric as a field, so its figures answer to that metric's
+            # words ("-0.009 of AUC per fold") as the agent is asked to relay them.
+            selection = item['values'].get('model_selection') \
+                if isinstance(item['values'], Mapping) else None
+            selection_metric = selection.get('metric') if isinstance(selection, Mapping) \
+                else None
             for segments, value, labels in leaves:
                 path = cite.format_path(segments)
                 if internal_path(slot, path):
@@ -571,6 +578,9 @@ class Pool:
                         self.labels.setdefault(label, _label_pattern(label))
                 if isinstance(metric, str):
                     entry['metric'] = metric
+                elif isinstance(selection_metric, str) and segments \
+                        and segments[0] == 'model_selection':
+                    entry['metric'] = selection_metric
                 bucket.append(entry)
         self.scope, self.unknown_scope = None, []
         if scope is not None:
@@ -607,7 +617,12 @@ class Pool:
         for cand in options.get('candidates') or []:
             if isinstance(cand.get('per_1000'), Mapping):
                 self._literal('criterion_option', 'per_1000', cand['per_1000'])
-                self._literal('criterion_option', 'value', cand.get('value'))
+            # v0.3 (WP-H): a regression option has no per-1,000 translation; its minimum
+            # ("5% less error") and the factor its text states ("at most 0.95 E <unit>") are
+            # the engine's own words, refused before (WP-H acceptance, round 1).
+            self._literal('criterion_option', 'value', cand.get('value'))
+            if isinstance(cand.get('text'), str):
+                self._literal('criterion_option', 'text', cand['text'])
         if options.get('scale'):
             self._literal('criterion_option', 'scale', options['scale'])
         if proposed is not None:
