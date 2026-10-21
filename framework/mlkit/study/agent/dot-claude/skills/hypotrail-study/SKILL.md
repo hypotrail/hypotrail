@@ -92,7 +92,9 @@ Do not invent a figure: write <N> until an output gives it.
 ## Resuming
 
 A plain "where are we?" gets the same answer as the resume command: the summary's
-`recap_junior`, five flat lines, goal first, quoted. Add no ids and no revision number.
+`recap_junior`, five flat lines, goal first, quoted, with the junior's own words of the
+latest confirmation in quotation marks on the decisions line. Add no ids and no revision
+number.
 
 "Explain differently", "show the calculation", or "let me try" change the depth, not the
 position in the plan. For "let me try", point to `notebooks/workbench.py`: nothing there

@@ -350,8 +350,13 @@ FIT_RE = re.compile(r'\brun\s+fit\.(?:logistic|linear)\b')
 DIAG_RE = re.compile(r'\brun\s+diag\.(?:binary|regression)\b')
 
 
-NEXT_DIAG_RE = re.compile(r'"next_action"\s*:\s*\{[^{}]{0,400}?"activity"\s*:\s*'
-                          r'"(diag\.(?:binary|regression))"')
+# The engine's next action as the agent printed it (often through ``jq`` under another
+# key): a ``run`` of the diagnostics requires them; a proposal means they are done or not
+# required. The last one printed in an output counts (round 1: a diagnostic launched in
+# the background and read when it finished, S14 Hotel en).
+NEXT_DIAG_RE = re.compile(r'"kind"\s*:\s*"run"\s*,\s*(?:"step"\s*:\s*"\w+"\s*,\s*)?'
+                          r'"activity"\s*:\s*"(diag\.(?:binary|regression))"')
+NEXT_PROPOSE_RE = re.compile(r'"kind"\s*:\s*"(?:propose|await_user_words)"')
 
 
 def diagnostics_when_required(events: list[dict], run: dict | None = None) -> dict:
@@ -368,7 +373,14 @@ def diagnostics_when_required(events: list[dict], run: dict | None = None) -> di
             start_required[t['index']] = str(na.get('activity') or '').startswith('diag.')
             prev = (t.get('after') or {}).get('snapshot') or prev
     required, turn, misses, required_seen = None, None, [], 0
-    for c in hypotrail_calls(events):
+    calls = hypotrail_calls(events)
+    # The output of a command the agent ran in the background, read from its task file.
+    seen = {c['id'] for c in calls}
+    calls += [{**u, 'command': '', 'ok': True} for u in tool_uses(events)
+              if u['name'] == 'Read' and u['id'] not in seen
+              and '/tasks/' in str(u['input'].get('file_path', ''))]
+    calls.sort(key=lambda c: c['order'])
+    for c in calls:
         if c['turn'] != turn:
             turn = c['turn']
             if start_required.get(turn):
@@ -381,11 +393,18 @@ def diagnostics_when_required(events: list[dict], run: dict | None = None) -> di
         if m and c['ok'] and required:
             misses.append({'turn': c['turn'], 'proposal': m.group(1), 'required_by': required})
             required = None
-        hit = NEXT_DIAG_RE.search(c['result'] or '')
-        if hit and c['ok']:
-            if not required:
-                required_seen += 1
-            required = f'next_action {hit.group(1)}'
+        if not c['ok']:
+            continue
+        signals = [(m.start(), m) for m in NEXT_DIAG_RE.finditer(c['result'] or '')] + \
+            [(m.start(), None) for m in NEXT_PROPOSE_RE.finditer(c['result'] or '')]
+        if signals:
+            _, last = max(signals, key=lambda x: x[0])
+            if last is not None:
+                if not required:
+                    required_seen += 1
+                required = f'next_action {last.group(1)}'
+            else:
+                required = None
     return {'ok': not misses, 'exercised': required_seen, 'misses': misses}
 
 

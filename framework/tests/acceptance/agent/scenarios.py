@@ -854,11 +854,24 @@ def c_reached_conclusion(ctx):
 ADOPTER = {
     'fr': {'adopt': 'oui', 'explain': "explique-moi d'abord", 'continue': 'on continue',
            'criterion': {'binary': 'le gain de précision, au moins 5 points',
-                         'regression': "au moins 10 % d'erreur en moins que la référence"}},
+                         'regression': "au moins 10 % d'erreur en moins que la référence"},
+           # WP-H round 1: the conclusion is asked as an open question (no delegation at
+           # that pause); the junior answers with the verdict the criterion supports.
+           'verdict': {('binary', True): "j'adopte la règle",
+                       ('regression', True): "j'adopte le modèle",
+                       ('binary', False): 'on garde le modèle de référence',
+                       ('regression', False): 'on garde le modèle de référence'},
+           'interrupted': "oui, enregistre l'arrêt et relance-le"},
     'en': {'adopt': 'yes', 'explain': 'explain first', 'continue': "let's continue",
            'criterion': {'binary': 'the precision gain, at least 5 points',
-                         'regression': 'at least 10% less error than the baseline'}},
+                         'regression': 'at least 10% less error than the baseline'},
+           'verdict': {('binary', True): 'I adopt the rule', ('regression', True): 'I adopt the model',
+                       ('binary', False): 'we keep the baseline',
+                       ('regression', False): 'we keep the baseline'},
+           'interrupted': 'yes, record that it stopped and run it again'},
 }
+INTERRUPTED_RE = re.compile(r'interromp|interrupt|outcome is unknown|issue (?:est )?inconnue|'
+                            r'résultat (?:est )?inconnu', re.I)
 
 
 def adopter_responder(lang: str, explain_at: str = 'split', max_turns: int = 20, log=print):
@@ -886,6 +899,12 @@ def adopter_responder(lang: str, explain_at: str = 'split', max_turns: int = 20,
                 or na.get('step') == 'success_criterion':
             task = 'regression' if 'model_choice' in decisions else 'binary'
             say, label = words['criterion'][task], 'criterion_choice'
+        elif (na.get('decision') or na.get('decision_id')) == 'conclusion':
+            task = 'regression' if 'model_choice' in decisions else 'binary'
+            met = ((snap.get('criterion') or {}).get('judged_status')) == 'met'
+            say, label = words['verdict'][(task, met)], 'verdict'
+        elif na.get('kind') == 'acknowledge_interruption' or INTERRUPTED_RE.search(reply):
+            say, label = words['interrupted'], 'interrupted'
         else:
             say, label = words['continue'], 'continue'
         state['n'] += 1

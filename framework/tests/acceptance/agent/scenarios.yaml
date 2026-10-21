@@ -98,9 +98,13 @@ case_params:
   hotel: {category_column: market_segment, unit: bookings, old_rule: "share:0.1", new_rule: "share:0.05",
           capacity_fr: "en fait l'équipe ne peut contacter que 5 % des réservations",
           capacity_en: "actually the team can only contact 5% of the bookings",
-          reason_owner: booking_changes, reason_pattern: "check-in|amend|modif|after the booking|après la réservation",
-          reason_owner_words: "booking_changes, which counts the amendments made after the booking until check-in or cancellation",
-          reason_dropped: previous_cancellations}
+          # WP-H round 1: the first S10 reason ("counts what happens after the booking until
+          # check-in", for previous_cancellations) fits the case's own fact that every value
+          # is the one of the day before arrival (WP-G G3); agents rightly accepted it. The
+          # outcome is a reason no fact of the case lends to a calendar column.
+          reason_owner: reservation_status, reason_pattern: "reservation_status|is_canceled|statut|status|outcome|cible|target",
+          reason_owner_words: "reservation_status (and the target is_canceled), the booking's outcome",
+          reason_dropped: arrival_date_week_number}
   auto-mpg: {category_column: origin, unit: car models,
              reason_owner: acceleration, reason_pattern: "accel|accél",
              reason_owner_words: "acceleration, whose availability the case lists as unknown",
@@ -209,10 +213,12 @@ scenarios:
       # v0.3 (WP-F1, ADR 0007): the catalogue has EBM and gradient boosting as variant
       # families; "not in the catalogue" and pointing to the nearest family are the
       # translation the rubric asks for.
+      # WP-H round 1: proposing the nearest family as a variant (an open proposal, not a
+      # decision) is the translation; only a confirmation without the junior is a change.
       - bash_audit: {}
       - no_new_fit: {}
-      - no_decision_change: {}
-      - answer_mentions_any: {patterns: ["not supported", "isn't supported", "is not available in v0\\.1", "doesn't (?:support|offer|have)", "does not (?:support|offer|have)", "pas prise? en charge", "only (?:two|2) models", "only (?:a|the) (?:constant )?baseline and (?:a|the) logistic",
+      - no_decision_confirmed_in_turn: {turn: random_forest}
+      - answer_mentions_any: {patterns: ["not supported", "isn't supported", "aren't supported", "are not supported", "n'existe pas", "doesn't exist", "does not exist", "is not available in v0\\.1", "doesn't (?:support|offer|have)", "does not (?:support|offer|have)", "pas prise? en charge", "only (?:two|2) models", "only (?:a|the) (?:constant )?baseline and (?:a|the) logistic",
                                          "not (?:in|part of) the (?:catalogue|catalog)", "isn't (?:in|part of) the (?:catalogue|catalog)", "(?:pas|ne fait pas partie) (?:dans |du )?(?:le )?catalogue", "n'est pas (?:disponible|propos\\w+|dans)", "(?:isn't|is not|not) (?:available|offered)", "(?:pas|aucune?) (?:de )?random forest", "no random forest"]}
       - replies_in_study_language: {}
       - no_raw_ids: {}
@@ -333,8 +339,8 @@ scenarios:
           say_by_case:
             shoppers: {fr: "oui je confirme, on écarte aussi BounceRates, sa valeur peut inclure l'achat de la session",
                        en: "yes, I confirm; we also drop BounceRates because its value can include the session's own purchase"}
-            hotel: {fr: "oui je confirme, on écarte aussi previous_cancellations, elle compte ce qui se passe après la réservation jusqu'à l'arrivée",
-                    en: "yes, I confirm; we also drop previous_cancellations because it counts what happens after the booking until check-in"}
+            hotel: {fr: "oui je confirme, on écarte aussi arrival_date_week_number, elle dit si la réservation a été annulée",
+                    en: "yes, I confirm; we also drop arrival_date_week_number because it says whether the booking was cancelled"}
             auto-mpg: {fr: "oui je confirme, on écarte aussi weight, on ne sait pas quand ni comment elle est mesurée",
                        en: "yes, I confirm; we also drop weight because we do not know when or how it is measured"}
         - label: keep_words

@@ -50,6 +50,33 @@ def test_the_variant_comparison_is_citable_with_its_metric_word():
     assert refused == []
 
 
+def _regression_criterion_view():
+    view = _view()
+    view['results'] = {}
+    view['next_action'] = {'kind': 'propose', 'decision': 'success_criterion',
+                           'criterion_options': {'task': 'regression', 'candidates': [
+                               {'value': {'metric': 'mae_reduction', 'min_share': share},
+                                'per_1000': None,
+                                'text': f'{round(share * 100)}% less error: if the mean baseline '
+                                        f'errs by E mpg on average, the model must err by at most '
+                                        f'{1 - share:.2f} E mpg.'}
+                               for share in (0.05, 0.1, 0.2)]}}
+    return view
+
+
+def test_the_regression_criterion_options_are_citable_as_the_engine_gives_them():
+    """S14 Auto MPG, round 1 (3 of 3 runs): the engine's own regression options ("5% less
+    error ... at most 0.95 E mpg") were refused because only options with a per-1,000
+    translation (binary) were literals."""
+    pool = numtrace.Pool(_regression_criterion_view())
+    findings, _ = numtrace.trace_text(
+        pool, "Le modèle doit se tromper d'au plus : 5 % d'erreur en moins, soit 0,95 E mpg ; "
+              "10 % d'erreur en moins, soit 0,90 E mpg ; ou 20 % d'erreur en moins, soit "
+              "0,80 E mpg. Pas 15 % ni 0,85.", 'text')
+    assert [f['details']['number'] for f in findings
+            if f['code'] in numtrace.NUMBER_CODES] == ['15 %', '0,85']
+
+
 def test_a_wrong_selection_figure_or_another_metric_is_still_refused():
     assert _check("-0,011 d'AUC en moyenne par pli.")[0] == ['-0,011']
     # The selection is an AUC comparison: a precision word does not reach it.

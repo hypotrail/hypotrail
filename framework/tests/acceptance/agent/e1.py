@@ -175,6 +175,9 @@ def compact_snapshot(ws: Path) -> dict:
             # WP-H (v0.3): the study language, the proposals' ids, and the family shortlist's
             # recommendation (ADR 0007: a family is offered only on `compare_nonlinear`).
             'language': view.get('language'),
+            'criterion': ({k: (view.get('criterion') or {}).get(k)
+                           for k in ('status', 'judged_status', 'judged_on')}
+                          if isinstance(view.get('criterion'), dict) else None),
             'model_families': ({'recommendation': (view.get('model_families') or {})
                                 .get('recommendation')}
                                if isinstance(view.get('model_families'), dict) else None),

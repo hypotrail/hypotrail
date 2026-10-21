@@ -880,7 +880,7 @@ def test_v03_hotel_is_the_discovery_case_of_the_scenarios():
     s8 = sc.build_chats(sc.scenario('S8'), 'hotel', 'en', Path('/tmp/i'))
     assert '5% of the bookings' in s8[0][0]['say']
     s10 = sc.build_chats(sc.scenario('S10'), 'hotel', 'fr', Path('/tmp/i'))
-    assert 'previous_cancellations' in s10[0][0]['say']
+    assert 'arrival_date_week_number' in s10[0][0]['say']
     junior = setup.JUNIOR['hotel']
     assert junior['act'] == 'contact' and junior['unit'] == 'bookings'
     assert set(junior['exclusions']) == {'country', 'deposit_type', 'adr',
@@ -1119,6 +1119,19 @@ def test_wp_h_r28_diagnostics_and_confusion_matrix():
     run = _snapshot_run([('on continue', '', {'next_action': {'activity': 'diag.binary'}}, 0),
                          ('oui', '', {}, 1)])
     assert not gv.diagnostics_when_required(late.events, run)['ok']
+    # Round 1 (S14 Hotel en): the diagnostic ran in the background across two turns; the
+    # agent read its task output, where the next action had become the proposal.
+    waited = Transcript().new_turn(2)
+    waited.tool('Read', '{"revision":35,"na":{"kind":"propose","step":"policy"}}',
+                file_path='/tmp/x/tasks/b1.output')
+    waited.tool('Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    assert gv.diagnostics_when_required(waited.events, run)['ok']
+    # The agent's jq rename of next_action ("na") still names the run.
+    renamed = Transcript().new_turn(1)
+    renamed.tool('Bash', '{"revision":31,"na":{"kind":"run","step":"policy","activity":'
+                         '"diag.binary"}}', command='hypotrail status --summary | jq')
+    renamed.tool('Bash', '{"ok": true}', command='hypotrail decide propose policy --value share:0.1')
+    assert not gv.diagnostics_when_required(renamed.events)['ok']
     # A compact refusal (``{"ok":false,...}``) is a refusal.
     compact = Transcript().new_turn(1).tool(
         'Bash', '{"ok":false,"error":{"code":"literal_number_in_text"}}',
@@ -1214,6 +1227,15 @@ def test_wp_h_scripted_adopter_and_case_parameters():
     crit = {'next_action': {'decision': 'success_criterion', 'kind': 'propose'}, 'decisions': {}}
     assert 'au moins 5 points' in say(None, turn(crit), {}, None, 0)['say']
     assert say(None, turn({}, 'Est-ce que tu adoptes cette décision ?'), {}, None, 0)['say'] == 'oui'
+    # Round 1 (S14 Bank full): the conclusion asked as an open question gets the verdict the
+    # criterion supports; an interrupted run gets an answer about it.
+    ask = {'next_action': {'kind': 'propose', 'decision': 'conclusion'}, 'decisions': {},
+           'criterion': {'judged_status': 'met'}}
+    assert say(None, turn(ask, 'Que conclus-tu ?'), {}, None, 0)['say'] == "j'adopte la règle"
+    ask['criterion'] = {'judged_status': 'not_met'}
+    assert say(None, turn(ask), {}, None, 0)['say'] == 'on garde le modèle de référence'
+    assert 'relance' in say(None, turn({}, "Le diagnostic s'est interrompu ; son issue est "
+                                           'inconnue.'), {}, None, 0)['say']
     done = {'decisions': {'conclusion': {'status': 'confirmed'}}}
     assert say(None, turn(done), {}, None, 0) is None
     assert say(None, turn({}, subtype='error_max_budget_usd'), {}, None, 0) is None

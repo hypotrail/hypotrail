@@ -109,16 +109,18 @@ JUNIOR = {
                               'deposit type, we do not know when they are set; keep the price '
                               'and the requests but list them as doubts.',
         'rate_by': 'market_segment',
-        # S10: the junior also drops previous_cancellations with the reason that belongs to
-        # booking_changes (it counts what happens after the booking, until check-in).
+        # S10: the junior also drops arrival_date_week_number with the reason that belongs to
+        # the outcome (reservation_status, is_canceled). WP-H round 1: the earlier reason for
+        # previous_cancellations ("counts what happens after the booking") fits the case's
+        # day-before-arrival snapshot fact, so it was no misattribution.
         'exclusions_s10': {'country': 'uncertain_excluded', 'deposit_type': 'uncertain_excluded',
                            'adr': 'uncertain_included',
                            'required_car_parking_spaces': 'uncertain_included',
                            'total_of_special_requests': 'uncertain_included',
-                           'previous_cancellations': 'not_available'},
+                           'arrival_date_week_number': 'not_available'},
         'restatement_s10': 'You exclude the outcome columns, the columns recorded after the '
-                           'booking, country, deposit_type and previous_cancellations, keep adr '
-                           'and the requests as stated doubts, and keep the other variables.',
+                           'booking, country, deposit_type and arrival_date_week_number, keep '
+                           'adr and the requests as stated doubts, and keep the other variables.',
         'policy_words': 'Yes, contact the top 10% of bookings, because the team can handle one '
                         'new booking in ten.',
         # S2 (WP-H): an earlier, different prediction moment that the junior corrects in a
@@ -327,7 +329,7 @@ def cli_env(extra: dict | None = None) -> dict:
 
 
 def hyp(*args, cwd: Path | None = None, stdin: str | None = None, extra_env=None,
-        expect: int | tuple | None = 0, timeout: int = 600) -> tuple[int, dict]:
+        expect: int | tuple | None = 0, timeout: int = 1800) -> tuple[int, dict]:
     """One CLI process: ``(exit code, payload)``."""
     proc = subprocess.run([sys.executable, '-m', 'mlkit.study.cli', *map(str, args)],
                           input=stdin, capture_output=True, text=True,
@@ -564,6 +566,12 @@ class Setup:
         return self.call('run', activity, *options, '--request-id', self.rid(f'run-{activity}'),
                          '--expected-revision', self.rev())
 
+    def run_required_diagnostics(self) -> None:
+        """Run ``diag.binary``/``diag.regression`` when the engine's next action names them."""
+        na = self.view().get('next_action') or {}
+        if str(na.get('activity') or '').startswith('diag.'):
+            self.run(na['activity'])
+
     def availability_value(self) -> dict:
         case_yaml = Path(status(self.study)['view']['case']['path'])
         doc = yaml.safe_load(case_yaml.read_text(encoding='utf-8'))
@@ -655,6 +663,10 @@ class Setup:
         if stop >= 4:
             self.run('fit.baseline')
             self.run('fit.linear' if regression else 'fit.logistic')
+            # v0.3 (WP-F1, R28): the diagnostics follow the fits when the plan asks for
+            # them (WP-H round 1: without them every later stage started with the
+            # diagnostics owed, and a scenario about something else ran them first).
+            self.run_required_diagnostics()
         has_variant = self.has_decision('model_variant')
         if stop >= 5 and has_variant:
             p = self.propose('model_variant', VARIANT,
@@ -668,6 +680,7 @@ class Setup:
                 self.run('evaluate.regression')
             else:
                 self.run('policy.evaluate', '--rule', rule)
+            self.run_required_diagnostics()
         if stop >= 7:
             if regression:
                 p = self.propose('model_choice', 'fit.linear', 'You adopt the linear model.')
@@ -684,9 +697,7 @@ class Setup:
             # v0.3 (WP-F1, R28): the diagnostics at the adopted rule (or of the chosen model)
             # are the next step after the choice; the agent runs them when ``next_action``
             # names them, so a study past the choice has them.
-            na = self.view().get('next_action') or {}
-            if str(na.get('activity') or '').startswith('diag.'):
-                self.run(na['activity'])
+            self.run_required_diagnostics()
         if stop >= 8:
             value = self.default_value('final_test')
             p = self.propose('final_test', value, 'You open the sealed final test once, for the '
