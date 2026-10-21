@@ -453,7 +453,10 @@ NOT_FINAL_RE = re.compile(r"\b(?:no|not|n't|never|none|sealed|scell\w*|unopened|
                           # obtenir la performance finale, il faut ouvrir le test final",
                           # "pourraient être").
                           r"once|when|will|viendr\w*|arriver\w*|would|could|might|quand|lorsque|faut|need\w*|"
-                          r"requires?|pourr\w*|ser(?:a|ait|ont|aient)|open\w*|ouvr\w*)\b"
+                          r"requires?|pourr\w*|ser(?:a|ait|ont|aient)|open\w*|ouvr\w*|"
+                          # WP-H3: « à l'ouverture », and a French simple future
+                          # (« mesureront », « saura »).
+                          r"ouverture|\w{2,}(?:era|eront|ira|iront|ura|uront))\b"
                           r"|'ll\b", re.I)
 
 

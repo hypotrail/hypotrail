@@ -1035,10 +1035,11 @@ def trace_text(pool: Pool, text: str, where: str, locate=None) -> tuple[list[dic
         if difference:
             tok = dataclasses.replace(tok, percent=True)
         bind = binding(masked, tok.start, tok.end, tok.percent)
-        if tok.percent and not difference and (
+        if tok.percent and not difference and not RANGE_AFTER.match(masked, tok.end) and (
                 LEVEL_AFTER.match(masked, tok.end)
                 or LEVEL_BEFORE.search(masked[max(0, tok.start - 40):tok.start])):
-            # v0.3 (WP-J): "95% interval" names the interval's level.
+            # v0.3 (WP-J): "95% interval" names the interval's level. WP-H3: the first
+            # bound of a range (« intervalle de 7,02 % à 7,55 % ») is a value, not a level.
             bind = dataclasses.replace(bind, segments=LEVEL_BINDING, rule=False)
         # v0.3 (WP-A): the results and groups the sentence names bind its numbers.
         bounds = _sentence_bounds(masked, tok.start, tok.end)

@@ -547,7 +547,11 @@ REFUSAL_TALK_RE = re.compile(
     r"wasn't recorded|(?:didn't|did not) (?:record|accept|go through|take)|"
     r"l'outil (?:a|n'a)|le moteur|the engine (?:refused|did not|didn't|would not|won't|"
     r"rejected|asks|needs|requires)|the tool (?:refused|did not|didn't)", re.I)
-ADOPTION_RE = re.compile(r'adopt\w*(?:-(?:vous|tu))?\s+(?:this|the|cette|la)\s+d[ée]cision', re.I)
+# The closed question, with the final-test opening's form ("Do you adopt the opening of the
+# final test?", WP-H3), as graders_b.ADOPTION_QUESTION_RE.
+ADOPTION_RE = re.compile(
+    r"adopt\w*(?:-(?:vous|tu))?\s+(?:(?:this|the|cette|la)\s+d[ée]cision|"
+    r"(?:the\s+opening|l['’]\s*ouverture)\b)", re.I)
 
 
 def _words(text: str) -> int:

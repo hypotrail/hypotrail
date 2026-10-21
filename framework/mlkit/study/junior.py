@@ -128,8 +128,9 @@ def _steps_fr() -> dict[str, str]:
         st.REGRESSION_SUCCESS_STEP['question']: "L'erreur absolue moyenne (MAE) est la taille "
                                                 "moyenne de l'erreur d'une prédiction, dans "
                                                 "l'unité de la cible. La moyenne de référence "
-                                                "prédit la moyenne du jeu d'entraînement pour "
-                                                "chaque ligne. De combien l'erreur de "
+                                                'prédit, pour chaque ligne du jeu de '
+                                                'validation, la moyenne de la cible sur le jeu '
+                                                "d'entraînement. De combien l'erreur de "
                                                 'validation du modèle doit-elle être plus '
                                                 'petite que celle de la moyenne de référence '
                                                 'pour qu\'il soit utile ? Le critère est fixé '
@@ -180,8 +181,9 @@ def _steps_fr() -> dict[str, str]:
         rcv['success_criterion']['question']: "L'erreur absolue moyenne (MAE) est la taille "
                                               "moyenne de l'erreur d'une prédiction, dans "
                                               "l'unité de la cible. La moyenne de référence "
-                                              'prédit, pour chaque ligne, la moyenne des '
-                                              "lignes sur lesquelles elle est ajustée. De "
+                                              "prédit, pour chaque ligne d'un pli de "
+                                              'validation, la moyenne des plis '
+                                              "d'entraînement. De "
                                               "combien l'erreur hors pli du modèle doit-elle "
                                               'être plus petite que celle de la moyenne de '
                                               "référence pour qu'il soit utile ? Le critère est "

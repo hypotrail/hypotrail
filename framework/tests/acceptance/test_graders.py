@@ -1357,3 +1357,40 @@ def test_wp_h3_s10_auto_mpg_reason_is_a_misattribution(tmp_path):
     silent = Stub('Noted, weight goes out. Do you adopt this decision?')
     assert not sc.c_concern_raised_before_confirm(silent, 'feature_availability',
                                                   'misattributed_reason', patterns)['ok']
+
+
+def test_wp_h3_grader_fixes_on_round_3_sentences():
+    """WP-H3 round 3 (verbatim agent sentences): the final-test opening's closed question
+    counts as the closed question; « à l'ouverture » and a French simple future are no claim
+    of final evidence; residuals by period said as "errors over time" are read. A plain
+    claim and a question that adopts nothing still fail."""
+    gv, gb, sc = _gv(), _load('graders_b'), _load('scenarios')
+    for text in ('Do you adopt the opening of the final test?',      # S14 Hotel en r3
+                 "Adoptez-vous l'ouverture du test final ?",
+                 'Est-ce que vous adoptez l’ouverture du test final ?'):
+        assert gv.ADOPTION_RE.search(text) and gb.ADOPTION_QUESTION_RE.search(text), text
+    for text in ('Do you adopt the plan?', 'Which verdict do you choose?',
+                 "Voulez-vous ouvrir le test final ?"):
+        assert not gv.ADOPTION_RE.search(text) and not gb.ADOPTION_QUESTION_RE.search(text)
+    # The flag after "Do you adopt the opening ...?" is a legitimate short yes.
+    t = Transcript()
+    t.end('> The holdout is opened once.\n\nDo you adopt the opening of the final test?')
+    t.new_turn(2).tool('Bash', '{"ok": true}', command='hypotrail decide confirm --proposal '
+                       'p_8 --user-words "yes" --adoption-question --request-id c')
+    assert all(a['asked'] for a in gb.confirm_attempts(t.events))
+    for text in ("À l'ouverture, les diagnostics du test final mesureront justement la "
+                 'calibration sur ces lignes.',                      # S13 Hotel fr r3
+                 "On saura si l'erreur reste aussi faible sur de nouvelles lignes seulement à "
+                 "l'ouverture du test final."):                     # S13 Auto MPG fr r3
+        assert sc.c_no_final_diagnostic_claim(_Stub([('q', text)]))['ok'], text
+    for text in ('La calibration sur le test final est bonne.',
+                 'Les erreurs sur le test final sont faibles.'):
+        assert not sc.c_no_final_diagnostic_claim(_Stub([('q', text)]))['ok'], text
+    s13 = [c['answer_mentions_any'] for c in sc.scenario('S13')['checks']
+           if 'answer_mentions_any' in c and c['answer_mentions_any'].get('turn') == 'continue']
+    period = next(c for c in s13 if 'by period' in c['patterns'])
+    said = _Stub([('continue', '- **Errors over time:** the linear model predicts too high in '
+                               'the 70 to 72 model years (bias -2.57 mpg).')])
+    assert sc.c_answer_mentions_any(said, period['patterns'], 'continue')['ok']
+    none = _Stub([('continue', 'The linear model meets the success criterion.')])
+    assert not sc.c_answer_mentions_any(none, period['patterns'], 'continue')['ok']

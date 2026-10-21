@@ -104,8 +104,11 @@ def _splittable(cmd: str) -> bool:
 
 
 # v0.3 (WP-B, R14): the closed adoption question, in English or French.
+# WP-H3: at the final-test pause the engine says "ask them whether they adopt the opening",
+# so "Do you adopt the opening of the final test?" is that question too.
 ADOPTION_QUESTION_RE = re.compile(
-    r"adopt\w*(?:-(?:vous|tu))?\s+(?:this|the|cette|la)\s+(?:decision|d[ée]cision)", re.I)
+    r"adopt\w*(?:-(?:vous|tu))?\s+(?:(?:this|the|cette|la)\s+(?:decision|d[ée]cision)|"
+    r"(?:the\s+opening|l['’]\s*ouverture)\b)", re.I)
 ADOPTION_FLAG_RE = re.compile(r"--adoption-question\b|--channel[ =]choice\b")
 
 

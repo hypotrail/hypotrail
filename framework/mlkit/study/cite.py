@@ -61,8 +61,14 @@ _SEGMENT = re.compile(r'\[([^\]]+)\]|([^.\[\]]+)')
 # letter or an underscore ("pct1", "x_2", "3f9a") is part of a word, not a number. A minus
 # sign glued to the digits makes the number negative ("-1", a sentinel); "10-18" is two numbers.
 # The minus may be the hyphen-minus or the Unicode minus sign U+2212 ("−0.99").
-NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)'
+# WP-H3: French groups thousands with a space, a no-break space or a narrow no-break space
+# ("37 062", "37 062,5"); such a group is one number, its decimals after a comma.
+_SPACE = '[ \u00a0\u202f\u2009]'
+NUMBER = re.compile(r'(?<![\w.])([-\u2212](?=\d))?([1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?|'
+                    rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?![\d.]|,\d{{3}})(?:,\d+)?|'
+                    r'\d+(?:[.,]\d+)?)'
                     r'(?![\w])(\s?%)?')
+SPACE_GROUPED = re.compile(rf'[1-9]\d{{0,2}}(?:{_SPACE}\d{{3}})+(?:,(\d+))?')
 
 
 def untraceable(message: str, **details) -> StudyError:
@@ -178,9 +184,13 @@ def parse_numbers(text: str) -> list[Token]:
     for m in NUMBER.finditer(text):
         sign, body, pct = (-1.0 if m.group(1) else 1.0), m.group(2), bool(m.group(3))
         grouped = re.fullmatch(r"[1-9]\d{0,2}(?:,\d{3})+(?:\.(\d+))?", body)
+        spaced = SPACE_GROUPED.fullmatch(body)
         if grouped:
             value = float(body.replace(',', ''))
             decimals = len(grouped.group(1) or '')
+        elif spaced:
+            value = float(re.sub(_SPACE, '', body).replace(',', '.'))
+            decimals = len(spaced.group(1) or '')
         else:
             norm = body.replace(',', '.')
             value = float(norm)

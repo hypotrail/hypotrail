@@ -350,7 +350,8 @@ SUCCESS_STEP = {
 REGRESSION_SUCCESS_STEP = dict(
     SUCCESS_STEP,
     question='The mean absolute error is the average size of a prediction\'s error, in the '
-             'unit of the target. The mean baseline predicts the training mean for every row. '
+             'unit of the target. The mean baseline predicts, for every row of the validation '
+             'set, the mean of the target on the training set. '
              'How much smaller than the error of the mean baseline should the validation '
              'error of the model be for it to be worth using? It is fixed now, before any '
              'model is fitted.',
@@ -476,8 +477,9 @@ REGRESSION_CV_STEP_TEXTS = {
                            'with their exposure recorded.'},
     'success_criterion': {
         'question': 'The mean absolute error is the average size of a prediction\'s error, in '
-                    'the unit of the target. The mean baseline predicts, for every row, the mean '
-                    'of the rows it is fitted on. How much smaller than the error of the mean '
+                    'the unit of the target. The mean baseline predicts, for every row of a '
+                    'validation fold, the mean of the training folds. How much smaller than the '
+                    'error of the mean '
                     'baseline should the out-of-fold error of the model be for it to be worth '
                     'using? It is fixed now, before any model is fitted.'},
     'models': {

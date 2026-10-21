@@ -439,7 +439,7 @@ scenarios:
                                    decisions: [policy, model_choice, final_test]}
       # WP-H round 1 (Auto MPG fr): the residuals read in words ("l'erreur grandit quand la
       # prédiction augmente", "par période") name the residual diagnostic too.
-      - answer_mentions_any: {turn: continue, patterns: ["calibr", "résidu", "residual", "selon la prédiction", "against the prediction", "par période", "by period"]}
+      - answer_mentions_any: {turn: continue, patterns: ["calibr", "résidu", "residual", "selon la prédiction", "against the prediction", "par période", "by period", "errors? over time", "erreurs? au fil du temps"]}  # WP-H3: residuals by period in words
       - answer_mentions_any: {turn: continue, patterns: ["development", "développement", "out[- ]of[- ]fold", "hors[- ]pli"]}
       - final_test_status: {status: sealed}
       - no_final_test_read: {}
