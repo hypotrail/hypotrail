@@ -113,7 +113,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    their wording and ask one line that quotes them.
    - **Guided mode: the pause message.** The restatement as a quoted block (`> ...`, in
      the junior's language), then one closed question, "Do you adopt this decision?"
-     ("Est-ce que tu adoptes cette décision ?"). With an interactive choice tool (Claude
+     ("Adoptez-vous cette décision ?"). With an interactive choice tool (Claude
      Code: `AskUserQuestion`), offer three options in the junior's language: adopt ("J'adopte
      cette décision"), change something, explain first. Without one, ask it in text.
      Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A
@@ -141,7 +141,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      (`words_contradict_value`) until you raise it the same way. A later correction of a
      confirmed decision's reasoning is `decide note --about DECISION --kind correction`.
    - **Delegation.** When the junior delegates the decision at hand ("go with your
-     recommendation", "je te laisse choisir"), propose the default with a restatement
+     recommendation", "je vous laisse choisir"), propose the default with a restatement
      starting "My recommended default:", confirm with `--basis delegated_default
      --delegation-scope this_decision`, and say it is recorded as delegated. That prefix is
      reserved for this case; answered in the junior's own words, it is confirmed as

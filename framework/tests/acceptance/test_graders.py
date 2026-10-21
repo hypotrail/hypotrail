@@ -240,7 +240,9 @@ def test_arm_b_confirm_attempts_and_ambiguity():
     # v0.3 (WP-B, R14/R16): a short yes answers the closed adoption question when the agent
     # asked it at the end of the turn before; a flag without the question stays a failure.
     t = Transcript()
-    t.end('> Tu prédis avant le premier appel.\n\nEst-ce que tu adoptes cette décision ?')
+    for asked in ('Adoptez-vous cette décision ?', 'Est-ce que vous adoptez cette décision ?'):
+        assert gb.ADOPTION_QUESTION_RE.search(asked)
+    t.end('> Vous prédisez avant le premier appel.\n\nAdoptez-vous cette décision ?')
     t.new_turn(2).tool('Bash', '{"ok": true}', command='hypotrail decide confirm --proposal '
                        'p_1 --user-words "oui" --adoption-question --request-id c')
     yes = {'decisions': {'prediction_time': {'status': 'confirmed', 'user_words': 'oui',
