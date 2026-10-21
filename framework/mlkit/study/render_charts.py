@@ -15,7 +15,7 @@ styled by the report's CSS variables, so they follow the theme and stay CSP-safe
 chart sits in a ``<figure>`` whose caption states the question it answers. Hover shows
 the mark's name (an SVG ``<title>``, never a number).
 
-The charts (3 to 5, depending on what is registered):
+The charts (3 to 7, depending on what is registered):
 
 1. the target: the count of each label (binary) or its distribution (regression);
 2. the rate (binary) or mean (regression) by group of one column, with 95% intervals and
@@ -23,7 +23,10 @@ The charts (3 to 5, depending on what is registered):
 3. the single-feature signal, with the legitimacy flag;
 4. binary: positives found by the model and by the baseline at each evaluated rule;
    regression: the residual distribution of each model on validation rows;
-5. regression with a period column: the mean residual by period.
+5. regression with a period column: the mean residual by period;
+6. v0.3 (WP-J, R17): the distribution of one column, a skewed one first, with its exact
+   zeros apart and its positive values on logarithmic bins, as the study panel draws it;
+7. v0.3 (WP-J, R28): the predictor correlation matrix with its collinearity flags.
 
 Pure: no pandas, numpy, or scikit-learn.
 """
@@ -65,6 +68,9 @@ svg.chart rect.box{fill:var(--accent);opacity:.35}
 svg.chart rect.box.b{fill:var(--muted);opacity:.35}
 svg.chart rect.flagged{fill:var(--amber)}
 svg.chart rect.unused{fill:var(--muted);opacity:.3}
+svg.chart rect.cpos{fill:var(--accent)}
+svg.chart rect.cneg{fill:var(--amber)}
+svg.chart rect.cflag{stroke:var(--ink);stroke-width:2}
 svg.chart line.whisker{stroke:var(--ink);stroke-width:1.5}
 svg.chart line.median{stroke:var(--ink);stroke-width:2.5}
 svg.chart circle.mean{fill:var(--paper);stroke:var(--ink);stroke-width:2}
@@ -74,6 +80,7 @@ svg.chart circle.mean{fill:var(--paper);stroke:var(--ink);stroke-width:2}
 .legend span.band:before{background:var(--muted);opacity:.18}
 .legend span.flagged:before{background:var(--amber)}
 .legend span.unused:before{opacity:.3}
+.legend span.outline:before{background:none;border:2px solid var(--ink);width:9px;height:9px}
 .legend span.box:before{opacity:.35}
 .legend span.box.b:before{background:var(--muted);opacity:.35}
 .legend span.final:before{background:var(--amber)}
@@ -552,3 +559,145 @@ def residuals_by(citer: cite.Citer, rid: str, values: Mapping) -> str:
     return figure(f'residuals_by:{column}', f'Does the error drift across the values of '
                   f'{column}?', svg, legend(('m', 'Linear model'), ('b', 'Mean baseline')),
                   note)
+
+
+# --- v0.3 (WP-J, R17, R28): a column's distribution and the predictor correlations ---------
+
+def distribution(citer: cite.Citer, rid: str, values: Mapping) -> str:
+    """The distribution of one column (``eda.distribution``), as the study panel draws it:
+    a skewed column of non-negative values shows its exact zeros as their own bar and its
+    positive values on logarithmic bins (R17); otherwise the fixed-width bins, or the groups
+    of a discrete or categorical column. Special values and missing cells are bars of their
+    own. Bar length: the share of the rows read; label: the count of rows."""
+    column = str(values.get('column', ''))
+    numeric = values.get('numeric') if isinstance(values.get('numeric'), Mapping) else None
+    rows = []          # (label parts, share path or None, count path, css class)
+    if numeric:
+        skewed = bool(numeric.get('skewed')) and bool(numeric.get('log_bins'))
+        key = 'log_bins' if skewed else 'bins'
+        zeros = numeric.get('zeros') or {}
+        if skewed and _num(zeros.get('n_rows')) and zeros['n_rows'] > 0:
+            rows.append((('lit', 'Exactly zero'), 'numeric.zeros.share', 'numeric.zeros.n_rows',
+                         'flagged'))
+        for i, b in enumerate(numeric.get(key) or []):
+            if isinstance(b, Mapping) and _num(b.get('n_rows')):
+                rows.append((('bin', f'numeric.{key}.{i}'), f'numeric.{key}.{i}.share',
+                             f'numeric.{key}.{i}.n_rows', 'm'))
+    else:
+        skewed = False
+        for i, g in enumerate(values.get('groups') or []):
+            if isinstance(g, Mapping) and _num(g.get('n_rows')):
+                rows.append((('lit', short(g.get('value', ''), 20)), f'groups.{i}.share',
+                             f'groups.{i}.n_rows', 'unused' if g.get('small_count') else 'm'))
+    for i, s in enumerate(values.get('special_values') or []):
+        if isinstance(s, Mapping) and _num(s.get('n_rows')) and s['n_rows'] > 0:
+            rows.append((('lit', short(f'{column} = {s.get("value")}', 20)),
+                         f'special_values.{i}.share', f'special_values.{i}.n_rows', 'b'))
+    if _num(values.get('n_missing')) and values['n_missing'] > 0:
+        rows.append((('lit', 'Missing'), None, 'n_missing', 'b'))
+    if not rows:
+        return ''
+    total = values.get('n_rows')
+    if not _num(total) or total <= 0:
+        return ''
+    counts = [citer.value(rid, count) for _, _, count, _ in rows]
+    scale = Scale(0, _nice_max(max(counts) / total), x1=WIDTH - RIGHT - 20)
+    body, y = [], TOP
+    for (label, _share, count, cls), n in zip(rows, counts):
+        cy = y + 13
+        kind, text = label
+        if kind == 'bin':
+            # The bin's edges, cited: "low to high".
+            body.append(citer.svg_num(rid, f'{text}.low', 'auto', x=LEFT - 70, y=cy + 4,
+                                      anchor='end', cls='axis', suffix=' to'))
+            body.append(citer.svg_num(rid, f'{text}.high', 'auto', x=LEFT - 8, y=cy + 4,
+                                      anchor='end', cls='axis'))
+            name = 'Bin of the column'
+        else:
+            body.append(lit('category', text, LEFT - 8, cy + 4, 'end'))
+            name = str(text)
+        w = max(1.0, scale(n / total) - scale(0))
+        body.append(f'<rect class="{cls}" x="{LEFT}" y="{y + 3}" width="{w:.1f}" height="18" '
+                    f'rx="4"><title>{e(name)}</title></rect>')
+        body.append(citer.svg_num(rid, count, 'int', x=LEFT + w + 6, y=cy + 4))
+        y += ROW
+    body.insert(0, scale.axis(TOP - 6, y + 2, percent=True))
+    svg = _svg(y + AXIS, ''.join(body), f'Distribution of {column} on the {_rows()}')
+    items = [('m', 'Rows in the bin or group')]
+    if skewed:
+        items.insert(0, ('flagged', 'Exact zeros, apart'))
+    if any(cls == 'b' for *_, cls in rows):
+        items.append(('b', 'Special values and missing cells'))
+    if any(cls == 'unused' for *_, cls in rows):
+        items.append(('unused', 'Group with few rows'))
+    note = (f'Share of the {_rows()} ({citer.num(rid, "n_rows", "int")} rows read) on the '
+            'axis; the count of rows at the end of each bar.')
+    if skewed:
+        note += (' The column is skewed: its exact zeros are counted apart and its positive '
+                 'values are binned on a logarithmic scale, each bin closed on the left.')
+    note += ' The outcome is not read.'
+    return figure(f'distribution:{column}', values.get('question') or
+                  f'How are the values of {column} distributed among the {_rows()}?', svg,
+                  legend(*items), note)
+
+
+MAX_MATRIX_LABELS = 30
+
+
+def correlation(citer: cite.Citer, rid: str, values: Mapping) -> str:
+    """The predictor association matrix (``eda.correlation``), as the study panel draws it:
+    the features in the engine's clustered order, one cell per pair coloured by the sign
+    and shaded by the size of the association, the pairs at or above the collinearity level
+    outlined; the flagged pairs are listed with their cited value."""
+    order = [str(n) for n in values.get('order') or []][:MAX_MATRIX_LABELS]
+    pairs = [(i, p) for i, p in enumerate(values.get('pairs') or []) if isinstance(p, Mapping)]
+    if len(order) < 2 or not pairs:
+        return ''
+    by_pair = {}
+    for i, p in pairs:
+        by_pair[(p.get('a'), p.get('b'))] = by_pair[(p.get('b'), p.get('a'))] = (i, p)
+    k = len(order)
+    cell = min(22.0, (WIDTH - RIGHT - LEFT) / k)
+    body, top = [], TOP
+    for r, a in enumerate(order):
+        y = top + r * cell
+        body.append(lit('identifier', short(a, 20), LEFT - 8, y + cell / 2 + 4, 'end'))
+        for col, b in enumerate(order):
+            x = LEFT + col * cell
+            if a == b:
+                body.append(f'<rect class="b" x="{x:.1f}" y="{y:.1f}" width="{cell - 1:.1f}" '
+                            f'height="{cell - 1:.1f}" fill-opacity="0.15"><title>{e(a)}</title>'
+                            f'</rect>')
+                continue
+            found = by_pair.get((a, b))
+            if not found or not _num(found[1].get('value')):
+                continue
+            i, p = found
+            v = citer.value(rid, f'pairs.{i}.value')
+            cls = 'cpos' if v >= 0 else 'cneg'
+            flag = ' cflag' if p.get('flag') else ''
+            body.append(f'<rect class="{cls}{flag}" x="{x:.1f}" y="{y:.1f}" '
+                        f'width="{cell - 1:.1f}" height="{cell - 1:.1f}" '
+                        f'fill-opacity="{0.08 + 0.92 * min(1.0, abs(v)):.2f}">'
+                        f'<title>{e(a)} and {e(b)}</title></rect>')
+    height = top + k * cell + 12
+    svg = _svg(height, ''.join(body), 'Association between each pair of predictors')
+    lg = legend(('m', 'Positive association'), ('final', 'Negative association'),
+                ('outline', 'At or above the collinearity level (outlined)'))
+    flagged = [(i, p) for i, p in pairs if p.get('flag') and _num(p.get('value'))]
+    flagged.sort(key=lambda ip: -abs(ip[1]['value']))
+    level = citer.num(rid, 'level', 'f2') if citer.has(rid, 'level') else ''
+    note = ('Columns are in the same order as the rows, grouped so that associated '
+            'predictors sit together; a darker cell is a stronger association. ')
+    if flagged:
+        items = '; '.join(f'<code data-literal="identifier">{e(str(p.get("a")))}</code> and '
+                          f'<code data-literal="identifier">{e(str(p.get("b")))}</code> '
+                          f'{citer.num(rid, f"pairs.{i}.value", "f2")}'
+                          for i, p in flagged[:8])
+        note += f'Pairs at or above {level} in size: {items}. '
+    else:
+        note += f'No pair reaches {level} in size. '
+    note += ('The target is not read: this is not a look at the outcome. A flagged pair only '
+             'asks whether both predictors are needed.')
+    return figure('correlation', values.get('question') or
+                  'Which predictors carry nearly the same information?', svg, lg, note)

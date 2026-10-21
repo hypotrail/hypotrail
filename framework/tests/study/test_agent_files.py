@@ -452,9 +452,14 @@ def test_the_agent_relays_the_engine_payloads(task):
         assert f'`{key}`' in rule1, key
     assert set(('junior_digest', 'recommended', 'question')) <= set(junior.ENRICH_KEYS)
     assert {'model_families', 'model_selection'} <= set(view.VIEW_KEYS)
-    for phrase in ('at most four tool calls per pause', 'a command\'s own output counts',
-                   'no `status` is needed between two runs'):
+    # v0.3 (WP-J): a write returns the next action, so no status after it; a short read
+    # asks for keys, and the JSON is never piped into a program (S14: 6 of 104 runs did).
+    for phrase in ('at most four tool calls per pause', 'ends with the refreshed `next_action`',
+                   'no `status` is needed after a write',
+                   '`status --summary --fields next_action,criterion`'):
         assert phrase in rule1, phrase
+    rule2 = _rule(text, 2)
+    assert 'Never pipe a command\'s JSON into `python3`, `jq`, or another program' in rule2
     assert 'before every decision or `run`' not in text           # the v0.2 reading load
 
 

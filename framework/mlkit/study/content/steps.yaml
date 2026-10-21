@@ -27,7 +27,7 @@ steps:
   prediction_time:
     concept: prediction_time
     context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
-    method: You state the moment in your own words; the agent restates it and records your answer. No data are read.
+    method: You state the moment; the agent restates it and records your answer. No data are read.
     interpretation: Every later step is judged against this moment.
     consequence: Changing it later makes the availability decision, the policy, and the conclusion need confirmation again.
   feature_availability:
@@ -86,7 +86,7 @@ regression_steps:
   prediction_time:
     concept: prediction_time
     context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
-    method: You state the moment in your own words; the agent restates it and records your answer. No data are read.
+    method: You state the moment; the agent restates it and records your answer. No data are read.
     interpretation: Every later step is judged against this moment.
     consequence: Changing it later makes the availability decision, the model choice, and the conclusion need confirmation again.
   feature_availability:

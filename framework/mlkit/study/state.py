@@ -1246,10 +1246,15 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
     pending = sorted(open_proposals(state), key=lambda p: (p['revision'], p['proposal_id']))
     if pending:
         p = pending[0]
+        # v0.3 (WP-J): mode-aware; own words are asked only in the training mode (R27).
+        message = ('Show the restatement and record the user\'s own words in reply: what '
+                   'they keep and why. A bare "ok" is not a decision.'
+                   if mode_of(state) == TRAINING else
+                   'Show the restatement, then ask the closed question "Do you adopt this '
+                   'decision?" and record the reply verbatim. A bare "ok" before that '
+                   'question is not a decision.')
         return {'kind': 'await_user_words', 'proposal_id': p['proposal_id'],
-                'decision': p['decision_id'],
-                'message': 'Show the restatement and record the user\'s own words in reply. '
-                           'A bare "ok" is not a decision.'}
+                'decision': p['decision_id'], 'message': message}
     for step in derive_plan(state):
         if step['status'] == 'done':
             continue

@@ -35,6 +35,7 @@ from pathlib import Path
 from . import commands as cmd
 from . import guard, manifest as mf
 from .errors import StudyError
+from .store import StudyStore
 
 SCHEMA = 'hypotrail.render/1'
 FAULT_ENV = 'HYPOTRAIL_FAULT'
@@ -240,10 +241,27 @@ def after_commit(study_dir: Path, payload: dict) -> dict:
 def configure(parser: argparse.ArgumentParser) -> None:
     parser.description = ('Render the HTML report, the generated notebook, and the workbench '
                           'from the current study state.')
+    # v0.3 (WP-J, R35): the study panel passes webview; recorded as an event, not a revision.
+    parser.add_argument('--channel', default=None,
+                        help='chat (the default), cli, or webview: where the render came from')
+
+
+def record_channel(study_dir, action: str, channel: str | None, revision) -> None:
+    """v0.3 (WP-J, R35): a render or an export started outside the chat is recorded as a
+    ``channel_action`` event (``events.jsonl``), which the digest lists; a chat request
+    records nothing."""
+    from .executions import channel_param
+    named = channel_param(channel)
+    if named:
+        StudyStore(Path(study_dir)).event('channel_action', action=action,
+                                          channel=named['channel'], revision=revision)
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
+    from .executions import channel_param
+    channel_param(getattr(args, 'channel', None))      # refused before anything is written
     result = render_all(args.study)
+    record_channel(args.study, 'render', getattr(args, 'channel', None), result['revision'])
     payload = {'schema': SCHEMA, 'ok': True, 'study': str(Path(args.study).resolve()),
                'revision': result['revision'], 'status': result['status'],
                'artifacts': result['artifacts']}

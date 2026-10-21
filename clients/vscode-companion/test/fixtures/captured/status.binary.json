@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"",
    "revision": 48,
-   "updated": "2026-10-21T09:33:52.765459+00:00",
+   "updated": "2026-10-21T12:16:21.143904+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -265,7 +265,7 @@
     "kind": "await_user_words",
     "proposal_id": "p_8",
     "decision": "policy",
-    "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
+    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
     "audience": "agent",
     "junior_message": "A proposal on the decision policy is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
     "language": "en",
@@ -281,7 +281,7 @@
      "restatement": "Call the 100 clients with the highest scores.",
      "rationale": "The team can make 100 calls per wave.",
      "revision": 48,
-     "created": "2026-10-21T09:33:52.765383+00:00",
+     "created": "2026-10-21T12:16:21.143826+00:00",
      "labels": null,
      "label": "Call the 100 clients with the highest scores.",
      "origin": {
@@ -305,7 +305,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-21T09:32:40.329905+00:00",
+      "time": "2026-10-21T12:15:31.519084+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -352,7 +352,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-21T09:32:41.750445+00:00",
+      "time": "2026-10-21T12:15:33.735289+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -401,7 +401,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-21T09:32:43.513440+00:00",
+      "time": "2026-10-21T12:15:35.976236+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -432,7 +432,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-21T09:32:45.193494+00:00",
+      "time": "2026-10-21T12:15:38.467727+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -468,7 +468,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-21T09:32:46.802508+00:00",
+      "time": "2026-10-21T12:15:41.592847+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -499,7 +499,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 37,
-      "time": "2026-10-21T09:33:16.171127+00:00",
+      "time": "2026-10-21T12:16:06.644310+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -533,7 +533,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_7",
       "revision": 43,
-      "time": "2026-10-21T09:33:20.769997+00:00",
+      "time": "2026-10-21T12:16:14.010693+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -662,7 +662,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+     "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1492,317 +1492,352 @@
           {
            "term": "cat__poutcome_success",
            "value": 1.336193548504178,
-           "low": 0.9941320965435829,
-           "high": 1.8899797930699016,
+           "low": 0.9379245252035354,
+           "high": 1.734462571805376,
+           "std_error": 0.2032022151643682,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_failure",
            "value": -0.8445494549191536,
-           "low": -1.1866556517918037,
-           "high": -0.5196739902536774,
+           "low": -1.1724401791364256,
+           "high": -0.5166587307019306,
+           "std_error": 0.16729425989641022,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_unemployed",
            "value": -0.766190357302201,
-           "low": -1.351368819914153,
-           "high": -0.2651345191917427,
+           "low": -1.3736492611333344,
+           "high": -0.15873145347365136,
+           "std_error": 0.30993370726268443,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_student",
            "value": 0.7115358785130389,
-           "low": 0.012495813408763087,
-           "high": 1.2650221193077487,
+           "low": 0.09786240039164407,
+           "high": 1.3252093566359493,
+           "std_error": 0.31310446669567954,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_retired",
            "value": 0.6533427088446462,
-           "low": 0.1865953512733138,
-           "high": 1.2020431636286464,
+           "low": 0.184177748073531,
+           "high": 1.122507669616029,
+           "std_error": 0.23937427650301865,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_unknown",
            "value": -0.6491778760911625,
-           "low": -0.9891976855565203,
-           "high": -0.3943314938997571,
+           "low": -0.9402841205122321,
+           "high": -0.35807163175968015,
+           "std_error": 0.1485263232755729,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_housemaid",
            "value": 0.4885625750646005,
-           "low": -0.003776947843663475,
-           "high": 0.9907137157230135,
+           "low": -0.055158839371029555,
+           "high": 1.0322839895035674,
+           "std_error": 0.27741398246401655,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_entrepreneur",
            "value": -0.4390323966380503,
-           "low": -1.0447719482303175,
-           "high": 0.2327376685277902,
+           "low": -1.100032036414754,
+           "high": 0.22196724313729638,
+           "std_error": 0.33725091123607687,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_other",
            "value": -0.36889217985932526,
-           "low": -0.7919074053937097,
-           "high": -0.10012160020584644,
+           "low": -0.7348306605863801,
+           "high": -0.002953699132641263,
+           "std_error": 0.18670673727341194,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__education_unknown",
            "value": -0.3585511010499962,
-           "low": -1.0179255950565675,
-           "high": 0.11778656796783268,
+           "low": -0.8320037412426615,
+           "high": 0.11490153914173828,
+           "std_error": 0.24156190824256674,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__contact_cellular",
            "value": 0.34383510773809417,
-           "low": 0.1182307912050121,
-           "high": 0.5572131427443929,
+           "low": 0.1243714010188926,
+           "high": 0.5632988145033206,
+           "std_error": 0.11197333648644352,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "num__pdays=-1",
            "value": -0.3175079866038967,
-           "low": -0.4394550371526305,
-           "high": -0.20048398369850273,
+           "low": -0.44521014226670774,
+           "high": -0.18980583094146664,
+           "std_error": 0.06515535829735591,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__default_no",
            "value": -0.3105176058772145,
-           "low": -0.6642886649300691,
-           "high": 0.255921551398707,
+           "low": -0.7192716774724017,
+           "high": 0.0982364657154024,
+           "std_error": 0.20855182789995233,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__default_yes",
            "value": 0.31051760587720634,
-           "low": -0.25592155139870854,
-           "high": 0.6642886649300709,
+           "low": -0.09823646571524575,
+           "high": 0.7192716774722541,
+           "std_error": 0.20855182789987467,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__contact_telephone",
            "value": 0.3053427683530615,
-           "low": 0.03480828460220077,
-           "high": 0.6393891264007422,
-           "excludes_zero": true,
+           "low": -0.013333095533923478,
+           "high": 0.6240186322836302,
+           "std_error": 0.16259271416334764,
+           "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_services",
            "value": -0.3020232951957189,
-           "low": -0.8290359839325752,
-           "high": 0.16866822649074387,
+           "low": -0.7379177744316747,
+           "high": 0.13387118404052079,
+           "std_error": 0.2223992291054213,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_blue-collar",
            "value": -0.2921393051830068,
-           "low": -0.7102627223602412,
-           "high": 0.1502303115529993,
+           "low": -0.6928256391754846,
+           "high": 0.10854702880515438,
+           "std_error": 0.2044355596076674,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_tertiary",
            "value": 0.279825874545479,
-           "low": -0.07223939420956428,
-           "high": 0.6261589087597609,
+           "low": -0.01031004507947858,
+           "high": 0.5699617941712418,
+           "std_error": 0.14803125053006863,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__loan_no",
            "value": 0.24117338283418738,
-           "low": 0.0677549242887175,
-           "high": 0.42345921559543254,
+           "low": 0.035862704342251,
+           "high": 0.4464840613269315,
+           "std_error": 0.10475227101712314,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__loan_yes",
            "value": -0.24117338283418246,
-           "low": -0.423459215595433,
-           "high": -0.06775492428871445,
+           "low": -0.4464840613265652,
+           "high": -0.03586270434262001,
+           "std_error": 0.10475227101693556,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_technician",
            "value": -0.2291625877029829,
-           "low": -0.5739358870295315,
-           "high": 0.10851202739530288,
+           "low": -0.5633521448878769,
+           "high": 0.10502696948167256,
+           "std_error": 0.17050800923936327,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_divorced",
            "value": 0.21683296584047487,
-           "low": -0.04568828636732758,
-           "high": 0.4485031122884377,
+           "low": -0.027541931560295108,
+           "high": 0.46120786324250185,
+           "std_error": 0.12468336118877518,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__housing_yes",
            "value": -0.2105720836138011,
-           "low": -0.3523521477320741,
-           "high": -0.08510800320729253,
+           "low": -0.3486324050891476,
+           "high": -0.0725117621396337,
+           "std_error": 0.0704402338837648,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__housing_no",
            "value": 0.21057208361379606,
-           "low": 0.08510800320729695,
-           "high": 0.3523521477320715,
+           "low": 0.07251176213982663,
+           "high": 0.34863240508897914,
+           "std_error": 0.0704402338836726,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__marital_married",
            "value": -0.1842677398641632,
-           "low": -0.37275654175638034,
-           "high": -0.0562481408292156,
+           "low": -0.3682048212914569,
+           "high": -0.0003306584377660293,
+           "std_error": 0.09384717417142238,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__education_secondary",
            "value": 0.17028027116251554,
-           "low": -0.07397368990320136,
-           "high": 0.42733237692303344,
+           "low": -0.07230758439131352,
+           "high": 0.41286812671679796,
+           "std_error": 0.12377158839017342,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_admin.",
            "value": 0.15074709362553942,
-           "low": -0.24274390714805075,
-           "high": 0.544912525870775,
+           "low": -0.23583964857807752,
+           "high": 0.5373338358307583,
+           "std_error": 0.19724175814135614,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_unknown",
            "value": -0.12275191372571352,
-           "low": -0.16989792094325046,
-           "high": -0.07750920829921076,
+           "low": -0.17212290486998852,
+           "high": -0.07338092258154091,
+           "std_error": 0.02518974406349091,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_unknown",
            "value": 0.0942927970003512,
-           "low": -1.0757710163458702,
-           "high": 0.9646988890405682,
+           "low": -0.8623426839682186,
+           "high": 1.0509282779693727,
+           "std_error": 0.48808829576186835,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_primary",
            "value": -0.09155504465799887,
-           "low": -0.4491526082789173,
-           "high": 0.3587490480091941,
+           "low": -0.45381876250258113,
+           "high": 0.2707086731862528,
+           "std_error": 0.18483182379977747,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_management",
            "value": -0.0749787712415918,
-           "low": -0.37331422343015047,
-           "high": 0.32144680427343464,
+           "low": -0.4019952615579375,
+           "high": 0.25203771907507255,
+           "std_error": 0.1668482139957517,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__age",
            "value": 0.041432775994825935,
-           "low": -0.10573732137456364,
-           "high": 0.18989278293473502,
+           "low": -0.12184621273665397,
+           "high": 0.20471176472673575,
+           "std_error": 0.08330713728395968,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_single",
            "value": -0.032565225976320146,
-           "low": -0.18959210181826971,
-           "high": 0.20514948354246307,
+           "low": -0.26009405301926636,
+           "high": 0.19496360106628083,
+           "std_error": 0.11608826939550522,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__balance",
            "value": 0.031912082002247044,
-           "low": -0.06493302148351307,
-           "high": 0.13032014308931153,
+           "low": -0.06015084531192968,
+           "high": 0.1239750093164006,
+           "std_error": 0.04697174439956336,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__pdays",
            "value": -0.023270758294740783,
-           "low": -0.1863403896888174,
-           "high": 0.08949855625377484,
+           "low": -0.16047779745645305,
+           "high": 0.11393628086736898,
+           "std_error": 0.07000487776519501,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__previous",
            "value": 0.022538954443788253,
-           "low": -0.12964923277472745,
-           "high": 0.1485351414037664,
+           "low": -0.11152202786046506,
+           "high": 0.15659993674819717,
+           "std_error": 0.06839971722020766,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_self-employed",
            "value": 0.005045660215379513,
-           "low": -0.6406136053125993,
-           "high": 0.48413225505626706,
+           "low": -0.5477497481974996,
+           "high": 0.5578410686289663,
+           "std_error": 0.28204365629859157,
            "excludes_zero": false,
            "inside_interval": true
           }
          ],
          "n_rows": 2531,
-         "replicates": 100,
-         "seed": 20261019,
          "level": 0.95,
-         "skipped_replicates": 0,
+         "penalty": 1.0,
          "point_check": {
           "consistent": true,
-          "max_difference": 4.4794834508365966e-11,
+          "max_difference": 4.479361326303888e-11,
           "tolerance": 0.0001,
           "misaligned_terms": [],
           "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
          },
-         "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
-         "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+         "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+         "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6"
+        "predictions": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c"
        },
        "fit.variant": {
         "confusion": {
@@ -2611,305 +2646,340 @@
           {
            "term": "cat__poutcome_success",
            "value": 0.8736691280828087,
-           "low": 0.6594335016385523,
-           "high": 1.1808648590363522,
+           "low": 0.6201059319221683,
+           "high": 1.127232324243447,
+           "std_error": 0.129371354861984,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_failure",
            "value": -0.5797600669978065,
-           "low": -0.7915894944695754,
-           "high": -0.3454727072454229,
+           "low": -0.8011007999576076,
+           "high": -0.3584193340380011,
+           "std_error": 0.11293102052165796,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_unknown",
            "value": -0.5150628840942344,
-           "low": -0.7381373737581188,
-           "high": -0.3282054787127225,
+           "low": -0.7162627732010357,
+           "high": -0.3138629949877304,
+           "std_error": 0.10265489095396231,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_retired",
            "value": 0.428752315605801,
-           "low": 0.15745965381985608,
-           "high": 0.7435558818491125,
+           "low": 0.14549201099301162,
+           "high": 0.7120126202185919,
+           "std_error": 0.14452321922602218,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_student",
            "value": 0.3304760182833804,
-           "low": 0.030980005992169622,
-           "high": 0.5912436903680166,
+           "low": 0.02214918362023144,
+           "high": 0.6388028529465333,
+           "std_error": 0.1573125001761225,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_cellular",
            "value": 0.3099244399518792,
-           "low": 0.11504297203040247,
-           "high": 0.4691911849089697,
+           "low": 0.13053789451284434,
+           "high": 0.48931098539109597,
+           "std_error": 0.09152542947426792,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "num__pdays=-1",
            "value": -0.2923729982457271,
-           "low": -0.3985599494220297,
-           "high": -0.18511148453635656,
+           "low": -0.4034771448735781,
+           "high": -0.18126885161788406,
+           "std_error": 0.05668683072965749,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_unemployed",
            "value": -0.2889393859717757,
-           "low": -0.46288921321613014,
-           "high": -0.11610560846090776,
+           "low": -0.4991753338340218,
+           "high": -0.0787034381095311,
+           "std_error": 0.10726520972862753,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_blue-collar",
            "value": -0.24696156397113092,
-           "low": -0.5136503795398859,
-           "high": 0.05028610339769369,
+           "low": -0.510835388682514,
+           "high": 0.016912260740221896,
+           "std_error": 0.13463197629791726,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_housemaid",
            "value": 0.2365534858894058,
-           "low": -0.038697755490837364,
-           "high": 0.5046870441139162,
+           "low": -0.06560536557964114,
+           "high": 0.5387123373584597,
+           "std_error": 0.1541655121484073,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__housing_no",
            "value": 0.228112810935056,
-           "low": 0.12331194919750496,
-           "high": 0.3540720532459418,
+           "low": 0.10728127609849933,
+           "high": 0.34894434577162925,
+           "std_error": 0.06164987509447558,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__housing_yes",
            "value": -0.22811281093505592,
-           "low": -0.3540720532459428,
-           "high": -0.1233119491975039,
+           "low": -0.3489443457716327,
+           "high": -0.10728127609849887,
+           "std_error": 0.061649875094476565,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__loan_yes",
            "value": -0.20975715807455136,
-           "low": -0.3550447633660479,
-           "high": -0.06687839153666605,
+           "low": -0.37103591578037465,
+           "high": -0.04847840036873177,
+           "std_error": 0.08228659249760086,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__loan_no",
            "value": 0.20975715807455023,
-           "low": 0.0668783915366662,
-           "high": 0.3550447633660476,
+           "low": 0.048478400368740626,
+           "high": 0.3710359157803666,
+           "std_error": 0.08228659249759654,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_entrepreneur",
            "value": -0.20529680585773027,
-           "low": -0.42518381632275143,
-           "high": 0.09138455438196859,
+           "low": -0.47292000735658823,
+           "high": 0.06232639564112785,
+           "std_error": 0.13654495878997563,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__contact_telephone",
            "value": 0.2051384441423559,
-           "low": 0.017071187651715728,
-           "high": 0.4434960373467086,
-           "excludes_zero": true,
+           "low": -0.025661366174977607,
+           "high": 0.43593825445980416,
+           "std_error": 0.11775716907959044,
+           "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_services",
            "value": -0.18691316835738583,
-           "low": -0.4707259766593675,
-           "high": 0.08081970465854407,
+           "low": -0.4485375515321043,
+           "high": 0.07471121481733498,
+           "std_error": 0.133484280955354,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_tertiary",
            "value": 0.1848579120122844,
-           "low": -0.06502505350963805,
-           "high": 0.3832526661034278,
+           "low": -0.012788184821697496,
+           "high": 0.38250400884627256,
+           "std_error": 0.10084169831333242,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_other",
            "value": -0.18087459716408136,
-           "low": -0.432531695691609,
-           "high": -0.014969842046200669,
-           "excludes_zero": true,
+           "low": -0.41386828498727496,
+           "high": 0.05211909065911369,
+           "std_error": 0.11887651490589565,
+           "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_unknown",
            "value": -0.16987884440767204,
-           "low": -0.4827662255583418,
-           "high": 0.11139477523798735,
+           "low": -0.41443846398515155,
+           "high": 0.07468077516980587,
+           "std_error": 0.12477760892880373,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_married",
            "value": -0.16281516110615446,
-           "low": -0.32508907793367686,
-           "high": -0.03832024588551211,
+           "low": -0.3214556915141038,
+           "high": -0.004174630698210363,
+           "std_error": 0.0809405334277992,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__default_no",
            "value": -0.1615394399556354,
-           "low": -0.3596534205377519,
-           "high": 0.1001139180994684,
+           "low": -0.4066856568014239,
+           "high": 0.08360677689015289,
+           "std_error": 0.12507689874889055,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__default_yes",
            "value": 0.16153943995563488,
-           "low": -0.10011391809946807,
-           "high": 0.359653420537752,
+           "low": -0.08360677689014662,
+           "high": 0.40668565680141894,
+           "std_error": 0.1250768987488877,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_divorced",
            "value": 0.15512244374103715,
-           "low": -0.04467183457306076,
-           "high": 0.32502675867864783,
+           "low": -0.04104384130970354,
+           "high": 0.35128872879177897,
+           "std_error": 0.10008667842780579,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_technician",
            "value": -0.14671620503702565,
-           "low": -0.41130527474190204,
-           "high": 0.10675044290458487,
+           "low": -0.38606363440713776,
+           "high": 0.09263122433308896,
+           "std_error": 0.12211827934495502,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_admin.",
            "value": 0.13242627183771422,
-           "low": -0.14394883215257617,
-           "high": 0.3970919684213663,
+           "low": -0.13530464321304553,
+           "high": 0.4001571868884824,
+           "std_error": 0.13659991569365118,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_unknown",
            "value": -0.11303446392092073,
-           "low": -0.1540874516237138,
-           "high": -0.07156603908609643,
+           "low": -0.155988490896059,
+           "high": -0.07008043694578603,
+           "std_error": 0.02191572259181923,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__education_primary",
            "value": -0.10145158250216474,
-           "low": -0.3281605796634201,
-           "high": 0.18720379043129487,
+           "low": -0.33384843933717356,
+           "high": 0.1309452743328376,
+           "std_error": 0.11857200370421211,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_secondary",
            "value": 0.08647251489755238,
-           "low": -0.0823022130561355,
-           "high": 0.2509654014844594,
+           "low": -0.09011660521621237,
+           "high": 0.2630616350113181,
+           "std_error": 0.09009814542852712,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__age",
            "value": 0.07235172873449781,
-           "low": -0.039795799370304696,
-           "high": 0.20609142269631767,
+           "low": -0.06296707323240384,
+           "high": 0.20767053070140823,
+           "std_error": 0.06904147373843782,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__pdays",
            "value": -0.055055437858073236,
-           "low": -0.20286822003202298,
-           "high": 0.057958665413305924,
+           "low": -0.18318837495859286,
+           "high": 0.07307749924244933,
+           "std_error": 0.06537514878396612,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_management",
            "value": -0.05151237812597987,
-           "low": -0.27861230880544774,
-           "high": 0.2036758340605809,
+           "low": -0.2838419038529639,
+           "high": 0.1808171476010078,
+           "std_error": 0.1185376504668308,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__balance",
            "value": 0.03602201435397825,
-           "low": -0.06026739762384439,
-           "high": 0.12381801274457115,
+           "low": -0.05188777006656604,
+           "high": 0.12393179877452323,
+           "std_error": 0.04485275500670718,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__previous",
            "value": 0.030538458239871235,
-           "low": -0.07949269391011972,
-           "high": 0.14376873459959488,
+           "low": -0.08342631198991128,
+           "high": 0.1445032284696556,
+           "std_error": 0.058146359386561715,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_self-employed",
            "value": -0.013657846123044201,
-           "low": -0.295916448060987,
-           "high": 0.24634057194432105,
+           "low": -0.30024375678481585,
+           "high": 0.27292806453872587,
+           "std_error": 0.14621998818464219,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_unknown",
            "value": 0.011789261827771413,
-           "low": -0.2279851419730218,
-           "high": 0.25876235538973097,
+           "low": -0.24281115330527545,
+           "high": 0.26638967696082,
+           "std_error": 0.1299005579394843,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_single",
            "value": 0.007692717365116455,
-           "low": -0.1255354464208688,
-           "high": 0.19351747045853224,
+           "low": -0.17395076548498806,
+           "high": 0.18933620021522757,
+           "std_error": 0.09267694931278762,
            "excludes_zero": false,
            "inside_interval": true
           }
          ],
          "n_rows": 2531,
-         "replicates": 100,
-         "seed": 20261019,
          "level": 0.95,
-         "skipped_replicates": 0,
+         "penalty": 10.0,
          "point_check": {
           "consistent": true,
           "max_difference": 1.4865886299730846e-13,
@@ -2917,11 +2987,11 @@
           "misaligned_terms": [],
           "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
          },
-         "method": "percentile bootstrap: the model refitted on prepared rows drawn with replacement (the preparation kept as fitted on every row)",
-         "note": "Coefficients of the model fitted on these rows, with percentile bootstrap intervals: the model refitted on rows drawn with replacement, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
+         "method": "Wald intervals, estimate +- z * standard error, from the sandwich covariance H^-1 B H^-1 of the fit on every prepared row (H the penalised information, B the spread of the row scores): the delta-method approximation of a nonparametric bootstrap",
+         "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af"
+        "predictions": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829"
        }
       },
       "coefficient_rows": 2531,
@@ -3157,9 +3227,8 @@
      "blobs": {},
      "params": {
       "coefficients": {
-       "level": 0.95,
-       "replicates": 100,
-       "seed": 20261019
+       "intervals": "wald_sandwich",
+       "level": 0.95
       },
       "evaluation": "validation",
       "models": [
@@ -3181,16 +3250,16 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
-       "fit.variant": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af",
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "fit.logistic": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+       "fit.variant": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "a1cc36d93dc87a451391cf0eeba279337b798de299ea0a252a8928717a2e4b8f",
+     "code_fingerprint": "8d8f047c401a06ea65e8ed76d65555128bec7b2326afdfe0fc12efd92890da64",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3204,13 +3273,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
-     "exposure_id": "x_c932a1a35afd4a00985bd87ff9696a4d",
+     "exposure_id": "x_60e616b4239f44ee8eeeff5c401b3d98",
      "started_revision": 44,
      "integrity": "ok"
     },
     "eda.correlation": {
      "slot": "eda.correlation",
-     "result_id": "dddb1872227a28bc501642ceaedc3d8b963fd23e6414d5fed44edbe6337544cf",
+     "result_id": "99b87448f8a0f3322c005b7251a682da78088d6ca08e84c79208e49a521c8b6c",
      "activity": "eda.correlation",
      "current": true,
      "stale_reason": null,
@@ -4336,7 +4405,7 @@
        }
       ]
      },
-     "code_fingerprint": "f6ed3c7ee4eb5e8345017289f196686e322627ca5c208ea65762f3ae1564e714",
+     "code_fingerprint": "c46b8864e9e24053fb20e78519a03ec47dc54f005c5d34c12e322d5ac887e7e7",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4350,13 +4419,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_dc60c4ca476066179e139318",
-     "exposure_id": "x_802ef63ae35046b4a03318c8a133d5d2",
+     "exposure_id": "x_be26b7d867de4fecac55707a674d29e7",
      "started_revision": 30,
      "integrity": "ok"
     },
     "eda.distribution:age": {
      "slot": "eda.distribution:age",
-     "result_id": "1173166a09562549e9d70525cc5d7cc5b98f22eb584d13a8697671f1e333b75f",
+     "result_id": "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -4482,11 +4551,11 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": []
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4500,13 +4569,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_17bb42fe2af6771b4815132d",
-     "exposure_id": "x_f85a20674c2b41cab9c6c9cf57bf44bc",
+     "exposure_id": "x_96a669c375464763b058b0164c33ea90",
      "started_revision": 24,
      "integrity": "ok"
     },
     "eda.distribution:job": {
      "slot": "eda.distribution:job",
-     "result_id": "b54bcec595a9a12e54d3593c60c37416b267a560eb89a231806191d2b7af7c95",
+     "result_id": "3a1e3de370196c12e69001848ee5e4d5f3a683e8f993315ca676820443ebda75",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -4617,7 +4686,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": [
        {
@@ -4626,7 +4695,7 @@
        }
       ]
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4640,13 +4709,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
-     "exposure_id": "x_d77204104cba44c9b20e78b9178909b3",
+     "exposure_id": "x_c92023ca6b084e9482b417f1d2079617",
      "started_revision": 26,
      "integrity": "ok"
     },
     "eda.distribution:previous": {
      "slot": "eda.distribution:previous",
-     "result_id": "3b9acd54901981484b8f9995472b5e38027b0fa53c5202985679dfa6b362024a",
+     "result_id": "0e5475484816b89aa0eb11e92990c63974d653a6bd8c2bbe788f07bbc185e74a",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -4794,11 +4863,11 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": []
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -4812,13 +4881,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_9bfea10e1d03fc0af5aa162b",
-     "exposure_id": "x_0739390e9a3d483d91a4753b79b039f3",
+     "exposure_id": "x_be496b82cf754916b8ffe4fdab55c6fa",
      "started_revision": 28,
      "integrity": "ok"
     },
     "eda.quality": {
      "slot": "eda.quality",
-     "result_id": "02107b62c83765dc12ceb2ce6b3bcfab107257fbe7ff827fd82a479a50e28467",
+     "result_id": "2f07985087dd4623a29934568d19b8649dd444b451cd1b7dc6d200e89c9c87ba",
      "activity": "eda.quality",
      "current": true,
      "stale_reason": null,
@@ -5093,7 +5162,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       }
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5107,13 +5176,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_1cc8ff5e6aa02f9fae196751",
-     "exposure_id": "x_43797b7865fc4ef79350011c68f7d06f",
+     "exposure_id": "x_cfe5d802f53747679877869463408c7e",
      "started_revision": 18,
      "integrity": "ok"
     },
     "eda.rate_by:job": {
      "slot": "eda.rate_by:job",
-     "result_id": "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf",
+     "result_id": "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
      "activity": "eda.rate_by",
      "current": true,
      "stale_reason": null,
@@ -5366,7 +5435,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": [
        {
@@ -5379,7 +5448,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5393,13 +5462,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_3b7e9da2df5de95232824246",
-     "exposure_id": "x_609c014a581b469e948efbb2fff1905e",
+     "exposure_id": "x_72ce459ae77742daac5c829d5d45431d",
      "started_revision": 22,
      "integrity": "ok"
     },
     "eda.single_feature_signal": {
      "slot": "eda.single_feature_signal",
-     "result_id": "5578a456ade1932ea9b7d02e9431ff2b20681adfc53559d7d949c21f9d2e5f50",
+     "result_id": "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
      "activity": "eda.single_feature_signal",
      "current": true,
      "stale_reason": null,
@@ -5589,7 +5658,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": [
        {
@@ -5618,7 +5687,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "b5471abf2329400f70fc3dfbbe9b744d4b19c220874a0f2396406976193af445",
+     "code_fingerprint": "32bd56dadcc15512df94350fb076c4533f9308ad9fd83c5ef213e9d369510852",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5632,13 +5701,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_40d674998c07527b12a31e29",
-     "exposure_id": "x_f9d369b7f7ab49e8a822b98aa100b4b5",
+     "exposure_id": "x_08ddad06f25142c3b7acf6d9767f3837",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.special_values": {
      "slot": "eda.special_values",
-     "result_id": "1e9bbc438ccba1b9f7343f0cb2731c4651b9990d3bbd9975c1c0f316eedde272",
+     "result_id": "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
      "activity": "eda.special_values",
      "current": true,
      "stale_reason": null,
@@ -5899,7 +5968,7 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": [
        {
@@ -5928,7 +5997,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -5942,13 +6011,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_76bdb563530c997e6fdf55cc",
-     "exposure_id": "x_360a3b1d1d4e40b4ac6bfe7beb034bb4",
+     "exposure_id": "x_02cd2c872544430cace36a6aa9246f27",
      "started_revision": 16,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
+     "result_id": "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -5980,14 +6049,14 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c1442a961cb29cc161cbdbe9c032a6174199d2d98618e2b21c5252c7c1341846",
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6001,13 +6070,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8651b2bcef1776e9ebffd170",
-     "exposure_id": "x_0d315923050b45fa89d82ef1a8e6780b",
+     "exposure_id": "x_846dbd6d8287483d8fe37ced6c55b03f",
      "started_revision": 14,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "5c67966289b4594422c255132f62dc9408eafa8013ff14912c83463b0f2079fa",
+     "result_id": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -6052,14 +6121,14 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "2de5fa35eba0b01af833f9a4ab59c6f3fda5068097cd12fbf935b431944f9b02",
+     "code_fingerprint": "f55038c33ee8262324fc22d14c183c1f2e64a6361e5078f7573c47f1270a7bf4",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6073,13 +6142,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
-     "exposure_id": "x_09b334fb948440aa9b350363f2a559c4",
+     "exposure_id": "x_0929e93c310b44e2ab8c4950ed67d320",
      "started_revision": 32,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
+     "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -6237,7 +6306,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": [
        {
@@ -6266,7 +6335,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "908070659543533f88941227a313ed8db0490408e89d7bdf264d8031e059ff03",
+     "code_fingerprint": "6115b64beef61cfa235a84dc4ac0aa5fa8b107c33e33c55bbea93e5319273686",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6280,13 +6349,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
-     "exposure_id": "x_0c2e9dcaf3034e9fb94fdcecded2bba8",
+     "exposure_id": "x_2d740a6182d24b0cac30767679e629b8",
      "started_revision": 34,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af",
+     "result_id": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -6452,7 +6521,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f"
+       "split": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf"
       },
       "special_values": [
        {
@@ -6485,7 +6554,7 @@
        "strength": "strong"
       }
      },
-     "code_fingerprint": "0bc923b68777a5e6617b270bccad9f5a9ae42c506233c1f530b7b7f6cfa8f4b7",
+     "code_fingerprint": "c58e185e772d64be330f46ce9d902ef948af2dc7d42eead17dfde7941468c039",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6499,13 +6568,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_fd2d4cab3d29a091ff558cfa",
-     "exposure_id": "x_e48f0ff2a9ed42be9a001a02272ae3a3",
+     "exposure_id": "x_20836a01c2504500be633f0319b66e81",
      "started_revision": 38,
      "integrity": "ok"
     },
     "policy.evaluation": {
      "slot": "policy.evaluation",
-     "result_id": "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
+     "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
      "activity": "policy.evaluation",
      "current": true,
      "stale_reason": null,
@@ -6895,9 +6964,9 @@
       "n": 1086,
       "n_positive": 125,
       "predictions": {
-       "fit.baseline": "5c67966289b4594422c255132f62dc9408eafa8013ff14912c83463b0f2079fa",
-       "fit.logistic": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
-       "fit.variant": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af"
+       "fit.baseline": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+       "fit.logistic": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+       "fit.variant": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829"
       },
       "reference": "fit.baseline",
       "bootstrap": {
@@ -7061,9 +7130,9 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.baseline": "5c67966289b4594422c255132f62dc9408eafa8013ff14912c83463b0f2079fa",
-       "fit.logistic": "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
-       "fit.variant": "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af"
+       "fit.baseline": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+       "fit.logistic": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+       "fit.variant": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829"
       },
       "trial_budget": {
        "declared": 1,
@@ -7079,7 +7148,7 @@
        }
       ]
      },
-     "code_fingerprint": "4c82bea8c8b14b5c5e7aab26150afa86b2693139a7283e1b54555c7b460ca60b",
+     "code_fingerprint": "a4fab503e5ec3fedc3380f8435bd946309a85d6bc51b721904d44c13c3c637ed",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -7093,13 +7162,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_08e526346896c3129f460359",
-     "exposure_id": "x_bbd6883847b04c4c997a43f424a7dd73",
+     "exposure_id": "x_656e11fc4f6745fd8d4268c3074ec33f",
      "started_revision": 46,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
+     "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -7148,7 +7217,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "feccdeae00eb12af400a3b0459f5dc40c0d6a112d2333991c8a6d5af4ae38c8d",
+     "code_fingerprint": "a5b7e800bec7cfbb2ff65ce403f94c44dbc063d199deb5647a2f94c8ca49b1ab",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -7162,7 +7231,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_8101d16893f3425fbb4ff727",
-     "exposure_id": "x_6b1b76b7a437499d8b2e88ed8c2f31ba",
+     "exposure_id": "x_e3492d5ed8394f42ab1844c54fba4887",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -7182,30 +7251,30 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "02107b62c83765dc12ceb2ce6b3bcfab107257fbe7ff827fd82a479a50e28467",
-       "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf",
-       "1173166a09562549e9d70525cc5d7cc5b98f22eb584d13a8697671f1e333b75f",
-       "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
-       "1e9bbc438ccba1b9f7343f0cb2731c4651b9990d3bbd9975c1c0f316eedde272",
-       "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
-       "3b9acd54901981484b8f9995472b5e38027b0fa53c5202985679dfa6b362024a",
-       "5578a456ade1932ea9b7d02e9431ff2b20681adfc53559d7d949c21f9d2e5f50",
-       "5c67966289b4594422c255132f62dc9408eafa8013ff14912c83463b0f2079fa",
-       "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af",
-       "b54bcec595a9a12e54d3593c60c37416b267a560eb89a231806191d2b7af7c95",
-       "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
-       "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
-       "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
-       "dddb1872227a28bc501642ceaedc3d8b963fd23e6414d5fed44edbe6337544cf"
+       "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+       "0e5475484816b89aa0eb11e92990c63974d653a6bd8c2bbe788f07bbc185e74a",
+       "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+       "2f07985087dd4623a29934568d19b8649dd444b451cd1b7dc6d200e89c9c87ba",
+       "3a1e3de370196c12e69001848ee5e4d5f3a683e8f993315ca676820443ebda75",
+       "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
+       "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+       "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+       "99b87448f8a0f3322c005b7251a682da78088d6ca08e84c79208e49a521c8b6c",
+       "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+       "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+       "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+       "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+       "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+       "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b"
       ],
-      "edit_check_sha256": "fc62ebf16c5e79f1f09790dfce268aadc29e4e66934035fe1fa5cf4946ba6663",
+      "edit_check_sha256": "00252fbe981b8941e8ebd6e6eabcde5db50397bbd02eefebd3ca9f0928bbfd60",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 48,
       "path": "notebooks/study_generated.py",
       "revision": 48,
-      "sha256": "8d83bb111bf36900a1839024ef5e3416f09ea69d40e486f0aced69b7600273a4",
+      "sha256": "8b864994673668e6a417b99d9910db2c4d157985c76770fee291ad7c877756fc",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -7218,21 +7287,21 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "02107b62c83765dc12ceb2ce6b3bcfab107257fbe7ff827fd82a479a50e28467",
-       "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf",
-       "1173166a09562549e9d70525cc5d7cc5b98f22eb584d13a8697671f1e333b75f",
-       "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
-       "1e9bbc438ccba1b9f7343f0cb2731c4651b9990d3bbd9975c1c0f316eedde272",
-       "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
-       "3b9acd54901981484b8f9995472b5e38027b0fa53c5202985679dfa6b362024a",
-       "5578a456ade1932ea9b7d02e9431ff2b20681adfc53559d7d949c21f9d2e5f50",
-       "5c67966289b4594422c255132f62dc9408eafa8013ff14912c83463b0f2079fa",
-       "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af",
-       "b54bcec595a9a12e54d3593c60c37416b267a560eb89a231806191d2b7af7c95",
-       "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
-       "cc9471c92e513f32559a36edab670ede1d4c432d872a9df29a67ee576d75273f",
-       "d0e9d161680d3f62ef65e6b14a982a22dfffd87fb3172031defa58ccfbd6374f",
-       "dddb1872227a28bc501642ceaedc3d8b963fd23e6414d5fed44edbe6337544cf"
+       "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+       "0e5475484816b89aa0eb11e92990c63974d653a6bd8c2bbe788f07bbc185e74a",
+       "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+       "2f07985087dd4623a29934568d19b8649dd444b451cd1b7dc6d200e89c9c87ba",
+       "3a1e3de370196c12e69001848ee5e4d5f3a683e8f993315ca676820443ebda75",
+       "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
+       "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+       "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+       "99b87448f8a0f3322c005b7251a682da78088d6ca08e84c79208e49a521c8b6c",
+       "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+       "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+       "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+       "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+       "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+       "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b"
       ],
       "error": null,
       "generated": true,
@@ -7240,7 +7309,7 @@
       "last_ok_revision": 48,
       "path": "reports/study.html",
       "revision": 48,
-      "sha256": "c4b8625281d2f13733be3d61e173e95d9b64e5ef47b82c925e95e15dfc81fc00",
+      "sha256": "5685fbb93a8774640679db3e1db0279f49e8c99df22786dee6a020271d48a7b2",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -7479,11 +7548,11 @@
    "eda_looks": {
     "target_looks": 5,
     "results": [
-     "2348d9f1f71823c243e5080f54c06fdd98ba621469dab43af97e34a34c93caa5",
-     "1e9bbc438ccba1b9f7343f0cb2731c4651b9990d3bbd9975c1c0f316eedde272",
-     "5578a456ade1932ea9b7d02e9431ff2b20681adfc53559d7d949c21f9d2e5f50",
-     "0edd1ecd7a411ee436bd036225622ae6954351a6848c6a62d3aa53b375c01cdf",
-     "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675"
+     "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+     "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+     "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
+     "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+     "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565"
     ],
     "by_activity": {
      "diag.binary": 1,
@@ -7504,8 +7573,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "127243e1a7e2c565fe90e8dfebc3002bcc8da1eb0b40903840b1d98de048aac6",
-     "7a686934e7b125f89ae93ab487e4e56bad0623eb7599e34b6eafec2e6f61e7af"
+     "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+     "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -7542,7 +7611,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "b6990f785699390a1d42b779fdd0e2c169738e156798299b6fbf77973b1bc675",
+     "source": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
      "checked": true,
      "flags": [],
      "checks": {

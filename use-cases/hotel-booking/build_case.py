@@ -651,6 +651,16 @@ def case_document(data: bytes) -> dict:
                 'source': 'Teaching scenario: the reservations team can contact one new '
                           'booking in ten. A real team would give its own figure.'},
         },
+        # v0.3 (WP-J): what the use case asks of a model (CASE-CONTRACT, "Constraints").
+        'constraints': {
+            'interpretability': {
+                'value': 'preferred', 'status': 'scenario_assumption',
+                'source': 'Teaching scenario: the team contacts a customer or asks for a deposit '
+                          'because of the score, and should be able to say which booking '
+                          'details raised it (a customer may ask why); no rule of the hotel '
+                          'is known that requires a readable model, so a model that cannot be '
+                          'read is not excluded.'},
+        },
     }
 
 

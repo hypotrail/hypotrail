@@ -47,6 +47,28 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "propose",
+   "step": "final_test",
+   "decision": "final_test",
+   "message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+   "default_value": {
+    "model": "fit.logistic",
+    "rule": "threshold:0.2"
+   },
+   "audience": "junior",
+   "junior_message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+   "language": "en",
+   "recommended": {
+    "value": {
+     "model": "fit.logistic",
+     "rule": "threshold:0.2"
+    },
+    "why": "This is the configuration you chose; the holdout (final test) measures it once."
+   },
+   "question": "Do you open the holdout (final test) now, once?",
+   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows."
   }
  }
 }

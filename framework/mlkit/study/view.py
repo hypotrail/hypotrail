@@ -1502,7 +1502,11 @@ CURRENCY_INPUT_KEYS = ('revision', 'sources', 'artifacts', 'sources_changed', 'a
 MOMENT_KEYS = ('id', 'title', 'steps')
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
 LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
-DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts')
+DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts',
+               # v0.3 (WP-J, R35): runs, acknowledgements, renders and exports made outside
+               # the chat (the study panel passes webview).
+               'channel_actions')
+CHANNEL_ACTION_KEYS = ('action', 'channel', 'revision', 'activity', 'time')
 DIGEST_ITEM_KEYS = ('revision', 'time', 'action', 'kind', 'decision_id', 'proposal_id', 'note_id',
                     'activity', 'slot', 'result_id', 'execution_id', 'rules', 'column', 'channel',
                     'basis', 'delegation_scope', 'superseded', 'invalidation', 'text',
@@ -1742,6 +1746,10 @@ def _text(t: _Texts, item: dict, *, again: bool, state: dict, full: dict | None,
             main = t.template('run_late', junior, **act)
         else:
             main = t.template(kind, junior, **act)
+        if item.get('channel') == 'webview':
+            # v0.3 (WP-J, R35): a run started from the study panel says so.
+            main += (' You ran it from the study panel.' if junior
+                     else ' It was started from the study panel (channel webview).')
     elif action == 'init':
         main = template('created')
     else:
@@ -1768,6 +1776,7 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
     stale: set = set()
     counts = dict.fromkeys(DIGEST_COUNT_KEYS, 0)
     items = []
+    channel_actions: list[dict] = []
     for record in records:
         revision, action = record['revision'], record.get('action') or ''
         params, result = record.get('params') or {}, record.get('result') or {}
@@ -1777,10 +1786,21 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
         eid = (params.get('execution_id') or result.get('execution_id')) if run else None
         if action == _RESERVE:
             reserved[eid] = {'activity': params.get('activity'),
-                             'options': params.get('options') or {}}
+                             'options': params.get('options') or {},
+                             'channel': params.get('channel')}
             if listed:
                 counts['runs_started'] += 1
+                if params.get('channel'):
+                    channel_actions.append({'action': 'run', 'channel': params['channel'],
+                                            'revision': revision,
+                                            'activity': params.get('activity'),
+                                            'time': record.get('time')})
             continue
+        if action == 'run.acknowledge' and listed and params.get('channel'):
+            channel_actions.append({'action': 'acknowledge', 'channel': params['channel'],
+                                    'revision': revision,
+                                    'activity': result.get('activity'),
+                                    'time': record.get('time')})
         kept = [s for s in sorted(occupant) if s.startswith('fit.') and occupant[s] not in stale]
         kind = _KIND_OF_ACTION.get(action, 'other')
         if action == 'decide.note' and result.get('kind') == st.CORRECTION:
@@ -1797,6 +1817,9 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
         item = dict.fromkeys(DIGEST_ITEM_KEYS)
         item.update(revision=revision, time=record.get('time'), action=action, kind=kind)
         if run:
+            # v0.3 (WP-J, R35): the channel the run (or its acknowledgement) came from.
+            item['channel'] = (params.get('channel') if action == 'run.acknowledge'
+                               else started.get('channel'))
             item.update(activity=result.get('activity') or started.get('activity'),
                         slot=result.get('slot'), result_id=result.get('result_id'),
                         execution_id=eid,
@@ -1839,8 +1862,40 @@ def digest(study: read.Study, state: dict, *, since: int) -> dict:
                                 or inv['reconfirm_required']):
             counts['invalidations'] += 1
         items.append(item)
+    channel_actions += _channel_events(study, since)
+    channel_actions.sort(key=lambda a: (a['revision'], a['time'] or ''))
     return {'since': since, 'until': study.revision, 'items': items[-DIGEST_MAX_ITEMS:],
-            'truncated': len(items) > DIGEST_MAX_ITEMS, 'counts': counts}
+            'truncated': len(items) > DIGEST_MAX_ITEMS, 'counts': counts,
+            'channel_actions': channel_actions[-DIGEST_MAX_ITEMS:]}
+
+
+def _channel_events(study: read.Study, since: int) -> list[dict]:
+    """v0.3 (WP-J, R35): the renders and exports recorded with a channel other than the chat
+    (``channel_action`` events of ``events.jsonl``) at revision ``since`` or later: they
+    commit no revision, so one made at the revision the agent last read is listed too."""
+    import json
+
+    out = []
+    home = getattr(study, 'home', None)
+    if home is None:
+        return out
+    path = home / 'events.jsonl'           # store.EVENTS_FILE (the read side imports no writer)
+    try:
+        lines = path.read_text(encoding='utf-8').splitlines()
+    except OSError:
+        return out
+    for line in lines:
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(event, dict) or event.get('kind') != 'channel_action':
+            continue
+        revision = event.get('revision')
+        if isinstance(revision, int) and revision >= since:
+            out.append({'action': event.get('action'), 'channel': event.get('channel'),
+                        'revision': revision, 'activity': None, 'time': event.get('time')})
+    return out
 
 
 def with_digest(study: read.Study, built: dict, summary_out: dict, *,

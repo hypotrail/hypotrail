@@ -129,10 +129,12 @@ def _value_text(value: Any) -> str:
 
 
 def _concept(term_id: str | None) -> str:
-    entry = texts.glossary(term_id) if term_id else None
-    if not entry:
+    found = texts.concept(term_id)
+    if not found:
         return ''
-    return f'<p><strong class="term">{e(entry["term"])}.</strong> {e(entry["definition"])}</p>'
+    term, definition, lang = found
+    attr = ' lang="fr"' if lang == 'fr' else ''
+    return f'<p{attr}><strong class="term">{e(term)}.</strong> {e(definition)}</p>'
 
 
 def slots_of_step(step_id: str, results: Mapping, task: str | None = None) -> list[str]:
@@ -1439,7 +1441,7 @@ def _data(view: Mapping, citer: cite.Citer, variables: list[dict],
 
 # --- v0.2a (WP-A6): charts -----------------------------------------------------------------
 
-MAX_CHARTS = 5
+MAX_CHARTS = 7          # v0.3 (WP-J): with a distribution and the correlation matrix
 
 
 def _charts(view: Mapping, citer: cite.Citer) -> str:
@@ -1465,6 +1467,19 @@ def _charts(view: Mapping, citer: cite.Citer) -> str:
         rid, v = values(slot)
         if rid:
             out.append(render_charts.by_group(citer, rid, v, rate=task != 'regression'))
+    # v0.3 (WP-J, R17): one column's distribution, a skewed one first (its zeros apart, log
+    # bins), as the study panel draws it.
+    dist = []
+    for slot in sorted(s for s in view['results'] if s.startswith('eda.distribution:')):
+        rid, v = values(slot)
+        if rid and isinstance(v, Mapping):
+            dist.append((not (v.get('numeric') or {}).get('skewed'), slot, rid, v))
+    for _, _, rid, v in sorted(dist, key=lambda d: d[:2])[:1]:
+        out.append(render_charts.distribution(citer, rid, v))
+    # v0.3 (WP-J, R28): the predictor correlation matrix with its collinearity flags.
+    rid, v = values('eda.correlation')
+    if rid:
+        out.append(render_charts.correlation(citer, rid, v))
     rid, v = values('eda.single_feature_signal')
     if rid:
         out.append(render_charts.signal(citer, rid, v))
@@ -1516,7 +1531,7 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
     plan, the decisions, the evidence by step, the comparison, the limits, the case
     statements, the surfaces, and the annex (collapsed).
     """
-    with texts.study_context(view):
+    with texts.study_context(view), texts.report_language_context(view.get('language')):
         return _build(view, surfaces=surfaces, variables=variables, sample=sample)
 
 

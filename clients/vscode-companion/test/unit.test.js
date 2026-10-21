@@ -356,7 +356,7 @@ test('acknowledge (W6): exact argv with the typed words, uuid, revision read; bl
   const rid = ack.args[ack.args.indexOf('--request-id') + 1];
   assert.match(rid, UUID);
   assert.deepEqual(ack.args, [...CLI.slice(1), 'run', '--acknowledge-interruption', 'e_1', `--user-words=${words}`,
-    '--request-id', rid, '--expected-revision', '3', '--json', '--study', dir]);
+    '--channel=webview', '--request-id', rid, '--expected-revision', '3', '--json', '--study', dir]);
   assert.equal(ack.options.shell, false);
   const outcome = panel.posted.filter(m => m.type === 'outcome').at(-1);
   assert.equal(outcome.v, 2);

@@ -195,12 +195,12 @@ test('HE-3: a check that fails is a load_error for the check view, not the summa
 
 // --- handler: render (W5) ---------------------------------------------------------------------
 
-test('OV-8: Regenerate runs exactly `render --json --study S` and lists each artefact message', async () => {
+test('OV-8: Regenerate runs exactly `render --channel=webview --json --study S` and lists each artefact message', async () => {
   const { c, posted, tails, last } = make({ route: health() });
   await c.handle({ v: 2, type: 'ready' });
   await c.handle({ v: 2, type: 'render' });
   const render = tails().find(t => t[0] === 'render');
-  assert.deepEqual(render, ['render', '--json', '--study', AGENT.studyDir]);
+  assert.deepEqual(render, ['render', '--channel=webview', '--json', '--study', AGENT.studyDir]);
   const o = last('outcome');
   assert.equal(o.op, 'W5');
   assert.equal(o.kind, 'ok');
@@ -233,7 +233,7 @@ test('HE-1: an acknowledgement typed in the panel runs the exact argv of W6 and 
   await c.handle({ v: 2, type: 'acknowledge', executionId: INTERRUPTED, words, revision: 26 });
   const run = tails().find(t => t[0] === 'run');
   assert.deepEqual(run, ['run', '--acknowledge-interruption', INTERRUPTED, `--user-words=${words}`,
-    '--request-id', UUID, '--expected-revision', '26', '--json', '--study', AGENT.studyDir]);
+    '--channel=webview', '--request-id', UUID, '--expected-revision', '26', '--json', '--study', AGENT.studyDir]);
   const o = last('outcome');
   assert.equal(o.op, 'W6');
   assert.equal(o.kind, 'ok');

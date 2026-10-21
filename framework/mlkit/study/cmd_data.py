@@ -33,7 +33,7 @@ N_EXAMPLES = 3
 UNGROUPED = 'Other columns'
 NOTE = ('These are development rows only; the final test stays sealed. The card shows what '
         'the columns mean and a few rows, never how often the outcome occurs: that is '
-        'explored on training rows after the split.')
+        'explored after the split, on the rows it leaves for exploration.')
 
 
 def configure(parser: argparse.ArgumentParser) -> None:

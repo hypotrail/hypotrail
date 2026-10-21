@@ -348,7 +348,7 @@ def test_report_layout_and_traceability(studies, name):
     p = _Page()
     p.feed(page)
     assert p.order[:4] == ['verdict', 'objective', 'data', 'charts']
-    assert 3 <= p.figures <= 5
+    assert 3 <= p.figures <= 7      # v0.3 (WP-J): a distribution and the correlation matrix too
     assert p.annex_open is False
     # every number drawn in a chart is a cited label or an axis tick
     for text, ancestors in p.svg_numbers:

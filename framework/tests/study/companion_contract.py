@@ -66,7 +66,8 @@ MOMENT_STEPS = {
 }
 PAUSE_KEYS = ('pause', 'decisions', 'status', 'confirmed')
 LAST_SESSION_KEYS = ('boundary_revision', 'boundary_time', 'gap_minutes')
-DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts')
+DIGEST_KEYS = ('since', 'until', 'items', 'truncated', 'counts',
+               'channel_actions')          # v0.3 (WP-J, R35)
 DIGEST_ITEM_KEYS = ('revision', 'time', 'action', 'kind', 'decision_id', 'proposal_id', 'note_id',
                     'activity', 'slot', 'result_id', 'execution_id', 'rules', 'column', 'channel',
                     'basis', 'delegation_scope', 'superseded', 'invalidation', 'text',

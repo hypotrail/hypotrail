@@ -93,7 +93,8 @@
     "until",
     "items",
     "truncated",
-    "counts"
+    "counts",
+    "channel_actions"
    ],
    "digest.items[]": [
     "revision",
@@ -561,7 +562,8 @@
     "replayed",
     "revision",
     "result",
-    "artifacts"
+    "artifacts",
+    "next_action"
    ]
   },
   "hypotrail.error/1": {
@@ -587,7 +589,8 @@
     "result_id",
     "values",
     "result",
-    "artifacts"
+    "artifacts",
+    "next_action"
    ]
   },
   "hypotrail.session_report/1": {

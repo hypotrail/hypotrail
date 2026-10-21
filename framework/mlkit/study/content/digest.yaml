@@ -58,8 +58,8 @@ templates:
 # person and without a recorded token: {value} and {rules} are filled with the rule or the
 # model in words. A template missing here is the same for the junior.
 junior_templates:
-  confirmed: "You confirmed {decision} in your own words."
-  confirmed_again: "You confirmed {decision} again in your own words."
+  confirmed: "You confirmed {decision}."
+  confirmed_again: "You confirmed {decision} again."
   confirmed_delegated: "{Decision} was left to the assistant's recommended default, as you asked."
   hold_recorded: "You put {decision} on hold: \"{words}\"."
   correction_recorded: "You recorded a correction on {decision}: \"{words}\"."
@@ -86,6 +86,6 @@ regression:
   activities:
     eda.target_summary: the target summary
     eda.mean_by: the target mean by group
-    fit.baseline: the training mean baseline
+    fit.baseline: the mean baseline
     fit.linear: the linear model
     evaluate.regression: the model evaluation

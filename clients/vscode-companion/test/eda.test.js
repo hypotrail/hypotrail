@@ -176,7 +176,7 @@ test('ED-1: run_eda is exactly W4 with the catalog activity and column, then a r
   const before = runCli.calls.length;
   await c.handle({ v: 2, type: 'run_eda', activity: 'eda.distribution', column: 'balance', revision: 27 });
   const tails = runCli.calls.slice(before).map(x => x.tail);
-  assert.deepEqual(tails[0], ['run', 'eda.distribution', '--column=balance', '--request-id', UUID,
+  assert.deepEqual(tails[0], ['run', 'eda.distribution', '--column=balance', '--channel=webview', '--request-id', UUID,
     '--expected-revision', '27', '--json', '--study', AGENT.studyDir], 'cached catalog: the run is the first process');
   assert.deepEqual(runCli.calls[before].argv.slice(0, AGENT.argv.length), AGENT.argv);
   assert.equal(runCli.calls[before].options.timeoutMs, 300000);

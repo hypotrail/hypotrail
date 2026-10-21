@@ -46,8 +46,9 @@ transform, so no retransformation (Duan's smearing) applies; the values say so.
 
 Development diagnostics of the candidate and the variant add the coefficients of the model
 fitted on the rows its coefficients come from (every development row under
-cross-validation), with percentile bootstrap intervals over :data:`COEFFICIENT_REPLICATES`
-refits of the model on resampled rows (the preparation kept as fitted). The scale is that of the
+cross-validation), with Wald intervals from a sandwich covariance of the penalised fit
+(v0.3, WP-J: the delta-method approximation of the percentile bootstrap of 100 refits used
+until then, one refit instead of a hundred; the preparation kept as fitted). The scale is that of the
 fit: per standard deviation of a numeric feature, per category of a one-hot encoded one;
 associations, never effects.
 
@@ -75,9 +76,13 @@ MAX_SEGMENT_VALUES = 12
 SMALL_CELL_ROWS = 30
 SMALL_CELL_SELECTED = 10
 MAX_EXAMPLES = 5
-COEFFICIENT_REPLICATES = 100
-COEFFICIENT_SEED = 20261019
 COEFFICIENT_LEVEL = 0.95
+# v0.3 (WP-J): the interval method of the coefficients (part of the diagnostics' params, so
+# a study whose diagnostics used the earlier 100-refit bootstrap sees them as changed).
+COEFFICIENT_INTERVALS = 'wald_sandwich'
+COEFFICIENT_KEYS = ('terms', 'n_rows', 'level', 'penalty', 'point_check', 'method', 'note')
+COEFFICIENT_TERM_KEYS = ('term', 'value', 'low', 'high', 'std_error', 'excludes_zero',
+                         'inside_interval')
 RESIDUAL_BINS = 10
 FEATURE_BINS = 5
 MAX_RESIDUAL_FEATURES = 8
@@ -141,8 +146,8 @@ NORMALITY_NOTE = ('The quantile-quantile points compare the standardised residua
                   'normal distribution. Normality is not needed for the mean error or the '
                   'coefficients with this many rows (Lumley et al. 2002); it matters for '
                   'prediction intervals, which this study does not give.')
-# A stored coefficient further than this from the refit on the same prepared rows (the
-# replicates' solver, every row) is flagged: its interval would not describe it.
+# A stored coefficient further than this from the refit on the same prepared rows (a tight
+# solver, every row) is flagged: its interval would not describe it.
 POINT_TOLERANCE = 1e-4
 POINT_CONSISTENT_NOTE = ('The coefficients and their intervals come from the same prepared rows '
                          'and the same penalised fit.')
@@ -151,10 +156,20 @@ POINT_INCONSISTENT_NOTE = ('The stored coefficients differ from a refit of the s
                            'stopped before its optimum): '
                            'the intervals describe the refit, not these values. Run the fit '
                            'again to align them.')
-COEFFICIENT_NOTE = ('Coefficients of the model fitted on these rows, with percentile bootstrap '
-                    'intervals: the model refitted on rows drawn with replacement, the '
-                    'preparation of the variables kept as fitted. Associations given the other '
-                    'variables, never effects.')
+COEFFICIENT_NOTE = ('Coefficients of the model fitted on these rows, with Wald intervals from a '
+                    'robust (sandwich) standard error: the approximation of how much each '
+                    'coefficient would move if the rows were drawn again, the preparation of '
+                    'the variables kept as fitted. Associations given the other variables, '
+                    'never effects.')
+PENALTY_NOTE = ('The fit is penalised: its coefficients are pulled towards zero, so the '
+                'intervals describe the spread of the penalised estimate, centred on a value '
+                'that is itself shrunk; they are not exact confidence intervals of an '
+                'unpenalised coefficient, and a coefficient of a rare category can be '
+                'shrunk well inside its interval.')
+COEFFICIENT_METHOD = ('Wald intervals, estimate +- z * standard error, from the sandwich '
+                      'covariance H^-1 B H^-1 of the fit on every prepared row (H the '
+                      'penalised information, B the spread of the row scores): the '
+                      'delta-method approximation of a nonparametric bootstrap')
 
 
 # --- small helpers -------------------------------------------------------------------------
@@ -608,84 +623,148 @@ def regression_model(y, prediction, frame, keys, case, features) -> dict:
 # --- coefficients ---------------------------------------------------------------------------
 
 def coefficient_intervals(case, frame, inputs: Mapping, params: Mapping, binary: bool,
-                          point: Mapping[str, float], *, replicates: int = COEFFICIENT_REPLICATES,
-                          seed: int = COEFFICIENT_SEED, level: float = COEFFICIENT_LEVEL) -> dict:
-    """Percentile bootstrap intervals of the coefficients ``point`` (the fit's, on the rows
-    of ``frame``). The variables are prepared once, as the fit prepared them on these rows
-    (special-value indicators, the confirmed preprocessing, imputation, scaling, one-hot
-    encoding); the model alone is refitted ``replicates`` times on prepared rows drawn with
-    replacement. The intervals are therefore conditional on that preparation."""
+                          point: Mapping[str, float], *,
+                          level: float = COEFFICIENT_LEVEL,
+                          intercept: float | None = None) -> dict:
+    """Wald intervals of the coefficients ``point`` (the fit's, on the rows of ``frame``)
+    from a sandwich (Huber-White) covariance of the penalised estimator (v0.3, WP-J).
+
+    The variables are prepared once, as the fit prepared them on these rows (special-value
+    indicators, the confirmed preprocessing, imputation, scaling, one-hot encoding), and the
+    model is refitted once on every prepared row (the reference of the point check). At that
+    optimum, with ``x_i`` a prepared row with its intercept, ``psi_i`` its score (``(y_i -
+    p_i) x_i`` for the logistic model, ``r_i x_i`` for the linear one) and ``P`` the penalty
+    (``1/C`` or ``alpha`` on the coefficients, nothing on the intercept), the covariance is
+    ``H^-1 B H^-1`` with the penalised information ``H = sum w_i x_i x_i' + P`` (``w_i =
+    p_i (1 - p_i)``, or 1) and ``B = sum (psi_i - mean psi)(psi_i - mean psi)'``. This is the
+    infinitesimal-jackknife (delta-method) approximation of the nonparametric bootstrap the
+    engine used until v0.3 (Efron 1982), at the cost of one refit instead of a hundred. The
+    intervals are ``estimate +- z * se`` around that refit (the stored point when the point
+    check passes), conditional on the preparation, symmetric by construction. ``intercept``
+    (the fit's, when known) starts the refit with the point: at the optimum it takes one
+    Newton step."""
     import numpy as np
-    from sklearn.base import clone
+    from statistics import NormalDist
     from . import fit
     from .activities import positive
     features, special = list(inputs['features']), list(inputs['special_values'])
     X, _ = fit.design(frame, features, special, case)
     X, _, _ = fit.prepare(case, frame, frame, X, X.copy(), features, inputs.get('preprocessing'),
                           special)
-    model = fit._fit_predict(case, frame, frame.iloc[:1], inputs, params, binary)[1]
-    Z = np.asarray(model['preprocess'].transform(X), dtype=float)
-    names = [str(x) for x in model['preprocess'].get_feature_names_out()]
+    if params.get('tuning') and params.get('tuned_value') is None:
+        # As the fit does: the penalty chosen by the inner cross-validation of these rows.
+        from . import families
+        params = {**params, 'tuned_value': families.choose(case, frame, inputs, params,
+                                                           binary)['value']}
+    preprocess, reference = _linear_model(X, params, binary)
+    Z = np.asarray(preprocess.fit_transform(X), dtype=float)
+    names = [str(x) for x in preprocess.get_feature_names_out()]
     y = positive(frame, case).to_numpy() if binary else fit._target(case, frame, 'development')
-    stored = model['model'].coef_[0] if binary else model['model'].coef_
-    # The point and the replicates must solve the same problem on the same design: the
-    # refit of the fit's model on every row of Z, with the replicates' solver, is the
-    # reference the stored point is compared with (WP-B6a).
-    reference = clone(model['model'])
+    y = np.asarray(y, dtype=float)
+    # The point and the intervals must describe the same problem on the same design: the
+    # fit's model refitted on every row of Z with a Newton solver, started from the stored
+    # point, is the reference the point is compared with (WP-B6a) and the optimum the
+    # covariance is taken at (WP-J: one refit, a few Newton steps from the point).
     if binary:
+        start = np.asarray([float(point.get(n, 0.0)) for n in names])
+        rate = min(max(float(y.mean()), 1e-6), 1 - 1e-6) if len(y) else 0.5
         reference.set_params(warm_start=True, solver='newton-cholesky')
-        reference.coef_ = model['model'].coef_.copy()
-        reference.intercept_ = model['model'].intercept_.copy()
+        reference.coef_ = start.reshape(1, -1)
+        reference.intercept_ = np.asarray([float(intercept) if intercept is not None
+                                           else math.log(rate / (1 - rate))])
     reference.fit(Z, y)
-    ref = reference.coef_[0] if binary else reference.coef_
+    ref = np.ravel(reference.coef_[0] if binary else reference.coef_)
     drift = {term: abs(float(point[term]) - float(r)) for term, r in zip(names, ref)
              if term in point}
-    misaligned = sorted(term for term, s_ in zip(names, stored)
-                        if term in point and abs(float(point[term]) - float(s_)) > 1e-9)
-    rng = np.random.default_rng(seed)
-    n = len(frame)
-    samples = []
-    skipped = 0
-    for _ in range(replicates):
-        idx = rng.integers(0, n, n)
-        if binary and y[idx].min() == y[idx].max():
-            skipped += 1
-            continue
-        est = clone(model['model'])
-        if binary:
-            # Start from the fitted coefficients: the same optimum, reached in fewer steps.
-            # Newton-Cholesky solves the same penalised likelihood as the fit's solver, in a
-            # few steps when there are few prepared variables.
-            est.set_params(warm_start=True, solver='newton-cholesky')
-            est.coef_ = model['model'].coef_.copy()
-            est.intercept_ = model['model'].intercept_.copy()
-        est.fit(Z[idx], y[idx])
-        samples.append(est.coef_[0] if binary else est.coef_)
-    draws = np.asarray(samples, dtype=float).reshape(len(samples), len(names))
-    alpha = (1 - level) / 2
+    # A term of the stored point that the design does not have, or a term of the design the
+    # point lacks: the point does not describe this design.
+    misaligned = sorted(set(point) ^ set(names))
+    penalty = _penalty(reference, binary)
+    n, k = Z.shape
+    Xt = np.column_stack([np.ones(n), Z])
+    eta = Xt @ np.concatenate([[float(np.ravel(reference.intercept_)[0])], ref])
+    if binary:
+        prob = 1.0 / (1.0 + np.exp(-eta))
+        w = prob * (1.0 - prob)
+        resid = y - prob
+    else:
+        w = np.ones(n)
+        resid = y - eta
+    H = Xt.T @ (Xt * w[:, None])
+    H[np.arange(1, k + 1), np.arange(1, k + 1)] += penalty
+    psi = Xt * resid[:, None]
+    psi -= psi.mean(axis=0)
+    B = psi.T @ psi
+    # pinv: an unpenalised linear model with every category of a one-hot encoding has a
+    # singular information; scikit-learn then returns the minimum-norm solution, whose
+    # covariance this is.
+    Hinv = np.linalg.pinv(H, hermitian=True)
+    cov = Hinv @ B @ Hinv
+    se = np.sqrt(np.clip(np.diag(cov)[1:], 0.0, None))
+    z = NormalDist().inv_cdf(0.5 + level / 2)
     terms = []
     for j, term in enumerate(names):
         if term not in point:
             continue
-        s = draws[:, j]
-        low = float(np.quantile(s, alpha)) if len(s) >= 2 else None
-        high = float(np.quantile(s, 1 - alpha)) if len(s) >= 2 else None
         value = float(point[term])
+        s = float(se[j])
+        ok = math.isfinite(s)
+        centre = float(ref[j])
+        low, high = (centre - z * s, centre + z * s) if ok else (None, None)
         terms.append({'term': term, 'value': value, 'low': low, 'high': high,
+                      'std_error': s if ok else None,
                       'excludes_zero': bool(low is not None and (low > 0 or high < 0)),
                       'inside_interval': None if low is None else bool(low <= value <= high)})
     terms.sort(key=lambda t: (-abs(t['value']), t['term']))
     largest = max(drift.values(), default=0.0)
     consistent = not misaligned and largest <= POINT_TOLERANCE
-    return {'terms': terms, 'n_rows': n, 'replicates': replicates - skipped, 'seed': seed,
-            'level': level, 'skipped_replicates': skipped,
+    return {'terms': terms, 'n_rows': n, 'level': level, 'penalty': penalty,
             'point_check': {'consistent': consistent, 'max_difference': largest,
                             'tolerance': POINT_TOLERANCE, 'misaligned_terms': misaligned,
                             'note': POINT_CONSISTENT_NOTE if consistent
                             else POINT_INCONSISTENT_NOTE},
-            'method': 'percentile bootstrap: the model refitted on prepared rows drawn with '
-                      'replacement (the preparation kept as fitted on every row)',
-            'note': COEFFICIENT_NOTE}
+            'method': COEFFICIENT_METHOD,
+            'note': COEFFICIENT_NOTE + (' ' + PENALTY_NOTE if penalty > 0 else '')}
+
+
+def _linear_model(X, params: Mapping, binary: bool):
+    """``(preprocess, estimator)``, unfitted, configured as :func:`mlkit.study.fit._fit_predict`
+    configures the linear model of ``params`` (the solver, tolerance, penalty and tuned value
+    of a logistic fit; a ridge penalty or none for a regression)."""
+    from sklearn.linear_model import LinearRegression, Ridge
+    from mlkit import classical
+    task = 'binary' if binary else 'regression'
+    pipe = classical.pipeline('logistic' if binary else 'ridge', X,
+                              {'task': {'kind': task}, 'model_options': {}}, params['seed'])
+    tuned = params.get('tuned_value')
+    if binary:
+        if params.get('solver') is not None:
+            pipe.set_params(model__solver=str(params['solver']))
+        if params.get('tol') is not None:
+            pipe.set_params(model__tol=float(params['tol']))
+        if params.get('C') is not None:
+            pipe.set_params(model__C=float(params['C']))
+        if tuned is not None:
+            pipe.set_params(model__C=float(tuned))
+    elif tuned is not None:
+        pipe.set_params(model=Ridge(alpha=float(tuned)))
+    elif params.get('alpha') is not None:
+        pipe.set_params(model=Ridge(alpha=float(params['alpha'])))
+    else:
+        pipe.set_params(model=LinearRegression())
+    return pipe.named_steps['preprocess'], pipe.named_steps['model']
+
+
+def _penalty(model, binary: bool) -> float:
+    """The ridge penalty on the coefficients of the fitted linear ``model``, on the scale of
+    the summed loss: ``1/C`` for the logistic model (scikit-learn minimises ``C * sum loss +
+    |w|^2 / 2``), ``alpha`` for a ridge model, 0 for an unpenalised one."""
+    if binary:
+        C = float(getattr(model, 'C', 1.0))
+        if getattr(model, 'penalty', 'l2') is None or not math.isfinite(C):
+            return 0.0
+        return 1.0 / C
+    return float(getattr(model, 'alpha', 0.0) or 0.0)
 
 
 # --- v0.3 (WP-F1): what the linear fit cannot follow ------------------------------------------

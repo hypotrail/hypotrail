@@ -18,13 +18,15 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    term first, in the study language), `recommended` (`value` and `why`: your
    recommendation), `question` (the one question to ask), `default_value` (the value to
    propose), and at the success criterion `criterion_options`. Relay them; do not rewrite
-   them at length. A write needs `--expected-revision`: the `revision` of the last output
-   you read (a command's own output counts), so no `status` is needed between two runs.
-   Use `status --json` only for a detail the summary lacks (a result's values,
-   `model_families`, `model_selection`). Aim for at most four tool calls per pause.
+   them at length. Every `decide` and `run` output ends with the refreshed `next_action`
+   and its `revision`: read them there; no `status` is needed after a write. For a short
+   read, ask for keys only: `status --summary --fields next_action,criterion`. Use
+   `status --json` only for a detail the summary lacks (a result's values,
+   `model_families`, `model_selection`). Use at most four tool calls per pause.
 2. **Every number comes from the engine.** Do not run or write python, pandas, R, SQL, or
-   a script (`jq` only if installed), and do not open the data files: the engine is their
-   only reader; read outputs directly.
+   a script, and do not open the data files: the engine is their only reader. Never pipe
+   a command's JSON into `python3`, `jq`, or another program: read it as printed, or ask
+   for fewer keys with `--fields`.
    Compute only with `hypotrail run`. Do not compute differences, sums, or counts
    yourself: cite the registered value or write the two registered figures side by side.
 <!-- hypotrail:task binary -->
@@ -193,9 +195,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    The line adds to the chat; it never replaces its content. The panel can run charts,
    regenerate the deliverables, acknowledge an interruption, and export a handoff pack.
    When the revision moved without a command of yours, read `status --summary --digest
-   --since <your last revision>`: an item with `channel` `webview`, or a run or export this
-   chat did not start, was done from the panel; say so ("you ran these charts from the
-   panel") and use it.
+   --since <your last revision>`: `digest.channel_actions` lists the runs, renders and
+   exports made from the panel (`channel` `webview`); say so ("you ran these charts from
+   the panel") and use them.
 7. **Deliverables.** Say "up to date" only after a read that shows it, each deliverable in
    the words of its `junior_message`, without a revision number. After exit `3` with a
    failed report, say "previous report kept and marked stale at revision N" (N from the
@@ -256,7 +258,7 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
 
 ```sh
 {{HYPOTRAIL}} data [--format text] --study {{STUDY}}
-{{HYPOTRAIL}} status --summary [--digest --since REV] --study {{STUDY}}
+{{HYPOTRAIL}} status --summary [--fields KEY,...] [--digest --since REV] --study {{STUDY}}
 {{HYPOTRAIL}} status --json --study {{STUDY}}
 {{HYPOTRAIL}} decide propose DECISION (--value TEXT | --value-json JSON) --restatement TEXT [--restatement-fr TEXT] --rationale TEXT --request-id ID --expected-revision REV --study {{STUDY}}
 {{HYPOTRAIL}} decide confirm --proposal PROPOSAL_ID --user-words "<the junior's reply, verbatim>" [--adoption-question | --channel choice] [--agent-concern TEXT] [--basis delegated_default --delegation-scope this_decision|standing] --request-id ID --expected-revision REV --study {{STUDY}}

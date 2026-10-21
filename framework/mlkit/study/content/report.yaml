@@ -4,7 +4,7 @@ schema: hypotrail.content.report/1
 title: Study report
 subtitle: One evolving report of the study. It describes the recorded state; it does not decide anything.
 authority: This page does not update itself. The study state, read with hypotrail status, is the authority.
-no_controls: There are no decision controls on this page. Decisions are made in the chat or with hypotrail decide, in your own words.
+no_controls: There are no decision controls on this page. Decisions are made in the chat or with hypotrail decide, with your answer.
 theme_toggle: Switch theme
 sections:
   verdict: Verdict
@@ -33,7 +33,7 @@ surface_status:
 step_status:
   done: Done
   needs_reconfirmation: Needs your confirmation again
-  awaiting_confirmation: Waiting for your own words
+  awaiting_confirmation: Waiting for your answer
   ready: Ready
   blocked: Blocked by an earlier step
 decision_status:
@@ -74,7 +74,7 @@ next_action: Next action
 user_words: Your words
 delegated: Delegated to the assistant's recommended default
 delegated_words: Your words delegating the choice
-delegated_note: Decided by delegation to the assistant's default, not by your own judgment. Confirm it in your own words when you can.
+delegated_note: Decided by delegation to the assistant's default, not by your own judgment. Confirm it yourself when you can.
 delegated_restatement: Recommended default you delegated to
 not_authenticated: Recorded words, not an authenticated signature.
 restatement: Restatement you answered
@@ -149,7 +149,7 @@ notebook:
 # v0.2a (WP-A6): the verdict card, the data section, the charts, decision chips.
 verdict_card:
   not_concluded: Not concluded yet.
-  proposed: A conclusion is proposed and waits for your own words.
+  proposed: A conclusion is proposed and waits for your answer.
   criterion: Success criterion
   criterion_none: No success criterion fixed yet.
   rule: Adopted rule
@@ -163,7 +163,7 @@ verdict_card:
   validation_note: The figures that follow are on the validation rows, used to choose; they are optimistic, and they are not the final result.
   final: Final test
   final_absent: This study has no final test; nothing in it is independent evidence.
-  final_sealed: Still sealed. It is opened once, after the choice, in your own words.
+  final_sealed: Still sealed. It is opened once, after the choice, with your answer.
   final_missing: Opened, but its evaluation cannot be cited.
   final_opened: Opened once, on
   final_rows: rows nothing had seen, with the chosen configuration refitted on every development row.

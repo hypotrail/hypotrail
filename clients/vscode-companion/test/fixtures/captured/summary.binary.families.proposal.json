@@ -105,7 +105,7 @@
    "kind": "await_user_words",
    "proposal_id": "p_6",
    "decision": "model_variant",
-   "message": "Show the restatement and record the user's own words in reply. A bare \"ok\" is not a decision.",
+   "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
    "junior_message": "A proposal on the variant to compare is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
    "language": "en",
@@ -316,31 +316,31 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "7d07bd3203d609650a75267b5300d22d8bd026f5f2372d38e67aedb95dd20f64",
+    "result_id": "ccba417278cc687bd0462f98b58f7d862ef5ccc20113dede53ece160eff18e9f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "f13dced08ec6a9a22a2aaef60eb6a83a0d358f53240c91c11d7f6fd6e0c1d1b5",
+    "result_id": "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "54a583a8582e87bad964ee7ab5a7f9eae1b41295a0f716c5e1d4a8dcd210f097",
+    "result_id": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "a34c902a700fb1a4484d811b93bd762a73e4141427744acfba60b77c6c20f5b7",
+    "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "0f5c6e5d19cf509f443b119604a4949a60a3b1dbca2ffa9a3dce45e9aa23f585",
+    "result_id": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -457,8 +457,8 @@
   "eda_looks": {
    "target_looks": 2,
    "results": [
-    "f13dced08ec6a9a22a2aaef60eb6a83a0d358f53240c91c11d7f6fd6e0c1d1b5",
-    "7d07bd3203d609650a75267b5300d22d8bd026f5f2372d38e67aedb95dd20f64"
+    "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
+    "ccba417278cc687bd0462f98b58f7d862ef5ccc20113dede53ece160eff18e9f"
    ]
   },
   "recap": [
@@ -593,7 +593,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-21T09:36:03.838215+00:00",
+   "boundary_time": "2026-10-21T12:17:48.563187+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -602,7 +602,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-21T09:36:04.057173+00:00",
+     "time": "2026-10-21T12:17:48.805354+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -625,7 +625,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-21T09:36:04.590054+00:00",
+     "time": "2026-10-21T12:17:49.542069+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -651,11 +651,11 @@
      },
      "text": "The prediction moment was confirmed in the junior's words (channel chat).",
      "audience": "agent",
-     "junior_text": "You confirmed the prediction moment in your own words."
+     "junior_text": "You confirmed the prediction moment."
     },
     {
      "revision": 4,
-     "time": "2026-10-21T09:36:05.545209+00:00",
+     "time": "2026-10-21T12:17:50.409256+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -678,7 +678,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-21T09:36:06.283564+00:00",
+     "time": "2026-10-21T12:17:51.339197+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -704,11 +704,11 @@
      },
      "text": "The feature availability was confirmed in the junior's words (channel chat).",
      "audience": "agent",
-     "junior_text": "You confirmed the feature availability in your own words."
+     "junior_text": "You confirmed the feature availability."
     },
     {
      "revision": 6,
-     "time": "2026-10-21T09:36:07.276067+00:00",
+     "time": "2026-10-21T12:17:52.559714+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -731,7 +731,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-21T09:36:08.536875+00:00",
+     "time": "2026-10-21T12:17:53.747776+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -757,11 +757,11 @@
      },
      "text": "The split was confirmed in the junior's words (channel chat).",
      "audience": "agent",
-     "junior_text": "You confirmed the split in your own words."
+     "junior_text": "You confirmed the split."
     },
     {
      "revision": 8,
-     "time": "2026-10-21T09:36:09.916134+00:00",
+     "time": "2026-10-21T12:17:55.490220+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -784,7 +784,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-21T09:36:10.905207+00:00",
+     "time": "2026-10-21T12:17:56.856487+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -810,11 +810,11 @@
      },
      "text": "The success criterion was confirmed in the junior's words (channel chat).",
      "audience": "agent",
-     "junior_text": "You confirmed the success criterion in your own words."
+     "junior_text": "You confirmed the success criterion."
     },
     {
      "revision": 10,
-     "time": "2026-10-21T09:36:12.271629+00:00",
+     "time": "2026-10-21T12:17:58.105270+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -837,7 +837,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-21T09:36:13.570283+00:00",
+     "time": "2026-10-21T12:17:59.666869+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -863,11 +863,11 @@
      },
      "text": "The preparation of the variables was confirmed in the junior's words (channel chat).",
      "audience": "agent",
-     "junior_text": "You confirmed the preparation of the variables in your own words."
+     "junior_text": "You confirmed the preparation of the variables."
     },
     {
      "revision": 13,
-     "time": "2026-10-21T09:36:15.235246+00:00",
+     "time": "2026-10-21T12:18:01.107465+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -875,7 +875,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "0f5c6e5d19cf509f443b119604a4949a60a3b1dbca2ffa9a3dce45e9aa23f585",
+     "result_id": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
      "execution_id": "e_bb85e451e092b31aedb250d1",
      "rules": null,
      "column": null,
@@ -890,7 +890,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-21T09:36:16.584034+00:00",
+     "time": "2026-10-21T12:18:02.741484+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -898,7 +898,7 @@
      "note_id": null,
      "activity": "eda.target_rate",
      "slot": "eda.target_rate",
-     "result_id": "f13dced08ec6a9a22a2aaef60eb6a83a0d358f53240c91c11d7f6fd6e0c1d1b5",
+     "result_id": "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
      "execution_id": "e_a8274014a4c678f4a2a235d2",
      "rules": null,
      "column": null,
@@ -913,7 +913,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-21T09:36:18.208894+00:00",
+     "time": "2026-10-21T12:18:04.162536+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -921,7 +921,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "54a583a8582e87bad964ee7ab5a7f9eae1b41295a0f716c5e1d4a8dcd210f097",
+     "result_id": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
      "execution_id": "e_eff39ccb2204a33ff345cb41",
      "rules": null,
      "column": null,
@@ -936,7 +936,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-21T09:36:24.071390+00:00",
+     "time": "2026-10-21T12:18:06.455205+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -944,7 +944,7 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "a34c902a700fb1a4484d811b93bd762a73e4141427744acfba60b77c6c20f5b7",
+     "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
      "rules": null,
      "column": null,
@@ -959,7 +959,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-21T09:37:15.312391+00:00",
+     "time": "2026-10-21T12:18:08.067208+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -967,7 +967,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "7d07bd3203d609650a75267b5300d22d8bd026f5f2372d38e67aedb95dd20f64",
+     "result_id": "ccba417278cc687bd0462f98b58f7d862ef5ccc20113dede53ece160eff18e9f",
      "execution_id": "e_e3011a6950ece5ea44c0419c",
      "rules": null,
      "column": null,
@@ -982,7 +982,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-21T09:37:16.536418+00:00",
+     "time": "2026-10-21T12:18:09.315998+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1016,9 +1016,10 @@
     "runs_started": 5,
     "runs_failed": 0,
     "invalidations": 0
-   }
+   },
+   "channel_actions": []
   },
   "task": "binary",
-  "currency": "733eee123b2b6721"
+  "currency": "7339b68bf6d988d1"
  }
 }

@@ -23,9 +23,9 @@
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the rule share:0.2: act on the 20% highest-scored rows, 725 of the 3,617 development rows in the out-of-fold predictions. There the logistic model's selection had precision 25.2% against 11.5% for the baseline, and recall 43.9%. These predictions were used to choose the rule, so these figures are development evidence and optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result cd87f1b0).",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result e8c58166).",
   "evidence": {
-   "result_id": "cd87f1b0c078925a4f522fd4b96f4640b65c0dd7ef12ff667eb5114e01bfeb49",
+   "result_id": "e8c5816602d826382cedb02b780de6c5a813b4d4ebfba8e44523d49d4811dcde",
    "activity": "policy.evaluation",
    "figures": [
     {

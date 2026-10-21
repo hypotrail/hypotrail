@@ -885,8 +885,9 @@ REPLY_MESSAGES = {
     'bare_acknowledgement': 'A bare acknowledgement is not a decision. Restate the proposal and '
                             'ask the user to answer it in their own words.',
     'unrelated_reply': 'These words share nothing with the proposal (no word or number of its '
-                       'value or restatement). Restate the proposal and ask the user to answer '
-                       'it in their own words.',
+                       'value or restatement). Restate the proposal and ask the closed question '
+                       '"Do you adopt this decision?" (in the training mode, ask what it '
+                       'decides).',
     # ADR 0005 (guided mode).
     'question_reply': 'These words ask a question: nothing is confirmed. Answer it, restate the '
                       'proposal, and ask again.',
@@ -1912,8 +1913,11 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
                     'deliverables': launch.deliverables(study_dir)})
 
 
+SUMMARY_FIXED_KEYS = ('schema', 'ok', 'study', 'revision')
+
+
 def status(study_dir, since: int | None = None, summary: bool = False,
-           digest: bool = False) -> Outcome:
+           digest: bool = False, fields: list[str] | None = None) -> Outcome:
     """``status`` (``hypotrail.status/1``), ``--summary`` (``hypotrail.summary/1``), and
     ``--summary --digest`` (CLI-CONTRACT-COMPANION §1, C1): the summary with ``moments``,
     ``pauses``, ``last_session``, ``digest``, and ``task`` appended, and ``origin`` as the
@@ -1927,10 +1931,20 @@ def status(study_dir, since: int | None = None, summary: bool = False,
         out = view.summary(built)
         if digest:
             out = view.with_digest(study, built, out, since=since)
-        return Outcome({'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
-                        'revision': study.revision, 'since': since,
-                        'changed': None if since is None else study.revision > since,
-                        **out})
+        payload = {'schema': SUMMARY_SCHEMA, 'ok': True, 'study': str(study.study_dir),
+                   'revision': study.revision, 'since': since,
+                   'changed': None if since is None else study.revision > since, **out}
+        if fields is not None:
+            # v0.3 (WP-J): ``--fields``: only the keys asked for, so an agent reads a short
+            # document instead of piping the summary into a script.
+            unknown = [f for f in fields if f not in payload]
+            if unknown or not fields:
+                raise StudyError('invalid_arguments',
+                                 f'--fields names keys of the summary: {", ".join(payload)}.',
+                                 details={'unknown': unknown, 'keys': list(payload)})
+            payload = {**{k: payload[k] for k in SUMMARY_FIXED_KEYS},
+                       **{k: payload[k] for k in fields if k not in SUMMARY_FIXED_KEYS}}
+        return Outcome(payload)
     payload = {'schema': SCHEMAS['status'], 'ok': True, 'study': str(study.study_dir),
                'revision': study.revision, 'since': since,
                'changed': None if since is None else study.revision > since,
@@ -1993,7 +2007,20 @@ def apply(study_dir, *, action: str, params: dict, request_id: str, expected_rev
             payload['artifacts'] = artifacts
             if any(a.get('status') in ('stale', 'failed') for a in artifacts.values()):
                 code = EXIT_ARTIFACT_STALE
+    payload['next_action'] = refreshed_next_action(store.study_dir)
     return Outcome(payload, code)
+
+
+def refreshed_next_action(study_dir) -> dict | None:
+    """v0.3 (WP-J): the study's ``next_action`` after a write, as ``status`` gives it (its
+    junior-ready keys included), so the agent needs no ``status`` call between a write and
+    the next pause. None when the view cannot be built (the write itself stands)."""
+    from . import view
+    try:
+        leases = lock.probe_leases(study_dir)
+        return view.build(read.open(study_dir), leases=leases)['next_action']
+    except Exception:                     # noqa: BLE001 - a read never undoes a write
+        return None
 
 
 OPENING_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')

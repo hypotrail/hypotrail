@@ -66,10 +66,12 @@ def _model_name(model: str) -> str:
 
 
 def _concept(term_id: str) -> str:
-    entry = texts.glossary(term_id)
-    if not entry:
+    found = texts.concept(term_id)            # v0.3 (WP-J): French in a French report
+    if not found:
         return ''
-    return f'<p><strong class="term">{e(entry["term"])}.</strong> {e(entry["definition"])}</p>'
+    term, definition, lang = found
+    attr = ' lang="fr"' if lang == 'fr' else ''
+    return f'<p{attr}><strong class="term">{e(term)}.</strong> {e(definition)}</p>'
 
 
 def _lit(kind: str, text: Any, tag: str = 'span') -> str:
@@ -308,10 +310,17 @@ def _coefficients(citer: cite.Citer, rid: str, base: list, coef: Mapping) -> str
                     f'<td>{_lit("category", excl)}</td></tr>')
     meta = (f'<p class="small">{e(lab["coefficients_note"])} Scale: '
             f'{_lit("message", coef.get("scale") or "")}. '
-            f'{_num(citer, rid, base + ["coefficients", "replicates"], "int")} bootstrap refits on '
-            f'{_num(citer, rid, base + ["coefficients", "n_rows"], "int")} rows, '
-            f'{_num(citer, rid, base + ["coefficients", "level"], "pct0")} percentile '
-            f'intervals.</p>')
+            + (f'{_num(citer, rid, base + ["coefficients", "replicates"], "int")} bootstrap '
+               f'refits on {_num(citer, rid, base + ["coefficients", "n_rows"], "int")} rows, '
+               f'{_num(citer, rid, base + ["coefficients", "level"], "pct0")} percentile '
+               f'intervals.</p>' if coef.get('replicates') is not None else
+               f'{_num(citer, rid, base + ["coefficients", "n_rows"], "int")} rows, '
+               f'{_num(citer, rid, base + ["coefficients", "level"], "pct0")} Wald intervals '
+               f'from a robust (sandwich) standard error.</p>'))
+    if coef.get('replicates') is None and coef.get('penalty'):
+        # v0.3 (WP-J): the caveat of a Wald interval around a penalised estimate.
+        from .diagnostics import PENALTY_NOTE
+        meta += f'<p class="small">{_lit("message", PENALTY_NOTE)}</p>'
     check = coef.get('point_check')
     if isinstance(check, Mapping) and check.get('consistent') is False:
         # WP-B6a: the stored coefficients are not the refit the intervals describe.

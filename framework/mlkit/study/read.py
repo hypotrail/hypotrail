@@ -228,8 +228,10 @@ class Study:
     def code_changed(self, entry: dict) -> list[str]:
         """Modules of ``entry``'s code fingerprint whose source differs now (§3.7 row 11)."""
         from .code_compat import equivalent      # v0.3 (WP-F1): declared equivalent versions
+        activity = entry.get('activity')
         return sorted(name for name, sha in entry['code']['modules'].items()
-                      if self._module_sha(name) != sha and not equivalent(name, sha))
+                      if self._module_sha(name) != sha
+                      and not equivalent(name, sha, activity))
 
     def currency(self, rid: str) -> dict:
         """``{"current", "reason"}`` of result ``rid``, derived, never stored.

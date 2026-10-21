@@ -60,7 +60,9 @@ test('INV-3, INV-13: exactly four write builders W4-W7 (W1-W3 withdrawn, v0.3), 
   for (const [w, sample] of Object.entries(SAMPLES)) {
     const tail = sample().slice(AGENT.argv.length);
     const verbs = tail.slice(0, 2).join(' ');
-    assert.ok(['run eda.distribution', 'render --json', 'run --acknowledge-interruption', 'export handoff'].includes(verbs),
+    // v0.3 (WP-J, R35): every write names the panel as its channel.
+    assert.equal(tail.filter(a => a === '--channel=webview').length, 1, `${w} names its channel once`);
+    assert.ok(['run eda.distribution', 'render --channel=webview', 'run --acknowledge-interruption', 'export handoff'].includes(verbs),
       `${w}: ${verbs}`);
     // ADR 0004 amendment (R23, I2): no write of the panel is a `decide` command.
     assert.notEqual(tail[0], 'decide', w);

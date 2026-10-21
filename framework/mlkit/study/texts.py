@@ -70,6 +70,36 @@ def scheme_context(scheme: str | None):
         _SCHEME.reset(token)
 
 
+# v0.3 (WP-J): the language the HTML report writes its glossary definitions in (English
+# unless the report is rendered for a French study, ``report_language_context``).
+_REPORT_LANGUAGE = contextvars.ContextVar('hypotrail_texts_report_language', default='en')
+
+
+@contextlib.contextmanager
+def report_language_context(language: str | None):
+    token = _REPORT_LANGUAGE.set(language if language in ('en', 'fr') else 'en')
+    try:
+        yield
+    finally:
+        _REPORT_LANGUAGE.reset(token)
+
+
+def report_language() -> str:
+    return _REPORT_LANGUAGE.get()
+
+
+def concept(term_id: str | None, task: str | None = None) -> tuple[str, str, str] | None:
+    """``(term, definition, language)`` of a glossary entry as the report shows it: in a
+    French report (v0.3, WP-J) the French term and definition when the entry has
+    ``definition_fr`` (the English otherwise); None for an unknown term."""
+    entry = glossary(term_id, task) if term_id else None
+    if not entry:
+        return None
+    if _REPORT_LANGUAGE.get() == 'fr' and entry.get('definition_fr'):
+        return entry.get('term_fr') or entry['term'], entry['definition_fr'], 'fr'
+    return entry['term'], entry['definition'], 'en'
+
+
 @contextlib.contextmanager
 def study_context(view):
     """The task and the evaluation scheme of a view (or a state): both contexts at once."""
@@ -142,7 +172,11 @@ def glossary_terms(task: str | None = None) -> dict:
     if is_cv():
         for key, value in overlay.items():
             if key in out:
-                out[key] = _merge(out[key], value)
+                merged = _merge(out[key], value)
+                if 'definition' in value and 'definition_fr' not in value:
+                    # v0.3 (WP-J): a French definition describes the text it translates.
+                    merged.pop('definition_fr', None)
+                out[key] = merged
     return out
 
 

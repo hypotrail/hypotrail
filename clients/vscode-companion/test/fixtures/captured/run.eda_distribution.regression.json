@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_622dd0c704d6af123eea761a",
   "status": "promoted",
-  "result_id": "8048bbed995410d13848f30abd06009e37adb86137ee0ad26c6a831a1770ca07",
+  "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "8048bbed995410d13848f30abd06009e37adb86137ee0ad26c6a831a1770ca07",
-   "input_key": "ce8f0a3e353429d7a43fed8976e6d71eb2bea8a3161504bffc4543c261b9cee6",
+   "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+   "input_key": "539096ae32854b855b89869230e7bd975f2917391e4c3a2489440ef6dab4f7e6",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_68450e1a64f240b2996d5e83bd7f4578"
+    "x_0dba20f237d34361a0be6af2461f870c"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -173,6 +173,18 @@
     "tracked": false,
     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
    }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "models",
+   "activity": "fit.baseline",
+   "message": "Which predictions do the training mean and a linear model give for the validation rows?",
+   "audience": "junior",
+   "junior_message": "Which predictions do the training mean and a linear model give for the validation rows?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the baseline model, run without asking you. Which predictions do the training mean and a linear model give for the validation rows?"
   }
  }
 }

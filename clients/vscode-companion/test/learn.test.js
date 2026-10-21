@@ -184,7 +184,7 @@ test('HO-1: export runs the exact argv of W7 into <chosen>/revision-<R>; files a
   await c.handle({ v: 2, type: 'export_handoff', revision: 26 });
   assert.deepEqual(picked, [path.join(AGENT.studyDir, 'handoff')], 'the default parent is <study>/handoff/');
   const call = runCli.calls.find(x => x.tail[0] === 'export');
-  assert.deepEqual(call.argv, [...AGENT.argv, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--expected-revision', '26',
+  assert.deepEqual(call.argv, [...AGENT.argv, 'export', 'handoff', '--out=/tmp/hand off/revision-26', '--channel=webview', '--expected-revision', '26',
     '--json', '--study', AGENT.studyDir]);
   assert.equal(runCli.calls.filter(x => x.tail[0] === 'export').length, 1, 'no second run with an engine that knows the option');
   assert.equal(call.options.timeoutMs, 120000);
@@ -374,7 +374,7 @@ test('LE-1, LE-2, HO-1 through the extension: context.globalState, showOpenDialo
   await opened.controller.handle({ v: 2, type: 'export_handoff', revision: 26 });
   assert.equal(fake.calls.openDialog.at(-1).canSelectFolders, true);
   assert.equal(fake.calls.openDialog.at(-1).defaultUri.fsPath, path.join(dir, 'handoff'));
-  assert.deepEqual(exec.find(t => t[0] === 'export'), ['export', 'handoff', '--out=/tmp/packs/revision-26', '--expected-revision', '26',
+  assert.deepEqual(exec.find(t => t[0] === 'export'), ['export', 'handoff', '--out=/tmp/packs/revision-26', '--channel=webview', '--expected-revision', '26',
     '--json', '--study', dir]);
   const out = fake.calls.panels[0].posted.find(m => m.type === 'outcome').recorded.out;
   await opened.controller.handle({ v: 2, type: 'navigate_external', kind: 'reveal_export', path: out });
