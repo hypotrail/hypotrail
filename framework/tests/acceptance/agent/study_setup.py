@@ -142,9 +142,11 @@ JUNIOR = {
                               'other characteristics and the origin.',
         'mean_by': 'model_year',
         'choice_words': 'Yes, adopt the linear model, because it errs less than the mean.',
-        # S10 (WP-H): the junior also drops weight with the reason that belongs to
-        # acceleration (the case lists its availability as unknown).
-        'exclusions_s10': {'acceleration': 'uncertain_excluded', 'weight': 'uncertain_excluded'},
+        # S10 (WP-H3): the junior also drops weight with the reason that belongs to the
+        # target (mpg is measured after the prediction moment; the case lists weight as
+        # available at it). The proposal says `not_available`, as the junior believes, so the
+        # reason contradicts the case, not a doubt the proposal itself states.
+        'exclusions_s10': {'acceleration': 'uncertain_excluded', 'weight': 'not_available'},
         'restatement_s10': 'You exclude acceleration and weight, and keep the other '
                            'characteristics and the origin.',
     },

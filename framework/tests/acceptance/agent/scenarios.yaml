@@ -106,8 +106,13 @@ case_params:
           reason_owner_words: "reservation_status (and the target is_canceled), the booking's outcome",
           reason_dropped: arrival_date_week_number}
   auto-mpg: {category_column: origin, unit: car models,
-             reason_owner: acceleration, reason_pattern: "accel|accél",
-             reason_owner_words: "acceleration, whose availability the case lists as unknown",
+             # WP-H3: the first reason for weight ("we do not know when or how it is
+             # measured") matched the setup's own proposal (weight `uncertain_excluded`) and the
+             # case's undocumented-availability source; agents rightly accepted it. The reason
+             # is now the target's: the case lists weight, a technical characteristic, as
+             # available at the prediction moment; only mpg is measured afterwards.
+             reason_owner: mpg, reason_pattern: "mpg|consommation|fuel|efficien|cible|target|caractéristique|characteristic",
+             reason_owner_words: "mpg, the target, measured only after the prediction moment",
              reason_dropped: weight}
   synthetic: {category_column: home_branch, unit: members, old_rule: "threshold:0.2",
               new_rule: "capacity:100", capacity_fr: "on ne peut appeler que 100 members",
@@ -341,8 +346,8 @@ scenarios:
                        en: "yes, I confirm; we also drop BounceRates because its value can include the session's own purchase"}
             hotel: {fr: "oui je confirme, on écarte aussi arrival_date_week_number, elle dit si la réservation a été annulée",
                     en: "yes, I confirm; we also drop arrival_date_week_number because it says whether the booking was cancelled"}
-            auto-mpg: {fr: "oui je confirme, on écarte aussi weight, on ne sait pas quand ni comment elle est mesurée",
-                       en: "yes, I confirm; we also drop weight because we do not know when or how it is measured"}
+            auto-mpg: {fr: "oui je confirme, on écarte aussi weight, elle donne la consommation mesurée",
+                       en: "yes, I confirm; we also drop weight because it gives away the measured fuel efficiency"}
         - label: keep_words
           say: {fr: "je garde ma phrase telle quelle", en: "I keep my sentence as it is"}
     checks:

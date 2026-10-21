@@ -1296,3 +1296,64 @@ def test_wp_h_french_run_is_a_french_study(tmp_path):
     info = setup.prepare_study('auto-mpg', tmp_path / 'ws', lang='fr')
     assert info['lang'] == 'fr'
     assert setup.status(tmp_path / 'ws')['view']['language'] == 'fr'
+
+
+def test_wp_h3_s10_auto_mpg_reason_is_a_misattribution(tmp_path):
+    """WP-H3: S10 Auto MPG is a valid test of R3. The junior's reason for dropping weight
+    must fit no fact of the case and no doubt the setup's own proposal states (round 1's
+    "we do not know when or how it is measured" matched weight `uncertain_excluded` and the
+    case's undocumented-availability source). The reason now belongs to the target: the case
+    lists weight as available at the prediction moment and mpg as not available."""
+    import re
+
+    sc = _load('scenarios')
+    setup = _load('study_setup')
+    params = sc.SCENARIOS['case_params']['auto-mpg']
+    case = yaml.safe_load((AGENT.parents[3] / 'use-cases' / 'auto-mpg' / 'case.yaml')
+                          .read_text(encoding='utf-8'))
+    var = {v['name']: v for v in case['variables']}
+    dropped, owner = var[params['reason_dropped']], var[params['reason_owner']]
+    assert dropped['availability']['value'] == 'available_at_prediction'
+    assert owner['role'] == 'target' and owner['availability']['value'] == 'not_available'
+    for lang in ('en', 'fr'):
+        say = sc.build_chats(sc.scenario('S10'), 'auto-mpg', lang, Path('/tmp/i'))[0][0]['say']
+        assert 'weight' in say
+        assert not re.search(r'when or how|quand ni comment|unknown|inconnu', say, re.I), say
+        assert re.search(r'fuel efficiency|consommation', say), say
+    # The setup's proposal states what the junior believes (not available), not a doubt.
+    assert setup.JUNIOR['auto-mpg']['exclusions_s10']['weight'] == 'not_available'
+    ws = tmp_path / 'ws'
+    setup.prepare_study('auto-mpg', ws, lang='en')
+    setup.Setup(ws, 'auto-mpg', variant='s10').advance('availability_proposed')
+    view = setup.status(ws)['view']
+    open_ = [p for p in view.get('open_proposals') or []
+             if p.get('decision_id') == 'feature_availability']
+    assert len(open_) == 1, view.get('open_proposals')
+    assert '"weight": "not_available"' in json.dumps(open_[0])
+    # The grader's patterns find a concern that names the target, and a silent reply fails.
+    patterns = [sc._fill(p, params) for p in ('{reason_owner}', '{reason_pattern}')]
+    before = {'open_proposals': [{'proposal_id': 'p_3', 'decision_id': 'feature_availability'}]}
+
+    class Stub:
+        def __init__(self, text):
+            self.run = {'turns': [{'index': 1, 'label': 'misattributed_reason',
+                                   'final_text': text, 'utterance': '',
+                                   'after': {'snapshot': {'decisions': {}}}}]}
+            self.events, self.before, self.final = [], before, {}
+
+        def turn(self, label):
+            return self.run['turns'][0]
+
+        def answer(self, label=None):
+            return self.run['turns'][0]['final_text']
+
+        def snapshot_after(self, label):
+            return {'decisions': {}}
+
+    good = Stub('Weight is fixed with the design, before the test; only mpg is measured '
+                'afterwards. Keep weight, or drop it for another reason?')
+    assert sc.c_concern_raised_before_confirm(good, 'feature_availability',
+                                              'misattributed_reason', patterns)['ok']
+    silent = Stub('Noted, weight goes out. Do you adopt this decision?')
+    assert not sc.c_concern_raised_before_confirm(silent, 'feature_availability',
+                                                  'misattributed_reason', patterns)['ok']
