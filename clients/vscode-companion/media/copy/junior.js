@@ -56,6 +56,8 @@
   const MODEL_NAMES = {
     'fit.logistic': 'the logistic model', 'fit.linear': 'the linear model',
     'fit.variant': 'the variant',
+    // v0.3 (WP-F1, WP-K): the second and third variants of a list value.
+    'fit.variant:2': 'the second variant', 'fit.variant:3': 'the third variant',
   };
   const modelName = (slot, task) => (slot === 'fit.baseline'
     ? (regression(task) ? 'the mean baseline' : 'the baseline')
@@ -153,15 +155,27 @@
   }
 
   // WP-B1: the variant and the opening of the final test in words.
+  // v0.3 (WP-F1, WP-K): one variant of a list value in a few words (ADR 0007 kinds).
+  const FAMILY_WORDS = { ebm: 'an Explainable Boosting Machine', hgb: 'gradient boosting' };
+  function variantWords(v) {
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'regularisation') return v.strength === 'weak' ? 'a less regularised variant' : 'a more regularised variant';
+    if (v.kind === 'drop_group') return `the model without the group "${str(v.group)}"`;
+    if (v.kind === 'tuned') return 'the penalty tuned by nested cross-validation';
+    if (v.kind === 'family') return FAMILY_WORDS[v.family] || null;
+    return null;
+  }
+
   function variant(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
-    if (v.kind === 'regularisation') {
-      return v.strength === 'weak' ? 'Compare with a less regularised variant'
-        : 'Compare with a more regularised variant';
+    if (Array.isArray(v.variants)) {
+      const words = v.variants.map(variantWords);
+      if (!words.length || words.some(w => !w)) return null;
+      return `Compare with ${words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`}`;
     }
-    if (v.kind === 'drop_group') return `Compare with the model without the group "${str(v.group)}"`;
-    return null;
+    const one = variantWords(v);
+    return one ? `Compare with ${one}` : null;
   }
 
   function finalTest(raw, task) {

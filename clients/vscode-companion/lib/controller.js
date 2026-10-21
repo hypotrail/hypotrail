@@ -35,19 +35,21 @@ const { toSummaryModel, ARTIFACT_PATHS } = require('./models/summary');
 const refusals = require('./refusals');
 const { studyKey } = require('./localstore');
 const launch = require('./launch');
+const l10n = require('./l10n');
 
 const HANDLERS_DIR = path.join(__dirname, 'handlers');
 const MAX_READS = 2;
 const MAX_PREVIEWS = 1;
 const DEFAULT_SETTINGS = Object.freeze({ stage: 'v0', reviewer: false, learningLayer: true, chatInsert: false, language: 'auto' });
-const UNKNOWN_OUTCOME = 'The outcome is unknown: the refreshed panel shows whether anything was recorded.';
-const REVIEWER_REFUSAL = 'Read-only reviewer mode.';
+// English values (tests and the contract); the text shown follows the language (lib/l10n.js).
+const UNKNOWN_OUTCOME = l10n.EN.unknownOutcome;
+const REVIEWER_REFUSAL = l10n.EN.reviewerRefusal;
 // Reviewer mode refuses every write of the study. The handoff export (W7) writes no study
 // state, only files under the chosen folder, so a reviewer may run it (decision CA.9).
 const REVIEWER_ALLOWED = Object.freeze(['W7']);
-const BUSY_REFUSAL = 'Another request is in progress.';
-const NOT_PROMOTED = 'The result was computed but not used: the study changed while it ran. Nothing in the study changed.';
-const NOT_AVAILABLE = 'Not available in this stage.';
+const BUSY_REFUSAL = l10n.EN.busyRefusal;
+const NOT_PROMOTED = l10n.EN.notPromoted;
+const NOT_AVAILABLE = l10n.EN.notAvailable;
 
 /** The cache version of a snapshot: its revision and currency (CR.1). */
 function versionOf(snap) {
@@ -151,6 +153,10 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     return runCli(argv, options);
   };
   const stageAtLeast = wanted => protocol.stageAllows(active.stage, wanted);
+  // v0.3 (WP-K, R21): the language of the extension's words: the setting, else (auto) the
+  // study language of the last summary.
+  const language = () => l10n.resolve(active.language, snapshot ? snapshot.language : null);
+  const say = (key, ...args) => l10n.say(language(), key, ...args);
 
   function sendInit() {
     // `study` (CR.2): the study key, so the webview keeps draft words for this study only.
@@ -270,7 +276,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
 
   function outcomeOf(op, res, record) {
     if (res.failure || !res.payload) {
-      return { op, kind: 'failed', exitCode: res.exitCode, message: `${res.failure || 'The hypotrail CLI failed.'} ${UNKNOWN_OUTCOME}` };
+      return { op, kind: 'failed', exitCode: res.exitCode, message: `${res.failure || 'The hypotrail CLI failed.'} ${say('unknownOutcome')}` };
     }
     const p = res.payload;
     if (p.ok === true) {
@@ -278,15 +284,15 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
         revision: Number.isInteger(p.revision) ? p.revision : null, artifacts: artifactMessages(p) };
       if (p.status === 'late_not_promoted' || (p.result && p.result.status === 'late_not_promoted')) {
         out.kind = 'not_promoted';
-        out.message = NOT_PROMOTED;
+        out.message = say('notPromoted');
       }
-      if (p.replayed === true) out.message = '(replayed, no effect)';
+      if (p.replayed === true) out.message = say('replayed');
       const recorded = record ? record(p) : null;
       if (recorded) out.recorded = recorded;
       return out;
     }
     const out = { op, kind: 'refused', exitCode: res.exitCode, refusal: refusals.describe(p) };
-    if (res.exitCode === 4) out.message = 'An execution has an unknown outcome.';
+    if (res.exitCode === 4) out.message = say('executionUnknown');
     return out;
   }
 
@@ -301,8 +307,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
    */
   async function write(op, { target = null, argv, record = null, refresh: again_ = true } = {}) {
     if (!protocol.WRITE_OPS.includes(op)) throw new Error(`unknown write ${op}`);
-    if (active.reviewer && !REVIEWER_ALLOWED.includes(op)) { invalid(op, REVIEWER_REFUSAL, target); return null; }
-    if (busy) { invalid(op, BUSY_REFUSAL, target); return null; }
+    if (active.reviewer && !REVIEWER_ALLOWED.includes(op)) { invalid(op, say('reviewerRefusal'), target); return null; }
+    if (busy) { invalid(op, say('busyRefusal'), target); return null; }
     let built;
     try {
       built = argv(uuid());
@@ -340,7 +346,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     }
     const loader = routes.loads[message.view];
     if (!loader || (loader.stage && !stageAtLeast(loader.stage)) || (typeof loader.when === 'function' && !loader.when({ ...active }))) {
-      return send({ type: 'load_error', view: message.view, message: NOT_AVAILABLE, detail: '' });
+      return send({ type: 'load_error', view: message.view, message: say('notAvailable'), detail: '' });
     }
     const out = await read(loader.key(message), loader.argv(cli, agent, message), loader.model);
     if (!out.ok) return send({ type: 'load_error', view: message.view, message: out.message, detail: out.detail || '' });
@@ -368,6 +374,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     diagnostics,
     cli,
     refusals,
+    language,
+    say,
   };
 
   async function handle(raw) {
@@ -382,7 +390,7 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     }
     const spec = protocol.TO_EXTENSION[message.type];
     if (spec.write && active.reviewer && !REVIEWER_ALLOWED.includes(spec.write)) {
-      invalid(spec.write, REVIEWER_REFUSAL, message.proposalId || message.executionId || null);
+      invalid(spec.write, say('reviewerRefusal'), message.proposalId || message.executionId || null);
       return;
     }
     switch (message.type) {
@@ -416,6 +424,8 @@ function createController({ agent, post, runCli = cli.run, settings = DEFAULT_SE
     /** The number of cached payloads (tests: the cache stays bounded). */
     cacheSize: () => cache.size(),
     settings: () => ({ ...active }),
+    /** The language of the extension's words (lib/l10n.js). */
+    language,
     /** Post a navigation request (a deep link, "go to a result"); false when invalid. */
     navigate(target) {
       return send({ type: 'navigate', tab: target.tab, kind: target.kind, id: target.id });

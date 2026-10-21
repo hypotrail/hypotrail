@@ -4,6 +4,8 @@
 //   loads.evidence          `evidence --json` (the registry, lineage, ledger) or, with a
 //                           `resultId`, `evidence --result <rid> --json` (the same plus the
 //                           detail of that result). Cached per key and revision.
+//   loads.trials            v0.3 (WP-K): `status --json` projected by toTrialsModel (the
+//                           trial budget, the variants' questions, the family shortlist).
 //   commands.go_to_result   "Hypotrail: go to a result...": resolve a pasted id prefix
 //                           through `evidence`, then post `navigate` to the Evidence tab.
 //
@@ -14,9 +16,13 @@
 // Overview handler serves (the report fragment `#r-<rid>` is WP-0's).
 
 const { toEvidenceModel } = require('../models/evidence');
+const { toTrialsModel } = require('../models/trials');
 const { resultIdInput } = require('../uri');
 
 const LIST_KEY = 'evidence';
+// v0.3 (WP-K): the full view (`status --json`), shared by `trials` (here) and the What if?
+// `scenario`: one process and one cache entry per version, each projected by its model.
+const VIEW_KEY = 'view';
 const keyOf = message => (message.resultId ? `${LIST_KEY}:${message.resultId}` : LIST_KEY);
 
 const loads = {
@@ -25,6 +31,14 @@ const loads = {
     key: keyOf,
     argv: (cli, agent, message) => cli.evidenceArgv(agent, { resultId: message.resultId || null }),
     model: toEvidenceModel,
+  },
+  // v0.3 (WP-K): the trial budget (a replaced variant still counts), the question of each
+  // variant, and the engine's model-family shortlist (CLI-CONTRACT §14). Read only.
+  trials: {
+    stage: 'v2',
+    key: () => VIEW_KEY,
+    argv: (cli, agent) => cli.viewArgv(agent),
+    model: toTrialsModel,
   },
 };
 
@@ -42,7 +56,7 @@ async function goToResult(args, ctx) {
   if (!prefix) return undefined;
   const out = await ctx.read(LIST_KEY, ctx.cli.evidenceArgv(ctx.agent), toEvidenceModel);
   if (!out.ok) {
-    tell(ctx, `The results of this study could not be read: ${out.message}`);
+    tell(ctx, ctx.say('resultsUnreadable', out.message));
     return null;
   }
   const ids = [...new Set(out.model.results.map(r => r.resultId).filter(id => id.startsWith(prefix)))];
@@ -51,13 +65,11 @@ async function goToResult(args, ctx) {
   // checks it, and refuses an unknown one with `unknown_result`.
   if (!id && ids.length === 0 && prefix.length === 64 && out.model.truncated) id = prefix;
   if (!id) {
-    tell(ctx, ids.length > 1
-      ? `Several results start with ${prefix}. Paste more characters of the id.`
-      : `No result of this study starts with ${prefix}.${out.model.truncated ? ' Older results are not listed; paste the whole id.' : ''}`);
+    tell(ctx, ids.length > 1 ? ctx.say('severalResults', prefix) : ctx.say('noResult', prefix, out.model.truncated));
     return null;
   }
   ctx.post({ type: 'navigate', tab: 'evidence', kind: 'result', id });
   return id;
 }
 
-module.exports = { types: {}, loads, commands: { go_to_result: goToResult }, LIST_KEY };
+module.exports = { types: {}, loads, commands: { go_to_result: goToResult }, LIST_KEY, VIEW_KEY };

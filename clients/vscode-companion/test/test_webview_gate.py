@@ -3,9 +3,10 @@
 The real document under the real CSP, offline, on the **captured** payloads of the real
 engine (``panel_cases.py``). Two layers:
 
-1. **Structural assertions**, on every tab of the split and the cross-validated Bank studies
-   (and Auto MPG in French), at 1280, 900 and 420 px, under Light Modern, Dark Modern and High
-   Contrast (``themes.py``), in English and in French:
+1. **Structural assertions**, on every tab of the split and the cross-validated Bank studies,
+   the cross-validated Bank study with three variants (v0.3, WP-K), and Auto MPG in French,
+   at 1280, 900 and 420 px, under Light Modern, Dark Modern and High Contrast (``themes.py``),
+   in English and in French:
 
    * nothing scrolls sideways: no element's right edge passes the viewport, and none passes
      the right edge of its card (a ``section``, ``article`` or ``.card``), except inside the
@@ -203,6 +204,9 @@ def column_names(payload, task: str) -> list:
 
 def structural(panel, where, columns=()):
     page = panel.page
+    # A view that threw renders a one-line alert instead of itself (core.js): the gate fails then.
+    errors = page.locator('[data-view-error]').all_inner_texts()
+    assert errors == [], (where, errors)
     o = page.evaluate(OVERFLOW)
     assert o['scroll'] <= o['vw'] + 1 and not o['out'], (where, o)
     assert page.evaluate(CARD_OVERFLOW) == [], where
@@ -249,14 +253,15 @@ def views(model, payload):
 @pytest.mark.parametrize('theme', THEMES)
 def test_every_tab_passes_the_structural_gate(open_panel, views, payload, theme, width, lang):
     """A11Y-3, A11Y-4, R26: every tab at 1280, 900 and 420 px, three themes, both languages."""
-    for case in ['binary', 'cv']:
+    # v0.3 (WP-K): `families`, the study with three variants, for the selection and family cards.
+    for case in ['binary', 'cv', 'families']:
         panel = open_case(open_panel, views, case=case, theme=theme, width=width, lang=lang)
         page = panel.page
         for tab in TABS:
             show(page, tab)
             structural(panel, f'{case}/{tab}/{theme}/{width}/{lang}', column_names(payload, 'binary'))
             assert page.locator(f'#panel-{tab} [data-tab-lead="{tab}"]').count() == 1, (tab, 'one lead sentence per tab (I1)')
-            if width != 1280 and (case == 'binary' or tab in ('overview', 'evidence')):
+            if width != 1280 and (case == 'binary' or tab in ('overview', 'evidence', 'decisions')):
                 shot(page, f'{tab}-{case}-{theme}-{width}-{lang}')
 
 

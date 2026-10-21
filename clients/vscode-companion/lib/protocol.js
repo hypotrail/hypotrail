@@ -16,8 +16,10 @@ function protocolFactory() {
   const TABS = ['overview', 'eda', 'decisions', 'evidence', 'whatif', 'learn'];
   // WP-A7: `data`, the data card of the Data & EDA tab (`hypotrail data`). WP-B5:
   // `scenario`, the teaching scenario's defaults (`status --json`, view.scenario_defaults).
+  // v0.3 (WP-K): `trials`, the trial budget and the model-family shortlist of the same read
+  // (`status --json`, view.model_selection and view.model_families; CLI-CONTRACT §14).
   const VIEWS = ['summary', 'decisions', 'eda', 'evidence', 'whatif', 'explain', 'check', 'session_report', 'data',
-    'scenario'];
+    'scenario', 'trials'];
   // v0.3 narrowing (ADR 0004 amendment, R23, I2): W1 confirm, W2 withdraw and W3 propose
   // are withdrawn; decisions are made in the chat only. The remaining ids keep their numbers.
   const WRITE_OPS = ['W4', 'W5', 'W6', 'W7'];
@@ -182,6 +184,8 @@ function protocolFactory() {
           fields: {
             code: { t: 'str' }, reason: { t: 'str', nullable: true }, engineMessage: { t: 'str' },
             human: { t: 'str' }, details: { t: 'arr', items: { t: 'str' } },
+            // v0.3 (WP-K, R21): the same explanation and lines in French (lib/refusals.js).
+            humanFr: { t: 'str', opt: true }, detailsFr: { t: 'arr', opt: true, items: { t: 'str' } },
           },
         },
         recorded: {

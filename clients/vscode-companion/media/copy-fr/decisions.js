@@ -5,6 +5,7 @@
   const regression = task => task === 'regression';
   HT.copyFr = HT.copyFr || {};
   HT.copyFr.decisions = {
+    trialsTitle: "Avant de répondre : le budget d'essais et la liste courte des familles",
     waitingTitle: 'En attente de votre réponse',
     nothingWaiting: "Rien n'attend votre réponse. L'assistant propose les décisions dans le chat.",
     nothingWaitingV0: "Aucune proposition ouverte. L'assistant propose les décisions dans le chat.",

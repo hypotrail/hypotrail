@@ -77,6 +77,14 @@
     mapTitle: 'The journey',
     // v0.3 (WP-E2): the journey bar and why a step came back.
     stepsDone: (done, total) => `${done} of ${total} steps done`,
+    // v0.3 (WP-K): the journey bar's short step labels (the validated mockup's words), so a
+    // narrow panel never breaks a word; the plan's full title stays in the hover and for
+    // screen readers. A step without a label here shows its title.
+    journeyLabels: {
+      discover_data: 'Data', prediction_time: 'Moment', feature_availability: 'Variables', split: 'Split',
+      success_criterion: 'Criterion', train_eda: 'Explore', preprocessing: 'Preparation', models: 'Models',
+      model_variant: 'Variants', policy: 'Rule', model_choice: 'Choice', final_test: 'Final test', conclusion: 'Conclusion',
+    },
     reopenedWhy: 'A step came back: a new proposal or a changed decision asks you to answer again in the chat. The steps after it stay as they are until you do.',
     // v0.3 (owner addition, I1): how the panel works.
     guide: {

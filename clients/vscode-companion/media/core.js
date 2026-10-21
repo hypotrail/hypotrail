@@ -301,13 +301,16 @@
     const str = x => (typeof x === 'string' ? x : '');
     if (o.kind === 'refused' && o.refusal) {
       const r = o.refusal;
+      // v0.3 (WP-K, R21): the explanation in the panel language (the engine's message stays as sent).
+      const fr = language() === 'fr' && typeof r.humanFr === 'string';
+      const lines = fr && Array.isArray(r.detailsFr) ? r.detailsFr : r.details || [];
       return el('div', { className: 'card alert', role: 'alert', 'data-outcome': 'refused', 'data-op': o.op,
         'data-code': str(r.code), 'data-reason': str(r.reason) }, [
         el('p', { className: 'title', text: c.refusedTitle(str(r.code), r.reason) }),
-        el('p', { text: str(r.human), 'data-human': true }),
+        el('p', { text: str(fr ? r.humanFr : r.human), 'data-human': true, lang: fr ? 'fr' : null }),
         el('p', { className: 'muted', text: c.engineVerbatim }),
         el('blockquote', { text: str(r.engineMessage), 'data-engine-message': true }),
-        (r.details || []).length ? el('ul', {}, r.details.map(line => el('li', { text: str(line) }))) : null,
+        lines.length ? el('ul', {}, lines.map(line => el('li', { text: str(line) }))) : null,
         o.message ? el('p', { text: o.message }) : null,
       ]);
     }
@@ -649,7 +652,7 @@
       try {
         out = v.render(state.snapshot, context(v));
       } catch (e) {
-        out = el('p', { className: 'alert', role: 'alert', text: `${C().viewError} ${String((e && e.message) || e)}` });
+        out = el('p', { className: 'alert', role: 'alert', 'data-view-error': v.name, text: `${C().viewError} ${String((e && e.message) || e)}` });
       }
       append(node, [out]);
     }

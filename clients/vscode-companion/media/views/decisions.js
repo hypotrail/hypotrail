@@ -291,6 +291,31 @@
 
   // --- the pending decision card (read only) ---------------------------------------------
 
+  /**
+   * v0.3 (WP-K): on a variant proposal, the trial budget (a replaced variant still counts)
+   * and the engine's family shortlist, read from the full view (`trials`), so the junior
+   * sees what answering spends before answering in the chat. Read only.
+   */
+  function trialsNote(ctx, c) {
+    const entry = ctx.data('trials');
+    const m = entry && entry.model;
+    if (!m || (!m.budget && !m.families)) return null;
+    const T = HT.copy.evidence.variants;
+    const b = m.budget;
+    const lang = HT.language ? HT.language() : 'en';
+    const texts = m.families && m.families.texts;
+    const text = texts ? texts[lang] || texts.en : null;
+    return el('div', { className: 'ht-note dc-trials', role: 'note', 'data-trials-note': b ? `${b.used}/${b.max}` : 'shortlist' }, [
+      el('div', {}, [
+        el('p', { className: 'title', text: c.trialsTitle }),
+        b ? el('p', { 'data-trial-budget': `${b.used}/${b.max}`, text: T.budgetLine(ctx.format.number(b.used, 'int'),
+          ctx.format.number(b.max, 'int'), ctx.format.number(b.remaining ?? Math.max(0, b.max - b.used), 'int')) }) : null,
+        b ? el('p', { className: 'muted', text: T.budgetWhy }) : null,
+        text ? ctx.components.engineText(text, { lang: texts[lang] ? lang : 'en', tag: 'p', attrs: { 'data-shortlist-text': m.families.recommendation || '' } }) : null,
+      ]),
+    ]);
+  }
+
   function proposalCard(p, model, ctx, c) {
     const id = str(p.proposalId);
     const v1 = ctx.atLeast('v1');
@@ -324,6 +349,7 @@
           groups ? groupsList(groups, c) : null]),
       ]),
       v1 && ctx.atLeast('v2') ? evidenceChips(p, ctx, c) : null,
+      str(p.decisionId) === 'model_variant' && ctx.atLeast('v2') ? trialsNote(ctx, c) : null,
       ...holds,
       ...resolved,
       v1 ? effectsSection(p, ctx, c) : null,
@@ -464,6 +490,8 @@
       if (v1) ensureLoad(ctx, 'decisions');
       if (ctx.atLeast('v2')) ensureLoad(ctx, 'evidence');
       const proposals = arr(model.proposals);
+      // v0.3 (WP-K): the trial budget and the shortlist, only while a variant proposal waits.
+      if (ctx.atLeast('v2') && proposals.some(p => str(p.decisionId) === 'model_variant')) ensureLoad(ctx, 'trials');
       const cards = proposals.map(p => proposalCard(p, model, ctx, c));
       const articles = cards.map(n => (n.matches('[data-proposal-card]') ? n : n.querySelector('[data-proposal-card]')));
       const out = [

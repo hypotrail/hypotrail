@@ -19,7 +19,10 @@ script after an engine change, then update the hand-written fixtures the test na
 
 Nothing under ``use-cases/`` is written: the committed cases are only read. The studies
 live in a temporary directory, removed at the end. No business model is trained beyond the
-case's own baseline, logistic, and linear fits on the public data, as the engine tests do.
+case's own baseline, logistic, and linear fits on the public data, as the engine tests do, and
+(v0.3, WP-K) the three variants of ADR 0007 (a stronger penalty, an Explainable Boosting
+Machine, histogram gradient boosting) on the public Bank rows, for the selection and family
+cards of the Evidence tab.
 """
 from __future__ import annotations
 
@@ -139,6 +142,8 @@ def binary(cap: Capture) -> None:
              '--value=capacity:150', '--json')
     cap.read('preview.binary', 'binary', study, 'preview', 'policy', '--rule', 'capacity:100', '--intervals', '--json')
     evidence = cap.read('evidence.binary', 'binary', study, 'evidence', '--json')
+    # v0.3 (WP-K): the full view at the same point (the trial budget and the family shortlist).
+    cap.read('status.binary', 'binary', study, 'status', '--json')
     logistic = next(r['result_id'] for r in evidence['results'] if r['slot'] == 'fit.logistic' and r['current'])
     cap.read('evidence.binary.detail', 'binary', study, 'evidence', '--result', logistic, '--json')
     cap.read('error.unknown_result', 'binary', study, 'evidence', '--result', 'a' * 64, '--json', expect=(2,))
@@ -266,11 +271,66 @@ def cross_validated(cap: Capture) -> None:
              note='Bank, cross-validation, final test opened, then the calling rule changed after it.')
     cap.read('evidence.binary.cv', 'binary', study, 'evidence', '--json',
              note='Bank, cross-validation, final test opened, then the calling rule changed after it.')
+    cap.read('status.binary.cv', 'binary', study, 'status', '--json',
+             note='Bank, cross-validation, final test opened, then the calling rule changed after it.')
     cap.read('decisions.binary.cv', 'binary', study, 'decisions', '--json')
     cap.read('error.final_test_already_opened', 'binary', study, 'decide', 'propose', 'final_test', '--value-json',
              json.dumps(st.b1_default_value(flow.state(), 'final_test')), '--restatement',
              'You open the final test again.', '--rationale', 'x', '--request-id', 'v-again',
              '--expected-revision', flow.rev(), '--json', expect=(2,))
+
+
+FAMILY_VARIANTS = {'variants': [
+    {'kind': 'regularisation', 'strength': 'strong', 'question': 'Does a stronger penalty rank the clients as well?'},
+    {'kind': 'family', 'family': 'ebm',
+     'question': 'Does an explainable boosting machine follow age and balance more closely?'},
+    {'kind': 'family', 'family': 'hgb', 'question': 'Does gradient boosting rank the clients better?'}]}
+
+
+def families(cap: Capture) -> None:
+    """v0.3 (WP-F1, WP-K): a cross-validated Bank study whose variant decision names three
+    variants (a stronger penalty, an Explainable Boosting Machine, histogram gradient
+    boosting), so the budget is used, all fitted and compared by one evaluation, with the
+    development diagnostics before and after the variants. The evidence carries the stored
+    ``model_selection`` and each family's own diagnostics; the full view carries the live
+    ``model_selection`` (with the budget) and the shortlist ``model_families``."""
+    from mlkit.study import state as st
+
+    study = cap.root / 'binary-families'
+    flow = fk.Flow(study, BANK, prefix='m')
+    flow.init()
+    flow.decide('prediction_time', 'before the first contact of the campaign, from the client file')
+    flow.decide('feature_availability', fk.availability(BANK, duration='not_available', day='not_available',
+                                                         month='not_available', campaign='not_available',
+                                                         contact='uncertain_included'))
+    flow.decide('split', st.b1_default_value(flow.state(), 'split'))
+    flow.model_decisions()
+    for activity in ('split', 'eda.target_rate', 'fit.baseline', 'fit.logistic', 'diag.binary'):
+        flow.run(activity)
+    # The variant proposal waits for the junior: the Decisions card shows the budget it spends.
+    code, out = run('decide', 'propose', 'model_variant', '--value-json', json.dumps(FAMILY_VARIANTS),
+                    '--restatement', 'You compare three variants of the candidate, each with its question.',
+                    '--rationale', 'One penalty change and two model families, inside the budget of three.',
+                    '--request-id', 'm-variants', '--expected-revision', flow.rev(), '--study', study)
+    assert code == 0, out
+    pid = out['result']['proposal_id']
+    cap.read('summary.binary.families.proposal', 'binary', study, 'status', '--summary', '--digest', '--json',
+             note='Bank, cross-validation, the three-variant proposal waits for the junior.')
+    cap.read('status.binary.families.proposal', 'binary', study, 'status', '--json',
+             note='The full view while the three-variant proposal waits: nothing of the budget used yet.')
+    flow.call('decide', 'confirm', pid, '--user-words', fk.default_words('model_variant'),
+              '--request-id', flow.rid(), '--expected-revision', flow.rev(), '--study', study)
+    for slot in ('fit.variant', 'fit.variant:2', 'fit.variant:3'):
+        flow.run(slot)
+    flow.run('policy.evaluate', '--rule', 'share:0.1', '--rule', 'capacity:100')
+    flow.run('diag.binary')
+    cap.read('summary.binary.families', 'binary', study, 'status', '--summary', '--digest', '--json',
+             note='Bank, cross-validation, three variants (penalty, EBM, boosting) compared, budget used.')
+    cap.read('evidence.binary.families', 'binary', study, 'evidence', '--json',
+             note='Bank, cross-validation, three variants (penalty, EBM, boosting) compared, budget used.')
+    cap.read('decisions.binary.families', 'binary', study, 'decisions', '--json')
+    cap.read('status.binary.families', 'binary', study, 'status', '--json',
+             note='The full view of the same study: the live model selection and the family shortlist.')
 
 
 def scenario(cap: Capture) -> None:
@@ -315,6 +375,7 @@ def regression(cap: Capture) -> None:
     cap.read('proposal_draft.regression', 'regression', study, 'preview', 'proposal', 'model_choice',
              '--value=fit.linear', '--json')
     cap.read('evidence.regression', 'regression', study, 'evidence', '--json')
+    cap.read('status.regression', 'regression', study, 'status', '--json')
     cap.read('explain.regression', 'regression', study, 'explain', '--json')
     cap.read('session_report.regression', 'regression', study, 'session-report', '--json')
     # WP-B4: the development diagnostics.
@@ -331,6 +392,7 @@ def capture(root: Path) -> dict[str, dict]:
     with environment(HYPOTRAIL_SESSION_LOG='1'):
         binary(cap)
         cross_validated(cap)
+        families(cap)
         scenario(cap)
         regression(cap)
     return cap.items

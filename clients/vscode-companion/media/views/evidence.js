@@ -640,6 +640,277 @@
       ctx.el('h3', { id: 'ht-ev-fe-h', text: c.finalEvidenceTitle }), ...kids]);
   }
 
+  // --- v0.3 (WP-K): variants, families, and each family's diagnostics (WP-F1, ADR 0007) -----
+  //
+  // Read only, in the one card pattern. The comparison fold by fold, the one-standard-error
+  // pick, the optimism and the advice are cited from the `model_selection` the current
+  // evaluation stored (a registered result); the live budget (a replaced variant still
+  // counts), each variant's question and the shortlist come from the full view (`trials`).
+  // The engine's sentences are shown in the panel language from their `texts`.
+
+  const T = () => C().variants;
+  const cap1 = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+  /** The engine sentence of `texts` in the panel language (marked "(en)" when only English). */
+  function engineSentence(ctx, texts, attrs = {}, tag = 'p') {
+    if (!texts) return null;
+    const lang = HT.language ? HT.language() : 'en';
+    const text = texts[lang] || texts.en;
+    if (!text) return null;
+    return ctx.components.engineText(text, { lang: texts[lang] ? lang : 'en', tag, attrs });
+  }
+
+  /** A configuration in words: the candidate's model, else what the variant changes. */
+  function configName(task, cfg) {
+    const k = T().configs;
+    if (cfg.kind === 'candidate') return cap1(fitLabel(task, cfg.slot));
+    if (cfg.kind === 'regularisation') return k.regularisation[cfg.strength] || k.variant;
+    if (cfg.kind === 'drop_group') return k.drop_group(cfg.group || '');
+    if (cfg.kind === 'tuned') return k.tuned;
+    if (cfg.kind === 'family') return k.family[cfg.family] || k.variant;
+    return cap1(fitLabel(task, cfg.slot));
+  }
+
+  function metricName(metric) {
+    return C().measures[metric] || metric || '';
+  }
+
+  /** The budget: the live one of the full view, else the one the evaluation stored. */
+  function budgetOf(ctx, model) {
+    const t = ctx.data('trials');
+    const live = t && t.model && t.model.budget;
+    return live || (model.selection && model.selection.budget) || null;
+  }
+
+  function selectionCard(ctx, model, task) {
+    const t = T();
+    const s = model.selection;
+    const budget = budgetOf(ctx, model);
+    const trials = ctx.data('trials');
+    const questions = (trials && trials.model && trials.model.questions) || {};
+    if (!s && !budget) return null;
+    const f3 = x => ctx.format.number(x, task === 'regression' ? 'f2' : 'f3');
+    const signed = x => `${x > 0 ? '+' : ''}${f3(x)}`;
+    const cite = (text, c) => ctx.components.cited(text, { resultId: s.resultId, path: c.path, value: c.value });
+    const metric = s ? metricName(s.metric) : '';
+    const configs = s && s.available ? s.configurations : [];
+    const body = [];
+    let finding = null;
+    if (budget) {
+      body.push(ctx.el('p', { 'data-trial-budget': `${budget.used}/${budget.max}` },
+        [t.budgetLine(int(ctx, budget.used), int(ctx, budget.max), int(ctx, budget.remaining ?? Math.max(0, budget.max - budget.used)))]));
+    }
+    if (configs.length) {
+      const pick = s.oneSe && s.oneSe.pick;
+      const name = cfg => configName(task, cfg);
+      const rows = configs.map(cfg => ({
+        configuration: `${name(cfg)}${cfg.kind === 'candidate' ? ` (${t.candidate})` : ''}${cfg.slot === pick ? ` · ${t.kept}` : ''}`,
+        mean: cfg.mean.value === null ? '' : { text: `${f3(cfg.mean.value)} ± ${f3(cfg.se.value)}`,
+          cited: { resultId: s.resultId, path: cfg.mean.path, value: cfg.mean.value } },
+        difference: !cfg.difference || cfg.difference.mean.value === null ? '—' : { text: `${signed(cfg.difference.mean.value)} ± ${f3(cfg.difference.se.value)}`,
+          cited: { resultId: s.resultId, path: cfg.difference.mean.path, value: cfg.difference.mean.value } },
+      }));
+      const table = ctx.components.valuesTable(null, { caption: t.meansTitle(metric),
+        columns: [{ key: 'configuration', label: t.columns.configuration }, { key: 'mean', label: t.columns.mean },
+          { key: 'difference', label: t.columns.difference }], rows });
+      table.setAttribute('data-selection-table', String(configs.length));
+      for (const [i, tr] of [...table.querySelectorAll('tbody tr')].entries()) {
+        tr.setAttribute('data-configuration', configs[i].slot);
+        if (configs[i].slot === pick) tr.setAttribute('data-kept', 'true');
+      }
+      body.push(table);
+      const diffs = configs.filter(cfg => cfg.difference && cfg.difference.mean.value !== null);
+      if (diffs.length) {
+        const box = ctx.el('div', { 'data-selection-chart': 'difference' });
+        intervals(ctx, box, { title: t.differenceTitle(metric), zero: true,
+          rows: diffs.map(cfg => ({ label: name(cfg), point: cfg.difference.mean.value, low: cfg.difference.low, high: cfg.difference.high,
+            pointText: signed(cfg.difference.mean.value),
+            intervalText: cfg.difference.low === null ? '' : `[${signed(cfg.difference.low)}, ${signed(cfg.difference.high)}]` })) });
+        body.push(box);
+      }
+      // Fold by fold: one row per fold, one column per configuration (cited per-fold values).
+      const folds = Math.max(...configs.map(cfg => cfg.perFold.length));
+      const foldTable = ctx.components.valuesTable(null, { caption: t.foldsTitle,
+        columns: [{ key: 'fold', label: '' }, ...configs.map((cfg, i) => ({ key: `c${i}`, label: name(cfg) }))],
+        rows: Array.from({ length: folds }, (_, k) => Object.fromEntries([['fold', t.fold(int(ctx, k + 1))],
+          ...configs.map((cfg, i) => {
+            const v = cfg.perFold[k];
+            return [`c${i}`, v && v.value !== null ? { text: f3(v.value), cited: { resultId: s.resultId, path: v.path, value: v.value } } : ''];
+          })])) });
+      foldTable.setAttribute('data-selection-folds', String(folds));
+      body.push(ctx.el('details', { className: 'ht-details', 'data-fold-by-fold': true }, [
+        ctx.el('summary', { text: t.foldsTitle }), foldTable]));
+      const asked = configs.filter(cfg => questions[cfg.slot]);
+      if (asked.length) {
+        body.push(ctx.el('div', { className: 'ht-ev-questions', 'data-variant-questions': String(asked.length) }, [
+          ctx.el('p', { className: 'ht-sub', text: t.questionsTitle }),
+          ctx.el('ul', {}, asked.map(cfg => ctx.el('li', { 'data-variant-question': cfg.slot }, [
+            ctx.el('strong', { text: `${name(cfg)} · ` }), ctx.el('q', { 'data-quoted': true, text: questions[cfg.slot] })]))),
+        ]));
+      }
+      if (pick) {
+        const picked = configs.find(cfg => cfg.slot === pick);
+        const best = configs.find(cfg => cfg.slot === s.best);
+        finding = [t.pick(picked ? name(picked) : pick), ' ',
+          s.best === pick || !best ? t.pickIsBest : t.pickNotBest(name(best))];
+      }
+      if (s.optimism && s.optimism.estimate.value !== null) {
+        body.push(ctx.el('p', { 'data-selection-optimism': true }, [t.optimism, cite(f3(s.optimism.estimate.value), s.optimism.estimate),
+          t.optimismOf(metric)]));
+      }
+    }
+    if (s && s.advice && s.advice.texts && (configs.length || s.advice.code === 'not_available')) {
+      const stop = s.advice.stop;
+      body.push(ctx.el('div', { className: `ht-note ${stop ? 'ht-note-accent' : ''}`.trim(), 'data-selection-advice': s.advice.code || '' }, [
+        configs.length ? ctx.components.chip(stop ? 'accent' : 'neutral', stop ? t.adviceStop : t.adviceGo) : null,
+        engineSentence(ctx, s.advice.texts)]));
+    } else if (!s) {
+      body.push(ctx.el('p', { className: 'muted', 'data-selection-pending': true, text: t.noEvaluation }));
+    }
+    const why = [t.budgetWhy, budget && budget.legacy ? t.budgetLegacy : null,
+      s && s.oneSe ? engineSentence(ctx, s.oneSe.texts) : null,
+      s && s.optimism ? engineSentence(ctx, s.optimism.texts) : null,
+      s && s.note && configs.length ? ctx.components.engineText(s.note, { lang: 'en', tag: 'p' }) : null,
+      s && (s.oneSe || s.optimism) ? ctx.el('p', { className: 'muted' }, [`${t.sources}: `,
+        [s.oneSe && s.oneSe.source, s.optimism && s.optimism.source].filter(Boolean).join(' · ')]) : null];
+    return ctx.components.card({
+      eyebrow: s && s.folds ? t.eyebrow(int(ctx, s.folds), metric) : t.eyebrowNoFolds,
+      title: t.title, titleId: 'ht-ev-sel-h',
+      right: budget ? ctx.components.chip(budget.used >= budget.max ? 'needs' : 'neutral', t.budgetChip(int(ctx, budget.used), int(ctx, budget.max)),
+        { 'data-budget-chip': true }) : null,
+      body, finding, why,
+      source: s ? { activity: s.activity, id: s.resultId } : null,
+      className: 'ht-ev-selection', attrs: { 'data-ev': 'selection' },
+    });
+  }
+
+  function familiesCard(ctx, model, task) {
+    const t = T().families;
+    const trials = ctx.data('trials');
+    const f = trials && trials.model ? trials.model.families : null;
+    if (!f) return null;
+    const p3 = x => (x === null ? '' : x < 0.001 ? 'p < 0.001' : `p = ${ctx.format.number(x, 'f3')}`);
+    const body = [];
+    if (f.flags.length) {
+      body.push(ctx.el('p', { className: 'ht-sub', text: t.flagsTitle }));
+      const slope = f.checks && f.checks.calibrationSlope;
+      body.push(ctx.el('ul', { className: 'ht-ev-flags', 'data-family-flags': String(f.flags.length) }, f.flags.map(x => {
+        const feature = x.feature || '';
+        const text = x.check === 'nonlinearity' ? t.flag.nonlinearity(feature, p3(x.pValue))
+          : x.check === 'interaction' ? t.flag.interaction(feature, p3(x.pValue))
+            : x.check === 'calibration_slope' ? t.flag.calibration_slope(ctx.format.number(x.slope ?? (slope && slope.slope), 'f2'),
+              ctx.format.number(slope && slope.band[0] !== undefined ? slope.band[0] : 0.8, 'f1'),
+              ctx.format.number(slope && slope.band[1] !== undefined ? slope.band[1] : 1.2, 'f1'))
+              : t.flag.other(feature);
+        return ctx.el('li', { 'data-family-flag': x.check, text });
+      })));
+    } else {
+      body.push(ctx.el('p', { 'data-no-family-evidence': f.checked ? 'checked' : 'not_checked', text: f.checked ? t.noEvidence : t.notChecked }));
+    }
+    const listed = new Set(f.shortlist);
+    body.push(ctx.el('p', { className: 'ht-sub', text: t.catalogueTitle }));
+    body.push(ctx.el('ul', { className: 'ht-ev-catalogue', 'data-family-catalogue': f.families.length }, f.families.map(x => {
+      const status = x.excluded ? ['error', t.status.excluded] : x.default ? ['ok', t.status.default]
+        : listed.has(x.family) ? ['accent', x.motivated ? t.status.motivated : t.status.shortlisted] : ['neutral', t.status.notListed];
+      return ctx.el('li', { 'data-family': x.family, 'data-shortlisted': listed.has(x.family) ? 'true' : 'false' }, [
+        ctx.el('strong', { text: t.names[x.family] || x.family }),
+        x.interpretability ? ctx.el('span', { className: 'muted', text: ` · ${t.kinds[x.interpretability] || ''} ` }) : ' ',
+        ctx.components.chip(status[0], status[1])]);
+    })));
+    if (f.dataContingent) body.push(ctx.el('p', { className: 'ht-note ht-note-warn', 'data-family-contingent': true, text: t.dataContingent }));
+    const checks = f.checks;
+    const names = list => (list.length ? list.join(', ') : t.nothing);
+    const why = [t.why, checks ? t.checked(names(checks.nonlinearity.map(x => x.feature)), names(checks.interaction.map(x => x.feature))) : null];
+    return ctx.components.card({
+      eyebrow: t.eyebrow, title: t.title, titleId: 'ht-ev-fam-h',
+      right: f.recommendation ? ctx.components.chip(f.recommendation === 'stay_linear' ? 'ok'
+        : f.recommendation === 'compare_nonlinear' ? 'accent' : 'stale', t.chips[f.recommendation], { 'data-family-recommendation': f.recommendation }) : null,
+      body, finding: engineSentence(ctx, f.texts, { 'data-shortlist-text': f.recommendation || '' }, 'span'), why,
+      source: f.source ? { activity: task === 'regression' ? 'diag.regression' : 'diag.binary', id: f.source } : null,
+      className: 'ht-ev-families', attrs: { 'data-ev': 'families' },
+    });
+  }
+
+  /** The term of an EBM in words ("age & balance" is an interaction of two columns). */
+  function termName(term) {
+    const parts = String(term).split(' & ');
+    return parts.length === 2 ? T().family.interaction(parts[0], parts[1]) : String(term);
+  }
+
+  function shapeFigure(ctx, fit, term) {
+    const t = T().family;
+    const sc = x => ctx.format.number(x, 'f2');
+    const box = ctx.el('div', { 'data-family-shape': term.term });
+    const shape = term.shape;
+    if (shape.type === 'nominal') {
+      intervals(ctx, box, { title: t.nominal(term.term), zero: true,
+        rows: shape.points.map(p => ({ label: p.value, point: p.score, low: null, high: null,
+          pointText: `${p.score > 0 ? '+' : ''}${sc(p.score)}`, intervalText: '' })) });
+      return box;
+    }
+    // A step function: each bin's score held from its lower to its upper value.
+    const pts = shape.points.flatMap(p => [{ x: p.from, y: p.score, label: '' }, { x: p.to, y: p.score, label: '' }]);
+    const xs = pts.map(p => p.x);
+    const ys = pts.map(p => p.y);
+    const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+    const [y0, y1] = [Math.min(0, ...ys), Math.max(0, ...ys)];
+    const pad = (y1 - y0) * 0.08 || 0.1;
+    const nf = v => ctx.format.number(v, Math.abs(x1 - x0) >= 100 ? 'int' : 'f1');
+    ctx.components.curve(box, { title: t.shapeTitle(term.term), xDomain: [x0, x1 === x0 ? x0 + 1 : x1],
+      yDomain: [y0 - pad, y1 + pad], xTicks: [x0, (x0 + x1) / 2, x1].map(v => ({ value: v, text: nf(v) })),
+      yTicks: [y0, 0, y1].filter((v, i, a) => a.indexOf(v) === i).map(v => ({ value: v, text: sc(v) })),
+      xLabel: t.shapeX, yLabel: t.shapeY, points: pts,
+      columns: [{ key: 'from', label: t.columns.from }, { key: 'to', label: t.columns.to }, { key: 'score', label: t.columns.score }],
+      rows: shape.points.map(p => ({ from: nf(p.from), to: nf(p.to),
+        score: { text: sc(p.score), cited: { resultId: fit.resultId, path: p.path, value: p.score } } })) });
+    return box;
+  }
+
+  function familyFitCard(ctx, fit, task) {
+    const t = T().family;
+    const k = T().configs;
+    const name = k.family[fit.family] || k.variant;
+    const slot = cap1(fitLabel(task, fit.slot));
+    const imp = x => ctx.format.number(x, 'f3');
+    const body = [];
+    if (fit.kind === 'ebm_terms') {
+      const top = Math.max(0, ...fit.terms.map(x => x.importance.value || 0));
+      const box = ctx.el('div', { 'data-family-importance': fit.terms.length });
+      ctx.components.bars(box, { title: t.importance(int(ctx, fit.terms.length), int(ctx, fit.total)), max: top,
+        items: fit.terms.map(x => ({ label: termName(x.term), value: x.importance.value, valueText: imp(x.importance.value),
+          cited: { resultId: fit.resultId, path: x.importance.path, value: x.importance.value } })) });
+      body.push(box);
+      const shaped = fit.terms.filter(x => x.shape);
+      if (shaped.length) body.push(shapeFigure(ctx, fit, shaped[0]));
+      if (shaped.length > 1) {
+        body.push(ctx.el('details', { className: 'ht-details', 'data-more-shapes': shaped.length - 1 }, [
+          ctx.el('summary', { text: t.moreShapes }), ...shaped.slice(1).map(x => shapeFigure(ctx, fit, x))]));
+      }
+    } else {
+      const top = Math.max(0, ...fit.columns.map(x => x.importance.value || 0));
+      const box = ctx.el('div', { 'data-family-importance': fit.columns.length });
+      ctx.components.bars(box, { title: t.permutation(metricName(fit.metric), int(ctx, fit.columns.length), int(ctx, fit.total)), max: top,
+        items: fit.columns.map(x => ({ label: x.column, value: Math.max(0, x.importance.value || 0), valueText: imp(x.importance.value),
+          cited: { resultId: fit.resultId, path: x.importance.path, value: x.importance.value } })) });
+      body.push(box);
+      if (fit.repeats !== null) body.push(ctx.el('p', { className: 'muted', text: t.repeats(int(ctx, fit.repeats)) }));
+    }
+    const why = [fit.note ? ctx.components.engineText(fit.note, { lang: 'en', tag: 'p' }) : null,
+      fit.kind === 'ebm_terms' && fit.importance ? ctx.components.engineText(fit.importance, { lang: 'en', tag: 'p' }) : null,
+      fit.kind === 'ebm_terms' && fit.scoreScale ? ctx.components.engineText(fit.scoreScale, { lang: 'en', tag: 'p' }) : null,
+      fit.kind !== 'ebm_terms' && fit.definition ? ctx.components.engineText(fit.definition, { lang: 'en', tag: 'p' }) : null];
+    return ctx.components.card({
+      eyebrow: t.eyebrow(slot, name), title: fit.kind === 'ebm_terms' ? t.ebmTitle : t.hgbTitle, titleId: `ht-ev-fam-${fit.slot.replace(/[^a-z0-9]/g, '-')}`,
+      body, why, source: { activity: 'fit.variant', id: fit.resultId },
+      className: 'ht-ev-family-fit', attrs: { 'data-ev': 'family-fit', 'data-family-fit': fit.family || '', 'data-slot': fit.slot },
+    });
+  }
+
+  function trialCards(ctx, model, task) {
+    return [selectionCard(ctx, model, task), familiesCard(ctx, model, task),
+      ...(model.familyFits || []).map(fit => familyFitCard(ctx, fit, task))].filter(Boolean);
+  }
+
   // --- diagnostics (WP-B4; CLI-CONTRACT §13, CLI-CONTRACT-COMPANION §14) ------------------
   //
   // Development diagnostics (`diag.binary`, `diag.regression`: candidate and variant) and the
@@ -890,7 +1161,9 @@
     const stale = summary && !ctx.fresh(d);
     if (stale) root.appendChild(ctx.el('p', { className: 'muted', role: 'status', 'data-updating': true, text: c.updating }));
     // WP-B5: the final test and the ledger first, development and final evidence apart.
+    // v0.3 (WP-K): the variants compared, the family shortlist, each family's diagnostics.
     const first = [finalTestCard(summary, model, ctx), ledger(ctx, model), developmentSection(ctx, model, task),
+      ...trialCards(ctx, model, task),
       finalEvidenceSection(ctx, model, summary, task), diagnosticsSection(ctx, model, summary, task)].filter(Boolean);
     for (const node of first) root.appendChild(node);
     root.appendChild(ctx.el('div', { className: `ht-ev-grid${stale ? ' ht-pending' : ''}` }, [
@@ -904,7 +1177,8 @@
   HT.register('evidence', {
     tab: 'evidence',
     stage: 'v2',
-    views: [],
+    // v0.3 (WP-K): `trials` (the full view: the live budget and the family shortlist).
+    views: ['trials'],
     render,
     onMessage(m, ctx) {
       if (m.type === 'navigate' && m.tab === 'evidence' && m.kind === 'result' && RID.test(m.id)) {

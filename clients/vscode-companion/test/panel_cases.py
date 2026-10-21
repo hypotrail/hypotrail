@@ -2,7 +2,8 @@
 
 ``load_views(model, payload)`` builds the models of the captured payloads of the real engine
 (``test/fixtures/captured``): the split Bank study (``binary``), the cross-validated Bank study
-whose final test was opened (``cv``), and Auto MPG (``regression``). ``open_case`` opens the
+whose final test was opened (``cv``), the cross-validated Bank study with three variants
+(``families``, v0.3 WP-K), and Auto MPG (``regression``). ``open_case`` opens the
 panel on one of them under a theme of ``themes.py``, at a width, in a language, with every
 view's read delivered. The page scripts below are the structural probes of the gate
 (``test_webview_gate.py``). This is not a VS Code session.
@@ -75,17 +76,23 @@ STYLE_ATTRS = """() => [...document.querySelectorAll('#app [style]')].map(n => n
 
 def load_views(model, payload) -> dict:
     out = {}
-    for key, s in [('binary', 'summary.binary'), ('regression', 'summary.regression'), ('cv', 'summary.binary.cv')]:
+    for key, s in [('binary', 'summary.binary'), ('regression', 'summary.regression'), ('cv', 'summary.binary.cv'),
+                   ('families', 'summary.binary.families')]:
         out[f'summary.{key}'] = model('summary', f'captured/{s}')
-    for key, task, ev, dec in [('binary', 'binary', 'evidence.binary', 'decisions.binary'),
-                               ('regression', 'regression', 'evidence.regression', 'decisions.regression'),
-                               ('cv', 'binary', 'evidence.binary.cv', 'decisions.binary.cv')]:
+    # v0.3 (WP-K): `families` is the cross-validated Bank study with three variants (a stronger
+    # penalty, an EBM, gradient boosting); `trials` is each study's full view at that point.
+    for key, task, ev, dec, view in [
+            ('binary', 'binary', 'evidence.binary', 'decisions.binary', 'status.binary'),
+            ('regression', 'regression', 'evidence.regression', 'decisions.regression', 'status.regression'),
+            ('cv', 'binary', 'evidence.binary.cv', 'decisions.binary.cv', 'status.binary.cv'),
+            ('families', 'binary', 'evidence.binary.families', 'decisions.binary.families', 'status.binary.families')]:
         out[f'evidence.{key}'] = model('evidence', f'captured/{ev}')
         out[f'eda.{key}'] = model('eda', f'captured/{ev}')
         out[f'whatif.{key}'] = model('whatif', f'captured/{ev}')
         out[f'decisions.{key}'] = model('decisions', f'captured/{dec}')
         out[f'data.{key}'] = model('data', f'captured/data.{task}')
         out[f'explain.{key}'] = model('explain', f'captured/explain.{task}')
+        out[f'trials.{key}'] = model('trials', f'captured/{view}')
     out['raw.evidence.binary'] = payload('captured/evidence.binary')
     out['raw.summary.binary'] = payload('captured/summary.binary')
     return out
@@ -107,6 +114,6 @@ def open_case(open_panel, views, case='binary', theme='light-modern', width=900,
     if lang:
         # The toggle is UI state: press it as the junior would.
         panel.page.locator(f'[data-language="{lang}"]').click()
-    for view in ['decisions', 'evidence', 'eda', 'whatif', 'explain', 'data']:
+    for view in ['decisions', 'evidence', 'eda', 'whatif', 'explain', 'data', 'trials']:
         panel.view_data(view, views[f'{view}.{case}'])
     return panel

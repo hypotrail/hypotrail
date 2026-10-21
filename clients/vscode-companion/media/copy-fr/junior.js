@@ -42,7 +42,9 @@
     conclusion: "La conclusion dit ce que l'étude soutient, et ce qu'elle ne soutient pas.",
   })[id] || '';
 
-  const MODEL_NAMES = { 'fit.logistic': 'le modèle logistique', 'fit.linear': 'le modèle linéaire', 'fit.variant': 'la variante' };
+  const MODEL_NAMES = { 'fit.logistic': 'le modèle logistique', 'fit.linear': 'le modèle linéaire', 'fit.variant': 'la variante',
+    // v0.3 (WP-F1, WP-K): the second and third variants of a list value.
+    'fit.variant:2': 'la deuxième variante', 'fit.variant:3': 'la troisième variante' };
   const modelName = (slot, task) => (slot === 'fit.baseline'
     ? (regression(task) ? 'la référence moyenne' : 'la référence')
     : MODEL_NAMES[slot] || `le modèle ${str(slot).replace(/^fit\./, '').replace(/_/g, ' ')}`);
@@ -96,14 +98,26 @@
     return rest;
   }
 
+  const FAMILY_WORDS = { ebm: 'une Explainable Boosting Machine', hgb: 'le gradient boosting' };
+  function variantWords(v) {
+    if (!v || typeof v !== 'object') return null;
+    if (v.kind === 'regularisation') return v.strength === 'weak' ? 'une variante moins régularisée' : 'une variante plus régularisée';
+    if (v.kind === 'drop_group') return `le modèle sans le groupe « ${str(v.group)} »`;
+    if (v.kind === 'tuned') return 'la pénalité réglée par validation croisée imbriquée';
+    if (v.kind === 'family') return FAMILY_WORDS[v.family] || null;
+    return null;
+  }
+
   function variant(raw) {
     const v = parse(raw);
     if (!v || typeof v !== 'object') return null;
-    if (v.kind === 'regularisation') {
-      return v.strength === 'weak' ? 'Comparer avec une variante moins régularisée' : 'Comparer avec une variante plus régularisée';
+    if (Array.isArray(v.variants)) {
+      const words = v.variants.map(variantWords);
+      if (!words.length || words.some(w => !w)) return null;
+      return `Comparer avec ${words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} et ${words[words.length - 1]}`}`;
     }
-    if (v.kind === 'drop_group') return `Comparer avec le modèle sans le groupe « ${str(v.group)} »`;
-    return null;
+    const one = variantWords(v);
+    return one ? `Comparer avec ${one}` : null;
   }
 
   function finalTest(raw, task) {

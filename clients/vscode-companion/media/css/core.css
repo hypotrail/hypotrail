@@ -324,7 +324,7 @@ data[data-result-id] { text-decoration: none; }
 .ht-journey > li.ht-j-now::before { background: repeating-linear-gradient(90deg, var(--ht-accent) 0 60%, var(--ht-line-strong) 60%); }
 .ht-journey > li.ht-j-reopened::before { background: var(--ht-warn); }
 .ht-journey > li.ht-j-seal::before { background: var(--ht-seal); opacity: 0.45; }
-.ht-journey > li strong { display: block; color: var(--ht-fg); font-size: var(--t-meta); font-weight: 500; overflow-wrap: anywhere; }
+.ht-journey > li strong { display: block; color: var(--ht-fg); font-size: var(--t-meta); font-weight: 500; overflow-wrap: break-word; hyphens: auto; }
 .ht-journey > li.ht-j-now strong { font-weight: 700; }
 .ht-journey > li.ht-j-todo strong { color: var(--ht-muted); }
 

@@ -20,8 +20,11 @@ lib/cache.js            CLI payloads per read key and version (<revision>:<curre
 lib/handlers/<view>.js  {types, loads, commands, onReady}: one module per view group
 lib/models/<view>.js    pure payload -> model functions (to<Name>Model) + FIXTURES
                         (WP-A7: lib/models/data.js, the data card of the Data & EDA tab, read with `data`;
-                        WP-B5: lib/models/scenario.js, the case's teaching share, read with `status --json`)
-lib/refusals.js         refusal explanations (never suggest words)
+                        WP-B5: lib/models/scenario.js, the case's teaching share, read with `status --json`;
+                        v0.3 WP-K: lib/models/trials.js, the variant budget and the family shortlist, the
+                        same `status --json` read, cache key `view`)
+lib/refusals.js         refusal explanations (never suggest words), English and French (v0.3, WP-K)
+lib/l10n.js             the extension's own words (notifications, notices) in English and French (WP-K)
 lib/uri.js              deep-link parsing (a decoded query: study=<path as is>, CR.11) and result-id input (WP-U3)
 lib/bridge.js           the agent bridge's template, clipboard, guarded chat command (WP-U5)
 lib/localstore.js       the globalState schema and limits of spec §10 (WP-U5)

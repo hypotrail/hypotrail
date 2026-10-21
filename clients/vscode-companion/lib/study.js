@@ -11,9 +11,11 @@ const AGENT_FILE = path.join('.hypotrail', 'agent.json');
 const MAX_ARGV = 32;
 
 class StudyError extends Error {
-  constructor(code, message) {
+  // v0.3 (WP-K, R21): `messageFr`, the same message in French (the extension picks by language).
+  constructor(code, message, messageFr = null) {
     super(message);
     this.code = code;
+    this.messageFr = messageFr;
   }
 }
 
@@ -88,21 +90,26 @@ function readAgent(dir, fsImpl = fs) {
     record = JSON.parse(fsImpl.readFileSync(file, 'utf8'));
   } catch (e) {
     if (e && e.code === 'ENOENT') {
-      throw new StudyError('no_study', `No study here: ${file} does not exist. Create one with "hypotrail init".`);
+      throw new StudyError('no_study', `No study here: ${file} does not exist. Create one with "hypotrail init".`,
+        `Aucune étude ici : ${file} n'existe pas. Créez-en une avec « hypotrail init ».`);
     }
-    throw new StudyError('invalid_agent_file', `${file} is not valid JSON.`);
+    throw new StudyError('invalid_agent_file', `${file} is not valid JSON.`, `${file} n'est pas un JSON valide.`);
   }
   if (!record || typeof record !== 'object' || record.schema !== AGENT_SCHEMA) {
-    throw new StudyError('invalid_agent_file', `${file} is not a ${AGENT_SCHEMA} record.`);
+    throw new StudyError('invalid_agent_file', `${file} is not a ${AGENT_SCHEMA} record.`,
+      `${file} n'est pas un enregistrement ${AGENT_SCHEMA}.`);
   }
   const argv = record.cli && record.cli.argv;
   if (!validArgv(argv)) {
-    throw new StudyError('invalid_agent_file', `${file} has no valid cli.argv (a list of strings).`);
+    throw new StudyError('invalid_agent_file', `${file} has no valid cli.argv (a list of strings).`,
+      `${file} n'a pas de cli.argv valide (une liste de chaînes).`);
   }
   if (typeof record.study === 'string' && realpath(record.study, fsImpl) !== realpath(studyDir, fsImpl)) {
     throw new StudyError('study_moved',
       `This study was created at ${record.study} and is now at ${studyDir}. ` +
-      'Its recorded paths are wrong after a move; create a new study with "hypotrail init".');
+      'Its recorded paths are wrong after a move; create a new study with "hypotrail init".',
+      `Cette étude a été créée dans ${record.study} et se trouve maintenant dans ${studyDir}. ` +
+      'Ses chemins enregistrés sont faux après un déplacement ; créez une nouvelle étude avec « hypotrail init ».');
   }
   return { studyDir, argv: argv.slice(), how: (record.cli && record.cli.how) || null };
 }

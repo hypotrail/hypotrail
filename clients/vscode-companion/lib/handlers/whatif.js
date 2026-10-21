@@ -18,11 +18,11 @@ const { toWhatIfModel } = require('../models/whatif');
 const { toPolicyPreviewModel } = require('../models/preview');
 const { toDraftModel } = require('../models/draft');
 const { toScenarioModel } = require('../models/scenario');
+const { VIEW_KEY } = require('./evidence');
 
 const DEBOUNCE_MS = 300;
 const RULE = /^(threshold:(0(\.[0-9]+)?|1(\.0+)?)|capacity:[1-9][0-9]{0,6}|share:(0\.[0-9]*[1-9][0-9]*|1(\.0+)?))$/;
 const FIT_SLOT = /^fit\.[a-z_]+$/;
-const NOTHING = 'Nothing was recorded.';
 
 const sliders = new WeakMap();   // ctx -> {timer, latest (debouncing), queued (due), running}
 
@@ -42,12 +42,12 @@ async function pump(ctx, s) {
     try {
       argv = ctx.cli.previewPolicyArgv(ctx.agent, { rules: m.rules, intervals: m.intervals });
     } catch (e) {
-      ctx.post({ type: 'notice', politeness: 'assertive', text: `The preview could not be asked: ${e.message}.` });
+      ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('previewNotAsked', e.message) });
       continue;
     }
     const out = await ctx.read(previewKey(m.rules, m.intervals), argv, toPolicyPreviewModel, { group: 'preview' });
     if (!out.ok) {
-      ctx.post({ type: 'notice', politeness: 'assertive', text: `The preview could not be computed: ${out.message}` });
+      ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('previewFailed', out.message) });
       continue;
     }
     ctx.post({ type: 'preview_policy_result', seq: m.seq, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
@@ -103,12 +103,12 @@ async function readDraft(ctx, decisionId, value) {
 async function draft(message, ctx) {
   const { decisionId, value } = message;
   if (!valueOk(decisionId, value)) {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: `${value} is not a value the panel can draft. ${NOTHING}` });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('notDraftable', value) });
     return;
   }
   const out = await readDraft(ctx, decisionId, value);
   if (!out.ok) {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: `The draft could not be read: ${out.message}` });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('draftUnreadable', out.message) });
     return;
   }
   ctx.post({ type: 'draft_result', decisionId, value, revision: out.revision, ...(out.currency ? { currency: out.currency } : {}),
@@ -123,10 +123,11 @@ const loads = {
     model: toWhatIfModel,
   },
   // WP-B5: the full view holds `scenario_defaults` (the summary and the evidence do not);
-  // cached per version like any read. Engine request: carry it in the summary.
+  // cached per version like any read. Engine request: carry it in the summary. v0.3
+  // (WP-K): the Evidence tab's `trials` reads the same payload (key `view`, one process).
   scenario: {
     stage: 'v2',
-    key: () => 'scenario',
+    key: () => VIEW_KEY,
     argv: (cli, agent) => cli.viewArgv(agent),
     model: toScenarioModel,
   },

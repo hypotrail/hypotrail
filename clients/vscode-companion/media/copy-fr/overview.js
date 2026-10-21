@@ -68,6 +68,11 @@
     journeyTitle: 'Le plan',
     mapTitle: 'Le parcours',
     stepsDone: (done, total) => `${done} étapes sur ${total} faites`,
+    journeyLabels: {
+      discover_data: 'Données', prediction_time: 'Moment', feature_availability: 'Variables', split: 'Découpage',
+      success_criterion: 'Critère', train_eda: 'Exploration', preprocessing: 'Préparation', models: 'Modèles',
+      model_variant: 'Variantes', policy: 'Règle', model_choice: 'Choix', final_test: 'Test final', conclusion: 'Conclusion',
+    },
     reopenedWhy: "Une étape est revenue : une nouvelle proposition ou une décision modifiée vous demande de répondre de nouveau dans le chat. Les étapes suivantes restent telles quelles jusque-là.",
     guide: {
       eyebrow: 'À propos de ce panneau',

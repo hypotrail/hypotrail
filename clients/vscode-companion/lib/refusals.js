@@ -101,6 +101,89 @@ const OLDER_ENGINE_EXPORT = 'The study engine in this environment is older than 
   'revision check of an export (--expected-revision), so it exported nothing. Update the hypotrail engine of this ' +
   'environment, then export again.';
 
+// v0.3 (WP-K, R21): the same explanations in French ("vous", owner decision 2026-10-21).
+// `describe` returns both; the panel shows the one of its language. The engine's own
+// message stays verbatim, in the engine's language.
+const NOTHING_FR = "Rien n'a été enregistré.";
+
+const BY_REASON_FR = {
+  missing_user_words: 'Votre réponse était vide.',
+  bare_acknowledgement: 'Votre réponse prenait seulement acte de la proposition ; elle ne disait pas, avec vos mots, ce que vous décidez.',
+  negative_reply: "Votre réponse se lit comme un refus, une hésitation ou une réserve, elle n'a donc pas été prise pour une confirmation. Si vous n'êtes pas d'accord, dites-le dans le chat ou retirez la proposition.",
+  unrelated_reply: "Votre réponse ne se lit pas comme une réponse à cette proposition : elle ne l'approuve pas tout en en parlant.",
+  proposal_not_found: "Cette proposition n'existe plus.",
+  proposal_withdrawn: 'Cette proposition a été retirée.',
+  proposal_superseded: 'Une proposition plus récente a remplacé celle-ci.',
+  proposal_confirmed: 'Cette proposition est déjà confirmée.',
+  same_request: "Cette proposition ne peut pas être confirmée par la requête qui l'a créée.",
+  proposal_stale: 'Une décision sur laquelle repose cette proposition a changé depuis : il faut une nouvelle proposition.',
+  delegation_needs_basis: "Votre réponse confie le choix à l'assistant. Une délégation s'enregistre dans le chat, pas dans ce panneau.",
+  not_a_delegation: "Le moteur n'a pas lu cette réponse comme une délégation.",
+  restatement_not_default: "La proposition ne dit pas qu'elle est le défaut recommandé par l'assistant.",
+  delegation_not_given_at_this_pause: 'Cette décision demande vos propres mots ou une délégation donnée à cette pause, dans le chat.',
+  delegation_not_allowed: "Cette décision n'est jamais déléguée : elle s'enregistre seulement avec vos propres mots, dans le chat.",
+  question_reply: "Votre réponse pose une question, elle n'a donc pas été prise pour une confirmation. Posez-la d'abord dans le chat.",
+  conditional_reply: "Votre réponse pose une condition, garde une réserve ou n'accepte qu'une partie de la proposition, elle n'a donc pas été prise pour une confirmation. Réglez-le d'abord dans le chat.",
+  not_implemented: "Le moteur d'étude de cet environnement n'a pas encore cette commande.",
+};
+
+const BY_CODE_FR = {
+  stale_revision: "L'étude a changé après l'affichage du panneau. Le panneau a été actualisé : relisez la proposition avant de répondre.",
+  decision_on_hold: 'Cette décision est en suspens, avec vos propres mots. Levez la suspension dans le chat avant de confirmer.',
+  precondition_missing: "Une étape précédente doit d'abord être confirmée.",
+  dataset_changed: "Les fichiers du cas ou des données ont changé depuis la création de l'étude. Commencez une nouvelle étude.",
+  invalid_value: "La valeur proposée n'est pas valide pour cette décision.",
+  study_busy: "Une autre commande écrit dans l'étude. Réessayez dans un instant.",
+  idempotency_conflict: 'Cet identifiant de requête a déjà servi pour une autre requête.',
+  unknown_proposal: "Cette proposition n'existe pas.",
+  proposal_not_open: "Cette proposition n'est plus ouverte.",
+  read_only: 'Ce processus est en lecture seule (HYPOTRAIL_READ_ONLY=1).',
+  study_missing: "L'état de l'étude est manquant.",
+  integrity_error: "L'état de l'étude ne correspond pas à son empreinte. Ne modifiez pas `.hypotrail/` à la main.",
+  invalid_arguments: 'La CLI a refusé les arguments de cette requête.',
+  internal_error: 'La CLI a échoué de façon inattendue.',
+  unsupported_capability: "Le moteur d'étude ne prend pas en charge cette requête.",
+  export_target_exists: "Le dossier choisi contient déjà des fichiers, le moteur n'y a donc rien écrit. Choisissez un dossier vide ou un nouveau dossier.",
+  unknown_result: "L'étude n'a aucun résultat avec cet identifiant.",
+  unknown_decision: 'Le moteur ne connaît pas cette décision.',
+  literal_number_in_text: "Le moteur a trouvé dans le texte de la proposition un nombre qu'il ne peut relier à aucun résultat à jour.",
+  causal_or_forecast_wording: 'Le moteur a trouvé dans le texte de la proposition une formulation causale ou de prévision.',
+  misattributed_delegation: "Le moteur a trouvé dans le texte de la proposition un défaut recommandé attribué à l'analyste.",
+  interrupted_execution_pending: "Une exécution a une issue inconnue : le moteur ne lance plus rien tant que vous n'en avez pas pris acte avec vos mots (Vue d'ensemble, Santé).",
+  execution_in_progress: 'Le même calcul est déjà en cours.',
+  unknown_execution: 'Le moteur ne liste plus cette exécution comme interrompue.',
+  invalid_request: 'Le moteur a refusé la forme de cette requête.',
+  invalid_command: "Le moteur n'accepte pas cette requête.",
+  reason_required: "En mode entraînement, cette décision est un arbitrage : le moteur ne l'enregistre qu'avec votre raison, avec vos propres mots.",
+  paraphrase_required: "En mode entraînement, une confirmation dit avec vos propres mots ce que la proposition décide, pas seulement que vous êtes d'accord. Les lignes ci-dessous nomment ce que votre réponse ne dit pas encore.",
+  words_contradict_value: "Vos mots et la proposition ne s'accordent pas sur une variable, le moteur a donc arrêté la confirmation. Précisez dans le chat laquelle vous voulez dire.",
+  final_test_already_opened: "Le test final a déjà été ouvert. Il ne s'ouvre qu'une fois : un changement ultérieur est montré comme fait après, et n'est plus jamais mesuré dessus.",
+};
+
+const BY_CONTEXT_FR = {
+  run: {
+    stale_revision: "L'étude a changé après l'affichage du panneau. Le panneau a été actualisé : regardez de nouveau la liste avant de demander un graphique.",
+    precondition_missing: 'Une étape précédente du plan doit être faite avant que ce graphique puisse être calculé.',
+    invalid_value: "Le moteur n'accepte pas cette colonne pour ce graphique.",
+  },
+  acknowledge: {
+    stale_revision: "L'étude a changé après l'affichage du panneau. Le panneau a été actualisé : relisez l'exécution avant d'en prendre acte.",
+    missing_user_words: "Votre prise d'acte était vide.",
+    bare_acknowledgement: "Votre réponse prenait seulement acte de l'interruption ; elle ne disait pas, avec vos mots, ce que vous en savez.",
+    negative_reply: "Votre réponse se lit comme un refus ou une hésitation, elle n'a donc pas été prise pour une prise d'acte.",
+    unrelated_reply: "Votre réponse n'a aucun mot en commun avec l'exécution interrompue : elle ne peut pas se lire comme une prise d'acte.",
+  },
+  export: {
+    read_only: "Ce processus est en lecture seule (HYPOTRAIL_READ_ONLY=1), le moteur n'a donc rien exporté.",
+  },
+};
+
+const OLDER_ENGINE_EXPORT_FR = "Le moteur d'étude de cet environnement est plus ancien que ce panneau : il ne connaît pas " +
+  "la vérification de révision d'un export (--expected-revision), il n'a donc rien exporté. Mettez à jour le moteur " +
+  'hypotrail de cet environnement, puis exportez de nouveau.';
+const REFUSED = 'The engine refused this request.';
+const REFUSED_FR = 'Le moteur a refusé cette requête.';
+
 /** True for an older engine's refusal of `export --expected-revision` (CR.6). */
 function olderEngineExport(context, code, message) {
   return context === 'export' && code === 'invalid_arguments' && /--expected-revision/.test(message);
@@ -125,61 +208,97 @@ function describe(payload) {
   const details = error.details && typeof error.details === 'object' ? error.details : {};
   const reason = typeof details.reason === 'string' ? details.reason : null;
   const where = contextOf(payload, code, reason, details);
-  const context = BY_CONTEXT[where] || {};
-  const human = olderEngineExport(where, code, String(error.message || '')) ? OLDER_ENGINE_EXPORT
-    : (reason && context[reason]) || context[code] || (reason && BY_REASON[reason]) || BY_CODE[code] ||
-    'The engine refused this request.';
+  const older = olderEngineExport(where, code, String(error.message || ''));
+  const explain = (byContext, byReason, byCode, olderText, refused) => {
+    const context = byContext[where] || {};
+    return older ? olderText
+      : (reason && context[reason]) || context[code] || (reason && byReason[reason]) || byCode[code] || refused;
+  };
+  const human = explain(BY_CONTEXT, BY_REASON, BY_CODE, OLDER_ENGINE_EXPORT, REFUSED);
+  const humanFr = explain(BY_CONTEXT_FR, BY_REASON_FR, BY_CODE_FR, OLDER_ENGINE_EXPORT_FR, REFUSED_FR);
   return {
     code, reason,
     engineMessage: typeof error.message === 'string' ? error.message : '',
     human: `${human} ${NOTHING}`,
     details: summariseDetails(code, details),
+    // v0.3 (WP-K): the French panel's explanation and detail lines (the panel picks by language).
+    humanFr: `${humanFr} ${NOTHING_FR}`,
+    detailsFr: summariseDetails(code, details, 'fr'),
   };
 }
 
+const DETAIL_LINES = {
+  en: {
+    readByPanel: r => `Revision read by the panel: ${r}`,
+    current: r => `Current revision: ${r}`,
+    changedAt: (r, action, about) => `Changed at revision ${r}: ${action}${about ? ' (' + about + ')' : ''}`,
+    onHold: (id, words) => `On hold (${id}): "${words}"`,
+    missing: m => `Missing: ${m}`,
+    folder: p => `Folder: ${p}`,
+    notSaid: h => `Not said yet: ${h}`,
+    disagree: v => `Your words and the proposal disagree about ${v}`,
+    openedAt: r => `Opened at revision ${r}`,
+    unknownOutcome: (id, activity) => `Unknown outcome: ${id}${activity ? ' (' + activity + ')' : ''}`,
+  },
+  fr: {
+    readByPanel: r => `Révision lue par le panneau : ${r}`,
+    current: r => `Révision actuelle : ${r}`,
+    changedAt: (r, action, about) => `Modifié à la révision ${r} : ${action}${about ? ' (' + about + ')' : ''}`,
+    onHold: (id, words) => `En suspens (${id}) : « ${words} »`,
+    missing: m => `Manquant : ${m}`,
+    folder: p => `Dossier : ${p}`,
+    notSaid: h => `Pas encore dit : ${h}`,
+    disagree: v => `Vos mots et la proposition ne s'accordent pas sur ${v}`,
+    openedAt: r => `Ouvert à la révision ${r}`,
+    unknownOutcome: (id, activity) => `Issue inconnue : ${id}${activity ? ' (' + activity + ')' : ''}`,
+  },
+};
+
 /** A few safe, flat lines from the refusal details (the full payload stays in the CLI). */
-function summariseDetails(code, details) {
+function summariseDetails(code, details, lang = 'en') {
+  const L = DETAIL_LINES[lang] || DETAIL_LINES.en;
   const lines = [];
   if (code === 'stale_revision') {
-    if (Number.isInteger(details.expected_revision)) lines.push(`Revision read by the panel: ${details.expected_revision}`);
-    if (Number.isInteger(details.current_revision)) lines.push(`Current revision: ${details.current_revision}`);
+    if (Number.isInteger(details.expected_revision)) lines.push(L.readByPanel(details.expected_revision));
+    if (Number.isInteger(details.current_revision)) lines.push(L.current(details.current_revision));
     for (const change of Array.isArray(details.changes_since) ? details.changes_since.slice(0, 10) : []) {
       const params = (change && change.params) || {};
       const about = params.decision_id || params.proposal_id || params.note_id || '';
-      lines.push(`Changed at revision ${change && change.revision}: ${change && change.action}${about ? ' (' + about + ')' : ''}`);
+      lines.push(L.changedAt(change && change.revision, change && change.action, about));
     }
   }
   if (code === 'decision_on_hold') {
     for (const note of Array.isArray(details.notes) ? details.notes : []) {
-      lines.push(`On hold (${note && note.note_id}): "${note && note.user_words}"`);
+      lines.push(L.onHold(note && note.note_id, note && note.user_words));
     }
   }
   if (code === 'precondition_missing' && Array.isArray(details.missing)) {
     for (const m of details.missing.slice(0, 10)) {
-      lines.push(`Missing: ${typeof m === 'string' ? m : (m && (m.text || m.decision || m.id || JSON.stringify(m)))}`);
+      lines.push(L.missing(typeof m === 'string' ? m : (m && (m.text || m.decision || m.id || JSON.stringify(m)))));
     }
   }
-  if (code === 'export_target_exists' && typeof details.path === 'string') lines.push(`Folder: ${details.path}`);
+  if (code === 'export_target_exists' && typeof details.path === 'string') lines.push(L.folder(details.path));
   if (code === 'paraphrase_required' && Array.isArray(details.missing)) {
     for (const m of details.missing.slice(0, 10)) {
-      if (m && typeof m.hint === 'string') lines.push(`Not said yet: ${m.hint}`);
+      if (m && typeof m.hint === 'string') lines.push(L.notSaid(m.hint));
     }
   }
   if (code === 'words_contradict_value' && Array.isArray(details.warnings)) {
     for (const w of details.warnings.slice(0, 10)) {
-      if (w && typeof w.variable === 'string') lines.push(`Your words and the proposal disagree about ${w.variable}`);
+      if (w && typeof w.variable === 'string') lines.push(L.disagree(w.variable));
     }
   }
   if (code === 'final_test_already_opened' && details.opening && typeof details.opening === 'object') {
-    if (Number.isInteger(details.opening.revision)) lines.push(`Opened at revision ${details.opening.revision}`);
+    if (Number.isInteger(details.opening.revision)) lines.push(L.openedAt(details.opening.revision));
   }
   if (code === 'interrupted_execution_pending' && Array.isArray(details.interrupted)) {
     for (const e of details.interrupted.slice(0, 10)) {
       const id = typeof e === 'string' ? e : (e && e.execution_id);
-      if (id) lines.push(`Unknown outcome: ${id}${e && e.activity ? ' (' + e.activity + ')' : ''}`);
+      if (id) lines.push(L.unknownOutcome(id, e && e.activity));
     }
   }
   return lines.map(l => String(l));
 }
 
-module.exports = { describe, contextOf, BY_REASON, BY_CODE, BY_CONTEXT, NOTHING, OLDER_ENGINE_EXPORT };
+module.exports = { describe, contextOf, BY_REASON, BY_CODE, BY_CONTEXT, NOTHING, OLDER_ENGINE_EXPORT,
+  BY_REASON_FR, BY_CODE_FR, BY_CONTEXT_FR, NOTHING_FR, OLDER_ENGINE_EXPORT_FR };

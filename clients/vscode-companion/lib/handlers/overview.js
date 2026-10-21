@@ -40,7 +40,7 @@ function lineOf(target, resultId, read = file => fs.readFileSync(file, 'utf8')) 
 async function openArtifact(message, ctx) {
   const target = ctx.artifactPath(message.artifact);
   if (!ctx.exists(target)) {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: `${ARTIFACT_PATHS[message.artifact]} does not exist yet.` });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('artifactMissing', ARTIFACT_PATHS[message.artifact]) });
     return;
   }
   const options = {};
@@ -49,7 +49,7 @@ async function openArtifact(message, ctx) {
   if (message.resultId && message.artifact !== 'report') {
     const line = lineOf(target, message.resultId);
     if (line) options.line = line;
-    else ctx.post({ type: 'notice', politeness: 'polite', text: `${ARTIFACT_PATHS[message.artifact]} does not name this result; it opens at the top.` });
+    else ctx.post({ type: 'notice', politeness: 'polite', text: ctx.say('artifactTop', ARTIFACT_PATHS[message.artifact]) });
   }
   await ctx.openArtifact(message.artifact, target, options);
 }
@@ -114,11 +114,11 @@ async function openMarimo(message, ctx) {
   const name = message.artifact;
   const rel = ARTIFACT_PATHS[name];
   if (ctx.settings.reviewer && name === 'workbench') {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: 'Read-only reviewer mode: the workbench is not opened for editing. Nothing was started.' });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('reviewerWorkbench') });
     return;
   }
   if (!ctx.exists(ctx.artifactPath(name))) {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: `${rel} does not exist yet. Nothing was started.` });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('notebookMissing', rel) });
     return;
   }
   let engine = null;
@@ -131,17 +131,17 @@ async function openMarimo(message, ctx) {
   const spec = launch.launchFor(ctx.agent, name, engine);
   if (!spec) {
     ctx.post({ type: 'notice', politeness: 'assertive',
-      text: `The panel cannot build the Marimo command for ${rel} from this study's engine. Open the file, or ask the agent for the command. Nothing was started.` });
+      text: ctx.say('noMarimoCommand', rel) });
     return;
   }
   if (!ctx.host || typeof ctx.host.launchMarimo !== 'function') {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: 'This host cannot open a terminal. Nothing was started.' });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('noTerminal') });
     return;
   }
   const reused = await ctx.host.launchMarimo(spec);
   ctx.post({ type: 'notice', politeness: 'polite', text: reused
-    ? `The terminal "${spec.terminalName}" already runs ${rel}; it is shown again.`
-    : `Started "marimo ${spec.mode}" for ${rel} in the terminal "${spec.terminalName}". Stop it with Ctrl+C in that terminal.` });
+    ? ctx.say('terminalReused', spec.terminalName, rel)
+    : ctx.say('terminalStarted', spec.mode, rel, spec.terminalName) });
 }
 
 /** The header's study switcher: the extension shows the quick pick and reopens the panel. */

@@ -6,6 +6,7 @@
   'use strict';
   const regression = task => task === 'regression';
   HT.copy.decisions = {
+    trialsTitle: 'Before you answer: the trial budget and the family shortlist',
     waitingTitle: 'Waiting for your answer',
     nothingWaiting: 'Nothing is waiting for your answer. The assistant proposes decisions in the chat.',
     // v0 wording, kept at stage v0 (CA.11: v0 behaves as before).

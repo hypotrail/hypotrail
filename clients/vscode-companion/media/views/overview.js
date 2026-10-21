@@ -241,12 +241,18 @@
     const tone = status === 'done' ? 'ht-j-done' : current ? 'ht-j-now'
       : status === 'reopened' || status === 'needs_reconfirmation' ? 'ht-j-reopened'
         : step.id === 'final_test' ? 'ht-j-seal' : 'ht-j-todo';
+    // v0.3 (WP-K): a short label in the bar (no word broken at 420 px); the plan's title in
+    // the hover with the moment, and for screen readers.
+    const title = str(step.title);
+    const short = (c.journeyLabels && c.journeyLabels[step.id]) || title;
+    const hover = [title !== short ? title : null, momentTitle || null].filter(Boolean).join(' · ');
     return el('li', { className: `ov-step ov-step-${status} ${tone}`, 'data-step': step.id, 'data-status': step.status,
       'data-display-status': status, 'data-nav': `step:${step.id}`, 'aria-current': current ? 'step' : null,
-      'data-moment': momentTitle || null, title: momentTitle || null }, [
+      'data-moment': momentTitle || null, title: hover || null }, [
       el('span', { className: 'sr-only', 'data-mark-text': true, text: `${c.markText[status]}: ` }),
-      el('strong', { className: 'ov-step-title' }, [el('span', { className: 'ov-mark', 'aria-hidden': 'true', text: `${c.marks[status]} ` }),
-        str(step.title)]),
+      el('strong', { className: 'ov-step-title', 'data-step-label': short }, [el('span', { className: 'ov-mark', 'aria-hidden': 'true', text: `${c.marks[status]} ` }),
+        title !== short ? el('span', { 'aria-hidden': 'true', text: short }) : short,
+        title !== short ? el('span', { className: 'sr-only', text: title }) : null]),
       label ? el('span', { className: 'ov-sub', 'data-sub': true, text: label }) : null,
     ]);
   }

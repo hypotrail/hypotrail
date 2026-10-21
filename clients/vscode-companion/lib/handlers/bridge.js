@@ -9,6 +9,8 @@
 // the chat input without submitting (decision CA.8). Allowed in reviewer mode (§3.3).
 
 const bridge = require('../bridge');
+const NOTICE_KEYS = new Map([[bridge.COPIED, 'copied'], [bridge.INSERTED, 'inserted'], [bridge.FELL_BACK, 'fellBack'],
+  [bridge.FAILED, 'copyFailed']]);
 const { toExplainModel } = require('../models/explain');
 const { expectSchema, list, str } = require('../models/common');
 
@@ -39,7 +41,9 @@ async function askAgent(message, ctx) {
   const text = bridge.template({ studyDir: ctx.agent.studyDir, revision: snapshot ? snapshot.revision : null,
     about: message.about, label: bridge.labelOf(message.about, snapshot, extra), question: message.question });
   const done = await bridge.deliver(text, { mode: message.mode, chatInsert: ctx.settings.chatInsert === true, host: ctx.host });
-  ctx.post({ type: 'notice', politeness: done.channel ? 'polite' : 'assertive', text: done.notice });
+  // v0.3 (WP-K, R21): what happened, in the extension's language (lib/l10n.js).
+  const key = NOTICE_KEYS.get(done.notice);
+  ctx.post({ type: 'notice', politeness: done.channel ? 'polite' : 'assertive', text: key && ctx.say ? ctx.say(key) : done.notice });
   return done;
 }
 

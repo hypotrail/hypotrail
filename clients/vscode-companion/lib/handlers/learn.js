@@ -15,11 +15,6 @@ const { toExplainModel } = require('../models/explain');
 const { toSessionReportModel } = require('../models/session_report');
 const { createStore } = require('../localstore');
 
-const CANCELLED = 'No folder was chosen. Nothing was exported.';
-const STALE = 'The study changed since the panel showed it. Read the panel again, then export. Nothing was exported.';
-const NOT_LAST = 'That folder is not the last export of this panel. Nothing was opened.';
-const OFF = 'The learning layer is off (hypotrail.companion.learningLayer). Nothing was stored.';
-const UNKNOWN_ID = 'The learning layer does not know that item. Nothing was stored.';
 const WARNINGS = {
   report_not_current: 'the report was not current, so it is not in the pack',
   open_proposals: 'some proposals are still open',
@@ -56,7 +51,7 @@ function warningsText(codes) {
 
 async function learnSet(message, ctx) {
   if (!layerOn(ctx)) {
-    ctx.post({ type: 'notice', politeness: 'polite', text: OFF });
+    ctx.post({ type: 'notice', politeness: 'polite', text: ctx.say('learningOff') });
     return;
   }
   const store = storeOf(ctx);
@@ -74,7 +69,7 @@ async function learnSet(message, ctx) {
   if (message.key === 'seen') {
     const [scope, id] = message.id.split(':');
     const known = model && (scope === 'term' ? Boolean(model.terms[id]) : scope === model.task && Boolean(model.steps[id]));
-    if (!known) return ctx.post({ type: 'notice', politeness: 'polite', text: UNKNOWN_ID });
+    if (!known) return ctx.post({ type: 'notice', politeness: 'polite', text: ctx.say('learningUnknown') });
     const mine = session(ctx);
     if (!mine.seen.has(message.id)) {
       mine.seen.add(message.id);
@@ -86,7 +81,7 @@ async function learnSet(message, ctx) {
   }
   const question = model && model.predictions.find(q => q.id === message.id);
   if (!question || !question.choices.some(c => c.id === message.value)) {
-    ctx.post({ type: 'notice', politeness: 'polite', text: UNKNOWN_ID });
+    ctx.post({ type: 'notice', politeness: 'polite', text: ctx.say('learningUnknown') });
     return;
   }
   postState(ctx, await store.setPrediction(message.id, message.value));
@@ -98,11 +93,11 @@ async function learnSet(message, ctx) {
  */
 async function exportHandoff(message, ctx) {
   const snapshot = ctx.snapshot();
-  if (!snapshot || snapshot.revision !== message.revision) return ctx.invalid('W7', STALE, 'handoff');
+  if (!snapshot || snapshot.revision !== message.revision) return ctx.invalid('W7', ctx.say('exportStale'), 'handoff');
   const fallback = path.join(ctx.agent.studyDir, 'handoff');
   const parent = ctx.host && typeof ctx.host.pickFolder === 'function' ? await ctx.host.pickFolder(fallback) : null;
   if (!parent) {
-    ctx.post({ type: 'outcome', op: 'W7', kind: 'cancelled', target: 'handoff', message: CANCELLED });
+    ctx.post({ type: 'outcome', op: 'W7', kind: 'cancelled', target: 'handoff', message: ctx.say('exportCancelled') });
     return null;
   }
   const outcome = await ctx.write('W7', {
@@ -128,7 +123,7 @@ async function exportHandoff(message, ctx) {
 async function navigateExternal(message, ctx) {
   const last = session(ctx).lastExport;
   if (message.kind !== 'reveal_export' || !last || message.path !== last) {
-    ctx.post({ type: 'notice', politeness: 'assertive', text: NOT_LAST });
+    ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('notLastExport') });
     return;
   }
   await ctx.host.revealInOS(last);

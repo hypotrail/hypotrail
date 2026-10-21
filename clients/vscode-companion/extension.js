@@ -25,13 +25,20 @@ const launch = require('./lib/launch');
 const { createController } = require('./lib/controller');
 const { watchStudy } = require('./lib/watch');
 const { renderHtml } = require('./lib/html');
+const l10n = require('./lib/l10n');
 
 const COMMAND = 'hypotrail.companion.open';
 const REVIEWER_COMMAND = 'hypotrail.companion.openReviewer';
 const GO_TO_RESULT_COMMAND = 'hypotrail.companion.goToResult';
 const VIEW_TYPE = 'hypotrail.companion.study';
-const TRUST_MESSAGE = 'The Hypotrail companion runs the study CLI, so it needs a trusted workspace.';
-const NOT_IN_STAGE = 'This is not available in the current stage of the companion (hypotrail.companion.stage).';
+// v0.3 (WP-K, R21): the extension's words follow `hypotrail.companion.language`: `en`, `fr`,
+// else the open study's language, else VS Code's display language (lib/l10n.js).
+function lang() {
+  const study = current && current.controller && typeof current.controller.language === 'function'
+    ? current.controller.language() : null;
+  return l10n.resolve(flag.language(vscode), study, vscode.env && vscode.env.language);
+}
+const say = (key, ...args) => l10n.say(lang(), key, ...args);
 let current = null;   // {panel, controller, watcher, agent, reviewer}
 // The Marimo terminals this extension opened, per notebook file: one terminal per file is
 // reused while it is open (WP-A5, ADR 0004 "local launch").
@@ -57,7 +64,6 @@ function launchMarimo(agent, spec) {
   return false;
 }
 
-const PICK_FOLDER = 'Pick another folder...';
 
 /**
  * The study folder to open. `pick` (the study switch) always shows the quick pick. `want`
@@ -76,14 +82,14 @@ async function chooseStudy(pick = false, want = null) {
   if (found.length > 1 || (pick && found.length > 0)) {
     // One entry per study: its folder name, described by its path (§6.1.6).
     const items = found.map(dir => ({ label: path.basename(dir) || dir, description: dir, dir }));
-    if (pick) items.push({ label: PICK_FOLDER, dir: null });
+    if (pick) items.push({ label: say('pickFolder'), dir: null });
     const picked = await vscode.window.showQuickPick(items,
-      { title: 'Hypotrail: choose a study', placeHolder: 'A folder holding .hypotrail/agent.json' });
+      { title: say('chooseTitle'), placeHolder: say('choosePlaceholder') });
     if (!picked) return null;
     if (picked.dir) return picked.dir;
   }
   const uris = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false,
-    canSelectMany: false, openLabel: 'Open this study', title: 'Hypotrail: pick a study folder (it holds .hypotrail/agent.json)' });
+    canSelectMany: false, openLabel: say('openLabel'), title: say('openTitle') });
   return uris && uris[0] ? uris[0].fsPath : null;
 }
 
@@ -97,11 +103,11 @@ function close() {
 /** The flag and trust checks of every entry point (INV-10, INV-11); true when allowed. */
 function allowed() {
   if (!flag.isEnabled(vscode)) {
-    vscode.window.showInformationMessage(flag.DISABLED_MESSAGE);
+    vscode.window.showInformationMessage(say('disabled'));
     return false;
   }
   if (!vscode.workspace.isTrusted) {
-    vscode.window.showErrorMessage(TRUST_MESSAGE);
+    vscode.window.showErrorMessage(say('trust'));
     return false;
   }
   return true;
@@ -124,7 +130,7 @@ function host(context, agent) {
     },
     pickFolder: async defaultPath => {
       const uris = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, canSelectMany: false,
-        defaultUri: defaultPath ? vscode.Uri.file(defaultPath) : undefined, openLabel: 'Export here' });
+        defaultUri: defaultPath ? vscode.Uri.file(defaultPath) : undefined, openLabel: say('exportHere') });
       return uris && uris[0] ? uris[0].fsPath : null;
     },
     openFile: async (target, { line = null } = {}) => {
@@ -149,7 +155,8 @@ async function openPanel(context, { reviewer = false, pick = false, want = null 
   try {
     agent = study.readAgent(dir);
   } catch (e) {
-    vscode.window.showErrorMessage(e instanceof study.StudyError ? e.message : `Cannot open the study: ${e.message}`);
+    vscode.window.showErrorMessage(e instanceof study.StudyError ? (lang() === 'fr' && e.messageFr) || e.message
+      : say('cannotOpen', e.message));
     return null;
   }
   if (current && current.agent.studyDir === agent.studyDir && current.reviewer === reviewer) {
@@ -169,7 +176,7 @@ async function openPanel(context, { reviewer = false, pick = false, want = null 
   close();
 
   const settings = flag.settings(vscode, process.env, { forceReviewer: reviewer });
-  const panel = vscode.window.createWebviewPanel(VIEW_TYPE, settings.reviewer ? 'Hypotrail study (reviewer)' : 'Hypotrail study',
+  const panel = vscode.window.createWebviewPanel(VIEW_TYPE, settings.reviewer ? say('panelTitleReviewer') : say('panelTitle'),
     vscode.ViewColumn.Beside, {
       enableScripts: true, enableCommandUris: false, enableForms: false, retainContextWhenHidden: false,
       localResourceRoots: [],
@@ -239,21 +246,20 @@ function attach(context, mine, agent) {
 async function goToResult(context) {
   if (!allowed()) return null;
   if (!flag.stageAtLeast(flag.stage(vscode), 'v2')) {
-    vscode.window.showInformationMessage(NOT_IN_STAGE);
+    vscode.window.showInformationMessage(say('notInStage'));
     return null;
   }
-  const text = await vscode.window.showInputBox({ title: 'Hypotrail: go to a result',
-    prompt: 'The result id, or its first 8 or more characters, as the report shows it.' });
+  const text = await vscode.window.showInputBox({ title: say('goTitle'), prompt: say('goPrompt') });
   if (text === undefined || text === null) return null;
   const prefix = uri.resultIdInput(text);
   if (!prefix) {
-    vscode.window.showInformationMessage(uri.INVALID_LINK);
+    vscode.window.showInformationMessage(say('invalidLink'));
     return null;
   }
   const opened = current || await openPanel(context);
   if (!opened) return null;
   if (!opened.controller.hasCommand('go_to_result')) {
-    vscode.window.showInformationMessage(NOT_IN_STAGE);
+    vscode.window.showInformationMessage(say('notInStage'));
     return null;
   }
   return opened.controller.command('go_to_result', { prefix });
@@ -263,7 +269,7 @@ async function handleUri(context, link) {
   if (!allowed()) return null;
   const target = uri.parseDeepLink(link);
   if (!target) {
-    vscode.window.showInformationMessage(uri.INVALID_LINK);
+    vscode.window.showInformationMessage(say('invalidLink'));
     return null;
   }
   // A link naming another study opens it (a discovered one) or asks (the quick pick).
@@ -277,7 +283,7 @@ async function handleUri(context, link) {
 
 function activate(context) {
   const report = e => {
-    vscode.window.showErrorMessage(`Hypotrail companion: ${e.message}`);
+    vscode.window.showErrorMessage(say('failed', e.message));
     return null;
   };
   context.subscriptions.push(

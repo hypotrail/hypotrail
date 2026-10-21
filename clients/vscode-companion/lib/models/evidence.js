@@ -588,6 +588,132 @@ function diagnosticsOf(rawResults, task) {
   });
 }
 
+// --- v0.3 (WP-F1, WP-K): the selection among the variants and each family's diagnostics ----
+//
+// `selection` is the `model_selection` the current evaluation stored (CLI-CONTRACT §14,
+// "Selection"): every figure keeps its value path in that evaluation, so the panel cites a
+// registered number. The engine's sentences come in both languages (`texts`); the panel
+// shows the one of its language. `familyFits` are the `family_diagnostics` each current
+// variant fit registered (the EBM's terms and shapes, the boosting's permutation importance).
+
+const SELECTION_SLOTS = ['policy.evaluation', 'evaluate.regression'];
+const VARIANT_SLOTS = ['fit.variant', 'fit.variant:2', 'fit.variant:3'];
+const MAX_FAMILY_TERMS = 8;
+const MAX_SHAPES = 3;
+
+const textsOf = raw => ({ en: strOrNull(obj(raw).en), fr: strOrNull(obj(raw).fr) });
+const cell = (value, path) => ({ value: num(value), path });
+
+function selectionOf(rawResults) {
+  const r = rawResults.find(x => x && x.promoted === true && SELECTION_SLOTS.includes(str(x.slot)) && citable(x)) || null;
+  if (!r) return null;
+  const s = obj(r.values).model_selection;
+  if (!s || typeof s !== 'object') return null;
+  const at = (...parts) => pathOf('model_selection', ...parts);
+  const one = obj(s.one_se);
+  const opt = obj(s.optimism);
+  const adv = obj(s.advice);
+  const b = obj(s.budget);
+  return {
+    resultId: str(r.result_id),
+    activity: str(r.activity) || str(r.slot),
+    available: bool(s.available),
+    metric: strOrNull(s.metric),
+    direction: strOrNull(s.direction),
+    folds: int(s.folds),
+    best: strOrNull(s.best),
+    configurations: list(s.configurations).map((c, i) => {
+      const d = c && c.difference && typeof c.difference === 'object' ? c.difference : null;
+      const p = (...parts) => at('configurations', i, ...parts);
+      // What the variant changes, from its own fit (the stored selection has its kind only).
+      const fit = promotedOf(rawResults, str(c && c.slot));
+      const spec = fit ? obj(obj(fit.values).variant) : {};
+      return {
+        slot: str(c && c.slot), kind: strOrNull(c && c.kind), family: strOrNull(c && c.family),
+        strength: strOrNull(spec.strength), group: strOrNull(spec.group),
+        perFold: list(c && c.per_fold).map((v, k) => cell(v, p('per_fold', k))),
+        mean: cell(c && c.mean, p('mean')), se: cell(c && c.se, p('se')), sd: num(c && c.sd),
+        difference: d ? { against: strOrNull(d.against), mean: cell(d.mean, p('difference', 'mean')),
+          se: cell(d.se, p('difference', 'se')), low: num(d.low), high: num(d.high), withinNoise: bool(d.within_fold_noise) } : null,
+        withinOneSe: bool(c && c.within_one_se),
+      };
+    }).filter(c => c.slot),
+    oneSe: Object.keys(one).length ? { pick: strOrNull(one.pick), best: strOrNull(one.best),
+      bound: cell(one.bound, at('one_se', 'bound')), seOfBest: cell(one.se_of_best, at('one_se', 'se_of_best')),
+      texts: textsOf(one.texts), source: strOrNull(one.source) } : null,
+    optimism: Object.keys(opt).length ? { estimate: cell(opt.estimate, at('optimism', 'estimate')),
+      configurations: int(opt.configurations), texts: textsOf(opt.texts), source: strOrNull(opt.source),
+      note: strOrNull(opt.note) } : null,
+    advice: Object.keys(adv).length ? { code: strOrNull(adv.code), stop: bool(adv.stop), texts: textsOf(adv.texts),
+      noise: cell(adv.noise, at('advice', 'noise')) } : null,
+    budget: int(b.max) !== null && int(b.used) !== null ? { max: int(b.max), used: int(b.used), remaining: int(b.remaining),
+      declared: int(b.declared), legacy: bool(b.legacy) } : null,
+    trials: int(s.trials),
+    note: strOrNull(s.note),
+  };
+}
+
+function ebmOf(fd, at) {
+  const terms = list(fd.terms).map((t, i) => ({ t, i }))
+    .sort((a, b) => (num(b.t && b.t.importance) || 0) - (num(a.t && a.t.importance) || 0));
+  const shapeOf = (t, i) => {
+    const s = obj(t && t.shape);
+    if (s.type === 'continuous') {
+      return { type: 'continuous', points: list(s.points).map((x, k) => ({ from: num(x && x.from), to: num(x && x.to),
+        score: num(x && x.score), path: at('terms', i, 'shape', 'points', k, 'score') }))
+        .filter(x => x.from !== null && x.to !== null && x.score !== null) };
+    }
+    if (s.type === 'nominal') {
+      return { type: 'nominal', points: list(s.points).map((x, k) => ({ value: str(x && x.value), score: num(x && x.score),
+        path: at('terms', i, 'shape', 'points', k, 'score') })).filter(x => x.score !== null) };
+    }
+    return null;
+  };
+  const kept = terms.slice(0, MAX_FAMILY_TERMS);
+  let shapes = 0;
+  return {
+    kind: 'ebm_terms',
+    total: int(fd.n_terms) ?? list(fd.terms).length,
+    interactions: int(fd.interactions),
+    scoreScale: strOrNull(fd.score_scale),
+    importance: strOrNull(fd.importance),
+    note: strOrNull(fd.note),
+    terms: kept.map(({ t, i }) => {
+      const main = (t && t.kind) !== 'interaction';
+      const shape = main && shapes < MAX_SHAPES ? shapeOf(t, i) : null;
+      if (shape && shape.points.length) shapes += 1;
+      return { term: str(t && t.term), kind: main ? 'main' : 'interaction', importance: cell(t && t.importance, at('terms', i, 'importance')),
+        shape: shape && shape.points.length ? shape : null };
+    }),
+  };
+}
+
+function permutationOf(fd, at) {
+  const cols = list(fd.columns).map((c, i) => ({ c, i }))
+    .sort((a, b) => (num(b.c && b.c.importance) || 0) - (num(a.c && a.c.importance) || 0));
+  return {
+    kind: 'permutation_importance',
+    total: list(fd.columns).length,
+    metric: strOrNull(fd.metric),
+    repeats: int(fd.repeats),
+    definition: strOrNull(fd.definition),
+    note: strOrNull(fd.note),
+    columns: cols.slice(0, MAX_FAMILY_TERMS).map(({ c, i }) => ({ column: str(c && c.column),
+      importance: cell(c && c.importance, at('columns', i, 'importance')) })),
+  };
+}
+
+function familyFitsOf(rawResults) {
+  return VARIANT_SLOTS.map(slot => promotedOf(rawResults, slot)).filter(Boolean).map(r => {
+    const v = obj(r.values);
+    const fd = obj(v.family_diagnostics);
+    const at = (...parts) => pathOf('family_diagnostics', ...parts);
+    const body = fd.kind === 'ebm_terms' ? ebmOf(fd, at) : fd.kind === 'permutation_importance' ? permutationOf(fd, at) : null;
+    if (!body) return null;
+    return { slot: str(r.slot), resultId: str(r.result_id), family: strOrNull(v.family), ...body };
+  }).filter(Boolean);
+}
+
 function toEvidenceModel(payload) {
   const p = expectSchema(payload, SCHEMA);
   if (!Number.isInteger(p.revision)) throw new ModelError(`The CLI did not return a ${SCHEMA} document.`);
@@ -629,10 +755,13 @@ function toEvidenceModel(payload) {
     gain: task === 'binary' ? gainOf(rawResults) : null,
     finalEvaluation: finalEvaluationOf(rawResults, task),
     diagnostics: diagnosticsOf(rawResults, task),
+    selection: selectionOf(rawResults),
+    familyFits: familyFitsOf(rawResults),
   });
 }
 
 const FIXTURES = ['evidence.binary', 'evidence.binary.detail', 'evidence.regression',
-  'captured/evidence.binary.cv', 'captured/evidence.binary.cv.sealed', 'captured/evidence.regression.diag'];
+  'captured/evidence.binary.cv', 'captured/evidence.binary.cv.sealed', 'captured/evidence.regression.diag',
+  'captured/evidence.binary.families'];
 
 module.exports = { toEvidenceModel, chainFor, uncertaintyOf, side, citable, gainOf, pathOf, DIAG_SLOTS, FIXTURES, SCHEMA };
