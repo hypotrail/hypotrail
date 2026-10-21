@@ -105,7 +105,7 @@ def _splittable(cmd: str) -> bool:
 
 # v0.3 (WP-B, R14): the closed adoption question, in English or French.
 ADOPTION_QUESTION_RE = re.compile(
-    r"adopt\w*\s+(?:this|the|cette|la)\s+(?:decision|d[ée]cision)", re.I)
+    r"adopt\w*(?:-(?:vous|tu))?\s+(?:this|the|cette|la)\s+(?:decision|d[ée]cision)", re.I)
 ADOPTION_FLAG_RE = re.compile(r"--adoption-question\b|--channel[ =]choice\b")
 
 

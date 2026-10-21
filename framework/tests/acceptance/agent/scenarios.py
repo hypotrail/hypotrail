@@ -97,7 +97,8 @@ def run_scenario(sid: str, case: str, lang: str, out: Path, *, caps: runner.Caps
 
     def prepare(ws: Path) -> dict:
         info = study_setup.prepare_study(case, ws, hidden, lang=lang)
-        st = study_setup.Setup(ws, case, (s.get('setup') or {}).get('variant'))
+        st = study_setup.Setup(ws, case, (s.get('setup') or {}).get('variant'),
+                               diagnostics=(s.get('setup') or {}).get('diagnostics', True))
         st.advance(s['setup']['walkthrough_until'])
         setup_log.update({'stage': s['setup']['walkthrough_until'], 'calls': st.log,
                           'variant': st.variant})
@@ -451,7 +452,7 @@ NOT_FINAL_RE = re.compile(r"\b(?:no|not|n't|never|none|sealed|scell\w*|unopened|
                           # no claim ("Once the final test is opened, I'll ...", "Pour
                           # obtenir la performance finale, il faut ouvrir le test final",
                           # "pourraient être").
-                          r"once|when|will|would|could|might|quand|lorsque|faut|need\w*|"
+                          r"once|when|will|viendr\w*|arriver\w*|would|could|might|quand|lorsque|faut|need\w*|"
                           r"requires?|pourr\w*|ser(?:a|ait|ont|aient)|open\w*|ouvr\w*)\b"
                           r"|'ll\b", re.I)
 

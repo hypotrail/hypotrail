@@ -958,6 +958,9 @@ def test_wp_b6b_s13_checks_on_stub_runs():
                         'configuration within one standard error of the best under the '
                         'one-standard-error rule, as the model taken to the final test.')])
     assert sc.c_no_final_diagnostic_claim(rule)['ok']
+    # Round 2 (S13 Hotel fr), verbatim: a future reading is no claim.
+    assert sc.c_no_final_diagnostic_claim(_Stub([('q', 'La calibration sur le test final '
+                                                       "viendra au moment de l'ouverture.")]))['ok']
     claim = _Stub([('q', 'The calibration on the final test is good.')])
     assert not sc.c_no_final_diagnostic_claim(claim)['ok']
 
@@ -1077,6 +1080,24 @@ def test_wp_h_guided_confirmations_verbatim_after_the_closed_question():
         command='hypotrail decide confirm --proposal p_4 --user-words "oui je confirme"')
     r = gv.guided_confirmations(run, t2.events, gb.confirm_attempts(t2.events))
     assert not r['ok'] and r['refused_attempts'] and r['reason_or_paraphrase_refusals']
+
+
+def test_wp_h_the_closed_question_in_tu_and_vous_forms():
+    """The French register moves to "vous" (owner decision, 2026-10-20): both forms of the
+    closed question count, in every grader that looks for it."""
+    gv, gb = _gv(), _load('graders_b')
+    sc = _load('scenarios')
+    s6 = next(c for c in sc.scenario('S6')['checks'] if 'answer_mentions_any' in c)
+    import re as _re
+    for text in ('Est-ce que tu adoptes cette décision ?', 'Adoptes-tu cette décision ?',
+                 'Adoptez-vous cette décision ?', 'Est-ce que vous adoptez cette décision ?',
+                 'Do you adopt this decision?'):
+        assert gv.ADOPTION_RE.search(text) and gb.ADOPTION_QUESTION_RE.search(text), text
+        assert any(_re.search(p, text, _re.I) for p in s6['answer_mentions_any']['patterns'])
+    for text in ('Dites-moi avec vos propres mots ce que vous changez.',
+                 'Donnez-moi votre raison.', 'Pourquoi vous choisissez cette règle ?'):
+        assert not gv.asks_for_reason([text])['ok'], text
+    assert gv.asks_for_reason(["J'ai enregistré l'ouverture avec vos mots et votre raison."])['ok']
 
 
 def test_wp_h_r32_data_contingent_said_before_the_proposal():

@@ -332,7 +332,7 @@ def data_contingent_first(events: list[dict], final_texts: dict) -> dict:
         reply = final_texts.get(c['turn']) or ''
         said = CONTINGENT_TALK_RE.search(reply)
         quote = QUOTE_LINE_RE.search(reply)
-        question = re.search(r'adopt\w*\s+(?:this|the|cette|la)\s+d[ée]cision', reply, re.I)
+        question = re.search(r'adopt\w*(?:-(?:vous|tu))?\s+(?:this|the|cette|la)\s+d[ée]cision', reply, re.I)
         anchor = quote or question
         ok = bool(said) and (anchor is None or said.start() < anchor.start())
         cases.append({'turn': c['turn'], 'data_contingent': True, 'said': bool(said),
@@ -547,7 +547,7 @@ REFUSAL_TALK_RE = re.compile(
     r"wasn't recorded|(?:didn't|did not) (?:record|accept|go through|take)|"
     r"l'outil (?:a|n'a)|le moteur|the engine (?:refused|did not|didn't|would not|won't|"
     r"rejected|asks|needs|requires)|the tool (?:refused|did not|didn't)", re.I)
-ADOPTION_RE = re.compile(r'adopt\w*\s+(?:this|the|cette|la)\s+d[ée]cision', re.I)
+ADOPTION_RE = re.compile(r'adopt\w*(?:-(?:vous|tu))?\s+(?:this|the|cette|la)\s+d[ée]cision', re.I)
 
 
 def _words(text: str) -> int:

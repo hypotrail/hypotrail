@@ -530,11 +530,14 @@ class Setup:
     """Direct CLI driver that takes a study through the walkthrough stages."""
 
     def __init__(self, study: Path, case: str, variant: str | None = None,
-                 split: str = 'cv'):
+                 split: str = 'cv', diagnostics: bool = True):
         """``split``: ``cv`` (the engine's drafted cross-validation in a v0.2b study) or
-        ``holdout`` (the stratified 30 % validation split, still accepted by v0.2b)."""
+        ``holdout`` (the stratified 30 % validation split, still accepted by v0.2b).
+        ``diagnostics``: run the diagnostics the plan requires (WP-H); S13 turns it off,
+        since running them is what it tests."""
         self.study, self.case, self.variant, self.n = Path(study), case, variant, 0
         self.split = split
+        self.diagnostics = diagnostics
         self.junior = JUNIOR[case]
         self.log: list[dict] = []
 
@@ -568,6 +571,8 @@ class Setup:
 
     def run_required_diagnostics(self) -> None:
         """Run ``diag.binary``/``diag.regression`` when the engine's next action names them."""
+        if not self.diagnostics:
+            return
         na = self.view().get('next_action') or {}
         if str(na.get('activity') or '').startswith('diag.'):
             self.run(na['activity'])

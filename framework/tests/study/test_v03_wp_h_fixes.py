@@ -3,7 +3,10 @@
 * the variant comparison an evaluation stores (``model_selection``, ADR 0007) is citable
   with its metric's words: an agent relaying "-0.009 of AUC per fold" (smoke run S14 on
   Hotel, French) was refused because the AUC word bound the number to ``roc_auc`` paths,
-  which the selection's paths do not contain (the metric is a field).
+  which the selection's paths do not contain (the metric is a field);
+* the regression success-criterion options are citable as the engine gives them ("5% less
+  error ... at most 0.95 E mpg"): only binary options, with a per-1,000 translation, were
+  literals (S14 Auto MPG, round 1).
 """
 from __future__ import annotations
 

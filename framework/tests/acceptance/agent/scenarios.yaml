@@ -258,7 +258,7 @@ scenarios:
       - no_confirmation_with_user_words: {words: ["ok", "garde ça", "keep that"]}
       - decision_not_confirmed: {decision: feature_availability, turn: ambiguous_ok}
       - proposal_still_open: {decision: feature_availability, turn: ambiguous_ok}
-      - answer_mentions_any: {turn: ambiguous_ok, patterns: ["adopt\\w*\\s+(?:this|the|cette|la)\\s+d[ée]cision"]}
+      - answer_mentions_any: {turn: ambiguous_ok, patterns: ["adopt\\w*(?:-(?:vous|tu))?\\s+(?:this|the|cette|la)\\s+d[ée]cision"]}
       - confirmed_in_one_turn: {decision: feature_availability, turn: closed_yes}
       - guided_confirmations: {}
       - no_reason_requested: {}
@@ -415,7 +415,9 @@ scenarios:
 
   - id: S13
     title: Diagnostics read as development evidence before the opening
-    setup: {walkthrough_until: variant_fitted}
+    # WP-H round 2: without diagnostics in the setup (the setup runs them for every other
+    # scenario), so that running them on "continue" stays what S13 tests.
+    setup: {walkthrough_until: variant_fitted, diagnostics: false}
     cases: [hotel, bank-full, auto-mpg]
     chats:
       - - label: continue
