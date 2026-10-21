@@ -115,10 +115,17 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    guess confirms nothing. When they agreed before the proposal existed, propose it in
    their wording and ask one line that quotes them.
    - **Guided mode: the pause message.** The restatement as a quoted block (`> ...`, in
-     the junior's language), then one closed question, "Do you adopt this decision?"
-     ("Adoptez-vous cette décision ?"). With an interactive choice tool (Claude
-     Code: `AskUserQuestion`), offer three options in the junior's language: adopt ("J'adopte
-     cette décision"), change something, explain first. Without one, ask it in text.
+     the junior's language, present tense: "Vous excluez X parce que… ; vous gardez Y…"),
+     then one closed question, "Do you adopt this decision?" ("Adoptez-vous cette
+     décision ?"). The block is in the chat message itself, directly above the question,
+     every time: never ask without it, never replace it by a summary or by a pointer to the
+     panel, and never word a proposal in the past tense ("j'ai examiné… pour exclure"):
+     nothing is decided yet. For a list decision (feature availability), the block names
+     every column it excludes with its reason, and what it keeps. With an interactive
+     choice tool (Claude Code: `AskUserQuestion`), send that message first, then offer
+     three options in the junior's language: adopt ("J'adopte cette décision", its
+     description the decision in one line, e.g. "J'exclus les 4 colonnes connues après la
+     réservation"), change something, explain first. Without one, ask it in text.
      Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A
      typed yes to that question ("oui", "ok", "je confirme"): confirm with
      `--adoption-question`, only when your last message asked that question about this
