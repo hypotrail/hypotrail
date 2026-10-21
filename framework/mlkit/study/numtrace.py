@@ -618,8 +618,8 @@ class Pool:
             if isinstance(cand.get('per_1000'), Mapping):
                 self._literal('criterion_option', 'per_1000', cand['per_1000'])
             # v0.3 (WP-H): a regression option has no per-1,000 translation; its minimum
-            # ("5% less error") and the factor its text states ("at most 0.95 E mpg") are
-            # the engine's own words, refused before (S14 Auto MPG, round 1).
+            # ("5% less error") and the factor its text states ("at most 0.95 E <unit>") are
+            # the engine's own words, refused before (WP-H acceptance, round 1).
             self._literal('criterion_option', 'value', cand.get('value'))
             if isinstance(cand.get('text'), str):
                 self._literal('criterion_option', 'text', cand['text'])
