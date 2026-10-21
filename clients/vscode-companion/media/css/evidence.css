@@ -1,0 +1,65 @@
+/* Evidence view (COMPANION-ADVANCED §6.4). WP-U3. Tokens of tokens.css only; no inline style. */
+.ht-ev-grid { display: grid; grid-template-columns: minmax(220px, 340px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 720px) { .ht-ev-grid { grid-template-columns: 1fr; } }
+.ht-ev-filter { border: none; padding: 0; margin: 4px 0 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+.ht-ev-radio { display: inline-flex; align-items: center; gap: 4px; font-weight: 400; margin: 0 8px 0 0; }
+.ht-ev-list { list-style: none; padding: 0; margin: 0; }
+.ht-ev-list li { margin: 0; }
+.ht-ev-item { display: flex; justify-content: space-between; gap: 8px; width: 100%; margin: 0; text-align: left;
+  color: var(--ht-fg); background: none; border: none; border-bottom: 1px solid var(--ht-border); border-radius: 0; padding: 8px 6px; }
+.ht-ev-item[aria-pressed="true"] { background: var(--ht-done-bg); font-weight: 600; border-radius: 6px; }
+.ht-ev-item[data-current="false"] { color: var(--ht-muted); }
+.ht-ev-headline { color: var(--ht-muted); text-align: right; }
+.ht-ev-badge { margin-left: 6px; font-size: var(--t-cap); padding: 1px 6px; border-radius: 4px; background: var(--ht-button2-bg); color: var(--ht-button2-fg); }
+.ht-ev-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
+.ht-ev-head h2 { border: none; margin: 0; padding: 0; }
+.ht-ev-fullid summary { cursor: pointer; color: var(--ht-muted); }
+.ht-ev-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 12px 0; }
+.ht-ev-facts dt { color: var(--ht-muted); }
+.ht-ev-facts dd { margin: 0; }
+.ht-ev-actions { display: flex; flex-wrap: wrap; }
+.ht-evidence .ht-warn, .ht-whatif .ht-warn { background: var(--ht-warn-bg); border-color: var(--ht-warn-border); color: var(--ht-warn-fg); }
+.ht-evidence .ht-warn .title, .ht-whatif .ht-warn .title { font-weight: 600; }
+.ht-ev-uncertainty h4 { margin: 12px 0 4px; }
+.ht-ev-metric { margin-bottom: 8px; }
+.ht-chain { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ht-chain-item { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.ht-chain-arrow { color: var(--ht-muted); }
+.ht-chip { display: inline-flex; flex-direction: column; padding: 6px 10px; border: 1px solid var(--ht-border); border-radius: 8px; background: var(--ht-surface); }
+.ht-chip-self { border: 2px solid var(--ht-accent); font-weight: 600; }
+.ht-chip-warn { border-color: var(--ht-warn-border); background: var(--ht-warn-bg); }
+.ht-chip-status { font-size: var(--t-cap); color: var(--ht-muted); font-weight: 400; }
+.ht-ev-impacts { margin: 10px 0; padding: 8px 12px 8px 28px; background: var(--ht-quote-bg); border-radius: 8px; }
+.ht-ledger { width: 100%; }
+.ht-ledger-selection { background: var(--ht-warn-bg); color: var(--ht-warn-fg); }
+.ht-evidence .ht-pending { opacity: 0.6; }
+
+/* WP-B5: the final test first (sealed, opened, changed after, absent), the ledger in words,
+   development and final evidence apart, diagnostics. */
+.ht-ev-final { border-left: 4px solid var(--ht-st-sealed); }
+.ht-ev-final-opened { border-left-color: var(--ht-st-ok); }
+.ht-ev-final-changed, .ht-ev-final-interrupted { border-left-color: var(--ht-warn-border); }
+.ht-ev-final-absent { border-left-color: var(--ht-border); }
+.ht-ev-final-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.ht-ev-final-count { font-size: var(--t-title); }
+.ht-ev-partitions { margin: 6px 0; padding-left: 20px; }
+.ht-ev-before ul { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.ht-ev-before p { margin: 6px 0 0; }
+.ht-ev-chat { padding: 6px 10px; border-radius: 6px; background: var(--ht-quote-bg); border: 1px solid var(--ht-card-border); }
+.ht-ev-trials { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ht-border); }
+.ht-ev-trials .title { font-weight: 600; margin: 0; }
+.ht-ledger-final { background: var(--ht-quote-bg); }
+.ht-ledger-final td:first-child { border-left: 3px solid var(--ht-st-sealed); }
+.ht-ledger-words { font-size: var(--t-cap); }
+.ht-ev-list-head { margin: 10px 0 2px; font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ht-muted); }
+.ht-ev-development h4, .ht-ev-final-evidence h4, .ht-ev-diagnostics h4 { margin: 12px 0 4px; }
+.ht-ev-variant { margin-top: 8px; }
+.ht-ev-diag { margin: 8px 0 14px; }
+.ht-confusion td { min-width: 9em; }
+.ht-confusion caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+@media (forced-colors: active) {
+  .ht-ev-final, .ht-ledger-final td:first-child { border-left-color: CanvasText; }
+}
+@media (max-width: 600px) {
+  .ht-evidence table.ht-cardable caption { display: block; text-align: left; }
+}

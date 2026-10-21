@@ -1,0 +1,608 @@
+{
+ "about": {
+  "schema": "hypotrail.explain/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "explain",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.explain/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "task": "binary",
+  "terms": [
+   {
+    "id": "prediction_time",
+    "term": "Prediction time",
+    "definition": "The moment when the score is computed and acted on. Only information known at that moment may enter the model.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "leakage",
+    "term": "Leakage",
+    "definition": "A variable that carries information from after the prediction time. It makes a model look better on past data than it can be in use.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "feature_availability",
+    "term": "Feature availability",
+    "definition": "Whether a variable is known at the prediction time. It is a decision about the use case, not a property the data can prove.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "validation_partition",
+    "term": "Validation partition",
+    "definition": "Rows held apart from model fitting and used to compare models and choose a policy. Once used to choose, they are no longer independent evidence.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "stratified_split",
+    "term": "Stratified split",
+    "definition": "A random division of the rows that keeps the share of the positive outcome similar in the training and validation partitions.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "exposure",
+    "term": "Data exposure",
+    "definition": "The record of which rows were read, by which activity, and why. Changing the split does not make rows already seen unseen.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "distribution",
+    "term": "Distribution",
+    "definition": "How the values of one column spread over the rows, read as how often each value occurs or, for a measurement, its range, quartiles, and missing cells. Read on training rows only, it leaves the validation rows unexplored.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "class_imbalance",
+    "term": "Class imbalance",
+    "definition": "An outcome that occurs in a small share of the rows. A model can then look accurate by predicting the common outcome everywhere, so it is judged against the base rate.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "base_rate",
+    "term": "Base rate",
+    "definition": "The share of rows with the positive outcome. Any model must be compared with what this share alone would give.",
+    "example": {
+     "segments": [
+      {
+       "text": "In this study's training rows the positive outcome occurs in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+       "path": "rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " of rows."
+      }
+     ]
+    },
+    "example_status": "shown",
+    "steps": [
+     "train_eda"
+    ]
+   },
+   {
+    "id": "special_value",
+    "term": "Special value",
+    "definition": "A code that stands for something other than a measurement, such as \"never\" or \"unknown\". Treating it as an ordinary number distorts a model.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "baseline",
+    "term": "Baseline",
+    "definition": "The simplest reference model, a constant score equal to the training base rate. Keeping the baseline is a valid conclusion.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "logistic_regression",
+    "term": "Logistic regression",
+    "definition": "A model that turns a weighted sum of the features into a score between zero and one. It ranks rows; its scores are not calibrated probabilities unless that is checked.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "score",
+    "term": "Score",
+    "definition": "The number a model gives to each row to rank it. A higher score places the row earlier in the queue.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "policy",
+    "term": "Decision policy",
+    "definition": "The rule that turns scores into actions, either a threshold on the score or a fixed capacity of rows to act on.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "threshold",
+    "term": "Threshold rule",
+    "definition": "Act on every row whose score is at least the threshold. The number of actions then depends on the data.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "capacity",
+    "term": "Capacity rule",
+    "definition": "Act on a fixed number of the highest-scored rows, matching what the team can actually handle.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "precision",
+    "term": "Precision",
+    "definition": "Among the rows acted on, the share that turned out positive.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "recall",
+    "term": "Recall",
+    "definition": "Among all positive rows, the share the policy reached.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "volume",
+    "term": "Volume",
+    "definition": "How many rows the policy acts on, also shown as a share of the partition.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "tie_at_cut",
+    "term": "Tie at the cut",
+    "definition": "Rows with exactly the score at the cut-off. They are counted pro rata, as an expected value, rather than broken arbitrarily.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "paired_bootstrap",
+    "term": "Paired bootstrap",
+    "definition": "Resampling the same validation rows for both policies at once, so the interval describes their difference rather than each one separately.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "paired_difference",
+    "term": "Paired difference",
+    "definition": "The difference between two models measured on the same rows, such as the logistic model's precision minus the baseline's at one rule. Pairing removes the noise of which rows each model was measured on.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "confidence_interval",
+    "term": "Confidence interval",
+    "definition": "A range that shows how much a figure could move if other rows had been drawn. In this study it is a percentile interval of the paired bootstrap, so it describes the variability of these validation rows, not a guaranteed range for a future campaign.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "percentile_interval",
+    "term": "Percentile interval",
+    "definition": "The range between two percentiles of the bootstrap replicates. It shows sampling variability on these rows, not the performance of a future campaign.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "selection_on_validation",
+    "term": "Selection on validation",
+    "definition": "Choosing a model, a threshold, or a capacity by looking at validation results. The chosen figures are optimistic for that reason.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "documented_fact",
+    "term": "Documented fact",
+    "definition": "A statement backed by the dataset documentation, with its source.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "scenario_assumption",
+    "term": "Scenario assumption",
+    "definition": "A statement the scenario takes as given without evidence. It can be challenged and is never a decision.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "confirmed_decision",
+    "term": "Confirmed decision",
+    "definition": "A choice recorded with the user's own words in reply to a restatement. The engine records the words; it cannot verify who typed them.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "proposal",
+    "term": "Proposal",
+    "definition": "A restated choice waiting for the user's answer. It is not a decision until it is confirmed.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   },
+   {
+    "id": "stale_result",
+    "term": "Stale result",
+    "definition": "A result computed under decisions that have since changed. It is kept for the record but is not cited.",
+    "example": null,
+    "example_status": "none",
+    "steps": []
+   }
+  ],
+  "steps": {
+   "prediction_time": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Prediction time"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "feature_availability": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Feature availability"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "split": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Stratified split"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "train_eda": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Base rate"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "models": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Baseline"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "policy": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Decision policy"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   },
+   "conclusion": {
+    "concept": {
+     "segments": [
+      {
+       "text": "Confirmed decision"
+      }
+     ]
+    },
+    "context": {
+     "segments": [
+      {
+       "text": "In this study, the step applies to the case as declared."
+      }
+     ]
+    },
+    "method": {
+     "segments": [
+      {
+       "text": "The engine runs the activity and records what it read."
+      }
+     ]
+    },
+    "interpretation": {
+     "segments": [
+      {
+       "text": "Read the result with its partition and its limits."
+      }
+     ]
+    },
+    "consequence": {
+     "segments": [
+      {
+       "text": "The next step depends on your answer."
+      }
+     ]
+    },
+    "text_status": "shown"
+   }
+  },
+  "predictions": [
+   {
+    "id": "binary.train_eda.rare",
+    "step": "train_eda",
+    "question": "Is the positive outcome common or rare in the training rows?",
+    "choices": [
+     {
+      "id": "common",
+      "label": "Common"
+     },
+     {
+      "id": "rare",
+      "label": "Rare"
+     },
+     {
+      "id": "not_sure",
+      "label": "Not sure"
+     }
+    ],
+    "reveal": {
+     "segments": [
+      {
+       "text": "It occurs in "
+      },
+      {
+       "text": "11.5%",
+       "result_id": "744b2d1cffbbdb905b9492fca6de249283b2144d61faaeeab794134ae0878db8",
+       "path": "rate",
+       "value": 0.11536030341340076,
+       "format": "pct1"
+      },
+      {
+       "text": " of the training rows."
+      }
+     ]
+    },
+    "available": true
+   },
+   {
+    "id": "binary.policy.beats_baseline",
+    "step": "policy",
+    "question": "Will the logistic model's selection beat the baseline's precision at the evaluated rule?",
+    "choices": [
+     {
+      "id": "yes",
+      "label": "Yes"
+     },
+     {
+      "id": "no",
+      "label": "No"
+     },
+     {
+      "id": "not_sure",
+      "label": "Not sure"
+     }
+    ],
+    "reveal": null,
+    "available": false
+   }
+  ]
+ }
+}

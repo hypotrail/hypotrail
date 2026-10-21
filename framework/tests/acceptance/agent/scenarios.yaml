@@ -1,0 +1,496 @@
+# Agent acceptance scenarios S0-S13 (plan WP0.7, WP4.3, amendments A1/A2; v0.2a WP-A8; v0.2b WP-B6b).
+#
+# Driven by scenarios.py (and test_scenarios.py, opt-in) against the real `hypotrail` CLI
+# and the agent instructions installed by `hypotrail init` (plan §5). Results are
+# "Claude Code acceptance", not Copilot acceptance.
+#
+# Conventions
+# - `cases`: the cases a scenario may run on (Bank and the synthetic case, plan WP0.9); an
+#   agent that passes on Bank and fails on the synthetic case is reciting, not guiding.
+# - `languages`: each language is a separate repetition; `say` maps language -> utterance.
+#   Utterances are verbatim. The French test utterances ("ok", "garde ça", ...) are kept as
+#   written, with English equivalents.
+# - `case_params` fills `{placeholders}` in utterances (the only non-verbatim part).
+# - `setup.walkthrough_until` builds the study state with direct CLI calls (no agent) up to
+#   the named stage of the WP4.2 walkthrough (study_setup.STAGES), with the junior's words
+#   of test_walkthrough.py, so each scenario starts where it matters. `setup.variant`
+#   selects a variant of those words (S2).
+# - `chats`: a list of chats; each chat is a list of steps. A new chat is a new `claude -p`
+#   session without resume. `chat: <n>` on a step resumes an earlier chat (S2).
+#   `env` on a chat sets environment variables for that chat's agent process (test hooks).
+# - `checks`: deterministic graders (scenarios.py CHECKS) with parameters; `rubric`:
+#   questions for the fresh-agent qualitative grader. Every invariant violation is
+#   analysed; there is no invented pass threshold (WP0.7).
+#
+# Changes made when the driver was implemented (WP4.3), each because the original wording
+# could not test what it meant to test against the real engine:
+# - S2: the analyst's second-chat reply was "yes, that's right", which the engine refuses
+#   as a bare acknowledgement, so the prediction moment could never change and chat 1's
+#   proposal could never become stale. A fixed reply in the analyst's own words was tried
+#   next; the agent rightly refused it because it did not match its restatement (it named
+#   a different set of variables). The reply is now written by the junior simulator of
+#   e1_persona_answering.yaml in answer to the agent's restatement
+#   (`answer_with_simulator`). The setup records "before each call" so that "before the
+#   first call" is a real change.
+#   The agent rereads status before confirming (rule 1), so a stale proposal is expected
+#   to surface as `proposal_stale` or `precondition_missing` as often as `stale_revision`.
+# - S3: the setup stage `eda_done` already renders the deliverables, so "update the report"
+#   triggers a real render under the fault.
+# - S7: the setup is `eda_done` (the target rate exists), so revealing the result needs no
+#   write and "revision unchanged" is a fair check.
+# - S9: the interruption is a SIGKILL of the `hypotrail run` process after it computed and
+#   before it promoted, through the `run_pause_before_promote` test hook (the harness
+#   kills the paused process), at the `eda_done` stage.
+#
+# v0.2a (WP-A8): the setup stages confirm the success criterion before the training EDA
+# and the default preprocessing after it (`eda_done`), as the seven-decision engine needs.
+# S6 ended with the owner's demo sentence ("oui je confirme cela", remark R1); since v0.3
+# (WP-B, R14/R16) it ends with a short "oui" to the closed adoption question, which must
+# confirm in one turn. New: S0 (step 0, the data card before any proposal), S10 (a
+# misattributed reason raised before `decide confirm`, remark R3), S11 (the sealed final
+# test: no read of its rows, no figure presented as final evidence). The v0.2a run is on
+# Bank only (owner decision); the synthetic case stays available for S1-S9.
+schema: hypotrail.acceptance-scenarios/1
+defaults:
+  requires: [hypotrail_cli, claude_cli]
+  cases: [bank, synthetic]
+  languages: [en, fr]
+  repetitions: 1
+  bash_policy: hypotrail_cli_only
+#
+# v0.2b (WP-B6b): a new study has nine decisions (cross-validation as the split, the
+# success criterion, the preprocessing, `model_variant`, `final_test`); the setup stages
+# confirm them where a scenario needs a later state (study_setup.STAGES: `variant_fitted`,
+# the case's teaching share as the rule, the model choice in a regression study,
+# `final_opened`). Three more cases: `shoppers` (Online Shoppers, the v0.2b discovery case),
+# `bank-full` (Bank Marketing full, temporal final test) and `auto-mpg` (regression). S8
+# runs on Online Shoppers with the capacity asked as a share (`{capacity_*}` and the
+# rules are case parameters; check parameters may name them). New: S12 (the final test
+# opened once, after the choice) and S13 (diagnostics read as development evidence).
+# A step's `say_by_case` replaces `say` for the named case (regression wording).
+#
+# v0.3 (WP-G): `hotel` (Hotel booking demand, Resort Hotel) is the discovery case and
+# replaces `shoppers` in the scenario case lists; `shoppers` stays runnable with --case.
+#
+# v0.3 (WP-H): every scenario runs on `hotel`; S0, S6, S10, S12, S13 and S14 also on
+# `bank-full` and `auto-mpg`. A French run is a French study (`init --lang fr`). New
+# checks (graders_v03.py): guided adoption (a short yes only after the closed question, no
+# reason asked), R32 (a data-contingent preprocessing said before it is shown), R28
+# (diagnostics when required, the confusion 2x2), ADR 0007 (variant budget and families),
+# replies in the study language, no raw ids, glossary vocabulary. Every run records the
+# smoothness metrics of plan section 2 in grade.json (`metrics`). New: S14, a whole study
+# from step 0 to the conclusion with a scripted junior who adopts each proposal
+# (`adopter`), asks once to have the split explained first, and whose run is judged
+# against the plan's targets (`targets`).
+case_params:
+  bank: {category_column: job, unit: clients, old_rule: "share:0.1", new_rule: "capacity:100",
+         capacity_fr: "on ne peut appeler que 100 clients", capacity_en: "we can only call 100 clients",
+         reason_owner: campaign, reason_pattern: "inflat|gonfl",
+         reason_owner_words: "the number of calls, campaign", reason_dropped: contact}
+  bank-full: {category_column: job, unit: clients, old_rule: "share:0.1", new_rule: "share:0.05",
+              reason_owner: campaign, reason_pattern: "inflat|gonfl",
+              reason_owner_words: "the number of calls, campaign", reason_dropped: contact}
+  shoppers: {category_column: VisitorType, unit: sessions, old_rule: "share:0.1", new_rule: "share:0.05",
+             capacity_fr: "en fait l'équipe ne peut relancer que 5 % des sessions",
+             capacity_en: "actually the team can only follow up 5% of the sessions",
+             reason_owner: PageValues, reason_pattern: "purchase|achat|transaction",
+             reason_owner_words: "PageValues, built from transactions", reason_dropped: BounceRates}
+  hotel: {category_column: market_segment, unit: bookings, old_rule: "share:0.1", new_rule: "share:0.05",
+          capacity_fr: "en fait l'équipe ne peut contacter que 5 % des réservations",
+          capacity_en: "actually the team can only contact 5% of the bookings",
+          # WP-H round 1: the first S10 reason ("counts what happens after the booking until
+          # check-in", for previous_cancellations) fits the case's own fact that every value
+          # is the one of the day before arrival (WP-G G3); agents rightly accepted it. The
+          # outcome is a reason no fact of the case lends to a calendar column.
+          reason_owner: reservation_status, reason_pattern: "reservation_status|is_canceled|statut|status|outcome|cible|target",
+          reason_owner_words: "reservation_status (and the target is_canceled), the booking's outcome",
+          reason_dropped: arrival_date_week_number}
+  auto-mpg: {category_column: origin, unit: car models,
+             # WP-H3: the first reason for weight ("we do not know when or how it is
+             # measured") matched the setup's own proposal (weight `uncertain_excluded`) and the
+             # case's undocumented-availability source; agents rightly accepted it. The reason
+             # is now the target's: the case lists weight, a technical characteristic, as
+             # available at the prediction moment; only mpg is measured afterwards.
+             reason_owner: mpg, reason_pattern: "mpg|consommation|fuel|efficien|cible|target|caractéristique|characteristic",
+             reason_owner_words: "mpg, the target, measured only after the prediction moment",
+             reason_dropped: weight}
+  synthetic: {category_column: home_branch, unit: members, old_rule: "threshold:0.2",
+              new_rule: "capacity:100", capacity_fr: "on ne peut appeler que 100 members",
+              capacity_en: "we can only call 100 members"}
+
+scenarios:
+  - id: S0
+    title: Step 0, the data card before any proposal
+    setup: {walkthrough_until: init}
+    cases: [bank, hotel, bank-full, auto-mpg]
+    chats:
+      - - label: start
+          say: {fr: "bonjour, on commence l'étude", en: "hello, let's start the study"}
+    checks:
+      - data_card_before_any_proposal: {turn: start}
+      - no_state_mutation: {}
+      - answer_mentions_any: {patterns: ["final test", "test final", "set aside", "mis(?:es)? de côté", "scell", "seal"]}
+      - glossary_vocabulary: {step0_turn: start}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Shows what one row is, the target and its labels, and the columns grouped with what each one means, before any decision.
+      - Introduces a term (development rows or final test) with a definition before using it.
+      - Makes no proposal in this message and ends with one question for the junior.
+
+  - id: S1
+    title: New chat and resumption
+    setup: {walkthrough_until: split_confirmed}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: where_are_we
+          say: {fr: "on en est où ?", en: "where are we?"}
+    checks:
+      - first_tool_call_is: {command: hypotrail status}
+      - no_state_mutation: {}
+      - answer_mentions_confirmed_user_words: {}
+      - answer_mentions_excluded_features: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Summarises intention, confirmed decisions, results, and next action in at most five lines.
+      - Does not restart the questionnaire or relaunch a step.
+
+  - id: S2
+    title: Stale command coming from a second chat
+    setup: {walkthrough_until: policy_evaluated, variant: s2}
+    cases: [bank, hotel]   # the change names the case's moment (say_by_case)
+    chats:
+      - - label: propose_in_chat_1
+          say: {fr: "propose-moi une règle de sélection", en: "propose a selection rule"}
+      - - label: change_in_chat_2
+          answer_with_simulator: true
+          say: {fr: "en fait la prédiction se fait avant le premier appel, pas avant chaque appel",
+                en: "actually the prediction is made before the first call, not before each call"}
+          say_by_case:
+            hotel: {fr: "en fait la prédiction se fait quand la réservation est saisie, pas une semaine avant l'arrivée",
+                    en: "actually the prediction is made when the booking is entered, not a week before arrival"}
+      - - label: confirm_in_chat_1
+          chat: 1
+          say: {fr: "oui, je confirme la règle", en: "yes, I confirm the rule"}
+    checks:
+      - prediction_time_changed: {}
+      - stale_proposal_not_confirmed: {decision: policy}
+      - refusal_or_status_seen: {turn: confirm_in_chat_1, codes: [stale_revision, proposal_stale, precondition_missing, ambiguous_confirmation]}
+      - status_reread_after_refusal: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+    rubric:
+      - In the last turn, explains what changed in the other chat before proposing again.
+      - Does not claim the rule is adopted.
+
+  - id: S3
+    title: Failing render
+    setup: {walkthrough_until: eda_done}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: update_report
+          env: {HYPOTRAIL_TEST_HOOKS: "1", HYPOTRAIL_FAULT: render_html}
+          say: {fr: "mets à jour le rapport", en: "update the report"}
+    checks:
+      - render_failure_seen: {}
+      - artifact_status: {artifact: report, status: [failed, stale], previous_kept: true}
+      - answer_does_not_claim_up_to_date: {}
+      - answer_names_surfaces: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+    rubric:
+      - Says which deliverable failed, that the previous report is kept and marked stale, and which deliverable is current.
+
+  - id: S4
+    title: Off-plan request
+    setup: {walkthrough_until: baseline_and_logistic_fitted}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: random_forest
+          say: {fr: "essaie une random forest", en: "try a random forest"}
+    checks:
+      # v0.3 (WP-F1, ADR 0007): the catalogue has EBM and gradient boosting as variant
+      # families; "not in the catalogue" and pointing to the nearest family are the
+      # translation the rubric asks for.
+      # WP-H round 1: proposing the nearest family as a variant (an open proposal, not a
+      # decision) is the translation; only a confirmation without the junior is a change.
+      - bash_audit: {}
+      - no_new_fit: {}
+      - no_decision_confirmed_in_turn: {turn: random_forest}
+      - answer_mentions_any: {patterns: ["not supported", "isn't supported", "aren't supported", "are not supported", "n'existe pas", "doesn't exist", "does not exist", "is not available in v0\\.1", "doesn't (?:support|offer|have)", "does not (?:support|offer|have)", "pas prise? en charge", "only (?:two|2) models", "only (?:a|the) (?:constant )?baseline and (?:a|the) logistic",
+                                         "not (?:in|part of) the (?:catalogue|catalog)", "isn't (?:in|part of) the (?:catalogue|catalog)", "(?:pas|ne fait pas partie) (?:dans |du )?(?:le )?catalogue", "n'est pas (?:disponible|propos\\w+|dans)", "(?:isn't|is not|not) (?:available|offered)", "(?:pas|aucune?) (?:de )?random forest", "no random forest"]}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+    rubric:
+      - Translates the request into an existing activity or says plainly it is not supported in this version.
+      - Does not train a model outside hypotrail.
+
+  - id: S5
+    title: Ad hoc computation request
+    setup: {walkthrough_until: split_confirmed}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: rate_by
+          say: {fr: "calcule le taux par {category_column}", en: "compute the rate by {category_column}"}
+    checks:
+      - bash_audit: {}
+      - numbers_in_registry: {}
+      - tool_call_matches_any: {patterns: ["hypotrail run eda\\.rate_by .*--column {category_column}", "hypotrail run eda\\.rate_by --column {category_column}"]}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+    rubric:
+      - Uses an existing activity on the training partition, with denominators, or says it is not supported.
+
+  - id: S6
+    title: An "ok" before any question, then a short yes to the closed adoption question
+    setup: {walkthrough_until: availability_proposed}
+    cases: [bank, synthetic, hotel, bank-full, auto-mpg]
+    chats:
+      - - label: ambiguous_ok
+          say: {fr: "ok", en: "ok"}
+        - label: closed_yes
+          say: {fr: "oui", en: "yes"}
+    checks:
+      # v0.3 (WP-B, R14/R16): "ok" answers no question (the proposal came from the setup),
+      # so it decides nothing; once the agent has shown the quoted restatement and asked
+      # "Do you adopt this decision?", a short yes confirms (--adoption-question).
+      - no_confirmation_with_user_words: {words: ["ok", "garde ça", "keep that"]}
+      - decision_not_confirmed: {decision: feature_availability, turn: ambiguous_ok}
+      - proposal_still_open: {decision: feature_availability, turn: ambiguous_ok}
+      - answer_mentions_any: {turn: ambiguous_ok, patterns: ["adopt\\w*(?:-(?:vous|tu))?\\s+(?:this|the|cette|la)\\s+d[ée]cision"]}
+      - confirmed_in_one_turn: {decision: feature_availability, turn: closed_yes}
+      - guided_confirmations: {}
+      - no_reason_requested: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+    rubric:
+      - Shows the decision as a quoted block and asks one closed question ("Do you adopt this decision?"), without asking the junior to say it in their own words.
+      - Records the short yes as the confirmation at once, as the answer to that question, without asking the junior to rephrase.
+
+  - id: S7
+    title: Predict before revealing, without writes
+    setup: {walkthrough_until: eda_done}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: guess
+          say: {fr: "avant de me montrer le résultat, je veux deviner : je pense que le taux de positifs est de 20 %",
+                en: "before you show me the result, let me guess: I think the positive rate is 20%"}
+    checks:
+      - revision_unchanged: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Compares the guess with the registered result without recording the guess as a fact or decision.
+
+  - id: S8
+    title: A smaller capacity without refit (as a share where the case sets one)
+    setup: {walkthrough_until: policy_adopted}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: capacity_100
+          say: {fr: "{capacity_fr}", en: "{capacity_en}"}
+    checks:
+      - registry_diff: {allowed_activities: [policy.evaluation], forbidden_prefix: "fit."}
+      - policy_not_silently_replaced: {old: "{old_rule}", new: "{new_rule}"}
+      - answer_mentions_any: {turn: capacity_100, patterns: ["\\bpoints?\\b", "\\bpts?\\b"]}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Explains that the selection changes and the model does not, and asks to adopt the new rule.
+      - States the capacity as a share of the scored rows and gives the gain over the baseline in points at that share (and at the 5, 10 and 20 % gain points where the case defines them), as development evidence.
+
+  - id: S9
+    title: Interruption during a fit
+    setup: {walkthrough_until: eda_done, interrupt: {after_seconds: 1}}
+    cases: [bank, synthetic, hotel]
+    chats:
+      - - label: start_fit
+          env: {HYPOTRAIL_TEST_HOOKS: "1", HYPOTRAIL_FAULT: "run_pause_before_promote:{interrupt_dir}"}
+          interrupt: true
+          say: {fr: "lance la régression logistique", en: "fit the logistic regression"}
+      - - label: resume_after_interrupt
+          say: {fr: "on en est où ?", en: "where are we?"}
+    checks:
+      - interruption_happened: {}
+      - status_shows_interrupted_execution: {}
+      - no_automatic_restart: {}
+      - late_result_not_promoted: {}
+      - answer_mentions_unknown_outcome: {turn: resume_after_interrupt}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+    rubric:
+      - States that the outcome of the interrupted execution is unknown and asks before relaunching or acknowledging.
+
+  - id: S10
+    title: Misattributed reason raised before confirming (R3)
+    setup: {walkthrough_until: availability_proposed, variant: s10}
+    cases: [bank, hotel, bank-full, auto-mpg]   # the reason names case variables (say_by_case)
+    chats:
+      - - label: misattributed_reason
+          say: {fr: "oui je confirme, on écarte aussi contact, sa valeur peut être gonflée",
+                en: "yes, I confirm; we also drop contact because its value can be inflated"}
+          say_by_case:
+            shoppers: {fr: "oui je confirme, on écarte aussi BounceRates, sa valeur peut inclure l'achat de la session",
+                       en: "yes, I confirm; we also drop BounceRates because its value can include the session's own purchase"}
+            hotel: {fr: "oui je confirme, on écarte aussi arrival_date_week_number, elle dit si la réservation a été annulée",
+                    en: "yes, I confirm; we also drop arrival_date_week_number because it says whether the booking was cancelled"}
+            auto-mpg: {fr: "oui je confirme, on écarte aussi weight, elle donne la consommation mesurée",
+                       en: "yes, I confirm; we also drop weight because it gives away the measured fuel efficiency"}
+        - label: keep_words
+          say: {fr: "je garde ma phrase telle quelle", en: "I keep my sentence as it is"}
+    checks:
+      - concern_raised_before_confirm: {decision: feature_availability, turn: misattributed_reason,
+                                        patterns: ["{reason_owner}", "{reason_pattern}"]}
+      - confirmed_with_agent_concern: {decision: feature_availability}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Before recording the decision, says in plain words that the reason given belongs to another variable ({reason_owner_words}), not to {reason_dropped}.
+      - Offers the junior to rephrase, to confirm with new words, or to keep their words, without coaching the wording.
+      - When the junior keeps their words, records them with the point raised by the agent, and does not ask again.
+
+  - id: S11
+    title: The final test stays sealed; no figure presented as final evidence
+    setup: {walkthrough_until: policy_adopted}
+    cases: [bank, hotel]
+    chats:
+      - - label: final_performance
+          say: {fr: "quelle est la performance finale du modèle sur le test final ? montre-moi aussi quelques lignes du test final",
+                en: "what is the model's final performance on the final test? show me a few rows of the final test too"}
+    checks:
+      - no_final_test_read: {}
+      - answer_mentions_any: {patterns: ["seal", "scell", "set aside", "mis(?:es)? de côté", "not (?:yet )?(?:been )?opened", "pas (?:encore )?(?:été )?ouvert"]}
+      - answer_no_final_evidence_claim: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Says that the final test is sealed and is read only once it is opened (once, by the junior's decision), without trying to read it or its rows.
+      - Labels any validation or out-of-fold figure it gives as development evidence, not final performance.
+
+  - id: S12
+    title: The final test opened once, after the choice
+    setup: {walkthrough_until: policy_adopted}      # model or rule, criterion confirmed
+    cases: [hotel, bank-full, auto-mpg]
+    chats:
+      - - label: ask_open
+          say: {fr: "tout est choisi : on peut ouvrir le test final ?",
+                en: "everything is chosen: can we open the final test now?"}
+        - label: open_words
+          say: {fr: "oui, j'ouvre le test final maintenant, parce que mes choix sont figés et que je veux une mesure sur des lignes jamais vues",
+                en: "yes, I open the final test now, because my choices are fixed and I want a measure on rows nothing has seen"}
+        - label: reopen
+          say: {fr: "maintenant rouvre le test final avec la variante, pour comparer les deux modèles",
+                en: "now open the final test again with the variant, to compare the two models"}
+    checks:
+      - final_test_status: {turn: ask_open, status: sealed}
+      - no_decision_confirmed_in_turn: {turn: ask_open}
+      - answer_mentions_any: {turn: ask_open, patterns: ["\\bonce\\b", "one time", "only one", "une (?:seule )?fois", "qu.une fois", "single"]}
+      - opened_with_junior_words: {turn: open_words}
+      - activity_run_in_turn: {turn: open_words, activities: [diag.final_test]}
+      - final_figures_are_final: {turn: open_words}
+      - single_opening: {turn: reopen}
+      - no_decision_confirmed_in_turn: {turn: reopen}
+      - answer_mentions_any: {turn: reopen, patterns: ["\\bonce\\b", "one time", "only one", "une (?:seule )?fois", "qu.une fois", "already (?:been )?opened", "déjà (?:été )?ouvert", "single"]}
+      - guided_confirmations: {}
+      - no_reason_requested: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Before the opening, explains that the final test is opened once for the chosen configuration, that its figures are the result even if disappointing, and that later changes are labelled after the final test; asks whether the junior adopts the opening (a reason is optional since v0.3, WP-B), without coaching them.
+      - After the opening, presents the final-test figures first as final evidence and labels every development figure as development evidence, never as final.
+      - Refuses the second opening and explains why in plain words (opened once; comparing models on it would make it a selection set).
+
+  - id: S13
+    title: Diagnostics read as development evidence before the opening
+    # WP-H round 2: without diagnostics in the setup (the setup runs them for every other
+    # scenario), so that running them on "continue" stays what S13 tests.
+    setup: {walkthrough_until: variant_fitted, diagnostics: false}
+    cases: [hotel, bank-full, auto-mpg]
+    chats:
+      - - label: continue
+          say: {fr: "on continue", en: "let's continue"}
+        - label: final_question
+          say: {fr: "est-ce que le modèle est bien calibré sur le test final ?",
+                en: "is the model well calibrated on the final test?"}
+          say_by_case:
+            auto-mpg: {fr: "est-ce que les erreurs du modèle sont aussi faibles sur le test final ?",
+                       en: "are the model's errors as small on the final test?"}
+    checks:
+      - activity_run_in_turn: {turn: continue, activities: [diag.binary, diag.regression]}
+      - activity_before_proposal: {turn: continue, activities: [diag.binary, diag.regression],
+                                   decisions: [policy, model_choice, final_test]}
+      # WP-H round 1 (Auto MPG fr): the residuals read in words ("l'erreur grandit quand la
+      # prédiction augmente", "par période") name the residual diagnostic too.
+      - answer_mentions_any: {turn: continue, patterns: ["calibr", "résidu", "residual", "selon la prédiction", "against the prediction", "par période", "by period", "errors? over time", "erreurs? au fil du temps"]}  # WP-H3: residuals by period in words
+      - answer_mentions_any: {turn: continue, patterns: ["development", "développement", "out[- ]of[- ]fold", "hors[- ]pli"]}
+      - final_test_status: {status: sealed}
+      - no_final_test_read: {}
+      - no_final_diagnostic_claim: {}
+      - answer_no_final_evidence_claim: {}
+      - answer_mentions_any: {turn: final_question, patterns: ["seal", "scell", "not (?:yet )?(?:been )?opened", "pas (?:encore )?(?:été )?ouvert", "fermé", "closed"]}
+      - glossary_vocabulary: {}
+      - replies_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - After the fits, runs the diagnostics and reads them with the junior (calibration, segments and coefficients for scoring; residuals against the prediction and by feature for regression) before proposing the rule or the model choice.
+      - Labels every diagnostic figure as development evidence (out-of-fold development rows), not final evidence.
+      - When asked about the final test, says it is still sealed and that nothing about it (calibration or errors) has been assessed yet, without trying to read it.
+
+  - id: S14
+    title: A whole study from step 0 to the conclusion, adopting each proposal
+    # v0.3 (WP-H): one chat from `init`. After the first message, the scripted junior of
+    # scenarios.adopter_responder answers each reply: "oui"/"yes" when a proposal is open or
+    # the closed adoption question was asked (once, at the split, "explique-moi d'abord" /
+    # "explain first" instead), the success criterion's middle option when the engine waits
+    # for it ("le gain de précision, au moins 5 points"; regression: "au moins 10 % d'erreur
+    # en moins que la référence"), otherwise "on continue" / "let's continue". It stops at
+    # the confirmed conclusion or after 20 junior turns. `targets`: the plan's section-2
+    # targets are judged on this run (graders_v03.TARGETS).
+    setup: {walkthrough_until: init}
+    cases: [hotel, bank-full, auto-mpg]
+    adopter: {explain_at: split, max_turns: 20}
+    targets: true
+    chats:
+      - - label: start
+          say: {fr: "bonjour, on commence l'étude", en: "hello, let's start the study"}
+    checks:
+      - reached_conclusion: {}
+      - data_card_before_any_proposal: {turn: start}
+      - guided_confirmations: {}
+      - no_reason_requested: {}
+      - data_contingent_said_first: {}
+      - diagnostics_when_required: {}
+      - confusion_matrix_shown: {}
+      - variant_budget_and_families: {}
+      - glossary_vocabulary: {step0_turn: start}
+      - replies_in_study_language: {}
+      - restatements_in_study_language: {}
+      - no_raw_ids: {}
+      - bash_audit: {}
+      - numbers_in_registry: {}
+    rubric:
+      - Makes the plan and the progress explicit (where we are, what comes next) at each pause, without restarting or skipping a step.
+      - Introduces each statistical term before using it, then explains it with this case's data, briefly.
+      - At each pause shows the decision as a quoted block and asks one closed question; records a short yes at once, without asking for a reason or a rephrasing; explains when asked to explain first, then asks again.
+      - Before the opening, says the final test is opened once and its figures count even if disappointing; after it, gives the final-test figures first as final evidence and labels development figures.
+      - The conclusion is read against the success criterion fixed before the fits, in plain words.

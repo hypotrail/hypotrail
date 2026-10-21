@@ -1,0 +1,46 @@
+{
+ "about": {
+  "schema": "hypotrail.export/1",
+  "task": "binary",
+  "exit_code": 3,
+  "source": "hand-authored",
+  "argv": [
+   "export",
+   "handoff",
+   "--out=/studies/bank marketing \"demo\"/handoff/revision-26",
+   "--json"
+  ],
+  "note": "Exit 3: the report was not current, so it is not in the pack."
+ },
+ "payload": {
+  "schema": "hypotrail.export/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "kind": "handoff",
+  "out": "/studies/bank marketing \"demo\"/handoff/revision-26",
+  "files": [
+   {
+    "path": "handoff.md",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "bytes": 8213
+   },
+   {
+    "path": "handoff.json",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "bytes": 15327
+   },
+   {
+    "path": "SHA256SUMS",
+    "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "bytes": 284
+   }
+  ],
+  "included_report": false,
+  "warnings": [
+   "report_not_current",
+   "open_proposals",
+   "unconfirmed_decisions"
+  ]
+ }
+}

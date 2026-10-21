@@ -1,0 +1,42 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "propose",
+   "final_test",
+   "--value-json",
+   "{\"model\": \"fit.logistic\", \"rule\": \"share:0.2\"}",
+   "--restatement",
+   "You open the final test again.",
+   "--rationale",
+   "x",
+   "--request-id",
+   "v-again",
+   "--expected-revision",
+   "41",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide propose",
+  "error": {
+   "code": "final_test_already_opened",
+   "message": "The final test was already opened; it is opened once. A later change is shown as made after the final test, never measured on it again.",
+   "details": {
+    "opening": {
+     "revision": 32,
+     "model": "fit.logistic",
+     "rule": "share:0.1",
+     "result_id": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d"
+    }
+   }
+  }
+ }
+}

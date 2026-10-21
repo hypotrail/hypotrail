@@ -1,0 +1,95 @@
+{
+ "about": {
+  "schema": "hypotrail.preview_effects/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "effects",
+   "p_8",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.preview_effects/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-hold",
+  "revision": 49,
+  "proposal_id": "p_8",
+  "decision_id": "policy",
+  "value": "capacity:100",
+  "previous": {
+   "value": "threshold:0.2",
+   "user_words": "Yes, call everyone scored at 0.2 or more",
+   "basis": "restated",
+   "channel": "chat",
+   "revision": 43,
+   "proposal_id": "p_7"
+  },
+  "mutation": "policy.rule_type",
+  "row": 6,
+  "reason": "policy changed (§3.7 row 6: policy.rule_type)",
+  "stale_results": [
+   "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565"
+  ],
+  "stale_slots": [
+   "diag.binary"
+  ],
+  "kept_slots": [
+   "split",
+   "eda.target_rate",
+   "eda.special_values",
+   "eda.correlation",
+   "eda.distribution:age",
+   "eda.distribution:job",
+   "eda.distribution:previous",
+   "eda.quality",
+   "eda.rate_by:job",
+   "eda.single_feature_signal",
+   "fit.baseline",
+   "fit.logistic",
+   "fit.variant",
+   "policy.evaluation"
+  ],
+  "refit": [],
+  "re_eda": [],
+  "re_policy": [
+   "policy.evaluation"
+  ],
+  "recompute": [
+   "diag.binary"
+  ],
+  "reconfirm_required": [],
+  "supersedes_proposal": "p_7",
+  "blocked": [
+   {
+    "code": "decision_on_hold",
+    "reason": null,
+    "message": "The junior put the policy on hold in their own words; it cannot be confirmed until their words resolve the hold (decide note --resolve). Tell them what is still pending and ask whether the condition is met.",
+    "details": {
+     "decision_id": "policy",
+     "proposal_id": "p_8",
+     "notes": [
+      {
+       "note_id": "n_1",
+       "user_words": "Only if the call centre confirms the wave size"
+      }
+     ]
+    }
+   }
+  ],
+  "artifacts_after": {
+   "report": "regenerated",
+   "notebook": "regenerated",
+   "workbench": "unchanged"
+  },
+  "notes": [
+   "No refit: predictions are reused.",
+   "The diagnostics are computed at the adopted rule: they are run again at the new one."
+  ],
+  "recorded": false,
+  "note": "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm."
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "about": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "proposal",
+   "policy",
+   "--value=capacity:150",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.proposal_draft/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 48,
+  "decision_id": "policy",
+  "value": "capacity:150",
+  "proposable": false,
+  "missing": [
+   {
+    "requirement": "evaluated_rule",
+    "value": "capacity:150"
+   }
+  ],
+  "restatement": null,
+  "rationale": null,
+  "evidence": null,
+  "supersedes_proposal": "p_8",
+  "recorded": false,
+  "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
+ }
+}

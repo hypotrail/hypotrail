@@ -1,0 +1,195 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "run",
+   "eda.distribution",
+   "--column=age",
+   "--request-id",
+   "ID",
+   "--expected-revision",
+   "R",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "run",
+  "request_id": "7e6d5c4b-3a29-4180-9f7e-6d5c4b3a2918",
+  "replayed": false,
+  "revision": 27,
+  "activity": "eda.distribution",
+  "execution_id": "e_cccccccccccccccccccccccc",
+  "status": "promoted",
+  "result_id": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+  "values": {
+   "partition": "train",
+   "column": "age",
+   "role": "feature",
+   "type": "integer",
+   "kind": "numeric",
+   "n_rows": 3164,
+   "n_missing": 0,
+   "special_values": [],
+   "numeric": {
+    "n": 3164,
+    "min": 19,
+    "q25": 33,
+    "median": 39,
+    "q75": 48,
+    "max": 86,
+    "mean": 41.2,
+    "sd": 10.6,
+    "n_bins": 10,
+    "bin_width": 6.8,
+    "bins": [
+     {
+      "low": 18,
+      "high": 25.8,
+      "n_rows": 148,
+      "share": 0.04677623261694058,
+      "closed": "left"
+     },
+     {
+      "low": 25.8,
+      "high": 32.6,
+      "n_rows": 642,
+      "share": 0.20290771175726927,
+      "closed": "left"
+     },
+     {
+      "low": 32.6,
+      "high": 39.4,
+      "n_rows": 846,
+      "share": 0.26738305941845764,
+      "closed": "left"
+     },
+     {
+      "low": 39.4,
+      "high": 46.2,
+      "n_rows": 584,
+      "share": 0.1845764854614412,
+      "closed": "left"
+     },
+     {
+      "low": 46.2,
+      "high": 53,
+      "n_rows": 476,
+      "share": 0.1504424778761062,
+      "closed": "left"
+     },
+     {
+      "low": 53,
+      "high": 59.8,
+      "n_rows": 357,
+      "share": 0.11283185840707964,
+      "closed": "left"
+     },
+     {
+      "low": 59.8,
+      "high": 66.6,
+      "n_rows": 58,
+      "share": 0.018331226295828066,
+      "closed": "left"
+     },
+     {
+      "low": 66.6,
+      "high": 73.4,
+      "n_rows": 27,
+      "share": 0.008533501896333754,
+      "closed": "left"
+     },
+     {
+      "low": 73.4,
+      "high": 80.2,
+      "n_rows": 19,
+      "share": 0.0060050568900126425,
+      "closed": "left"
+     },
+     {
+      "low": 80.2,
+      "high": 87,
+      "n_rows": 7,
+      "share": 0.0022123893805309734,
+      "closed": "both"
+     }
+    ],
+    "zeros": {
+     "n_rows": 0,
+     "share": 0.0
+    },
+    "skewed": false,
+    "log_bins": null
+   },
+   "groups": null,
+   "n_groups": null,
+   "max_groups": 20,
+   "other": null,
+   "min_group_rows": 30,
+   "warnings": [],
+   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+   "question": "How are the values of age distributed among the training rows?"
+  },
+  "result": {
+   "execution_id": "e_cccccccccccccccccccccccc",
+   "activity": "eda.distribution",
+   "slot": "eda.distribution:age",
+   "status": "promoted",
+   "result_id": "c19c4e2a7f6b5d4c3b2a1908f7e6d5c4b3a29180f7e6d5c4b3a2918071625344",
+   "input_key": "0075d6db6dc2154ec4302cc379c50cb2f5207cef47e2a5d38707890fbd858828",
+   "reason": null,
+   "started_revision": 14,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 26,
+    "last_ok_revision": 26,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 26,
+    "last_ok_revision": 26,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "models",
+   "activity": "fit.baseline",
+   "message": "How much does a simple model improve on a constant baseline on validation?",
+   "audience": "junior",
+   "junior_message": "How much does a simple model improve on a constant baseline on validation?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?"
+  }
+ }
+}

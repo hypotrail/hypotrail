@@ -1,0 +1,26 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "captured",
+  "argv": [
+   "export",
+   "handoff",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "export handoff",
+  "error": {
+   "code": "export_target_exists",
+   "message": "The export folder exists and is not empty; nothing was written.",
+   "details": {
+    "path": "/tmp/capture/packs/revision-48"
+   }
+  }
+ }
+}

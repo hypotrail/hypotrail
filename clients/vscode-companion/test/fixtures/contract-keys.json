@@ -1,0 +1,709 @@
+{
+ "source": "framework/tests/study/companion_contract.py and test_contract_freeze.py (CLI-CONTRACT, CLI-CONTRACT-COMPANION)",
+ "schemas": {
+  "hypotrail.summary/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "since",
+    "changed",
+    "goal",
+    "current_step",
+    "plan",
+    "next_action",
+    "open_proposals",
+    "decisions",
+    "results",
+    "artifacts",
+    "executions",
+    "not_yet_defensible",
+    "notes",
+    "holds",
+    "final_test",
+    "criterion",
+    "eda_looks",
+    "recap",
+    "recap_audience",
+    "recap_junior",
+    "mode",
+    "deliverables",
+    "trials",
+    "scenario_defaults",
+    "language"
+   ]
+  },
+  "hypotrail.summary/1+digest": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "since",
+    "changed",
+    "goal",
+    "current_step",
+    "plan",
+    "next_action",
+    "open_proposals",
+    "decisions",
+    "results",
+    "artifacts",
+    "executions",
+    "not_yet_defensible",
+    "notes",
+    "holds",
+    "final_test",
+    "criterion",
+    "eda_looks",
+    "recap",
+    "recap_audience",
+    "recap_junior",
+    "mode",
+    "deliverables",
+    "trials",
+    "scenario_defaults",
+    "language",
+    "moments",
+    "pauses",
+    "last_session",
+    "digest",
+    "task",
+    "currency"
+   ],
+   "moments[]": [
+    "id",
+    "title",
+    "steps"
+   ],
+   "pauses[]": [
+    "pause",
+    "decisions",
+    "status",
+    "confirmed"
+   ],
+   "last_session": [
+    "boundary_revision",
+    "boundary_time",
+    "gap_minutes"
+   ],
+   "digest": [
+    "since",
+    "until",
+    "items",
+    "truncated",
+    "counts",
+    "channel_actions"
+   ],
+   "digest.items[]": [
+    "revision",
+    "time",
+    "action",
+    "kind",
+    "decision_id",
+    "proposal_id",
+    "note_id",
+    "activity",
+    "slot",
+    "result_id",
+    "execution_id",
+    "rules",
+    "column",
+    "channel",
+    "basis",
+    "delegation_scope",
+    "superseded",
+    "invalidation",
+    "text",
+    "audience",
+    "junior_text"
+   ],
+   "digest.items[].invalidation": [
+    "mutation",
+    "row",
+    "stale_slots",
+    "reconfirm_required",
+    "refit",
+    "kept_fits"
+   ],
+   "digest.counts": [
+    "proposed",
+    "confirmed",
+    "withdrawn",
+    "holds_recorded",
+    "holds_resolved",
+    "results_added",
+    "results_replaced",
+    "runs_started",
+    "runs_failed",
+    "invalidations"
+   ]
+  },
+  "hypotrail.decisions/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "task",
+    "decisions",
+    "proposals",
+    "history",
+    "reconfirm_queue",
+    "notes"
+   ],
+   "decisions[]": [
+    "decision_id",
+    "title",
+    "pause",
+    "step",
+    "status",
+    "value",
+    "depends_on",
+    "reason",
+    "confirmation",
+    "open_proposals"
+   ],
+   "proposals[]": [
+    "proposal_id",
+    "decision_id",
+    "value",
+    "restatement",
+    "rationale",
+    "status",
+    "revision",
+    "created",
+    "closed_revision",
+    "closed_reason",
+    "origin"
+   ],
+   "proposals[].origin": [
+    "channel"
+   ],
+   "history[]": [
+    "revision",
+    "time",
+    "decision_id",
+    "proposal_id",
+    "value",
+    "user_words",
+    "basis",
+    "delegation_scope",
+    "channel",
+    "actor",
+    "current",
+    "superseded_at"
+   ],
+   "reconfirm_queue[]": [
+    "decision_id",
+    "reason",
+    "since_revision",
+    "previous",
+    "open_proposal"
+   ],
+   "reconfirm_queue[].previous": [
+    "value",
+    "user_words",
+    "basis",
+    "channel"
+   ]
+  },
+  "hypotrail.preview_effects/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "proposal_id",
+    "decision_id",
+    "value",
+    "previous",
+    "mutation",
+    "row",
+    "reason",
+    "stale_results",
+    "stale_slots",
+    "kept_slots",
+    "refit",
+    "re_eda",
+    "re_policy",
+    "recompute",
+    "reconfirm_required",
+    "supersedes_proposal",
+    "blocked",
+    "artifacts_after",
+    "notes",
+    "recorded",
+    "note"
+   ],
+   "previous": [
+    "value",
+    "user_words",
+    "basis",
+    "channel",
+    "revision",
+    "proposal_id"
+   ],
+   "blocked[]": [
+    "code",
+    "reason",
+    "message",
+    "details"
+   ]
+  },
+  "hypotrail.proposal_draft/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "decision_id",
+    "value",
+    "proposable",
+    "missing",
+    "restatement",
+    "rationale",
+    "evidence",
+    "supersedes_proposal",
+    "recorded",
+    "note"
+   ],
+   "evidence": [
+    "result_id",
+    "activity",
+    "figures"
+   ],
+   "evidence.figures[]": [
+    "path",
+    "value",
+    "shown"
+   ]
+  },
+  "hypotrail.evidence/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "task",
+    "results",
+    "truncated",
+    "lineage",
+    "exposure",
+    "impacts",
+    "eda_catalog",
+    "sources",
+    "detail"
+   ],
+   "results[]": [
+    "result_id",
+    "activity",
+    "slot",
+    "promoted",
+    "current",
+    "stale_reason",
+    "integrity",
+    "partition",
+    "n_rows",
+    "params",
+    "upstream",
+    "downstream",
+    "created",
+    "started_revision",
+    "execution_id",
+    "exposure_id",
+    "values",
+    "headline"
+   ],
+   "lineage": [
+    "nodes",
+    "edges"
+   ],
+   "lineage.nodes[]": [
+    "id",
+    "kind",
+    "label",
+    "status"
+   ],
+   "lineage.edges[]": [
+    "from",
+    "to",
+    "role"
+   ],
+   "exposure": [
+    "summary",
+    "records",
+    "ledger",
+    "prior_exposure"
+   ],
+   "exposure.records[]": [
+    "exposure_id",
+    "revision",
+    "time",
+    "activity",
+    "result_id",
+    "execution_id",
+    "purpose",
+    "partition",
+    "n_rows",
+    "columns"
+   ],
+   "exposure.ledger[]": [
+    "purpose",
+    "partition",
+    "rows",
+    "records",
+    "activities",
+    "first_revision",
+    "last_revision"
+   ],
+   "impacts[]": [
+    "decision_id",
+    "mutation",
+    "row",
+    "change",
+    "stale_slots",
+    "kept_slots",
+    "refit",
+    "reconfirm",
+    "notes"
+   ],
+   "eda_catalog": [
+    "activities"
+   ],
+   "eda_catalog.activities[]": [
+    "activity",
+    "per_column",
+    "columns",
+    "runnable",
+    "missing",
+    "partition"
+   ],
+   "eda_catalog.activities[].columns[]": [
+    "name",
+    "role",
+    "type",
+    "slot",
+    "result_id"
+   ],
+   "sources": [
+    "case",
+    "dataset"
+   ],
+   "sources.case": [
+    "path",
+    "sha256",
+    "matches"
+   ],
+   "sources.dataset": [
+    "path",
+    "sha256",
+    "matches"
+   ],
+   "detail": [
+    "result_id",
+    "values",
+    "params",
+    "inputs",
+    "code",
+    "environment",
+    "blobs",
+    "exposure",
+    "consumers",
+    "report_anchor",
+    "notebook_hint"
+   ],
+   "detail.code": [
+    "fingerprint",
+    "modules"
+   ],
+   "detail.notebook_hint": [
+    "path",
+    "search"
+   ]
+  },
+  "hypotrail.explain/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "task",
+    "terms",
+    "steps",
+    "predictions"
+   ],
+   "terms[]": [
+    "id",
+    "term",
+    "definition",
+    "example",
+    "example_status",
+    "steps"
+   ],
+   "steps.*": [
+    "concept",
+    "context",
+    "method",
+    "interpretation",
+    "consequence",
+    "text_status"
+   ],
+   "predictions[]": [
+    "id",
+    "step",
+    "question",
+    "choices",
+    "reveal",
+    "available"
+   ],
+   "predictions[].choices[]": [
+    "id",
+    "label"
+   ]
+  },
+  "hypotrail.export/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "kind",
+    "out",
+    "files",
+    "included_report",
+    "warnings"
+   ],
+   "files[]": [
+    "path",
+    "sha256",
+    "bytes"
+   ]
+  },
+  "hypotrail.handoff/1": {
+   "": [
+    "schema",
+    "study",
+    "revision",
+    "task",
+    "case",
+    "dataset",
+    "goal",
+    "decisions",
+    "results_cited",
+    "exposure",
+    "not_yet_defensible",
+    "open_items",
+    "deliverables",
+    "reproduce",
+    "environment"
+   ],
+   "results_cited[]": [
+    "result_id",
+    "activity",
+    "path",
+    "value",
+    "shown"
+   ]
+  },
+  "hypotrail.check/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "target",
+    "clean",
+    "counts",
+    "findings",
+    "traced"
+   ],
+   "findings[].location": [
+    "path",
+    "anchor",
+    "line"
+   ]
+  },
+  "hypotrail.render/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "status",
+    "artifacts"
+   ]
+  },
+  "hypotrail.preview/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "kind",
+    "rules",
+    "models",
+    "evaluations",
+    "intervals",
+    "adopted",
+    "recorded",
+    "note",
+    "warnings"
+   ]
+  },
+  "hypotrail.decide/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "action",
+    "request_id",
+    "replayed",
+    "revision",
+    "result",
+    "artifacts",
+    "next_action"
+   ]
+  },
+  "hypotrail.error/1": {
+   "": [
+    "schema",
+    "ok",
+    "command",
+    "error"
+   ]
+  },
+  "hypotrail.run/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "action",
+    "request_id",
+    "replayed",
+    "revision",
+    "activity",
+    "execution_id",
+    "status",
+    "result_id",
+    "values",
+    "result",
+    "artifacts",
+    "next_action"
+   ]
+  },
+  "hypotrail.session_report/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "since",
+    "sources",
+    "span",
+    "commands",
+    "refusals",
+    "decisions",
+    "pauses",
+    "runs",
+    "renders",
+    "checks",
+    "gaps",
+    "timeline",
+    "privacy"
+   ]
+  },
+  "hypotrail.data/1": {
+   "": [
+    "schema",
+    "ok",
+    "study",
+    "revision",
+    "observation_unit",
+    "development",
+    "target",
+    "final_test",
+    "groups",
+    "rows",
+    "note"
+   ],
+   "groups[].variables[]": [
+    "name",
+    "role",
+    "type",
+    "unit",
+    "description",
+    "description_fr",
+    "availability",
+    "decided",
+    "special_values",
+    "n_missing",
+    "n_distinct",
+    "examples"
+   ]
+  }
+ },
+ "fixtures": {
+  "run.eda_distribution.": {
+   "values": [
+    "partition",
+    "column",
+    "role",
+    "type",
+    "kind",
+    "n_rows",
+    "n_missing",
+    "special_values",
+    "numeric",
+    "groups",
+    "n_groups",
+    "max_groups",
+    "other",
+    "min_group_rows",
+    "warnings",
+    "note",
+    "question"
+   ],
+   "values.numeric": [
+    "n",
+    "min",
+    "q25",
+    "median",
+    "q75",
+    "max",
+    "mean",
+    "sd",
+    "n_bins",
+    "bin_width",
+    "bins",
+    "zeros",
+    "skewed",
+    "log_bins"
+   ],
+   "values.numeric.bins[]": [
+    "low",
+    "high",
+    "n_rows",
+    "share",
+    "closed"
+   ],
+   "values.groups[]": [
+    "value",
+    "n_rows",
+    "share",
+    "small_count"
+   ],
+   "values.special_values[]": [
+    "value",
+    "meaning",
+    "n_rows",
+    "share"
+   ]
+  }
+ },
+ "error_codes_added": [
+  "export_target_exists"
+ ],
+ "not_implemented_reason": "not_implemented"
+}

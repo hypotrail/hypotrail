@@ -1,0 +1,192 @@
+# One section per plan step (plan §6): concept (term first, then a contextual
+# explanation), method, interpretation, consequence. The question comes from the plan
+# itself (state.STEPS).
+# Templates: {{fact:<id>|<fallback>}} quotes a case statement; {{slot:<slot>:<path>|<fmt>}}
+# cites a current result by slot (see mlkit.study.cite). No literal digits: numbers
+# come from the registry.
+schema: hypotrail.content.steps/1
+steps:
+  discover_data:
+    concept: development_rows
+    context: "The case describes one row as: {{fact:observation_unit|not stated by the case}}. The data card shows the columns grouped with their meaning and availability, and a few development rows."
+    method: Nothing is computed and nothing is decided. The rows shown are development rows, already read for their structure when the study was created; the final test stays sealed.
+    interpretation: Reading the columns before any decision is how you know what each variable describes and when its value becomes known.
+    consequence: The availability decision that follows relies on this reading.
+  success_criterion:
+    concept: success_criterion
+    context: The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it.
+    method: You state the smallest gain in precision over the baseline, at the rule you will adopt, that would make the model worth using, in percentage points.
+    interpretation: The conclusion is read against it. A gain below it, or whose paired interval includes zero, does not support adopting the model.
+    consequence: Changing it later asks for the conclusion again.
+  preprocessing:
+    concept: data_contingent_decision
+    context: The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
+    interpretation: A preparation chosen after looking at the outcome is stamped data-contingent; the validation figures may then be slightly optimistic.
+    consequence: Changing it refits the candidate model and asks for the policy and the conclusion again; the exploration is unchanged.
+  prediction_time:
+    concept: prediction_time
+    context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
+    method: You state the moment; the agent restates it and records your answer. No data are read.
+    interpretation: Every later step is judged against this moment.
+    consequence: Changing it later makes the availability decision, the policy, and the conclusion need confirmation again.
+  feature_availability:
+    concept: feature_availability
+    context: "The case describes one row as: {{fact:observation_unit|not stated by the case}}. For each variable you decide whether it is known at the prediction moment."
+    method: Each candidate variable gets one status. Uncertain variables are either excluded or included and listed as a limit.
+    interpretation: Variables marked not available, or uncertain and excluded, never enter a model.
+    consequence: A change that alters the set of usable variables refits the logistic model and asks for the policy again.
+  split:
+    concept: stratified_split
+    context: The split is fixed before any exploration of the outcome, so that validation rows stay apart from fitting.
+    method: A stratified random split with a recorded seed. The rows read are recorded as exposure.
+    interpretation: "Training rows: {{slot:split:partitions.train.n_rows|int}}, of which {{slot:split:partitions.train.rate|pct1}} are positive. Validation rows: {{slot:split:partitions.validation.n_rows|int}}, of which {{slot:split:partitions.validation.rate|pct1}} are positive: stratification keeps the share close."
+    consequence: Changing the split refits both models and recomputes the exploration; rows already explored stay exposed.
+  train_eda:
+    concept: base_rate
+    context: "The outcome is: {{fact:target|not stated by the case}}. Exploration reads training rows only."
+    method: The target rate and the special values are computed on the training partition, with their denominators.
+    interpretation: "In the training rows, the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows. A model has to beat this base rate to be useful."
+    consequence: Special values become explicit indicators in the model instead of ordinary numbers.
+  models:
+    concept: baseline
+    context: A constant baseline and a logistic model are fitted on training rows and scored on validation rows.
+    method: Predictions on validation rows are stored, so a new policy never requires a refit.
+    interpretation: The comparison is made on validation rows, which are then no longer independent evidence.
+    consequence: The policy step reads these stored predictions.
+  policy:
+    concept: policy
+    context: "The intended use is: {{fact:intended_use|not stated by the case}}. A policy turns scores into a number of actions the team can handle."
+    method: Each rule is evaluated on the stored validation predictions, with ties at the cut counted pro rata and paired bootstrap intervals.
+    interpretation: The figures describe these validation rows after a choice made on them; they are optimistic and are not a forecast.
+    consequence: Adopting a different threshold or capacity recomputes the evaluation without refitting any model.
+  conclusion:
+    concept: confirmed_decision
+    context: The conclusion says what can be claimed, for which use, and with which limits.
+    method: You choose a verdict and write the text; keeping the baseline or calling the study inconclusive are valid results.
+    interpretation: The conclusion rests on validation rows that were used for selection.
+    consequence: The limits listed under "What is not yet defensible" stay attached to it.
+pending: Not executed yet.
+stale: Stale, not cited.
+# Regression study (M3): steps whose text differs for a numeric target. The others are
+# shared. Templates cite only paths every regression result of the slot has.
+regression_steps:
+  success_criterion:
+    concept: success_criterion
+    context: The criterion is fixed at the split pause, before any model is fitted, so the result cannot shape it.
+    method: You state the smallest relative reduction of the validation mean absolute error of the mean baseline that would make the model worth using.
+    interpretation: The conclusion is read against it. A reduction below it, or whose paired interval includes zero, does not support adopting the model.
+    consequence: Changing it later asks for the conclusion again.
+  preprocessing:
+    concept: data_contingent_decision
+    context: The exploration of the training rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at training quantiles, and log transforms are learnt on training rows only and applied unchanged to the validation rows. The default changes nothing.
+    interpretation: A preparation chosen after looking at the target is stamped data-contingent; the validation errors may then be slightly optimistic.
+    consequence: Changing it refits the linear model and asks for the model choice and the conclusion again; the exploration is unchanged.
+  prediction_time:
+    concept: prediction_time
+    context: "In this case the decision is: {{fact:decision|not stated by the case}}. The moment of prediction decides which variables are allowed."
+    method: You state the moment; the agent restates it and records your answer. No data are read.
+    interpretation: Every later step is judged against this moment.
+    consequence: Changing it later makes the availability decision, the model choice, and the conclusion need confirmation again.
+  feature_availability:
+    concept: feature_availability
+    context: "The case describes one row as: {{fact:observation_unit|not stated by the case}}. For each variable you decide whether it is known at the prediction moment."
+    method: Each candidate variable gets one status. Uncertain variables are either excluded or included and listed as a limit. A time column is not a candidate variable; it orders the rows.
+    interpretation: Variables marked not available, or uncertain and excluded, never enter a model.
+    consequence: A change that alters the set of usable variables refits the linear model and asks for the model choice again.
+  split:
+    concept: validation_partition
+    context: "The split is fixed before any exploration of the target. When the case declares a time column, the cut is ordinal: later periods are validated on a model fitted on earlier ones, which shows extrapolation instead of hiding it. When it declares a group column, the split reports the groups both partitions share."
+    method: A random split with a recorded seed, or an ordinal cutoff on the integer time column (read as integers, never as dates). The rows read are recorded as exposure.
+    interpretation: "Training rows: {{slot:split:partitions.train.n_rows|int}}. Validation rows: {{slot:split:partitions.validation.n_rows|int}}. Shared groups and the range of the time column in each partition are listed with the result."
+    consequence: Changing the split refits both models and recomputes the exploration; rows already explored stay exposed.
+  train_eda:
+    concept: target_distribution
+    context: "The target is: {{fact:target|not stated by the case}}. Exploration reads training rows only."
+    method: The target summary and the special values are computed on the training partition, with their counts.
+    interpretation: "On the training rows the target has a mean of {{slot:eda.target_summary:mean|f2}} and a standard deviation of {{slot:eda.target_summary:sd|f2}}, in the unit of the target. The mean baseline predicts that mean for every row; a model has to do better to be useful."
+    consequence: A missing-value marker on a numeric variable becomes an indicator and an imputed value in the model, never an ordinary number.
+  models:
+    concept: baseline
+    context: A mean baseline and a linear model are fitted on training rows and predict the validation rows.
+    method: Predictions on validation rows are stored, so comparing and choosing a model never requires a refit.
+    interpretation: "On the validation rows the mean baseline has a mean absolute error of {{slot:fit.baseline:validation.mae|f2}} and the linear model of {{slot:fit.linear:validation.mae|f2}}, in the unit of the target."
+    consequence: The model comparison reads these stored predictions.
+  model_choice:
+    concept: mae
+    context: "The intended use is: {{fact:intended_use|not stated by the case}}. A model is adopted only when it reduces the error of the mean baseline by more than the variability of these validation rows, and its residuals do not show a bias that matters for that use."
+    method: MAE and RMSE are computed in the unit of the target on the stored validation predictions, with paired bootstrap intervals of each and of the difference with the baseline, and the residuals by period.
+    interpretation: "The linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} on the validation rows, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of those rows. Its mean residual (bias) is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. These rows were used for the choice, so the figures are optimistic and are not a forecast."
+    consequence: Changing the model choice reuses the stored predictions and the evaluation; nothing is refitted.
+# The four moments of JUNIOR-WORKFLOW.md, as plan step ids (CLI-CONTRACT-COMPANION §1.1,
+# C1, C11). ``status --summary --digest`` lists them in this order; a client shows the
+# plan's step titles. ``regression_moments`` replaces the steps of a moment for a
+# regression study.
+moments:
+  - id: frame
+    title: Frame the change
+    steps: [discover_data, prediction_time, feature_availability, split, success_criterion]
+  - id: evidence
+    title: Prepare evidence
+    steps: [train_eda, preprocessing]
+  - id: compare
+    title: Work and compare
+    steps: [models, model_variant, policy]
+  - id: conclude
+    title: Conclude and hand over
+    steps: [final_test, conclusion]
+regression_moments:
+  compare: [models, model_variant, model_choice]
+# B6c (M3): a study evaluated by cross-validation explores every development row and
+# predicts each once, out of fold, by a model fitted on the other folds. These keys are
+# merged over the step of the task (``regression_cv_steps`` first in a regression study).
+cv_steps:
+  preprocessing:
+    context: The exploration of the development rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at quantiles, and log transforms are learnt, fold by fold, on the rows each model is fitted on, and applied unchanged to the fold it predicts. The default changes nothing.
+    interpretation: A preparation chosen after looking at the outcome is stamped data-contingent; the out-of-fold figures may then be slightly optimistic.
+  split:
+    concept: cross_validation
+    context: The folds are fixed before any exploration of the outcome. Each development row is predicted once, by a model fitted on the other folds, so every row counts in the comparison.
+    method: Stratified folds with a recorded seed, or contiguous blocks in time order when the case declares an order. The rows read are recorded as exposure.
+    interpretation: "{{slot:split:folds|int}} folds over {{slot:split:n_rows|int}} development rows; each row is predicted once, out of fold."
+  train_eda:
+    context: "The outcome is: {{fact:target|not stated by the case}}. Exploration reads the development rows; the final test stays sealed."
+    method: The target rate and the special values are computed on the development rows, with their denominators.
+    interpretation: "In the development rows, the positive outcome occurs in {{slot:eda.target_rate:rate|pct1}} of rows. A model has to beat this base rate to be useful."
+  models:
+    context: A constant baseline and a logistic model are fitted fold by fold; each fold is scored by models fitted on the other folds.
+    method: The out-of-fold predictions of every development row are stored, so a new policy never requires a refit.
+    interpretation: The comparison is made on these out-of-fold predictions; they helped choose, so they are development evidence, not independent evidence.
+  policy:
+    method: Each rule is evaluated on the stored out-of-fold predictions; a capacity or a share is applied within each fold, since each fold is scored by its own model. Ties at the cut are counted pro rata, with paired bootstrap intervals.
+    interpretation: The figures describe these development rows after a choice made on them; they are optimistic and are not a forecast. Only the final test, opened once, is independent.
+  conclusion:
+    interpretation: The conclusion rests on out-of-fold figures of rows used for selection, and on the final test once it is opened.
+regression_cv_steps:
+  success_criterion:
+    method: You state the smallest relative reduction of the out-of-fold mean absolute error of the mean baseline that would make the model worth using.
+  preprocessing:
+    context: The exploration of the development rows can motivate how the model prepares the variables; the analyses that motivated it are recorded with it.
+    method: Missing-value indicators, the minimum rows of a category, caps at quantiles, and log transforms are learnt, fold by fold, on the rows each model is fitted on, and applied unchanged to the fold it predicts. The default changes nothing.
+    interpretation: A preparation chosen after looking at the target is stamped data-contingent; the out-of-fold errors may then be slightly optimistic.
+  split:
+    concept: cross_validation
+    context: The folds are fixed before any exploration of the target. Each development row is predicted once, by a model fitted on the other folds; quantile folds keep the target's spread similar in each fold, and temporal folds follow the time order.
+    method: Folds on target quantiles with a recorded seed, or contiguous blocks in time order when the case declares a time column or an order. The rows read are recorded as exposure.
+    interpretation: "{{slot:split:folds|int}} folds over {{slot:split:n_rows|int}} development rows; each row is predicted once, out of fold."
+  train_eda:
+    context: "The target is: {{fact:target|not stated by the case}}. Exploration reads the development rows; the final test stays sealed."
+    method: The target summary and the special values are computed on the development rows, with their counts.
+    interpretation: "On the development rows the target has a mean of {{slot:eda.target_summary:mean|f2}} and a standard deviation of {{slot:eda.target_summary:sd|f2}}, in the unit of the target. The mean baseline predicts the mean of the rows it is fitted on; a model has to do better to be useful."
+  models:
+    context: A mean baseline and a linear model are fitted fold by fold; each fold is predicted by models fitted on the other folds.
+    method: The out-of-fold predictions of every development row are stored, so comparing and choosing a model never requires a refit.
+    interpretation: "Out of fold, the mean baseline has a mean absolute error of {{slot:fit.baseline:validation.mae|f2}} and the linear model of {{slot:fit.linear:validation.mae|f2}}, in the unit of the target."
+  model_choice:
+    context: "The intended use is: {{fact:intended_use|not stated by the case}}. A model is adopted only when it reduces the error of the mean baseline by more than the variability of these out-of-fold predictions, and its residuals do not show a bias that matters for that use."
+    method: MAE and RMSE are computed in the unit of the target on the stored out-of-fold predictions, with paired bootstrap intervals of each and of the difference with the baseline, and the residuals by period.
+    interpretation: "The linear model's MAE minus the baseline's is {{slot:evaluate.regression:deltas.[fit.linear].mae.point|f2}} out of fold, between {{slot:evaluate.regression:deltas.[fit.linear].mae.low|f2}} and {{slot:evaluate.regression:deltas.[fit.linear].mae.high|f2}} on resamples of those rows. Its mean residual (bias) is {{slot:evaluate.regression:models.[fit.linear].mean_residual|f2}}. These rows were used for the choice, so the figures are optimistic and are not a forecast."
+  conclusion:
+    interpretation: The conclusion rests on out-of-fold figures of rows used for the choice, and on the final test once it is opened.

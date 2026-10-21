@@ -1,0 +1,49 @@
+{
+ "about": {
+  "schema": "hypotrail.export/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "export",
+   "handoff",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.export/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 48,
+  "kind": "handoff",
+  "out": "/tmp/capture/packs/revision-48",
+  "files": [
+   {
+    "path": "handoff.md",
+    "sha256": "3d94944af455f9e5b79c51db8c13aacd30478ef9c9fe8dd8ed3b20557a1b84fd",
+    "bytes": 9185
+   },
+   {
+    "path": "handoff.json",
+    "sha256": "d062bd5478178e5dd388174ec9829fbe8d0e992c9abe1ec12861e323c2e75802",
+    "bytes": 18746
+   },
+   {
+    "path": "study.html",
+    "sha256": "5685fbb93a8774640679db3e1db0279f49e8c99df22786dee6a020271d48a7b2",
+    "bytes": 1371080
+   },
+   {
+    "path": "SHA256SUMS",
+    "sha256": "807c6b5f34e7aec14350ba0e2ade5b67966aee5960924b76b1043d81c17a9ae0",
+    "bytes": 233
+   }
+  ],
+  "included_report": true,
+  "warnings": [
+   "open_proposals",
+   "unconfirmed_decisions"
+  ]
+ }
+}

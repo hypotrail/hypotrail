@@ -1,0 +1,52 @@
+/* Decisions view (COMPANION-ADVANCED §6.2, mockup Decision.dc.html). Owned by WP-U2.
+   Colours come from tokens.css only, so both themes apply; no inline style attribute. */
+.dc-card { border: 2px solid var(--ht-st-needs); border-radius: 10px; padding: 16px 18px; }
+.dc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.dc-head-main { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.dc-head h3 { font-size: var(--t-title); margin: 0; }
+.dc-pill { font-size: var(--t-cap); font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--ht-done-bg); color: var(--ht-fg); }
+.dc-origin { font-size: var(--t-meta); }
+.dc-value p { margin: 6px 0; }
+.dc-groups { list-style: none; padding-left: 0; margin: 4px 0 8px; }
+.dc-group { font-weight: 600; }
+.dc-card h4 { font-size: var(--t-meta); margin: 12px 0 6px; color: var(--ht-muted); }
+.dc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dc-chip { margin: 0; padding: 4px 10px; border: 1px solid var(--ht-button2-border); border-radius: 6px; background: var(--ht-surface);
+  color: var(--ht-fg); }
+.dc-chip-static { display: inline-block; }
+.dc-hold { padding: 8px 12px; border-radius: 6px; background: var(--ht-warn-bg); border: 1px solid var(--ht-warn-border); color: var(--ht-warn-fg); }
+.dc-resolved { padding: 8px 12px; border-radius: 6px; background: var(--ht-done-bg); color: var(--ht-fg); }
+.dc-box-title { font-weight: 600; }
+.dc-blocked { margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--ht-error-bg); border: 1px solid var(--ht-error-border);
+  color: var(--ht-error-fg); }
+.dc-blocked ul { margin: 4px 0 0; }
+.dc-notes { margin: 8px 0 0; font-size: var(--t-meta); }
+.dc-caption { font-size: var(--t-meta); margin: 6px 0 0; }
+.dc-answer { margin-top: 12px; }
+.dc-actions { display: flex; flex-wrap: wrap; }
+.dc-queue { border-color: var(--ht-warn-border); }
+.dc-history { width: 100%; border-collapse: collapse; }
+.dc-history th, .dc-history td { text-align: left; vertical-align: top; padding: 8px 8px 8px 0; border-bottom: 1px solid var(--ht-border); }
+.dc-history th { font-size: var(--t-cap); color: var(--ht-muted); }
+.dc-decision { font-weight: 600; }
+.dc-basis { color: var(--ht-fg); }
+/* WP-A7: the basis is a status chip of one vocabulary (core.css); delegated in the stale tone. */
+.dc-basis-cell { white-space: nowrap; }
+.dc-basis.dc-delegated { color: var(--ht-warn-fg); background: var(--ht-warn-bg); }
+.dc-channel { font-size: var(--t-meta); }
+.dc-concern, .dc-correction { margin: 4px 0 0; font-size: var(--t-meta); }
+.dc-correction { color: var(--ht-fg); border-left: 3px solid var(--ht-st-needs); padding-left: 6px; }
+.dc-mode { margin: 8px 0 12px; }
+.dc-mode h3 { margin-bottom: 4px; }
+.dc-mode p { margin: 4px 0; }
+.dc-mode-rules { margin: 4px 0; }
+tr.dc-superseded, tr.dc-superseded .dc-basis, tr.dc-superseded .dc-decision { color: var(--ht-muted); }
+details[data-unconfirmed] { margin-top: 8px; }
+.dc-history-value { display: block; }
+/* WP-E1: the read-only card says where to answer; its effects are a list in words. */
+.dc-answer .title, .dc-final-chat .title { font-weight: 600; margin: 0 0 4px; }
+.dc-answer p { margin: 0 0 4px; }
+.dc-effects-list { margin: 4px 0; padding-left: 18px; }
+.dc-lead { margin: 8px 0 4px; }
+
+/* WP-B5: the opening of the final test is answered in the chat; its card says so (above). */

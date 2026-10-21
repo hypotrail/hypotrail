@@ -1,6 +1,6 @@
 # Junior Copilot HTML and Marimo workflow
 
-Status: **consolidated target specification, not yet implemented**. This preserves the product decisions for an agent without conversation history. Explicit subsequent user specifications take precedence. Storage conventions below are implementation proposals to validate.
+Status: **consolidated target specification, partly implemented**: v0.2 implements a slice of it with Claude Code (not Copilot) on Online Shoppers, Bank Marketing, Bank Marketing full, Auto MPG and a synthetic case; see [the handoff](../handoff/IMPLEMENTATION.md) for what exists and [the v0.2 checklist](../acceptance/V0.2-CHECKLIST.md) for its evidence. This preserves the product decisions for an agent without conversation history. Explicit subsequent user specifications take precedence. Storage conventions below are implementation proposals to validate.
 
 ## Intended outcome
 
@@ -8,7 +8,7 @@ A developer new to ML starts from an intention, understands the data, reviews a 
 
 Fluidity means understanding the next action, retaining valid decisions, and resuming without reconstructing history. It is not measured by confirmation counts, arbitrary percentages, or chart volume.
 
-Initial scope: local supervised tabular learning, first Bank Marketing, then Auto MPG. The visual companion, webview, overnight autonomy, cloud execution, and senior mode are outside this milestone. Unsupported tasks must be identified; a universal-looking sequence must not hide different evidence requirements.
+Initial scope: local supervised tabular learning, first Bank Marketing, then Auto MPG (since v0.3, Hotel booking demand (Resort Hotel) is the discovery case, Bank Marketing full validates generality on scoring, Auto MPG covers regression, and Online Shoppers, the v0.2b discovery case, is an advanced case with a documented scenario limitation; owner decision 2026-10-20, AGENTS.md). The visual companion, webview, overnight autonomy, cloud execution, and senior mode are outside this milestone. Unsupported tasks must be identified; a universal-looking sequence must not hide different evidence requirements.
 
 ## Three surfaces with distinct responsibilities
 
@@ -50,9 +50,13 @@ Lead with the professional term, then a brief explanation and data-specific exam
 
 Activity order adapts. Evaluation design must precede detailed EDA when required for validity. Summarize completed work when resuming rather than replaying it.
 
+The engine's glossary gives each concept a canonical English term and its usual French term, used verbatim by every engine text (v0.3, remark R15): training set / jeu d'entraînement, validation set / jeu de validation, fold / pli, k-fold cross-validation / validation croisée à k plis, out-of-fold predictions / prédictions hors pli, holdout (final test) / échantillon de test final, confidence interval / intervalle de confiance, average precision (AP) / average precision (AP, aire sous la courbe précision-rappel), sample / échantillon, development set / échantillon de développement. Under k-fold cross-validation each fold is in turn the validation fold and the other folds its training folds. Fold spread is not a confidence interval; where both appear, each is named. A study in French gets every engine junior text in French (English stays the source).
+
 ## Guidance loop
 
 At each meaningful step, identify the current plan position and question, completed action, available evidence, useful observation, interpretation, limitation, and recommended next action. Ask one main question at a time and offer a reasoned default when possible.
+
+The engine drafts this for each pause (v0.3, WP-C): `next_action` carries a short digest in the study language (term first, then the study's example), the recommended default with one line of why, and the one question to ask, so the agent relays rather than composes. The success criterion is a metric and a minimum: the metric is explained and defaulted by the action type (a capacity or share action reads precision at that share, which ranks configurations as recall and lift do; a threshold action lets the junior weigh precision against recall; AUC and average precision are ranking diagnostics, not business criteria), and the question states the reference value (the base rate of the development rows) and translates candidate minimums per 1,000 actions, labelled illustrative.
 
 An optional teaching question can illuminate a consequential choice. It must not become a gate at every chart. Requests such as “explain differently,” “show the calculation,” or “let me try” change depth without losing the study's place.
 
@@ -138,11 +142,13 @@ The notebook contains code, results, explanation, and chart exploration. HTML sh
 
 A threshold chosen on validation remains exploratory. Missed observed subscriptions are not causally established lost sales. Historical observations do not establish future-campaign performance.
 
+**Variants and model families (v0.3, [ADR 0007](../decisions/0007-trial-budget-and-model-families.md)).** After the first logistic fit, the engine runs its diagnostics as the next step of the plan; the junior does not have to ask. The diagnostics check whether the linear model misses a shape in a numeric variable, an interaction with a segment, or a calibration slope away from one. The junior then names up to three variants, each with the question it answers. The engine drafts the first: the penalty chosen by nested cross-validation, one trial. It proposes a non-linear family (an Explainable Boosting Machine first, gradient boosting when the case allows a black box) only when the diagnostics flagged something, shows that evidence, and says that this choice is data-contingent. Each variant is compared with the candidate on the same folds, with a paired difference and its noise. The engine names the configuration the one-standard-error rule keeps, states the approximate optimism of picking the best, and advises stopping when the differences stay within the noise between folds or the budget is used. The junior then chooses one configuration and one rule, and the diagnostics run again at the adopted rule, confusion matrix included, before the final test is opened.
+
 **Conclusion and resumption.** Explain use, protocol, trials, results, limits, and next action. Keeping the reference or finding no sufficiently supported improvement are valid outcomes. A fresh chat reconstructs, for example: “Pre-call prediction is confirmed, duration is excluded, EDA and the first comparison are available; the next choice concerns simulated contact volume.” This comes from persistent state.
 
 ## Scientific validity
 
-Fit preprocessing on training data. Tie predictions and metrics to the declared protocol. Record trials, model selection, and threshold exploration. Budget exhaustion is not evidence of convergence.
+Fit preprocessing on training data. Tie predictions and metrics to the declared protocol. Record trials, model selection, and threshold exploration. Budget exhaustion is not evidence of convergence. Hyperparameters are chosen inside each outer fold (nested cross-validation), never on the rows that score them, and every variant confirmed counts against a budget of three, replaced ones included.
 
 Current, stale, and exploratory describe different dimensions. Recalculation can restore freshness without independence. A new split does not erase prior exposure. Public data already explored does not become an unseen final test during a fresh demonstration.
 

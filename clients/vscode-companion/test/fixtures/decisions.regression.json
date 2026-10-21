@@ -1,0 +1,273 @@
+{
+ "about": {
+  "schema": "hypotrail.decisions/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decisions/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "revision": 22,
+  "task": "regression",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "title": "Define the prediction moment",
+    "pause": 1,
+    "step": "prediction_time",
+    "status": "confirmed",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the prediction_time exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the prediction_time as stated.",
+     "proposal_id": "p_1",
+     "revision": 3,
+     "time": "2026-10-18T22:31:46.258576+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "pause": 1,
+    "step": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "acceleration": "uncertain_excluded",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the feature_availability exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the feature_availability as stated.",
+     "proposal_id": "p_2",
+     "revision": 5,
+     "time": "2026-10-18T22:31:46.390635+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "split",
+    "title": "Split the data before exploring it",
+    "pause": 2,
+    "step": "split",
+    "status": "confirmed",
+    "value": {
+     "column": "model_year",
+     "cutoff": 79,
+     "method": "ordinal_cutoff"
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the split exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the split as stated.",
+     "proposal_id": "p_3",
+     "revision": 7,
+     "time": "2026-10-18T22:31:46.462543+00:00",
+     "authenticated": false,
+     "basis": "explicit",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_choice",
+    "title": "Choose the model",
+    "pause": 3,
+    "step": "model_choice",
+    "status": "proposed",
+    "value": "fit.linear",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": [
+     "p_4"
+    ]
+   },
+   {
+    "decision_id": "conclusion",
+    "title": "Conclude proportionately",
+    "pause": 3,
+    "step": "conclusion",
+    "status": "open",
+    "value": null,
+    "depends_on": [],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   }
+  ],
+  "proposals": [
+   {
+    "proposal_id": "p_1",
+    "decision_id": "prediction_time",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "restatement": "You decide the prediction_time as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 2,
+    "created": "2026-10-18T22:31:46.195430+00:00",
+    "closed_revision": 3,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_2",
+    "decision_id": "feature_availability",
+    "value": {
+     "acceleration": "uncertain_excluded",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "restatement": "You decide the feature_availability as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 4,
+    "created": "2026-10-18T22:31:46.337781+00:00",
+    "closed_revision": 5,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_3",
+    "decision_id": "split",
+    "value": {
+     "column": "model_year",
+     "cutoff": 79,
+     "method": "ordinal_cutoff"
+    },
+    "restatement": "You decide the split as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 6,
+    "created": "2026-10-18T22:31:46.427228+00:00",
+    "closed_revision": 7,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_4",
+    "decision_id": "model_choice",
+    "value": "fit.linear",
+    "restatement": "Adopt the linear model.",
+    "rationale": "Lower error on later years.",
+    "status": "open",
+    "revision": 22,
+    "created": "2026-10-18T22:31:47.498096+00:00",
+    "closed_revision": null,
+    "closed_reason": null,
+    "origin": {
+     "channel": "webview"
+    }
+   }
+  ],
+  "history": [
+   {
+    "revision": 3,
+    "time": "2026-10-18T22:31:46.258576+00:00",
+    "decision_id": "prediction_time",
+    "proposal_id": "p_1",
+    "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 5,
+    "time": "2026-10-18T22:31:46.390635+00:00",
+    "decision_id": "feature_availability",
+    "proposal_id": "p_2",
+    "value": {
+     "acceleration": "uncertain_excluded",
+     "cylinders": "available_at_prediction",
+     "displacement": "available_at_prediction",
+     "horsepower": "available_at_prediction",
+     "origin": "available_at_prediction",
+     "weight": "available_at_prediction"
+    },
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 7,
+    "time": "2026-10-18T22:31:46.462543+00:00",
+    "decision_id": "split",
+    "proposal_id": "p_3",
+    "value": {
+     "column": "model_year",
+     "cutoff": 79,
+     "method": "ordinal_cutoff"
+    },
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "basis": "explicit",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   }
+  ],
+  "reconfirm_queue": [],
+  "notes": []
+ }
+}

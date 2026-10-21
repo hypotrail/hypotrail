@@ -1,0 +1,182 @@
+"""Offline browser check of the HTML report (plan §7: ``test_html_offline``; WP3.1).
+
+Simulated browser test (Playwright, headless Chromium, network blocked). It is not a
+Copilot or Claude Code acceptance session. Requires the ``browser`` dependency group:
+``uv sync --project framework --group dev --group browser``.
+"""
+from __future__ import annotations
+
+import glob
+import os
+import warnings
+from pathlib import Path
+
+import pytest
+
+from mlkit.study import manifest as mf, view
+
+BROWSER_MISSING = ('the offline browser test (plan §7, test_html_offline) did not run: '
+                   'Playwright is not installed. Run `uv sync --project framework --group dev '
+                   '--group browser` and `uv run --project framework python -m playwright '
+                   'install chromium` (CONTRIBUTING.md, full gate).')
+try:
+    import playwright.sync_api as _sync_api
+except ImportError:
+    # A visible warning in the summary, not only an "s": the full gate needs this test.
+    warnings.warn(BROWSER_MISSING, pytest.PytestWarning, stacklevel=1)
+    pytest.skip(BROWSER_MISSING, allow_module_level=True)
+playwright = _sync_api
+
+
+def _chromium(p):
+    try:
+        return p.chromium.launch(headless=True)
+    except Exception:
+        # A preinstalled browser build that differs from the one this Playwright pins.
+        root = os.environ.get('PLAYWRIGHT_BROWSERS_PATH', '/opt/pw-browsers')
+        for pattern in ('chromium_headless_shell-*/chrome-linux/headless_shell',
+                        'chromium-*/chrome-linux/chrome'):
+            found = sorted(glob.glob(os.path.join(root, pattern)))
+            if found:
+                return p.chromium.launch(headless=True, executable_path=found[-1])
+        warnings.warn('no Chromium for Playwright: the offline browser test did not run; run '
+                      '`uv run --project framework python -m playwright install chromium`.',
+                      pytest.PytestWarning, stacklevel=1)
+        pytest.skip('no Chromium available for Playwright (python -m playwright install '
+                    'chromium)')
+
+
+@pytest.fixture(scope='module')
+def browser():
+    with playwright.sync_playwright() as p:
+        b = _chromium(p)
+        yield b
+        b.close()
+
+
+def _open(browser, page_path: Path, scheme='light'):
+    context = browser.new_context(offline=True, color_scheme=scheme)
+    requests, errors = [], []
+    context.route('**/*', lambda route: route.continue_() if route.request.url.startswith('file:')
+                  else (requests.append(route.request.url), route.abort()))
+    page = context.new_page()
+    page.on('pageerror', lambda exc: errors.append(str(exc)))
+    page.on('console', lambda msg: errors.append(msg.text) if msg.type == 'error' else None)
+    page.goto(page_path.resolve().as_uri())
+    page.wait_for_load_state('load')
+    return context, page, requests, errors
+
+
+def test_report_works_offline_without_decision_controls(browser, full_study):
+    report = full_study / mf.ARTIFACTS['report']
+    context, page, requests, errors = _open(browser, report)
+    try:
+        assert requests == [] and errors == []
+        assert page.locator('button').count() == 1
+        assert page.locator('button[data-theme-toggle]').count() == 1
+        for selector in ('input', 'form', 'select', 'textarea', '[role=slider]',
+                         '[contenteditable]', 'iframe', 'a[href^="http"]'):
+            assert page.locator(selector).count() == 0, selector
+        data = page.locator('data')
+        assert data.count() > 50
+        assert page.locator('data:not([data-result-id])').count() == 0
+        assert page.locator('[data-nyd]').count() >= 5
+        # One row per (rule, model) of the current evaluation: 2 rules x 2 models in the
+        # fixture since the canonical value shapes (the former 3 predates them).
+        rules = view.build(full_study)['results']['policy.evaluation']['values']['rules']
+        assert page.locator('#policy table.metrics tbody tr').count() == sum(
+            len(r['models']) for r in rules.values()) == 4
+        # status is written in words, not shown by colour alone
+        assert 'Confirmed decision' in page.inner_text('#decisions')
+        body = page.locator('body')
+        assert 'dark' not in (body.get_attribute('class') or '')
+        page.click('button[data-theme-toggle]')
+        assert 'dark' in body.get_attribute('class')
+        assert page.get_attribute('button[data-theme-toggle]', 'aria-pressed') == 'true'
+        page.click('button[data-theme-toggle]')
+        assert 'dark' not in body.get_attribute('class')
+    finally:
+        context.close()
+
+
+def test_report_never_scrolls_sideways_on_a_narrow_screen(browser, full_study, tmp_path):
+    """B6c (Low): at 400 px the page fits its width; tables and charts scroll inside their
+    own frames, and a long unbreakable quotation (a source URL) wraps."""
+    page_text = (full_study / mf.ARTIFACTS['report']).read_text(encoding='utf-8')
+    long_quote = ('<p>Source: <q data-literal="case">Obtained from the public mirror https://'
+                  'raw.githubusercontent.com/' + 'a-very-long-path-segment/' * 12
+                  + 'data.csv</q></p>')
+    page_text = page_text.replace('</section>', long_quote + '</section>', 1)
+    copy = tmp_path / 'study.html'
+    copy.write_text(page_text, encoding='utf-8')
+    context = browser.new_context(offline=True, viewport={'width': 400, 'height': 900})
+    try:
+        page = context.new_page()
+        page.goto(copy.resolve().as_uri())
+        page.wait_for_load_state('load')
+        width = page.evaluate('document.documentElement.scrollWidth')
+        assert width <= 400, width
+        frames = page.evaluate('''() => [...document.querySelectorAll('.scroll, .chart-frame')]
+            .filter(f => f.scrollWidth > f.clientWidth).length''')
+        assert frames >= 1          # the wide tables scroll inside their frames
+    finally:
+        context.close()
+
+
+def test_report_follows_a_dark_preference(browser, full_study):
+    context, page, requests, errors = _open(browser, full_study / mf.ARTIFACTS['report'], 'dark')
+    try:
+        assert requests == [] and errors == []
+        assert 'dark' in page.locator('body').get_attribute('class')
+    finally:
+        context.close()
+
+
+def test_report_anchors_one_per_cited_result_and_no_editor_link(browser, full_study):
+    """C10 (CLI-CONTRACT-COMPANION §10, §11): every cited result has exactly one annex
+    anchor ``r-<result_id>``; the page holds no ``vscode:`` or ``command:`` URI; opening
+    the page at an anchor unfolds that annex row, offline."""
+    import re
+
+    report = full_study / mf.ARTIFACTS['report']
+    html = report.read_text(encoding='utf-8')
+    cited = sorted(set(re.findall(r'data-result-id="([0-9a-f]{64})"', html)))
+    assert cited
+    for rid in cited:
+        assert html.count(f'id="r-{rid}"') == 1, rid
+    assert 'vscode:' not in html and 'command:' not in html
+    context = browser.new_context(offline=True)
+    try:
+        page = context.new_page()
+        errors = []
+        page.on('pageerror', lambda exc: errors.append(str(exc)))
+        page.goto(report.resolve().as_uri() + f'#r-{cited[0]}')
+        page.wait_for_load_state('load')
+        row = page.locator(f'#annex details[id="r-{cited[0]}"]')
+        assert row.count() == 1 and row.get_attribute('open') is not None
+        assert page.locator('#annex details[open]').count() == 1
+        assert page.locator('a[href^="vscode:"], a[href^="command:"]').count() == 0
+        page.evaluate(f'window.location.hash = "#r-{cited[-1]}"')
+        page.wait_for_function(
+            f'document.getElementById("r-{cited[-1]}").open === true')
+        assert errors == []
+    finally:
+        context.close()
+
+
+def test_stale_banner_is_visible_offline(browser, full_study, monkeypatch):
+    from mlkit.study import cmd_render
+
+    monkeypatch.setenv('HYPOTRAIL_TEST_HOOKS', '1')
+    monkeypatch.setenv('HYPOTRAIL_FAULT', 'render_html')
+    result = cmd_render.render_all(full_study)
+    assert result['artifacts']['report']['status'] == 'failed'
+    context, page, requests, errors = _open(browser, full_study / mf.ARTIFACTS['report'])
+    try:
+        assert requests == [] and errors == []
+        alert = page.locator('[role=alert][data-hypotrail-banner=stale]')
+        assert alert.count() == 1 and alert.is_visible()
+        assert 'Stale report.' in alert.inner_text()
+        assert page.locator('button').count() == 1
+    finally:
+        context.close()

@@ -1,0 +1,348 @@
+# How each activity's result is shown. ``highlights`` name value paths (``a.b``,
+# ``rules.[threshold:x].precision``; see mlkit.study.cite) with a label and a format;
+# a path absent from the result is skipped. ``tables`` render lists of rows (a column
+# ``key`` may be a dotted path inside the row). Value shapes: CLI-CONTRACT.md §8.5.
+# Every number is cited from the registry. Formats: int, pct0, pct1, pct2, f1, f2, f3,
+# f4, auto. A ``kind: text`` column is shown as recorded (a category label).
+schema: hypotrail.content.activities/1
+activities:
+  split:
+    label: Split
+    glossary: stratified_split
+    highlights:
+      - {path: n_rows, label: Development rows, fmt: int}
+      - {path: partitions.train.n_rows, label: Training rows, fmt: int}
+      - {path: partitions.validation.n_rows, label: Validation rows, fmt: int}
+      - {path: partitions.train.n_positive, label: Positive rows in training, fmt: int}
+      - {path: partitions.validation.n_positive, label: Positive rows in validation, fmt: int}
+      - {path: partitions.train.rate, label: Positive share in training, fmt: pct1}
+      - {path: partitions.validation.rate, label: Positive share in validation, fmt: pct1}
+      - {path: validation_fraction, label: Validation fraction (decided), fmt: pct0}
+      - {path: folds, label: Cross-validation folds (each row validated once), fmt: int}
+      - {path: overlap.moved, label: Rows that changed partition since the previous split, fmt: int}
+      - {path: overlap.previously_exposed.validation.train_eda, label: Validation rows already explored during EDA, fmt: int}
+  eda.target_rate:
+    label: Target rate on training rows
+    glossary: base_rate
+    highlights:
+      - {path: rate, label: Positive share, fmt: pct1}
+      - {path: n_positive, label: Positive rows, fmt: int}
+      - {path: n_rows, label: Rows read, fmt: int}
+  eda.special_values:
+    label: Special values on training rows
+    glossary: special_value
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+    tables:
+      - rows: special_values
+        columns:
+          - {key: column, label: Variable, kind: text}
+          - {key: value, label: Code, kind: text}
+          - {key: meaning, label: Meaning, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+      - rows: co_occurrence
+        columns:
+          - {key: a.column, label: First variable, kind: text}
+          - {key: a.value, label: Code, kind: text}
+          - {key: b.column, label: Second variable, kind: text}
+          - {key: b.value, label: Code, kind: text}
+          - {key: n_both, label: Rows with both, fmt: int}
+          - {key: n_either, label: Rows with either, fmt: int}
+          - {key: same_rows, label: Always together, kind: text}
+  eda.rate_by:
+    label: Target rate by group on training rows
+    glossary: base_rate
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+      - {path: overall_rate, label: Positive share overall, fmt: pct1}
+      - {path: min_group_rows, label: Smallest group read on its own (rows), fmt: int}
+    tables:
+      - rows: groups
+        columns:
+          - {key: value, label: Group, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+          - {key: small_count, label: Too few rows to read alone, kind: text}
+  # CLI-CONTRACT-COMPANION §8 (C8): one column's distribution on training rows, shared by
+  # both tasks (regression_activities repeats it). It never shows the outcome.
+  eda.distribution: &distribution
+    label: Distribution of one column on training rows
+    glossary: distribution
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+      - {path: n_missing, label: Missing cells, fmt: int}
+      - {path: numeric.n, label: Rows with an ordinary value, fmt: int}
+      - {path: numeric.min, label: Minimum, fmt: auto}
+      - {path: numeric.q25, label: First quartile, fmt: auto}
+      - {path: numeric.median, label: Median, fmt: auto}
+      - {path: numeric.q75, label: Third quartile, fmt: auto}
+      - {path: numeric.max, label: Maximum, fmt: auto}
+      - {path: numeric.mean, label: Mean, fmt: auto}
+      - {path: numeric.sd, label: Standard deviation, fmt: auto}
+      - {path: numeric.bin_width, label: Bin width, fmt: auto}
+      - {path: n_groups, label: Distinct values, fmt: int}
+      - {path: other.n_values, label: Values folded into the other group, fmt: int}
+    tables:
+      - rows: special_values
+        columns:
+          - {key: value, label: Code, kind: text}
+          - {key: meaning, label: Meaning, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+      - rows: numeric.bins
+        columns:
+          - {key: low, label: From, fmt: auto}
+          - {key: high, label: To, fmt: auto}
+          - {key: closed, label: Bounds included, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+      - rows: groups
+        columns:
+          - {key: value, label: Value, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+          - {key: small_count, label: Too few rows to read alone, kind: text}
+  fit.baseline:
+    label: Constant baseline
+    glossary: baseline
+    highlights:
+      - {path: validation.roc_auc, label: Ranking quality on validation (AUC), fmt: f3}
+      - {path: validation.average_precision, label: Average precision on validation, fmt: f3}
+      - {path: train_rate, label: Constant score (training positive share), fmt: f3}
+      - {path: n_train, label: Training rows fitted, fmt: int}
+      - {path: validation.n_rows, label: Validation rows scored, fmt: int}
+  fit.logistic:
+    label: Logistic model
+    glossary: logistic_regression
+    highlights:
+      - {path: validation.roc_auc, label: Ranking quality on validation (AUC), fmt: f3}
+      - {path: validation.average_precision, label: Average precision on validation, fmt: f3}
+      - {path: n_train, label: Training rows fitted, fmt: int}
+      - {path: validation.n_rows, label: Validation rows scored, fmt: int}
+      - {path: validation.n_positive, label: Positive rows in validation, fmt: int}
+      - {path: n_terms, label: Model terms after encoding, fmt: int}
+      - {path: cross_validation.spread.roc_auc.sd, label: Spread of the AUC across folds (standard deviation), fmt: f3}
+      - {path: cross_validation.spread.roc_auc.min, label: Lowest fold AUC, fmt: f3}
+      - {path: cross_validation.spread.roc_auc.max, label: Highest fold AUC, fmt: f3}
+  fit.variant:
+    label: Variant of the logistic model
+    glossary: regularisation
+    highlights:
+      - {path: validation.roc_auc, label: Ranking quality out of fold or on validation (AUC), fmt: f3}
+      - {path: validation.average_precision, label: Average precision, fmt: f3}
+      - {path: C, label: Regularisation parameter C of the variant, fmt: auto}
+      - {path: cross_validation.spread.roc_auc.sd, label: Spread of the AUC across folds (standard deviation), fmt: f3}
+      - {path: n_terms, label: Model terms after encoding, fmt: int}
+  final_test.evaluation:
+    label: The final test, opened once
+    glossary: final_test
+    highlights:
+      - {path: n, label: Final-test rows scored once, fmt: int}
+      - {path: n_positive, label: Positive rows in the final test, fmt: int}
+      - {path: refit.n_rows, label: Development rows the chosen configuration was refitted on, fmt: int}
+      - {path: criterion.gain, label: Precision gain over the baseline on the final test (points), fmt: f1}
+  policy.evaluation:
+    label: Policy evaluation on validation rows
+    glossary: policy
+    highlights:
+      - {path: n, label: Validation rows, fmt: int}
+      - {path: n_positive, label: Positive rows in validation, fmt: int}
+      - {path: bootstrap.replicates, label: Bootstrap replicates, fmt: int}
+# Metrics of a policy rule, in display order (render_html.policy_section).
+policy_metrics:
+  - {key: volume, label: Volume, fmt: auto, glossary: volume}
+  - {key: volume_rate, label: Volume share, fmt: pct1, glossary: volume}
+  - {key: true_positives, label: Positive rows reached, fmt: auto}
+  - {key: precision, label: Precision, fmt: pct1, glossary: precision}
+  - {key: recall, label: Recall, fmt: pct1, glossary: recall}
+# Regression study (M3): display specifications that replace or add to the ones above
+# (mlkit.study.texts.activity). Value shapes: CLI-CONTRACT.md §8.5.
+regression_activities:
+  split:
+    label: Split
+    glossary: validation_partition
+    highlights:
+      - {path: n_rows, label: Development rows, fmt: int}
+      - {path: partitions.train.n_rows, label: Training rows, fmt: int}
+      - {path: partitions.validation.n_rows, label: Validation rows, fmt: int}
+      - {path: cutoff, label: Cutoff (validation from this value of the time column), fmt: int}
+      - {path: partitions.train.column_min, label: "Time column in training, first value", fmt: int}
+      - {path: partitions.train.column_max, label: "Time column in training, last value", fmt: int}
+      - {path: partitions.validation.column_min, label: "Time column in validation, first value", fmt: int}
+      - {path: partitions.validation.column_max, label: "Time column in validation, last value", fmt: int}
+      - {path: validation_share, label: Share of rows in validation, fmt: pct1}
+      - {path: validation_fraction, label: Validation fraction (decided), fmt: pct0}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+      - {path: groups.shared_groups, label: Groups in both partitions (no grouped split), fmt: int}
+      - {path: groups.validation_rows_in_shared_groups, label: Validation rows of a shared group, fmt: int}
+      - {path: groups.validation_share_in_shared_groups, label: Share of validation rows in a shared group, fmt: pct1}
+      - {path: overlap.moved, label: Rows that changed partition since the previous split, fmt: int}
+      - {path: overlap.previously_exposed.validation.train_eda, label: Validation rows already explored during EDA, fmt: int}
+  eda.target_summary:
+    label: Target summary on training rows
+    glossary: target_distribution
+    highlights:
+      - {path: n_rows, label: Rows read, fmt: int}
+      - {path: n_missing, label: Rows without a target value, fmt: int}
+      - {path: mean, label: Mean, fmt: f2}
+      - {path: sd, label: Standard deviation, fmt: f2}
+      - {path: min, label: Minimum, fmt: f2}
+      - {path: q25, label: First quartile, fmt: f2}
+      - {path: median, label: Median, fmt: f2}
+      - {path: q75, label: Third quartile, fmt: f2}
+      - {path: max, label: Maximum, fmt: f2}
+  eda.special_values:
+    label: Special values on training rows
+    glossary: special_value
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+    tables:
+      - rows: special_values
+        columns:
+          - {key: column, label: Variable, kind: text}
+          - {key: value, label: Code, kind: text}
+          - {key: meaning, label: Meaning, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: share, label: Share of training rows, fmt: pct1}
+          - {key: mean_target, label: Mean target in these rows, fmt: f2}
+      - rows: co_occurrence
+        columns:
+          - {key: a.column, label: First variable, kind: text}
+          - {key: a.value, label: Code, kind: text}
+          - {key: b.column, label: Second variable, kind: text}
+          - {key: b.value, label: Code, kind: text}
+          - {key: n_both, label: Rows with both, fmt: int}
+          - {key: n_either, label: Rows with either, fmt: int}
+          - {key: same_rows, label: Always together, kind: text}
+  eda.mean_by:
+    label: Mean target by group on training rows
+    glossary: target_distribution
+    highlights:
+      - {path: n_rows, label: Training rows read, fmt: int}
+      - {path: overall_mean, label: Mean target overall, fmt: f2}
+      - {path: min_group_rows, label: Smallest group read on its own (rows), fmt: int}
+    tables:
+      - rows: groups
+        columns:
+          - {key: value, label: Group, kind: text}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: mean, label: Mean target, fmt: f2}
+          - {key: sd, label: Standard deviation, fmt: f2}
+          - {key: small_count, label: Too few rows to read alone, kind: text}
+  eda.distribution: *distribution
+  fit.baseline:
+    label: Mean baseline
+    glossary: baseline
+    highlights:
+      - {path: validation.mae, label: Mean absolute error on validation (MAE), fmt: f2}
+      - {path: validation.rmse, label: Root mean squared error on validation (RMSE), fmt: f2}
+      - {path: validation.mean_residual, label: Mean residual on validation (bias), fmt: f2}
+      - {path: train_mean, label: Prediction for every row (training mean), fmt: f2}
+      - {path: train_median, label: Training median (for reference), fmt: f2}
+      - {path: n_train, label: Training rows fitted, fmt: int}
+      - {path: validation.n_rows, label: Validation rows predicted, fmt: int}
+  fit.linear:
+    label: Linear model
+    glossary: linear_regression
+    highlights:
+      - {path: validation.mae, label: Mean absolute error on validation (MAE), fmt: f2}
+      - {path: validation.rmse, label: Root mean squared error on validation (RMSE), fmt: f2}
+      - {path: validation.mean_residual, label: Mean residual on validation (bias), fmt: f2}
+      - {path: train.mae, label: Mean absolute error on training rows, fmt: f2}
+      - {path: train.rmse, label: Root mean squared error on training rows, fmt: f2}
+      - {path: n_train, label: Training rows fitted, fmt: int}
+      - {path: validation.n_rows, label: Validation rows predicted, fmt: int}
+      - {path: n_terms, label: Model terms after encoding, fmt: int}
+  fit.variant:
+    label: Variant of the linear model
+    glossary: regularisation
+    highlights:
+      - {path: validation.mae, label: Mean absolute error out of fold or on validation, fmt: f2}
+      - {path: validation.rmse, label: Root mean squared error, fmt: f2}
+      - {path: alpha, label: Ridge penalty alpha (the candidate has none), fmt: auto}
+      - {path: cross_validation.spread.mae.sd, label: Spread of the MAE across folds (standard deviation), fmt: f2}
+  final_test.evaluation:
+    label: The final test, opened once
+    glossary: final_test
+    highlights:
+      - {path: n, label: Final-test rows scored once, fmt: int}
+      - {path: refit.n_rows, label: Development rows the chosen model was refitted on, fmt: int}
+      - {path: criterion.gain, label: Reduction of the baseline error on the final test, fmt: pct1}
+  evaluate.regression:
+    label: Model comparison on validation rows
+    glossary: mae
+    highlights:
+      - {path: n, label: Validation rows, fmt: int}
+      - {path: bootstrap.replicates, label: Bootstrap replicates, fmt: int}
+# Error metrics of a regression model comparison, in display order
+# (render_html._model_comparison). Values are in the unit of the target.
+regression_metrics:
+  - {key: mae, label: MAE, fmt: f2, glossary: mae}
+  - {key: rmse, label: RMSE, fmt: f2, glossary: rmse}
+  - {key: mean_residual, label: Mean residual (bias), fmt: f2, glossary: bias}
+# B6c (M3): a study evaluated by cross-validation has no training or validation rows to
+# name: every development row is explored, and each is predicted once, out of fold, by a
+# model fitted on the other folds (mlkit.study.texts.activity). ``cv_activities`` replaces
+# whole specs; ``cv_labels`` renames the labels of the other specs.
+cv_activities:
+  split:
+    label: Cross-validation folds
+    glossary: cross_validation
+    highlights:
+      - {path: n_rows, label: Development rows, fmt: int}
+      - {path: folds, label: Folds (each row predicted once, by a model fitted on the other folds), fmt: int}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+      - {path: duplicates.n_groups, label: Groups of identical records kept in one fold, fmt: int}
+    tables:
+      - rows: fold_rows
+        columns:
+          - {key: fold, label: Fold, fmt: int}
+          - {key: n_rows, label: Rows, fmt: int}
+          - {key: n_positive, label: Positive rows, fmt: int}
+          - {key: rate, label: Positive share, fmt: pct1}
+regression_cv_activities:
+  split:
+    label: Cross-validation folds
+    glossary: cross_validation
+    highlights:
+      - {path: n_rows, label: Development rows, fmt: int}
+      - {path: folds, label: Folds (each row predicted once, by a model fitted on the other folds), fmt: int}
+      - {path: groups.n_groups, label: Distinct groups, fmt: int}
+    tables:
+      - rows: fold_rows
+        columns:
+          - {key: fold, label: Fold, fmt: int}
+          - {key: n_rows, label: Rows, fmt: int}
+cv_labels:
+  Target rate on training rows: Target rate on the development rows
+  Special values on training rows: Special values on the development rows
+  Training rows read: Development rows read
+  Share of training rows: Share of development rows
+  Target rate by group on training rows: Target rate by group on the development rows
+  Distribution of one column on training rows: Distribution of one column on the development rows
+  Target summary on training rows: Target summary on the development rows
+  Mean target by group on training rows: Mean target by group on the development rows
+  Signal of each feature alone on training rows: Signal of each feature alone on the development rows
+  Ranking quality on validation (AUC): Ranking quality out of fold (AUC)
+  Average precision on validation: Average precision out of fold
+  Ranking quality out of fold or on validation (AUC): Ranking quality out of fold (AUC)
+  Constant score (training positive share): Constant score (development positive share)
+  Training rows fitted: Development rows of the reported coefficients
+  Validation rows scored: Development rows predicted out of fold
+  Validation rows predicted: Development rows predicted out of fold
+  Positive rows in validation: Positive development rows
+  Policy evaluation on validation rows: Policy evaluation on the out-of-fold predictions
+  Validation rows: Development rows predicted out of fold
+  Mean absolute error on validation (MAE): Mean absolute error out of fold (MAE)
+  Root mean squared error on validation (RMSE): Root mean squared error out of fold (RMSE)
+  Mean residual on validation (bias): Mean residual out of fold (bias)
+  Mean absolute error out of fold or on validation: Mean absolute error out of fold
+  Prediction for every row (training mean): Mean of the development rows (each fold is predicted with the mean of the other folds)
+  Training median (for reference): Development median (for reference)
+  Mean absolute error on training rows: Mean absolute error on the rows fitted (in sample)
+  Root mean squared error on training rows: Root mean squared error on the rows fitted (in sample)
+  Model comparison on validation rows: Model comparison on the out-of-fold predictions

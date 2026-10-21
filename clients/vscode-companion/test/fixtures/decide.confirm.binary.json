@@ -1,0 +1,84 @@
+{
+ "about": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "W1 success, channel webview."
+ },
+ "payload": {
+  "schema": "hypotrail.decide/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "decide.confirm",
+  "request_id": "6f1c2b8e-1d2a-4c3b-9e8f-0a1b2c3d4e5f",
+  "replayed": false,
+  "revision": 27,
+  "result": {
+   "decision_id": "policy",
+   "proposal_id": "p_5",
+   "status": "confirmed",
+   "value": "capacity:100",
+   "user_words": "Yes: we can make 100 calls per wave, so call the 100 best-scored clients.",
+   "channel": "webview",
+   "actor": "user",
+   "invalidation": {
+    "mutation": "policy.rule_type",
+    "row": 6,
+    "reason": "the policy changed from a threshold to a capacity",
+    "stale_results": [],
+    "stale_slots": [],
+    "reconfirm_required": []
+   },
+   "basis": "explicit",
+   "delegation_scope": null,
+   "agent_concern": null,
+   "warnings": [],
+   "mode": "guided",
+   "reason_given": null,
+   "adoption_question": false,
+   "opening": null
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 26,
+    "last_ok_revision": 26,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 26,
+    "last_ok_revision": 26,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "policy",
+   "activity": "diag.binary",
+   "message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "default_value": "share:0.1",
+   "audience": "junior",
+   "junior_message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?"
+  }
+ }
+}

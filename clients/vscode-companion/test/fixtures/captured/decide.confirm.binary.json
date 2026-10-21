@@ -1,0 +1,102 @@
+{
+ "about": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "confirm",
+   "p_9",
+   "--user-words=Yes, call the 100 best-scored clients in each wave",
+   "--channel",
+   "webview",
+   "--actor",
+   "user",
+   "--request-id",
+   "b-conf",
+   "--expected-revision",
+   "49",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decide/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-confirm",
+  "action": "decide.confirm",
+  "request_id": "b-conf",
+  "replayed": false,
+  "revision": 50,
+  "result": {
+   "decision_id": "policy",
+   "proposal_id": "p_9",
+   "status": "confirmed",
+   "value": "capacity:100",
+   "user_words": "Yes, call the 100 best-scored clients in each wave",
+   "channel": "webview",
+   "actor": "user",
+   "invalidation": {
+    "mutation": "policy.rule_type",
+    "row": 6,
+    "reason": "policy changed (§3.7 row 6: policy.rule_type)",
+    "stale_results": [
+     "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565"
+    ],
+    "stale_slots": [
+     "diag.binary"
+    ],
+    "reconfirm_required": []
+   },
+   "basis": "restated",
+   "delegation_scope": null,
+   "agent_concern": null,
+   "warnings": [],
+   "mode": "guided",
+   "opening": null,
+   "reason_given": true,
+   "adoption_question": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 50,
+    "last_ok_revision": 50,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 50,
+    "last_ok_revision": 50,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "policy",
+   "activity": "diag.binary",
+   "message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "default_value": "share:0.1",
+   "audience": "junior",
+   "junior_message": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?"
+  }
+ }
+}

@@ -1,0 +1,22 @@
+/* Learn & hand off view (COMPANION-ADVANCED §6.6, §6.8). Owned by WP-U5. Tokens of tokens.css only. */
+.ht-learn .ht-tag { margin: 0 0 4px; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ht-muted); }
+.ht-learn .ht-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.ht-concept { border-left: 4px solid var(--ht-accent); }
+.ht-concept h3 { font-size: var(--t-title); }
+.ht-concept-definition { margin-top: 0; }
+.ht-predict { margin: 8px 0; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--ht-border);
+  background: var(--ht-experiment-bg); color: var(--ht-experiment-fg); }
+.ht-predict .ht-tag, .ht-predict .muted { color: var(--ht-experiment-fg); }
+.ht-predict .ht-question { font-size: var(--t-title); margin: 4px 0; }
+.ht-reveal { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--ht-surface); color: var(--ht-fg); }
+.ht-reveal .ht-tag { color: var(--ht-muted); }
+.ht-handoff, .ht-learn-layer { margin: 8px 0 16px; }
+.ht-report { margin: 16px 0; padding: 8px 12px; border: 1px solid var(--ht-border); border-radius: 6px; background: var(--ht-surface); }
+.ht-report summary { cursor: pointer; font-weight: 600; }
+.ht-report h4 { margin: 12px 0 2px; font-size: var(--t-body); }
+/* Glossary terms marked by media/terms.js (only those in this task's glossary). */
+/* v0.3 (WP-E2, §15.1 amended): no dotted underline in prose; a glossary term is a hover
+   target in the link colour's tint, its definition in the tooltip. */
+.ht-term { text-decoration: none; cursor: help; border-bottom: 1px solid var(--ht-line-strong); }
+.ht-tooltip strong { display: block; }
+.ht-tooltip p { margin: 4px 0 0; }

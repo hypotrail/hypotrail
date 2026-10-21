@@ -1,0 +1,581 @@
+{
+ "about": {
+  "schema": "hypotrail.decisions/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decisions",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decisions/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-families",
+  "revision": 33,
+  "task": "binary",
+  "decisions": [
+   {
+    "decision_id": "prediction_time",
+    "title": "Define the prediction moment",
+    "pause": 1,
+    "step": "prediction_time",
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the prediction_time exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the prediction_time as stated.",
+     "proposal_id": "p_1",
+     "revision": 3,
+     "time": "2026-10-21T12:17:49.541949+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "pause": 1,
+    "step": "feature_availability",
+    "status": "confirmed",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "depends_on": [
+     "prediction_time"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the feature_availability exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the feature_availability as stated.",
+     "proposal_id": "p_2",
+     "revision": 5,
+     "time": "2026-10-21T12:17:51.339088+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "split",
+    "title": "Split the data before exploring it",
+    "pause": 2,
+    "step": "split",
+    "status": "confirmed",
+    "value": {
+     "folds": 5,
+     "method": "kfold_stratified",
+     "seed": 20261017
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the split exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the split as stated.",
+     "proposal_id": "p_3",
+     "revision": 7,
+     "time": "2026-10-21T12:17:53.747695+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "pause": 2,
+    "step": "success_criterion",
+    "status": "confirmed",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the success_criterion exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the success_criterion as stated.",
+     "proposal_id": "p_4",
+     "revision": 9,
+     "time": "2026-10-21T12:17:56.856349+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
+    "pause": 2,
+    "step": "preprocessing",
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the preprocessing exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the preprocessing as stated.",
+     "proposal_id": "p_5",
+     "revision": 11,
+     "time": "2026-10-21T12:17:59.666770+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_variant",
+    "title": "Choose the variants to compare",
+    "pause": 3,
+    "step": "model_variant",
+    "status": "confirmed",
+    "value": {
+     "variants": [
+      {
+       "kind": "regularisation",
+       "question": "Does a stronger penalty rank the clients as well?",
+       "strength": "strong"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does an explainable boosting machine follow age and balance more closely?"
+      },
+      {
+       "family": "hgb",
+       "kind": "family",
+       "question": "Does gradient boosting rank the clients better?"
+      }
+     ]
+    },
+    "depends_on": [],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the model_variant exactly as you stated it",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You compare three variants of the candidate, each with its question.",
+     "proposal_id": "p_6",
+     "revision": 23,
+     "time": "2026-10-21T12:18:11.666568+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "policy",
+    "title": "Choose a decision policy",
+    "pause": 3,
+    "step": "policy",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "preprocessing",
+     "model_variant"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   },
+   {
+    "decision_id": "final_test",
+    "title": "Open the final test once",
+    "pause": 3,
+    "step": "final_test",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "policy"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   },
+   {
+    "decision_id": "conclusion",
+    "title": "Conclude proportionately",
+    "pause": 3,
+    "step": "conclusion",
+    "status": "open",
+    "value": null,
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant",
+     "policy",
+     "final_test"
+    ],
+    "reason": null,
+    "confirmation": null,
+    "open_proposals": []
+   }
+  ],
+  "proposals": [
+   {
+    "proposal_id": "p_1",
+    "decision_id": "prediction_time",
+    "value": "before the first contact of the campaign, from the client file",
+    "restatement": "You decide the prediction_time as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 2,
+    "created": "2026-10-21T12:17:48.805302+00:00",
+    "closed_revision": 3,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_2",
+    "decision_id": "feature_availability",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "restatement": "You decide the feature_availability as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 4,
+    "created": "2026-10-21T12:17:50.409188+00:00",
+    "closed_revision": 5,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_3",
+    "decision_id": "split",
+    "value": {
+     "folds": 5,
+     "method": "kfold_stratified",
+     "seed": 20261017
+    },
+    "restatement": "You decide the split as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 6,
+    "created": "2026-10-21T12:17:52.559641+00:00",
+    "closed_revision": 7,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_4",
+    "decision_id": "success_criterion",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "restatement": "You decide the success_criterion as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 8,
+    "created": "2026-10-21T12:17:55.490162+00:00",
+    "closed_revision": 9,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_5",
+    "decision_id": "preprocessing",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "restatement": "You decide the preprocessing as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 10,
+    "created": "2026-10-21T12:17:58.105215+00:00",
+    "closed_revision": 11,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_6",
+    "decision_id": "model_variant",
+    "value": {
+     "variants": [
+      {
+       "kind": "regularisation",
+       "question": "Does a stronger penalty rank the clients as well?",
+       "strength": "strong"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does an explainable boosting machine follow age and balance more closely?"
+      },
+      {
+       "family": "hgb",
+       "kind": "family",
+       "question": "Does gradient boosting rank the clients better?"
+      }
+     ]
+    },
+    "restatement": "You compare three variants of the candidate, each with its question.",
+    "rationale": "One penalty change and two model families, inside the budget of three.",
+    "status": "confirmed",
+    "revision": 22,
+    "created": "2026-10-21T12:18:09.314058+00:00",
+    "closed_revision": 23,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   }
+  ],
+  "history": [
+   {
+    "revision": 3,
+    "time": "2026-10-21T12:17:49.542069+00:00",
+    "decision_id": "prediction_time",
+    "proposal_id": "p_1",
+    "value": "before the first contact of the campaign, from the client file",
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 5,
+    "time": "2026-10-21T12:17:51.339197+00:00",
+    "decision_id": "feature_availability",
+    "proposal_id": "p_2",
+    "value": {
+     "age": "available_at_prediction",
+     "balance": "available_at_prediction",
+     "campaign": "not_available",
+     "contact": "uncertain_included",
+     "day": "not_available",
+     "default": "available_at_prediction",
+     "duration": "not_available",
+     "education": "available_at_prediction",
+     "housing": "available_at_prediction",
+     "job": "available_at_prediction",
+     "loan": "available_at_prediction",
+     "marital": "available_at_prediction",
+     "month": "not_available",
+     "pdays": "available_at_prediction",
+     "poutcome": "available_at_prediction",
+     "previous": "available_at_prediction"
+    },
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 7,
+    "time": "2026-10-21T12:17:53.747776+00:00",
+    "decision_id": "split",
+    "proposal_id": "p_3",
+    "value": {
+     "folds": 5,
+     "method": "kfold_stratified",
+     "seed": 20261017
+    },
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 9,
+    "time": "2026-10-21T12:17:56.856487+00:00",
+    "decision_id": "success_criterion",
+    "proposal_id": "p_4",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 11,
+    "time": "2026-10-21T12:17:59.666869+00:00",
+    "decision_id": "preprocessing",
+    "proposal_id": "p_5",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 23,
+    "time": "2026-10-21T12:18:11.671470+00:00",
+    "decision_id": "model_variant",
+    "proposal_id": "p_6",
+    "value": {
+     "variants": [
+      {
+       "kind": "regularisation",
+       "question": "Does a stronger penalty rank the clients as well?",
+       "strength": "strong"
+      },
+      {
+       "family": "ebm",
+       "kind": "family",
+       "question": "Does an explainable boosting machine follow age and balance more closely?"
+      },
+      {
+       "family": "hgb",
+       "kind": "family",
+       "question": "Does gradient boosting rank the clients better?"
+      }
+     ]
+    },
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   }
+  ],
+  "reconfirm_queue": [],
+  "notes": []
+ }
+}

@@ -1,0 +1,344 @@
+# Labels of the HTML report and the generated notebook. A status is always written
+# in words, never shown by colour alone. No digits: numbers come from the registry.
+schema: hypotrail.content.report/1
+title: Study report
+subtitle: One evolving report of the study. It describes the recorded state; it does not decide anything.
+authority: This page does not update itself. The study state, read with hypotrail status, is the authority.
+no_controls: There are no decision controls on this page. Decisions are made in the chat or with hypotrail decide, with your answer.
+theme_toggle: Switch theme
+sections:
+  verdict: Verdict
+  objective: The objective
+  data: The data
+  charts: What the results show
+  revision: Revision and surfaces
+  plan: Where the study stands
+  decisions: Decisions
+  facts: What the case states
+  evidence: Evidence by step
+  policy: Policy comparison
+  diagnostics: Model diagnostics
+  not_yet_defensible: What is not yet defensible
+  annex: Results annex
+surfaces:
+  report: HTML report
+  notebook: Generated notebook
+  workbench: Workbench
+surface_status:
+  ok: Up to date with this revision
+  stale: Stale
+  failed: Rendering failed
+  not_rendered: Not rendered yet
+  not_tracked: Created once and never overwritten; experiments in it are not tracked
+step_status:
+  done: Done
+  needs_reconfirmation: Needs your confirmation again
+  awaiting_confirmation: Waiting for your answer
+  ready: Ready
+  blocked: Blocked by an earlier step
+decision_status:
+  open: Open, nothing proposed
+  proposed: Proposed, not confirmed
+  confirmed: Confirmed decision
+  reconfirm_required: Needs reconfirmation
+  superseded: Superseded
+fact_status:
+  documented_fact: Documented fact
+  scenario_assumption: Scenario assumption
+  observed: Observed in the data
+  unknown: Unknown
+availability:
+  available_at_prediction: Available at prediction time
+  not_available: Not available at prediction time
+  uncertain_excluded: Uncertain, excluded
+  uncertain_included: Uncertain, included and listed as a limit
+  missing: No status
+# v0.2a (WP-A1): who decided each feature's status. A feature the junior did not name is
+# never shown as their decision.
+availability_head:
+  status: Status used
+  basis: Who decided
+  case: What the case states
+availability_basis:
+  discussed: Your decision (named in your words)
+  default_from_case: From the case, not discussed
+  proposed_not_discussed: Proposed by the assistant, not discussed
+availability_basis_open: Proposed, not confirmed
+availability_not_stated: availability at prediction time not documented
+verdict:
+  adopt_policy: Adopt the policy
+  keep_baseline: Keep the baseline
+  inconclusive: Inconclusive
+current_marker: You are here
+next_action: Next action
+user_words: Your words
+delegated: Delegated to the assistant's recommended default
+delegated_words: Your words delegating the choice
+delegated_note: Decided by delegation to the assistant's default, not by your own judgment. Confirm it yourself when you can.
+delegated_restatement: Recommended default you delegated to
+not_authenticated: Recorded words, not an authenticated signature.
+restatement: Restatement you answered
+proposal_waiting: Waiting for your answer
+hold_open: On hold in your words
+hold_open_note: This decision cannot be confirmed until your own words resolve the condition.
+hold_resolved: Condition resolved
+hold_resolved_by: Resolved in your words
+hold_withdrawn: Condition withdrawn
+hold_withdrawn_by: Withdrawn in your words
+agent_concern: Point raised by the agent
+agent_concern_kept: kept by the user, who confirmed these words
+# v0.3 (WP-B, R27): a trade-off confirmed without a reason; and the option of an
+# interactive choice in the chat.
+no_reason_given: no reason given
+adoption_option: chosen as an option in the chat
+# WP-A9 (M6): the case's structure statements in words (never the raw keys).
+structure_words:
+  time_column: time column
+  group_column: entity identifier (a column that names who or what repeats)
+  row_unit: what one row describes
+  duplicates: duplicate rows
+# WP-A9 (M1): what motivated the preparation of the variables.
+motivation:
+  questions: "Questions behind this preparation:"
+  not_current: An earlier analysis that is no longer current.
+  contingent: Chosen after looking at the outcome on training rows, so the validation figures may be slightly optimistic.
+  looks: "The study had {n} look{s} at the outcome before this proposal."
+  not_contingent: Chosen before any look at the outcome on training rows.
+# WP-A9 (H3): a words_contradict_value warning kept on the confirmation.
+contradiction:
+  title: Words and value disagree
+  exclude: Your words exclude {variable}, but the value keeps it.
+  keep: Your words keep {variable}, but the value excludes it.
+correction: Correction in your words
+correction_note: Recorded after the confirmation; the decision was not asked again.
+credit_heading: Who decided what
+credit_delegated: "The assistant's recommended default, delegated by the analyst (not the analyst's own choice):"
+credit_explicit: "Confirmed in the analyst's own words:"
+policy_note: Figures are computed on validation rows after a choice made on them. They are optimistic and are not a forecast of a future campaign.
+policy_missing: No current policy evaluation yet.
+capacity_population:
+  before: A capacity rule here selects that many of the
+  after: validation rows, which stand for a share of the scored rows, not for a whole population. Read its volume share as the rate to carry over (a share rule states that rate directly); apply that rate to another population before quoting a count for it.
+paired_heading: Paired differences, model minus baseline (paired bootstrap on the same validation rows)
+policy_note_oof: Figures are out-of-fold predictions of the development rows, after a choice made on them. They are development evidence, optimistic, and not a forecast of a future campaign; only the final test, opened once, is independent.
+comparison_heading: The variant against the candidate model (variant minus candidate, paired bootstrap on the same rows)
+tied_none: No tie at the cut
+tied_yes: Ties at the cut counted pro rata
+adopted: Adopted rule
+proposed_rule: Proposed rule
+not_cited: Not cited
+annex_note: Every number in this report is a cited registry value. Hover a number to see its result id and path.
+not_yet_defensible_extra:
+  validation_is_not_independent: A threshold or capacity chosen on validation rows makes the validation figures optimistic.
+  no_time_or_entity_identifier: Without a time column or an entity identifier, drift and repeated entities cannot be checked.
+  public_data_already_explored: Public data may have been explored by you, by others, or by the model that assists you.
+  uncertain_features_included: Uncertain variables included in the model may carry information from after the prediction time.
+  no_causality: The study ranks rows; it does not show that acting would change the outcome.
+  workbench_not_tracked: Slider experiments in the workbench change nothing and prove nothing.
+  delegated_decisions: You let the assistant choose. The choice is recorded, but the reasons are the assistant's, not yours.
+  open_holds: You asked to wait. Nothing on hold is confirmed until your own words resolve the condition.
+  small_validation_partition: With so few validation rows, one or two rows can change a figure; compare models with care.
+  capacity_exceeds_validation: Selecting every row says nothing about how well the model ranks; choose a capacity below the validation rows.
+  high_cardinality_grouping: Run the exploration again with a larger --max-groups to see more groups.
+notebook:
+  banner_current: Generated at this revision. Numbers are frozen by result id.
+  banner_stale: The study has moved on since this notebook was generated. Render again before relying on it.
+  read_only: Read-only. Write your notes in workbench.py; edits to this file are preserved as a copy and then regenerated.
+  source_label: Activity source (displayed, not executed)
+  source_changed: The module changed after this result was computed; the code shown is not what ran.
+# v0.2a (WP-A6): the verdict card, the data section, the charts, decision chips.
+verdict_card:
+  not_concluded: Not concluded yet.
+  proposed: A conclusion is proposed and waits for your answer.
+  criterion: Success criterion
+  criterion_none: No success criterion fixed yet.
+  rule: Adopted rule
+  rule_none: No rule adopted yet.
+  figures: Key figures
+  figures_none: No current evaluation to quote yet.
+  limits: Main limits
+  all_limits: All the limits of this study
+  development: Development evidence
+  development_note: The figures that follow are out-of-fold figures on the development rows, used to choose; they are optimistic, and they are not the final result.
+  validation_note: The figures that follow are on the validation rows, used to choose; they are optimistic, and they are not the final result.
+  final: Final test
+  final_absent: This study has no final test; nothing in it is independent evidence.
+  final_sealed: Still sealed. It is opened once, after the choice, with your answer.
+  final_missing: Opened, but its evaluation cannot be cited.
+  final_opened: Opened once, on
+  final_rows: rows nothing had seen, with the chosen configuration refitted on every development row.
+  final_found: Positive rows found on the final test
+  final_mae: Mean absolute error on the final test
+  final_criterion: Success criterion on the final test
+  final_gain: Precision gain over the baseline
+  final_reduction: Reduction of the baseline's error
+  judged_final: on the final test, where it is judged once the final test is opened.
+  development_status: 'On the development rows, as context:'
+  status_differ: They differ because the development figures helped choose, so they may be optimistic, and both carry chance; the final test, measured once on rows nothing had seen, is the one that judges.
+  final_after: After the final test
+  final_after_note: Something changed after the final test was opened, so it no longer measures what the study now holds.
+  trials: Configurations compared
+  trials_note: model configurations evaluated on the same rows so far (a disclosure; the more there are, the more the best one may owe to chance).
+  status:
+    met: Met
+    uncertain: Uncertain, the interval includes zero
+    not_met: Not met
+    not_assessed: Not assessed yet
+data_section:
+  unit: One row
+  development: Development rows
+  columns: Columns
+  final_test_sealed: rows are set aside as the final test and stay sealed; nothing in this report reads them.
+  final_test_absent: This study has no final test. It was created before the final test existed, so every row is a development row.
+  final_test_opened: rows were set aside as the final test; it has been opened once to measure the chosen configuration (see the verdict). Its rows are read only by that one evaluation and its diagnostics.
+  final_test_changed_after: Something changed after the opening, so the final test no longer measures what the study now holds.
+  case_uncertain: The case calls its availability uncertain; it is used as known at prediction time.
+  case_unknown: The case does not document its availability; it is used as known at prediction time.
+  target: Target
+  dictionary: Columns by group
+  rows: The first development rows, target first
+  rows_note: Fixed rows (the first by position in the file), shown to make the columns concrete. They are development rows only.
+  rows_missing: The example rows could not be read.
+  ungrouped: Other columns
+  missing: Missing in development rows
+  scroll_hint: On a narrow screen, scroll each table sideways to see every column.
+  head:
+    name: Column
+    meaning: Meaning
+    type: Type and unit
+# Titles of the result slots that activities.yaml does not describe (WP-A4 slots).
+slot_labels:
+  eda.quality: Quality of the development rows (no target read)
+  eda.single_feature_signal: Signal of each feature alone on training rows
+roles:
+  target: The target
+  time: Time column, orders the split
+  group_id: Group identifier, not a model input
+  id: Row identifier, not a model input
+charts_intro: Each chart answers one question and is drawn from registered results only. Training rows are explored; validation rows only compare and choose.
+charts_none: No result to chart yet.
+basis:
+  explicit: Your own words
+  restated: Restated in your words
+  endorsed: Endorsed in your words
+  delegated_default: Delegated to the assistant
+recorded_at: Recorded at revision
+looks:
+  summary: Looks at the outcome on training rows
+  note: Each exploration that read the target on training rows counts as one look. The more looks, the more a pattern found among them can be chance.
+  count: looks so far
+# v0.2b (WP-B4, R9): the model diagnostics section. No digits: every number is cited.
+diagnostics:
+  intro: Where the model errs, and how far its scores can be read as probabilities. Each part answers one question, from the stored predictions.
+  development: Development evidence
+  development_note: Computed on the predictions of the development rows on which the model and the rule were chosen. They describe the choice; only the final test is independent evidence.
+  after_opening: Computed after the final test was opened, on the development rows only; it adds nothing to the final evidence.
+  before_opening: Computed before the final test was opened.
+  final: Final evidence
+  final_note: Computed once the final test was opened, from the predictions of its one evaluation, for the chosen configuration only.
+  final_sealed: The final test is still sealed, so it has no diagnostics. They are computed only after you open it.
+  final_absent: This study has no final test.
+  final_pending: The final test is opened; its diagnostics are not computed yet.
+  pending: No diagnostics yet. They are computed from the predictions of the models once they are fitted and compared.
+  stale: These diagnostics no longer describe the current models or rule; they are not cited until computed again.
+  model: Model shown
+  models_heading: The models side by side
+  rule: Rule of these figures
+  rule_source:
+    adopted: the rule you adopted
+    proposed: the rule proposed when these figures were computed
+    scenario_default: the teaching scenario's share, before any rule was proposed
+    engine_default: a default share, before any rule was proposed
+  confusion_heading: Confusion matrix at the rule
+  confusion_rows: Actual outcome
+  confusion_selected: Selected by the rule
+  confusion_not_selected: Not selected
+  confusion_positive: Positive
+  confusion_negative: Negative
+  confusion_expected: A tie at the cut is counted pro rata, so these counts are expected counts.
+  gain_heading: Gain curve
+  roc_heading: Ranking quality
+  calibration_heading: Calibration
+  calibration_table: Calibration bins (equal numbers of rows, in score order)
+  segments_heading: Precision and recall at the rule, by segment
+  segments_note: Segments chosen by the engine; a cell with few rows or few selected rows is flagged and should not be read alone.
+  coefficients_heading: Coefficients with bootstrap intervals
+  coefficients_note: The largest coefficients in size. Associations given the other variables, not effects of changing a variable.
+  examples_heading: Examples of errors
+  false_positives: Selected, but the outcome was negative (highest scores first)
+  false_negatives: Not selected, but the outcome was positive (lowest scores first)
+  examples_none: None at this rule.
+  residuals_heading: Residuals
+  residual_summary: Distribution of the residuals (observed minus predicted)
+  hetero_heading: Does the error grow with the prediction?
+  hetero_yes: Flagged
+  hetero_no: Not flagged
+  by_feature_heading: Residuals by variable
+  largest_heading: The largest errors
+  smearing: Target transform
+model_names:
+  fit.logistic: Model (logistic regression)
+  fit.baseline: Baseline (no ranking)
+  fit.linear: Linear model
+  fit.variant: Variant
+rows_label:
+  train: training rows
+  validation: validation rows
+  development: development rows
+  final_test: final-test rows
+  all: all rows
+# Regression study (M3): labels merged over the ones above (mlkit.study.texts.report).
+regression:
+  sections:
+    policy: Model comparison
+  model_names:
+    fit.baseline: Mean baseline
+  verdict_card:
+    rule: Chosen model
+    rule_none: No model chosen yet.
+  verdict:
+    adopt_model: Adopt the linear model
+    keep_baseline: Keep the mean baseline
+    inconclusive: Inconclusive
+  model_note: Errors are computed on validation rows after a choice made on them, in the unit of the target. They are optimistic and are not a forecast of the error on future rows.
+  model_note_oof: Errors are out-of-fold predictions of the development rows, after a choice made on them, in the unit of the target. They are development evidence and optimistic; only the final test, opened once, is independent.
+  model_missing: No current model comparison yet.
+  model_paired_heading: Paired differences, linear model minus mean baseline (a negative difference is a smaller error; paired bootstrap on the same validation rows)
+  residuals_heading: Residuals on validation rows (observed minus predicted)
+  residuals_by_heading: Residuals by period
+  chosen_model: Chosen model
+  proposed_model: Proposed model
+  not_yet_defensible_extra:
+    validation_is_not_independent: A model chosen on validation rows makes its validation error optimistic.
+    no_causality: The study compares predictions; it does not show that changing a variable would change the target.
+    workbench_not_tracked: Experiments in the workbench change nothing and prove nothing.
+    grouped_split_unsupported: The split result shows how many group values both partitions share and how many validation rows they hold.
+  # B6c (M3): a regression study evaluated by cross-validation (merged last).
+  cross_validation:
+    model_note: Errors are out-of-fold predictions of the development rows, after a choice made on them, in the unit of the target. They are development evidence and optimistic; only the final test, opened once, is independent.
+    model_paired_heading: Paired differences, linear model minus mean baseline (a negative difference is a smaller error; paired bootstrap on the same out-of-fold predictions)
+    residuals_heading: Residuals of the out-of-fold predictions (observed minus predicted)
+    not_yet_defensible_extra:
+      validation_is_not_independent: A model chosen on out-of-fold predictions makes its out-of-fold error optimistic; only the final test, opened once, is independent.
+      grouped_split_unsupported: The split result shows how many group values the folds share.
+# B6c (M3): a study evaluated by cross-validation has no training or validation rows to
+# name (mlkit.study.texts.report merges this mapping last).
+cross_validation:
+  motivation:
+    contingent: Chosen after looking at the outcome on the development rows, so the out-of-fold figures may be slightly optimistic.
+    not_contingent: Chosen before any look at the outcome on the development rows.
+  policy_note: Figures are out-of-fold predictions of the development rows, after a choice made on them. They are development evidence, optimistic, and not a forecast of a future campaign; only the final test, opened once, is independent.
+  capacity_population:
+    after: development rows predicted out of fold (a capacity keeps its share of each fold), which stand for a share of the scored rows, not for a whole population. Read its volume share as the rate to carry over (a share rule states that rate directly); apply that rate to another population before quoting a count for it.
+  paired_heading: Paired differences, model minus baseline (paired bootstrap on the same out-of-fold predictions, resampled within each fold)
+  not_yet_defensible_extra:
+    validation_is_not_independent: A threshold or capacity chosen on out-of-fold predictions makes those figures optimistic; only the final test, opened once, is independent.
+  slot_labels:
+    eda.single_feature_signal: Signal of each feature alone on the development rows
+  charts_intro: Each chart answers one question and is drawn from registered results only. The development rows are explored, and their out-of-fold predictions compare the models and choose; the final test stays apart.
+  looks:
+    summary: Looks at the outcome on the development rows
+    note: Each exploration that read the target on the development rows counts as one look. The more looks, the more a pattern found among them can be chance.
+  rows_label:
+    train: development rows
+    validation: development rows predicted out of fold

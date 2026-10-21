@@ -8,6 +8,8 @@ import shutil, subprocess, sys, time
 import yaml
 from . import config
 
+# PHASES values are persisted compatibility identifiers (in .pilot state, gate.py, and
+# question phases): keep their historical spelling; translate only displayed labels.
 PHASES = ['cadrage','donnees','cible','modelisation','evaluation','validation','deploiement','suivi']
 ROLES = {'data-analyst','explorer','feature-builder','leak-reviewer','validator','pedagogue'}
 # Explicit export capability set; never allow arbitrary project paths or free-form handoffs.
@@ -20,8 +22,9 @@ INPUTS = {
  'pedagogue':['reports/data_profile.json','reports/classical-profile.json'],
 }
 TASKS = [('profile',['profile']),('checks',['checks','--data']),('preflight',['preflight']),('reference',['run','--reference']),
-         ('pipeline',['run','--pipeline','model/pipeline.py','--note','pilot: exploration provisoire']),
+         ('pipeline',['run','--pipeline','model/pipeline.py','--note','pilot: provisional exploration']),
          ('null',['run','--pipeline','model/pipeline.py','--null'])]
+STALE_RESULT='Result is stale and retained in executions; no promotion into the current journey.'
 
 def now(): return dt.datetime.now(dt.timezone.utc).isoformat()
 def home(): return config.ROOT/'.pilot'
@@ -307,7 +310,7 @@ def step(s):
  execution=reliability.finish(sys.modules[__name__],s,execution,code,elapsed)
  if execution['status']=='stale':
   s['seconds_used']+=elapsed;sync_context(s);save(s)
-  return 'Result is stale and retained in executions; no promotion into the current journey.'
+  return STALE_RESULT
  (home()/'logs').mkdir(exist_ok=True);log=home()/'logs'/f'{key}.txt';log.write_text(output)
  s['steps'][key]={'command':argv,'returncode':code,'seconds':elapsed,'log':str(log.relative_to(config.ROOT)),'time':now(),'execution_id':execution['id'],'context':execution['context'],'provenance':execution['provenance']}
  s['seconds_used']+=elapsed
@@ -431,14 +434,14 @@ def main(argv=None):
     result={'test_plan':s['test_ticket'],'returncode':exit_status}
    elif args.action=='step':
     result=step(s)
-    if s.get('interrupted_execution') or any(v.get('returncode')!=0 for v in s['steps'].values()) or result.startswith('Stale result'):exit_status=2
+    if s.get('interrupted_execution') or any(v.get('returncode')!=0 for v in s['steps'].values()) or result==STALE_RESULT:exit_status=2
    elif args.action=='auto':
     if s['mode']!='auto':raise ValueError('Explicitly select auto mode before uninterrupted execution')
     result=[]
     for _ in range(s['max_steps']):
      before=len(s['steps']);result.append(step(s))
      if len(s['steps'])==before or any(v.get('returncode')!=0 for v in s['steps'].values()):break
-    if s.get('interrupted_execution') or any(v.get('returncode')!=0 for v in s['steps'].values()) or any(r.startswith('Stale result') for r in result):exit_status=2
+    if s.get('interrupted_execution') or any(v.get('returncode')!=0 for v in s['steps'].values()) or STALE_RESULT in result:exit_status=2
    out=render(s)
    if args.action in {'init','next','resume'}:result={'revision':s.get('revision',0),'overview':reliability.summary(sys.modules[__name__],s),'mode':s['mode'],'iteration':s.get('iteration',1),'context':s['context'],'phase':s['phase'],'questions':pending(s)[:1 if s['mode']=='junior' else 5],'next_steps':remaining(s),'tasks':[t for t in s['tasks'] if t['status']=='queued']}
    print(json.dumps({'result':result,'report':str(out)},ensure_ascii=False,indent=2));return exit_status

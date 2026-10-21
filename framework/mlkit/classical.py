@@ -28,16 +28,16 @@ def write(path,obj):
 def dataset(root,s):
  d=s['data'];df=pd.read_csv(tc.data_path(root,s))
  required=set(d['features'])|{v for k,v in d.items() if k.endswith('_col') and v}
- if required-set(df.columns):raise ValueError('Columns missing : '+str(required-set(df.columns)))
- if df[d['id_col']].isna().any() or df[d['id_col']].duplicated().any():raise ValueError('Identifiant de ligne unique et non empty required')
+ if required-set(df.columns):raise ValueError('Missing columns: '+str(required-set(df.columns)))
+ if df[d['id_col']].isna().any() or df[d['id_col']].duplicated().any():raise ValueError('A unique, non-empty row identifier is required')
  if len(df)<20:raise ValueError('At least 20 observations required for this exploratory study')
  for col in [d['group_col'],d['query_col'],d['time_col'],d['target_col']]:
   if col and df[col].isna().any():raise ValueError('Missing metadata/target: '+col)
  numeric=df[d['features']].select_dtypes(include='number')
- if np.isinf(numeric.to_numpy()).any():raise ValueError('Features infinies interdites')
+ if np.isinf(numeric.to_numpy()).any():raise ValueError('Infinite feature values are not allowed')
  kind=s['task']['kind'];y=None if kind=='clustering' else df[d['target_col']]
  if kind=='binary' and (y.nunique()!=2 or s['task']['positive_label'] not in set(y)):raise ValueError('Two classes and the positive class are required')
- if kind=='multiclass' and y.nunique()<3:raise ValueError('Au less trois classes required')
+ if kind=='multiclass' and y.nunique()<3:raise ValueError('At least three classes are required')
  if kind in {'regression','ranking'} and (not pd.api.types.is_numeric_dtype(y) or not np.isfinite(y).all()):raise ValueError('A finite numeric target is required')
  if kind=='ranking' and (y<0).any():raise ValueError('Nonnegative NDCG relevance is required')
  if kind=='clustering' and len(numeric.columns)!=len(d['features']):raise ValueError('Clustering v1 supports numeric features only; specify categorical distance separately')
@@ -46,13 +46,16 @@ def dataset(root,s):
 def split(df,y,s):
  d=s['data'];p=s['split'];idx=np.arange(len(df));g=d['group_col'] or d['query_col']
  if p['kind']=='time':
+  # pd.to_datetime reads integers as nanoseconds since 1970, so model years 70..82 would
+  # silently become 1970-01-01. Refuse instead of producing a wrong chronology.
+  if pd.api.types.is_integer_dtype(df[d['time_col']]):raise ValueError(f"Time column {d['time_col']!r} has an integer dtype; missing capability: integer-year temporal split")
   dates=pd.to_datetime(df[d['time_col']],utc=True,errors='raise');cut=pd.to_datetime(p['cutoff'],utc=True)
   tr=idx[dates<cut-pd.Timedelta(days=p['gap_days'])];va=idx[dates>=cut]
   if g and set(df.iloc[tr][g])&set(df.iloc[va][g]):raise ValueError('Groups overlap between temporal training and validation: clarify the protocol')
  elif p['kind']=='group':
   tr,va=next(GroupShuffleSplit(n_splits=1,test_size=p['test_size'],random_state=p['seed']).split(df,groups=df[g]))
  else:tr,va=train_test_split(idx,test_size=p['test_size'],random_state=p['seed'],stratify=y if s['task']['kind'] in {'binary','multiclass'} else None)
- if len(tr)<5 or len(va)<5:raise ValueError('Partition too petite')
+ if len(tr)<5 or len(va)<5:raise ValueError('Partition too small: at least 5 rows in each part')
  if s['task']['kind'] in {'binary','multiclass'} and (set(y.iloc[tr])!=set(y) or set(y.iloc[va])!=set(y)):raise ValueError('A partition lacks classes; no silently partial metric')
  return tr,va
 
@@ -97,8 +100,8 @@ def constraints(name,s,model=None,seconds=None,batch_ms=None,size_mb=None):
  """No declared constraint means no implicit interpretability requirement."""
  rows=[];features=s['data']['features']
  for c in s['constraints']:
-  k=c['kind'];ok=None;why='Evidence unavailable; examen required'
-  if k=='allowed_models':ok=name in c['models'];why='Explicitly authorized feature catalog'
+  k=c['kind'];ok=None;why='Evidence unavailable; review required'
+  if k=='allowed_models':ok=name in c['models'];why='Explicitly authorized model catalog'
   elif k=='max_input_features':ok=len(features)<=c['maximum'];why=f'{len(features)} declared input features'
   elif k=='forbidden_features':ok=not set(features)&set(c['columns']);why='Checks declared names; does not detect proxies'
   elif k=='interpretability' and c['level']=='intrinsic':
@@ -109,9 +112,9 @@ def constraints(name,s,model=None,seconds=None,batch_ms=None,size_mb=None):
    why='Bounded structural readability; human understanding still needs confirmation'
   elif k=='interpretability':why='Post-hoc explanations are not implemented in this adapter; no equivalence with a readable model'
   elif k=='training_time' and seconds is not None:ok=seconds<=c['max_seconds'];why=f'{seconds:.4f} s on this machine'
-  elif k=='latency' and batch_ms is not None:ok=batch_ms[c['batch_size']]<=c['max_batch_p95_ms'];why=f"p95 local : {batch_ms[c['batch_size']]:.4f} ms / batch of {c['batch_size']}; not an SLA"
+  elif k=='latency' and batch_ms is not None:ok=batch_ms[c['batch_size']]<=c['max_batch_p95_ms'];why=f"local p95: {batch_ms[c['batch_size']]:.4f} ms / batch of {c['batch_size']}; not an SLA"
   elif k=='artifact_size' and size_mb is not None:ok=size_mb<=c['max_mb'];why=f'{size_mb:.4f} serialized MB'
-  elif k=='custom':why=c['name']+' — evidence attendue : '+c['evidence_required']
+  elif k=='custom':why=c['name']+' — expected evidence: '+c['evidence_required']
   rows.append({'kind':k,'hard':c['hard'],'status':'PASS' if ok is True else 'FAIL' if ok is False else 'NOT_ASSESSED','reason':why})
  return rows
 
@@ -194,6 +197,6 @@ def main(argv=None):
   elif args.action=='profile':obj=profile(root)
   else:obj=study(root)
   print(json.dumps(obj,ensure_ascii=False,indent=2));return 0
- except (ValueError,FileNotFoundError,FileExistsError,KeyError) as exc:print('ML CLASSIQUE : '+str(exc),file=sys.stderr);return 2
+ except (ValueError,FileNotFoundError,FileExistsError,KeyError) as exc:print('CLASSICAL ML: '+str(exc),file=sys.stderr);return 2
 
 if __name__=='__main__':sys.exit(main())

@@ -1,0 +1,1428 @@
+{
+ "about": {
+  "schema": "hypotrail.summary/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--summary",
+   "--digest",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.summary/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 48,
+  "since": null,
+  "changed": null,
+  "goal": {
+   "intended_use": {
+    "value": "Teaching simulation: prioritize contacts when call capacity is limited",
+    "status": "scenario_assumption"
+   },
+   "decision": {
+    "value": "Select contacts to call first",
+    "status": "scenario_assumption"
+   },
+   "observation_unit": {
+    "value": "A customer contacted during a telephone campaign",
+    "status": "documented_fact"
+   },
+   "prediction_time": {
+    "value": "before the first contact of the campaign, from the client file",
+    "source": "decision",
+    "status": "confirmed"
+   }
+  },
+  "current_step": "final_test",
+  "plan": [
+   {
+    "id": "discover_data",
+    "title": "Discover the data",
+    "status": "done"
+   },
+   {
+    "id": "prediction_time",
+    "title": "Define the prediction moment",
+    "status": "done"
+   },
+   {
+    "id": "feature_availability",
+    "title": "Decide which variables are available at prediction time",
+    "status": "done"
+   },
+   {
+    "id": "split",
+    "title": "Split the data before exploring it",
+    "status": "done"
+   },
+   {
+    "id": "success_criterion",
+    "title": "Fix the success criterion before seeing a model",
+    "status": "done"
+   },
+   {
+    "id": "train_eda",
+    "title": "Explore the training partition",
+    "status": "done"
+   },
+   {
+    "id": "preprocessing",
+    "title": "Decide how the model prepares the variables",
+    "status": "done"
+   },
+   {
+    "id": "models",
+    "title": "Fit a baseline and a logistic model",
+    "status": "done"
+   },
+   {
+    "id": "model_variant",
+    "title": "Choose the variants to compare",
+    "status": "done"
+   },
+   {
+    "id": "policy",
+    "title": "Choose a decision policy",
+    "status": "done"
+   },
+   {
+    "id": "final_test",
+    "title": "Open the final test once",
+    "status": "ready"
+   },
+   {
+    "id": "conclusion",
+    "title": "Conclude proportionately",
+    "status": "ready"
+   }
+  ],
+  "next_action": {
+   "kind": "await_user_words",
+   "proposal_id": "p_8",
+   "decision": "policy",
+   "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
+   "audience": "agent",
+   "junior_message": "A proposal on the decision policy is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
+   "language": "en",
+   "recommended": null,
+   "question": "Do you adopt this decision?",
+   "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change."
+  },
+  "open_proposals": [
+   {
+    "proposal_id": "p_8",
+    "decision_id": "policy",
+    "value": "capacity:100",
+    "restatement": "Call the 100 clients with the highest scores.",
+    "revision": 48,
+    "origin": {
+     "channel": "chat"
+    }
+   }
+  ],
+  "decisions": {
+   "prediction_time": {
+    "status": "confirmed",
+    "value": "before the first contact of the campaign, from the client file",
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the prediction_time exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "feature_availability": {
+    "status": "confirmed",
+    "value": {
+     "available_at_prediction": [
+      "age",
+      "balance",
+      "default",
+      "education",
+      "housing",
+      "job",
+      "loan",
+      "marital",
+      "pdays",
+      "poutcome",
+      "previous"
+     ],
+     "not_available": [
+      "campaign",
+      "day",
+      "duration",
+      "month"
+     ],
+     "uncertain_included": [
+      "contact"
+     ]
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the feature_availability exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": {
+     "proposed_not_discussed": [
+      "age",
+      "campaign",
+      "contact",
+      "day",
+      "default",
+      "education",
+      "housing",
+      "job",
+      "loan",
+      "marital",
+      "month"
+     ],
+     "default_from_case": [
+      "balance",
+      "duration",
+      "pdays",
+      "poutcome",
+      "previous"
+     ]
+    }
+   },
+   "split": {
+    "status": "confirmed",
+    "value": {
+     "method": "stratified_random",
+     "seed": 20261017,
+     "validation_fraction": 0.3
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the split exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "success_criterion": {
+    "status": "confirmed",
+    "value": {
+     "metric": "precision_gain",
+     "min_points": 5
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the success_criterion exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "preprocessing": {
+    "status": "confirmed",
+    "value": {
+     "caps": {},
+     "data_contingent": false,
+     "log_transform": [],
+     "missing": "none",
+     "motivated_by": [],
+     "rare_category_min_rows": 0,
+     "target_looks_before": 0
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the preprocessing exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "model_variant": {
+    "status": "confirmed",
+    "value": {
+     "kind": "regularisation",
+     "strength": "strong"
+    },
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, I want the model_variant exactly as you stated it",
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "policy": {
+    "status": "confirmed",
+    "value": "threshold:0.2",
+    "basis": "restated",
+    "delegation_scope": null,
+    "user_words": "Yes, call everyone scored at 0.2 or more",
+    "reason": null,
+    "open_proposals": [
+     "p_8"
+    ],
+    "feature_basis": null
+   },
+   "final_test": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   },
+   "conclusion": {
+    "status": "open",
+    "value": null,
+    "basis": null,
+    "delegation_scope": null,
+    "user_words": null,
+    "reason": null,
+    "open_proposals": [],
+    "feature_basis": null
+   }
+  },
+  "results": {
+   "diag.binary": {
+    "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.correlation": {
+    "result_id": "99b87448f8a0f3322c005b7251a682da78088d6ca08e84c79208e49a521c8b6c",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.distribution:age": {
+    "result_id": "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.distribution:job": {
+    "result_id": "3a1e3de370196c12e69001848ee5e4d5f3a683e8f993315ca676820443ebda75",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.distribution:previous": {
+    "result_id": "0e5475484816b89aa0eb11e92990c63974d653a6bd8c2bbe788f07bbc185e74a",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.quality": {
+    "result_id": "2f07985087dd4623a29934568d19b8649dd444b451cd1b7dc6d200e89c9c87ba",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.rate_by:job": {
+    "result_id": "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.single_feature_signal": {
+    "result_id": "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.special_values": {
+    "result_id": "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "eda.target_rate": {
+    "result_id": "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.baseline": {
+    "result_id": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.logistic": {
+    "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "fit.variant": {
+    "result_id": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "policy.evaluation": {
+    "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   },
+   "split": {
+    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "current": true,
+    "stale_reason": null,
+    "integrity": "ok"
+   }
+  },
+  "artifacts": {
+   "status": "ok",
+   "items": {
+    "notebook": {
+     "status": "ok",
+     "revision": 48,
+     "last_ok_revision": 48,
+     "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+     "audience": "agent",
+     "junior_message": "The generated notebook is up to date."
+    },
+    "report": {
+     "status": "ok",
+     "revision": 48,
+     "last_ok_revision": 48,
+     "message": "The report (reports/study.html) is up to date.",
+     "audience": "agent",
+     "junior_message": "The report is up to date."
+    },
+    "workbench": {
+     "status": "ok",
+     "revision": 2,
+     "last_ok_revision": 2,
+     "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+     "audience": "agent",
+     "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+    }
+   }
+  },
+  "executions": {
+   "active": [],
+   "interrupted": [],
+   "late": [],
+   "suspected_interrupted": []
+  },
+  "not_yet_defensible": {
+   "top": [
+    {
+     "id": "unconfirmed_decisions",
+     "text": "These decisions are not confirmed: final_test, conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: the opening of the final test and the conclusion."
+    },
+    {
+     "id": "uncertain_features_included",
+     "text": "These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "id": "final_test_sealed",
+     "text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "id": "public_data_already_explored",
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "audience": "junior",
+     "junior_text": null
+    }
+   ],
+   "more": [
+    "no_time_or_entity_identifier",
+    "no_causality",
+    "workbench_not_tracked"
+   ]
+  },
+  "notes": [],
+  "holds": [],
+  "final_test": {
+   "status": "sealed",
+   "rows": 904,
+   "method": "stratified",
+   "fraction": 0.2,
+   "development_rows": 3617,
+   "schema_check": "pass",
+   "opening": null,
+   "post_final_test": false,
+   "changed_after": [],
+   "excluded_prior_exposed": 0
+  },
+  "criterion": {
+   "decision_status": "confirmed",
+   "value": {
+    "metric": "precision_gain",
+    "min_points": 5
+   },
+   "status": "not_assessed",
+   "gain": null,
+   "low": null,
+   "high": null,
+   "minimum": null,
+   "unit": "percentage points",
+   "rule": null,
+   "result_id": null,
+   "contradicts_verdict": false,
+   "final_test": null,
+   "model": null,
+   "judged_on": "development",
+   "judged_status": "not_assessed"
+  },
+  "eda_looks": {
+   "target_looks": 5,
+   "results": [
+    "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+    "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+    "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
+    "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+    "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565"
+   ]
+  },
+  "recap": [
+   "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result b3b6e35b).",
+   "Now: Open the final test once; the report and notebook are up to date.",
+   "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
+   "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
+  ],
+  "recap_audience": "agent",
+  "recap_junior": [
+   "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
+   "Decided: the prediction moment; the feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); the split (stratified random, 30% for validation); the success criterion (precision gain over the baseline of at least 5 points); the preparation of the variables (the default: no missing-value indicator, every category kept, no cap, no transform); the variant to compare (stronger regularisation); the decision policy: select every row scored 0.2 or more (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%).",
+   "Now: Choose a decision policy, waiting for your answer; the report and notebook are up to date.",
+   "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
+   "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
+  ],
+  "mode": "guided",
+  "deliverables": {
+   "launch": {
+    "notebook": {
+     "mode": "run",
+     "path": "notebooks/study_generated.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/bank marketing \"demo\"/notebooks/study_generated.py"
+     ]
+    },
+    "workbench": {
+     "mode": "edit",
+     "path": "notebooks/workbench.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/bank marketing \"demo\"/notebooks/workbench.py"
+     ]
+    }
+   }
+  },
+  "trials": {
+   "count": 2
+  },
+  "scenario_defaults": {
+   "capacity_share": 0.1
+  },
+  "language": "en",
+  "moments": [
+   {
+    "id": "frame",
+    "title": "Frame the change",
+    "steps": [
+     "discover_data",
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion"
+    ]
+   },
+   {
+    "id": "evidence",
+    "title": "Prepare evidence",
+    "steps": [
+     "train_eda",
+     "preprocessing"
+    ]
+   },
+   {
+    "id": "compare",
+    "title": "Work and compare",
+    "steps": [
+     "models",
+     "model_variant",
+     "policy"
+    ]
+   },
+   {
+    "id": "conclude",
+    "title": "Conclude and hand over",
+    "steps": [
+     "final_test",
+     "conclusion"
+    ]
+   }
+  ],
+  "pauses": [
+   {
+    "pause": 1,
+    "decisions": [
+     "prediction_time",
+     "feature_availability"
+    ],
+    "status": "closed",
+    "confirmed": [
+     "prediction_time",
+     "feature_availability"
+    ]
+   },
+   {
+    "pause": 2,
+    "decisions": [
+     "split",
+     "success_criterion",
+     "preprocessing"
+    ],
+    "status": "closed",
+    "confirmed": [
+     "split",
+     "success_criterion",
+     "preprocessing"
+    ]
+   },
+   {
+    "pause": 3,
+    "decisions": [
+     "model_variant",
+     "policy",
+     "final_test",
+     "conclusion"
+    ],
+    "status": "open",
+    "confirmed": [
+     "model_variant",
+     "policy"
+    ]
+   }
+  ],
+  "last_session": {
+   "boundary_revision": 1,
+   "boundary_time": "2026-10-21T12:15:29.543574+00:00",
+   "gap_minutes": null
+  },
+  "digest": {
+   "since": 1,
+   "until": 48,
+   "items": [
+    {
+     "revision": 2,
+     "time": "2026-10-21T12:15:29.854929+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "prediction_time",
+     "proposal_id": "p_1",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The prediction moment was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 3,
+     "time": "2026-10-21T12:15:31.519322+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "prediction_time",
+     "proposal_id": "p_1",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The prediction moment was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the prediction moment."
+    },
+    {
+     "revision": 4,
+     "time": "2026-10-21T12:15:32.727642+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "feature_availability",
+     "proposal_id": "p_2",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The feature availability was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 5,
+     "time": "2026-10-21T12:15:33.735399+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "feature_availability",
+     "proposal_id": "p_2",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The feature availability was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the feature availability."
+    },
+    {
+     "revision": 6,
+     "time": "2026-10-21T12:15:34.856837+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "split",
+     "proposal_id": "p_3",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The split was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 7,
+     "time": "2026-10-21T12:15:35.976319+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "split",
+     "proposal_id": "p_3",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The split was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the split."
+    },
+    {
+     "revision": 8,
+     "time": "2026-10-21T12:15:37.293215+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The success criterion was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 9,
+     "time": "2026-10-21T12:15:38.467803+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "success_criterion",
+     "proposal_id": "p_4",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The success criterion was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the success criterion."
+    },
+    {
+     "revision": 10,
+     "time": "2026-10-21T12:15:40.006363+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The preparation of the variables was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 11,
+     "time": "2026-10-21T12:15:41.593021+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "preprocessing",
+     "proposal_id": "p_5",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": []
+     },
+     "text": "The preparation of the variables was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the preparation of the variables."
+    },
+    {
+     "revision": 13,
+     "time": "2026-10-21T12:15:44.413531+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "split",
+     "slot": "split",
+     "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+     "execution_id": "e_8101d16893f3425fbb4ff727",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The split was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 15,
+     "time": "2026-10-21T12:15:45.635735+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.target_rate",
+     "slot": "eda.target_rate",
+     "result_id": "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+     "execution_id": "e_8651b2bcef1776e9ebffd170",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target rate was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 17,
+     "time": "2026-10-21T12:15:46.988605+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.special_values",
+     "slot": "eda.special_values",
+     "result_id": "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+     "execution_id": "e_76bdb563530c997e6fdf55cc",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The special-value check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 19,
+     "time": "2026-10-21T12:15:48.315869+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.quality",
+     "slot": "eda.quality",
+     "result_id": "2f07985087dd4623a29934568d19b8649dd444b451cd1b7dc6d200e89c9c87ba",
+     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The data quality check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 21,
+     "time": "2026-10-21T12:15:51.549012+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.single_feature_signal",
+     "slot": "eda.single_feature_signal",
+     "result_id": "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
+     "execution_id": "e_40d674998c07527b12a31e29",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The single-feature signal check was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 23,
+     "time": "2026-10-21T12:15:53.076318+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.rate_by",
+     "slot": "eda.rate_by:job",
+     "result_id": "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+     "execution_id": "e_3b7e9da2df5de95232824246",
+     "rules": null,
+     "column": "job",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The target rate by group of job was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 25,
+     "time": "2026-10-21T12:15:54.820876+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:age",
+     "result_id": "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b",
+     "execution_id": "e_17bb42fe2af6771b4815132d",
+     "rules": null,
+     "column": "age",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of age was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 27,
+     "time": "2026-10-21T12:15:56.247243+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:job",
+     "result_id": "3a1e3de370196c12e69001848ee5e4d5f3a683e8f993315ca676820443ebda75",
+     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
+     "rules": null,
+     "column": "job",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of job was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 29,
+     "time": "2026-10-21T12:15:57.780834+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.distribution",
+     "slot": "eda.distribution:previous",
+     "result_id": "0e5475484816b89aa0eb11e92990c63974d653a6bd8c2bbe788f07bbc185e74a",
+     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
+     "rules": null,
+     "column": "previous",
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The distribution of previous was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 31,
+     "time": "2026-10-21T12:16:00.261401+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "eda.correlation",
+     "slot": "eda.correlation",
+     "result_id": "99b87448f8a0f3322c005b7251a682da78088d6ca08e84c79208e49a521c8b6c",
+     "execution_id": "e_dc60c4ca476066179e139318",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity eda.correlation was computed.",
+     "audience": "agent",
+     "junior_text": "An analysis was computed."
+    },
+    {
+     "revision": 33,
+     "time": "2026-10-21T12:16:02.251824+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.baseline",
+     "slot": "fit.baseline",
+     "result_id": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+     "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The baseline model was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 35,
+     "time": "2026-10-21T12:16:03.976188+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.logistic",
+     "slot": "fit.logistic",
+     "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+     "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The logistic model was computed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 36,
+     "time": "2026-10-21T12:16:05.187574+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "model_variant",
+     "proposal_id": "p_6",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "Model variant was proposed.",
+     "audience": "junior",
+     "junior_text": null
+    },
+    {
+     "revision": 37,
+     "time": "2026-10-21T12:16:06.644456+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "model_variant",
+     "proposal_id": "p_6",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": [
+       "fit.baseline",
+       "fit.logistic"
+      ]
+     },
+     "text": "Model variant was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed model variant."
+    },
+    {
+     "revision": 39,
+     "time": "2026-10-21T12:16:08.481454+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "fit.variant",
+     "slot": "fit.variant",
+     "result_id": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+     "execution_id": "e_fd2d4cab3d29a091ff558cfa",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity fit.variant was computed.",
+     "audience": "agent",
+     "junior_text": "The variant model was computed."
+    },
+    {
+     "revision": 41,
+     "time": "2026-10-21T12:16:10.594379+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "policy.evaluation",
+     "slot": "policy.evaluation",
+     "result_id": "a4c003021e7f094169cf615652d13e506d41366998deb82287701e0aa4ba2e89",
+     "execution_id": "e_9f1e0272a9e69c5abdc408f8",
+     "rules": [
+      "threshold:0.2"
+     ],
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The policy evaluation was computed: threshold:0.2 evaluated.",
+     "audience": "agent",
+     "junior_text": "The policy evaluation was computed for: select every row scored 0.2 or more."
+    },
+    {
+     "revision": 42,
+     "time": "2026-10-21T12:16:12.081063+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "policy",
+     "proposal_id": "p_7",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The policy was proposed: threshold:0.2.",
+     "audience": "agent",
+     "junior_text": "The policy was proposed: select every row scored 0.2 or more."
+    },
+    {
+     "revision": 43,
+     "time": "2026-10-21T12:16:14.010841+00:00",
+     "action": "decide.confirm",
+     "kind": "confirmed",
+     "decision_id": "policy",
+     "proposal_id": "p_7",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": "chat",
+     "basis": "restated",
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": {
+      "mutation": "first_confirmation",
+      "row": null,
+      "stale_slots": [],
+      "reconfirm_required": [],
+      "refit": [],
+      "kept_fits": [
+       "fit.baseline",
+       "fit.logistic",
+       "fit.variant"
+      ]
+     },
+     "text": "The policy was confirmed in the junior's words (channel chat).",
+     "audience": "agent",
+     "junior_text": "You confirmed the policy."
+    },
+    {
+     "revision": 45,
+     "time": "2026-10-21T12:16:15.779179+00:00",
+     "action": "run.promote",
+     "kind": "result_added",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "diag.binary",
+     "slot": "diag.binary",
+     "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+     "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The activity diag.binary was computed.",
+     "audience": "agent",
+     "junior_text": "An analysis was computed."
+    },
+    {
+     "revision": 47,
+     "time": "2026-10-21T12:16:19.033310+00:00",
+     "action": "run.promote",
+     "kind": "result_replaced",
+     "decision_id": null,
+     "proposal_id": null,
+     "note_id": null,
+     "activity": "policy.evaluation",
+     "slot": "policy.evaluation",
+     "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+     "execution_id": "e_08e526346896c3129f460359",
+     "rules": [
+      "capacity:100"
+     ],
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": null,
+     "invalidation": null,
+     "text": "The policy evaluation was replaced: capacity:100 evaluated. Models unchanged, nothing refitted.",
+     "audience": "agent",
+     "junior_text": "The policy evaluation was replaced for: select the top 100 by score. Models unchanged, nothing refitted."
+    },
+    {
+     "revision": 48,
+     "time": "2026-10-21T12:16:21.143904+00:00",
+     "action": "decide.propose",
+     "kind": "proposed",
+     "decision_id": "policy",
+     "proposal_id": "p_8",
+     "note_id": null,
+     "activity": null,
+     "slot": null,
+     "result_id": null,
+     "execution_id": null,
+     "rules": null,
+     "column": null,
+     "channel": null,
+     "basis": null,
+     "delegation_scope": null,
+     "superseded": [],
+     "invalidation": null,
+     "text": "The policy was proposed: capacity:100.",
+     "audience": "agent",
+     "junior_text": "The policy was proposed: select the top 100 by score."
+    }
+   ],
+   "truncated": false,
+   "counts": {
+    "proposed": 8,
+    "confirmed": 7,
+    "withdrawn": 0,
+    "holds_recorded": 0,
+    "holds_resolved": 0,
+    "results_added": 15,
+    "results_replaced": 1,
+    "runs_started": 16,
+    "runs_failed": 0,
+    "invalidations": 0
+   },
+   "channel_actions": []
+  },
+  "task": "binary",
+  "currency": "c4169a2d9b87327a"
+ }
+}

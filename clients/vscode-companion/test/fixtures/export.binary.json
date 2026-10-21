@@ -1,0 +1,50 @@
+{
+ "about": {
+  "schema": "hypotrail.export/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "hand-authored",
+  "argv": [
+   "export",
+   "handoff",
+   "--out=/studies/bank marketing \"demo\"/handoff/revision-26",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.export/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 26,
+  "kind": "handoff",
+  "out": "/studies/bank marketing \"demo\"/handoff/revision-26",
+  "files": [
+   {
+    "path": "handoff.md",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "bytes": 8213
+   },
+   {
+    "path": "handoff.json",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "bytes": 15327
+   },
+   {
+    "path": "study.html",
+    "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "bytes": 91562
+   },
+   {
+    "path": "SHA256SUMS",
+    "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "bytes": 284
+   }
+  ],
+  "included_report": true,
+  "warnings": [
+   "open_proposals",
+   "unconfirmed_decisions"
+  ]
+ }
+}

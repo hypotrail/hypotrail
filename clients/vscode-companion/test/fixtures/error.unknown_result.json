@@ -1,0 +1,22 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "evidence",
+  "error": {
+   "code": "unknown_result",
+   "message": "No registry entry has this id.",
+   "details": {
+    "result_id": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+   }
+  }
+ }
+}

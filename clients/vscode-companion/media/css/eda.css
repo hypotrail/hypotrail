@@ -1,0 +1,50 @@
+/* EDA view styles (COMPANION-ADVANCED §6.3; v0.3 WP-E2, docs/design/companion-v0.3-mockups/
+   eda.html). Tokens of tokens.css and the card pattern of core.css only; no inline style. */
+.eda-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--s3); margin: var(--s3) 0; }
+.eda-gallery > .card { margin: 0; }
+.eda-card { display: flex; flex-direction: column; min-width: 0; }
+.eda-card > .ht-card-f { margin-top: auto; }
+.eda-card > .ht-figure + .ht-card-f, .eda-card > .ht-finding + .ht-card-f { margin-top: var(--s3); }
+.eda-wide { grid-column: 1 / -1; }
+.eda-question { margin: 0; }
+.ht-chips, .eda-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--s1) 0 var(--s2); }
+.eda-skeleton { min-height: 120px; }
+.eda-stack { max-width: 520px; }
+.eda-banner { margin: var(--s2) 0 var(--s3); }
+.eda-banner details.ht-why { margin-top: var(--s1); }
+.eda-seal-line { margin: var(--s2) 0; }
+.eda-facts { margin: var(--s1) 0 var(--s3); }
+/* The dictionary and the five rows are the only containers that may scroll sideways, inside
+   the card (data-scroll-ok); the page never does. */
+.eda-scroll { overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.eda-dictionary .colname { font-weight: 600; overflow-wrap: anywhere; }
+.eda-dictionary td.eda-meaning { min-width: 12ch; }
+.eda-rows td { white-space: nowrap; }
+.eda-target-col { font-weight: 600; background: var(--ht-accent-tint); }
+.eda-excluded { color: var(--ht-muted); }
+.eda-group-row th { background: var(--ht-sunken); font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 600; color: var(--ht-muted); padding: 5px 8px; text-align: left; }
+.eda-num { text-align: right; }
+.eda-five { margin-top: var(--s3); }
+.eda-band-outside { font-weight: 500; }
+.eda-leak p { margin: 0 0 var(--s1); }
+.eda-flagged { list-style: none; padding: 0; margin: var(--s2) 0 0; font-size: var(--t-meta); }
+.eda-flagged li { margin: 2px 0; }
+.eda-request-row { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: flex-end; }
+.eda-request-row label { margin: 0 0 2px; font-size: var(--t-meta); font-weight: 500; color: var(--ht-muted); }
+.eda-request-row > div { min-width: 0; max-width: 100%; }
+.eda-request-row select { width: 100%; max-width: 320px; }
+.eda-request-go button { margin: 0; }
+.eda-request-question { margin-top: var(--s2); }
+.eda-whole { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--ht-line); }
+.eda-whole button { margin-top: var(--s1); }
+.ht-empty { text-align: center; padding: var(--s5) var(--s4); color: var(--ht-muted); border: 1px dashed var(--ht-line-strong);
+  border-radius: var(--r-card); margin: var(--s3) 0; }
+@media (max-width: 600px) {
+  .eda-group-row th { display: block; }
+  .eda-rows td { white-space: normal; }
+  table.ht-cardable.eda-dictionary .eda-group-row { border: 0; padding: 0; }
+}
+@media (forced-colors: active) {
+  .eda-leak, .eda-banner { border: 1px solid CanvasText; }
+}

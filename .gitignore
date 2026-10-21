@@ -40,3 +40,10 @@
 .coverage
 .coverage.*
 htmlcov/
+
+# Local agent worktrees
+.claude/worktrees/
+
+# Datasets copied from an installed package by a use case prepare.py (not redistributed)
+/use-cases/breast-cancer-wdbc/data/
+/use-cases/diabetes/data/

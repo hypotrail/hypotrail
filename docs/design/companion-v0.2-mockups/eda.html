@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study panel eda</title>
+<style>
+:root{
+  --vscode-editor-background:#FBFAF7;--vscode-sideBar-background:#FFFFFF;--vscode-panel-border:#E3E1DA;
+  --vscode-foreground:#1C1E21;--vscode-descriptionForeground:#5B6066;--vscode-textLink-foreground:#1D5FAF;
+  --vscode-focusBorder:#1D5FAF;--vscode-button-background:#0F6E66;--vscode-button-foreground:#FFFFFF;
+  --vscode-button-secondaryBackground:#EEEDE8;--vscode-button-secondaryForeground:#1C1E21;
+  --vscode-input-background:#FFFFFF;--vscode-input-border:#8A8F96;--vscode-contrastBorder:transparent;
+  --vscode-charts-green:#0F6E66;--vscode-charts-orange:#A35C00;--vscode-charts-purple:#5B4AA8;--vscode-charts-red:#B3261E;
+  --vscode-charts-foreground:#5B6066;--vscode-charts-lines:#C9C6BD;
+  --ht-bg:var(--vscode-editor-background);--ht-surface:var(--vscode-sideBar-background);--ht-border:var(--vscode-panel-border);
+  --ht-fg:var(--vscode-foreground);--ht-muted:var(--vscode-descriptionForeground);--ht-link:var(--vscode-textLink-foreground);
+  --ht-accent:var(--vscode-charts-green);--ht-accent-soft:#E3F1EF;--ht-base:#8A8F96;--ht-track:#EEEDE8;
+  --ht-warn:var(--vscode-charts-orange);--ht-warn-bg:#FCEFD9;--ht-warn-fg:#5A3205;
+  --ht-err:var(--vscode-charts-red);--ht-err-bg:#FBE7E4;--ht-err-fg:#6B1E14;
+  --ht-seal:var(--vscode-charts-purple);--ht-seal-bg:#EEE8F7;--ht-seal-fg:#3A2363;
+  --ht-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ht-font:-apple-system,"Segoe UI",system-ui,Ubuntu,sans-serif;
+}
+:root[data-theme="dark"]{
+  --vscode-editor-background:#1F1F1F;--vscode-sideBar-background:#252526;--vscode-panel-border:#3A3C3F;
+  --vscode-foreground:#D4D4D4;--vscode-descriptionForeground:#A3A7AD;--vscode-textLink-foreground:#4DAAFC;
+  --vscode-focusBorder:#0078D4;--vscode-button-background:#0E7A71;--vscode-button-foreground:#FFFFFF;
+  --vscode-button-secondaryBackground:#313131;--vscode-button-secondaryForeground:#D4D4D4;
+  --vscode-input-background:#313131;--vscode-input-border:#5A5D62;
+  --vscode-charts-green:#4FB3A9;--vscode-charts-orange:#E0A04A;--vscode-charts-purple:#B7A9F5;--vscode-charts-red:#F48771;
+  --vscode-charts-foreground:#A3A7AD;--vscode-charts-lines:#4A4D52;
+  --ht-accent-soft:#1F3A37;--ht-base:#7D828A;--ht-track:#333538;
+  --ht-warn-bg:#3A2C14;--ht-warn-fg:#F2DDB8;--ht-err-bg:#3B1F1B;--ht-err-fg:#F4C7BF;--ht-seal-bg:#2C2340;--ht-seal-fg:#D9CCF2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ht-bg);color:var(--ht-fg);font:14px/1.5 var(--ht-font)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 40px}
+a{color:var(--ht-link)}
+code,.mono{font-family:var(--ht-mono);font-size:12.5px}
+h2{font-size:20px;margin:4px 0 6px}
+h3{font-size:14px;margin:0 0 10px}
+h4{font-size:13px;margin:12px 0 6px}
+p{margin:0 0 8px}
+.muted{color:var(--ht-muted)} .small{font-size:12px}
+/* frame */
+header.frame{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ht-border)}
+header.frame .t{font-weight:600}
+.pill{font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--ht-border);color:var(--ht-muted);white-space:nowrap}
+.pill.mode{border-color:var(--ht-accent);color:var(--ht-accent);font-weight:600}
+.pill.seal{border-color:var(--ht-seal);color:var(--ht-seal);font-weight:600}
+.fresh{margin-left:auto;font-size:12px;color:var(--ht-muted);display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ht-accent);display:inline-block}
+.dot.stale{background:var(--ht-warn)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--ht-border);margin-bottom:16px}
+nav.tabs a{padding:10px 12px;color:var(--ht-muted);text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent}
+nav.tabs a[aria-current]{color:var(--ht-fg);border-color:var(--ht-accent);font-weight:600}
+nav.tabs .n{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:9px;background:var(--ht-warn);color:#fff;font-size:11px;text-align:center;font-weight:700}
+.topbar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ht-muted);margin:-8px 0 14px}
+/* artboard label */
+.board{font:600 11px/1.4 var(--ht-mono);letter-spacing:.06em;text-transform:uppercase;color:#C2185B;border-top:2px dashed #C2185B;padding-top:6px;margin:28px 0 10px}
+.note{border:1px dashed #C2185B;color:#C2185B;font-size:12px;padding:4px 8px;border-radius:4px;margin:6px 0 10px}
+/* cards */
+.card{background:var(--ht-surface);border:1px solid var(--ht-border);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.card.hero{border:2px solid var(--ht-accent)}
+.card.warn{border-color:var(--ht-warn)}
+.card.seal{border-color:var(--ht-seal)}
+.kicker{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ht-accent);font-weight:700}
+.kicker.w{color:var(--ht-warn)} .kicker.s{color:var(--ht-seal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid2>.card,.grid3>.card{margin-bottom:0}
+.stack>*+*{margin-top:16px}
+/* buttons */
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:13px;border-radius:4px;padding:5px 12px;cursor:pointer;border:1px solid var(--vscode-contrastBorder);
+  background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground);font-weight:600}
+button.link{background:none;border:none;color:var(--ht-link);padding:5px 2px}
+button[disabled]{opacity:.55;cursor:not-allowed}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--vscode-focusBorder);outline-offset:2px}
+button .ico{margin-right:6px}
+/* text blocks */
+.quote{border-left:3px solid var(--ht-accent);background:var(--ht-accent-soft);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 12px}
+.callout{border-radius:6px;padding:8px 12px;margin:8px 0;font-size:13px}
+.callout.warn{background:var(--ht-warn-bg);color:var(--ht-warn-fg)}
+.callout.err{background:var(--ht-err-bg);color:var(--ht-err-fg)}
+.callout.seal{background:var(--ht-seal-bg);color:var(--ht-seal-fg)}
+.callout.ok{background:var(--ht-accent-soft)}
+.callout b{display:block;margin-bottom:2px}
+.term{border-bottom:1px dotted currentColor;cursor:help}
+.defn{font-size:13px;border-left:3px solid var(--ht-border);padding:2px 10px;margin:6px 0 10px;color:var(--ht-muted)}
+.defn b{color:var(--ht-fg)}
+textarea{width:100%;min-height:64px;font:inherit;color:var(--ht-fg);background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);border-radius:4px;padding:8px}
+label.f{display:block;font-weight:600;margin:10px 0 4px}
+/* chips and tags */
+.chip{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:4px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.chip.ok{background:var(--ht-accent-soft);color:var(--ht-accent)}
+.chip.w{background:var(--ht-warn-bg);color:var(--ht-warn-fg)}
+.chip.e{background:var(--ht-err-bg);color:var(--ht-err-fg)}
+.chip.s{background:var(--ht-seal-bg);color:var(--ht-seal-fg)}
+.chip.n{background:var(--ht-track);color:var(--ht-muted)}
+/* journey */
+.journey{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:4px 0 16px;list-style:none;padding:0}
+.journey li{padding:6px 4px 2px;border-top:4px solid var(--ht-accent);font-size:12px;color:var(--ht-muted)}
+.journey li.now{border-color:var(--ht-warn);color:var(--ht-fg);font-weight:700}
+.journey li.todo{border-color:var(--ht-border)}
+.journey li.sealed{border-color:var(--ht-seal);border-top-style:dashed}
+.journey li small{display:block;font-weight:400}
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--ht-muted);font-size:12px;border-bottom:1px solid var(--ht-border);padding:6px 8px}
+td{border-bottom:1px solid var(--ht-border);padding:6px 8px;vertical-align:top}
+td.num,th.num{text-align:right;font-family:var(--ht-mono);font-size:12.5px}
+tr.target td{background:var(--ht-accent-soft)}
+tr.grp td{background:var(--ht-track);font-weight:600;font-size:12px;color:var(--ht-muted);letter-spacing:.03em;text-transform:uppercase}
+.scroll{overflow-x:auto}
+/* svg charts */
+svg.chart{width:100%;height:auto;display:block}
+svg .acc{fill:var(--ht-accent)} svg .base{fill:var(--ht-base)} svg .trk{fill:var(--ht-track)}
+svg .warnf{fill:var(--ht-warn)} svg .sealf{fill:var(--ht-seal)}
+svg .ax{stroke:var(--vscode-charts-lines);stroke-width:1}
+svg .ln{fill:none;stroke:var(--ht-accent);stroke-width:2.5}
+svg .lnb{fill:none;stroke:var(--ht-base);stroke-width:2;stroke-dasharray:5 4}
+svg text{fill:var(--ht-fg);font:12px var(--ht-font)}
+svg text.m{fill:var(--ht-muted);font-size:11px}
+svg text.v{font:12px var(--ht-mono)}
+.legend{font-size:12px;color:var(--ht-muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.sw.a{background:var(--ht-accent)} .sw.b{background:var(--ht-base)} .sw.w{background:var(--ht-warn)} .sw.s{background:var(--ht-seal)}
+.q{font-size:13px;font-weight:600;margin:0 0 2px}
+.q::before{content:"Question \2014  ";color:var(--ht-accent);font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ht-muted);margin-bottom:8px}
+footer{margin-top:24px;font-size:12px;color:var(--ht-muted)}
+.themebtn{position:fixed;right:12px;bottom:12px;z-index:5}
+@media (max-width:680px){.grid2,.grid3{grid-template-columns:1fr}.journey{grid-template-columns:repeat(4,1fr)}}
+@media (forced-colors:active){.card.hero,.card.warn,.card.seal{border:2px solid CanvasText}button{border:1px solid ButtonText}.chip{border:1px solid CanvasText}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="frame">
+  <span class="t">Bank marketing &middot; demo</span>
+  <span class="pill mode" title="Confirmation mode of this study">guided mode</span>
+  <span class="pill seal" title="Final-test rows are excluded from every read">&#128274; final test sealed</span>
+  <span class="pill">Experimental</span>
+  <span class="fresh"><span class="dot" aria-hidden="true"></span><span><b>In sync</b> &middot; revision 31 &middot; read 12 s ago</span><button class="link">Refresh</button></span>
+</header>
+<nav class="tabs" aria-label="Study panel"><a href="#">Today</a><a href="#" aria-current="page">Data & EDA</a><a href="#">Decisions<span class=n aria-label="1 waiting for you">1</span></a><a href="#">Evidence</a><a href="#">What if?</a><a href="#">Deliverables</a><a href="#">Learn</a></nav>
+
+<div class="board">Data card &mdash; structural inspection, all rows, no outcome rate (R2, R5)</div>
+<section class="card" aria-labelledby="hd">
+  <div class="row" style="justify-content:space-between"><h3 id="hd" style="margin:0">The data</h3><span class="chip n">structural inspection &middot; recorded in the ledger</span></div>
+  <div class="grid3" style="margin:10px 0">
+    <div class="callout ok"><b>One row = one client</b>contacted in a 2008&ndash;2010 Portuguese bank phone campaign (UCI 222, 10 % sample)</div>
+    <div class="callout ok"><b>4,521 rows &middot; 17 columns</b>no missing cell &middot; no duplicate row &middot; no date, no client id</div>
+    <div class="callout ok"><b>Target <code>y</code></b>subscribed a term deposit: yes / no. Its rate is shown only after the split.</div>
+  </div>
+  <h4>Five rows, as stored (fixed rows, target first)</h4>
+  <div class="scroll"><table class="small"><tr><th style="color:var(--ht-accent)">y</th><th class=num style="">age</th><th style="">job</th><th style="">marital</th><th style="">education</th><th style="">default</th><th class=num style="">balance</th><th style="">housing</th><th style="">loan</th><th style="">contact</th><th class=num style="">day &#10007;</th><th style="">month &#10007;</th><th class=num style="">duration &#10007;</th><th class=num style="">campaign &#10007;</th><th class=num style="">pdays</th><th class=num style="">previous</th><th style="">poutcome</th></tr><tr><td class="" style="background:var(--ht-accent-soft);font-weight:600">no</td><td class="num" style="">30</td><td class="" style="">unemployed</td><td class="" style="">married</td><td class="" style="">primary</td><td class="" style="">no</td><td class="num" style="">1,787</td><td class="" style="">no</td><td class="" style="">no</td><td class="" style="">cellular</td><td class="num" style="color:var(--ht-muted)">19</td><td class="" style="color:var(--ht-muted)">oct</td><td class="num" style="color:var(--ht-muted)">79</td><td class="num" style="color:var(--ht-muted)">1</td><td class="num" style="">-1</td><td class="num" style="">0</td><td class="" style="">unknown</td></tr><tr><td class="" style="background:var(--ht-accent-soft);font-weight:600">no</td><td class="num" style="">33</td><td class="" style="">services</td><td class="" style="">married</td><td class="" style="">secondary</td><td class="" style="">no</td><td class="num" style="">4,789</td><td class="" style="">yes</td><td class="" style="">yes</td><td class="" style="">cellular</td><td class="num" style="color:var(--ht-muted)">11</td><td class="" style="color:var(--ht-muted)">may</td><td class="num" style="color:var(--ht-muted)">220</td><td class="num" style="color:var(--ht-muted)">1</td><td class="num" style="">339</td><td class="num" style="">4</td><td class="" style="">failure</td></tr><tr><td class="" style="background:var(--ht-accent-soft);font-weight:600">no</td><td class="num" style="">35</td><td class="" style="">management</td><td class="" style="">single</td><td class="" style="">tertiary</td><td class="" style="">no</td><td class="num" style="">1,350</td><td class="" style="">yes</td><td class="" style="">no</td><td class="" style="">cellular</td><td class="num" style="color:var(--ht-muted)">16</td><td class="" style="color:var(--ht-muted)">apr</td><td class="num" style="color:var(--ht-muted)">185</td><td class="num" style="color:var(--ht-muted)">1</td><td class="num" style="">330</td><td class="num" style="">1</td><td class="" style="">failure</td></tr><tr><td class="" style="background:var(--ht-accent-soft);font-weight:600">no</td><td class="num" style="">30</td><td class="" style="">management</td><td class="" style="">married</td><td class="" style="">tertiary</td><td class="" style="">no</td><td class="num" style="">1,476</td><td class="" style="">yes</td><td class="" style="">yes</td><td class="" style="">unknown</td><td class="num" style="color:var(--ht-muted)">3</td><td class="" style="color:var(--ht-muted)">jun</td><td class="num" style="color:var(--ht-muted)">199</td><td class="num" style="color:var(--ht-muted)">4</td><td class="num" style="">-1</td><td class="num" style="">0</td><td class="" style="">unknown</td></tr><tr><td class="" style="background:var(--ht-accent-soft);font-weight:600">no</td><td class="num" style="">59</td><td class="" style="">blue-collar</td><td class="" style="">married</td><td class="" style="">secondary</td><td class="" style="">no</td><td class="num" style="">0</td><td class="" style="">yes</td><td class="" style="">no</td><td class="" style="">unknown</td><td class="num" style="color:var(--ht-muted)">5</td><td class="" style="color:var(--ht-muted)">may</td><td class="num" style="color:var(--ht-muted)">226</td><td class="num" style="color:var(--ht-muted)">1</td><td class="num" style="">-1</td><td class="num" style="">0</td><td class="" style="">unknown</td></tr></table></div>
+  <p class="small muted" style="margin-top:4px">&#10007; excluded by your decision on variables (rev 5). Codes such as <code>-1</code> and <code>unknown</code> are special values, explained below.</p>
+  <h4>Dictionary <span class="small muted">(grouped; 9 of 17 shown)</span></h4>
+  <div class="scroll"><table><tr><th>Column</th><th>Type</th><th>Meaning</th><th>Known before the call?</th><th>Examples</th></tr><tr class="grp"><td colspan="5">Client profile</td></tr><tr><td><code>age</code></td><td class="small muted">int &middot; years</td><td class="small">Age of the client.</td><td><span class="chip ok">available</span><div class="small muted">documented fact</div></td><td class="small muted">30, 33, 59</td></tr><tr><td><code>job</code></td><td class="small muted">category &middot; 12</td><td class="small">Type of job.<div class=muted>Special: <code>unknown</code> (38 rows)</div></td><td><span class="chip ok">available</span><div class="small muted">scenario assumption</div></td><td class="small muted">management, services</td></tr><tr><td><code>education</code></td><td class="small muted">category &middot; 4</td><td class="small">Education level.<div class=muted>Special: <code>unknown</code> (187 rows)</div></td><td><span class="chip ok">available</span><div class="small muted">scenario assumption</div></td><td class="small muted">primary, tertiary</td></tr><tr class="grp"><td colspan="5">Current campaign contact</td></tr><tr><td><code>contact</code></td><td class="small muted">category &middot; 3</td><td class="small">Channel of the last contact of the current campaign.<div class=muted>Special: <code>unknown</code> (1,324 rows)</div></td><td><span class="chip w">uncertain</span><div class="small muted">unknown: not documented</div></td><td class="small muted">cellular, unknown</td></tr><tr><td><code>duration</code></td><td class="small muted">int &middot; seconds</td><td class="small">Duration of the last call. Known only after the call.</td><td><span class="chip e">not available</span><div class="small muted">documented fact (UCI)</div></td><td class="small muted">79, 220, 185</td></tr><tr class="grp"><td colspan="5">Previous campaigns</td></tr><tr><td><code>pdays</code></td><td class="small muted">int &middot; days</td><td class="small">Days since the client was last contacted in a previous campaign.<div class=muted>Special: <code>-1</code> = never contacted (3,705 rows)</div></td><td><span class="chip ok">available</span><div class="small muted">scenario assumption</div></td><td class="small muted">-1, 339, 330</td></tr><tr><td><code>poutcome</code></td><td class="small muted">category &middot; 4</td><td class="small">Outcome of the previous campaign.<div class=muted>Special: <code>unknown</code> = same rows as pdays -1</div></td><td><span class="chip ok">available</span><div class="small muted">scenario assumption</div></td><td class="small muted">unknown, failure</td></tr><tr class="grp"><td colspan="5">Target</td></tr><tr><td><code>y</code></td><td class="small muted">yes / no</td><td class="small">Has the client subscribed a term deposit?</td><td><span class="chip s">target</span><div class="small muted">documented fact</div></td><td class="small muted">no, no, no</td></tr></table></div>
+  <div class="row" style="margin-top:8px"><button class="link">Show all 17 columns</button><button class="link">Show French labels</button></div>
+</section>
+
+<div class="board">Exploration &mdash; development rows only, one question per chart</div>
+<section class="callout seal" style="display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center">
+  <span><b style="display:inline">Development rows only</b> &middot; 3,617 rows. The 904 final-test rows are sealed and never read here.</span>
+  <span style="margin-left:auto" class="mono">analyses viewed: 6 &middot; each one is recorded</span>
+</section>
+<div class="grid2" style="margin-top:12px">
+  <section class="card">
+    <p class="q">Is the outcome rare?</p>
+    <div class="meta"><span>eda.target_rate</span><span class="chip ok">current</span></div>
+    <svg class="chart" viewBox="0 0 400 34" role="img" aria-label="417 yes, 3,200 no"><rect class="acc" x="0" y="4" width="46" height="18" rx="2"/><rect class="trk" x="46" y="4" width="354" height="18" rx="2"/><text x="52" y="18">417 yes &middot; 11.5 %</text><text x="396" y="18" text-anchor="end" class="m">3,200 no</text></svg>
+    <p class="small"><b><span class="term">Class imbalance</span></b>: a model that always says &ldquo;no&rdquo; would be right 88.5 % of the time, so accuracy will mislead. Judge models against this <span class="term">base rate</span>.</p>
+  </section>
+  <section class="card">
+    <p class="q">Are the codes &ldquo;-1&rdquo; and &ldquo;unknown&rdquo; one fact or several?</p>
+    <div class="meta"><span>eda.special_values</span><span class="chip ok">current</span></div>
+    <p class="small"><code>pdays = -1</code> and <code>poutcome = unknown</code> are the <b>same 2,964 rows</b>: one fact, &ldquo;never contacted before&rdquo;. Treat them as one category, not as the number -1.</p>
+    <p class="small muted">Also coded unknown: <code>contact</code> 1,059 rows &middot; <code>education</code> 150 &middot; <code>job</code> 30.</p>
+  </section>
+</div>
+<section class="card" style="margin-top:16px">
+  <p class="q">Does the result of the previous campaign go with subscribing now?</p>
+  <div class="meta"><span>eda.rate_by:poutcome</span><span class="chip ok">current</span><span>sorted by rate &middot; scale 0&ndash;70 %</span></div>
+  <svg class="chart" viewBox="0 0 560 126" style="max-width:560px" role="img"><text x="142" y="18" text-anchor="end">success</text><rect class="trk" x="150" y="7" width="300" height="14" rx="2"/><rect class="acc" x="150" y="7" width="275.6" height="14" rx="2"/><text class="v" x="458" y="18">64.3% · n 103</text><text x="142" y="44" text-anchor="end">other</text><rect class="trk" x="150" y="33" width="300" height="14" rx="2"/><rect class="acc" x="150" y="33" width="82.7" height="14" rx="2"/><text class="v" x="458" y="44">19.3% · n 158</text><text x="142" y="70" text-anchor="end">failure</text><rect class="trk" x="150" y="59" width="300" height="14" rx="2"/><rect class="acc" x="150" y="59" width="55.3" height="14" rx="2"/><text class="v" x="458" y="70">12.9% · n 392</text><text x="142" y="96" text-anchor="end">unknown = never</text><rect class="trk" x="150" y="85" width="300" height="14" rx="2"/><rect class="acc" x="150" y="85" width="39.0" height="14" rx="2"/><text class="v" x="458" y="96">9.1% · n 2,964</text><line class="ax" x1="199.3" x2="199.3" y1="0" y2="108" stroke-dasharray="3 3" style="stroke:var(--ht-fg)"/><text class="m" x="199.3" y="122" text-anchor="middle">overall 11.5 %</text></svg>
+  <p class="small" style="margin-top:6px">Clients whose previous campaign succeeded subscribed far more often (64.3 % of 103). This describes the development sample; it does not say that a past success causes a subscription.</p>
+</section>
+<section class="card">
+  <p class="q">Does any single column predict the outcome suspiciously well?</p>
+  <div class="meta"><span>eda.single_feature_signal</span><span class="chip ok">current</span><span>5-fold cross-validated AUC, one column at a time</span></div>
+  <svg class="chart" viewBox="0 0 560 204" style="max-width:560px" role="img"><text x="142" y="18" text-anchor="end">duration &#10007;</text><rect class="trk" x="150" y="7" width="300" height="14" rx="2"/><rect class="warnf" x="150" y="7" width="243.0" height="14" rx="2"/><text class="v" x="458" y="18">0.81 leakage?</text><text x="142" y="44" text-anchor="end">poutcome</text><rect class="trk" x="150" y="33" width="300" height="14" rx="2"/><rect class="acc" x="150" y="33" width="180.0" height="14" rx="2"/><text class="v" x="458" y="44">0.60</text><text x="142" y="70" text-anchor="end">pdays</text><rect class="trk" x="150" y="59" width="300" height="14" rx="2"/><rect class="acc" x="150" y="59" width="177.0" height="14" rx="2"/><text class="v" x="458" y="70">0.59</text><text x="142" y="96" text-anchor="end">month &#10007;</text><rect class="trk" x="150" y="85" width="300" height="14" rx="2"/><rect class="base" x="150" y="85" width="186.0" height="14" rx="2"/><text class="v" x="458" y="96">0.62 excluded</text><text x="142" y="122" text-anchor="end">contact (uncertain)</text><rect class="trk" x="150" y="111" width="300" height="14" rx="2"/><rect class="acc" x="150" y="111" width="174.0" height="14" rx="2"/><text class="v" x="458" y="122">0.58</text><text x="142" y="148" text-anchor="end">age</text><rect class="trk" x="150" y="137" width="300" height="14" rx="2"/><rect class="acc" x="150" y="137" width="165.0" height="14" rx="2"/><text class="v" x="458" y="148">0.55</text><text x="142" y="174" text-anchor="end">balance</text><rect class="trk" x="150" y="163" width="300" height="14" rx="2"/><rect class="acc" x="150" y="163" width="162.0" height="14" rx="2"/><text class="v" x="458" y="174">0.54</text><line class="ax" x1="300.0" x2="300.0" y1="0" y2="186" stroke-dasharray="3 3" style="stroke:var(--ht-fg)"/><text class="m" x="300.0" y="200" text-anchor="middle">0.5 = no signal</text></svg>
+  <div class="callout warn"><b>Leakage detector</b><code>duration</code> alone reaches 0.81: the length of the call is only known after the call. You already excluded it; this is why.</div>
+</section>
+<section class="card">
+  <h3>Ask the engine for another chart</h3>
+  <div class="row"><span class="small">Column</span><button>balance &#9662;</button><span class="small">Analysis</span><button>Distribution &#9662;</button><button class="primary">Run on development rows</button></div>
+  <p class="small muted" style="margin-top:6px">Answers: &ldquo;How are balances spread? Are there extreme values?&rdquo; Recorded in the ledger (W4). For free exploration use your workbench in Marimo.</p>
+</section>
+
+<footer>Reads the hypotrail CLI only. The chat, the report and the notebook stay complete without this panel.</footer>
+</div>
+<button class="themebtn" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Toggle light / dark</button>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('theme');
+if(q){document.documentElement.dataset.theme=q;}
+else if(matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.dataset.theme='dark';}})();
+</script>
+</body>
+</html>

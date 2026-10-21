@@ -1,0 +1,23 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide confirm",
+  "error": {
+   "code": "ambiguous_confirmation",
+   "message": "A bare acknowledgement is not a decision. Restate the proposal and ask the user to answer it in their own words.",
+   "details": {
+    "reason": "bare_acknowledgement",
+    "user_words": "ok"
+   }
+  }
+ }
+}

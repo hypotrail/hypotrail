@@ -1,0 +1,224 @@
+schema: hypotrail.case-supplement/1
+purpose: >-
+  Input of mlkit.study.migrate, next to project.json. It adds what the companion tutorial
+  contract does not carry: how to read bank.csv, the positive label, line-cited UCI
+  documentation for every column, and structural observations. Every documented_fact cites
+  data/bank-names.txt by line. Edit this file and regenerate case.yaml; never edit case.yaml.
+dataset:
+  sep: ';'
+  header: true
+  quotechar: '"'
+target:
+  positive_label: 'yes'
+  negative_label: 'no'
+facts:
+  target:
+    source: 'data/bank-names.txt:35,67-68'
+  observation_unit:
+    source: 'data/bank-names.txt:26-28'
+  repeated_observations:
+    source: 'Structural inspection of data/bank.csv (no client identifier, no year)'
+variables:
+  age:
+    group: Client
+    labels:
+      fr: 'Âge du client, en années.'
+    type: integer
+    unit: years
+    description: Age of the client.
+    status: documented_fact
+    source: 'data/bank-names.txt:47'
+  job:
+    group: Client
+    labels:
+      fr: 'Type d''emploi.'
+    type: category
+    description: Type of job.
+    status: documented_fact
+    source: 'data/bank-names.txt:48-49'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:48'
+  marital:
+    group: Client
+    labels:
+      fr: 'Situation matrimoniale ; « divorced » signifie divorcé ou veuf.'
+    type: category
+    description: Marital status; "divorced" means divorced or widowed.
+    status: documented_fact
+    source: 'data/bank-names.txt:50'
+  education:
+    group: Client
+    labels:
+      fr: 'Niveau d''études.'
+    type: category
+    description: Education level.
+    status: documented_fact
+    source: 'data/bank-names.txt:51'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:51'
+  default:
+    group: Client
+    labels:
+      fr: 'Le client a-t-il un crédit en défaut de paiement ? (oui/non)'
+    type: binary
+    description: Has credit in default? (yes/no)
+    status: documented_fact
+    source: 'data/bank-names.txt:52'
+  balance:
+    group: Client
+    labels:
+      fr: 'Solde annuel moyen, en euros.'
+    description: Average yearly balance, in euros.
+    source: 'data/bank-names.txt:53'
+  housing:
+    group: Client
+    labels:
+      fr: 'Le client a-t-il un prêt immobilier ? (oui/non)'
+    type: binary
+    description: Has a housing loan? (yes/no)
+    status: documented_fact
+    source: 'data/bank-names.txt:54'
+  loan:
+    group: Client
+    labels:
+      fr: 'Le client a-t-il un prêt personnel ? (oui/non)'
+    type: binary
+    description: Has a personal loan? (yes/no)
+    status: documented_fact
+    source: 'data/bank-names.txt:55'
+  contact:
+    group: Last contact of this campaign
+    labels:
+      fr: 'Moyen du dernier contact de la campagne en cours (portable, téléphone fixe ou inconnu). Il décrit le dernier contact : il peut ne pas être connu avant ce contact.'
+    type: category
+    description: >-
+      Communication type of the last contact of the current campaign (cellular, telephone,
+      or unknown). It describes the last contact, so it may not be known before that contact.
+    status: documented_fact
+    source: 'data/bank-names.txt:56-57'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:57'
+  day:
+    group: Last contact of this campaign
+    labels:
+      fr: 'Jour du mois du dernier contact de la campagne en cours. Il décrit le dernier contact : il peut ne pas être connu avant ce contact.'
+    type: integer
+    description: >-
+      Day of the month of the last contact of the current campaign. It describes the last
+      contact, so it may not be known before that contact.
+    status: documented_fact
+    source: 'data/bank-names.txt:56,58'
+  month:
+    group: Last contact of this campaign
+    labels:
+      fr: 'Mois du dernier contact de la campagne en cours (jan à dec) ; l''année n''est pas enregistrée. Il décrit le dernier contact : il peut ne pas être connu avant ce contact.'
+    type: category
+    description: >-
+      Month of the last contact of the current campaign (jan to dec); the year is not
+      recorded. It describes the last contact, so it may not be known before that contact.
+    status: documented_fact
+    source: 'data/bank-names.txt:56,59'
+  duration:
+    group: Last contact of this campaign
+    labels:
+      fr: 'Durée du dernier contact de la campagne en cours, en secondes.'
+    description: Duration of the last contact of the current campaign, in seconds.
+    source: 'data/bank-names.txt:56,60'
+    availability:
+      value: not_available
+      status: documented_fact
+      source: >-
+        data/bank-names.txt:56,60: duration of the last contact of the current campaign, which
+        is known only once that contact has ended
+  campaign:
+    group: This and previous campaigns
+    labels:
+      fr: 'Nombre de contacts réalisés pendant cette campagne pour ce client, dernier contact compris. Comme il inclut le dernier contact, sa valeur avant ce contact est plus faible.'
+    type: integer
+    unit: contacts
+    description: >-
+      Number of contacts performed during this campaign for this client, including the last
+      contact. Because it includes the last contact, its value before that contact is lower.
+    status: documented_fact
+    source: 'data/bank-names.txt:62'
+  pdays:
+    group: This and previous campaigns
+    labels:
+      fr: 'Nombre de jours depuis le dernier contact du client lors d''une campagne précédente ; -1 signifie que le client n''avait jamais été contacté.'
+    description: >-
+      Number of days since the client was last contacted in a previous campaign; -1 means the
+      client was not previously contacted.
+    source: 'data/bank-names.txt:63'
+    special_values:
+      - value: -1
+        meaning: The client was not previously contacted.
+        status: documented_fact
+        source: 'data/bank-names.txt:63'
+  previous:
+    group: This and previous campaigns
+    labels:
+      fr: 'Nombre de contacts réalisés avant cette campagne pour ce client.'
+    description: Number of contacts performed before this campaign for this client.
+    source: 'data/bank-names.txt:64'
+  poutcome:
+    group: This and previous campaigns
+    labels:
+      fr: 'Résultat de la campagne marketing précédente.'
+    description: Outcome of the previous marketing campaign.
+    source: 'data/bank-names.txt:65'
+    special_values:
+      - value: unknown
+        meaning: Listed as a category by the documentation; what it covers is not documented.
+        status: unknown
+        source: 'data/bank-names.txt:65'
+  y:
+    group: Outcome
+    labels:
+      fr: 'Le client a-t-il souscrit un dépôt à terme ? (oui/non)'
+    description: Has the client subscribed a term deposit? (yes/no)
+    source: 'data/bank-names.txt:67-68'
+structure:
+  group_column:
+    value: null
+    status: unknown
+    source: >-
+      No client identifier in the extract, so repeated clients cannot be verified
+      (fact repeated_observations)
+  time_column:
+    value: null
+    status: unknown
+    source: >-
+      No complete date: day and month of the last contact without the year. bank.csv is a
+      random 10% sample of bank-full.csv, which is ordered by date (data/bank-names.txt:31-32)
+  duplicates:
+    value: 0
+    status: observed
+    source: 'Structural inspection of data/bank.csv: no exact duplicate rows'
+prior_exposure:
+  - value: >-
+      data/split.json records the tutorial split (seed 20261017) whose validation metrics were
+      published with this dataset. A study that reuses this seed has no unseen validation rows.
+    status: observed
+    source: data/split.json
+notes:
+  - >-
+    The UCI "bank-additional" documentation warns that duration is not known before a call;
+    data/bank-names.txt, shipped here, does not contain that warning. The not_available
+    status relies on lines 56 and 60 only.
+# WP-A9 (owner remark R6): the teaching scenario's capacity, asked as a share of the scored
+# clients. A scenario assumption only; a real team gives its own figure.
+scenario_defaults:
+  capacity_share:
+    value: 0.1
+    status: scenario_assumption
+    source: 'Teaching scenario: the call team can contact one client in ten. A real team would give
+      its own figure.'

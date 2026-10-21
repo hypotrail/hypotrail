@@ -1,0 +1,27 @@
+{
+ "about": {
+  "schema": "hypotrail.check/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "check",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.check/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 48,
+  "target": "study",
+  "clean": true,
+  "counts": {
+   "error": 0,
+   "warning": 0
+  },
+  "findings": [],
+  "traced": []
+ }
+}

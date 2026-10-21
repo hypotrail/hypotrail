@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study panel overview</title>
+<style>
+:root{
+  --vscode-editor-background:#FBFAF7;--vscode-sideBar-background:#FFFFFF;--vscode-panel-border:#E3E1DA;
+  --vscode-foreground:#1C1E21;--vscode-descriptionForeground:#5B6066;--vscode-textLink-foreground:#1D5FAF;
+  --vscode-focusBorder:#1D5FAF;--vscode-button-background:#0F6E66;--vscode-button-foreground:#FFFFFF;
+  --vscode-button-secondaryBackground:#EEEDE8;--vscode-button-secondaryForeground:#1C1E21;
+  --vscode-input-background:#FFFFFF;--vscode-input-border:#8A8F96;--vscode-contrastBorder:transparent;
+  --vscode-charts-green:#0F6E66;--vscode-charts-orange:#A35C00;--vscode-charts-purple:#5B4AA8;--vscode-charts-red:#B3261E;
+  --vscode-charts-foreground:#5B6066;--vscode-charts-lines:#C9C6BD;
+  --ht-bg:var(--vscode-editor-background);--ht-surface:var(--vscode-sideBar-background);--ht-border:var(--vscode-panel-border);
+  --ht-fg:var(--vscode-foreground);--ht-muted:var(--vscode-descriptionForeground);--ht-link:var(--vscode-textLink-foreground);
+  --ht-accent:var(--vscode-charts-green);--ht-accent-soft:#E3F1EF;--ht-base:#8A8F96;--ht-track:#EEEDE8;
+  --ht-warn:var(--vscode-charts-orange);--ht-warn-bg:#FCEFD9;--ht-warn-fg:#5A3205;
+  --ht-err:var(--vscode-charts-red);--ht-err-bg:#FBE7E4;--ht-err-fg:#6B1E14;
+  --ht-seal:var(--vscode-charts-purple);--ht-seal-bg:#EEE8F7;--ht-seal-fg:#3A2363;
+  --ht-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ht-font:-apple-system,"Segoe UI",system-ui,Ubuntu,sans-serif;
+}
+:root[data-theme="dark"]{
+  --vscode-editor-background:#1F1F1F;--vscode-sideBar-background:#252526;--vscode-panel-border:#3A3C3F;
+  --vscode-foreground:#D4D4D4;--vscode-descriptionForeground:#A3A7AD;--vscode-textLink-foreground:#4DAAFC;
+  --vscode-focusBorder:#0078D4;--vscode-button-background:#0E7A71;--vscode-button-foreground:#FFFFFF;
+  --vscode-button-secondaryBackground:#313131;--vscode-button-secondaryForeground:#D4D4D4;
+  --vscode-input-background:#313131;--vscode-input-border:#5A5D62;
+  --vscode-charts-green:#4FB3A9;--vscode-charts-orange:#E0A04A;--vscode-charts-purple:#B7A9F5;--vscode-charts-red:#F48771;
+  --vscode-charts-foreground:#A3A7AD;--vscode-charts-lines:#4A4D52;
+  --ht-accent-soft:#1F3A37;--ht-base:#7D828A;--ht-track:#333538;
+  --ht-warn-bg:#3A2C14;--ht-warn-fg:#F2DDB8;--ht-err-bg:#3B1F1B;--ht-err-fg:#F4C7BF;--ht-seal-bg:#2C2340;--ht-seal-fg:#D9CCF2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ht-bg);color:var(--ht-fg);font:14px/1.5 var(--ht-font)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 40px}
+a{color:var(--ht-link)}
+code,.mono{font-family:var(--ht-mono);font-size:12.5px}
+h2{font-size:20px;margin:4px 0 6px}
+h3{font-size:14px;margin:0 0 10px}
+h4{font-size:13px;margin:12px 0 6px}
+p{margin:0 0 8px}
+.muted{color:var(--ht-muted)} .small{font-size:12px}
+/* frame */
+header.frame{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ht-border)}
+header.frame .t{font-weight:600}
+.pill{font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--ht-border);color:var(--ht-muted);white-space:nowrap}
+.pill.mode{border-color:var(--ht-accent);color:var(--ht-accent);font-weight:600}
+.pill.seal{border-color:var(--ht-seal);color:var(--ht-seal);font-weight:600}
+.fresh{margin-left:auto;font-size:12px;color:var(--ht-muted);display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ht-accent);display:inline-block}
+.dot.stale{background:var(--ht-warn)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--ht-border);margin-bottom:16px}
+nav.tabs a{padding:10px 12px;color:var(--ht-muted);text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent}
+nav.tabs a[aria-current]{color:var(--ht-fg);border-color:var(--ht-accent);font-weight:600}
+nav.tabs .n{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:9px;background:var(--ht-warn);color:#fff;font-size:11px;text-align:center;font-weight:700}
+.topbar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ht-muted);margin:-8px 0 14px}
+/* artboard label */
+.board{font:600 11px/1.4 var(--ht-mono);letter-spacing:.06em;text-transform:uppercase;color:#C2185B;border-top:2px dashed #C2185B;padding-top:6px;margin:28px 0 10px}
+.note{border:1px dashed #C2185B;color:#C2185B;font-size:12px;padding:4px 8px;border-radius:4px;margin:6px 0 10px}
+/* cards */
+.card{background:var(--ht-surface);border:1px solid var(--ht-border);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.card.hero{border:2px solid var(--ht-accent)}
+.card.warn{border-color:var(--ht-warn)}
+.card.seal{border-color:var(--ht-seal)}
+.kicker{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ht-accent);font-weight:700}
+.kicker.w{color:var(--ht-warn)} .kicker.s{color:var(--ht-seal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid2>.card,.grid3>.card{margin-bottom:0}
+.stack>*+*{margin-top:16px}
+/* buttons */
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:13px;border-radius:4px;padding:5px 12px;cursor:pointer;border:1px solid var(--vscode-contrastBorder);
+  background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground);font-weight:600}
+button.link{background:none;border:none;color:var(--ht-link);padding:5px 2px}
+button[disabled]{opacity:.55;cursor:not-allowed}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--vscode-focusBorder);outline-offset:2px}
+button .ico{margin-right:6px}
+/* text blocks */
+.quote{border-left:3px solid var(--ht-accent);background:var(--ht-accent-soft);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 12px}
+.callout{border-radius:6px;padding:8px 12px;margin:8px 0;font-size:13px}
+.callout.warn{background:var(--ht-warn-bg);color:var(--ht-warn-fg)}
+.callout.err{background:var(--ht-err-bg);color:var(--ht-err-fg)}
+.callout.seal{background:var(--ht-seal-bg);color:var(--ht-seal-fg)}
+.callout.ok{background:var(--ht-accent-soft)}
+.callout b{display:block;margin-bottom:2px}
+.term{border-bottom:1px dotted currentColor;cursor:help}
+.defn{font-size:13px;border-left:3px solid var(--ht-border);padding:2px 10px;margin:6px 0 10px;color:var(--ht-muted)}
+.defn b{color:var(--ht-fg)}
+textarea{width:100%;min-height:64px;font:inherit;color:var(--ht-fg);background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);border-radius:4px;padding:8px}
+label.f{display:block;font-weight:600;margin:10px 0 4px}
+/* chips and tags */
+.chip{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:4px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.chip.ok{background:var(--ht-accent-soft);color:var(--ht-accent)}
+.chip.w{background:var(--ht-warn-bg);color:var(--ht-warn-fg)}
+.chip.e{background:var(--ht-err-bg);color:var(--ht-err-fg)}
+.chip.s{background:var(--ht-seal-bg);color:var(--ht-seal-fg)}
+.chip.n{background:var(--ht-track);color:var(--ht-muted)}
+/* journey */
+.journey{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:4px 0 16px;list-style:none;padding:0}
+.journey li{padding:6px 4px 2px;border-top:4px solid var(--ht-accent);font-size:12px;color:var(--ht-muted)}
+.journey li.now{border-color:var(--ht-warn);color:var(--ht-fg);font-weight:700}
+.journey li.todo{border-color:var(--ht-border)}
+.journey li.sealed{border-color:var(--ht-seal);border-top-style:dashed}
+.journey li small{display:block;font-weight:400}
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--ht-muted);font-size:12px;border-bottom:1px solid var(--ht-border);padding:6px 8px}
+td{border-bottom:1px solid var(--ht-border);padding:6px 8px;vertical-align:top}
+td.num,th.num{text-align:right;font-family:var(--ht-mono);font-size:12.5px}
+tr.target td{background:var(--ht-accent-soft)}
+tr.grp td{background:var(--ht-track);font-weight:600;font-size:12px;color:var(--ht-muted);letter-spacing:.03em;text-transform:uppercase}
+.scroll{overflow-x:auto}
+/* svg charts */
+svg.chart{width:100%;height:auto;display:block}
+svg .acc{fill:var(--ht-accent)} svg .base{fill:var(--ht-base)} svg .trk{fill:var(--ht-track)}
+svg .warnf{fill:var(--ht-warn)} svg .sealf{fill:var(--ht-seal)}
+svg .ax{stroke:var(--vscode-charts-lines);stroke-width:1}
+svg .ln{fill:none;stroke:var(--ht-accent);stroke-width:2.5}
+svg .lnb{fill:none;stroke:var(--ht-base);stroke-width:2;stroke-dasharray:5 4}
+svg text{fill:var(--ht-fg);font:12px var(--ht-font)}
+svg text.m{fill:var(--ht-muted);font-size:11px}
+svg text.v{font:12px var(--ht-mono)}
+.legend{font-size:12px;color:var(--ht-muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.sw.a{background:var(--ht-accent)} .sw.b{background:var(--ht-base)} .sw.w{background:var(--ht-warn)} .sw.s{background:var(--ht-seal)}
+.q{font-size:13px;font-weight:600;margin:0 0 2px}
+.q::before{content:"Question \2014  ";color:var(--ht-accent);font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ht-muted);margin-bottom:8px}
+footer{margin-top:24px;font-size:12px;color:var(--ht-muted)}
+.themebtn{position:fixed;right:12px;bottom:12px;z-index:5}
+@media (max-width:680px){.grid2,.grid3{grid-template-columns:1fr}.journey{grid-template-columns:repeat(4,1fr)}}
+@media (forced-colors:active){.card.hero,.card.warn,.card.seal{border:2px solid CanvasText}button{border:1px solid ButtonText}.chip{border:1px solid CanvasText}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="frame">
+  <span class="t">Bank marketing &middot; demo</span>
+  <span class="pill mode" title="Confirmation mode of this study">guided mode</span>
+  <span class="pill seal" title="Final-test rows are excluded from every read">&#128274; final test sealed</span>
+  <span class="pill">Experimental</span>
+  <span class="fresh"><span class="dot" aria-hidden="true"></span><span><b>In sync</b> &middot; revision 31 &middot; read 12 s ago</span><button class="link">Refresh</button></span>
+</header>
+<nav class="tabs" aria-label="Study panel"><a href="#" aria-current="page">Today</a><a href="#">Data & EDA</a><a href="#">Decisions<span class=n aria-label="1 waiting for you">1</span></a><a href="#">Evidence</a><a href="#">What if?</a><a href="#">Deliverables</a><a href="#">Learn</a></nav>
+
+<div class="board">Artboard A &mdash; first open (step 0, no proposal yet)</div>
+<ol class="journey" aria-label="Study steps">
+<li class="now">0 Discover the data<small>you are here</small></li>
+<li class="todo">1 Prediction moment<small>your words</small></li>
+<li class="todo">2 Variables<small>your words</small></li>
+<li class="todo">3 Split &amp; seal<small>your words</small></li>
+<li class="todo">4 Explore<small>development rows</small></li>
+<li class="todo">5 Models<small>cross-validated</small></li>
+<li class="todo">6 Calling rule<small>your words + reason</small></li>
+<li class="todo">7 Final test &amp; conclusion<small>your words + reason</small></li>
+</ol>
+<section class="card hero" aria-labelledby="h0">
+  <div class="kicker">Step 0 of 7 &middot; nothing to decide yet</div>
+  <h2 id="h0">Start by looking at the data</h2>
+  <p>Before anyone talks about variables or models, read what one row is and what each column means. This is a
+  <span class="term" title="Reading the structure of the data (columns, codes, a few rows). Recorded in the exposure ledger; it shows no outcome rate.">structural inspection</span>:
+  it shows no outcome rate and no chart of the target, so it does not bias the later steps.</p>
+  <div class="grid3" style="margin:12px 0">
+    <div class="callout ok"><b>One row</b>one client contacted in the campaign</div>
+    <div class="callout ok"><b>4,521 rows &middot; 17 columns</b>no missing cell, no duplicate row</div>
+    <div class="callout ok"><b>Target <code>y</code></b>did the client subscribe a term deposit? yes / no</div>
+  </div>
+  <div class="row"><button class="primary">Open the data card</button><button>Open the report</button><button class="link">What is this panel?</button></div>
+</section>
+<div class="grid2">
+  <section class="card"><h3>The plan, in one line per step</h3>
+    <ol class="small" style="padding-left:18px;margin:0">
+      <li><b>Prediction moment</b> &mdash; when the score is computed; it decides which columns are allowed.</li>
+      <li><b>Variables</b> &mdash; which columns are known at that moment (risk: <span class="term">leakage</span>).</li>
+      <li><b>Split &amp; seal</b> &mdash; set aside a <span class="term">final test</span> nobody reads until the end.</li>
+      <li><b>Explore</b> &mdash; charts on development rows only, each tied to a question.</li>
+      <li><b>Models</b> &mdash; a baseline and a logistic model, compared by cross-validation.</li>
+      <li><b>Calling rule</b> &mdash; how many clients to call, given the team's capacity.</li>
+      <li><b>Final test &amp; conclusion</b> &mdash; open the seal once, then say what you can claim.</li>
+    </ol>
+    <p class="small muted" style="margin-top:8px">You make 5 decisions in your own words. The agent proposes; nothing is decided until you answer.</p>
+  </section>
+  <section class="card"><h3>How to work with this panel</h3>
+    <ul class="small" style="padding-left:18px;margin:0">
+      <li>Talk to the agent in the <b>chat</b>; it does the analysis.</li>
+      <li>This panel shows <b>where the study stands</b> and lets you answer proposals in your own words.</li>
+      <li>The <b>report</b> and the <b>notebook</b> are the deliverables; they are regenerated after each decision.</li>
+      <li>Nothing here trains a model or reads the final-test rows.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="board">Artboard B &mdash; mid-study: one thing waits for you</div>
+<ol class="journey" aria-label="Study steps">
+<li>0 Data<small>seen</small></li>
+<li>1 Moment<small>your words</small></li>
+<li>2 Variables<small>your words &middot; 1 concern</small></li>
+<li>3 Split &amp; seal<small>delegated</small></li>
+<li>4 Explore<small>6 analyses</small></li>
+<li>5 Models<small>2 fitted</small></li>
+<li class="now">6 Calling rule<small>needs your words</small></li>
+<li class="todo sealed">7 Final test<small>sealed</small></li>
+</ol>
+<section class="card hero" aria-labelledby="h1">
+  <div class="kicker">Your next move &middot; pause 3 &middot; business trade-off</div>
+  <h2 id="h1">Answer the proposed calling rule</h2>
+  <p class="muted">Your manager confirmed the team can make about 10&nbsp;% of the calls (362 clients per wave). The agent proposes to call the 10&nbsp;% highest-scored clients. Nothing changes until you answer.</p>
+  <div class="quote">&ldquo;Call the 10 % of clients with the highest scores.&rdquo;</div>
+  <p class="small">Out-of-fold on 3,617 development rows: <b>36 subscribers per 100 calls</b> against 11.5 at random (+24.5 points, 95&nbsp;% interval +16 to +33).</p>
+  <div class="row"><button class="primary">Answer in Decisions</button><button>Compare rules in What if?</button><button class="link">Copy a question for the chat</button></div>
+</section>
+<div class="grid2">
+  <section class="card"><h3>Since your last session <span class="muted small">(yesterday 21:12, revision 23)</span></h3>
+    <ul style="list-style:none;padding:0;margin:0" class="small">
+      <li style="margin-bottom:6px"><span class="chip ok">resolved</span> Your condition &ldquo;wait for my manager's figure&rdquo; &rarr; &ldquo;the team can call 10 % per wave&rdquo;</li>
+      <li style="margin-bottom:6px"><span class="chip ok">re-evaluated</span> Calling rule at 5, 10 and 20 %. Models unchanged, nothing refitted.</li>
+      <li style="margin-bottom:6px"><span class="chip w">needs you</span> Calling rule, then the final test</li>
+      <li><span class="chip n">deliverables</span> Report and notebook regenerated (revision 31)</li>
+    </ul>
+    <button class="link small">Show all 18 events</button>
+  </section>
+  <section class="card"><h3>What you cannot claim yet</h3>
+    <ul class="small" style="list-style:none;padding:0;margin:0">
+      <li style="margin-bottom:6px"><span class="chip e">blocking</span> The calling rule and the conclusion are not confirmed.</li>
+      <li style="margin-bottom:6px"><span class="chip w">caveat</span> <code>contact</code> is kept although its availability before the call is uncertain.</li>
+      <li style="margin-bottom:6px"><span class="chip s">sealed</span> No figure is independent evidence yet: the final test is still sealed.</li>
+      <li><span class="chip n">context</span> No date or client id; no causal effect of a call is measured.</li>
+    </ul>
+  </section>
+</div>
+<div class="note">Changes vs. today: the recap is rewritten for the junior (no &ldquo;recap from status --summary&rdquo;, no <code>threshold:0.2</code>, no agent instruction such as &ldquo;Show the restatement&hellip;&rdquo;); the highlighted step is the one waiting for the junior, not the last; Health only appears when something is wrong; limits carry a severity.</div>
+
+<footer>Reads the hypotrail CLI only. The chat, the report and the notebook stay complete without this panel.</footer>
+</div>
+<button class="themebtn" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Toggle light / dark</button>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('theme');
+if(q){document.documentElement.dataset.theme=q;}
+else if(matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.dataset.theme='dark';}})();
+</script>
+</body>
+</html>

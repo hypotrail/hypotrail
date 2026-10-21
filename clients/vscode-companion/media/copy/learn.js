@@ -1,0 +1,82 @@
+// Copy of the Learn & hand off view and of the agent bridge (COMPANION-ADVANCED §6.6,
+// §6.8, §15): panel-owned English strings. No digit outside placeholders, except inside
+// the engine's own instruction quoted verbatim (`sessionLogOff`, an environment variable
+// value). No word of a decision rule (INV-12): the same strings serve both tasks, so no
+// key is task-specific. Never a suggestion of confirmation words. Owned by WP-U5.
+(function (HT) {
+  'use strict';
+  HT.copy = HT.copy || {};
+  HT.copy.learn = {
+    title: 'Learn & hand off',
+    // Learning layer (§6.6.1)
+    layerTitle: 'Concepts of this study',
+    layerIntro: 'The term first, then what it means in this study. A card or a prediction is not a ',
+    layerIntroTerm: 'decision',
+    layerIntroEnd: '.',
+    layerReading: 'Reading the concepts...',
+    layerError: 'The concepts could not be read.',
+    retry: 'Retry',
+    cardLabel: 'Concept card, not a decision',
+    cardStep: title => `Step: ${title}`,
+    cardMissing: 'This text appears once the results it cites are current.',
+    showConcept: term => `Show the concept: ${term}`,
+    hideConcept: 'Collapse',
+    hideCards: 'Hide concept cards',
+    showCards: 'Show concept cards',
+    cardsHidden: 'Concept cards are hidden. They stay hidden on this computer until you show them again.',
+    noCards: 'No step waits for you now, so no concept card is shown.',
+    exampleNeeded: 'The example of this study appears once the results it cites are current.',
+    predictTag: 'Optional · before you look',
+    predictionsTitle: 'Predict before you look',
+    yourAnswer: label => `Your answer: ${label}`,
+    revealTitle: 'What the study shows',
+    revealLater: 'The answer appears once the engine has computed it.',
+    keptLocal: 'Kept on this computer only. Never written to the study.',
+    resetAnswers: 'Reset my answers for this study',
+    noPredictions: 'No question is open for the steps reached so far.',
+    // Agent bridge (§6.8)
+    ask: 'Ask the agent about this',
+    askTitle: 'Ask the agent',
+    askAbout: 'About',
+    askQuestion: 'Your question (optional)',
+    askHint: 'The text names what you are asking about and your question. It is copied for you to paste; nothing is sent.',
+    askCopy: 'Copy for the chat',
+    askInsert: 'Insert into the chat',
+    aboutLine: (kind, id, label) => `${kind} ${id}${label ? ` (${label})` : ''}`,
+    // Hand off (§6.6.2)
+    handoffTitle: 'Hand the study over',
+    handoffIntro: 'A handoff pack is a folder for a reviewer: a summary, the cited results, and the report when it is current. It changes nothing in the study.',
+    exportButton: 'Export a handoff pack',
+    exportFolder: 'You choose a parent folder; the pack goes in a new folder named after the revision.',
+    exportFiles: 'Files written:',
+    exportFile: (file, bytes) => `${file} · ${bytes} bytes`,
+    exportOut: out => `Folder: ${out}`,
+    exportIncomplete: words => `The pack is incomplete: ${words}.`,
+    exportStaleReport: 'The report was not current, so it is not in the pack. Regenerate it in Overview and export again if you need it.',
+    openFolder: 'Open folder',
+    reviewerLine: 'A reviewer can open this study read-only with "Hypotrail: open the study panel (reviewer, read-only)".',
+    // Session report (§6.6.3)
+    reportTitle: 'Session report (for an observed session)',
+    reportReading: 'Reading the session report...',
+    reportError: 'The session report could not be read.',
+    reportPrivacy: 'It holds no conversation content: only times, counts, and identifiers.',
+    logOn: 'Session log: on',
+    logOff: 'Session log: off',
+    sessionLogOff: 'Start the CLI once with HYPOTRAIL_SESSION_LOG=1 to turn it on; delete .hypotrail/session-log.jsonl to turn it off.',
+    spanTitle: 'Span',
+    span: (first, last, seconds) => `From ${first} to ${last} (${seconds} s)`,
+    spanNone: 'No activity recorded yet.',
+    pausesTitle: 'Pauses',
+    pause: (n, seconds) => `Pause ${n}: ${seconds === null ? 'still open' : `${seconds} s`}`,
+    refusalsTitle: 'Refusals',
+    refusal: (code, reason, count) => `${code}${reason ? ` (${reason})` : ''}: ${count}`,
+    noRefusals: 'None recorded.',
+    decisionsTitle: 'Decisions',
+    decision: (d, p, outcome, seconds, refused) =>
+      `${d} (${p}): ${outcome}${seconds === null ? '' : `, open ${seconds} s`}${refused ? `, refused confirmations ${refused}` : ''}`,
+    gapsTitle: 'Gaps',
+    gap: (from, to, minutes) => `${from} to ${to} (${minutes} min)`,
+    noGaps: 'None.',
+    noneYet: 'None yet.',
+  };
+})(globalThis.Hypotrail = globalThis.Hypotrail || {});

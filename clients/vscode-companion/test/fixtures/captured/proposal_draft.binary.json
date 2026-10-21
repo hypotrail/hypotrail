@@ -1,0 +1,57 @@
+{
+ "about": {
+  "schema": "hypotrail.proposal_draft/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "preview",
+   "proposal",
+   "policy",
+   "--value=capacity:100",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.proposal_draft/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "revision": 48,
+  "decision_id": "policy",
+  "value": "capacity:100",
+  "proposable": true,
+  "missing": [],
+  "restatement": "Adopt the rule capacity:100: act on the 100 highest-scored rows. On the 1,086 validation rows the logistic model's selection had precision 38.0% against 11.5% for the baseline, and recall 30.4%. These validation rows were used to choose the rule, so these figures are optimistic.",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result b3b6e35b).",
+  "evidence": {
+   "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+   "activity": "policy.evaluation",
+   "figures": [
+    {
+     "path": "n",
+     "value": 1086,
+     "shown": "1,086"
+    },
+    {
+     "path": "rules.capacity:100.models.[fit.logistic].precision",
+     "value": 0.38,
+     "shown": "38.0%"
+    },
+    {
+     "path": "rules.capacity:100.models.[fit.baseline].precision",
+     "value": 0.1151012891344383,
+     "shown": "11.5%"
+    },
+    {
+     "path": "rules.capacity:100.models.[fit.logistic].recall",
+     "value": 0.304,
+     "shown": "30.4%"
+    }
+   ]
+  },
+  "supersedes_proposal": "p_8",
+  "recorded": false,
+  "note": "Draft only: nothing was recorded. Proposing creates a proposal, not a decision."
+ }
+}

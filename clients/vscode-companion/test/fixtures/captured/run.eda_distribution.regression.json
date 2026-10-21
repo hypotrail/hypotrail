@@ -1,0 +1,190 @@
+{
+ "about": {
+  "schema": "hypotrail.run/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "run",
+   "eda.distribution",
+   "--column=weight"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.run/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "action": "run",
+  "request_id": "a17",
+  "replayed": false,
+  "revision": 25,
+  "activity": "eda.distribution",
+  "execution_id": "e_622dd0c704d6af123eea761a",
+  "status": "promoted",
+  "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+  "values": {
+   "partition": "train",
+   "column": "weight",
+   "role": "feature",
+   "type": "numeric",
+   "kind": "numeric",
+   "n_rows": 222,
+   "n_missing": 0,
+   "special_values": [],
+   "numeric": {
+    "n": 222,
+    "min": 1613.0,
+    "q25": 2300.0,
+    "median": 3027.0,
+    "q75": 3842.75,
+    "max": 5140.0,
+    "mean": 3123.698198198198,
+    "sd": 890.8144902362324,
+    "n_bins": 10,
+    "bin_width": 352.7,
+    "bins": [
+     {
+      "low": 1613.0,
+      "high": 1965.7,
+      "n_rows": 15,
+      "share": 0.06756756756756757,
+      "closed": "left"
+     },
+     {
+      "low": 1965.7,
+      "high": 2318.4,
+      "n_rows": 44,
+      "share": 0.1981981981981982,
+      "closed": "left"
+     },
+     {
+      "low": 2318.4,
+      "high": 2671.1,
+      "n_rows": 29,
+      "share": 0.13063063063063063,
+      "closed": "left"
+     },
+     {
+      "low": 2671.1,
+      "high": 3023.8,
+      "n_rows": 23,
+      "share": 0.1036036036036036,
+      "closed": "left"
+     },
+     {
+      "low": 3023.8,
+      "high": 3376.5,
+      "n_rows": 20,
+      "share": 0.09009009009009009,
+      "closed": "left"
+     },
+     {
+      "low": 3376.5,
+      "high": 3729.2,
+      "n_rows": 28,
+      "share": 0.12612612612612611,
+      "closed": "left"
+     },
+     {
+      "low": 3729.2,
+      "high": 4081.9,
+      "n_rows": 19,
+      "share": 0.08558558558558559,
+      "closed": "left"
+     },
+     {
+      "low": 4081.9,
+      "high": 4434.6,
+      "n_rows": 24,
+      "share": 0.10810810810810811,
+      "closed": "left"
+     },
+     {
+      "low": 4434.6,
+      "high": 4787.299999999999,
+      "n_rows": 15,
+      "share": 0.06756756756756757,
+      "closed": "left"
+     },
+     {
+      "low": 4787.299999999999,
+      "high": 5140.0,
+      "n_rows": 5,
+      "share": 0.02252252252252252,
+      "closed": "both"
+     }
+    ],
+    "zeros": {
+     "n_rows": 0,
+     "share": 0.0
+    },
+    "skewed": false,
+    "log_bins": null
+   },
+   "groups": null,
+   "n_groups": null,
+   "max_groups": 20,
+   "other": null,
+   "min_group_rows": 30,
+   "warnings": [],
+   "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+   "question": "How are the values of weight distributed among the training rows?"
+  },
+  "result": {
+   "execution_id": "e_622dd0c704d6af123eea761a",
+   "activity": "eda.distribution",
+   "slot": "eda.distribution:weight",
+   "status": "promoted",
+   "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+   "input_key": "539096ae32854b855b89869230e7bd975f2917391e4c3a2489440ef6dab4f7e6",
+   "reason": null,
+   "started_revision": 24,
+   "invalidation": null,
+   "exposure_ids": [
+    "x_0dba20f237d34361a0be6af2461f870c"
+   ],
+   "registry_created": true,
+   "nondeterministic": false
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 25,
+    "last_ok_revision": 25,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 25,
+    "last_ok_revision": 25,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  },
+  "next_action": {
+   "kind": "run",
+   "step": "models",
+   "activity": "fit.baseline",
+   "message": "Which predictions do the training mean and a linear model give for the validation rows?",
+   "audience": "junior",
+   "junior_message": "Which predictions do the training mean and a linear model give for the validation rows?",
+   "language": "en",
+   "recommended": null,
+   "question": null,
+   "junior_digest": "Next: the baseline model, run without asking you. Which predictions do the training mean and a linear model give for the validation rows?"
+  }
+ }
+}

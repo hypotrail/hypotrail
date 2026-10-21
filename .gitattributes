@@ -12,3 +12,6 @@
 
 # Preserve original public data and source documentation byte for byte.
 use-cases/*/data/** -text -whitespace
+
+# Panel pixel baselines (clients/vscode-companion/test/baselines)
+*.png binary

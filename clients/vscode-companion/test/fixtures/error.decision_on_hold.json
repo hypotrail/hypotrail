@@ -1,0 +1,29 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "decide confirm",
+  "error": {
+   "code": "decision_on_hold",
+   "message": "This decision is on hold in the junior's own words; resolve the note first.",
+   "details": {
+    "decision_id": "policy",
+    "proposal_id": "p_5",
+    "notes": [
+     {
+      "note_id": "n_1",
+      "user_words": "don't adopt anything until I bring my manager's figure"
+     }
+    ]
+   }
+  }
+ }
+}

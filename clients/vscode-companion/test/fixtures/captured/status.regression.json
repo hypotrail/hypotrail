@@ -1,0 +1,3963 @@
+{
+ "about": {
+  "schema": "hypotrail.status/1",
+  "task": "regression",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "status",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.status/1",
+  "ok": true,
+  "study": "/studies/auto mpg",
+  "revision": 38,
+  "since": null,
+  "changed": null,
+  "changes_since": null,
+  "view": {
+   "schema": "hypotrail.view/1",
+   "study": "/studies/auto mpg",
+   "revision": 38,
+   "updated": "2026-10-21T12:19:45.656033+00:00",
+   "case": {
+    "id": "uci-auto-mpg-v1",
+    "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
+    "sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291"
+   },
+   "dataset": {
+    "path": "/hypotrail/use-cases/auto-mpg/data/auto-mpg.data",
+    "row_key": {
+     "format": "L<line>",
+     "rule": "source_line"
+    },
+    "rows": 398,
+    "sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d"
+   },
+   "plan": [
+    {
+     "id": "discover_data",
+     "title": "Discover the data",
+     "question": "What does one row describe, which columns are there and what does each one mean, and what do a few rows look like?",
+     "expected_output": "The data card read with you: the row unit, the columns grouped with their meaning and availability, and a few example rows. Nothing is decided at this step.",
+     "completion": "Done once a first proposal is made.",
+     "pause": null,
+     "decision": null,
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "prediction_time",
+     "title": "Define the prediction moment",
+     "question": "At what moment is the prediction made, and what is known at that moment?",
+     "expected_output": "A confirmed prediction time, restated and answered in your own words.",
+     "completion": "Decision prediction_time is confirmed.",
+     "pause": 1,
+     "decision": "prediction_time",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "feature_availability",
+     "title": "Decide which variables are available at prediction time",
+     "question": "Which variables are known at the prediction moment, and which must be excluded?",
+     "expected_output": "A confirmed availability status for every candidate feature, with the exclusions listed in your own words.",
+     "completion": "Decision feature_availability is confirmed.",
+     "pause": 1,
+     "decision": "feature_availability",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "prediction_time"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "split",
+     "title": "Split the data before exploring it",
+     "question": "How are rows divided between training and validation, before any exploration of the target?",
+     "expected_output": "A confirmed split decision and a recorded split result.",
+     "completion": "Decision split is confirmed and the split result is current.",
+     "pause": 2,
+     "decision": "split",
+     "activities": [
+      "split"
+     ],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "prediction_time",
+      "feature_availability"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "success_criterion",
+     "title": "Fix the success criterion before seeing a model",
+     "question": "The mean absolute error is the average size of a prediction's error, in the unit of the target. The mean baseline predicts the training mean for every row. How much smaller than the error of the mean baseline should the validation error of the model be for it to be worth using? It is fixed now, before any model is fitted.",
+     "expected_output": "A confirmed minimum relative error reduction over the mean baseline, stated before any model result is seen.",
+     "completion": "Decision success_criterion is confirmed.",
+     "pause": 2,
+     "decision": "success_criterion",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "train_eda",
+     "title": "Explore the training partition",
+     "question": "What do the training rows show about the distribution of the target and the special values? Other explorations (the quality overview, means by variable, distributions, the single-feature signal) each answer a question stated first; every look at the target is counted.",
+     "expected_output": "A target summary (count, mean, standard deviation, quantiles, missing values) and special-value counts on training rows, with their exposure recorded.",
+     "completion": "The training EDA results are current.",
+     "pause": null,
+     "decision": null,
+     "activities": [
+      "eda.target_summary",
+      "eda.special_values"
+     ],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "preprocessing",
+     "title": "Decide how the model prepares the variables",
+     "question": "How should the model treat missing values, rare categories, extreme values and skewed variables? Every parameter is learnt on training rows only.",
+     "expected_output": "A confirmed preprocessing, with the explorations that motivated it.",
+     "completion": "Decision preprocessing is confirmed.",
+     "pause": 2,
+     "decision": "preprocessing",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "models",
+     "title": "Fit a mean baseline and a linear model",
+     "question": "Which predictions do the training mean and a linear model give for the validation rows?",
+     "expected_output": "Persisted validation predictions for the mean baseline and the linear model.",
+     "completion": "Both fit results are current.",
+     "pause": null,
+     "decision": null,
+     "activities": [
+      "fit.baseline",
+      "fit.linear"
+     ],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "split",
+      "success_criterion",
+      "preprocessing"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "model_variant",
+     "title": "Choose the variants to compare",
+     "question": "Which variants of the candidate model, at most three and each with the question it answers, should be compared with it under the same evaluation: the penalty chosen by nested cross-validation, a stronger or weaker regularisation, the model without one group of variables, or another model family when the diagnostics show a pattern the linear model cannot follow?",
+     "expected_output": "A confirmed list of variants and their out-of-fold predictions, evaluated like the candidate.",
+     "completion": "Decision model_variant is confirmed and every variant fit is current.",
+     "pause": 3,
+     "decision": "model_variant",
+     "activities": [
+      "fit.variant"
+     ],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "models"
+     ],
+     "status": "done",
+     "current": false
+    },
+    {
+     "id": "model_choice",
+     "title": "Choose the model",
+     "question": "Does the linear model reduce the validation error of the mean baseline, in the target unit, by enough to adopt it, given the paired intervals and the residuals?",
+     "expected_output": "A current regression evaluation and a confirmed model choice.",
+     "completion": "The regression evaluation is current and decision model_choice is confirmed.",
+     "pause": 3,
+     "decision": "model_choice",
+     "activities": [
+      "evaluate.regression",
+      "diag.regression"
+     ],
+     "decide_first": false,
+     "missing_results": [
+      "diag.regression"
+     ],
+     "requires": [
+      "models",
+      "model_variant"
+     ],
+     "status": "awaiting_confirmation",
+     "current": true
+    },
+    {
+     "id": "final_test",
+     "title": "Open the final test once",
+     "question": "Now that the model is chosen, do you open the sealed final test, once, to measure it on rows nothing has seen? After this, any change is made after the final test.",
+     "expected_output": "A confirmed opening in your own words, and the one evaluation of the chosen configuration on the final test.",
+     "completion": "Decision final_test is confirmed and the final evaluation is recorded.",
+     "pause": 3,
+     "decision": "final_test",
+     "activities": [
+      "final_test.evaluation"
+     ],
+     "decide_first": true,
+     "missing_results": [
+      "final_test.evaluation"
+     ],
+     "requires": [
+      "model_choice"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
+     "id": "conclusion",
+     "title": "Conclude proportionately",
+     "question": "What can be said, for which use, and with which limits? Keeping the baseline is a valid result.",
+     "expected_output": "A confirmed conclusion that names its limits.",
+     "completion": "Decision conclusion is confirmed.",
+     "pause": 3,
+     "decision": "conclusion",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "models"
+     ],
+     "status": "ready",
+     "current": false
+    }
+   ],
+   "current_step": "model_choice",
+   "next_action": {
+    "kind": "await_user_words",
+    "proposal_id": "p_7",
+    "decision": "model_choice",
+    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
+    "audience": "agent",
+    "junior_message": "A proposal on the model choice is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
+    "language": "en",
+    "recommended": null,
+    "question": "Do you adopt this decision?",
+    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
+   },
+   "open_proposals": [
+    {
+     "proposal_id": "p_7",
+     "decision_id": "model_choice",
+     "value": "fit.linear",
+     "restatement": "Adopt the linear model.",
+     "rationale": "Lower error on later years.",
+     "revision": 38,
+     "created": "2026-10-21T12:19:45.655986+00:00",
+     "labels": null,
+     "label": "Adopt the linear model.",
+     "origin": {
+      "channel": "chat"
+     }
+    }
+   ],
+   "decisions": {
+    "prediction_time": {
+     "decision_id": "prediction_time",
+     "status": "confirmed",
+     "value": "when the technical characteristics of a new model are fixed, before its fuel efficiency is measured",
+     "proposal_id": "p_1",
+     "depends_on": [],
+     "revision": 3,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the prediction_time exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the prediction_time as stated.",
+      "proposal_id": "p_1",
+      "revision": 3,
+      "time": "2026-10-21T12:19:22.560853+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "feature_availability": {
+     "decision_id": "feature_availability",
+     "status": "confirmed",
+     "value": {
+      "acceleration": "uncertain_excluded",
+      "cylinders": "available_at_prediction",
+      "displacement": "available_at_prediction",
+      "horsepower": "available_at_prediction",
+      "origin": "available_at_prediction",
+      "weight": "available_at_prediction"
+     },
+     "proposal_id": "p_2",
+     "depends_on": [
+      "prediction_time"
+     ],
+     "revision": 5,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the feature_availability exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the feature_availability as stated.",
+      "proposal_id": "p_2",
+      "revision": 5,
+      "time": "2026-10-21T12:19:23.937344+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false
+     },
+     "open_proposals": [],
+     "feature_basis": {
+      "acceleration": "proposed_not_discussed",
+      "cylinders": "default_from_case",
+      "displacement": "default_from_case",
+      "horsepower": "default_from_case",
+      "origin": "default_from_case",
+      "weight": "default_from_case"
+     }
+    },
+    "split": {
+     "decision_id": "split",
+     "status": "confirmed",
+     "value": {
+      "column": "model_year",
+      "cutoff": 79,
+      "method": "ordinal_cutoff"
+     },
+     "proposal_id": "p_3",
+     "depends_on": [],
+     "revision": 7,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the split exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the split as stated.",
+      "proposal_id": "p_3",
+      "revision": 7,
+      "time": "2026-10-21T12:19:25.703064+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "success_criterion": {
+     "decision_id": "success_criterion",
+     "status": "confirmed",
+     "value": {
+      "metric": "mae_reduction",
+      "min_share": 0.1
+     },
+     "proposal_id": "p_4",
+     "depends_on": [],
+     "revision": 9,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the success_criterion exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the success_criterion as stated.",
+      "proposal_id": "p_4",
+      "revision": 9,
+      "time": "2026-10-21T12:19:27.458689+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "preprocessing": {
+     "decision_id": "preprocessing",
+     "status": "confirmed",
+     "value": {
+      "caps": {},
+      "data_contingent": false,
+      "log_transform": [],
+      "missing": "none",
+      "motivated_by": [],
+      "rare_category_min_rows": 0,
+      "target_looks_before": 0
+     },
+     "proposal_id": "p_5",
+     "depends_on": [],
+     "revision": 11,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the preprocessing exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the preprocessing as stated.",
+      "proposal_id": "p_5",
+      "revision": 11,
+      "time": "2026-10-21T12:19:29.361312+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "model_variant": {
+     "decision_id": "model_variant",
+     "status": "confirmed",
+     "value": {
+      "kind": "regularisation",
+      "strength": "strong"
+     },
+     "proposal_id": "p_6",
+     "depends_on": [],
+     "revision": 33,
+     "reason": null,
+     "confirmation": {
+      "user_words": "Yes, I want the model_variant exactly as you stated it",
+      "channel": "chat",
+      "actor": "user",
+      "restatement": "You decide the model_variant as stated.",
+      "proposal_id": "p_6",
+      "revision": 33,
+      "time": "2026-10-21T12:19:42.507731+00:00",
+      "authenticated": false,
+      "basis": "restated",
+      "delegation_scope": null,
+      "agent_concern": null,
+      "mode": "guided",
+      "warnings": [],
+      "reason_given": null,
+      "adoption_question": false
+     },
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "model_choice": {
+     "decision_id": "model_choice",
+     "status": "proposed",
+     "value": "fit.linear",
+     "proposal_id": "p_7",
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "preprocessing",
+      "model_variant"
+     ],
+     "revision": 38,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [
+      "p_7"
+     ],
+     "feature_basis": null
+    },
+    "final_test": {
+     "decision_id": "final_test",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant",
+      "model_choice"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
+    "conclusion": {
+     "decision_id": "conclusion",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant",
+      "model_choice",
+      "final_test"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    }
+   },
+   "facts": {
+    "by_status": {
+     "documented_fact": [
+      {
+       "id": "target",
+       "value": "mpg: city-cycle fuel efficiency in miles per gallon according to the source",
+       "source": "data/auto-mpg.names:24-26,34"
+      }
+     ],
+     "scenario_assumption": [
+      {
+       "id": "decision",
+       "value": "Compare estimation methods without a real decision",
+       "source": "Tutorial scenario"
+      },
+      {
+       "id": "intended_use",
+       "value": "Exercise: estimate a future model fuel efficiency from technical characteristics",
+       "source": "Tutorial scenario"
+      },
+      {
+       "id": "observation_unit",
+       "value": "A vehicle model for a model year",
+       "source": "Inspection: documentation describes unique names, but some recur across years"
+      },
+      {
+       "id": "prediction_time",
+       "value": "When technical characteristics are fixed, before measuring fuel efficiency",
+       "source": "Scenario assumption, to confirm"
+      }
+     ],
+     "observed": [
+      {
+       "id": "repeated_observations",
+       "value": "Model years 70 to 82 (read as 1970 to 1982). The 398 rows carry 305 distinct car names: some names occur in several rows, including across model years.",
+       "source": "Structural inspection of data/auto-mpg.data"
+      }
+     ],
+     "unknown": [
+      {
+       "id": "origin_meaning",
+       "value": "Codes 1, 2, 3 are not documented in auto-mpg.names (often interpreted as USA, Europe, Japan)",
+       "source": "auto-mpg.names"
+      }
+     ]
+    },
+    "count": 7
+   },
+   "structure": {
+    "duplicates": {
+     "source": "Structural inspection of data/auto-mpg.data: no exact duplicate rows",
+     "status": "observed",
+     "value": 0
+    },
+    "group_column": {
+     "source": "Structural inspection of data/auto-mpg.data: 305 distinct car names for 398 rows",
+     "status": "observed",
+     "value": "car_name"
+    },
+    "row_unit": {
+     "source": "Inspection: documentation describes unique names, but some recur across years",
+     "status": "scenario_assumption",
+     "value": "A vehicle model for a model year"
+    },
+    "time_column": {
+     "source": "data/auto-mpg.names:40",
+     "status": "documented_fact",
+     "value": "model_year"
+    }
+   },
+   "results": {
+    "eda.correlation": {
+     "slot": "eda.correlation",
+     "result_id": "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
+     "activity": "eda.correlation",
+     "current": true,
+     "stale_reason": null,
+     "partition": "development",
+     "n_rows": 318,
+     "values": {
+      "partition": "development",
+      "n_rows": 318,
+      "target_read": false,
+      "columns": [
+       {
+        "name": "cylinders",
+        "kind": "numeric"
+       },
+       {
+        "name": "displacement",
+        "kind": "numeric"
+       },
+       {
+        "name": "horsepower",
+        "kind": "numeric"
+       },
+       {
+        "name": "weight",
+        "kind": "numeric"
+       },
+       {
+        "name": "acceleration",
+        "kind": "numeric"
+       },
+       {
+        "name": "origin",
+        "kind": "categorical"
+       }
+      ],
+      "order": [
+       "acceleration",
+       "origin",
+       "horsepower",
+       "cylinders",
+       "displacement",
+       "weight"
+      ],
+      "pairs": [
+       {
+        "a": "cylinders",
+        "b": "displacement",
+        "measure": "spearman",
+        "value": 0.9086802777103509,
+        "n_rows": 318,
+        "flag": true
+       },
+       {
+        "a": "cylinders",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8142861976119781,
+        "n_rows": 312,
+        "flag": true
+       },
+       {
+        "a": "cylinders",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.868971031546768,
+        "n_rows": 318,
+        "flag": true
+       },
+       {
+        "a": "cylinders",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.46458897637803565,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "cylinders",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.6140708761612704,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "displacement",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8742037139905126,
+        "n_rows": 312,
+        "flag": true
+       },
+       {
+        "a": "displacement",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.9438875606480072,
+        "n_rows": 318,
+        "flag": true
+       },
+       {
+        "a": "displacement",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.4929933302304839,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "displacement",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.7151187974715895,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "horsepower",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.8716545457386615,
+        "n_rows": 312,
+        "flag": true
+       },
+       {
+        "a": "horsepower",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.6594310544138169,
+        "n_rows": 312,
+        "flag": false
+       },
+       {
+        "a": "horsepower",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.5333404338589786,
+        "n_rows": 312,
+        "flag": false
+       },
+       {
+        "a": "weight",
+        "b": "acceleration",
+        "measure": "spearman",
+        "value": -0.3895488084700121,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "weight",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.6333068195198771,
+        "n_rows": 318,
+        "flag": false
+       },
+       {
+        "a": "acceleration",
+        "b": "origin",
+        "measure": "eta",
+        "value": 0.22310102369572654,
+        "n_rows": 318,
+        "flag": false
+       }
+      ],
+      "flagged": [
+       {
+        "a": "displacement",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.9438875606480072
+       },
+       {
+        "a": "cylinders",
+        "b": "displacement",
+        "measure": "spearman",
+        "value": 0.9086802777103509
+       },
+       {
+        "a": "displacement",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8742037139905126
+       },
+       {
+        "a": "horsepower",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.8716545457386615
+       },
+       {
+        "a": "cylinders",
+        "b": "weight",
+        "measure": "spearman",
+        "value": 0.868971031546768
+       },
+       {
+        "a": "cylinders",
+        "b": "horsepower",
+        "measure": "spearman",
+        "value": 0.8142861976119781
+       }
+      ],
+      "n_flagged": 6,
+      "level": 0.8,
+      "measures": {
+       "spearman": "Spearman's rank correlation (two numeric features, signed)",
+       "cramers_v": "Cramér's V, bias-corrected (two categorical features, unsigned)",
+       "eta": "Correlation ratio of the ranks across the categories (a numeric and a categorical feature, unsigned)"
+      },
+      "question": "Do any two predictors carry nearly the same information in the development rows, so that a model would split its weight between them?",
+      "note": "Structural reading of the development rows: the target is not read, so this is not a look at the outcome. An association between two predictors is not an effect on the outcome; a flagged pair only asks whether both are needed."
+     },
+     "blobs": {},
+     "params": {
+      "partition": "development"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "columns": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "acceleration",
+       "origin"
+      ],
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ]
+     },
+     "code_fingerprint": "c46b8864e9e24053fb20e78519a03ec47dc54f005c5d34c12e322d5ac887e7e7",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_284db43c31758f9aef75cd0b",
+     "exposure_id": "x_5bfcee27806f4330b4d5afd7e7bff6d1",
+     "started_revision": 26,
+     "integrity": "ok"
+    },
+    "eda.distribution:weight": {
+     "slot": "eda.distribution:weight",
+     "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+     "activity": "eda.distribution",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 222,
+     "values": {
+      "partition": "train",
+      "column": "weight",
+      "role": "feature",
+      "type": "numeric",
+      "kind": "numeric",
+      "n_rows": 222,
+      "n_missing": 0,
+      "special_values": [],
+      "numeric": {
+       "n": 222,
+       "min": 1613.0,
+       "q25": 2300.0,
+       "median": 3027.0,
+       "q75": 3842.75,
+       "max": 5140.0,
+       "mean": 3123.698198198198,
+       "sd": 890.8144902362324,
+       "n_bins": 10,
+       "bin_width": 352.7,
+       "bins": [
+        {
+         "low": 1613.0,
+         "high": 1965.7,
+         "n_rows": 15,
+         "share": 0.06756756756756757,
+         "closed": "left"
+        },
+        {
+         "low": 1965.7,
+         "high": 2318.4,
+         "n_rows": 44,
+         "share": 0.1981981981981982,
+         "closed": "left"
+        },
+        {
+         "low": 2318.4,
+         "high": 2671.1,
+         "n_rows": 29,
+         "share": 0.13063063063063063,
+         "closed": "left"
+        },
+        {
+         "low": 2671.1,
+         "high": 3023.8,
+         "n_rows": 23,
+         "share": 0.1036036036036036,
+         "closed": "left"
+        },
+        {
+         "low": 3023.8,
+         "high": 3376.5,
+         "n_rows": 20,
+         "share": 0.09009009009009009,
+         "closed": "left"
+        },
+        {
+         "low": 3376.5,
+         "high": 3729.2,
+         "n_rows": 28,
+         "share": 0.12612612612612611,
+         "closed": "left"
+        },
+        {
+         "low": 3729.2,
+         "high": 4081.9,
+         "n_rows": 19,
+         "share": 0.08558558558558559,
+         "closed": "left"
+        },
+        {
+         "low": 4081.9,
+         "high": 4434.6,
+         "n_rows": 24,
+         "share": 0.10810810810810811,
+         "closed": "left"
+        },
+        {
+         "low": 4434.6,
+         "high": 4787.299999999999,
+         "n_rows": 15,
+         "share": 0.06756756756756757,
+         "closed": "left"
+        },
+        {
+         "low": 4787.299999999999,
+         "high": 5140.0,
+         "n_rows": 5,
+         "share": 0.02252252252252252,
+         "closed": "both"
+        }
+       ],
+       "zeros": {
+        "n_rows": 0,
+        "share": 0.0
+       },
+       "skewed": false,
+       "log_bins": null
+      },
+      "groups": null,
+      "n_groups": null,
+      "max_groups": 20,
+      "other": null,
+      "min_group_rows": 30,
+      "warnings": [],
+      "note": "Counts of training rows only. A distribution describes this sample; it is not a rate of the outcome and says nothing about causes.",
+      "question": "How are the values of weight distributed among the training rows?"
+     },
+     "blobs": {},
+     "params": {
+      "column": "weight"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "special_values": []
+     },
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_622dd0c704d6af123eea761a",
+     "exposure_id": "x_0dba20f237d34361a0be6af2461f870c",
+     "started_revision": 24,
+     "integrity": "ok"
+    },
+    "eda.mean_by:model_year": {
+     "slot": "eda.mean_by:model_year",
+     "result_id": "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
+     "activity": "eda.mean_by",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 222,
+     "values": {
+      "partition": "train",
+      "column": "model_year",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 222,
+      "overall_mean": 20.565315315315317,
+      "binned": false,
+      "binning": null,
+      "groups": [
+       {
+        "value": "70",
+        "n_rows": 22,
+        "mean": 18.09090909090909,
+        "sd": 5.022891321682883,
+        "small_count": true,
+        "interval": {
+         "low": 15.863883840267457,
+         "high": 20.31793434155072,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 17.504545454545454,
+         "high": 23.722727272727273
+        }
+       },
+       {
+        "value": "71",
+        "n_rows": 20,
+        "mean": 21.7,
+        "sd": 6.489667901648297,
+        "small_count": true,
+        "interval": {
+         "low": 18.662741929147668,
+         "high": 24.73725807085233,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 17.740000000000002,
+         "high": 23.0
+        }
+       },
+       {
+        "value": "72",
+        "n_rows": 25,
+        "mean": 18.84,
+        "sd": 5.5051491048532615,
+        "small_count": true,
+        "interval": {
+         "low": 16.56758613618911,
+         "high": 21.11241386381089,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 17.212,
+         "high": 22.54
+        }
+       },
+       {
+        "value": "73",
+        "n_rows": 32,
+        "mean": 17.0625,
+        "sd": 4.950969276232033,
+        "small_count": false,
+        "interval": {
+         "low": 15.277485225670816,
+         "high": 18.847514774329184,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 18.06875,
+         "high": 22.96875
+        }
+       },
+       {
+        "value": "74",
+        "n_rows": 19,
+        "mean": 21.05263157894737,
+        "sd": 6.25809417395252,
+        "small_count": true,
+        "interval": {
+         "low": 18.03632673906477,
+         "high": 24.06893641882997,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 17.110526315789475,
+         "high": 22.50526315789474
+        }
+       },
+       {
+        "value": "75",
+        "n_rows": 24,
+        "mean": 20.125,
+        "sd": 4.455699818161589,
+        "small_count": true,
+        "interval": {
+         "low": 18.243522976930336,
+         "high": 22.006477023069664,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 17.758333333333333,
+         "high": 23.05
+        }
+       },
+       {
+        "value": "76",
+        "n_rows": 25,
+        "mean": 21.6,
+        "sd": 6.554260700745228,
+        "small_count": true,
+        "interval": {
+         "low": 18.89453415343937,
+         "high": 24.305465846560633,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 18.128,
+         "high": 22.628
+        }
+       },
+       {
+        "value": "77",
+        "n_rows": 24,
+        "mean": 23.166666666666668,
+        "sd": 6.23570829746024,
+        "small_count": true,
+        "interval": {
+         "low": 20.533557982725515,
+         "high": 25.79977535060782,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 19.029166666666665,
+         "high": 22.46666666666667
+        }
+       },
+       {
+        "value": "78",
+        "n_rows": 31,
+        "mean": 23.79032258064516,
+        "sd": 6.9084660544730525,
+        "small_count": false,
+        "interval": {
+         "low": 21.256276773582485,
+         "high": 26.324368387707835,
+         "level": 0.95,
+         "method": "t"
+        },
+        "null_band": {
+         "low": 19.190322580645162,
+         "high": 24.483870967741932
+        }
+       }
+      ],
+      "min_group_rows": 30,
+      "warnings": [
+       "model_year = 70: only 22 training rows; its mean is too noisy to read on its own.",
+       "model_year = 71: only 20 training rows; its mean is too noisy to read on its own.",
+       "model_year = 72: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 74: only 19 training rows; its mean is too noisy to read on its own.",
+       "model_year = 75: only 24 training rows; its mean is too noisy to read on its own.",
+       "model_year = 76: only 25 training rows; its mean is too noisy to read on its own.",
+       "model_year = 77: only 24 training rows; its mean is too noisy to read on its own."
+      ],
+      "n_groups": 9,
+      "max_groups": 20,
+      "other": null,
+      "note": "Mean target by group on training rows: associations, not effects of the variable.",
+      "question": "Does the mean target differ across the groups of model_year by more than chance alone draws?",
+      "null_band": {
+       "chart": {
+        "statistic": "spread between the largest and the smallest group value among groups of at least 30 training rows",
+        "observed": 6.72782258064516,
+        "null_min": 0.04415322580645409,
+        "null_max": 4.108870967741932,
+        "outside": true
+       },
+       "shuffles": 19,
+       "seed": 20261019,
+       "note": "The band is the range of the same figure after shuffling the target among the training rows 19 times (fixed seed): what chance alone draws. A pattern inside it is not distinguishable from chance; one above every shuffle happens by chance about once in 20 looks."
+      }
+     },
+     "blobs": {},
+     "params": {
+      "column": "model_year"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "special_values": [],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_5f95a7d242e4ea751ed82afb",
+     "exposure_id": "x_5771cec5408f4f9f92589856f7215ab3",
+     "started_revision": 22,
+     "integrity": "ok"
+    },
+    "eda.quality": {
+     "slot": "eda.quality",
+     "result_id": "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22",
+     "activity": "eda.quality",
+     "current": true,
+     "stale_reason": null,
+     "partition": "development",
+     "n_rows": 318,
+     "values": {
+      "partition": "development",
+      "n_rows": 318,
+      "n_columns": 8,
+      "target_read": false,
+      "missing": [
+       {
+        "column": "cylinders",
+        "n_missing": 0,
+        "share": 0.0
+       },
+       {
+        "column": "displacement",
+        "n_missing": 0,
+        "share": 0.0
+       },
+       {
+        "column": "horsepower",
+        "n_missing": 6,
+        "share": 0.018867924528301886
+       },
+       {
+        "column": "weight",
+        "n_missing": 0,
+        "share": 0.0
+       },
+       {
+        "column": "acceleration",
+        "n_missing": 0,
+        "share": 0.0
+       },
+       {
+        "column": "model_year",
+        "n_missing": 0,
+        "share": 0.0
+       },
+       {
+        "column": "origin",
+        "n_missing": 0,
+        "share": 0.0
+       },
+       {
+        "column": "car_name",
+        "n_missing": 0,
+        "share": 0.0
+       }
+      ],
+      "n_rows_with_missing": 6,
+      "co_missing": [
+       {
+        "columns": [
+         "horsepower"
+        ],
+        "n_rows": 6,
+        "share": 0.018867924528301886
+       }
+      ],
+      "duplicates": {
+       "n_rows": 0,
+       "n_groups": 0,
+       "definition": "rows identical on every column except the target"
+      },
+      "cardinality": [
+       {
+        "column": "origin",
+        "type": "category",
+        "n_distinct": 3,
+        "rare": [],
+        "rare_rows": 30
+       },
+       {
+        "column": "car_name",
+        "type": "string",
+        "n_distinct": 254,
+        "rare": [
+         {
+          "value": "amc ambassador brougham",
+          "n_rows": 1
+         },
+         {
+          "value": "amc ambassador dpl",
+          "n_rows": 1
+         },
+         {
+          "value": "amc ambassador sst",
+          "n_rows": 1
+         },
+         {
+          "value": "amc concord d/l",
+          "n_rows": 1
+         },
+         {
+          "value": "amc concord dl",
+          "n_rows": 1
+         },
+         {
+          "value": "amc concord dl 6",
+          "n_rows": 1
+         },
+         {
+          "value": "amc hornet sportabout (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "amc pacer",
+          "n_rows": 1
+         },
+         {
+          "value": "amc pacer d/l",
+          "n_rows": 1
+         },
+         {
+          "value": "amc rebel sst",
+          "n_rows": 1
+         },
+         {
+          "value": "amc spirit dl",
+          "n_rows": 1
+         },
+         {
+          "value": "audi 100 ls",
+          "n_rows": 1
+         },
+         {
+          "value": "audi 4000",
+          "n_rows": 1
+         },
+         {
+          "value": "audi 5000",
+          "n_rows": 1
+         },
+         {
+          "value": "audi 5000s (diesel)",
+          "n_rows": 1
+         },
+         {
+          "value": "bmw 2002",
+          "n_rows": 1
+         },
+         {
+          "value": "bmw 320i",
+          "n_rows": 1
+         },
+         {
+          "value": "buick century 350",
+          "n_rows": 1
+         },
+         {
+          "value": "buick century limited",
+          "n_rows": 1
+         },
+         {
+          "value": "buick century luxus (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "buick century special",
+          "n_rows": 1
+         },
+         {
+          "value": "buick electra 225 custom",
+          "n_rows": 1
+         },
+         {
+          "value": "buick lesabre custom",
+          "n_rows": 1
+         },
+         {
+          "value": "buick opel isuzu deluxe",
+          "n_rows": 1
+         },
+         {
+          "value": "buick regal sport coupe (turbo)",
+          "n_rows": 1
+         },
+         {
+          "value": "buick skylark 320",
+          "n_rows": 1
+         },
+         {
+          "value": "buick skylark limited",
+          "n_rows": 1
+         },
+         {
+          "value": "cadillac eldorado",
+          "n_rows": 1
+         },
+         {
+          "value": "cadillac seville",
+          "n_rows": 1
+         },
+         {
+          "value": "capri ii",
+          "n_rows": 1
+         },
+         {
+          "value": "chevroelt chevelle malibu",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet bel air",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet cavalier",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet cavalier 2-door",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet cavalier wagon",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet chevelle concours (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet chevelle malibu",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet chevelle malibu classic",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet concours",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet malibu classic (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet monza 2+2",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet nova custom",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet vega (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "chevrolet vega 2300",
+          "n_rows": 1
+         },
+         {
+          "value": "chevy c10",
+          "n_rows": 1
+         },
+         {
+          "value": "chevy c20",
+          "n_rows": 1
+         },
+         {
+          "value": "chevy s-10",
+          "n_rows": 1
+         },
+         {
+          "value": "chrysler cordoba",
+          "n_rows": 1
+         },
+         {
+          "value": "chrysler lebaron medallion",
+          "n_rows": 1
+         },
+         {
+          "value": "chrysler lebaron salon",
+          "n_rows": 1
+         },
+         {
+          "value": "chrysler newport royal",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 1200",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 200-sx",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 200sx",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 210 mpg",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 280-zx",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 310",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 310 gx",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 510",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 510 (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 510 hatchback",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 610",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 810",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun 810 maxima",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun b-210",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun b210 gx",
+          "n_rows": 1
+         },
+         {
+          "value": "datsun f-10 hatchback",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge aries se",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge aries wagon (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge aspen 6",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge aspen se",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge challenger se",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge colt (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge colt hardtop",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge colt hatchback custom",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge colt m/m",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge coronet custom (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge d100",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge dart custom",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge diplomat",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge monaco brougham",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge omni",
+          "n_rows": 1
+         },
+         {
+          "value": "dodge rampage",
+          "n_rows": 1
+         },
+         {
+          "value": "fiat 124 sport coupe",
+          "n_rows": 1
+         },
+         {
+          "value": "fiat 124 tc",
+          "n_rows": 1
+         },
+         {
+          "value": "fiat 131",
+          "n_rows": 1
+         },
+         {
+          "value": "ford country",
+          "n_rows": 1
+         },
+         {
+          "value": "ford escort 2h",
+          "n_rows": 1
+         },
+         {
+          "value": "ford f108",
+          "n_rows": 1
+         },
+         {
+          "value": "ford fairmont",
+          "n_rows": 1
+         },
+         {
+          "value": "ford fairmont (auto)",
+          "n_rows": 1
+         },
+         {
+          "value": "ford fairmont 4",
+          "n_rows": 1
+         },
+         {
+          "value": "ford fairmont futura",
+          "n_rows": 1
+         },
+         {
+          "value": "ford futura",
+          "n_rows": 1
+         },
+         {
+          "value": "ford granada",
+          "n_rows": 1
+         },
+         {
+          "value": "ford granada ghia",
+          "n_rows": 1
+         },
+         {
+          "value": "ford ltd",
+          "n_rows": 1
+         },
+         {
+          "value": "ford ltd landau",
+          "n_rows": 1
+         },
+         {
+          "value": "ford mustang",
+          "n_rows": 1
+         },
+         {
+          "value": "ford mustang cobra",
+          "n_rows": 1
+         },
+         {
+          "value": "ford mustang gl",
+          "n_rows": 1
+         },
+         {
+          "value": "ford mustang ii 2+2",
+          "n_rows": 1
+         },
+         {
+          "value": "ford pinto (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "ford ranger",
+          "n_rows": 1
+         },
+         {
+          "value": "ford thunderbird",
+          "n_rows": 1
+         },
+         {
+          "value": "ford torino",
+          "n_rows": 1
+         },
+         {
+          "value": "hi 1200d",
+          "n_rows": 1
+         },
+         {
+          "value": "honda accord",
+          "n_rows": 1
+         },
+         {
+          "value": "honda accord cvcc",
+          "n_rows": 1
+         },
+         {
+          "value": "honda civic (auto)",
+          "n_rows": 1
+         },
+         {
+          "value": "honda civic 1500 gl",
+          "n_rows": 1
+         },
+         {
+          "value": "honda civic cvcc",
+          "n_rows": 1
+         },
+         {
+          "value": "honda prelude",
+          "n_rows": 1
+         },
+         {
+          "value": "maxda rx3",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda glc",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda glc 4",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda glc custom",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda glc custom l",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda glc deluxe",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda rx-4",
+          "n_rows": 1
+         },
+         {
+          "value": "mazda rx2 coupe",
+          "n_rows": 1
+         },
+         {
+          "value": "mercedes benz 300d",
+          "n_rows": 1
+         },
+         {
+          "value": "mercedes-benz 240d",
+          "n_rows": 1
+         },
+         {
+          "value": "mercedes-benz 280s",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury capri 2000",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury capri v6",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury lynx l",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury marquis brougham",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury monarch ghia",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury zephyr",
+          "n_rows": 1
+         },
+         {
+          "value": "mercury zephyr 6",
+          "n_rows": 1
+         },
+         {
+          "value": "nissan stanza xe",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile cutlass ciera (diesel)",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile cutlass ls",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile cutlass salon brougham",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile cutlass supreme",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile delta 88 royale",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile omega",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile omega brougham",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile starfire sx",
+          "n_rows": 1
+         },
+         {
+          "value": "oldsmobile vista cruiser",
+          "n_rows": 1
+         },
+         {
+          "value": "opel 1900",
+          "n_rows": 1
+         },
+         {
+          "value": "peugeot 304",
+          "n_rows": 1
+         },
+         {
+          "value": "peugeot 505s turbo diesel",
+          "n_rows": 1
+         },
+         {
+          "value": "peugeot 604sl",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth arrow gs",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth champ",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth cricket",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth custom suburb",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth duster",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth fury",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth fury gran sedan",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth grand fury",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth horizon tc3",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth sapporo",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth satellite",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth satellite custom",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth satellite custom (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth valiant custom",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth volare custom",
+          "n_rows": 1
+         },
+         {
+          "value": "plymouth volare premier v8",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac astro",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac catalina brougham",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac firebird",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac grand prix",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac grand prix lj",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac j2000 se hatchback",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac lemans v6",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac phoenix",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac phoenix lj",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac safari (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac sunbird coupe",
+          "n_rows": 1
+         },
+         {
+          "value": "pontiac ventura sj",
+          "n_rows": 1
+         },
+         {
+          "value": "renault 12 (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "renault 12tl",
+          "n_rows": 1
+         },
+         {
+          "value": "renault 18i",
+          "n_rows": 1
+         },
+         {
+          "value": "renault lecar deluxe",
+          "n_rows": 1
+         },
+         {
+          "value": "saab 99e",
+          "n_rows": 1
+         },
+         {
+          "value": "saab 99gle",
+          "n_rows": 1
+         },
+         {
+          "value": "subaru dl",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota carina",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota celica gt",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota celica gt liftback",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota corolla 1200",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota corolla 1600 (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota corolla liftback",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota corolla tercel",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota corona hardtop",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota cressida",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota starlet",
+          "n_rows": 1
+         },
+         {
+          "value": "toyota tercel",
+          "n_rows": 1
+         },
+         {
+          "value": "toyouta corona mark ii (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "triumph tr7 coupe",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen 1131 deluxe sedan",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen 411 (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen jetta",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen model 111",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen rabbit custom",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen rabbit custom diesel",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen rabbit l",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen scirocco",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen super beetle",
+          "n_rows": 1
+         },
+         {
+          "value": "volkswagen type 3",
+          "n_rows": 1
+         },
+         {
+          "value": "volvo 144ea",
+          "n_rows": 1
+         },
+         {
+          "value": "volvo 145e (sw)",
+          "n_rows": 1
+         },
+         {
+          "value": "volvo 244dl",
+          "n_rows": 1
+         },
+         {
+          "value": "volvo 264gl",
+          "n_rows": 1
+         },
+         {
+          "value": "volvo diesel",
+          "n_rows": 1
+         },
+         {
+          "value": "vw pickup",
+          "n_rows": 1
+         },
+         {
+          "value": "vw rabbit c (diesel)",
+          "n_rows": 1
+         },
+         {
+          "value": "vw rabbit custom",
+          "n_rows": 1
+         },
+         {
+          "value": "amc concord",
+          "n_rows": 2
+         },
+         {
+          "value": "amc matador (sw)",
+          "n_rows": 2
+         },
+         {
+          "value": "audi 100ls",
+          "n_rows": 2
+         },
+         {
+          "value": "buick century",
+          "n_rows": 2
+         },
+         {
+          "value": "buick estate wagon (sw)",
+          "n_rows": 2
+         },
+         {
+          "value": "buick skylark",
+          "n_rows": 2
+         },
+         {
+          "value": "chevrolet caprice classic",
+          "n_rows": 2
+         },
+         {
+          "value": "chevrolet malibu",
+          "n_rows": 2
+         },
+         {
+          "value": "chevrolet monte carlo landau",
+          "n_rows": 2
+         },
+         {
+          "value": "chevrolet nova",
+          "n_rows": 2
+         },
+         {
+          "value": "chevrolet vega",
+          "n_rows": 2
+         },
+         {
+          "value": "datsun 210",
+          "n_rows": 2
+         },
+         {
+          "value": "datsun 710",
+          "n_rows": 2
+         },
+         {
+          "value": "dodge aspen",
+          "n_rows": 2
+         },
+         {
+          "value": "fiat 128",
+          "n_rows": 2
+         },
+         {
+          "value": "ford country squire (sw)",
+          "n_rows": 2
+         },
+         {
+          "value": "ford gran torino (sw)",
+          "n_rows": 2
+         },
+         {
+          "value": "mazda 626",
+          "n_rows": 2
+         },
+         {
+          "value": "opel manta",
+          "n_rows": 2
+         },
+         {
+          "value": "plymouth fury iii",
+          "n_rows": 2
+         },
+         {
+          "value": "plymouth reliant",
+          "n_rows": 2
+         },
+         {
+          "value": "plymouth valiant",
+          "n_rows": 2
+         },
+         {
+          "value": "pontiac catalina",
+          "n_rows": 2
+         },
+         {
+          "value": "saab 99le",
+          "n_rows": 2
+         },
+         {
+          "value": "subaru",
+          "n_rows": 2
+         },
+         {
+          "value": "volkswagen dasher",
+          "n_rows": 2
+         },
+         {
+          "value": "volkswagen rabbit",
+          "n_rows": 2
+         },
+         {
+          "value": "vw rabbit",
+          "n_rows": 2
+         },
+         {
+          "value": "amc gremlin",
+          "n_rows": 3
+         },
+         {
+          "value": "amc hornet",
+          "n_rows": 3
+         },
+         {
+          "value": "chevrolet chevette",
+          "n_rows": 3
+         },
+         {
+          "value": "chevrolet citation",
+          "n_rows": 3
+         },
+         {
+          "value": "chevrolet impala",
+          "n_rows": 3
+         },
+         {
+          "value": "dodge colt",
+          "n_rows": 3
+         },
+         {
+          "value": "ford galaxie 500",
+          "n_rows": 3
+         },
+         {
+          "value": "ford gran torino",
+          "n_rows": 3
+         },
+         {
+          "value": "ford maverick",
+          "n_rows": 3
+         },
+         {
+          "value": "honda civic",
+          "n_rows": 3
+         },
+         {
+          "value": "peugeot 504",
+          "n_rows": 3
+         },
+         {
+          "value": "toyota corolla",
+          "n_rows": 4
+         },
+         {
+          "value": "toyota corona",
+          "n_rows": 4
+         },
+         {
+          "value": "amc matador",
+          "n_rows": 5
+         },
+         {
+          "value": "ford pinto",
+          "n_rows": 5
+         }
+        ],
+        "rare_rows": 30
+       }
+      ],
+      "ranges": [
+       {
+        "column": "cylinders",
+        "type": "integer",
+        "min": 3,
+        "max": 8,
+        "n_special": 0,
+        "declared": null,
+        "n_below": null,
+        "n_above": null
+       },
+       {
+        "column": "displacement",
+        "type": "numeric",
+        "min": 68,
+        "max": 455,
+        "n_special": 0,
+        "declared": null,
+        "n_below": null,
+        "n_above": null
+       },
+       {
+        "column": "horsepower",
+        "type": "numeric",
+        "min": 46,
+        "max": 230,
+        "n_special": 6,
+        "declared": null,
+        "n_below": null,
+        "n_above": null
+       },
+       {
+        "column": "weight",
+        "type": "numeric",
+        "min": 1613,
+        "max": 5140,
+        "n_special": 0,
+        "declared": null,
+        "n_below": null,
+        "n_above": null
+       },
+       {
+        "column": "acceleration",
+        "type": "numeric",
+        "min": 8.5,
+        "max": 24.8,
+        "n_special": 0,
+        "declared": null,
+        "n_below": null,
+        "n_above": null
+       },
+       {
+        "column": "model_year",
+        "type": "integer",
+        "min": 70,
+        "max": 82,
+        "n_special": 0,
+        "declared": null,
+        "n_below": null,
+        "n_above": null
+       }
+      ],
+      "question": "Are there missing cells, repeated rows, rare categories, or values outside their possible range in the development rows?",
+      "note": "Structural reading of the development rows: the target is not read, and nothing here is a rate or an association. A range is checked only against a range the case declares."
+     },
+     "blobs": {},
+     "params": {
+      "partition": "development"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "columns": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "acceleration",
+       "model_year",
+       "origin",
+       "car_name"
+      ],
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      }
+     },
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_808e66ec55e19cf01a72e71c",
+     "exposure_id": "x_813ace0e29fe4f62bcc215f8329298bb",
+     "started_revision": 18,
+     "integrity": "ok"
+    },
+    "eda.single_feature_signal": {
+     "slot": "eda.single_feature_signal",
+     "result_id": "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
+     "activity": "eda.single_feature_signal",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 222,
+     "values": {
+      "partition": "train",
+      "n_rows": 222,
+      "metric": "r2",
+      "folds": 5,
+      "seed": 20261019,
+      "signals": [
+       {
+        "feature": "weight",
+        "availability": "available_at_prediction",
+        "score": 0.7713111621467463,
+        "rank": 1,
+        "flag": false
+       },
+       {
+        "feature": "displacement",
+        "availability": "available_at_prediction",
+        "score": 0.7057985980427371,
+        "rank": 2,
+        "flag": false
+       },
+       {
+        "feature": "cylinders",
+        "availability": "available_at_prediction",
+        "score": 0.6648927939010156,
+        "rank": 3,
+        "flag": false
+       },
+       {
+        "feature": "horsepower",
+        "availability": "available_at_prediction",
+        "score": 0.6239501978472506,
+        "rank": 4,
+        "flag": false
+       },
+       {
+        "feature": "origin",
+        "availability": "available_at_prediction",
+        "score": 0.3449029817324962,
+        "rank": 5,
+        "flag": false
+       },
+       {
+        "feature": "acceleration",
+        "availability": "uncertain_excluded",
+        "score": 0.2020734269265655,
+        "rank": 6,
+        "flag": false
+       }
+      ],
+      "median": 0.6444214958741331,
+      "level": 0.8,
+      "gap": 0.4,
+      "questions": [],
+      "question": "Does any single feature, on its own, predict the target so well that its availability at the prediction moment should be questioned?",
+      "note": "Each feature alone, scored out of fold on the training rows. A high value only raises a question about when the value is known; it never keeps or drops a feature, and a legitimate feature may score high."
+     },
+     "blobs": {},
+     "params": {
+      "folds": 5,
+      "metric": "r2",
+      "seed": 20261019
+     },
+     "inputs": {
+      "availability": {
+       "acceleration": "uncertain_excluded",
+       "cylinders": "available_at_prediction",
+       "displacement": "available_at_prediction",
+       "horsepower": "available_at_prediction",
+       "origin": "available_at_prediction",
+       "weight": "available_at_prediction"
+      },
+      "candidates": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "acceleration",
+       "origin"
+      ],
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "32bd56dadcc15512df94350fb076c4533f9308ad9fd83c5ef213e9d369510852",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_75c47b1ef767a30eb39cdb4d",
+     "exposure_id": "x_680956c3de3b4e6a879bb2b25adbd149",
+     "started_revision": 20,
+     "integrity": "ok"
+    },
+    "eda.special_values": {
+     "slot": "eda.special_values",
+     "result_id": "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
+     "activity": "eda.special_values",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 222,
+     "values": {
+      "partition": "train",
+      "n_rows": 222,
+      "target": "mpg",
+      "unit": "mpg",
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?",
+        "meaning": "Missing value.",
+        "status": "observed",
+        "source": "data/auto-mpg.names:44 documents 6 missing horsepower values; structural inspection of data/auto-mpg.data shows that they are written \"?\"",
+        "n_rows": 2,
+        "share": 0.009009009009009009,
+        "mean_target": 23.0
+       }
+      ],
+      "co_occurrence": [],
+      "note": "Counts on training rows. A missing-value marker is imputed by the model, with an indicator column for a numeric variable.",
+      "question": "How many training rows carry each special value, and how does the target look among them?"
+     },
+     "blobs": {},
+     "params": {},
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_305370681065d9971a93f227",
+     "exposure_id": "x_918c3ae61fe7421fba500ffff9ed76ed",
+     "started_revision": 16,
+     "integrity": "ok"
+    },
+    "eda.target_summary": {
+     "slot": "eda.target_summary",
+     "result_id": "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
+     "activity": "eda.target_summary",
+     "current": true,
+     "stale_reason": null,
+     "partition": "train",
+     "n_rows": 222,
+     "values": {
+      "partition": "train",
+      "target": "mpg",
+      "unit": "mpg",
+      "n_rows": 222,
+      "n_missing": 0,
+      "n": 222,
+      "mean": 20.565315315315317,
+      "sd": 6.195978453412262,
+      "min": 9.0,
+      "q25": 15.5,
+      "median": 19.2,
+      "q75": 25.0,
+      "max": 43.1,
+      "note": "Distribution of the target on training rows, in its unit. The mean is what the baseline predicts for every row.",
+      "mean_interval": {
+       "low": 19.74578253659207,
+       "high": 21.384848094038563,
+       "level": 0.95,
+       "method": "t"
+      },
+      "question": "How is the target distributed among the training rows?"
+     },
+     "blobs": {},
+     "params": {},
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "3d2af726fe30209773a9e02e38cd2c88e7de2680673a9e978413e6148d0ce086",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_f37508d21e9ebda7c2ebce28",
+     "exposure_id": "x_5bb538e247d547af8ad6ef951349051f",
+     "started_revision": 14,
+     "integrity": "ok"
+    },
+    "evaluate.regression": {
+     "slot": "evaluate.regression",
+     "result_id": "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+     "activity": "evaluate.regression",
+     "current": true,
+     "stale_reason": null,
+     "partition": "validation",
+     "n_rows": 96,
+     "values": {
+      "n": 96,
+      "target": "mpg",
+      "unit": "mpg",
+      "models": {
+       "fit.baseline": {
+        "n": 96,
+        "mae": 10.268806306306304,
+        "rmse": 11.924502477405836,
+        "mean_residual": 9.806559684684684,
+        "median_abs_residual": 10.434684684684683,
+        "max_abs_residual": 26.034684684684684
+       },
+       "fit.linear": {
+        "n": 96,
+        "mae": 6.476590382656274,
+        "rmse": 7.664419781686159,
+        "mean_residual": 6.394515464632113,
+        "median_abs_residual": 5.572351386623355,
+        "max_abs_residual": 18.45304785315237
+       },
+       "fit.variant": {
+        "n": 96,
+        "mae": 6.505297098322088,
+        "rmse": 7.754118337852464,
+        "mean_residual": 6.409752295558562,
+        "median_abs_residual": 5.673693089740421,
+        "max_abs_residual": 18.794732120875594
+       }
+      },
+      "intervals": {
+       "fit.baseline": {
+        "mae": {
+         "low": 9.020375609984985,
+         "high": 11.442172719594593
+        },
+        "rmse": {
+         "low": 10.7294383439307,
+         "high": 13.066515033675511
+        }
+       },
+       "fit.linear": {
+        "mae": {
+         "low": 5.690730215654784,
+         "high": 7.3058496174077225
+        },
+        "rmse": {
+         "low": 6.765424236359606,
+         "high": 8.545695275480197
+        }
+       },
+       "fit.variant": {
+        "mae": {
+         "low": 5.700070241671318,
+         "high": 7.367522314327747
+        },
+        "rmse": {
+         "low": 6.833640498704084,
+         "high": 8.65974474375661
+        }
+       }
+      },
+      "deltas": {
+       "fit.linear": {
+        "mae": {
+         "point": -3.792215923650031,
+         "low": -4.375861635363238,
+         "high": -3.159283658688826
+        },
+        "rmse": {
+         "point": -4.260082695719677,
+         "low": -4.785149196088145,
+         "high": -3.7022079436310995
+        }
+       },
+       "fit.variant": {
+        "mae": {
+         "point": -3.7635092079842165,
+         "low": -4.318230357129342,
+         "high": -3.182753899638755
+        },
+        "rmse": {
+         "point": -4.170384139553372,
+         "low": -4.660485375760737,
+         "high": -3.648570386778664
+        }
+       }
+      },
+      "residuals": {
+       "fit.baseline": {
+        "n": 96,
+        "mean": 9.806559684684684,
+        "sd": 6.81979631004668,
+        "min": -5.065315315315317,
+        "q05": -1.8403153153153156,
+        "q25": 5.384684684684683,
+        "median": 10.434684684684683,
+        "q75": 14.059684684684683,
+        "q95": 20.48468468468468,
+        "max": 26.034684684684684
+       },
+       "fit.linear": {
+        "n": 96,
+        "mean": 6.394515464632113,
+        "sd": 4.2475209438452115,
+        "min": -1.776599519158502,
+        "q05": 0.41185178765315067,
+        "q25": 3.261984922442746,
+        "median": 5.572351386623355,
+        "q75": 8.998533037532638,
+        "q95": 15.165754635580324,
+        "max": 18.45304785315237
+       },
+       "fit.variant": {
+        "n": 96,
+        "mean": 6.409752295558562,
+        "sd": 4.386554773122254,
+        "min": -2.0154747653481238,
+        "q05": 0.4804557357102279,
+        "q25": 3.3901253743852857,
+        "median": 5.673693089740421,
+        "q75": 9.178199377862295,
+        "q95": 15.431844902403551,
+        "max": 18.794732120875594
+       }
+      },
+      "residuals_by": [
+       {
+        "column": "model_year",
+        "binned": false,
+        "binning": null,
+        "groups": [
+         {
+          "value": "79",
+          "n_rows": 22,
+          "small_count": true,
+          "models": {
+           "fit.baseline": {
+            "mae": 5.82170352170352,
+            "mean_residual": 4.2074119574119555
+           },
+           "fit.linear": {
+            "mae": 3.95800803197313,
+            "mean_residual": 3.807868612211449
+           },
+           "fit.variant": {
+            "mae": 3.924945436027481,
+            "mean_residual": 3.753553139485518
+           }
+          }
+         },
+         {
+          "value": "80",
+          "n_rows": 24,
+          "small_count": true,
+          "models": {
+           "fit.baseline": {
+            "mae": 13.656794294294292,
+            "mean_residual": 13.534684684684683
+           },
+           "fit.linear": {
+            "mae": 8.942708621261152,
+            "mean_residual": 8.90008671054259
+           },
+           "fit.variant": {
+            "mae": 9.00156758638398,
+            "mean_residual": 8.944454210939016
+           }
+          }
+         },
+         {
+          "value": "81",
+          "n_rows": 25,
+          "small_count": true,
+          "models": {
+           "fit.baseline": {
+            "mae": 9.883909909909908,
+            "mean_residual": 9.646684684684683
+           },
+           "fit.linear": {
+            "mae": 5.841737309743365,
+            "mean_residual": 5.699609348210685
+           },
+           "fit.variant": {
+            "mae": 5.9372553994158785,
+            "mean_residual": 5.776017418188028
+           }
+          }
+         },
+         {
+          "value": "82",
+          "n_rows": 25,
+          "small_count": true,
+          "models": {
+           "fit.baseline": {
+            "mae": 11.314684684684682,
+            "mean_residual": 11.314684684684682
+           },
+           "fit.linear": {
+            "mae": 6.960322415109672,
+            "mean_residual": 6.960322415109672
+           },
+           "fit.variant": {
+            "mae": 6.947628591508134,
+            "mean_residual": 6.947628591508134
+           }
+          }
+         }
+        ],
+        "min_group_rows": 30
+       }
+      ],
+      "predictions": {
+       "fit.baseline": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+       "fit.linear": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+       "fit.variant": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23"
+      },
+      "reference": "fit.baseline",
+      "candidate": "fit.linear",
+      "bootstrap": {
+       "replicates": 2000,
+       "seed": 20261017,
+       "level": 0.95,
+       "method": "paired percentile bootstrap over validation rows"
+      },
+      "residual_definition": "residual = observed minus predicted; a positive residual means the model predicted too low; the mean residual is the bias",
+      "note": "The model is chosen on these validation rows: these errors are not independent evidence of future error. No model was refitted.",
+      "model_selection": {
+       "available": false,
+       "metric": "mae",
+       "direction": "lower",
+       "folds": null,
+       "configurations": [],
+       "best": null,
+       "one_se": null,
+       "optimism": null,
+       "advice": {
+        "code": "not_available",
+        "text": "The comparison across folds needs a cross-validation of the development rows.",
+        "texts": {
+         "en": "The comparison across folds needs a cross-validation of the development rows.",
+         "fr": "La comparaison entre plis demande une validation croisée des lignes de développement."
+        }
+       },
+       "budget": {
+        "max": 3,
+        "declared": 1,
+        "used": 1,
+        "remaining": 2,
+        "legacy": true
+       },
+       "trials": 0,
+       "note": "Development evidence: every configuration is compared on the same out-of-fold predictions of the development rows. The fold standard errors ignore the overlap of the folds' training rows (Bengio & Grandvalet 2004), so they understate the noise: the advice errs towards stopping late, not early. The final test, opened once, is not affected by this choice."
+      },
+      "comparisons": {
+       "fit.variant": {
+        "reference": "fit.linear",
+        "mae": {
+         "point": 0.028706715665814286,
+         "low": -0.04194178849329033,
+         "high": 0.09590339908292789
+        },
+        "rmse": {
+         "point": 0.08969855616630529,
+         "low": 0.021499179657065777,
+         "high": 0.15014827065407482
+        }
+       }
+      },
+      "evaluation": "validation"
+     },
+     "blobs": {},
+     "params": {
+      "candidate": "fit.linear",
+      "metrics": [
+       "mae",
+       "rmse"
+      ],
+      "models": [
+       "fit.baseline",
+       "fit.linear",
+       "fit.variant"
+      ],
+      "reference": "fit.baseline"
+     },
+     "inputs": {
+      "bootstrap": {
+       "level": 0.95,
+       "replicates": 2000,
+       "seed": 20261017
+      },
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "residual_columns": [
+       "model_year"
+      ],
+      "results": {
+       "fit.baseline": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+       "fit.linear": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+       "fit.variant": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      },
+      "trial_budget": {
+       "declared": 1,
+       "legacy": true,
+       "max": 3,
+       "remaining": 2,
+       "used": 1
+      },
+      "variants": [
+       {
+        "kind": "regularisation",
+        "strength": "strong"
+       }
+      ]
+     },
+     "code_fingerprint": "b826465626aaaa7829231e0a59df100e4e697c1e694056956b4a0076d53e3704",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_952532c3c79c0a600a6ca16b",
+     "exposure_id": "x_40676558d4ce446d8ef6cf8eda1d5e7e",
+     "started_revision": 36,
+     "integrity": "ok"
+    },
+    "fit.baseline": {
+     "slot": "fit.baseline",
+     "result_id": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+     "activity": "fit.baseline",
+     "current": true,
+     "stale_reason": null,
+     "partition": "validation",
+     "n_rows": 96,
+     "values": {
+      "model": "train_mean",
+      "target": "mpg",
+      "unit": "mpg",
+      "train_mean": 20.565315315315317,
+      "train_median": 19.2,
+      "n_train": 222,
+      "features": [],
+      "train": {
+       "n_rows": 222,
+       "mae": 5.114093823553284,
+       "rmse": 6.182007796506872,
+       "mean_residual": -1.5363086178596762e-15
+      },
+      "validation": {
+       "n_rows": 96,
+       "mae": 10.268806306306304,
+       "rmse": 11.924502477405836,
+       "mean_residual": 9.806559684684684
+      },
+      "predictions": {
+       "blob": "predictions",
+       "format": "gzip csv row_key,y,prediction",
+       "model": "train_mean",
+       "partition": "validation",
+       "target": "mpg",
+       "unit": "mpg",
+       "prediction_semantics": "A prediction of the target, in its unit.",
+       "n": 96,
+       "features": []
+      },
+      "note": "Every row receives the training mean: the reference a model must beat."
+     },
+     "blobs": {
+      "predictions": "20276db65b2523f9c80abe5b4bf32529799e62f23844da7c225291af46e128bd"
+     },
+     "params": {
+      "model": "train_mean"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "d43afc055150994ee50894cc3524822edebeb1c5d0563b1c50321be4fac72417",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_aa1477c41bc44c975f9888ce",
+     "exposure_id": "x_1f7caefc13124a638d483bb180c2d4a6",
+     "started_revision": 28,
+     "integrity": "ok"
+    },
+    "fit.linear": {
+     "slot": "fit.linear",
+     "result_id": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+     "activity": "fit.linear",
+     "current": true,
+     "stale_reason": null,
+     "partition": "validation",
+     "n_rows": 96,
+     "values": {
+      "model": "linear",
+      "target": "mpg",
+      "unit": "mpg",
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ],
+      "special_value_indicators": [
+       "horsepower=?"
+      ],
+      "n_train": 222,
+      "n_terms": 8,
+      "intercept": 21.07139386751173,
+      "coefficients": {
+       "num__cylinders": -0.37022387198762724,
+       "num__displacement": 0.41888510741149876,
+       "num__horsepower": -1.1866635219111468,
+       "num__weight": -4.061984545313062,
+       "num__horsepower=?": -0.04154318702939566,
+       "cat__origin_1": -0.9522927696704008,
+       "cat__origin_2": -0.1883477305837519,
+       "cat__origin_3": 1.1406405002541518
+      },
+      "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+      "train": {
+       "n_rows": 222,
+       "mae": 2.107827519590371,
+       "rmse": 2.828244905141762,
+       "mean_residual": 6.40128590774865e-17
+      },
+      "validation": {
+       "n_rows": 96,
+       "mae": 6.476590382656274,
+       "rmse": 7.664419781686159,
+       "mean_residual": 6.394515464632113
+      },
+      "predictions": {
+       "blob": "predictions",
+       "format": "gzip csv row_key,y,prediction",
+       "model": "linear",
+       "partition": "validation",
+       "target": "mpg",
+       "unit": "mpg",
+       "prediction_semantics": "A prediction of the target, in its unit.",
+       "n": 96,
+       "features": [
+        "cylinders",
+        "displacement",
+        "horsepower",
+        "weight",
+        "origin"
+       ]
+      },
+      "preprocessing": {
+       "value": {
+        "missing": "none",
+        "rare_category_min_rows": 0,
+        "caps": {},
+        "log_transform": []
+       },
+       "fitted": {
+        "missing_indicators": [],
+        "rare_categories": {},
+        "caps": {},
+        "log_transform": [],
+        "ignored": []
+       },
+       "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
+      }
+     },
+     "blobs": {
+      "predictions": "b225513593321a8cd516ceab26c06227e17d6bf51924f6ea4540990cbc70f997"
+     },
+     "params": {
+      "estimator": "sklearn.linear_model.LinearRegression",
+      "implementation": "mlkit.classical.pipeline",
+      "model": "linear",
+      "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+      "seed": 0,
+      "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ],
+      "preprocessing": {
+       "caps": {},
+       "log_transform": [],
+       "missing": "none",
+       "rare_category_min_rows": 0
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "5b19099e8df0a2a657a90398252cc73c9378d74ae5d7376cfbefd3769d30b782",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_2033db067e905124ef78ea82",
+     "exposure_id": "x_27b79f03e35d43538aa57f812c3d61d6",
+     "started_revision": 30,
+     "integrity": "ok"
+    },
+    "fit.variant": {
+     "slot": "fit.variant",
+     "result_id": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
+     "activity": "fit.variant",
+     "current": true,
+     "stale_reason": null,
+     "partition": "validation",
+     "n_rows": 96,
+     "values": {
+      "model": "ridge",
+      "target": "mpg",
+      "unit": "mpg",
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ],
+      "special_value_indicators": [
+       "horsepower=?"
+      ],
+      "n_train": 222,
+      "n_terms": 8,
+      "intercept": 20.943266941816127,
+      "coefficients": {
+       "num__cylinders": -0.5206655589928507,
+       "num__displacement": -0.4706630199042758,
+       "num__horsepower": -1.0461027069104654,
+       "num__weight": -3.1876711076603237,
+       "num__horsepower=?": -0.04053541390734935,
+       "cat__origin_1": -0.7060718689819638,
+       "cat__origin_2": -0.20009242812717776,
+       "cat__origin_3": 0.9061642971091335
+      },
+      "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
+      "train": {
+       "n_rows": 222,
+       "mae": 2.0983194550246034,
+       "rmse": 2.8506217842819295,
+       "mean_residual": -7.681543089298381e-16
+      },
+      "validation": {
+       "n_rows": 96,
+       "mae": 6.505297098322088,
+       "rmse": 7.754118337852464,
+       "mean_residual": 6.409752295558562
+      },
+      "predictions": {
+       "blob": "predictions",
+       "format": "gzip csv row_key,y,prediction",
+       "model": "linear",
+       "partition": "validation",
+       "target": "mpg",
+       "unit": "mpg",
+       "prediction_semantics": "A prediction of the target, in its unit.",
+       "n": 96,
+       "features": [
+        "cylinders",
+        "displacement",
+        "horsepower",
+        "weight",
+        "origin"
+       ]
+      },
+      "preprocessing": {
+       "value": {
+        "missing": "none",
+        "rare_category_min_rows": 0,
+        "caps": {},
+        "log_transform": []
+       },
+       "fitted": {
+        "missing_indicators": [],
+        "rare_categories": {},
+        "caps": {},
+        "log_transform": [],
+        "ignored": []
+       },
+       "note": "Parameters learnt on training rows only and applied unchanged to validation rows."
+      },
+      "variant": {
+       "kind": "regularisation",
+       "strength": "strong"
+      },
+      "alpha": 10.0
+     },
+     "blobs": {
+      "predictions": "fcfaca99fb29acdff0d7692638ce6b441a48e9a9be801eb29e6ec58f7273b066"
+     },
+     "params": {
+      "alpha": 10.0,
+      "estimator": "sklearn.linear_model.Ridge",
+      "implementation": "mlkit.classical.pipeline",
+      "model": "ridge",
+      "preprocessing": "numeric: median imputation and standardisation; categorical: most frequent imputation and one-hot encoding; fitted on training rows only",
+      "seed": 0,
+      "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
+     },
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "features": [
+       "cylinders",
+       "displacement",
+       "horsepower",
+       "weight",
+       "origin"
+      ],
+      "preprocessing": {
+       "caps": {},
+       "log_transform": [],
+       "missing": "none",
+       "rare_category_min_rows": 0
+      },
+      "results": {
+       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+      },
+      "special_values": [
+       {
+        "column": "horsepower",
+        "value": "?"
+       }
+      ],
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      },
+      "variant": {
+       "kind": "regularisation",
+       "strength": "strong"
+      }
+     },
+     "code_fingerprint": "c58e185e772d64be330f46ce9d902ef948af2dc7d42eead17dfde7941468c039",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_9ef87905207eafeced71da38",
+     "exposure_id": "x_d17d4c973ce44eaaafa59e4b92b002f2",
+     "started_revision": 34,
+     "integrity": "ok"
+    },
+    "split": {
+     "slot": "split",
+     "result_id": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
+     "activity": "split",
+     "current": true,
+     "stale_reason": null,
+     "partition": "development",
+     "n_rows": 318,
+     "values": {
+      "method": "ordinal_cutoff",
+      "column": "model_year",
+      "cutoff": 79,
+      "n_rows": 318,
+      "partitions": {
+       "train": {
+        "n_rows": 222,
+        "column_min": 70,
+        "column_max": 78,
+        "distinct_values": 9
+       },
+       "validation": {
+        "n_rows": 96,
+        "column_min": 79,
+        "column_max": 82,
+        "distinct_values": 4
+       }
+      },
+      "validation_share": 0.3018867924528302,
+      "stratified_on": null,
+      "implementation": "mlkit.study.activities (ordinal cutoff on the integer values of the time column, never converted to a date)",
+      "scenario": "Rows with model_year >= 79 are validated on a model fitted on rows with model_year < 79: later periods validated on earlier ones. Values beyond the training range are extrapolation.",
+      "groups": {
+       "column": "car_name",
+       "n_groups": 254,
+       "train_groups": 178,
+       "validation_groups": 89,
+       "shared_groups": 13,
+       "validation_rows": 96,
+       "validation_rows_in_shared_groups": 15,
+       "validation_share_in_shared_groups": 0.15625,
+       "examples": [
+        "amc concord",
+        "buick century",
+        "buick estate wagon (sw)",
+        "buick skylark",
+        "chevrolet caprice classic"
+       ],
+       "capability": "grouped split (v0.2)",
+       "note": "Grouped split is not available in this version: validation rows of a shared group are not independent of the training rows."
+      },
+      "overlap": null
+     },
+     "blobs": {
+      "train": "d86c63c410b777f42d06059d4731df193c265ca4833a0bdc1adee66061ecc849",
+      "validation": "c325ca859dea663ed6d2785c01e3e5325dc3c94df28f19cef2551b4228d154bd"
+     },
+     "params": {},
+     "inputs": {
+      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
+      "decision": {
+       "column": "model_year",
+       "cutoff": 79,
+       "method": "ordinal_cutoff"
+      },
+      "development": {
+       "n_rows": 318,
+       "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
+      },
+      "group_column": "car_name",
+      "target": {
+       "column": "mpg",
+       "positive_label": null
+      }
+     },
+     "code_fingerprint": "a5b7e800bec7cfbb2ff65ce403f94c44dbc063d199deb5647a2f94c8ca49b1ab",
+     "environment": {
+      "implementation": "cpython",
+      "packages": {
+       "marimo": "0.25.1",
+       "numpy": "2.5.4",
+       "pandas": "3.0.6",
+       "scikit-learn": "1.9.1",
+       "scipy": "1.18.1"
+      },
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.13.16"
+     },
+     "execution_id": "e_ea1ff066194e9ce5fbc1533b",
+     "exposure_id": "x_31410bb1d5b14b36a3677e06eb763671",
+     "started_revision": 12,
+     "integrity": "ok"
+    }
+   },
+   "stale": {},
+   "invalidations": [],
+   "executions": {
+    "active": {},
+    "interrupted": {},
+    "late": {},
+    "suspected_interrupted": {}
+   },
+   "artifacts": {
+    "manifest": "artifacts.json",
+    "status": "ok",
+    "items": {
+     "notebook": {
+      "candidate": null,
+      "consumed": [
+       "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+       "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+       "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
+       "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
+       "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
+       "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
+       "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
+       "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+       "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
+       "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
+       "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+       "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22"
+      ],
+      "edit_check_sha256": "dc011a22b94ec647a0b4545803c445f77f499c5350fcc1ee718589eddab1f929",
+      "error": null,
+      "generated": true,
+      "kind": "marimo_notebook",
+      "last_ok_revision": 38,
+      "path": "notebooks/study_generated.py",
+      "revision": 38,
+      "sha256": "6943755f2bf782509bb953396693414f195b1fc6ffc6ec2ff48cc2f5592cd482",
+      "status": "ok",
+      "template_version": 2,
+      "user_edits_preserved": [],
+      "recorded_status": "ok",
+      "stale_reason": null,
+      "message": "The generated notebook (notebooks/study_generated.py) is up to date.",
+      "audience": "agent",
+      "junior_message": "The generated notebook is up to date."
+     },
+     "report": {
+      "candidate": null,
+      "consumed": [
+       "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+       "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+       "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
+       "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
+       "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
+       "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
+       "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
+       "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+       "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
+       "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
+       "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+       "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22"
+      ],
+      "error": null,
+      "generated": true,
+      "kind": "html",
+      "last_ok_revision": 38,
+      "path": "reports/study.html",
+      "revision": 38,
+      "sha256": "1f5fb7dc5b02cd175bd924616c3258eff0e9e0e3d3ba411562a06f5857d4f0c8",
+      "status": "ok",
+      "template_version": 2,
+      "user_edits_preserved": [],
+      "recorded_status": "ok",
+      "stale_reason": null,
+      "message": "The report (reports/study.html) is up to date.",
+      "audience": "agent",
+      "junior_message": "The report is up to date."
+     },
+     "workbench": {
+      "candidate": null,
+      "consumed": [],
+      "error": null,
+      "generated": false,
+      "kind": "marimo_notebook",
+      "last_ok_revision": 2,
+      "path": "notebooks/workbench.py",
+      "revision": 2,
+      "sha256": "176eb87a2809b40aa48d5b922a87a38ad7778947cb6ac8177a6ef1c90bdf7e36",
+      "sha256_at_creation": "176eb87a2809b40aa48d5b922a87a38ad7778947cb6ac8177a6ef1c90bdf7e36",
+      "status": "ok",
+      "template_version": 3,
+      "user_edits_preserved": [],
+      "recorded_status": "ok",
+      "stale_reason": null,
+      "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study.",
+      "audience": "agent",
+      "junior_message": "The workbench is your free space: it is created once, never overwritten, and not tracked by the study."
+     }
+    }
+   },
+   "exposure": {
+    "records": 17,
+    "rows_exposed": 318,
+    "by_purpose": {
+     "sealed": 80,
+     "structural_inspection": 318,
+     "train_eda": 222,
+     "train_fit": 222,
+     "validation_model_evaluation": 96
+    },
+    "by_partition": {
+     "development": {
+      "structural_inspection": 318
+     },
+     "final_test": {
+      "sealed": 80
+     },
+     "train": {
+      "train_eda": 222,
+      "train_fit": 222
+     },
+     "validation": {
+      "validation_model_evaluation": 96
+     }
+    },
+    "validation_rows_used_for_selection": 96,
+    "prior_exposure": [
+     {
+      "source": "Results of an earlier analysis published with the dataset",
+      "status": "observed",
+      "value": "Outputs of an earlier analysis (protocol \"chronological-70-78-vs-79-82\": Train on 1970–1978, compare on 1979–1982. Chronological split by model year. The horsepower imputation median is calculated from training data only.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     },
+     {
+      "source": "Results of an earlier analysis published with the dataset",
+      "status": "observed",
+      "value": "Outputs of an earlier analysis (protocol \"random-70-30-counterexample\": Counterexample: random 70/30 split (mixed years). Random split with seed 20261017. Future years also contribute to training.) were published with this dataset. The rows used there are not unseen, and that validation is not independent evidence."
+     }
+    ]
+   },
+   "not_yet_defensible": [
+    {
+     "id": "unconfirmed_decisions",
+     "decisions": [
+      "model_choice",
+      "final_test",
+      "conclusion"
+     ],
+     "text": "These decisions are not confirmed: model_choice, final_test, conclusion.",
+     "audience": "agent",
+     "junior_text": "Not confirmed by you yet: the model choice, the opening of the final test and the conclusion."
+    },
+    {
+     "id": "validation_is_not_independent",
+     "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error.",
+     "audience": "junior",
+     "junior_text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+    },
+    {
+     "id": "public_data_already_explored",
+     "text": "The data were explored or published before this study; its rows are not unseen.",
+     "sources": [
+      "Results of an earlier analysis published with the dataset",
+      "Results of an earlier analysis published with the dataset"
+     ],
+     "audience": "junior",
+     "junior_text": "The data were explored or published before this study; its rows are not unseen."
+    },
+    {
+     "id": "grouped_split_unsupported",
+     "column": "car_name",
+     "capability": "grouped split (v0.2)",
+     "text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows.",
+     "audience": "junior",
+     "junior_text": "Rows that share a value of car_name can fall in both partitions: this version has no grouped split, so a split reports how many group values its partitions share instead of preventing it. Validation rows of a shared group are not independent of the training rows."
+    },
+    {
+     "id": "no_causality",
+     "text": "Associations in observational data do not show that acting on a variable would change the outcome.",
+     "audience": "junior",
+     "junior_text": "Associations in observational data do not show that acting on a variable would change the outcome."
+    },
+    {
+     "id": "workbench_not_tracked",
+     "text": "Experiments in the notebook workbench are not recorded and are not decisions.",
+     "audience": "junior",
+     "junior_text": "Experiments in the notebook workbench are not recorded and are not decisions."
+    },
+    {
+     "id": "final_test_sealed",
+     "text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose.",
+     "audience": "junior",
+     "junior_text": "The final test is still sealed: every figure so far is development evidence, measured on rows used to explore, fit, and choose."
+    }
+   ],
+   "settings": {
+    "bootstrap": {
+     "level": 0.95,
+     "replicates": 2000,
+     "seed": 20261017
+    }
+   },
+   "task": "regression",
+   "notes": [],
+   "final_test": {
+    "status": "sealed",
+    "rows": 80,
+    "method": "quantile_stratified",
+    "fraction": 0.2,
+    "development_rows": 318,
+    "schema_check": "pass",
+    "opening": null,
+    "post_final_test": false,
+    "changed_after": [],
+    "excluded_prior_exposed": 0
+   },
+   "deliverables": {
+    "interpreter": "/hypotrail/framework/.venv/bin/python",
+    "launch": {
+     "notebook": {
+      "mode": "run",
+      "path": "notebooks/study_generated.py",
+      "argv": [
+       "uv",
+       "run",
+       "--project",
+       "/hypotrail/framework",
+       "marimo",
+       "run",
+       "/studies/auto mpg/notebooks/study_generated.py"
+      ],
+      "shell": "uv run --project /hypotrail/framework marimo run '/studies/auto mpg/notebooks/study_generated.py'"
+     },
+     "workbench": {
+      "mode": "edit",
+      "path": "notebooks/workbench.py",
+      "argv": [
+       "uv",
+       "run",
+       "--project",
+       "/hypotrail/framework",
+       "marimo",
+       "edit",
+       "/studies/auto mpg/notebooks/workbench.py"
+      ],
+      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/auto mpg/notebooks/workbench.py'"
+     }
+    }
+   },
+   "mode": "guided",
+   "language": "en",
+   "criterion": {
+    "decision_status": "confirmed",
+    "value": {
+     "metric": "mae_reduction",
+     "min_share": 0.1
+    },
+    "metric": "mae_reduction",
+    "status": "met",
+    "result_id": "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+    "rule": null,
+    "model": "fit.linear",
+    "gain": 0.36929471747082676,
+    "low": 0.30765831630777174,
+    "high": 0.4261314806060684,
+    "minimum": 0.1,
+    "unit": "share",
+    "interval_includes_zero": false,
+    "verdict": null,
+    "contradicts_verdict": false,
+    "final_test": null,
+    "judged_on": "development",
+    "judged_status": "met"
+   },
+   "eda_looks": {
+    "target_looks": 4,
+    "results": [
+     "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
+     "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
+     "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
+     "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377"
+    ],
+    "by_activity": {
+     "eda.mean_by": 1,
+     "eda.single_feature_signal": 1,
+     "eda.special_values": 1,
+     "eda.target_summary": 1
+    },
+    "note": "Each exploration that read the target on training rows is a look, and so is each diagnostic of the models on the development rows. The count is a disclosure: the more looks, the more a pattern found among them can be chance. Validation and final-test rows are never explored."
+   },
+   "scenario_defaults": null,
+   "trials": {
+    "count": 2,
+    "results": [
+     "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+     "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23"
+    ],
+    "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
+   },
+   "model_selection": {
+    "available": false,
+    "metric": "mae",
+    "direction": "lower",
+    "folds": null,
+    "configurations": [],
+    "best": null,
+    "one_se": null,
+    "optimism": null,
+    "advice": {
+     "code": "not_available",
+     "text": "The comparison across folds needs a cross-validation of the development rows.",
+     "texts": {
+      "en": "The comparison across folds needs a cross-validation of the development rows.",
+      "fr": "La comparaison entre plis demande une validation croisée des lignes de développement."
+     }
+    },
+    "budget": {
+     "max": 3,
+     "declared": 1,
+     "used": 1,
+     "remaining": 2,
+     "legacy": true
+    },
+    "trials": 0,
+    "note": "Development evidence: every configuration is compared on the same out-of-fold predictions of the development rows. The fold standard errors ignore the overlap of the folds' training rows (Bengio & Grandvalet 2004), so they understate the noise: the advice errs towards stopping late, not early. The final test, opened once, is not affected by this choice."
+   },
+   "model_families": {
+    "constraints": {
+     "interpretability": "none",
+     "declared": false
+    },
+    "evidence": {
+     "source": null,
+     "checked": false,
+     "flags": [],
+     "checks": null
+    },
+    "families": [
+     {
+      "family": "linear",
+      "model": "linear regression",
+      "interpretability": "glass_box",
+      "implementation": "scikit-learn (LogisticRegression, LinearRegression, Ridge)",
+      "diagnostics": "coefficients with bootstrap intervals",
+      "default": true,
+      "allowed": true,
+      "excluded_reason": null,
+      "motivated": false,
+      "words": "the linear model"
+     },
+     {
+      "family": "ebm",
+      "model": "Explainable Boosting Machine",
+      "interpretability": "glass_box",
+      "implementation": "interpret-core (InterpretML, MIT licence)",
+      "diagnostics": "a shape function per feature and the pairwise interaction terms",
+      "default": false,
+      "allowed": true,
+      "excluded_reason": null,
+      "motivated": false,
+      "words": "an Explainable Boosting Machine"
+     },
+     {
+      "family": "hgb",
+      "model": "histogram gradient boosting",
+      "interpretability": "black_box",
+      "implementation": "scikit-learn (HistGradientBoostingClassifier, HistGradientBoostingRegressor)",
+      "diagnostics": "permutation importance on the out-of-fold rows",
+      "default": false,
+      "allowed": true,
+      "excluded_reason": null,
+      "motivated": false,
+      "words": "histogram gradient boosting"
+     }
+    ],
+    "shortlist": [
+     "linear"
+    ],
+    "recommendation": "run_diagnostics",
+    "text": "The diagnostics of the linear model are not computed yet: the shortlist waits for them.",
+    "texts": {
+     "en": "The diagnostics of the linear model are not computed yet: the shortlist waits for them.",
+     "fr": "Les diagnostics du modèle linéaire ne sont pas encore calculés : la liste courte les attend."
+    },
+    "data_contingent": false,
+    "catalogue": [
+     "linear",
+     "ebm",
+     "hgb"
+    ]
+   }
+  }
+ }
+}

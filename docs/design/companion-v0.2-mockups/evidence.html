@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study panel evidence</title>
+<style>
+:root{
+  --vscode-editor-background:#FBFAF7;--vscode-sideBar-background:#FFFFFF;--vscode-panel-border:#E3E1DA;
+  --vscode-foreground:#1C1E21;--vscode-descriptionForeground:#5B6066;--vscode-textLink-foreground:#1D5FAF;
+  --vscode-focusBorder:#1D5FAF;--vscode-button-background:#0F6E66;--vscode-button-foreground:#FFFFFF;
+  --vscode-button-secondaryBackground:#EEEDE8;--vscode-button-secondaryForeground:#1C1E21;
+  --vscode-input-background:#FFFFFF;--vscode-input-border:#8A8F96;--vscode-contrastBorder:transparent;
+  --vscode-charts-green:#0F6E66;--vscode-charts-orange:#A35C00;--vscode-charts-purple:#5B4AA8;--vscode-charts-red:#B3261E;
+  --vscode-charts-foreground:#5B6066;--vscode-charts-lines:#C9C6BD;
+  --ht-bg:var(--vscode-editor-background);--ht-surface:var(--vscode-sideBar-background);--ht-border:var(--vscode-panel-border);
+  --ht-fg:var(--vscode-foreground);--ht-muted:var(--vscode-descriptionForeground);--ht-link:var(--vscode-textLink-foreground);
+  --ht-accent:var(--vscode-charts-green);--ht-accent-soft:#E3F1EF;--ht-base:#8A8F96;--ht-track:#EEEDE8;
+  --ht-warn:var(--vscode-charts-orange);--ht-warn-bg:#FCEFD9;--ht-warn-fg:#5A3205;
+  --ht-err:var(--vscode-charts-red);--ht-err-bg:#FBE7E4;--ht-err-fg:#6B1E14;
+  --ht-seal:var(--vscode-charts-purple);--ht-seal-bg:#EEE8F7;--ht-seal-fg:#3A2363;
+  --ht-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ht-font:-apple-system,"Segoe UI",system-ui,Ubuntu,sans-serif;
+}
+:root[data-theme="dark"]{
+  --vscode-editor-background:#1F1F1F;--vscode-sideBar-background:#252526;--vscode-panel-border:#3A3C3F;
+  --vscode-foreground:#D4D4D4;--vscode-descriptionForeground:#A3A7AD;--vscode-textLink-foreground:#4DAAFC;
+  --vscode-focusBorder:#0078D4;--vscode-button-background:#0E7A71;--vscode-button-foreground:#FFFFFF;
+  --vscode-button-secondaryBackground:#313131;--vscode-button-secondaryForeground:#D4D4D4;
+  --vscode-input-background:#313131;--vscode-input-border:#5A5D62;
+  --vscode-charts-green:#4FB3A9;--vscode-charts-orange:#E0A04A;--vscode-charts-purple:#B7A9F5;--vscode-charts-red:#F48771;
+  --vscode-charts-foreground:#A3A7AD;--vscode-charts-lines:#4A4D52;
+  --ht-accent-soft:#1F3A37;--ht-base:#7D828A;--ht-track:#333538;
+  --ht-warn-bg:#3A2C14;--ht-warn-fg:#F2DDB8;--ht-err-bg:#3B1F1B;--ht-err-fg:#F4C7BF;--ht-seal-bg:#2C2340;--ht-seal-fg:#D9CCF2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ht-bg);color:var(--ht-fg);font:14px/1.5 var(--ht-font)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 40px}
+a{color:var(--ht-link)}
+code,.mono{font-family:var(--ht-mono);font-size:12.5px}
+h2{font-size:20px;margin:4px 0 6px}
+h3{font-size:14px;margin:0 0 10px}
+h4{font-size:13px;margin:12px 0 6px}
+p{margin:0 0 8px}
+.muted{color:var(--ht-muted)} .small{font-size:12px}
+/* frame */
+header.frame{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ht-border)}
+header.frame .t{font-weight:600}
+.pill{font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--ht-border);color:var(--ht-muted);white-space:nowrap}
+.pill.mode{border-color:var(--ht-accent);color:var(--ht-accent);font-weight:600}
+.pill.seal{border-color:var(--ht-seal);color:var(--ht-seal);font-weight:600}
+.fresh{margin-left:auto;font-size:12px;color:var(--ht-muted);display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ht-accent);display:inline-block}
+.dot.stale{background:var(--ht-warn)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--ht-border);margin-bottom:16px}
+nav.tabs a{padding:10px 12px;color:var(--ht-muted);text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent}
+nav.tabs a[aria-current]{color:var(--ht-fg);border-color:var(--ht-accent);font-weight:600}
+nav.tabs .n{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:9px;background:var(--ht-warn);color:#fff;font-size:11px;text-align:center;font-weight:700}
+.topbar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ht-muted);margin:-8px 0 14px}
+/* artboard label */
+.board{font:600 11px/1.4 var(--ht-mono);letter-spacing:.06em;text-transform:uppercase;color:#C2185B;border-top:2px dashed #C2185B;padding-top:6px;margin:28px 0 10px}
+.note{border:1px dashed #C2185B;color:#C2185B;font-size:12px;padding:4px 8px;border-radius:4px;margin:6px 0 10px}
+/* cards */
+.card{background:var(--ht-surface);border:1px solid var(--ht-border);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.card.hero{border:2px solid var(--ht-accent)}
+.card.warn{border-color:var(--ht-warn)}
+.card.seal{border-color:var(--ht-seal)}
+.kicker{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ht-accent);font-weight:700}
+.kicker.w{color:var(--ht-warn)} .kicker.s{color:var(--ht-seal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid2>.card,.grid3>.card{margin-bottom:0}
+.stack>*+*{margin-top:16px}
+/* buttons */
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:13px;border-radius:4px;padding:5px 12px;cursor:pointer;border:1px solid var(--vscode-contrastBorder);
+  background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}
+button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground);font-weight:600}
+button.link{background:none;border:none;color:var(--ht-link);padding:5px 2px}
+button[disabled]{opacity:.55;cursor:not-allowed}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--vscode-focusBorder);outline-offset:2px}
+button .ico{margin-right:6px}
+/* text blocks */
+.quote{border-left:3px solid var(--ht-accent);background:var(--ht-accent-soft);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 12px}
+.callout{border-radius:6px;padding:8px 12px;margin:8px 0;font-size:13px}
+.callout.warn{background:var(--ht-warn-bg);color:var(--ht-warn-fg)}
+.callout.err{background:var(--ht-err-bg);color:var(--ht-err-fg)}
+.callout.seal{background:var(--ht-seal-bg);color:var(--ht-seal-fg)}
+.callout.ok{background:var(--ht-accent-soft)}
+.callout b{display:block;margin-bottom:2px}
+.term{border-bottom:1px dotted currentColor;cursor:help}
+.defn{font-size:13px;border-left:3px solid var(--ht-border);padding:2px 10px;margin:6px 0 10px;color:var(--ht-muted)}
+.defn b{color:var(--ht-fg)}
+textarea{width:100%;min-height:64px;font:inherit;color:var(--ht-fg);background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);border-radius:4px;padding:8px}
+label.f{display:block;font-weight:600;margin:10px 0 4px}
+/* chips and tags */
+.chip{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:4px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.chip.ok{background:var(--ht-accent-soft);color:var(--ht-accent)}
+.chip.w{background:var(--ht-warn-bg);color:var(--ht-warn-fg)}
+.chip.e{background:var(--ht-err-bg);color:var(--ht-err-fg)}
+.chip.s{background:var(--ht-seal-bg);color:var(--ht-seal-fg)}
+.chip.n{background:var(--ht-track);color:var(--ht-muted)}
+/* journey */
+.journey{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:4px 0 16px;list-style:none;padding:0}
+.journey li{padding:6px 4px 2px;border-top:4px solid var(--ht-accent);font-size:12px;color:var(--ht-muted)}
+.journey li.now{border-color:var(--ht-warn);color:var(--ht-fg);font-weight:700}
+.journey li.todo{border-color:var(--ht-border)}
+.journey li.sealed{border-color:var(--ht-seal);border-top-style:dashed}
+.journey li small{display:block;font-weight:400}
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--ht-muted);font-size:12px;border-bottom:1px solid var(--ht-border);padding:6px 8px}
+td{border-bottom:1px solid var(--ht-border);padding:6px 8px;vertical-align:top}
+td.num,th.num{text-align:right;font-family:var(--ht-mono);font-size:12.5px}
+tr.target td{background:var(--ht-accent-soft)}
+tr.grp td{background:var(--ht-track);font-weight:600;font-size:12px;color:var(--ht-muted);letter-spacing:.03em;text-transform:uppercase}
+.scroll{overflow-x:auto}
+/* svg charts */
+svg.chart{width:100%;height:auto;display:block}
+svg .acc{fill:var(--ht-accent)} svg .base{fill:var(--ht-base)} svg .trk{fill:var(--ht-track)}
+svg .warnf{fill:var(--ht-warn)} svg .sealf{fill:var(--ht-seal)}
+svg .ax{stroke:var(--vscode-charts-lines);stroke-width:1}
+svg .ln{fill:none;stroke:var(--ht-accent);stroke-width:2.5}
+svg .lnb{fill:none;stroke:var(--ht-base);stroke-width:2;stroke-dasharray:5 4}
+svg text{fill:var(--ht-fg);font:12px var(--ht-font)}
+svg text.m{fill:var(--ht-muted);font-size:11px}
+svg text.v{font:12px var(--ht-mono)}
+.legend{font-size:12px;color:var(--ht-muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.sw.a{background:var(--ht-accent)} .sw.b{background:var(--ht-base)} .sw.w{background:var(--ht-warn)} .sw.s{background:var(--ht-seal)}
+.q{font-size:13px;font-weight:600;margin:0 0 2px}
+.q::before{content:"Question \2014  ";color:var(--ht-accent);font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ht-muted);margin-bottom:8px}
+footer{margin-top:24px;font-size:12px;color:var(--ht-muted)}
+.themebtn{position:fixed;right:12px;bottom:12px;z-index:5}
+@media (max-width:680px){.grid2,.grid3{grid-template-columns:1fr}.journey{grid-template-columns:repeat(4,1fr)}}
+@media (forced-colors:active){.card.hero,.card.warn,.card.seal{border:2px solid CanvasText}button{border:1px solid ButtonText}.chip{border:1px solid CanvasText}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="frame">
+  <span class="t">Bank marketing &middot; demo</span>
+  <span class="pill mode" title="Confirmation mode of this study">guided mode</span>
+  <span class="pill seal" title="Final-test rows are excluded from every read">&#128274; final test sealed</span>
+  <span class="pill">Experimental</span>
+  <span class="fresh"><span class="dot" aria-hidden="true"></span><span><b>In sync</b> &middot; revision 31 &middot; read 12 s ago</span><button class="link">Refresh</button></span>
+</header>
+<nav class="tabs" aria-label="Study panel"><a href="#">Today</a><a href="#">Data & EDA</a><a href="#">Decisions<span class=n aria-label="1 waiting for you">1</span></a><a href="#" aria-current="page">Evidence</a><a href="#">What if?</a><a href="#">Deliverables</a><a href="#">Learn</a></nav>
+
+<div class="board">Evidence &mdash; seal state first, then diagnostics (R9, R10)</div>
+<section class="card seal" aria-labelledby="hs">
+  <div class="row" style="justify-content:space-between"><div class="kicker s">&#128274; Final test sealed</div><span class="small muted">set at the split, rev 7</span></div>
+  <h2 id="hs">904 rows nobody has read</h2>
+  <svg class="chart" viewBox="0 0 600 30" role="img" aria-label="Development 3,617 rows, final test 904 rows sealed" style="max-width:600px">
+    <rect class="acc" x="0" y="4" width="480" height="22" rx="2"/><text x="10" y="19" style="fill:var(--ht-surface);font-weight:600">development 3,617 &middot; explored, fitted, cross-validated</text>
+    <rect class="sealf" x="482" y="4" width="118" height="22" rx="2"/><text x="541" y="19" text-anchor="middle" style="fill:var(--ht-surface);font-weight:600">final test 904</text></svg>
+  <p class="small">Every figure below is <b>out-of-fold</b> on development rows. It was used to choose the model and the rule, so it is <b>optimistic</b>. The final test gives the one independent figure; it opens once, by your decision, after the model and the rule are confirmed.</p>
+  <div class="row"><button disabled title="Needs the calling rule confirmed">Open the final test&hellip; (in the chat)</button><span class="small muted">Locked until: calling rule confirmed &#10007; &middot; model confirmed &#10003;</span></div>
+</section>
+
+<div class="grid2">
+  <section class="card">
+    <p class="q">If we call the top x % of clients, what share of subscribers do we reach?</p>
+    <div class="meta"><span>diagnostic.gain</span><span class="chip ok">current</span><span>out-of-fold &middot; 3,617 rows</span></div>
+    <svg class="chart" viewBox="0 0 420 260" style="max-width:420px" role="img" aria-label="Gain curve"><line class="ax" x1="44" x2="408" y1="226.0" y2="226.0" opacity=".5"/><text class="m" x="38" y="230.0" text-anchor="end">0%</text><text class="m" x="44.0" y="242" text-anchor="middle">0%</text><line class="ax" x1="44" x2="408" y1="172.0" y2="172.0" opacity=".5"/><text class="m" x="38" y="176.0" text-anchor="end">25%</text><text class="m" x="135.0" y="242" text-anchor="middle">25%</text><line class="ax" x1="44" x2="408" y1="118.0" y2="118.0" opacity=".5"/><text class="m" x="38" y="122.0" text-anchor="end">50%</text><text class="m" x="226.0" y="242" text-anchor="middle">50%</text><line class="ax" x1="44" x2="408" y1="64.0" y2="64.0" opacity=".5"/><text class="m" x="38" y="68.0" text-anchor="end">75%</text><text class="m" x="317.0" y="242" text-anchor="middle">75%</text><line class="ax" x1="44" x2="408" y1="10.0" y2="10.0" opacity=".5"/><text class="m" x="38" y="14.0" text-anchor="end">100%</text><text class="m" x="408.0" y="242" text-anchor="middle">100%</text><path class="lnb" d="M44,226 L408,10"/><path class="ln" d="M44.0,226.0 L62.2,187.1 L80.4,159.0 L116.8,118.0 L153.2,92.1 L226.0,53.2 L317.0,25.1 L408.0,10.0"/><circle cx="62.2" cy="187.1" r="4" class="acc"/><text x="72.2" y="203.1" class="v">5 %: 18 %</text><circle cx="80.4" cy="159.0" r="6" class="warnf"/><text x="90.4" y="175.0" class="v">10 %: 31 %</text><circle cx="116.8" cy="118.0" r="4" class="acc"/><text x="126.8" y="134.0" class="v">20 %: 50 %</text><text class="m" x="232.0" y="258" text-anchor="middle">share of clients called (highest scores first)</text><text class="m" x="12" y="118.0" transform="rotate(-90 12 118.0)" text-anchor="middle">share of subscribers reached</text></svg>
+    <p class="legend"><span class="sw a"></span>logistic model <span class="sw b"></span>random calls <span class="sw w"></span>proposed rule (10 %)</p>
+  </section>
+  <section class="card">
+    <p class="q">At the proposed rule, who do we call by mistake, and who do we miss?</p>
+    <div class="meta"><span>diagnostic.confusion</span><span class="chip ok">current</span><span>call the top 10 % (362)</span></div>
+    <table style="text-align:center">
+      <tr><th></th><th style="text-align:center">called</th><th style="text-align:center">not called</th></tr>
+      <tr><th>subscribed</th><td style="background:var(--ht-accent-soft)"><b class="mono" style="font-size:18px">130</b><div class="small muted">reached</div></td><td><b class="mono" style="font-size:18px">287</b><div class="small muted">missed</div></td></tr>
+      <tr><th>did not</th><td style="background:var(--ht-warn-bg)"><b class="mono" style="font-size:18px">232</b><div class="small muted">wasted calls</div></td><td><b class="mono" style="font-size:18px">2,968</b><div class="small muted">correctly skipped</div></td></tr>
+    </table>
+    <p class="small" style="margin-top:8px"><span class="term">Precision</span> 130 / 362 = <b>35.9 %</b> &middot; <span class="term">Recall</span> 130 / 417 = <b>31.2 %</b>. With a capacity of 10 %, at most 87 % of subscribers could ever be reached.</p>
+    <button class="link small">See 5 example wasted calls and 5 missed subscribers</button>
+  </section>
+</div>
+<div class="grid2" style="margin-top:16px">
+  <section class="card">
+    <p class="q">Are the scores honest probabilities?</p>
+    <div class="meta"><span>diagnostic.calibration</span><span class="chip ok">current</span></div>
+    <svg class="chart" viewBox="0 0 300 150" style="max-width:340px" role="img" aria-label="Calibration"><line class="ax" x1="30" y1="130" x2="290" y2="10"/><path class="ln" d="M30,128 L82,120 L134,104 L186,86 L238,70 L290,40"/><text class="m" x="160" y="146" text-anchor="middle">predicted score</text><text class="m" x="4" y="70">observed</text></svg>
+    <p class="small">Scores above 0.4 are over-confident. Use the score to <b>rank</b> clients, not as a probability of subscribing.</p>
+  </section>
+  <section class="card">
+    <p class="q">Does the model work equally across segments?</p>
+    <div class="meta"><span>diagnostic.by_segment:contact</span><span class="chip w">uses an uncertain column</span></div>
+    <table><tr><th>contact</th><th class="num">rows</th><th class="num">precision @10 %</th></tr>
+    <tr><td>cellular</td><td class="num">2,317</td><td class="num">38.1 %</td></tr><tr><td>telephone</td><td class="num">241</td><td class="num">29.4 %</td></tr><tr><td>unknown</td><td class="num">1,059</td><td class="num">21.0 % <span class="chip n">wide</span></td></tr></table>
+  </section>
+</div>
+<section class="card" style="margin-top:16px">
+  <h3>Every result and what it depends on</h3>
+  <div class="scroll"><table>
+    <tr><th>Result</th><th>Answers</th><th>Rows</th><th>Status</th><th>Depends on</th></tr>
+    <tr><td>Split &amp; seal</td><td>which rows are development / final test</td><td class="small">all</td><td><span class="chip ok">current</span></td><td class="small muted">decision: split</td></tr>
+    <tr><td>Logistic model (CV)</td><td>AUC 0.71 [0.68, 0.74] vs 0.50 baseline</td><td class="small">development</td><td><span class="chip ok">current</span></td><td class="small muted">variables, split</td></tr>
+    <tr><td>Calling rule 10 %</td><td>precision 35.9 %, recall 31.2 %</td><td class="small">development</td><td><span class="chip ok">current</span></td><td class="small muted">model, capacity</td></tr>
+    <tr style="opacity:.6"><td>Calling rule score &ge; 0.2</td><td>precision 34.8 %</td><td class="small">development</td><td><span class="chip n">stale</span></td><td class="small muted">replaced at rev 27</td></tr>
+  </table></div>
+</section>
+<div class="note">Values in this artboard are illustrative (the engine has no CV, holdout or diagnostics yet: plan L3). Every chart opens with the question it answers, and the seal state sits above any figure.</div>
+
+<footer>Reads the hypotrail CLI only. The chat, the report and the notebook stay complete without this panel.</footer>
+</div>
+<button class="themebtn" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Toggle light / dark</button>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('theme');
+if(q){document.documentElement.dataset.theme=q;}
+else if(matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.dataset.theme='dark';}})();
+</script>
+</body>
+</html>

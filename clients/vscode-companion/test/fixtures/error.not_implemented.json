@@ -1,0 +1,23 @@
+{
+ "about": {
+  "schema": "hypotrail.error/1",
+  "task": "binary",
+  "exit_code": 2,
+  "source": "hand-authored",
+  "argv": [],
+  "note": "The WP-0 stub refusal (CC §13)."
+ },
+ "payload": {
+  "schema": "hypotrail.error/1",
+  "ok": false,
+  "command": "evidence",
+  "error": {
+   "code": "unsupported_capability",
+   "message": "evidence is reserved for the advanced companion and is not implemented in this version. Nothing was read or written.",
+   "details": {
+    "command": "evidence",
+    "reason": "not_implemented"
+   }
+  }
+ }
+}

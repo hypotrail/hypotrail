@@ -1,0 +1,60 @@
+# Small-data variant of the E1 answering persona (synthetic-small case, G.12 acceptance).
+#
+# The steps of e1_persona.yaml, with one change: the plan approval also states the split
+# the junior's team always uses ("keep 30% of the rows for validation"). On the 60-row
+# synthetic case this leaves 18 validation rows, so the engine's small-data warnings
+# (small_validation_partition, then capacity_exceeds_validation once the manager's 100
+# calls are evaluated) are raised and the agent has to explain them in plain words. In
+# the first small-data run the agent chose a 50% split by default, which sits exactly at
+# the 30-row threshold and raised no warning. The sheet is e1_persona_answering.yaml's.
+schema: hypotrail.acceptance-persona-answering/1
+id: e1-junior-small
+model: sonnet
+max_answers_per_gap: 2
+answer_after: [garde_ca, continue_1, continue_2, keep_that, capacity_100, conclusion]
+chats:
+  - # chat 1
+    - label: intent
+      say: >-
+        Hi! I'm a junior data analyst and I'm new to machine learning. My manager shared the
+        files in this folder (start with README.md). We want to know whom to call first,
+        because the team cannot call everyone. Can you help me do a proper study? Please
+        explain things as we go.
+    - label: accept_plan
+      say: >-
+        That plan looks good to me, let's go with it. For the split, keep 30% of the rows
+        for validation, as our team always does. For other questions I can't answer, use
+        your recommended default and tell me what you assumed.
+    - label: ok
+      say: ok
+    - label: garde_ca
+      say: garde ça
+    - label: continue_1
+      say: Please continue with the plan.
+    - label: continue_2
+      say: Great, thanks. Keep going with the next steps.
+  - # chat 2: a new conversation, no resume
+    - label: where_are_we
+      say: where are we?
+    - label: continue_3
+      say: Please continue until we have a model and a recommendation for how many people to call.
+    - label: keep_that
+      say: keep that
+    - label: capacity_100
+      say: >-
+        News from my manager: the team can make only 100 calls in the next campaign. What
+        does that change?
+    - label: conclusion
+      say: Can you write the conclusion for my manager? What should we do?
+sheet: >-
+  You play a junior data analyst who is new to machine learning, cooperative and terse.
+  Below is the assistant's last message to you. If it waits for you to confirm, choose, or
+  answer something about the study (a decision, a restatement to confirm, variables to
+  leave out, a split, a selection rule, a conclusion), reply as the analyst in one or two
+  sentences in your own words: accept the option the assistant recommends, and say
+  concretely what it means, using the assistant's own terms (for example the moment of the
+  prediction, the variables to leave out and why, the split, the rule, or the main point of
+  the conclusion). If it asks you to write something in your own words, write it. Never
+  reply with only "ok", "yes", "keep that", "continue" or a similar word. Do not ask for
+  anything new and do not add numbers the assistant did not give. If the message does not
+  wait for any answer from you, reply exactly NONE. Output only the analyst's reply.

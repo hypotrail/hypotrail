@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hypotrail"
+version = "0.1.0.dev0"
+description = "Agent-assisted machine learning study engine (mlkit compatibility namespace)."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "scikit-learn>=1.5",
+    "scipy",
+    "pyyaml>=6.0",
+    "marimo==0.25.1",
+    "interpret-core==0.7.3",
+    "matplotlib>=3.8",
+]
+# interpret-core (MIT) is a core dependency since v0.3 (WP-F1, ADR 0007): the study engine
+# fits the Explainable Boosting Machine as a model family; pinned, and its version is part
+# of the code fingerprint of the fits that use it.
+
+[project.scripts]
+hypotrail = "mlkit.study.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+browser = ["playwright==1.55.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["mlkit"]
+
+# mlkit/assets/design.css and the teaching texts mlkit/study/content/*.yaml ship inside
+# the package (hatch includes every file under mlkit/; read with importlib.resources). framework/notebooks/ and
+# framework/templates/ are read through Path(__file__).parents[1] (discover.py,
+# notebooks.py, tutorial.py), so they resolve only from a source checkout with the
+# editable install that `uv sync` creates. A non-editable wheel does not support them yet.
+
+[tool.pytest.ini_options]
+markers = [
+    "spike: exploratory spike tests that gate a design decision",
+    "agent_acceptance: acceptance checks that need a real agent session",
+]

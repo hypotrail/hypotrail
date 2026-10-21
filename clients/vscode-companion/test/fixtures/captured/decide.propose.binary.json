@@ -1,0 +1,72 @@
+{
+ "about": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "propose",
+   "policy"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decide/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"",
+  "action": "decide.propose",
+  "request_id": "b-prop",
+  "replayed": false,
+  "revision": 48,
+  "result": {
+   "proposal_id": "p_8",
+   "decision_id": "policy",
+   "status": "open",
+   "decision_status": "confirmed",
+   "superseded": [],
+   "restatement": "Call the 100 clients with the highest scores.",
+   "data_contingent": null,
+   "data_contingent_reason": null
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 48,
+    "last_ok_revision": 48,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 48,
+    "last_ok_revision": 48,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  },
+  "next_action": {
+   "kind": "await_user_words",
+   "proposal_id": "p_8",
+   "decision": "policy",
+   "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
+   "audience": "agent",
+   "junior_message": "A proposal on the decision policy is waiting for your answer. Read its restatement and say whether you adopt it, or what you would change.",
+   "language": "en",
+   "recommended": null,
+   "question": "Do you adopt this decision?",
+   "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change."
+  }
+ }
+}

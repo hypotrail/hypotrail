@@ -1,0 +1,99 @@
+/* Overview view styles (COMPANION-ADVANCED §6.1; v0.3 WP-E2, docs/design/companion-v0.3-
+   mockups/overview.html). Tokens of tokens.css and the card pattern of core.css only. */
+.ov-section { background: var(--ht-surface); border: 1px solid var(--ht-card-border); border-radius: var(--r-card);
+  padding: var(--s4); margin: var(--s3) 0; min-width: 0; }
+.ov-section > h2 { font-size: var(--t-cap); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ht-muted);
+  margin: 0 0 var(--s3); }
+
+/* Your next move: the one hero of the panel (an accent ring, no shadow). */
+.ov-hero { border: 1px solid color-mix(in srgb, var(--ht-accent) 55%, var(--ht-line)); border-radius: var(--r-card);
+  padding: var(--s4); margin: var(--s3) 0 var(--s4); background: var(--ht-bg); box-shadow: 0 0 0 3px var(--ht-accent-tint); }
+.ov-hero[data-hero="done"], .ov-hero[data-hero="propose"], .ov-hero[data-hero="run"], .ov-hero[data-hero="blocked"],
+.ov-hero[data-hero="other"] { border-color: var(--ht-card-border); box-shadow: none; }
+.ov-hero[data-hero="outcome_unknown"], .ov-hero[data-hero="acknowledge_interruption"] { border-color: var(--ht-bad);
+  box-shadow: 0 0 0 3px var(--ht-bad-tint); }
+.ov-hero > h2 { margin: 2px 0 var(--s2); font-size: var(--t-h); }
+.ov-eyebrow { margin: 0; font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ht-accent-ink); }
+.ov-hero-lead { margin: 0 0 var(--s2); color: var(--ht-fg); }
+.ov-hero-quote { font-size: var(--t-body); }
+.ov-hero-short, .ov-hero-why, .ov-hero-support { margin: 6px 0; }
+.ov-hero-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+.ov-hero-actions button { margin: 0; }
+
+/* Where we are */
+.ov-recap { margin: var(--s2) 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: var(--s4); row-gap: var(--s2); }
+.ov-recap-row { display: contents; }
+.ov-recap dt { color: var(--ht-muted); font-weight: 400; }
+.ov-recap dd { margin: 0; min-width: 0; }
+.ov-criterion-why, .ov-criterion-figure { margin: 2px 0 0; }
+.ov-decided { list-style: none; padding: 0; margin: 0; }
+.ov-decided li { margin: 0 0 var(--s1); }
+.ov-decided-name { color: var(--ht-muted); }
+.ov-decided .ht-status { margin-left: 6px; }
+@media (max-width: 600px) { .ov-recap { grid-template-columns: minmax(0, 1fr); } .ov-recap dd { margin-bottom: var(--s2); } }
+
+/* The journey bar (replaces the four-column map) */
+.ov-steps { list-style: none; padding: 0; margin: 0; }
+.ov-step .ov-sub { display: block; font-size: var(--t-cap); font-weight: 400; color: var(--ht-muted); }
+.ov-step .ov-mark { color: var(--ht-muted); font-weight: 400; }
+.ov-step-awaiting_confirmation .ov-sub, .ov-step-reopened .ov-sub, .ov-step-needs_reconfirmation .ov-sub { color: var(--ht-fg); }
+.ht-journey > li[aria-current="step"] strong { color: var(--ht-accent-ink); }
+
+/* Since your last session and the limits */
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--s3); }
+.ov-grid > .ov-section { margin: 0; }
+.ov-digest, .ov-limits { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--s2); margin: var(--s1) 0; }
+.ov-digest-more > summary { cursor: pointer; color: var(--ht-link); margin-top: var(--s1); font-size: var(--t-meta); }
+.ov-since-select { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: var(--t-meta); }
+.ov-since-select label { display: inline; margin: 0; font-weight: 500; }
+
+/* Deliverables */
+.ov-deliverable { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s3); padding: var(--s3) 0;
+  border-bottom: 1px solid var(--ht-line); }
+.ov-deliverable:last-of-type { border-bottom: 0; }
+.ov-deliverable-main { min-width: 0; }
+.ov-deliverable-label { font-weight: 600; }
+.ov-path { font-size: var(--t-meta); color: var(--ht-faint); }
+.ov-deliverable-what { margin: 2px 0 var(--s1); }
+.ov-deliverable-status { font-size: var(--t-meta); }
+.ov-deliverable-actions { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: none; }
+.ov-deliverable-actions button { margin: 0; }
+@media (max-width: 600px) {
+  .ov-deliverable { flex-direction: column; }
+  .ov-deliverable-actions { flex-direction: row; flex-wrap: wrap; }
+}
+.ov-launch { margin: var(--s3) 0 var(--s1); padding: var(--s2) var(--s3); border-radius: 6px; background: var(--ht-sunken);
+  border: 1px solid var(--ht-contrast); font-size: var(--t-meta); }
+.ov-launch-title { font-weight: 600; margin: 0 0 var(--s1); }
+.ov-launch p { margin: var(--s1) 0; }
+.ov-launch pre { margin: var(--s1) 0; }
+.ov-regenerate { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin-top: var(--s2); }
+.ov-regenerate button { margin: 0; }
+
+/* Needs attention (Health) */
+.ov-sub-section { margin: var(--s3) 0; }
+.ov-execution h4 { margin: 0 0 var(--s1); }
+.ov-execution { border-color: var(--ht-bad); }
+.ov-checks summary { cursor: pointer; font-weight: 600; }
+.ov-findings { list-style: none; padding: 0; }
+.ov-finding { padding: var(--s1) 0; }
+.ov-severity { font-size: var(--t-cap); text-transform: uppercase; font-weight: 600; padding: 1px 6px; border-radius: var(--r-chip);
+  background: var(--ht-sunken); }
+.ov-finding-error .ov-severity { background: var(--ht-bad-tint); color: var(--ht-bad); }
+.ov-finding-warning .ov-severity { background: var(--ht-warn-tint); color: var(--ht-warn); }
+.ov-health-alerts { list-style: none; padding: 0; }
+.ov-recap .ht-link { margin: 0; }
+.ov-finding button { margin-top: 0; }
+
+/* WP-B5: the final test row and the mode explainer (read only). */
+.ov-mode-rules { margin: 6px 0; padding-left: 20px; }
+.ov-hero-chat { padding: var(--s2) var(--s3); border-radius: 6px; background: var(--ht-sunken); border: 1px solid var(--ht-contrast); }
+
+/* v0.3 (owner addition, I1): how this panel works. */
+.ov-guide > h2 { font-size: var(--t-title); margin: 0 0 var(--s2); }
+.ov-guide-list { margin: var(--s2) 0; }
+.ov-guide-tabs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--s3); margin: 0; }
+.ov-guide-tabs dt { font-weight: 600; color: var(--ht-fg); }
+.ov-guide-tabs dd { margin: 0; }
+@media (max-width: 600px) { .ov-guide-tabs { grid-template-columns: minmax(0, 1fr); } .ov-guide-tabs dd { margin-bottom: var(--s2); } }

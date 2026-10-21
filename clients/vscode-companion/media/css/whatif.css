@@ -1,0 +1,18 @@
+/* What if? view (COMPANION-ADVANCED §6.5). WP-U3. Tokens of tokens.css only; no inline style. */
+.ht-wi-banner { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 12px 0; border: 1px solid var(--ht-experiment-fg); }
+.ht-wi-icon { font-weight: 600; }
+.ht-wi-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.ht-segmented { display: inline-flex; border: 1px solid var(--ht-border); border-radius: 8px; overflow: hidden; }
+.ht-segmented button { margin: 0; border-radius: 0; }
+.ht-wi-slider-row { display: flex; align-items: center; gap: 12px; }
+.ht-wi-slider-row input[type="range"] { flex: 1; min-width: 160px; }
+.ht-wi-slider-row input[type="number"] { width: 7em; }
+.ht-wi-share { margin: 6px 0 0; }
+.ht-wi-counts { margin: 6px 0; }
+.ht-wi-intervals { margin-top: 10px; padding: 10px 12px; background: var(--ht-quote-bg); border-radius: 8px; }
+.ht-wi-draft { border-color: var(--ht-experiment-fg); }
+.ht-wi-label { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--ht-experiment-bg); color: var(--ht-experiment-fg); font-weight: 600; }
+.ht-wi-propose { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ht-wi-models { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.ht-wi-models legend { font-weight: 600; }
+.ht-whatif .ht-pending { opacity: 0.6; }

@@ -1,0 +1,83 @@
+{
+ "about": {
+  "schema": "hypotrail.decide/1",
+  "task": "binary",
+  "exit_code": 0,
+  "source": "captured",
+  "argv": [
+   "decide",
+   "withdraw",
+   "p_9",
+   "--request-id",
+   "b-wd",
+   "--expected-revision",
+   "49",
+   "--json"
+  ],
+  "note": ""
+ },
+ "payload": {
+  "schema": "hypotrail.decide/1",
+  "ok": true,
+  "study": "/studies/bank marketing \"demo\"-web",
+  "action": "decide.withdraw",
+  "request_id": "b-wd",
+  "replayed": false,
+  "revision": 50,
+  "result": {
+   "proposal_id": "p_9",
+   "decision_id": "policy",
+   "status": "withdrawn",
+   "decision_status": "confirmed"
+  },
+  "artifacts": {
+   "report": {
+    "status": "ok",
+    "path": "reports/study.html",
+    "revision": 50,
+    "last_ok_revision": 50,
+    "error": null,
+    "message": "The report (reports/study.html) is up to date."
+   },
+   "notebook": {
+    "status": "ok",
+    "path": "notebooks/study_generated.py",
+    "revision": 50,
+    "last_ok_revision": 50,
+    "error": null,
+    "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "workbench": {
+    "status": "ok",
+    "path": "notebooks/workbench.py",
+    "revision": 2,
+    "last_ok_revision": 2,
+    "error": null,
+    "tracked": false,
+    "message": "The workbench (notebooks/workbench.py) is the junior's free space: created once, never overwritten, and not tracked by the study."
+   }
+  },
+  "next_action": {
+   "kind": "propose",
+   "step": "final_test",
+   "decision": "final_test",
+   "message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+   "default_value": {
+    "model": "fit.logistic",
+    "rule": "threshold:0.2"
+   },
+   "audience": "junior",
+   "junior_message": "Now that the model and the rule are chosen, do you open the sealed final test, once, to measure the chosen configuration on rows nothing has seen? After this, any change is made after the final test.",
+   "language": "en",
+   "recommended": {
+    "value": {
+     "model": "fit.logistic",
+     "rule": "threshold:0.2"
+    },
+    "why": "This is the configuration you chose; the holdout (final test) measures it once."
+   },
+   "question": "Do you open the holdout (final test) now, once?",
+   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows."
+  }
+ }
+}
