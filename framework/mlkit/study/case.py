@@ -103,6 +103,9 @@ VARIABLE_OPTIONAL = ('unit', 'format', 'group', 'labels', 'range')
 LABEL_LANGUAGES = ('en', 'fr')
 RANGE_KEYS = ('min', 'max', 'status', 'source')
 STATEMENT_KEYS = ('value', 'status', 'source')
+AVAILABILITY_OPTIONAL = ('restriction',)
+AVAILABILITY_RESTRICTION_KEYS = ('scenario_id', 'kind', 'source')
+AVAILABILITY_RESTRICTION_KIND = 'unavailable_at_prediction'
 SPECIAL_VALUE_KEYS = ('value', 'meaning', 'status', 'source')
 STRUCTURE_KEYS = ('row_unit', 'group_column', 'time_column', 'duplicates')
 MIGRATION_REQUIRED = ('from', 'from_schema', 'from_sha256', 'tool', 'tool_version')
@@ -331,7 +334,7 @@ def _validate_variables(variables: Any, p: _Problems) -> list[dict]:
         p.status(v['status'], f'{path}.status')
         p.text(v['source'], f'{path}.source')
         a = v['availability']
-        if p.keys(a, f'{path}.availability', STATEMENT_KEYS):
+        if p.keys(a, f'{path}.availability', STATEMENT_KEYS, AVAILABILITY_OPTIONAL):
             if a['value'] not in AVAILABILITY_VALUES:
                 p.add(f'{path}.availability.value',
                       f'must be one of {", ".join(AVAILABILITY_VALUES)}')
@@ -340,6 +343,17 @@ def _validate_variables(variables: Any, p: _Problems) -> list[dict]:
             if (a['value'] == 'unknown') != (a['status'] == 'unknown'):
                 p.add(f'{path}.availability',
                       'value "unknown" and status "unknown" go together')
+            if 'restriction' in a:
+                restriction = a['restriction']
+                rpath = f'{path}.availability.restriction'
+                if p.keys(restriction, rpath, AVAILABILITY_RESTRICTION_KEYS):
+                    p.text(restriction['scenario_id'], f'{rpath}.scenario_id')
+                    if restriction['kind'] != AVAILABILITY_RESTRICTION_KIND:
+                        p.add(f'{rpath}.kind',
+                              f'must be "{AVAILABILITY_RESTRICTION_KIND}"')
+                    p.text(restriction['source'], f'{rpath}.source')
+                    if a['value'] != 'not_available' or a['status'] != 'documented_fact':
+                        p.add(rpath, 'is allowed only for a documented not_available value')
         if 'group' in v:
             p.text(v['group'], f'{path}.group')
         if 'labels' in v:

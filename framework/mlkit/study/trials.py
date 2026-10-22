@@ -51,6 +51,9 @@ MAX_VARIANTS = 3
 VARIANT_SLOTS = ('fit.variant', 'fit.variant:2', 'fit.variant:3')
 LIST_KEY = 'variants'
 QUESTION_KEY = 'question'
+ORIGIN_KEY = 'origin'
+DIAGNOSTIC_RESULT_KEY = 'diagnostic_result_id'
+ORIGINS = ('planned', 'diagnostic_informed')
 KINDS = ('regularisation', 'drop_group', 'tuned', 'family')
 KIND_KEYS = {'regularisation': ('kind', 'strength'), 'drop_group': ('kind', 'group'),
              'tuned': ('kind',), 'family': ('kind', 'family')}
@@ -140,8 +143,9 @@ def variants_of(value: Any) -> list[dict]:
 
 
 def spec_of(variant: Mapping) -> dict:
-    """What makes a variant's model: the variant without its question."""
-    return {k: v for k, v in variant.items() if k != QUESTION_KEY}
+    """What makes a variant's numerical model (wording/provenance excluded)."""
+    return {k: v for k, v in variant.items()
+            if k not in (QUESTION_KEY, ORIGIN_KEY, DIAGNOSTIC_RESULT_KEY)}
 
 
 def spec_key(variant: Mapping) -> str:
@@ -236,7 +240,8 @@ def check_value(value: Any, groups: Mapping, task: str) -> str | None:
         kind = v.get('kind')
         if kind not in KIND_KEYS:
             return f'kind is one of {", ".join(KINDS)}.'
-        allowed = set(KIND_KEYS[kind]) | ({QUESTION_KEY} if is_list_value(value) else set())
+        allowed = set(KIND_KEYS[kind]) | ({QUESTION_KEY, ORIGIN_KEY, DIAGNOSTIC_RESULT_KEY}
+                                         if is_list_value(value) else set())
         if set(v) - allowed or not set(KIND_KEYS[kind]) <= set(v):
             return (f'A {kind} variant is {{' + ', '.join(f'"{k}"' for k in KIND_KEYS[kind])
                     + (', "question"' if is_list_value(value) else '') + '}.')
@@ -245,6 +250,17 @@ def check_value(value: Any, groups: Mapping, task: str) -> str | None:
             if not isinstance(q, str) or not q.strip() or len(q) > MAX_QUESTION:
                 return ('Each variant is declared with the question it answers (a non-empty '
                         f'sentence of at most {MAX_QUESTION} characters).')
+            if ORIGIN_KEY in v:
+                if v.get(ORIGIN_KEY) not in ORIGINS:
+                    return f'origin is one of {", ".join(ORIGINS)}.'
+                diagnostic = v.get(DIAGNOSTIC_RESULT_KEY)
+                if v[ORIGIN_KEY] == 'diagnostic_informed' \
+                        and (not isinstance(diagnostic, str) or not diagnostic):
+                    return 'A diagnostic_informed variant requires diagnostic_result_id.'
+                if v[ORIGIN_KEY] == 'planned' and diagnostic is not None:
+                    return 'A planned variant has diagnostic_result_id null.'
+            elif DIAGNOSTIC_RESULT_KEY in v:
+                return 'diagnostic_result_id requires an origin.'
         if kind == 'regularisation' and v['strength'] not in STRENGTHS:
             return 'strength is "weak" or "strong".'
         if kind == 'drop_group' and v['group'] not in groups:
@@ -461,6 +477,12 @@ def selection(results: Mapping, state: Mapping, task: str) -> dict:
     """The candidate and the declared variants compared fold by fold (see the module
     docstring), from the view's ``results`` (current results only) and the study's
     variant decision and budget: :func:`select`."""
+    evaluation_slot = 'policy.evaluation' if task == 'binary' else 'evaluate.regression'
+    evaluation = results.get(evaluation_slot) or {}
+    stored = (evaluation.get('values') or {}).get('model_selection') \
+        if evaluation.get('current') else None
+    if isinstance(stored, Mapping):
+        return dict(stored)
     candidate = 'fit.logistic' if task == 'binary' else 'fit.linear'
     variants = variants_of(confirmed_value(state))
     fits = {}
@@ -472,20 +494,43 @@ def selection(results: Mapping, state: Mapping, task: str) -> dict:
 
 
 def select(fits: Mapping, variants: list, task: str, bud: Mapping,
-           language: str = 'en') -> dict:
+           language: str = 'en', objectives: Mapping | None = None) -> dict:
     """``{available, metric, direction, folds, configurations, best, one_se, optimism,
     advice, budget, trials, note}``: the candidate and the ``variants`` compared on the
     per-fold metric of their fit values (``fits``: ``{slot: values}``); ``bud`` is the
     variant budget (:func:`budget`). Pure; also stored by the evaluations (WP-F1), where every
     number is a registered value."""
-    metric = 'roc_auc' if task == 'binary' else 'mae'
-    higher = task == 'binary'
+    first_values = next((v for v in fits.values() if isinstance(v, Mapping)), {})
+    declared = ((first_values.get('cross_validation') or {}).get('objective') or {})
+    if objectives:
+        declared = next((v for v in objectives.values() if isinstance(v, Mapping)), declared)
+    metric = declared.get('metric') or ('roc_auc' if task == 'binary' else 'mae')
+    higher = declared.get('direction', 'maximize' if task == 'binary' else 'minimize') \
+        == 'maximize'
+    objective_selection = bool(declared)
     candidate = 'fit.logistic' if task == 'binary' else 'fit.linear'
     slots = [candidate] + list(VARIANT_SLOTS[:len(variants)])
     configs, folds = [], None
     for i, slot in enumerate(slots):
         values = fits.get(slot)
-        per_fold = _per_fold(values, metric)
+        if objectives and slot in objectives:
+            objective_item = objectives[slot]
+            metric_key = objective_item.get('metric')
+            per_fold = [window.get(metric_key) for window in
+                        objective_item.get('per_window') or []]
+            point = objective_item.get('point')
+            if not per_fold or any(v is None for v in per_fold) or point is None:
+                per_fold = None
+        elif objective_selection:
+            fold_items = ((values or {}).get('cross_validation') or {}).get('per_fold') or []
+            per_fold = [((item.get('objective') or {}).get('point')) for item in fold_items]
+            point = (((values or {}).get('cross_validation') or {}).get('objective') or {}).get(
+                'point')
+            if not per_fold or any(v is None for v in per_fold) or point is None:
+                per_fold = None
+        else:
+            per_fold = _per_fold(values, metric)
+            point = None
         if per_fold is None:
             continue
         if folds is None:
@@ -494,7 +539,8 @@ def select(fits: Mapping, variants: list, task: str, bud: Mapping,
             continue
         variant = variants[i - 1] if i else None
         n_features = len((values or {}).get('features') or [])
-        mean, sd = _mean_sd(per_fold)
+        fold_mean, sd = _mean_sd(per_fold)
+        mean = float(point) if objective_selection else fold_mean
         configs.append({'slot': slot, 'kind': variant.get('kind') if variant else 'candidate',
                         'family': family_of(variant),
                         'question': (variant or {}).get(QUESTION_KEY),
@@ -527,6 +573,21 @@ def select(fits: Mapping, variants: list, task: str, bud: Mapping,
     sign = 1 if higher else -1
     best = max(configs, key=lambda c: (sign * c['mean'], -configs.index(c)))
     out['best'] = best['slot']
+    if objective_selection and declared.get('aggregation') == 'pooled_counts':
+        for c in configs:
+            c['within_one_se'] = None
+        out['one_se'] = {'available': False,
+                         'reason': 'pooled_counts is not an equal-weight fold mean; the '
+                                   'legacy one-standard-error heuristic is incoherent'}
+        out['optimism'] = {'available': False,
+                           'reason': 'no weighted selection-optimism estimator is implemented'}
+        out['advice'] = {'code': 'objective_selected', 'stop': False, 'noise': None,
+                         'largest_difference': None,
+                         'text': 'Choose using the predeclared pooled-count objective.',
+                         'texts': {'en': 'Choose using the predeclared pooled-count objective.',
+                                   'fr': "Choisissez selon l'objectif pré-déclaré sur les "
+                                         'comptages agrégés.'}}
+        return out
     se_best = best['se'] or 0.0
     threshold = best['mean'] - sign * se_best
     for c in configs:
@@ -635,9 +696,15 @@ def data_contingency(value: Any, diag: Mapping | None, diag_result: str | None
     """``(data_contingent, reason)`` of a ``model_variant`` proposal: a family variant
     proposed while the diagnostics of the linear fit flag a pattern was motivated by them
     (WP-F1); every other variant is a pre-declared alternative."""
-    families = [v.get('family') for v in variants_of(value) if v.get('kind') == 'family']
+    items = variants_of(value)
+    informed = [v for v in items if v.get(ORIGIN_KEY) == 'diagnostic_informed']
+    families = [v.get('family') for v in items if v.get('kind') == 'family']
     checks = (diag or {}).get('linear_checks') if isinstance(diag, Mapping) else None
     flags = list((checks or {}).get('flags') or [])
+    if informed and not flags:
+        return True, {'families': families, 'diagnostics': diag_result, 'flags': [],
+                      'text': 'This challenger was declared after model evidence and is '
+                              'recorded as diagnostic-informed/data-contingent.'}
     if not families or not flags:
         return False, None
     named = ', '.join(f"{f.get('check')} ({f.get('feature') or 'all rows'})" for f in flags)

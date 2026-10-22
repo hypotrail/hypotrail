@@ -1,6 +1,6 @@
 # CLI and study contract (`hypotrail`, v0.1, extended through v0.2)
 
-## Review roadmap J0: opt-in scope and assurance
+## Review roadmap J0--J3: opt-in scope, protocol and assurance
 
 `hypotrail init --case CASE --study DIR [--lang en|fr]` additionally accepts
 `[--reliability-profile legacy|review-v1]`. Omission preserves existing behavior and
@@ -14,12 +14,11 @@ after whitespace normalization. A mismatch is `invalid_value`, reason
 for a revised case/new study when the intended scenario changes. Legacy free-text
 prediction moments are unchanged.
 
-`review-v1` currently supports inspection and planning. Analytical activities are
-refused before reservation with `unsupported_capability`, `details.capability`:
-`review-v1 analytical execution (J1-J3 pending)`, reason `analysis_contract_missing`
-or `implementation_pending`. Structural `eda.quality` remains allowed. A future or
-group-disjoint review profile cannot initialize its final partition yet: capability
-`review-v1 final partition (J1 pending)`. No legacy fallback is substituted.
+`review-v1` requires a valid `analysis_contract` and executes analytical activities under
+the J1--J3 protocol below. The final partition and every outer or inner evaluation use an
+explicit, digest-addressed row-membership plan. Missing clocks, groups or feasible training
+memberships are refused with a specific reason; no legacy split is substituted. Structural
+`eda.quality` remains available before analytical decisions.
 
 The full view adds `assurance` with exact keys `profile`, `evaluation_protection`,
 `consent_provenance`, `cross_study_history`, `analysis_contract_status`, `claim_scope`.
@@ -39,9 +38,71 @@ enforced. `sealed` remains the machine status. Choice-picker confirmation retain
 limits appear before scores in the data card and the plan/summary next-action digest.
 The ordinary data-card and plan payload keys are unchanged.
 
-No numerical algorithm, trial budget, existing confirmation mode, panel write
-whitelist or default stage changes in J0. Future J1–J3 behavior is not implemented
-by this amendment.
+The profile is additive. A missing profile still means `legacy`; legacy numerical
+algorithms, trial budget, confirmation mode, panel write whitelist and historical result
+interpretation are unchanged.
+
+### Review-v1 evaluation plan (J1)
+
+The split result stores `evaluation_plan`, schema `hypotrail.evaluation_plan/1`, and its
+canonical SHA-256 digest. Its folds contain exact `train_keys`, `validation_keys` and
+`excluded_train_keys`; the plan also records `scored_keys`, warm-up `unscored_keys`, counts
+and method parameters. Supported review methods are `kfold_stratified`, `kfold_quantile`,
+`group_disjoint`, `forward_chaining` and `ordered_retrospective`. A model consumes these
+memberships verbatim, and its identity includes the plan digest.
+
+Forward chaining admits a training row only when its outcome is available strictly before
+the validation window begins. Prediction-time ties stay in one window. Gaps, overlapping
+groups, transitive entity/duplicate components and prior exposure purge training rows;
+validation membership is not moved to conceal overlap. Warm-up rows remain development
+provenance but receive no prediction and enter no metric denominator. Nested tuning builds
+the same kind of plan inside each outer training set. Too few time blocks, an empty or
+single-class training set, and other infeasible memberships are explicit refusals.
+
+### Review-v1 validity requirements (J2)
+
+The full view adds three derived surfaces: `requirements`, `completion` and
+`claim_eligibility` (`null` in a legacy view). Each requirement has the frozen shape
+`{code, satisfied, result_id, detail}`. They cover feature timing, protocol validity,
+current development diagnostics for the selected model/rule, final diagnostics where a
+final claim needs them, interpretability, uncertainty and the case's permitted-claim
+ceiling. Completion and claim eligibility are derived from current results and decisions;
+they are not stored declarations.
+
+`check` reports `validity_requirement_missing` when a completed, non-inconclusive
+review-v1 conclusion lacks a required item. An inconclusive conclusion remains the
+explicit path for reporting that evidence is absent.
+
+A documented availability restriction is enforced on proposal, confirmation and direct
+execution paths. Required interpretability excludes HGB on those same paths. A
+`model_variant` has `origin: planned|diagnostic_informed`; the latter cites the current
+development diagnostic in `diagnostic_result_id`. A variant first named after model scores
+cannot be relabelled as predeclared. Opening the final test requires the matching current
+development diagnostic. A final diagnostic is then part of a completed empirical claim,
+while an explicitly inconclusive conclusion may report missing evidence without inventing
+it.
+
+### Review-v1 objective and verdict (J3)
+
+The success criterion fixes `decision_rule: point_estimate|lower_bound` and a `selection`
+object before model comparison. Binary selection uses precision or recall at the exact
+declared rule and `pooled_counts`; regression uses row-weighted MAE against a training-fold
+median baseline. `capacity:k` is literal in each declared batch (an undersized batch selects
+all its rows); `share:p` is relative in each batch; score ties at the action boundary use
+expected fractional counts. Undefined precision/recall remains unavailable rather than
+being dropped from aggregation.
+
+Inner tuning, outer comparison, policy evaluation and final evaluation use that objective.
+Changing its rule invalidates tuned/family fits and dependent evaluations, while fixed raw
+predictions remain reusable when their identity permits. The criterion records
+`point_meets_minimum`, `interval_excludes_zero`, `lower_bound_meets_minimum`,
+`uncertainty_status`, `decision_rule`, `decision_status` and `basis`. A lower-bound verdict
+can be met only by a qualified interval. Paired row bootstrap is qualified only for an
+independent held-out evaluation of a fixed selected configuration; any undefined required
+replicate makes its interval unavailable. Temporal/group dependence and unsupported batch
+resampling are stated limitations, never silent independence assumptions. Pooled-count
+selection does not report the legacy equal-fold one-SE or optimism heuristic.
+The dependency-table mutation is named `success_criterion.selection`.
 
 Status: **frozen** at the end of Phase 1 (plan `docs/plans/V0.1-IMPLEMENTATION-PLAN.md` §4, §8, §9 bis). Implemented in `framework/mlkit/study/`. Frozen by `framework/tests/study/test_contract_freeze.py`.
 

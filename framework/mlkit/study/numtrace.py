@@ -34,6 +34,7 @@ SEVERITY = {'number_outside_result': 'error', 'unknown_result_id': 'error',
             'verdict_keeps_baseline_against_criterion': 'warning',
             # B6c (H2): a final-test figure in a text after the choice changed.
             'final_test_figure_outdated': 'error'}
+SEVERITY['validity_requirement_missing'] = 'error'
 FINDING_CODES = tuple(SEVERITY)
 
 EXEMPT_BEFORE = re.compile(r'(?:revision|revisions|rev\.?|step|steps|pause|pauses|proposal|p_|'

@@ -339,7 +339,9 @@ def final_criterion(results: Mapping) -> dict | None:
 
 
 FINAL_CRITERION_KEYS = ('status', 'gain', 'low', 'high', 'minimum', 'unit',
-                        'interval_includes_zero', 'result_id')
+                        'interval_includes_zero', 'result_id', 'point_meets_minimum',
+                        'interval_excludes_zero', 'lower_bound_meets_minimum',
+                        'uncertainty_status', 'decision_rule', 'decision_status', 'basis')
 
 
 def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict | None:
@@ -416,6 +418,27 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
     if final and final.get('status') and _same_configuration(results, out, canonical):
         judged_on, judged = 'final_test', final['status']
     out['judged_on'], out['judged_status'] = judged_on, judged
+    if isinstance(value, Mapping) and value.get('decision_rule') in (
+            'point_estimate', 'lower_bound'):
+        from . import objective
+        if judged_on == 'final_test':
+            assessment = {k: final.get(k) for k in (
+                'point_meets_minimum', 'interval_excludes_zero',
+                'lower_bound_meets_minimum', 'uncertainty_status', 'decision_rule',
+                'decision_status', 'basis')}
+        else:
+            item = results.get('policy.evaluation' if task == 'binary'
+                               else 'evaluate.regression') or {}
+            qualified = bool(((item.get('values') or {}).get('uncertainty') or {}).get(
+                'eligible'))
+            assessment = objective.assess(out['gain'], out['minimum'],
+                                          decision_rule=value['decision_rule'],
+                                          low=out['low'], high=out['high'],
+                                          interval_qualified=qualified)
+        out.update(assessment)
+        judged = assessment.get('decision_status') or 'not_assessed'
+        out['status'] = judged if judged_on == 'development' else out['status']
+        out['judged_status'] = judged
     out['contradicts_verdict'] = verdict in ADOPT_VERDICTS and judged in ('not_met', 'uncertain')
     return out
 
@@ -438,6 +461,13 @@ def _same_configuration(results: Mapping, out: Mapping, canonical: Callable[[str
     item = results.get('final_test.evaluation')
     values = item.get('values') if isinstance(item, Mapping) else None
     if not isinstance(values, Mapping):
+        return False
+    current_criterion = out.get('value')
+    measured_criterion = (item.get('inputs') or {}).get('criterion')
+    if isinstance(current_criterion, Mapping) and 'decision_rule' in current_criterion \
+            and measured_criterion != current_criterion:
+        # A post-opening criterion edit is adaptive: the original final result stays
+        # citable history, but cannot qualify the new criterion as independent evidence.
         return False
     if out.get('model') is None:
         return True

@@ -15,7 +15,7 @@
  "payload": {
   "schema": "hypotrail.summary/1",
   "ok": true,
-  "study": "/private/studies/bank marketing \"demo\"-families",
+  "study": "/studies/bank marketing \"demo\"-families",
   "revision": 22,
   "since": null,
   "changed": null,
@@ -316,31 +316,31 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "1051a831ce5054a252429cdd9347be2a310e5fb5e5a170347798d6064a83223c",
+    "result_id": "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
+    "result_id": "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
+    "result_id": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+    "result_id": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
+    "result_id": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -457,8 +457,8 @@
   "eda_looks": {
    "target_looks": 2,
    "results": [
-    "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
-    "1051a831ce5054a252429cdd9347be2a310e5fb5e5a170347798d6064a83223c"
+    "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
+    "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20"
    ]
   },
   "recap": [
@@ -489,7 +489,7 @@
       "/hypotrail/framework",
       "marimo",
       "run",
-      "/private/studies/bank marketing \"demo\"-families/notebooks/study_generated.py"
+      "/studies/bank marketing \"demo\"-families/notebooks/study_generated.py"
      ]
     },
     "workbench": {
@@ -502,7 +502,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/private/studies/bank marketing \"demo\"-families/notebooks/workbench.py"
+      "/studies/bank marketing \"demo\"-families/notebooks/workbench.py"
      ]
     }
    }
@@ -593,7 +593,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-21T20:15:10.451670+00:00",
+   "boundary_time": "2026-10-22T09:30:00.640107+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -602,7 +602,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-21T20:15:10.551100+00:00",
+     "time": "2026-10-22T09:30:00.765408+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -625,7 +625,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-21T20:15:10.837706+00:00",
+     "time": "2026-10-22T09:30:01.215112+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -655,7 +655,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-21T20:15:11.129997+00:00",
+     "time": "2026-10-22T09:30:01.708797+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -678,7 +678,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-21T20:15:11.411231+00:00",
+     "time": "2026-10-22T09:30:02.174502+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -708,7 +708,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-21T20:15:11.829959+00:00",
+     "time": "2026-10-22T09:30:02.865919+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -731,7 +731,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-21T20:15:12.201083+00:00",
+     "time": "2026-10-22T09:30:03.549819+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -761,7 +761,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-21T20:15:12.601132+00:00",
+     "time": "2026-10-22T09:30:04.295784+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -784,7 +784,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-21T20:15:12.985512+00:00",
+     "time": "2026-10-22T09:30:04.978896+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -814,7 +814,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-21T20:15:13.429139+00:00",
+     "time": "2026-10-22T09:30:05.708784+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -837,7 +837,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-21T20:15:13.821590+00:00",
+     "time": "2026-10-22T09:30:06.412192+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -867,7 +867,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-21T20:15:14.350088+00:00",
+     "time": "2026-10-22T09:30:07.235438+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -875,7 +875,7 @@
      "note_id": null,
      "activity": "split",
      "slot": "split",
-     "result_id": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
+     "result_id": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
      "execution_id": "e_bb85e451e092b31aedb250d1",
      "rules": null,
      "column": null,
@@ -890,7 +890,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-21T20:15:14.868682+00:00",
+     "time": "2026-10-22T09:30:08.120740+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -898,7 +898,7 @@
      "note_id": null,
      "activity": "eda.target_rate",
      "slot": "eda.target_rate",
-     "result_id": "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
+     "result_id": "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
      "execution_id": "e_a8274014a4c678f4a2a235d2",
      "rules": null,
      "column": null,
@@ -913,7 +913,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-21T20:15:15.389540+00:00",
+     "time": "2026-10-22T09:30:09.000996+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -921,7 +921,7 @@
      "note_id": null,
      "activity": "fit.baseline",
      "slot": "fit.baseline",
-     "result_id": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
+     "result_id": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
      "execution_id": "e_eff39ccb2204a33ff345cb41",
      "rules": null,
      "column": null,
@@ -936,7 +936,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-21T20:15:16.057716+00:00",
+     "time": "2026-10-22T09:30:10.160865+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -944,7 +944,7 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "result_id": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
      "rules": null,
      "column": null,
@@ -959,7 +959,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-21T20:15:16.619574+00:00",
+     "time": "2026-10-22T09:30:11.098960+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -967,7 +967,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "1051a831ce5054a252429cdd9347be2a310e5fb5e5a170347798d6064a83223c",
+     "result_id": "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
      "execution_id": "e_e3011a6950ece5ea44c0419c",
      "rules": null,
      "column": null,
@@ -982,7 +982,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-21T20:15:17.141173+00:00",
+     "time": "2026-10-22T09:30:11.881990+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1020,6 +1020,6 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "d437bfa9d12a4d29"
+  "currency": "c38592970f6778dd"
  }
 }

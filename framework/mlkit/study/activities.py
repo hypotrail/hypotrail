@@ -76,6 +76,7 @@ opened read-only can display results but never produce one.
 from __future__ import annotations
 
 import os
+import json
 from typing import Any, Mapping
 
 from mlkit.reliability import CommandRefused
@@ -161,19 +162,20 @@ MODEL_FITS = (BASELINE, LOGISTIC, LINEAR, VARIANT)
 # Modules whose source defines each result (registry code fingerprint, plan §3.3).
 _BASE = 'mlkit.study.activities'
 MODULES = {
-    SPLIT: (_BASE, 'mlkit.classical'),
+    SPLIT: (_BASE, 'mlkit.classical', 'mlkit.study.evaluation_plan'),
     TARGET_RATE: (_BASE, 'mlkit.study.eda'),
     SPECIAL_VALUES: (_BASE, 'mlkit.study.eda'),
     RATE_BY: (_BASE, 'mlkit.study.eda'),
-    BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics'),
+    BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.objective'),
     LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical',
-               'mlkit.study.governance'),
-    POLICY: (_BASE, 'mlkit.study.policy', 'mlkit.study.trials'),
+               'mlkit.study.governance', 'mlkit.study.objective'),
+    POLICY: (_BASE, 'mlkit.study.policy', 'mlkit.study.trials', 'mlkit.study.objective'),
     TARGET_SUMMARY: (_BASE, 'mlkit.study.eda'),
     MEAN_BY: (_BASE, 'mlkit.study.eda'),
     LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical',
-             'mlkit.study.governance'),
-    REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression', 'mlkit.study.trials'),
+             'mlkit.study.governance', 'mlkit.study.objective'),
+    REGRESSION_EVALUATION: (_BASE, 'mlkit.study.regression', 'mlkit.study.trials',
+                            'mlkit.study.objective'),
     DISTRIBUTION: (_BASE, 'mlkit.study.eda'),
     QUALITY: (_BASE, 'mlkit.study.eda'),
     CORRELATION: (_BASE, 'mlkit.study.correlation'),
@@ -183,10 +185,12 @@ MODULES = {
     # fit them (``interpret._version`` and ``sklearn`` hold the version strings).
     VARIANT: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.regression',
               'mlkit.classical', 'mlkit.study.governance', 'mlkit.study.families',
-              'mlkit.study.trials', 'interpret._version', 'sklearn'),
+              'mlkit.study.trials', 'mlkit.study.objective', 'mlkit.study.evaluation_plan',
+              'interpret._version', 'sklearn'),
     FINAL: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.study.policy',
             'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance',
-            'mlkit.study.families', 'mlkit.study.trials', 'interpret._version', 'sklearn'),
+            'mlkit.study.families', 'mlkit.study.trials', 'mlkit.study.objective',
+            'mlkit.study.evaluation_plan', 'interpret._version', 'sklearn'),
     DIAG_BINARY: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.fit', 'mlkit.study.metrics',
                   'mlkit.study.policy', 'mlkit.classical', 'mlkit.study.governance'),
     DIAG_REGRESSION: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.fit',
@@ -228,6 +232,7 @@ CAPABILITY_SPLIT_PARAMETERS = 'random split of these rows with these parameters'
 # WP-B1: a cross-validation needs at least ``folds`` rows in each stratum it keeps.
 CAPABILITY_FOLDS = 'cross-validation folds with fewer rows of a stratum than folds'
 FOLDS_BLOB = 'folds'
+EVALUATION_PLAN_BLOB = 'evaluation_plan'
 # WP-B1: the variant's regularisation (decision ``model_variant``). The candidate logistic
 # model has C = 1 (scikit-learn's default); a weaker regularisation is C = 10, a stronger one
 # C = 0.1. The candidate linear model is unregularised (ordinary least squares); its
@@ -447,6 +452,10 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
     case = case_of(state)
     inputs = _base_inputs(state)
     params: dict[str, Any] = {}
+    # Human-authored wording belongs in the result we present, but not in the numerical
+    # identity of the evaluation.  Keep a frozen copy in the in-memory execution plan: the
+    # registry still receives only ``params`` and ``inputs`` below.
+    presentation: dict[str, Any] = {}
     exposures: list[dict] = []
     target = case.target_column
 
@@ -497,16 +506,36 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
         if decision.get('method') in ('stratified_random', 'kfold_stratified',
                                       'kfold_quantile'):
             read = [target]
-        elif decision.get('method') == 'temporal_folds':
+        elif decision.get('method') in ('temporal_folds', 'forward_chaining',
+                                        'ordered_retrospective'):
             # WP-B1: blocks in time order, by the time column (else the declared order).
             column = time_order_column(case)
             inputs['order_column'] = column
             read = [column] if column != 'line' else []
+            if decision.get('method') in ('forward_chaining', 'ordered_retrospective'):
+                contract = case.document['analysis_contract']
+                inputs['analysis_contract'] = contract
+                prediction = contract['timing']['prediction_order']['by']
+                outcome = contract['timing'].get('outcome_available_order')
+                read = [] if prediction == 'line' else [prediction]
+                if isinstance(outcome, Mapping) and outcome['by'] != 'line':
+                    read.append(outcome['by'])
+        elif decision.get('method') == 'group_disjoint':
+            read = [target]
+            inputs['analysis_contract'] = case.document['analysis_contract']
         else:
             read = [decision['column']] if decision.get('method') == 'ordinal_cutoff' else []
         if case.group_column:
             read.append(case.group_column)
             inputs['group_column'] = case.group_column
+        contract = case.document.get('analysis_contract')
+        if decision.get('method') in st.REVIEW_CV_METHODS and contract:
+            inputs['analysis_contract'] = contract
+            group_column = contract['dependencies'].get('group_column')
+            if group_column:
+                inputs['group_column'] = group_column
+                if group_column not in read:
+                    read.append(group_column)
         if case.duplicates_policy:
             # v0.2b (WP-B3): identical records stay together (no key otherwise, so earlier
             # identities are unchanged).
@@ -590,6 +619,11 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                     params['max_groups'] = options['max_groups']   # keeps earlier identities
                 inputs['special_values'] = feature_special_values(case, [column])
                 columns.append(column)
+                from . import assurance
+                contract = case.document.get('analysis_contract') or {}
+                dependence = (contract.get('dependencies') or {}).get('kind')
+                if assurance.profile(state) == 'review-v1' and dependence != 'independent':
+                    params['shuffle_envelope'] = False
             expose('train_eda', eda_partition, keys['train'], columns)
         elif activity in MODEL_FITS:
             inputs['target'] = _target(case)
@@ -626,7 +660,13 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             inputs['residual_columns'] = columns
             params = {'models': models, 'reference': BASELINE,
                       'candidate': LINEAR, 'metrics': ['mae', 'rmse']}
-            _selection_inputs(state, inputs, models)
+            display_variants = _selection_inputs(state, inputs, models)
+            if display_variants is not None:
+                presentation['variants'] = display_variants
+            from . import assurance, state as st
+            if assurance.profile(state) == 'review-v1':
+                inputs['success_criterion'] = dict(
+                    state['decisions'][st.SUCCESS_CRITERION]['value'])
             if cv:
                 params['evaluation'] = 'out_of_fold'
                 expose('out_of_fold_evaluation', partition.DEVELOPMENT, keys['validation'],
@@ -640,7 +680,13 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             inputs['bootstrap'] = dict(state['settings']['bootstrap'])
             params = {'rules': evaluated_rules(state, options['rules']), 'models': models,
                       'reference': BASELINE}
-            _selection_inputs(state, inputs, models)
+            from . import assurance, state as st
+            if assurance.profile(state) == 'review-v1':
+                inputs['success_criterion'] = dict(
+                    state['decisions'][st.SUCCESS_CRITERION]['value'])
+            display_variants = _selection_inputs(state, inputs, models)
+            if display_variants is not None:
+                presentation['variants'] = display_variants
             if cv:
                 params['evaluation'] = 'out_of_fold'
                 # B6c (H3): a capacity or a share is applied within each fold, so the folds
@@ -655,33 +701,42 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                else MODULES[activity])
     code = registry.code_fingerprint(modules)
     key = rec.input_key(activity, rec_json(params), rec_json(inputs), code['fingerprint'])
-    return {'activity': activity, 'slot': slot_of(activity, options), 'options': options,
-            'params': params,
-            'inputs': inputs, 'code': code, 'input_key': key, 'exposures': exposures,
-            'case_path': state['case']['path'], 'dataset_sha256': state['dataset']['sha256']}
+    result = {'activity': activity, 'slot': slot_of(activity, options), 'options': options,
+              'params': params,
+              'inputs': inputs, 'code': code, 'input_key': key, 'exposures': exposures,
+              'case_path': state['case']['path'], 'dataset_sha256': state['dataset']['sha256']}
+    if presentation:
+        result['presentation'] = presentation
+    return result
 
 
-def _selection_inputs(state: Mapping, inputs: dict, models: list) -> None:
+def _selection_inputs(state: Mapping, inputs: dict, models: list) -> list[dict] | None:
     """v0.3 (WP-F1): an evaluation that compares variants also records the selection among
-    them (:func:`mlkit.study.trials.select`); its inputs name the variants (without their
-    questions) and the budget used."""
+    them (:func:`mlkit.study.trials.select`). Its identity inputs name only the numerical
+    variant specs and the budget. The returned full variants are presentation metadata,
+    frozen for this execution without making their questions part of ``input_key``."""
     if not any(trials.is_variant_slot(m) for m in models):
-        return
+        return None
     from . import state as st
-    inputs['variants'] = [trials.spec_of(v) for v in
-                          trials.variants_of(state['decisions'][st.MODEL_VARIANT]['value'])]
+    variants = trials.variants_of(state['decisions'][st.MODEL_VARIANT]['value'])
+    inputs['variants'] = [trials.spec_of(v) for v in variants]
     inputs['trial_budget'] = trials.budget(state)
+    return variants
 
 
-def _selection_values(store, plan_: Mapping, models: list, task: str) -> dict | None:
+def _selection_values(store, plan_: Mapping, models: list, task: str,
+                      objectives: Mapping | None = None) -> dict | None:
     """The stored selection of an evaluation (WP-F1), from the fits it compares."""
-    variants = plan_['inputs'].get('variants')
+    variants = (plan_.get('presentation') or {}).get('variants')
+    if variants is None:       # legacy/direct plans contained only the numerical specs
+        variants = plan_['inputs'].get('variants')
     if variants is None:
         return None
     results = plan_['inputs']['results']
     fits = {m: registry.get(store, results[m])['output']['values'] for m in models
             if m != BASELINE and m in results}
-    return trials.select(fits, variants, task, plan_['inputs']['trial_budget'])
+    return trials.select(fits, variants, task, plan_['inputs']['trial_budget'],
+                         objectives=objectives)
 
 
 def adopted_rule(state: Mapping) -> str | None:
@@ -730,6 +785,23 @@ def fold_assignment(store, split_rid: str) -> dict[str, int] | None:
     return out
 
 
+def evaluation_membership(store, split_rid: str) -> dict | None:
+    """The explicit J1 plan, or ``None`` for an immutable legacy split result."""
+    entry = registry.get(store, split_rid)
+    sha = entry['blobs'].get(EVALUATION_PLAN_BLOB)
+    if sha is None:
+        return None
+    try:
+        plan = json.loads(store.read_blob(sha))
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise StudyError('integrity_error', 'The evaluation-plan blob is not valid JSON.') from exc
+    from . import evaluation_plan as ep
+    if plan.get('schema') != ep.SCHEMA or ep.digest(plan) != \
+            (entry['output']['values'].get('evaluation_plan') or {}).get('digest'):
+        raise StudyError('integrity_error', 'The evaluation plan does not match its digest.')
+    return plan
+
+
 def compared_models(state: Mapping, fits: tuple) -> list[str]:
     """The model slots an evaluation compares: the baseline and the candidate, and (WP-B1)
     the variant once the junior named it (v0.3, WP-F1: every variant the junior named, up to
@@ -762,6 +834,11 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
     from . import governance, state as st
     task = st.task_of(state)
     availability = state['decisions']['feature_availability']['value'] or {}
+    from . import assurance, validity
+    if assurance.profile(state) == 'review-v1':
+        # Recheck at the computation boundary: a hand-edited decision must not bypass a
+        # documented scenario restriction.
+        validity.require_availability(case, availability)
     candidates = [v['name'] for v in case.document['variables'] if v['role'] == 'feature']
     missing = [f for f in candidates if f not in availability]
     _refuse([{'requirement': 'availability_decision', 'feature': f,
@@ -782,6 +859,14 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
                           f'variant {index} before fitting it.'}], f'Running {activity}')
             variant = declared[index - 1]
         variant = trials.spec_of(variant)
+        if assurance.profile(state) == 'review-v1' \
+                and variant.get('kind') == 'family' and variant.get('family') == 'hgb' \
+                and (((case.document.get('constraints') or {}).get('interpretability') or {})
+                     .get('value') == 'required'):
+            _refuse([{'requirement': 'interpretability_constraint_satisfied',
+                      'family': 'hgb',
+                      'detail': 'The case requires an interpretable model; histogram '
+                                'gradient boosting is not admissible.'}], f'Running {activity}')
         if variant.get('kind') == 'drop_group':
             group = {v['name'] for v in case.document['variables']
                      if v['role'] == 'feature' and v.get('group') == variant['group']}
@@ -794,6 +879,9 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
                 f'Running {activity}')
             features = kept
     inputs = {'features': features, 'special_values': feature_special_values(case, features)}
+    if assurance.profile(state) == 'review-v1':
+        inputs['analysis_contract'] = case.document['analysis_contract']
+        inputs['evaluation_protocol'] = dict(state['decisions']['split']['value'])
     # WP-A4: the confirmed preprocessing, in a study that has the decision (an earlier study
     # keeps its identities: no key).
     preprocessing = governance.effective_preprocessing(state)
@@ -831,6 +919,11 @@ def model_plan(state: Mapping, case: c.Case, activity: str,
                       'seed': params['seed']}
         if index > 1:
             params['variant_index'] = index
+    if assurance.profile(state) == 'review-v1' and params.get('tuning'):
+        criterion_value = (state['decisions'].get(st.SUCCESS_CRITERION) or {}).get('value')
+        if criterion_value is not None:
+            inputs['success_criterion'] = {'metric': criterion_value['metric'],
+                                           'selection': dict(criterion_value['selection'])}
     return inputs, params
 
 
@@ -862,7 +955,8 @@ def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
     inputs['criterion'] = criterion
     params.update(model=model, rule=config.get('rule'), model_params=model_params,
                   reference=BASELINE, task=task)
-    if rec.capacity_of(config.get('rule')) is not None:
+    review_criterion = isinstance(criterion, Mapping) and 'decision_rule' in criterion
+    if rec.capacity_of(config.get('rule')) is not None and not review_criterion:
         # The capacity was chosen on the rows the policy evaluation scored (every development
         # row out of fold, or the validation rows); on the final test it keeps its share.
         chosen_on = registry.get(store, state['current'][POLICY])['output']['values']['n']
@@ -1304,6 +1398,9 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
     import pandas as pd
 
     decision = plan_['inputs']['decision']
+    if decision['method'] in ('forward_chaining', 'ordered_retrospective',
+                              'group_disjoint'):
+        return compute_review_cv_split(plan_, case, dataset)
     method, k, seed = decision['method'], decision['folds'], decision['seed']
     frame = dataset.frame
     keys = sorted(frame.index, key=_line)
@@ -1389,6 +1486,99 @@ def compute_cv_split(store, plan_: Mapping, case: c.Case, dataset) -> dict:
                                      plan_['inputs'].get('previous_split_stale_since'), parts)
     return {'values': values, 'blobs': blobs, 'partition': _rows_partition(plan_['inputs']),
             'n_rows': n}
+
+
+def compute_review_cv_split(plan_: Mapping, case: c.Case, dataset) -> dict:
+    """J1 explicit memberships for the opt-in review-v1 methods."""
+    import pandas as pd
+    from . import evaluation_plan as ep
+    decision, frame = plan_['inputs']['decision'], dataset.frame
+    keys = sorted(frame.index, key=_line)
+    contract = plan_['inputs']['analysis_contract']
+    timing, dependencies = contract['timing'], contract['dependencies']
+
+    def clock(spec):
+        if not isinstance(spec, Mapping):
+            return None
+        if spec['by'] == 'line':
+            return {key: _line(key) for key in keys}
+        values = pd.to_numeric(frame.loc[keys, spec['by']], errors='coerce')
+        if values.isna().any():
+            raise StudyError('invalid_value', f'The clock {spec["by"]!r} must be numeric.',
+                             details={'column': spec['by'], 'missing': int(values.isna().sum())})
+        return dict(zip(keys, values.astype(float)))
+
+    prediction = clock(timing.get('prediction_order'))
+    outcome = clock(timing.get('outcome_available_order'))
+    binary = case.task == 'binary'
+    labels = dict(zip(keys, positive(frame.loc[keys], case).astype(int))) if binary else None
+    if binary:
+        strata = labels
+    else:
+        from .eda import numeric_target
+        bins = pd.qcut(numeric_target(case, frame.loc[keys]), partition.QUANTILE_BINS,
+                       labels=False, duplicates='drop')
+        strata = dict(zip(keys, bins.astype(int)))
+    groups = None
+    group_column = dependencies.get('group_column')
+    if group_column:
+        groups = dict(zip(keys, frame.loc[keys, group_column].astype(str)))
+    duplicates = None
+    if plan_['inputs'].get('duplicates'):
+        duplicates = dt.entity_groups(dataset.index)
+    protocol = dict(decision)
+    plan = ep.build(keys, protocol, prediction_order=prediction,
+                    outcome_available_order=outcome, strata=strata, labels=labels,
+                    groups=groups, duplicate_groups=duplicates,
+                    assumptions=[f'scenario:{contract["scenario_id"]}'],
+                    group_goal=dependencies.get('group_goal'))
+    plan_digest = ep.digest(plan)
+    assignment = {key: fold['id'] for fold in plan['folds']
+                  for key in fold['validation_keys']}
+    lines = ['row_key,fold'] + [f'{key},{assignment[key]}' for key in keys if key in assignment]
+    plan_bytes = (json.dumps(plan, ensure_ascii=False, sort_keys=True,
+                             separators=(',', ':')) + '\n').encode('utf-8')
+    every = {'n_rows': len(keys)}
+    if binary:
+        every.update(n_positive=sum(labels.values()), rate=sum(labels.values()) / len(keys))
+    fold_rows = []
+    for fold in plan['folds']:
+        val = fold['validation_keys']
+        item = {'fold': fold['id'], 'n_rows': len(val),
+                'n_train': len(fold['train_keys']),
+                'n_purged': len(fold['excluded_train_keys']),
+                'validation_start': fold['validation_start'],
+                'validation_end': fold['validation_end']}
+        if binary:
+            item.update(n_positive=sum(labels[k] for k in val),
+                        rate=sum(labels[k] for k in val) / len(val))
+        fold_rows.append(item)
+    purged = sum(len(fold['excluded_train_keys']) for fold in plan['folds'])
+    scored_part = {'n_rows': len(assignment)}
+    if binary:
+        positives = sum(labels[key] for key in assignment)
+        scored_part.update(n_positive=positives,
+                           rate=positives / len(assignment) if assignment else None)
+    values = {'method': decision['method'], 'folds': len(plan['folds']),
+              'seed': decision.get('seed'), 'gap': decision.get('gap'),
+              'stratified_on': case.target_column if decision['method'] == 'group_disjoint'
+              else None, 'n_rows': len(keys), 'n_development': len(keys),
+              'n_scored': len(assignment), 'n_warmup': len(plan['unscored_keys']),
+              'n_purged': purged, 'scheme': 'cross_validation', 'fold_rows': fold_rows,
+              'evaluation_plan': {'schema': ep.SCHEMA, 'digest': plan_digest,
+                                  'blob': EVALUATION_PLAN_BLOB},
+              'partitions': {'train': dict(every),
+                             'validation': scored_part},
+              'implementation': 'mlkit.study.evaluation_plan (explicit memberships)',
+              'overlap': None,
+              'note': ('Only validation-window rows are scored. Warm-up rows remain in '
+                       'development provenance and are absent from metric denominators.')}
+    blobs = {'train': rec.row_keys_bytes(keys),
+             'validation': rec.row_keys_bytes([key for key in keys if key in assignment]),
+             FOLDS_BLOB: ('\n'.join(lines) + '\n').encode('utf-8'),
+             EVALUATION_PLAN_BLOB: plan_bytes}
+    return {'values': values, 'blobs': blobs,
+            'partition': _rows_partition(plan_['inputs']), 'n_rows': len(keys)}
 
 
 GROUPED_FOLDS_IMPLEMENTATION = ('sklearn.model_selection.StratifiedGroupKFold (shuffled, '
@@ -1528,8 +1718,10 @@ def compute(store, plan_: Mapping) -> dict:
         split_rid = plan_['inputs']['results'][SPLIT]
         keys = split_keys(store, split_rid)
         folds = fold_assignment(store, split_rid)
-        if folds is not None:      # WP-B1: out-of-fold predictions of every development row
-            return fit.compute_cv(activity, case, rows(dataset, keys['train']), folds,
+        explicit = evaluation_membership(store, split_rid)
+        if folds is not None:      # WP-B1/J1: out-of-sample predictions under the split plan
+            return fit.compute_cv(activity, case, rows(dataset, keys['train']),
+                                  explicit or folds,
                                   plan_['inputs'], plan_['params'])
         return fit.compute(activity, case, rows(dataset, keys['train']),
                            rows(dataset, keys['validation']), plan_['inputs'], plan_['params'])
@@ -1652,8 +1844,16 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
               'residual_definition': regression.RESIDUAL_DEFINITION,
               'note': 'The model is chosen on these validation rows: these errors are not '
                       'independent evidence of future error. No model was refitted.'}
+    criterion_value = plan_['inputs'].get('success_criterion')
+    if isinstance(criterion_value, Mapping):
+        from . import objective
+        assignment = fold_assignment(store, results[SPLIT]) or {}
+        windows = [assignment.get(key, 1) for key in first['row_keys']]
+        values['objective'] = {slot: objective.evaluate_regression(y, prediction,
+                                                                   windows=windows)
+                               for slot, prediction in predictions.items()}
     out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
-    selection = _selection_values(store, plan_, models, 'regression')
+    selection = _selection_values(store, plan_, models, 'regression', values.get('objective'))
     if selection is not None:
         values['model_selection'] = selection      # v0.3 (WP-F1, additive)
     if pairs or out_of_fold:
@@ -1742,6 +1942,35 @@ def compute_policy(store, plan_: Mapping) -> dict:
               'counts': 'expected counts when a capacity cut splits a tie group (tied_at_cut)',
               'note': 'The rule is chosen on validation rows: these figures are not independent '
                       'evidence of future performance. No model was refitted.'}
+    criterion_value = plan_['inputs'].get('success_criterion')
+    if isinstance(criterion_value, Mapping):
+        from . import objective
+        selection_spec = criterion_value['selection']
+        windows = groups.tolist() if groups is not None else [1] * len(y)
+        batches = None
+        if selection_spec['scope'] == 'column_batch':
+            case, dataset = load(plan_, store)
+            batches = rows(dataset, first['row_keys'])[selection_spec['batch_column']].tolist()
+        values['objective'] = {
+            slot: objective.evaluate_binary(
+                y, preds[slot]['score'], metric=selection_spec['metric'],
+                rule=selection_spec['rule'], windows=windows, batches=batches,
+                scope=selection_spec['scope']) for slot in models}
+        split_method = None
+        split_rid = plan_['inputs'].get('fold_split')
+        if split_rid:
+            split_method = registry.get(store, split_rid)['output']['values'].get('method')
+        inferential = split_method in ('kfold_stratified', 'kfold_quantile', None) \
+            and not out_of_fold
+        values['uncertainty'] = {
+            'method': 'paired_row_bootstrap' if inferential else 'descriptive_only',
+            'level': float(boot['level']), 'resampling_unit': 'row',
+            'target_quantity': selection_spec['metric'],
+            'conditioning': 'fixed selected configuration',
+            'dependence_assumptions': 'independent held-out observations',
+            'eligible': inferential,
+            'reason': None if inferential else
+            'adaptive OOF or group/temporal dependence has no supported inferential interval'}
     if pairs or out_of_fold:
         from . import metrics
         values['evaluation'] = 'out_of_fold' if out_of_fold else 'validation'
@@ -1770,7 +1999,7 @@ def compute_policy(store, plan_: Mapping) -> dict:
             # v0.3 (WP-F1, additive): the same for the second and third variants.
             values['gain_points_variants'] = {m: {'model': m, **policy.gain_points(
                 y, preds[m]['score'], groups=groups)} for m in extra}
-    selection = _selection_values(store, plan_, models, 'binary')
+    selection = _selection_values(store, plan_, models, 'binary', values.get('objective'))
     if selection is not None:
         values['model_selection'] = selection      # v0.3 (WP-F1, additive)
     return {'values': values, 'blobs': {},

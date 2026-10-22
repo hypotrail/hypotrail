@@ -92,7 +92,7 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
     value = out.get('value')
     metric = value.get('metric') if isinstance(value, Mapping) else None
     if metric not in DELTA_METRIC or metric == 'precision_gain':
-        return out
+        return _review_assessment(out, results=view.get('results') or {})
     out['metric'] = metric
     results = view.get('results') or {}
     out.update(gain=None, low=None, high=None, interval_includes_zero=None,
@@ -121,6 +121,30 @@ def assess(view: Mapping, canonical: Callable[[str], str] = lambda r: r) -> dict
     out['judged_on'], out['judged_status'] = judged_on, judged
     out['contradicts_verdict'] = out.get('verdict') in governance.ADOPT_VERDICTS \
         and judged in ('not_met', 'uncertain')
+    return _review_assessment(out, results=results)
+
+
+def _review_assessment(out: dict, *, results: Mapping) -> dict:
+    """Attach J3's centralized truth-table fields to a new-profile criterion."""
+    value = out.get('value')
+    if not isinstance(value, Mapping) or 'decision_rule' not in value:
+        return out
+    from . import objective
+    judged = out.get('final_test') if out.get('judged_on') == 'final_test' else out
+    result_slot = ('final_test.evaluation' if out.get('judged_on') == 'final_test'
+                   else 'policy.evaluation')
+    item = results.get(result_slot) or {}
+    uncertainty = ((item.get('values') or {}).get('uncertainty') or {})
+    qualified = bool(uncertainty.get('eligible'))
+    assessment = objective.assess(judged.get('gain'), judged.get('minimum'),
+                                  decision_rule=value['decision_rule'],
+                                  low=judged.get('low'), high=judged.get('high'),
+                                  interval_qualified=qualified,
+                                  uncertainty_status=('available' if qualified else
+                                                      'unavailable'))
+    out.update(assessment)
+    out['status'] = assessment['decision_status']
+    out['judged_status'] = assessment['decision_status']
     return out
 
 

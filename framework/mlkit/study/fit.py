@@ -531,6 +531,9 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
     from .activities import guard_read_only, positive
     guard_read_only()
 
+    if folds.get('schema') == 'hypotrail.evaluation_plan/1':
+        return compute_explicit_cv(activity, case, frame, folds, inputs, params)
+
     frame = _ordered(frame)
     keys = list(frame.index)
     fold = np.array([int(folds[k]) for k in keys])
@@ -641,6 +644,164 @@ def compute_cv(activity: str, case: c.Case, frame, folds: Mapping, inputs: Mappi
             'n_rows': n}
 
 
+def compute_explicit_cv(activity: str, case: c.Case, frame, plan: Mapping,
+                        inputs: Mapping, params: Mapping) -> dict:
+    """J1 fits exactly the memberships recorded by the planner (warm-up stays unscored)."""
+    import numpy as np
+    from .activities import positive
+    from . import evaluation_plan as ep
+    frame = _ordered(frame)
+    universe = set(frame.index)
+    binary, candidate = case.task == 'binary', activity != 'fit.baseline'
+    family = params.get('family') or 'linear'
+    scored_keys = [key for fold in plan['folds'] for key in fold['validation_keys']]
+    if len(scored_keys) != len(set(scored_keys)) or not set(scored_keys) <= universe:
+        from .errors import StudyError
+        raise StudyError('integrity_error', 'The explicit plan has invalid scored keys.')
+    criterion = inputs.get('success_criterion')
+    selection = (criterion or {}).get('selection') if isinstance(criterion, Mapping) else None
+    if isinstance(selection, Mapping) and selection.get('scope') == 'column_batch':
+        column = selection['batch_column']
+        if column == case.target_column or column not in frame.columns:
+            from .errors import StudyError
+            raise StudyError('invalid_value', 'The declared action batch column is invalid.',
+                             details={'batch_column': column})
+        seen = {}
+        for fold in plan['folds']:
+            for value in frame.loc[fold['validation_keys'], column].astype(str):
+                previous = seen.setdefault(value, fold['id'])
+                if previous != fold['id']:
+                    from .errors import StudyError
+                    raise StudyError('unsupported_capability',
+                                     'The evaluation split cuts an action batch.',
+                                     details={'reason': 'batch_cut_across_windows',
+                                              'batch_column': column, 'batch': value,
+                                              'folds': [previous, fold['id']]})
+    y_all = (positive(frame, case).astype(int) if binary else
+             _target(case, frame, 'development'))
+    predictions, observed, keys_out = [], [], []
+    per_fold, choices, importances = [], [], []
+    for fold in plan['folds']:
+        train_keys, validation_keys = fold['train_keys'], fold['validation_keys']
+        if not set(train_keys + validation_keys) <= universe or set(train_keys) & set(validation_keys):
+            from .errors import StudyError
+            raise StudyError('integrity_error', 'An explicit fold has invalid memberships.',
+                             details={'fold': fold['id']})
+        train, test = frame.loc[train_keys], frame.loc[validation_keys]
+        y_train, y_test = y_all.loc[train_keys].to_numpy(), y_all.loc[validation_keys].to_numpy()
+        if not candidate:
+            if binary:
+                pred = np.full(len(test), float(y_train.mean()))
+            else:
+                # J3: MAE is minimized by the training median in review-v1.
+                pred = np.full(len(test), float(np.median(y_train)))
+        else:
+            info = {'keep': family == 'hgb'}
+            nested_inputs = {**inputs, 'parent_protocol': {
+                'method': plan['method'], 'fold': fold['id'],
+                'outer_train_keys': list(train_keys),
+                'outer_validation_keys': list(validation_keys)}}
+            pred, fold_model = _fit_predict(case, train, test, nested_inputs, params, binary,
+                                            info=info)[:2]
+            choices.append(info.get('tuning'))
+            if family == 'hgb':
+                from . import families
+                importances.append((len(test), families.permutation_importance(
+                    fold_model, info['X_test'], y_test, binary, params['seed'])))
+        predictions.extend(float(v) for v in pred)
+        observed.extend(float(v) for v in y_test)
+        keys_out.extend(validation_keys)
+        item = {'fold': fold['id'], 'n_rows': len(validation_keys),
+                'n_train': len(train_keys), 'validation_start': fold['validation_start'],
+                'validation_end': fold['validation_end']}
+        if binary:
+            item.update(n_positive=int(y_test.sum()), roc_auc=metrics.roc_auc(y_test, pred),
+                        average_precision=metrics.average_precision(y_test, pred))
+            if isinstance(criterion, Mapping):
+                from . import objective
+                selection = criterion['selection']
+                batches = (test[selection['batch_column']].tolist()
+                           if selection['scope'] == 'column_batch' else None)
+                item['objective'] = objective.evaluate_binary(
+                    y_test, pred, metric=selection['metric'], rule=selection['rule'],
+                    windows=[fold['id']] * len(test), batches=batches,
+                    scope=selection['scope'])
+        else:
+            item.update(_errors(y_test, pred))
+        per_fold.append(item)
+    y, oof = np.asarray(observed), np.asarray(predictions)
+    names = ('roc_auc', 'average_precision') if binary else ('mae', 'rmse')
+    cv = {'method': plan['method'], 'folds': len(plan['folds']), 'per_fold': per_fold,
+          'spread': {name: _spread(item.get(name) for item in per_fold) for name in names},
+          'plan_digest': ep.digest(plan), 'n_development': len(frame),
+          'n_scored': len(keys_out), 'n_warmup': len(plan['unscored_keys']),
+          'note': ('Explicit train/validation memberships; warm-up rows are not predicted '
+                   'and are absent from every metric denominator.')}
+    if isinstance(criterion, Mapping):
+        from . import objective
+        windows = [fold['id'] for fold in plan['folds']
+                   for _ in fold['validation_keys']]
+        if binary:
+            selection = criterion['selection']
+            batches = ([frame.loc[key, selection['batch_column']] for key in keys_out]
+                       if selection['scope'] == 'column_batch' else None)
+            cv['objective'] = objective.evaluate_binary(
+                y, oof, metric=selection['metric'], rule=selection['rule'], windows=windows,
+                batches=batches, scope=selection['scope'])
+        else:
+            cv['objective'] = objective.evaluate_regression(y, oof, windows=windows)
+    common = {'evaluation': 'out_of_sample_windows', 'cross_validation': cv}
+    if not candidate:
+        if binary:
+            values = {'model': 'constant_training_prior', 'baseline_strategy': 'fold_train_rate',
+                      'n_train': len(frame), 'features': [],
+                      'validation': _validation_summary(y, oof),
+                      'predictions': _cv_meta(_predictions_meta(
+                          case, 'constant_training_prior', [], y)), **common}
+            blob = predictions_blob(keys_out, y, oof)
+        else:
+            values = {'model': 'train_median', 'baseline_strategy': 'fold_train_median',
+                      'target': case.target_column, 'unit': case.target_unit,
+                      'train_median': float(np.median(y_all)), 'n_train': len(frame),
+                      'features': [], 'validation': _errors(y, oof),
+                      'predictions': _cv_meta(_regression_meta(case, 'train_median', [], y)),
+                      **common}
+            blob = regression_blob(keys_out, y, oof)
+        return {'values': values, 'blobs': {'predictions': blob},
+                'partition': 'development', 'n_rows': len(keys_out)}
+    full_info = {}
+    _, model, indicators, fitted, in_sample = _fit_predict(case, frame, frame, inputs, params,
+                                                           binary, info=full_info)
+    if binary:
+        values = {**_model_values(case, frame, model, indicators, list(inputs['features']),
+                                  params, True, int(y_all.sum())),
+                  'validation': _validation_summary(y, oof),
+                  'predictions': _cv_meta(_predictions_meta(case, family if family != 'linear'
+                                                            else 'logistic',
+                                                            list(inputs['features']), y))}
+        blob = predictions_blob(keys_out, y, oof)
+    else:
+        values = {**_model_values(case, frame, model, indicators, list(inputs['features']),
+                                  params, False),
+                  'train': _errors(y_all.to_numpy(), in_sample),
+                  'validation': _errors(y, oof),
+                  'predictions': _cv_meta(_regression_meta(case, family if family != 'linear'
+                                                           else 'linear',
+                                                           list(inputs['features']), y))}
+        blob = regression_blob(keys_out, y, oof)
+    tuning = tuning_values(params, choices, full_info.get('tuning'))
+    if tuning is not None:
+        values['tuning'] = tuning
+    if importances:
+        from . import families
+        values['family_diagnostics'] = families.combine_importance(importances, binary)
+    values.update(_preprocessing_values(inputs, fitted))
+    values.update(_variant_values(inputs, params))
+    values.update(common)
+    return {'values': values, 'blobs': {'predictions': blob},
+            'partition': 'development', 'n_rows': len(keys_out)}
+
+
 def _cv_meta(meta: dict) -> dict:
     return {**meta, 'partition': 'development', 'evaluation': 'out_of_fold'}
 
@@ -682,6 +843,10 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
     boot = inputs['bootstrap']
     B, seed, level = int(boot['replicates']), int(boot['seed']), float(boot['level'])
     criterion = inputs.get('criterion') or {}
+    review = 'decision_rule' in criterion
+    dependency = ((inputs.get('model_inputs') or {}).get('analysis_contract') or {}) \
+        .get('dependencies', {}).get('kind')
+    review_uncertainty = None
     n = len(final)
     values = {'model': chosen, 'rule': params.get('rule'), 'n': n,
               'refit': {'n_rows': int(len(development)),
@@ -707,7 +872,9 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
         scores = {'fit.baseline': base, chosen: score}
         paired = policy.paired_bootstrap(y, scores, rule_final, B, seed, level=level,
                                          reference='fit.baseline')
-        delta = paired['deltas'].get(chosen, {}).get('precision') or {}
+        delta_metric = {'precision_gain': 'precision', 'recall_gain': 'recall'}.get(
+            criterion.get('metric'), 'precision')
+        delta = paired['deltas'].get(chosen, {}).get(delta_metric) or {}
         gain = 100 * delta['point'] if delta.get('point') is not None else None
         low = 100 * delta['low'] if delta.get('low') is not None else None
         high = 100 * delta['high'] if delta.get('high') is not None else None
@@ -721,10 +888,55 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
                                    'average_precision': metrics.average_precision(y, v)}
                                for s, v in scores.items()})
         blob = predictions_blob(final.index, y, score)
+        if review:
+            from . import objective
+            selection = criterion['selection']
+            batches = (final[selection['batch_column']].tolist()
+                       if selection['scope'] == 'column_batch' else None)
+            values['objective'] = {slot: objective.evaluate_binary(
+                y, scores_, metric=selection['metric'], rule=selection['rule'],
+                windows=[1] * n, batches=batches, scope=selection['scope'])
+                for slot, scores_ in scores.items()}
+            baseline_point = values['objective']['fit.baseline']['point']
+            chosen_point = values['objective'][chosen]['point']
+            gain = (100 * (chosen_point - baseline_point)
+                    if baseline_point is not None and chosen_point is not None else None)
+            low = high = None
+            if dependency == 'independent' and selection['scope'] == 'evaluation_window':
+                if chosen == 'fit.baseline':
+                    low = high = 0.0
+                    review_uncertainty = {
+                        'method': 'paired_row_bootstrap', 'level': level,
+                        'resampling_unit': 'row', 'target_quantity': criterion.get('metric'),
+                        'conditioning': 'fixed selected configuration',
+                        'dependence_assumptions': 'independent held-out observations',
+                        'eligible': True, 'replicates': B, 'undefined_replicates': 0,
+                        'reason': None}
+                else:
+                    boot_objective = objective.paired_row_bootstrap(
+                        y, scores,
+                        lambda yy, ss: objective.evaluate_binary(
+                            yy, ss, metric=selection['metric'], rule=selection['rule'],
+                            windows=[1] * len(yy), scope='evaluation_window'),
+                        replicates=B, seed=seed, level=level)
+                    review_uncertainty = boot_objective['uncertainty']
+                    interval = boot_objective['delta_intervals'].get(chosen) or {}
+                    if review_uncertainty['eligible']:
+                        low = 100 * interval['low']
+                        high = 100 * interval['high']
+            elif dependency == 'independent':
+                review_uncertainty = {
+                    'method': None, 'level': level, 'resampling_unit': None,
+                    'target_quantity': criterion.get('metric'),
+                    'conditioning': 'fixed selected configuration',
+                    'dependence_assumptions': 'fixed action batches', 'eligible': False,
+                    'replicates': B, 'undefined_replicates': None,
+                    'reason': 'no batch-preserving inferential interval is implemented'}
     else:
         y_dev = _target(case, development, 'development')
         y = _target(case, final, 'final test')
-        base = np.full(n, float(y_dev.mean()))
+        baseline_value = float(np.median(y_dev)) if review else float(y_dev.mean())
+        base = np.full(n, baseline_value)
         pred = base if chosen == 'fit.baseline' else _fit_predict(
             case, development, final, model_inputs, model_params, False, info=final_info)[0]
         predictions = {'fit.baseline': base}
@@ -742,10 +954,42 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
         minimum = criterion.get('min_share')
         unit = 'share'
         values.update(target=case.target_column, unit=case.target_unit,
+                      baseline_strategy=('development_median' if review else
+                                         'development_mean'),
                       models=paired['models'], intervals=paired['intervals'],
                       deltas=paired['deltas'],
                       residuals={s: regression.residual_summary(y, p)
                                  for s, p in predictions.items()})
+        if review:
+            from . import objective
+            values['objective'] = {slot: objective.evaluate_regression(y, prediction,
+                                                                        windows=[1] * n)
+                                   for slot, prediction in predictions.items()}
+            baseline_point = values['objective']['fit.baseline']['point']
+            chosen_point = values['objective'][chosen]['point']
+            gain = objective.relative_mae_reduction(chosen_point, baseline_point)
+            low = high = None
+            if dependency == 'independent' and baseline_point > 0:
+                if chosen == 'fit.baseline':
+                    low = high = 0.0
+                    review_uncertainty = {
+                        'method': 'paired_row_bootstrap', 'level': level,
+                        'resampling_unit': 'row', 'target_quantity': criterion.get('metric'),
+                        'conditioning': 'fixed selected configuration',
+                        'dependence_assumptions': 'independent held-out observations',
+                        'eligible': True, 'replicates': B, 'undefined_replicates': 0,
+                        'reason': None}
+                else:
+                    boot_objective = objective.paired_row_bootstrap(
+                        y, predictions,
+                        lambda yy, pp: objective.evaluate_regression(yy, pp,
+                                                                     windows=[1] * len(yy)),
+                        replicates=B, seed=seed, level=level)
+                    review_uncertainty = boot_objective['uncertainty']
+                    interval = boot_objective['delta_intervals'].get(chosen) or {}
+                    if review_uncertainty['eligible']:
+                        low = -interval['high'] / baseline_point
+                        high = -interval['low'] / baseline_point
         blob = regression_blob(final.index, y, pred)
     tuning = tuning_values(model_params or {}, [], final_info.get('tuning'))
     if tuning is not None:
@@ -753,10 +997,36 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
         tuning['note'] = ('The value is chosen by an inner cross-validation of the development '
                           'rows only, before the final-test rows are scored.')
         values['tuning'] = tuning
-    status, includes = criterion_status(gain, low, high, minimum)
-    values['criterion'] = {'metric': criterion.get('metric'), 'minimum': minimum,
-                           'unit': unit, 'gain': gain, 'low': low, 'high': high,
-                           'interval_includes_zero': includes, 'status': status}
+    if review:
+        from . import objective
+        if review_uncertainty is None:
+            review_uncertainty = {
+                'method': None, 'level': level, 'resampling_unit': None,
+                'target_quantity': criterion.get('metric'),
+                'conditioning': 'fixed selected configuration',
+                'dependence_assumptions': dependency or 'unspecified', 'eligible': False,
+                'replicates': B, 'undefined_replicates': None,
+                'reason': 'group or temporal dependence has no supported inferential interval'}
+        qualified = bool(review_uncertainty['eligible'])
+        assessment = objective.assess(
+            gain, minimum, decision_rule=criterion['decision_rule'],
+            low=low, high=high, interval_qualified=qualified,
+            uncertainty_status='available' if qualified else 'unavailable')
+        values['criterion'] = {'metric': criterion.get('metric'), 'minimum': minimum,
+                               'unit': unit, 'gain': gain,
+                               'low': low if qualified else None,
+                               'high': high if qualified else None,
+                               'interval_includes_zero': (
+                                   None if assessment['interval_excludes_zero'] is None else
+                                   not assessment['interval_excludes_zero']),
+                               'status': assessment['decision_status'],
+                               **assessment}
+        values['uncertainty'] = review_uncertainty
+    else:
+        status, includes = criterion_status(gain, low, high, minimum)
+        values['criterion'] = {'metric': criterion.get('metric'), 'minimum': minimum,
+                               'unit': unit, 'gain': gain, 'low': low, 'high': high,
+                               'interval_includes_zero': includes, 'status': status}
     values['bootstrap'] = {'replicates': B, 'seed': seed, 'level': level,
                            'method': 'paired percentile bootstrap over the final-test rows'}
     values['note'] = FINAL_NOTE

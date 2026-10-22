@@ -1,9 +1,15 @@
 # Implementation specifications: review remediation, J0–J7
 
-Status: **proposed implementation package; no milestone implemented by this document**.
+Status: **J0--J3 implemented and automatically verified on 22 October 2026; owner review of
+18 intentional EDA baseline changes is deferred until final handoff; J4--J7 remain proposed**.
 Prepared on 21 October 2026 for sequential handoff to an implementation model.
 Inspected checkout: `86729175ed4b1b42163d327b9e100c9ce2cdf14a`.
 Review baseline: `a41c851e2b854780445806e7263e8665a8d10666`.
+
+Implementation evidence is in `docs/acceptance/reliability-roadmap/J0.md` through
+`J3.md`. The specifications below remain the normative trace of the design; statements
+describing the package as wholly unimplemented are historical for J0--J3. Do not infer
+implementation of J4--J7 from the combined profile.
 
 ## Intended outcome
 

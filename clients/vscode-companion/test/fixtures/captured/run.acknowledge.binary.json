@@ -20,7 +20,7 @@
  "payload": {
   "schema": "hypotrail.run/1",
   "ok": true,
-  "study": "/private/studies/bank marketing \"demo\"-broken",
+  "study": "/studies/bank marketing \"demo\"-broken",
   "action": "run.acknowledge",
   "request_id": "b-ack",
   "replayed": false,

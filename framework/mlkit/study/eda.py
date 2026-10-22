@@ -308,7 +308,7 @@ def _folded(column: str, folded: dict | None, max_groups: int, groups: list) -> 
 
 
 def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS,
-            rows_word: str = 'training') -> dict:
+            rows_word: str = 'training', shuffle_envelope: bool = True) -> dict:
     """The positive rate by group of ``column``; ``rows_word`` names the rows the bins
     were cut on (``development`` under cross-validation, WP-B6a)."""
     from .activities import positive
@@ -344,11 +344,16 @@ def rate_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS,
            'note': 'Rates by group on training rows are associations, not effects of the '
                    'variable.',
            'question': question('eda.rate_by', column)}
+    if not shuffle_envelope:
+        out['null_band'] = {'available': False,
+                            'reason': 'unrestricted label shuffling is unsupported for the '
+                                      'declared dependence structure'}
+        return out
     return _with_null_band(out, labels, y.astype(float), lambda v: float(v.mean()), 'null_band')
 
 
 def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS,
-            rows_word: str = 'training') -> dict:
+            rows_word: str = 'training', shuffle_envelope: bool = True) -> dict:
     """The mean target by group of ``column`` on training rows, with counts; ``rows_word``
     as :func:`rate_by`."""
     y = numeric_target(case, train)
@@ -381,6 +386,11 @@ def mean_by(case: c.Case, train, column: str, max_groups: int = MAX_GROUPS,
            'note': 'Mean target by group on training rows: associations, not effects of the '
                    'variable.',
            'question': question('eda.mean_by', column)}
+    if not shuffle_envelope:
+        out['null_band'] = {'available': False,
+                            'reason': 'unrestricted label shuffling is unsupported for the '
+                                      'declared dependence structure'}
+        return out
     return _with_null_band(out, labels, y, lambda v: float(v.mean()), 'null_band')
 
 
@@ -872,10 +882,12 @@ def compute(activity: str, case: c.Case, train, params: Mapping) -> dict:
         values = target_summary(case, train)
     elif activity == 'eda.mean_by':
         values = mean_by(case, train, params['column'],
-                         params.get('max_groups', MAX_GROUPS), params.get('rows_word', 'training'))
+                         params.get('max_groups', MAX_GROUPS), params.get('rows_word', 'training'),
+                         params.get('shuffle_envelope', True))
     else:
         values = rate_by(case, train, params['column'], params.get('max_groups', MAX_GROUPS),
-                         params.get('rows_word', 'training'))
+                         params.get('rows_word', 'training'),
+                         params.get('shuffle_envelope', True))
     if params.get('rows_word') == 'development':
         values = development_words(values)
     return {'values': values, 'blobs': {}, 'partition': 'train', 'n_rows': int(len(train))}

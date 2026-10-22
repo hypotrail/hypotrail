@@ -24,7 +24,7 @@
  "payload": {
   "schema": "hypotrail.decide/1",
   "ok": true,
-  "study": "/private/studies/bank marketing \"demo\"-confirm",
+  "study": "/studies/bank marketing \"demo\"-confirm",
   "action": "decide.confirm",
   "request_id": "b-conf",
   "replayed": false,
@@ -42,7 +42,7 @@
     "row": 6,
     "reason": "policy changed (§3.7 row 6: policy.rule_type)",
     "stale_results": [
-     "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500"
+     "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3"
     ],
     "stale_slots": [
      "diag.binary"

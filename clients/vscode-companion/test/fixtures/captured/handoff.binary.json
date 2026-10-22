@@ -174,189 +174,189 @@
   ],
   "results_cited": [
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+    "result_id": "ae6d780c46ebb38d5ea550155c82b69d9eff34172edec96baf39cf697af55050",
     "activity": "eda.target_rate",
     "path": "rate",
     "value": 0.11536941920189649,
     "shown": "11.5%"
    },
    {
-    "result_id": "149165f29f78f84d78ae48a1559f7971da0707948bad646010ed6fcfabb4a90e",
+    "result_id": "ae6d780c46ebb38d5ea550155c82b69d9eff34172edec96baf39cf697af55050",
     "activity": "eda.target_rate",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
+    "result_id": "64edc94409dfcd24dfae394e0050ec253742ccb1212207d40d476ff5ebdbeedf",
     "activity": "eda.special_values",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b",
+    "result_id": "4a6c5352d000f824df018da4fc8d481cfa54c606605c05d7b00f26ed3feb5a35",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "3a1e3de370196c12e69001848ee5e4d5f3a683e8f993315ca676820443ebda75",
+    "result_id": "aaa9e1d038fbed51264b3057302c113870b5dfde2cbce0f842f7ae816b6db007",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "0e5475484816b89aa0eb11e92990c63974d653a6bd8c2bbe788f07bbc185e74a",
+    "result_id": "d39ce92c299daa3e269c1464667d28a5aba97af37d94352a98370b0fec697cf5",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+    "result_id": "6b464196a11e68b1ba7bc9611c0475631a2940c68d51f48d393173c64b7a1a2a",
     "activity": "eda.rate_by",
     "path": "n_groups",
     "value": 12,
     "shown": "12"
    },
    {
-    "result_id": "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
+    "result_id": "6b464196a11e68b1ba7bc9611c0475631a2940c68d51f48d393173c64b7a1a2a",
     "activity": "eda.rate_by",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+    "result_id": "8416eb74d99aedba56738f035c1c3fb052a4966589c172d19e288978dbda97f2",
     "activity": "fit.baseline",
     "path": "validation.roc_auc",
     "value": 0.5,
     "shown": "0.500"
    },
    {
-    "result_id": "9b8bc1df623a820610833379c7922389175766e73f807b0f90b21d2630d18b41",
+    "result_id": "8416eb74d99aedba56738f035c1c3fb052a4966589c172d19e288978dbda97f2",
     "activity": "fit.baseline",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "d38e8455aaebb84b9ac19015e275e239bfda2dc0cf6d0e82f3c13b6211c6ec5b",
+    "result_id": "cfed924627ed16184242cdbbbf5af2d6327abc8e16a8b2e2ca407ebc03ed5abc",
     "activity": "fit.logistic",
     "path": "validation.roc_auc",
     "value": 0.7347096774193549,
     "shown": "0.735"
    },
    {
-    "result_id": "d38e8455aaebb84b9ac19015e275e239bfda2dc0cf6d0e82f3c13b6211c6ec5b",
+    "result_id": "cfed924627ed16184242cdbbbf5af2d6327abc8e16a8b2e2ca407ebc03ed5abc",
     "activity": "fit.logistic",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
+    "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
     "value": 0.38144329896907214,
     "shown": "38.1%"
    },
    {
-    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
+    "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
     "value": 0.296,
     "shown": "29.6%"
    },
    {
-    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
+    "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
     "activity": "policy.evaluation",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
+    "result_id": "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3",
     "activity": "diag.binary",
     "path": "models.[fit.logistic].calibration.brier",
     "value": 0.08742712462824617,
     "shown": "0.0874"
    },
    {
-    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
+    "result_id": "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3",
     "activity": "diag.binary",
     "path": "models.[fit.logistic].roc_auc",
     "value": 0.7347096774193549,
     "shown": "0.735"
    },
    {
-    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
+    "result_id": "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3",
     "activity": "diag.binary",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "n_rows",
     "value": 3617,
     "shown": "3,617"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a0ffa01701f9afffc52041380d84326ed3fecbd58c88c62f5c2d40dcab5686bf",
+    "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
@@ -586,8 +586,8 @@
     "scikit-learn": "1.9.1",
     "scipy": "1.18.1"
    },
-   "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
-   "python": "3.13.2"
+   "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+   "python": "3.13.5"
   }
  }
 }

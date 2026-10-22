@@ -149,7 +149,7 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('--lang', choices=st.LANGUAGES, default=st.DEFAULT_LANGUAGE,
                    help='the study language: surfaces show restatements in it (ADR 0005)')
     p.add_argument('--reliability-profile', choices=('legacy', 'review-v1'), default=None,
-                   help='opt-in reliability profile; review-v1 currently supports inspection and planning')
+                   help='opt-in reliability profile; review-v1 enforces the declared evaluation protocol')
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',

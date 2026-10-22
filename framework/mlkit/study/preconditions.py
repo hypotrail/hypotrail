@@ -128,6 +128,19 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
     """Unmet requirements to confirm ``decision_id`` with ``value``."""
     missing = [_need_decision(state, d) for d in decision_requires(state, decision_id)
                if not _confirmed(state, d)]
+    from . import assurance
+    if decision_id == st.MODEL_VARIANT and assurance.profile(state) == 'review-v1':
+        for slot in FIT_SLOTS[st.task_of(state)]:
+            if not st.is_current(state, slot):
+                missing.append({'requirement': 'result_current', 'slot': slot,
+                                'detail': 'Fit the candidate and its reference before adopting '
+                                          'a challenger.'})
+        diag_slot = st.DIAG_SLOT[st.task_of(state)]
+        if not st.is_current(state, diag_slot):
+            missing.append({'requirement': 'development_diagnostics_current',
+                            'slot': diag_slot,
+                            'detail': 'Current candidate development diagnostics are required '
+                                      'before the challenger discussion.'})
     if decision_id == 'policy':
         if not st.is_current(state, POLICY_EVALUATION):
             missing.append({'requirement': 'result_current', 'slot': POLICY_EVALUATION,
@@ -161,7 +174,7 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                                 'model': value, 'evaluated': compared,
                                 'detail': 'The current evaluation did not compare this model.'})
     if decision_id == st.FINAL_TEST:
-        missing += final_test_missing(state, value)
+        missing += final_test_missing(state, value, store=store)
     if decision_id == 'conclusion':
         verdict = value.get('verdict') if isinstance(value, Mapping) else None
         if st.task_of(state) == st.REGRESSION:
@@ -179,10 +192,17 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
             missing.append({**_need_decision(state, 'policy'),
                             'detail': 'Adopt a policy first, or conclude keep_baseline or '
                                       'inconclusive.'})
+        if assurance.profile(state) == 'review-v1' and verdict != 'inconclusive' \
+                and st.is_current(state, FINAL_TEST_EVALUATION) \
+                and not st.is_current(state, FINAL_DIAGNOSTICS):
+            missing.append({'requirement': 'final_evidence_current_for_configuration',
+                            'slot': FINAL_DIAGNOSTICS,
+                            'detail': 'Compute the final diagnostic summary from the stored '
+                                      'final predictions before drawing an empirical conclusion.'})
     return missing
 
 
-def final_test_missing(state: Mapping, value: Any = None) -> list[dict]:
+def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list[dict]:
     """What the opening of the final test still needs (WP-B1), beyond the confirmed
     decisions: a sealed final test, the value naming the chosen configuration, no result
     stale, no decision to confirm again, and the current evaluations it is opened on."""
@@ -221,6 +241,29 @@ def final_test_missing(state: Mapping, value: Any = None) -> list[dict]:
         if not st.is_current(state, slot):
             missing.append({'requirement': 'result_current', 'slot': slot,
                             'detail': 'The final test is opened on current results only.'})
+    from . import assurance
+    if assurance.profile(state) == 'review-v1':
+        diag_slot = st.DIAG_SLOT[task]
+        diag_id = state.get('current', {}).get(diag_slot)
+        if not st.is_current(state, diag_slot):
+            missing.append({'requirement': 'development_diagnostics_current',
+                            'slot': diag_slot,
+                            'detail': 'Run current development diagnostics for the chosen '
+                                      'configuration before opening the final test.'})
+        elif store is not None and chosen is not None:
+            from . import registry
+            entry = registry.get(store, diag_id)
+            params = entry.get('params') or {}
+            model_ok = chosen['model'] in (params.get('models') or [])
+            rule_ok = chosen.get('rule') is None or chosen.get('rule') == params.get('rule')
+            if not model_ok or not rule_ok:
+                missing.append({'requirement': 'development_diagnostics_current',
+                                'slot': diag_slot, 'result_id': diag_id,
+                                'chosen': chosen,
+                                'diagnostic': {'models': params.get('models'),
+                                               'rule': params.get('rule')},
+                                'detail': 'The current diagnostic describes a different '
+                                          'model or action rule.'})
     return missing
 
 

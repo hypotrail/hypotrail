@@ -115,6 +115,11 @@ MUTATIONS: tuple[dict, ...] = (
      'blocked_until': (),
      'notes': ('The baseline and the candidate stay current; only the variant is fitted again. '
                'The trial count grows by one configuration.',)},
+    {'row': 18, 'mutation': 'success_criterion.selection', 'refit': (), 're_eda': (),
+     're_policy': ('policy.evaluation',), 'recompute': (),
+     'reconfirm': ('policy', 'conclusion'), 'blocked_until': (),
+     'notes': ('Fixed predictions are reused. Selection-dependent evaluations and tuned '
+               'variants are recomputed on development rows.',)},
     {'row': '*', 'mutation': 'unknown', 'refit': ('*',), 're_eda': ('*',), 're_policy': ('*',),
      'recompute': ('*',), 'reconfirm': ('*',), 'blocked_until': (),
      'notes': ('Unknown mutation: every current result is stale and every confirmed '
@@ -159,6 +164,10 @@ REGRESSION_MUTATIONS: tuple[dict, ...] = (
      'notes': ('The mean baseline uses no feature and stays current; the exploration is '
                'unchanged.',)},
     BY_MUTATION['preprocessing.motivation'], BY_MUTATION['success_criterion'],
+    {'row': 18, 'mutation': 'success_criterion.selection', 'refit': (), 're_eda': (),
+     're_policy': ('evaluate.regression',), 'recompute': (),
+     'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
+     'notes': BY_MUTATION['success_criterion.selection']['notes']},
     {'row': 17, 'mutation': 'model_variant', 'refit': ('fit.variant',), 're_eda': (),
      're_policy': ('evaluate.regression',), 'recompute': (),
      'reconfirm': ('model_choice', 'conclusion'), 'blocked_until': (),
@@ -236,8 +245,11 @@ def classify(decision_id: str, old: Any, new: Any) -> str:
         return ('preprocessing' if rec.canonical(before) != rec.canonical(after)
                 else 'preprocessing.motivation')
     if decision_id == 'success_criterion':
-        return 'success_criterion' if isinstance(old, Mapping) and isinstance(new, Mapping) \
-            else 'unknown'
+        if not isinstance(old, Mapping) or not isinstance(new, Mapping):
+            return 'unknown'
+        return ('success_criterion.selection'
+                if rec.canonical(old.get('selection')) != rec.canonical(new.get('selection'))
+                or old.get('metric') != new.get('metric') else 'success_criterion')
     if decision_id == 'model_variant':
         return 'model_variant' if isinstance(old, Mapping) and isinstance(new, Mapping) \
             else 'unknown'
@@ -281,7 +293,16 @@ def effects_at(old_state: Mapping, decision_id: str, old: Any, new: Any,
     out = _diagnostics_follow_the_rule(old_state, decision_id, old, new,
                                        _effects(old_state, decision_id, old, new),
                                        diag_rule=diag_rule)
-    return _diagnostics_follow_the_variants(old_state, decision_id, out)
+    out = _diagnostics_follow_the_variants(old_state, decision_id, out)
+    if out['mutation'] == 'success_criterion.selection':
+        variants = trials.variants_of(trials.confirmed_value(old_state))
+        tuned = [trials.variant_slot(i + 1) for i, variant in enumerate(variants)
+                 if variant.get('kind') in ('tuned', 'family')]
+        out['refit'] = sorted(set(out['refit']) | set(tuned))
+        diagnostics = [s for s in DIAG_SLOTS if s in old_state.get('current', {})]
+        out['recompute'] = sorted(set(out['recompute']) | set(diagnostics))
+        out['re_chart'] = sorted(set(out['refit'] + out['re_policy'] + out['recompute']))
+    return out
 
 
 DIAG_SLOTS = ('diag.binary', 'diag.regression')
@@ -421,6 +442,7 @@ DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
                         'policy.rule_type': 'policy', 'model_choice': 'model_choice',
                         'preprocessing': 'preprocessing',
                         'success_criterion': 'success_criterion',
+                        'success_criterion.selection': 'success_criterion',
                         # WP-B1.
                         'model_variant': 'model_variant'}
 # The rows whose mutation can change a confirmed decision, by task (CC §5 ``impacts``):

@@ -81,7 +81,8 @@ RECORD_KEYS = ('schema', 'status', 'method', 'fraction', 'seed', 'stratified_on'
 # v0.2b: ``groups`` (WP-B3) only when the case declares ``duplicates: {policy: group}``;
 # ``opening`` (WP-B1) once the final test is opened; ``prior_exposed`` (WP-B6a) only when
 # the case declares ``prior_exposed_rows``.
-OPTIONAL_RECORD_KEYS = ('groups', 'opening', 'prior_exposed')
+OPTIONAL_RECORD_KEYS = ('groups', 'opening', 'prior_exposed', 'training_exclusions',
+                        'analysis_protocol')
 GROUPS_KEYS = ('policy', 'n_groups', 'n_rows', 'moved_rows')
 # ``declared_rows``: the keys the case lists; ``excluded_rows``: those of them the final-test
 # rule would otherwise have sealed (temporal: the ones in the tail; stratified: every one,
@@ -219,10 +220,12 @@ def _temporal(case: Case, frame, keys: list[str], fraction: float) -> tuple[list
 
 
 def assign(case: Case, index, frame, *, fraction: float = DEFAULT_FRACTION,
-           seed: int = DEFAULT_SEED) -> dict:
+           seed: int = DEFAULT_SEED, reliability_profile: str = 'legacy') -> dict:
     """``{record, development, final_test}``: the partition of every row of ``frame``
     (indexed by row key, all records of ``index``). ``record`` lacks the blob digests,
     the schema check, and ``created``; :func:`seal` completes it."""
+    if reliability_profile == 'review-v1' and case.document.get('analysis_contract'):
+        return _assign_review(case, index, frame, fraction=fraction, seed=seed)
     from .data import DUPLICATES_GROUP, duplicate_summary, entity_groups
     from .case import prior_exposed_keys
     keys = list(index.keys)
@@ -294,6 +297,131 @@ def assign(case: Case, index, frame, *, fraction: float = DEFAULT_FRACTION,
         record['groups'] = {'policy': DUPLICATES_GROUP, 'n_groups': summary['n_groups'],
                             'n_rows': summary['n_rows'], 'moved_rows': moved}
     return {'record': record, 'development': development, 'final_test': final}
+
+
+def _clock(frame, keys, spec: Mapping):
+    """Numeric clock aligned to ``keys``; case validation has already checked the column."""
+    import pandas as pd
+    if spec['by'] == 'line':
+        return [int(key[1:]) for key in keys]
+    values = pd.to_numeric(frame.loc[keys, spec['by']], errors='coerce')
+    if values.isna().any():
+        raise CaseError('invalid_case', f'The clock column {spec["by"]!r} must be numeric.',
+                        problems=[{'path': 'analysis_contract.timing',
+                                   'problem': f'{int(values.isna().sum())} rows have no clock'}])
+    return [float(value) for value in values]
+
+
+def _assign_review(case: Case, index, frame, *, fraction: float, seed: int) -> dict:
+    """J1 final boundary: prediction clock, complete ties, delayed-label/group purge."""
+    from .case import prior_exposed_keys
+    from .data import DUPLICATES_GROUP, entity_groups
+    from .evaluation_plan import _components
+    contract = case.document['analysis_contract']
+    timing, dependencies = contract['timing'], contract['dependencies']
+    keys = list(index.keys)
+    prediction_spec = timing.get('prediction_order')
+    future = contract['intended_use'] == 'future_prediction'
+    temporal = future or dependencies['kind'] in ('temporal', 'grouped_temporal')
+    duplicate = entity_groups(index) if case.duplicates_policy == DUPLICATES_GROUP else None
+    entity = None
+    if dependencies['kind'] in ('grouped', 'grouped_temporal'):
+        column = dependencies['group_column']
+        entity = {key: str(frame.loc[key, column]) for key in keys}
+    components = _components(keys, entity, duplicate)
+    component = dict(zip(keys, components or keys))
+    held = set(prior_exposed_keys(case) or [])
+    if held and components:
+        held_components = {component[key] for key in held}
+        held = {key for key in keys if component[key] in held_components}
+    exclusion_reasons: dict[str, list[str]] = {}
+    if temporal:
+        if not isinstance(prediction_spec, Mapping):
+            raise StudyError('unsupported_capability',
+                             'A temporal final partition needs the prediction clock.',
+                             details={'reason': 'prediction_order_missing'})
+        prediction = _clock(frame, keys, prediction_spec)
+        ranked = sorted(range(len(keys)), key=lambda i: (prediction[i], int(keys[i][1:])))
+        wanted = _round(len(keys), fraction)
+        if not wanted or wanted >= len(keys):
+            raise StudyError('unsupported_capability', 'The final boundary leaves an empty side.',
+                             details={'reason': 'empty_final_or_development'})
+        start = prediction[ranked[len(keys) - wanted]]
+        final_set = {keys[i] for i in ranked if prediction[i] >= start}
+        # A group touching the future side follows it. A prior-exposed group stays out.
+        if components:
+            future_components = {component[key] for key in final_set}
+            final_set = {key for key in keys if component[key] in future_components}
+        excluded_prior = final_set & held
+        if excluded_prior:
+            excluded_components = {component[key] for key in excluded_prior}
+            final_set = {key for key in final_set if component[key] not in excluded_components}
+        development = [key for key in keys if key not in final_set]
+        final = [key for key in keys if key in final_set]
+        outcome_spec = timing.get('outcome_available_order')
+        training_excluded = []
+        if isinstance(outcome_spec, Mapping):
+            outcome = dict(zip(keys, _clock(frame, keys, outcome_spec)))
+            delayed = [key for key in development if outcome[key] >= start]
+            training_excluded.extend(delayed)
+            if delayed:
+                exclusion_reasons['outcome_not_available_before_final'] = delayed
+        elif future:
+            raise StudyError('unsupported_capability',
+                             'A future final partition needs an outcome-availability clock.',
+                             details={'reason': 'outcome_available_order_missing'})
+        actual = len(final) / len(keys)
+        record = {'schema': SCHEMA, 'status': 'sealed', 'method': 'temporal',
+                  'fraction': actual, 'seed': None, 'stratified_on': None, 'bins': None,
+                  'order': {'by': prediction_spec['by'], 'direction': 'ascending',
+                            'ties_at_cut': sum(value == start for value in prediction),
+                            'final_start': start},
+                  'dataset_sha256': index.dataset_sha256, 'n_rows': len(keys),
+                  'implementation': ('mlkit.study.partition (review-v1 prediction-clock '
+                                     'boundary; complete ties; delayed labels and overlapping '
+                                     'groups excluded before training)'),
+                  'analysis_protocol': {'scenario_id': contract['scenario_id'],
+                                        'intended_use': contract['intended_use'],
+                                        'dependencies': dependencies['kind'],
+                                        'outcome_timing_verified': isinstance(outcome_spec,
+                                                                               Mapping)}}
+        if held:
+            prior = case.prior_exposed_rows
+            record['prior_exposed'] = {'path': prior['path'], 'sha256': prior['sha256'],
+                                       'declared_rows': len(prior_exposed_keys(case) or []),
+                                       'excluded_rows': len(excluded_prior)}
+    else:
+        strata = _strata(case, frame)
+        eligible = [i for i, key in enumerate(keys) if key not in held]
+        ekeys, estrata = [keys[i] for i in eligible], [strata[i] for i in eligible]
+        mapping = {key: component[key] for key in ekeys}
+        final = (grouped_stratified(ekeys, estrata, mapping, fraction, seed)
+                 if components else _stratified(ekeys, estrata, fraction, seed))
+        final_set = set(final)
+        development = [key for key in keys if key not in final_set]
+        final = [key for key in keys if key in final_set]
+        training_excluded, exclusion_reasons = [], {}
+        method = 'stratified' if case.task == 'binary' else 'quantile_stratified'
+        record = {'schema': SCHEMA, 'status': 'sealed', 'method': method,
+                  'fraction': len(final) / len(keys), 'seed': seed,
+                  'stratified_on': case.target_column,
+                  'bins': None if case.task == 'binary' else QUANTILE_BINS, 'order': None,
+                  'dataset_sha256': index.dataset_sha256, 'n_rows': len(keys),
+                  'implementation': ('mlkit.study.partition (review-v1 group-disjoint '
+                                     'per-stratum assignment)'),
+                  'analysis_protocol': {'scenario_id': contract['scenario_id'],
+                                        'intended_use': contract['intended_use'],
+                                        'dependencies': dependencies['kind'],
+                                        'outcome_timing_verified': False}}
+    if not development or not final:
+        raise StudyError('unsupported_capability', 'The final partition leaves an empty side.',
+                         details={'reason': 'empty_final_or_development'})
+    record['training_exclusions'] = {
+        'n_rows': len(set(training_excluded)),
+        'reasons': [{'reason': reason, 'count': len(rows)}
+                    for reason, rows in sorted(exclusion_reasons.items())]}
+    return {'record': record, 'development': development, 'final_test': final,
+            'training_excluded': sorted(set(training_excluded), key=lambda k: int(k[1:]))}
 
 
 # --- the final test's schema check (counts only) ----------------------------------------

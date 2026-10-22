@@ -57,7 +57,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.3 (WP-F1, ADR 0007): the candidate and the variants compared fold by fold
              # (one-standard-error rule, selection optimism, advice to stop), and the
              # engine's shortlist of model families; ``null`` in a study without variants.
-             'model_selection', 'model_families', 'assurance')
+             'model_selection', 'model_families', 'assurance',
+             # reliability roadmap J2: one derived evaluator, never persisted.
+             'requirements', 'completion', 'claim_eligibility')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -1356,17 +1358,21 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     }
     case = _case_or_none(state) if not sources else None
     out['assurance'] = assurance.describe(state, case)
+    if assurance.profile(state) == 'review-v1':
+        from . import validity
+        derived = validity.evaluate(state, case, results)
+        out['requirements'] = derived['requirements']
+        out['completion'] = derived['completion']
+        out['claim_eligibility'] = derived['claim_eligibility']
+    else:
+        out['requirements'] = None
+        out['completion'] = None
+        out['claim_eligibility'] = None
     # v0.3 (WP-C): what the agent relays at this pause (``junior_digest``, ``recommended``,
     # ``question``, ``criterion_options``), in the study language.
     junior.enrich(out, state, case)
     notice = assurance.scope_notice(case, language)
     if assurance.profile(state) == 'review-v1':
-        pending = ("Le profil review-v1 permet pour l'instant l'inspection et le plan ; "
-                   "l'exécution analytique attend les jalons suivants."
-                   if language == 'fr' else
-                   'The review-v1 profile currently supports inspection and planning; '
-                   'analytical execution awaits the next milestones.')
-        notice = ' '.join(filter(None, (notice, pending)))
         contract = case.document.get('analysis_contract') if case is not None else None
         if contract and out['next_action'].get('decision') == 'prediction_time':
             out['next_action']['default_value'] = contract['prediction_statement']

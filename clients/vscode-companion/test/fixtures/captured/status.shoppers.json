@@ -13,16 +13,16 @@
  "payload": {
   "schema": "hypotrail.status/1",
   "ok": true,
-  "study": "/private/tmp/capture/shoppers",
+  "study": "/tmp/capture/shoppers",
   "revision": 1,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
-   "study": "/private/tmp/capture/shoppers",
+   "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-21T20:15:37.459016+00:00",
+   "updated": "2026-10-22T09:30:49.646414+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -651,9 +651,9 @@
        "/hypotrail/framework",
        "marimo",
        "run",
-       "/private/tmp/capture/shoppers/notebooks/study_generated.py"
+       "/tmp/capture/shoppers/notebooks/study_generated.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo run '/private/tmp/capture/shoppers/notebooks/study_generated.py'"
+      "shell": "uv run --project /hypotrail/framework marimo run '/tmp/capture/shoppers/notebooks/study_generated.py'"
      },
      "workbench": {
       "mode": "edit",
@@ -665,9 +665,9 @@
        "/hypotrail/framework",
        "marimo",
        "edit",
-       "/private/tmp/capture/shoppers/notebooks/workbench.py"
+       "/tmp/capture/shoppers/notebooks/workbench.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit '/private/tmp/capture/shoppers/notebooks/workbench.py'"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/tmp/capture/shoppers/notebooks/workbench.py'"
      }
     }
    },
@@ -810,7 +810,10 @@
     "cross_study_history": "not_enforced",
     "analysis_contract_status": "absent",
     "claim_scope": []
-   }
+   },
+   "requirements": null,
+   "completion": null,
+   "claim_eligibility": null
   }
  }
 }

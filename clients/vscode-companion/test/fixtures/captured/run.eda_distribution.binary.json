@@ -14,7 +14,7 @@
  "payload": {
   "schema": "hypotrail.run/1",
   "ok": true,
-  "study": "/private/studies/bank marketing \"demo\"",
+  "study": "/studies/bank marketing \"demo\"",
   "action": "run",
   "request_id": "b17",
   "replayed": false,
@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
-  "result_id": "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b",
+  "result_id": "4a6c5352d000f824df018da4fc8d481cfa54c606605c05d7b00f26ed3feb5a35",
   "values": {
    "partition": "train",
    "column": "age",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
-   "result_id": "c47064b29e36f40e90a04e3fcf5fc34b3707eb8eb5ddc8616902cc14abae475b",
-   "input_key": "e1bf1cf68087a807502f5615e2fc69f84c592821ad2d1fd481ab7288fa01f065",
+   "result_id": "4a6c5352d000f824df018da4fc8d481cfa54c606605c05d7b00f26ed3feb5a35",
+   "input_key": "ae68ddf8d18714382cde66c1e20bec0906be18215836d8744ac6b4a878d645c4",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_1d8b2767fa7f496b976ec9376d9dadba"
+    "x_3dc4b1ad2f5049fc9514c455e0194000"
    ],
    "registry_created": true,
    "nondeterministic": false

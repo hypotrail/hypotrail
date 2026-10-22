@@ -19,7 +19,7 @@
  "payload": {
   "schema": "hypotrail.decide/1",
   "ok": true,
-  "study": "/private/studies/bank marketing \"demo\"-web",
+  "study": "/studies/bank marketing \"demo\"-web",
   "action": "decide.withdraw",
   "request_id": "b-wd",
   "replayed": false,

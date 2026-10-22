@@ -92,13 +92,19 @@ def _md_cell(text: str) -> str:
 
 RECOMPUTE_NOTE = ('Each code cell below is the pandas (or scikit-learn) you would type on the '
                   'development rows, then an `assert` that its figure equals the registry. '
-                  'Copy any of them to your workbench to experiment.')
+                  'Under review-v1, fitting uses the registered row-membership plan and model '
+                  'comparison uses the predeclared business objective; pooled-count objectives '
+                  'are not replaced by an equal-fold mean. Copy any cell to your workbench to '
+                  'experiment.')
 # WP-F2: the notebook narrative is in the study language where the engine provides French
 # (WP-C: step titles and questions, glossary term names). Definitions, methods, and code
 # comments have no French source yet and stay English.
 RECOMPUTE_NOTE_FR = ("Chaque cellule de code ci-dessous est le pandas (ou scikit-learn) que vous "
                      "taperiez sur l'échantillon de développement, suivi d'un `assert` qui "
-                     "vérifie que son résultat est celui du registre. Copiez-les dans votre "
+                     "vérifie que son résultat est celui du registre. Avec review-v1, "
+                     "l'ajustement suit le plan d'appartenance enregistré et la comparaison "
+                     "suit l'objectif métier pré-déclaré ; les comptages agrégés ne sont pas "
+                     "remplacés par une moyenne simple des plis. Copiez les cellules dans votre "
                      "workbench pour expérimenter.")
 
 

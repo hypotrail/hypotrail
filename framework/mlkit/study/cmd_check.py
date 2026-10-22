@@ -595,6 +595,26 @@ def check_criterion(view: Mapping) -> list[dict]:
                     development_status=c.get('status'))]
 
 
+def check_validity_requirements(view: Mapping) -> list[dict]:
+    """A completed review-v1 conclusion cannot hide mandatory missing evidence."""
+    conclusion = (view.get('decisions') or {}).get('conclusion') or {}
+    if conclusion.get('status') != 'confirmed':
+        return []
+    if isinstance(conclusion.get('value'), Mapping) \
+            and conclusion['value'].get('verdict') == 'inconclusive':
+        return []
+    out = []
+    for requirement in view.get('requirements') or []:
+        if requirement.get('satisfied'):
+            continue
+        out.append(finding('validity_requirement_missing', 'decision:conclusion',
+                           f'Completed conclusion lacks requirement {requirement["code"]}.',
+                           requirement=requirement['code'],
+                           result_id=requirement.get('result_id'),
+                           detail=requirement.get('detail')))
+    return out
+
+
 def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
     study = read.open(study_dir)
     view = view_model.build(study)
@@ -624,6 +644,7 @@ def check_study(study_dir: Path) -> tuple[dict, list[dict], list[dict]]:
                                    mf.ARTIFACTS['notebook'])
     findings += check_features(view)
     findings += check_criterion(view)
+    findings += check_validity_requirements(view)
     conclusion = view['decisions']['conclusion']['value']
     if isinstance(conclusion, dict) and isinstance(conclusion.get('text'), str):
         f, t = _check_text(view, conclusion['text'], 'decision:conclusion',

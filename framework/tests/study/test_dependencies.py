@@ -78,10 +78,24 @@ ROWS = [
 ]
 
 
-def test_table_has_rows_one_to_twelve_and_unknown():
+def test_table_has_rows_one_to_eighteen_and_unknown():
     # WP-A4 adds rows 14 to 16 (preprocessing, its motivation, the success criterion);
-    # WP-B1 row 17 (the variant).
-    assert [m['row'] for m in dep.MUTATIONS] == list(range(1, 13)) + [14, 15, 16, 17, '*']
+    # WP-B1 row 17 (the variant); reliability J3 row 18 (selection objective/rule).
+    assert [m['row'] for m in dep.MUTATIONS] == \
+        list(range(1, 13)) + [14, 15, 16, 17, 18, '*']
+
+
+def test_row_18_reuses_fixed_predictions_and_recomputes_selection(full):
+    _, state = full
+    old = {'metric': 'precision_gain', 'min_points': 5,
+           'selection': {'metric': 'precision', 'rule': 'share:0.1'}}
+    new = {'metric': 'recall_gain', 'min_points': 5,
+           'selection': {'metric': 'recall', 'rule': 'share:0.2'}}
+    effect = dep.effects(state, 'success_criterion', old, new)
+    assert effect['row'] == 18 and effect['mutation'] == 'success_criterion.selection'
+    assert effect['refit'] == []
+    assert effect['re_policy'] == ['policy.evaluation']
+    assert effect['reconfirm'] == ['policy', 'conclusion']
 
 
 @pytest.mark.parametrize('row, decision_id, old, new, mutation, stale_slots, reconfirm', ROWS,

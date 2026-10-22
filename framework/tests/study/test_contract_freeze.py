@@ -163,7 +163,9 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.2b (WP-B1): the configurations evaluated so far.
              'trials',
              # v0.3 (WP-F1): the selection among the variants and the model families.
-             'model_selection', 'model_families', 'assurance')
+             'model_selection', 'model_families', 'assurance',
+             # Reliability roadmap J2: derived, null for legacy studies.
+             'requirements', 'completion', 'claim_eligibility')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -232,7 +234,8 @@ B1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split'
 B1_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
                'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
                'policy', 'final_test', 'conclusion')
-CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds')
+CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds',
+              'forward_chaining', 'ordered_retrospective', 'group_disjoint')
 TRIALS_KEYS = ('count', 'results', 'note')
 OPENING_RESULT_KEYS = ('status', 'execution_id', 'result_id', 'revision', 'error')
 FULL_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
@@ -274,7 +277,9 @@ REGRESSION_MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.featur
                            14: 'preprocessing', 15: 'preprocessing.motivation',
                            16: 'success_criterion',
                            # v0.2b (WP-B1).
-                           17: 'model_variant', '*': 'unknown'}
+                           17: 'model_variant',
+                           # Reliability roadmap J3: action objective/rule mutation.
+                           18: 'success_criterion.selection', '*': 'unknown'}
 NEXT_ACTION_KINDS = {'acknowledge_interruption', 'reconfirm', 'await_user_words', 'blocked',
                      'propose', 'run', 'done',
                      # Closure fix F1: a dead execution seen by the read-only lease probe.
@@ -326,7 +331,9 @@ MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.feature_set',
                 # v0.2a (WP-A4).
                 14: 'preprocessing', 15: 'preprocessing.motivation', 16: 'success_criterion',
                 # v0.2b (WP-B1).
-                17: 'model_variant', '*': 'unknown'}
+                17: 'model_variant',
+                # Reliability roadmap J3: action objective/rule mutation.
+                18: 'success_criterion.selection', '*': 'unknown'}
 ERROR_CODES = {
     'invalid_arguments', 'internal_error', 'invalid_request', 'idempotency_conflict',
     'stale_revision', 'invalid_command', 'study_missing', 'state_exists', 'integrity_error',
@@ -438,7 +445,10 @@ CHECK_FINDINGS = {'number_outside_result': 'error', 'unknown_result_id': 'error'
                   'verdict_contradicts_criterion': 'warning',
                   # B6c (H4).
                   'verdict_keeps_baseline_against_criterion': 'warning',
-                  'final_test_figure_outdated': 'error'}
+                  'final_test_figure_outdated': 'error',
+                  # Reliability roadmap J2: a completed non-inconclusive claim needs all
+                  # derived validity requirements.
+                  'validity_requirement_missing': 'error'}
 LITERAL_KINDS = ('revision', 'ordinal', 'user_words', 'proposal', 'decision_value', 'case',
                  'identifier', 'parameter', 'environment', 'setting', 'message', 'category',
                  # v0.2a (WP-A6): state counts, the five example rows, chart axis ticks.
@@ -1008,7 +1018,8 @@ def test_final_test_partition_contract(tmp_path, synthetic_case_dir):
     # WP-B1: the final test is opened once (optional record key ``opening``); WP-B3: the
     # optional ``groups`` of a case whose identical records are grouped.
     assert partition.STATUSES == ('sealed', 'opened') and partition.STATUS_ABSENT == 'absent'
-    assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening', 'prior_exposed')
+    assert partition.OPTIONAL_RECORD_KEYS == ('groups', 'opening', 'prior_exposed',
+                                              'training_exclusions', 'analysis_protocol')
     # WP-B6a: rows the case declares as already exposed, kept out of the final test; the
     # opening's time in the status view.
     assert partition.PRIOR_EXPOSED_KEYS == ('path', 'sha256', 'declared_rows', 'excluded_rows')
@@ -1081,6 +1092,7 @@ def test_wp_b1_contract_constants():
     assert st.B1_REGRESSION_DECISION_IDS == B1_REGRESSION_DECISION_IDS
     assert st.B1_STEP_IDS == B1_STEP_IDS and st.WP_B1_DECISIONS == ('model_variant', 'final_test')
     assert st.CV_METHODS == CV_METHODS and st.CV_KEYS == ('method', 'folds', 'seed')
+    assert st.TEMPORAL_CV_KEYS == ('method', 'folds', 'gap')
     assert (st.DEFAULT_FOLDS, st.MIN_FOLDS, st.MAX_FOLDS) == (5, 3, 10)
     # v0.3 (WP-F1, ADR 0007): two more kinds, in a list of at most three variants.
     assert st.VARIANT_KINDS == ('regularisation', 'drop_group', 'tuned', 'family')
@@ -1092,8 +1104,11 @@ def test_wp_b1_contract_constants():
     assert cmd.OPENING_KEYS == OPENING_RESULT_KEYS
     assert cmd.FINAL_TEST_KEYS == ('model', 'rule')
     assert partition.STATUS_VIEW_KEYS == FINAL_TEST_STATUS_KEYS
-    assert governance.FINAL_CRITERION_KEYS == ('status', 'gain', 'low', 'high', 'minimum',
-                                               'unit', 'interval_includes_zero', 'result_id')
+    assert governance.FINAL_CRITERION_KEYS == (
+        'status', 'gain', 'low', 'high', 'minimum', 'unit', 'interval_includes_zero',
+        'result_id', 'point_meets_minimum', 'interval_excludes_zero',
+        'lower_bound_meets_minimum', 'uncertainty_status', 'decision_rule',
+        'decision_status', 'basis')
     assert rec.POLICY_MODELS == ('fit.logistic', 'fit.variant', 'fit.variant:2',
                                  'fit.variant:3')
     keys = (set(B1_DECISION_IDS) | set(B1_STEP_IDS) | set(CV_METHODS) | set(TRIALS_KEYS)
@@ -1208,3 +1223,23 @@ def test_wp_b4_contract_constants():
                'render_diagnostics.section', 'render_html.ANNEX_SKIPPED',
                'recompute_dev_diagnostics', 'recompute_final_diagnostics'})
     assert not sorted(k for k in keys if k not in DOC_TOKENS)
+
+
+def test_review_v1_j1_j3_contract_constants():
+    """The additive public schemas and enumerations introduced by reliability J1--J3."""
+    from mlkit.study import evaluation_plan, objective, validity
+    assert evaluation_plan.SCHEMA == 'hypotrail.evaluation_plan/1'
+    assert evaluation_plan.INDEPENDENT_METHODS == (
+        'kfold_stratified', 'kfold_quantile', 'group_disjoint')
+    assert evaluation_plan.TEMPORAL_METHODS == (
+        'forward_chaining', 'ordered_retrospective')
+    assert evaluation_plan.METHODS == evaluation_plan.INDEPENDENT_METHODS \
+        + evaluation_plan.TEMPORAL_METHODS
+    assert validity.REQUIREMENT_CODES == (
+        'scenario_bound', 'analysis_contract_present', 'feature_timing_supported',
+        'evaluation_protocol_current', 'choice_evaluation_current',
+        'selected_configuration_current', 'development_diagnostics_current',
+        'interpretability_constraint_satisfied', 'uncertainty_available_for_claim',
+        'final_evidence_current_for_configuration')
+    assert objective.DECISION_RULES == ('point_estimate', 'lower_bound')
+    assert objective.BINARY_METRICS == ('precision', 'recall')

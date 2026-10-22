@@ -127,8 +127,7 @@ def test_j0_a03_unknown_profile_is_refused_before_creation(tmp_path):
     assert not study.exists()
 
 
-def test_j0_future_contract_has_planted_clocks_but_no_legacy_partition_fallback(
-        tmp_path, monkeypatch):
+def test_j0_future_contract_has_planted_clocks_and_j1_partition(tmp_path):
     paths = make_review(tmp_path, future=True)
     case = c.load_case(paths['case'])
     contract = case.document['analysis_contract']
@@ -139,15 +138,13 @@ def test_j0_future_contract_has_planted_clocks_but_no_legacy_partition_fallback(
     assert list(frame['prediction_tick']) == list(range(1, 301))
     assert list(frame['outcome_tick'] - frame['prediction_tick']) == [2] * 300
 
-    def dataset_read_would_be_a_bug(*_args, **_kwargs):
-        raise AssertionError('unsupported review-v1 initialization read dataset bytes')
-
-    monkeypatch.setattr(c, 'verify_dataset', dataset_read_would_be_a_bug)
-    monkeypatch.setattr(c, 'prior_exposed_keys', dataset_read_would_be_a_bug)
     out = init(paths, tmp_path / 'study', '--reliability-profile', 'review-v1')
-    assert out.payload['error']['code'] == 'unsupported_capability'
-    assert 'J1 pending' in out.payload['error']['details']['capability']
-    assert not (tmp_path / 'study').exists()
+    assert out.exit_code == 0, out.payload
+    part = read.open(tmp_path / 'study').state['partition']
+    assert part['method'] == 'temporal'
+    assert part['analysis_protocol']['intended_use'] == 'future_prediction'
+    assert part['order']['by'] == 'prediction_tick'
+    assert part['training_exclusions']['n_rows'] == 2
 
 
 def test_j0_final_opening_is_refused_before_confirming_the_decision(tmp_path):
@@ -173,8 +170,7 @@ def test_j0_final_opening_is_refused_before_confirming_the_decision(tmp_path):
                    '--expected-revision', str(read.open(study).state['revision']),
                    '--study', str(study)])
     assert out.exit_code == 2, out.payload
-    assert out.payload['error']['code'] == 'unsupported_capability'
-    assert out.payload['error']['details']['reason'] == 'implementation_pending'
+    assert out.payload['error']['code'] == 'precondition_missing'
     after = state_bytes(study)
     assert {k: v for k, v in after.items() if k != 'events.jsonl'} == {
         k: v for k, v in before.items() if k != 'events.jsonl'}
@@ -214,9 +210,10 @@ def test_j0_a04_inspection_allowed_but_pending_calculations_refused(tmp_path, wi
     for activity in ('split', 'fit.baseline', 'fit.logistic', 'final_test.evaluation'):
         out = cli.run(['run', activity, '--study', str(study), '--request-id', f'x-{activity}',
                        '--expected-revision', '1'])
-        assert out.payload['error']['code'] == 'unsupported_capability', out.payload
-        assert out.payload['error']['details']['reason'] == (
-            'implementation_pending' if with_contract else 'analysis_contract_missing')
+        assert out.payload['error']['code'] == (
+            'precondition_missing' if with_contract else 'unsupported_capability'), out.payload
+        if not with_contract:
+            assert out.payload['error']['details']['reason'] == 'analysis_contract_missing'
     after = state_bytes(study)
     assert {k: v for k, v in after.items() if k != 'events.jsonl'} == {
         k: v for k, v in before.items() if k != 'events.jsonl'}

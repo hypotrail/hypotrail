@@ -1,12 +1,13 @@
 # Implementation handoff (v0.2)
 
-## Review remediation J0 (21 October 2026)
+## Review remediation J0--J3 (22 October 2026)
 
 J0 adds an opt-in `init --reliability-profile review-v1`, static `analysis_contract`
 validation and a derived `assurance` object (`status --summary --fields assurance`).
-The default remains legacy. Old state is not migrated; new-profile analytical
-execution is explicitly unavailable until the later reliability milestones. Future
-or group-disjoint new-profile partition creation is also refused pending J1.
+The default remains legacy and old state is not migrated. The opt-in profile now executes
+J1 explicit evaluation memberships, J2 validity requirements and J3 business-objective
+selection. Future/group-disjoint execution is available only with the required clocks or
+groups and a feasible plan; no legacy fallback is used.
 
 Hotel remains the discovery case, now explicitly an exercise in leakage and evidence
 limits: **performance at booking is not established** from the published snapshot.
@@ -19,10 +20,17 @@ read the local source file. Confirmations are agent-reported, not independently
 authenticated; cross-study exposure/budget inheritance is not enforced. The old
 `sealed` status is a compatibility identifier, not a filesystem guarantee.
 
-J0 does **not** fix the known temporal/nested-fold issue, diagnostic prerequisites,
-business-metric selection, criterion uncertainty or unbounded code equivalence.
-Those are tracked in [the findings ledger](../acceptance/reliability-roadmap/FINDINGS.md).
-Implementation and actual verification: [J0 acceptance](../acceptance/reliability-roadmap/J0.md).
+J1--J3 fix the opt-in temporal/nested-fold protocol, diagnostic prerequisites,
+business-metric selection and criterion interpretation. Bounded code equivalence and the
+remaining history work are still J4. See the [findings ledger](../acceptance/reliability-roadmap/FINDINGS.md)
+and [J0](../acceptance/reliability-roadmap/J0.md), [J1](../acceptance/reliability-roadmap/J1.md),
+[J2](../acceptance/reliability-roadmap/J2.md), [J3](../acceptance/reliability-roadmap/J3.md).
+The required engine, Node and complete Companion gates pass in this cloud run. A saved
+no-hinting fontconfig profile plus TTF copies decompressed from the image's OpenAI Sans WOFF2
+files make Chromium rendering reproducible. Ninety pixel baselines remain unchanged; 18 EDA
+baselines reflect the intended J0 disclosure copy and chart source-label changes. The owner
+asked to review their retained before/after/diff sheet at final handoff. At the time this note
+was written, no commit or push had yet been made.
 The remaining sections below describe the legacy slice and its historical evidence.
 
 Status: **v0.2 implemented and closed** (v0.2a then v0.2b) on branch `claude/hypotrail-product-review-yrstzb`, 19 October 2026. It is a vertical slice of the [junior workflow](../specs/JUNIOR-WORKFLOW.md), guided by **Claude Code**, not GitHub Copilot, and used by no human junior yet. Evidence per remark and per decision: [V0.2-CHECKLIST.md](../acceptance/V0.2-CHECKLIST.md). Decisions taken during implementation: [V0.2-DECISIONS.md](../plans/V0.2-DECISIONS.md); the short list worth the owner's review and the demo script: [V0.2-OWNER-REVIEW.md](../plans/V0.2-OWNER-REVIEW.md). Scope sources: [owner demo 1 remarks R1–R11](../acceptance/OWNER-DEMO-1-REMARKS.md), the [review synthesis](../plans/V0.2-REVIEW-SYNTHESIS.md), and the [plan](../plans/V0.2-IMPLEMENTATION-PLAN.md). The v0.1 handoff is in the git history (commit `c534680` and before) and its evidence in [V0.1-CHECKLIST.md](../acceptance/V0.1-CHECKLIST.md).

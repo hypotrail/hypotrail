@@ -90,10 +90,11 @@ case-source invalidation; no new equivalence whitelist bypass is introduced.
 `case-supplement.yaml` may also contain `analysis_contract`; migration copies it
 and validates the resulting case. It does not import a human decision.
 
-The opt-in `review-v1` profile currently permits inspection and planning only.
-Future/group-disjoint initialization is refused until J1 supplies the required
-partition planner; J0 must not seal a future test with a legacy random/blocked
-fallback. Future synthetic contracts can already be validated without initialization.
+The opt-in `review-v1` profile executes the J1--J3 protocol described in
+`CLI-CONTRACT.md`: explicit row memberships, claim requirements and the declared
+business objective. Future and group-disjoint cases are initialized only when the
+contract supplies the clocks or groups their planner needs. An infeasible protocol is
+refused; it is never replaced by a legacy random or complement-of-block fallback.
 
 ### Dataset
 
@@ -169,6 +170,15 @@ task: binary
 - `value` ∈ `available_at_prediction`, `not_available`, `uncertain`, `unknown`;
 - `status` is an epistemic status. `value: unknown` goes with `status: unknown`, and only with it;
 - `source` says why.
+
+For a documented scenario-specific prohibition, `availability` may additionally contain
+`restriction: {scenario_id, kind, source}`. Its only `kind` in this schema is
+`unavailable_at_prediction`; `scenario_id` must equal the enclosing analysis contract,
+and it is valid only with `value: not_available` and `status: documented_fact`. In a
+`review-v1` study this is a hard restriction: neither a proposal, a confirmation nor a
+direct model run may include that column. A merely uncertain column may be explored, but
+its inclusion keeps a future-timing claim ineligible and is surfaced in the validity
+requirements.
 
 Availability is almost never a `documented_fact`. Documentation usually describes what a variable measures, not when it becomes known; that depends on the prediction time, which is a study decision. Study state records the availability *decision* (`available_at_prediction`, `not_available`, `uncertain_excluded`, `uncertain_included`; plan §3.2) and may differ from the case.
 

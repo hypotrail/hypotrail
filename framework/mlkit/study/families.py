@@ -64,6 +64,56 @@ def inner_folds(y, binary: bool, k: int = trials.INNER_FOLDS, seed: int = trials
     return list(ms.KFold(n_splits=k, shuffle=True, random_state=seed).split(np.zeros(n)))
 
 
+def inner_plan(case, train, inputs: Mapping, *, k: int = trials.INNER_FOLDS) -> dict | None:
+    """J1 inner plan on the outer-training subset; ``None`` is the legacy protocol."""
+    contract, parent = inputs.get('analysis_contract'), inputs.get('evaluation_protocol')
+    if not isinstance(contract, Mapping) or not isinstance(parent, Mapping):
+        return None
+    from . import evaluation_plan as ep
+    from .activities import positive
+    from .fit import _target
+    keys = list(train.index)
+    timing, dependencies = contract['timing'], contract['dependencies']
+
+    def values(spec):
+        if not isinstance(spec, Mapping):
+            return None
+        if spec['by'] == 'line':
+            return {key: int(str(key)[1:]) for key in keys}
+        return dict(zip(keys, train.loc[keys, spec['by']].astype(float)))
+
+    prediction = values(timing.get('prediction_order'))
+    outcome = values(timing.get('outcome_available_order'))
+    labels = (dict(zip(keys, positive(train, case).astype(int))) if case.task == 'binary'
+              else None)
+    if labels is not None:
+        strata = labels
+    else:
+        import pandas as pd
+        bins = pd.qcut(_target(case, train, 'training'), 5, labels=False, duplicates='drop')
+        strata = dict(zip(keys, bins.astype(int)))
+    group_column = dependencies.get('group_column')
+    groups = dict(zip(keys, train[group_column].astype(str))) if group_column else None
+    duplicates = None
+    if case.duplicates_policy:
+        markers, first = {}, {}
+        for key in keys:
+            marker = tuple('<NA>' if value != value else repr(value)
+                           for value in train.loc[key].tolist())
+            first.setdefault(marker, key)
+            markers[key] = first[marker]
+        duplicates = markers
+    method = parent['method']
+    protocol = ({'method': method, 'folds': k, 'gap': parent.get('gap', 0)}
+                if method in ep.TEMPORAL_METHODS else
+                {'method': method, 'folds': k, 'seed': parent.get('seed', trials.INNER_SEED)})
+    return ep.build(keys, protocol, prediction_order=prediction,
+                    outcome_available_order=outcome, strata=strata, labels=labels,
+                    groups=groups, duplicate_groups=duplicates,
+                    assumptions=[f'inner_of:{(inputs.get("parent_protocol") or {}).get("fold", "development")}'],
+                    group_goal=dependencies.get('group_goal'))
+
+
 def choose(case, train, inputs: Mapping, params: Mapping, binary: bool) -> dict:
     """The grid value of ``params['tuning']`` an inner cross-validation of ``train`` picks:
     ``{value, scores: [{value, mean, per_fold}], metric}``."""
@@ -72,18 +122,39 @@ def choose(case, train, inputs: Mapping, params: Mapping, binary: bool) -> dict:
     tuning = params['tuning']
     train = fit._ordered(train)
     y = positive(train, case).to_numpy() if binary else fit._target(case, train, 'training')
-    splits = inner_folds(y, binary, int(tuning['inner_folds']), int(tuning['seed']))
+    explicit = inner_plan(case, train, inputs, k=int(tuning['inner_folds']))
+    splits = ([(np.asarray([train.index.get_loc(key) for key in fold['train_keys']]),
+                np.asarray([train.index.get_loc(key) for key in fold['validation_keys']]))
+               for fold in explicit['folds']] if explicit is not None else
+              inner_folds(y, binary, int(tuning['inner_folds']), int(tuning['seed'])))
     scores = []
     for value in tuning['values']:
-        per_fold = []
+        per_fold, all_y, all_pred, windows = [], [], [], []
         for tr, te in splits:
             pred = fit._fit_predict(case, train.iloc[tr], train.iloc[te], inputs,
                                     {**params, 'tuned_value': value}, binary)[0]
             per_fold.append(_score(y[te], pred, binary))
-        valid = [s for s in per_fold if s is not None]
-        mean = sum(valid) / len(valid) if valid else None
+            all_y.extend(y[te].tolist())
+            all_pred.extend(pred.tolist())
+            windows.extend([len(per_fold)] * len(te))
+        criterion = inputs.get('success_criterion') if explicit is not None else None
+        if binary and isinstance(criterion, Mapping):
+            from . import objective
+            selection = criterion['selection']
+            scored = objective.evaluate_binary(all_y, all_pred,
+                                               metric=selection['metric'],
+                                               rule=selection['rule'], windows=windows,
+                                               scope=selection['scope'])
+            mean = scored['point']
+        elif not binary and isinstance(criterion, Mapping):
+            from . import objective
+            scored = objective.evaluate_regression(all_y, all_pred, windows=windows)
+            mean = scored['point']
+        else:
+            valid = [s for s in per_fold if s is not None]
+            mean = sum(valid) / len(valid) if valid else None
         scores.append({'value': value, 'mean': mean, 'per_fold': per_fold})
-    sign = 1 if binary else -1
+    sign = (1 if binary else -1)
     best = None
     for s in scores:                      # the grid lists the simplest value first
         if s['mean'] is None:
@@ -91,7 +162,14 @@ def choose(case, train, inputs: Mapping, params: Mapping, binary: bool) -> dict:
         if best is None or sign * s['mean'] > sign * best['mean'] + 1e-12:
             best = s
     chosen = best['value'] if best is not None else tuning['values'][0]
-    return {'value': chosen, 'scores': scores, 'metric': tuning['metric']}
+    out = {'value': chosen, 'scores': scores,
+           'metric': ((inputs.get('success_criterion') or {}).get('selection') or {}).get(
+               'metric', tuning['metric'])}
+    if explicit is not None:
+        from .evaluation_plan import digest
+        out['inner_plan_digest'] = digest(explicit)
+        out['inner_plan'] = explicit
+    return out
 
 
 # --- the non-linear families ---------------------------------------------------------------

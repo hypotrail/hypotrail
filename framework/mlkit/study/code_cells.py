@@ -892,10 +892,12 @@ assert abs(np.mean(({p}score - {p}y) ** 2) - {p}model["calibration"]["brier"]) <
 
 
 def selection_cell(view: Mapping, task: str) -> tuple[str, str] | None:
-    """v0.3 (WP-F1): the comparison of the candidate and the variants, fold by fold, as a
-    pandas table built from the fits' registered per-fold metrics; the mean, the standard
-    error, the one-standard-error pick and the selection optimism recomputed and asserted
-    equal to the ``model_selection`` the evaluation stored."""
+    """Candidate/variant comparison from registered evaluation evidence.
+
+    Legacy equal-fold metrics recompute their mean, one-standard-error pick and descriptive
+    optimism.  A review-v1 pooled-count objective instead recomputes the winner from its
+    pooled point estimate and explicitly verifies that those two heuristics are unavailable.
+    """
     slot = 'evaluate.regression' if task == 'regression' else 'policy.evaluation'
     item = _current(view, slot)
     selection = (item or {}).get('values', {}).get('model_selection') if item else None
@@ -905,6 +907,24 @@ def selection_cell(view: Mapping, task: str) -> tuple[str, str] | None:
     if not slots or any(_current(view, s) is None for s in slots):
         return None
     metric = selection['metric']
+    if not (selection.get('one_se') or {}).get('available', True):
+        direction = selection.get('direction')
+        best = 'idxmax' if direction == 'higher' else 'idxmin'
+        code = f'''_evaluation = nv.values(study, RESULT_IDS[{q(slot)}])
+_selection = _evaluation["model_selection"]
+# Pooled-count objectives are not equal-weight fold means.  Display the registered
+# per-window values, but recompute the winner from the registered pooled point estimate.
+_comparison = pd.DataFrame([
+    {{"slot": _c["slot"], "point": _c["mean"], "per_window": _c["per_fold"]}}
+    for _c in _selection["configurations"]
+]).set_index("slot")
+_best = _comparison["point"].{best}()
+print(_comparison)
+print(f"best pooled {metric}: {{_best}}")
+assert _best == _selection["best"]
+assert not _selection["one_se"]["available"]
+assert not _selection["optimism"]["available"]'''
+        return 'recompute_selection', code
     best = 'idxmax' if selection.get('direction') == 'higher' else 'idxmin'
     gap = ('_per_fold.max(axis=1) - _per_fold[_best]' if best == 'idxmax'
            else '_per_fold[_best] - _per_fold.min(axis=1)')

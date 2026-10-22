@@ -36,7 +36,9 @@ LABELS = {
         'excluded': 'Excluded',
         'selection': 'The configurations compared fold by fold',
         'metric': {'roc_auc': 'Out-of-fold AUC by fold (mean, standard error)',
-                   'mae': 'Out-of-fold MAE by fold (mean, standard error)'},
+                   'mae': 'Out-of-fold MAE by fold (mean, standard error)',
+                   'precision': 'Precision at the predeclared rule (pooled counts)',
+                   'recall': 'Recall at the predeclared rule (pooled counts)'},
         'cols': ['Configuration', 'Question', 'Mean', 'Standard error',
                  'Difference with the candidate (± one standard error)',
                  'Within one standard error of the best'],
@@ -71,7 +73,9 @@ LABELS = {
         'excluded': 'Exclue',
         'selection': 'Les configurations comparées pli par pli',
         'metric': {'roc_auc': 'AUC hors pli par pli (moyenne, erreur type)',
-                   'mae': 'MAE hors pli par pli (moyenne, erreur type)'},
+                   'mae': 'MAE hors pli par pli (moyenne, erreur type)',
+                   'precision': 'Précision à la règle pré-déclarée (comptages agrégés)',
+                   'recall': 'Rappel à la règle pré-déclarée (comptages agrégés)'},
         'cols': ['Configuration', 'Question', 'Moyenne', 'Erreur type',
                  'Écart avec le candidat (± une erreur type)',
                  "À moins d'une erreur type de la meilleure"],
@@ -195,18 +199,27 @@ def _selection(view: Mapping, citer: cite.Citer, lab: Mapping, lang: str) -> str
     opt = sel.get('optimism') or {}
     advice = sel.get('advice') or {}
     parts = [f'<h3>{e(lab["selection"])}</h3><p class="small">{e(lab["metric"][sel["metric"]])}</p>',
-             _table(lab['cols'], rows, 'selection'),
+             _table(lab['cols'], rows, 'selection')]
+    if one.get('available') is False:
+        parts.append(f'<p class="muted" data-one-se="unavailable">{e(one.get("reason") or "")}</p>')
+    else:
+        parts.append(
              f'<p data-one-se="{e(str(one.get("pick")))}"><strong>{e(lab["one_se"])}:</strong> '
              f'{e(lab["pick"])} {e(_name(pick.get("slot"), pick.get("words"), lab))}, '
              f'{e(lab["best"])} {e(_name(best.get("slot"), best.get("words"), lab))}. '
              f'{e((one.get("texts") or {}).get(lang) or "")} '
-             f'<span class="small">{_lit("message", one.get("source") or "")}</span></p>',
+             f'<span class="small">{_lit("message", one.get("source") or "")}</span></p>')
+    if opt.get('available') is False:
+        parts.append(f'<p class="muted" data-optimism="unavailable">{e(opt.get("reason") or "")}</p>')
+    else:
+        parts.append(
              f'<p data-optimism="estimate"><strong>{e(lab["optimism"])}:</strong> '
              f'{_num(citer, rid, ["model_selection", "optimism", "estimate"], fmt)}. '
              f'{e((opt.get("texts") or {}).get(lang) or "")} '
-             f'<span class="small">{_lit("message", opt.get("source") or "")}</span></p>',
+             f'<span class="small">{_lit("message", opt.get("source") or "")}</span></p>')
+    parts.append(
              f'<p class="notice" data-advice="{e(str(advice.get("code")))}"><strong>'
-             f'{e(lab["advice"])}:</strong> {e((advice.get("texts") or {}).get(lang) or "")}</p>']
+             f'{e(lab["advice"])}:</strong> {e((advice.get("texts") or {}).get(lang) or "")}</p>')
     return ''.join(parts)
 
 

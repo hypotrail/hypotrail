@@ -466,6 +466,9 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             raise _invalid('Every candidate feature needs exactly one availability status.',
                            missing=missing, not_features=unknown, invalid_status=bad,
                            statuses=list(st.AVAILABILITY_DECISIONS))
+        from . import assurance, validity
+        if assurance.profile(state) == 'review-v1':
+            validity.require_availability(case_of(state), value)
     elif decision_id == 'split':
         validate_split(state, value)
     elif decision_id == 'policy':
@@ -485,6 +488,16 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             # v0.3 (WP-F1): a rule applies to a variant the decision names.
             raise _invalid('The policy names a variant the variant decision does not declare.',
                            models=[rec.POLICY_CANDIDATE] + named)
+        from . import assurance
+        if assurance.profile(state) == 'review-v1':
+            criterion_value = (state['decisions'].get(st.SUCCESS_CRITERION) or {}).get('value')
+            fixed = ((criterion_value or {}).get('selection') or {}).get('rule')
+            proposed = rec.policy_rule(value)
+            if fixed is not None and rec.canonical_rule(fixed) != proposed:
+                raise _invalid('The policy must adopt the rule fixed by the success criterion; '
+                               'change that criterion and rerun selection first.',
+                               reason='selection_rule_mismatch', expected=fixed,
+                               actual=proposed)
     elif decision_id == 'model_choice':
         choices = model_choices(state)
         if value not in choices:
@@ -511,8 +524,20 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
         try:
             # v0.3 (WP-C, R18): a metric of ``criterion.METRICS_BY_TASK`` and a minimum.
             from . import criterion
-            criterion.check(value, st.task_of(state))
-        except governance.ValueProblem as exc:
+            from . import assurance
+            if assurance.profile(state) == 'review-v1':
+                from . import objective
+                objective.validate_criterion(value, st.task_of(state))
+                batch = value['selection'].get('batch_column')
+                if batch is not None:
+                    variable = case_of(state).variables.get(batch)
+                    if variable is None or variable.get('role') == 'target':
+                        raise ValueError('batch_column must name a non-target case variable')
+            else:
+                criterion.check(value, st.task_of(state))
+        except (governance.ValueProblem, ValueError) as exc:
+            if isinstance(exc, ValueError) and not isinstance(exc, governance.ValueProblem):
+                raise _invalid(str(exc)) from None
             raise _invalid(exc.message, **exc.details) from None
     elif decision_id == st.PREPROCESSING:
         try:
@@ -581,6 +606,34 @@ def validate_variant(state: Mapping, value: Any) -> None:
                        '...}, ...]} (at most three).', kinds=list(st.VARIANT_KINDS),
                        strengths=list(st.VARIANT_STRENGTHS), groups=sorted(groups),
                        families=list(trials.VARIANT_FAMILIES), max=trials.MAX_VARIANTS)
+    from . import assurance
+    if assurance.profile(state) == 'review-v1':
+        items = trials.variants_of(value)
+        missing_origin = [i + 1 for i, item in enumerate(items)
+                          if item.get(trials.ORIGIN_KEY) not in trials.ORIGINS]
+        if missing_origin:
+            raise _invalid('Every review-v1 variant records origin as planned or '
+                           'diagnostic_informed.', variants=missing_origin,
+                           origins=list(trials.ORIGINS))
+        current_diag = (state.get('current') or {}).get(st.DIAG_SLOT[st.task_of(state)])
+        bad_diagnostics = [i + 1 for i, item in enumerate(items)
+                           if item.get(trials.ORIGIN_KEY) == 'diagnostic_informed'
+                           and (item.get(trials.DIAGNOSTIC_RESULT_KEY) != current_diag
+                                or not st.is_current(state, st.DIAG_SLOT[st.task_of(state)]))]
+        if bad_diagnostics:
+            raise _invalid('A diagnostic-informed variant must cite the current development '
+                           'diagnostic.', reason='diagnostic_not_current',
+                           variants=bad_diagnostics, current_diagnostic=current_diag)
+        required = (((case_of(state).document.get('constraints') or {})
+                     .get('interpretability') or {}).get('value') == 'required')
+        forbidden = [i + 1 for i, item in enumerate(items)
+                     if item.get('kind') == 'family' and item.get('family') == 'hgb']
+        if required and forbidden:
+            raise _invalid('Histogram gradient boosting is incompatible with the case\'s '
+                           'required interpretability constraint.',
+                           reason='interpretability_required', variants=forbidden,
+                           source=((case_of(state).document.get('constraints') or {})
+                                   .get('interpretability') or {}).get('source'))
     used = trials.used_specs(state, value)
     if len(used) > trials.MAX_VARIANTS:
         raise _invalid(f'The trial budget is {trials.MAX_VARIANTS} variants: this value would '
@@ -594,6 +647,9 @@ def split_methods(state: Mapping) -> list[str]:
     """The split methods of a study: its random method, and ``ordinal_cutoff`` when the
     case declares an integer time column. A declared time column allows ``ordinal_cutoff``
     only: a random split would mix earlier and later rows (no silent fallback)."""
+    from . import assurance
+    if assurance.profile(state) == 'review-v1':
+        return [st.cv_method(state)]
     time_column = state['structure']['time_column']['value']
     if time_column is not None:
         methods = [ORDINAL_CUTOFF]
@@ -637,14 +693,20 @@ def validate_split(state: Mapping, value: Any) -> None:
             why = 'A binary target keeps its outcome share: use "stratified_random".'
         raise _invalid(f'Split method {method!r} does not fit this study. {why}', methods=allowed)
     if method in st.CV_METHODS:
-        if set(value) != set(st.CV_KEYS):
-            raise _invalid('A cross-validation scheme is {"method", "folds", "seed"}.',
-                           keys=list(st.CV_KEYS))
+        temporal = method in ('forward_chaining', 'ordered_retrospective')
+        keys = st.TEMPORAL_CV_KEYS if temporal else st.CV_KEYS
+        if set(value) != set(keys):
+            shape = '{"method", "folds", "gap"}' if temporal else \
+                '{"method", "folds", "seed"}'
+            raise _invalid(f'A cross-validation scheme is {shape}.', keys=list(keys))
         folds = value['folds']
-        if type(folds) is not int or not st.MIN_FOLDS <= folds <= st.MAX_FOLDS:
-            raise _invalid(f'folds is a whole number from {st.MIN_FOLDS} to {st.MAX_FOLDS}.',
+        minimum = 2 if temporal else st.MIN_FOLDS
+        if type(folds) is not int or not minimum <= folds <= st.MAX_FOLDS:
+            raise _invalid(f'folds is a whole number from {minimum} to {st.MAX_FOLDS}.',
                            field='folds')
-        if type(value['seed']) is not int:
+        if temporal and (type(value['gap']) not in (int, float) or value['gap'] < 0):
+            raise _invalid('gap is a nonnegative number on the ordinal clock.', field='gap')
+        if not temporal and type(value['seed']) is not int:
             raise _invalid('seed is an integer.', field='seed')
         return
     if method == ORDINAL_CUTOFF:
@@ -1045,6 +1107,8 @@ def _propose(ctx: Context) -> Handler:
 
         if decision_id == st.FINAL_TEST and st.final_test_opened(state):
             raise final_test_opened_refusal(state)
+        if decision_id == st.MODEL_VARIANT:
+            value = normalize_variant_provenance(state, value)
         validate_value(state, decision_id, value)
         if decision_id == 'policy':
             value = rec.canonical_policy(value)      # L2: one spelling per rule
@@ -1081,12 +1145,35 @@ def _propose(ctx: Context) -> Handler:
             decision.update(status='proposed', value=copy.deepcopy(value), proposal_id=pid,
                             revision=revision)
         contingent, why = data_contingency(ctx.store, state, decision_id, value)
-        return {'proposal_id': pid, 'decision_id': decision_id, 'status': 'open',
+        response = {'proposal_id': pid, 'decision_id': decision_id, 'status': 'open',
                 'decision_status': decision['status'], 'superseded': superseded,
                 'restatement': params['restatement'],
                 # v0.3 (WP-A, R32): said before the proposal is presented.
                 'data_contingent': contingent, 'data_contingent_reason': why}
+        if decision_id == st.MODEL_VARIANT:
+            missing = preconditions.missing_for_decision(state, decision_id, value,
+                                                          store=ctx.store)
+            response.update(adoptable=not missing, missing_prerequisites=missing)
+        return response
     return Handler(PROPOSE_PARAMS, run, check)
+
+
+def normalize_variant_provenance(state: Mapping, value: Any) -> Any:
+    """A planned challenger declared after scores is never retroactively predeclared."""
+    from . import assurance
+    if assurance.profile(state) != 'review-v1' or not trials.is_list_value(value):
+        return value
+    value = copy.deepcopy(value)
+    scored = any(slot.startswith(('fit.', 'policy.', 'evaluate.'))
+                 for slot in (state.get('current') or {}))
+    if not scored:
+        return value
+    diag_id = (state.get('current') or {}).get(st.DIAG_SLOT[st.task_of(state)])
+    for variant in value[trials.LIST_KEY]:
+        if variant.get(trials.ORIGIN_KEY) == 'planned':
+            variant[trials.ORIGIN_KEY] = 'diagnostic_informed'
+            variant[trials.DIAGNOSTIC_RESULT_KEY] = diag_id
+    return value
 
 
 def final_test_opened_refusal(state: Mapping) -> CommandRefused:
@@ -1871,7 +1958,8 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
         raise StudyError('invalid_arguments', f'language is one of {", ".join(st.LANGUAGES)}.')
     index = dt.row_index(case)
     frame = dt.read_frame(case, index)
-    assigned = partition.assign(case, index, frame)
+    assigned = partition.assign(case, index, frame,
+                                reliability_profile=reliability_profile or 'legacy')
     check = partition.schema_check(case, frame.loc[assigned['final_test']],
                                    frame.loc[assigned['development']])
     del frame
@@ -1884,6 +1972,9 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))
+    if 'training_excluded' in assigned:
+        excluded_sha = store.put_blob(rec.row_keys_bytes(assigned['training_excluded']))
+        assigned['record']['training_exclusions']['row_keys'] = excluded_sha
     state[partition.STATE_KEY] = partition.seal(
         assigned['record'], development_sha=dev_sha,
         n_development=len(assigned['development']), final_sha=final_sha,
@@ -1930,7 +2021,8 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
 
 SUMMARY_FIXED_KEYS = ('schema', 'ok', 'study', 'revision')
 # WP-H3: keys of the full view that ``status --summary --fields`` also gives.
-FIELDS_FROM_VIEW = ('model_selection', 'model_families', 'assurance')
+FIELDS_FROM_VIEW = ('model_selection', 'model_families', 'assurance', 'requirements',
+                    'completion', 'claim_eligibility')
 
 
 def status(study_dir, since: int | None = None, summary: bool = False,

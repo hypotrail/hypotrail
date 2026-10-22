@@ -86,6 +86,23 @@ def test_changed_slots_ignore_a_reworded_question_and_name_a_dropped_variant():
     assert trials.changed_slots(legacy, {'variants': [STRONG, TUNED]}) == []
 
 
+def test_selection_plan_freezes_questions_outside_its_numerical_identity():
+    before = _state([{'variants': [TUNED, HGB]}])
+    reworded = _state([{'variants': [{**TUNED, 'question': 'Other words'}, HGB]}])
+    before_inputs, reworded_inputs = {}, {}
+
+    before_display = act._selection_inputs(before, before_inputs,
+                                           ['fit.logistic', 'fit.variant', 'fit.variant:2'])
+    reworded_display = act._selection_inputs(
+        reworded, reworded_inputs, ['fit.logistic', 'fit.variant', 'fit.variant:2'])
+
+    assert before_inputs == reworded_inputs
+    assert before_inputs['variants'] == [{'kind': 'tuned'},
+                                         {'kind': 'family', 'family': 'hgb'}]
+    assert before_display[0]['question'] == TUNED['question']
+    assert reworded_display[0]['question'] == 'Other words'
+
+
 def _state(confirmed=(), current=None, language='en'):
     proposals = {f'p_{i}': {'proposal_id': f'p_{i}', 'decision_id': 'model_variant',
                             'status': 'confirmed', 'revision': i, 'value': v}
@@ -350,6 +367,8 @@ def test_three_variants_are_compared_chosen_and_opened(tmp_path):
     assert evaluation['selection']['scope'] == 'within_fold'
     live = flow.view()['model_selection']
     assert stored['available'] and len(stored['configurations']) == 4
+    assert [c.get('question') for c in stored['configurations'][1:]] == \
+        [TUNED['question'], HGB['question'], STRONG['question']]
     assert [c['mean'] for c in stored['configurations']] == \
         [c['mean'] for c in live['configurations']]
     assert stored['optimism']['estimate'] == live['optimism']['estimate']

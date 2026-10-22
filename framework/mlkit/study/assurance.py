@@ -18,7 +18,7 @@ DEPENDENCY_KEYS = ('kind', 'group_column', 'group_goal', 'status', 'source')
 ASSURANCE_KEYS = ('profile', 'evaluation_protection', 'consent_provenance',
                   'cross_study_history', 'analysis_contract_status', 'claim_scope')
 NOTICE_KEYS = ('code', 'audience', 'message', 'junior_message')
-CAPABILITY = 'review-v1 analytical execution (J1-J3 pending)'
+CAPABILITY = 'review-v1 analytical execution'
 
 
 def profile(state) -> str:
@@ -145,33 +145,26 @@ def initial_notices(case, language='en') -> list[dict]:
 
 
 def require_activity(state, activity):
-    """J0 deliberately cannot execute the analytical guarantees of later milestones."""
+    """A review-v1 study needs a validated analysis contract before analysis."""
     if profile(state) != 'review-v1' or activity == 'eda.quality':
         return
     from .case import case_of
     from mlkit.reliability import CommandRefused
     contract = case_of(state).document.get('analysis_contract')
-    reason = 'analysis_contract_missing' if contract is None else 'implementation_pending'
-    raise CommandRefused('unsupported_capability',
-                         'This profile currently supports inspection and planning only; '
-                         'analytical execution needs the later reliability milestones.',
-                         details={'capability': CAPABILITY, 'reason': reason,
-                                  'activity': activity, 'profile': 'review-v1'})
+    if contract is None:
+        raise CommandRefused('unsupported_capability',
+                             'Review-v1 analytical execution needs an analysis contract.',
+                             details={'capability': CAPABILITY,
+                                      'reason': 'analysis_contract_missing',
+                                      'activity': activity, 'profile': 'review-v1'})
 
 
 def require_initialization(case, requested_profile):
-    """Never seal a future/group-disjoint profile using a legacy partition fallback."""
+    """J1 supplies the review-v1 partition planner; missing contracts remain legacy."""
     contract = case.document.get('analysis_contract')
     if requested_profile != 'review-v1' or contract is None:
         return
-    if contract['intended_use'] == 'future_prediction' \
-            or contract['dependencies']['kind'] in ('grouped', 'grouped_temporal'):
-        from .errors import StudyError
-        raise StudyError('unsupported_capability',
-                         'This analysis needs the review-v1 partition planner, pending J1. '
-                         'The contract can be validated, but no legacy partition is substituted.',
-                         details={'capability': 'review-v1 final partition (J1 pending)',
-                                  'reason': 'implementation_pending', 'profile': requested_profile})
+    return
 
 
 def require_prediction_statement(state, value):

@@ -632,6 +632,8 @@ def _wp_f1_steps(state: Mapping | str | None, out: tuple) -> tuple:
     slots = tuple(trials.declared_slots(state)) or ('fit.variant',)
     choice = choice_decision(state)
     result = []
+    from . import assurance
+    review = assurance.profile(state) == 'review-v1'
     for step in out:
         if step['id'] == MODEL_VARIANT:
             step = dict(step, activities=slots)
@@ -639,6 +641,8 @@ def _wp_f1_steps(state: Mapping | str | None, out: tuple) -> tuple:
             step = dict(step, activities=tuple(step['activities']) + (diag,))
         elif step['id'] == choice:
             step = dict(step, activities=tuple(step['activities']) + (diag,))
+        elif step['id'] == FINAL_TEST and review:
+            step = dict(step, activities=tuple(step['activities']) + ('diag.final_test',))
         result.append(step)
     return tuple(result)
 
@@ -1261,6 +1265,19 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
                     'message': f'Decision {decision_id} must be confirmed again: '
                                f'{decision["reason"]}'}
     pending = sorted(open_proposals(state), key=lambda p: (p['revision'], p['proposal_id']))
+    from . import assurance
+    if assurance.profile(state) == 'review-v1':
+        # J2: an early planned challenger is recorded but deliberately non-adoptable.  It
+        # must not pull the active workflow away from framing/model diagnostics.
+        pending = [p for p in pending if not (
+            p.get('decision_id') == MODEL_VARIANT and
+            (not all((state['decisions'].get(d) or {}).get('status') == 'confirmed'
+                     for d in ('prediction_time', 'feature_availability', 'split',
+                               SUCCESS_CRITERION, PREPROCESSING))
+             or not all(is_current(state, slot) for slot in
+                        (('fit.baseline', 'fit.logistic') if task_of(state) == BINARY
+                         else ('fit.baseline', 'fit.linear')))
+             or not is_current(state, DIAG_SLOT[task_of(state)])))]
     if pending:
         p = pending[0]
         # v0.3 (WP-J): mode-aware; own words are asked only in the training mode (R27).
@@ -1310,8 +1327,11 @@ def next_action(state: dict, suspected: Mapping | None = None) -> dict:
 
 # v0.2b (WP-B1): the evaluation schemes of the ``split`` decision (cross-validation on the
 # development rows), one per kind of study, and their defaults.
-CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds')
+LEGACY_CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds')
+REVIEW_CV_METHODS = ('forward_chaining', 'ordered_retrospective', 'group_disjoint')
+CV_METHODS = LEGACY_CV_METHODS + REVIEW_CV_METHODS
 CV_KEYS = ('method', 'folds', 'seed')
+TEMPORAL_CV_KEYS = ('method', 'folds', 'gap')
 DEFAULT_FOLDS = 5
 MIN_FOLDS, MAX_FOLDS = 3, 10
 DEFAULT_CV_SEED = 20261017
@@ -1326,7 +1346,12 @@ DEFAULT_VARIANT = dict(kind='regularisation', strength='strong')
 def default_variant(state: Mapping) -> dict:
     """v0.3 (WP-F1): the engine's drafted variant, the candidate's penalty chosen by nested
     cross-validation (one trial), with its question in the study language."""
-    return trials.draft(task_of(state), language_of(state))
+    value = trials.draft(task_of(state), language_of(state))
+    from . import assurance
+    if assurance.profile(state) == 'review-v1':
+        for variant in value[trials.LIST_KEY]:
+            variant.update(origin='planned', diagnostic_result_id=None)
+    return value
 
 
 def is_cv_split(value) -> bool:
@@ -1338,6 +1363,15 @@ def cv_method(state: Mapping) -> str:
     """The cross-validation method of a study: ``temporal_folds`` when its case declares a
     time column or an order (folds follow time), ``kfold_stratified`` for a binary target,
     ``kfold_quantile`` for a numeric one."""
+    from . import assurance
+    if assurance.profile(state) == 'review-v1':
+        protocol = (state.get('partition') or {}).get('analysis_protocol') or {}
+        dependency = protocol.get('dependencies')
+        if dependency in ('temporal', 'grouped_temporal'):
+            return ('forward_chaining' if protocol.get('intended_use') == 'future_prediction'
+                    else 'ordered_retrospective')
+        if dependency == 'grouped':
+            return 'group_disjoint'
     structure = state.get('structure') or {}
     time_column = ((structure.get('time_column') or {}).get('value'))
     if time_column is not None or (state.get('partition') or {}).get('method') == 'temporal':
@@ -1368,7 +1402,10 @@ def b1_default_value(state: Mapping, decision_id: str):
     if not has_wp_b1_decisions(state):
         return None
     if decision_id == 'split':
-        return {'method': cv_method(state), 'folds': DEFAULT_FOLDS, 'seed': DEFAULT_CV_SEED}
+        method = cv_method(state)
+        if method in ('forward_chaining', 'ordered_retrospective'):
+            return {'method': method, 'folds': DEFAULT_FOLDS, 'gap': 0}
+        return {'method': method, 'folds': DEFAULT_FOLDS, 'seed': DEFAULT_CV_SEED}
     if decision_id == MODEL_VARIANT:
         return default_variant(state)
     if decision_id == FINAL_TEST:

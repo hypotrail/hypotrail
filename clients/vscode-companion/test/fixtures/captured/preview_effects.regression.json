@@ -15,7 +15,7 @@
  "payload": {
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
-  "study": "/private/studies/auto mpg",
+  "study": "/studies/auto mpg",
   "revision": 38,
   "proposal_id": "p_7",
   "decision_id": "model_choice",

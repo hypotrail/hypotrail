@@ -21,12 +21,27 @@ Hotel remains a discovery exercise, with performance at booking explicitly not
 established from its snapshot. Retrospective scores do not validate that future use.
 Older substantive case revisions are not silently treated as equivalent.
 
-The opt-in review-v1 profile is scaffolding, not a completed alternative protocol.
-It refuses analytical execution pending J1–J3 and refuses future/group-disjoint final
-partition initialization pending J1. Existing profile/default behavior is preserved.
+The opt-in review-v1 profile is now the implemented J1--J3 alternative protocol. It uses
+explicit forward, ordered or group-disjoint memberships, delayed-label eligibility and
+validity requirements before opening. Existing profile/default behavior is preserved.
 The original decision and amendments below are retained as historical decisions;
 their independence language is subject to the actual scenario, exposure and access
 limitations described here.
+
+### Review-v1 amendment (22 October 2026)
+
+For `review-v1`, a temporal final partition cuts on complete prediction-time ties. A row is
+eligible for final evidence only when its prediction belongs after the cut and its outcome
+availability satisfies the declared protocol; prior-exposed and linked entity/duplicate
+components remain development or are recorded as exclusions. The record includes the
+analysis protocol, exact training exclusions and their digest. Development evaluation uses
+the explicit plan in `CLI-CONTRACT.md`, not the historical `temporal_folds` complement.
+
+The opening precondition includes a current development diagnostic for the selected
+configuration and rule. Once opened, the final evaluation remains consumed even if its
+required final diagnostic fails; that diagnostic may be retried without reopening or
+recomputing the final evaluation. These additions do not alter legacy partitions or permit
+an old final test to be opened again.
 
 In v0.1 a study had two partitions, made by the `split` decision: training rows (EDA and fitting) and validation rows (model and policy selection). The validation rows are used to choose, so their figures are optimistic; nothing in the study was independent evidence. A junior who explored, refit, and changed the split could see every row before anything was set aside, and the report could only say "not independent".
 
