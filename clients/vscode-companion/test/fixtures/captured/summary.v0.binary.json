@@ -14,7 +14,7 @@
  "payload": {
   "schema": "hypotrail.summary/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "revision": 48,
   "since": null,
   "changed": null,
@@ -279,7 +279,7 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -345,19 +345,19 @@
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+    "result_id": "d38e8455aaebb84b9ac19015e275e239bfda2dc0cf6d0e82f3c13b6211c6ec5b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+    "result_id": "0682fba1049d51b7caed451a21f504565c854cbacf30613d126c9ea1651afd62",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -484,12 +484,12 @@
     "9b2961131636d6bd3cacb00af987e5e29f0e06ce0f6af002e6c11008bb1cd02d",
     "53e541019ded883bf9032a979e8a1470f288646a48c02fd4129cba6504630d18",
     "71036ba5f69b0221e5c89017bf7b68208b4011ad04fef1aee456a178164c1a7b",
-    "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565"
+    "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result b3b6e35b).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 209375db).",
    "Now: Open the final test once; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."
@@ -515,7 +515,7 @@
       "/hypotrail/framework",
       "marimo",
       "run",
-      "/studies/bank marketing \"demo\"/notebooks/study_generated.py"
+      "/private/studies/bank marketing \"demo\"/notebooks/study_generated.py"
      ]
     },
     "workbench": {
@@ -528,7 +528,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/bank marketing \"demo\"/notebooks/workbench.py"
+      "/private/studies/bank marketing \"demo\"/notebooks/workbench.py"
      ]
     }
    }

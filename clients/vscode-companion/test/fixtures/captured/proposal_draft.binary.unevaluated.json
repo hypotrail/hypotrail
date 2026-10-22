@@ -16,7 +16,7 @@
  "payload": {
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "revision": 48,
   "decision_id": "policy",
   "value": "capacity:150",

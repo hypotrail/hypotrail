@@ -1,5 +1,12 @@
 # Hotel booking demand (Resort Hotel)
 
+**J0 scope:** this remains the discovery case as an exercise in leakage and evidence
+limits. **Performance at booking is not established.** The published values are a
+snapshot close to arrival, not verified historical values at booking. Removing the
+obvious late columns does not establish the remaining values' historical availability.
+The `analysis_contract` therefore permits retrospective association only. The
+booking-time scenario below is the question to examine, not a validated service.
+
 Discovery case from v0.3: the first study a junior runs. A **binary** scoring study on real bookings of a resort hotel, with a clear timeline: the prediction is made when a booking is entered, the outcome (a cancellation) comes later, and several columns of the file are recorded after the booking. Those columns are the leakage traps of the case.
 
 ## Scenario

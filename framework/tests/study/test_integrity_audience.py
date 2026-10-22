@@ -73,11 +73,15 @@ def test_existing_settings_are_kept_and_the_line_is_given(tmp_path, synthetic_ca
     payload = fk.Flow(study, synthetic_case_dir).init()
     assert (study / '.vscode' / 'settings.json').read_text() == own        # never overwritten
     assert (study / '.gitignore').read_text() == '*.log\n__marimo__/\n'
-    [notice] = payload['notices']
+    notice = next(n for n in payload['notices'] if n['code'] == 'vscode_settings_kept')
     assert tuple(notice) == launch.NOTICE_KEYS and notice['code'] == 'vscode_settings_kept'
     assert notice['audience'] == 'agent' and notice['line'] in notice['message']
     assert notice['line'] == f'"{launch.INTERPRETER_KEY}": {json.dumps(launch.interpreter())}'
     _junior_clean(notice['junior_message'])
+    protection = next(n for n in payload['notices']
+                      if n['code'] == 'cooperative_evaluation_protection')
+    assert protection['audience'] == 'junior'
+    assert 'local source file remains accessible' in protection['junior_message']
 
 
 def test_launch_commands_open_the_two_notebooks_with_the_engine(flow):

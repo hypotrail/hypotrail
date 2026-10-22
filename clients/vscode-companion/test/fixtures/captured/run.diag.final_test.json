@@ -13,7 +13,7 @@
  "payload": {
   "schema": "hypotrail.run/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"-cv",
+  "study": "/private/studies/bank marketing \"demo\"-cv",
   "action": "run",
   "request_id": "v23",
   "replayed": false,
@@ -21,7 +21,7 @@
   "activity": "diag.final_test",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "09b8abf07ec42045b87451b5766c345bd34e5e7ab907c96f7c427ecf607e1aaf",
+  "result_id": "d46245c0a862856cfdce2a323575d6f896d324e4e7b9cfb81c7b97c2e2a1c145",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d",
+   "final_evaluation": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -296,8 +296,8 @@
         "n": 91,
         "n_positive": 4,
         "score_min": 0.01088588855966555,
-        "score_max": 0.0293692201009569,
-        "mean_predicted": 0.023080162472131543,
+        "score_max": 0.02936922010095691,
+        "mean_predicted": 0.02308016247213154,
         "observed_rate": 0.04395604395604396,
         "low": 0.01722436644411733,
         "high": 0.10763093384266353,
@@ -307,8 +307,8 @@
         "bin": 2,
         "n": 90,
         "n_positive": 6,
-        "score_min": 0.02943115098958867,
-        "score_max": 0.041437942480661294,
+        "score_min": 0.029431150989588657,
+        "score_max": 0.04143794248066127,
         "mean_predicted": 0.03501968123890015,
         "observed_rate": 0.06666666666666667,
         "low": 0.030909927745827924,
@@ -320,8 +320,8 @@
         "n": 91,
         "n_positive": 6,
         "score_min": 0.04170212941758427,
-        "score_max": 0.05738822789996842,
-        "mean_predicted": 0.04887614613643311,
+        "score_max": 0.0573882278999684,
+        "mean_predicted": 0.0488761461364331,
         "observed_rate": 0.06593406593406594,
         "low": 0.03056628647161548,
         "high": 0.13646466199411572,
@@ -331,7 +331,7 @@
         "bin": 4,
         "n": 90,
         "n_positive": 10,
-        "score_min": 0.05741758493717682,
+        "score_min": 0.057417584937176774,
         "score_max": 0.07283333002589401,
         "mean_predicted": 0.0664800934237886,
         "observed_rate": 0.1111111111111111,
@@ -343,8 +343,8 @@
         "bin": 5,
         "n": 90,
         "n_positive": 9,
-        "score_min": 0.07286077626283075,
-        "score_max": 0.0918929298301578,
+        "score_min": 0.07286077626283077,
+        "score_max": 0.09189292983015783,
         "mean_predicted": 0.08116332520078334,
         "observed_rate": 0.1,
         "low": 0.05350675169712493,
@@ -357,7 +357,7 @@
         "n_positive": 11,
         "score_min": 0.09243552845133417,
         "score_max": 0.10825156339491089,
-        "mean_predicted": 0.09939860950225785,
+        "mean_predicted": 0.09939860950225786,
         "observed_rate": 0.12087912087912088,
         "low": 0.06885508485107264,
         "high": 0.20361498406203435,
@@ -367,9 +367,9 @@
         "bin": 7,
         "n": 90,
         "n_positive": 9,
-        "score_min": 0.10833118980895226,
+        "score_min": 0.10833118980895232,
         "score_max": 0.13347016439404366,
-        "mean_predicted": 0.12194580835051566,
+        "mean_predicted": 0.12194580835051569,
         "observed_rate": 0.1,
         "low": 0.05350675169712493,
         "high": 0.17924174875433652,
@@ -380,8 +380,8 @@
         "n": 91,
         "n_positive": 11,
         "score_min": 0.13350478985878467,
-        "score_max": 0.15792827505481732,
-        "mean_predicted": 0.14458528420577305,
+        "score_max": 0.15792827505481735,
+        "mean_predicted": 0.14458528420577307,
         "observed_rate": 0.12087912087912088,
         "low": 0.06885508485107264,
         "high": 0.20361498406203435,
@@ -392,8 +392,8 @@
         "n": 90,
         "n_positive": 13,
         "score_min": 0.15808797833669697,
-        "score_max": 0.2120810814987746,
-        "mean_predicted": 0.18202766550050226,
+        "score_max": 0.21208108149877444,
+        "mean_predicted": 0.1820276655005023,
         "observed_rate": 0.14444444444444443,
         "low": 0.08639988786660784,
         "high": 0.23159877920135785,
@@ -405,14 +405,14 @@
         "n_positive": 25,
         "score_min": 0.21221756012439313,
         "score_max": 0.8301295129800422,
-        "mean_predicted": 0.41723138680609456,
+        "mean_predicted": 0.4172313868060945,
         "observed_rate": 0.2777777777777778,
         "low": 0.19579689194686647,
         "high": 0.3779522749706121,
         "inside_interval": false
        }
       ],
-      "brier": 0.0949071265875692,
+      "brier": 0.09490712658756921,
       "brier_base_rate": 0.10180906883859348,
       "mean_absolute_gap": 0.037646816135031125,
       "bins_outside_interval": 1,
@@ -646,7 +646,7 @@
       "false_positives": [
        {
         "row_key": "L3646",
-        "score": 0.792472025888286,
+        "score": 0.7924720258882859,
         "values": {
          "age": "58",
          "job": "admin.",
@@ -664,7 +664,7 @@
        },
        {
         "row_key": "L1218",
-        "score": 0.7605341686644688,
+        "score": 0.7605341686644689,
         "values": {
          "age": "29",
          "job": "management",
@@ -718,7 +718,7 @@
        },
        {
         "row_key": "L2268",
-        "score": 0.7123677365818354,
+        "score": 0.7123677365818355,
         "values": {
          "age": "55",
          "job": "admin.",
@@ -756,7 +756,7 @@
        },
        {
         "row_key": "L2197",
-        "score": 0.026405624833978653,
+        "score": 0.026405624833978663,
         "values": {
          "age": "23",
          "job": "entrepreneur",
@@ -774,7 +774,7 @@
        },
        {
         "row_key": "L4063",
-        "score": 0.026572948275165324,
+        "score": 0.026572948275165313,
         "values": {
          "age": "28",
          "job": "blue-collar",
@@ -843,7 +843,7 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d"
+     "predictions": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -853,13 +853,13 @@
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "09b8abf07ec42045b87451b5766c345bd34e5e7ab907c96f7c427ecf607e1aaf",
-   "input_key": "74a684dd68b06c9815c7555d02c408a88ccaddbf163bb04f9c82ec63f3f124dc",
+   "result_id": "d46245c0a862856cfdce2a323575d6f896d324e4e7b9cfb81c7b97c2e2a1c145",
+   "input_key": "32b337663d64566ff1dea6b2f199f5d04cd0784ab1bab60f99a3dd4fc0aaf031",
    "reason": null,
    "started_revision": 34,
    "invalidation": null,
    "exposure_ids": [
-    "x_1433cbb76c884381958fbcff2e20dd6c"
+    "x_ae83128b9bb74e72afcb419ec5584c23"
    ],
    "registry_created": true,
    "nondeterministic": false

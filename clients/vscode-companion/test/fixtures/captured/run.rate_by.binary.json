@@ -14,7 +14,7 @@
  "payload": {
   "schema": "hypotrail.run/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "action": "run",
   "request_id": "b16",
   "replayed": false,
@@ -269,7 +269,7 @@
    "started_revision": 22,
    "invalidation": null,
    "exposure_ids": [
-    "x_72ce459ae77742daac5c829d5d45431d"
+    "x_ab65b9ae88d147b8b1769997cff2b157"
    ],
    "registry_created": true,
    "nondeterministic": false

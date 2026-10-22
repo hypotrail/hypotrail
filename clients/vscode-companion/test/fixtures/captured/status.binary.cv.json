@@ -13,16 +13,16 @@
  "payload": {
   "schema": "hypotrail.status/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"-cv",
+  "study": "/private/studies/bank marketing \"demo\"-cv",
   "revision": 41,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
-   "study": "/studies/bank marketing \"demo\"-cv",
+   "study": "/private/studies/bank marketing \"demo\"-cv",
    "revision": 41,
-   "updated": "2026-10-21T12:17:45.565457+00:00",
+   "updated": "2026-10-21T20:15:09.209931+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -290,7 +290,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-21T12:16:40.246080+00:00",
+      "time": "2026-10-21T20:14:48.248475+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -337,7 +337,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-21T12:16:41.947493+00:00",
+      "time": "2026-10-21T20:14:48.790063+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -386,7 +386,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-21T12:16:44.427070+00:00",
+      "time": "2026-10-21T20:14:49.585581+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -417,7 +417,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-21T12:16:46.585705+00:00",
+      "time": "2026-10-21T20:14:50.356837+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -453,7 +453,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-21T12:16:49.204400+00:00",
+      "time": "2026-10-21T20:14:51.162143+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -484,7 +484,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 21,
-      "time": "2026-10-21T12:16:58.672924+00:00",
+      "time": "2026-10-21T20:14:54.262343+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -518,7 +518,7 @@
       "restatement": "You decide the policy as stated.",
       "proposal_id": "p_9",
       "revision": 39,
-      "time": "2026-10-21T12:17:43.616346+00:00",
+      "time": "2026-10-21T20:15:08.530304+00:00",
       "authenticated": false,
       "basis": "endorsed",
       "delegation_scope": null,
@@ -557,7 +557,7 @@
       "restatement": "You open the sealed final test once, for the chosen configuration.",
       "proposal_id": "p_8",
       "revision": 31,
-      "time": "2026-10-21T12:17:20.106633+00:00",
+      "time": "2026-10-21T20:15:01.268138+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -664,7 +664,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "7c7200726f6927a5a6b164a952fd4d9d7a916077a2cb1a7986323c26c67ecc59",
+     "result_id": "95a0514478487ab031e70638badad067925bcf4310417d53383fe3d63e955454",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -944,7 +944,7 @@
            "n": 362,
            "n_positive": 9,
            "score_min": 0.009567420617237352,
-           "score_max": 0.030645556217617345,
+           "score_max": 0.03064555621761736,
            "mean_predicted": 0.023617984894779637,
            "observed_rate": 0.024861878453038673,
            "low": 0.013133963468143346,
@@ -956,7 +956,7 @@
            "n": 362,
            "n_positive": 15,
            "score_min": 0.03066875463341658,
-           "score_max": 0.0427310929622015,
+           "score_max": 0.04273109296220152,
            "mean_predicted": 0.03684939386278712,
            "observed_rate": 0.04143646408839779,
            "low": 0.02526933157094898,
@@ -968,7 +968,7 @@
            "n": 362,
            "n_positive": 22,
            "score_min": 0.042778034268859455,
-           "score_max": 0.05778057679671768,
+           "score_max": 0.057780576796717706,
            "mean_predicted": 0.04998596024343198,
            "observed_rate": 0.06077348066298342,
            "low": 0.04047304586309551,
@@ -991,9 +991,9 @@
            "bin": 5,
            "n": 362,
            "n_positive": 29,
-           "score_min": 0.07300977508178974,
-           "score_max": 0.09138691521603073,
-           "mean_predicted": 0.08198362445899086,
+           "score_min": 0.07300977508178971,
+           "score_max": 0.09138691521603069,
+           "mean_predicted": 0.08198362445899088,
            "observed_rate": 0.08011049723756906,
            "low": 0.05635498954182924,
            "high": 0.1126839679892356,
@@ -1003,9 +1003,9 @@
            "bin": 6,
            "n": 362,
            "n_positive": 35,
-           "score_min": 0.09139802927253214,
-           "score_max": 0.10753839333091011,
-           "mean_predicted": 0.0994031541370522,
+           "score_min": 0.09139802927253217,
+           "score_max": 0.10753839333091016,
+           "mean_predicted": 0.09940315413705221,
            "observed_rate": 0.09668508287292818,
            "low": 0.07034219808111107,
            "high": 0.13149785323162225,
@@ -1015,9 +1015,9 @@
            "bin": 7,
            "n": 361,
            "n_positive": 53,
-           "score_min": 0.10767567913375409,
-           "score_max": 0.1283330789886041,
-           "mean_predicted": 0.11761050744782378,
+           "score_min": 0.10767567913375413,
+           "score_max": 0.12833307898860416,
+           "mean_predicted": 0.1176105074478238,
            "observed_rate": 0.14681440443213298,
            "low": 0.11402689634257346,
            "high": 0.1870393782407575,
@@ -1027,8 +1027,8 @@
            "bin": 8,
            "n": 362,
            "n_positive": 43,
-           "score_min": 0.1283334712664542,
-           "score_max": 0.15579837205783095,
+           "score_min": 0.12833347126645422,
+           "score_max": 0.15579837205783104,
            "mean_predicted": 0.14092345687328098,
            "observed_rate": 0.11878453038674033,
            "low": 0.08939365690930673,
@@ -1039,9 +1039,9 @@
            "bin": 9,
            "n": 362,
            "n_positive": 55,
-           "score_min": 0.1558069118374713,
-           "score_max": 0.20272595320293949,
-           "mean_predicted": 0.17599539944583317,
+           "score_min": 0.15580691183747125,
+           "score_max": 0.20272595320293954,
+           "mean_predicted": 0.1759953994458332,
            "observed_rate": 0.15193370165745856,
            "low": 0.11862468694345632,
            "high": 0.19255234364150534,
@@ -1051,7 +1051,7 @@
            "bin": 10,
            "n": 361,
            "n_positive": 128,
-           "score_min": 0.20437532064466127,
+           "score_min": 0.2043753206446613,
            "score_max": 0.8897904455969814,
            "mean_predicted": 0.3641139980941199,
            "observed_rate": 0.3545706371191136,
@@ -1062,7 +1062,7 @@
          ],
          "brier": 0.09071934025194879,
          "brier_base_rate": 0.10199737989644175,
-         "mean_absolute_gap": 0.011793952126972753,
+         "mean_absolute_gap": 0.011793952126972759,
          "bins_outside_interval": 0,
          "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
         },
@@ -1366,7 +1366,7 @@
           },
           {
            "row_key": "L340",
-           "score": 0.7878032855568858,
+           "score": 0.787803285556886,
            "values": {
             "age": "63",
             "job": "retired",
@@ -1404,7 +1404,7 @@
           },
           {
            "row_key": "L1023",
-           "score": 0.019360285174735488,
+           "score": 0.019360285174735477,
            "values": {
             "age": "45",
             "job": "admin.",
@@ -1495,334 +1495,334 @@
          "terms": [
           {
            "term": "cat__poutcome_success",
-           "value": 1.5210027675184337,
-           "low": 1.1806351346593773,
-           "high": 1.8613704003784715,
-           "std_error": 0.173660146586531,
+           "value": 1.521002767518433,
+           "low": 1.1806351346606077,
+           "high": 1.86137040037725,
+           "std_error": 0.17366014658590548,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_failure",
-           "value": -0.9169330096535167,
-           "low": -1.1957626410712983,
-           "high": -0.6381033782360648,
-           "std_error": 0.14226263013860938,
+           "value": -0.9169330096535173,
+           "low": -1.195762641069739,
+           "high": -0.6381033782376151,
+           "std_error": 0.14226263013781615,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_retired",
-           "value": 0.6087198081190006,
-           "low": 0.1862669948902046,
-           "high": 1.0311726213475176,
-           "std_error": 0.21554111022493805,
+           "value": 0.6087198081190008,
+           "low": 0.18626699489039422,
+           "high": 1.031172621347328,
+           "std_error": 0.21554111022484132,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_unknown",
-           "value": -0.5878741561862811,
-           "low": -0.831869777016977,
-           "high": -0.3438785354156886,
-           "std_error": 0.12448984916317368,
+           "value": -0.5878741561862794,
+           "low": -0.8318697770252715,
+           "high": -0.34387853540737556,
+           "std_error": 0.12448984916741045,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_student",
-           "value": 0.5684124435264754,
-           "low": 0.021861285105409523,
-           "high": 1.1149636019484475,
-           "std_error": 0.2788577559244174,
+           "value": 0.568412443526475,
+           "low": 0.021861285105516548,
+           "high": 1.1149636019483413,
+           "std_error": 0.27885775592436307,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_other",
-           "value": -0.4679501904896617,
-           "low": -0.7884297884162961,
-           "high": -0.14747059256357647,
-           "std_error": 0.16351300353183124,
+           "value": -0.46795019048966235,
+           "low": -0.7884297884154324,
+           "high": -0.1474705925644314,
+           "std_error": 0.16351300353139284,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_entrepreneur",
-           "value": -0.3666829799138865,
-           "low": -0.9076604814155467,
-           "high": 0.17429452158693287,
-           "std_error": 0.27601400115940977,
+           "value": -0.36668297991388654,
+           "low": -0.9076604814153769,
+           "high": 0.1742945215867634,
+           "std_error": 0.2760140011593233,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__contact_cellular",
-           "value": 0.36236446398131145,
-           "low": 0.17705384622888742,
-           "high": 0.5476750817645176,
-           "std_error": 0.09454797089616017,
+           "value": 0.36236446398131344,
+           "low": 0.1770538462171114,
+           "high": 0.547675081776313,
+           "std_error": 0.09454797090217339,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__loan_no",
-           "value": 0.3621615134160482,
-           "low": 0.17792455272619032,
-           "high": 0.5463984741103401,
-           "std_error": 0.09400017660799516,
+           "value": 0.36216151341604974,
+           "low": 0.17792455273520533,
+           "high": 0.5463984741013346,
+           "std_error": 0.094000176603398,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__loan_yes",
-           "value": -0.36216151341604164,
-           "low": -0.5463984741097399,
-           "high": -0.17792455272679086,
-           "std_error": 0.0940001766076888,
+           "value": -0.3621615134160403,
+           "low": -0.5463984741012915,
+           "high": -0.17792455273523047,
+           "std_error": 0.09400017660338057,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "num__pdays=-1",
-           "value": -0.35347271182600665,
-           "low": -0.4619749006444273,
-           "high": -0.24497052300782124,
-           "std_error": 0.05535927684087794,
+           "value": -0.3534727118260084,
+           "low": -0.4619749006387831,
+           "high": -0.24497052301345332,
+           "std_error": 0.05535927683800129,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__education_unknown",
-           "value": -0.3314495674431663,
-           "low": -0.7343611361895723,
-           "high": 0.07146200130284136,
-           "std_error": 0.2055709043249376,
+           "value": -0.3314495674431676,
+           "low": -0.7343611361919645,
+           "high": 0.07146200130522862,
+           "std_error": 0.2055709043261569,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_unemployed",
-           "value": -0.32320443466373977,
-           "low": -0.8592470640508477,
-           "high": 0.21283819472190169,
-           "std_error": 0.2734961629982034,
+           "value": -0.32320443466374,
+           "low": -0.859247064050678,
+           "high": 0.21283819472173254,
+           "std_error": 0.27349616299811697,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_married",
-           "value": -0.28677230167837836,
-           "low": -0.4447120039530935,
-           "high": -0.12883259940472203,
-           "std_error": 0.08058296148296296,
+           "value": -0.2867723016783865,
+           "low": -0.44471200395132016,
+           "high": -0.12883259940649247,
+           "std_error": 0.08058296148205893,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_technician",
-           "value": -0.2813344952173388,
-           "low": -0.5741328022358091,
-           "high": 0.011463811800782042,
-           "std_error": 0.14938963640549077,
+           "value": -0.2813344952173387,
+           "low": -0.5741328022354462,
+           "high": 0.011463811800419443,
+           "std_error": 0.14938963640530573,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_blue-collar",
-           "value": -0.27549787772397055,
-           "low": -0.6202038181797589,
-           "high": 0.06920806272798402,
-           "std_error": 0.17587360950143374,
+           "value": -0.2754978777239705,
+           "low": -0.620203818179524,
+           "high": 0.06920806272774999,
+           "std_error": 0.1758736095013141,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_housemaid",
-           "value": 0.2597534974616277,
-           "low": -0.279394113991127,
-           "high": 0.7989011089171459,
-           "std_error": 0.2750803666326852,
+           "value": 0.2597534974616278,
+           "low": -0.2793941139909227,
+           "high": 0.7989011089169422,
+           "std_error": 0.2750803666325811,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__contact_telephone",
-           "value": 0.2255096922049799,
-           "low": -0.049779311675598625,
-           "high": 0.5007986961148754,
-           "std_error": 0.1404561543307334,
+           "value": 0.22550969220498185,
+           "low": -0.049779311683085664,
+           "high": 0.5007986961223806,
+           "std_error": 0.14045615433455808,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_services",
            "value": -0.22386566273123207,
-           "low": -0.5984777761974902,
-           "high": 0.1507464507355793,
-           "std_error": 0.19113214141761145,
+           "low": -0.59847777619729,
+           "high": 0.15074645073538004,
+           "std_error": 0.1911321414175096,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_divorced",
-           "value": 0.22182185402368232,
-           "low": 0.013586287154203125,
-           "high": 0.4300574208943451,
-           "std_error": 0.10624458842744389,
+           "value": 0.22182185402367433,
+           "low": 0.01358628715495136,
+           "high": 0.4300574208935999,
+           "std_error": 0.10624458842706291,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__education_tertiary",
-           "value": 0.21822118008266336,
-           "low": -0.02928489594584835,
-           "high": 0.46572725611172405,
-           "std_error": 0.12628093066050328,
+           "value": 0.21822118008266186,
+           "low": -0.029284895950718204,
+           "high": 0.46572725611658916,
+           "std_error": 0.12628093066298673,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
-           "term": "cat__housing_no",
-           "value": 0.2014565216699658,
-           "low": 0.08479973047004244,
-           "high": 0.3181133128706789,
-           "std_error": 0.05951986471205192,
+           "term": "cat__housing_yes",
+           "value": -0.2014565216699655,
+           "low": -0.31811331290863776,
+           "high": -0.08479973043207042,
+           "std_error": 0.05951986473142242,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
-           "term": "cat__housing_yes",
-           "value": -0.20145652166996394,
-           "low": -0.31811331287128974,
-           "high": -0.08479973046942418,
-           "std_error": 0.05951986471236548,
+           "term": "cat__housing_no",
+           "value": 0.20145652166996433,
+           "low": 0.08479973043151559,
+           "high": 0.3181133129092114,
+           "std_error": 0.05951986473171029,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__default_yes",
-           "value": 0.19787999607677687,
-           "low": -0.19678646524915344,
-           "high": 0.5925464574035874,
-           "std_error": 0.20136413956554775,
+           "value": 0.19787999607677828,
+           "low": -0.19678646525076354,
+           "high": 0.5925464574052008,
+           "std_error": 0.20136413956637012,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__default_no",
-           "value": -0.19787999607677323,
-           "low": -0.5925464574035509,
-           "high": 0.19678646524912757,
-           "std_error": 0.20136413956553184,
+           "value": -0.1978799960767716,
+           "low": -0.5925464574054242,
+           "high": 0.19678646525100482,
+           "std_error": 0.20136413956648866,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_secondary",
-           "value": 0.1583058390966499,
-           "low": -0.04982693566662014,
-           "high": 0.36643861386077237,
-           "std_error": 0.10619214251150587,
+           "value": 0.15830583909664828,
+           "low": -0.04982693567227997,
+           "high": 0.36643861386642723,
+           "std_error": 0.10619214251439234,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_unknown",
-           "value": -0.13611956737525746,
-           "low": -0.1779029088122071,
-           "high": -0.09433622593839347,
-           "std_error": 0.02131842307638737,
+           "value": -0.13611956737525313,
+           "low": -0.1779029087071508,
+           "high": -0.09433622604347196,
+           "std_error": 0.02131842302278058,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "num__age",
-           "value": 0.1095925432700592,
-           "low": -0.027665390087924888,
-           "high": 0.24685047662863674,
-           "std_error": 0.07003084466906224,
+           "value": 0.10959254327005913,
+           "low": -0.02766539008792418,
+           "high": 0.24685047662863646,
+           "std_error": 0.07003084466906201,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_single",
-           "value": 0.06495044765469307,
-           "low": -0.129716847091028,
-           "high": 0.2596177424003086,
-           "std_error": 0.09932187340235797,
+           "value": 0.06495044765468518,
+           "low": -0.12971684709006892,
+           "high": 0.2596177423993523,
+           "std_error": 0.09932187340186936,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_unknown",
-           "value": -0.06126534899371248,
-           "low": -0.8805034572106496,
-           "high": 0.75797275922343,
-           "std_error": 0.4179863072378297,
+           "value": -0.06126534899371254,
+           "low": -0.8805034572106295,
+           "high": 0.7579727592234103,
+           "std_error": 0.41798630723781965,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_admin.",
-           "value": 0.050213917890223135,
-           "low": -0.2734045528316666,
-           "high": 0.37383238861295615,
-           "std_error": 0.16511449867190045,
+           "value": 0.05021391789022314,
+           "low": -0.27340455283139564,
+           "high": 0.3738323886126862,
+           "std_error": 0.16511449867176248,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_primary",
-           "value": -0.04507745173614467,
-           "low": -0.35982940471901886,
-           "high": 0.2696745012457145,
-           "std_error": 0.1605906820049195,
+           "value": -0.04507745173614624,
+           "low": -0.3598294047222735,
+           "high": 0.2696745012489637,
+           "std_error": 0.16059068200657867,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_management",
-           "value": 0.040602625315680964,
-           "low": -0.24223727302989054,
-           "high": 0.3234425236619927,
-           "std_error": 0.14430872229130062,
+           "value": 0.0406026253156808,
+           "low": -0.2422372730295802,
+           "high": 0.323442523661683,
+           "std_error": 0.14430872229114247,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__pdays",
-           "value": -0.016960096070927046,
-           "low": -0.12245386885633039,
-           "high": 0.08853367671483248,
-           "std_error": 0.053824342496955495,
+           "value": -0.016960096070926852,
+           "low": -0.12245386885633,
+           "high": 0.08853367671483209,
+           "std_error": 0.05382434249695531,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__balance",
-           "value": 0.012997757206100748,
-           "low": -0.06596701680826844,
-           "high": 0.09196253122048023,
-           "std_error": 0.04028889032514802,
+           "value": 0.012997757206100767,
+           "low": -0.06596701680826829,
+           "high": 0.09196253122048005,
+           "std_error": 0.040288890325147944,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_self-employed",
-           "value": 0.004148506930874031,
-           "low": -0.4580009332943969,
-           "high": 0.4662979471569039,
-           "std_error": 0.23579486351332288,
+           "value": 0.004148506930874076,
+           "low": -0.4580009332942642,
+           "high": 0.4662979471567716,
+           "std_error": 0.2357948635132553,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__previous",
-           "value": 0.0011839204515415305,
-           "low": -0.10977769656865409,
-           "high": 0.11214553747183827,
-           "std_error": 0.05661411020584933,
+           "value": 0.001183920451541738,
+           "low": -0.10977769656865413,
+           "high": 0.11214553747183822,
+           "std_error": 0.05661411020584934,
            "excludes_zero": false,
            "inside_interval": true
           }
@@ -1832,7 +1832,7 @@
          "penalty": 1.0,
          "point_check": {
           "consistent": true,
-          "max_difference": 3.00516278528562e-11,
+          "max_difference": 3.004418935859121e-11,
           "tolerance": 0.0001,
           "misaligned_terms": [],
           "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
@@ -1841,7 +1841,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90"
+        "predictions": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642"
        },
        "fit.variant": {
         "confusion": {
@@ -2099,9 +2099,9 @@
            "bin": 1,
            "n": 362,
            "n_positive": 8,
-           "score_min": 0.012733057596356985,
-           "score_max": 0.03623284336686657,
-           "mean_predicted": 0.02869398963045459,
+           "score_min": 0.012733057596356996,
+           "score_max": 0.03623284336686661,
+           "mean_predicted": 0.0286939896304546,
            "observed_rate": 0.022099447513812154,
            "low": 0.01123975165374054,
            "high": 0.04299537764148458,
@@ -2112,8 +2112,8 @@
            "n": 362,
            "n_positive": 21,
            "score_min": 0.0362535105573154,
-           "score_max": 0.04900952621067434,
-           "mean_predicted": 0.04245661534696099,
+           "score_max": 0.049009526210674365,
+           "mean_predicted": 0.042456615346961,
            "observed_rate": 0.058011049723756904,
            "low": 0.0382525296577131,
            "high": 0.08705163616446042,
@@ -2123,9 +2123,9 @@
            "bin": 3,
            "n": 362,
            "n_positive": 15,
-           "score_min": 0.04917516013805697,
-           "score_max": 0.06439583178280453,
-           "mean_predicted": 0.05695438708261061,
+           "score_min": 0.049175160138056985,
+           "score_max": 0.06439583178280461,
+           "mean_predicted": 0.05695438708261063,
            "observed_rate": 0.04143646408839779,
            "low": 0.02526933157094898,
            "high": 0.06723374046955605,
@@ -2135,7 +2135,7 @@
            "bin": 4,
            "n": 361,
            "n_positive": 24,
-           "score_min": 0.06441340873620449,
+           "score_min": 0.06441340873620446,
            "score_max": 0.07873488370326727,
            "mean_predicted": 0.07121436753756018,
            "observed_rate": 0.0664819944598338,
@@ -2147,9 +2147,9 @@
            "bin": 5,
            "n": 362,
            "n_positive": 29,
-           "score_min": 0.07874320999332372,
+           "score_min": 0.07874320999332377,
            "score_max": 0.09460936652148719,
-           "mean_predicted": 0.08668578604452482,
+           "mean_predicted": 0.08668578604452483,
            "observed_rate": 0.08011049723756906,
            "low": 0.05635498954182924,
            "high": 0.1126839679892356,
@@ -2159,9 +2159,9 @@
            "bin": 6,
            "n": 362,
            "n_positive": 44,
-           "score_min": 0.09468341851024556,
+           "score_min": 0.09468341851024564,
            "score_max": 0.1125078069139644,
-           "mean_predicted": 0.10301881126103035,
+           "mean_predicted": 0.10301881126103037,
            "observed_rate": 0.12154696132596685,
            "low": 0.09180219494467418,
            "high": 0.1592394970405619,
@@ -2171,9 +2171,9 @@
            "bin": 7,
            "n": 361,
            "n_positive": 47,
-           "score_min": 0.11254238757909012,
-           "score_max": 0.1320479787378769,
-           "mean_predicted": 0.12212632099720978,
+           "score_min": 0.11254238757909021,
+           "score_max": 0.13204797873787694,
+           "mean_predicted": 0.12212632099720981,
            "observed_rate": 0.13019390581717452,
            "low": 0.09933832361904033,
            "high": 0.16883695212115324,
@@ -2184,8 +2184,8 @@
            "n": 362,
            "n_positive": 47,
            "score_min": 0.1320951243134687,
-           "score_max": 0.15589173053690303,
-           "mean_predicted": 0.14319155472445336,
+           "score_max": 0.15589173053690322,
+           "mean_predicted": 0.14319155472445338,
            "observed_rate": 0.1298342541436464,
            "low": 0.0990597904436128,
            "high": 0.16838244843245753,
@@ -2195,9 +2195,9 @@
            "bin": 9,
            "n": 362,
            "n_positive": 49,
-           "score_min": 0.15627526154533664,
-           "score_max": 0.1978146788154296,
-           "mean_predicted": 0.17477120929761888,
+           "score_min": 0.1562752615453366,
+           "score_max": 0.19781467881542955,
+           "mean_predicted": 0.1747712092976189,
            "observed_rate": 0.13535911602209943,
            "low": 0.10392341976099528,
            "high": 0.17445251704229786,
@@ -2207,16 +2207,16 @@
            "bin": 10,
            "n": 361,
            "n_positive": 133,
-           "score_min": 0.19794942799231677,
-           "score_max": 0.7916886230815008,
-           "mean_predicted": 0.32656966429412065,
+           "score_min": 0.19794942799231685,
+           "score_max": 0.7916886230815006,
+           "mean_predicted": 0.3265696642941207,
            "observed_rate": 0.3684210526315789,
            "low": 0.3202897175722076,
            "high": 0.4193232082529549,
            "inside_interval": true
           }
          ],
-         "brier": 0.09113868545810415,
+         "brier": 0.09113868545810412,
          "brier_base_rate": 0.10199737989644175,
          "mean_absolute_gap": 0.01701811419768698,
          "bins_outside_interval": 1,
@@ -2450,7 +2450,7 @@
          "false_positives": [
           {
            "row_key": "L4325",
-           "score": 0.7912001450869292,
+           "score": 0.7912001450869294,
            "values": {
             "age": "83",
             "job": "retired",
@@ -2468,7 +2468,7 @@
           },
           {
            "row_key": "L2072",
-           "score": 0.7606093635736363,
+           "score": 0.7606093635736368,
            "values": {
             "age": "80",
             "job": "retired",
@@ -2504,7 +2504,7 @@
           },
           {
            "row_key": "L1444",
-           "score": 0.6976514162613776,
+           "score": 0.6976514162613774,
            "values": {
             "age": "73",
             "job": "retired",
@@ -2542,7 +2542,7 @@
          "false_negatives": [
           {
            "row_key": "L2204",
-           "score": 0.020456533636298766,
+           "score": 0.020456533636298745,
            "values": {
             "age": "29",
             "job": "management",
@@ -2560,7 +2560,7 @@
           },
           {
            "row_key": "L1023",
-           "score": 0.024658920698491207,
+           "score": 0.024658920698491217,
            "values": {
             "age": "45",
             "job": "admin.",
@@ -2578,7 +2578,7 @@
           },
           {
            "row_key": "L2975",
-           "score": 0.028025133392465814,
+           "score": 0.028025133392465835,
            "values": {
             "age": "46",
             "job": "admin.",
@@ -2652,333 +2652,333 @@
           {
            "term": "cat__poutcome_success",
            "value": 1.0976947814371023,
-           "low": 0.8654323714329054,
-           "high": 1.3299571914412962,
-           "std_error": 0.11850340712189188,
+           "low": 0.8654323714328885,
+           "high": 1.3299571914413142,
+           "std_error": 0.11850340712190081,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_failure",
-           "value": -0.6904071477693708,
-           "low": -0.8939703686800259,
-           "high": -0.48684392685870803,
-           "std_error": 0.10386069464354433,
+           "value": -0.6904071477693706,
+           "low": -0.8939703686800393,
+           "high": -0.4868439268586933,
+           "std_error": 0.1038606946435515,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_unknown",
-           "value": -0.49928568407753243,
-           "low": -0.6851895714994156,
-           "high": -0.3133817966569343,
-           "std_error": 0.0948506650569229,
+           "value": -0.4992856840775328,
+           "low": -0.6851895714995256,
+           "high": -0.3133817966568231,
+           "std_error": 0.09485066505697935,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_retired",
-           "value": 0.43590849676635895,
-           "low": 0.15390160836301187,
-           "high": 0.7179153851696984,
-           "std_error": 0.1438837094088349,
+           "value": 0.43590849676635934,
+           "low": 0.15390160836304057,
+           "high": 0.7179153851696696,
+           "std_error": 0.14388370940882025,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_cellular",
-           "value": 0.33761635553978575,
-           "low": 0.17890562930755435,
-           "high": 0.49632708177277685,
-           "std_error": 0.08097634828216296,
+           "value": 0.3376163555397856,
+           "low": 0.17890562930740198,
+           "high": 0.4963270817729306,
+           "std_error": 0.08097634828224107,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "num__pdays=-1",
-           "value": -0.33244590253820583,
-           "low": -0.42805526513678305,
-           "high": -0.23683653993965714,
-           "std_error": 0.04878118340577553,
-           "excludes_zero": true,
-           "inside_interval": true
-          },
-          {
-           "term": "cat__loan_no",
-           "value": 0.31639716074225643,
-           "low": 0.16824780837665196,
-           "high": 0.4645465131079397,
-           "std_error": 0.07558779321162384,
+           "value": -0.3324459025382068,
+           "low": -0.42805526513671843,
+           "high": -0.23683653993971954,
+           "std_error": 0.048781183405743146,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__loan_yes",
-           "value": -0.3163971607422553,
-           "low": -0.4645465131079558,
-           "high": -0.16824780837663844,
-           "std_error": 0.0755877932116314,
+           "value": -0.3163971607422561,
+           "low": -0.46454651310797573,
+           "high": -0.16824780837661474,
+           "std_error": 0.07558779321164254,
+           "excludes_zero": true,
+           "inside_interval": true
+          },
+          {
+           "term": "cat__loan_no",
+           "value": 0.31639716074225566,
+           "low": 0.16824780837657388,
+           "high": 0.46454651310802303,
+           "std_error": 0.07558779321166502,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_student",
-           "value": 0.3156320196934801,
-           "low": 0.005611843085838675,
-           "high": 0.6256521963011394,
-           "std_error": 0.1581764660233811,
+           "value": 0.3156320196934802,
+           "low": 0.005611843085859658,
+           "high": 0.6256521963011181,
+           "std_error": 0.1581764660233703,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_other",
-           "value": -0.27926532553705297,
-           "low": -0.5003399773432725,
-           "high": -0.058190673730828785,
-           "std_error": 0.11279526233646667,
+           "value": -0.2792653255370529,
+           "low": -0.5003399773432425,
+           "high": -0.058190673730857484,
+           "std_error": 0.11279526233645173,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__marital_married",
-           "value": -0.25998343422188164,
-           "low": -0.40020589409749563,
-           "high": -0.11976097434630181,
-           "std_error": 0.07154338599160691,
+           "value": -0.2599834342218813,
+           "low": -0.4002058940974277,
+           "high": -0.11976097434637001,
+           "std_error": 0.07154338599157217,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_blue-collar",
-           "value": -0.24106334353822134,
-           "low": -0.4895191498348134,
-           "high": 0.007392462758229856,
-           "std_error": 0.12676549582355054,
+           "value": -0.24106334353822123,
+           "low": -0.4895191498348066,
+           "high": 0.0073924627582230285,
+           "std_error": 0.12676549582354707,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
-           "term": "cat__housing_yes",
-           "value": -0.2172171468787808,
-           "low": -0.3221896777548322,
-           "high": -0.11224461600278944,
-           "std_error": 0.05355839786038486,
+           "term": "cat__housing_no",
+           "value": 0.2172171468787808,
+           "low": 0.1122446160030633,
+           "high": 0.32218967775455726,
+           "std_error": 0.053558397860244855,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
-           "term": "cat__housing_no",
-           "value": 0.21721714687878055,
-           "low": 0.11224461600280175,
-           "high": 0.3221896777548202,
-           "std_error": 0.05355839786037865,
+           "term": "cat__housing_yes",
+           "value": -0.21721714687878046,
+           "low": -0.3221896777546146,
+           "high": -0.11224461600300847,
+           "std_error": 0.05355839786027348,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__job_technician",
-           "value": -0.20516551811113323,
-           "low": -0.42673229235694354,
-           "high": 0.016401256134686987,
-           "std_error": 0.11304634982760181,
+           "value": -0.20516551811113307,
+           "low": -0.42673229235694865,
+           "high": 0.016401256134692094,
+           "std_error": 0.11304634982760443,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_entrepreneur",
-           "value": -0.2047469639768081,
-           "low": -0.4732161931957041,
-           "high": 0.06372226524209607,
-           "std_error": 0.13697661351767237,
+           "value": -0.20474696397680797,
+           "low": -0.4732161931956949,
+           "high": 0.06372226524208685,
+           "std_error": 0.13697661351766768,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_unknown",
-           "value": -0.1890600432812835,
-           "low": -0.4291280924036778,
-           "high": 0.05100800584111265,
-           "std_error": 0.12248594923989492,
+           "value": -0.18906004328128342,
+           "low": -0.42912809240365,
+           "high": 0.05100800584108525,
+           "std_error": 0.12248594923988088,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_divorced",
-           "value": 0.17695188632905465,
-           "low": 0.0001154373348885851,
-           "high": 0.3537883353232305,
-           "std_error": 0.09022433595159622,
+           "value": 0.17695188632905479,
+           "low": 0.00011543733497856867,
+           "high": 0.3537883353231407,
+           "std_error": 0.09022433595155037,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "cat__contact_telephone",
-           "value": 0.16166932853774688,
-           "low": -0.05050301181958011,
-           "high": 0.37384166889559595,
-           "std_error": 0.10825318323763929,
+           "value": 0.1616693285377467,
+           "low": -0.05050301181960887,
+           "high": 0.3738416688956255,
+           "std_error": 0.10825318323765416,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_tertiary",
            "value": 0.1585336956938475,
-           "low": -0.024052895990588213,
-           "high": 0.3411202873783079,
-           "std_error": 0.09315813613141254,
+           "low": -0.024052895990491152,
+           "high": 0.3411202873782108,
+           "std_error": 0.09315813613136302,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_unemployed",
-           "value": -0.14987834573042919,
-           "low": -0.4138712721279494,
-           "high": 0.11411458066708599,
-           "std_error": 0.13469274358093328,
+           "value": -0.14987834573042916,
+           "low": -0.41387127212793706,
+           "high": 0.11411458066707367,
+           "std_error": 0.134692743580927,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_services",
-           "value": -0.14879932492400083,
-           "low": -0.4021433889401286,
-           "high": 0.10454473909214301,
-           "std_error": 0.1292595506930135,
+           "value": -0.14879932492400072,
+           "low": -0.40214338894011903,
+           "high": 0.10454473909213344,
+           "std_error": 0.12925955069300865,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_housemaid",
-           "value": 0.13021531574786616,
-           "low": -0.16812583352285937,
-           "high": 0.4285564650186273,
-           "std_error": 0.1522176691123002,
+           "value": 0.13021531574786627,
+           "low": -0.16812583352286153,
+           "high": 0.4285564650186294,
+           "std_error": 0.1522176691123013,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__poutcome_unknown",
-           "value": -0.1280223081306796,
-           "low": -0.1648407233535546,
-           "high": -0.0912038929078129,
-           "std_error": 0.01878525090934824,
+           "value": -0.12802230813067664,
+           "low": -0.16484072335211183,
+           "high": -0.09120389290925882,
+           "std_error": 0.01878525090861133,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
            "term": "num__age",
-           "value": 0.12741228529638018,
-           "low": 0.010867606679400468,
-           "high": 0.24395696391339938,
-           "std_error": 0.059462663363352104,
+           "value": 0.12741228529638016,
+           "low": 0.01086760667940255,
+           "high": 0.24395696391339722,
+           "std_error": 0.05946266336335103,
            "excludes_zero": true,
            "inside_interval": true
           },
           {
-           "term": "cat__default_yes",
-           "value": 0.10446876402441647,
-           "low": -0.13274151524859873,
-           "high": 0.34167904329742743,
-           "std_error": 0.12102787660594662,
+           "term": "cat__default_no",
+           "value": -0.10446876402441807,
+           "low": -0.3416790432974403,
+           "high": 0.1327415152486175,
+           "std_error": 0.12102787660595471,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
-           "term": "cat__default_no",
-           "value": -0.10446876402441624,
-           "low": -0.3416790432974136,
-           "high": 0.13274151524858577,
-           "std_error": 0.12102787660593979,
+           "term": "cat__default_yes",
+           "value": 0.10446876402441588,
+           "low": -0.13274151524859118,
+           "high": 0.3416790432974216,
+           "std_error": 0.12102787660594322,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_secondary",
-           "value": 0.09264129959975022,
-           "low": -0.06938344766190728,
-           "high": 0.2546660468614239,
-           "std_error": 0.08266720640771778,
+           "value": 0.09264129959975032,
+           "low": -0.06938344766188785,
+           "high": 0.2546660468614047,
+           "std_error": 0.08266720640770794,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__marital_single",
-           "value": 0.08303154789282699,
-           "low": -0.08087862468384527,
-           "high": 0.24694172046952195,
-           "std_error": 0.08362917577546637,
+           "value": 0.08303154789282723,
+           "low": -0.0808786246837598,
+           "high": 0.24694172046943658,
+           "std_error": 0.0836291757754228,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_admin.",
-           "value": 0.06704196393860819,
-           "low": -0.17335447948243446,
-           "high": 0.30743840735968253,
-           "std_error": 0.12265350043025028,
+           "value": 0.06704196393860834,
+           "low": -0.17335447948242777,
+           "high": 0.3074384073596759,
+           "std_error": 0.12265350043024689,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__education_primary",
-           "value": -0.06211495201231471,
-           "low": -0.28478815677710145,
-           "high": 0.16055825275242955,
-           "std_error": 0.11361086556752235,
+           "value": -0.06211495201231455,
+           "low": -0.2847881567770842,
+           "high": 0.16055825275241242,
+           "std_error": 0.1136108655675136,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_management",
-           "value": 0.0431322022066476,
-           "low": -0.17397709656304233,
-           "high": 0.2602415009763679,
-           "std_error": 0.11077208585577879,
+           "value": 0.043132202206647936,
+           "low": -0.17397709656305033,
+           "high": 0.260241500976376,
+           "std_error": 0.11077208585578291,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__pdays",
-           "value": -0.04195515485658304,
-           "low": -0.1410232248599949,
-           "high": 0.05711291514683893,
-           "std_error": 0.05054586246729697,
+           "value": -0.04195515485658305,
+           "low": -0.1410232248599953,
+           "high": 0.057112915146839346,
+           "std_error": 0.050545862467297184,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_unknown",
-           "value": -0.03601178884985792,
-           "low": -0.29569885113449457,
-           "high": 0.22367527343478533,
-           "std_error": 0.13249583376685412,
+           "value": -0.03601178884985789,
+           "low": -0.2956988511344919,
+           "high": 0.22367527343478255,
+           "std_error": 0.13249583376685273,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__balance",
-           "value": 0.01568980784546906,
-           "low": -0.05988225849564245,
-           "high": 0.09126187418658464,
-           "std_error": 0.038557885214838834,
+           "value": 0.015689807845469028,
+           "low": -0.05988225849564206,
+           "high": 0.09126187418658428,
+           "std_error": 0.03855788521483865,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "num__previous",
-           "value": 0.010113412407297124,
-           "low": -0.08645110652202218,
-           "high": 0.1066779313366214,
-           "std_error": 0.04926851701919546,
+           "value": 0.010113412407297196,
+           "low": -0.08645110652202181,
+           "high": 0.10667793133662148,
+           "std_error": 0.0492685170191954,
            "excludes_zero": false,
            "inside_interval": true
           },
           {
            "term": "cat__job_self-employed",
-           "value": -0.0062647132225118396,
-           "low": -0.28566796048492804,
-           "high": 0.2731385340399046,
-           "std_error": 0.14255529666173133,
+           "value": -0.006264713222511685,
+           "low": -0.28566796048493526,
+           "high": 0.27313853403991184,
+           "std_error": 0.14255529666173503,
            "excludes_zero": false,
            "inside_interval": true
           }
@@ -2988,7 +2988,7 @@
          "penalty": 10.0,
          "point_check": {
           "consistent": true,
-          "max_difference": 6.424860643505781e-13,
+          "max_difference": 6.415423747796467e-13,
           "tolerance": 0.0001,
           "misaligned_terms": [],
           "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
@@ -2997,7 +2997,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+        "predictions": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
        }
       },
       "coefficient_rows": 3617,
@@ -3013,8 +3013,8 @@
            "n": 853,
            "low": 19.0,
            "high": 32.0,
-           "gap": 0.008731801444340326,
-           "se": 0.01019113276369028
+           "gap": 0.008731801444340312,
+           "se": 0.010191132763690283
           },
           {
            "bin": 2,
@@ -3029,15 +3029,15 @@
            "n": 702,
            "low": 37.0,
            "high": 42.0,
-           "gap": -0.0036836554853329068,
-           "se": 0.010721922879570885
+           "gap": -0.0036836554853329206,
+           "se": 0.010721922879570887
           },
           {
            "bin": 4,
            "n": 776,
            "low": 43.0,
            "high": 51.0,
-           "gap": -0.006279634238554446,
+           "gap": -0.006279634238554474,
            "se": 0.010456380961734875
           },
           {
@@ -3045,11 +3045,11 @@
            "n": 660,
            "low": 52.0,
            "high": 87.0,
-           "gap": 0.002200362547684437,
+           "gap": 0.0022003625476843813,
            "se": 0.013113770421669037
           }
          ],
-         "statistic": 1.3559477366584907,
+         "statistic": 1.3559477366584904,
          "df": 5,
          "p_value": 0.929070782808754,
          "level": 0.0025,
@@ -3063,7 +3063,7 @@
            "n": 729,
            "low": -3313.0,
            "high": 20.0,
-           "gap": -0.016146352416858634,
+           "gap": -0.01614635241685866,
            "se": 0.010723902119604292
           },
           {
@@ -3095,11 +3095,11 @@
            "n": 724,
            "low": 1931.0,
            "high": 71188.0,
-           "gap": 0.030681466331109325,
+           "gap": 0.030681466331109297,
            "se": 0.011723150029660456
           }
          ],
-         "statistic": 12.247363654503665,
+         "statistic": 12.247363654503662,
          "df": 5,
          "p_value": 0.03155111449795323,
          "level": 0.0025,
@@ -3149,20 +3149,20 @@
           {
            "value": "admin.",
            "n": 377,
-           "slope": 0.9352611997396506,
-           "se": 0.17425093029731217
+           "slope": 0.9352611997396503,
+           "se": 0.17425093029731234
           },
           {
            "value": "blue-collar",
            "n": 734,
-           "slope": 0.8702690586343161,
-           "se": 0.17642249929110776
+           "slope": 0.8702690586343166,
+           "se": 0.1764224992911076
           },
           {
            "value": "entrepreneur",
            "n": 144,
-           "slope": 1.0507512197039557,
-           "se": 0.45255796711733143
+           "slope": 1.0507512197039572,
+           "se": 0.4525579671173311
           },
           {
            "value": "management",
@@ -3179,31 +3179,31 @@
           {
            "value": "self-employed",
            "n": 154,
-           "slope": 1.1590873798608796,
-           "se": 0.3754527636896891
+           "slope": 1.15908737986088,
+           "se": 0.37545276368969016
           },
           {
            "value": "services",
            "n": 344,
-           "slope": 1.2404595960844809,
-           "se": 0.2588970792158661
+           "slope": 1.2404595960844813,
+           "se": 0.2588970792158666
           },
           {
            "value": "technician",
            "n": 623,
-           "slope": 0.8519410303806464,
-           "se": 0.14392573394625693
+           "slope": 0.8519410303806466,
+           "se": 0.14392573394625682
           },
           {
            "value": "unemployed",
            "n": 101,
-           "slope": 1.5125717298270018,
-           "se": 0.4980259744351435
+           "slope": 1.5125717298270025,
+           "se": 0.49802597443514435
           }
          ],
-         "q": 7.5001362650461205,
+         "q": 7.500136265046116,
          "df": 8,
-         "p_value": 0.48375329872946726,
+         "p_value": 0.4837532987294676,
          "level": 0.005,
          "flagged": false
         },
@@ -3220,26 +3220,26 @@
            "value": "married",
            "n": 2229,
            "slope": 0.9518937370486348,
-           "se": 0.0750815759564308
+           "se": 0.07508157595643067
           },
           {
            "value": "single",
            "n": 955,
-           "slope": 0.7475327152153197,
-           "se": 0.11463454803700214
+           "slope": 0.7475327152153199,
+           "se": 0.11463454803700207
           }
          ],
-         "q": 5.3858270227862075,
+         "q": 5.385827022786205,
          "df": 2,
-         "p_value": 0.06768345530725924,
+         "p_value": 0.06768345530725932,
          "level": 0.005,
          "flagged": false
         }
        ],
        "calibration_slope": {
-        "slope": 0.9345650238435238,
-        "se": 0.05906488587502072,
-        "low": 0.8187999747775146,
+        "slope": 0.9345650238435239,
+        "se": 0.05906488587502074,
+        "low": 0.8187999747775148,
         "high": 1.050330072909533,
         "band": [
          0.8,
@@ -3280,8 +3280,8 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-       "fit.variant": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+       "fit.logistic": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+       "fit.variant": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
        "split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a"
       },
       "target": {
@@ -3299,17 +3299,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_f02c465bbc8626047ce0b4cc",
-     "exposure_id": "x_5afa4ed0d27a424799267c107f57fbde",
+     "exposure_id": "x_ab4c807b928c4503bde01762d6200b5b",
      "started_revision": 40,
      "integrity": "ok"
     },
     "diag.final_test": {
      "slot": "diag.final_test",
-     "result_id": "09b8abf07ec42045b87451b5766c345bd34e5e7ab907c96f7c427ecf607e1aaf",
+     "result_id": "d46245c0a862856cfdce2a323575d6f896d324e4e7b9cfb81c7b97c2e2a1c145",
      "activity": "diag.final_test",
      "current": true,
      "stale_reason": null,
@@ -3323,7 +3323,7 @@
       "evaluation": "final_test",
       "n": 904,
       "model": "fit.logistic",
-      "final_evaluation": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d",
+      "final_evaluation": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5",
       "n_positive": 104,
       "base_rate": 0.11504424778761062,
       "rule": "share:0.1",
@@ -3589,8 +3589,8 @@
            "n": 91,
            "n_positive": 4,
            "score_min": 0.01088588855966555,
-           "score_max": 0.0293692201009569,
-           "mean_predicted": 0.023080162472131543,
+           "score_max": 0.02936922010095691,
+           "mean_predicted": 0.02308016247213154,
            "observed_rate": 0.04395604395604396,
            "low": 0.01722436644411733,
            "high": 0.10763093384266353,
@@ -3600,8 +3600,8 @@
            "bin": 2,
            "n": 90,
            "n_positive": 6,
-           "score_min": 0.02943115098958867,
-           "score_max": 0.041437942480661294,
+           "score_min": 0.029431150989588657,
+           "score_max": 0.04143794248066127,
            "mean_predicted": 0.03501968123890015,
            "observed_rate": 0.06666666666666667,
            "low": 0.030909927745827924,
@@ -3613,8 +3613,8 @@
            "n": 91,
            "n_positive": 6,
            "score_min": 0.04170212941758427,
-           "score_max": 0.05738822789996842,
-           "mean_predicted": 0.04887614613643311,
+           "score_max": 0.0573882278999684,
+           "mean_predicted": 0.0488761461364331,
            "observed_rate": 0.06593406593406594,
            "low": 0.03056628647161548,
            "high": 0.13646466199411572,
@@ -3624,7 +3624,7 @@
            "bin": 4,
            "n": 90,
            "n_positive": 10,
-           "score_min": 0.05741758493717682,
+           "score_min": 0.057417584937176774,
            "score_max": 0.07283333002589401,
            "mean_predicted": 0.0664800934237886,
            "observed_rate": 0.1111111111111111,
@@ -3636,8 +3636,8 @@
            "bin": 5,
            "n": 90,
            "n_positive": 9,
-           "score_min": 0.07286077626283075,
-           "score_max": 0.0918929298301578,
+           "score_min": 0.07286077626283077,
+           "score_max": 0.09189292983015783,
            "mean_predicted": 0.08116332520078334,
            "observed_rate": 0.1,
            "low": 0.05350675169712493,
@@ -3650,7 +3650,7 @@
            "n_positive": 11,
            "score_min": 0.09243552845133417,
            "score_max": 0.10825156339491089,
-           "mean_predicted": 0.09939860950225785,
+           "mean_predicted": 0.09939860950225786,
            "observed_rate": 0.12087912087912088,
            "low": 0.06885508485107264,
            "high": 0.20361498406203435,
@@ -3660,9 +3660,9 @@
            "bin": 7,
            "n": 90,
            "n_positive": 9,
-           "score_min": 0.10833118980895226,
+           "score_min": 0.10833118980895232,
            "score_max": 0.13347016439404366,
-           "mean_predicted": 0.12194580835051566,
+           "mean_predicted": 0.12194580835051569,
            "observed_rate": 0.1,
            "low": 0.05350675169712493,
            "high": 0.17924174875433652,
@@ -3673,8 +3673,8 @@
            "n": 91,
            "n_positive": 11,
            "score_min": 0.13350478985878467,
-           "score_max": 0.15792827505481732,
-           "mean_predicted": 0.14458528420577305,
+           "score_max": 0.15792827505481735,
+           "mean_predicted": 0.14458528420577307,
            "observed_rate": 0.12087912087912088,
            "low": 0.06885508485107264,
            "high": 0.20361498406203435,
@@ -3685,8 +3685,8 @@
            "n": 90,
            "n_positive": 13,
            "score_min": 0.15808797833669697,
-           "score_max": 0.2120810814987746,
-           "mean_predicted": 0.18202766550050226,
+           "score_max": 0.21208108149877444,
+           "mean_predicted": 0.1820276655005023,
            "observed_rate": 0.14444444444444443,
            "low": 0.08639988786660784,
            "high": 0.23159877920135785,
@@ -3698,14 +3698,14 @@
            "n_positive": 25,
            "score_min": 0.21221756012439313,
            "score_max": 0.8301295129800422,
-           "mean_predicted": 0.41723138680609456,
+           "mean_predicted": 0.4172313868060945,
            "observed_rate": 0.2777777777777778,
            "low": 0.19579689194686647,
            "high": 0.3779522749706121,
            "inside_interval": false
           }
          ],
-         "brier": 0.0949071265875692,
+         "brier": 0.09490712658756921,
          "brier_base_rate": 0.10180906883859348,
          "mean_absolute_gap": 0.037646816135031125,
          "bins_outside_interval": 1,
@@ -3939,7 +3939,7 @@
          "false_positives": [
           {
            "row_key": "L3646",
-           "score": 0.792472025888286,
+           "score": 0.7924720258882859,
            "values": {
             "age": "58",
             "job": "admin.",
@@ -3957,7 +3957,7 @@
           },
           {
            "row_key": "L1218",
-           "score": 0.7605341686644688,
+           "score": 0.7605341686644689,
            "values": {
             "age": "29",
             "job": "management",
@@ -4011,7 +4011,7 @@
           },
           {
            "row_key": "L2268",
-           "score": 0.7123677365818354,
+           "score": 0.7123677365818355,
            "values": {
             "age": "55",
             "job": "admin.",
@@ -4049,7 +4049,7 @@
           },
           {
            "row_key": "L2197",
-           "score": 0.026405624833978653,
+           "score": 0.026405624833978663,
            "values": {
             "age": "23",
             "job": "entrepreneur",
@@ -4067,7 +4067,7 @@
           },
           {
            "row_key": "L4063",
-           "score": 0.026572948275165324,
+           "score": 0.026572948275165313,
            "values": {
             "age": "28",
             "job": "blue-collar",
@@ -4136,7 +4136,7 @@
          ],
          "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
         },
-        "predictions": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d"
+        "predictions": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5"
        }
       },
       "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -4163,7 +4163,7 @@
        "row_keys": "709fa7079e85b6a172ec56995df0520059d582284a44794497d779bf8c95abd0"
       },
       "results": {
-       "final_test.evaluation": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d"
+       "final_test.evaluation": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5"
       },
       "target": {
        "column": "y",
@@ -4180,11 +4180,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_6f568a7e009178d11fe5261f",
-     "exposure_id": "x_1433cbb76c884381958fbcff2e20dd6c",
+     "exposure_id": "x_ae83128b9bb74e72afcb419ec5584c23",
      "started_revision": 34,
      "integrity": "ok"
     },
@@ -4239,17 +4239,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-     "exposure_id": "x_77dba9f99f084a12887b9a7173e5b866",
+     "exposure_id": "x_f03f7a69d66d4a2a96e8bb0896acb563",
      "started_revision": 14,
      "integrity": "ok"
     },
     "final_test.evaluation": {
      "slot": "final_test.evaluation",
-     "result_id": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d",
+     "result_id": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5",
      "activity": "final_test.evaluation",
      "current": true,
      "stale_reason": null,
@@ -4415,7 +4415,7 @@
       "note": "Measured once on the sealed final-test rows, with the configuration chosen on the development rows refitted on all of them: this is the study's independent evidence. Any later change is made after the final test."
      },
      "blobs": {
-      "predictions": "d77a314488542f159e24c3653d6ab44f8def34ddc46ffdc97fec0ac77970f644"
+      "predictions": "845708d56ebcc7124436d4da55bd2c6fd312ddecc6e8ff7b3c2454d8d9a81bae"
      },
      "params": {
       "capacity_share": 0.1,
@@ -4517,11 +4517,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_4efc14acad6d02fb77c50461",
-     "exposure_id": "x_b6ae8129a02741dd9cb747be64658abf",
+     "exposure_id": "x_2aa10f2f9dfe40d480e4a9e827dd3d95",
      "started_revision": 32,
      "integrity": "ok"
     },
@@ -4652,17 +4652,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-     "exposure_id": "x_71324e45e1a945ccb3c5c56eccd15953",
+     "exposure_id": "x_c6c15c4ba9c94f8291b5e31eb39c6db1",
      "started_revision": 16,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -4690,45 +4690,45 @@
       "n_train": 3617,
       "n_train_positive": 417,
       "n_terms": 37,
-      "intercept": -2.141460437539146,
+      "intercept": -2.1414604375391435,
       "coefficients": {
-       "num__age": 0.1095925432700592,
-       "num__balance": 0.012997757206100748,
-       "num__pdays": -0.016960096070927046,
-       "num__previous": 0.0011839204515415305,
-       "num__pdays=-1": -0.35347271182600665,
-       "cat__job_admin.": 0.050213917890223135,
-       "cat__job_blue-collar": -0.27549787772397055,
-       "cat__job_entrepreneur": -0.3666829799138865,
-       "cat__job_housemaid": 0.2597534974616277,
-       "cat__job_management": 0.040602625315680964,
-       "cat__job_retired": 0.6087198081190006,
-       "cat__job_self-employed": 0.004148506930874031,
+       "num__age": 0.10959254327005913,
+       "num__balance": 0.012997757206100767,
+       "num__pdays": -0.016960096070926852,
+       "num__previous": 0.001183920451541738,
+       "num__pdays=-1": -0.3534727118260084,
+       "cat__job_admin.": 0.05021391789022314,
+       "cat__job_blue-collar": -0.2754978777239705,
+       "cat__job_entrepreneur": -0.36668297991388654,
+       "cat__job_housemaid": 0.2597534974616278,
+       "cat__job_management": 0.0406026253156808,
+       "cat__job_retired": 0.6087198081190008,
+       "cat__job_self-employed": 0.004148506930874076,
        "cat__job_services": -0.22386566273123207,
-       "cat__job_student": 0.5684124435264754,
-       "cat__job_technician": -0.2813344952173388,
-       "cat__job_unemployed": -0.32320443466373977,
-       "cat__job_unknown": -0.06126534899371248,
-       "cat__marital_divorced": 0.22182185402368232,
-       "cat__marital_married": -0.28677230167837836,
-       "cat__marital_single": 0.06495044765469307,
-       "cat__education_primary": -0.04507745173614467,
-       "cat__education_secondary": 0.1583058390966499,
-       "cat__education_tertiary": 0.21822118008266336,
-       "cat__education_unknown": -0.3314495674431663,
-       "cat__default_no": -0.19787999607677323,
-       "cat__default_yes": 0.19787999607677687,
-       "cat__housing_no": 0.2014565216699658,
-       "cat__housing_yes": -0.20145652166996394,
-       "cat__loan_no": 0.3621615134160482,
-       "cat__loan_yes": -0.36216151341604164,
-       "cat__contact_cellular": 0.36236446398131145,
-       "cat__contact_telephone": 0.2255096922049799,
-       "cat__contact_unknown": -0.5878741561862811,
-       "cat__poutcome_failure": -0.9169330096535167,
-       "cat__poutcome_other": -0.4679501904896617,
-       "cat__poutcome_success": 1.5210027675184337,
-       "cat__poutcome_unknown": -0.13611956737525746
+       "cat__job_student": 0.568412443526475,
+       "cat__job_technician": -0.2813344952173387,
+       "cat__job_unemployed": -0.32320443466374,
+       "cat__job_unknown": -0.06126534899371254,
+       "cat__marital_divorced": 0.22182185402367433,
+       "cat__marital_married": -0.2867723016783865,
+       "cat__marital_single": 0.06495044765468518,
+       "cat__education_primary": -0.04507745173614624,
+       "cat__education_secondary": 0.15830583909664828,
+       "cat__education_tertiary": 0.21822118008266186,
+       "cat__education_unknown": -0.3314495674431676,
+       "cat__default_no": -0.1978799960767716,
+       "cat__default_yes": 0.19787999607677828,
+       "cat__housing_no": 0.20145652166996433,
+       "cat__housing_yes": -0.2014565216699655,
+       "cat__loan_no": 0.36216151341604974,
+       "cat__loan_yes": -0.3621615134160403,
+       "cat__contact_cellular": 0.36236446398131344,
+       "cat__contact_telephone": 0.22550969220498185,
+       "cat__contact_unknown": -0.5878741561862794,
+       "cat__poutcome_failure": -0.9169330096535173,
+       "cat__poutcome_other": -0.46795019048966235,
+       "cat__poutcome_success": 1.521002767518433,
+       "cat__poutcome_unknown": -0.13611956737525313
       },
       "coefficient_scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects",
       "iterations": 6,
@@ -4838,7 +4838,7 @@
       }
      },
      "blobs": {
-      "predictions": "0160744b5f3062c56206f4dd0da62d93cb1aaecac964487e02acca1729b5352a"
+      "predictions": "456c4f67d7c4429cf8845147ddb4f141b7e940e4ae9bea3f4deb93f8f5bfcbb0"
      },
      "params": {
       "implementation": "mlkit.classical.pipeline",
@@ -4922,17 +4922,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-     "exposure_id": "x_bfd939ada9854142a6fc3de12b593149",
+     "exposure_id": "x_6aa9f2e188ac4108b50177bc0691f7bc",
      "started_revision": 18,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "result_id": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -4962,43 +4962,43 @@
       "n_terms": 37,
       "intercept": -2.1768662397321967,
       "coefficients": {
-       "num__age": 0.12741228529638018,
-       "num__balance": 0.01568980784546906,
-       "num__pdays": -0.04195515485658304,
-       "num__previous": 0.010113412407297124,
-       "num__pdays=-1": -0.33244590253820583,
-       "cat__job_admin.": 0.06704196393860819,
-       "cat__job_blue-collar": -0.24106334353822134,
-       "cat__job_entrepreneur": -0.2047469639768081,
-       "cat__job_housemaid": 0.13021531574786616,
-       "cat__job_management": 0.0431322022066476,
-       "cat__job_retired": 0.43590849676635895,
-       "cat__job_self-employed": -0.0062647132225118396,
-       "cat__job_services": -0.14879932492400083,
-       "cat__job_student": 0.3156320196934801,
-       "cat__job_technician": -0.20516551811113323,
-       "cat__job_unemployed": -0.14987834573042919,
-       "cat__job_unknown": -0.03601178884985792,
-       "cat__marital_divorced": 0.17695188632905465,
-       "cat__marital_married": -0.25998343422188164,
-       "cat__marital_single": 0.08303154789282699,
-       "cat__education_primary": -0.06211495201231471,
-       "cat__education_secondary": 0.09264129959975022,
+       "num__age": 0.12741228529638016,
+       "num__balance": 0.015689807845469028,
+       "num__pdays": -0.04195515485658305,
+       "num__previous": 0.010113412407297196,
+       "num__pdays=-1": -0.3324459025382068,
+       "cat__job_admin.": 0.06704196393860834,
+       "cat__job_blue-collar": -0.24106334353822123,
+       "cat__job_entrepreneur": -0.20474696397680797,
+       "cat__job_housemaid": 0.13021531574786627,
+       "cat__job_management": 0.043132202206647936,
+       "cat__job_retired": 0.43590849676635934,
+       "cat__job_self-employed": -0.006264713222511685,
+       "cat__job_services": -0.14879932492400072,
+       "cat__job_student": 0.3156320196934802,
+       "cat__job_technician": -0.20516551811113307,
+       "cat__job_unemployed": -0.14987834573042916,
+       "cat__job_unknown": -0.03601178884985789,
+       "cat__marital_divorced": 0.17695188632905479,
+       "cat__marital_married": -0.2599834342218813,
+       "cat__marital_single": 0.08303154789282723,
+       "cat__education_primary": -0.06211495201231455,
+       "cat__education_secondary": 0.09264129959975032,
        "cat__education_tertiary": 0.1585336956938475,
-       "cat__education_unknown": -0.1890600432812835,
-       "cat__default_no": -0.10446876402441624,
-       "cat__default_yes": 0.10446876402441647,
-       "cat__housing_no": 0.21721714687878055,
-       "cat__housing_yes": -0.2172171468787808,
-       "cat__loan_no": 0.31639716074225643,
-       "cat__loan_yes": -0.3163971607422553,
-       "cat__contact_cellular": 0.33761635553978575,
-       "cat__contact_telephone": 0.16166932853774688,
-       "cat__contact_unknown": -0.49928568407753243,
-       "cat__poutcome_failure": -0.6904071477693708,
-       "cat__poutcome_other": -0.27926532553705297,
+       "cat__education_unknown": -0.18906004328128342,
+       "cat__default_no": -0.10446876402441807,
+       "cat__default_yes": 0.10446876402441588,
+       "cat__housing_no": 0.2172171468787808,
+       "cat__housing_yes": -0.21721714687878046,
+       "cat__loan_no": 0.31639716074225566,
+       "cat__loan_yes": -0.3163971607422561,
+       "cat__contact_cellular": 0.3376163555397856,
+       "cat__contact_telephone": 0.1616693285377467,
+       "cat__contact_unknown": -0.4992856840775328,
+       "cat__poutcome_failure": -0.6904071477693706,
+       "cat__poutcome_other": -0.2792653255370529,
        "cat__poutcome_success": 1.0976947814371023,
-       "cat__poutcome_unknown": -0.1280223081306796
+       "cat__poutcome_unknown": -0.12802230813067664
       },
       "coefficient_scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects",
       "iterations": 6,
@@ -5114,7 +5114,7 @@
       }
      },
      "blobs": {
-      "predictions": "1ba1e86d70b902106721d0b5cbe7ed85af45ca279b3abd65bc119a8763944b46"
+      "predictions": "844fa7f7f1d72759c8b7def52df1f3ba0e6e912cde0fd19f77dcdc9730eb149e"
      },
      "params": {
       "C": 0.1,
@@ -5204,17 +5204,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_8b6b767c3df161e7401893c1",
-     "exposure_id": "x_1b09c016819e4783b95b84ef9312785f",
+     "exposure_id": "x_37a09baa87cf4cab851fce380953e5da",
      "started_revision": 22,
      "integrity": "ok"
     },
     "policy.evaluation": {
      "slot": "policy.evaluation",
-     "result_id": "e8c5816602d826382cedb02b780de6c5a813b4d4ebfba8e44523d49d4811dcde",
+     "result_id": "1d1afd43d5bc3a0e9a1619699634c70e0c94675c59cf0715f2151ea525a8ea72",
      "activity": "policy.evaluation",
      "current": true,
      "stale_reason": null,
@@ -5899,8 +5899,8 @@
       "n_positive": 417,
       "predictions": {
        "fit.baseline": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
-       "fit.logistic": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-       "fit.variant": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+       "fit.logistic": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+       "fit.variant": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
       },
       "reference": "fit.baseline",
       "bootstrap": {
@@ -6167,8 +6167,8 @@
       "fold_split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
       "results": {
        "fit.baseline": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
-       "fit.logistic": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-       "fit.variant": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+       "fit.logistic": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+       "fit.variant": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
       },
       "trial_budget": {
        "declared": 1,
@@ -6194,11 +6194,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_c747f3646963f5be94a54bdb",
-     "exposure_id": "x_4953ef55164c4369af02bc1e3c237f75",
+     "exposure_id": "x_87ca2df239f14e1fafb63bb42401a75b",
      "started_revision": 36,
      "integrity": "ok"
     },
@@ -6299,17 +6299,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-     "exposure_id": "x_65accd3555774eeb8a0f2fadc6a48123",
+     "exposure_id": "x_6e5ce61e046442ca8ae33c48ebee4ddb",
      "started_revision": 12,
      "integrity": "ok"
     }
    },
    "stale": {
-    "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d": {
+    "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4": {
      "reason": "policy changed (§3.7 row 5: policy.parameter)",
      "since": 39
     }
@@ -6361,7 +6361,7 @@
        "reason_given": true,
        "restatement": "You decide the policy as stated.",
        "revision": 27,
-       "time": "2026-10-21T12:17:14.336727+00:00",
+       "time": "2026-10-21T20:14:59.319165+00:00",
        "user_words": "Yes, I adopt calling the top tenth, because the team can make that many calls"
       },
       "proposal_id": "p_7",
@@ -6372,7 +6372,7 @@
      "revision": 39,
      "row": 5,
      "stale_results": [
-      "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d"
+      "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4"
      ],
      "stale_slots": [
       "diag.binary"
@@ -6392,24 +6392,24 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "09b8abf07ec42045b87451b5766c345bd34e5e7ab907c96f7c427ecf607e1aaf",
-       "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d",
+       "1d1afd43d5bc3a0e9a1619699634c70e0c94675c59cf0715f2151ea525a8ea72",
+       "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
        "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
        "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
-       "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-       "7c7200726f6927a5a6b164a952fd4d9d7a916077a2cb1a7986323c26c67ecc59",
+       "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5",
+       "95a0514478487ab031e70638badad067925bcf4310417d53383fe3d63e955454",
        "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
-       "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
-       "e8c5816602d826382cedb02b780de6c5a813b4d4ebfba8e44523d49d4811dcde"
+       "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+       "d46245c0a862856cfdce2a323575d6f896d324e4e7b9cfb81c7b97c2e2a1c145"
       ],
-      "edit_check_sha256": "4e0b8dd5616d87ec7f0603f16c5573f4290ed0c5ab0dd15a0fe602d3c7e7d3de",
+      "edit_check_sha256": "bac8d46c5930700ec7048cad5a3bfda4a8168774138dc52300cf3b0edf7e3a8a",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 41,
       "path": "notebooks/study_generated.py",
       "revision": 41,
-      "sha256": "2a33620f4b0b50080cc1c7b1b3c2f7b13436551c37fd728f5821b7bcab23657d",
+      "sha256": "5913a2cc0eff78844a236d05e4a4327616c135e1cab10d721bcfb79d02b65be5",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -6422,15 +6422,15 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "09b8abf07ec42045b87451b5766c345bd34e5e7ab907c96f7c427ecf607e1aaf",
-       "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d",
+       "1d1afd43d5bc3a0e9a1619699634c70e0c94675c59cf0715f2151ea525a8ea72",
+       "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
        "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
        "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
-       "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-       "7c7200726f6927a5a6b164a952fd4d9d7a916077a2cb1a7986323c26c67ecc59",
+       "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5",
+       "95a0514478487ab031e70638badad067925bcf4310417d53383fe3d63e955454",
        "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
-       "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
-       "e8c5816602d826382cedb02b780de6c5a813b4d4ebfba8e44523d49d4811dcde"
+       "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+       "d46245c0a862856cfdce2a323575d6f896d324e4e7b9cfb81c7b97c2e2a1c145"
       ],
       "error": null,
       "generated": true,
@@ -6438,7 +6438,7 @@
       "last_ok_revision": 41,
       "path": "reports/study.html",
       "revision": 41,
-      "sha256": "a7fcad19eecac88573dfcd8d908b1493ee457ed4cc4ef9856e487f254d8203e9",
+      "sha256": "0bf006d93429247de6d173b971d4a443bd7aceb957a7dc71e67ee7713889c527",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -6577,7 +6577,7 @@
     {
      "id": "stale_results",
      "results": [
-      "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d"
+      "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4"
      ],
      "cited_by": [],
      "junior": false,
@@ -6628,9 +6628,9 @@
      "revision": 32,
      "model": "fit.logistic",
      "rule": "share:0.1",
-     "result_id": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d",
+     "result_id": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5",
      "user_words": "Yes, I open the final test now, because the model and the rule are fixed",
-     "time": "2026-10-21T12:17:20.173280+00:00"
+     "time": "2026-10-21T20:15:01.298791+00:00"
     },
     "post_final_test": true,
     "changed_after": [
@@ -6652,9 +6652,9 @@
        "/hypotrail/framework",
        "marimo",
        "run",
-       "/studies/bank marketing \"demo\"-cv/notebooks/study_generated.py"
+       "/private/studies/bank marketing \"demo\"-cv/notebooks/study_generated.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo run '/studies/bank marketing \"demo\"-cv/notebooks/study_generated.py'"
+      "shell": "uv run --project /hypotrail/framework marimo run '/private/studies/bank marketing \"demo\"-cv/notebooks/study_generated.py'"
      },
      "workbench": {
       "mode": "edit",
@@ -6666,9 +6666,9 @@
        "/hypotrail/framework",
        "marimo",
        "edit",
-       "/studies/bank marketing \"demo\"-cv/notebooks/workbench.py"
+       "/private/studies/bank marketing \"demo\"-cv/notebooks/workbench.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/bank marketing \"demo\"-cv/notebooks/workbench.py'"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/private/studies/bank marketing \"demo\"-cv/notebooks/workbench.py'"
      }
     }
    },
@@ -6682,7 +6682,7 @@
     },
     "metric": "precision_gain",
     "status": "met",
-    "result_id": "e8c5816602d826382cedb02b780de6c5a813b4d4ebfba8e44523d49d4811dcde",
+    "result_id": "1d1afd43d5bc3a0e9a1619699634c70e0c94675c59cf0715f2151ea525a8ea72",
     "rule": "share:0.2",
     "model": "fit.logistic",
     "gain": 13.712528527465023,
@@ -6701,7 +6701,7 @@
      "minimum": 5,
      "unit": "percentage points",
      "interval_includes_zero": false,
-     "result_id": "2f23c7147ce8c95cb75e4aca7dc68abd5dff6a64a72bd8c8c2919372ebbea04d"
+     "result_id": "72675b7b63279e01327e112cc2df464d66cad904e2c041fcf3f3e7a015edd0d5"
     },
     "judged_on": "development",
     "judged_status": "met"
@@ -6710,8 +6710,8 @@
     "target_looks": 3,
     "results": [
      "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
-     "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
-     "7c7200726f6927a5a6b164a952fd4d9d7a916077a2cb1a7986323c26c67ecc59"
+     "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
+     "95a0514478487ab031e70638badad067925bcf4310417d53383fe3d63e955454"
     ],
     "by_activity": {
      "diag.binary": 2,
@@ -6729,8 +6729,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-     "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+     "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -6859,7 +6859,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "7c7200726f6927a5a6b164a952fd4d9d7a916077a2cb1a7986323c26c67ecc59",
+     "source": "95a0514478487ab031e70638badad067925bcf4310417d53383fe3d63e955454",
      "checked": true,
      "flags": [],
      "checks": {
@@ -6873,8 +6873,8 @@
           "n": 853,
           "low": 19.0,
           "high": 32.0,
-          "gap": 0.008731801444340326,
-          "se": 0.01019113276369028
+          "gap": 0.008731801444340312,
+          "se": 0.010191132763690283
          },
          {
           "bin": 2,
@@ -6889,15 +6889,15 @@
           "n": 702,
           "low": 37.0,
           "high": 42.0,
-          "gap": -0.0036836554853329068,
-          "se": 0.010721922879570885
+          "gap": -0.0036836554853329206,
+          "se": 0.010721922879570887
          },
          {
           "bin": 4,
           "n": 776,
           "low": 43.0,
           "high": 51.0,
-          "gap": -0.006279634238554446,
+          "gap": -0.006279634238554474,
           "se": 0.010456380961734875
          },
          {
@@ -6905,11 +6905,11 @@
           "n": 660,
           "low": 52.0,
           "high": 87.0,
-          "gap": 0.002200362547684437,
+          "gap": 0.0022003625476843813,
           "se": 0.013113770421669037
          }
         ],
-        "statistic": 1.3559477366584907,
+        "statistic": 1.3559477366584904,
         "df": 5,
         "p_value": 0.929070782808754,
         "level": 0.0025,
@@ -6923,7 +6923,7 @@
           "n": 729,
           "low": -3313.0,
           "high": 20.0,
-          "gap": -0.016146352416858634,
+          "gap": -0.01614635241685866,
           "se": 0.010723902119604292
          },
          {
@@ -6955,11 +6955,11 @@
           "n": 724,
           "low": 1931.0,
           "high": 71188.0,
-          "gap": 0.030681466331109325,
+          "gap": 0.030681466331109297,
           "se": 0.011723150029660456
          }
         ],
-        "statistic": 12.247363654503665,
+        "statistic": 12.247363654503662,
         "df": 5,
         "p_value": 0.03155111449795323,
         "level": 0.0025,
@@ -7009,20 +7009,20 @@
          {
           "value": "admin.",
           "n": 377,
-          "slope": 0.9352611997396506,
-          "se": 0.17425093029731217
+          "slope": 0.9352611997396503,
+          "se": 0.17425093029731234
          },
          {
           "value": "blue-collar",
           "n": 734,
-          "slope": 0.8702690586343161,
-          "se": 0.17642249929110776
+          "slope": 0.8702690586343166,
+          "se": 0.1764224992911076
          },
          {
           "value": "entrepreneur",
           "n": 144,
-          "slope": 1.0507512197039557,
-          "se": 0.45255796711733143
+          "slope": 1.0507512197039572,
+          "se": 0.4525579671173311
          },
          {
           "value": "management",
@@ -7039,31 +7039,31 @@
          {
           "value": "self-employed",
           "n": 154,
-          "slope": 1.1590873798608796,
-          "se": 0.3754527636896891
+          "slope": 1.15908737986088,
+          "se": 0.37545276368969016
          },
          {
           "value": "services",
           "n": 344,
-          "slope": 1.2404595960844809,
-          "se": 0.2588970792158661
+          "slope": 1.2404595960844813,
+          "se": 0.2588970792158666
          },
          {
           "value": "technician",
           "n": 623,
-          "slope": 0.8519410303806464,
-          "se": 0.14392573394625693
+          "slope": 0.8519410303806466,
+          "se": 0.14392573394625682
          },
          {
           "value": "unemployed",
           "n": 101,
-          "slope": 1.5125717298270018,
-          "se": 0.4980259744351435
+          "slope": 1.5125717298270025,
+          "se": 0.49802597443514435
          }
         ],
-        "q": 7.5001362650461205,
+        "q": 7.500136265046116,
         "df": 8,
-        "p_value": 0.48375329872946726,
+        "p_value": 0.4837532987294676,
         "level": 0.005,
         "flagged": false
        },
@@ -7080,26 +7080,26 @@
           "value": "married",
           "n": 2229,
           "slope": 0.9518937370486348,
-          "se": 0.0750815759564308
+          "se": 0.07508157595643067
          },
          {
           "value": "single",
           "n": 955,
-          "slope": 0.7475327152153197,
-          "se": 0.11463454803700214
+          "slope": 0.7475327152153199,
+          "se": 0.11463454803700207
          }
         ],
-        "q": 5.3858270227862075,
+        "q": 5.385827022786205,
         "df": 2,
-        "p_value": 0.06768345530725924,
+        "p_value": 0.06768345530725932,
         "level": 0.005,
         "flagged": false
        }
       ],
       "calibration_slope": {
-       "slope": 0.9345650238435238,
-       "se": 0.05906488587502072,
-       "low": 0.8187999747775146,
+       "slope": 0.9345650238435239,
+       "se": 0.05906488587502074,
+       "low": 0.8187999747775148,
        "high": 1.050330072909533,
        "band": [
         0.8,
@@ -7167,6 +7167,14 @@
      "ebm",
      "hgb"
     ]
+   },
+   "assurance": {
+    "profile": "legacy",
+    "evaluation_protection": "protocol_reserved",
+    "consent_provenance": "agent_reported",
+    "cross_study_history": "not_enforced",
+    "analysis_contract_status": "absent",
+    "claim_scope": []
    }
   }
  }

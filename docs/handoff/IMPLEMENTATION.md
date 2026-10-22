@@ -1,5 +1,30 @@
 # Implementation handoff (v0.2)
 
+## Review remediation J0 (21 October 2026)
+
+J0 adds an opt-in `init --reliability-profile review-v1`, static `analysis_contract`
+validation and a derived `assurance` object (`status --summary --fields assurance`).
+The default remains legacy. Old state is not migrated; new-profile analytical
+execution is explicitly unavailable until the later reliability milestones. Future
+or group-disjoint new-profile partition creation is also refused pending J1.
+
+Hotel remains the discovery case, now explicitly an exercise in leakage and evidence
+limits: **performance at booking is not established** from the published snapshot.
+Bank full and Auto MPG have bounded retrospective claim ceilings. Their substantive
+case changes trigger the normal source-change check for older studies; no new
+case/code equivalence exception is added. Data bytes are unchanged.
+
+The test is reserved by a cooperative protocol, not isolated from an agent that can
+read the local source file. Confirmations are agent-reported, not independently
+authenticated; cross-study exposure/budget inheritance is not enforced. The old
+`sealed` status is a compatibility identifier, not a filesystem guarantee.
+
+J0 does **not** fix the known temporal/nested-fold issue, diagnostic prerequisites,
+business-metric selection, criterion uncertainty or unbounded code equivalence.
+Those are tracked in [the findings ledger](../acceptance/reliability-roadmap/FINDINGS.md).
+Implementation and actual verification: [J0 acceptance](../acceptance/reliability-roadmap/J0.md).
+The remaining sections below describe the legacy slice and its historical evidence.
+
 Status: **v0.2 implemented and closed** (v0.2a then v0.2b) on branch `claude/hypotrail-product-review-yrstzb`, 19 October 2026. It is a vertical slice of the [junior workflow](../specs/JUNIOR-WORKFLOW.md), guided by **Claude Code**, not GitHub Copilot, and used by no human junior yet. Evidence per remark and per decision: [V0.2-CHECKLIST.md](../acceptance/V0.2-CHECKLIST.md). Decisions taken during implementation: [V0.2-DECISIONS.md](../plans/V0.2-DECISIONS.md); the short list worth the owner's review and the demo script: [V0.2-OWNER-REVIEW.md](../plans/V0.2-OWNER-REVIEW.md). Scope sources: [owner demo 1 remarks R1–R11](../acceptance/OWNER-DEMO-1-REMARKS.md), the [review synthesis](../plans/V0.2-REVIEW-SYNTHESIS.md), and the [plan](../plans/V0.2-IMPLEMENTATION-PLAN.md). The v0.1 handoff is in the git history (commit `c534680` and before) and its evidence in [V0.1-CHECKLIST.md](../acceptance/V0.1-CHECKLIST.md).
 
 The promise is unchanged: *do your ML study with an agent; Hypotrail guarantees that numbers, partitions, and decisions are traceable, and says what is not yet defensible.*

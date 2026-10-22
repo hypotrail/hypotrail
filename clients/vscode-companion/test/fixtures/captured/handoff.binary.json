@@ -258,56 +258,56 @@
     "shown": "1,086"
    },
    {
-    "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+    "result_id": "d38e8455aaebb84b9ac19015e275e239bfda2dc0cf6d0e82f3c13b6211c6ec5b",
     "activity": "fit.logistic",
     "path": "validation.roc_auc",
     "value": 0.7347096774193549,
     "shown": "0.735"
    },
    {
-    "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+    "result_id": "d38e8455aaebb84b9ac19015e275e239bfda2dc0cf6d0e82f3c13b6211c6ec5b",
     "activity": "fit.logistic",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
     "value": 0.38144329896907214,
     "shown": "38.1%"
    },
    {
-    "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
     "value": 0.296,
     "shown": "29.6%"
    },
    {
-    "result_id": "b3b6e35b6a4da49b407907bfdbf316cc555900898efb76500d80f3033fdc058e",
+    "result_id": "209375dbafb2a0a914e1481615cd1874f0648bd707690cb0e7ec42fd00e1dec4",
     "activity": "policy.evaluation",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
     "activity": "diag.binary",
     "path": "models.[fit.logistic].calibration.brier",
     "value": 0.08742712462824617,
     "shown": "0.0874"
    },
    {
-    "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
     "activity": "diag.binary",
     "path": "models.[fit.logistic].roc_auc",
     "value": 0.7347096774193549,
     "shown": "0.735"
    },
    {
-    "result_id": "0bf5d97e57edf1afea4615b4bebdf41dc3988a9712ce01e3cb387c3df6d54565",
+    "result_id": "fa0d14ee0b0c4c5d94824cb56a950cb4a5bd7eb3ac372cde2edcbb7ab8304500",
     "activity": "diag.binary",
     "path": "n",
     "value": 1086,
@@ -586,8 +586,8 @@
     "scikit-learn": "1.9.1",
     "scipy": "1.18.1"
    },
-   "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-   "python": "3.13.16"
+   "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+   "python": "3.13.2"
   }
  }
 }

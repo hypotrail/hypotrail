@@ -946,6 +946,25 @@ scenario_defaults:
     status: scenario_assumption
     source: 'Teaching scenario: the reservations team can contact one new booking in ten. A real team
       would give its own figure.'
+analysis_contract:
+  schema: hypotrail.analysis/1
+  scenario_id: hotel-booking-leakage-v1
+  intended_use: leakage_exercise
+  row_unit: reservation
+  population: Resort Hotel reservations in the published snapshot
+  prediction_statement: Predict cancellation when a booking is entered
+  timing:
+    prediction_order: null
+    outcome_available_order: null
+    scale: ordinal
+  dependencies:
+    kind: unknown
+    group_column: null
+    group_goal: null
+    status: unknown
+    source: 'README.md: snapshot timing and missing historical booking values'
+  permitted_claims:
+  - retrospective_association
 constraints:
   interpretability:
     value: preferred

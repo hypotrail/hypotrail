@@ -13,7 +13,7 @@
  "payload": {
   "schema": "hypotrail.data/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "revision": 48,
   "observation_unit": {
    "value": "A customer contacted during a telephone campaign",
@@ -57,7 +57,7 @@
    "excluded_prior_exposed": 0,
    "line": "904 rows are set aside as the final test and stay sealed: nothing here reads them.",
    "audience": "junior",
-   "junior_text": "904 rows are set aside as the final test and stay sealed: nothing here reads them."
+   "junior_text": "904 rows are set aside as the final test. This view does not read them; the local source file remains accessible."
   },
   "groups": [
    {
@@ -669,9 +669,9 @@
    ]
   },
   "note": {
-   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration.",
+   "text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced.",
    "audience": "junior",
-   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration."
+   "junior_text": "These are development rows only; the final test stays sealed. The card shows what the columns mean and a few rows, never how often the outcome occurs: that is explored after the split, on the rows it leaves for exploration. The test is reserved by the protocol; the local source file remains accessible. Confirmations are agent-reported, not independently authenticated. Cross-study history is not enforced."
   }
  }
 }

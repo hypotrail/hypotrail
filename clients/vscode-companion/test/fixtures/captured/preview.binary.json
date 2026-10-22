@@ -17,7 +17,7 @@
  "payload": {
   "schema": "hypotrail.preview/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "revision": 48,
   "kind": "policy",
   "rules": [
@@ -30,12 +30,12 @@
     "stale_reason": null
    },
    "fit.logistic": {
-    "result_id": "553fd09920d7861ccf0319accf10606446e024b4b85a69f6d29e2c2870c5f22c",
+    "result_id": "d38e8455aaebb84b9ac19015e275e239bfda2dc0cf6d0e82f3c13b6211c6ec5b",
     "current": true,
     "stale_reason": null
    },
    "fit.variant": {
-    "result_id": "a2395c77cc9ba88937890ddc5fb0f0d529b05340d99d6c25b4e2275082a52829",
+    "result_id": "0682fba1049d51b7caed451a21f504565c854cbacf30613d126c9ea1651afd62",
     "current": true,
     "stale_reason": null
    }

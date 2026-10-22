@@ -25,6 +25,7 @@ from . import partition
 from . import governance, read
 from . import criterion as criterion_mod
 from . import junior
+from . import assurance
 from . import records as rec
 from . import state as st
 from . import texts
@@ -56,7 +57,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.3 (WP-F1, ADR 0007): the candidate and the variants compared fold by fold
              # (one-standard-error rule, selection optimism, advice to stop), and the
              # engine's shortlist of model families; ``null`` in a study without variants.
-             'model_selection', 'model_families')
+             'model_selection', 'model_families', 'assurance')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -1353,9 +1354,33 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
         'trials': trials(study.exposure_records()),
         **_wp_f1(state, results),
     }
+    case = _case_or_none(state) if not sources else None
+    out['assurance'] = assurance.describe(state, case)
     # v0.3 (WP-C): what the agent relays at this pause (``junior_digest``, ``recommended``,
     # ``question``, ``criterion_options``), in the study language.
-    return junior.enrich(out, state, _case_or_none(state))
+    junior.enrich(out, state, case)
+    notice = assurance.scope_notice(case, language)
+    if assurance.profile(state) == 'review-v1':
+        pending = ("Le profil review-v1 permet pour l'instant l'inspection et le plan ; "
+                   "l'exécution analytique attend les jalons suivants."
+                   if language == 'fr' else
+                   'The review-v1 profile currently supports inspection and planning; '
+                   'analytical execution awaits the next milestones.')
+        notice = ' '.join(filter(None, (notice, pending)))
+        contract = case.document.get('analysis_contract') if case is not None else None
+        if contract and out['next_action'].get('decision') == 'prediction_time':
+            out['next_action']['default_value'] = contract['prediction_statement']
+            out['next_action']['recommended'] = {
+                'value': contract['prediction_statement'],
+                'why': ("Ce profil est lié au scénario déclaré ; un autre moment de prédiction "
+                        "nécessite un cas révisé et une nouvelle étude."
+                        if language == 'fr' else
+                        'This profile is bound to the declared scenario; a different '
+                        'prediction moment needs a revised case and a new study.')}
+    if notice:
+        out['next_action']['junior_digest'] += ' ' + notice
+        # The existing summary and plan both carry next_action; no second scope model.
+    return out
 
 
 def _case_or_none(state: dict):

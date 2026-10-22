@@ -56,7 +56,7 @@ CAPABILITY_GROUPED_SPLIT = 'grouped split (v0.2)'
 TOP_REQUIRED = ('schema', 'id', 'title', 'description', 'provenance', 'dataset', 'target',
                 'row_key', 'facts', 'variables', 'special_values', 'structure', 'task')
 TOP_OPTIONAL = ('prior_exposure', 'migration', 'order', 'duplicates', 'scenario_defaults',
-                'prior_exposed_rows', 'constraints')
+                'prior_exposed_rows', 'constraints', 'analysis_contract')
 # ``constraints`` (v0.3, WP-F1, ADR 0007): what the use case requires of a model, as
 # statements ``{value, status, source}``. ``interpretability`` is ``required`` (a black-box
 # family is never shortlisted), ``preferred`` or ``none`` (the default when absent). The
@@ -557,6 +557,9 @@ def validate(document: Any) -> list[dict]:
             for key in ('from_sha256', 'supplement_sha256'):
                 if key in m and (not isinstance(m[key], str) or not SHA256.fullmatch(m[key])):
                     p.add(f'migration.{key}', 'must be 64 lowercase hexadecimal characters')
+    if 'analysis_contract' in document:
+        from . import assurance
+        assurance.validate(document['analysis_contract'], variables, p)
     return p.items
 
 

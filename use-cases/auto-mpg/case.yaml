@@ -251,12 +251,31 @@ prior_exposure:
     evidence.'
   status: observed
   source: Results of an earlier analysis published with the dataset
+analysis_contract:
+  schema: hypotrail.analysis/1
+  scenario_id: auto-mpg-retrospective-v1
+  intended_use: retrospective_comparison
+  row_unit: car model
+  population: Vehicles in the published Auto MPG extract
+  prediction_statement: Estimate mpg retrospectively from vehicle characteristics
+  timing:
+    prediction_order: null
+    outcome_available_order: null
+    scale: ordinal
+  dependencies:
+    kind: unknown
+    group_column: null
+    group_goal: null
+    status: unknown
+    source: No independent sampling or prospective availability guarantee is documented
+  permitted_claims:
+  - retrospective_association
 migration:
   from: project.json
   from_schema: hypotrail.project/1
   from_sha256: 4ba90be566048ea0cf91dfee91e3cd82a0fadeacc31554aad13f9eab36891f64
   supplement: case-supplement.yaml
-  supplement_sha256: 311a8200d288c4b16504bf86450ab8426d1fe1233248489dc675be1149a33eb4
+  supplement_sha256: b46685e75d84db83d0ed99804ea3cc7b399d794198ffff78f83d194b679fd8b9
   tool: mlkit.study.migrate
   tool_version: 1
   rules:

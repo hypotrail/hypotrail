@@ -22,6 +22,8 @@ import argparse
 import math
 from typing import Any, Mapping
 
+from . import assurance
+
 SCHEMA = 'hypotrail.data/1'
 PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'observation_unit', 'development',
                 'target', 'final_test', 'groups', 'rows', 'note')
@@ -33,7 +35,8 @@ N_EXAMPLES = 3
 UNGROUPED = 'Other columns'
 NOTE = ('These are development rows only; the final test stays sealed. The card shows what '
         'the columns mean and a few rows, never how often the outcome occurs: that is '
-        'explored after the split, on the rows it leaves for exploration.')
+        'explored after the split, on the rows it leaves for exploration. '
+        + assurance.protection_notice())
 
 
 def configure(parser: argparse.ArgumentParser) -> None:
@@ -98,7 +101,7 @@ def card(study_dir) -> dict:
     from . import partition, read
     from .activities import matches
 
-    from . import junior
+    from . import junior, assurance
     from . import state as st
     study = read.open(study_dir)
     state = study.state
@@ -168,6 +171,11 @@ def card(study_dir) -> dict:
         'note': {'text': NOTE, 'audience': 'junior',
                  'junior_text': junior.DATA_NOTE_FR if language == 'fr' else NOTE},
     }
+    payload['note']['text'] = ' '.join(filter(None, (
+        NOTE, assurance.scope_notice(case))))
+    payload['note']['junior_text'] = ' '.join(filter(None, (
+        junior.DATA_NOTE_FR if language == 'fr' else NOTE,
+        assurance.scope_notice(case, language))))
     assert tuple(payload) == PAYLOAD_KEYS
     return payload
 

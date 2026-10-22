@@ -8,6 +8,17 @@
 
 ## Context
 
+### Pending review-v1 amendments (recorded by J0, 21 October 2026)
+
+J1 will replace complement-of-block temporal fitting and shuffled inner tuning with
+explicit supported memberships. J2 will enforce claim/diagnostic requirements and
+distinguish planned challengers from diagnostic-informed choices. J3 will align the
+selection objective with the declared action metric and separate point-estimate
+success from lower-bound success. See `docs/plans/reliability-roadmap/`.
+These are **pending**, not implemented or verified by J0. The legacy algorithms and
+three-variant budget remain unchanged. The independence of an outer score does not
+establish future-scenario validity when training includes later observations.
+
 v0.2b allowed exactly one variant of the candidate model, a hand-picked weaker or stronger penalty or the model without one group of variables, and only the linear family. The aim was to limit forking paths before any independent evidence existed. Now that a sealed final test is read once at the end, several development trials are acceptable, provided they are counted, compared on the same folds, and chosen by a stated rule. In the second demo the chosen variant was a sensitivity check, not a search for a better model, and the penalty was never tuned (R24). The owner validated three things (R24bis). The first is a small trial budget, each variant declared with its question. The second is hyperparameters chosen by nested cross-validation, one tuning being one trial. The third is a model family chosen from a catalogue that includes an interpretable non-linear family, the Explainable Boosting Machine. A non-linear family is proposed only when the diagnostics of the linear fit show something it cannot follow. R28 adds that the diagnostics must run without the agent remembering to run them.
 
 ## Decision

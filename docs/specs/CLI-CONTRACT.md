@@ -1,5 +1,48 @@
 # CLI and study contract (`hypotrail`, v0.1, extended through v0.2)
 
+## Review roadmap J0: opt-in scope and assurance
+
+`hypotrail init --case CASE --study DIR [--lang en|fr]` additionally accepts
+`[--reliability-profile legacy|review-v1]`. Omission preserves existing behavior and
+does not add a settings field. An explicit value records `settings.reliability_profile`.
+Missing means `legacy` at read time, without migrating or rewriting old state.
+Unknown values are `invalid_arguments`; unknown settings keys are invalid state.
+There is no in-place profile-conversion command; init never overwrites a study.
+In review-v1, a prediction-time value must match `analysis_contract.prediction_statement`
+after whitespace normalization. A mismatch is `invalid_value`, reason
+`scenario_mismatch`; the guidance offers the declared value and explains the need
+for a revised case/new study when the intended scenario changes. Legacy free-text
+prediction moments are unchanged.
+
+`review-v1` currently supports inspection and planning. Analytical activities are
+refused before reservation with `unsupported_capability`, `details.capability`:
+`review-v1 analytical execution (J1-J3 pending)`, reason `analysis_contract_missing`
+or `implementation_pending`. Structural `eda.quality` remains allowed. A future or
+group-disjoint review profile cannot initialize its final partition yet: capability
+`review-v1 final partition (J1 pending)`. No legacy fallback is substituted.
+
+The full view adds `assurance` with exact keys `profile`, `evaluation_protection`,
+`consent_provenance`, `cross_study_history`, `analysis_contract_status`, `claim_scope`.
+`status --summary --fields assurance` selects that same object; the unselected summary
+shape remains unchanged. `commands.FIELDS_FROM_VIEW` now includes `assurance`.
+
+Values are `legacy|review-v1`, `protocol_reserved`, `agent_reported`, `not_enforced`,
+`present|absent`, and the case analysis contract's permitted-claims list respectively.
+The claim list is a ceiling, not a statement of eligibility. A changed/unavailable
+case does not lend its current contract to the old study's assurance. Source-change
+findings remain authoritative. `assurance.ASSURANCE_KEYS` freezes this shape.
+
+Junior data-card notes and init notices explain that the local source file remains
+accessible, confirmations are reported by the agent and cross-study history is not
+enforced. `sealed` remains the machine status. Choice-picker confirmation retains
+`authenticated: false`; channel `choice` is not identity verification. Leakage-case
+limits appear before scores in the data card and the plan/summary next-action digest.
+The ordinary data-card and plan payload keys are unchanged.
+
+No numerical algorithm, trial budget, existing confirmation mode, panel write
+whitelist or default stage changes in J0. Future J1–J3 behavior is not implemented
+by this amendment.
+
 Status: **frozen** at the end of Phase 1 (plan `docs/plans/V0.1-IMPLEMENTATION-PLAN.md` §4, §8, §9 bis). Implemented in `framework/mlkit/study/`. Frozen by `framework/tests/study/test_contract_freeze.py`.
 
 Extended additively through v0.2 (no schema version changed): audience of engine messages (§3.3), the sealed final test (§4.1), confirmation modes and language (§5.2, §5.3), the data card, EDA governance, `preprocessing` and `success_criterion` (§11), cross-validation, `model_variant` and the `final_test` opening (§12), and model diagnostics (§13). A study created today has nine decisions; studies created under v0.1 (five) and v0.2a (seven) keep their set and load unchanged.
@@ -84,7 +127,7 @@ Every payload is a JSON object whose first keys are `schema` and `ok`. Keys are 
 * `status.since` is the `--since` value or `null`; `changed` is `revision > since` (or `null`); `changes_since` lists the revision records after `since` (or `null`). A webview polls with `--since`.
 * `decide.revision` is the revision created by the request (also on replay). `artifacts` is `null` until Phase 3 renders after commits (§8.3).
 * `init.agent_instructions` is `{source, copied, skipped_existing, status, cli, agent_file, glossary}`; `glossary` is the study path of the glossary copy (§8.4); `status` is `copied`, `kept_existing`, or `no_templates_yet`; `cli` is the exact shell command that runs this CLI (§8.4) and `agent_file` is `.hypotrail/agent.json`. `copied` and `skipped_existing` list workspace paths. `ignored_sources` names the companion files found next to the case (`project.json`, `results.json`, `tutorial-results.json`, `answers.yaml`, `project.yaml`, `frame.yaml`); they are never read. `structural_exposure` is `{exposure_id, n_rows}`: the structural inspection of the **development rows** (v0.2a, ADR 0006; every row in a study created before it). `init.final_test` (v0.2a, additive) is the sealed final test, as `view.final_test` (§4.1).
-* `init.notices` and `init.deliverables` (v0.2a, WP-A1, remark R7; additive). `init` writes `<study>/.vscode/settings.json` with `python.defaultInterpreterPath` set to the engine's Python (`framework/.venv/bin/python` when it exists, else the interpreter running the CLI; `mlkit.study.launch.interpreter`) **only when that file is absent**; when it exists and does not already name that Python, nothing is changed and `notices` holds `{code: "vscode_settings_kept", audience, message, junior_message, line}` (`launch.NOTICE_KEYS`), `line` being the JSON line to add. `notices` is `[]` otherwise. `init` also adds `__marimo__/` (Marimo's cache) to the study's `.gitignore`, creating it or appending the line once; `check` never reports `__marimo__/` or `.vscode/` as `untracked_files`. `deliverables` is `{interpreter, launch: {notebook, workbench}}` (`launch.DELIVERABLES_KEYS`); each launch is `{mode, path, argv, shell}` (`launch.LAUNCH_KEYS`): `mode` is `run` for the generated notebook (read-only, it is regenerated) and `edit` for the workbench, `path` the study-relative file, `argv` the argument list with absolute paths (`uv run --project <engine>/framework marimo run|edit <file>` when the CLI runs from the engine's uv project, as recorded in `.hypotrail/agent.json`; else the engine's Python with `-m marimo`), and `shell` the same quoted for a shell. The engine never starts these processes.
+* `init.notices` and `init.deliverables` (v0.2a, WP-A1, remark R7; additive). `init` writes `<study>/.vscode/settings.json` with `python.defaultInterpreterPath` set to the engine's Python (`framework/.venv/bin/python` when it exists, else the interpreter running the CLI; `mlkit.study.launch.interpreter`) **only when that file is absent**; when it exists and does not already name that Python, nothing is changed and `notices` includes `{code: "vscode_settings_kept", audience, message, junior_message, line}` (`launch.NOTICE_KEYS`), `line` being the JSON line to add. J0 always adds `{code: "cooperative_evaluation_protection", audience, message, junior_message}` and adds `analysis_claim_scope` with the same keys for a leakage exercise (`assurance.NOTICE_KEYS`). These messages state the cooperative protection and any case-specific claim ceiling in the study language. `init` also adds `__marimo__/` (Marimo's cache) to the study's `.gitignore`, creating it or appending the line once; `check` never reports `__marimo__/` or `.vscode/` as `untracked_files`. `deliverables` is `{interpreter, launch: {notebook, workbench}}` (`launch.DELIVERABLES_KEYS`); each launch is `{mode, path, argv, shell}` (`launch.LAUNCH_KEYS`): `mode` is `run` for the generated notebook (read-only, it is regenerated) and `edit` for the workbench, `path` the study-relative file, `argv` the argument list with absolute paths (`uv run --project <engine>/framework marimo run|edit <file>` when the CLI runs from the engine's uv project, as recorded in `.hypotrail/agent.json`; else the engine's Python with `-m marimo`), and `shell` the same quoted for a shell. The engine never starts these processes.
 * `error` is `{code, message, details?, problems?}`. `problems` (case validation) is a list of `{path, problem}`.
 
 ### 3.1 Plan steps and next action

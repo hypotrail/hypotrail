@@ -26,6 +26,7 @@ import copy
 from typing import Any, Mapping
 
 from . import audience
+from . import assurance
 from . import state as st
 
 EN, FR = 'en', 'fr'
@@ -396,10 +397,10 @@ def final_test_line(final: Mapping, lang: str) -> str:
                         'existed, so every row is a development row.',
                   "Cette étude n'a pas d'échantillon de test final : elle a été créée avant "
                   "qu'il existe, donc chaque ligne est une ligne de développement.")
-    return _t(lang, f'{final.get("rows")} rows are set aside as the final test and stay '
-                    f'sealed: nothing here reads them.',
+    return _t(lang, f'{final.get("rows")} rows are set aside as the final test. This view '
+                    f'does not read them; the local source file remains accessible.',
               f"{final.get('rows')} lignes sont mises de côté comme échantillon de test final "
-              "(holdout) et restent scellées : rien ici ne les lit.")
+              "(holdout). Cette vue ne les lit pas ; le fichier source local reste accessible.")
 
 
 def duplicates_line(out: Mapping, group_policy: bool, lang: str) -> str:
@@ -423,7 +424,7 @@ def duplicates_line(out: Mapping, group_policy: bool, lang: str) -> str:
 DATA_NOTE_FR = ("Ce sont uniquement des lignes de l'échantillon de développement ; "
                 "l'échantillon de test final reste scellé. La fiche montre le sens des colonnes "
                 'et quelques lignes, jamais la fréquence du résultat : elle est explorée après '
-                'le découpage.')
+                'le découpage. ' + assurance.protection_notice('fr'))
 UNGROUPED_FR = 'Autres colonnes'
 
 

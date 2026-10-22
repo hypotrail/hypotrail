@@ -14,7 +14,7 @@
  "payload": {
   "schema": "hypotrail.summary/1",
   "ok": true,
-  "study": "/studies/auto mpg",
+  "study": "/private/studies/auto mpg",
   "revision": 38,
   "since": null,
   "changed": null,
@@ -257,73 +257,73 @@
   },
   "results": {
    "eda.correlation": {
-    "result_id": "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
+    "result_id": "313ec8fa22a81f18574c935ea5b53a69771a43f687febb31f4f843f68ef62d96",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:weight": {
-    "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+    "result_id": "3919fc047041362390d7ac6a0a4eda3f36fc1204545ae52152a74858beab0b72",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
+    "result_id": "fd6afebd09ae80f99aea5e057d15e8834efef154fbffe3014392d86dd0bc3493",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22",
+    "result_id": "57ca5936ef97745b96972f8b5db475eeb45d957ce4dd2b168416627b3e50af5d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
+    "result_id": "72f46220fac585d2dd45e58fd07f99ceb671cce9d7562e04b2e2c683296b8295",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
+    "result_id": "36606f7e1f7198e6c3fddb4bc9f60dcde91b04514be7835d03cd71b7d673f9db",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
+    "result_id": "02c93f96799d85d9691d3179f80ca35e0bf800b0b9bfcf03025b2293d00cbed3",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+    "result_id": "daa1d76ec8f1d9a417fbd93a206ff72668c8f54d4977c7383fbca8920cdd0458",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+    "result_id": "89afbb4ea77110dd0e7902bf1c63e876f66bca967a31117f41a3704e6b91ce3a",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+    "result_id": "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
+    "result_id": "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
+    "result_id": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -423,13 +423,13 @@
     "min_share": 0.1
    },
    "status": "met",
-   "gain": 0.36929471747082676,
-   "low": 0.30765831630777174,
-   "high": 0.4261314806060684,
+   "gain": 0.3692947174708269,
+   "low": 0.3076583163077719,
+   "high": 0.42613148060606887,
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+   "result_id": "daa1d76ec8f1d9a417fbd93a206ff72668c8f54d4977c7383fbca8920cdd0458",
    "contradicts_verdict": false,
    "final_test": null,
    "model": "fit.linear",
@@ -439,16 +439,16 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
-    "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
-    "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
-    "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377"
+    "02c93f96799d85d9691d3179f80ca35e0bf800b0b9bfcf03025b2293d00cbed3",
+    "36606f7e1f7198e6c3fddb4bc9f60dcde91b04514be7835d03cd71b7d673f9db",
+    "72f46220fac585d2dd45e58fd07f99ceb671cce9d7562e04b2e2c683296b8295",
+    "fd6afebd09ae80f99aea5e057d15e8834efef154fbffe3014392d86dd0bc3493"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result c0945887); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result daa1d76e); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
@@ -473,7 +473,7 @@
       "/hypotrail/framework",
       "marimo",
       "run",
-      "/studies/auto mpg/notebooks/study_generated.py"
+      "/private/studies/auto mpg/notebooks/study_generated.py"
      ]
     },
     "workbench": {
@@ -486,7 +486,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/auto mpg/notebooks/workbench.py"
+      "/private/studies/auto mpg/notebooks/workbench.py"
      ]
     }
    }

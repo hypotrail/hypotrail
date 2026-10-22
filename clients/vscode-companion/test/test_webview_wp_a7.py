@@ -113,7 +113,8 @@ def test_da1_the_tab_reads_the_data_card_and_shows_it_first(open_panel, views, t
     # v0.3 (WP-E2): stat tiles, the rows and the columns apart.
     assert rows.inner_text() == f"{raw['development']['rows']:,}"
     assert f"{raw['development']['columns']}\nColumns" in card.locator('.eda-facts').inner_text()
-    assert card.locator('[data-seal-line]').inner_text().endswith(raw['final_test']['line'])
+    expected_final_test_line = raw['final_test'].get('junior_text') or raw['final_test']['line']
+    assert card.locator('[data-seal-line]').inner_text().endswith(expected_final_test_line)
     assert card.locator('[data-data-note]').inner_text() == raw['note']['text']
     clean(panel)
     shot(page, f'data-card-{task}-light-900')

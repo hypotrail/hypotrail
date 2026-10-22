@@ -14,29 +14,29 @@
  "payload": {
   "schema": "hypotrail.export/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "revision": 48,
   "kind": "handoff",
   "out": "/tmp/capture/packs/revision-48",
   "files": [
    {
     "path": "handoff.md",
-    "sha256": "3d94944af455f9e5b79c51db8c13aacd30478ef9c9fe8dd8ed3b20557a1b84fd",
+    "sha256": "850ee883184aef08bec8f899548d85cc82fd8f1e56e1ed0579e0924a1c4d1db9",
     "bytes": 9185
    },
    {
     "path": "handoff.json",
-    "sha256": "d062bd5478178e5dd388174ec9829fbe8d0e992c9abe1ec12861e323c2e75802",
-    "bytes": 18746
+    "sha256": "86315a07989ecdeaa57fa93f0df884ec2f3e04707a45c4a357dfb8b2b2cd6884",
+    "bytes": 18737
    },
    {
     "path": "study.html",
-    "sha256": "5685fbb93a8774640679db3e1db0279f49e8c99df22786dee6a020271d48a7b2",
-    "bytes": 1371080
+    "sha256": "75592b4c82e1a941672c2774656faeddf6a657ec89a2e073fee41158fcc3efaf",
+    "bytes": 1371065
    },
    {
     "path": "SHA256SUMS",
-    "sha256": "807c6b5f34e7aec14350ba0e2ade5b67966aee5960924b76b1043d81c17a9ae0",
+    "sha256": "8f85c732a45c342309dcfef14bf03ac0a9c5aaa956b0832bce5718e46da95e2e",
     "bytes": 233
    }
   ],

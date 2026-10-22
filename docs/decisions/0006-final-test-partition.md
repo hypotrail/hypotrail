@@ -7,6 +7,27 @@
 
 ## Context
 
+### J0 clarification (21 October 2026): cooperative protection and case scope
+
+The term “sealed” denotes the engine's protocol and access paths, not filesystem
+isolation. An agent with the complete source CSV and code execution can bypass the
+protocol. Consent passed by that agent is recorded as agent-reported, with
+`authenticated: false`, including a response from a chat choice picker. A new study
+does not automatically inherit every other study's exposure or trial budget.
+
+J0 exposes these limits through `assurance` and junior-facing notes. No authenticated
+approval channel, protected-data service or cross-study database is introduced.
+Hotel remains a discovery exercise, with performance at booking explicitly not
+established from its snapshot. Retrospective scores do not validate that future use.
+Older substantive case revisions are not silently treated as equivalent.
+
+The opt-in review-v1 profile is scaffolding, not a completed alternative protocol.
+It refuses analytical execution pending J1–J3 and refuses future/group-disjoint final
+partition initialization pending J1. Existing profile/default behavior is preserved.
+The original decision and amendments below are retained as historical decisions;
+their independence language is subject to the actual scenario, exposure and access
+limitations described here.
+
 In v0.1 a study had two partitions, made by the `split` decision: training rows (EDA and fitting) and validation rows (model and policy selection). The validation rows are used to choose, so their figures are optimistic; nothing in the study was independent evidence. A junior who explored, refit, and changed the split could see every row before anything was set aside, and the report could only say "not independent".
 
 The literature the synthesis reviewed (Ambroise & McLachlan 2002; Cawley & Talbot 2010; ESL §7.10.2) is consistent: only rows set aside before any selection, and read once at the end, are final evidence. To be credible the set-aside must happen before the first look, including the structural inspection of `init` and any future data card, and it must hold mechanically, not by agent discipline.

@@ -14,7 +14,7 @@
  "payload": {
   "schema": "hypotrail.run/1",
   "ok": true,
-  "study": "/studies/auto mpg",
+  "study": "/private/studies/auto mpg",
   "action": "run",
   "request_id": "a17",
   "replayed": false,
@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_622dd0c704d6af123eea761a",
   "status": "promoted",
-  "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+  "result_id": "3919fc047041362390d7ac6a0a4eda3f36fc1204545ae52152a74858beab0b72",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
-   "input_key": "539096ae32854b855b89869230e7bd975f2917391e4c3a2489440ef6dab4f7e6",
+   "result_id": "3919fc047041362390d7ac6a0a4eda3f36fc1204545ae52152a74858beab0b72",
+   "input_key": "599a40b046e7d7c85aa6ba8ae96bdcc4aeeece4f85c40d27c87709c7482e5038",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_0dba20f237d34361a0be6af2461f870c"
+    "x_bb884ad391284ccab74b6600347102ea"
    ],
    "registry_created": true,
    "nondeterministic": false

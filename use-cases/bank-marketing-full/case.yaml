@@ -458,3 +458,25 @@ scenario_defaults:
     status: scenario_assumption
     source: 'Teaching scenario: the call team can contact one client in ten. A real team would give its
       own figure.'
+analysis_contract:
+  schema: hypotrail.analysis/1
+  scenario_id: bank-full-retrospective-v1
+  intended_use: retrospective_comparison
+  row_unit: client campaign contact
+  population: Published Bank Marketing campaigns, excluding previously exposed final rows
+  prediction_statement: Compare pre-call targeting retrospectively
+  timing:
+    prediction_order:
+      by: line
+      status: documented_fact
+      source: 'data/bank-names.txt:31: examples ordered by date'
+    outcome_available_order: null
+    scale: ordinal
+  dependencies:
+    kind: unknown
+    group_column: null
+    group_goal: null
+    status: unknown
+    source: 'README.md: no complete client history or outcome-availability clock'
+  permitted_claims:
+  - retrospective_association

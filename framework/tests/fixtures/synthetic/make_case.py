@@ -936,6 +936,65 @@ def make_regression_case(out_dir, seed: int = 20261018, n_rows: int = 600,
     return {'data': data_path, 'case': case_path, 'truth': truth_path}
 
 
+def make_review_case(out_dir, *, future: bool = False, n_rows: int = 300) -> dict[str, Path]:
+    """J0 fixtures: independent comparison or explicitly documented synthetic clocks.
+
+    The future case is a contract fixture for J1, not a claim that J0 implements its
+    final partition. Every clock is planted independently of the generated target.
+    """
+    import csv
+    import io
+
+    paths = make_case(out_dir, n_rows=n_rows)
+    document = yaml.safe_load(paths['case'].read_text(encoding='utf-8'))
+    timing = {'prediction_order': None, 'outcome_available_order': None, 'scale': 'ordinal'}
+    if future:
+        rows = list(csv.reader(io.StringIO(paths['data'].read_text(encoding='utf-8')),
+                               delimiter=SEP))
+        rows[0] += ['prediction_tick', 'outcome_tick']
+        for tick, row in enumerate(rows[1:], start=1):
+            row += [str(tick), str(tick + 2)]
+        buf = io.StringIO(newline='')
+        csv.writer(buf, delimiter=SEP, lineterminator='\n').writerows(rows)
+        paths['data'].write_text(buf.getvalue(), encoding='utf-8')
+        document['dataset']['sha256'] = hashlib.sha256(paths['data'].read_bytes()).hexdigest()
+        document['dataset']['columns'] += 2
+        for name in ('prediction_tick', 'outcome_tick'):
+            document['variables'].append({
+                'name': name, 'type': 'integer', 'role': 'identifier',
+                'description': f'Planted {name} on the shared ascending ordinal scale',
+                'status': 'documented_fact', 'source': 'Synthetic fixture specification',
+                'availability': {'value': 'not_available', 'status': 'documented_fact',
+                                 'source': 'Protocol metadata, not a predictor'},
+                'special_values': [],
+            })
+            timing['prediction_order' if name == 'prediction_tick' else 'outcome_available_order'] = {
+                'by': name, 'status': 'documented_fact', 'source': 'Synthetic fixture specification'}
+    document['analysis_contract'] = {
+        'schema': 'hypotrail.analysis/1',
+        'scenario_id': 'synthetic-future-v1' if future else 'synthetic-independent-v1',
+        'intended_use': 'future_prediction' if future else 'retrospective_comparison',
+        'row_unit': 'synthetic observation', 'population': 'Generated synthetic observations',
+        'prediction_statement': 'Predict using information available at the planted decision time',
+        'timing': timing,
+        'dependencies': {'kind': 'temporal' if future else 'independent',
+                         'group_column': None, 'group_goal': None,
+                         'status': 'documented_fact', 'source': 'Synthetic fixture specification'},
+        'permitted_claims': ['retrospective_association'] + (
+            ['future_predictive_performance'] if future else []),
+    }
+    paths['case'].write_text(yaml.safe_dump(document, sort_keys=False, allow_unicode=True),
+                             encoding='utf-8')
+    # The original generating truth still describes y, but its file hash/columns refer
+    # to the base fixture. Do not expose that stale metadata for the clock variant.
+    if future:
+        truth = json.loads(paths['truth'].read_text(encoding='utf-8'))
+        truth['data'].update(sha256=document['dataset']['sha256'], columns=rows[0])
+        truth['review_clocks'] = {'prediction': 'row ordinal', 'outcome': 'row ordinal + 2'}
+        paths['truth'].write_text(json.dumps(truth, indent=2) + '\n', encoding='utf-8')
+    return paths
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('out_dir')

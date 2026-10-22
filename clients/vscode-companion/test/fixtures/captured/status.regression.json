@@ -13,20 +13,20 @@
  "payload": {
   "schema": "hypotrail.status/1",
   "ok": true,
-  "study": "/studies/auto mpg",
+  "study": "/private/studies/auto mpg",
   "revision": 38,
   "since": null,
   "changed": null,
   "changes_since": null,
   "view": {
    "schema": "hypotrail.view/1",
-   "study": "/studies/auto mpg",
+   "study": "/private/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-21T12:19:45.656033+00:00",
+   "updated": "2026-10-21T20:15:45.546710+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
-    "sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291"
+    "sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c"
    },
    "dataset": {
     "path": "/hypotrail/use-cases/auto-mpg/data/auto-mpg.data",
@@ -108,7 +108,7 @@
     {
      "id": "success_criterion",
      "title": "Fix the success criterion before seeing a model",
-     "question": "The mean absolute error is the average size of a prediction's error, in the unit of the target. The mean baseline predicts the training mean for every row. How much smaller than the error of the mean baseline should the validation error of the model be for it to be worth using? It is fixed now, before any model is fitted.",
+     "question": "The mean absolute error is the average size of a prediction's error, in the unit of the target. The mean baseline predicts, for every row of the validation set, the mean of the target on the training set. How much smaller than the error of the mean baseline should the validation error of the model be for it to be worth using? It is fixed now, before any model is fitted.",
      "expected_output": "A confirmed minimum relative error reduction over the mean baseline, stated before any model result is seen.",
      "completion": "Decision success_criterion is confirmed.",
      "pause": 2,
@@ -283,7 +283,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-21T12:19:45.655986+00:00",
+     "created": "2026-10-21T20:15:45.546700+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -307,7 +307,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-21T12:19:22.560853+00:00",
+      "time": "2026-10-21T20:15:37.906808+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -344,7 +344,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-21T12:19:23.937344+00:00",
+      "time": "2026-10-21T20:15:38.300512+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -383,7 +383,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-21T12:19:25.703064+00:00",
+      "time": "2026-10-21T20:15:38.849682+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -414,7 +414,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-21T12:19:27.458689+00:00",
+      "time": "2026-10-21T20:15:39.381933+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -450,7 +450,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-21T12:19:29.361312+00:00",
+      "time": "2026-10-21T20:15:39.950069+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -481,7 +481,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-21T12:19:42.507731+00:00",
+      "time": "2026-10-21T20:15:44.369167+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -629,7 +629,7 @@
    "results": {
     "eda.correlation": {
      "slot": "eda.correlation",
-     "result_id": "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
+     "result_id": "313ec8fa22a81f18574c935ea5b53a69771a43f687febb31f4f843f68ef62d96",
      "activity": "eda.correlation",
      "current": true,
      "stale_reason": null,
@@ -848,7 +848,7 @@
       "partition": "development"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "columns": [
        "cylinders",
        "displacement",
@@ -879,17 +879,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_5bfcee27806f4330b4d5afd7e7bff6d1",
+     "exposure_id": "x_0facb00f758246838ffb508422eb18ab",
      "started_revision": 26,
      "integrity": "ok"
     },
     "eda.distribution:weight": {
      "slot": "eda.distribution:weight",
-     "result_id": "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
+     "result_id": "3919fc047041362390d7ac6a0a4eda3f36fc1204545ae52152a74858beab0b72",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -1008,14 +1008,14 @@
       "column": "weight"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "special_values": []
      },
@@ -1029,17 +1029,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_0dba20f237d34361a0be6af2461f870c",
+     "exposure_id": "x_bb884ad391284ccab74b6600347102ea",
      "started_revision": 24,
      "integrity": "ok"
     },
     "eda.mean_by:model_year": {
      "slot": "eda.mean_by:model_year",
-     "result_id": "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
+     "result_id": "fd6afebd09ae80f99aea5e057d15e8834efef154fbffe3014392d86dd0bc3493",
      "activity": "eda.mean_by",
      "current": true,
      "stale_reason": null,
@@ -1242,14 +1242,14 @@
       "column": "model_year"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "special_values": [],
       "target": {
@@ -1267,17 +1267,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_5771cec5408f4f9f92589856f7215ab3",
+     "exposure_id": "x_34b0ee2e99a04418966de745022d10fd",
      "started_revision": 22,
      "integrity": "ok"
     },
     "eda.quality": {
      "slot": "eda.quality",
-     "result_id": "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22",
+     "result_id": "57ca5936ef97745b96972f8b5db475eeb45d957ce4dd2b168416627b3e50af5d",
      "activity": "eda.quality",
      "current": true,
      "stale_reason": null,
@@ -2448,7 +2448,7 @@
       "partition": "development"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "columns": [
        "cylinders",
        "displacement",
@@ -2475,17 +2475,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_813ace0e29fe4f62bcc215f8329298bb",
+     "exposure_id": "x_ed049d1573674cb59ef56f199d6708a5",
      "started_revision": 18,
      "integrity": "ok"
     },
     "eda.single_feature_signal": {
      "slot": "eda.single_feature_signal",
-     "result_id": "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
+     "result_id": "72f46220fac585d2dd45e58fd07f99ceb671cce9d7562e04b2e2c683296b8295",
      "activity": "eda.single_feature_signal",
      "current": true,
      "stale_reason": null,
@@ -2508,14 +2508,14 @@
        {
         "feature": "displacement",
         "availability": "available_at_prediction",
-        "score": 0.7057985980427371,
+        "score": 0.705798598042737,
         "rank": 2,
         "flag": false
        },
        {
         "feature": "cylinders",
         "availability": "available_at_prediction",
-        "score": 0.6648927939010156,
+        "score": 0.6648927939010155,
         "rank": 3,
         "flag": false
        },
@@ -2541,7 +2541,7 @@
         "flag": false
        }
       ],
-      "median": 0.6444214958741331,
+      "median": 0.644421495874133,
       "level": 0.8,
       "gap": 0.4,
       "questions": [],
@@ -2571,14 +2571,14 @@
        "acceleration",
        "origin"
       ],
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "special_values": [
        {
@@ -2601,17 +2601,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_680956c3de3b4e6a879bb2b25adbd149",
+     "exposure_id": "x_752d5ad4f02842d9a71bcbb8c86153a2",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.special_values": {
      "slot": "eda.special_values",
-     "result_id": "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
+     "result_id": "36606f7e1f7198e6c3fddb4bc9f60dcde91b04514be7835d03cd71b7d673f9db",
      "activity": "eda.special_values",
      "current": true,
      "stale_reason": null,
@@ -2641,14 +2641,14 @@
      "blobs": {},
      "params": {},
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "special_values": [
        {
@@ -2671,17 +2671,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_918c3ae61fe7421fba500ffff9ed76ed",
+     "exposure_id": "x_dc0c46ee49e9480a921f6acec9bef214",
      "started_revision": 16,
      "integrity": "ok"
     },
     "eda.target_summary": {
      "slot": "eda.target_summary",
-     "result_id": "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
+     "result_id": "02c93f96799d85d9691d3179f80ca35e0bf800b0b9bfcf03025b2293d00cbed3",
      "activity": "eda.target_summary",
      "current": true,
      "stale_reason": null,
@@ -2713,14 +2713,14 @@
      "blobs": {},
      "params": {},
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "target": {
        "column": "mpg",
@@ -2737,17 +2737,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_5bb538e247d547af8ad6ef951349051f",
+     "exposure_id": "x_9752f5a76cf14502994c630193349f4c",
      "started_revision": 14,
      "integrity": "ok"
     },
     "evaluate.regression": {
      "slot": "evaluate.regression",
-     "result_id": "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+     "result_id": "daa1d76ec8f1d9a417fbd93a206ff72668c8f54d4977c7383fbca8920cdd0458",
      "activity": "evaluate.regression",
      "current": true,
      "stale_reason": null,
@@ -2768,18 +2768,18 @@
        },
        "fit.linear": {
         "n": 96,
-        "mae": 6.476590382656274,
-        "rmse": 7.664419781686159,
-        "mean_residual": 6.394515464632113,
-        "median_abs_residual": 5.572351386623355,
+        "mae": 6.476590382656272,
+        "rmse": 7.664419781686156,
+        "mean_residual": 6.394515464632111,
+        "median_abs_residual": 5.572351386623351,
         "max_abs_residual": 18.45304785315237
        },
        "fit.variant": {
         "n": 96,
         "mae": 6.505297098322088,
-        "rmse": 7.754118337852464,
+        "rmse": 7.7541183378524625,
         "mean_residual": 6.409752295558562,
-        "median_abs_residual": 5.673693089740421,
+        "median_abs_residual": 5.673693089740427,
         "max_abs_residual": 18.794732120875594
        }
       },
@@ -2796,36 +2796,36 @@
        },
        "fit.linear": {
         "mae": {
-         "low": 5.690730215654784,
-         "high": 7.3058496174077225
+         "low": 5.6907302156547805,
+         "high": 7.305849617407719
         },
         "rmse": {
-         "low": 6.765424236359606,
-         "high": 8.545695275480197
+         "low": 6.7654242363596016,
+         "high": 8.545695275480194
         }
        },
        "fit.variant": {
         "mae": {
          "low": 5.700070241671318,
-         "high": 7.367522314327747
+         "high": 7.367522314327745
         },
         "rmse": {
          "low": 6.833640498704084,
-         "high": 8.65974474375661
+         "high": 8.659744743756608
         }
        }
       },
       "deltas": {
        "fit.linear": {
         "mae": {
-         "point": -3.792215923650031,
-         "low": -4.375861635363238,
-         "high": -3.159283658688826
+         "point": -3.7922159236500326,
+         "low": -4.3758616353632425,
+         "high": -3.1592836586888278
         },
         "rmse": {
-         "point": -4.260082695719677,
-         "low": -4.785149196088145,
-         "high": -3.7022079436310995
+         "point": -4.26008269571968,
+         "low": -4.785149196088148,
+         "high": -3.702207943631104
         }
        },
        "fit.variant": {
@@ -2835,9 +2835,9 @@
          "high": -3.182753899638755
         },
         "rmse": {
-         "point": -4.170384139553372,
-         "low": -4.660485375760737,
-         "high": -3.648570386778664
+         "point": -4.170384139553374,
+         "low": -4.6604853757607385,
+         "high": -3.648570386778666
         }
        }
       },
@@ -2856,26 +2856,26 @@
        },
        "fit.linear": {
         "n": 96,
-        "mean": 6.394515464632113,
+        "mean": 6.394515464632111,
         "sd": 4.2475209438452115,
-        "min": -1.776599519158502,
-        "q05": 0.41185178765315067,
-        "q25": 3.261984922442746,
-        "median": 5.572351386623355,
-        "q75": 8.998533037532638,
-        "q95": 15.165754635580324,
+        "min": -1.776599519158509,
+        "q05": 0.4118517876531471,
+        "q25": 3.2619849224427426,
+        "median": 5.572351386623351,
+        "q75": 8.998533037532635,
+        "q95": 15.16575463558032,
         "max": 18.45304785315237
        },
        "fit.variant": {
         "n": 96,
         "mean": 6.409752295558562,
-        "sd": 4.386554773122254,
+        "sd": 4.386554773122252,
         "min": -2.0154747653481238,
-        "q05": 0.4804557357102279,
-        "q25": 3.3901253743852857,
-        "median": 5.673693089740421,
-        "q75": 9.178199377862295,
-        "q95": 15.431844902403551,
+        "q05": 0.48045573571022393,
+        "q25": 3.390125374385292,
+        "median": 5.673693089740427,
+        "q75": 9.178199377862285,
+        "q95": 15.431844902403546,
         "max": 18.794732120875594
        }
       },
@@ -2895,12 +2895,12 @@
             "mean_residual": 4.2074119574119555
            },
            "fit.linear": {
-            "mae": 3.95800803197313,
-            "mean_residual": 3.807868612211449
+            "mae": 3.9580080319731255,
+            "mean_residual": 3.807868612211445
            },
            "fit.variant": {
-            "mae": 3.924945436027481,
-            "mean_residual": 3.753553139485518
+            "mae": 3.9249454360274783,
+            "mean_residual": 3.7535531394855166
            }
           }
          },
@@ -2914,12 +2914,12 @@
             "mean_residual": 13.534684684684683
            },
            "fit.linear": {
-            "mae": 8.942708621261152,
-            "mean_residual": 8.90008671054259
+            "mae": 8.942708621261149,
+            "mean_residual": 8.900086710542586
            },
            "fit.variant": {
-            "mae": 9.00156758638398,
-            "mean_residual": 8.944454210939016
+            "mae": 9.001567586383983,
+            "mean_residual": 8.94445421093902
            }
           }
          },
@@ -2933,8 +2933,8 @@
             "mean_residual": 9.646684684684683
            },
            "fit.linear": {
-            "mae": 5.841737309743365,
-            "mean_residual": 5.699609348210685
+            "mae": 5.841737309743361,
+            "mean_residual": 5.69960934821068
            },
            "fit.variant": {
             "mae": 5.9372553994158785,
@@ -2952,12 +2952,12 @@
             "mean_residual": 11.314684684684682
            },
            "fit.linear": {
-            "mae": 6.960322415109672,
-            "mean_residual": 6.960322415109672
+            "mae": 6.960322415109667,
+            "mean_residual": 6.960322415109667
            },
            "fit.variant": {
-            "mae": 6.947628591508134,
-            "mean_residual": 6.947628591508134
+            "mae": 6.947628591508135,
+            "mean_residual": 6.947628591508135
            }
           }
          }
@@ -2966,9 +2966,9 @@
        }
       ],
       "predictions": {
-       "fit.baseline": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
-       "fit.linear": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
-       "fit.variant": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23"
+       "fit.baseline": "89afbb4ea77110dd0e7902bf1c63e876f66bca967a31117f41a3704e6b91ce3a",
+       "fit.linear": "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
+       "fit.variant": "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b"
       },
       "reference": "fit.baseline",
       "candidate": "fit.linear",
@@ -3011,14 +3011,14 @@
        "fit.variant": {
         "reference": "fit.linear",
         "mae": {
-         "point": 0.028706715665814286,
-         "low": -0.04194178849329033,
-         "high": 0.09590339908292789
+         "point": 0.028706715665816063,
+         "low": -0.041941788493284116,
+         "high": 0.09590339908292882
         },
         "rmse": {
-         "point": 0.08969855616630529,
-         "low": 0.021499179657065777,
-         "high": 0.15014827065407482
+         "point": 0.08969855616630618,
+         "low": 0.02149917965706844,
+         "high": 0.15014827065407665
         }
        }
       },
@@ -3044,7 +3044,7 @@
        "replicates": 2000,
        "seed": 20261017
       },
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
@@ -3054,10 +3054,10 @@
        "model_year"
       ],
       "results": {
-       "fit.baseline": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
-       "fit.linear": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
-       "fit.variant": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "fit.baseline": "89afbb4ea77110dd0e7902bf1c63e876f66bca967a31117f41a3704e6b91ce3a",
+       "fit.linear": "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
+       "fit.variant": "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b",
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "target": {
        "column": "mpg",
@@ -3087,17 +3087,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_40676558d4ce446d8ef6cf8eda1d5e7e",
+     "exposure_id": "x_1991ea6fcdf24f5c8faa401fc43cc9a4",
      "started_revision": 36,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
+     "result_id": "89afbb4ea77110dd0e7902bf1c63e876f66bca967a31117f41a3704e6b91ce3a",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -3143,14 +3143,14 @@
       "model": "train_mean"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "target": {
        "column": "mpg",
@@ -3167,17 +3167,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_1f7caefc13124a638d483bb180c2d4a6",
+     "exposure_id": "x_7d587c94e57f424191fc6d1736293da8",
      "started_revision": 28,
      "integrity": "ok"
     },
     "fit.linear": {
      "slot": "fit.linear",
-     "result_id": "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
+     "result_id": "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
      "activity": "fit.linear",
      "current": true,
      "stale_reason": null,
@@ -3199,15 +3199,15 @@
       ],
       "n_train": 222,
       "n_terms": 8,
-      "intercept": 21.07139386751173,
+      "intercept": 21.071393867511734,
       "coefficients": {
-       "num__cylinders": -0.37022387198762724,
-       "num__displacement": 0.41888510741149876,
-       "num__horsepower": -1.1866635219111468,
-       "num__weight": -4.061984545313062,
-       "num__horsepower=?": -0.04154318702939566,
-       "cat__origin_1": -0.9522927696704008,
-       "cat__origin_2": -0.1883477305837519,
+       "num__cylinders": -0.37022387198762885,
+       "num__displacement": 0.4188851074115008,
+       "num__horsepower": -1.1866635219111485,
+       "num__weight": -4.061984545313061,
+       "num__horsepower=?": -0.0415431870293953,
+       "cat__origin_1": -0.9522927696704006,
+       "cat__origin_2": -0.18834773058375273,
        "cat__origin_3": 1.1406405002541518
       },
       "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
@@ -3215,13 +3215,13 @@
        "n_rows": 222,
        "mae": 2.107827519590371,
        "rmse": 2.828244905141762,
-       "mean_residual": 6.40128590774865e-17
+       "mean_residual": -3.4566943901842714e-15
       },
       "validation": {
        "n_rows": 96,
-       "mae": 6.476590382656274,
-       "rmse": 7.664419781686159,
-       "mean_residual": 6.394515464632113
+       "mae": 6.476590382656272,
+       "rmse": 7.664419781686156,
+       "mean_residual": 6.394515464632111
       },
       "predictions": {
        "blob": "predictions",
@@ -3258,7 +3258,7 @@
       }
      },
      "blobs": {
-      "predictions": "b225513593321a8cd516ceab26c06227e17d6bf51924f6ea4540990cbc70f997"
+      "predictions": "a4c428aa3c527290b0ff2cd0d3b39cb7cadb43b1b1f91dc50774078dc889531f"
      },
      "params": {
       "estimator": "sklearn.linear_model.LinearRegression",
@@ -3269,7 +3269,7 @@
       "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
@@ -3289,7 +3289,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "special_values": [
        {
@@ -3312,17 +3312,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_27b79f03e35d43538aa57f812c3d61d6",
+     "exposure_id": "x_0913988d721f4e6c81b372fa878748fb",
      "started_revision": 30,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
+     "result_id": "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -3344,28 +3344,28 @@
       ],
       "n_train": 222,
       "n_terms": 8,
-      "intercept": 20.943266941816127,
+      "intercept": 20.943266941816123,
       "coefficients": {
-       "num__cylinders": -0.5206655589928507,
-       "num__displacement": -0.4706630199042758,
-       "num__horsepower": -1.0461027069104654,
-       "num__weight": -3.1876711076603237,
-       "num__horsepower=?": -0.04053541390734935,
-       "cat__origin_1": -0.7060718689819638,
-       "cat__origin_2": -0.20009242812717776,
-       "cat__origin_3": 0.9061642971091335
+       "num__cylinders": -0.520665558992845,
+       "num__displacement": -0.470663019904262,
+       "num__horsepower": -1.046102706910468,
+       "num__weight": -3.1876711076603423,
+       "num__horsepower=?": -0.04053541390735011,
+       "cat__origin_1": -0.7060718689819595,
+       "cat__origin_2": -0.20009242812717198,
+       "cat__origin_3": 0.906164297109135
       },
       "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
       "train": {
        "n_rows": 222,
-       "mae": 2.0983194550246034,
-       "rmse": 2.8506217842819295,
-       "mean_residual": -7.681543089298381e-16
+       "mae": 2.098319455024603,
+       "rmse": 2.8506217842819286,
+       "mean_residual": -1.408282899704703e-15
       },
       "validation": {
        "n_rows": 96,
        "mae": 6.505297098322088,
-       "rmse": 7.754118337852464,
+       "rmse": 7.7541183378524625,
        "mean_residual": 6.409752295558562
       },
       "predictions": {
@@ -3408,7 +3408,7 @@
       "alpha": 10.0
      },
      "blobs": {
-      "predictions": "fcfaca99fb29acdff0d7692638ce6b441a48e9a9be801eb29e6ec58f7273b066"
+      "predictions": "6fdf5da7ccf6b80af01174781285150df4de4db719cd6a5779ac57652cd9730e"
      },
      "params": {
       "alpha": 10.0,
@@ -3420,7 +3420,7 @@
       "special_values": "numeric special values: indicator column, value imputed; categorical special values: their own category"
      },
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "development": {
        "n_rows": 318,
@@ -3440,7 +3440,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802"
+       "split": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4"
       },
       "special_values": [
        {
@@ -3467,17 +3467,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_d17d4c973ce44eaaafa59e4b92b002f2",
+     "exposure_id": "x_4779b6d5227247f2becc7ecaf1e89d34",
      "started_revision": 34,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
+     "result_id": "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -3533,7 +3533,7 @@
      },
      "params": {},
      "inputs": {
-      "case_sha256": "eab1407ab113f08418ac0ddc2def657a168b6573f15b66b390d89fe5915f9291",
+      "case_sha256": "07dad2cbd5e0caa880a0d4e6b06cb5342a71f226431d5b79b90c764be0e3d31c",
       "dataset_sha256": "48b830e11feee5572525f8f1691ddb9d38d3d7b7063edcd8fca672c2a5e17d8d",
       "decision": {
        "column": "model_year",
@@ -3560,11 +3560,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
-      "python": "3.13.16"
+      "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.2"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_31410bb1d5b14b36a3677e06eb763671",
+     "exposure_id": "x_3e07fc2242a3432f8d7f2b8356357363",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3584,27 +3584,27 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
-       "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
-       "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
-       "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
-       "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
-       "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
-       "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
-       "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
-       "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
-       "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
-       "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
-       "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22"
+       "02c93f96799d85d9691d3179f80ca35e0bf800b0b9bfcf03025b2293d00cbed3",
+       "313ec8fa22a81f18574c935ea5b53a69771a43f687febb31f4f843f68ef62d96",
+       "36606f7e1f7198e6c3fddb4bc9f60dcde91b04514be7835d03cd71b7d673f9db",
+       "3919fc047041362390d7ac6a0a4eda3f36fc1204545ae52152a74858beab0b72",
+       "57ca5936ef97745b96972f8b5db475eeb45d957ce4dd2b168416627b3e50af5d",
+       "72f46220fac585d2dd45e58fd07f99ceb671cce9d7562e04b2e2c683296b8295",
+       "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b",
+       "89afbb4ea77110dd0e7902bf1c63e876f66bca967a31117f41a3704e6b91ce3a",
+       "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4",
+       "daa1d76ec8f1d9a417fbd93a206ff72668c8f54d4977c7383fbca8920cdd0458",
+       "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
+       "fd6afebd09ae80f99aea5e057d15e8834efef154fbffe3014392d86dd0bc3493"
       ],
-      "edit_check_sha256": "dc011a22b94ec647a0b4545803c445f77f499c5350fcc1ee718589eddab1f929",
+      "edit_check_sha256": "e13ac02b15e2d3b53cfea1e4c8f1fe7b24be5175c579c48b83c7961dc7c78a17",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 38,
       "path": "notebooks/study_generated.py",
       "revision": 38,
-      "sha256": "6943755f2bf782509bb953396693414f195b1fc6ffc6ec2ff48cc2f5592cd482",
+      "sha256": "940196b9f0a028c1685c96e8c99592e34e27d89a808db1562fe4393e59f0c052",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3617,18 +3617,18 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "01bb9658d40182a8ac171988b2a43de48e7bb2806af8da6f35814e86ad87bd7a",
-       "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
-       "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377",
-       "20b20428d403a6e06c7d2984cf30b50e4d6d6df494059b62d35f9b7c96123af0",
-       "2ded3bba7954ca53729f1914a60d06fca930507e06c1276fb5d2a3bdee39e802",
-       "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
-       "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
-       "757fa8584e7b341d54bcb0c4d0e1d853738e4e99a8a14f4a1d3bf1393cec7a22",
-       "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23",
-       "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
-       "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
-       "c1d251cfcef83cb0afa036a3a1ff5199d68315d8c54e3a57235edff52a733f22"
+       "02c93f96799d85d9691d3179f80ca35e0bf800b0b9bfcf03025b2293d00cbed3",
+       "313ec8fa22a81f18574c935ea5b53a69771a43f687febb31f4f843f68ef62d96",
+       "36606f7e1f7198e6c3fddb4bc9f60dcde91b04514be7835d03cd71b7d673f9db",
+       "3919fc047041362390d7ac6a0a4eda3f36fc1204545ae52152a74858beab0b72",
+       "57ca5936ef97745b96972f8b5db475eeb45d957ce4dd2b168416627b3e50af5d",
+       "72f46220fac585d2dd45e58fd07f99ceb671cce9d7562e04b2e2c683296b8295",
+       "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b",
+       "89afbb4ea77110dd0e7902bf1c63e876f66bca967a31117f41a3704e6b91ce3a",
+       "a32409647f51e1be2952aa697d5594b1cef045e0ec815e7238bfefa6c58b76b4",
+       "daa1d76ec8f1d9a417fbd93a206ff72668c8f54d4977c7383fbca8920cdd0458",
+       "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
+       "fd6afebd09ae80f99aea5e057d15e8834efef154fbffe3014392d86dd0bc3493"
       ],
       "error": null,
       "generated": true,
@@ -3636,7 +3636,7 @@
       "last_ok_revision": 38,
       "path": "reports/study.html",
       "revision": 38,
-      "sha256": "1f5fb7dc5b02cd175bd924616c3258eff0e9e0e3d3ba411562a06f5857d4f0c8",
+      "sha256": "dd78aebcd455086c8786d1b27c902c4ac91d70328c8d861d1d43c92438f25e01",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3796,9 +3796,9 @@
        "/hypotrail/framework",
        "marimo",
        "run",
-       "/studies/auto mpg/notebooks/study_generated.py"
+       "/private/studies/auto mpg/notebooks/study_generated.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo run '/studies/auto mpg/notebooks/study_generated.py'"
+      "shell": "uv run --project /hypotrail/framework marimo run '/private/studies/auto mpg/notebooks/study_generated.py'"
      },
      "workbench": {
       "mode": "edit",
@@ -3810,9 +3810,9 @@
        "/hypotrail/framework",
        "marimo",
        "edit",
-       "/studies/auto mpg/notebooks/workbench.py"
+       "/private/studies/auto mpg/notebooks/workbench.py"
       ],
-      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/auto mpg/notebooks/workbench.py'"
+      "shell": "uv run --project /hypotrail/framework marimo edit '/private/studies/auto mpg/notebooks/workbench.py'"
      }
     }
    },
@@ -3826,12 +3826,12 @@
     },
     "metric": "mae_reduction",
     "status": "met",
-    "result_id": "c09458879f2164a56489265a612bf8b64b5f854a60f04bbd08aaf896ffe04f2a",
+    "result_id": "daa1d76ec8f1d9a417fbd93a206ff72668c8f54d4977c7383fbca8920cdd0458",
     "rule": null,
     "model": "fit.linear",
-    "gain": 0.36929471747082676,
-    "low": 0.30765831630777174,
-    "high": 0.4261314806060684,
+    "gain": 0.3692947174708269,
+    "low": 0.3076583163077719,
+    "high": 0.42613148060606887,
     "minimum": 0.1,
     "unit": "share",
     "interval_includes_zero": false,
@@ -3844,10 +3844,10 @@
    "eda_looks": {
     "target_looks": 4,
     "results": [
-     "bbb27f0746f1fe70112541610d6708376e87a17c56eb5d5777c9d250501baee5",
-     "636442f8e6eb62d7905fb777dd2d9cd8a741d0289630bd8427b9f94e31ec7353",
-     "6c639d44e1599b55a4c18e011a67b6fc46cbceda8e7b455c505313350d5210ce",
-     "19ccd09b8ef823523185156a54a9bd8bca69e1aeb23570d252744958c685b377"
+     "02c93f96799d85d9691d3179f80ca35e0bf800b0b9bfcf03025b2293d00cbed3",
+     "36606f7e1f7198e6c3fddb4bc9f60dcde91b04514be7835d03cd71b7d673f9db",
+     "72f46220fac585d2dd45e58fd07f99ceb671cce9d7562e04b2e2c683296b8295",
+     "fd6afebd09ae80f99aea5e057d15e8834efef154fbffe3014392d86dd0bc3493"
     ],
     "by_activity": {
      "eda.mean_by": 1,
@@ -3861,8 +3861,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "08182649a6f10a800fa81be6bd26eee87e48a75af9146da24ce963f4d42edc24",
-     "b965716ffd45ecd2f6ef9f33e8fa48b0b275e921969d34678304901869aeac23"
+     "f0394a3b908866fcb541dc26485584ac67b516a90a75291d31d42f08fa9583d9",
+     "85bde05bd2d22ceaa7588cac6de7889152712325255b5cd8474cf2d9a1d44a0b"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -3956,6 +3956,16 @@
      "linear",
      "ebm",
      "hgb"
+    ]
+   },
+   "assurance": {
+    "profile": "legacy",
+    "evaluation_protection": "protocol_reserved",
+    "consent_provenance": "agent_reported",
+    "cross_study_history": "not_enforced",
+    "analysis_contract_status": "present",
+    "claim_scope": [
+     "retrospective_association"
     ]
    }
   }

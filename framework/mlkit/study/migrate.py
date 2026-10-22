@@ -69,7 +69,7 @@ SUPPLEMENT_KEYS = ('schema', 'purpose', 'dataset', 'target', 'facts', 'variables
                    'prior_exposure', 'notes',
                    # WP-A9 (R6): the teaching scenario's defaults, copied as they are
                    # (``scenario_assumption`` only; the case contract checks them).
-                   'scenario_defaults')
+                   'scenario_defaults', 'analysis_contract')
 SUPPLEMENT_DATASET_KEYS = ('sep', 'header', 'quotechar', 'na_values', 'encoding', 'decimal',
                            'column_names')
 # v0.2a (WP-A1): statements a surface shows the junior name no tutorial file; the migration
@@ -442,6 +442,8 @@ def from_companion_project(path, *, supplement=None) -> dict:
     }
     if 'scenario_defaults' in sup:
         document['scenario_defaults'] = copy.deepcopy(sup['scenario_defaults'])
+    if 'analysis_contract' in sup:
+        document['analysis_contract'] = copy.deepcopy(sup['analysis_contract'])
     document['migration'] = migration
     leftovers = [p for p, node in case_contract._walk(document, '')
                  if isinstance(node, str) and TEMPLATE.search(node)]

@@ -1,4 +1,22 @@
 schema: hypotrail.case-supplement/1
+analysis_contract:
+  schema: hypotrail.analysis/1
+  scenario_id: auto-mpg-retrospective-v1
+  intended_use: retrospective_comparison
+  row_unit: car model
+  population: Vehicles in the published Auto MPG extract
+  prediction_statement: Estimate mpg retrospectively from vehicle characteristics
+  timing:
+    prediction_order: null
+    outcome_available_order: null
+    scale: ordinal
+  dependencies:
+    kind: unknown
+    group_column: null
+    group_goal: null
+    status: unknown
+    source: No independent sampling or prospective availability guarantee is documented
+  permitted_claims: [retrospective_association]
 purpose: >-
   Input of mlkit.study.migrate, next to project.json. It adds what the companion tutorial
   contract does not carry: how to read auto-mpg.data (whitespace-separated, no header, "?"

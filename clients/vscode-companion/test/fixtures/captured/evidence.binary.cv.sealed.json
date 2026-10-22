@@ -13,7 +13,7 @@
  "payload": {
   "schema": "hypotrail.evidence/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"-cv",
+  "study": "/private/studies/bank marketing \"demo\"-cv",
   "revision": 30,
   "task": "binary",
   "results": [
@@ -32,14 +32,14 @@
     "downstream": [
      "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
      "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
-     "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-     "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
-     "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d"
+     "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
+     "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4"
     ],
-    "created": "2026-10-21T12:16:50.483357+00:00",
+    "created": "2026-10-21T20:14:51.623843+00:00",
     "started_revision": 12,
     "execution_id": "e_0eee3a0bb608847ca1ac05a7",
-    "exposure_id": "x_65accd3555774eeb8a0f2fadc6a48123",
+    "exposure_id": "x_6e5ce61e046442ca8ae33c48ebee4ddb",
     "values": {
      "method": "kfold_stratified",
      "folds": 5,
@@ -136,10 +136,10 @@
      "split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a"
     },
     "downstream": [],
-    "created": "2026-10-21T12:16:51.860072+00:00",
+    "created": "2026-10-21T20:14:52.122391+00:00",
     "started_revision": 14,
     "execution_id": "e_2ab8c63a63b208bd8731b8b3",
-    "exposure_id": "x_77dba9f99f084a12887b9a7173e5b866",
+    "exposure_id": "x_f03f7a69d66d4a2a96e8bb0896acb563",
     "values": {
      "partition": "train",
      "target": "y",
@@ -201,12 +201,12 @@
      "split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a"
     },
     "downstream": [
-     "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092"
+     "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a"
     ],
-    "created": "2026-10-21T12:16:53.535788+00:00",
+    "created": "2026-10-21T20:14:52.700507+00:00",
     "started_revision": 16,
     "execution_id": "e_9c2f7f2c69f91be9c07e4331",
-    "exposure_id": "x_71324e45e1a945ccb3c5c56eccd15953",
+    "exposure_id": "x_c6c15c4ba9c94f8291b5e31eb39c6db1",
     "values": {
      "model": "constant_prior",
      "train_rate": 0.11528891346419685,
@@ -319,7 +319,7 @@
     }
    },
    {
-    "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+    "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
     "activity": "fit.logistic",
     "slot": "fit.logistic",
     "promoted": true,
@@ -342,13 +342,13 @@
      "split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a"
     },
     "downstream": [
-     "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
-     "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d"
+     "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
+     "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4"
     ],
-    "created": "2026-10-21T12:16:55.866203+00:00",
+    "created": "2026-10-21T20:14:53.374521+00:00",
     "started_revision": 18,
     "execution_id": "e_c4434080afdaeb4edd1ce5b5",
-    "exposure_id": "x_bfd939ada9854142a6fc3de12b593149",
+    "exposure_id": "x_6aa9f2e188ac4108b50177bc0691f7bc",
     "values": {
      "model": "logistic",
      "features": [
@@ -371,45 +371,45 @@
      "n_train": 3617,
      "n_train_positive": 417,
      "n_terms": 37,
-     "intercept": -2.141460437539146,
+     "intercept": -2.1414604375391435,
      "coefficients": {
-      "num__age": 0.1095925432700592,
-      "num__balance": 0.012997757206100748,
-      "num__pdays": -0.016960096070927046,
-      "num__previous": 0.0011839204515415305,
-      "num__pdays=-1": -0.35347271182600665,
-      "cat__job_admin.": 0.050213917890223135,
-      "cat__job_blue-collar": -0.27549787772397055,
-      "cat__job_entrepreneur": -0.3666829799138865,
-      "cat__job_housemaid": 0.2597534974616277,
-      "cat__job_management": 0.040602625315680964,
-      "cat__job_retired": 0.6087198081190006,
-      "cat__job_self-employed": 0.004148506930874031,
+      "num__age": 0.10959254327005913,
+      "num__balance": 0.012997757206100767,
+      "num__pdays": -0.016960096070926852,
+      "num__previous": 0.001183920451541738,
+      "num__pdays=-1": -0.3534727118260084,
+      "cat__job_admin.": 0.05021391789022314,
+      "cat__job_blue-collar": -0.2754978777239705,
+      "cat__job_entrepreneur": -0.36668297991388654,
+      "cat__job_housemaid": 0.2597534974616278,
+      "cat__job_management": 0.0406026253156808,
+      "cat__job_retired": 0.6087198081190008,
+      "cat__job_self-employed": 0.004148506930874076,
       "cat__job_services": -0.22386566273123207,
-      "cat__job_student": 0.5684124435264754,
-      "cat__job_technician": -0.2813344952173388,
-      "cat__job_unemployed": -0.32320443466373977,
-      "cat__job_unknown": -0.06126534899371248,
-      "cat__marital_divorced": 0.22182185402368232,
-      "cat__marital_married": -0.28677230167837836,
-      "cat__marital_single": 0.06495044765469307,
-      "cat__education_primary": -0.04507745173614467,
-      "cat__education_secondary": 0.1583058390966499,
-      "cat__education_tertiary": 0.21822118008266336,
-      "cat__education_unknown": -0.3314495674431663,
-      "cat__default_no": -0.19787999607677323,
-      "cat__default_yes": 0.19787999607677687,
-      "cat__housing_no": 0.2014565216699658,
-      "cat__housing_yes": -0.20145652166996394,
-      "cat__loan_no": 0.3621615134160482,
-      "cat__loan_yes": -0.36216151341604164,
-      "cat__contact_cellular": 0.36236446398131145,
-      "cat__contact_telephone": 0.2255096922049799,
-      "cat__contact_unknown": -0.5878741561862811,
-      "cat__poutcome_failure": -0.9169330096535167,
-      "cat__poutcome_other": -0.4679501904896617,
-      "cat__poutcome_success": 1.5210027675184337,
-      "cat__poutcome_unknown": -0.13611956737525746
+      "cat__job_student": 0.568412443526475,
+      "cat__job_technician": -0.2813344952173387,
+      "cat__job_unemployed": -0.32320443466374,
+      "cat__job_unknown": -0.06126534899371254,
+      "cat__marital_divorced": 0.22182185402367433,
+      "cat__marital_married": -0.2867723016783865,
+      "cat__marital_single": 0.06495044765468518,
+      "cat__education_primary": -0.04507745173614624,
+      "cat__education_secondary": 0.15830583909664828,
+      "cat__education_tertiary": 0.21822118008266186,
+      "cat__education_unknown": -0.3314495674431676,
+      "cat__default_no": -0.1978799960767716,
+      "cat__default_yes": 0.19787999607677828,
+      "cat__housing_no": 0.20145652166996433,
+      "cat__housing_yes": -0.2014565216699655,
+      "cat__loan_no": 0.36216151341604974,
+      "cat__loan_yes": -0.3621615134160403,
+      "cat__contact_cellular": 0.36236446398131344,
+      "cat__contact_telephone": 0.22550969220498185,
+      "cat__contact_unknown": -0.5878741561862794,
+      "cat__poutcome_failure": -0.9169330096535173,
+      "cat__poutcome_other": -0.46795019048966235,
+      "cat__poutcome_success": 1.521002767518433,
+      "cat__poutcome_unknown": -0.13611956737525313
      },
      "coefficient_scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects",
      "iterations": 6,
@@ -525,7 +525,7 @@
       },
       {
        "text": "0.715",
-       "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+       "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
        "path": "validation.roc_auc",
        "value": 0.7153657074340528,
        "format": "f3"
@@ -535,7 +535,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+       "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
        "path": "validation.n_rows",
        "value": 3617,
        "format": "int"
@@ -547,7 +547,7 @@
     }
    },
    {
-    "result_id": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+    "result_id": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
     "activity": "fit.variant",
     "slot": "fit.variant",
     "promoted": true,
@@ -572,13 +572,13 @@
      "split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a"
     },
     "downstream": [
-     "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
-     "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d"
+     "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
+     "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4"
     ],
-    "created": "2026-10-21T12:17:00.539619+00:00",
+    "created": "2026-10-21T20:14:54.887341+00:00",
     "started_revision": 22,
     "execution_id": "e_8b6b767c3df161e7401893c1",
-    "exposure_id": "x_1b09c016819e4783b95b84ef9312785f",
+    "exposure_id": "x_37a09baa87cf4cab851fce380953e5da",
     "values": {
      "model": "logistic",
      "features": [
@@ -603,43 +603,43 @@
      "n_terms": 37,
      "intercept": -2.1768662397321967,
      "coefficients": {
-      "num__age": 0.12741228529638018,
-      "num__balance": 0.01568980784546906,
-      "num__pdays": -0.04195515485658304,
-      "num__previous": 0.010113412407297124,
-      "num__pdays=-1": -0.33244590253820583,
-      "cat__job_admin.": 0.06704196393860819,
-      "cat__job_blue-collar": -0.24106334353822134,
-      "cat__job_entrepreneur": -0.2047469639768081,
-      "cat__job_housemaid": 0.13021531574786616,
-      "cat__job_management": 0.0431322022066476,
-      "cat__job_retired": 0.43590849676635895,
-      "cat__job_self-employed": -0.0062647132225118396,
-      "cat__job_services": -0.14879932492400083,
-      "cat__job_student": 0.3156320196934801,
-      "cat__job_technician": -0.20516551811113323,
-      "cat__job_unemployed": -0.14987834573042919,
-      "cat__job_unknown": -0.03601178884985792,
-      "cat__marital_divorced": 0.17695188632905465,
-      "cat__marital_married": -0.25998343422188164,
-      "cat__marital_single": 0.08303154789282699,
-      "cat__education_primary": -0.06211495201231471,
-      "cat__education_secondary": 0.09264129959975022,
+      "num__age": 0.12741228529638016,
+      "num__balance": 0.015689807845469028,
+      "num__pdays": -0.04195515485658305,
+      "num__previous": 0.010113412407297196,
+      "num__pdays=-1": -0.3324459025382068,
+      "cat__job_admin.": 0.06704196393860834,
+      "cat__job_blue-collar": -0.24106334353822123,
+      "cat__job_entrepreneur": -0.20474696397680797,
+      "cat__job_housemaid": 0.13021531574786627,
+      "cat__job_management": 0.043132202206647936,
+      "cat__job_retired": 0.43590849676635934,
+      "cat__job_self-employed": -0.006264713222511685,
+      "cat__job_services": -0.14879932492400072,
+      "cat__job_student": 0.3156320196934802,
+      "cat__job_technician": -0.20516551811113307,
+      "cat__job_unemployed": -0.14987834573042916,
+      "cat__job_unknown": -0.03601178884985789,
+      "cat__marital_divorced": 0.17695188632905479,
+      "cat__marital_married": -0.2599834342218813,
+      "cat__marital_single": 0.08303154789282723,
+      "cat__education_primary": -0.06211495201231455,
+      "cat__education_secondary": 0.09264129959975032,
       "cat__education_tertiary": 0.1585336956938475,
-      "cat__education_unknown": -0.1890600432812835,
-      "cat__default_no": -0.10446876402441624,
-      "cat__default_yes": 0.10446876402441647,
-      "cat__housing_no": 0.21721714687878055,
-      "cat__housing_yes": -0.2172171468787808,
-      "cat__loan_no": 0.31639716074225643,
-      "cat__loan_yes": -0.3163971607422553,
-      "cat__contact_cellular": 0.33761635553978575,
-      "cat__contact_telephone": 0.16166932853774688,
-      "cat__contact_unknown": -0.49928568407753243,
-      "cat__poutcome_failure": -0.6904071477693708,
-      "cat__poutcome_other": -0.27926532553705297,
+      "cat__education_unknown": -0.18906004328128342,
+      "cat__default_no": -0.10446876402441807,
+      "cat__default_yes": 0.10446876402441588,
+      "cat__housing_no": 0.2172171468787808,
+      "cat__housing_yes": -0.21721714687878046,
+      "cat__loan_no": 0.31639716074225566,
+      "cat__loan_yes": -0.3163971607422561,
+      "cat__contact_cellular": 0.3376163555397856,
+      "cat__contact_telephone": 0.1616693285377467,
+      "cat__contact_unknown": -0.4992856840775328,
+      "cat__poutcome_failure": -0.6904071477693706,
+      "cat__poutcome_other": -0.2792653255370529,
       "cat__poutcome_success": 1.0976947814371023,
-      "cat__poutcome_unknown": -0.1280223081306796
+      "cat__poutcome_unknown": -0.12802230813067664
      },
      "coefficient_scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects",
      "iterations": 6,
@@ -757,7 +757,7 @@
     "headline": null
    },
    {
-    "result_id": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+    "result_id": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
     "activity": "policy.evaluation",
     "slot": "policy.evaluation",
     "promoted": true,
@@ -782,14 +782,14 @@
     },
     "upstream": {
      "fit.baseline": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
-     "fit.logistic": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-     "fit.variant": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+     "fit.logistic": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "fit.variant": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
     },
     "downstream": [],
-    "created": "2026-10-21T12:17:11.582144+00:00",
+    "created": "2026-10-21T20:14:58.354873+00:00",
     "started_revision": 24,
     "execution_id": "e_a633b01aa452bb85d7c21822",
-    "exposure_id": "x_76fbe974bb6e48308d01e5accd6f9134",
+    "exposure_id": "x_4c4e52d5a4ef4b91805691c86ab2fbfd",
     "values": {
      "rules": {
       "share:0.1": {
@@ -1469,8 +1469,8 @@
      "n_positive": 417,
      "predictions": {
       "fit.baseline": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
-      "fit.logistic": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-      "fit.variant": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+      "fit.logistic": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+      "fit.variant": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
      },
      "reference": "fit.baseline",
      "bootstrap": {
@@ -1714,7 +1714,7 @@
       },
       {
        "text": "36.4%",
-       "result_id": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+       "result_id": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
        "path": "rules.[share:0.1].models.[fit.logistic].precision",
        "value": 0.3638888888888889,
        "format": "pct1"
@@ -1724,7 +1724,7 @@
       },
       {
        "text": "31.4%",
-       "result_id": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+       "result_id": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
        "path": "rules.[share:0.1].models.[fit.logistic].recall",
        "value": 0.31414868105515587,
        "format": "pct1"
@@ -1734,7 +1734,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+       "result_id": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
        "path": "n",
        "value": 3617,
        "format": "int"
@@ -1746,7 +1746,7 @@
     }
    },
    {
-    "result_id": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+    "result_id": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
     "activity": "diag.binary",
     "slot": "diag.binary",
     "promoted": true,
@@ -1773,15 +1773,15 @@
      ]
     },
     "upstream": {
-     "fit.logistic": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-     "fit.variant": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "fit.logistic": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "fit.variant": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "split": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a"
     },
     "downstream": [],
-    "created": "2026-10-21T12:17:17.731906+00:00",
+    "created": "2026-10-21T20:15:00.412881+00:00",
     "started_revision": 29,
     "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
-    "exposure_id": "x_41e82806ef6041efbaf705b698c7dc36",
+    "exposure_id": "x_3b387628c0b7453dbd797a324d3a9150",
     "values": {
      "question": "Where does the model err at the rule, and can its score be read as a probability?",
      "evidence": "development",
@@ -2056,7 +2056,7 @@
           "n": 362,
           "n_positive": 9,
           "score_min": 0.009567420617237352,
-          "score_max": 0.030645556217617345,
+          "score_max": 0.03064555621761736,
           "mean_predicted": 0.023617984894779637,
           "observed_rate": 0.024861878453038673,
           "low": 0.013133963468143346,
@@ -2068,7 +2068,7 @@
           "n": 362,
           "n_positive": 15,
           "score_min": 0.03066875463341658,
-          "score_max": 0.0427310929622015,
+          "score_max": 0.04273109296220152,
           "mean_predicted": 0.03684939386278712,
           "observed_rate": 0.04143646408839779,
           "low": 0.02526933157094898,
@@ -2080,7 +2080,7 @@
           "n": 362,
           "n_positive": 22,
           "score_min": 0.042778034268859455,
-          "score_max": 0.05778057679671768,
+          "score_max": 0.057780576796717706,
           "mean_predicted": 0.04998596024343198,
           "observed_rate": 0.06077348066298342,
           "low": 0.04047304586309551,
@@ -2103,9 +2103,9 @@
           "bin": 5,
           "n": 362,
           "n_positive": 29,
-          "score_min": 0.07300977508178974,
-          "score_max": 0.09138691521603073,
-          "mean_predicted": 0.08198362445899086,
+          "score_min": 0.07300977508178971,
+          "score_max": 0.09138691521603069,
+          "mean_predicted": 0.08198362445899088,
           "observed_rate": 0.08011049723756906,
           "low": 0.05635498954182924,
           "high": 0.1126839679892356,
@@ -2115,9 +2115,9 @@
           "bin": 6,
           "n": 362,
           "n_positive": 35,
-          "score_min": 0.09139802927253214,
-          "score_max": 0.10753839333091011,
-          "mean_predicted": 0.0994031541370522,
+          "score_min": 0.09139802927253217,
+          "score_max": 0.10753839333091016,
+          "mean_predicted": 0.09940315413705221,
           "observed_rate": 0.09668508287292818,
           "low": 0.07034219808111107,
           "high": 0.13149785323162225,
@@ -2127,9 +2127,9 @@
           "bin": 7,
           "n": 361,
           "n_positive": 53,
-          "score_min": 0.10767567913375409,
-          "score_max": 0.1283330789886041,
-          "mean_predicted": 0.11761050744782378,
+          "score_min": 0.10767567913375413,
+          "score_max": 0.12833307898860416,
+          "mean_predicted": 0.1176105074478238,
           "observed_rate": 0.14681440443213298,
           "low": 0.11402689634257346,
           "high": 0.1870393782407575,
@@ -2139,8 +2139,8 @@
           "bin": 8,
           "n": 362,
           "n_positive": 43,
-          "score_min": 0.1283334712664542,
-          "score_max": 0.15579837205783095,
+          "score_min": 0.12833347126645422,
+          "score_max": 0.15579837205783104,
           "mean_predicted": 0.14092345687328098,
           "observed_rate": 0.11878453038674033,
           "low": 0.08939365690930673,
@@ -2151,9 +2151,9 @@
           "bin": 9,
           "n": 362,
           "n_positive": 55,
-          "score_min": 0.1558069118374713,
-          "score_max": 0.20272595320293949,
-          "mean_predicted": 0.17599539944583317,
+          "score_min": 0.15580691183747125,
+          "score_max": 0.20272595320293954,
+          "mean_predicted": 0.1759953994458332,
           "observed_rate": 0.15193370165745856,
           "low": 0.11862468694345632,
           "high": 0.19255234364150534,
@@ -2163,7 +2163,7 @@
           "bin": 10,
           "n": 361,
           "n_positive": 128,
-          "score_min": 0.20437532064466127,
+          "score_min": 0.2043753206446613,
           "score_max": 0.8897904455969814,
           "mean_predicted": 0.3641139980941199,
           "observed_rate": 0.3545706371191136,
@@ -2174,7 +2174,7 @@
         ],
         "brier": 0.09071934025194879,
         "brier_base_rate": 0.10199737989644175,
-        "mean_absolute_gap": 0.011793952126972753,
+        "mean_absolute_gap": 0.011793952126972759,
         "bins_outside_interval": 0,
         "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
        },
@@ -2478,7 +2478,7 @@
          },
          {
           "row_key": "L340",
-          "score": 0.7878032855568858,
+          "score": 0.787803285556886,
           "values": {
            "age": "63",
            "job": "retired",
@@ -2516,7 +2516,7 @@
          },
          {
           "row_key": "L1023",
-          "score": 0.019360285174735488,
+          "score": 0.019360285174735477,
           "values": {
            "age": "45",
            "job": "admin.",
@@ -2607,334 +2607,334 @@
         "terms": [
          {
           "term": "cat__poutcome_success",
-          "value": 1.5210027675184337,
-          "low": 1.1806351346593773,
-          "high": 1.8613704003784715,
-          "std_error": 0.173660146586531,
+          "value": 1.521002767518433,
+          "low": 1.1806351346606077,
+          "high": 1.86137040037725,
+          "std_error": 0.17366014658590548,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__poutcome_failure",
-          "value": -0.9169330096535167,
-          "low": -1.1957626410712983,
-          "high": -0.6381033782360648,
-          "std_error": 0.14226263013860938,
+          "value": -0.9169330096535173,
+          "low": -1.195762641069739,
+          "high": -0.6381033782376151,
+          "std_error": 0.14226263013781615,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_retired",
-          "value": 0.6087198081190006,
-          "low": 0.1862669948902046,
-          "high": 1.0311726213475176,
-          "std_error": 0.21554111022493805,
+          "value": 0.6087198081190008,
+          "low": 0.18626699489039422,
+          "high": 1.031172621347328,
+          "std_error": 0.21554111022484132,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__contact_unknown",
-          "value": -0.5878741561862811,
-          "low": -0.831869777016977,
-          "high": -0.3438785354156886,
-          "std_error": 0.12448984916317368,
+          "value": -0.5878741561862794,
+          "low": -0.8318697770252715,
+          "high": -0.34387853540737556,
+          "std_error": 0.12448984916741045,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_student",
-          "value": 0.5684124435264754,
-          "low": 0.021861285105409523,
-          "high": 1.1149636019484475,
-          "std_error": 0.2788577559244174,
+          "value": 0.568412443526475,
+          "low": 0.021861285105516548,
+          "high": 1.1149636019483413,
+          "std_error": 0.27885775592436307,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__poutcome_other",
-          "value": -0.4679501904896617,
-          "low": -0.7884297884162961,
-          "high": -0.14747059256357647,
-          "std_error": 0.16351300353183124,
+          "value": -0.46795019048966235,
+          "low": -0.7884297884154324,
+          "high": -0.1474705925644314,
+          "std_error": 0.16351300353139284,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_entrepreneur",
-          "value": -0.3666829799138865,
-          "low": -0.9076604814155467,
-          "high": 0.17429452158693287,
-          "std_error": 0.27601400115940977,
+          "value": -0.36668297991388654,
+          "low": -0.9076604814153769,
+          "high": 0.1742945215867634,
+          "std_error": 0.2760140011593233,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__contact_cellular",
-          "value": 0.36236446398131145,
-          "low": 0.17705384622888742,
-          "high": 0.5476750817645176,
-          "std_error": 0.09454797089616017,
+          "value": 0.36236446398131344,
+          "low": 0.1770538462171114,
+          "high": 0.547675081776313,
+          "std_error": 0.09454797090217339,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__loan_no",
-          "value": 0.3621615134160482,
-          "low": 0.17792455272619032,
-          "high": 0.5463984741103401,
-          "std_error": 0.09400017660799516,
+          "value": 0.36216151341604974,
+          "low": 0.17792455273520533,
+          "high": 0.5463984741013346,
+          "std_error": 0.094000176603398,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__loan_yes",
-          "value": -0.36216151341604164,
-          "low": -0.5463984741097399,
-          "high": -0.17792455272679086,
-          "std_error": 0.0940001766076888,
+          "value": -0.3621615134160403,
+          "low": -0.5463984741012915,
+          "high": -0.17792455273523047,
+          "std_error": 0.09400017660338057,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "num__pdays=-1",
-          "value": -0.35347271182600665,
-          "low": -0.4619749006444273,
-          "high": -0.24497052300782124,
-          "std_error": 0.05535927684087794,
+          "value": -0.3534727118260084,
+          "low": -0.4619749006387831,
+          "high": -0.24497052301345332,
+          "std_error": 0.05535927683800129,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__education_unknown",
-          "value": -0.3314495674431663,
-          "low": -0.7343611361895723,
-          "high": 0.07146200130284136,
-          "std_error": 0.2055709043249376,
+          "value": -0.3314495674431676,
+          "low": -0.7343611361919645,
+          "high": 0.07146200130522862,
+          "std_error": 0.2055709043261569,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_unemployed",
-          "value": -0.32320443466373977,
-          "low": -0.8592470640508477,
-          "high": 0.21283819472190169,
-          "std_error": 0.2734961629982034,
+          "value": -0.32320443466374,
+          "low": -0.859247064050678,
+          "high": 0.21283819472173254,
+          "std_error": 0.27349616299811697,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__marital_married",
-          "value": -0.28677230167837836,
-          "low": -0.4447120039530935,
-          "high": -0.12883259940472203,
-          "std_error": 0.08058296148296296,
+          "value": -0.2867723016783865,
+          "low": -0.44471200395132016,
+          "high": -0.12883259940649247,
+          "std_error": 0.08058296148205893,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_technician",
-          "value": -0.2813344952173388,
-          "low": -0.5741328022358091,
-          "high": 0.011463811800782042,
-          "std_error": 0.14938963640549077,
+          "value": -0.2813344952173387,
+          "low": -0.5741328022354462,
+          "high": 0.011463811800419443,
+          "std_error": 0.14938963640530573,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_blue-collar",
-          "value": -0.27549787772397055,
-          "low": -0.6202038181797589,
-          "high": 0.06920806272798402,
-          "std_error": 0.17587360950143374,
+          "value": -0.2754978777239705,
+          "low": -0.620203818179524,
+          "high": 0.06920806272774999,
+          "std_error": 0.1758736095013141,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_housemaid",
-          "value": 0.2597534974616277,
-          "low": -0.279394113991127,
-          "high": 0.7989011089171459,
-          "std_error": 0.2750803666326852,
+          "value": 0.2597534974616278,
+          "low": -0.2793941139909227,
+          "high": 0.7989011089169422,
+          "std_error": 0.2750803666325811,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__contact_telephone",
-          "value": 0.2255096922049799,
-          "low": -0.049779311675598625,
-          "high": 0.5007986961148754,
-          "std_error": 0.1404561543307334,
+          "value": 0.22550969220498185,
+          "low": -0.049779311683085664,
+          "high": 0.5007986961223806,
+          "std_error": 0.14045615433455808,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_services",
           "value": -0.22386566273123207,
-          "low": -0.5984777761974902,
-          "high": 0.1507464507355793,
-          "std_error": 0.19113214141761145,
+          "low": -0.59847777619729,
+          "high": 0.15074645073538004,
+          "std_error": 0.1911321414175096,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__marital_divorced",
-          "value": 0.22182185402368232,
-          "low": 0.013586287154203125,
-          "high": 0.4300574208943451,
-          "std_error": 0.10624458842744389,
+          "value": 0.22182185402367433,
+          "low": 0.01358628715495136,
+          "high": 0.4300574208935999,
+          "std_error": 0.10624458842706291,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__education_tertiary",
-          "value": 0.21822118008266336,
-          "low": -0.02928489594584835,
-          "high": 0.46572725611172405,
-          "std_error": 0.12628093066050328,
+          "value": 0.21822118008266186,
+          "low": -0.029284895950718204,
+          "high": 0.46572725611658916,
+          "std_error": 0.12628093066298673,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
-          "term": "cat__housing_no",
-          "value": 0.2014565216699658,
-          "low": 0.08479973047004244,
-          "high": 0.3181133128706789,
-          "std_error": 0.05951986471205192,
+          "term": "cat__housing_yes",
+          "value": -0.2014565216699655,
+          "low": -0.31811331290863776,
+          "high": -0.08479973043207042,
+          "std_error": 0.05951986473142242,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
-          "term": "cat__housing_yes",
-          "value": -0.20145652166996394,
-          "low": -0.31811331287128974,
-          "high": -0.08479973046942418,
-          "std_error": 0.05951986471236548,
+          "term": "cat__housing_no",
+          "value": 0.20145652166996433,
+          "low": 0.08479973043151559,
+          "high": 0.3181133129092114,
+          "std_error": 0.05951986473171029,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__default_yes",
-          "value": 0.19787999607677687,
-          "low": -0.19678646524915344,
-          "high": 0.5925464574035874,
-          "std_error": 0.20136413956554775,
+          "value": 0.19787999607677828,
+          "low": -0.19678646525076354,
+          "high": 0.5925464574052008,
+          "std_error": 0.20136413956637012,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__default_no",
-          "value": -0.19787999607677323,
-          "low": -0.5925464574035509,
-          "high": 0.19678646524912757,
-          "std_error": 0.20136413956553184,
+          "value": -0.1978799960767716,
+          "low": -0.5925464574054242,
+          "high": 0.19678646525100482,
+          "std_error": 0.20136413956648866,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__education_secondary",
-          "value": 0.1583058390966499,
-          "low": -0.04982693566662014,
-          "high": 0.36643861386077237,
-          "std_error": 0.10619214251150587,
+          "value": 0.15830583909664828,
+          "low": -0.04982693567227997,
+          "high": 0.36643861386642723,
+          "std_error": 0.10619214251439234,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__poutcome_unknown",
-          "value": -0.13611956737525746,
-          "low": -0.1779029088122071,
-          "high": -0.09433622593839347,
-          "std_error": 0.02131842307638737,
+          "value": -0.13611956737525313,
+          "low": -0.1779029087071508,
+          "high": -0.09433622604347196,
+          "std_error": 0.02131842302278058,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "num__age",
-          "value": 0.1095925432700592,
-          "low": -0.027665390087924888,
-          "high": 0.24685047662863674,
-          "std_error": 0.07003084466906224,
+          "value": 0.10959254327005913,
+          "low": -0.02766539008792418,
+          "high": 0.24685047662863646,
+          "std_error": 0.07003084466906201,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__marital_single",
-          "value": 0.06495044765469307,
-          "low": -0.129716847091028,
-          "high": 0.2596177424003086,
-          "std_error": 0.09932187340235797,
+          "value": 0.06495044765468518,
+          "low": -0.12971684709006892,
+          "high": 0.2596177423993523,
+          "std_error": 0.09932187340186936,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_unknown",
-          "value": -0.06126534899371248,
-          "low": -0.8805034572106496,
-          "high": 0.75797275922343,
-          "std_error": 0.4179863072378297,
+          "value": -0.06126534899371254,
+          "low": -0.8805034572106295,
+          "high": 0.7579727592234103,
+          "std_error": 0.41798630723781965,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_admin.",
-          "value": 0.050213917890223135,
-          "low": -0.2734045528316666,
-          "high": 0.37383238861295615,
-          "std_error": 0.16511449867190045,
+          "value": 0.05021391789022314,
+          "low": -0.27340455283139564,
+          "high": 0.3738323886126862,
+          "std_error": 0.16511449867176248,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__education_primary",
-          "value": -0.04507745173614467,
-          "low": -0.35982940471901886,
-          "high": 0.2696745012457145,
-          "std_error": 0.1605906820049195,
+          "value": -0.04507745173614624,
+          "low": -0.3598294047222735,
+          "high": 0.2696745012489637,
+          "std_error": 0.16059068200657867,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_management",
-          "value": 0.040602625315680964,
-          "low": -0.24223727302989054,
-          "high": 0.3234425236619927,
-          "std_error": 0.14430872229130062,
+          "value": 0.0406026253156808,
+          "low": -0.2422372730295802,
+          "high": 0.323442523661683,
+          "std_error": 0.14430872229114247,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "num__pdays",
-          "value": -0.016960096070927046,
-          "low": -0.12245386885633039,
-          "high": 0.08853367671483248,
-          "std_error": 0.053824342496955495,
+          "value": -0.016960096070926852,
+          "low": -0.12245386885633,
+          "high": 0.08853367671483209,
+          "std_error": 0.05382434249695531,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "num__balance",
-          "value": 0.012997757206100748,
-          "low": -0.06596701680826844,
-          "high": 0.09196253122048023,
-          "std_error": 0.04028889032514802,
+          "value": 0.012997757206100767,
+          "low": -0.06596701680826829,
+          "high": 0.09196253122048005,
+          "std_error": 0.040288890325147944,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_self-employed",
-          "value": 0.004148506930874031,
-          "low": -0.4580009332943969,
-          "high": 0.4662979471569039,
-          "std_error": 0.23579486351332288,
+          "value": 0.004148506930874076,
+          "low": -0.4580009332942642,
+          "high": 0.4662979471567716,
+          "std_error": 0.2357948635132553,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "num__previous",
-          "value": 0.0011839204515415305,
-          "low": -0.10977769656865409,
-          "high": 0.11214553747183827,
-          "std_error": 0.05661411020584933,
+          "value": 0.001183920451541738,
+          "low": -0.10977769656865413,
+          "high": 0.11214553747183822,
+          "std_error": 0.05661411020584934,
           "excludes_zero": false,
           "inside_interval": true
          }
@@ -2944,7 +2944,7 @@
         "penalty": 1.0,
         "point_check": {
          "consistent": true,
-         "max_difference": 3.00516278528562e-11,
+         "max_difference": 3.004418935859121e-11,
          "tolerance": 0.0001,
          "misaligned_terms": [],
          "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
@@ -2953,7 +2953,7 @@
         "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
         "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
        },
-       "predictions": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90"
+       "predictions": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642"
       },
       "fit.variant": {
        "confusion": {
@@ -3211,9 +3211,9 @@
           "bin": 1,
           "n": 362,
           "n_positive": 8,
-          "score_min": 0.012733057596356985,
-          "score_max": 0.03623284336686657,
-          "mean_predicted": 0.02869398963045459,
+          "score_min": 0.012733057596356996,
+          "score_max": 0.03623284336686661,
+          "mean_predicted": 0.0286939896304546,
           "observed_rate": 0.022099447513812154,
           "low": 0.01123975165374054,
           "high": 0.04299537764148458,
@@ -3224,8 +3224,8 @@
           "n": 362,
           "n_positive": 21,
           "score_min": 0.0362535105573154,
-          "score_max": 0.04900952621067434,
-          "mean_predicted": 0.04245661534696099,
+          "score_max": 0.049009526210674365,
+          "mean_predicted": 0.042456615346961,
           "observed_rate": 0.058011049723756904,
           "low": 0.0382525296577131,
           "high": 0.08705163616446042,
@@ -3235,9 +3235,9 @@
           "bin": 3,
           "n": 362,
           "n_positive": 15,
-          "score_min": 0.04917516013805697,
-          "score_max": 0.06439583178280453,
-          "mean_predicted": 0.05695438708261061,
+          "score_min": 0.049175160138056985,
+          "score_max": 0.06439583178280461,
+          "mean_predicted": 0.05695438708261063,
           "observed_rate": 0.04143646408839779,
           "low": 0.02526933157094898,
           "high": 0.06723374046955605,
@@ -3247,7 +3247,7 @@
           "bin": 4,
           "n": 361,
           "n_positive": 24,
-          "score_min": 0.06441340873620449,
+          "score_min": 0.06441340873620446,
           "score_max": 0.07873488370326727,
           "mean_predicted": 0.07121436753756018,
           "observed_rate": 0.0664819944598338,
@@ -3259,9 +3259,9 @@
           "bin": 5,
           "n": 362,
           "n_positive": 29,
-          "score_min": 0.07874320999332372,
+          "score_min": 0.07874320999332377,
           "score_max": 0.09460936652148719,
-          "mean_predicted": 0.08668578604452482,
+          "mean_predicted": 0.08668578604452483,
           "observed_rate": 0.08011049723756906,
           "low": 0.05635498954182924,
           "high": 0.1126839679892356,
@@ -3271,9 +3271,9 @@
           "bin": 6,
           "n": 362,
           "n_positive": 44,
-          "score_min": 0.09468341851024556,
+          "score_min": 0.09468341851024564,
           "score_max": 0.1125078069139644,
-          "mean_predicted": 0.10301881126103035,
+          "mean_predicted": 0.10301881126103037,
           "observed_rate": 0.12154696132596685,
           "low": 0.09180219494467418,
           "high": 0.1592394970405619,
@@ -3283,9 +3283,9 @@
           "bin": 7,
           "n": 361,
           "n_positive": 47,
-          "score_min": 0.11254238757909012,
-          "score_max": 0.1320479787378769,
-          "mean_predicted": 0.12212632099720978,
+          "score_min": 0.11254238757909021,
+          "score_max": 0.13204797873787694,
+          "mean_predicted": 0.12212632099720981,
           "observed_rate": 0.13019390581717452,
           "low": 0.09933832361904033,
           "high": 0.16883695212115324,
@@ -3296,8 +3296,8 @@
           "n": 362,
           "n_positive": 47,
           "score_min": 0.1320951243134687,
-          "score_max": 0.15589173053690303,
-          "mean_predicted": 0.14319155472445336,
+          "score_max": 0.15589173053690322,
+          "mean_predicted": 0.14319155472445338,
           "observed_rate": 0.1298342541436464,
           "low": 0.0990597904436128,
           "high": 0.16838244843245753,
@@ -3307,9 +3307,9 @@
           "bin": 9,
           "n": 362,
           "n_positive": 49,
-          "score_min": 0.15627526154533664,
-          "score_max": 0.1978146788154296,
-          "mean_predicted": 0.17477120929761888,
+          "score_min": 0.1562752615453366,
+          "score_max": 0.19781467881542955,
+          "mean_predicted": 0.1747712092976189,
           "observed_rate": 0.13535911602209943,
           "low": 0.10392341976099528,
           "high": 0.17445251704229786,
@@ -3319,16 +3319,16 @@
           "bin": 10,
           "n": 361,
           "n_positive": 133,
-          "score_min": 0.19794942799231677,
-          "score_max": 0.7916886230815008,
-          "mean_predicted": 0.32656966429412065,
+          "score_min": 0.19794942799231685,
+          "score_max": 0.7916886230815006,
+          "mean_predicted": 0.3265696642941207,
           "observed_rate": 0.3684210526315789,
           "low": 0.3202897175722076,
           "high": 0.4193232082529549,
           "inside_interval": true
          }
         ],
-        "brier": 0.09113868545810415,
+        "brier": 0.09113868545810412,
         "brier_base_rate": 0.10199737989644175,
         "mean_absolute_gap": 0.01701811419768698,
         "bins_outside_interval": 1,
@@ -3562,7 +3562,7 @@
         "false_positives": [
          {
           "row_key": "L4325",
-          "score": 0.7912001450869292,
+          "score": 0.7912001450869294,
           "values": {
            "age": "83",
            "job": "retired",
@@ -3580,7 +3580,7 @@
          },
          {
           "row_key": "L2072",
-          "score": 0.7606093635736363,
+          "score": 0.7606093635736368,
           "values": {
            "age": "80",
            "job": "retired",
@@ -3616,7 +3616,7 @@
          },
          {
           "row_key": "L1444",
-          "score": 0.6976514162613776,
+          "score": 0.6976514162613774,
           "values": {
            "age": "73",
            "job": "retired",
@@ -3654,7 +3654,7 @@
         "false_negatives": [
          {
           "row_key": "L2204",
-          "score": 0.020456533636298766,
+          "score": 0.020456533636298745,
           "values": {
            "age": "29",
            "job": "management",
@@ -3672,7 +3672,7 @@
          },
          {
           "row_key": "L1023",
-          "score": 0.024658920698491207,
+          "score": 0.024658920698491217,
           "values": {
            "age": "45",
            "job": "admin.",
@@ -3690,7 +3690,7 @@
          },
          {
           "row_key": "L2975",
-          "score": 0.028025133392465814,
+          "score": 0.028025133392465835,
           "values": {
            "age": "46",
            "job": "admin.",
@@ -3764,333 +3764,333 @@
          {
           "term": "cat__poutcome_success",
           "value": 1.0976947814371023,
-          "low": 0.8654323714329054,
-          "high": 1.3299571914412962,
-          "std_error": 0.11850340712189188,
+          "low": 0.8654323714328885,
+          "high": 1.3299571914413142,
+          "std_error": 0.11850340712190081,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__poutcome_failure",
-          "value": -0.6904071477693708,
-          "low": -0.8939703686800259,
-          "high": -0.48684392685870803,
-          "std_error": 0.10386069464354433,
+          "value": -0.6904071477693706,
+          "low": -0.8939703686800393,
+          "high": -0.4868439268586933,
+          "std_error": 0.1038606946435515,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__contact_unknown",
-          "value": -0.49928568407753243,
-          "low": -0.6851895714994156,
-          "high": -0.3133817966569343,
-          "std_error": 0.0948506650569229,
+          "value": -0.4992856840775328,
+          "low": -0.6851895714995256,
+          "high": -0.3133817966568231,
+          "std_error": 0.09485066505697935,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_retired",
-          "value": 0.43590849676635895,
-          "low": 0.15390160836301187,
-          "high": 0.7179153851696984,
-          "std_error": 0.1438837094088349,
+          "value": 0.43590849676635934,
+          "low": 0.15390160836304057,
+          "high": 0.7179153851696696,
+          "std_error": 0.14388370940882025,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__contact_cellular",
-          "value": 0.33761635553978575,
-          "low": 0.17890562930755435,
-          "high": 0.49632708177277685,
-          "std_error": 0.08097634828216296,
+          "value": 0.3376163555397856,
+          "low": 0.17890562930740198,
+          "high": 0.4963270817729306,
+          "std_error": 0.08097634828224107,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "num__pdays=-1",
-          "value": -0.33244590253820583,
-          "low": -0.42805526513678305,
-          "high": -0.23683653993965714,
-          "std_error": 0.04878118340577553,
-          "excludes_zero": true,
-          "inside_interval": true
-         },
-         {
-          "term": "cat__loan_no",
-          "value": 0.31639716074225643,
-          "low": 0.16824780837665196,
-          "high": 0.4645465131079397,
-          "std_error": 0.07558779321162384,
+          "value": -0.3324459025382068,
+          "low": -0.42805526513671843,
+          "high": -0.23683653993971954,
+          "std_error": 0.048781183405743146,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__loan_yes",
-          "value": -0.3163971607422553,
-          "low": -0.4645465131079558,
-          "high": -0.16824780837663844,
-          "std_error": 0.0755877932116314,
+          "value": -0.3163971607422561,
+          "low": -0.46454651310797573,
+          "high": -0.16824780837661474,
+          "std_error": 0.07558779321164254,
+          "excludes_zero": true,
+          "inside_interval": true
+         },
+         {
+          "term": "cat__loan_no",
+          "value": 0.31639716074225566,
+          "low": 0.16824780837657388,
+          "high": 0.46454651310802303,
+          "std_error": 0.07558779321166502,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_student",
-          "value": 0.3156320196934801,
-          "low": 0.005611843085838675,
-          "high": 0.6256521963011394,
-          "std_error": 0.1581764660233811,
+          "value": 0.3156320196934802,
+          "low": 0.005611843085859658,
+          "high": 0.6256521963011181,
+          "std_error": 0.1581764660233703,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__poutcome_other",
-          "value": -0.27926532553705297,
-          "low": -0.5003399773432725,
-          "high": -0.058190673730828785,
-          "std_error": 0.11279526233646667,
+          "value": -0.2792653255370529,
+          "low": -0.5003399773432425,
+          "high": -0.058190673730857484,
+          "std_error": 0.11279526233645173,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__marital_married",
-          "value": -0.25998343422188164,
-          "low": -0.40020589409749563,
-          "high": -0.11976097434630181,
-          "std_error": 0.07154338599160691,
+          "value": -0.2599834342218813,
+          "low": -0.4002058940974277,
+          "high": -0.11976097434637001,
+          "std_error": 0.07154338599157217,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_blue-collar",
-          "value": -0.24106334353822134,
-          "low": -0.4895191498348134,
-          "high": 0.007392462758229856,
-          "std_error": 0.12676549582355054,
+          "value": -0.24106334353822123,
+          "low": -0.4895191498348066,
+          "high": 0.0073924627582230285,
+          "std_error": 0.12676549582354707,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
-          "term": "cat__housing_yes",
-          "value": -0.2172171468787808,
-          "low": -0.3221896777548322,
-          "high": -0.11224461600278944,
-          "std_error": 0.05355839786038486,
+          "term": "cat__housing_no",
+          "value": 0.2172171468787808,
+          "low": 0.1122446160030633,
+          "high": 0.32218967775455726,
+          "std_error": 0.053558397860244855,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
-          "term": "cat__housing_no",
-          "value": 0.21721714687878055,
-          "low": 0.11224461600280175,
-          "high": 0.3221896777548202,
-          "std_error": 0.05355839786037865,
+          "term": "cat__housing_yes",
+          "value": -0.21721714687878046,
+          "low": -0.3221896777546146,
+          "high": -0.11224461600300847,
+          "std_error": 0.05355839786027348,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__job_technician",
-          "value": -0.20516551811113323,
-          "low": -0.42673229235694354,
-          "high": 0.016401256134686987,
-          "std_error": 0.11304634982760181,
+          "value": -0.20516551811113307,
+          "low": -0.42673229235694865,
+          "high": 0.016401256134692094,
+          "std_error": 0.11304634982760443,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_entrepreneur",
-          "value": -0.2047469639768081,
-          "low": -0.4732161931957041,
-          "high": 0.06372226524209607,
-          "std_error": 0.13697661351767237,
+          "value": -0.20474696397680797,
+          "low": -0.4732161931956949,
+          "high": 0.06372226524208685,
+          "std_error": 0.13697661351766768,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__education_unknown",
-          "value": -0.1890600432812835,
-          "low": -0.4291280924036778,
-          "high": 0.05100800584111265,
-          "std_error": 0.12248594923989492,
+          "value": -0.18906004328128342,
+          "low": -0.42912809240365,
+          "high": 0.05100800584108525,
+          "std_error": 0.12248594923988088,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__marital_divorced",
-          "value": 0.17695188632905465,
-          "low": 0.0001154373348885851,
-          "high": 0.3537883353232305,
-          "std_error": 0.09022433595159622,
+          "value": 0.17695188632905479,
+          "low": 0.00011543733497856867,
+          "high": 0.3537883353231407,
+          "std_error": 0.09022433595155037,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "cat__contact_telephone",
-          "value": 0.16166932853774688,
-          "low": -0.05050301181958011,
-          "high": 0.37384166889559595,
-          "std_error": 0.10825318323763929,
+          "value": 0.1616693285377467,
+          "low": -0.05050301181960887,
+          "high": 0.3738416688956255,
+          "std_error": 0.10825318323765416,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__education_tertiary",
           "value": 0.1585336956938475,
-          "low": -0.024052895990588213,
-          "high": 0.3411202873783079,
-          "std_error": 0.09315813613141254,
+          "low": -0.024052895990491152,
+          "high": 0.3411202873782108,
+          "std_error": 0.09315813613136302,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_unemployed",
-          "value": -0.14987834573042919,
-          "low": -0.4138712721279494,
-          "high": 0.11411458066708599,
-          "std_error": 0.13469274358093328,
+          "value": -0.14987834573042916,
+          "low": -0.41387127212793706,
+          "high": 0.11411458066707367,
+          "std_error": 0.134692743580927,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_services",
-          "value": -0.14879932492400083,
-          "low": -0.4021433889401286,
-          "high": 0.10454473909214301,
-          "std_error": 0.1292595506930135,
+          "value": -0.14879932492400072,
+          "low": -0.40214338894011903,
+          "high": 0.10454473909213344,
+          "std_error": 0.12925955069300865,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_housemaid",
-          "value": 0.13021531574786616,
-          "low": -0.16812583352285937,
-          "high": 0.4285564650186273,
-          "std_error": 0.1522176691123002,
+          "value": 0.13021531574786627,
+          "low": -0.16812583352286153,
+          "high": 0.4285564650186294,
+          "std_error": 0.1522176691123013,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__poutcome_unknown",
-          "value": -0.1280223081306796,
-          "low": -0.1648407233535546,
-          "high": -0.0912038929078129,
-          "std_error": 0.01878525090934824,
+          "value": -0.12802230813067664,
+          "low": -0.16484072335211183,
+          "high": -0.09120389290925882,
+          "std_error": 0.01878525090861133,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
           "term": "num__age",
-          "value": 0.12741228529638018,
-          "low": 0.010867606679400468,
-          "high": 0.24395696391339938,
-          "std_error": 0.059462663363352104,
+          "value": 0.12741228529638016,
+          "low": 0.01086760667940255,
+          "high": 0.24395696391339722,
+          "std_error": 0.05946266336335103,
           "excludes_zero": true,
           "inside_interval": true
          },
          {
-          "term": "cat__default_yes",
-          "value": 0.10446876402441647,
-          "low": -0.13274151524859873,
-          "high": 0.34167904329742743,
-          "std_error": 0.12102787660594662,
+          "term": "cat__default_no",
+          "value": -0.10446876402441807,
+          "low": -0.3416790432974403,
+          "high": 0.1327415152486175,
+          "std_error": 0.12102787660595471,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
-          "term": "cat__default_no",
-          "value": -0.10446876402441624,
-          "low": -0.3416790432974136,
-          "high": 0.13274151524858577,
-          "std_error": 0.12102787660593979,
+          "term": "cat__default_yes",
+          "value": 0.10446876402441588,
+          "low": -0.13274151524859118,
+          "high": 0.3416790432974216,
+          "std_error": 0.12102787660594322,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__education_secondary",
-          "value": 0.09264129959975022,
-          "low": -0.06938344766190728,
-          "high": 0.2546660468614239,
-          "std_error": 0.08266720640771778,
+          "value": 0.09264129959975032,
+          "low": -0.06938344766188785,
+          "high": 0.2546660468614047,
+          "std_error": 0.08266720640770794,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__marital_single",
-          "value": 0.08303154789282699,
-          "low": -0.08087862468384527,
-          "high": 0.24694172046952195,
-          "std_error": 0.08362917577546637,
+          "value": 0.08303154789282723,
+          "low": -0.0808786246837598,
+          "high": 0.24694172046943658,
+          "std_error": 0.0836291757754228,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_admin.",
-          "value": 0.06704196393860819,
-          "low": -0.17335447948243446,
-          "high": 0.30743840735968253,
-          "std_error": 0.12265350043025028,
+          "value": 0.06704196393860834,
+          "low": -0.17335447948242777,
+          "high": 0.3074384073596759,
+          "std_error": 0.12265350043024689,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__education_primary",
-          "value": -0.06211495201231471,
-          "low": -0.28478815677710145,
-          "high": 0.16055825275242955,
-          "std_error": 0.11361086556752235,
+          "value": -0.06211495201231455,
+          "low": -0.2847881567770842,
+          "high": 0.16055825275241242,
+          "std_error": 0.1136108655675136,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_management",
-          "value": 0.0431322022066476,
-          "low": -0.17397709656304233,
-          "high": 0.2602415009763679,
-          "std_error": 0.11077208585577879,
+          "value": 0.043132202206647936,
+          "low": -0.17397709656305033,
+          "high": 0.260241500976376,
+          "std_error": 0.11077208585578291,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "num__pdays",
-          "value": -0.04195515485658304,
-          "low": -0.1410232248599949,
-          "high": 0.05711291514683893,
-          "std_error": 0.05054586246729697,
+          "value": -0.04195515485658305,
+          "low": -0.1410232248599953,
+          "high": 0.057112915146839346,
+          "std_error": 0.050545862467297184,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_unknown",
-          "value": -0.03601178884985792,
-          "low": -0.29569885113449457,
-          "high": 0.22367527343478533,
-          "std_error": 0.13249583376685412,
+          "value": -0.03601178884985789,
+          "low": -0.2956988511344919,
+          "high": 0.22367527343478255,
+          "std_error": 0.13249583376685273,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "num__balance",
-          "value": 0.01568980784546906,
-          "low": -0.05988225849564245,
-          "high": 0.09126187418658464,
-          "std_error": 0.038557885214838834,
+          "value": 0.015689807845469028,
+          "low": -0.05988225849564206,
+          "high": 0.09126187418658428,
+          "std_error": 0.03855788521483865,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "num__previous",
-          "value": 0.010113412407297124,
-          "low": -0.08645110652202218,
-          "high": 0.1066779313366214,
-          "std_error": 0.04926851701919546,
+          "value": 0.010113412407297196,
+          "low": -0.08645110652202181,
+          "high": 0.10667793133662148,
+          "std_error": 0.0492685170191954,
           "excludes_zero": false,
           "inside_interval": true
          },
          {
           "term": "cat__job_self-employed",
-          "value": -0.0062647132225118396,
-          "low": -0.28566796048492804,
-          "high": 0.2731385340399046,
-          "std_error": 0.14255529666173133,
+          "value": -0.006264713222511685,
+          "low": -0.28566796048493526,
+          "high": 0.27313853403991184,
+          "std_error": 0.14255529666173503,
           "excludes_zero": false,
           "inside_interval": true
          }
@@ -4100,7 +4100,7 @@
         "penalty": 10.0,
         "point_check": {
          "consistent": true,
-         "max_difference": 6.424860643505781e-13,
+         "max_difference": 6.415423747796467e-13,
          "tolerance": 0.0001,
          "misaligned_terms": [],
          "note": "The coefficients and their intervals come from the same prepared rows and the same penalised fit."
@@ -4109,7 +4109,7 @@
         "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
         "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
        },
-       "predictions": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1"
+       "predictions": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0"
       }
      },
      "coefficient_rows": 3617,
@@ -4125,8 +4125,8 @@
           "n": 853,
           "low": 19.0,
           "high": 32.0,
-          "gap": 0.008731801444340326,
-          "se": 0.01019113276369028
+          "gap": 0.008731801444340312,
+          "se": 0.010191132763690283
          },
          {
           "bin": 2,
@@ -4141,15 +4141,15 @@
           "n": 702,
           "low": 37.0,
           "high": 42.0,
-          "gap": -0.0036836554853329068,
-          "se": 0.010721922879570885
+          "gap": -0.0036836554853329206,
+          "se": 0.010721922879570887
          },
          {
           "bin": 4,
           "n": 776,
           "low": 43.0,
           "high": 51.0,
-          "gap": -0.006279634238554446,
+          "gap": -0.006279634238554474,
           "se": 0.010456380961734875
          },
          {
@@ -4157,11 +4157,11 @@
           "n": 660,
           "low": 52.0,
           "high": 87.0,
-          "gap": 0.002200362547684437,
+          "gap": 0.0022003625476843813,
           "se": 0.013113770421669037
          }
         ],
-        "statistic": 1.3559477366584907,
+        "statistic": 1.3559477366584904,
         "df": 5,
         "p_value": 0.929070782808754,
         "level": 0.0025,
@@ -4175,7 +4175,7 @@
           "n": 729,
           "low": -3313.0,
           "high": 20.0,
-          "gap": -0.016146352416858634,
+          "gap": -0.01614635241685866,
           "se": 0.010723902119604292
          },
          {
@@ -4207,11 +4207,11 @@
           "n": 724,
           "low": 1931.0,
           "high": 71188.0,
-          "gap": 0.030681466331109325,
+          "gap": 0.030681466331109297,
           "se": 0.011723150029660456
          }
         ],
-        "statistic": 12.247363654503665,
+        "statistic": 12.247363654503662,
         "df": 5,
         "p_value": 0.03155111449795323,
         "level": 0.0025,
@@ -4261,20 +4261,20 @@
          {
           "value": "admin.",
           "n": 377,
-          "slope": 0.9352611997396506,
-          "se": 0.17425093029731217
+          "slope": 0.9352611997396503,
+          "se": 0.17425093029731234
          },
          {
           "value": "blue-collar",
           "n": 734,
-          "slope": 0.8702690586343161,
-          "se": 0.17642249929110776
+          "slope": 0.8702690586343166,
+          "se": 0.1764224992911076
          },
          {
           "value": "entrepreneur",
           "n": 144,
-          "slope": 1.0507512197039557,
-          "se": 0.45255796711733143
+          "slope": 1.0507512197039572,
+          "se": 0.4525579671173311
          },
          {
           "value": "management",
@@ -4291,31 +4291,31 @@
          {
           "value": "self-employed",
           "n": 154,
-          "slope": 1.1590873798608796,
-          "se": 0.3754527636896891
+          "slope": 1.15908737986088,
+          "se": 0.37545276368969016
          },
          {
           "value": "services",
           "n": 344,
-          "slope": 1.2404595960844809,
-          "se": 0.2588970792158661
+          "slope": 1.2404595960844813,
+          "se": 0.2588970792158666
          },
          {
           "value": "technician",
           "n": 623,
-          "slope": 0.8519410303806464,
-          "se": 0.14392573394625693
+          "slope": 0.8519410303806466,
+          "se": 0.14392573394625682
          },
          {
           "value": "unemployed",
           "n": 101,
-          "slope": 1.5125717298270018,
-          "se": 0.4980259744351435
+          "slope": 1.5125717298270025,
+          "se": 0.49802597443514435
          }
         ],
-        "q": 7.5001362650461205,
+        "q": 7.500136265046116,
         "df": 8,
-        "p_value": 0.48375329872946726,
+        "p_value": 0.4837532987294676,
         "level": 0.005,
         "flagged": false
        },
@@ -4332,26 +4332,26 @@
           "value": "married",
           "n": 2229,
           "slope": 0.9518937370486348,
-          "se": 0.0750815759564308
+          "se": 0.07508157595643067
          },
          {
           "value": "single",
           "n": 955,
-          "slope": 0.7475327152153197,
-          "se": 0.11463454803700214
+          "slope": 0.7475327152153199,
+          "se": 0.11463454803700207
          }
         ],
-        "q": 5.3858270227862075,
+        "q": 5.385827022786205,
         "df": 2,
-        "p_value": 0.06768345530725924,
+        "p_value": 0.06768345530725932,
         "level": 0.005,
         "flagged": false
        }
       ],
       "calibration_slope": {
-       "slope": 0.9345650238435238,
-       "se": 0.05906488587502072,
-       "low": 0.8187999747775146,
+       "slope": 0.9345650238435239,
+       "se": 0.05906488587502074,
+       "low": 0.8187999747775148,
        "high": 1.050330072909533,
        "band": [
         0.8,
@@ -4373,7 +4373,7 @@
       },
       {
        "text": "0.0907",
-       "result_id": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+       "result_id": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
        "path": "models.[fit.logistic].calibration.brier",
        "value": 0.09071934025194879,
        "format": "f4"
@@ -4383,7 +4383,7 @@
       },
       {
        "text": "0.715",
-       "result_id": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+       "result_id": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
        "path": "models.[fit.logistic].roc_auc",
        "value": 0.7153657074340528,
        "format": "f3"
@@ -4393,7 +4393,7 @@
       },
       {
        "text": "3,617",
-       "result_id": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+       "result_id": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
        "path": "n",
        "value": 3617,
        "format": "int"
@@ -4481,25 +4481,25 @@
      "status": "current"
     },
     {
-     "id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "kind": "result",
      "label": "fit.logistic",
      "status": "current"
     },
     {
-     "id": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "id": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "kind": "result",
      "label": "fit.variant",
      "status": "current"
     },
     {
-     "id": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "id": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "kind": "result",
      "label": "policy.evaluation",
      "status": "current"
     },
     {
-     "id": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "id": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "kind": "result",
      "label": "diag.binary",
      "status": "current"
@@ -4550,77 +4550,77 @@
     },
     {
      "from": "dataset",
-     "to": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "to": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "role": "rows"
     },
     {
      "from": "decision:feature_availability",
-     "to": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "to": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "role": "features"
     },
     {
      "from": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
-     "to": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "to": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "to": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "role": "rows"
     },
     {
      "from": "decision:feature_availability",
-     "to": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "to": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "role": "features"
     },
     {
      "from": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
-     "to": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "to": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "role": "split"
     },
     {
      "from": "dataset",
-     "to": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "to": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "role": "rows"
     },
     {
      "from": "decision:policy",
-     "to": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "to": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "role": "rule"
     },
     {
      "from": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
-     "to": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "to": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "role": "fit.baseline"
     },
     {
-     "from": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-     "to": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "from": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "to": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "role": "fit.logistic"
     },
     {
-     "from": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
-     "to": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "from": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
+     "to": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "role": "fit.variant"
     },
     {
      "from": "dataset",
-     "to": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "to": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "role": "rows"
     },
     {
-     "from": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
-     "to": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "from": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
+     "to": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "role": "fit.logistic"
     },
     {
-     "from": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
-     "to": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "from": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
+     "to": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "role": "fit.variant"
     },
     {
      "from": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
-     "to": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "to": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "role": "split"
     },
     {
@@ -4654,42 +4654,42 @@
      "role": "consumed"
     },
     {
-     "from": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "from": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "from": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "from": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "from": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "from": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "from": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "to": "artifact:notebook",
      "role": "consumed"
     },
     {
-     "from": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "from": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "to": "artifact:report",
      "role": "consumed"
     },
     {
-     "from": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "from": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "to": "artifact:notebook",
      "role": "consumed"
     }
@@ -4737,9 +4737,9 @@
    },
    "records": [
     {
-     "exposure_id": "x_41899fca31f64a21bc5394b5fd001963",
+     "exposure_id": "x_32141ce8f3c94d74a761edcd37c7ecf6",
      "revision": 1,
-     "time": "2026-10-21T12:16:39.297670+00:00",
+     "time": "2026-10-21T20:14:47.899925+00:00",
      "activity": "init.structure",
      "result_id": null,
      "execution_id": null,
@@ -4767,9 +4767,9 @@
      ]
     },
     {
-     "exposure_id": "x_e688c6c9e1004e8a981abf95e94978e8",
+     "exposure_id": "x_bcda92d5206540f5866a0a5e222ce4c2",
      "revision": 1,
-     "time": "2026-10-21T12:16:39.299888+00:00",
+     "time": "2026-10-21T20:14:47.901326+00:00",
      "activity": "init.final_test",
      "result_id": null,
      "execution_id": null,
@@ -4797,9 +4797,9 @@
      ]
     },
     {
-     "exposure_id": "x_65accd3555774eeb8a0f2fadc6a48123",
+     "exposure_id": "x_6e5ce61e046442ca8ae33c48ebee4ddb",
      "revision": 12,
-     "time": "2026-10-21T12:16:50.489937+00:00",
+     "time": "2026-10-21T20:14:51.627043+00:00",
      "activity": "split",
      "result_id": "6577a978a0150bc1b2fa1dc8d064022c6321ca6f5c5092693e2d59240554f10a",
      "execution_id": "e_0eee3a0bb608847ca1ac05a7",
@@ -4811,9 +4811,9 @@
      ]
     },
     {
-     "exposure_id": "x_77dba9f99f084a12887b9a7173e5b866",
+     "exposure_id": "x_f03f7a69d66d4a2a96e8bb0896acb563",
      "revision": 14,
-     "time": "2026-10-21T12:16:51.865309+00:00",
+     "time": "2026-10-21T20:14:52.126251+00:00",
      "activity": "eda.target_rate",
      "result_id": "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
      "execution_id": "e_2ab8c63a63b208bd8731b8b3",
@@ -4825,9 +4825,9 @@
      ]
     },
     {
-     "exposure_id": "x_5eff6eccbf9c4bb6a8b1a29c9f3be61e",
+     "exposure_id": "x_d5c3b4e7a1164044ad22dbdc8f7973ce",
      "revision": 16,
-     "time": "2026-10-21T12:16:53.542527+00:00",
+     "time": "2026-10-21T20:14:52.704621+00:00",
      "activity": "fit.baseline",
      "result_id": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
@@ -4839,9 +4839,9 @@
      ]
     },
     {
-     "exposure_id": "x_71324e45e1a945ccb3c5c56eccd15953",
+     "exposure_id": "x_c6c15c4ba9c94f8291b5e31eb39c6db1",
      "revision": 16,
-     "time": "2026-10-21T12:16:53.546784+00:00",
+     "time": "2026-10-21T20:14:52.706947+00:00",
      "activity": "fit.baseline",
      "result_id": "5f3293429c2eb49e6688528033df70c6b384c734746fe3ac3e145a137cfaebd3",
      "execution_id": "e_9c2f7f2c69f91be9c07e4331",
@@ -4853,11 +4853,11 @@
      ]
     },
     {
-     "exposure_id": "x_19f001323fe249648101e7549e9b518a",
+     "exposure_id": "x_79672bc786a3468ab9ec832786155202",
      "revision": 18,
-     "time": "2026-10-21T12:16:55.875776+00:00",
+     "time": "2026-10-21T20:14:53.378927+00:00",
      "activity": "fit.logistic",
-     "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
      "purpose": "cross_validated_fit",
      "partition": "development",
@@ -4879,11 +4879,11 @@
      ]
     },
     {
-     "exposure_id": "x_bfd939ada9854142a6fc3de12b593149",
+     "exposure_id": "x_6aa9f2e188ac4108b50177bc0691f7bc",
      "revision": 18,
-     "time": "2026-10-21T12:16:55.881952+00:00",
+     "time": "2026-10-21T20:14:53.381101+00:00",
      "activity": "fit.logistic",
-     "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "execution_id": "e_c4434080afdaeb4edd1ce5b5",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
@@ -4905,11 +4905,11 @@
      ]
     },
     {
-     "exposure_id": "x_348ebcad0c304e5fb43b4814664cee5b",
+     "exposure_id": "x_e09d2a54a7244cf1af406165b296cbcf",
      "revision": 22,
-     "time": "2026-10-21T12:17:00.546137+00:00",
+     "time": "2026-10-21T20:14:54.893247+00:00",
      "activity": "fit.variant",
-     "result_id": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "result_id": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "execution_id": "e_8b6b767c3df161e7401893c1",
      "purpose": "cross_validated_fit",
      "partition": "development",
@@ -4931,11 +4931,11 @@
      ]
     },
     {
-     "exposure_id": "x_1b09c016819e4783b95b84ef9312785f",
+     "exposure_id": "x_37a09baa87cf4cab851fce380953e5da",
      "revision": 22,
-     "time": "2026-10-21T12:17:00.549695+00:00",
+     "time": "2026-10-21T20:14:54.895502+00:00",
      "activity": "fit.variant",
-     "result_id": "e5a81bbf10c4c4c681b57406f935d95a1d23b43b1121851804185b5db06033e1",
+     "result_id": "43c6cc597e2fa923ac9095548133240ed95c34622e38f8a2958f1fe44d5357e0",
      "execution_id": "e_8b6b767c3df161e7401893c1",
      "purpose": "out_of_fold_evaluation",
      "partition": "development",
@@ -4957,11 +4957,11 @@
      ]
     },
     {
-     "exposure_id": "x_76fbe974bb6e48308d01e5accd6f9134",
+     "exposure_id": "x_4c4e52d5a4ef4b91805691c86ab2fbfd",
      "revision": 24,
-     "time": "2026-10-21T12:17:11.588728+00:00",
+     "time": "2026-10-21T20:14:58.358397+00:00",
      "activity": "policy.evaluation",
-     "result_id": "82ee9c86e6d6354c3472f8a1fd4c83b99dc2e68792c96a938f94a7f38e39c092",
+     "result_id": "bb4ca24dffffa05977eec9c5e5bd7b72e59aa3fdb67b82859bdff606395c6e5a",
      "execution_id": "e_a633b01aa452bb85d7c21822",
      "purpose": "out_of_fold_policy_selection",
      "partition": "development",
@@ -4971,11 +4971,11 @@
      ]
     },
     {
-     "exposure_id": "x_41e82806ef6041efbaf705b698c7dc36",
+     "exposure_id": "x_3b387628c0b7453dbd797a324d3a9150",
      "revision": 29,
-     "time": "2026-10-21T12:17:17.741409+00:00",
+     "time": "2026-10-21T20:15:00.417641+00:00",
      "activity": "diag.binary",
-     "result_id": "18de895ec7340b46358146da511b6921e64745f095188bc4cf0449ad4aa6676d",
+     "result_id": "36aa430c791f9a40ae3364f34d754b743a57a6346edfdcaafe3b314bf7d073e4",
      "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
      "purpose": "development_diagnostics",
      "partition": "development",

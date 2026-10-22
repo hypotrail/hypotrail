@@ -725,7 +725,7 @@ def label_of(proposal: Mapping, language: str) -> str:
 
 
 def initial_state(case: Case, *, created: str | None = None,
-                  language: str = DEFAULT_LANGUAGE) -> dict:
+                  language: str = DEFAULT_LANGUAGE, reliability_profile: str | None = None) -> dict:
     """The state of a new study on ``case``, before its first commit (revision 0).
 
     Refuses an unsupported case (``unsupported_capability``) without fallback. Facts
@@ -733,6 +733,12 @@ def initial_state(case: Case, *, created: str | None = None,
     decision is taken.
     """
     require_supported(case)
+    from . import assurance
+    if reliability_profile is not None and reliability_profile not in assurance.PROFILES:
+        raise ValueError('Unknown reliability profile')
+    settings = copy.deepcopy(DEFAULT_SETTINGS)
+    if reliability_profile is not None:
+        settings['reliability_profile'] = reliability_profile
     doc = case.document
     stamp = created or now()
     task = case.task
@@ -758,7 +764,7 @@ def initial_state(case: Case, *, created: str | None = None,
         'executions': {bucket: {} for bucket in EXECUTION_BUCKETS},
         'invalidations': [],
         'receipts': {},
-        'settings': copy.deepcopy(DEFAULT_SETTINGS),
+        'settings': settings,
         'mode': DEFAULT_MODE,
         'language': language,
     }
@@ -1075,6 +1081,15 @@ def validate_state(state: Any) -> list[dict]:
             _keys(receipt, f'receipts.{key}', ('signature', 'result', 'revision'), problems)
     if not isinstance(state['settings'], dict) or 'bootstrap' not in state['settings']:
         problems.append({'path': 'settings', 'problem': 'must be a mapping with "bootstrap"'})
+    else:
+        from . import assurance
+        for key in state['settings']:
+            if key not in ('bootstrap', 'reliability_profile'):
+                problems.append({'path': f'settings.{key}', 'problem': 'is not part of the schema'})
+        if 'reliability_profile' in state['settings'] \
+                and state['settings']['reliability_profile'] not in assurance.PROFILES:
+            problems.append({'path': 'settings.reliability_profile',
+                             'problem': 'must be legacy or review-v1'})
     return problems
 
 

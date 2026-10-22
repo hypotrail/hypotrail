@@ -1,5 +1,10 @@
 # Bank Marketing (full file, in time order)
 
+**J0 scope:** the analysis contract declares a retrospective comparison. Campaign
+order is documented, but complete feature snapshots, client history and the time
+each training outcome became available are not. Ordered evaluation alone does not
+establish future pre-call performance; dependencies remain explicitly unknown.
+
 Generality case from v0.2b: the same telephone campaigns as [Bank Marketing](../bank-marketing/README.md), with every row instead of the 10 % sample, so that the sealed final test is **the latest fifth of the calls** (a temporal holdout). The `bank-marketing` case (`bank.csv`) is unchanged and stays the v0.2a reference.
 
 ## Data and licence

@@ -148,6 +148,8 @@ def build_parser(extension: str | None = None, *, listing: bool = False
     p.add_argument('--case', required=True, help='case.yaml or its directory')
     p.add_argument('--lang', choices=st.LANGUAGES, default=st.DEFAULT_LANGUAGE,
                    help='the study language: surfaces show restatements in it (ADR 0005)')
+    p.add_argument('--reliability-profile', choices=('legacy', 'review-v1'), default=None,
+                   help='opt-in reliability profile; review-v1 currently supports inspection and planning')
     p = sub.add_parser('status', parents=[common], help='read-only view of the study')
     p.add_argument('--since', type=int, default=None, help='report revisions after REV')
     p.add_argument('--summary', action='store_true',
@@ -309,7 +311,8 @@ def _decide(args) -> cmd.Outcome:
 
 def dispatch(args) -> cmd.Outcome:
     if args.command == 'init':
-        return cmd.init(args.case, args.study, language=args.lang)
+        return cmd.init(args.case, args.study, language=args.lang,
+                        reliability_profile=args.reliability_profile)
     if args.command == 'mode':
         return cmd.apply(args.study, action=cmd.ACTION_SET_MODE,
                          params={'mode': args.mode, 'user_words': args.user_words},

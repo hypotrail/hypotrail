@@ -652,6 +652,20 @@ def case_document(data: bytes) -> dict:
                           'booking in ten. A real team would give its own figure.'},
         },
         # v0.3 (WP-J): what the use case asks of a model (CASE-CONTRACT, "Constraints").
+        'analysis_contract': {
+            'schema': 'hypotrail.analysis/1',
+            'scenario_id': 'hotel-booking-leakage-v1',
+            'intended_use': 'leakage_exercise',
+            'row_unit': 'reservation',
+            'population': 'Resort Hotel reservations in the published snapshot',
+            'prediction_statement': 'Predict cancellation when a booking is entered',
+            'timing': {'prediction_order': None, 'outcome_available_order': None,
+                       'scale': 'ordinal'},
+            'dependencies': {'kind': 'unknown', 'group_column': None, 'group_goal': None,
+                             'status': 'unknown',
+                             'source': 'README.md: snapshot timing and missing historical booking values'},
+            'permitted_claims': ['retrospective_association'],
+        },
         'constraints': {
             'interpretability': {
                 'value': 'preferred', 'status': 'scenario_assumption',

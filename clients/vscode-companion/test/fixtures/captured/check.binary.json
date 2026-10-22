@@ -13,7 +13,7 @@
  "payload": {
   "schema": "hypotrail.check/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"",
+  "study": "/private/studies/bank marketing \"demo\"",
   "revision": 48,
   "target": "study",
   "clean": true,

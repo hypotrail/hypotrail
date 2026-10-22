@@ -163,7 +163,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.2b (WP-B1): the configurations evaluated so far.
              'trials',
              # v0.3 (WP-F1): the selection among the variants and the model families.
-             'model_selection', 'model_families')
+             'model_selection', 'model_families', 'assurance')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.

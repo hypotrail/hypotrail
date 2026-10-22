@@ -452,6 +452,8 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
     if decision_id == 'prediction_time':
         if not isinstance(value, str) or not value.strip():
             raise _invalid('prediction_time is a non-empty description of the prediction moment.')
+        from . import assurance
+        assurance.require_prediction_statement(state, value)
     elif decision_id == 'feature_availability':
         features = candidate_features(case_of(state))
         if not isinstance(value, Mapping):
@@ -1527,6 +1529,9 @@ def confirmation_plan(state: Mapping, store, proposal_id: str, *,
         valid = False
     if valid:
         try:
+            if decision_id == st.FINAL_TEST:
+                from . import assurance
+                assurance.require_activity(state, 'final_test.evaluation')
             preconditions.require_decision(state, decision_id, value, store=store)
         except (CommandRefused, StudyError) as exc:
             refusals.append(exc)
@@ -1837,7 +1842,8 @@ def _copy_agent_templates(study_dir: Path, task: str = st.DEFAULT_TASK) -> dict:
     return agent_files.install(study_dir, task=task)
 
 
-def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
+def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
+         reliability_profile: str | None = None) -> Outcome:
     """Create a study on a case (revision 1). Never overwrites an existing study.
     ``language`` is the study language (ADR 0005, ``init --lang``)."""
     guard.assert_writable()
@@ -1847,7 +1853,15 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
     if store.exists():
         raise StudyError('state_exists', 'A study already exists here; it is never overwritten.',
                          details={'study': str(study_dir)})
-    case = c.require_supported(c.load_case(_case_file(case_path)))
+    from . import assurance
+    if reliability_profile is not None and reliability_profile not in assurance.PROFILES:
+        raise StudyError('invalid_arguments', 'reliability_profile must be legacy or review-v1.')
+    # Validate the static contract before reading dataset bytes. A review-v1 scenario whose
+    # partition planner is not implemented must be refused without inspecting the source data.
+    case = c.require_supported(c.load_case(_case_file(case_path), verify_data=False))
+    assurance.require_initialization(case, reliability_profile)
+    c.verify_dataset(case)
+    c.prior_exposed_keys(case)
     # ADR 0006: the final test is assigned and sealed before any look. Row keys and
     # duplicates are read on every record (keys only); the stratification reads the
     # target (or the declared order); values that would silently change meaning
@@ -1866,7 +1880,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
     except c.CaseError as exc:
         raise partition.with_final_test_counts(exc, check)
     partition.refuse_failed_check(case, check)
-    state = st.initial_state(case, language=language)
+    state = st.initial_state(case, language=language, reliability_profile=reliability_profile)
     study_dir.mkdir(parents=True, exist_ok=True)
     dev_sha = store.put_blob(rec.row_keys_bytes(assigned['development']))
     final_sha = store.put_blob(rec.row_keys_bytes(assigned['final_test']))
@@ -1893,6 +1907,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
     from . import audience, launch
 
     notices = [n for n in (launch.install_settings(study_dir),) if n is not None]
+    notices.extend(assurance.initial_notices(case, language))
     launch.install_gitignore(study_dir)
     ignored = sorted(n for n in IGNORED_CASE_SOURCES if (case.root / n).exists())
     snapshot = read.open(study_dir).state
@@ -1915,7 +1930,7 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE) -> Outcome:
 
 SUMMARY_FIXED_KEYS = ('schema', 'ok', 'study', 'revision')
 # WP-H3: keys of the full view that ``status --summary --fields`` also gives.
-FIELDS_FROM_VIEW = ('model_selection', 'model_families')
+FIELDS_FROM_VIEW = ('model_selection', 'model_families', 'assurance')
 
 
 def status(study_dir, since: int | None = None, summary: bool = False,

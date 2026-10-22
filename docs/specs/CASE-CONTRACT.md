@@ -54,7 +54,46 @@ Top-level keys, in this order. Unknown keys are refused.
 | `scenario_defaults` | no | v0.2b: defaults of a teaching scenario, see [Scenario defaults](#scenario-defaults) |
 | `prior_exposed_rows` | no | v0.2b: rows already seen outside the study, kept out of the final test, see [Prior-exposed rows](#prior-exposed-rows) |
 | `constraints` | no | v0.3: what the use case requires of a model, see [Constraints](#constraints) |
+| `analysis_contract` | no | J0: scenario and claim ceiling, see [Analysis contract](#analysis-contract) |
 | `migration` | no | See [Migration block](#migration-block) |
+
+### Analysis contract
+
+J0 adds optional `analysis_contract`, schema `hypotrail.analysis/1`. It describes
+the scenario and the maximum claim scope, never adopted decisions or scientific
+eligibility. The exact keys are `schema`, `scenario_id`, `intended_use`, `row_unit`,
+`population`, `prediction_statement`, `timing`, `dependencies`, `permitted_claims`.
+Unknown keys are refused at every level. Existing cases without it remain valid.
+
+- `scenario_id`, `row_unit`, `population`, `prediction_statement`: nonempty strings.
+- `intended_use`: `retrospective_comparison`, `future_prediction` or `leakage_exercise`.
+- `timing`: `{prediction_order, outcome_available_order, scale}`. Scale is `ordinal`
+  on a shared ascending scale. Each clock is null or `{by, status, source}`, where
+  `by` is a non-target numeric/integer column, or unambiguous `line`. Future
+  prediction requires two documented clocks; file order alone is insufficient.
+  Declaring clock semantics does not establish that the data actually meet them.
+- `dependencies`: `{kind, group_column, group_goal, status, source}`. Kind is
+  `independent`, `grouped`, `temporal`, `grouped_temporal` or `unknown`. Grouped modes
+  require a non-target column and `group_goal: unseen_groups`; other modes require
+  both group fields null. Status/source use the existing epistemic/provenance rules.
+- `permitted_claims`: a list without duplicates, drawn from
+  `retrospective_association`, `future_predictive_performance`,
+  `calibrated_probability`; empty is allowed. This ceiling is not validation.
+  Only a future scenario can include future predictive performance.
+
+Hotel declares a leakage exercise with retrospective-only scope: performance at
+booking is not established from the current snapshot. Bank full and Auto MPG
+declare bounded retrospective comparisons; unknown dependencies remain unknown.
+Builders/supplements own these declarations. Substantive changes trigger normal
+case-source invalidation; no new equivalence whitelist bypass is introduced.
+
+`case-supplement.yaml` may also contain `analysis_contract`; migration copies it
+and validates the resulting case. It does not import a human decision.
+
+The opt-in `review-v1` profile currently permits inspection and planning only.
+Future/group-disjoint initialization is refused until J1 supplies the required
+partition planner; J0 must not seal a future test with a legacy random/blocked
+fallback. Future synthetic contracts can already be validated without initialization.
 
 ### Dataset
 

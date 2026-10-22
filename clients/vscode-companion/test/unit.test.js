@@ -64,10 +64,15 @@ function fakeCli(respond) {
   return calls;
 }
 
-test.afterEach(() => {
-  childProcess.execFile = realExecFile;
+function clearFlagEnvironment() {
   delete process.env.HYPOTRAIL_COMPANION;
   delete process.env.HYPOTRAIL_COMPANION_STAGE;
+}
+
+test.beforeEach(clearFlagEnvironment);
+test.afterEach(() => {
+  childProcess.execFile = realExecFile;
+  clearFlagEnvironment();
 });
 
 async function openWith(fake) {

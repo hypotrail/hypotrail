@@ -15,7 +15,7 @@
  "payload": {
   "schema": "hypotrail.summary/1",
   "ok": true,
-  "study": "/studies/bank marketing \"demo\"-families",
+  "study": "/private/studies/bank marketing \"demo\"-families",
   "revision": 22,
   "since": null,
   "changed": null,
@@ -316,7 +316,7 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "ccba417278cc687bd0462f98b58f7d862ef5ccc20113dede53ece160eff18e9f",
+    "result_id": "1051a831ce5054a252429cdd9347be2a310e5fb5e5a170347798d6064a83223c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -334,7 +334,7 @@
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+    "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -458,7 +458,7 @@
    "target_looks": 2,
    "results": [
     "bafec54394c9c872c1a44ecfc78125502cb3bfdb7016d87eaa479ecc72d7aa31",
-    "ccba417278cc687bd0462f98b58f7d862ef5ccc20113dede53ece160eff18e9f"
+    "1051a831ce5054a252429cdd9347be2a310e5fb5e5a170347798d6064a83223c"
    ]
   },
   "recap": [
@@ -489,7 +489,7 @@
       "/hypotrail/framework",
       "marimo",
       "run",
-      "/studies/bank marketing \"demo\"-families/notebooks/study_generated.py"
+      "/private/studies/bank marketing \"demo\"-families/notebooks/study_generated.py"
      ]
     },
     "workbench": {
@@ -502,7 +502,7 @@
       "/hypotrail/framework",
       "marimo",
       "edit",
-      "/studies/bank marketing \"demo\"-families/notebooks/workbench.py"
+      "/private/studies/bank marketing \"demo\"-families/notebooks/workbench.py"
      ]
     }
    }
@@ -593,7 +593,7 @@
   ],
   "last_session": {
    "boundary_revision": 1,
-   "boundary_time": "2026-10-21T12:17:48.563187+00:00",
+   "boundary_time": "2026-10-21T20:15:10.451670+00:00",
    "gap_minutes": null
   },
   "digest": {
@@ -602,7 +602,7 @@
    "items": [
     {
      "revision": 2,
-     "time": "2026-10-21T12:17:48.805354+00:00",
+     "time": "2026-10-21T20:15:10.551100+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "prediction_time",
@@ -625,7 +625,7 @@
     },
     {
      "revision": 3,
-     "time": "2026-10-21T12:17:49.542069+00:00",
+     "time": "2026-10-21T20:15:10.837706+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "prediction_time",
@@ -655,7 +655,7 @@
     },
     {
      "revision": 4,
-     "time": "2026-10-21T12:17:50.409256+00:00",
+     "time": "2026-10-21T20:15:11.129997+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "feature_availability",
@@ -678,7 +678,7 @@
     },
     {
      "revision": 5,
-     "time": "2026-10-21T12:17:51.339197+00:00",
+     "time": "2026-10-21T20:15:11.411231+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "feature_availability",
@@ -708,7 +708,7 @@
     },
     {
      "revision": 6,
-     "time": "2026-10-21T12:17:52.559714+00:00",
+     "time": "2026-10-21T20:15:11.829959+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "split",
@@ -731,7 +731,7 @@
     },
     {
      "revision": 7,
-     "time": "2026-10-21T12:17:53.747776+00:00",
+     "time": "2026-10-21T20:15:12.201083+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "split",
@@ -761,7 +761,7 @@
     },
     {
      "revision": 8,
-     "time": "2026-10-21T12:17:55.490220+00:00",
+     "time": "2026-10-21T20:15:12.601132+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "success_criterion",
@@ -784,7 +784,7 @@
     },
     {
      "revision": 9,
-     "time": "2026-10-21T12:17:56.856487+00:00",
+     "time": "2026-10-21T20:15:12.985512+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "success_criterion",
@@ -814,7 +814,7 @@
     },
     {
      "revision": 10,
-     "time": "2026-10-21T12:17:58.105270+00:00",
+     "time": "2026-10-21T20:15:13.429139+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "preprocessing",
@@ -837,7 +837,7 @@
     },
     {
      "revision": 11,
-     "time": "2026-10-21T12:17:59.666869+00:00",
+     "time": "2026-10-21T20:15:13.821590+00:00",
      "action": "decide.confirm",
      "kind": "confirmed",
      "decision_id": "preprocessing",
@@ -867,7 +867,7 @@
     },
     {
      "revision": 13,
-     "time": "2026-10-21T12:18:01.107465+00:00",
+     "time": "2026-10-21T20:15:14.350088+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -890,7 +890,7 @@
     },
     {
      "revision": 15,
-     "time": "2026-10-21T12:18:02.741484+00:00",
+     "time": "2026-10-21T20:15:14.868682+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -913,7 +913,7 @@
     },
     {
      "revision": 17,
-     "time": "2026-10-21T12:18:04.162536+00:00",
+     "time": "2026-10-21T20:15:15.389540+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -936,7 +936,7 @@
     },
     {
      "revision": 19,
-     "time": "2026-10-21T12:18:06.455205+00:00",
+     "time": "2026-10-21T20:15:16.057716+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -944,7 +944,7 @@
      "note_id": null,
      "activity": "fit.logistic",
      "slot": "fit.logistic",
-     "result_id": "699f5973fed3dad967985c2a0eba433e913aacd499d2f82602113ad7f623df90",
+     "result_id": "cbec093b07db84209381d6f621f724724b9acf626b5ca0e374fc82401ce01642",
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
      "rules": null,
      "column": null,
@@ -959,7 +959,7 @@
     },
     {
      "revision": 21,
-     "time": "2026-10-21T12:18:08.067208+00:00",
+     "time": "2026-10-21T20:15:16.619574+00:00",
      "action": "run.promote",
      "kind": "result_added",
      "decision_id": null,
@@ -967,7 +967,7 @@
      "note_id": null,
      "activity": "diag.binary",
      "slot": "diag.binary",
-     "result_id": "ccba417278cc687bd0462f98b58f7d862ef5ccc20113dede53ece160eff18e9f",
+     "result_id": "1051a831ce5054a252429cdd9347be2a310e5fb5e5a170347798d6064a83223c",
      "execution_id": "e_e3011a6950ece5ea44c0419c",
      "rules": null,
      "column": null,
@@ -982,7 +982,7 @@
     },
     {
      "revision": 22,
-     "time": "2026-10-21T12:18:09.315998+00:00",
+     "time": "2026-10-21T20:15:17.141173+00:00",
      "action": "decide.propose",
      "kind": "proposed",
      "decision_id": "model_variant",
@@ -1020,6 +1020,6 @@
    "channel_actions": []
   },
   "task": "binary",
-  "currency": "7339b68bf6d988d1"
+  "currency": "d437bfa9d12a4d29"
  }
 }

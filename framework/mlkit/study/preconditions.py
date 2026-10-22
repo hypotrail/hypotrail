@@ -308,4 +308,6 @@ def require_decision(state: Mapping, decision_id: str, value: Any = None, *, sto
 
 
 def require_activity(state: Mapping, activity: str) -> None:
+    from . import assurance
+    assurance.require_activity(state, activity)
     _refuse(missing_for_activity(state, activity), f'Running {activity}')

@@ -371,13 +371,17 @@ def test_a_hotel_study_started_before_the_constraint_keeps_its_case(tmp_path):
     shortlist only). A study initialised on the earlier bytes is not "dataset changed": it
     reads its status and runs; any other edit of the case still is a change."""
     import shutil
+    import hashlib
     hotel = fk.REPO / 'use-cases' / 'hotel-booking'
     case_dir = tmp_path / 'hotel'
     shutil.copytree(hotel, case_dir)
     current = (hotel / 'case.yaml').read_text(encoding='utf-8')
+    # Keep this exact historical WP-J equivalence test. J0's substantive scope
+    # addition is deliberately not an equivalent case change (tested separately).
+    current = current[:current.index('analysis_contract:\n')] + current[current.index('constraints:\n'):]
     earlier = current[:current.index('constraints:\n')]
     (case_dir / 'case.yaml').write_text(earlier, encoding='utf-8')
-    assert (c.sha256_file(case_dir / 'case.yaml'), c.sha256_file(hotel / 'case.yaml')) \
+    assert (c.sha256_file(case_dir / 'case.yaml'), hashlib.sha256(current.encode('utf-8')).hexdigest()) \
         in c.EQUIVALENT_CASE_FILES
     flow = Flow(tmp_path / 'study', case_dir, prefix='h')
     flow.init()
