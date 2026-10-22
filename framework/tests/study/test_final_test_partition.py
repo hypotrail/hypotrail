@@ -98,7 +98,9 @@ def test_exposure_records_development_inspection_and_sealed_final_test(bank_stud
     flow, _ = bank_study
     records = fk.exposure_records(flow.study)
     assert [(r['purpose'], r['partition'], r['n_rows']) for r in records] == [
-        ('structural_inspection', 'development', 3617), ('sealed', 'final_test', 904)]
+        ('structural_inspection', 'development', 3617),
+        ('labelled_preview_available', 'development', 5),
+        ('sealed', 'final_test', 904)]
     s = read.open(flow.study)
     assert set(s.blob(records[0]['row_keys']).decode().split()) == \
         set(fk.partition_keys(flow.study, 'development'))

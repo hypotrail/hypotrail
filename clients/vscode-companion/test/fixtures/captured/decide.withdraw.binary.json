@@ -77,7 +77,46 @@
     "why": "This is the configuration you chose; the holdout (final test) measures it once."
    },
    "question": "Do you open the holdout (final test) now, once?",
-   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows."
+   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "action",
+    "language": "en",
+    "revision": 50,
+    "position": {
+     "step_id": "final_test",
+     "completed": 10,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": null,
+    "proposal_text": null,
+    "recommended_option": "continue",
+    "options": [
+     "continue",
+     "explain"
+    ],
+    "question": "Do you open the holdout (final test) now, once?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }

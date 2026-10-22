@@ -165,7 +165,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # v0.3 (WP-F1): the selection among the variants and the model families.
              'model_selection', 'model_families', 'assurance',
              # Reliability roadmap J2: derived, null for legacy studies.
-             'requirements', 'completion', 'claim_eligibility')
+             'requirements', 'completion', 'claim_eligibility', 'presentation')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on', 'revision',
                       'reason', 'confirmation', 'open_proposals',
                       # v0.2a (WP-A1): per-feature basis of a feature availability value.
@@ -341,6 +341,9 @@ ERROR_CODES = {
     'dataset_missing', 'dataset_changed', 'unsupported_capability', 'unknown_decision',
     'invalid_value', 'literal_number_in_text', 'ambiguous_confirmation', 'precondition_missing',
     'unknown_proposal', 'proposal_not_open', 'unknown_result', 'invalid_result', 'unknown_module',
+    # Reliability roadmap J5: context-bound evidence references.
+    'invalid_evidence_ref', 'unknown_evidence_result', 'invalid_evidence_path',
+    'evidence_context_mismatch', 'evidence_integrity_error', 'evidence_not_current',
     'invalid_exposure', 'no_predictions', 'invalid_state', 'invalid_confirmation',
     'lease_exists', 'lease_held',
     # Phase 2 contract commit: reserved codes now emitted, plus read_only.
@@ -393,7 +396,8 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'cross_validated_fit', 'out_of_fold_evaluation',
                      'out_of_fold_policy_selection', 'final_evaluation',
                      # v0.2b (WP-B4): the diagnostics of the development predictions.
-                     'development_diagnostics')
+                     'development_diagnostics', 'policy_exploration',
+                     'labelled_preview_available')
 EXPOSURE_PARTITIONS = ('all', 'train', 'validation', 'development', 'final_test')
 FINAL_TEST_STATUS_KEYS = ('status', 'rows', 'method', 'fraction', 'development_rows',
                           'schema_check',
@@ -641,7 +645,7 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
     """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
     refusal keys."""
     assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'partition', 'mode', 'language',
-                                    'mode_history')
+                                    'mode_history', 'exploration')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS

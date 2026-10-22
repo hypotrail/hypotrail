@@ -85,7 +85,27 @@
    "language": "en",
    "recommended": null,
    "question": "Do you adopt this decision?",
-   "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change."
+   "junior_digest": "Proposal on the decision policy: \"Call the 100 clients with the highest scores.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "decision",
+    "language": "en",
+    "revision": 26,
+    "position": {"step_id": "final_test", "completed": 10, "total": 12},
+    "learned": [],
+    "limitations": [
+     {"code": "unconfirmed_decisions", "text": "Not confirmed by you yet: the opening of the final test and the conclusion."},
+     {"code": "validation_is_not_independent", "text": "Validation rows are used to compare models and choose policy."},
+     {"code": "public_data_already_explored", "text": "The public data were already explored."}
+    ],
+    "proposal_id": "p_5",
+    "proposal_text": "Call the 100 clients with the highest scores.",
+    "recommended_option": "adopt",
+    "options": ["adopt", "change", "explain"],
+    "question": "Do you adopt this decision?",
+    "evidence_refs": [],
+    "detail_topics": ["metric", "uncertainty"]
+   }
   },
   "open_proposals": [
    {

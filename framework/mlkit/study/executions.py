@@ -162,6 +162,14 @@ def _reserve(ctx: cmd.Context) -> Handler:
                   'exposures': plan['exposures'],
                   'lease': str(lock.lease_path(ctx.store.study_dir, eid))}
         state['executions']['active'][eid] = record
+        if activity == act.POLICY_INSPECT:
+            state.setdefault('exploration', {'events': {}})['events'][eid] = {
+                'event_id': eid, 'status': 'reserved', 'request_id': ctx.request_id,
+                'revision': revision, 'time': record['started'],
+                'rules': list(plan['params']['rules']),
+                'query_count': len(plan['params']['rules']),
+                'result_id': None,
+            }
         _PLANS[eid] = {**plan, 'started_revision': revision}
         return {'execution_id': eid, 'activity': activity, 'status': 'running',
                 'input_key': plan['input_key'], 'started_revision': revision}
@@ -185,6 +193,10 @@ def _promote(ctx: cmd.Context) -> Handler:
                       'or code)')
         done = {**record, 'result_id': rid, 'finished': st.now(),
                 'finished_revision': state['revision'] + 1}
+        if record['activity'] == act.POLICY_INSPECT:
+            event = state.setdefault('exploration', {'events': {}})['events'][eid]
+            event.update(status='completed', result_id=rid, finished=done['finished'],
+                         finished_revision=done['finished_revision'])
         opening = (state.get('partition') or {}).get('opening')
         if record['activity'] == act.FINAL and opening \
                 and opening.get('execution_id') == eid:
@@ -195,7 +207,7 @@ def _promote(ctx: cmd.Context) -> Handler:
             state['current'][slot] = rid
             state['stale'].pop(rid, None)
             done.update(status='promoted', replaced=previous if previous != rid else None)
-            if previous and previous != rid:
+            if previous and previous != rid and slot != act.POLICY_INSPECTION:
                 # H2: what was computed from the replaced result no longer holds.
                 code_changed = (registry.get(ctx.store, previous)['code']['fingerprint']
                                 != record['code_fingerprint'])
@@ -225,6 +237,10 @@ def _fail(ctx: cmd.Context) -> Handler:
         if record is None:
             raise CommandRefused('unknown_execution', f'Execution {eid} is not active.',
                                  details={'execution_id': eid})
+        if record['activity'] == act.POLICY_INSPECT:
+            event = state.setdefault('exploration', {'events': {}})['events'][eid]
+            event.update(status='failed', error=params['error'], finished=st.now(),
+                         finished_revision=state['revision'] + 1)
         return {'execution_id': eid, 'activity': record['activity'], 'status': 'failed',
                 'error': params['error'], 'started_revision': record['started_revision']}
     return Handler(frozenset({'execution_id', 'error'}), run)
@@ -242,6 +258,10 @@ def _recover(ctx: cmd.Context) -> Handler:
                   'reason': 'Its process ended before promoting a result (orphaned lease). '
                             'Whether it computed anything is unknown; it is not restarted.'}
         state['executions']['interrupted'][eid] = record
+        if record['activity'] == act.POLICY_INSPECT:
+            event = state.setdefault('exploration', {'events': {}})['events'][eid]
+            event.update(status='outcome_unknown', detected=record['detected'],
+                         detected_revision=record['detected_revision'])
         return {'execution_id': eid, 'activity': record['activity'],
                 'status': 'interrupted_unknown', 'started_revision': record['started_revision']}
     return Handler(frozenset({'execution_id'}), run)
@@ -473,7 +493,7 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
             return _outcome(store, describe(store, state, request_id), render=False)
         if state['executions']['interrupted']:
             raise _interrupted_refusal(state)
-        if expected_revision == state['revision']:
+        if expected_revision == state['revision'] and activity != act.POLICY_INSPECT:
             shortcut = _already_current(store, state, activity, options, request_id)
             if shortcut is not None:
                 return _outcome(store, shortcut, render=False)

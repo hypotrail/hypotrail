@@ -180,8 +180,8 @@ EXPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'out', 'files', 'inc
                'warnings')
 EXPORT_FILE_KEYS = ('path', 'sha256', 'bytes')
 HANDOFF_KEYS = ('schema', 'study', 'revision', 'task', 'case', 'dataset', 'goal', 'decisions',
-                'results_cited', 'exposure', 'not_yet_defensible', 'open_items', 'deliverables',
-                'reproduce', 'environment')
+                'results_cited', 'exposure', 'history', 'not_yet_defensible', 'open_items',
+                'deliverables', 'reproduce', 'environment')
 HANDOFF_CITED_KEYS = ('result_id', 'activity', 'path', 'value', 'shown')
 EXPORT_WARNINGS = ('report_not_current', 'open_proposals', 'open_holds', 'interrupted_executions',
                    'sources_changed', 'unconfirmed_decisions')

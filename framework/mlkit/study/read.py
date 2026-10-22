@@ -231,7 +231,7 @@ class Study:
         activity = entry.get('activity')
         return sorted(name for name, sha in entry['code']['modules'].items()
                       if self._module_sha(name) != sha
-                      and not equivalent(name, sha, activity))
+                      and not equivalent(name, sha, self._module_sha(name), activity))
 
     def currency(self, rid: str) -> dict:
         """``{"current", "reason"}`` of result ``rid``, derived, never stored.

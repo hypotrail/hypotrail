@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_622dd0c704d6af123eea761a",
   "status": "promoted",
-  "result_id": "84ecd3892db672076dd0f49f72ff110b029f6345bf4bebba0149c26500626b19",
+  "result_id": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "84ecd3892db672076dd0f49f72ff110b029f6345bf4bebba0149c26500626b19",
-   "input_key": "2fed431baefdb847a62966ae2b6d048bf8b8fd32a3daa1b6aa252f5a31542e04",
+   "result_id": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
+   "input_key": "e157b5cb98d565be1054b0613baf9684147038257ec8bebf912e06032ba99916",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_af689fcbae544444880019025421cbb2"
+    "x_0651586f6e894515bf54abfd6eba31bf"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -184,7 +184,46 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. Which predictions do the training mean and a linear model give for the validation rows?"
+   "junior_digest": "Next: the baseline model, run without asking you. Which predictions do the training mean and a linear model give for the validation rows?",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "action",
+    "language": "en",
+    "revision": 25,
+    "position": {
+     "step_id": "models",
+     "completed": 7,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the variant to compare, the model choice, the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": null,
+    "proposal_text": null,
+    "recommended_option": "continue",
+    "options": [
+     "continue",
+     "explain"
+    ],
+    "question": "Which predictions do the training mean and a linear model give for the validation rows?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }

@@ -22,7 +22,7 @@
   "activity": "eda.rate_by",
   "execution_id": "e_3b7e9da2df5de95232824246",
   "status": "promoted",
-  "result_id": "6b464196a11e68b1ba7bc9611c0475631a2940c68d51f48d393173c64b7a1a2a",
+  "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
   "values": {
    "partition": "train",
    "column": "job",
@@ -263,13 +263,13 @@
    "activity": "eda.rate_by",
    "slot": "eda.rate_by:job",
    "status": "promoted",
-   "result_id": "6b464196a11e68b1ba7bc9611c0475631a2940c68d51f48d393173c64b7a1a2a",
-   "input_key": "20f6a70d516cf8b3f3265179558f965520e48620f22353bab0005d8b4c94f7d3",
+   "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
+   "input_key": "1418c18f90590fe33c415731d06690340d0ac317f7084af341a03fc215b88ec2",
    "reason": null,
    "started_revision": 22,
    "invalidation": null,
    "exposure_ids": [
-    "x_5f372eb8335743a3b9eb8b99f66832cc"
+    "x_15a21ec2b1b34b79981a8c300c9a2125"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -311,7 +311,46 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?"
+   "junior_digest": "Next: the baseline model, run without asking you. How much does a simple model improve on a constant baseline on validation?",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "action",
+    "language": "en",
+    "revision": 23,
+    "position": {
+     "step_id": "models",
+     "completed": 7,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": null,
+    "proposal_text": null,
+    "recommended_option": "continue",
+    "options": [
+     "continue",
+     "explain"
+    ],
+    "question": "How much does a simple model improve on a constant baseline on validation?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }

@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-22T09:30:11.881990+00:00",
+   "updated": "2026-10-22T18:58:56.904427+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -278,7 +278,47 @@
     "language": "en",
     "recommended": null,
     "question": "Do you adopt this decision?",
-    "junior_digest": "Proposal on the variant to compare: \"You compare three variants of the candidate, each with its question.\" If it suits you, say that you adopt it; otherwise say what you change."
+    "junior_digest": "Proposal on the variant to compare: \"You compare three variants of the candidate, each with its question.\" If it suits you, say that you adopt it; otherwise say what you change.",
+    "pause": {
+     "schema": "hypotrail.pause/1",
+     "kind": "decision",
+     "language": "en",
+     "revision": 22,
+     "position": {
+      "step_id": "train_eda",
+      "completed": 7,
+      "total": 12
+     },
+     "learned": [],
+     "limitations": [
+      {
+       "code": "unconfirmed_decisions",
+       "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+      },
+      {
+       "code": "validation_is_not_independent",
+       "text": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+      },
+      {
+       "code": "public_data_already_explored",
+       "text": "The data were explored or published before this study; its rows are not unseen."
+      }
+     ],
+     "proposal_id": "p_6",
+     "proposal_text": "You compare three variants of the candidate, each with its question.",
+     "recommended_option": "adopt",
+     "options": [
+      "adopt",
+      "change",
+      "explain"
+     ],
+     "question": "Do you adopt this decision?",
+     "evidence_refs": [],
+     "detail_topics": [
+      "metric",
+      "uncertainty"
+     ]
+    }
    },
    "open_proposals": [
     {
@@ -306,7 +346,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-22T09:30:11.880789+00:00",
+     "created": "2026-10-22T18:58:56.903263+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -330,7 +370,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-22T09:30:01.215059+00:00",
+      "time": "2026-10-22T18:58:45.735220+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -377,7 +417,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-22T09:30:02.174406+00:00",
+      "time": "2026-10-22T18:58:46.727693+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -426,7 +466,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-22T09:30:03.549762+00:00",
+      "time": "2026-10-22T18:58:48.236796+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -457,7 +497,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-22T09:30:04.978839+00:00",
+      "time": "2026-10-22T18:58:49.699970+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -493,7 +533,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-22T09:30:06.412127+00:00",
+      "time": "2026-10-22T18:58:51.237842+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -670,7 +710,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
+     "result_id": "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1847,7 +1887,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199"
+        "predictions": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460"
        }
       },
       "coefficient_rows": 3617,
@@ -2129,15 +2169,15 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "fit.logistic": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "e599d93309bf18a27c0de609429c61eab84d8b659897e667bbd3dae4ecc5b86d",
+     "code_fingerprint": "b8ff5e1a37c39bb1c14588d0af3ae8bd32c626ee5d834828efb6558eccd26934",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2151,13 +2191,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_49755256f72446178cb1ef210a6bc53a",
+     "exposure_id": "x_2b77042d5fe24750a835954eb92e06b6",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
+     "result_id": "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -2189,14 +2229,14 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2210,13 +2250,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_deeee16355414dedb8c04555624258f0",
+     "exposure_id": "x_fdd8d09680cd4693aa4f3d3063fd932f",
      "started_revision": 14,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
+     "result_id": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -2324,14 +2364,14 @@
        "scheme": "cross_validation"
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "7147c7c8ffcb7e04e8a2b8633b4bf884d8ad18c9a3db65a5625974b1cf1c119b",
+     "code_fingerprint": "efebfacf48c9bdaf104fa7557d6fcc0c7641cf58c25fb8ce028b072b1df79879",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2345,13 +2385,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_72ecf76a30bc49beb1e2036dc6a91b58",
+     "exposure_id": "x_ff2e54f9a034444c99be48d2091d4994",
      "started_revision": 16,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
+     "result_id": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -2572,7 +2612,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "special_values": [
        {
@@ -2601,7 +2641,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "7c515a3ea0eee21c1fe997cbb6cadb09f6a96294f18df9019b0ff5f9aa2c9754",
+     "code_fingerprint": "329764ca5972b0249d333b7ae2bc1063fb87f1691551e412584f3374e826f5a9",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2615,13 +2655,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_4392890fc1f0453ca78f53cde0a2ea1e",
+     "exposure_id": "x_ab0e33f4f3214c7cb3862707ca7acc00",
      "started_revision": 18,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
+     "result_id": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -2706,7 +2746,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "cdfe83bbc2fa8d50b430045d563d7f10abac90a1364eafa37462457359a6bec6",
+     "code_fingerprint": "39c88f58258ac3e65b5c6c018e6eb6c41fb3ed14759ca24f6cc706c5d45e5e26",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2720,7 +2760,7 @@
       "python": "3.13.5"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_2eda3cc6194d40fba7054ee2d19b4235",
+     "exposure_id": "x_fb5fe53b2ba74cd3ac0802b9e01f63ff",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -2740,20 +2780,20 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
-       "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
-       "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
-       "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9"
+       "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2",
+       "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
+       "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+       "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f"
       ],
-      "edit_check_sha256": "70f5bc9655f6c20c70e3987c0a8c88fe8e5dbc7ce3691b982ebe750d289d67f9",
+      "edit_check_sha256": "c7c11c1ef2a7748c15621e1ca7c359e86c87f9c09c78b83730123cbc9a3247cd",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 22,
       "path": "notebooks/study_generated.py",
       "revision": 22,
-      "sha256": "342078fa417baed5f0a2cabb60781be32da443500011206beb7d1fcf212ea100",
+      "sha256": "248a751d16c8ed6562f969811704b91b9cf13508a38d11162399c324a62eb80d",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2766,11 +2806,11 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
-       "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
-       "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
-       "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9"
+       "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2",
+       "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
+       "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+       "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f"
       ],
       "error": null,
       "generated": true,
@@ -2778,7 +2818,7 @@
       "last_ok_revision": 22,
       "path": "reports/study.html",
       "revision": 22,
-      "sha256": "7974dff7531999e47294f6ae94e9e42ee497bb34fc7e042775d9b0f7ebff86dc",
+      "sha256": "a452ec7c7d243a17f1097d86cee52b6f0b5f583ece7c92538ebbe2b63d269de0",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2811,11 +2851,12 @@
     }
    },
    "exposure": {
-    "records": 9,
+    "records": 10,
     "rows_exposed": 3617,
     "by_purpose": {
      "cross_validated_fit": 3617,
      "development_diagnostics": 3617,
+     "labelled_preview_available": 5,
      "out_of_fold_evaluation": 3617,
      "sealed": 904,
      "structural_inspection": 3617,
@@ -2825,6 +2866,7 @@
      "development": {
       "cross_validated_fit": 3617,
       "development_diagnostics": 3617,
+      "labelled_preview_available": 5,
       "out_of_fold_evaluation": 3617,
       "structural_inspection": 3617,
       "train_eda": 3617
@@ -3012,8 +3054,8 @@
    "eda_looks": {
     "target_looks": 2,
     "results": [
-     "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
-     "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20"
+     "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+     "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2"
     ],
     "by_activity": {
      "diag.binary": 1,
@@ -3031,7 +3073,7 @@
    "trials": {
     "count": 1,
     "results": [
-     "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199"
+     "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -3127,7 +3169,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
+     "source": "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2",
      "checked": true,
      "flags": [],
      "checks": {
@@ -3442,11 +3484,89 @@
     "consent_provenance": "agent_reported",
     "cross_study_history": "not_enforced",
     "analysis_contract_status": "absent",
-    "claim_scope": []
+    "claim_scope": [],
+    "exploration_coverage": "instrumented_operations_only",
+    "unrecorded_surfaces": [
+     "preview",
+     "workbench",
+     "external_files"
+    ]
    },
    "requirements": null,
    "completion": null,
-   "claim_eligibility": null
+   "claim_eligibility": null,
+   "presentation": {
+    "schema": "hypotrail.presentation/1",
+    "revision": 22,
+    "result_ids": {
+     "diag.binary": "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2",
+     "eda.target_rate": "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+     "fit.baseline": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
+     "fit.logistic": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+     "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
+    },
+    "eligibility": null,
+    "uncertainty": {},
+    "assurance": {
+     "profile": "legacy",
+     "evaluation_protection": "protocol_reserved",
+     "consent_provenance": "agent_reported",
+     "cross_study_history": "not_enforced",
+     "analysis_contract_status": "absent",
+     "claim_scope": [],
+     "exploration_coverage": "instrumented_operations_only",
+     "unrecorded_surfaces": [
+      "preview",
+      "workbench",
+      "external_files"
+     ]
+    },
+    "pending_action": {
+     "schema": "hypotrail.pause/1",
+     "kind": "decision",
+     "language": "en",
+     "revision": 22,
+     "position": {
+      "step_id": "train_eda",
+      "completed": 7,
+      "total": 12
+     },
+     "learned": [],
+     "limitations": [
+      {
+       "code": "unconfirmed_decisions",
+       "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+      },
+      {
+       "code": "validation_is_not_independent",
+       "text": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+      },
+      {
+       "code": "public_data_already_explored",
+       "text": "The data were explored or published before this study; its rows are not unseen."
+      }
+     ],
+     "proposal_id": "p_6",
+     "proposal_text": "You compare three variants of the candidate, each with its question.",
+     "recommended_option": "adopt",
+     "options": [
+      "adopt",
+      "change",
+      "explain"
+     ],
+     "question": "Do you adopt this decision?",
+     "evidence_refs": [],
+     "detail_topics": [
+      "metric",
+      "uncertainty"
+     ]
+    },
+    "historical": {
+     "stale_result_ids": [],
+     "final_test_opened": false,
+     "changed_after_opening": false
+    }
+   }
   }
  }
 }

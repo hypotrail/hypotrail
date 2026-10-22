@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-22T09:31:03.603570+00:00",
+   "updated": "2026-10-22T18:59:46.487454+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -273,7 +273,47 @@
     "language": "en",
     "recommended": null,
     "question": "Do you adopt this decision?",
-    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
+    "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+    "pause": {
+     "schema": "hypotrail.pause/1",
+     "kind": "decision",
+     "language": "en",
+     "revision": 38,
+     "position": {
+      "step_id": "model_choice",
+      "completed": 9,
+      "total": 12
+     },
+     "learned": [],
+     "limitations": [
+      {
+       "code": "unconfirmed_decisions",
+       "text": "Not confirmed by you yet: the model choice, the opening of the final test and the conclusion."
+      },
+      {
+       "code": "validation_is_not_independent",
+       "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+      },
+      {
+       "code": "public_data_already_explored",
+       "text": "The data were explored or published before this study; its rows are not unseen."
+      }
+     ],
+     "proposal_id": "p_7",
+     "proposal_text": "Adopt the linear model.",
+     "recommended_option": "adopt",
+     "options": [
+      "adopt",
+      "change",
+      "explain"
+     ],
+     "question": "Do you adopt this decision?",
+     "evidence_refs": [],
+     "detail_topics": [
+      "metric",
+      "uncertainty"
+     ]
+    }
    },
    "open_proposals": [
     {
@@ -283,7 +323,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-22T09:31:03.603543+00:00",
+     "created": "2026-10-22T18:59:46.487428+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -307,7 +347,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-22T09:30:50.322582+00:00",
+      "time": "2026-10-22T18:59:33.525570+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -344,7 +384,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-22T09:30:51.078780+00:00",
+      "time": "2026-10-22T18:59:34.203021+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -383,7 +423,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-22T09:30:52.255444+00:00",
+      "time": "2026-10-22T18:59:35.188678+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -414,7 +454,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-22T09:30:53.352157+00:00",
+      "time": "2026-10-22T18:59:36.191561+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -450,7 +490,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-22T09:30:54.362955+00:00",
+      "time": "2026-10-22T18:59:37.227860+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -481,7 +521,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-22T09:31:01.662134+00:00",
+      "time": "2026-10-22T18:59:44.615347+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -629,7 +669,7 @@
    "results": {
     "eda.correlation": {
      "slot": "eda.correlation",
-     "result_id": "c363c6e4a53d29fd0e41a143757be54a1fab268dbb74ea84cc96c3c80193b68c",
+     "result_id": "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
      "activity": "eda.correlation",
      "current": true,
      "stale_reason": null,
@@ -869,7 +909,7 @@
        }
       ]
      },
-     "code_fingerprint": "2f15e3c23a89d1b488cf363df897bc920c8e0c5c6c96d4231468cfade41bbe78",
+     "code_fingerprint": "d5e4007116df3d4e265d24dbc1c4958abcb01e8d32b5d7176a09e47b17ca6249",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -883,13 +923,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_da3e4044f9774d2b93546fdc1b40ae12",
+     "exposure_id": "x_73fc31a721304a008ff96b9162a9890c",
      "started_revision": 26,
      "integrity": "ok"
     },
     "eda.distribution:weight": {
      "slot": "eda.distribution:weight",
-     "result_id": "84ecd3892db672076dd0f49f72ff110b029f6345bf4bebba0149c26500626b19",
+     "result_id": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -1015,11 +1055,11 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "special_values": []
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -1033,13 +1073,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_af689fcbae544444880019025421cbb2",
+     "exposure_id": "x_0651586f6e894515bf54abfd6eba31bf",
      "started_revision": 24,
      "integrity": "ok"
     },
     "eda.mean_by:model_year": {
      "slot": "eda.mean_by:model_year",
-     "result_id": "b8651c04e44b1e2f2b4fa851376b2ffb6af93b106378d7883f96b4fac55ffb7f",
+     "result_id": "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
      "activity": "eda.mean_by",
      "current": true,
      "stale_reason": null,
@@ -1249,7 +1289,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "special_values": [],
       "target": {
@@ -1257,7 +1297,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -1271,13 +1311,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_083fb9a133a041918c41160f36fc111b",
+     "exposure_id": "x_c86e69b6cf574b5c8799ffa35cdcfd23",
      "started_revision": 22,
      "integrity": "ok"
     },
     "eda.quality": {
      "slot": "eda.quality",
-     "result_id": "b16a82e1016d25cdd29bb414a25825951e5dff381ea8a429235f83595b5bc2e9",
+     "result_id": "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
      "activity": "eda.quality",
      "current": true,
      "stale_reason": null,
@@ -2465,7 +2505,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       }
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2479,13 +2519,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_67cb8b881cb148e3947996f46921a8cf",
+     "exposure_id": "x_97bff6abc20149dd808f5d38f720eb6e",
      "started_revision": 18,
      "integrity": "ok"
     },
     "eda.single_feature_signal": {
      "slot": "eda.single_feature_signal",
-     "result_id": "861874f226c560f2f0883ffe59c079c97049ef4ffc54ba6c5ea83da439c9a94e",
+     "result_id": "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
      "activity": "eda.single_feature_signal",
      "current": true,
      "stale_reason": null,
@@ -2578,7 +2618,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "special_values": [
        {
@@ -2591,7 +2631,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "d6797755949c0a43cf6c6448813caf6e30b6514b9612f474600f84ea84f63f85",
+     "code_fingerprint": "9f5e656ffe98e09758ba07f5ca1c376f063beade51a1280fd192f1739df7a3ce",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2605,13 +2645,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_413241b37328414bb04e82055312fb9d",
+     "exposure_id": "x_b6d7eb8fe8f34503be492598e3aae53f",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.special_values": {
      "slot": "eda.special_values",
-     "result_id": "6b5999a1557a4d95b9824b22b210e568d69d8ef812acf756a3ec05bd88aae908",
+     "result_id": "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
      "activity": "eda.special_values",
      "current": true,
      "stale_reason": null,
@@ -2648,7 +2688,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "special_values": [
        {
@@ -2661,7 +2701,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2675,13 +2715,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_fe3884280c3d4341956236b7f11f5dbf",
+     "exposure_id": "x_455e98bf1c474f25a137637b9f683359",
      "started_revision": 16,
      "integrity": "ok"
     },
     "eda.target_summary": {
      "slot": "eda.target_summary",
-     "result_id": "fe94f048ee6b9b943f691c414035695b739d8c4118d9e2341849c890b814b5be",
+     "result_id": "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
      "activity": "eda.target_summary",
      "current": true,
      "stale_reason": null,
@@ -2720,14 +2760,14 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "target": {
        "column": "mpg",
        "positive_label": null
       }
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2741,13 +2781,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_19747ef51da147028811d6160e6847a0",
+     "exposure_id": "x_41bc8c98013943389a922ff63421dc2a",
      "started_revision": 14,
      "integrity": "ok"
     },
     "evaluate.regression": {
      "slot": "evaluate.regression",
-     "result_id": "1a0cda3b8e56927877d80de037421e12abfb00b43c9f76ad3b0938d8d6f6329f",
+     "result_id": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
      "activity": "evaluate.regression",
      "current": true,
      "stale_reason": null,
@@ -2966,9 +3006,9 @@
        }
       ],
       "predictions": {
-       "fit.baseline": "c10298205d29e96c2f1df6427ceb331a0aea581d2e28220823c4c2c4b1064b76",
-       "fit.linear": "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4",
-       "fit.variant": "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707"
+       "fit.baseline": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+       "fit.linear": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+       "fit.variant": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa"
       },
       "reference": "fit.baseline",
       "candidate": "fit.linear",
@@ -3054,10 +3094,10 @@
        "model_year"
       ],
       "results": {
-       "fit.baseline": "c10298205d29e96c2f1df6427ceb331a0aea581d2e28220823c4c2c4b1064b76",
-       "fit.linear": "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4",
-       "fit.variant": "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707",
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "fit.baseline": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+       "fit.linear": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+       "fit.variant": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "target": {
        "column": "mpg",
@@ -3077,7 +3117,7 @@
        }
       ]
      },
-     "code_fingerprint": "e6f0353fecb051553e70e6419ccd3a81d70917e029d2f32e6d7c3bed010b90ea",
+     "code_fingerprint": "3ed4e0f45519121efc177f2140dd7849b786d1940c8b61a455f0f775ab695f6b",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3091,13 +3131,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_615b719d8a0a4c459d8007731bf8dd3c",
+     "exposure_id": "x_bb69c14488664bbd8cb982993f9dafc3",
      "started_revision": 36,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "c10298205d29e96c2f1df6427ceb331a0aea581d2e28220823c4c2c4b1064b76",
+     "result_id": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -3150,14 +3190,14 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "target": {
        "column": "mpg",
        "positive_label": null
       }
      },
-     "code_fingerprint": "a0eff283123b87ece230c9d679a38b4150f1aec8e7730b0418b7e190d6d07617",
+     "code_fingerprint": "d85d17d1bc95b07b484612bea5d687dee991f8cea6f3c83a73cf0224b977f14b",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3171,13 +3211,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_4e735ad6007b44b9bf1aab22172c3570",
+     "exposure_id": "x_5fb8b259d54f40e6894012fdd487769a",
      "started_revision": 28,
      "integrity": "ok"
     },
     "fit.linear": {
      "slot": "fit.linear",
-     "result_id": "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4",
+     "result_id": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
      "activity": "fit.linear",
      "current": true,
      "stale_reason": null,
@@ -3289,7 +3329,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "special_values": [
        {
@@ -3302,7 +3342,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "4eec2d824658885f8e4132471d79758146ae6a2b9c8411b17bae46258f8f74a8",
+     "code_fingerprint": "81dfd8793db136025ac70dae1f92735cbc6e63c30a9c250c151be3a5c8c2a71a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3316,13 +3356,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_751e6ba54dbd47bfbcd5114eae7e8b5c",
+     "exposure_id": "x_9d118df0e2aa4e2d9b430556113c5a04",
      "started_revision": 30,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707",
+     "result_id": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -3440,7 +3480,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a"
+       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       },
       "special_values": [
        {
@@ -3457,7 +3497,7 @@
        "strength": "strong"
       }
      },
-     "code_fingerprint": "f002424057c5148ca5bfd7c8cf58e00b5c94b8546a10d4cc1d0ff5ab70886828",
+     "code_fingerprint": "627174e6c3617f7fda059d1e137381bb49249766a91ab5a634de4b124f4fb019",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3471,13 +3511,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_4adae02e2b8d46d3a199950c2a95a273",
+     "exposure_id": "x_ca620677b7d64ca7aaf7f0fe11fbd6bb",
      "started_revision": 34,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a",
+     "result_id": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -3550,7 +3590,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "cdfe83bbc2fa8d50b430045d563d7f10abac90a1364eafa37462457359a6bec6",
+     "code_fingerprint": "39c88f58258ac3e65b5c6c018e6eb6c41fb3ed14759ca24f6cc706c5d45e5e26",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3564,7 +3604,7 @@
       "python": "3.13.5"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_0b55189ca956435c825e0ab6fb5bfdd6",
+     "exposure_id": "x_8d492ce8a9b64560be190e104b726640",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3584,27 +3624,27 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "1a0cda3b8e56927877d80de037421e12abfb00b43c9f76ad3b0938d8d6f6329f",
-       "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4",
-       "6b5999a1557a4d95b9824b22b210e568d69d8ef812acf756a3ec05bd88aae908",
-       "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a",
-       "84ecd3892db672076dd0f49f72ff110b029f6345bf4bebba0149c26500626b19",
-       "861874f226c560f2f0883ffe59c079c97049ef4ffc54ba6c5ea83da439c9a94e",
-       "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707",
-       "b16a82e1016d25cdd29bb414a25825951e5dff381ea8a429235f83595b5bc2e9",
-       "b8651c04e44b1e2f2b4fa851376b2ffb6af93b106378d7883f96b4fac55ffb7f",
-       "c10298205d29e96c2f1df6427ceb331a0aea581d2e28220823c4c2c4b1064b76",
-       "c363c6e4a53d29fd0e41a143757be54a1fab268dbb74ea84cc96c3c80193b68c",
-       "fe94f048ee6b9b943f691c414035695b739d8c4118d9e2341849c890b814b5be"
+       "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
+       "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
+       "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+       "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
+       "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
+       "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
+       "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
+       "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+       "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
+       "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
+       "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+       "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       ],
-      "edit_check_sha256": "32b2ce250dfd6356e235bcf07a8b2ce233e81f3f20d8ee14a16fcc3b82d1f898",
+      "edit_check_sha256": "5aa570ac42ff585431bdee50078b276f4912751e0d2abb6ddddc2d45afac2cc7",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 38,
       "path": "notebooks/study_generated.py",
       "revision": 38,
-      "sha256": "c03ba5e490ba4c3dd4c03682882b74295ea969ba1f48819486a2231c8f6cdde9",
+      "sha256": "8aa49c7d98d76bf0d28f94587ec9bfa430165a31f29c8a169f357f3d18a2ed8f",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3617,18 +3657,18 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "1a0cda3b8e56927877d80de037421e12abfb00b43c9f76ad3b0938d8d6f6329f",
-       "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4",
-       "6b5999a1557a4d95b9824b22b210e568d69d8ef812acf756a3ec05bd88aae908",
-       "71133791e689f6ea4818633ea652aa9af890fd10defddea6748a249167a3490a",
-       "84ecd3892db672076dd0f49f72ff110b029f6345bf4bebba0149c26500626b19",
-       "861874f226c560f2f0883ffe59c079c97049ef4ffc54ba6c5ea83da439c9a94e",
-       "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707",
-       "b16a82e1016d25cdd29bb414a25825951e5dff381ea8a429235f83595b5bc2e9",
-       "b8651c04e44b1e2f2b4fa851376b2ffb6af93b106378d7883f96b4fac55ffb7f",
-       "c10298205d29e96c2f1df6427ceb331a0aea581d2e28220823c4c2c4b1064b76",
-       "c363c6e4a53d29fd0e41a143757be54a1fab268dbb74ea84cc96c3c80193b68c",
-       "fe94f048ee6b9b943f691c414035695b739d8c4118d9e2341849c890b814b5be"
+       "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
+       "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
+       "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+       "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
+       "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
+       "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
+       "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
+       "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+       "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
+       "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
+       "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+       "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
       ],
       "error": null,
       "generated": true,
@@ -3636,7 +3676,7 @@
       "last_ok_revision": 38,
       "path": "reports/study.html",
       "revision": 38,
-      "sha256": "afc7c7e14408ccc3acc0c7d985d23a136737d1e330279ffc4efabda695b8eb09",
+      "sha256": "2bf8d5481ebb7dd1ecbc1abf7da69cdcaf60d882b2ec663caa2a8714686f9551",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3669,9 +3709,10 @@
     }
    },
    "exposure": {
-    "records": 17,
+    "records": 18,
     "rows_exposed": 318,
     "by_purpose": {
+     "labelled_preview_available": 5,
      "sealed": 80,
      "structural_inspection": 318,
      "train_eda": 222,
@@ -3680,6 +3721,7 @@
     },
     "by_partition": {
      "development": {
+      "labelled_preview_available": 5,
       "structural_inspection": 318
      },
      "final_test": {
@@ -3826,7 +3868,7 @@
     },
     "metric": "mae_reduction",
     "status": "met",
-    "result_id": "1a0cda3b8e56927877d80de037421e12abfb00b43c9f76ad3b0938d8d6f6329f",
+    "result_id": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
     "rule": null,
     "model": "fit.linear",
     "gain": 0.36929471747082676,
@@ -3844,10 +3886,10 @@
    "eda_looks": {
     "target_looks": 4,
     "results": [
-     "fe94f048ee6b9b943f691c414035695b739d8c4118d9e2341849c890b814b5be",
-     "6b5999a1557a4d95b9824b22b210e568d69d8ef812acf756a3ec05bd88aae908",
-     "861874f226c560f2f0883ffe59c079c97049ef4ffc54ba6c5ea83da439c9a94e",
-     "b8651c04e44b1e2f2b4fa851376b2ffb6af93b106378d7883f96b4fac55ffb7f"
+     "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
+     "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
+     "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
+     "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25"
     ],
     "by_activity": {
      "eda.mean_by": 1,
@@ -3861,8 +3903,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4",
-     "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707"
+     "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+     "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -3966,11 +4008,98 @@
     "analysis_contract_status": "present",
     "claim_scope": [
      "retrospective_association"
+    ],
+    "exploration_coverage": "instrumented_operations_only",
+    "unrecorded_surfaces": [
+     "preview",
+     "workbench",
+     "external_files"
     ]
    },
    "requirements": null,
    "completion": null,
-   "claim_eligibility": null
+   "claim_eligibility": null,
+   "presentation": {
+    "schema": "hypotrail.presentation/1",
+    "revision": 38,
+    "result_ids": {
+     "eda.correlation": "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
+     "eda.distribution:weight": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
+     "eda.mean_by:model_year": "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
+     "eda.quality": "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
+     "eda.single_feature_signal": "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
+     "eda.special_values": "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
+     "eda.target_summary": "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
+     "evaluate.regression": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+     "fit.baseline": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+     "fit.linear": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+     "fit.variant": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
+     "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+    },
+    "eligibility": null,
+    "uncertainty": {},
+    "assurance": {
+     "profile": "legacy",
+     "evaluation_protection": "protocol_reserved",
+     "consent_provenance": "agent_reported",
+     "cross_study_history": "not_enforced",
+     "analysis_contract_status": "present",
+     "claim_scope": [
+      "retrospective_association"
+     ],
+     "exploration_coverage": "instrumented_operations_only",
+     "unrecorded_surfaces": [
+      "preview",
+      "workbench",
+      "external_files"
+     ]
+    },
+    "pending_action": {
+     "schema": "hypotrail.pause/1",
+     "kind": "decision",
+     "language": "en",
+     "revision": 38,
+     "position": {
+      "step_id": "model_choice",
+      "completed": 9,
+      "total": 12
+     },
+     "learned": [],
+     "limitations": [
+      {
+       "code": "unconfirmed_decisions",
+       "text": "Not confirmed by you yet: the model choice, the opening of the final test and the conclusion."
+      },
+      {
+       "code": "validation_is_not_independent",
+       "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+      },
+      {
+       "code": "public_data_already_explored",
+       "text": "The data were explored or published before this study; its rows are not unseen."
+      }
+     ],
+     "proposal_id": "p_7",
+     "proposal_text": "Adopt the linear model.",
+     "recommended_option": "adopt",
+     "options": [
+      "adopt",
+      "change",
+      "explain"
+     ],
+     "question": "Do you adopt this decision?",
+     "evidence_refs": [],
+     "detail_topics": [
+      "metric",
+      "uncertainty"
+     ]
+    },
+    "historical": {
+     "stale_result_ids": [],
+     "final_test_opened": false,
+     "changed_after_opening": false
+    }
+   }
   }
  }
 }

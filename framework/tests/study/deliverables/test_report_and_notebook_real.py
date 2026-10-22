@@ -95,7 +95,7 @@ def studies(tmp_path_factory) -> dict[str, Path]:
 
 
 def _run_app(path: Path, cwd: Path) -> dict:
-    """Run a notebook's ``app.run()`` in a subprocess; return the named figures."""
+    """Explicitly run a notebook's guarded recomputations in a headless subprocess."""
     script = (
         'import importlib.util, json, sys\n'
         f'spec = importlib.util.spec_from_file_location("nb", {str(path)!r})\n'
@@ -108,7 +108,7 @@ def _run_app(path: Path, cwd: Path) -> dict:
         '    keep["development_keys"] = sorted(defs["development"].index)\n'
         'if "train_rows" in defs: keep["train_rows"] = len(defs["train_rows"])\n'
         'print(json.dumps(keep))\n')
-    env = fk.env()
+    env = fk.env(HYPOTRAIL_NOTEBOOK_RECOMPUTE='1')
     proc = subprocess.run([sys.executable, '-c', script], cwd=cwd, env=env, capture_output=True,
                           text=True, timeout=300, stdin=subprocess.DEVNULL)
     return {'code': proc.returncode, 'stderr': proc.stderr,

@@ -25,17 +25,17 @@
   ],
   "models": {
    "fit.baseline": {
-    "result_id": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
+    "result_id": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
     "current": true,
     "stale_reason": null
    },
    "fit.logistic": {
-    "result_id": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
+    "result_id": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
     "current": true,
     "stale_reason": null
    },
    "fit.variant": {
-    "result_id": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
+    "result_id": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
     "current": true,
     "stale_reason": null
    }
@@ -390,7 +390,7 @@
    "value": "share:0.1"
   },
   "recorded": false,
-  "note": "Experiment, not adopted: nothing was recorded. To adopt a rule, run policy.evaluate with it (exposure validation_policy_selection), then propose and confirm the policy.",
+  "note": "Experiment, not adopted: this read-only preview is an unrecorded surface. Use run policy.inspect for a recorded consultation, or run policy.evaluate before proposing and confirming an adopted policy.",
   "warnings": []
  }
 }

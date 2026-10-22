@@ -209,6 +209,17 @@
     }
    ]
   },
+  "history": {
+   "dataset_sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",
+   "exploration_events": [],
+   "exploration_coverage": "instrumented_operations_only",
+   "unrecorded_surfaces": [
+    "preview",
+    "workbench",
+    "external_files"
+   ],
+   "cross_study_history": "not_enforced"
+  },
   "not_yet_defensible": [
    {
     "id": "unconfirmed_decisions",

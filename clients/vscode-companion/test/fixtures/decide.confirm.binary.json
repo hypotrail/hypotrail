@@ -78,7 +78,27 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?"
+   "junior_digest": "Next: an analysis, run without asking you. Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "action",
+    "language": "en",
+    "revision": 50,
+    "position": {"step_id": "policy", "completed": 9, "total": 12},
+    "learned": [],
+    "limitations": [
+     {"code": "unconfirmed_decisions", "text": "Not confirmed by you yet: the opening of the final test and the conclusion."},
+     {"code": "validation_is_not_independent", "text": "Validation rows are used to compare models and choose policy."},
+     {"code": "public_data_already_explored", "text": "The public data were already explored."}
+    ],
+    "proposal_id": null,
+    "proposal_text": null,
+    "recommended_option": "continue",
+    "options": ["continue", "explain"],
+    "question": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
+    "evidence_refs": [],
+    "detail_topics": ["metric", "uncertainty"]
+   }
   }
  }
 }

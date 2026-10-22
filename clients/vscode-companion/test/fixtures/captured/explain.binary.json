@@ -56,7 +56,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -66,7 +66,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -90,7 +90,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -100,7 +100,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -150,7 +150,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae6d780c46ebb38d5ea550155c82b69d9eff34172edec96baf39cf697af55050",
+       "result_id": "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -184,7 +184,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "8416eb74d99aedba56738f035c1c3fb052a4966589c172d19e288978dbda97f2",
+       "result_id": "bfc3ae7d1816fe70002cdcb6512a816716b1db4d0620e65a036193afed8d9850",
        "path": "train_rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -252,7 +252,7 @@
       },
       {
        "text": "38.1%",
-       "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
+       "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
        "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
        "value": 0.38144329896907214,
        "format": "pct1"
@@ -276,7 +276,7 @@
       },
       {
        "text": "29.6%",
-       "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
+       "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
        "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
        "value": 0.296,
        "format": "pct1"
@@ -332,7 +332,7 @@
       },
       {
        "text": "28.3%",
-       "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
+       "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.low",
        "value": 0.2828227931488801,
        "format": "pct1"
@@ -342,7 +342,7 @@
       },
       {
        "text": "47.8%",
-       "result_id": "18b2e9f56bc4edee36e94c4cb823803548f697dc52eb13a831f36c6dd43a0ec2",
+       "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
        "path": "rules.[threshold:0.2].intervals.[fit.logistic].precision.high",
        "value": 0.4783043478260867,
        "format": "pct1"
@@ -424,7 +424,7 @@
    {
     "id": "average_precision",
     "term": "Average precision (AP)",
-    "definition": "The precision reached each time the ranked list meets a positive row, averaged from the top of the list down. Unlike the AUC, it depends on the base rate, so it suits a rare outcome. For example, when few clients subscribe, average precision tells how pure the top of the call list stays, which is what the calling team feels.",
+    "definition": "A weighted sum of precision values, weighted by each increase in recall as the threshold moves down the ranked list. It is not an arbitrary trapezoidal area under a precision-recall curve. Unlike the AUC, it depends on the base rate. For example, it describes how pure the top of a client call list stays as recall increases.",
     "example": null,
     "example_status": "none",
     "steps": []
@@ -796,7 +796,7 @@
       },
       {
        "text": "2,531",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.train.n_rows",
        "value": 2531,
        "format": "int"
@@ -806,7 +806,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.train.rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -816,7 +816,7 @@
       },
       {
        "text": "1,086",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.validation.n_rows",
        "value": 1086,
        "format": "int"
@@ -826,7 +826,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "a177e5618665e498ef1967b49f6396d6c9a23b993cab54c9b0d083fb26df6c06",
+       "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
        "path": "partitions.validation.rate",
        "value": 0.1151012891344383,
        "format": "pct1"
@@ -912,7 +912,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae6d780c46ebb38d5ea550155c82b69d9eff34172edec96baf39cf697af55050",
+       "result_id": "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"
@@ -1126,7 +1126,7 @@
       },
       {
        "text": "11.5%",
-       "result_id": "ae6d780c46ebb38d5ea550155c82b69d9eff34172edec96baf39cf697af55050",
+       "result_id": "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
        "path": "rate",
        "value": 0.11536941920189649,
        "format": "pct1"

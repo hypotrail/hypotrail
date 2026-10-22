@@ -97,6 +97,8 @@ RATE_BY = 'eda.rate_by'
 BASELINE = 'fit.baseline'
 LOGISTIC = 'fit.logistic'
 POLICY = 'policy.evaluation'
+POLICY_INSPECT = 'policy.inspect'
+POLICY_INSPECTION = 'policy.inspection'
 TARGET_SUMMARY = 'eda.target_summary'
 MEAN_BY = 'eda.mean_by'
 LINEAR = 'fit.linear'
@@ -118,10 +120,12 @@ DIAG_BINARY = 'diag.binary'
 DIAG_REGRESSION = 'diag.regression'
 DIAG_FINAL = 'diag.final_test'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
+              POLICY_INSPECT,
               TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
               SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL, CORRELATION)
 TASK_ACTIVITIES = {
-    'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY),
+    'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
+               POLICY_INSPECT),
     'regression': (SPLIT, TARGET_SUMMARY, SPECIAL_VALUES, MEAN_BY, BASELINE, LINEAR,
                    REGRESSION_EVALUATION),
 }
@@ -170,6 +174,8 @@ MODULES = {
     LOGISTIC: (_BASE, 'mlkit.study.fit', 'mlkit.study.metrics', 'mlkit.classical',
                'mlkit.study.governance', 'mlkit.study.objective'),
     POLICY: (_BASE, 'mlkit.study.policy', 'mlkit.study.trials', 'mlkit.study.objective'),
+    POLICY_INSPECT: (_BASE, 'mlkit.study.policy', 'mlkit.study.trials',
+                     'mlkit.study.objective'),
     TARGET_SUMMARY: (_BASE, 'mlkit.study.eda'),
     MEAN_BY: (_BASE, 'mlkit.study.eda'),
     LINEAR: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression', 'mlkit.classical',
@@ -258,6 +264,8 @@ def slot_of(activity: str, options: Mapping | None = None) -> str:
         return f'{activity}:{column}'
     if activity == VARIANT:
         return trials.variant_slot(int((options or {}).get('index') or 1))
+    if activity == POLICY_INSPECT:
+        return POLICY_INSPECTION
     return activity
 
 
@@ -267,6 +275,8 @@ def activity_of(slot: str) -> str:
     for activity in PER_COLUMN + (VARIANT,):
         if slot.startswith(activity + ':'):
             return activity
+    if slot == POLICY_INSPECTION:
+        return POLICY_INSPECT
     return slot
 
 
@@ -307,6 +317,7 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
     given = {k for k, v in options.items() if v not in (None, [], ())}
     allowed = {RATE_BY: {'column', 'max_groups'}, MEAN_BY: {'column', 'max_groups'},
                DISTRIBUTION: {'column', 'max_groups'}, POLICY: {'rules'},
+               POLICY_INSPECT: {'rules', 'intervals'},
                VARIANT: {'index'}}.get(activity, set())
     if given - allowed:
         raise CommandRefused('invalid_arguments',
@@ -324,11 +335,11 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
                                                           'least 1.', details={'max_groups': limit})
             out['max_groups'] = limit
         return out
-    if activity == POLICY:
+    if activity in (POLICY, POLICY_INSPECT):
         from . import policy
         rules = options.get('rules') or []
         if isinstance(rules, str) or not rules:
-            raise CommandRefused('invalid_arguments', 'policy.evaluation needs at least one '
+            raise CommandRefused('invalid_arguments', f'{activity} needs at least one '
                                                       '--rule (threshold:t, capacity:k, '
                                                       'or share:p).')
         canonical = []
@@ -338,7 +349,10 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
             except ValueError as exc:
                 raise CommandRefused('invalid_arguments', str(exc), details={'rule': rule}) from None
             canonical.append(rec.canonical_rule(rule))
-        return {'rules': list(dict.fromkeys(canonical))}
+        out = {'rules': list(dict.fromkeys(canonical))}
+        if activity == POLICY_INSPECT:
+            out['intervals'] = bool(options.get('intervals'))
+        return out
     if activity == VARIANT:
         # v0.3 (WP-F1): the first variant has no option, so its identity is unchanged.
         index = options.get('index')
@@ -674,12 +688,21 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             else:
                 expose('validation_model_evaluation', 'validation', keys['validation'],
                        [target] + columns)
-        else:   # policy evaluation; current fits are a precondition (require_activity)
+        else:   # policy evaluation/inspection; current fits are a precondition
             models = compared_models(state, FITS)
             inputs['results'] = {s: state['current'][s] for s in models}
-            inputs['bootstrap'] = dict(state['settings']['bootstrap'])
-            params = {'rules': evaluated_rules(state, options['rules']), 'models': models,
+            if activity == POLICY or options.get('intervals'):
+                inputs['bootstrap'] = dict(state['settings']['bootstrap'])
+            rules = (evaluated_rules(state, options['rules']) if activity == POLICY
+                     else list(options['rules']))
+            params = {'rules': rules, 'models': models,
                       'reference': BASELINE}
+            if activity == POLICY_INSPECT:
+                params.update(intervals=bool(options.get('intervals')),
+                              purpose='policy_exploration')
+                inputs['prediction_blobs'] = {
+                    slot: registry.get(store, rid)['blobs'][PREDICTIONS]
+                    for slot, rid in inputs['results'].items()}
             from . import assurance, state as st
             if assurance.profile(state) == 'review-v1':
                 inputs['success_criterion'] = dict(
@@ -693,10 +716,14 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                 # are an input (the split that assigned them).
                 params['selection'] = WITHIN_FOLD
                 inputs['fold_split'] = split_rid
-                expose('out_of_fold_policy_selection', partition.DEVELOPMENT, keys['validation'],
+                expose('policy_exploration' if activity == POLICY_INSPECT
+                       else 'out_of_fold_policy_selection',
+                       partition.DEVELOPMENT, keys['validation'],
                        [target])
             else:
-                expose('validation_policy_selection', 'validation', keys['validation'], [target])
+                expose('policy_exploration' if activity == POLICY_INSPECT
+                       else 'validation_policy_selection',
+                       'validation', keys['validation'], [target])
     modules = (REGRESSION_MODULES.get(activity, MODULES[activity]) if task == 'regression'
                else MODULES[activity])
     code = registry.code_fingerprint(modules)
@@ -1817,7 +1844,7 @@ def compute_regression_evaluation(store, plan_: Mapping) -> dict:
                              details={'results': {s: results[s] for s in models}})
     y = first['y']
     predictions = {slot: preds[slot]['prediction'] for slot in models}
-    boot = plan_['inputs']['bootstrap']
+    boot = plan_['inputs'].get('bootstrap')
     pairs = variant_pairs(models, LINEAR)
     paired = regression.paired_bootstrap(y, predictions, int(boot['replicates']),
                                          int(boot['seed']), level=float(boot['level']),
@@ -1909,7 +1936,7 @@ def compute_policy(store, plan_: Mapping) -> dict:
             raise StudyError('integrity_error', 'The fits were not scored on the same validation '
                                                 'rows; their policies cannot be compared.',
                              details={'results': dict(fits)})
-    boot = plan_['inputs']['bootstrap']
+    boot = plan_['inputs'].get('bootstrap')
     y = first['y']
     out_of_fold = plan_['params'].get('evaluation') == 'out_of_fold'
     pairs = variant_pairs(models, LOGISTIC)
@@ -1918,23 +1945,25 @@ def compute_policy(store, plan_: Mapping) -> dict:
     for rule in plan_['params']['rules']:
         points = {slot: policy.evaluate(y, preds[slot]['score'], rule, groups)
                   for slot in models}
-        paired = policy.paired_bootstrap(y, {s: preds[s]['score'] for s in models}, rule,
-                                         int(boot['replicates']), int(boot['seed']),
-                                         level=float(boot['level']),
-                                         reference=plan_['params']['reference'], pairs=pairs,
-                                         groups=groups)
-        out[rule] = {'models': points, 'intervals': paired['intervals'],
-                     'deltas': paired['deltas']}
-        if pairs or out_of_fold:
+        paired = None
+        if boot is not None:
+            paired = policy.paired_bootstrap(
+                y, {s: preds[s]['score'] for s in models}, rule,
+                int(boot['replicates']), int(boot['seed']), level=float(boot['level']),
+                reference=plan_['params']['reference'], pairs=pairs, groups=groups)
+        out[rule] = {'models': points}
+        if paired is not None:
+            out[rule].update(intervals=paired['intervals'], deltas=paired['deltas'])
+        if paired is not None and (pairs or out_of_fold):
             # WP-B1 (additive): the variant against the candidate; a capacity as a share of
             # the rows it was chosen on.
             out[rule]['comparisons'] = paired['comparisons']
             out[rule]['capacity_share'] = rec.capacity_share(rule, len(y))
     values = {'rules': out, 'n': len(y), 'n_positive': int(y.sum()),
               'predictions': dict(fits), 'reference': plan_['params']['reference'],
-              'bootstrap': {'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
-                            'level': float(boot['level']),
-                            'method': 'paired percentile bootstrap over validation rows'},
+              'population_digest': rec.sha256_hex(rec.canonical(first['row_keys'])),
+              'mode': ('inspection' if plan_['activity'] == POLICY_INSPECT
+                       else 'evaluation'),
               # v0.2b (WP-B3, R6): the top 5, 10 and 20 % of the scored rows.
               'gain_points': {'model': CANDIDATE_GAIN_MODEL,
                               **policy.gain_points(y, preds[CANDIDATE_GAIN_MODEL]['score'],
@@ -1942,6 +1971,11 @@ def compute_policy(store, plan_: Mapping) -> dict:
               'counts': 'expected counts when a capacity cut splits a tie group (tied_at_cut)',
               'note': 'The rule is chosen on validation rows: these figures are not independent '
                       'evidence of future performance. No model was refitted.'}
+    if boot is not None:
+        values['bootstrap'] = {
+            'replicates': int(boot['replicates']), 'seed': int(boot['seed']),
+            'level': float(boot['level']),
+            'method': 'paired percentile bootstrap over validation rows'}
     criterion_value = plan_['inputs'].get('success_criterion')
     if isinstance(criterion_value, Mapping):
         from . import objective
@@ -1964,7 +1998,8 @@ def compute_policy(store, plan_: Mapping) -> dict:
             and not out_of_fold
         values['uncertainty'] = {
             'method': 'paired_row_bootstrap' if inferential else 'descriptive_only',
-            'level': float(boot['level']), 'resampling_unit': 'row',
+            'level': float(boot['level']) if boot is not None else None,
+            'resampling_unit': 'row',
             'target_quantity': selection_spec['metric'],
             'conditioning': 'fixed selected configuration',
             'dependence_assumptions': 'independent held-out observations',
@@ -1977,14 +2012,14 @@ def compute_policy(store, plan_: Mapping) -> dict:
         values['ranking'] = {slot: {'roc_auc': metrics.roc_auc(y, preds[slot]['score']),
                                     'average_precision': metrics.average_precision(
                                         y, preds[slot]['score'])} for slot in models}
-        if out_of_fold:
+        if out_of_fold and boot is not None:
             values['bootstrap']['method'] = ('paired percentile bootstrap over the out-of-fold '
                                              'predictions of the development rows')
             values['note'] = ('The rule and the model are chosen on out-of-fold predictions of '
                               'the development rows: these figures are development evidence, '
                               'not independent evidence of future performance. No model was '
                               'refitted.')
-        if groups is not None:
+        if groups is not None and boot is not None:
             values['bootstrap']['method'] = ('paired percentile bootstrap over the out-of-fold '
                                              'predictions, rows resampled within each fold')
             values['selection'] = {'scope': WITHIN_FOLD, 'folds': int(len(set(groups.tolist()))),

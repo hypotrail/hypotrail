@@ -183,7 +183,13 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
     recompute = code_cells.cells_by_step(view, task, target, positive, facts,
                                          [step['id'] for step in view['plan']])
     if recompute:
-        cells.append(('recompute_imports', code_cells.imports(task)))
+        cells.append(('run_recompute',
+                      'run_recompute = mo.ui.run_button(label="Run registered recomputations")\n'
+                      'run_recompute'))
+        guard = ('mo.stop(not (run_recompute.value or '
+                 'os.environ.get("HYPOTRAIL_NOTEBOOK_RECOMPUTE") == "1"), '
+                 'mo.md("Recomputation is paused until you press the run button."))\n')
+        cells.append(('recompute_imports', guard + code_cells.imports(task)))
     for index, step in enumerate(view['plan'], start=1):
         content = texts.step(step['id'])
         slots = render_html.slots_of_step(step['id'], view['results'], task)
@@ -196,7 +202,7 @@ def _study_cells_for_task(view: Mapping, revision: Any) -> tuple[str, list[tuple
                                               view.get('language') or 'en'))))
         if pending:
             continue
-        cells += code
+        cells += [(name, guard + source) for name, source in code]
         concept = content.get('concept')
         items = [f'mo.Html(nv.example_html(cited, {concept!r}{task_arg}))',
                  f'mo.Html(nv.step_html(cited, RESULT_IDS, {slots!r}, '

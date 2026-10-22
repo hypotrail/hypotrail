@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
   "status": "promoted",
-  "result_id": "50dfd0a5c5a2d4f009608fb4a9b855888692dc6b475f482e90b84b4d3427c0c8",
+  "result_id": "fde74107e37d72724c9bdc767957e0e1587af7a6d007fb5208b5461d6faeffa8",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1193,7 +1193,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199"
+     "predictions": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460"
     },
     "fit.variant": {
      "confusion": {
@@ -2349,7 +2349,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671"
+     "predictions": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf"
     }
    },
    "coefficient_rows": 3617,
@@ -2611,13 +2611,13 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "50dfd0a5c5a2d4f009608fb4a9b855888692dc6b475f482e90b84b4d3427c0c8",
-   "input_key": "76ac4fed5fb3e87fc9248d033e96bdf1ae4b0130566091e5648f20eb9dff98a0",
+   "result_id": "fde74107e37d72724c9bdc767957e0e1587af7a6d007fb5208b5461d6faeffa8",
+   "input_key": "50381b1ec766fb85fd49027c9c8854836a4fdc9a9b00d08abec4c47497d9ca80",
    "reason": null,
    "started_revision": 29,
    "invalidation": null,
    "exposure_ids": [
-    "x_c1a60831050c4fffafeaa3f5d5e4ceaa"
+    "x_7b939039781e458a9e88420558b32e2e"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2659,7 +2659,47 @@
    "language": "en",
    "recommended": null,
    "question": "Do you adopt this decision?",
-   "junior_digest": "Proposal on the opening of the final test: \"You open the sealed final test once, for the chosen configuration.\" If it suits you, say that you adopt it; otherwise say what you change."
+   "junior_digest": "Proposal on the opening of the final test: \"You open the sealed final test once, for the chosen configuration.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "decision",
+    "language": "en",
+    "revision": 30,
+    "position": {
+     "step_id": "train_eda",
+     "completed": 9,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": "p_8",
+    "proposal_text": "You open the sealed final test once, for the chosen configuration.",
+    "recommended_option": "adopt",
+    "options": [
+     "adopt",
+     "change",
+     "explain"
+    ],
+    "question": "Do you adopt this decision?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }

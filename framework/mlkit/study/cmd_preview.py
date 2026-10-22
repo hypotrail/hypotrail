@@ -45,8 +45,9 @@ PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'rules', 'models', 
                 # Post-v0.1 fixes (D4): the small-data warnings that bear on these rules.
                 'warnings')
 FITS = ('fit.baseline', 'fit.logistic')
-NOTE = ('Experiment, not adopted: nothing was recorded. To adopt a rule, run policy.evaluate '
-        'with it (exposure validation_policy_selection), then propose and confirm the policy.')
+NOTE = ('Experiment, not adopted: this read-only preview is an unrecorded surface. '
+        'Use run policy.inspect for a recorded consultation, or run policy.evaluate before '
+        'proposing and confirming an adopted policy.')
 
 
 KINDS = ('policy', 'effects', 'proposal')

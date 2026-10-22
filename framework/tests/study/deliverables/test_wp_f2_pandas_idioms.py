@@ -64,7 +64,8 @@ def test_a_cross_validated_notebook_shows_a_per_fold_dataframe(cv_study):
         'print(json.dumps({"index": [int(i) for i in table.index],\n'
         '                  "rows": [int(r) for r in table["rows"]],\n'
         '                  "columns": list(table.columns)}))\n')
-    proc = subprocess.run([sys.executable, '-c', script], cwd=study.parent, env=fk.env(),
+    proc = subprocess.run([sys.executable, '-c', script], cwd=study.parent,
+                          env=fk.env(HYPOTRAIL_NOTEBOOK_RECOMPUTE='1'),
                           capture_output=True, text=True, timeout=300, stdin=subprocess.DEVNULL)
     assert proc.returncode == 0, proc.stderr
     out = json.loads(proc.stdout.strip().splitlines()[-1])
@@ -83,7 +84,8 @@ def test_a_changed_per_fold_figure_fails_the_notebook(cv_study, tmp_path):
     before = 'assert fold_table.loc[_item["fold"], "rows"] == _item["n_rows"]'
     assert source.count(before) == 1
     path.write_text(source.replace(before, before + ' + 1'), encoding='utf-8')
-    proc = subprocess.run([sys.executable, str(path)], cwd=study.parent, env=fk.env(),
+    proc = subprocess.run([sys.executable, str(path)], cwd=study.parent,
+                          env=fk.env(HYPOTRAIL_NOTEBOOK_RECOMPUTE='1'),
                           capture_output=True, text=True, timeout=300, stdin=subprocess.DEVNULL)
     assert proc.returncode != 0 and 'AssertionError' in proc.stderr
 

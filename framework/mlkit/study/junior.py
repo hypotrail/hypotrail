@@ -31,7 +31,7 @@ from . import state as st
 
 EN, FR = 'en', 'fr'
 MAX_DIGEST_WORDS = 200
-ENRICH_KEYS = ('language', 'junior_digest', 'recommended', 'question')
+ENRICH_KEYS = ('language', 'junior_digest', 'recommended', 'question', 'pause')
 RECOMMENDED_KEYS = ('value', 'why')
 
 

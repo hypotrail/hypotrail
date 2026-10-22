@@ -305,9 +305,9 @@ def _not_criteria(lang: str, task: str) -> list[dict]:
                 {'metric': 'average_precision', 'available': False,
                  'why': _t(lang, 'Average precision (AP) also judges the whole ranking: a '
                                  'diagnostic, not a business criterion.',
-                           "L'average precision (AP, aire sous la courbe précision-rappel) "
-                           'juge aussi tout le classement : un diagnostic, pas un critère '
-                           'métier.')}]
+                           "L'average precision (AP, somme pondérée des précisions selon les "
+                           'hausses de rappel) juge aussi tout le classement : un diagnostic, '
+                           'pas une aire trapézoïdale arbitraire ni un critère métier.')}]
     return out
 
 

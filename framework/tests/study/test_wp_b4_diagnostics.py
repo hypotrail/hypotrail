@@ -285,7 +285,8 @@ def test_report_section_is_cited_and_the_notebook_recomputes(tmp_path):
     text = notebook.read_text()
     assert 'recompute_dev_diagnostics' in text and 'recompute_final_diagnostics' in text
     run = subprocess.run([sys.executable, str(notebook)], capture_output=True, text=True,
-                         cwd=flow.study, env=dict(fk.env(), HYPOTRAIL_READ_ONLY='1'),
+                             cwd=flow.study, env=dict(fk.env(), HYPOTRAIL_READ_ONLY='1',
+                                                      HYPOTRAIL_NOTEBOOK_RECOMPUTE='1'),
                          timeout=300)
     assert run.returncode == 0, run.stderr[-3000:]
     assert "'true_positives'" in run.stdout

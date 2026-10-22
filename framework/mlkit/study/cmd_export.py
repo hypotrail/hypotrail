@@ -47,7 +47,7 @@ PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'out', 'files', 'in
                 'warnings')
 HANDOFF_KEYS = ('schema', 'study', 'revision', 'task', 'case', 'dataset', 'goal', 'decisions',
                 'results_cited', 'exposure', 'not_yet_defensible', 'open_items', 'deliverables',
-                'reproduce', 'environment')
+                'reproduce', 'environment', 'history')
 CITED_KEYS = ('result_id', 'activity', 'path', 'value', 'shown')
 FILE_KEYS = ('path', 'sha256', 'bytes')
 KINDS = ('handoff',)
@@ -66,6 +66,8 @@ PURPOSE_LABELS = {'structural_inspection': 'Structural inspection',
                   'train_eda': 'Exploration of training rows', 'train_fit': 'Model fitting',
                   'validation_model_evaluation': 'Model evaluation',
                   'validation_policy_selection': 'Rule selection',
+                  'policy_exploration': 'Recorded policy exploration',
+                  'labelled_preview_available': 'Labelled preview made available',
                   'sealed': 'Final test set aside, sealed (schema check only)'}
 BASIS_WORDS = {st.EXPLICIT: "the junior's own decision",
                # ADR 0005: the two kinds of own words of the guided mode.
@@ -450,7 +452,15 @@ def build(study_dir) -> tuple[read.Study, dict, dict[str, bytes], bool]:
         'open_items': open_items,
         'deliverables': {name: (view['artifacts']['items'].get(name) or {}).get(
             'status', 'not_rendered') for name in ev.LINEAGE_ARTIFACTS},
-        'reproduce': reproduce, 'environment': environment}
+        'reproduce': reproduce, 'environment': environment,
+        'history': {
+            'dataset_sha256': view['dataset']['sha256'],
+            'exploration_events': list((study.state.get('exploration') or {})
+                                       .get('events', {}).values()),
+            'exploration_coverage': 'instrumented_operations_only',
+            'unrecorded_surfaces': ['preview', 'workbench', 'external_files'],
+            'cross_study_history': 'not_enforced',
+        }}
     files = {'handoff.md': md.encode('utf-8'),
              'handoff.json': (json.dumps({k: handoff[k] for k in HANDOFF_KEYS}, indent=2,
                                          ensure_ascii=False) + '\n').encode('utf-8')}

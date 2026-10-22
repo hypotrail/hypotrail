@@ -167,6 +167,42 @@ def fmt_number(value: float, fmt: str = 'auto') -> str:
     return f'{value:.3f}'
 
 
+def format_value(value: float | int | None, kind: str = 'auto', language: str = 'en',
+                 *, undefined_reason: str | None = None) -> str:
+    """Canonical EN/FR formatting shared by structured presentation surfaces.
+
+    Stored values remain unchanged. ``None`` is never silently presented as zero.
+    """
+    if language not in ('en', 'fr'):
+        raise untraceable(f'Unknown language {language!r}.', language=language)
+    if value is None:
+        reason = undefined_reason or ('aucune observation sélectionnée'
+                                      if language == 'fr' else 'no selected observations')
+        return ('indéfini : ' if language == 'fr' else 'undefined: ') + reason
+    if not is_number(value):
+        raise untraceable('A formatted value must be a finite number or null.', value=value)
+    if kind == 'integer':
+        text = f'{round(value):,}'
+    elif kind == 'fraction':
+        text = f'{100 * value:.1f}%'
+    elif kind == 'fraction_difference':
+        points = 100 * value
+        number = f'{points:.0f}' if float(points).is_integer() else f'{points:.1f}'
+        text = (f'{number} points de pourcentage' if language == 'fr'
+                else f'{number} percentage points')
+    else:
+        text = fmt_number(value, kind)
+    if language == 'fr':
+        if kind == 'integer':
+            return text.replace(',', '\u202f')
+        head, sep, tail = text.partition(' ')
+        head = head.replace('.', ',')
+        if head.endswith('%'):
+            head = head[:-1] + '\u00a0%'
+        return head + (sep + tail if sep else '')
+    return text
+
+
 @dataclass(frozen=True)
 class Token:
     """A number read from text: its characters, value, decimals, and percent sign."""

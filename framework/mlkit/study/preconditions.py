@@ -224,6 +224,7 @@ def final_test_missing(state: Mapping, value: Any = None, *, store=None) -> list
     declared = trials.declared_slots(state)
     stale = sorted(slot for slot, rid in state['current'].items()
                    if rid in state['stale'] and not slot.startswith(('eda.', 'diag.'))
+                   and slot != 'policy.inspection'
                    and not (trials.is_variant_slot(slot) and slot not in declared))
     if stale:
         missing.append({'requirement': 'nothing_stale', 'slots': stale,

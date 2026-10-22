@@ -1988,6 +1988,15 @@ def init(case_path, study_dir, language: str = st.DEFAULT_LANGUAGE,
                                  row_keys=development.index.keys,
                                  dataset_sha256=index.dataset_sha256,
                                  columns=case.column_names)
+        # J4: the data card deterministically shows these labelled development rows. Record
+        # their availability at init; previews remain byte-level read-only afterwards.
+        preview_keys = sorted(development.index.keys,
+                              key=lambda key: int(str(key)[1:]))[:5]
+        exposure.record(store, exposure_id=exposure.new_exposure_id(),
+                        revision=state['revision'], activity='init.labelled_preview',
+                        result_id=None, purpose='labelled_preview_available',
+                        partition=partition.DEVELOPMENT, row_keys=preview_keys,
+                        dataset_sha256=index.dataset_sha256, columns=case.column_names)
         exposure.record(store, exposure_id=exposure.new_exposure_id(),
                         revision=state['revision'], activity=partition.ACTIVITY,
                         result_id=None, purpose=partition.EXPOSURE_PURPOSE,

@@ -21,7 +21,7 @@
   "activity": "diag.binary",
   "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
   "status": "promoted",
-  "result_id": "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3",
+  "result_id": "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1191,7 +1191,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "cfed924627ed16184242cdbbbf5af2d6327abc8e16a8b2e2ca407ebc03ed5abc"
+     "predictions": "5590a47affccfb4512baa8218b040b4d7698546f14e7f90adddd619fbed8874c"
     },
     "fit.variant": {
      "confusion": {
@@ -2345,7 +2345,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the training rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "69ca4db729700a6e5f57b3245345bf8ee7f83a993b9e831805fd1034a7246898"
+     "predictions": "adcf355177e792341a87b1507325444d3297d5651bbaf8c49ac5d376b8653557"
     }
    },
    "coefficient_rows": 2531,
@@ -2583,14 +2583,14 @@
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3",
-   "input_key": "43ea489a45001722659d99ce6eeb215cbef3b137363d0712351ef7819eda2137",
+   "result_id": "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1",
+   "input_key": "4c873984362dd011b73e946c8a26bb682f5f6ad49450d5708b61f758b4f6d761",
    "reason": null,
    "started_revision": 44,
    "invalidation": null,
    "exposure_ids": [
-    "x_540ede97369b49e5b148fa29634959fd",
-    "x_082208f8d39c4e0eb8cdbe779528e142"
+    "x_d7bcdad4ea1d4bb9bf2e976f6533fca3",
+    "x_5db405870c254e1b952b50cc93b1f32f"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2642,7 +2642,46 @@
     "why": "This is the configuration you chose; the holdout (final test) measures it once."
    },
    "question": "Do you open the holdout (final test) now, once?",
-   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows."
+   "junior_digest": "Holdout (final test): rows sealed since the start. Opened once, it measures the chosen configuration on rows no choice used; it is the study's only independent evidence. After the opening, any change is reported as made after the final test. Recommended: This is the configuration you chose; the holdout (final test) measures it once. It holds 904 rows.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "action",
+    "language": "en",
+    "revision": 45,
+    "position": {
+     "step_id": "final_test",
+     "completed": 10,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare models and to choose the policy and its threshold or capacity, so validation results are not independent evidence of future performance."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": null,
+    "proposal_text": null,
+    "recommended_option": "continue",
+    "options": [
+     "continue",
+     "explain"
+    ],
+    "question": "Do you open the holdout (final test) now, once?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }

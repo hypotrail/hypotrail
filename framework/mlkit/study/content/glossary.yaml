@@ -171,7 +171,7 @@ terms:
   average_precision:
     term: Average precision (AP)
     term_fr: "average precision (AP, aire sous la courbe précision-rappel)"
-    definition: The precision reached each time the ranked list meets a positive row, averaged from the top of the list down. Unlike the AUC, it depends on the base rate, so it suits a rare outcome. For example, when few clients subscribe, average precision tells how pure the top of the call list stays, which is what the calling team feels.
+    definition: A weighted sum of precision values, weighted by each increase in recall as the threshold moves down the ranked list. It is not an arbitrary trapezoidal area under a precision-recall curve. Unlike the AUC, it depends on the base rate. For example, it describes how pure the top of a client call list stays as recall increases.
   lift:
     term: Lift
     term_fr: "lift"

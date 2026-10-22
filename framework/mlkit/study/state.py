@@ -535,7 +535,8 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # ``mode`` and ``language`` (ADR 0005, v0.2a) are written by every new study; a state
 # without them is a guided study in English. ``mode_history`` appears with the first
 # ``mode set``.
-TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_history')
+TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_history',
+                     'exploration')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -766,6 +767,7 @@ def initial_state(case: Case, *, created: str | None = None,
         'current': {},
         'stale': {},
         'executions': {bucket: {} for bucket in EXECUTION_BUCKETS},
+        'exploration': {'events': {}},
         'invalidations': [],
         'receipts': {},
         'settings': settings,
@@ -1070,6 +1072,18 @@ def validate_state(state: Any) -> list[dict]:
     if 'partition' in present:
         from . import partition
         problems += partition.validate(state['partition'])
+    if 'exploration' in present:
+        exploration = state['exploration']
+        if not isinstance(exploration, dict) or set(exploration) != {'events'} \
+                or not isinstance(exploration.get('events'), dict):
+            problems.append({'path': 'exploration',
+                             'problem': 'must be a mapping containing an events mapping'})
+        else:
+            for event_id, event in exploration['events'].items():
+                if not isinstance(event, dict) or event.get('status') not in (
+                        'reserved', 'completed', 'failed', 'outcome_unknown'):
+                    problems.append({'path': f'exploration.events.{event_id}',
+                                     'problem': 'must have a valid event status'})
     for key in ('current', 'stale', 'receipts'):
         if not isinstance(state[key], dict):
             problems.append({'path': key, 'problem': 'must be a mapping'})
@@ -1556,12 +1570,14 @@ def not_yet_defensible(state: dict) -> list[dict]:
         items.append({'id': 'delegated_decisions', 'decisions': delegated,
                       'text': 'Decided by delegation to the assistant\'s default, not by the '
                               'junior\'s own judgment: ' + ', '.join(delegated) + '.'})
-    if state['stale']:
+    current_stale = sorted(rid for rid in state['stale']
+                           if rid != state.get('current', {}).get('policy.inspection'))
+    if current_stale:
         # v0.3 (WP-A, R34): a stale result reaches the junior only when a junior surface
         # cites it (a decision or an open proposal names it, as ``motivated_by`` does);
         # otherwise it is the agent's to recompute, and not a limit of the study for them.
         cited = cited_stale_results(state)
-        items.append({'id': 'stale_results', 'results': sorted(state['stale']),
+        items.append({'id': 'stale_results', 'results': current_stale,
                       'cited_by': cited, 'junior': bool(cited),
                       'text': 'Some results are stale and must be recomputed before they are cited.'})
     if state['executions']['interrupted']:

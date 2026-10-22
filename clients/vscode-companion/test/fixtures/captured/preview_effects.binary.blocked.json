@@ -32,7 +32,7 @@
   "row": 6,
   "reason": "policy changed (§3.7 row 6: policy.rule_type)",
   "stale_results": [
-   "48261ddf3e9350fec57c1ccc8ea966b719552ca856c26c9327a46c9e8a34b9b3"
+   "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1"
   ],
   "stale_slots": [
    "diag.binary"

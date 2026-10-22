@@ -61,7 +61,9 @@ def test_j0_a02_profile_is_opt_in_and_decisions_stay_open(tmp_path, language):
     assert out['assurance'] == {
         'profile': 'review-v1', 'evaluation_protection': 'protocol_reserved',
         'consent_provenance': 'agent_reported', 'cross_study_history': 'not_enforced',
-        'analysis_contract_status': 'present', 'claim_scope': ['retrospective_association']}
+        'analysis_contract_status': 'present', 'claim_scope': ['retrospective_association'],
+        'exploration_coverage': 'instrumented_operations_only',
+        'unrecorded_surfaces': ['preview', 'workbench', 'external_files']}
     assert tuple(out['assurance']) == assurance.ASSURANCE_KEYS
     short = cli.run(['status', '--summary', '--fields', 'assurance', '--study', str(study)])
     assert short.exit_code == 0 and short.payload['assurance'] == out['assurance']

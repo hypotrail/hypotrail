@@ -16,7 +16,8 @@ TIMING_KEYS = ('prediction_order', 'outcome_available_order', 'scale')
 CLOCK_KEYS = ('by', 'status', 'source')
 DEPENDENCY_KEYS = ('kind', 'group_column', 'group_goal', 'status', 'source')
 ASSURANCE_KEYS = ('profile', 'evaluation_protection', 'consent_provenance',
-                  'cross_study_history', 'analysis_contract_status', 'claim_scope')
+                  'cross_study_history', 'analysis_contract_status', 'claim_scope',
+                  'exploration_coverage', 'unrecorded_surfaces')
 NOTICE_KEYS = ('code', 'audience', 'message', 'junior_message')
 CAPABILITY = 'review-v1 analytical execution'
 
@@ -104,6 +105,7 @@ def describe(state, case=None) -> dict:
         profile(state), 'protocol_reserved', 'agent_reported', 'not_enforced',
         'present' if contract is not None else 'absent',
         list(contract['permitted_claims']) if contract is not None else [],
+        'instrumented_operations_only', ['preview', 'workbench', 'external_files'],
     )))
 
 

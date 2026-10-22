@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 33,
-   "updated": "2026-10-22T09:30:47.528944+00:00",
+   "updated": "2026-10-22T18:59:30.949618+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -275,7 +275,46 @@
     "language": "en",
     "recommended": null,
     "question": null,
-    "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted."
+    "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+    "pause": {
+     "schema": "hypotrail.pause/1",
+     "kind": "action",
+     "language": "en",
+     "revision": 33,
+     "position": {
+      "step_id": "train_eda",
+      "completed": 8,
+      "total": 12
+     },
+     "learned": [],
+     "limitations": [
+      {
+       "code": "unconfirmed_decisions",
+       "text": "Not confirmed by you yet: the decision policy, the opening of the final test and the conclusion."
+      },
+      {
+       "code": "validation_is_not_independent",
+       "text": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+      },
+      {
+       "code": "public_data_already_explored",
+       "text": "The data were explored or published before this study; its rows are not unseen."
+      }
+     ],
+     "proposal_id": null,
+     "proposal_text": null,
+     "recommended_option": "continue",
+     "options": [
+      "continue",
+      "explain"
+     ],
+     "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+     "evidence_refs": [],
+     "detail_topics": [
+      "metric",
+      "uncertainty"
+     ]
+    }
    },
    "open_proposals": [],
    "decisions": {
@@ -294,7 +333,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-22T09:30:01.215059+00:00",
+      "time": "2026-10-22T18:58:45.735220+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -341,7 +380,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-22T09:30:02.174406+00:00",
+      "time": "2026-10-22T18:58:46.727693+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -390,7 +429,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-22T09:30:03.549762+00:00",
+      "time": "2026-10-22T18:58:48.236796+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -421,7 +460,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-22T09:30:04.978839+00:00",
+      "time": "2026-10-22T18:58:49.699970+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -457,7 +496,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-22T09:30:06.412127+00:00",
+      "time": "2026-10-22T18:58:51.237842+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -503,7 +542,7 @@
       "restatement": "You compare three variants of the candidate, each with its question.",
       "proposal_id": "p_6",
       "revision": 23,
-      "time": "2026-10-22T09:30:13.148624+00:00",
+      "time": "2026-10-22T18:58:58.152695+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -648,7 +687,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "4f7805822a82709bcbe54120d31dfd549a42b22cd81734b16aba56a010a6297f",
+     "result_id": "1a13c43d22ad9b5c129c14cc576abc23e92e1a7c7ced2cb303032d228b14817e",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1825,7 +1864,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199"
+        "predictions": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460"
        },
        "fit.variant": {
         "confusion": {
@@ -2981,7 +3020,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671"
+        "predictions": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf"
        },
        "fit.variant:2": {
         "confusion": {
@@ -4835,7 +4874,7 @@
          },
          "note": "The value is chosen inside each outer fold by an inner cross-validation of that fold's training rows only, so the out-of-fold figures include the choice (nested cross-validation). One tuning is one trial."
         },
-        "predictions": "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85"
+        "predictions": "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d"
        },
        "fit.variant:3": {
         "confusion": {
@@ -5893,7 +5932,7 @@
          },
          "note": "The value is chosen inside each outer fold by an inner cross-validation of that fold's training rows only, so the out-of-fold figures include the choice (nested cross-validation). One tuning is one trial."
         },
-        "predictions": "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1"
+        "predictions": "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29"
        }
       },
       "coefficient_rows": 3617,
@@ -6178,18 +6217,18 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "fit.variant": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
-       "fit.variant:2": "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
-       "fit.variant:3": "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1",
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "fit.logistic": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "fit.variant": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+       "fit.variant:2": "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+       "fit.variant:3": "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29",
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "e599d93309bf18a27c0de609429c61eab84d8b659897e667bbd3dae4ecc5b86d",
+     "code_fingerprint": "b8ff5e1a37c39bb1c14588d0af3ae8bd32c626ee5d834828efb6558eccd26934",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6203,13 +6242,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_b8734faf726d77e6af0ae94a",
-     "exposure_id": "x_232191010233443eac26564c8c3a37ef",
+     "exposure_id": "x_e95f1d9c67254b13ae5f9542f56808fc",
      "started_revision": 32,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
+     "result_id": "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -6241,14 +6280,14 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "89ac00bf640f35ca565eccd3f53a757af96496ea75814d4d2de12c1341325902",
+     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6262,13 +6301,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_deeee16355414dedb8c04555624258f0",
+     "exposure_id": "x_fdd8d09680cd4693aa4f3d3063fd932f",
      "started_revision": 14,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
+     "result_id": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -6376,14 +6415,14 @@
        "scheme": "cross_validation"
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "7147c7c8ffcb7e04e8a2b8633b4bf884d8ad18c9a3db65a5625974b1cf1c119b",
+     "code_fingerprint": "efebfacf48c9bdaf104fa7557d6fcc0c7641cf58c25fb8ce028b072b1df79879",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6397,13 +6436,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_72ecf76a30bc49beb1e2036dc6a91b58",
+     "exposure_id": "x_ff2e54f9a034444c99be48d2091d4994",
      "started_revision": 16,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
+     "result_id": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -6624,7 +6663,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "special_values": [
        {
@@ -6653,7 +6692,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "7c515a3ea0eee21c1fe997cbb6cadb09f6a96294f18df9019b0ff5f9aa2c9754",
+     "code_fingerprint": "329764ca5972b0249d333b7ae2bc1063fb87f1691551e412584f3374e826f5a9",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6667,13 +6706,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_4392890fc1f0453ca78f53cde0a2ea1e",
+     "exposure_id": "x_ab0e33f4f3214c7cb3862707ca7acc00",
      "started_revision": 18,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
+     "result_id": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -6902,7 +6941,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "special_values": [
        {
@@ -6935,7 +6974,7 @@
        "strength": "strong"
       }
      },
-     "code_fingerprint": "f002424057c5148ca5bfd7c8cf58e00b5c94b8546a10d4cc1d0ff5ab70886828",
+     "code_fingerprint": "627174e6c3617f7fda059d1e137381bb49249766a91ab5a634de4b124f4fb019",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -6949,13 +6988,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_60b0cfe62d69e0ed78f7ce7e",
-     "exposure_id": "x_baff686e145c455b9037dc5cc3483892",
+     "exposure_id": "x_c6717ffc7e5c4e688869d4021cc2e472",
      "started_revision": 24,
      "integrity": "ok"
     },
     "fit.variant:2": {
      "slot": "fit.variant:2",
-     "result_id": "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
+     "result_id": "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -8216,7 +8255,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "special_values": [
        {
@@ -8249,7 +8288,7 @@
        "kind": "family"
       }
      },
-     "code_fingerprint": "f002424057c5148ca5bfd7c8cf58e00b5c94b8546a10d4cc1d0ff5ab70886828",
+     "code_fingerprint": "627174e6c3617f7fda059d1e137381bb49249766a91ab5a634de4b124f4fb019",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -8263,13 +8302,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_46ed3fd080ad3849123b1718",
-     "exposure_id": "x_77ff0ac5ec2e4b40ae7bc9740628b161",
+     "exposure_id": "x_ba907b3820074fa3923d6fd98bd0be29",
      "started_revision": 26,
      "integrity": "ok"
     },
     "fit.variant:3": {
      "slot": "fit.variant:3",
-     "result_id": "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1",
+     "result_id": "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -8731,7 +8770,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b"
+       "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
       },
       "special_values": [
        {
@@ -8764,7 +8803,7 @@
        "kind": "family"
       }
      },
-     "code_fingerprint": "f002424057c5148ca5bfd7c8cf58e00b5c94b8546a10d4cc1d0ff5ab70886828",
+     "code_fingerprint": "627174e6c3617f7fda059d1e137381bb49249766a91ab5a634de4b124f4fb019",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -8778,13 +8817,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_5c3f9f2dbbc0a17a1254423f",
-     "exposure_id": "x_d1b9fcbdb21b45f2869202a0435a2a0e",
+     "exposure_id": "x_e9c4186d9ed34d64bb0efcddd0ace877",
      "started_revision": 28,
      "integrity": "ok"
     },
     "policy.evaluation": {
      "slot": "policy.evaluation",
-     "result_id": "85cb90fe02e542bbbfee434a4f6d3ff6cafd6159111fd1eb6ef9eccdbcf6ad52",
+     "result_id": "0ec35d43826de5901a5a473995d874fcd9f7fa4751598aee7fdaf38d9e7626d0",
      "activity": "policy.evaluation",
      "current": true,
      "stale_reason": null,
@@ -9984,19 +10023,15 @@
       "n": 3617,
       "n_positive": 417,
       "predictions": {
-       "fit.baseline": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
-       "fit.logistic": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "fit.variant": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
-       "fit.variant:2": "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
-       "fit.variant:3": "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1"
+       "fit.baseline": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
+       "fit.logistic": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "fit.variant": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+       "fit.variant:2": "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+       "fit.variant:3": "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29"
       },
       "reference": "fit.baseline",
-      "bootstrap": {
-       "replicates": 2000,
-       "seed": 20261017,
-       "level": 0.95,
-       "method": "paired percentile bootstrap over the out-of-fold predictions, rows resampled within each fold"
-      },
+      "population_digest": "2485df345d6bb072908c13d74b9c67e8428cd653e7c22164626dbcb6fe9f292f",
+      "mode": "evaluation",
       "gain_points": {
        "model": "fit.logistic",
        "n": 3617,
@@ -10042,6 +10077,12 @@
       },
       "counts": "expected counts when a capacity cut splits a tie group (tied_at_cut)",
       "note": "The rule and the model are chosen on out-of-fold predictions of the development rows: these figures are development evidence, not independent evidence of future performance. No model was refitted.",
+      "bootstrap": {
+       "replicates": 2000,
+       "seed": 20261017,
+       "level": 0.95,
+       "method": "paired percentile bootstrap over the out-of-fold predictions, rows resampled within each fold"
+      },
       "evaluation": "out_of_fold",
       "ranking": {
        "fit.baseline": {
@@ -10416,13 +10457,13 @@
        "n_rows": 3617,
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
-      "fold_split": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
+      "fold_split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
       "results": {
-       "fit.baseline": "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9",
-       "fit.logistic": "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "fit.variant": "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
-       "fit.variant:2": "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
-       "fit.variant:3": "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1"
+       "fit.baseline": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
+       "fit.logistic": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "fit.variant": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+       "fit.variant:2": "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+       "fit.variant:3": "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29"
       },
       "trial_budget": {
        "declared": 3,
@@ -10446,7 +10487,7 @@
        }
       ]
      },
-     "code_fingerprint": "64618bd16b27120566437c1dd85730a6aac6c1478036d9e23453b742f41181c3",
+     "code_fingerprint": "b4ef79c64c2f0b6b316f021b4a0438244810f67a5a4f00bbb8c2512d3b697ae6",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -10460,13 +10501,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_b98236d8cafd383b17becb1c",
-     "exposure_id": "x_14181ade22f447eca5477e2ca7c718bc",
+     "exposure_id": "x_53fd08a83647462a911ae4959d01b9db",
      "started_revision": 30,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
+     "result_id": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -10551,7 +10592,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "cdfe83bbc2fa8d50b430045d563d7f10abac90a1364eafa37462457359a6bec6",
+     "code_fingerprint": "39c88f58258ac3e65b5c6c018e6eb6c41fb3ed14759ca24f6cc706c5d45e5e26",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -10565,13 +10606,13 @@
       "python": "3.13.5"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_2eda3cc6194d40fba7054ee2d19b4235",
+     "exposure_id": "x_fb5fe53b2ba74cd3ac0802b9e01f63ff",
      "started_revision": 12,
      "integrity": "ok"
     }
    },
    "stale": {
-    "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20": {
+    "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2": {
      "reason": "model_variant confirmed for the first time",
      "since": 23
     }
@@ -10607,7 +10648,7 @@
      "revision": 23,
      "row": null,
      "stale_results": [
-      "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20"
+      "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2"
      ],
      "stale_slots": [
       "diag.binary"
@@ -10627,24 +10668,24 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
-       "4f7805822a82709bcbe54120d31dfd549a42b22cd81734b16aba56a010a6297f",
-       "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1",
-       "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
-       "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
-       "85cb90fe02e542bbbfee434a4f6d3ff6cafd6159111fd1eb6ef9eccdbcf6ad52",
-       "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
-       "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9"
+       "0ec35d43826de5901a5a473995d874fcd9f7fa4751598aee7fdaf38d9e7626d0",
+       "1a13c43d22ad9b5c129c14cc576abc23e92e1a7c7ced2cb303032d228b14817e",
+       "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
+       "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29",
+       "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+       "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+       "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+       "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f"
       ],
-      "edit_check_sha256": "071c9c9bfc96245bdfbc308eed613e9b3f4bcada0e4f3423107d248b480e8d65",
+      "edit_check_sha256": "4cbc23ec49faf568e61174c616dfa72807c967e52add7fee66588ddd6282494b",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 33,
       "path": "notebooks/study_generated.py",
       "revision": 33,
-      "sha256": "2beccef82bad7ca59ef9e487cb98a56b5274e18268a7705935a4752b70025e20",
+      "sha256": "bdd307ada0e4f758b295f1f3cac1b5ec14059b414b1f9c06c440b6061744a775",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -10657,15 +10698,15 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
-       "4f7805822a82709bcbe54120d31dfd549a42b22cd81734b16aba56a010a6297f",
-       "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1",
-       "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
-       "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
-       "85cb90fe02e542bbbfee434a4f6d3ff6cafd6159111fd1eb6ef9eccdbcf6ad52",
-       "a5489287ef7ece2ff9eaf216cb078fc5522e16dbbfc433be2146c796d609823b",
-       "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-       "bfbb25adf639a322e706f7190c88baa05833ac2c60e5b27e0ec55de620449ee9"
+       "0ec35d43826de5901a5a473995d874fcd9f7fa4751598aee7fdaf38d9e7626d0",
+       "1a13c43d22ad9b5c129c14cc576abc23e92e1a7c7ced2cb303032d228b14817e",
+       "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d",
+       "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+       "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29",
+       "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+       "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+       "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+       "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f"
       ],
       "error": null,
       "generated": true,
@@ -10673,7 +10714,7 @@
       "last_ok_revision": 33,
       "path": "reports/study.html",
       "revision": 33,
-      "sha256": "9a921f038f8a61695049de5b478af9d30ec7054c17565a4f9343ac98d3d56019",
+      "sha256": "569f7503533faa52611c6acbaf6d396dbba99c6b0db192cf8745ba700d7b607d",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -10706,11 +10747,12 @@
     }
    },
    "exposure": {
-    "records": 17,
+    "records": 18,
     "rows_exposed": 3617,
     "by_purpose": {
      "cross_validated_fit": 3617,
      "development_diagnostics": 3617,
+     "labelled_preview_available": 5,
      "out_of_fold_evaluation": 3617,
      "out_of_fold_policy_selection": 3617,
      "sealed": 904,
@@ -10721,6 +10763,7 @@
      "development": {
       "cross_validated_fit": 3617,
       "development_diagnostics": 3617,
+      "labelled_preview_available": 5,
       "out_of_fold_evaluation": 3617,
       "out_of_fold_policy_selection": 3617,
       "structural_inspection": 3617,
@@ -10810,7 +10853,7 @@
     {
      "id": "stale_results",
      "results": [
-      "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20"
+      "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2"
      ],
      "cited_by": [],
      "junior": false,
@@ -10919,9 +10962,9 @@
    "eda_looks": {
     "target_looks": 3,
     "results": [
-     "3cd06134b31ec65dc1ec7a61df46bde9c2dd528605c3cda363391590d16d9b1b",
-     "a47b4421d0b5e6fac6cbeb3260e5a3197c99aff2e5863c9b94634fe4d39e4c20",
-     "4f7805822a82709bcbe54120d31dfd549a42b22cd81734b16aba56a010a6297f"
+     "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+     "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2",
+     "1a13c43d22ad9b5c129c14cc576abc23e92e1a7c7ced2cb303032d228b14817e"
     ],
     "by_activity": {
      "diag.binary": 2,
@@ -10939,10 +10982,10 @@
    "trials": {
     "count": 4,
     "results": [
-     "a67d4a1111141f07cda1e62f348aa32ab13d1c9653b277711558fccab0d41199",
-     "762db06bb7b3ec4b0636055cadc12f642f3eca6e11f7a39db99360b0c6fc3671",
-     "8487132571aed96ab6162cf4298e29406ca7e17a16768f82d309dc816e867d85",
-     "6c5cd4682632232130383142ecf27184e36313abd2be486eab627e040628f0f1"
+     "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+     "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+     "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+     "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -11137,7 +11180,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "4f7805822a82709bcbe54120d31dfd549a42b22cd81734b16aba56a010a6297f",
+     "source": "1a13c43d22ad9b5c129c14cc576abc23e92e1a7c7ced2cb303032d228b14817e",
      "checked": true,
      "flags": [],
      "checks": {
@@ -11452,11 +11495,94 @@
     "consent_provenance": "agent_reported",
     "cross_study_history": "not_enforced",
     "analysis_contract_status": "absent",
-    "claim_scope": []
+    "claim_scope": [],
+    "exploration_coverage": "instrumented_operations_only",
+    "unrecorded_surfaces": [
+     "preview",
+     "workbench",
+     "external_files"
+    ]
    },
    "requirements": null,
    "completion": null,
-   "claim_eligibility": null
+   "claim_eligibility": null,
+   "presentation": {
+    "schema": "hypotrail.presentation/1",
+    "revision": 33,
+    "result_ids": {
+     "diag.binary": "1a13c43d22ad9b5c129c14cc576abc23e92e1a7c7ced2cb303032d228b14817e",
+     "eda.target_rate": "7eb08c256399294cccd5e28674bb5b0b68eaefbae8b62582606ead844097aa0a",
+     "fit.baseline": "eba460d15486c4d751fba606566e0b08d4271c36c7f007c09c07217eb9548c7f",
+     "fit.logistic": "4a168bde39ba39dabb10aa5fa73167dc2229d5410318f6f81a4a0e9241d92460",
+     "fit.variant": "a10219e6ddf668e9a6c09c45d1c74791c45276d000f1ea07a7b780ac65b7cbaf",
+     "fit.variant:2": "9d838f39dddea29bfa17c2c7e2c7434d65779fd351c79803b4bca48bca463d6d",
+     "fit.variant:3": "4d44d87878e7dea63fb786363af19ce9eb6118bc588353891a6a7f36916e8e29",
+     "policy.evaluation": "0ec35d43826de5901a5a473995d874fcd9f7fa4751598aee7fdaf38d9e7626d0",
+     "split": "445ebc3e7588310b461d8c9f25873b94f38323b8e23cd42cde291f480169f22d"
+    },
+    "eligibility": null,
+    "uncertainty": {},
+    "assurance": {
+     "profile": "legacy",
+     "evaluation_protection": "protocol_reserved",
+     "consent_provenance": "agent_reported",
+     "cross_study_history": "not_enforced",
+     "analysis_contract_status": "absent",
+     "claim_scope": [],
+     "exploration_coverage": "instrumented_operations_only",
+     "unrecorded_surfaces": [
+      "preview",
+      "workbench",
+      "external_files"
+     ]
+    },
+    "pending_action": {
+     "schema": "hypotrail.pause/1",
+     "kind": "action",
+     "language": "en",
+     "revision": 33,
+     "position": {
+      "step_id": "train_eda",
+      "completed": 8,
+      "total": 12
+     },
+     "learned": [],
+     "limitations": [
+      {
+       "code": "unconfirmed_decisions",
+       "text": "Not confirmed by you yet: the decision policy, the opening of the final test and the conclusion."
+      },
+      {
+       "code": "validation_is_not_independent",
+       "text": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+      },
+      {
+       "code": "public_data_already_explored",
+       "text": "The data were explored or published before this study; its rows are not unseen."
+      }
+     ],
+     "proposal_id": null,
+     "proposal_text": null,
+     "recommended_option": "continue",
+     "options": [
+      "continue",
+      "explain"
+     ],
+     "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+     "evidence_refs": [],
+     "detail_topics": [
+      "metric",
+      "uncertainty"
+     ]
+    },
+    "historical": {
+     "stale_result_ids": [
+      "1f8b184851e936fb26ace4e7596b85683d9fc06190462a096625e849fffec6d2"
+     ],
+     "final_test_opened": false,
+     "changed_after_opening": false
+    }
+   }
   }
  }
 }

@@ -48,7 +48,10 @@ EXPOSURE_PURPOSES = ('structural_inspection', 'train_eda', 'train_fit',
                      'out_of_fold_policy_selection', 'final_evaluation',
                      # WP-B4: the diagnostics of the development predictions (they read the
                      # target and the features of the rows the models scored).
-                     'development_diagnostics')
+                     'development_diagnostics',
+                     # J4: an explicit, recorded consultation of persisted predictions, and
+                     # the labelled rows made visible by the init data card.
+                     'policy_exploration', 'labelled_preview_available')
 # Purposes that record rows set aside rather than looked at: not counted in rows_exposed.
 SEALED_PURPOSES = ('sealed',)
 EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', 'execution_id',
@@ -58,7 +61,8 @@ EXPOSURE_KEYS = ('schema', 'exposure_id', 'revision', 'activity', 'result_id', '
 # no longer independent evidence.
 SELECTION_PURPOSES = ('validation_model_evaluation', 'validation_policy_selection',
                       # WP-B1: out-of-fold predictions choose too.
-                      'out_of_fold_evaluation', 'out_of_fold_policy_selection')
+                      'out_of_fold_evaluation', 'out_of_fold_policy_selection',
+                      'policy_exploration')
 
 
 def canonical(obj: Any) -> bytes:

@@ -472,19 +472,20 @@ def test_a_v02b_variant_is_one_trial_and_restating_it_refits_nothing(tmp_path):
     assert refused['error']['code'] == 'precondition_missing'
 
 
-def test_results_computed_before_wp_f1_stay_current(tmp_path):
-    """The pre-WP-F1 sources of the modules WP-F1 changed are declared equivalent
-    (``code_compat``): an earlier fit, evaluation or opened final test is not "code
-    changed"; any other digest still is."""
+def test_source_compatibility_needs_an_exact_destination_and_activity(tmp_path):
+    """J4 replaces the old module allowlist with exact directed attestations."""
     from mlkit.study import code_compat, read
     case_dir = fk.make_case(tmp_path / 'case', n_rows=200)['case'].parent
     Flow(tmp_path / 'study', case_dir).init()
     study = read.open(tmp_path / 'study')
     now = registry.code_fingerprint(['mlkit.study.metrics'])['modules']
-    old = {m: next(iter(shas)) for m, shas in code_compat.EQUIVALENT.items()}
-    assert set(old) == {'mlkit.study.activities', 'mlkit.study.fit', 'mlkit.study.governance',
-                        'mlkit.study.diagnostics'}
-    assert study.code_changed({'code': {'modules': {**old, **now}}}) == []
-    other = {**old, 'mlkit.study.fit': '0' * 64}
-    assert study.code_changed({'code': {'modules': other}}) == ['mlkit.study.fit']
-    assert not code_compat.equivalent('mlkit.study.eda', old['mlkit.study.fit'])
+    assert code_compat.integrity()
+    old = {r['module']: r['from_sha256'] for r in code_compat.ATTESTATIONS}
+    assert set(old) == {'mlkit.study.activities', 'mlkit.study.diagnostics'}
+    entry = {'activity': 'diag.final_test', 'code': {'modules': {**old, **now}}}
+    assert study.code_changed(entry) == []
+    entry['activity'] = 'diag.binary'
+    assert study.code_changed(entry) == ['mlkit.study.activities', 'mlkit.study.diagnostics']
+    first = code_compat.ATTESTATIONS[0]
+    assert not code_compat.equivalent(first['module'], first['from_sha256'],
+                                      first['to_sha256'], None)

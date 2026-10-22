@@ -59,7 +59,7 @@ VIEW_KEYS = ('schema', 'study', 'revision', 'updated', 'case', 'dataset', 'plan'
              # engine's shortlist of model families; ``null`` in a study without variants.
              'model_selection', 'model_families', 'assurance',
              # reliability roadmap J2: one derived evaluator, never persisted.
-             'requirements', 'completion', 'claim_eligibility')
+             'requirements', 'completion', 'claim_eligibility', 'presentation')
 NOTE_VIEW_KEYS = ('note_id', 'decision_id', 'kind', 'user_words', 'status', 'revision',
                   'resolution')
 DECISION_VIEW_KEYS = ('decision_id', 'status', 'value', 'proposal_id', 'depends_on',
@@ -1276,7 +1276,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     results = _results(study, state)
     defensible = st.not_yet_defensible(state)
     _case_uncertain_limit(state, defensible)
-    broken = sorted(s for s, r in results.items() if r['integrity'] != 'ok')
+    broken = sorted(s for s, r in results.items()
+                    if r['integrity'] != 'ok' and s != 'policy.inspection')
     if broken:
         defensible.append({'id': 'result_integrity', 'slots': broken,
                            'text': 'Some recorded results fail their integrity check and '
@@ -1288,7 +1289,8 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
                                    'no result describes the current bytes, and every decision, '
                                    'run and render is refused. Start a new study on the new data.'})
     changed = sorted(s for s, r in results.items()
-                     if r['integrity'] == 'ok' and rid_reason(r, 'code_changed'))
+                     if s != 'policy.inspection' and r['integrity'] == 'ok'
+                     and rid_reason(r, 'code_changed'))
     if changed:
         defensible.append({'id': 'code_changed', 'slots': changed,
                            'text': 'The code of these activities changed after their results '
@@ -1386,6 +1388,10 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     if notice:
         out['next_action']['junior_digest'] += ' ' + notice
         # The existing summary and plan both carry next_action; no second scope model.
+    from . import guidance
+    out['next_action']['pause'] = guidance.pause(out)
+    from . import presentation
+    out['presentation'] = presentation.build(out)
     return out
 
 

@@ -120,27 +120,19 @@ def test_the_intervals_cost_one_refit_not_a_hundred(tmp_path, monkeypatch):
 
 
 def test_results_before_wp_j_stay_current_except_the_development_diagnostics(tmp_path):
-    """``code_compat``: the pre-WP-J digests of ``activities`` and ``diagnostics`` hold for
-    every activity but ``diag.binary``/``diag.regression``, whose coefficient intervals
-    changed; the pre-WP-F1 digests are revoked for those two activities as well."""
+    """The reviewed WP-J edge covers final diagnostics only, never by exclusion/wildcard."""
     from mlkit.study import code_compat, registry
     case_dir = fk.make_case(tmp_path / 'case', n_rows=200)['case'].parent
     Flow(tmp_path / 'study', case_dir).init()
     study = read.open(tmp_path / 'study')
     now = registry.code_fingerprint(['mlkit.study.metrics'])['modules']
-    pre_j = {m: sha for m, shas in code_compat.EQUIVALENT.items() for sha, why in shas.items()
-             if why == code_compat.WP_J_BASE}
+    pre_j = {r['module']: r['from_sha256'] for r in code_compat.ATTESTATIONS}
     assert set(pre_j) == {'mlkit.study.activities', 'mlkit.study.diagnostics'}
-    for activity in ('fit.logistic', 'policy.evaluate', 'final_test.evaluation',
-                     'diag.final_test'):
+    entry = {'activity': 'diag.final_test', 'code': {'modules': {**pre_j, **now}}}
+    assert study.code_changed(entry) == []
+    for activity in ('fit.logistic', 'policy.evaluation', 'final_test.evaluation',
+                     'diag.binary', 'diag.regression'):
         entry = {'activity': activity, 'code': {'modules': {**pre_j, **now}}}
-        assert study.code_changed(entry) == [], activity
-    for activity in ('diag.binary', 'diag.regression'):
-        entry = {'activity': activity, 'code': {'modules': {**pre_j, **now}}}
-        assert study.code_changed(entry) == ['mlkit.study.activities',
-                                             'mlkit.study.diagnostics']
-        pre_f1 = {m: next(iter(shas)) for m, shas in code_compat.EQUIVALENT.items()}
-        entry = {'activity': activity, 'code': {'modules': {**pre_f1, **now}}}
         assert study.code_changed(entry) == ['mlkit.study.activities',
                                              'mlkit.study.diagnostics']
 

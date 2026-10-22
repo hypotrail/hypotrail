@@ -104,7 +104,8 @@ def test_init_creates_revision_one_and_never_overwrites(study, work, synthetic_c
     # WP-A4: step 0 first, the data card, before any proposal.
     assert view['open_proposals'] == [] and view['next_action']['kind'] == 'show_data_card'
     # ADR 0006: init inspects the 240 development rows and seals 60 final-test rows.
-    assert view['exposure']['by_purpose'] == {'structural_inspection': 240, 'sealed': 60}
+    assert view['exposure']['by_purpose'] == {
+        'structural_inspection': 240, 'labelled_preview_available': 5, 'sealed': 60}
     assert view['exposure']['rows_exposed'] == 240
     code, again = hyp('init', '--case', synthetic_case_dir, '--study', study, cwd=work)
     assert code == 2 and again['error']['code'] == 'state_exists'

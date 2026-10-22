@@ -225,7 +225,8 @@ def test_the_notebook_shows_the_preparation_as_pandas_steps_and_runs(bank):
               'nb = importlib.util.module_from_spec(spec); spec.loader.exec_module(nb)\n'
               'outputs, defs = nb.app.run()\n'
               'print(float(defs["validation_auc"]))\n')
-    proc = subprocess.run([sys.executable, '-c', script], cwd=bank.parent, env=fk.env(),
+    proc = subprocess.run([sys.executable, '-c', script], cwd=bank.parent,
+                          env=fk.env(HYPOTRAIL_NOTEBOOK_RECOMPUTE='1'),
                           capture_output=True, text=True, timeout=300,
                           stdin=subprocess.DEVNULL)
     assert proc.returncode == 0, proc.stderr

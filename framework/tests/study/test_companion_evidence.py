@@ -78,11 +78,12 @@ def _by_slot(payload):
 def test_bank_ledger_has_six_rows_equal_to_the_exposure_summary(bank):
     p = evidence(bank.study)
     ledger = p['exposure']['ledger']
-    # ADR 0006: init inspects the development rows and seals the final test (sixth row).
+    # J4: init also records the labelled rows made available by the data card.
     assert [(r['purpose'], r['partition']) for r in ledger] == [
         ('structural_inspection', 'development'), ('train_eda', 'train'), ('train_fit', 'train'),
         ('validation_model_evaluation', 'validation'),
-        ('validation_policy_selection', 'validation'), ('sealed', 'final_test')]
+        ('validation_policy_selection', 'validation'), ('sealed', 'final_test'),
+        ('labelled_preview_available', 'development')]
     assert ledger[5]['rows'] == read.open(bank.study).state['partition']['final_test']['n_rows']
     summary = read.open(bank.study).exposure_summary()
     assert p['exposure']['summary'] == summary
@@ -220,7 +221,8 @@ def test_a_study_before_the_split_cannot_run_eda(tmp_path, synthetic_case_dir):
     assert items['eda.quality']['runnable'] and items['eda.quality']['partition'] == 'development'
     assert all(not a['runnable'] and a['missing'] for a in p['eda_catalog']['activities']
                if a['partition'] == 'train')
-    assert [r['purpose'] for r in p['exposure']['ledger']] == ['structural_inspection', 'sealed']
+    assert [r['purpose'] for r in p['exposure']['ledger']] == [
+        'structural_inspection', 'sealed', 'labelled_preview_available']
 
 
 def test_auto_mpg_evidence_holds_no_rule_vocabulary(auto):

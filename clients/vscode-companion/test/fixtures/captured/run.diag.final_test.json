@@ -21,7 +21,7 @@
   "activity": "diag.final_test",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "f3ad0c37ad89d755069b14341757a66e549598d77a30e8d40d5a9852abc72358",
+  "result_id": "559fae2c537b218c9d9ed119254490a9ecf0693dc91891b34ee89f6011211b47",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "c79a530193c7506907313e7d3b9c64ddfab54baa5ad39ebd40a0b1e7a45bf77b",
+   "final_evaluation": "7d64e269014e78c00dc1ff59cb4df2742beca4289d3214f958393effc655a04a",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -843,7 +843,7 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "c79a530193c7506907313e7d3b9c64ddfab54baa5ad39ebd40a0b1e7a45bf77b"
+     "predictions": "7d64e269014e78c00dc1ff59cb4df2742beca4289d3214f958393effc655a04a"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -853,13 +853,13 @@
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "f3ad0c37ad89d755069b14341757a66e549598d77a30e8d40d5a9852abc72358",
-   "input_key": "9badf6245803afc3dc2681000c3720cae55c23f6ed0af04571e7546b9cd7b85e",
+   "result_id": "559fae2c537b218c9d9ed119254490a9ecf0693dc91891b34ee89f6011211b47",
+   "input_key": "ccdc9aa28e8c357ed315f3595b549be1bdced7f605ffbd9dc39995a640c9e1f1",
    "reason": null,
    "started_revision": 34,
    "invalidation": null,
    "exposure_ids": [
-    "x_3b9876107a6b4ab0a1a5266a00e3fb18"
+    "x_c83c418fe2f443a39bf8f5e71634e46a"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -901,7 +901,46 @@
    "language": "en",
    "recommended": null,
    "question": null,
-   "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted."
+   "junior_digest": "Next: the special-value check, run without asking you. What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "action",
+    "language": "en",
+    "revision": 35,
+    "position": {
+     "step_id": "train_eda",
+     "completed": 10,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Out-of-fold predictions on the development rows are used to compare the models, the variant and the rule, so they are development evidence, not independent evidence of future performance. Only the sealed final test, opened once, is."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": null,
+    "proposal_text": null,
+    "recommended_option": "continue",
+    "options": [
+     "continue",
+     "explain"
+    ],
+    "question": "What do the development rows show about the outcome and the special values? Other explorations (the quality overview, rates by variable, distributions, the single-feature signal) each answer a question stated first; every look at the outcome is counted.",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }

@@ -1571,6 +1571,8 @@
       "fit.variant": "ddcbf654b0107f132937e89e10e630e299e21c9984eb79f92253c135c696b01a"
      },
      "reference": "fit.baseline",
+     "population_digest": "e11ff98750881550f797efadc17c59faf4462b4ae5ff6e4d67922e603b8ca80c",
+     "mode": "evaluation",
      "rules": {
       "capacity:100": {
        "deltas": {

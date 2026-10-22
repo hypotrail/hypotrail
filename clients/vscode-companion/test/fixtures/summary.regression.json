@@ -86,7 +86,27 @@
    "language": "en",
    "recommended": null,
    "question": "Do you adopt this decision?",
-   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
+   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "decision",
+    "language": "en",
+    "revision": 30,
+    "position": {"step_id": "model_choice", "completed": 9, "total": 12},
+    "learned": [],
+    "limitations": [
+     {"code": "unconfirmed_decisions", "text": "Not confirmed by you yet: model choice, final test and conclusion."},
+     {"code": "validation_is_not_independent", "text": "Validation rows are used to compare models and choose one."},
+     {"code": "public_data_already_explored", "text": "The public data were already explored."}
+    ],
+    "proposal_id": "p_4",
+    "proposal_text": "Adopt the linear model.",
+    "recommended_option": "adopt",
+    "options": ["adopt", "change", "explain"],
+    "question": "Do you adopt this decision?",
+    "evidence_refs": [],
+    "detail_topics": ["metric", "uncertainty"]
+   }
   },
   "open_proposals": [
    {

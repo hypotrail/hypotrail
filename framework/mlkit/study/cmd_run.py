@@ -61,6 +61,8 @@ def configure(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--rule', action='append', default=None,
                         help='policy rule: threshold:t, capacity:k, or share:p (the top share '
                              'p of the scored rows, 0 < p < 1) (repeatable)')
+    parser.add_argument('--intervals', action='store_true',
+                        help='with policy.inspect: also compute paired bootstrap intervals')
     parser.add_argument('--acknowledge-interruption', dest='acknowledge', default=None,
                         metavar='EXECUTION_ID',
                         help='acknowledge an execution with an unknown outcome (no restart)')
@@ -128,7 +130,8 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
     # StudyError, not cli.ArgumentError: under ``python -m mlkit.study.cli`` the CLI module
     # is ``__main__`` and a class imported from ``mlkit.study.cli`` would not be caught.
     if args.acknowledge is not None:
-        if args.activity or args.column or args.rule or args.max_groups is not None:
+        if args.activity or args.column or args.rule or args.intervals \
+                or args.max_groups is not None:
             raise StudyError('invalid_arguments',
                              '--acknowledge-interruption takes no activity or option.')
         if not isinstance(args.user_words, str) or not args.user_words.strip():
@@ -148,7 +151,8 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
                                           request_id=args.request_id,
                                           expected_revision=args.expected_revision,
                                           user_words=args.user_words, channel=args.channel)
-        options = {'column': args.column, 'rules': args.rule, 'max_groups': args.max_groups}
+        options = {'column': args.column, 'rules': args.rule, 'max_groups': args.max_groups,
+                   'intervals': True if args.intervals else None}
         return executions.run(args.study, args.activity, options, request_id=args.request_id,
                               expected_revision=args.expected_revision, hooks=test_hooks(),
                               channel=args.channel)

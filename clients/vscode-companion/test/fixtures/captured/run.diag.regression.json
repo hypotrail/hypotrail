@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_bad9a6f0e28076da5c45d47f",
   "status": "promoted",
-  "result_id": "0b4bafbebbfd107b8aca5c9b6ef74ef898112f0d1a0f9a91ad77a47342e4ee97",
+  "result_id": "689995ed6cd16cc60ea18a4f9ae560796a1f05b2e05854a02d84f58de0713fc9",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1259,7 +1259,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "3613edc7ced27bae0f3163b024a72850ec6c7554e597752f08c025e1b9dd22c4"
+     "predictions": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf"
     },
     "fit.variant": {
      "errors": {
@@ -2473,7 +2473,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "936e0da26b61b60a63d20a2419e175b51fb9f1111a15182822c02bbe5e9c6707"
+     "predictions": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa"
     }
    },
    "coefficient_rows": 222,
@@ -2688,14 +2688,14 @@
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "0b4bafbebbfd107b8aca5c9b6ef74ef898112f0d1a0f9a91ad77a47342e4ee97",
-   "input_key": "ceb4bcc29cbc7a8a0d5c7931cad4922972aba9fe9e94c4c87496dd2d1c376745",
+   "result_id": "689995ed6cd16cc60ea18a4f9ae560796a1f05b2e05854a02d84f58de0713fc9",
+   "input_key": "be32dadfd46aff988959e83adda1e8c11ca72734c6d3a32ad6560b419dbc8ad2",
    "reason": null,
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_89bf3ebbc8144729b5177b0fd1a5f632",
-    "x_387e34b32b72431c806a01fd77923551"
+    "x_418f1f6659224800bd625ae8e140a56b",
+    "x_c731b090e2844237bb33d9ef9c8fc40d"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2737,7 +2737,47 @@
    "language": "en",
    "recommended": null,
    "question": "Do you adopt this decision?",
-   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change."
+   "junior_digest": "Proposal on the model choice: \"Adopt the linear model.\" If it suits you, say that you adopt it; otherwise say what you change.",
+   "pause": {
+    "schema": "hypotrail.pause/1",
+    "kind": "decision",
+    "language": "en",
+    "revision": 40,
+    "position": {
+     "step_id": "model_choice",
+     "completed": 9,
+     "total": 12
+    },
+    "learned": [],
+    "limitations": [
+     {
+      "code": "unconfirmed_decisions",
+      "text": "Not confirmed by you yet: the model choice, the opening of the final test and the conclusion."
+     },
+     {
+      "code": "validation_is_not_independent",
+      "text": "Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
+     },
+     {
+      "code": "public_data_already_explored",
+      "text": "The data were explored or published before this study; its rows are not unseen."
+     }
+    ],
+    "proposal_id": "p_7",
+    "proposal_text": "Adopt the linear model.",
+    "recommended_option": "adopt",
+    "options": [
+     "adopt",
+     "change",
+     "explain"
+    ],
+    "question": "Do you adopt this decision?",
+    "evidence_refs": [],
+    "detail_topics": [
+     "metric",
+     "uncertainty"
+    ]
+   }
   }
  }
 }
