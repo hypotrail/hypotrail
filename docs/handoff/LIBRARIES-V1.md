@@ -53,17 +53,25 @@ write_evidence_binding(bundle_dir, binding) -> Path
 #   -> PackageDescriptor, .verify(native, package_dir, parity_spec) -> ParityResult
 # engine
 mlkit.contracts.export_source.read_export_source(study_path, expected_revision) -> ExportSource
-mlkit.contracts.capture.PACKAGERS  # {'mlflow_pyfunc': ('mlkit.integrations.mlflow_packaging', 'packager')}
+mlkit.contracts.capture.PACKAGERS  # {'mlflow_pyfunc': (mlflow_packaging, 'packager_for', 'atelier', 'mlflow')}
 ```
 
+> **Updated at integration I1** ([INTEGRATION-LIBRARIES-AZUREML-V1](INTEGRATION-LIBRARIES-AZUREML-V1.md)):
+> the bundle document is `predictor_bundle.json`; evidence bindings are versioned under
+> `evidence/binding-<n>.json` and named by its `evidence_binding_path`; the parser carries
+> `header` and `quotechar`; the environment lock is the runtime's dependency closure; the
+> workshop packager is workstream B's `packager_for('atelier')`. The notes below are the
+> pre-integration text where they differ.
+
 **Bundle layout** (`hypotrail.predictor_bundle/1`, relative paths only, every file hashed in
-`bundle.json` except `bundle.json` and `evidence_binding.json`): `predictor.json`
+`predictor_bundle.json` except itself and `evidence/`): `predictor.json`
 (`hypotrail.predictor_artifact/1`, `predictor_id` = digest of the manifest without itself),
 `recipe.json`, `data_contract.json`, `computation_context.json`, `payload/model.pkl`
 (`sklearn_pickle/1`), `runtime/hypotrail_runtime-1.0.0-py3-none-any.whl`,
 `environment/requirements.lock`, `parity/features.json` (`hypotrail.parity_frame/1`, feature
 columns only, at most 50 development rows), `parity/expected_outputs.json`,
-`packages/<format>/` (optional) and, after the final evaluation, `evidence_binding.json`.
+`packages/<format>/` and `packages/<format>.descriptor.json` (optional) and, after the final
+evaluation, `evidence/binding-<n>.json`.
 
 **Migration notes for B.**
 1. B's packager module is `mlkit.integrations.mlflow_packaging` exposing `packager()` that

@@ -1,8 +1,7 @@
 # Handoff: Azure ML export v1 (chantier B)
 
-Status on 23 October 2026: **B1 and B2 implemented and tested locally on a private test
-double of chantier A; B3 (the real bundle and runtime of A) deferred to the merge; Azure
-not qualified** (no job, no endpoint, no Azure call was made).
+Status on 23 October 2026: **B1 and B2 implemented; B3 done at integration I1 (the real
+bundle and runtime of A, see INTEGRATION-LIBRARIES-AZUREML-V1.md); Azure not qualified** (no job, no endpoint, no Azure call was made).
 
 `hypotrail export azureml` turns a study into a project in the team's Azure ML template
 (team-azureml-v1): same paths, four steps, Hydra groups, `aml/` YAML, `.ci`, `.vscode`,
@@ -185,6 +184,16 @@ path, `shared` copy of a generator module, `generated` document, `copied` model 
   mapping (no `azure/`, `deployment/`, `model/`, `scripts/`).
 
 ## 3. Contracts consumed, and the interface points to confirm at merge
+
+> **Closed at integration I1** ([INTEGRATION-LIBRARIES-AZUREML-V1](INTEGRATION-LIBRARIES-AZUREML-V1.md)):
+> `read_export_source` lives in `mlkit.contracts.export_source`; the bundle document is
+> `predictor_bundle.json` (kept); parity tables are the runtime's typed JSON documents
+> (`hypotrail.parity_frame/1`, `hypotrail.parity_outputs/1`), read by `read_table`; the
+> parser keys are `encoding`, `delimiter`, `header`, `quotechar`, `na_values`, `decimal`;
+> row keys are `L<physical line>` (the first data line of a file with a header is `L2`;
+> `materialize` was corrected); `load_predictor` takes an explicit `trusted_roots`; the
+> test double of the runtime was removed and every suite runs on the real runtime. The
+> table below is the pre-integration text.
 
 B consumes, never reimplements: `read_export_source` (A, engine), and from
 `hypotrail_runtime`: `verify_bundle`, `load_predictor` (`Predictor.predict` →
