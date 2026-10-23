@@ -2,8 +2,8 @@
 A06, A10, A11, A14, AC17, AC18, AC23).
 
 Every command runs in a subprocess from the moved folder, with no path to the study or
-to this repository: only the runtime (here its PRIVATE TEST DOUBLE, on PYTHONPATH) is
-installed, as the wheel would be. These tests are local; none contacts Azure.
+to this repository: only the runtime (workstream A's, installed) is available, as the
+wheel would be. These tests are local; none contacts Azure.
 """
 from __future__ import annotations
 
