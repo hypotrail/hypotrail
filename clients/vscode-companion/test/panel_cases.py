@@ -121,5 +121,6 @@ def open_case(open_panel, views, case='binary', theme='light-modern', width=900,
 
 def expand_eda(page):
     """Open every collapsed EDA card, as the junior does (only the last one starts open)."""
-    for summary in page.locator('details.eda-analysis:not([open]) > summary').all():
-        summary.click()
+    closed = page.locator('details.eda-analysis:not([open]) > summary')
+    while closed.count():
+        closed.first.click()

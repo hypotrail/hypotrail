@@ -290,11 +290,11 @@ def test_ov7_deliverables_junior_messages_open_file_and_marimo_launches(open_pan
     panel = opened(open_panel, binary, scheme=scheme, stage=stage, marimo=MARIMO)
     page = panel.page
     rows = page.locator('[data-ov="deliverables"] [data-artifact]')
-    assert rows.evaluate_all('rs => rs.map(r => r.dataset.artifact)') == ['report', 'notebook', 'workbench']
+    assert rows.evaluate_all('rs => rs.map(r => r.dataset.artifact)') == ['report', 'notebook', 'editable', 'workbench']
     for a in binary['artifacts']:
         row = page.locator(f'[data-ov="deliverables"] [data-artifact="{a["name"]}"]')
         # Two-layer copy: the junior variant; the engine message (it names paths) in the hover.
-        expected = '' if a['name'] == 'workbench' else a['juniorMessage']
+        expected = '' if a['name'] in ('workbench', 'editable') else a['juniorMessage']
         assert row.locator('[data-message]').inner_text() == expected
         assert row.locator('[data-message]').get_attribute('title') == a['message']
     assert page.locator('[data-ov="deliverables"] [data-artifact="report"] .ov-deliverable-label').inner_text() == \
@@ -308,7 +308,7 @@ def test_ov7_deliverables_junior_messages_open_file_and_marimo_launches(open_pan
     # The local launch (ADR 0004 "local launch"): read the generated notebook, edit the workbench.
     page.get_by_role('button', name='Open in Marimo (read)').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'notebook'}
-    page.get_by_role('button', name='Open in Marimo (edit)').click()
+    page.locator('[data-artifact="workbench"]').get_by_role('button', name='Open in Marimo (edit)').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'workbench'}
     assert page.locator('[data-launch="notebook"]').inner_text() == MARIMO['notebook']
     assert page.locator('[data-launch="workbench"]').inner_text() == MARIMO['workbench']
@@ -326,13 +326,9 @@ def test_ov7_reviewer_has_no_marimo_edit(open_panel, binary):
 
 def test_ov7_editable_study_notebook_opens_for_editing_and_reviewer_cannot_edit(open_panel, binary):
     summary = copy.deepcopy(binary)
-    generated = next(a for a in summary['artifacts'] if a['name'] == 'notebook')
-    editable = {**generated, 'name': 'editable', 'label': 'Editable study notebook',
-                'path': 'notebooks/study_editable.py', 'generated': False,
-                'message': 'The editable study notebook follows the generated notebook until you edit it.',
-                'juniorMessage': 'This copy is yours to edit.'}
-    workbench_at = next(i for i, a in enumerate(summary['artifacts']) if a['name'] == 'workbench')
-    summary['artifacts'].insert(workbench_at, editable)
+    # The engine emits the editable study notebook (main, 506180a); the fixture carries it.
+    editable = next(a for a in summary['artifacts'] if a['name'] == 'editable')
+    assert editable['path'] == 'notebooks/study_editable.py'
 
     panel = opened(open_panel, summary, marimo=MARIMO_EDITABLE)
     row = panel.page.locator('[data-artifact="editable"]')
