@@ -44,9 +44,23 @@ def required(study_dir, milestone: str) -> bool:
     return bool(doc) and doc['mode'] == 'required' and milestone in doc['milestones']
 
 
-def _same(a: dict, b: dict) -> bool:
-    keys = ('decision', 'policy_digest', 'scope_digest', 'checked_context_digest')
-    return all(a.get(k) == b.get(k) for k in keys)
+def _same(current: dict, reserved: dict) -> bool:
+    """The gate computed now has the reserved decision and identities."""
+    return current['decision'] in ('allowed', 'allowed_by_waiver') and all(
+        current.get(k) == reserved.get(k)
+        for k in ('policy_digest', 'scope_digest', 'checked_context_digest'))
+
+
+def _record_locked(store, state, rid, outcome, files, request_id):
+    """Record the outcome inside the writer lock already held (same transaction protocol as
+    every command: request id, revision, receipt)."""
+    from mlkit import reliability
+    actions.register()
+    request = {'request_id': request_id, 'expected_revision': state['revision'],
+               'action': actions.P + 'milestone_record',
+               'params': {'reservation_id': rid, 'outcome': outcome, 'files': files}}
+    return reliability.apply_command(store, state, request,
+                                     cmd.handlers(cmd.Context(store, request_id)))
 
 
 # In-process test hooks run between the rendering and the revalidation (A25).
@@ -68,31 +82,40 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
                              expected_revision=state['revision'])
     rid = reserved['result']['reservation_id']
     reserved_revision = reserved['revision']
-    cmd.after_commit(Path(study_dir), {'ok': True})       # the report at the reserved revision
-    gate_before = sv.gate(store, sv.load_state(study_dir), 'handoff')
-    study, view, files, included = ce.build(study_dir)
-    if view['revision'] != reserved_revision:
-        return _abandon(study_dir, rid, None, 'the study changed while the pack was built')
-    target = ce._target(study.study_dir, out, view['revision'])
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.parent / f'.{target.name}.tmp-{secrets.token_hex(4)}'
-    tmp.mkdir()
-    listed = []
-    for name in ce.FILES:
-        if name not in files:
-            continue
-        with open(tmp / name, 'xb') as handle:
-            handle.write(files[name])
-            handle.flush()
-            os.fsync(handle.fileno())
-        listed.append({'path': name, 'sha256': ce._sha(files[name]),
-                       'bytes': len(files[name])})
-    for hook in BEFORE_FINALIZE:           # tests only: a concurrent change at this point
-        hook(study_dir)
+    tmp = None
+    try:
+        cmd.after_commit(Path(study_dir), {'ok': True})   # the report at the reserved revision
+        study, view, files, included = ce.build(study_dir)
+        if view['revision'] != reserved_revision:
+            raise refuse('context_changed', 'The study changed while the pack was built.',
+                         'Run export handoff again.')
+        target = ce._target(study.study_dir, out, view['revision'])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp = target.parent / f'.{target.name}.tmp-{secrets.token_hex(4)}'
+        tmp.mkdir()
+        listed = []
+        for name in ce.FILES:
+            if name not in files:
+                continue
+            with open(tmp / name, 'xb') as handle:
+                handle.write(files[name])
+                handle.flush()
+                os.fsync(handle.fileno())
+            listed.append({'path': name, 'sha256': ce._sha(files[name]),
+                           'bytes': len(files[name])})
+        for hook in BEFORE_FINALIZE:       # tests only: a concurrent change at this point
+            hook(study_dir)
+    except BaseException:
+        if tmp is not None and tmp.exists():
+            for p in tmp.iterdir():
+                p.unlink()
+            tmp.rmdir()
+        _release(study_dir, rid, token)
+        raise
     with store.writing() as fresh:
+        record = fresh['understanding']['milestones'][rid]
         current = sv.gate(store, fresh, 'handoff')
-        same = fresh['revision'] == reserved_revision and _same(current, gate_before) and \
-            current['decision'] in ('allowed', 'allowed_by_waiver')
+        same = fresh['revision'] == reserved_revision and _same(current, record)
         if same:
             if target.exists() and target.is_dir() and not any(target.iterdir()):
                 target.rmdir()
@@ -100,18 +123,22 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
                 ex.rename_noreplace(tmp, target)
             except FileExistsError:
                 same = False
-        if not same:
+        if same:
+            # Published and recorded under the same lock: no published-but-unrecorded pack.
+            _record_locked(store, fresh, rid, 'published',
+                           {f['path']: f['sha256'] for f in listed},
+                           f'handoff-record-{token}')
+        else:
             candidate = target.parent / f'{target.name}.candidate-{token}'
             os.rename(tmp, candidate)
+            _record_locked(store, fresh, rid, 'candidate_not_current',
+                           {'candidate': candidate.name}, f'handoff-record-{token}')
     if not same:
-        return _abandon(study_dir, rid, str(candidate),
-                        'the policy, the selection, a source or the study changed between '
-                        'the reservation and the publication')
-    actions.apply(study_dir, 'milestone_record', {
-        'reservation_id': rid, 'outcome': 'published',
-        'files': {f['path']: f['sha256'] for f in listed}},
-        request_id=f'handoff-record-{token}',
-        expected_revision=sv.load_state(study_dir)['revision'])
+        raise refuse('context_changed', 'The handoff was not published: the policy, the '
+                     'selection, a source or the study changed between the reservation and the '
+                     'publication. The written folder stays as a candidate and is never a '
+                     'handoff.', 'Run understanding check, then export handoff again.',
+                     candidate=candidate.name)
     cmd.after_commit(Path(study_dir), {'ok': True})
     payload = {'schema': ce.SCHEMA, 'ok': True, 'study': str(study.study_dir),
                'revision': view['revision'], 'kind': 'handoff', 'out': str(target),
@@ -124,13 +151,12 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
     return payload, cmd.EXIT_OK if included else cmd.EXIT_ARTIFACT_STALE
 
 
-def _abandon(study_dir, rid, candidate, why):
-    actions.apply(study_dir, 'milestone_record', {
-        'reservation_id': rid, 'outcome': 'candidate_not_current',
-        'files': {'candidate': os.path.basename(candidate) if candidate else ''}},
-        request_id=f'handoff-abandon-{rid}',
-        expected_revision=sv.load_state(study_dir)['revision'])
-    raise refuse('context_changed', f'The handoff was not published: {why}. The written '
-                 'folder, if any, stays as a candidate and is never a handoff.',
-                 'Run understanding check, then export handoff again.',
-                 candidate=os.path.basename(candidate) if candidate else None)
+def _release(study_dir, rid, token):
+    """A failure after the reservation closes it as not published (never left reserved)."""
+    try:
+        actions.apply(study_dir, 'milestone_record', {
+            'reservation_id': rid, 'outcome': 'candidate_not_current', 'files': {}},
+            request_id=f'handoff-release-{token}',
+            expected_revision=sv.load_state(study_dir)['revision'])
+    except Exception:          # noqa: BLE001 - the original failure is what the user sees
+        pass

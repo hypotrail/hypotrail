@@ -122,7 +122,10 @@ def dimension_view(ext: Mapping, actor: str, dimension: str) -> dict:
                if p['reviewed_actor_id'] == actor and dimension in p['dimension_ids']
                and not any(set(x['attempt_ids']) & {p['attempt_id']}
                            for x in ext['decisions'].values() if x['kind'] == 'attempt')]
-    if disputed:
+    rectified = d is not None and any(
+        attempt_assistance(ext, a)['aided'] != aided
+        for a, aided in (d.get('assistance_at_review') or {}).items() if a in ext['attempts'])
+    if disputed or rectified:
         status = 'needs_review'
     elif reservations:
         status = 'to_consolidate' if any(r['kind'] == 'to_consolidate' for r in reservations) \
@@ -225,6 +228,13 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         info.update(decision_id=did, status=d['status'], session_id=d['session_id'])
         session = ext['sessions'].get(d['session_id'])
         problems = _decision_problems(ext, d, session, actor, dim, pdigest, bank_for)
+        lost = arbitrated_ids(ext).get(did)
+        if lost is not None and lost['chosen_decision_id'] != did:
+            problems.append('lost_arbitration')
+        if d.get('assistance_at_review') and any(
+                attempt_assistance(ext, a)['aided'] != aided
+                for a, aided in d['assistance_at_review'].items() if a in ext['attempts']):
+            problems.append('assistance_rectified_after_review')
         for p in problems:
             reasons.append({'code': p, 'dimension': dim})
         if d['status'] != 'demonstrated' or problems:
@@ -239,9 +249,6 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         info['assistance'] = 'unaided' if unaided else 'aided'
         if rule == 'unaided_required' and not unaided:
             reasons.append({'code': 'assistance_not_admissible', 'dimension': dim})
-        if any(a.get('rectified') for a in assist) and \
-                d['recorded_revision'] < _last_rectification(ext, d['attempt_ids']):
-            reasons.append({'code': 'assistance_rectified_after_review', 'dimension': dim})
         avail = evidence_availability(ext, d['attempt_ids'], blob_ok)
         info['evidence_availability'] = avail
         if avail != 'available':
@@ -274,7 +281,8 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
     for dim in policy_doc['peer_required_dimensions']:
         if dim not in required:
             continue
-        cover = peer_coverage(ext, actor, dim, selection, bank_for)
+        cover = selected_peer_coverage(ext, actor, dim, selection, pdigest, bank_for,
+                                       captured_for, current_for)
         result['dimensions'].setdefault(dim, {})['peer'] = cover
         if cover['people'] < policy_doc['team_coverage']['minimum_people'] \
                 or cover['status'] != 'current':
@@ -285,6 +293,55 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
             limitations.add('simulated_human_decisions')
     result['checked_context_digest'] = canonical.digest(sorted(context_digests))
     return _finish(result, reasons, limitations, policy_doc, ext, milestone, today)
+
+
+def selected_peer_coverage(ext, author, dim, selection, pdigest, bank_for, captured_for,
+                           current_for) -> dict:
+    """Peer coverage from the transfer reviews the selection names, never a search for an
+    old pass: each is ``demonstrated``, by a reviewer other than the peer, on a peer other than
+    the author, in a completed session, under the current policy, on the current handover
+    content, and its context is still fresh for the dimension."""
+    chosen = (selection or {}).get('transfer_decision_map', {}).get(dim)
+    ids = [chosen] if isinstance(chosen, str) else list(chosen or [])
+    peers, problems, simulated = set(), [], False
+    for did in ids:
+        d = ext['decisions'].get(did)
+        t = ext['transfers'].get(d['transfer_id']) if d and d['kind'] == 'transfer' else None
+        session = ext['sessions'].get(t['session_id']) if t else None
+        if d is None or t is None or session is None or d['status'] != 'demonstrated' \
+                or dim not in d['dimension_ids']:
+            problems.append('not_demonstrated')
+            continue
+        if t['author_declared_id'] != author or t['peer_declared_id'] == author \
+                or d['reviewer_declared_id'] == t['peer_declared_id']:
+            problems.append('people_not_distinct')
+            continue
+        if session['status'] != 'completed':
+            problems.append('session_not_completed')
+            continue
+        if d['policy_digest'] != pdigest:
+            problems.append('policy_changed')
+            continue
+        if t['input_note_digest'] != current_handover_digest(ext, t['session_id']):
+            problems.append('stale')
+            continue
+        bank = bank_for(session)
+        keys = set()
+        if bank is not None:
+            from . import bank as bk
+            task = bk.task(bank, t['task_ref']['task_id'])
+            r = bk.rubric_for(bank, dim)
+            keys.update(task['dependency_keys'] if task else [])
+            keys.update(r['dependency_keys'] if r else [])
+        fresh = snap.freshness(captured_for(session), current_for(session), keys)
+        if fresh['status'] != 'current':
+            problems.append(fresh['status'])
+            continue
+        peers.add(t['peer_declared_id'])
+        simulated = simulated or bool(d.get('simulated'))
+    status = 'current' if peers and not problems else (problems[0] if problems else 'missing')
+    return {'people': 1 + len(peers), 'peers': sorted(peers), 'status': status,
+            'problems': problems, 'simulated': simulated}
 
 
 def _last_rectification(ext: Mapping, attempt_ids) -> int:

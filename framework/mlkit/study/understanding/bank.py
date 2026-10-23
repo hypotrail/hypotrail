@@ -90,6 +90,13 @@ def _texts(value, where: str) -> list:
 
 def validate(doc: Any, *, case_id: str | None = None) -> dict:
     """The bank when it is structurally valid (``unsupported_case`` otherwise)."""
+    try:
+        return _validate(doc, case_id=case_id)
+    except (TypeError, KeyError, AttributeError) as exc:
+        raise _invalid(f'a field has the wrong shape ({exc.__class__.__name__}).') from None
+
+
+def _validate(doc: Any, *, case_id: str | None = None) -> dict:
     _keys(doc, BANK_KEYS, 'bank')
     if doc['schema'] != SCHEMA:
         raise _invalid(f'schema must be {SCHEMA}.', field='schema')

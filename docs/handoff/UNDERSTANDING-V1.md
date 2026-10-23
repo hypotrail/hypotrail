@@ -81,6 +81,33 @@ refused); automatic purge (`purge_after_days` refused); agent instruction files 
 | A30 | test | `test_canonical.py` (bytes and SHA-256 vectors, refusals) |
 | A31 | test | fault injection at each write, before and after the rename, reconciling retry, same id other content refused, concurrent publications |
 
+## Independent review of the code and fixes
+
+A separate agent reviewed the diff read-only against the spec. Its ten major findings were
+fixed, each with a regression test in `test_review_findings.py`: self-review and
+overruling another reviewer on a critical dimension (refused; arbitration needed); the
+arbitration choice limited to the conflicting decisions and binding for the gate
+(`lost_arbitration`); peer coverage only from selected, completed, current and fresh
+transfers (no search for an old pass); coaching carried over to linked sessions; an explicit
+`--policy-file` checking assistance, reviewer distinctness, expiry and the review terms of
+the embedded policy (`policy_differs`); the export receipt revalidated under the lock and
+checked against the announced bytes; the required handoff recorded inside the lock that
+publishes it, compared with the reserved digests, and released on failure; export possible
+without a selection; Git plan and receipt checked against the announced bytes; the verifier
+answering `invalid` on malformed artefacts. Minor findings fixed: raw floats and wrong shapes
+in input files are refusals, duplicate criterion results refused, plan sources revalidated,
+private verification limited to private entries, `core.fsmonitor=false`, untracked sources
+reported, the publication path checked before creating folders, a rectified help re-opens the
+dimension in status.
+
+Left as documented limits: the policy's `role_policy.arbiters` aliases are published as part
+of the policy; simulated reviews keep `allowed` with the `simulated_human_decisions`
+limitation (tests need it; a real team must not use simulated declarations); switching to
+`required` while an `export handoff` without `--expected-revision` is running can let that one
+export through ungated (the switch is read before the lock); a crash between the rename and the
+commit of the handoff record, inside the same lock, leaves a published folder with a
+`reserved` record.
+
 ## Gate run
 
 See the commit message and the final report of the session for the exact counts of the gate

@@ -256,20 +256,7 @@ def _policy_show(args) -> dict:
 def _sources(path) -> list:
     if path is None:
         return []
-    doc = model.read_json_input(path, 'sources-file')
-    if not isinstance(doc, list):
-        raise refuse('evidence_invalid', 'The sources file is a JSON list.', 'Correct it.')
-    out = []
-    for s in doc:
-        if not isinstance(s, dict) or set(s) != {'logical_key', 'path', 'role'} \
-                or s['role'] not in snap.REPO_ROLES or not isinstance(s['logical_key'], str) \
-                or not s['logical_key'].startswith('repo:'):
-            raise refuse('evidence_invalid', 'A source is {logical_key: "repo:...", path, role} '
-                         'with role among ' + ', '.join(snap.REPO_ROLES) + '.',
-                         'Correct the sources file.')
-        snap.safe_relative(s['path'])
-        out.append(dict(s))
-    return out
+    return snap.validate_sources(model.read_json_input(path, 'sources-file'))
 
 
 def _plan(args) -> dict:
@@ -468,6 +455,29 @@ def _preview(args) -> dict:
                     'content invalidates every approval.')
 
 
+def _published_intent(ext, session_id) -> dict:
+    published = [x for x in (ext or {}).get('exports', {}).values()
+                 if x['session_id'] == session_id and x['status'] == 'published']
+    if not published:
+        raise refuse('prerequisite_missing', 'No current export is published for this session.',
+                     'Run export write first (a not_current export gets no Git plan).')
+    return max(published, key=lambda x: x['recorded_revision'])
+
+
+def _expected_files(repo: Path, intent) -> dict:
+    """``{repo path: bytes}`` of the generation, checked against the hashes the intent
+    announced (an artefact edited after the export is refused, never planned)."""
+    files = {}
+    for n in ex.FILES:
+        path = repo / ex.EXPORT_DIR / intent['review_id'] / n
+        data = path.read_bytes() if path.is_file() else None
+        if data is None or canonical.sha256_hex(data) != intent['files'][n]:
+            raise refuse('export_stale', f'{n} of the generation differs from the exported '
+                         'bytes.', 'Restore the generation or export a new one.', file=n)
+        files[f'{ex.EXPORT_DIR}/{intent["review_id"]}/{n}'] = data
+    return files
+
+
 def _git_plan(args) -> dict:
     store = sv.open_store(args.study)
     state = sv.load_state(args.study)
@@ -475,16 +485,9 @@ def _git_plan(args) -> dict:
     s = (ext or {}).get('sessions', {}).get(args.session)
     if s is None:
         raise refuse('invalid_transition', 'Unknown session.', 'Check the session id.')
-    published = [x for x in ext['exports'].values() if x['session_id'] == s['session_id']
-                 and x['status'] == 'published']
-    if not published:
-        raise refuse('prerequisite_missing', 'Nothing was exported for this session.',
-                     'Run export write first.')
-    intent = max(published, key=lambda x: x['recorded_revision'])
+    intent = _published_intent(ext, s['session_id'])
     repo = Path(args.repo).resolve()
-    files = {f'{ex.EXPORT_DIR}/{intent["review_id"]}/{n}':
-             (repo / ex.EXPORT_DIR / intent['review_id'] / n).read_bytes()
-             for n in ex.FILES}
+    files = _expected_files(repo, intent)
     scope = sv.session_snapshot(store, s)['public']
     plan = vf.git_plan(repo, files, [e for e in scope['entries'] if e['path']])
     return _ok('git-plan', store.study_dir, review_id=intent['review_id'], **plan,
@@ -523,9 +526,17 @@ def _start(args) -> dict:
     plan = model.read_json_input(args.plan_file, 'plan-file')
     keys = {'schema', 'actor_declared_id', 'profile', 'milestone', 'task_ids',
             'transfer_task_ids', 'sources', 'repo', 'previous_session_id', 'retention_notice'}
-    if not isinstance(plan, dict) or set(plan) != keys or plan['schema'] != PLAN_SCHEMA:
+    if not isinstance(plan, dict) or set(plan) != keys or plan['schema'] != PLAN_SCHEMA \
+            or plan['milestone'] not in pol.MILESTONES \
+            or not isinstance(plan['task_ids'], list) \
+            or not all(isinstance(t, str) for t in plan['task_ids']) \
+            or not (plan['previous_session_id'] is None
+                    or isinstance(plan['previous_session_id'], str)) \
+            or not (plan['repo'] is None or isinstance(plan['repo'], str)) \
+            or not isinstance(plan['profile'], str):
         raise refuse('evidence_invalid', 'The plan file is the plan written by `understanding '
                      'plan`.', 'Make the plan again.')
+    snap.validate_sources(plan['sources'])
     last = None
     for _ in range(3):              # a source moving during the capture: bounded retry
         state = sv.load_state(args.study)
@@ -699,13 +710,10 @@ def _export_write(args, *, fault=None) -> dict:
     if on_disk != hashes:
         raise refuse('export_stale', 'The published generation does not hold the announced '
                      'bytes.', 'Inspect docs/understanding before any new attempt.')
-    state = sv.load_state(args.study)
-    current = canonical.digest(ex.projection(store, state, model.of(state)['sessions'][
-        s['session_id']]))
+    # The receipt revalidates the context under the writer lock (actions._export_receipt).
     receipt = actions.apply(args.study, 'export_receipt', {
-        'intent_id': intent['result']['intent_id'],
-        'outcome': 'published' if current == digest else 'not_current',
-        'verified_files': on_disk}, request_id=f'{args.request_id}:receipt',
+        'intent_id': intent['result']['intent_id'], 'verified_files': on_disk},
+        request_id=f'{args.request_id}:receipt',
         expected_revision=sv.load_state(args.study)['revision'])
     if args.latest:
         ex.write_latest(repo, rid)
@@ -722,16 +730,10 @@ def _git_receipt(args) -> dict:
     store = sv.open_store(args.study)
     state = sv.load_state(args.study)
     ext = model.of(state)
-    published = [x for x in ext['exports'].values() if x['session_id'] == args.session
-                 and x['status'] in ('published', 'not_current')]
-    if not published:
-        raise refuse('prerequisite_missing', 'Nothing was exported for this session.',
-                     'Run export write first.')
-    intent = max(published, key=lambda x: x['recorded_revision'])
-    repo = Path(args.repo).resolve()
-    files = {f'{ex.EXPORT_DIR}/{intent["review_id"]}/{n}':
-             (repo / ex.EXPORT_DIR / intent['review_id'] / n).read_bytes() for n in ex.FILES}
-    r = vf.commit_receipt(repo, args.commit, files)
+    intent = _published_intent(ext, args.session)
+    expected = {f'{ex.EXPORT_DIR}/{intent["review_id"]}/{n}': intent['files'][n]
+                for n in ex.FILES}
+    r = vf.commit_receipt(Path(args.repo).resolve(), args.commit, expected)
     return _ok('git-receipt', store.study_dir, **_apply(args, 'git_receipt', {
         'review_id': intent['review_id'], **r}), commit=r['commit'], tree=r['tree'])
 
@@ -763,9 +765,13 @@ def _local_checker(study, repo):
                        None)
         if session is None:
             return {'private_context_verification': 'unknown'}
+        # Private context only: the repository entries are public and checked against the
+        # requested tree (index or commit), never the working tree here.
+        def private(local):
+            return [e for e in local['entries'] if e['origin'] != 'repo']
         current = sv.current_for(store, state, ext, repo_override=repo)(session)
         captured = sv.session_snapshot(store, session)['local']
-        same = canonical.digest(current) == canonical.digest(captured)
+        same = canonical.digest(private(current)) == canonical.digest(private(captured))
         ids = [d['human_review_ref'] for d in doc['dimensions'] if d['human_review_ref']]
         attempts = [a for i in ids for a in (ext['decisions'].get(i) or {}).get('attempt_ids', [])]
         avail = ev.evidence_availability(ext, attempts, lambda sha: sv.blob_ok(store, sha)) \

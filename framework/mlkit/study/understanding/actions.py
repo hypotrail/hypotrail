@@ -207,9 +207,16 @@ def _reservation_variant(ext: Mapping, session: Mapping, task: Mapping | None) -
     return False
 
 
-def _coached(ext: Mapping, session_id: str, task_id: str) -> list:
+def _actor_of(ext: Mapping, session_id: str) -> str | None:
+    s = ext['sessions'].get(session_id)
+    return s['actor_declared_id'] if s else None
+
+
+def _coached(ext: Mapping, actor: str, task_id: str) -> list:
+    """Coaching the person received on this task, in any of their sessions: help carries
+    over to a linked session (A04)."""
     return [e for e in ext['assistance_events'] if e['kind'] == 'coaching'
-            and e['session_id'] == session_id and e['task_id'] == task_id]
+            and e['task_id'] == task_id and _actor_of(ext, e['session_id']) == actor]
 
 
 def _submit(ctx) -> Handler:
@@ -235,19 +242,21 @@ def _submit(ctx) -> Handler:
             raise refuse('evidence_invalid', 'The answer was not stored.', 'Submit again.')
         assistance = _assistance(ctx.store, params['assistance_sha'])
         cited = _check_refs(params['cited_refs'], _allowed_refs(ctx.store, s), 'cited_refs')
-        prior = [a for a in ext['attempts'].values()
-                 if a['session_id'] == s['session_id'] and a['task_ref']['task_id'] == tid]
+        actor_ = s['actor_declared_id']
+        # The first attempt of a person on a task is first across all their sessions.
+        prior = [a for a in ext['attempts'].values() if a['task_ref']['task_id'] == tid
+                 and a['declared_actor'] == actor_]
         previous = params['previous_attempt_id']
         if previous is not None and previous not in {a['attempt_id'] for a in prior}:
             raise refuse('evidence_invalid', 'previous_attempt_id is not an attempt of this '
                          'task in this session.', 'Name the attempt the new one corrects.')
-        coached = _coached(ext, s['session_id'], tid)
+        coached = _coached(ext, actor_, tid)
         assistance.update(hints_seen=sorted({h for e in coached for h in e['hints']}),
                           coaching_seen=bool(coached))
         family = task['variant_family']
         assistance['coaching_seen_on_family'] = any(
             e['variant_family'] == family for e in ext['assistance_events']
-            if e['kind'] == 'coaching' and e['session_id'] == s['session_id'])
+            if e['kind'] == 'coaching' and _actor_of(ext, e['session_id']) == actor_)
         aid = model.new_id('ua', ctx.request_id)
         ext['attempts'][aid] = {
             'attempt_id': aid, 'session_id': s['session_id'],
@@ -396,8 +405,8 @@ def _declaration(doc: Mapping) -> dict:
 
 def _criteria(results, rubric: Mapping) -> list:
     known = {c['criterion_id']: c for c in rubric['criteria']}
-    if not isinstance(results, list) or {r.get('criterion_id') for r in results
-                                         if isinstance(r, Mapping)} != set(known):
+    if not isinstance(results, list) or len(results) != len(known) or \
+            {r.get('criterion_id') for r in results if isinstance(r, Mapping)} != set(known):
         raise refuse('evidence_invalid', 'criterion_results gives one result per criterion of '
                      'the rubric.', 'Fill every criterion.')
     out = []
@@ -437,7 +446,7 @@ def _status_consistent(status: str, results: list, rubric: Mapping) -> None:
 
 def _review(ctx) -> Handler:
     def run(state, params):
-        sv.require_mode(ctx.store, state)
+        doc_policy = sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
         _need_status(s, 'active', 'awaiting_review')
@@ -467,6 +476,11 @@ def _review(ctx) -> Handler:
             if actor != s['actor_declared_id']:
                 raise refuse('evidence_invalid', 'The reviewed person is not the session '
                              'author.', 'Review the session author.')
+            if reviewer == actor and doc_policy['mode'] == 'required' \
+                    and dim in doc_policy['critical_dimensions']:
+                raise refuse('review_required', 'On a critical dimension the reviewer is '
+                             'another declared person than the author.',
+                             'Ask a colleague to review this dimension.', dimension=dim)
             attempts = model.str_list(d['attempt_ids'], 'attempt_ids')
             if not attempts:
                 raise refuse('evidence_invalid', 'A decision rests on at least one attempt.',
@@ -493,6 +507,13 @@ def _review(ctx) -> Handler:
                         or o['dimension_id'] != dim:
                     raise refuse('evidence_invalid', 'supersedes_ids names a decision on '
                                  'another person or dimension.', 'Name decisions it replaces.')
+                if o['reviewer_declared_id'] != reviewer:
+                    raise refuse('review_required', 'Only its own reviewer replaces a decision; '
+                                 'a disagreement between reviewers is settled by arbitration.',
+                                 'Record your own decision and ask for an arbitration.')
+                if any(o['decision_id'] in c['decision_ids'] for c in ev.conflicts(ext)):
+                    raise refuse('review_required', 'This decision is in a conflict; only an '
+                                 'arbitration settles it.', 'Ask for an arbitration.')
                 if not (set(attempts) - set(o['attempt_ids'])) and not \
                         d['correction_of_review_error']:
                     raise refuse('evidence_invalid', 'Replacing a decision needs new admissible '
@@ -510,12 +531,13 @@ def _review(ctx) -> Handler:
                                 for x in r['attempt_ids'] if x in ext['attempts']}
                 fresh = [x for x in attempts if x not in r['attempt_ids']
                          and ext['attempts'][x]['task_ref']['variant_id'] not in old_variants]
-                if d['status'] != 'demonstrated' or (not fresh and not
-                                                     d['correction_of_review_error']):
+                own = ext['decisions'][r['decision_id']]['reviewer_declared_id'] == reviewer
+                if d['status'] != 'demonstrated' or (not fresh and not (
+                        d['correction_of_review_error'] and own)):
                     raise refuse('evidence_invalid', 'A reservation is resolved by a '
                                  'demonstrated decision on a new attempt of a new variant (the '
                                  'same question again does not demonstrate anew), or by a '
-                                 'stated correction of a review error.',
+                                 'correction of a review error by the same reviewer.',
                                  'Ask a new variant of the task, or arbitrate.')
             if not isinstance(d['correction_of_review_error'], bool):
                 raise refuse('evidence_invalid', 'correction_of_review_error is a boolean.',
@@ -595,13 +617,22 @@ def _arbitrate(ctx) -> Handler:
             raise refuse('evidence_invalid', 'An arbitration settles decisions or '
                          'reservations.', 'Name them.')
         chosen = doc['chosen_decision_id']
-        if chosen is not None and chosen not in ext['decisions']:
-            raise refuse('evidence_invalid', 'chosen_decision_id is unknown.',
-                         'Choose an existing decision.')
+        if (ids and chosen not in ids) or (not ids and chosen is not None):
+            raise refuse('evidence_invalid', 'chosen_decision_id is one of the conflicting '
+                         'decisions (null when only reservations are settled).',
+                         'Choose among the decisions in conflict.')
+        for rid in reservations:
+            r = ext['reservations'][rid]
+            if ext['decisions'][r['decision_id']]['session_id'] != s['session_id']:
+                raise refuse('evidence_invalid', 'A reservation of another session is settled '
+                             'in that session.', 'Arbitrate in the session of the reservation.')
         actors = {d['reviewed_actor_id'] for d in decisions} | \
             {ext['reservations'][r]['actor'] for r in reservations}
         dims = {d['dimension_id'] for d in decisions} | \
             {ext['reservations'][r]['dimension_id'] for r in reservations}
+        if len(actors) > 1 or len(dims) > 1:
+            raise refuse('evidence_invalid', 'One arbitration settles one person and one '
+                         'dimension.', 'Split the arbitration.')
         if arbiter in actors and dims & set(doc_policy['critical_dimensions']):
             raise refuse('review_required', 'On a critical dimension the arbiter is not the '
                          'person reviewed.', 'Ask another declared person.')
@@ -889,7 +920,7 @@ def _approve(ctx) -> Handler:
                          'an approval covers exactly the projection reviewed.',
                          'Run export preview again and approve its digest.',
                          current_digest=digest)
-        if who not in ex.required_contributors(projection):
+        if who not in ex.required_contributors(projection) and who != s['actor_declared_id']:
             raise refuse('privacy_approval_required', 'This person contributes nothing to the '
                          'exported content.', 'Approvals come from the contributors listed '
                          'by export preview.')
@@ -947,16 +978,26 @@ def _export_receipt(ctx) -> Handler:
         intent = ext['exports'].get(params['intent_id'])
         if intent is None:
             raise refuse('invalid_transition', 'Unknown export intent.', 'Check the id.')
-        if intent['status'] == 'published':
-            return {'intent_id': intent['intent_id'], 'status': 'published', 'replayed': True}
-        if params['outcome'] not in ('published', 'not_current'):
-            raise refuse('invalid_transition', 'outcome is published or not_current.',
-                         'Correct the outcome.')
-        intent['status'] = params['outcome']
+        if intent['status'] != 'reserved':
+            return {'intent_id': intent['intent_id'], 'status': intent['status'],
+                    'final': True}
+        if dict(params['verified_files']) != intent['files']:
+            raise refuse('export_stale', 'The published files are not the bytes the intent '
+                         'announced.', 'Inspect docs/understanding before any new attempt.')
+        # Revalidated here, under the writer lock: a new policy or context means the
+        # generation exists as history but is not declared current.
+        from . import export as ex
+        s = _session(ext, intent['session_id'])
+        current = canonical.digest(ex.projection(ctx.store, state, s))
+        doc_policy = sv.policy_doc(ctx.store, ext)
+        same_policy = doc_policy is not None and pol.digest(doc_policy) == intent['policy_digest']
+        outcome = 'published' if current == intent['projection_digest'] and same_policy \
+            else 'not_current'
+        intent['status'] = outcome
         intent['receipt'] = {'verified_files': dict(params['verified_files']),
                              'recorded_revision': _rev(state), 'recorded_at': sv.now()}
-        return {'intent_id': intent['intent_id'], 'status': intent['status']}
-    return Handler(frozenset({'intent_id', 'outcome', 'verified_files'}), run)
+        return {'intent_id': intent['intent_id'], 'status': outcome}
+    return Handler(frozenset({'intent_id', 'verified_files'}), run)
 
 
 def _git_receipt(ctx) -> Handler:
@@ -1024,13 +1065,30 @@ FACTORIES = {
     'milestone_record': _milestone_record}
 
 
+def _guarded(factory):
+    """A malformed input document (a wrong type deep inside a file) is a refusal without
+    effect, never an internal error; the input itself is not echoed."""
+    def make(ctx):
+        handler = factory(ctx)
+
+        def run(state, params):
+            try:
+                return handler.run(state, params)
+            except (TypeError, KeyError, AttributeError, IndexError) as exc:
+                raise refuse('evidence_invalid', 'An input document has a field of the wrong '
+                             f'shape ({exc.__class__.__name__}).',
+                             'Correct the file against the documented format.') from None
+        return Handler(handler.params, run, handler.check)
+    return make
+
+
 def register() -> None:
     global REGISTERED
     if REGISTERED:
         return
     for name, factory in FACTORIES.items():
         if P + name not in cmd.ACTIONS:
-            cmd.register_action(P + name, factory)
+            cmd.register_action(P + name, _guarded(factory))
     REGISTERED = True
 
 

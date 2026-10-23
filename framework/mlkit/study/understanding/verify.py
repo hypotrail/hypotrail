@@ -36,7 +36,7 @@ def git(repo: Path, *args: str, input_: bytes | None = None) -> bytes:
     """Run one Git plumbing command (no shell, no hook, no pager); bytes of stdout."""
     env = {**os.environ, **GIT_ENV}
     proc = subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
-                           '--no-pager', *args], input=input_, capture_output=True, env=env,
+                           '-c', 'core.fsmonitor=false', '--no-pager', *args], input=input_, capture_output=True, env=env,
                           timeout=120, check=False)
     if proc.returncode != 0:
         raise refuse('git_index_conflict', f'git {args[0]} failed.',
@@ -163,8 +163,38 @@ class Tree:
         return sorted(p[len(prefix):] for p in self._entries if p.startswith(prefix))
 
 
-def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping) -> dict:
+# The terms that decide what a review had to establish. The other fields (mode, milestones,
+# what the verification requires of context and evidence, expiry, waivers, export, ids) are
+# applied by the verifier itself, so a policy may differ on them.
+REVIEW_TERMS = ('required_dimensions', 'responsibility_profiles', 'critical_dimensions',
+                'peer_required_dimensions', 'minimum_assurance', 'assistance_rule',
+                'team_coverage', 'role_policy')
+
+
+def _review_terms(policy_doc: Mapping) -> str:
+    return canonical.digest({k: policy_doc[k] for k in REVIEW_TERMS})
+
+
+def _gate_on_export(doc: Mapping, policy_doc: Mapping, axes: Mapping,
+                    today: str | None = None) -> dict:
+    import datetime as _dt
     reasons = []
+    if _review_terms(policy_doc) != _review_terms(doc['policy']):
+        # The reviews were made under another policy (perhaps relaxed in the candidate):
+        # they are not evidence for this one.
+        reasons.append({'code': 'policy_differs'})
+    rule = policy_doc['expiration_rule']
+    today = today or _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+    if rule['kind'] == 'until' and today > rule['date']:
+        reasons.append({'code': 'policy_expired'})
+    critical = set(policy_doc['critical_dimensions'])
+    actor = (doc['coverage_selection'] or {}).get('actor_alias')
+    for d in doc['dimensions']:
+        rule_ = policy_doc['assistance_rule']['critical' if d['id'] in critical else 'other']
+        if rule_ == 'unaided_required' and d['assistance_summary'] != 'unaided':
+            reasons.append({'code': 'assistance_not_admissible', 'dimension': d['id']})
+        if d['id'] in critical and d['reviewer_alias'] and d['reviewer_alias'] == actor:
+            reasons.append({'code': 'reviewer_not_distinct', 'dimension': d['id']})
     try:
         required = pol.author_dimensions(policy_doc, doc['coverage_selection']['profile']) \
             if doc['coverage_selection'] else []
@@ -219,7 +249,18 @@ def verify(repo, target: str, *, policy_doc: Mapping | None = None,
         generations = [g for g in generations if g == review_id] or [review_id]
     results = []
     for rid in generations:
-        results.append(_verify_one(tree, rid, policy_doc, local))
+        try:
+            results.append(_verify_one(tree, rid, policy_doc, local))
+        except Exception as exc:      # noqa: BLE001 - untrusted content: invalid, not a crash
+            results.append({'review_id': rid, 'public_integrity': 'invalid',
+                            'declared_conformity': 'unknown',
+                            'public_source_freshness': 'unknown',
+                            'private_context_verification': 'unknown',
+                            'evidence_availability': 'unavailable',
+                            'assurance': pol.SUPPORTED_ASSURANCE,
+                            'unresolved_private_refs': [], 'limitations': [],
+                            'problems': [f'malformed artefact ({exc.__class__.__name__})'],
+                            'gate_result': None})
     if not tree.still_coherent():
         raise refuse('git_index_conflict', 'The index changed during the verification; the '
                      'result is not usable.', 'Run verify-export again when nothing stages.')
@@ -260,6 +301,9 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     if not canonical.is_canonical(raw[ex.JSON_FILE]) or \
             not canonical.is_canonical(raw[ex.MANIFEST_FILE]):
         problems.append('JSON is not in canonical form')
+    if not isinstance(manifest, dict) or not isinstance(manifest.get('files'), dict):
+        problems.append('manifest is not an object with files')
+        return axes
     if manifest.get('schema') != ex.MANIFEST_SCHEMA or manifest.get('review_id') != rid:
         problems.append('manifest identity')
     for name in (ex.JSON_FILE, ex.MD_FILE):
@@ -338,9 +382,9 @@ def git_plan(repo, files: Mapping[str, bytes], sources: list[Mapping]) -> dict:
         w, i = work.read(s['path']), index.read(s['path'])
         ws = hashlib.sha256(w).hexdigest() if w is not None else None
         is_ = hashlib.sha256(i).hexdigest() if i is not None else None
-        if ws != s['sha256'] or (is_ is not None and is_ != s['sha256']):
+        if ws != s['sha256'] or is_ != s['sha256']:
             conflicts.append({'path': s['path'], 'snapshot': s['sha256'], 'worktree': ws,
-                              'index': is_})
+                              'index': is_})       # an untracked source is a conflict too
     staged = git(repo, 'diff', '--cached', '--name-only', '-z').split(b'\0') if head else \
         git(repo, 'ls-files', '-z').split(b'\0')
     staged = sorted(p.decode() for p in staged if p)
@@ -380,17 +424,18 @@ def stage(repo, paths: list[str], expected_index: str) -> dict:
             'index_identity': after.index_id}
 
 
-def commit_receipt(repo, commit: str, files: Mapping[str, bytes]) -> dict:
+def commit_receipt(repo, commit: str, expected: Mapping[str, str]) -> dict:
     """``{commit, tree, paths}`` once ``commit`` is identified and contains exactly the
-    artefact bytes; ``git_index_conflict`` otherwise. It never creates a commit."""
+    announced artefact bytes (``{path: sha256}`` of the export intent); ``git_index_conflict``
+    otherwise. It never creates a commit."""
     tree = Tree(Path(repo), commit)
-    for path, data in files.items():
-        if tree.read(path) != data:
+    for path, sha in expected.items():
+        data = tree.read(path)
+        if data is None or hashlib.sha256(data).hexdigest() != sha:
             raise refuse('git_index_conflict', 'The commit does not contain the exported bytes.',
                          'Inspect the commit before any new attempt; no commit is created '
                          'automatically.', path=path)
-    return {'commit': tree.commit, 'tree': tree.tree,
-            'paths': {p: hashlib.sha256(d).hexdigest() for p, d in sorted(files.items())}}
+    return {'commit': tree.commit, 'tree': tree.tree, 'paths': dict(sorted(expected.items()))}
 
 
 def posix(path: str) -> str:

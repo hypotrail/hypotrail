@@ -237,7 +237,10 @@ def _task_public(bank, ref) -> dict:
 
 
 def _selection_public(selection, session) -> dict | None:
-    if selection is None:
+    """The milestone selection about this session's author only (another person's
+    selection is not theirs to publish)."""
+    if selection is None or \
+            selection['actor_scope']['actor_declared_id'] != session['actor_declared_id']:
         return None
     return {'milestone': selection['milestone'], 'scope_digest': selection['scope_digest'],
             'actor_alias': selection['actor_scope']['actor_declared_id'],
@@ -506,10 +509,10 @@ def publish(repo: Path, review_id_: str, files: Mapping[str, bytes], *, fault=No
     """Publish one generation; ``'published'`` or ``'already_published'`` (same bytes)."""
     parent = Path(repo) / EXPORT_DIR
     real_repo = Path(os.path.realpath(repo))
-    parent.mkdir(parents=True, exist_ok=True)
     if not Path(os.path.realpath(parent)).is_relative_to(real_repo):
         raise refuse('path_outside_scope', 'docs/understanding leaves the repository.',
                      'Remove the link.')
+    parent.mkdir(parents=True, exist_ok=True)
     dest = parent / review_id_
     if dest.exists() or dest.is_symlink():
         if _same(dest, files):

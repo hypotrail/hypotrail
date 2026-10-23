@@ -68,7 +68,8 @@ def _keys(doc: Any, keys: tuple, path: str) -> None:
 
 
 def _dims(value, field: str, allowed=DIMENSIONS) -> list:
-    if not isinstance(value, list) or any(v not in allowed for v in value) \
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value) \
+            or any(v not in allowed for v in value) \
             or len(set(value)) != len(value):
         raise _invalid(f'{field} must be a list of distinct dimension ids among '
                        f'{", ".join(allowed)}.', field=field)
@@ -82,6 +83,13 @@ def _bool(value, field: str) -> None:
 
 def validate(doc: Any) -> dict:
     """Return the policy when it is valid; refuse otherwise (see the module docstring)."""
+    try:
+        return _validate(doc)
+    except (TypeError, KeyError, AttributeError) as exc:
+        raise _invalid(f'A field has the wrong shape ({exc.__class__.__name__}).') from None
+
+
+def _validate(doc: Any) -> dict:
     if isinstance(doc, Mapping) and doc.get('schema') not in (None, SCHEMA):
         raise _invalid(f'Unknown policy schema {doc.get("schema")!r}; this engine reads '
                        f'{SCHEMA}.', field='schema')

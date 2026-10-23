@@ -331,33 +331,15 @@ def test_input_limits_and_depth(u):
 
 
 def test_reviewer_must_be_distinct_for_critical_dimensions(u):
-    sid = ukit.full_flow(u)
-    ext = u.ext()
-    # Rewrite nothing; record a new session where the author reviews herself on D2.
-    u2 = u
-    _, out = u2.start(actor='alice')
-    sid2 = out['result']['session_id']
-    tasks = u2.call('task', '--session', sid2)['task']
-    a = u2.submit(sid2, tasks['task_id'])['result']['attempt_id']
-    dim = tasks['dimension_ids'][0]
-    u2.review(sid2, [u2.decision(dim, [a])], reviewer='alice')
-    u2.m('close', '--session', sid2, '--to', 'completed', '--reason', 'done')
-    did = next(d['decision_id'] for d in u2.ext()['decisions'].values()
-               if d['session_id'] == sid2)
-    sel = {d['dimension_id']: d['decision_id'] for d in ext['decisions'].values()
-           if d['kind'] == 'attempt'}
-    sel[dim] = did
-    u2.m('select', '--file', u2.file('s2.json', {
-        'milestone': 'handoff', 'actor_scope': {'actor_declared_id': 'alice',
-                                                'profile': 'pipeline'},
-        'dimension_decision_map': sel,
-        'transfer_decision_map': {k: v for k, v in [('D2', next(
-            d['decision_id'] for d in ext['decisions'].values() if d['kind'] == 'transfer'))]},
-        'reservation_resolution_refs': []}))
-    gate = u2.call('check', '--milestone', 'handoff')['gate']
-    assert gate['decision'] == 'blocked'
-    assert {'code': 'reviewer_not_distinct', 'dimension': dim} in gate['reasons']
-    assert sid
+    """In required mode the author never reviews themself on a critical dimension; on another
+    dimension a self-review is recorded and the policy decides."""
+    sid, tasks = started(u)
+    a = u.submit(sid, task_of(u, tasks, 'D2'))['result']['attempt_id']
+    out = u.review(sid, [u.decision('D2', [a])], reviewer='alice', expect=2)
+    assert code(out) == 'review_required'
+    b = u.submit(sid, task_of(u, tasks, 'D6'))['result']['attempt_id']
+    ok = u.review(sid, [u.decision('D6', [b])], reviewer='alice')
+    assert ok['result']['decisions'][0]['status'] == 'demonstrated'
 
 
 def test_new_review_on_a_removed_answer_is_refused(u):

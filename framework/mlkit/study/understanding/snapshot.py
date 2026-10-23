@@ -79,6 +79,24 @@ def safe_relative(path: str) -> str:
     return path
 
 
+def validate_sources(sources) -> list:
+    """The mapped repository sources: ``{logical_key: "repo:...", path, role}`` with a
+    repository role and a confined path (a plan file edited by hand is checked again)."""
+    if not isinstance(sources, list):
+        raise refuse('evidence_invalid', 'sources is a list.', 'Correct the plan.')
+    out = []
+    for s in sources:
+        if not isinstance(s, Mapping) or set(s) != {'logical_key', 'path', 'role'} \
+                or s['role'] not in REPO_ROLES or not isinstance(s['logical_key'], str) \
+                or not s['logical_key'].startswith('repo:') or len(s['logical_key']) > 300:
+            raise refuse('evidence_invalid', 'A source is {logical_key: "repo:...", path, role} '
+                         'with role among ' + ', '.join(REPO_ROLES) + '.',
+                         'Correct the sources.')
+        safe_relative(s['path'])
+        out.append(dict(s))
+    return out
+
+
 def read_repo_file(repo: Path, rel: str) -> bytes | None:
     """The bytes of ``repo/rel``; None when absent. A symlink that leaves the repository,
     a non-regular file or an oversized file is ``path_outside_scope``."""
@@ -211,7 +229,7 @@ def capture_context(state: Mapping, *, policy_digest: str | None, bank_doc: Mapp
                             'origin': 'contract', 'path': None, 'role': 'rubric',
                             'sha256': canonical.digest(r)})
     missing = []
-    sources = list(sources)
+    sources = validate_sources(sources)
     if len(sources) > MAX_SOURCES:
         raise refuse('path_outside_scope', f'At most {MAX_SOURCES} sources are mapped.',
                      'Map fewer files.', field='sources')

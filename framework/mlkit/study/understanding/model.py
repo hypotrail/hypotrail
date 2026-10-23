@@ -12,7 +12,6 @@ Schema ``hypotrail.understanding-state/1``; a future version is refused for writ
 """
 from __future__ import annotations
 
-import json
 import re
 import secrets
 from pathlib import Path
@@ -141,12 +140,11 @@ def read_input_bytes(path, field: str, limit: int) -> bytes:
 def read_json_input(path, field: str) -> Any:
     data = read_input_bytes(path, field, MAX_JSON_BYTES)
     try:
-        value = json.loads(data.decode('utf-8'),
-                           object_pairs_hook=canonical._pairs,
-                           parse_constant=canonical._no_constant)
+        value = canonical.loads(data)        # no duplicate, no raw float, safe integers
     except (UnicodeDecodeError, ValueError) as exc:
-        raise refuse('evidence_invalid', f'{field} is not valid JSON (duplicate keys and '
-                     'NaN are refused).', 'Correct the file.', field=field,
+        raise refuse('evidence_invalid', f'{field} is not valid JSON for the review (duplicate '
+                     'keys, NaN, raw decimal numbers and very large integers are refused).',
+                     'Correct the file.', field=field,
                      reason=exc.__class__.__name__) from None
     if _depth(value) > MAX_DEPTH:
         raise refuse('evidence_invalid', f'{field} is nested deeper than {MAX_DEPTH} levels.',
