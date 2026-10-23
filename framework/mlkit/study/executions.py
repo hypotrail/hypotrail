@@ -539,6 +539,16 @@ def run(study_dir, activity: str, options: Mapping | None, *, request_id: str,
                           'input_key': put['input_key']})
         result = {**receipt['result'], 'exposure_ids': exposure_ids,
                   'registry_created': put['created'], 'nondeterministic': put['nondeterministic']}
+        if activity == act.FINAL and plan['inputs'].get('predictor') \
+                and result.get('status') == 'promoted':
+            # Library integration v1: the evaluated predictor's evidence binding, written
+            # beside its bundle once the result exists (the hashed bundle is not modified).
+            from mlkit.contracts import capture
+            try:
+                capture.bind_evidence(store, plan, put['result_id'], state['revision'])
+                result['evidence_binding'] = 'written'
+            except Exception as exc:          # noqa: BLE001 - derived, re-creatable record
+                result['evidence_binding'] = f'failed: {type(exc).__name__}: {exc}'
         _history(store, eid, {**plan_summary(plan, eid), **result})
         lease.release()
         payload = _payload(store, action='run', request_id=request_id, replayed=False,

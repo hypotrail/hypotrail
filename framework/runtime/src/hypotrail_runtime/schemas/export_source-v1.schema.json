@@ -1,0 +1,360 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "ExportDecision": {
+   "additionalProperties": false,
+   "properties": {
+    "basis": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Basis"
+    },
+    "decision_id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Decision Id",
+     "type": "string"
+    },
+    "revision": {
+     "minimum": 0,
+     "title": "Revision",
+     "type": "integer"
+    },
+    "status": {
+     "enum": [
+      "confirmed",
+      "reconfirm_required"
+     ],
+     "title": "Status",
+     "type": "string"
+    },
+    "value": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "required": [
+    "decision_id",
+    "status",
+    "value",
+    "revision",
+    "basis"
+   ],
+   "title": "ExportDecision",
+   "type": "object"
+  },
+  "ExportPredictor": {
+   "additionalProperties": false,
+   "properties": {
+    "bundle_dir": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Bundle Dir"
+    },
+    "capture_result_id": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Capture Result Id"
+    },
+    "data_contract_sha256": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Data Contract Sha256"
+    },
+    "evidence_status": {
+     "enum": [
+      "evaluated",
+      "unassessed",
+      "stale"
+     ],
+     "title": "Evidence Status",
+     "type": "string"
+    },
+    "final_result_id": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Final Result Id"
+    },
+    "packages": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Packages",
+     "type": "array"
+    },
+    "predictor_id": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Predictor Id"
+    },
+    "profile": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Profile"
+    },
+    "recipe_sha256": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Recipe Sha256"
+    },
+    "status": {
+     "enum": [
+      "captured",
+      "not_captured",
+      "stale",
+      "not_applicable"
+     ],
+     "title": "Status",
+     "type": "string"
+    }
+   },
+   "required": [
+    "status",
+    "predictor_id",
+    "capture_result_id",
+    "bundle_dir",
+    "recipe_sha256",
+    "data_contract_sha256",
+    "profile",
+    "packages",
+    "evidence_status",
+    "final_result_id"
+   ],
+   "title": "ExportPredictor",
+   "type": "object"
+  },
+  "ExportResultRef": {
+   "additionalProperties": false,
+   "properties": {
+    "activity": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Activity",
+     "type": "string"
+    },
+    "current": {
+     "title": "Current",
+     "type": "boolean"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/JsonValue"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "result_id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Result Id",
+     "type": "string"
+    },
+    "slot": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Slot",
+     "type": "string"
+    }
+   },
+   "required": [
+    "slot",
+    "result_id",
+    "activity",
+    "current",
+    "reason"
+   ],
+   "title": "ExportResultRef",
+   "type": "object"
+  },
+  "JsonValue": {}
+ },
+ "$id": "https://hypotrail.invalid/schemas/export_source-v1.schema.json",
+ "additionalProperties": false,
+ "description": "The read-only view of a study at one revision (CONTRAT-COMMUN-v1 §6,\n``read_export_source``). It holds references and contracts, never data rows, labels or\nthe study database.",
+ "properties": {
+  "case": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Case",
+   "type": "object"
+  },
+  "dataset_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Dataset Sha256",
+   "type": "string"
+  },
+  "decisions": {
+   "items": {
+    "$ref": "#/$defs/ExportDecision"
+   },
+   "title": "Decisions",
+   "type": "array"
+  },
+  "development_plan": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Development Plan",
+   "type": "object"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "final_test": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Final Test",
+   "type": "object"
+  },
+  "limitations": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Limitations",
+   "type": "array"
+  },
+  "predictor": {
+   "$ref": "#/$defs/ExportPredictor"
+  },
+  "results": {
+   "items": {
+    "$ref": "#/$defs/ExportResultRef"
+   },
+   "title": "Results",
+   "type": "array"
+  },
+  "revision": {
+   "minimum": 0,
+   "title": "Revision",
+   "type": "integer"
+  },
+  "schema_version": {
+   "const": "hypotrail.export_source/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "scientific_contracts": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Scientific Contracts",
+   "type": "object"
+  },
+  "study_id": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Study Id",
+   "type": "string"
+  },
+  "task": {
+   "enum": [
+    "regression",
+    "binary"
+   ],
+   "title": "Task",
+   "type": "string"
+  }
+ },
+ "required": [
+  "schema_version",
+  "study_id",
+  "revision",
+  "task",
+  "case",
+  "dataset_sha256",
+  "scientific_contracts",
+  "decisions",
+  "results",
+  "development_plan",
+  "final_test",
+  "predictor",
+  "limitations"
+ ],
+ "title": "ExportSource",
+ "type": "object"
+}

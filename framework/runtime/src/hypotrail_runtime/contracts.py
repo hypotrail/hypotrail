@@ -454,6 +454,57 @@ class UncertaintyResult(AdapterResult):
     undefined_replicates: Optional[StrictInt]
 
 
+# --- export source (engine side, read by workstream B) ---------------------------------------
+
+class ExportDecision(Part):
+    decision_id: NAME
+    status: Literal['confirmed', 'reconfirm_required']
+    value: JsonValue
+    revision: StrictInt = Field(ge=0)
+    basis: Optional[StrictStr]
+
+
+class ExportResultRef(Part):
+    slot: NAME
+    result_id: NAME
+    activity: NAME
+    current: StrictBool
+    reason: Optional[JsonValue]
+
+
+class ExportPredictor(Part):
+    status: Literal['captured', 'not_captured', 'stale', 'not_applicable']
+    predictor_id: Optional[SHA256]
+    capture_result_id: Optional[NAME]
+    bundle_dir: Optional[StrictStr]
+    recipe_sha256: Optional[SHA256]
+    data_contract_sha256: Optional[SHA256]
+    profile: Optional[NAME]
+    packages: list[NAME]
+    evidence_status: Literal['evaluated', 'unassessed', 'stale']
+    final_result_id: Optional[NAME]
+
+
+class ExportSource(Contract):
+    """The read-only view of a study at one revision (CONTRAT-COMMUN-v1 §6,
+    ``read_export_source``). It holds references and contracts, never data rows, labels or
+    the study database."""
+    schema_version: Literal['hypotrail.export_source/1']
+    study_id: NAME
+    revision: StrictInt = Field(ge=0)
+    task: Task
+    case: dict[NAME, JsonValue]
+    dataset_sha256: SHA256
+    scientific_contracts: dict[NAME, JsonValue]
+    decisions: list[ExportDecision]
+    results: list[ExportResultRef]
+    development_plan: dict[NAME, JsonValue]
+    final_test: dict[NAME, JsonValue]
+    predictor: ExportPredictor
+    limitations: list[StrictStr]
+    extensions: Extensions = Field(default_factory=dict)
+
+
 MODELS: dict[str, Type[Contract]] = {
     'hypotrail.model_recipe/1': ModelRecipe,
     'hypotrail.data_contract/1': DataContract,
@@ -465,6 +516,7 @@ MODELS: dict[str, Type[Contract]] = {
     'hypotrail.package_descriptor/1': PackageDescriptor,
     'hypotrail.diagnostic_result/1': DiagnosticResult,
     'hypotrail.uncertainty_result/1': UncertaintyResult,
+    'hypotrail.export_source/1': ExportSource,
 }
 
 M = TypeVar('M', bound=Contract)

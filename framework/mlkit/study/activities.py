@@ -119,10 +119,14 @@ FINAL = 'final_test.evaluation'
 DIAG_BINARY = 'diag.binary'
 DIAG_REGRESSION = 'diag.regression'
 DIAG_FINAL = 'diag.final_test'
+# Library integration v1 (workstream A): the complete predictor of the chosen configuration,
+# captured before the final test is opened (mlkit.contracts.capture).
+CAPTURE = 'predictor.capture'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
               POLICY_INSPECT,
               TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
-              SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL, CORRELATION)
+              SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL, CORRELATION,
+              CAPTURE)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
                POLICY_INSPECT),
@@ -138,13 +142,16 @@ B1_ACTIVITIES = (VARIANT, FINAL)
 DIAG_ACTIVITIES = {'binary': (DIAG_BINARY, DIAG_FINAL),
                    'regression': (DIAG_REGRESSION, DIAG_FINAL)}
 DEVELOPMENT_DIAGNOSTICS = (DIAG_BINARY, DIAG_REGRESSION)
+# Library integration v1: activities of every task in a study that has a final test.
+EXPORT_ACTIVITIES = (CAPTURE,)
 
 
 def task_activities(task: str) -> tuple[str, ...]:
     """Every activity of a ``task`` study: its own, then the shared ones, then (WP-B1) the
     variant and the final evaluation, which only a study with their decisions can run, then
     (WP-B4) the diagnostics."""
-    return TASK_ACTIVITIES[task] + SHARED_ACTIVITIES + B1_ACTIVITIES + DIAG_ACTIVITIES[task]
+    return (TASK_ACTIVITIES[task] + SHARED_ACTIVITIES + B1_ACTIVITIES + EXPORT_ACTIVITIES
+            + DIAG_ACTIVITIES[task])
 ALIASES = {'policy.evaluate': POLICY}
 # v0.3 (WP-F1): the second and third variants are run by their slot name
 # (``fit.variant:2``); the first keeps ``fit.variant``.
@@ -203,6 +210,15 @@ MODULES = {
                       'mlkit.study.regression', 'mlkit.classical', 'mlkit.study.governance'),
     DIAG_FINAL: (_BASE, 'mlkit.study.diagnostics', 'mlkit.study.metrics', 'mlkit.study.policy',
                  'mlkit.study.regression'),
+    # Library integration v1: the engine fit it is compared with, the recipe translation and
+    # the runtime that fits, captures and reloads it (and the libraries that compute it).
+    CAPTURE: (_BASE, 'mlkit.study.fit', 'mlkit.classical', 'mlkit.study.governance',
+              'mlkit.study.families', 'mlkit.study.trials', 'mlkit.contracts.capture',
+              'mlkit.contracts.recipe', 'mlkit.contracts.context',
+              'mlkit.integrations.pandera_validation', 'hypotrail_runtime',
+              'hypotrail_runtime.contracts', 'hypotrail_runtime.preprocess',
+              'hypotrail_runtime.predictor', 'hypotrail_runtime.families',
+              'hypotrail_runtime.inference', 'hypotrail_runtime.canonical', 'sklearn'),
 }
 # The regression fit of the baseline also uses the error module.
 REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
@@ -318,11 +334,26 @@ def normalize_options(activity: str, options: Mapping | None) -> dict:
     allowed = {RATE_BY: {'column', 'max_groups'}, MEAN_BY: {'column', 'max_groups'},
                DISTRIBUTION: {'column', 'max_groups'}, POLICY: {'rules'},
                POLICY_INSPECT: {'rules', 'intervals'},
-               VARIANT: {'index'}}.get(activity, set())
+               VARIANT: {'index'}, CAPTURE: {'profile', 'packager'}}.get(activity, set())
     if given - allowed:
         raise CommandRefused('invalid_arguments',
                              f'{activity} does not take {", ".join(sorted(given - allowed))}.',
                              details={'activity': activity, 'options': sorted(allowed)})
+    if activity == CAPTURE:
+        from mlkit.contracts import capture
+        out = {}
+        for key in ('profile', 'packager'):
+            value = options.get(key)
+            if value is not None and (not isinstance(value, str) or not value):
+                raise CommandRefused('invalid_arguments', f'--{key} is a name.')
+        if options.get('profile') is not None:
+            if options['profile'] not in capture.PROFILES:
+                raise CommandRefused('invalid_arguments', '--profile is base or workshop.',
+                                     details={'profiles': list(capture.PROFILES)})
+            out['profile'] = options['profile']
+        if options.get('packager') is not None:
+            out['packager'] = options['packager']
+        return out
     if activity in PER_COLUMN:
         column = options.get('column')
         if not isinstance(column, str) or not column:
@@ -453,7 +484,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                              details={'activities': list(task_activities(task)), 'task': task})
     options = normalize_options(activity, options)
     from . import state as st
-    if (activity in B1_ACTIVITIES or activity == DIAG_FINAL) \
+    if (activity in B1_ACTIVITIES or activity in EXPORT_ACTIVITIES or activity == DIAG_FINAL) \
             and not st.has_wp_b1_decisions(state):
         raise CommandRefused('invalid_arguments',
                              f'{activity} is not an activity of this study: it was created before '
@@ -564,6 +595,9 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
             expose('structural_inspection', _rows_partition(inputs), keys, read)
     elif activity == FINAL:
         _plan_final(store, state, case, inputs, params, exposures, expose)
+    elif activity == CAPTURE:
+        from mlkit.contracts import capture
+        capture.plan(store, state, case, inputs, params, options, expose)
     elif activity == DIAG_FINAL:
         params = _plan_final_diagnostics(store, state, case, inputs, expose)
     elif activity in DEVELOPMENT_DIAGNOSTICS:
@@ -975,6 +1009,16 @@ def _plan_final(store, state: Mapping, case: c.Case, inputs: dict, params: dict,
     else:   # the baseline was chosen (regression)
         model_inputs, model_params = {'features': [], 'special_values': []}, {}
     inputs['model_inputs'] = model_inputs
+    if state['current'].get(CAPTURE):
+        # Library integration v1: once a study captured its predictor, the final test
+        # evaluates the reloaded capture of this exact configuration (no key otherwise, so
+        # earlier identities are unchanged).
+        from mlkit.contracts import capture
+        predictor = capture.matching_capture(store, state, case, model_inputs, model_params,
+                                             config)
+        if predictor is not None:
+            inputs['predictor'] = predictor
+            inputs.setdefault('results', {})[CAPTURE] = predictor['result_id']
     inputs['final_test'] = {'row_keys': part['final_test']['row_keys'],
                             'n_rows': part['final_test']['n_rows']}
     inputs['bootstrap'] = dict(state['settings']['bootstrap'])
@@ -1739,6 +1783,9 @@ def compute(store, plan_: Mapping) -> dict:
                 groups = dt.entity_groups(dataset.index)
                 params['groups'] = [groups[k] for k in train.index]
         return eda.compute(activity, case, train, params)
+    if activity == CAPTURE:
+        from mlkit.contracts import capture
+        return capture.compute(store, plan_)
     if activity in MODEL_FITS:
         from . import fit
         case, dataset = load(plan_, store)
@@ -2058,8 +2105,15 @@ def compute_final(store, plan_: Mapping) -> dict:
     if len(final_keys) != inputs['final_test']['n_rows']:
         raise StudyError('integrity_error', 'The final-test rows blob does not hold the '
                                             'recorded number of rows.')
+    predictor = None
+    if inputs.get('predictor'):
+        # Library integration v1: the reloaded capture is verified (digests, environment,
+        # its own parity rows) before any final-test row is read.
+        from mlkit.contracts import capture
+        predictor = capture.load_for_final(store, inputs['predictor'])
     final = dt.load_final_test(case, final_keys)
-    return fit.final_evaluation(case, development.frame, final.frame, inputs, params)
+    return fit.final_evaluation(case, development.frame, final.frame, inputs, params,
+                                predictor=predictor)
 
 
 # --- WP-B4: diagnostics -------------------------------------------------------------------
