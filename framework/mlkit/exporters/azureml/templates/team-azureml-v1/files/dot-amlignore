@@ -1,0 +1,26 @@
+# What `code: ./../../` uploads to Azure ML (Hypotrail export, team-azureml-v1).
+# The components need only the source code and its configuration: the data, the contracts
+# and the model travel as a versioned data asset (aml/pipelines/training/data.yml), and
+# the environment is built from aml/pipelines/training/runtime/. Nothing else is uploaded.
+.git/
+.venv/
+.ci/
+.vscode/
+aml/
+data/
+docs/
+notebooks/
+tests/
+outputs/
+hydra/
+mlruns/
+**/__pycache__/
+**/.pytest_cache/
+**/.ipynb_checkpoints/
+.env
+.env.*
+*.pem
+*.key
+*.log
+Makefile
+cli-aliases.sh

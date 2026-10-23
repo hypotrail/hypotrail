@@ -1,0 +1,98 @@
+HYPOTRAIL — CONTRAT D'INTEROPERABILITE v1
+23 octobre 2026 — normatif pour les branches bibliothèques et Azure ML
+
+0. PRIORITE ET BASE
+Cette spécification et SPEC-INTEGRATION-LIBRAIRIES.txt amendent la spec Azure ML antérieure sur la répartition du travail, le packaging et les chemins. TEMPLATE-LAYOUT-v1.json gouverne les chemins du projet généré. Les autres exigences Azure antérieures restent applicables.
+Base auditée et base commune par défaut : 581c7b3723629260a18e1281ef9e18583ae060a7 du dépôt https://github.com/chadlis/hypotrail.
+Si l'utilisateur fournit un autre BASE_SHA partagé aux deux sessions, celui-ci prime. Ne pas sélectionner indépendamment le HEAD du jour pour chaque chantier. Vérifier l'existence du commit et l'écart au dépôt cible, sans effacer les travaux existants.
+Les noms API ci-dessous sont proposés comme interface v1 à implémenter, pas des fonctions déjà existantes. Le chantier A fournit leur implémentation et leurs schémas. Le chantier B ne crée pas de seconde version de production.
+
+1. SCHEMAS ET CANONICALISATION
+Chaque document contient schema_version (littéral hypotrail.<type>/1). Pydantic est l'autorité pour les schémas scientifiques. Les schémas JSON distribués sont générés, versionnés et testés. Une version majeure inconnue échoue. Les champs inconnus sont refusés, sauf extensions, un dictionnaire optionnel à clés namespacées dont les valeurs sont JSON.
+Ne pas sérialiser un objet de bibliothèque dans les contrats JSON. Types JSON stricts, absence de NaN/Infinity. Une valeur indéfinie est null avec reason. Validation Python et validation JSON doivent aboutir à la même sémantique, notamment booléens/entiers et nombres en chaînes.
+La normalisation typée précède la canonicalisation : dictionnaires triés par clé Unicode, listes préservées, UTF-8, séparateurs compacts, ensure_ascii=False, allow_nan=False. Les champs de type float sont normalisés en float, -0.0 en 0.0 ; les int restent int. Sérialiseur versionné et tests de vecteurs de référence. Aucun chemin absolu, timestamp d'exécution ou secret dans la projection scientifique. Ne pas appliquer des exclusions génériques à des champs inconnus : les projections sont des modèles explicites.
+scientific_id = SHA-256 du document scientifique normalisé ; artifact_id = SHA-256 du manifeste de contenu canonique sans son propre id ni son champ de liaison mutable ; file_sha256 = SHA-256 des octets du fichier. Identité de prédicteur et identité de package MLflow sont distinctes.
+Les liaisons vers résultats finaux sont stockées séparément dans le registre, ou dans un document de liaison immuable, pour éviter un hash circulaire entre modèle et résultat. Ne pas modifier après évaluation le manifeste de contenu déjà haché.
+
+2. ModelRecipe — hypotrail.model_recipe/1
+Champs obligatoires :
+- task : regression | binary.
+- family : identifiant du registre fermé des familles.
+- parameters : paramètres effectivement utilisés, validés par famille ; aucun fallback inconnu.
+- features : liste ordonnée des noms exacts.
+- feature_types : mapping de chaque feature vers type sémantique et type physique attendus.
+- preprocessing : liste ordonnée de déclarations {operation, version, parameters}. L'état appris est dans le payload, pas reconstruit à partir d'un résumé.
+- target : {name, unit, positive_label}. unit peut être null pour classification ; positive_label est obligatoire pour binary, null pour regression. Labels JSON scalaires typés.
+- seeds : mapping des composants stochastiques vers int, vide uniquement si aucun.
+- output_contract : {kind, columns, unit, positive_label}; kind = regression_point | binary_score. Les capacités dérivées ont leur contrat séparé.
+- selection_reference : {decision_id, revision, evidence_ids}. Pas de décision non confirmée.
+- method_contract_version et runtime_api_version.
+Le contrat scientifique inclut calibration/politique quand elles constituent une capacité demandée ; elles ne sont jamais éliminées pour réussir un export.
+
+3. DataContract — hypotrail.data_contract/1
+Champs : dataset_id, source_sha256, format, parser (encodage/délimiteur/NA explicites), columns (liste de {name, physical_type, semantic_type, nullable, allowed_values, role}), row_identity, exclusions, inference_policy.
+role = feature | target | key | auxiliary. allowed_values peut être null. Les domaines numériques sont explicités dans extensions ou dans un sous-schéma versionné, sans déduire de bornes de données interdites.
+row_identity = {kind: stable_key | source_position, columns, source_hash_required}. Les clés positionnelles dépendent du hash du fichier ; une permutation n'est pas une source équivalente.
+exclusions est une liste de règles déclarées avec justification ; aucune suppression de ligne implicite.
+inference_policy décrit les colonnes obligatoires, supplémentaires acceptées/refusées, conversions déclarées, ordre canonique et traitement des catégories inconnues. La cible n'est jamais requise à l'inférence.
+Une projection de développement porte materialization_sha256 distinct de source_sha256, clés originales et table de filiation. Ni cible ni clé technique n'entrent dans features.
+
+4. ComputationContext — hypotrail.computation_context/1
+Champs : activity_id, study_id, expected_revision, protocol_id, decision_refs, input_refs, partition_refs, code_fingerprint, runtime_version, backend, method_contract_version, semantic_dependencies, environment_lock_sha256.
+input_refs = [{id, sha256, role}]. partition_refs = [{id, membership_sha256, role, exposure_status}].
+semantic_dependencies = [{distribution, version}] limité aux moteurs affectant ce calcul, mais incluant leurs composants numériques pertinents. environment_lock_sha256 sert à l'audit, pas à invalider arbitrairement tous les calculs pour une dépendance étrangère.
+A vérifie la révision et les droits d'accès avant de matérialiser les tableaux transmis à un adaptateur. Un backend ne reçoit ni connexion à la base d'étude, ni chemin permettant de lire d'autres partitions.
+
+5. PredictorArtifact et bundle — hypotrail.predictor_artifact/1 ; hypotrail.predictor_bundle/1
+Manifeste de contenu du prédicteur : predictor_id, recipe_sha256, data_contract_sha256, input_contract_sha256, output_contract, native_format, payload_files [{relative_path, size_bytes, sha256}], runtime {api_version, distribution, version, wheel_relative_path, wheel_sha256}, environment {python, platform, semantic_dependencies, lock_relative_path, lock_sha256}, training_scope {role, dataset_id, membership_sha256, protocol_id}, code_fingerprint.
+role = development_fit | fold_fit | final_development_refit | rebuilt_candidate. Un rôle ne suffit pas à déclarer evaluated.
+Le bundle ajoute recipe_path, data_contract_path, predictor_manifest_path, parity {features_path, expected_outputs_path, sha256s, origin: synthetic | authorized_development, tolerance}, optional_packages [{format, artifact_id, relative_path, manifest_sha256}], evidence_binding_path (null si absent).
+La liaison de preuve contient predictor_id, final_result_id, study_revision, decision_refs, protocol_id, evaluation_context_id, status: evaluated | unassessed | stale. Une nouvelle version de liaison est créée lors de changements ; le payload évalué n'est pas modifié.
+Le bundle est autonome et ne contient ni labels/lignes du test final, ni secrets, ni base d'étude complète. La fixture de parité ne prouve pas la généralisation. Paths relatifs, sans .. ni chemin absolu ni symlink sortant. Vérifier les hashes et tailles avant chargement. Un hash seul n'authentifie pas un pickle tiers ; seuls les artefacts issus d'une source de confiance explicitement reconnue peuvent être chargés.
+Les familles/capacités exportables sont une liste positive. Le MVP atelier qualifie la régression linéaire utilisée pour Auto MPG. Une famille non qualifiée ne peut pas être remplacée par une famille supportée à l'insu de l'utilisateur.
+
+6. API DE FRONTIERE
+Dans hypotrail_runtime (distribution minimale appartenant à A) :
+- validate_recipe(document: Mapping) -> ModelRecipe
+- validate_data_contract(document: Mapping) -> DataContract
+- verify_bundle(bundle_dir: Path) -> BundleDescriptor
+- load_predictor(bundle_dir: Path) -> Predictor
+- Predictor.predict(raw_features: DataFrame) -> PredictionBatch
+- fit_predictor(recipe, data_contract, training_frame, training_scope) -> FittedPredictor
+- capture_predictor(fitted, context, parity_features, destination, packager=None) -> BundleDescriptor
+PredictionBatch contient row_order (indices d'entrée), kind, values, columns, unit, positive_label. Pour binary_score, values est le score de la classe positive explicitement nommée, pas une colonne arbitraire de predict_proba. Pour regression_point, values représente prediction. La politique de seuil et les intervalles sont des capacités distinctes.
+Les méthodes ne lisent pas d'autres fichiers de données que leurs entrées. fit_predictor ne décide pas de son propre protocole ; l'appelant lui transmet seulement les lignes autorisées. capture ne réentraîne pas.
+
+Dans le moteur A :
+- read_export_source(study_path, expected_revision) -> ExportSource
+ExportSource contient study_id, revision, scientific_contracts, decisions confirmées, références de résultats et état de validité, plan de développement, descripteur du prédicteur si disponible, limitations. Lecture cohérente de la révision sans fit ni exposition nouvelle. Les données brutes et labels finaux n'y figurent pas. Les structures exactes des preuves réutilisent les contrats du dépôt existants.
+B construit DeploymentSnapshot depuis ExportSource ; B ne lit pas directement les tables internes du registre.
+
+Extension de packaging implémentée par B :
+- ArtifactPackager.package(native_bundle_dir, output_dir, parity_spec) -> PackageDescriptor
+- ArtifactPackager.verify(native_bundle_dir, package_dir, parity_spec) -> ParityResult
+PackageDescriptor contient format, artifact_id, predictor_id, files+sha256s, signature, environment, parity_result. format initial = mlflow_pyfunc.
+Le hook est injecté dans capture_predictor, pas importé par le runtime. Le moteur peut charger paresseusement l'adaptateur connu à partir du profil export ; pas de découverte de code arbitraire dans YAML. Profil atelier : packaging requis. Si l'extra/module manque, erreur avant exposition finale. Profil de base : capture native sans MLflow. Ne pas annoncer un package MLflow absent.
+L'activité assemble l'artefact et le packaging, vérifie la parité, réserve/journalise l'exposition selon le protocole existant, puis évalue. Le hook n'accède pas aux labels finaux. La liaison de preuve est écrite séparément après résultat.
+B peut tester le packager avec une fixture privée de bundle conforme avant disponibilité de A. Après fusion, la même suite doit passer avec un bundle produit par A. Aucun stub dans les chemins production.
+
+7. RESULTATS D'ADAPTATEUR
+Base commune : schema_version, result_id, status (ok | not_applicable | insufficient_data | failed), reason, context, backend {distribution, version}, method {name, version, parameters}, warnings[], artifact_refs[].
+DiagnosticResult ajoute checks[] : {id, family, column_or_pair, reference_partition, current_partition, n_reference, n_current, statistic_name, statistic_value, p_value, adjusted_p_value, effect_size, threshold, comparison, alert, status, reason}. Champs non applicables = null. comparison déclare lt/le/gt/ge ; pas d'inférence depuis le nom de méthode. Méthodes et corrections spécifiées avant exécution. Les détails de données affichés sont bornés et soumis à autorisation.
+UncertaintyResult ajoute target_quantity, assumptions, eligibility, calibration_ref, predictor_id, confidence_level, coverage_level, risk_target, selection_rule, valid_thresholds, selected_threshold, interval_bounds, undefined_replicates. Les champs non applicables sont null, pas inventés.
+Un contrôle risque sans seuil admissible est insufficient_data avec reason=no_admissible_threshold ; cela signifie insuffisance de preuve sous ce protocole, pas nécessairement échantillon petit. Un défaut d'hypothèses est not_applicable. Aucun comportement de repli vers un seuil empirique.
+La dépendance calibration est invalidée dès que le modèle, la recette ou la règle change ; invalidation n'annule jamais son exposition. La qualification Azure de MAPIE n'est pas implicite dans celle du prédicteur de base.
+
+8. ERREURS MINIMALES
+contract_invalid ; schema_version_unsupported ; stale_revision ; partition_not_authorized ; calibration_not_eligible ; capability_not_supported ; optional_dependency_missing ; backend_failed ; model_not_captured ; artifact_integrity_failed ; environment_unqualified ; scientific_config_changed ; template_layout_mismatch ; destination_not_empty.
+Mapping vers les erreurs et codes de sortie existants documenté, sans collisions. Erreur JSON : code, path, message, remediation, details bornés sans secrets. Pas de traceback brut comme seul message utilisateur.
+
+9. GARANTIES TRANSVERSALES
+- Le test final n'est jamais lu par export, diagnostics, choix de seuil, packaging ou replay cloud.
+- Les opérations de calcul existantes restent soumises aux confirmations du moteur ; installer une bibliothèque ne confirme rien.
+- Un modèle reconstruit possède un nouvel ID et ne reçoit pas la liaison de preuve d'un autre objet.
+- Invariants de sortie, schémas et hashes testés par des fixtures indépendantes du générateur.
+- Tolérances numériques explicites et versionnées ; pas d'ajustement automatique pour obtenir du vert.
+- Rétrocompatibilité : lecture historique conservée ; aucune fabrication rétroactive d'objet évalué.
+- Runtime et snapshot indépendants d'Hydra ; état d'étude indépendant de MLflow.
+- Toute dérogation à cette interface est une révision documentée, appliquée et testée par les deux côtés.

@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+name: @@text:environment_name@@
+version: @@yaml:environment_version@@
+# Built from the minimal context runtime/ (Dockerfile, requirements.lock and, when the
+# model was captured, the hypotrail_runtime wheel); no data and no study in it.
+build:
+  path: runtime
+  dockerfile_path: Dockerfile
+description: @@yaml:environment_description@@

@@ -1,0 +1,133 @@
+[project]
+name = "@@text:project_name@@"
+version = "@@text:project_version@@"
+description = "@@text:project_description@@"
+requires-python = ">=3.13,<3.14"
+# Dependencies are pinned in aml/pipelines/training/requirements.lock (environment.yml).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["runtime: needs hypotrail_runtime", "mlflow: needs MLflow", "hydra: needs Hydra"]
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+namespace-packages = ["src/pipeline"]
+
+# Python 3.13: the version qualified for the Hypotrail runtime (not the template's 3.11).
+target-version = "py313"
+
+[tool.ruff.lint.per-file-ignores]
+"schemas.py" = ["N805"]
+"tests/**.py" = ["S101"]
+
+[tool.ruff.lint]
+ignore = [
+    "PLR0913",  # Too many arguments to function call
+    "UP007",    # Use 'isort' for sorting imports
+    "D203",     # One blank line before class (incompatible with D211)
+    "D211",     # No blank lines allowed before class docstring (incompatible with D203)
+    "D213",     # Multi-line docstring summary should start at the second line (incompatible with D212)
+    "TID252",   # Prefer absolute imports over relative imports from parent modules
+    "S301",     ######! PUTTTTTT BACK
+]
+
+# check the rules definition: https://docs.astral.sh/ruff/rules/#rules
+select = [
+
+    "F",      # Pyflakes
+    "E",      # pycodestyle Errors
+    "W",      # pycodestyle Warnings
+    "C90",    # Mccabe Complexity
+    "N",      # pep8-naming
+    "I",      # Isort
+    "D",      # pydocstyle
+    "UP",     # pyupgrade
+    "YTT",    # flake8-2020
+    "ANN",    # flake8-annotations
+    "ASYNC",  # flake8-async
+    "TRIO",   # flake8-trio
+    "S",      # flake8-bandit
+    "BLE",    # flake8-blind-except
+    "FBT",    # flake8-boolean-trap
+    "B",      # flake8-bugbear
+    "A",      # flake8-builtins
+    "COM",    # flake8-commas
+    "C4",     # flake8-comprehensions
+    "DTZ",    # flake8-datetimez
+    "T10",    # flake8-debugger
+    "EM",     # flake8-errmsg
+    "FA",     # flake8-future-annotations
+    "ISC",    # flake8-implicit-str-concat
+    "ICN",    # flake8-import-conventions
+    "LOG",    # flake8-logging
+    "G",      # flake8-logging-format
+    "INP",    # flake8-no-pep420
+    "PIE",    # flake8-pie
+    "T20",    # flake8-print
+    "PYI",    # flake8-pyi
+    "PT",     # flake8-pytest-style
+    "Q",      # flake8-quotes
+    "RSE",    # flake8-raise
+    "RET",    # flake8-return
+    "SLF",    # flake8-self
+    "SLOT",   # flake8-slots
+    "SIM",    # flake8-simplify
+    "TID",    # flake8-tidy-imports
+    "TCH",    # flake8-type-checking
+    "INT",    # flake8-gettext
+    "ARG",    # flake8-unused-arguments
+    "PTH",    # flake8-use-pathlib
+    "TD",     # flake8-todos
+    "FIX",    # flake8-fixme
+    "ERA",    # eradicate
+    "PD",     # pandas-vet
+    "PGH",    # pygrep-hooks
+    "PL",     # Pylint
+    # "TRY",    # tryceratops
+    "FLY",    # flynt
+    "NPY",    # NumPy-specific rules
+    "PERF",   # Perflint
+    "FURB",   # refurb
+    "RUF",    # Ruff-specific rules
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "*.egg-info",
+    "__pycache__",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    ".tox",
+    "tests",
+    "venv",
+    ".ipynb_checkpoints",
+]
+
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10

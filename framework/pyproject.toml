@@ -22,12 +22,20 @@ dependencies = [
 # fits the Explainable Boosting Machine as a model family; pinned, and its version is part
 # of the code fingerprint of the fits that use it.
 
+[project.optional-dependencies]
+# Chantier B (docs/handoff/AZUREML-EXPORT-V1.md): `hypotrail export azureml` and the MLflow
+# packager. Hydra/OmegaConf run in the exported project; nothing in the engine imports them
+# outside mlkit.exporters.azureml and mlkit.integrations.mlflow_packaging, lazily.
+azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2"]
+
 [project.scripts]
 hypotrail = "mlkit.study.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0"]
 browser = ["playwright==1.55.0"]
+# The same pins as the azureml extra, so the export tests run in the gate environment.
+azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["mlkit"]

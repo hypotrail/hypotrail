@@ -1,0 +1,5 @@
+# Scientific (from the study's data contract and recipe): changing it is refused in replay.
+debug: false
+target: @@yaml:target@@
+features: @@yaml:features@@
+feature_types: @@yaml:feature_types@@

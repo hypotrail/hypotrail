@@ -1,0 +1,60 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: @@text:component_prefix@@_pipeline
+version: @@yaml:component_version@@
+description: @@yaml:pipeline_description@@
+# <inputs_and_outputs>
+
+inputs:
+  hypotrail_data_path:
+    type: uri_folder
+
+outputs:
+  pipeline_job_trained_model:
+    type: uri_folder
+    mode: rw_mount
+  pipeline_job_validation_report:
+    type: uri_folder
+    mode: rw_mount
+# </inputs_and_outputs>
+
+# <jobs>
+jobs:
+  prep_job:
+    type: command
+    component: ../../components/data_preparation.yml
+    inputs:
+      hypotrail_data_path: ${{parent.inputs.hypotrail_data_path}}
+    outputs:
+      preprocessed_data_path:
+        type: uri_folder
+        mode: rw_mount
+
+  split_job:
+    type: command
+    component: ../../components/data_splitting.yml
+    inputs:
+      hypotrail_data_path: ${{parent.inputs.hypotrail_data_path}}
+      preprocessed_data_path: ${{parent.jobs.prep_job.outputs.preprocessed_data_path}}
+    outputs:
+      partitions_path:
+        type: uri_folder
+        mode: rw_mount
+  train_job:
+    type: command
+    component: ../../components/training.yml
+    inputs:
+      hypotrail_data_path: ${{parent.inputs.hypotrail_data_path}}
+      partitions_path: ${{parent.jobs.split_job.outputs.partitions_path}}
+    outputs:
+      model_path: ${{parent.outputs.pipeline_job_trained_model}}
+  evaluate_job:
+    type: command
+    component: ../../components/evaluation.yml
+    inputs:
+      hypotrail_data_path: ${{parent.inputs.hypotrail_data_path}}
+      model_path: ${{parent.jobs.train_job.outputs.model_path}}
+    outputs:
+      reports_path: ${{parent.outputs.pipeline_job_validation_report}}
+# </jobs>

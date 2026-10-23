@@ -1,0 +1,19 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+description: @@yaml:job_description@@
+experiment_name: @@text:experiment_name@@
+tags:
+  project: @@yaml:project_name@@
+  hypotrail_study: @@yaml:study_id@@
+  hypotrail_study_revision: @@yaml:study_revision_text@@
+  hypotrail_snapshot_id: @@yaml:snapshot_id@@
+  hypotrail_export_id: @@yaml:export_id@@
+  hypotrail_model_role: rebuilt_candidate
+
+compute: azureml:@@text:compute@@
+component: pipeline.yml
+
+inputs:
+  hypotrail_data_path:
+    type: uri_folder
+    path: azureml:@@text:data_asset_name@@:@@text:data_asset_version@@

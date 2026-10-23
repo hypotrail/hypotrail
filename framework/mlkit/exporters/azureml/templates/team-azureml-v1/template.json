@@ -1,0 +1,447 @@
+{
+  "schema_version": "hypotrail.export_template/1",
+  "id": "team-azureml-v1",
+  "version": "1.0.0",
+  "layout": "layout.json",
+  "transport": "transport.json",
+  "transport_prefix": "ml_project_template/",
+  "addendum_lock": "env/requirements-azureml.lock",
+  "directories": [
+    ".ci",
+    ".vscode",
+    "aml/components",
+    "aml/pipelines/training",
+    "aml/pipelines/training/runtime",
+    "data/01_raw",
+    "data/hypotrail/contracts",
+    "data/hypotrail/development",
+    "data/hypotrail/models",
+    "docs/pages",
+    "docs/media",
+    "notebooks",
+    "src/conf/components",
+    "src/conf/hydra",
+    "src/pipeline",
+    "tests/pipeline"
+  ],
+  "copied": {
+    "evaluated_model": "data/hypotrail/models/evaluated/",
+    "runtime_wheel": "aml/pipelines/training/runtime/"
+  },
+  "capabilities": [
+    {
+      "task": "regression",
+      "family": "linear",
+      "output_kind": "regression_point",
+      "qualification": "local: native and MLflow pyfunc parity on synthetic and Auto MPG-like fixtures; Azure: not qualified"
+    }
+  ],
+  "python": "3.13",
+  "files": [
+    {
+      "path": ".pre-commit-config.yaml",
+      "kind": "preserved",
+      "source": "files/dot-pre-commit-config.yaml"
+    },
+    {
+      "path": ".vscode/extensions.json",
+      "kind": "preserved",
+      "source": "files/dot-vscode/extensions.json"
+    },
+    {
+      "path": "data/.gitignore",
+      "kind": "preserved",
+      "source": "files/data/dot-gitignore"
+    },
+    {
+      "path": "docs/media/.gitkeep",
+      "kind": "preserved",
+      "source": "files/docs/media/dot-gitkeep"
+    },
+    {
+      "path": "src/conf/hydra/job_logging/custom.yaml",
+      "kind": "preserved",
+      "source": "files/src/conf/hydra/job_logging/custom.yaml"
+    },
+    {
+      "path": "src/conf/logging_config.yaml",
+      "kind": "preserved",
+      "source": "files/src/conf/logging_config.yaml"
+    },
+    {
+      "path": "src/pipeline/utils/enums.py",
+      "kind": "preserved",
+      "source": "files/src/pipeline/utils/enums.py"
+    },
+    {
+      "path": "src/pipeline/utils/tracking.py",
+      "kind": "preserved",
+      "source": "files/src/pipeline/utils/tracking.py"
+    },
+    {
+      "path": "tests/conftest.py",
+      "kind": "preserved",
+      "source": "files/tests/conftest.py"
+    },
+    {
+      "path": "tests/pipeline/__init__.py",
+      "kind": "preserved",
+      "source": "files/tests/pipeline/__init__.py"
+    },
+    {
+      "path": "tests/pipeline/data_preparation/__init__.py",
+      "kind": "preserved",
+      "source": "files/tests/pipeline/data_preparation/__init__.py"
+    },
+    {
+      "path": ".gitignore",
+      "kind": "adapted",
+      "source": "files/dot-gitignore"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "kind": "adapted",
+      "source": "files/dot-vscode/launch.json"
+    },
+    {
+      "path": ".vscode/tasks.json",
+      "kind": "adapted",
+      "source": "files/dot-vscode/tasks.json"
+    },
+    {
+      "path": ".ci/pipeline.yml",
+      "kind": "adapted",
+      "source": "files/dot-ci/pipeline.yml"
+    },
+    {
+      "path": "Makefile",
+      "kind": "adapted",
+      "source": "files/Makefile"
+    },
+    {
+      "path": "cli-aliases.sh",
+      "kind": "adapted",
+      "source": "files/cli-aliases.sh"
+    },
+    {
+      "path": "src/pipeline/data_preparation/main.py",
+      "kind": "adapted",
+      "source": "files/src/pipeline/data_preparation/main.py"
+    },
+    {
+      "path": "src/pipeline/data_splitting/main.py",
+      "kind": "adapted",
+      "source": "files/src/pipeline/data_splitting/main.py"
+    },
+    {
+      "path": "src/pipeline/training/main.py",
+      "kind": "adapted",
+      "source": "files/src/pipeline/training/main.py"
+    },
+    {
+      "path": "src/pipeline/evaluation/main.py",
+      "kind": "adapted",
+      "source": "files/src/pipeline/evaluation/main.py"
+    },
+    {
+      "path": "src/pipeline/utils/data_management.py",
+      "kind": "adapted",
+      "source": "files/src/pipeline/utils/data_management.py"
+    },
+    {
+      "path": "tests/pipeline/data_preparation/test_main.py",
+      "kind": "adapted",
+      "source": "files/tests/pipeline/data_preparation/test_main.py"
+    },
+    {
+      "path": "docs/pages/.order",
+      "kind": "adapted",
+      "source": "files/docs/pages/dot-order"
+    },
+    {
+      "path": "README.md",
+      "kind": "rendered",
+      "source": "files/README.md"
+    },
+    {
+      "path": "pyproject.toml",
+      "kind": "rendered",
+      "source": "files/pyproject.toml"
+    },
+    {
+      "path": "environment.yml",
+      "kind": "rendered",
+      "source": "files/environment.yml"
+    },
+    {
+      "path": ".vscode/settings.json",
+      "kind": "rendered",
+      "source": "files/dot-vscode/settings.json"
+    },
+    {
+      "path": ".ci/deploy-pipeline.yml",
+      "kind": "rendered",
+      "source": "files/dot-ci/deploy-pipeline.yml"
+    },
+    {
+      "path": "aml/components/data_preparation.yml",
+      "kind": "rendered",
+      "source": "files/aml/components/data_preparation.yml"
+    },
+    {
+      "path": "aml/components/data_splitting.yml",
+      "kind": "rendered",
+      "source": "files/aml/components/data_splitting.yml"
+    },
+    {
+      "path": "aml/components/evaluation.yml",
+      "kind": "rendered",
+      "source": "files/aml/components/evaluation.yml"
+    },
+    {
+      "path": "aml/components/training.yml",
+      "kind": "rendered",
+      "source": "files/aml/components/training.yml"
+    },
+    {
+      "path": "aml/pipelines/training/aml-environment.yml",
+      "kind": "rendered",
+      "source": "files/aml/pipelines/training/aml-environment.yml"
+    },
+    {
+      "path": "aml/pipelines/training/data.yml",
+      "kind": "rendered",
+      "source": "files/aml/pipelines/training/data.yml"
+    },
+    {
+      "path": "aml/pipelines/training/pipeline-job.yml",
+      "kind": "rendered",
+      "source": "files/aml/pipelines/training/pipeline-job.yml"
+    },
+    {
+      "path": "aml/pipelines/training/pipeline.yml",
+      "kind": "rendered",
+      "source": "files/aml/pipelines/training/pipeline.yml"
+    },
+    {
+      "path": "src/conf/base_config.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/base_config.yaml"
+    },
+    {
+      "path": "src/conf/config.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/config.yaml"
+    },
+    {
+      "path": "src/conf/components/data_preparation/default.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/components/data_preparation/default.yaml"
+    },
+    {
+      "path": "src/conf/components/data_splitting/default.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/components/data_splitting/default.yaml"
+    },
+    {
+      "path": "src/conf/components/evaluation/default.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/components/evaluation/default.yaml"
+    },
+    {
+      "path": "src/conf/components/training/default.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/components/training/default.yaml"
+    },
+    {
+      "path": "src/conf/components/training/random_forest.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/components/training/random_forest.yaml"
+    },
+    {
+      "path": "src/pipeline/utils/schemas.py",
+      "kind": "rendered",
+      "source": "files/src/pipeline/utils/schemas.py"
+    },
+    {
+      "path": "docs/pages/architecture.md",
+      "kind": "rendered",
+      "source": "files/docs/pages/architecture.md"
+    },
+    {
+      "path": "docs/pages/code.md",
+      "kind": "rendered",
+      "source": "files/docs/pages/code.md"
+    },
+    {
+      "path": "docs/pages/data.md",
+      "kind": "rendered",
+      "source": "files/docs/pages/data.md"
+    },
+    {
+      "path": "docs/pages/references.md",
+      "kind": "rendered",
+      "source": "files/docs/pages/references.md"
+    },
+    {
+      "path": "docs/pages/deployment.md",
+      "kind": "rendered",
+      "source": "files/docs/pages/deployment.md"
+    },
+    {
+      "path": "src/conf/hypotrail/replay.yaml",
+      "kind": "rendered",
+      "source": "files/src/conf/hypotrail/replay.yaml"
+    },
+    {
+      "path": "aml/pipelines/training/runtime/Dockerfile",
+      "kind": "rendered",
+      "source": "files/aml/pipelines/training/runtime/Dockerfile"
+    },
+    {
+      "path": ".amlignore",
+      "kind": "added",
+      "source": "files/dot-amlignore"
+    },
+    {
+      "path": "src/pipeline/utils/project.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/project.py"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/__init__.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/hypotrail/__init__.py"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/errors.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/hypotrail/errors.py"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/runtime_bridge.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/hypotrail/runtime_bridge.py"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/contracts.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/hypotrail/contracts.py"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/config.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/hypotrail/config.py"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/steps.py",
+      "kind": "added",
+      "source": "files/src/pipeline/utils/hypotrail/steps.py"
+    },
+    {
+      "path": "tests/test_export_contract.py",
+      "kind": "added",
+      "source": "files/tests/test_export_contract.py"
+    },
+    {
+      "path": "aml/pipelines/training/runtime/README.md",
+      "kind": "added",
+      "source": "files/aml/pipelines/training/runtime/README.md"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/canonical.py",
+      "kind": "shared",
+      "module": "mlkit.exporters.azureml.canonical"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/projection.py",
+      "kind": "shared",
+      "module": "mlkit.exporters.azureml.projection"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/transfer.py",
+      "kind": "shared",
+      "module": "mlkit.exporters.azureml.transfer"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/azure_yaml.py",
+      "kind": "shared",
+      "module": "mlkit.exporters.azureml.azure_yaml"
+    },
+    {
+      "path": "src/pipeline/utils/hypotrail/mlflow_packaging.py",
+      "kind": "shared",
+      "module": "mlkit.integrations.mlflow_packaging"
+    },
+    {
+      "path": "notebooks/01_first_draft.ipynb",
+      "kind": "generated",
+      "generator": "notebook"
+    },
+    {
+      "path": "src/conf/hypotrail/contracts/model-recipe.json",
+      "kind": "generated",
+      "generator": "recipe"
+    },
+    {
+      "path": "src/conf/hypotrail/contracts/data-contract.json",
+      "kind": "generated",
+      "generator": "data_contract"
+    },
+    {
+      "path": "src/conf/azure/target.yaml",
+      "kind": "generated",
+      "generator": "azure_target"
+    },
+    {
+      "path": "data/hypotrail/contracts/model-recipe.json",
+      "kind": "generated",
+      "generator": "recipe"
+    },
+    {
+      "path": "data/hypotrail/contracts/data-contract.json",
+      "kind": "generated",
+      "generator": "data_contract"
+    },
+    {
+      "path": "data/hypotrail/contracts/development-plan.json",
+      "kind": "generated",
+      "generator": "plan"
+    },
+    {
+      "path": "data/hypotrail/contracts/deployment-snapshot.json",
+      "kind": "generated",
+      "generator": "snapshot"
+    },
+    {
+      "path": "data/hypotrail/contracts/scientific-projection.json",
+      "kind": "generated",
+      "generator": "projection"
+    },
+    {
+      "path": "data/hypotrail/contracts/readiness.json",
+      "kind": "generated",
+      "generator": "readiness"
+    },
+    {
+      "path": "aml/pipelines/training/requirements.lock",
+      "kind": "generated",
+      "generator": "lock"
+    },
+    {
+      "path": "aml/pipelines/training/runtime/requirements.lock",
+      "kind": "generated",
+      "generator": "lock"
+    },
+    {
+      "path": "data/hypotrail/contracts/export-manifest.json",
+      "kind": "generated",
+      "generator": "export_manifest"
+    },
+    {
+      "path": "data/hypotrail/SHA256SUMS",
+      "kind": "generated",
+      "generator": "sha256sums"
+    }
+  ]
+}

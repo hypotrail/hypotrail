@@ -1,0 +1,13 @@
+# Inactive profile kept from the team template. It was NOT evaluated by this study and is
+# not selected: choosing it (components/training=random_forest) is refused in a faithful
+# replay (scientific_config_changed), and nothing it would produce inherits a verdict.
+status: inactive_not_evaluated
+task: @@yaml:task@@
+model:
+  type: "random-forest"
+  params:
+    n_estimators: 10
+preprocessing: @@yaml:preprocessing@@
+seeds: {}
+output_contract: @@yaml:output_contract@@
+mode: rebuild_final_candidate

@@ -1,0 +1,21 @@
+# <component>
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: @@text:component_prefix@@_evaluate_model
+display_name: EvaluateModel@@text:display_suffix@@
+version: @@yaml:component_version@@
+type: command
+inputs:
+  hypotrail_data_path:
+    type: uri_folder
+  model_path:
+    type: uri_folder
+outputs:
+  reports_path:
+    type: uri_folder
+code: ./../../
+environment: azureml:@@text:environment_name@@:@@text:environment_version@@
+command: >-
+  python -m src.pipeline.evaluation.main mlflow_tracking=@@text:mlflow_tracking_cloud@@ data_dir=${{inputs.hypotrail_data_path}} models.path=${{inputs.model_path}} reports.path=${{outputs.reports_path}}
+
+
+# </component>
