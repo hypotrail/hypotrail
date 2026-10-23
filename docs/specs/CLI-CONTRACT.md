@@ -25,7 +25,8 @@ that uses none of them keeps its identities and payloads.
   `inputs.predictor` and `inputs.results["predictor.capture"]`, scores the final rows with the
   reloaded capture (no refit) and adds `values.predictor`; after promotion `run.result`
   carries `evidence_binding` (`written` or `failed: ...`) and
-  `.hypotrail/predictors/<id>/evidence_binding.json` holds `hypotrail.evidence_binding/1`.
+  `.hypotrail/predictors/<id>/evidence/binding-<n>.json` holds `hypotrail.evidence_binding/1`,
+  named by the bundle document's `evidence_binding_path`.
 * **`run diagnostics.population`**: compares two development populations (first and last fold
   or window, or training and validation rows) on the model's feature columns, never the
   target (exposure `structural_inspection`); `values.diagnostic` is a

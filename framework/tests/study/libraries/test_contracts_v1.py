@@ -20,7 +20,8 @@ from mlkit.contracts import context as cx
 import docs_v1
 
 RECIPE_ID = '1996818f11ff94fbc23aad319264285f7ec32315aa546b85b6c8a8daa9330078'
-CONTRACT_ID = '07091cb20dc621bee14b626e67027f363eeff47efc61586cdbe85fd3d2d61cc4'
+# Updated at integration I1 (parser header and quotechar added before any release).
+CONTRACT_ID = 'cb1b66b94aae75e30e2936e045e6b3de1580c7201377795b74edf7894867bb39'
 VECTORS = [
     ({'b': 1, 'a': [3, 1, 2]}, b'{"a":[3,1,2],"b":1}',
      'c35614dff4239c844f2aba7b99dcf76087221bf13f20fa1fefbe4a4173a7ad12'),

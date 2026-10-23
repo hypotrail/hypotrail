@@ -244,6 +244,24 @@
    "title": "Case",
    "type": "object"
   },
+  "conclusion": {
+   "anyOf": [
+    {
+     "additionalProperties": {
+      "$ref": "#/$defs/JsonValue"
+     },
+     "propertyNames": {
+      "maxLength": 512,
+      "minLength": 1
+     },
+     "type": "object"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Conclusion"
+  },
   "dataset_sha256": {
    "pattern": "^[0-9a-f]{64}$",
    "title": "Dataset Sha256",
@@ -294,6 +312,15 @@
    "title": "Limitations",
    "type": "array"
   },
+  "metrics": {
+   "items": {
+    "maxLength": 512,
+    "minLength": 1,
+    "type": "string"
+   },
+   "title": "Metrics",
+   "type": "array"
+  },
   "predictor": {
    "$ref": "#/$defs/ExportPredictor"
   },
@@ -338,6 +365,17 @@
    ],
    "title": "Task",
    "type": "string"
+  },
+  "validity": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Validity",
+   "type": "object"
   }
  },
  "required": [
@@ -353,7 +391,10 @@
   "development_plan",
   "final_test",
   "predictor",
-  "limitations"
+  "limitations",
+  "validity",
+  "metrics",
+  "conclusion"
  ],
  "title": "ExportSource",
  "type": "object"

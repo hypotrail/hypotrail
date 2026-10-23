@@ -30,7 +30,8 @@ from .contracts import (ComputationContext, DataContract, DiagnosticResult,  # n
 from .errors import ContractError  # noqa: E402
 from .predictor import (BundleDescriptor, FittedPredictor, PredictionBatch,  # noqa: E402
                         Predictor, capture_predictor, check_parity, fit_predictor,
-                        load_predictor, verify_bundle, write_evidence_binding)
+                        load_predictor, read_evidence_binding, verify_bundle,
+                        write_evidence_binding)
 
 __all__ = [
     'ComputationContext', 'DataContract', 'DiagnosticResult', 'EvidenceBinding',
@@ -38,5 +39,5 @@ __all__ = [
     'PredictorBundle', 'UncertaintyResult', 'parse', 'validate_data_contract',
     'validate_recipe', 'ContractError', 'BundleDescriptor', 'FittedPredictor',
     'PredictionBatch', 'Predictor', 'capture_predictor', 'check_parity', 'fit_predictor',
-    'load_predictor', 'verify_bundle', 'write_evidence_binding',
+    'load_predictor', 'read_evidence_binding', 'verify_bundle', 'write_evidence_binding',
 ]

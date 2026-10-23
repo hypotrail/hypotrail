@@ -33,7 +33,8 @@ RECIPE = {
 DATA_CONTRACT = {
     'schema_version': 'hypotrail.data_contract/1', 'dataset_id': 'synthetic',
     'source_sha256': 'a' * 64, 'format': 'csv',
-    'parser': {'encoding': 'utf-8', 'delimiter': ';', 'na_values': ['NA'], 'decimal': '.'},
+    'parser': {'encoding': 'utf-8', 'delimiter': ';', 'header': True, 'quotechar': '"',
+               'na_values': ['NA'], 'decimal': '.'},
     'columns': [
         {'name': 'age', 'physical_type': 'float64', 'semantic_type': 'numeric',
          'nullable': True, 'allowed_values': None, 'role': 'feature'},

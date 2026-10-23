@@ -1,8 +1,7 @@
 """Fixtures of the Azure ML export tests.
 
-``hypotrail_runtime`` here is the PRIVATE TEST DOUBLE of ``fixtures/fake_runtime`` (it is
-put on ``sys.path`` by these fixtures only); the real runtime of chantier A replaces it in
-the deferred integration suite. MLflow and Hydra come from the ``azureml`` dependency
+``hypotrail_runtime`` is the real runtime of workstream A (the private test double used
+before the integration was removed). MLflow and Hydra come from the ``azureml`` dependency
 group; without them the tests that need them are skipped with that reason.
 """
 from __future__ import annotations
@@ -20,15 +19,11 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / 'fixtures'))
 os.environ.setdefault('MLFLOW_DISABLE_AGENT_HINT', '1')
 
-from export_env import FAKE_RUNTIME, HAS_MLFLOW, REAL_RUNTIME  # noqa: E402
+from export_env import HAS_MLFLOW  # noqa: E402
 
 
 @pytest.fixture(scope='session')
 def runtime():
-    if REAL_RUNTIME:
-        return importlib.import_module('hypotrail_runtime')
-    if str(FAKE_RUNTIME) not in sys.path:
-        sys.path.insert(0, str(FAKE_RUNTIME))
     warnings.filterwarnings('ignore', module='mlflow')
     return importlib.import_module('hypotrail_runtime')
 

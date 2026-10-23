@@ -42,12 +42,14 @@ PAYLOAD = 'payload/model.pkl'
 RECIPE = 'recipe.json'
 DATA_CONTRACT = 'data_contract.json'
 MANIFEST = 'predictor.json'
-BUNDLE = 'bundle.json'
+BUNDLE = 'predictor_bundle.json'
 CONTEXT = 'computation_context.json'
 LOCK = 'environment/requirements.lock'
 PARITY_FEATURES = 'parity/features.json'
 PARITY_EXPECTED = 'parity/expected_outputs.json'
-EVIDENCE_BINDING = 'evidence_binding.json'
+# Evidence bindings are versioned beside the hashed content: ``evidence/binding-<n>.json``;
+# the bundle document's ``evidence_binding_path`` names the current one (CONTRAT §5).
+EVIDENCE_DIR = 'evidence'
 PACKAGES_DIR = 'packages'
 # Spec L-10: proposed float64 tolerances; classes and selections must match exactly. They
 # are never relaxed automatically.
@@ -292,18 +294,56 @@ def semantic_dependencies() -> list[dict]:
     return out
 
 
+def runtime_closure(root: str = DISTRIBUTION) -> dict[str, str]:
+    """``{distribution: version}`` of the installed distributions the runtime needs to load
+    and run a predictor: the transitive closure of ``root``'s requirements (extras and
+    unmet environment markers left out), including ``root``."""
+    import re
+    from importlib.metadata import PackageNotFoundError, distribution
+    name_re = re.compile(r'^\s*([A-Za-z0-9][A-Za-z0-9._-]*)')
+    seen: dict[str, str] = {}
+    todo = [root]
+    while todo:
+        name = todo.pop()
+        key = name.lower().replace('_', '-')
+        if key in seen:
+            continue
+        try:
+            dist = distribution(name)
+        except PackageNotFoundError:
+            continue
+        seen[key] = dist.version
+        for req in dist.requires or []:
+            requirement, _, marker = req.partition(';')
+            if 'extra' in marker:
+                continue
+            if marker.strip() and not _marker_holds(marker):
+                continue
+            m = name_re.match(requirement)
+            if m:
+                todo.append(m.group(1))
+    return seen
+
+
+def _marker_holds(marker: str) -> bool:
+    try:
+        from packaging.markers import Marker
+    except ImportError:              # pragma: no cover - keep the requirement when unsure
+        return True
+    return Marker(marker.strip()).evaluate()
+
+
 def environment_lock() -> bytes:
-    """Every installed distribution and version, sorted (audit only: the semantic
-    dependencies, not this lock, enter a computation's identity)."""
-    from importlib.metadata import distributions
-    seen = {}
-    for dist in distributions():
-        name = (dist.metadata.get('Name') or '').strip()
-        if name:
-            seen[name.lower().replace('_', '-')] = dist.version
-    lines = [f'{n}=={v}' for n, v in sorted(seen.items())]
+    """The pinned environment of the predictor (audit: the semantic dependencies, not this
+    lock, enter a computation's identity): every distribution of the runtime's dependency
+    closure, ``name==version``, sorted. Packages of the engine the predictor does not need
+    (notebooks, browsers, diagnostics backends) are not part of it."""
+    pins = runtime_closure()
+    pins.pop(DISTRIBUTION, None)          # shipped as the bundle's own wheel
+    lines = [f'{n}=={v}' for n, v in sorted(pins.items())]
     header = [f'# python {platform.python_version()} ({sys.implementation.name})',
-              f'# platform {platform.platform()}']
+              f'# platform {platform.platform()}',
+              f'# closure of {DISTRIBUTION} {__version__} requirements']
     return ('\n'.join(header + lines) + '\n').encode('utf-8')
 
 
@@ -385,6 +425,7 @@ def capture_predictor(fitted: FittedPredictor, context: ComputationContext | Map
             parity_frame_document(parity_view, contract, features)) + b'\n')
         _write(tmp, PARITY_EXPECTED, canonical.dumps(
             {'schema_version': 'hypotrail.parity_outputs/1', 'kind': recipe.output_contract.kind,
+             'columns': list(recipe.output_contract.columns),
              'values': [float(v) for v in expected]}) + b'\n')
         payload = _file_entry(tmp, PAYLOAD)
         manifest_doc = {
@@ -431,6 +472,7 @@ def capture_predictor(fitted: FittedPredictor, context: ComputationContext | Map
             packages = _package(tmp, packager, native, parity_spec)
             _write_bundle(tmp, manifest.predictor_id, parity_spec, packages)
             native = verify_bundle(tmp)
+            _verify_packages(tmp, packager, packages, parity_spec)
         if destination.exists():
             destination.rmdir()
         os.replace(tmp, destination)
@@ -454,7 +496,7 @@ def _write_bundle(root: Path, predictor_id: str, parity_spec: Mapping,
     files = []
     for path in sorted(p for p in root.rglob('*') if p.is_file()):
         rel = path.relative_to(root).as_posix()
-        if rel in (BUNDLE, EVIDENCE_BINDING):
+        if rel == BUNDLE or rel.startswith(EVIDENCE_DIR + '/'):
             continue
         files.append(_file_entry(root, rel))
     doc = {'schema_version': 'hypotrail.predictor_bundle/1', 'predictor_id': predictor_id,
@@ -467,9 +509,20 @@ def _write_bundle(root: Path, predictor_id: str, parity_spec: Mapping,
     return bundle
 
 
+def _contract_doc(model, value):
+    """A packager's answer as a contract model: the model itself, an object exposing
+    ``to_contract()`` (its contract v1 document), or a mapping."""
+    if isinstance(value, model):
+        return value
+    if hasattr(value, 'to_contract'):
+        value = value.to_contract()
+    return parse(model, value)
+
+
 def _package(root: Path, packager, native: BundleDescriptor, parity_spec: Mapping) -> list:
     """Run the injected packager on the verified native bundle (workstream B implements
-    it; the runtime imports no packaging library)."""
+    it; the runtime imports no packaging library). Its descriptor is recorded beside the
+    package (``packages/<format>.descriptor.json``), never inside it."""
     out = []
     fmt = getattr(packager, 'format', None)
     if not isinstance(fmt, str) or not fmt:
@@ -479,31 +532,53 @@ def _package(root: Path, packager, native: BundleDescriptor, parity_spec: Mappin
     target = root / rel
     target.mkdir(parents=True)
     try:
-        descriptor = packager.package(root, target, dict(parity_spec))
-        descriptor = descriptor if isinstance(descriptor, PackageDescriptor) else \
-            parse(PackageDescriptor, descriptor)
-        check = packager.verify(root, target, dict(parity_spec))
-        check = check if isinstance(check, ParityResult) else parse(ParityResult, check)
+        descriptor = _contract_doc(PackageDescriptor,
+                                   packager.package(root, target, dict(parity_spec)))
     except ContractError:
         raise
     except Exception as exc:
         raise ContractError('backend_failed', f'The packager {fmt} failed: '
                             f'{type(exc).__name__}: {exc}',
                             remediation='Fix the packaging environment; the final test stays '
-                                        'closed.') from exc
+                                        'closed.', details=_error_details(exc)) from exc
     if descriptor.predictor_id != native.predictor_id:
         raise ContractError('artifact_integrity_failed', 'The package names another predictor.',
                             remediation='Package the bundle that was captured.')
-    if descriptor.parity_result.status != 'ok' or check.status != 'ok':
+    if descriptor.parity_result.status != 'ok':
         raise ContractError('artifact_integrity_failed', f'The {fmt} package does not '
                             'reproduce the native predictor.',
                             remediation='The capture is not usable; nothing is relaxed.',
-                            details={'parity': check.model_dump(mode='json')})
-    manifest_rel = f'{rel}/package_descriptor.json'
+                            details={'parity': descriptor.parity_result.model_dump(mode='json')})
+    manifest_rel = f'{PACKAGES_DIR}/{fmt}.descriptor.json'
     manifest_sha = canonical.write_json(root / manifest_rel, descriptor)
     out.append((descriptor, {'format': fmt, 'artifact_id': descriptor.artifact_id,
                              'relative_path': rel, 'manifest_sha256': manifest_sha}))
     return out
+
+
+def _error_details(exc) -> dict:
+    to_dict = getattr(exc, 'to_dict', None)
+    return dict(to_dict()) if callable(to_dict) else {}
+
+
+def _verify_packages(root: Path, packager, packages: list, parity_spec: Mapping) -> None:
+    """Ask the packager to verify its package against the final bundle document."""
+    for _, entry in packages:
+        try:
+            check = _contract_doc(ParityResult, packager.verify(root, root / entry[
+                'relative_path'], dict(parity_spec)))
+        except ContractError:
+            raise
+        except Exception as exc:
+            raise ContractError('backend_failed', f'Verifying the {entry["format"]} package '
+                                f'failed: {type(exc).__name__}: {exc}',
+                                remediation='Fix the packaging environment.',
+                                details=_error_details(exc)) from exc
+        if check.status != 'ok':
+            raise ContractError('artifact_integrity_failed', f'The {entry["format"]} package '
+                                'does not reproduce the native predictor.',
+                                remediation='The capture is not usable; nothing is relaxed.',
+                                details={'parity': check.model_dump(mode='json')})
 
 
 # --- verify and load -------------------------------------------------------------------------
@@ -545,10 +620,17 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
                                 'match its recorded size and digest.',
                                 path=entry.relative_path, remediation='Refuse this bundle.')
     present = {p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
-    extra = sorted(present - listed - {BUNDLE, EVIDENCE_BINDING})
+    extra = sorted(p for p in present - listed - {BUNDLE}
+                   if not p.startswith(EVIDENCE_DIR + '/'))
     if extra:
         raise ContractError('artifact_integrity_failed', 'The bundle holds unlisted files.',
                             remediation='Refuse this bundle.', details={'files': extra})
+    if bundle.evidence_binding_path is not None and (
+            not bundle.evidence_binding_path.startswith(EVIDENCE_DIR + '/')
+            or not (root / bundle.evidence_binding_path).is_file()):
+        raise ContractError('artifact_integrity_failed', 'The evidence binding path is not a '
+                            'recorded binding.', path='evidence_binding_path',
+                            remediation='Refuse this bundle.')
     for rel in (bundle.recipe_path, bundle.data_contract_path, bundle.predictor_manifest_path,
                 bundle.parity.features_path, bundle.parity.expected_outputs_path):
         if rel not in listed:
@@ -643,8 +725,9 @@ def check_parity(predictor: Predictor) -> ParityResult:
 
 
 def write_evidence_binding(bundle_dir: Path, binding: Mapping) -> Path:
-    """Write (or replace by a new version) the mutable evidence binding beside the bundle;
-    the hashed content is never modified."""
+    """Record a new version of the evidence binding (``evidence/binding-<n>.json``) and
+    point the bundle document's ``evidence_binding_path`` at it. The hashed content (the
+    predictor manifest and every listed file) is never modified; earlier bindings stay."""
     from .contracts import EvidenceBinding
     root = Path(bundle_dir)
     desc = verify_bundle(root)
@@ -652,8 +735,29 @@ def write_evidence_binding(bundle_dir: Path, binding: Mapping) -> Path:
     if doc.predictor_id != desc.predictor_id:
         raise ContractError('artifact_integrity_failed', 'A binding names its own predictor '
                             'only.', remediation='Bind the evaluated predictor id.')
-    path = root / EVIDENCE_BINDING
-    tmp = root / f'.{EVIDENCE_BINDING}.tmp'
-    canonical.write_json(tmp, doc)
-    os.replace(tmp, path)
-    return path
+    folder = root / EVIDENCE_DIR
+    folder.mkdir(exist_ok=True)
+    n = 1 + max([int(p.stem.split('-')[1]) for p in folder.glob('binding-*.json')
+                 if p.stem.split('-')[1].isdigit()] or [0])
+    rel = f'{EVIDENCE_DIR}/binding-{n}.json'
+    canonical.write_json(root / rel, doc)
+    bundle = desc.bundle.model_copy(update={'evidence_binding_path': rel})
+    tmp = root / f'.{BUNDLE}.tmp'
+    canonical.write_json(tmp, parse(PredictorBundle, bundle.model_dump(mode='json')))
+    os.replace(tmp, root / BUNDLE)
+    return root / rel
+
+
+def read_evidence_binding(bundle_dir: Path):
+    """The current evidence binding of a verified bundle, or None (``unassessed``)."""
+    from .contracts import EvidenceBinding
+    root = Path(bundle_dir)
+    desc = verify_bundle(root)
+    rel = desc.bundle.evidence_binding_path
+    if rel is None:
+        return None
+    doc = parse(EvidenceBinding, _inside(root, rel).read_bytes())
+    if doc.predictor_id != desc.predictor_id:
+        raise ContractError('artifact_integrity_failed', 'The evidence binding names another '
+                            'predictor.', path=rel, remediation='Refuse this binding.')
+    return doc

@@ -44,6 +44,143 @@ def _limitations(predictor: dict, opened: bool) -> list[str]:
     return out
 
 
+def _protocol(split: dict) -> str | None:
+    value = split.get('value') if split.get('status') == 'confirmed' else None
+    if not isinstance(value, dict) or not value.get('method'):
+        return None
+    method = value['method']
+    detail = '-'.join(f'{k}={value[k]}' for k in sorted(value) if k != 'method'
+                      and isinstance(value[k], (int, float, str)))
+    return f'{method}:{detail}' if detail else method
+
+
+def _membership(keys: list) -> str:
+    return hashlib.sha256('\n'.join(sorted(keys)).encode()).hexdigest()
+
+
+def _partitions(store, state, results: list) -> list:
+    """The development partitions of the current split, by row key (development rows only;
+    the final test is named by its status and size, never by its keys)."""
+    from mlkit.study import activities as act
+    split_rid = state['current'].get('split')
+    if split_rid is None or not any(r['slot'] == 'split' and r['current'] for r in results):
+        return []
+    out = []
+    folds = act.fold_assignment(store, split_rid)
+    if folds:
+        for fold in sorted(set(folds.values())):
+            keys = [k for k, f in folds.items() if f == fold]
+            out.append({'id': f'fold_{fold}', 'role': f'fold_{fold}', 'row_keys': keys,
+                        'membership_sha256': _membership(keys),
+                        'exposure_status': 'exposed'})
+        return out
+    plan = act.evaluation_membership(store, split_rid)
+    if plan is not None:
+        for i, fold in enumerate(plan.get('folds') or [], start=1):
+            keys = list(fold['validation_keys'])
+            out.append({'id': f'fold_{i}', 'role': f'fold_{i}', 'row_keys': keys,
+                        'membership_sha256': _membership(keys), 'exposure_status': 'exposed'})
+        warmup = list(plan.get('unscored_keys') or [])
+        if warmup:
+            out.append({'id': 'warmup', 'role': 'train', 'row_keys': warmup,
+                        'membership_sha256': _membership(warmup),
+                        'exposure_status': 'exposed'})
+        return out
+    keys = act.split_keys(store, split_rid)
+    for role in ('train', 'validation'):
+        out.append({'id': role, 'role': role, 'row_keys': list(keys[role]),
+                    'membership_sha256': _membership(list(keys[role])),
+                    'exposure_status': 'exposed'})
+    return out
+
+
+def _contracts(store, state, predictor: dict, limitations: list) -> dict:
+    """The recipe and the data contract: those of the captured bundle when there is one;
+    otherwise derived from the chosen configuration without any fit (the column types of the
+    development rows are read, no value is used), when the model has no tuned
+    hyperparameter. A tuned model's value exists only after a fit: no recipe is invented."""
+    import json
+    if predictor['bundle_dir'] is not None:
+        from hypotrail_runtime import verify_bundle
+        desc = verify_bundle(Path(predictor['bundle_dir']))
+        bundle = Path(predictor['bundle_dir'])
+        return {'model_recipe': json.loads((bundle / desc.bundle.recipe_path).read_bytes()),
+                'data_contract': json.loads((bundle / desc.bundle.data_contract_path)
+                                            .read_bytes()),
+                'source': 'captured_bundle', 'bundle_dir': str(bundle)}
+    from mlkit.study import state as st
+    config = st.choice_config(state)
+    if config is None:
+        limitations.append('No configuration is chosen: no recipe can be described.')
+        return {'source': 'none'}
+    from mlkit.study import case as c, data as dt, fit, partition
+    from . import capture
+    from .recipe import data_contract_from_case, recipe_from_fit
+    from hypotrail_runtime.errors import ContractError
+    case = c.case_of(state)
+    try:
+        model_inputs, model_params = capture._chosen(state, case, config)
+    except Exception:                    # noqa: BLE001 - the baseline: no fitted predictor
+        limitations.append('The chosen model is the constant baseline: no recipe.')
+        return {'source': 'none'}
+    if model_params.get('tuning') and model_params.get('tuned_value') is None:
+        limitations.append('The chosen model has a tuned hyperparameter, whose value exists '
+                           'only after a fit: capture the predictor to export its recipe.')
+        return {'source': 'none'}
+    keys = partition.development_keys(store.read_blob, partition.inputs(state))
+    if keys is None:
+        keys = dt.row_index(case).keys
+    frame = fit._ordered(dt.load_development(case, keys).frame)
+    choice = st.choice_decision(state)
+    decision = state['decisions'][choice]
+    slot = capture._evaluation_slot(state)
+    try:
+        recipe, _ = recipe_from_fit(case, frame, model_inputs, model_params,
+                                    selection_reference={
+                                        'decision_id': choice,
+                                        'revision': int(decision['revision']),
+                                        'evidence_ids': [state['current'][slot]]
+                                        if slot in state['current'] else []})
+        contract = data_contract_from_case(case, frame,
+                                           dataset_sha256=state['dataset']['sha256'],
+                                           features=list(recipe.features))
+    except ContractError as exc:
+        limitations.append(f'No recipe: {exc.message}')
+        return {'source': 'none'}
+    limitations.append('The recipe is described from the chosen configuration; no model was '
+                       'captured, so the export carries no evaluated predictor.')
+    return {'model_recipe': recipe.model_dump(mode='json'),
+            'data_contract': contract.model_dump(mode='json'), 'source': 'configuration'}
+
+
+def _validity(contracts: dict, results: list, predictor: dict) -> dict:
+    current = {r['result_id']: r['current'] for r in results}
+    evidence = ((contracts.get('model_recipe') or {}).get('selection_reference') or {}) \
+        .get('evidence_ids') or []
+    return {'selected_result_current': bool(evidence) and all(current.get(e) is True
+                                                               for e in evidence),
+            'artifact_status': predictor['status'],
+            'evidence_status': predictor['evidence_status']}
+
+
+def _case(state) -> dict:
+    from mlkit.study import case as c
+    try:
+        title = c.case_of(state).document.get('title')
+    except Exception:                    # noqa: BLE001 - a moved case file: id only
+        title = None
+    return {'id': state['case']['id'], 'title': title, 'sha256': state['case']['sha256']}
+
+
+def _conclusion(state) -> dict | None:
+    d = (state.get('decisions') or {}).get('conclusion') or {}
+    if d.get('status') != 'confirmed':
+        return None
+    value = d.get('value')
+    return {'verdict': value.get('verdict') if isinstance(value, dict) else value,
+            'revision': d.get('revision')}
+
+
 def read_export_source(study_path, expected_revision: int) -> ExportSource:
     from mlkit.study import read, registry, state as st
     from mlkit.study.store import StudyStore
@@ -96,27 +233,30 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
                 predictor['evidence_status'] = 'evaluated' if study.currency(final_rid)[
                     'current'] else 'stale'
     split = state['decisions'].get('split') or {}
-    plan = {'split': split.get('value') if split.get('status') == 'confirmed' else None,
-            'split_result_id': state['current'].get('split'),
-            'configuration': st.choice_config(state)}
     part = state.get('partition') or {}
     final_test = {'status': 'opened' if opened else ('sealed' if part else 'absent'),
                   'n_rows': (part.get('final_test') or {}).get('n_rows'),
                   'final_result_id': final_rid}
-    contracts = {}
-    if predictor['bundle_dir'] is not None:
-        contracts = {'recipe_path': str(Path(predictor['bundle_dir']) / 'recipe.json'),
-                     'data_contract_path': str(Path(predictor['bundle_dir']) /
-                                               'data_contract.json'),
-                     'bundle_manifest_path': str(Path(predictor['bundle_dir']) / 'bundle.json')}
+    plan = {'split': split.get('value') if split.get('status') == 'confirmed' else None,
+            'split_result_id': state['current'].get('split'),
+            'configuration': st.choice_config(state),
+            'protocol_id': _protocol(split),
+            'partitions': _partitions(store, state, results),
+            'final_test': {'status': final_test['status'], 'n_rows': final_test['n_rows']}}
+    limitations = _limitations(predictor, opened)
+    contracts = _contracts(store, state, predictor, limitations)
     doc = {'schema_version': 'hypotrail.export_source/1',
            'study_id': hashlib.sha256(str(Path(study_path).resolve()).encode()).hexdigest()[:16],
            'revision': study.revision, 'task': st.task_of(state),
-           'case': {'id': state['case']['id'], 'sha256': state['case']['sha256']},
+           'case': _case(state),
            'dataset_sha256': state['dataset']['sha256'], 'scientific_contracts': contracts,
            'decisions': decisions, 'results': results, 'development_plan': plan,
            'final_test': final_test, 'predictor': predictor,
-           'limitations': _limitations(predictor, opened),
+           'limitations': limitations,
+           'validity': _validity(contracts, results, predictor),
+           'metrics': ['mae', 'rmse'] if st.task_of(state) == st.REGRESSION
+           else ['precision', 'recall', 'roc_auc', 'average_precision'],
+           'conclusion': _conclusion(state),
            'extensions': {'hypotrail.capabilities': {
                'native_predictor': predictor['status'],
                # The engine reserves no calibration partition (spec L-15): the MAPIE

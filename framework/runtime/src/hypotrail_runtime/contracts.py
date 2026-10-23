@@ -145,7 +145,11 @@ class ModelRecipe(Contract):
 
 class Parser(Part):
     encoding: NAME
+    # One character, or ``whitespace`` (runs of blanks, the case contract's ``sep``).
     delimiter: Annotated[str, StringConstraints(strict=True, min_length=1, max_length=16)]
+    header: StrictBool
+    quotechar: Optional[Annotated[str, StringConstraints(strict=True, min_length=1,
+                                                          max_length=1)]]
     na_values: list[StrictStr]
     decimal: Annotated[str, StringConstraints(strict=True, min_length=1, max_length=1)] = '.'
 
@@ -353,6 +357,7 @@ class ParityResult(Contract):
     exact_mismatches: StrictInt = Field(ge=0)
     tolerance: Tolerance
     reason: Optional[StrictStr]
+    extensions: Extensions = Field(default_factory=dict)
 
 
 class PackageDescriptor(Contract):
@@ -502,6 +507,11 @@ class ExportSource(Contract):
     final_test: dict[NAME, JsonValue]
     predictor: ExportPredictor
     limitations: list[StrictStr]
+    # Read by the Azure ML export (workstream B): evidence state of the selection, the
+    # metric names of the study's task, and the confirmed conclusion if any.
+    validity: dict[NAME, JsonValue]
+    metrics: list[NAME]
+    conclusion: Optional[dict[NAME, JsonValue]]
     extensions: Extensions = Field(default_factory=dict)
 
 

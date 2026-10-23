@@ -115,6 +115,6 @@ def test_a_final_evaluation_failing_after_its_reservation_consumes_the_test(tmp_
     assert src.predictor.evidence_status == 'unassessed'   # no evaluated binding
     assert src.final_test['final_result_id'] is None
     bundle = sto.StudyStore(flow.study).home / src.predictor.bundle_dir
-    assert not (bundle / 'evidence_binding.json').exists()
+    assert not (bundle / 'evidence').exists()
     assert flow.run('final_test.evaluation', expect=2)['error']['code'] \
         == 'final_test_already_opened'

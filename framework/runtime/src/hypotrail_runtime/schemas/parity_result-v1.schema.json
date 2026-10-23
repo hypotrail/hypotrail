@@ -1,6 +1,7 @@
 {
  "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
  "$defs": {
+  "JsonValue": {},
   "Tolerance": {
    "additionalProperties": false,
    "properties": {
@@ -40,6 +41,15 @@
    "minimum": 0,
    "title": "Exact Mismatches",
    "type": "integer"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
   },
   "max_abs_diff": {
    "anyOf": [

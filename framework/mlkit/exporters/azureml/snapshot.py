@@ -28,7 +28,7 @@ from .errors import ExportError
 
 SCHEMA = 'hypotrail.deployment_snapshot/1'
 PLAN_SCHEMA = 'hypotrail.development_plan/1'
-SOURCE_MODULE = 'mlkit.study.export_source'
+SOURCE_MODULE = 'mlkit.contracts.export_source'
 SOURCE_FUNCTION = 'read_export_source'
 RUNTIME_MODULE = 'hypotrail_runtime'
 RECIPE_SCHEMA = 'hypotrail.model_recipe/1'
@@ -319,7 +319,10 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
     contract_sha = cj.canonical_sha256(contract)
     predictor = None
     descriptor = field(source, 'predictor', None)
-    if descriptor:
+    # A's ExportSource always describes the predictor; only a bundle makes it captured
+    # (a stale capture no longer describes the chosen configuration: it is not exported).
+    if descriptor and field(descriptor, 'bundle_dir', None) and \
+            field(descriptor, 'status', 'captured') == 'captured':
         bundle_dir = field(descriptor, 'bundle_dir')
         if verify_predictor is None:
             raise ExportError('optional_dependency_missing', 'No predictor verifier.',

@@ -1,7 +1,6 @@
 """The MLflow packager (contract v1 §6, L-19, M-07; AC07, AC19).
 
-The native bundles here come from the PRIVATE TEST DOUBLE of ``hypotrail_runtime``; the
-same tests run against chantier A's runtime with ``HYPOTRAIL_EXPORT_REAL_RUNTIME=1``.
+The native bundles here are captured by the real ``hypotrail_runtime`` (workstream A).
 """
 from __future__ import annotations
 
@@ -78,14 +77,14 @@ def test_a_parity_failure_writes_no_package(native, runtime, tmp_path):
         def __getattr__(self, name):
             return getattr(self._inner, name)
 
-        def load_predictor(self, bundle_dir):
-            predictor = self._inner.load_predictor(bundle_dir)
+        def load_predictor(self, bundle_dir, **kwargs):
+            predictor = self._inner.load_predictor(bundle_dir, **kwargs)
 
             class Wrapped:
                 def predict(self, frame):
+                    import dataclasses
                     batch = predictor.predict(frame)
-                    batch.values = batch.values + 1e-6
-                    return batch
+                    return dataclasses.replace(batch, values=batch.values + 1e-6)
             return Wrapped()
     with pytest.raises(mp.PackagingError) as error:
         mp.ArtifactPackager(Drifting(runtime)).package(native, tmp_path / 'package')
@@ -122,13 +121,15 @@ def test_pyfunc_loads_in_a_clean_process_after_a_move(native, runtime, tmp_path)
         'import sys, json, pandas as pd, mlflow.pyfunc\n'
         f'sys.path.insert(0, {str(project_env().get("PYTHONPATH", ""))!r})\n'
         'model = mlflow.pyfunc.load_model(sys.argv[1])\n'
-        'features = pd.read_csv(sys.argv[1] + "/artifacts/native_bundle/parity/features.csv")\n'
+        'import hypotrail_runtime.predictor as rp\n'
+        'features = rp.frame_from_document(json.load(open(sys.argv[1] + '
+        '"/artifacts/native_bundle/parity/features.json")))\n'
         'print(json.dumps(model.predict(features)["prediction"].tolist()))\n')
     result = subprocess.run([sys.executable, '-I', '-c', script, str(moved)], cwd=tmp_path,
                             capture_output=True, text=True, env=project_env(), check=False)
     assert result.returncode == 0, result.stderr[-2000:]
     predicted = json.loads(result.stdout.strip().splitlines()[-1])
-    expected = mp.read_table(moved / 'artifacts/native_bundle/parity/expected_outputs.csv')
+    expected = mp.read_table(moved / 'artifacts/native_bundle/parity/expected_outputs.json')
     assert mp.compare(__import__('pandas').DataFrame({'prediction': predicted}), expected,
                       1e-10, 1e-12)['equal']
 

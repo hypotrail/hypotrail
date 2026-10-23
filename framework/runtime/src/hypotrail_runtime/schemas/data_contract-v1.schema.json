@@ -227,17 +227,36 @@
      "title": "Encoding",
      "type": "string"
     },
+    "header": {
+     "title": "Header",
+     "type": "boolean"
+    },
     "na_values": {
      "items": {
       "type": "string"
      },
      "title": "Na Values",
      "type": "array"
+    },
+    "quotechar": {
+     "anyOf": [
+      {
+       "maxLength": 1,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Quotechar"
     }
    },
    "required": [
     "encoding",
     "delimiter",
+    "header",
+    "quotechar",
     "na_values"
    ],
    "title": "Parser",

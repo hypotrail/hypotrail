@@ -4,8 +4,8 @@ It builds, in a temporary folder, what chantier A's ``read_export_source`` would
 for an Auto MPG-like regression study: a whitespace-separated source file without header
 and with ``?`` for a missing horsepower, its data contract, the selected linear recipe, a
 five-fold development plan with a disjoint final test, the confirmed decisions, current
-result references and, optionally, a captured predictor bundle made by the **test double**
-of ``hypotrail_runtime`` (``fixtures/fake_runtime``). Nothing here reads ``use-cases/`` or a
+result references and, optionally, a predictor bundle captured by the real
+``hypotrail_runtime`` (workstream A; the test double was removed at integration). Nothing here reads ``use-cases/`` or a
 real study. The final test rows are in the source file (as in a real study) but never in
 the development plan's partitions.
 """
@@ -46,53 +46,66 @@ def write_source(folder: Path, seed: int = 20261023) -> Path:
 
 
 def data_contract(source: Path) -> dict:
+    """A ``hypotrail.data_contract/1`` in the runtime's vocabulary (the engine derives the
+    same shape from a case with ``mlkit.contracts.recipe.data_contract_from_case``)."""
     def col(name, physical, semantic, role, nullable=False, allowed=None):
         return {'name': name, 'physical_type': physical, 'semantic_type': semantic,
                 'nullable': nullable, 'allowed_values': allowed, 'role': role}
-    return {
+    return _validated('contract', {
         'schema_version': 'hypotrail.data_contract/1',
         'dataset_id': 'synthetic-cars-v1',
         'source_sha256': _sha(source.read_bytes()),
-        'format': 'delimited_text',
+        'format': 'csv',
         'parser': {'encoding': 'utf-8', 'delimiter': 'whitespace', 'header': False,
-                   'quotechar': '"', 'na_values': ['?']},
+                   'quotechar': '"', 'na_values': ['?'], 'decimal': '.'},
         'columns': [col('mpg', 'float64', 'numeric', 'target'),
                     col('cylinders', 'int64', 'numeric', 'feature'),
                     col('displacement', 'float64', 'numeric', 'feature'),
                     col('horsepower', 'float64', 'numeric', 'feature', nullable=True),
                     col('weight', 'float64', 'numeric', 'feature'),
-                    col('origin', 'int64', 'categorical', 'feature', allowed=[1, 2, 3]),
-                    col('car_name', 'string', 'text', 'auxiliary')],
+                    col('origin', 'int64', 'category', 'feature', allowed=[1, 2, 3]),
+                    col('car_name', 'string', 'category', 'auxiliary', nullable=True)],
         'row_identity': {'kind': 'source_position', 'columns': [], 'source_hash_required': True},
         'exclusions': [],
         'inference_policy': {'required_columns': list(FEATURES), 'canonical_order': list(FEATURES),
-                             'extra_columns': 'ignored', 'conversions': [],
-                             'unknown_categories': 'encoded_as_zero'},
-    }
+                             'extra_columns': 'reject', 'conversions': [],
+                             'unknown_categories': 'predictor_handles'},
+        'extensions': {},
+    })
+
+
+def _validated(kind: str, document: dict) -> dict:
+    """The document as the runtime validates and serialises it (defaults made explicit),
+    which is what a bundle and ``read_export_source`` carry."""
+    import hypotrail_runtime as rt
+    model = rt.validate_data_contract(document) if kind == 'contract' \
+        else rt.validate_recipe(document)
+    return model.model_dump(mode='json')
 
 
 def recipe(family: str = 'linear') -> dict:
+    """The engine's linear regression recipe (``mlkit.contracts.recipe.recipe_from_fit``)."""
     types = {f: {'semantic': 'numeric', 'physical': 'float64'} for f in FEATURES}
     types['cylinders'] = {'semantic': 'numeric', 'physical': 'int64'}
-    types['origin'] = {'semantic': 'categorical', 'physical': 'int64'}
+    types['origin'] = {'semantic': 'category', 'physical': 'int64'}
     return {
         'schema_version': 'hypotrail.model_recipe/1',
-        'task': 'regression', 'family': family, 'parameters': {'fit_intercept': True},
+        'task': 'regression', 'family': family, 'parameters': {},
         'features': list(FEATURES), 'feature_types': types,
         'preprocessing': [
-            {'operation': 'median_impute', 'version': '1',
-             'parameters': {'columns': ['cylinders', 'displacement', 'horsepower', 'weight']}},
-            {'operation': 'standardise', 'version': '1',
-             'parameters': {'columns': ['cylinders', 'displacement', 'horsepower', 'weight']}},
-            {'operation': 'one_hot', 'version': '1',
-             'parameters': {'columns': ['origin'], 'unknown': 'ignore'}}],
+            {'operation': 'category_as_text', 'version': 1, 'parameters': {'columns': ['origin']}},
+            {'operation': 'special_value_indicator', 'version': 1, 'parameters': {'values': []}},
+            {'operation': 'numeric_median_impute_scale', 'version': 1, 'parameters': {}},
+            {'operation': 'categorical_mode_impute_onehot', 'version': 1,
+             'parameters': {'handle_unknown': 'ignore'}}],
         'target': {'name': 'mpg', 'unit': 'mpg', 'positive_label': None},
         'seeds': {},
         'output_contract': {'kind': 'regression_point', 'columns': ['prediction'],
                             'unit': 'mpg', 'positive_label': None},
         'selection_reference': {'decision_id': 'model_choice', 'revision': 6,
                                 'evidence_ids': ['r-cv-linear']},
-        'method_contract_version': '1', 'runtime_api_version': '1',
+        'method_contract_version': 'hypotrail.method/1', 'runtime_api_version': '1.0',
+        'extensions': {},
     }
 
 
@@ -133,25 +146,25 @@ def capture(runtime, folder: Path, source: Path, contract: dict, the_recipe: dic
             packager=None, role: str = 'final_development_refit') -> Path:
     frame = typed_development(source, contract)
     scope = {'role': role, 'dataset_id': contract['dataset_id'],
-             'membership_sha256': 'dev-membership', 'protocol_id': 'cv5-synthetic'}
+             'membership_sha256': _sha(b'dev-membership'), 'protocol_id': 'cv5-synthetic'}
     fitted = runtime.fit_predictor(the_recipe, contract, frame, scope)
     destination = folder / 'bundle'
-    runtime.capture_predictor(fitted, {'code_fingerprint': 'test'}, frame[FEATURES].head(8),
-                              destination, packager=packager)
+    runtime.capture_predictor(fitted, None, frame[FEATURES].head(8), destination,
+                              packager=packager, parity_origin='authorized_development',
+                              code_fingerprint=_sha(b'test-code'))
     return destination
 
 
 def bind_evidence(bundle_dir: Path, status: str = 'evaluated') -> None:
-    """What chantier A writes after the final result: a separate, immutable binding."""
-    bundle = json.loads((bundle_dir / 'predictor_bundle.json').read_text())
-    manifest = json.loads((bundle_dir / bundle['predictor_manifest_path']).read_text())
-    binding = {'predictor_id': manifest['predictor_id'], 'final_result_id': 'r-final-1',
-               'study_revision': REVISION, 'decision_refs': ['final_test', 'model_choice'],
-               'protocol_id': 'cv5-synthetic', 'evaluation_context_id': 'ctx-1', 'status': status}
-    (bundle_dir / 'evidence').mkdir(exist_ok=True)
-    (bundle_dir / 'evidence' / 'binding-1.json').write_text(json.dumps(binding, indent=2))
-    bundle['evidence_binding_path'] = 'evidence/binding-1.json'
-    (bundle_dir / 'predictor_bundle.json').write_text(json.dumps(bundle, indent=2))
+    """What the engine writes after the final result (``write_evidence_binding``): a new,
+    separate binding version named by the bundle document."""
+    import hypotrail_runtime as rt
+    predictor_id = rt.verify_bundle(bundle_dir).predictor_id
+    rt.write_evidence_binding(bundle_dir, {
+        'schema_version': 'hypotrail.evidence_binding/1', 'predictor_id': predictor_id,
+        'final_result_id': 'r-final-1', 'study_revision': REVISION,
+        'decision_refs': ['final_test', 'model_choice'], 'protocol_id': 'cv5-synthetic',
+        'evaluation_context_id': 'ctx-1', 'status': status})
 
 
 def export_source(folder: Path, *, bundle_dir: Path | None, the_recipe: dict | None = None,

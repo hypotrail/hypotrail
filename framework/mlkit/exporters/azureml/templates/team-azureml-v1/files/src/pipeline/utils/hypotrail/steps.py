@@ -254,14 +254,15 @@ def train(frozen: dict) -> dict:
             {
                 "id": p["id"],
                 "membership_sha256": p["keys_sha256"],
-                "role": p["role"],
-                "exposure_status": p.get("exposure_status"),
+                # Contract v1 roles: a cross-validation fold is a fold's validation rows.
+                "role": p["role"] if p["role"] in ("train", "validation", "development") else "fold_validation",
+                "exposure_status": "exposed",
             }
             for p in found.plan["partitions"]
         ],
         "code_fingerprint": _code_fingerprint(),
-        "runtime_version": getattr(rt, "__version__", None),
-        "backend": "hypotrail_runtime",
+        "runtime_version": rt.RUNTIME_API_VERSION,
+        "backend": {"distribution": rt.DISTRIBUTION, "version": rt.__version__},
         "method_contract_version": found.recipe["method_contract_version"],
         "semantic_dependencies": [],
         "environment_lock_sha256": lock_sha,
@@ -325,7 +326,7 @@ def evaluate(frozen: dict) -> dict:
     )
     spec = mp.ParitySpec.from_bundle(bundle)
     features = mp.read_table(mp.inside(bundle_dir, spec.features_path, "parity.features_path"))
-    native = mp.batch_frame(rt.load_predictor(bundle_dir).predict(features.copy()))
+    native = mp.batch_frame(rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir]).predict(features.copy()))
     expected = mp.read_table(mp.inside(bundle_dir, spec.expected_outputs_path, "parity.expected_outputs_path"))
     reload = mp.compare(native, expected, spec.rtol, spec.atol)
     checks.append({"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload})
@@ -343,7 +344,7 @@ def evaluate(frozen: dict) -> dict:
         espec = mp.ParitySpec.from_bundle(evaluated)
         efeatures = mp.read_table(mp.inside(evaluated_dir, espec.features_path, "parity.features_path"))
         eexpected = mp.read_table(mp.inside(evaluated_dir, espec.expected_outputs_path, "parity.expected_outputs_path"))
-        candidate = mp.batch_frame(rt.load_predictor(bundle_dir).predict(efeatures.copy()))
+        candidate = mp.batch_frame(rt.load_predictor(bundle_dir, trusted_roots=[bundle_dir]).predict(efeatures.copy()))
         observed = mp.compare(candidate, eexpected, espec.rtol, espec.atol)
         deviation = {
             "rows": len(efeatures),

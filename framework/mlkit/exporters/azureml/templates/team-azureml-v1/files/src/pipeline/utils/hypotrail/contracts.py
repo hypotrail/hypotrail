@@ -244,9 +244,46 @@ def typed_frame(frame: pd.DataFrame, contract: dict) -> pd.DataFrame:
     for column in columns:
         kind = str(column.get("physical_type"))
         if kind in ("int64", "int32"):
-            typed[column["name"]] = typed[column["name"]].astype("Int64" if column.get("nullable") else "int64")
+            missing = typed[column["name"]].isna().any()
+            typed[column["name"]] = typed[column["name"]].astype("Int64" if missing else "int64")
         elif kind in ("float64", "float32"):
             typed[column["name"]] = typed[column["name"]].astype("float64")
+    return typed
+
+
+def typed_features(path: Path, contract: dict) -> pd.DataFrame:
+    """Read a CSV of feature values and type it as the data contract declares.
+
+    The file has a header, any column order and no target. Every declared column is typed;
+    an undeclared column is kept as text so the predictor can refuse it. Nothing is
+    imputed, dropped or reordered.
+    """
+    import pandas as pd
+
+    frame = pd.read_csv(path, dtype=str, keep_default_na=False)
+    declared = {c["name"]: c for c in contract["columns"] if isinstance(c, dict)}
+    na = _na_tokens(contract)
+    keys = [f"row{i}" for i in range(len(frame))]
+    problems: list = []
+    out = {}
+    for name in frame.columns:
+        column = declared.get(name)
+        raws = frame[name].astype(str).tolist()
+        out[name] = _column_values(column, keys, raws, na, problems) if column else raws
+    if problems:
+        raise ProjectError(
+            "contract_invalid",
+            f"{len(problems)} values do not satisfy the data contract; nothing was corrected.",
+            path=str(path),
+            details={"examples": problems[:MAX_EXAMPLES], "count": len(problems)},
+        )
+    typed = pd.DataFrame(out)
+    for name in typed.columns:
+        kind = str((declared.get(name) or {}).get("physical_type"))
+        if kind in ("int64", "int32") and not typed[name].isna().any():
+            typed[name] = typed[name].astype("int64")
+        elif kind in ("float64", "float32"):
+            typed[name] = typed[name].astype("float64")
     return typed
 
 

@@ -108,7 +108,7 @@ def test_run_local_builds_a_new_candidate_without_the_verdict(project):
 
 def test_a_scientific_override_of_a_step_is_refused(project, tmp_path):
     result = _run(project['root'], '-m', 'src.pipeline.training.main',
-                  'components.training.model.params.fit_intercept=false',
+                  'components.training.model.type=ridge',
                   f'models.path={tmp_path / "m"}', f'hydra.run.dir={tmp_path / "h"}', check=False)
     assert result.returncode == 2
     assert 'scientific_config_changed' in result.stdout + result.stderr
@@ -143,7 +143,9 @@ def test_a_changed_contract_fails_validation(project, tmp_path):
     copy = tmp_path / 'copy'
     shutil.copytree(project['root'], copy)
     recipe = copy / 'data/hypotrail/contracts/model-recipe.json'
-    recipe.write_text(recipe.read_text().replace('"fit_intercept": true', '"fit_intercept": false'))
+    changed = recipe.read_text().replace('"family": "linear"', '"family": "ridge"')
+    assert changed != recipe.read_text()
+    recipe.write_text(changed)
     report = _json(_run(copy, '-m', 'src.pipeline.utils.project', 'validate', check=False))
     assert {c['id']: c['status'] for c in report['checks']}['data_checksums'] == 'failed'
 

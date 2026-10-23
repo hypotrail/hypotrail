@@ -173,7 +173,10 @@ def _evaluated() -> tuple[str, object]:
     features = mp.read_table(mp.inside(folder, spec.features_path, "parity.features_path"))
     expected = mp.read_table(mp.inside(folder, spec.expected_outputs_path, "parity.expected_outputs_path"))
     result = mp.compare(
-        mp.batch_frame(rt.load_predictor(folder).predict(features.copy())), expected, spec.rtol, spec.atol,
+        mp.batch_frame(rt.load_predictor(folder, trusted_roots=[folder]).predict(features.copy())),
+        expected,
+        spec.rtol,
+        spec.atol,
     )
     if not result["equal"]:
         raise ProjectError(
@@ -255,6 +258,12 @@ def _code_copies() -> str:
 # --- predict ---------------------------------------------------------------------------
 
 
+def bundle_contract(folder: Path) -> dict:
+    """Return the data contract the captured model was fitted with."""
+    bundle = contracts.load_json(folder / "predictor_bundle.json")
+    return contracts.load_json(folder / bundle["data_contract_path"])
+
+
 def predict(args: argparse.Namespace) -> int:
     """Predict with a captured model (default: the evaluated one); never fits."""
     from .hypotrail import mlflow_packaging as mp
@@ -278,8 +287,10 @@ def predict(args: argparse.Namespace) -> int:
         source = Path(args.input)
     else:
         raise ProjectError("contract_invalid", "Give --input FILE or --parity.", path="input")
-    features = mp.read_table(source)
-    frame = mp.batch_frame(rt.load_predictor(folder).predict(features))
+    # Rows given by a user are typed as the data contract declares (never by inference).
+    features = mp.read_table(source) if args.parity else contracts.typed_features(source, bundle_contract(folder))
+    predictor = rt.load_predictor(folder, trusted_roots=[folder])
+    frame = mp.batch_frame(predictor.predict(features))
     document = {
         "schema_version": "hypotrail.predictions/1",
         "predictor_id": manifest.get("predictor_id"),
@@ -317,7 +328,9 @@ def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[
     prefix = identity.get("prefix", "L")
     names = [c["name"] for c in contract["columns"]]
     rows, keys = [], []
-    for number, line in enumerate(lines[header:], 1):
+    # Keys are physical line numbers, as the engine records them (``L2`` is the first data
+    # line of a file with a header).
+    for number, line in enumerate(lines[header:], 1 + header):
         key = f"{prefix}{number}"
         if key not in wanted:
             continue

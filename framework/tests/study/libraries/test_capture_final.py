@@ -76,7 +76,7 @@ def test_final_test_scores_the_reloaded_capture(tmp_path, task):
     assert parity['n_rows'] <= 50
     files = {p.relative_to(bundle).as_posix() for p in bundle.rglob('*') if p.is_file()}
     assert not any(f.endswith(('state.json', '.sqlite', '.db')) for f in files)
-    assert {'bundle.json', 'predictor.json', 'recipe.json', 'data_contract.json',
+    assert {'predictor_bundle.json', 'predictor.json', 'recipe.json', 'data_contract.json',
             'payload/model.pkl', 'environment/requirements.lock'} <= files
     assert any(f.startswith('runtime/hypotrail_runtime-') and f.endswith('.whl') for f in files)
     # The opening scores the capture, not a new fit.
@@ -96,8 +96,11 @@ def test_final_test_scores_the_reloaded_capture(tmp_path, task):
     got = preds['score'] if task == 'binary' else preds['prediction']
     np.testing.assert_allclose(got, expected, rtol=1e-10, atol=1e-12)
     # The evidence binding is written beside the bundle; the bundle still verifies.
-    binding = json.loads((bundle / 'evidence_binding.json').read_bytes())
-    assert binding['status'] == 'evaluated' and binding['final_result_id'] == final['result_id']
+    from hypotrail_runtime import read_evidence_binding
+    binding = read_evidence_binding(bundle)
+    assert binding.status == 'evaluated' and binding.final_result_id == final['result_id']
+    doc = json.loads((bundle / 'predictor_bundle.json').read_bytes())
+    assert doc['evidence_binding_path'] == 'evidence/binding-1.json'
     verify_bundle(bundle)
     # A capture after the opening would be a rebuilt candidate: refused.
     out = flow.run('predictor.capture', expect=2)
@@ -143,7 +146,11 @@ def test_stale_capture_blocks_the_opening_before_anything_is_read(tmp_path):
     assert len(fk.exposure_records(flow.study)) == before
 
 
-def test_workshop_profile_without_its_packager_is_refused_before_any_read(tmp_path):
+def test_workshop_profile_without_its_packager_is_refused_before_any_read(tmp_path, monkeypatch):
+    import importlib.util
+    real = importlib.util.find_spec
+    monkeypatch.setattr(importlib.util, 'find_spec',
+                        lambda name, *a: None if name == 'mlflow' else real(name, *a))
     flow = _chosen(tmp_path)
     rev = flow.rev()
     before = len(fk.exposure_records(flow.study))
@@ -164,7 +171,7 @@ def test_workshop_profile_packages_before_the_opening(tmp_path, monkeypatch):
     bundle = _home(flow) / v['bundle']
     desc = verify_bundle(bundle)
     assert desc.bundle.optional_packages[0].format == 'synthetic_test'
-    assert (bundle / 'packages/synthetic_test/package_descriptor.json').is_file()
+    assert (bundle / 'packages/synthetic_test.descriptor.json').is_file()
     assert not st.final_test_opened(flow.state())
 
 
@@ -199,3 +206,24 @@ def test_a_study_without_capture_keeps_the_historical_refit(tmp_path):
     s = read.open(flow.study)
     final = s.result(s.state['current'][act.FINAL])
     assert 'predictor' not in final['inputs'] and 'predictor' not in final['output']['values']
+
+
+def test_workshop_profile_packages_with_mlflow_before_the_opening(tmp_path):
+    """The real hook: workstream B's MLflow packager, called by the capture, before the
+    final test; the package reloads with mlflow.pyfunc and reproduces the native outputs."""
+    pytest.importorskip('mlflow')
+    flow = _chosen(tmp_path, 'regression')
+    v = flow.run('predictor.capture', '--profile', 'workshop')['values']
+    assert [p['format'] for p in v['packages']] == ['mlflow_pyfunc']
+    assert not st.final_test_opened(flow.state())
+    bundle = _home(flow) / v['bundle']
+    desc = verify_bundle(bundle)
+    package = desc.bundle.optional_packages[0]
+    assert package.format == 'mlflow_pyfunc'
+    from mlkit.integrations import mlflow_packaging as mp
+    import hypotrail_runtime
+    check = mp.ArtifactPackager(hypotrail_runtime).verify(bundle, bundle / package.relative_path)
+    assert check.status == 'passed', check
+    # The final test is then scored by the native capture the package wraps.
+    out = _open(flow)
+    assert out['result']['opening']['status'] == 'promoted'

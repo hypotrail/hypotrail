@@ -49,10 +49,11 @@ PARITY_SCHEMA = 'hypotrail.parity_result/1'
 DESCRIPTOR_FILE = 'hypotrail-package.json'
 WRAPPER_FILE = 'hypotrail_pyfunc.py'
 NATIVE_ARTIFACT = 'native_bundle'
-# The bundle document of contract v1 §5 (``hypotrail.predictor_bundle/1``). Its file name
-# is not fixed by contract v1; this is the name assumed until chantier A publishes it
-# (docs/handoff/AZUREML-EXPORT-V1.md, open interface points).
+# The bundle document of contract v1 §5 (``hypotrail.predictor_bundle/1``), at the bundle
+# root; the name hypotrail_runtime writes (integration I1).
 BUNDLE_DOCUMENT = 'predictor_bundle.json'
+PARITY_FRAME = 'hypotrail.parity_frame/1'
+PARITY_OUTPUTS = 'hypotrail.parity_outputs/1'
 RUNTIME_MODULE = 'hypotrail_runtime'
 # Physical types of a DataContract column and the MLflow ColSpec type they map to.
 MLFLOW_TYPES = {'int64': 'long', 'int32': 'integer', 'float64': 'double', 'float32': 'float',
@@ -80,7 +81,8 @@ class HypotrailPredictor(mlflow.pyfunc.PythonModel):
 
         bundle = Path(context.artifacts["native_bundle"])
         hypotrail_runtime.verify_bundle(bundle)
-        self._predictor = hypotrail_runtime.load_predictor(bundle)
+        # The bundle travels inside this package: it is the trusted source by construction.
+        self._predictor = hypotrail_runtime.load_predictor(bundle, trusted_roots=[bundle])
 
     def predict(self, context, model_input, params=None):
         batch = self._predictor.predict(model_input)
@@ -165,6 +167,21 @@ class ParityResult:
     def to_dict(self) -> dict:
         return asdict(self)
 
+    def to_contract(self) -> dict:
+        """The ``hypotrail.parity_result/1`` document of contract v1 (status ``ok`` or
+        ``failed``); the comparisons are kept under namespaced extensions."""
+        worst = [c.get('max_abs_diff') for c in self.comparisons
+                 if isinstance(c.get('max_abs_diff'), float)]
+        return {'schema_version': PARITY_SCHEMA,
+                'status': 'ok' if self.status == 'passed' else 'failed',
+                'n_rows': int(self.n_rows or 0),
+                'max_abs_diff': max(worst) if worst else None, 'max_rel_diff': None,
+                'exact_mismatches': 0,
+                'tolerance': {'rtol': float(self.rtol), 'atol': float(self.atol), 'exact': []},
+                'reason': self.reason,
+                'extensions': {'hypotrail.comparisons': list(self.comparisons),
+                               'hypotrail.columns': list(self.columns)}}
+
 
 @dataclass(frozen=True)
 class PackageDescriptor:
@@ -185,6 +202,22 @@ class PackageDescriptor:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+    def to_contract(self) -> dict:
+        """The ``hypotrail.package_descriptor/1`` document of contract v1."""
+        parity = self.parity_result
+        if isinstance(parity, Mapping) and parity.get('status') in ('passed', 'failed') \
+                and 'comparisons' in parity:
+            parity = ParityResult(parity['status'], parity.get('n_rows'), parity['columns'],
+                                  parity['rtol'], parity['atol'], parity['comparisons'],
+                                  parity.get('reason')).to_contract()
+        return {'schema_version': DESCRIPTOR_SCHEMA, 'format': self.format,
+                'artifact_id': self.artifact_id, 'predictor_id': self.predictor_id,
+                'files': list(self.files), 'signature': dict(self.signature),
+                'environment': dict(self.environment), 'parity_result': parity,
+                'extensions': {'hypotrail.packager_version': self.packager_version,
+                               'hypotrail.native_bundle': self.native_bundle,
+                               **{k: v for k, v in self.extensions.items() if '.' in k}}}
 
 
 # --- helpers ----------------------------------------------------------------------------
@@ -286,13 +319,26 @@ def _import(name: str, extra: str):
 
 
 def read_table(path: Path):
-    """A parity table: ``.csv`` (header), ``.json`` (records), or ``.parquet``."""
+    """A parity table: the runtime's typed documents (``hypotrail.parity_frame/1`` features,
+    ``hypotrail.parity_outputs/1`` expected outputs), ``.csv`` (header), ``.json`` (records),
+    or ``.parquet``."""
     pd = _import('pandas', 'pandas')
     suffix = path.suffix.lower()
     if suffix == '.csv':
         return pd.read_csv(path, keep_default_na=False, na_values=[''])
     if suffix == '.json':
-        return pd.DataFrame(json.loads(path.read_text(encoding='utf-8')))
+        data = json.loads(path.read_text(encoding='utf-8'))
+        if isinstance(data, Mapping) and data.get('schema_version') == PARITY_FRAME:
+            # The runtime's own reader keeps the declared physical types (no inference).
+            runtime = _import(RUNTIME_MODULE, 'the hypotrail_runtime wheel of the bundle')
+            return runtime.predictor.frame_from_document(data)
+        if isinstance(data, Mapping) and data.get('schema_version') == PARITY_OUTPUTS:
+            columns = data.get('columns') or []
+            if len(columns) != 1:
+                raise PackagingError('contract_invalid', 'Parity outputs name one column.',
+                                     path=path.name)
+            return pd.DataFrame({columns[0]: [float(v) for v in data['values']]})
+        return pd.DataFrame(data)
     if suffix == '.parquet':
         return pd.read_parquet(path)
     raise PackagingError('contract_invalid', f'Unsupported parity table format: {suffix}.',
@@ -437,7 +483,7 @@ class ArtifactPackager:
 
     def _native_parity(self, bundle_dir: Path, spec: ParitySpec):
         features, expected = self._parity_frames(bundle_dir, spec)
-        predictor = self.runtime.load_predictor(bundle_dir)
+        predictor = self.runtime.load_predictor(bundle_dir, trusted_roots=[bundle_dir])
         native = batch_frame(predictor.predict(features.copy()))
         return features, expected, native
 
@@ -448,7 +494,7 @@ class ArtifactPackager:
         bundle_dir, out = Path(native_bundle_dir), Path(output_dir)
         self.runtime.verify_bundle(bundle_dir)
         bundle, manifest, contract = self._documents(bundle_dir)
-        spec = parity_spec or ParitySpec.from_bundle(bundle)
+        spec = _spec(parity_spec, bundle)
         signature = self.signature(manifest, contract)
         features, expected, native = self._native_parity(bundle_dir, spec)
         first = compare(native, expected, spec.rtol, spec.atol)
@@ -531,7 +577,7 @@ class ArtifactPackager:
         bundle_dir, package = Path(native_bundle_dir), Path(package_dir)
         self.runtime.verify_bundle(bundle_dir)
         bundle, manifest, _ = self._documents(bundle_dir)
-        spec = parity_spec or ParitySpec.from_bundle(bundle)
+        spec = _spec(parity_spec, bundle)
         descriptor = _read_json(package / DESCRIPTOR_FILE, DESCRIPTOR_FILE)
         listed = descriptor.get('files')
         if descriptor.get('predictor_id') != manifest.get('predictor_id'):
@@ -550,6 +596,16 @@ class ArtifactPackager:
                             spec.atol, [{'left': 'native', 'right': 'expected', **first},
                                         {'left': 'pyfunc', 'right': 'native', **second}],
                             reason)
+
+
+def _spec(parity_spec, bundle: Mapping) -> ParitySpec:
+    """The parity spec: a :class:`ParitySpec`, the runtime's mapping (the bundle's
+    ``parity`` section, passed by ``capture_predictor``), or the bundle's own."""
+    if isinstance(parity_spec, ParitySpec):
+        return parity_spec
+    if isinstance(parity_spec, Mapping):
+        return ParitySpec.from_bundle({'parity': parity_spec})
+    return ParitySpec.from_bundle(bundle)
 
 
 def _skip(bundle_dir: Path, bundle: Mapping, out: Path, staging: Path):

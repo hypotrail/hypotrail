@@ -51,7 +51,8 @@ def test_a_configured_export_with_the_evaluated_model(export):
     recipe = json.loads((out / 'data/hypotrail/contracts/model-recipe.json').read_text())
     assert recipe == fx.recipe()
     training = (out / 'src/conf/components/training/default.yaml').read_text()
-    assert 'type: "linear"' in training and 'fit_intercept: true' in training
+    # The engine's linear regression has no free parameter (LinearRegression()).
+    assert 'type: "linear"' in training and 'params: {}' in training
 
 
 def test_two_exports_are_byte_identical(export, tmp_path):
@@ -234,6 +235,11 @@ def test_a_final_test_key_listed_as_development_is_refused(export, material):
     _refused(export, 'contract_invalid', reader=fx.reader_of(source))
 
 
+def runtime_manifest(bundle: Path) -> dict:
+    doc = json.loads((bundle / 'predictor_bundle.json').read_text())
+    return json.loads((bundle / doc['predictor_manifest_path']).read_text())
+
+
 def _copy_bundle(material, tmp_path) -> Path:
     target = tmp_path / 'bundle-copy'
     shutil.copytree(material['bundle'], target)
@@ -247,7 +253,8 @@ def _with_bundle(export, bundle_dir, material):
 
 def test_an_altered_model_payload_is_refused(export, material, tmp_path):
     bundle = _copy_bundle(material, tmp_path)
-    payload = bundle / 'payload' / 'pipeline.joblib'
+    manifest = runtime_manifest(bundle)
+    payload = bundle / manifest['payload_files'][0]['relative_path']
     payload.write_bytes(payload.read_bytes() + b'x')
     _refused(_with_bundle(export, bundle, material), 'artifact_integrity_failed')
 
@@ -255,7 +262,9 @@ def test_an_altered_model_payload_is_refused(export, material, tmp_path):
 def test_a_bundle_of_another_recipe_is_refused(export, material, tmp_path):
     bundle = _copy_bundle(material, tmp_path)
     source = _source(material, bundle_dir=bundle)
-    source['scientific_contracts']['model_recipe']['parameters'] = {'fit_intercept': False}
+    # Same family, another recipe: a different preparation of the variables.
+    source['scientific_contracts']['model_recipe']['preprocessing'].insert(2, {
+        'operation': 'signed_log', 'version': 1, 'parameters': {'columns': ['weight']}})
     _refused(export, 'artifact_integrity_failed', reader=fx.reader_of(source))
 
 
@@ -267,7 +276,8 @@ def test_a_rebuilt_candidate_cannot_carry_an_evaluated_binding(export, material,
 
 
 def test_an_unqualified_python_is_refused(export, material, runtime, tmp_path, monkeypatch):
-    monkeypatch.setattr(runtime.platform, 'python_version', lambda: '3.11.9')
+    # The runtime records the Python of the capture from the platform module.
+    monkeypatch.setattr(runtime.predictor.platform, 'python_version', lambda: '3.11.9')
     bundle = fx.capture(runtime, tmp_path / 'py311', material['source'], material['contract'],
                         fx.recipe())
     monkeypatch.undo()
@@ -275,9 +285,10 @@ def test_an_unqualified_python_is_refused(export, material, runtime, tmp_path, m
 
 
 def test_a_conflicting_lock_is_refused(export, material, runtime, tmp_path, monkeypatch):
-    original = runtime._versions
-    monkeypatch.setattr(runtime, '_versions',
-                        lambda: original() + [{'distribution': 'pyyaml', 'version': '5.4.1'}])
+    # The captured environment lock pins a package the template pins differently.
+    original = runtime.predictor.runtime_closure
+    monkeypatch.setattr(runtime.predictor, 'runtime_closure',
+                        lambda *a: {**original(*a), 'pyyaml': '5.4.1'})
     bundle = fx.capture(runtime, tmp_path / 'conflict', material['source'], material['contract'],
                         fx.recipe())
     monkeypatch.undo()
@@ -401,5 +412,5 @@ def test_an_interpolation_like_value_is_refused(export, material):
 def test_the_rendered_configuration_is_block_yaml(export):
     _, _, out = export()
     text = (out / 'src/conf/components/training/default.yaml').read_text()
-    assert 'params:\n    fit_intercept: true\n' in text
+    assert 'params: {}\n' in text
     assert not [line for line in text.splitlines() if line != line.rstrip()]

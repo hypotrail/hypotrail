@@ -45,8 +45,12 @@ from . import errors as cerr
 
 CAPTURE = 'predictor.capture'
 PROFILES = ('base', 'workshop')
-PACKAGERS = {'mlflow_pyfunc': ('mlkit.integrations.mlflow_packaging', 'packager')}
-TEST_PACKAGERS = {'synthetic_test': ('mlkit.contracts.testing_packager', 'packager')}
+# format -> (module, factory, argument, backend module that must be importable). The
+# workshop packager is workstream B's ``packager_for('atelier')`` (MLflow pyfunc).
+PACKAGERS = {'mlflow_pyfunc': ('mlkit.integrations.mlflow_packaging', 'packager_for',
+                               'atelier', 'mlflow')}
+TEST_PACKAGERS = {'synthetic_test': ('mlkit.contracts.testing_packager', 'packager', None,
+                                     None)}
 WORKSHOP_PACKAGER = 'mlflow_pyfunc'
 PARITY_ROWS = 50
 TOLERANCE = {'rtol': 1e-10, 'atol': 1e-12, 'exact': []}
@@ -85,17 +89,19 @@ def require_packager(name: str | None) -> None:
     spec = packager_spec(name)
     if spec is None:
         return
-    module = spec[0]
-    try:
-        found = importlib.util.find_spec(module) is not None
-    except ModuleNotFoundError:
-        found = False
-    if not found:
-        _refuse('optional_dependency_missing',
-                f'The packager {name} is requested but {module} is not installed.',
-                packager=name, module=module,
-                remediation='Install the export extra that provides it, or capture with '
-                            '--profile base; the final test stays closed.')
+    for module in (spec[0], spec[3]):
+        if module is None:
+            continue
+        try:
+            found = importlib.util.find_spec(module) is not None
+        except ModuleNotFoundError:
+            found = False
+        if not found:
+            _refuse('optional_dependency_missing',
+                    f'The packager {name} is requested but {module} is not installed.',
+                    packager=name, module=module,
+                    remediation='Install the azureml extra (MLflow), or capture with '
+                                '--profile base; the final test stays closed.')
 
 
 def load_packager(name: str | None):
@@ -103,7 +109,8 @@ def load_packager(name: str | None):
     if spec is None:
         return None
     module = importlib.import_module(spec[0])
-    return getattr(module, spec[1])()
+    factory = getattr(module, spec[1])
+    return factory(spec[2]) if spec[2] is not None else factory()
 
 
 # --- planning (no pandas) ----------------------------------------------------------------------
