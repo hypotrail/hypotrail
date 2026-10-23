@@ -228,7 +228,20 @@ uv run --project framework python -m pytest -q framework/tests/exporters
 python3 scripts/check_layout.py
 ```
 
-Results: see the final section of this file once the full gate has run (pending at this commit).
+Results in this cloud session (Linux, Python 3.13.16, uv 0.11.32):
+
+- `framework/tests/exporters`: **103 passed** (30 s), with MLflow-skinny 3.17.2, Hydra
+  1.3.7, OmegaConf 2.3.1 and the **test double** of the runtime.
+- Engine gate pytest line (`framework/tests/{study,acceptance,exporters}` and the listed
+  modules): **1982 passed, 94 skipped, 2 failed** before the last fix; one failure was this
+  branch's test (fixed, now in the 103 above). The other,
+  `test_contract_companion_e2.py::test_c7_export_handoff`, **fails identically on the base
+  commit 581c7b3** (its `HANDOFF_KEYS` lacks `history`, added in J4–J7): not caused by
+  this branch, left to the `main` line. The 94 skips are the opt-in agent scenarios.
+- `python3 scripts/check_layout.py`: no error.
+- The exported project: its own `pytest` passes (18 tests) and `ruff check src` passes with
+  the team template's ruff 0.4.5 rules.
+- Not run here: the Node and companion-panel lines of the gate (no client file changed).
 
 In an exported folder (moved elsewhere, runtime installed):
 

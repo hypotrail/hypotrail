@@ -51,7 +51,7 @@ def test_a_configured_export_with_the_evaluated_model(export):
     recipe = json.loads((out / 'data/hypotrail/contracts/model-recipe.json').read_text())
     assert recipe == fx.recipe()
     training = (out / 'src/conf/components/training/default.yaml').read_text()
-    assert 'type: "linear"' in training and '"fit_intercept": true' in training
+    assert 'type: "linear"' in training and 'fit_intercept: true' in training
 
 
 def test_two_exports_are_byte_identical(export, tmp_path):
