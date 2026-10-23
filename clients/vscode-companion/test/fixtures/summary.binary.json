@@ -298,6 +298,14 @@
   "artifacts": {
    "status": "ok",
    "items": {
+    "editable": {
+     "status": "ok",
+     "revision": 26,
+     "last_ok_revision": 26,
+     "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
+     "audience": "agent",
+     "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
+    },
     "notebook": {
      "status": "ok",
      "revision": 26,
@@ -447,6 +455,19 @@
       "marimo",
       "run",
       "/studies/bank marketing \"demo\"/notebooks/study_generated.py"
+     ]
+    },
+    "editable": {
+     "mode": "edit",
+     "path": "notebooks/study_editable.py",
+     "argv": [
+      "uv",
+      "edit",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "run",
+      "/studies/bank marketing \"demo\"/notebooks/study_editable.py"
      ]
     },
     "workbench": {

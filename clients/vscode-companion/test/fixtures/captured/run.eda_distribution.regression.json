@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_622dd0c704d6af123eea761a",
   "status": "promoted",
-  "result_id": "34b12c3583d0cff8ca3c019fbc41e4ebfd8f7665f765899c69fed9d72ebfbd80",
+  "result_id": "b68e2a872bb35e1f4f79f86a4fbc75d82833c936131cf93de5510b32a21caf02",
   "values": {
    "partition": "train",
    "column": "weight",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:weight",
    "status": "promoted",
-   "result_id": "34b12c3583d0cff8ca3c019fbc41e4ebfd8f7665f765899c69fed9d72ebfbd80",
-   "input_key": "77ba2c955e6362f23efc6ba8111c8745b7a5ccd77dd3bd63139087d081a1f9d2",
+   "result_id": "b68e2a872bb35e1f4f79f86a4fbc75d82833c936131cf93de5510b32a21caf02",
+   "input_key": "0ff6c96c50321bca2c4e43689cc917080dd21a8e0b5b266c2a4efa544ad46bbc",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_f5d7077266dd486cbe61cb72ca3dc642"
+    "x_a94773eb79c441c5a09909be3a4b6d25"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -163,6 +163,15 @@
     "last_ok_revision": 25,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 25,
+    "last_ok_revision": 25,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",

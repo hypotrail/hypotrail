@@ -247,6 +247,7 @@
     "command": "decide",
     "revision": 2,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -257,6 +258,7 @@
     "command": "decide",
     "revision": 3,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -267,6 +269,7 @@
     "command": "decide",
     "revision": 4,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -277,6 +280,7 @@
     "command": "decide",
     "revision": 5,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -287,6 +291,7 @@
     "command": "decide",
     "revision": 6,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -297,6 +302,7 @@
     "command": "decide",
     "revision": 7,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -307,6 +313,7 @@
     "command": "run",
     "revision": 9,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -317,6 +324,7 @@
     "command": "run",
     "revision": 11,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -327,6 +335,7 @@
     "command": "run",
     "revision": 13,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -337,6 +346,7 @@
     "command": "run",
     "revision": 15,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -347,6 +357,7 @@
     "command": "run",
     "revision": 17,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -357,6 +368,7 @@
     "command": "run",
     "revision": 19,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -367,6 +379,7 @@
     "command": "run",
     "revision": 21,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -377,6 +390,7 @@
     "command": "run",
     "revision": 23,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -387,6 +401,7 @@
     "command": "decide",
     "revision": 24,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"

@@ -23,9 +23,9 @@
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the linear model. On the 96 validation rows its mean absolute error is 6.48 mpg against 10.27 for the training mean (paired difference -3.79, interval -4.38 to -3.16). These rows were used to choose, so the figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view (result 1ddeadff).",
+  "rationale": "Chosen by the junior in the companion's What if? view (result 5821e0cc).",
   "evidence": {
-   "result_id": "1ddeadffdef313250d4f53b54ecc5374980d0819735361e5718462d0f6b4a8cc",
+   "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
    "activity": "evaluate.regression",
    "figures": [
     {

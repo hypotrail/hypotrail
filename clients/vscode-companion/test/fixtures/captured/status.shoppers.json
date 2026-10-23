@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/tmp/capture/shoppers",
    "revision": 1,
-   "updated": "2026-10-23T11:56:33.944593+00:00",
+   "updated": "2026-10-23T14:16:04.191777+00:00",
    "case": {
     "id": "uci-online-shoppers-v1",
     "path": "/hypotrail/use-cases/online-shoppers/case.yaml",
@@ -213,6 +213,24 @@
      "current": false
     },
     {
+     "id": "model_choice",
+     "title": "Choose the model",
+     "question": "Given the development comparison, which model is retained for the decision rule? Comparing a model does not select it.",
+     "expected_output": "An explicit confirmed model choice, distinct from the rule.",
+     "completion": "Decision model_choice is confirmed.",
+     "pause": 3,
+     "decision": "model_choice",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "model_variant",
+      "models"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
      "id": "policy",
      "title": "Choose a decision policy",
      "question": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
@@ -231,7 +249,8 @@
      ],
      "requires": [
       "models",
-      "model_variant"
+      "model_variant",
+      "model_choice"
      ],
      "status": "blocked",
      "current": false
@@ -252,6 +271,7 @@
       "final_test.evaluation"
      ],
      "requires": [
+      "model_choice",
       "policy"
      ],
      "status": "blocked",
@@ -294,13 +314,13 @@
      "position": {
       "step_id": "discover_data",
       "completed": 0,
-      "total": 12
+      "total": 13
      },
      "learned": [],
      "limitations": [
       {
        "code": "unconfirmed_decisions",
-       "text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the decision policy, the opening of the final test and the conclusion."
+       "text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
       },
       {
        "code": "validation_is_not_independent",
@@ -402,6 +422,25 @@
      "open_proposals": [],
      "feature_basis": null
     },
+    "model_choice": {
+     "decision_id": "model_choice",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
     "policy": {
      "decision_id": "policy",
      "status": "open",
@@ -412,7 +451,8 @@
       "feature_availability",
       "split",
       "preprocessing",
-      "model_variant"
+      "model_variant",
+      "model_choice"
      ],
      "revision": null,
      "reason": null,
@@ -432,6 +472,7 @@
       "success_criterion",
       "preprocessing",
       "model_variant",
+      "model_choice",
       "policy"
      ],
      "revision": null,
@@ -452,6 +493,7 @@
       "success_criterion",
       "preprocessing",
       "model_variant",
+      "model_choice",
       "policy",
       "final_test"
      ],
@@ -606,13 +648,14 @@
       "success_criterion",
       "preprocessing",
       "model_variant",
+      "model_choice",
       "policy",
       "final_test",
       "conclusion"
      ],
-     "text": "These decisions are not confirmed: prediction_time, feature_availability, split, success_criterion, preprocessing, model_variant, policy, final_test, conclusion.",
+     "text": "These decisions are not confirmed: prediction_time, feature_availability, split, success_criterion, preprocessing, model_variant, model_choice, policy, final_test, conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the decision policy, the opening of the final test and the conclusion."
+     "junior_text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
     },
     {
      "id": "validation_is_not_independent",
@@ -695,6 +738,20 @@
        "/tmp/capture/shoppers/notebooks/study_generated.py"
       ],
       "shell": "uv run --project /hypotrail/framework marimo run '/tmp/capture/shoppers/notebooks/study_generated.py'"
+     },
+     "editable": {
+      "mode": "edit",
+      "path": "notebooks/study_editable.py",
+      "argv": [
+       "uv",
+       "run",
+       "--project",
+       "/hypotrail/framework",
+       "marimo",
+       "edit",
+       "/tmp/capture/shoppers/notebooks/study_editable.py"
+      ],
+      "shell": "uv run --project /hypotrail/framework marimo edit '/tmp/capture/shoppers/notebooks/study_editable.py'"
      },
      "workbench": {
       "mode": "edit",
@@ -889,13 +946,13 @@
      "position": {
       "step_id": "discover_data",
       "completed": 0,
-      "total": 12
+      "total": 13
      },
      "learned": [],
      "limitations": [
       {
        "code": "unconfirmed_decisions",
-       "text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the decision policy, the opening of the final test and the conclusion."
+       "text": "Not confirmed by you yet: the prediction moment, the feature availability, the split, the success criterion, the preparation of the variables, the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
       },
       {
        "code": "validation_is_not_independent",

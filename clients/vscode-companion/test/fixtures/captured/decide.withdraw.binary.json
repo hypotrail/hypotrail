@@ -7,11 +7,11 @@
   "argv": [
    "decide",
    "withdraw",
-   "p_9",
+   "p_10",
    "--request-id",
    "b-wd",
    "--expected-revision",
-   "49",
+   "51",
    "--json"
   ],
   "note": ""
@@ -23,9 +23,9 @@
   "action": "decide.withdraw",
   "request_id": "b-wd",
   "replayed": false,
-  "revision": 50,
+  "revision": 52,
   "result": {
-   "proposal_id": "p_9",
+   "proposal_id": "p_10",
    "decision_id": "policy",
    "status": "withdrawn",
    "decision_status": "confirmed"
@@ -34,18 +34,27 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 50,
-    "last_ok_revision": 50,
+    "revision": 52,
+    "last_ok_revision": 52,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 50,
-    "last_ok_revision": 50,
+    "revision": 52,
+    "last_ok_revision": 52,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 52,
+    "last_ok_revision": 52,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -82,11 +91,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "action",
     "language": "en",
-    "revision": 50,
+    "revision": 52,
     "position": {
      "step_id": "final_test",
-     "completed": 10,
-     "total": 12
+     "completed": 11,
+     "total": 13
     },
     "learned": [],
     "limitations": [

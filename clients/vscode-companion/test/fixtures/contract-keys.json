@@ -493,12 +493,12 @@
     "decisions",
     "results_cited",
     "exposure",
-    "history",
     "not_yet_defensible",
     "open_items",
     "deliverables",
     "reproduce",
-    "environment"
+    "environment",
+    "history"
    ],
    "results_cited[]": [
     "result_id",

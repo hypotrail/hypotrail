@@ -157,7 +157,7 @@ def test_the_shortlist_lists_the_flags_that_motivate_a_family(open_panel, views)
     card = page.locator('[data-ev="families"]')
     flags = card.locator('[data-family-flag]').all_inner_texts()
     assert flags[0] == 'Une forme courbe pour balance (p < 0.001)'
-    assert flags[1].startswith('Une pente de calibration globale de 0.71, hors de 0.8 à 1.2')
+    assert flags[1].startswith('Une pente de calibration globale de 0,71, hors de 0,8 à 1,2')
     assert card.locator('[data-family="ebm"]').get_attribute('data-shortlisted') == 'true'
     assert 'motivée par un signal' in card.locator('[data-family="ebm"]').inner_text()
     assert card.locator('[data-family-contingent]').count() == 1

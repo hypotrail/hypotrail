@@ -14,7 +14,7 @@
   "schema": "hypotrail.decisions/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 48,
+  "revision": 50,
   "task": "binary",
   "decisions": [
    {
@@ -33,7 +33,7 @@
      "restatement": "You decide the prediction_time as stated.",
      "proposal_id": "p_1",
      "revision": 3,
-     "time": "2026-10-23T11:54:07.469394+00:00",
+     "time": "2026-10-23T14:13:15.587814+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -80,7 +80,7 @@
      "restatement": "You decide the feature_availability as stated.",
      "proposal_id": "p_2",
      "revision": 5,
-     "time": "2026-10-23T11:54:08.790339+00:00",
+     "time": "2026-10-23T14:13:16.805037+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -112,7 +112,7 @@
      "restatement": "You decide the split as stated.",
      "proposal_id": "p_3",
      "revision": 7,
-     "time": "2026-10-23T11:54:10.539859+00:00",
+     "time": "2026-10-23T14:13:18.491928+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -143,7 +143,7 @@
      "restatement": "You decide the success_criterion as stated.",
      "proposal_id": "p_4",
      "revision": 9,
-     "time": "2026-10-23T11:54:12.606021+00:00",
+     "time": "2026-10-23T14:13:20.373491+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -179,7 +179,7 @@
      "restatement": "You decide the preprocessing as stated.",
      "proposal_id": "p_5",
      "revision": 11,
-     "time": "2026-10-23T11:54:14.544322+00:00",
+     "time": "2026-10-23T14:13:22.675332+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -210,7 +210,7 @@
      "restatement": "You decide the model_variant as stated.",
      "proposal_id": "p_6",
      "revision": 37,
-     "time": "2026-10-23T11:54:35.311901+00:00",
+     "time": "2026-10-23T14:13:42.727650+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -218,6 +218,41 @@
      "mode": "guided",
      "warnings": [],
      "reason_given": null,
+     "adoption_question": false
+    },
+    "open_proposals": []
+   },
+   {
+    "decision_id": "model_choice",
+    "title": "Choose the model",
+    "pause": 3,
+    "step": "model_choice",
+    "status": "confirmed",
+    "value": "fit.logistic",
+    "depends_on": [
+     "prediction_time",
+     "feature_availability",
+     "split",
+     "success_criterion",
+     "preprocessing",
+     "model_variant"
+    ],
+    "reason": null,
+    "confirmation": {
+     "user_words": "Yes, I want the model_choice exactly as you stated it, because it fits our situation",
+     "channel": "chat",
+     "actor": "user",
+     "restatement": "You decide the model_choice as stated.",
+     "proposal_id": "p_7",
+     "revision": 43,
+     "time": "2026-10-23T14:13:47.675569+00:00",
+     "authenticated": false,
+     "basis": "restated",
+     "delegation_scope": null,
+     "agent_concern": null,
+     "mode": "guided",
+     "warnings": [],
+     "reason_given": true,
      "adoption_question": false
     },
     "open_proposals": []
@@ -234,7 +269,8 @@
      "feature_availability",
      "split",
      "preprocessing",
-     "model_variant"
+     "model_variant",
+     "model_choice"
     ],
     "reason": null,
     "confirmation": {
@@ -242,9 +278,9 @@
      "channel": "chat",
      "actor": "user",
      "restatement": "You decide the policy as stated.",
-     "proposal_id": "p_7",
-     "revision": 43,
-     "time": "2026-10-23T11:54:39.277684+00:00",
+     "proposal_id": "p_8",
+     "revision": 45,
+     "time": "2026-10-23T14:13:49.826343+00:00",
      "authenticated": false,
      "basis": "restated",
      "delegation_scope": null,
@@ -255,7 +291,7 @@
      "adoption_question": false
     },
     "open_proposals": [
-     "p_8"
+     "p_9"
     ]
    },
    {
@@ -272,6 +308,7 @@
      "success_criterion",
      "preprocessing",
      "model_variant",
+     "model_choice",
      "policy"
     ],
     "reason": null,
@@ -292,6 +329,7 @@
      "success_criterion",
      "preprocessing",
      "model_variant",
+     "model_choice",
      "policy",
      "final_test"
     ],
@@ -309,7 +347,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 2,
-    "created": "2026-10-23T11:54:06.015358+00:00",
+    "created": "2026-10-23T14:13:14.328951+00:00",
     "closed_revision": 3,
     "closed_reason": "confirmed",
     "origin": {
@@ -341,7 +379,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 4,
-    "created": "2026-10-23T11:54:08.195260+00:00",
+    "created": "2026-10-23T14:13:16.258576+00:00",
     "closed_revision": 5,
     "closed_reason": "confirmed",
     "origin": {
@@ -360,7 +398,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 6,
-    "created": "2026-10-23T11:54:09.598515+00:00",
+    "created": "2026-10-23T14:13:17.601110+00:00",
     "closed_revision": 7,
     "closed_reason": "confirmed",
     "origin": {
@@ -378,7 +416,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 8,
-    "created": "2026-10-23T11:54:11.583443+00:00",
+    "created": "2026-10-23T14:13:19.348927+00:00",
     "closed_revision": 9,
     "closed_reason": "confirmed",
     "origin": {
@@ -401,7 +439,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 10,
-    "created": "2026-10-23T11:54:13.665217+00:00",
+    "created": "2026-10-23T14:13:21.560106+00:00",
     "closed_revision": 11,
     "closed_reason": "confirmed",
     "origin": {
@@ -419,7 +457,7 @@
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 36,
-    "created": "2026-10-23T11:54:34.219346+00:00",
+    "created": "2026-10-23T14:13:41.727728+00:00",
     "closed_revision": 37,
     "closed_reason": "confirmed",
     "origin": {
@@ -428,13 +466,13 @@
    },
    {
     "proposal_id": "p_7",
-    "decision_id": "policy",
-    "value": "threshold:0.2",
-    "restatement": "You decide the policy as stated.",
+    "decision_id": "model_choice",
+    "value": "fit.logistic",
+    "restatement": "You decide the model_choice as stated.",
     "rationale": "It fits the scenario.",
     "status": "confirmed",
     "revision": 42,
-    "created": "2026-10-23T11:54:38.385971+00:00",
+    "created": "2026-10-23T14:13:46.465815+00:00",
     "closed_revision": 43,
     "closed_reason": "confirmed",
     "origin": {
@@ -444,12 +482,27 @@
    {
     "proposal_id": "p_8",
     "decision_id": "policy",
+    "value": "threshold:0.2",
+    "restatement": "You decide the policy as stated.",
+    "rationale": "It fits the scenario.",
+    "status": "confirmed",
+    "revision": 44,
+    "created": "2026-10-23T14:13:48.753081+00:00",
+    "closed_revision": 45,
+    "closed_reason": "confirmed",
+    "origin": {
+     "channel": "chat"
+    }
+   },
+   {
+    "proposal_id": "p_9",
+    "decision_id": "policy",
     "value": "capacity:100",
     "restatement": "Call the 100 clients with the highest scores.",
     "rationale": "The team can make 100 calls per wave.",
     "status": "open",
-    "revision": 48,
-    "created": "2026-10-23T11:54:43.870954+00:00",
+    "revision": 50,
+    "created": "2026-10-23T14:13:54.851045+00:00",
     "closed_revision": null,
     "closed_reason": null,
     "origin": {
@@ -460,7 +513,7 @@
   "history": [
    {
     "revision": 3,
-    "time": "2026-10-23T11:54:07.469503+00:00",
+    "time": "2026-10-23T14:13:15.587900+00:00",
     "decision_id": "prediction_time",
     "proposal_id": "p_1",
     "value": "before the first contact of the campaign, from the client file",
@@ -474,7 +527,7 @@
    },
    {
     "revision": 5,
-    "time": "2026-10-23T11:54:08.790430+00:00",
+    "time": "2026-10-23T14:13:16.805126+00:00",
     "decision_id": "feature_availability",
     "proposal_id": "p_2",
     "value": {
@@ -505,7 +558,7 @@
    },
    {
     "revision": 7,
-    "time": "2026-10-23T11:54:10.539964+00:00",
+    "time": "2026-10-23T14:13:18.492015+00:00",
     "decision_id": "split",
     "proposal_id": "p_3",
     "value": {
@@ -523,7 +576,7 @@
    },
    {
     "revision": 9,
-    "time": "2026-10-23T11:54:12.606093+00:00",
+    "time": "2026-10-23T14:13:20.373560+00:00",
     "decision_id": "success_criterion",
     "proposal_id": "p_4",
     "value": {
@@ -540,7 +593,7 @@
    },
    {
     "revision": 11,
-    "time": "2026-10-23T11:54:14.544408+00:00",
+    "time": "2026-10-23T14:13:22.675424+00:00",
     "decision_id": "preprocessing",
     "proposal_id": "p_5",
     "value": {
@@ -562,7 +615,7 @@
    },
    {
     "revision": 37,
-    "time": "2026-10-23T11:54:35.311981+00:00",
+    "time": "2026-10-23T14:13:42.727729+00:00",
     "decision_id": "model_variant",
     "proposal_id": "p_6",
     "value": {
@@ -579,9 +632,23 @@
    },
    {
     "revision": 43,
-    "time": "2026-10-23T11:54:39.277770+00:00",
-    "decision_id": "policy",
+    "time": "2026-10-23T14:13:47.675632+00:00",
+    "decision_id": "model_choice",
     "proposal_id": "p_7",
+    "value": "fit.logistic",
+    "user_words": "Yes, I want the model_choice exactly as you stated it, because it fits our situation",
+    "basis": "restated",
+    "delegation_scope": null,
+    "channel": "chat",
+    "actor": "user",
+    "current": true,
+    "superseded_at": null
+   },
+   {
+    "revision": 45,
+    "time": "2026-10-23T14:13:49.826414+00:00",
+    "decision_id": "policy",
+    "proposal_id": "p_8",
     "value": "threshold:0.2",
     "user_words": "Yes, call everyone scored at 0.2 or more",
     "basis": "restated",

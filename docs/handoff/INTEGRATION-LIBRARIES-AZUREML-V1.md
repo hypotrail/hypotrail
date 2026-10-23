@@ -61,9 +61,38 @@ scipy 1.18.1, pydantic 2.14.1, pandera 0.34.1, hypotrail-runtime 1.0.0; extras: 
 hypothesis 6.170.8, ruff 0.4.5 (team template), playwright 1.55.0, marimo 0.25.1,
 interpret-core 0.7.3.
 
-## Commands run and results
+## Commands run and results (gate run)
 
-See "Gate run" below (filled from the logs of this session).
+Run in this container on the integration branch (Python 3.13.16, uv 0.11.32), environment
+synced with `uv sync --project framework --group dev --group browser --group azureml --extra
+diagnostics --extra uncertainty`.
+
+| Command | Result |
+|---|---|
+| `uv run --project framework python -m pytest framework/tests/study framework/tests/acceptance framework/tests/exporters -q` | **2084 passed, 99 skipped, 0 failed** (1 h 16). Includes the runtime and contract suites, Hypothesis properties and state machine, wheel build and fresh-environment install, fault injections (kill during capture, failure after reservation, altered payload), statistical oracles (bootstrap, DKW, conformal quantile, risk control), Hydra overrides, the B suites on the real runtime, and `test_end_to_end_real.py` (real Auto MPG study → workshop capture with MLflow → final test → export → moved folder). `test_contract_companion_e2.py::test_c7_export_handoff`, red at the base, passes. |
+| `node --test` in `clients/vscode-companion` | **243 passed, 0 failed** |
+| `uv run --project framework python -m pytest clients/vscode-companion/test -k "not pixel and not baseline"` | subset of the 8 previously failing files: passed (34 passed, 12 skipped); full run pending, result to be recorded |
+| `uv run --project framework python scripts/check_layout.py` | OK, no error |
+| `uv lock --check --project framework` | lock current |
+| Extras matrix (core only; `diagnostics`; `uncertainty`; all) | 4/4 on workstream A before the merge; **not rerun after the integration** |
+| Pixel baselines (`test_*baseline*`, `*pixel*`) | fail identically at the base and on `origin/main` in this container (fonts); not rewritten |
+
+### Panel regressions inherited from `main` (fixed here)
+
+`origin/main` (`506180a`) is red on the panel suite by itself: the same 8 tests fail on a clean
+worktree of `origin/main` in this container. `main` changed the engine payloads (the
+`editable` notebook, the explicit binary `model_choice`, the handoff key order) and the EDA
+cards (collapsed by default, localized titles) without recapturing the fixtures or updating
+the panel tests other than `test_webview_eda.py`. Fixes:
+
+| Failure | Cause | Fix |
+|---|---|---|
+| `test_fixture_drift` (captured and hand-written) | captures and hand-written fixtures predate `editable` | recaptured with `test/fixtures/capture.py`; `editable` added to the 13 hand-written fixtures that carry artifacts, launch, `artifacts_after` or renders (values from the live engine), formatting kept |
+| `test_contract_keys`, Node `fixtures.test.js` | `HANDOFF_KEYS` moved `history` last on the engine side only | `contract-keys.json` and `handoff.binary.json` follow the engine order |
+| `test_ed7_every_card_is_titled_by_its_question[binary, regression]` | **product bug**: every EDA card was titled with `requestQuestion`, a per-column chart question; the target, special-value and leakage cards read "…across the values of null…" | `media/views/eda.js`: the localized question titles per-column charts (`distribution`, `rate_by`, `mean_by`) only; other cards keep the engine's question (with the "(en)" marker in a French panel) |
+| `test_ed9…`, `test_the_rate_by_chart…`, `test_cards_put_provenance…` | the cards are now collapsed (`details.eda-analysis`), so their content has no visible text | the tests open the cards as the junior does (`panel_cases.expand_eda`), as `main` did in `test_webview_eda.py`; no assertion changed |
+| `test_the_shortlist_lists_the_flags…` (French) | `main` switched French numbers to a decimal comma | expected text `0,71 … 0,8 à 1,2` |
+| `test_recap_strip…`, Node OV-7 | the captured study now confirms `model_choice`; the summary lists the `editable` notebook | expected Decided line names the model choice; deliverable order `report, notebook, editable, workbench` |
 
 ## Acceptance criteria AC01–AC28
 
@@ -106,6 +135,29 @@ See "Gate run" below (filled from the logs of this session).
   package (library tests) but the Azure template refuses them (`capability_not_supported`).
 - Calibration partitions are not created by the engine (MAPIE adapters library-level).
 - Pixel baselines of the panel fail identically at the base in this container (fonts).
-- `test_contract_companion_e2.py::test_c7_export_handoff` failed at the base `581c7b3`; see
-  the gate run for its state after `main`'s fixes.
+- `test_contract_companion_e2.py::test_c7_export_handoff` failed at the base `581c7b3`; it
+  passes on the integration branch.
+- The extras matrix was not rerun after the integration (the full environment was).
 - No real Copilot, VS Code or human session; agent acceptance runs were not executed.
+
+## Pull request summary (integration → `main`)
+
+**Title:** Integrate library contracts v1 (A), Azure ML export v1 (B) and main's fixes
+
+- **A (libraries v1):** `hypotrail-runtime` distribution (strict Pydantic contracts,
+  canonical JSON, schemas); `predictor.capture` fits the complete predictor before the final
+  test, writes a verified bundle and a wheel; the final test scores the reloaded capture and
+  binds its evidence; Pandera data contracts; SciPy bootstrap, Evidently diagnostics, MAPIE
+  risk control and conformal intervals as optional extras; Hypothesis properties.
+- **B (Azure ML export v1):** `hypotrail export azureml` writes a self-contained project
+  (Hydra configuration, four replayable steps, MLflow pyfunc package, readiness contract)
+  from the read-only `read_export_source`. Cloud is **not qualified**: no Azure call is made.
+- **Integration:** B consumes A's real runtime (test double removed); interface points
+  closed in A's contract (see the semantic-conflict table); the workshop capture calls B's
+  MLflow packager; a real end-to-end test runs from a study to a moved exported project.
+- **main's fixes:** merged without textual conflict; the panel regressions `main` carried
+  (stale fixtures, EDA card titles, collapsed cards in tests, French decimals) are fixed.
+- **Validation:** engine gate 2084 passed / 0 failed; Node 243/243; panel suite: previously failing tests fixed, full run pending;
+  layout OK. Not run: Azure, real Copilot/VS Code session, extras matrix after the merge,
+  pixel baselines (font-dependent here).
+- **Merge:** merge commit (no rebase, no force-push); the branch contains `main` at `506180a`.

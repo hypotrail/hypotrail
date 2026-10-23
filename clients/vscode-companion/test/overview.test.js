@@ -110,10 +110,10 @@ test('OV-6: digest texts hold no revision number', () => {
   }
 });
 
-test('OV-7: deliverable messages verbatim, in the order report, notebook, workbench; Regenerate only when needed', () => {
+test('OV-7: deliverable messages verbatim, in the order report, notebook, editable, workbench; Regenerate only when needed', () => {
   const p = payload('summary.binary');
   const m = toSummaryModel(p);
-  assert.deepEqual(m.artifacts.map(a => a.name), ['report', 'notebook', 'workbench']);
+  assert.deepEqual(m.artifacts.map(a => a.name), ['report', 'notebook', 'editable', 'workbench']);
   for (const a of m.artifacts) assert.equal(a.message, p.artifacts.items[a.name].message);
   assert.equal(m.regenerate, false, 'everything is up to date');
   assert.equal(toSummaryModel(payload('summary.binary.health')).regenerate, true, 'the report is stale');

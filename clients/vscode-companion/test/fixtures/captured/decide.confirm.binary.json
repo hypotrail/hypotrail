@@ -7,7 +7,7 @@
   "argv": [
    "decide",
    "confirm",
-   "p_9",
+   "p_10",
    "--user-words=Yes, call the 100 best-scored clients in each wave",
    "--channel",
    "webview",
@@ -16,7 +16,7 @@
    "--request-id",
    "b-conf",
    "--expected-revision",
-   "49",
+   "51",
    "--json"
   ],
   "note": ""
@@ -28,10 +28,10 @@
   "action": "decide.confirm",
   "request_id": "b-conf",
   "replayed": false,
-  "revision": 50,
+  "revision": 52,
   "result": {
    "decision_id": "policy",
-   "proposal_id": "p_9",
+   "proposal_id": "p_10",
    "status": "confirmed",
    "value": "capacity:100",
    "user_words": "Yes, call the 100 best-scored clients in each wave",
@@ -42,7 +42,7 @@
     "row": 6,
     "reason": "policy changed (§3.7 row 6: policy.rule_type)",
     "stale_results": [
-     "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e"
+     "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75"
     ],
     "stale_slots": [
      "diag.binary"
@@ -62,18 +62,27 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 50,
-    "last_ok_revision": 50,
+    "revision": 52,
+    "last_ok_revision": 52,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 50,
-    "last_ok_revision": 50,
+    "revision": 52,
+    "last_ok_revision": 52,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 52,
+    "last_ok_revision": 52,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -101,11 +110,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "action",
     "language": "en",
-    "revision": 50,
+    "revision": 52,
     "position": {
      "step_id": "policy",
-     "completed": 9,
-     "total": 12
+     "completed": 10,
+     "total": 13
     },
     "learned": [],
     "limitations": [

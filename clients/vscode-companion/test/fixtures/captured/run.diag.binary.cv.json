@@ -15,13 +15,13 @@
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-cv",
   "action": "run",
-  "request_id": "v21",
+  "request_id": "v23",
   "replayed": false,
-  "revision": 30,
+  "revision": 32,
   "activity": "diag.binary",
-  "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+  "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "b811633e5920fdc0afc199df5ac25887a334bf684eda59a6cc8ab91b46e8c89c",
+  "result_id": "4aff6119b8e2db1cc9ad88ea2f544bc3384d1e0831c133bd5af046f6b797d34a",
   "values": {
    "question": "Where does the model err at the rule, and can its score be read as a probability?",
    "evidence": "development",
@@ -1193,7 +1193,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0"
+     "predictions": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067"
     },
     "fit.variant": {
      "confusion": {
@@ -2349,7 +2349,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
      },
-     "predictions": "4f7b88d048bc7a6ec7faefe27e343b14d6cef721eab35a93aeb177716f9e045f"
+     "predictions": "1a6d96198637aae76f8d86ef42fa115876e52c5c65b6a666bdd5871144e974d9"
     }
    },
    "coefficient_rows": 3617,
@@ -2607,17 +2607,17 @@
    }
   },
   "result": {
-   "execution_id": "e_0e4a1b71a8e1df8f87a964dc",
+   "execution_id": "e_6f568a7e009178d11fe5261f",
    "activity": "diag.binary",
    "slot": "diag.binary",
    "status": "promoted",
-   "result_id": "b811633e5920fdc0afc199df5ac25887a334bf684eda59a6cc8ab91b46e8c89c",
-   "input_key": "09c023a042157bc23880c14928b9ea6f9f24ba76c5c57fbe0cebb2b731b27fdc",
+   "result_id": "4aff6119b8e2db1cc9ad88ea2f544bc3384d1e0831c133bd5af046f6b797d34a",
+   "input_key": "c7e9bbfd096c25e698ede6e9f4f7cdc44e6473bf8edc12933ecfd7a631b7485f",
    "reason": null,
-   "started_revision": 29,
+   "started_revision": 31,
    "invalidation": null,
    "exposure_ids": [
-    "x_6a25940f78504fd091481432d4a24f86"
+    "x_088cfd6ff28a43b188577737baeb78a9"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2626,18 +2626,27 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 30,
-    "last_ok_revision": 30,
+    "revision": 32,
+    "last_ok_revision": 32,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 30,
-    "last_ok_revision": 30,
+    "revision": 32,
+    "last_ok_revision": 32,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 32,
+    "last_ok_revision": 32,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -2651,7 +2660,7 @@
   },
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_8",
+   "proposal_id": "p_9",
    "decision": "final_test",
    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
@@ -2664,11 +2673,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 30,
+    "revision": 32,
     "position": {
      "step_id": "train_eda",
-     "completed": 9,
-     "total": 12
+     "completed": 10,
+     "total": 13
     },
     "learned": [],
     "limitations": [
@@ -2685,7 +2694,7 @@
       "text": "The data were explored or published before this study; its rows are not unseen."
      }
     ],
-    "proposal_id": "p_8",
+    "proposal_id": "p_9",
     "proposal_text": "You open the sealed final test once, for the chosen configuration.",
     "recommended_option": "adopt",
     "options": [
@@ -2693,7 +2702,7 @@
      "change",
      "explain"
     ],
-    "question": "Do you adopt this decision?",
+    "question": "You open the sealed final test once, for the chosen configuration.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
      "metric",

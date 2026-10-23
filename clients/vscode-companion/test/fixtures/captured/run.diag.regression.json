@@ -21,7 +21,7 @@
   "activity": "diag.regression",
   "execution_id": "e_bad9a6f0e28076da5c45d47f",
   "status": "promoted",
-  "result_id": "8b6a5417a54051dad25d49ea5e75592b987684a51a49abbffc0a522449429b6f",
+  "result_id": "74a2b20d0fe36a3994085c2628c1e966e47bb2c893b62df0fd7ec781ed0677f9",
   "values": {
    "question": "Where are the predictions off, by how much, and does the error grow with the prediction or differ across groups?",
    "evidence": "development",
@@ -1259,7 +1259,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f"
+     "predictions": "6c5edebf385d0f90967eedb40e07575b13b9b18471f8928dcc83ce9dfb476e93"
     },
     "fit.variant": {
      "errors": {
@@ -2473,7 +2473,7 @@
       "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
       "scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects"
      },
-     "predictions": "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f"
+     "predictions": "004185cee65589c9d8f1f69db33979c1f781cf40aa81edf7476608f60846074b"
     }
    },
    "coefficient_rows": 222,
@@ -2688,14 +2688,14 @@
    "activity": "diag.regression",
    "slot": "diag.regression",
    "status": "promoted",
-   "result_id": "8b6a5417a54051dad25d49ea5e75592b987684a51a49abbffc0a522449429b6f",
-   "input_key": "a928e097a6ad04e921d6836859c98a3e17bcc07cad4a713f7e40418a9b322254",
+   "result_id": "74a2b20d0fe36a3994085c2628c1e966e47bb2c893b62df0fd7ec781ed0677f9",
+   "input_key": "1f41381f781bd6e999d7f0be2e1d79e47a36b500e486d6864785948bd199866c",
    "reason": null,
    "started_revision": 39,
    "invalidation": null,
    "exposure_ids": [
-    "x_f89e6dd394434387bff4864d3dbb7e21",
-    "x_8212f56bcb87470d953c562141821830"
+    "x_8ce7a881943b4b59988a14105060606a",
+    "x_cf940f1828f8495cb0531e67c17e0934"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -2716,6 +2716,15 @@
     "last_ok_revision": 40,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 40,
+    "last_ok_revision": 40,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -2771,11 +2780,12 @@
      "change",
      "explain"
     ],
-    "question": "Do you adopt this decision?",
+    "question": "Adopt the linear model.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
-     "uncertainty"
+     "uncertainty",
+     "why-consider-a-nonlinear-family"
     ]
    }
   }

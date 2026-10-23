@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/bank marketing \"demo\"-families",
    "revision": 22,
-   "updated": "2026-10-23T11:55:53.643008+00:00",
+   "updated": "2026-10-23T14:15:17.347137+00:00",
    "case": {
     "id": "uci-bank-marketing-v1",
     "path": "/hypotrail/use-cases/bank-marketing/case.yaml",
@@ -206,6 +206,24 @@
      "current": false
     },
     {
+     "id": "model_choice",
+     "title": "Choose the model",
+     "question": "Given the development comparison, which model is retained for the decision rule? Comparing a model does not select it.",
+     "expected_output": "An explicit confirmed model choice, distinct from the rule.",
+     "completion": "Decision model_choice is confirmed.",
+     "pause": 3,
+     "decision": "model_choice",
+     "activities": [],
+     "decide_first": true,
+     "missing_results": [],
+     "requires": [
+      "model_variant",
+      "models"
+     ],
+     "status": "blocked",
+     "current": false
+    },
+    {
      "id": "policy",
      "title": "Choose a decision policy",
      "question": "Which rule turns scores into actions (a threshold, a capacity or a share), and what does it cost and gain?",
@@ -223,7 +241,8 @@
      ],
      "requires": [
       "models",
-      "model_variant"
+      "model_variant",
+      "model_choice"
      ],
      "status": "blocked",
      "current": false
@@ -244,6 +263,7 @@
       "final_test.evaluation"
      ],
      "requires": [
+      "model_choice",
       "policy"
      ],
      "status": "blocked",
@@ -287,13 +307,13 @@
      "position": {
       "step_id": "train_eda",
       "completed": 7,
-      "total": 12
+      "total": 13
      },
      "learned": [],
      "limitations": [
       {
        "code": "unconfirmed_decisions",
-       "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+       "text": "Not confirmed by you yet: the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
       },
       {
        "code": "validation_is_not_independent",
@@ -312,7 +332,7 @@
       "change",
       "explain"
      ],
-     "question": "Do you adopt this decision?",
+     "question": "You compare three variants of the candidate, each with its question.\n\nDo you adopt this decision?",
      "evidence_refs": [],
      "detail_topics": [
       "metric",
@@ -346,7 +366,7 @@
      "restatement": "You compare three variants of the candidate, each with its question.",
      "rationale": "One penalty change and two model families, inside the budget of three.",
      "revision": 22,
-     "created": "2026-10-23T11:55:53.641385+00:00",
+     "created": "2026-10-23T14:15:17.344925+00:00",
      "labels": null,
      "label": "You compare three variants of the candidate, each with its question.",
      "origin": {
@@ -370,7 +390,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-23T11:55:38.994543+00:00",
+      "time": "2026-10-23T14:15:02.457882+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -417,7 +437,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-23T11:55:40.132908+00:00",
+      "time": "2026-10-23T14:15:03.716912+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -466,7 +486,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-23T11:55:41.972332+00:00",
+      "time": "2026-10-23T14:15:05.753890+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -497,7 +517,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-23T11:55:43.783890+00:00",
+      "time": "2026-10-23T14:15:07.604433+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -533,7 +553,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-23T11:55:45.643367+00:00",
+      "time": "2026-10-23T14:15:09.287406+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -578,6 +598,25 @@
      ],
      "feature_basis": null
     },
+    "model_choice": {
+     "decision_id": "model_choice",
+     "status": "open",
+     "value": null,
+     "proposal_id": null,
+     "depends_on": [
+      "prediction_time",
+      "feature_availability",
+      "split",
+      "success_criterion",
+      "preprocessing",
+      "model_variant"
+     ],
+     "revision": null,
+     "reason": null,
+     "confirmation": null,
+     "open_proposals": [],
+     "feature_basis": null
+    },
     "policy": {
      "decision_id": "policy",
      "status": "open",
@@ -588,7 +627,8 @@
       "feature_availability",
       "split",
       "preprocessing",
-      "model_variant"
+      "model_variant",
+      "model_choice"
      ],
      "revision": null,
      "reason": null,
@@ -608,6 +648,7 @@
       "success_criterion",
       "preprocessing",
       "model_variant",
+      "model_choice",
       "policy"
      ],
      "revision": null,
@@ -628,6 +669,7 @@
       "success_criterion",
       "preprocessing",
       "model_variant",
+      "model_choice",
       "policy",
       "final_test"
      ],
@@ -710,7 +752,7 @@
    "results": {
     "diag.binary": {
      "slot": "diag.binary",
-     "result_id": "10c0c54fdb2e6c98dee3782dc21ef461a668c8c05bea31558302d3be6d880df6",
+     "result_id": "6262e69afb3f96f6d58f38094946cda6c2175dec219536dcb55b29b9212d9251",
      "activity": "diag.binary",
      "current": true,
      "stale_reason": null,
@@ -1887,7 +1929,7 @@
          "note": "Coefficients of the model fitted on these rows, with Wald intervals from a robust (sandwich) standard error: the approximation of how much each coefficient would move if the rows were drawn again, the preparation of the variables kept as fitted. Associations given the other variables, never effects. The fit is penalised: its coefficients are pulled towards zero, so the intervals describe the spread of the penalised estimate, centred on a value that is itself shrunk; they are not exact confidence intervals of an unpenalised coefficient, and a coefficient of a rare category can be shrunk well inside its interval.",
          "scale": "per standard deviation of the development rows (numeric) or per category (one-hot); associations, not effects"
         },
-        "predictions": "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0"
+        "predictions": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067"
        }
       },
       "coefficient_rows": 3617,
@@ -2169,15 +2211,15 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "fit.logistic": "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0",
-       "split": "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+       "fit.logistic": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
+       "split": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "fccfe9c8e79039453bf2b59c325c8bb5864858077f2843936037ccc9b6aeaf22",
+     "code_fingerprint": "13d2c40aa97fc62bc604b8a2e6145e343c052e5feef4dd2b4d7e89defaa6a7a2",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2191,13 +2233,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_e3011a6950ece5ea44c0419c",
-     "exposure_id": "x_08d68dec337b4d999b7b035466440be8",
+     "exposure_id": "x_18324f7bf0524b4fb7fab29431b6b652",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.target_rate": {
      "slot": "eda.target_rate",
-     "result_id": "ad31ca8b92c27a90e4524a9ba1bdffd0b6bcee605850e0735e1445b8a888c3db",
+     "result_id": "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
      "activity": "eda.target_rate",
      "current": true,
      "stale_reason": null,
@@ -2229,14 +2271,14 @@
        "row_keys": "414619d8f98c34ce302aac931ad9116caf7e484b92f11524d2246a5d7506c56f"
       },
       "results": {
-       "split": "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+       "split": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "d6d4cf7690dee23a715561a6c98879d9876cd69063673be6f514ceb41c4b75b0",
+     "code_fingerprint": "ff3b0188d3e0dab22e9ae7537502cbf7ae4632abae8db0000740d11f75732609",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2250,13 +2292,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_a8274014a4c678f4a2a235d2",
-     "exposure_id": "x_14f8ac2ce0e4421ea1ccc94bb4031d71",
+     "exposure_id": "x_4a7bec780acb4adab30097a2faf8c2b0",
      "started_revision": 14,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "0c52ab274c24354672925ca603e5a6a27413d06c30d4ebfa23e296e5d6ba68f1",
+     "result_id": "21fe57126ab0c0baa933e26480772ebd93649a532cc9de9ec7b258f2315c109f",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -2364,14 +2406,14 @@
        "scheme": "cross_validation"
       },
       "results": {
-       "split": "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+       "split": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
       },
       "target": {
        "column": "y",
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c9f6713ea1e9eccbe2904b86e4aa3209fba8d3b65b0644b2842318c1fb2fe7f3",
+     "code_fingerprint": "1b6a490d9f6f4b3e801783e2771753372a558a076b65262e5c30407035c9c76c",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2385,13 +2427,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_eff39ccb2204a33ff345cb41",
-     "exposure_id": "x_774a252f84624436b08d8b46728f9c53",
+     "exposure_id": "x_149c329382a54975bb950e6223563e74",
      "started_revision": 16,
      "integrity": "ok"
     },
     "fit.logistic": {
      "slot": "fit.logistic",
-     "result_id": "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0",
+     "result_id": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
      "activity": "fit.logistic",
      "current": true,
      "stale_reason": null,
@@ -2612,7 +2654,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+       "split": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
       },
       "special_values": [
        {
@@ -2641,7 +2683,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "0d9c2fca3814285ba3a9853c7c494b9f505e270dd2c52e58e4f88a3849994fe8",
+     "code_fingerprint": "ccb64d080969ed4d8535dccf9dd9122fe988b49e5611938e76bc13dddc02fe46",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2655,13 +2697,13 @@
       "python": "3.13.16"
      },
      "execution_id": "e_ac3d1a916c1001ec24a7a3b6",
-     "exposure_id": "x_f557e2bf246a4f50b7f785cde8e4981f",
+     "exposure_id": "x_bbb36eaf1de049989288608b298fca78",
      "started_revision": 18,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7",
+     "result_id": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -2746,7 +2788,7 @@
        "positive_label": "yes"
       }
      },
-     "code_fingerprint": "c30c1b8abe48e32a29a4afbf0145b5bde705f41fc52da21acc33c70af54a5d35",
+     "code_fingerprint": "294643f62f0a708d02c964866c238760b12ee5d863f1bce67328fdf270d0e75b",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2760,7 +2802,7 @@
       "python": "3.13.16"
      },
      "execution_id": "e_bb85e451e092b31aedb250d1",
-     "exposure_id": "x_307fc0c871384453beeae67687fd2e9d",
+     "exposure_id": "x_ee451dbff3d04836a193eda0618729a4",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -2777,23 +2819,42 @@
     "manifest": "artifacts.json",
     "status": "ok",
     "items": {
+     "editable": {
+      "candidate": null,
+      "consumed": [],
+      "error": null,
+      "generated": false,
+      "kind": "marimo_notebook",
+      "last_ok_revision": 22,
+      "path": "notebooks/study_editable.py",
+      "revision": 22,
+      "sha256": "09c0b35c2d07f3319f845cdec30230e17826738dd3b8cc023ed97e4b006593ea",
+      "status": "ok",
+      "template_version": 2,
+      "user_edits_preserved": [],
+      "recorded_status": "ok",
+      "stale_reason": null,
+      "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
+      "audience": "agent",
+      "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
+     },
      "notebook": {
       "candidate": null,
       "consumed": [
-       "0c52ab274c24354672925ca603e5a6a27413d06c30d4ebfa23e296e5d6ba68f1",
-       "10c0c54fdb2e6c98dee3782dc21ef461a668c8c05bea31558302d3be6d880df6",
-       "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0",
-       "ad31ca8b92c27a90e4524a9ba1bdffd0b6bcee605850e0735e1445b8a888c3db",
-       "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+       "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
+       "21fe57126ab0c0baa933e26480772ebd93649a532cc9de9ec7b258f2315c109f",
+       "6262e69afb3f96f6d58f38094946cda6c2175dec219536dcb55b29b9212d9251",
+       "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
+       "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
       ],
-      "edit_check_sha256": "2492522144c502f1dff38b55100fd96a12e63a71a88f7eb70bef948c5cd0bbb0",
+      "edit_check_sha256": "46eafb294931c2e74e00f17b47d79f267e0f2b1797db72efc63cd03856eee292",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 22,
       "path": "notebooks/study_generated.py",
       "revision": 22,
-      "sha256": "18c2565625fc84a8cb04d0ec7e3a029d1e22130dd8d09dcb5baecd093e224c6a",
+      "sha256": "8e99e32d68be074e18219cd259efb79b3005758ba29517e5a41d82b6746ab235",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2806,11 +2867,11 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "0c52ab274c24354672925ca603e5a6a27413d06c30d4ebfa23e296e5d6ba68f1",
-       "10c0c54fdb2e6c98dee3782dc21ef461a668c8c05bea31558302d3be6d880df6",
-       "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0",
-       "ad31ca8b92c27a90e4524a9ba1bdffd0b6bcee605850e0735e1445b8a888c3db",
-       "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+       "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
+       "21fe57126ab0c0baa933e26480772ebd93649a532cc9de9ec7b258f2315c109f",
+       "6262e69afb3f96f6d58f38094946cda6c2175dec219536dcb55b29b9212d9251",
+       "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
+       "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
       ],
       "error": null,
       "generated": true,
@@ -2818,7 +2879,7 @@
       "last_ok_revision": 22,
       "path": "reports/study.html",
       "revision": 22,
-      "sha256": "0856cf6c7776c607b813b730396d9fc73a09ef80ce1e7a2c63814f8fb1f219fe",
+      "sha256": "e1cb1594490d15b518f111d4d33c8a87f9f4c692cbd95de966475137275f865d",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -2894,13 +2955,14 @@
      "id": "unconfirmed_decisions",
      "decisions": [
       "model_variant",
+      "model_choice",
       "policy",
       "final_test",
       "conclusion"
      ],
-     "text": "These decisions are not confirmed: model_variant, policy, final_test, conclusion.",
+     "text": "These decisions are not confirmed: model_variant, model_choice, policy, final_test, conclusion.",
      "audience": "agent",
-     "junior_text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+     "junior_text": "Not confirmed by you yet: the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
     },
     {
      "id": "validation_is_not_independent",
@@ -3010,6 +3072,20 @@
       ],
       "shell": "uv run --project /hypotrail/framework marimo run '/studies/bank marketing \"demo\"-families/notebooks/study_generated.py'"
      },
+     "editable": {
+      "mode": "edit",
+      "path": "notebooks/study_editable.py",
+      "argv": [
+       "uv",
+       "run",
+       "--project",
+       "/hypotrail/framework",
+       "marimo",
+       "edit",
+       "/studies/bank marketing \"demo\"-families/notebooks/study_editable.py"
+      ],
+      "shell": "uv run --project /hypotrail/framework marimo edit '/studies/bank marketing \"demo\"-families/notebooks/study_editable.py'"
+     },
      "workbench": {
       "mode": "edit",
       "path": "notebooks/workbench.py",
@@ -3054,8 +3130,8 @@
    "eda_looks": {
     "target_looks": 2,
     "results": [
-     "ad31ca8b92c27a90e4524a9ba1bdffd0b6bcee605850e0735e1445b8a888c3db",
-     "10c0c54fdb2e6c98dee3782dc21ef461a668c8c05bea31558302d3be6d880df6"
+     "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
+     "6262e69afb3f96f6d58f38094946cda6c2175dec219536dcb55b29b9212d9251"
     ],
     "by_activity": {
      "diag.binary": 1,
@@ -3073,7 +3149,7 @@
    "trials": {
     "count": 1,
     "results": [
-     "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0"
+     "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -3169,7 +3245,7 @@
      "declared": false
     },
     "evidence": {
-     "source": "10c0c54fdb2e6c98dee3782dc21ef461a668c8c05bea31558302d3be6d880df6",
+     "source": "6262e69afb3f96f6d58f38094946cda6c2175dec219536dcb55b29b9212d9251",
      "checked": true,
      "flags": [],
      "checks": {
@@ -3499,11 +3575,11 @@
     "schema": "hypotrail.presentation/1",
     "revision": 22,
     "result_ids": {
-     "diag.binary": "10c0c54fdb2e6c98dee3782dc21ef461a668c8c05bea31558302d3be6d880df6",
-     "eda.target_rate": "ad31ca8b92c27a90e4524a9ba1bdffd0b6bcee605850e0735e1445b8a888c3db",
-     "fit.baseline": "0c52ab274c24354672925ca603e5a6a27413d06c30d4ebfa23e296e5d6ba68f1",
-     "fit.logistic": "2d82df790d72b5b9de0f1b281d1bf344b692e418d384f46f76e1eb6ebbc04fe0",
-     "split": "e4816267cefb412b4ccfef7fb23ffe298ddd8a3339df285083b89b6cc849f2f7"
+     "diag.binary": "6262e69afb3f96f6d58f38094946cda6c2175dec219536dcb55b29b9212d9251",
+     "eda.target_rate": "b567ca7500d6aad9cd8777ec8d3922101d8bfce06f9ec23bfd7379fa324c8fcf",
+     "fit.baseline": "21fe57126ab0c0baa933e26480772ebd93649a532cc9de9ec7b258f2315c109f",
+     "fit.logistic": "04dadd044e03fd5db27d9e36260c2550277bf678390730f541a58728b2a6d067",
+     "split": "ddc90bf6eb0b286e0fed1bf6f3eaa2187a5675e450838e383f5e5a5c3fb40dc4"
     },
     "eligibility": null,
     "uncertainty": {},
@@ -3529,13 +3605,13 @@
      "position": {
       "step_id": "train_eda",
       "completed": 7,
-      "total": 12
+      "total": 13
      },
      "learned": [],
      "limitations": [
       {
        "code": "unconfirmed_decisions",
-       "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+       "text": "Not confirmed by you yet: the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
       },
       {
        "code": "validation_is_not_independent",
@@ -3554,7 +3630,7 @@
       "change",
       "explain"
      ],
-     "question": "Do you adopt this decision?",
+     "question": "You compare three variants of the candidate, each with its question.\n\nDo you adopt this decision?",
      "evidence_refs": [],
      "detail_topics": [
       "metric",

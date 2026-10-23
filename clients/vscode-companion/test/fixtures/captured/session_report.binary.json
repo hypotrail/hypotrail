@@ -14,44 +14,44 @@
   "schema": "hypotrail.session_report/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 48,
+  "revision": 50,
   "since": null,
   "sources": {
-   "revisions": 48,
+   "revisions": 50,
    "events": 1,
    "session_log": {
     "enabled": true,
-    "entries": 68,
+    "entries": 72,
     "path": ".hypotrail/session-log.jsonl",
     "note": null
    },
    "artifacts_status": "ok"
   },
   "span": {
-   "first": "2026-10-23T11:54:05.815818+00:00",
-   "last": "2026-10-23T11:54:48.754864+00:00",
-   "seconds": 42.9,
-   "revisions": 48
+   "first": "2026-10-23T14:13:14.077912+00:00",
+   "last": "2026-10-23T14:14:00.227899+00:00",
+   "seconds": 46.1,
+   "revisions": 50
   },
   "commands": {
    "check": 1,
-   "decide confirm": 7,
-   "decide propose": 8,
+   "decide confirm": 8,
+   "decide propose": 9,
    "init": 1,
    "render": 1,
    "run": 16,
-   "status": 34
+   "status": 36
   },
   "refusals": [],
   "decisions": [
    {
     "proposal_id": "p_1",
     "decision_id": "prediction_time",
-    "proposed_at": "2026-10-23T11:54:06.015412+00:00",
+    "proposed_at": "2026-10-23T14:13:14.329017+00:00",
     "proposed_revision": 2,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:07.469503+00:00",
-    "seconds_open": 1.5,
+    "closed_at": "2026-10-23T14:13:15.587900+00:00",
+    "seconds_open": 1.3,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -60,11 +60,11 @@
    {
     "proposal_id": "p_2",
     "decision_id": "feature_availability",
-    "proposed_at": "2026-10-23T11:54:08.195350+00:00",
+    "proposed_at": "2026-10-23T14:13:16.258637+00:00",
     "proposed_revision": 4,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:08.790430+00:00",
-    "seconds_open": 0.6,
+    "closed_at": "2026-10-23T14:13:16.805126+00:00",
+    "seconds_open": 0.5,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -73,10 +73,10 @@
    {
     "proposal_id": "p_3",
     "decision_id": "split",
-    "proposed_at": "2026-10-23T11:54:09.598549+00:00",
+    "proposed_at": "2026-10-23T14:13:17.601149+00:00",
     "proposed_revision": 6,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:10.539964+00:00",
+    "closed_at": "2026-10-23T14:13:18.492015+00:00",
     "seconds_open": 0.9,
     "basis": "restated",
     "delegation_scope": null,
@@ -86,10 +86,10 @@
    {
     "proposal_id": "p_4",
     "decision_id": "success_criterion",
-    "proposed_at": "2026-10-23T11:54:11.583489+00:00",
+    "proposed_at": "2026-10-23T14:13:19.348972+00:00",
     "proposed_revision": 8,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:12.606093+00:00",
+    "closed_at": "2026-10-23T14:13:20.373560+00:00",
     "seconds_open": 1.0,
     "basis": "restated",
     "delegation_scope": null,
@@ -99,11 +99,11 @@
    {
     "proposal_id": "p_5",
     "decision_id": "preprocessing",
-    "proposed_at": "2026-10-23T11:54:13.665268+00:00",
+    "proposed_at": "2026-10-23T14:13:21.560202+00:00",
     "proposed_revision": 10,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:14.544408+00:00",
-    "seconds_open": 0.9,
+    "closed_at": "2026-10-23T14:13:22.675424+00:00",
+    "seconds_open": 1.1,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -112,11 +112,11 @@
    {
     "proposal_id": "p_6",
     "decision_id": "model_variant",
-    "proposed_at": "2026-10-23T11:54:34.219428+00:00",
+    "proposed_at": "2026-10-23T14:13:41.727814+00:00",
     "proposed_revision": 36,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:35.311981+00:00",
-    "seconds_open": 1.1,
+    "closed_at": "2026-10-23T14:13:42.727729+00:00",
+    "seconds_open": 1.0,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -124,12 +124,12 @@
    },
    {
     "proposal_id": "p_7",
-    "decision_id": "policy",
-    "proposed_at": "2026-10-23T11:54:38.386003+00:00",
+    "decision_id": "model_choice",
+    "proposed_at": "2026-10-23T14:13:46.465879+00:00",
     "proposed_revision": 42,
     "outcome": "confirmed",
-    "closed_at": "2026-10-23T11:54:39.277770+00:00",
-    "seconds_open": 0.9,
+    "closed_at": "2026-10-23T14:13:47.675632+00:00",
+    "seconds_open": 1.2,
     "basis": "restated",
     "delegation_scope": null,
     "refused_confirmations": 0,
@@ -138,8 +138,21 @@
    {
     "proposal_id": "p_8",
     "decision_id": "policy",
-    "proposed_at": "2026-10-23T11:54:43.871004+00:00",
-    "proposed_revision": 48,
+    "proposed_at": "2026-10-23T14:13:48.753124+00:00",
+    "proposed_revision": 44,
+    "outcome": "confirmed",
+    "closed_at": "2026-10-23T14:13:49.826414+00:00",
+    "seconds_open": 1.1,
+    "basis": "restated",
+    "delegation_scope": null,
+    "refused_confirmations": 0,
+    "refusal_reasons": {}
+   },
+   {
+    "proposal_id": "p_9",
+    "decision_id": "policy",
+    "proposed_at": "2026-10-23T14:13:54.851113+00:00",
+    "proposed_revision": 50,
     "outcome": "open",
     "closed_at": null,
     "seconds_open": null,
@@ -156,9 +169,9 @@
      "prediction_time",
      "feature_availability"
     ],
-    "opened_at": "2026-10-23T11:54:06.015412+00:00",
-    "closed_at": "2026-10-23T11:54:08.790430+00:00",
-    "seconds": 2.8,
+    "opened_at": "2026-10-23T14:13:14.329017+00:00",
+    "closed_at": "2026-10-23T14:13:16.805126+00:00",
+    "seconds": 2.5,
     "proposals": 2,
     "confirmed": [
      "feature_availability",
@@ -174,9 +187,9 @@
      "success_criterion",
      "preprocessing"
     ],
-    "opened_at": "2026-10-23T11:54:09.598549+00:00",
-    "closed_at": "2026-10-23T11:54:14.544408+00:00",
-    "seconds": 4.9,
+    "opened_at": "2026-10-23T14:13:17.601149+00:00",
+    "closed_at": "2026-10-23T14:13:22.675424+00:00",
+    "seconds": 5.1,
     "proposals": 3,
     "confirmed": [
      "preprocessing",
@@ -190,15 +203,17 @@
     "pause": 3,
     "decisions": [
      "model_variant",
+     "model_choice",
      "policy",
      "final_test",
      "conclusion"
     ],
-    "opened_at": "2026-10-23T11:54:34.219428+00:00",
+    "opened_at": "2026-10-23T14:13:41.727814+00:00",
     "closed_at": null,
     "seconds": null,
-    "proposals": 3,
+    "proposals": 4,
     "confirmed": [
+     "model_choice",
      "model_variant",
      "policy"
     ],
@@ -212,156 +227,156 @@
     "activity": "split",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:15.445898+00:00",
+    "started_at": "2026-10-23T14:13:23.556732+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:16.725246+00:00",
-    "seconds": 1.3,
+    "ended_at": "2026-10-23T14:13:24.722851+00:00",
+    "seconds": 1.2,
     "slot": "split",
-    "result_id": "4fb77760"
+    "result_id": "ae127b38"
    },
    {
     "execution_id": "e_8651b2bcef1776e9ebffd170",
     "activity": "eda.target_rate",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:17.812266+00:00",
+    "started_at": "2026-10-23T14:13:25.798181+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:18.037412+00:00",
+    "ended_at": "2026-10-23T14:13:25.980910+00:00",
     "seconds": 0.2,
     "slot": "eda.target_rate",
-    "result_id": "6673caf8"
+    "result_id": "3733bf69"
    },
    {
     "execution_id": "e_76bdb563530c997e6fdf55cc",
     "activity": "eda.special_values",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:19.248493+00:00",
+    "started_at": "2026-10-23T14:13:27.082120+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:19.439469+00:00",
+    "ended_at": "2026-10-23T14:13:27.328754+00:00",
     "seconds": 0.2,
     "slot": "eda.special_values",
-    "result_id": "c597c0d1"
+    "result_id": "73229100"
    },
    {
     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
     "activity": "eda.quality",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:20.556000+00:00",
+    "started_at": "2026-10-23T14:13:28.616675+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:20.799960+00:00",
+    "ended_at": "2026-10-23T14:13:28.843854+00:00",
     "seconds": 0.2,
     "slot": "eda.quality",
-    "result_id": "5bbb72bd"
+    "result_id": "6db00244"
    },
    {
     "execution_id": "e_40d674998c07527b12a31e29",
     "activity": "eda.single_feature_signal",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:22.021158+00:00",
+    "started_at": "2026-10-23T14:13:30.016626+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:23.743825+00:00",
+    "ended_at": "2026-10-23T14:13:31.711566+00:00",
     "seconds": 1.7,
     "slot": "eda.single_feature_signal",
-    "result_id": "79ddb96d"
+    "result_id": "2aa4f23e"
    },
    {
     "execution_id": "e_3b7e9da2df5de95232824246",
     "activity": "eda.rate_by",
     "rules": null,
     "column": "job",
-    "started_at": "2026-10-23T11:54:24.729687+00:00",
+    "started_at": "2026-10-23T14:13:32.669597+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:24.952021+00:00",
+    "ended_at": "2026-10-23T14:13:32.861129+00:00",
     "seconds": 0.2,
     "slot": "eda.rate_by:job",
-    "result_id": "0bec0674"
+    "result_id": "ed070172"
    },
    {
     "execution_id": "e_17bb42fe2af6771b4815132d",
     "activity": "eda.distribution",
     "rules": null,
     "column": "age",
-    "started_at": "2026-10-23T11:54:26.041384+00:00",
+    "started_at": "2026-10-23T14:13:33.818427+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:26.268517+00:00",
-    "seconds": 0.2,
+    "ended_at": "2026-10-23T14:13:34.079123+00:00",
+    "seconds": 0.3,
     "slot": "eda.distribution:age",
-    "result_id": "a8ea04b2"
+    "result_id": "d111d579"
    },
    {
     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
     "activity": "eda.distribution",
     "rules": null,
     "column": "job",
-    "started_at": "2026-10-23T11:54:27.464492+00:00",
+    "started_at": "2026-10-23T14:13:35.037999+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:27.700545+00:00",
+    "ended_at": "2026-10-23T14:13:35.257698+00:00",
     "seconds": 0.2,
     "slot": "eda.distribution:job",
-    "result_id": "4402efd4"
+    "result_id": "7525eca9"
    },
    {
     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
     "activity": "eda.distribution",
     "rules": null,
     "column": "previous",
-    "started_at": "2026-10-23T11:54:28.871624+00:00",
+    "started_at": "2026-10-23T14:13:36.366834+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:29.034305+00:00",
+    "ended_at": "2026-10-23T14:13:36.527601+00:00",
     "seconds": 0.2,
     "slot": "eda.distribution:previous",
-    "result_id": "de54335e"
+    "result_id": "ffc20256"
    },
    {
     "execution_id": "e_dc60c4ca476066179e139318",
     "activity": "eda.correlation",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:30.089718+00:00",
+    "started_at": "2026-10-23T14:13:37.594039+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:30.776236+00:00",
-    "seconds": 0.7,
+    "ended_at": "2026-10-23T14:13:38.208091+00:00",
+    "seconds": 0.6,
     "slot": "eda.correlation",
-    "result_id": "e038bedc"
+    "result_id": "3b952dc3"
    },
    {
     "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
     "activity": "fit.baseline",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:31.677749+00:00",
+    "started_at": "2026-10-23T14:13:39.175957+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:31.876620+00:00",
+    "ended_at": "2026-10-23T14:13:39.361176+00:00",
     "seconds": 0.2,
     "slot": "fit.baseline",
-    "result_id": "e23e44fb"
+    "result_id": "fdce45ce"
    },
    {
     "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
     "activity": "fit.logistic",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:32.917323+00:00",
+    "started_at": "2026-10-23T14:13:40.337413+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:33.138018+00:00",
+    "ended_at": "2026-10-23T14:13:40.577297+00:00",
     "seconds": 0.2,
     "slot": "fit.logistic",
-    "result_id": "45051af2"
+    "result_id": "9862ea70"
    },
    {
     "execution_id": "e_fd2d4cab3d29a091ff558cfa",
     "activity": "fit.variant",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:36.215090+00:00",
+    "started_at": "2026-10-23T14:13:43.714389+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:36.440004+00:00",
+    "ended_at": "2026-10-23T14:13:43.963434+00:00",
     "seconds": 0.2,
     "slot": "fit.variant",
-    "result_id": "05f1fdf7"
+    "result_id": "72ea4d07"
    },
    {
     "execution_id": "e_9f1e0272a9e69c5abdc408f8",
@@ -370,356 +385,410 @@
      "threshold:0.2"
     ],
     "column": null,
-    "started_at": "2026-10-23T11:54:37.362431+00:00",
+    "started_at": "2026-10-23T14:13:45.101004+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:37.500742+00:00",
-    "seconds": 0.1,
+    "ended_at": "2026-10-23T14:13:45.256817+00:00",
+    "seconds": 0.2,
     "slot": "policy.evaluation",
-    "result_id": "d0bd4cdf"
+    "result_id": "d7fa486f"
    },
    {
-    "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
+    "execution_id": "e_6ed23e1b9a8128024e723b74",
     "activity": "diag.binary",
     "rules": null,
     "column": null,
-    "started_at": "2026-10-23T11:54:40.411164+00:00",
+    "started_at": "2026-10-23T14:13:50.817284+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:40.694839+00:00",
+    "ended_at": "2026-10-23T14:13:51.095706+00:00",
     "seconds": 0.3,
     "slot": "diag.binary",
-    "result_id": "7dc8f415"
+    "result_id": "141c7a9e"
    },
    {
-    "execution_id": "e_08e526346896c3129f460359",
+    "execution_id": "e_405ea565bcf4773f753be1e0",
     "activity": "policy.evaluation",
     "rules": [
      "capacity:100"
     ],
     "column": null,
-    "started_at": "2026-10-23T11:54:41.845166+00:00",
+    "started_at": "2026-10-23T14:13:52.199687+00:00",
     "outcome": "promoted",
-    "ended_at": "2026-10-23T11:54:42.518390+00:00",
-    "seconds": 0.7,
+    "ended_at": "2026-10-23T14:13:52.994043+00:00",
+    "seconds": 0.8,
     "slot": "policy.evaluation",
-    "result_id": "2409a40b"
+    "result_id": "97dd9c63"
    }
   ],
   "renders": [
    {
-    "time": "2026-10-23T11:54:07.175705+00:00",
+    "time": "2026-10-23T14:13:15.319985+00:00",
     "command": "decide",
     "revision": 2,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:07.917107+00:00",
+    "time": "2026-10-23T14:13:16.042271+00:00",
     "command": "decide",
     "revision": 3,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:08.617110+00:00",
+    "time": "2026-10-23T14:13:16.637827+00:00",
     "command": "decide",
     "revision": 4,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:09.355891+00:00",
+    "time": "2026-10-23T14:13:17.367023+00:00",
     "command": "decide",
     "revision": 5,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:10.266482+00:00",
+    "time": "2026-10-23T14:13:18.245648+00:00",
     "command": "decide",
     "revision": 6,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:11.221432+00:00",
+    "time": "2026-10-23T14:13:19.076696+00:00",
     "command": "decide",
     "revision": 7,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:12.271913+00:00",
+    "time": "2026-10-23T14:13:20.085622+00:00",
     "command": "decide",
     "revision": 8,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:13.352258+00:00",
+    "time": "2026-10-23T14:13:21.131642+00:00",
     "command": "decide",
     "revision": 9,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:14.271002+00:00",
+    "time": "2026-10-23T14:13:22.358954+00:00",
     "command": "decide",
     "revision": 10,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:15.140617+00:00",
+    "time": "2026-10-23T14:13:23.250998+00:00",
     "command": "decide",
     "revision": 11,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:17.546526+00:00",
+    "time": "2026-10-23T14:13:25.501519+00:00",
     "command": "run",
     "revision": 13,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:18.841505+00:00",
+    "time": "2026-10-23T14:13:26.782167+00:00",
     "command": "run",
     "revision": 15,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:20.169388+00:00",
+    "time": "2026-10-23T14:13:28.169433+00:00",
     "command": "run",
     "revision": 17,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:21.587766+00:00",
+    "time": "2026-10-23T14:13:29.641768+00:00",
     "command": "run",
     "revision": 19,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:24.398062+00:00",
+    "time": "2026-10-23T14:13:32.350936+00:00",
     "command": "run",
     "revision": 21,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:25.689008+00:00",
+    "time": "2026-10-23T14:13:33.546178+00:00",
     "command": "run",
     "revision": 23,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:27.142722+00:00",
+    "time": "2026-10-23T14:13:34.708946+00:00",
     "command": "run",
     "revision": 25,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:28.553011+00:00",
+    "time": "2026-10-23T14:13:36.053551+00:00",
     "command": "run",
     "revision": 27,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:29.740366+00:00",
+    "time": "2026-10-23T14:13:37.274598+00:00",
     "command": "run",
     "revision": 29,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:31.403740+00:00",
+    "time": "2026-10-23T14:13:38.872691+00:00",
     "command": "run",
     "revision": 31,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:32.615475+00:00",
+    "time": "2026-10-23T14:13:40.035694+00:00",
     "command": "run",
     "revision": 33,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:33.917640+00:00",
+    "time": "2026-10-23T14:13:41.376843+00:00",
     "command": "run",
     "revision": 35,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:34.996340+00:00",
+    "time": "2026-10-23T14:13:42.374369+00:00",
     "command": "decide",
     "revision": 36,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:35.920168+00:00",
+    "time": "2026-10-23T14:13:43.428603+00:00",
     "command": "decide",
     "revision": 37,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:37.076283+00:00",
+    "time": "2026-10-23T14:13:44.739448+00:00",
     "command": "run",
     "revision": 39,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:38.142963+00:00",
+    "time": "2026-10-23T14:13:46.068569+00:00",
     "command": "run",
     "revision": 41,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:38.992058+00:00",
+    "time": "2026-10-23T14:13:47.259644+00:00",
     "command": "decide",
     "revision": 42,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:40.070936+00:00",
+    "time": "2026-10-23T14:13:48.448901+00:00",
     "command": "decide",
     "revision": 43,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:41.527671+00:00",
-    "command": "run",
+    "time": "2026-10-23T14:13:49.556268+00:00",
+    "command": "decide",
+    "revision": 44,
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-23T14:13:50.524352+00:00",
+    "command": "decide",
     "revision": 45,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:43.221294+00:00",
+    "time": "2026-10-23T14:13:51.858211+00:00",
     "command": "run",
     "revision": 47,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:44.509786+00:00",
+    "time": "2026-10-23T14:13:53.895844+00:00",
+    "command": "run",
+    "revision": 49,
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "time": "2026-10-23T14:13:55.715409+00:00",
     "command": "decide",
-    "revision": 48,
+    "revision": 50,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     }
    },
    {
-    "time": "2026-10-23T11:54:47.949298+00:00",
+    "time": "2026-10-23T14:13:59.420044+00:00",
     "command": "render",
-    "revision": 48,
+    "revision": 50,
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -728,8 +797,8 @@
   ],
   "checks": [
    {
-    "time": "2026-10-23T11:54:48.754864+00:00",
-    "revision": 48,
+    "time": "2026-10-23T14:14:00.227899+00:00",
+    "revision": 50,
     "clean": true,
     "codes": {},
     "counts": {
@@ -744,20 +813,20 @@
   "gaps": [],
   "timeline": [
    {
-    "time": "2026-10-23T11:54:05.815818+00:00",
+    "time": "2026-10-23T14:13:14.077912+00:00",
     "source": "revision",
     "revision": 1,
     "action": "init"
    },
    {
-    "time": "2026-10-23T11:54:05.821534+00:00",
+    "time": "2026-10-23T14:13:14.081258+00:00",
     "source": "event",
     "kind": "study_created",
     "revision": 1
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:05.842369+00:00",
+    "time": "2026-10-23T14:13:14.096732+00:00",
     "command": "init",
     "verb": null,
     "exit_code": 0,
@@ -767,7 +836,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:05.969800+00:00",
+    "time": "2026-10-23T14:13:14.279422+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -778,7 +847,7 @@
     "next_action": "show_data_card"
    },
    {
-    "time": "2026-10-23T11:54:06.015412+00:00",
+    "time": "2026-10-23T14:13:14.329017+00:00",
     "source": "revision",
     "revision": 2,
     "action": "decide.propose",
@@ -788,7 +857,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:07.175705+00:00",
+    "time": "2026-10-23T14:13:15.319985+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -800,6 +869,7 @@
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -807,7 +877,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:07.338330+00:00",
+    "time": "2026-10-23T14:13:15.547484+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -818,7 +888,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:07.469503+00:00",
+    "time": "2026-10-23T14:13:15.587900+00:00",
     "source": "revision",
     "revision": 3,
     "action": "decide.confirm",
@@ -833,7 +903,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:07.917107+00:00",
+    "time": "2026-10-23T14:13:16.042271+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -850,6 +920,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -857,7 +928,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:08.131824+00:00",
+    "time": "2026-10-23T14:13:16.220398+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -868,7 +939,7 @@
     "next_action": "propose"
    },
    {
-    "time": "2026-10-23T11:54:08.195350+00:00",
+    "time": "2026-10-23T14:13:16.258637+00:00",
     "source": "revision",
     "revision": 4,
     "action": "decide.propose",
@@ -878,7 +949,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:08.617110+00:00",
+    "time": "2026-10-23T14:13:16.637827+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -890,6 +961,7 @@
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -897,7 +969,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:08.746782+00:00",
+    "time": "2026-10-23T14:13:16.765774+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -908,7 +980,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:08.790430+00:00",
+    "time": "2026-10-23T14:13:16.805126+00:00",
     "source": "revision",
     "revision": 5,
     "action": "decide.confirm",
@@ -923,7 +995,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:09.355891+00:00",
+    "time": "2026-10-23T14:13:17.367023+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -940,6 +1012,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -947,7 +1020,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:09.589885+00:00",
+    "time": "2026-10-23T14:13:17.593542+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -958,7 +1031,7 @@
     "next_action": "propose"
    },
    {
-    "time": "2026-10-23T11:54:09.598549+00:00",
+    "time": "2026-10-23T14:13:17.601149+00:00",
     "source": "revision",
     "revision": 6,
     "action": "decide.propose",
@@ -968,7 +1041,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:10.266482+00:00",
+    "time": "2026-10-23T14:13:18.245648+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -980,6 +1053,7 @@
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -987,7 +1061,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:10.528423+00:00",
+    "time": "2026-10-23T14:13:18.483412+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -998,7 +1072,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:10.539964+00:00",
+    "time": "2026-10-23T14:13:18.492015+00:00",
     "source": "revision",
     "revision": 7,
     "action": "decide.confirm",
@@ -1013,7 +1087,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:11.221432+00:00",
+    "time": "2026-10-23T14:13:19.076696+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1030,6 +1104,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1037,7 +1112,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:11.572114+00:00",
+    "time": "2026-10-23T14:13:19.338831+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1048,7 +1123,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:11.583489+00:00",
+    "time": "2026-10-23T14:13:19.348972+00:00",
     "source": "revision",
     "revision": 8,
     "action": "decide.propose",
@@ -1058,7 +1133,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:12.271913+00:00",
+    "time": "2026-10-23T14:13:20.085622+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1070,6 +1145,7 @@
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1077,7 +1153,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:12.597310+00:00",
+    "time": "2026-10-23T14:13:20.363102+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1088,7 +1164,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:12.606093+00:00",
+    "time": "2026-10-23T14:13:20.373560+00:00",
     "source": "revision",
     "revision": 9,
     "action": "decide.confirm",
@@ -1103,7 +1179,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:13.352258+00:00",
+    "time": "2026-10-23T14:13:21.131642+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1120,6 +1196,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1127,7 +1204,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:13.585948+00:00",
+    "time": "2026-10-23T14:13:21.472032+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1138,7 +1215,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:13.665268+00:00",
+    "time": "2026-10-23T14:13:21.560202+00:00",
     "source": "revision",
     "revision": 10,
     "action": "decide.propose",
@@ -1148,7 +1225,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:14.271002+00:00",
+    "time": "2026-10-23T14:13:22.358954+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1160,6 +1237,7 @@
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1167,7 +1245,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:14.499487+00:00",
+    "time": "2026-10-23T14:13:22.633425+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1178,7 +1256,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:14.544408+00:00",
+    "time": "2026-10-23T14:13:22.675424+00:00",
     "source": "revision",
     "revision": 11,
     "action": "decide.confirm",
@@ -1193,7 +1271,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:15.140617+00:00",
+    "time": "2026-10-23T14:13:23.250998+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1210,6 +1288,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1217,7 +1296,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:15.402367+00:00",
+    "time": "2026-10-23T14:13:23.481048+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1228,7 +1307,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:15.445898+00:00",
+    "time": "2026-10-23T14:13:23.556732+00:00",
     "source": "revision",
     "revision": 12,
     "action": "run.reserve",
@@ -1237,7 +1316,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:16.725246+00:00",
+    "time": "2026-10-23T14:13:24.722851+00:00",
     "source": "revision",
     "revision": 13,
     "action": "run.promote",
@@ -1245,11 +1324,11 @@
     "execution_id": "e_8101d16893f3425fbb4ff727",
     "slot": "split",
     "status": "promoted",
-    "result_id": "4fb77760"
+    "result_id": "ae127b38"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:17.546526+00:00",
+    "time": "2026-10-23T14:13:25.501519+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1259,16 +1338,17 @@
     "activity": "split",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "split",
-    "result_id": "4fb77760"
+    "result_id": "ae127b38"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:17.771691+00:00",
+    "time": "2026-10-23T14:13:25.748230+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1279,7 +1359,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:17.812266+00:00",
+    "time": "2026-10-23T14:13:25.798181+00:00",
     "source": "revision",
     "revision": 14,
     "action": "run.reserve",
@@ -1288,7 +1368,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:18.037412+00:00",
+    "time": "2026-10-23T14:13:25.980910+00:00",
     "source": "revision",
     "revision": 15,
     "action": "run.promote",
@@ -1296,11 +1376,11 @@
     "execution_id": "e_8651b2bcef1776e9ebffd170",
     "slot": "eda.target_rate",
     "status": "promoted",
-    "result_id": "6673caf8"
+    "result_id": "3733bf69"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:18.841505+00:00",
+    "time": "2026-10-23T14:13:26.782167+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1310,16 +1390,17 @@
     "activity": "eda.target_rate",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.target_rate",
-    "result_id": "6673caf8"
+    "result_id": "3733bf69"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:19.200580+00:00",
+    "time": "2026-10-23T14:13:27.019645+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1330,7 +1411,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:19.248493+00:00",
+    "time": "2026-10-23T14:13:27.082120+00:00",
     "source": "revision",
     "revision": 16,
     "action": "run.reserve",
@@ -1339,7 +1420,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:19.439469+00:00",
+    "time": "2026-10-23T14:13:27.328754+00:00",
     "source": "revision",
     "revision": 17,
     "action": "run.promote",
@@ -1347,11 +1428,11 @@
     "execution_id": "e_76bdb563530c997e6fdf55cc",
     "slot": "eda.special_values",
     "status": "promoted",
-    "result_id": "c597c0d1"
+    "result_id": "73229100"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:20.169388+00:00",
+    "time": "2026-10-23T14:13:28.169433+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1361,16 +1442,17 @@
     "activity": "eda.special_values",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.special_values",
-    "result_id": "c597c0d1"
+    "result_id": "73229100"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:20.489290+00:00",
+    "time": "2026-10-23T14:13:28.540852+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1381,7 +1463,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:20.556000+00:00",
+    "time": "2026-10-23T14:13:28.616675+00:00",
     "source": "revision",
     "revision": 18,
     "action": "run.reserve",
@@ -1390,7 +1472,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:20.799960+00:00",
+    "time": "2026-10-23T14:13:28.843854+00:00",
     "source": "revision",
     "revision": 19,
     "action": "run.promote",
@@ -1398,11 +1480,11 @@
     "execution_id": "e_1cc8ff5e6aa02f9fae196751",
     "slot": "eda.quality",
     "status": "promoted",
-    "result_id": "5bbb72bd"
+    "result_id": "6db00244"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:21.587766+00:00",
+    "time": "2026-10-23T14:13:29.641768+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1412,16 +1494,17 @@
     "activity": "eda.quality",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.quality",
-    "result_id": "5bbb72bd"
+    "result_id": "6db00244"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:21.973493+00:00",
+    "time": "2026-10-23T14:13:29.972576+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1432,7 +1515,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:22.021158+00:00",
+    "time": "2026-10-23T14:13:30.016626+00:00",
     "source": "revision",
     "revision": 20,
     "action": "run.reserve",
@@ -1441,7 +1524,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:23.743825+00:00",
+    "time": "2026-10-23T14:13:31.711566+00:00",
     "source": "revision",
     "revision": 21,
     "action": "run.promote",
@@ -1449,11 +1532,11 @@
     "execution_id": "e_40d674998c07527b12a31e29",
     "slot": "eda.single_feature_signal",
     "status": "promoted",
-    "result_id": "79ddb96d"
+    "result_id": "2aa4f23e"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:24.398062+00:00",
+    "time": "2026-10-23T14:13:32.350936+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1463,16 +1546,17 @@
     "activity": "eda.single_feature_signal",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.single_feature_signal",
-    "result_id": "79ddb96d"
+    "result_id": "2aa4f23e"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:24.674868+00:00",
+    "time": "2026-10-23T14:13:32.609285+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1483,7 +1567,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:24.729687+00:00",
+    "time": "2026-10-23T14:13:32.669597+00:00",
     "source": "revision",
     "revision": 22,
     "action": "run.reserve",
@@ -1493,7 +1577,7 @@
     "column": "job"
    },
    {
-    "time": "2026-10-23T11:54:24.952021+00:00",
+    "time": "2026-10-23T14:13:32.861129+00:00",
     "source": "revision",
     "revision": 23,
     "action": "run.promote",
@@ -1501,11 +1585,11 @@
     "execution_id": "e_3b7e9da2df5de95232824246",
     "slot": "eda.rate_by:job",
     "status": "promoted",
-    "result_id": "0bec0674"
+    "result_id": "ed070172"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:25.689008+00:00",
+    "time": "2026-10-23T14:13:33.546178+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1517,16 +1601,17 @@
     "activity": "eda.rate_by",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.rate_by:job",
-    "result_id": "0bec0674"
+    "result_id": "ed070172"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:25.978649+00:00",
+    "time": "2026-10-23T14:13:33.774815+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1537,7 +1622,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:26.041384+00:00",
+    "time": "2026-10-23T14:13:33.818427+00:00",
     "source": "revision",
     "revision": 24,
     "action": "run.reserve",
@@ -1547,7 +1632,7 @@
     "column": "age"
    },
    {
-    "time": "2026-10-23T11:54:26.268517+00:00",
+    "time": "2026-10-23T14:13:34.079123+00:00",
     "source": "revision",
     "revision": 25,
     "action": "run.promote",
@@ -1555,11 +1640,11 @@
     "execution_id": "e_17bb42fe2af6771b4815132d",
     "slot": "eda.distribution:age",
     "status": "promoted",
-    "result_id": "a8ea04b2"
+    "result_id": "d111d579"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:27.142722+00:00",
+    "time": "2026-10-23T14:13:34.708946+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1571,16 +1656,17 @@
     "activity": "eda.distribution",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.distribution:age",
-    "result_id": "a8ea04b2"
+    "result_id": "d111d579"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:27.406906+00:00",
+    "time": "2026-10-23T14:13:34.995322+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1591,7 +1677,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:27.464492+00:00",
+    "time": "2026-10-23T14:13:35.037999+00:00",
     "source": "revision",
     "revision": 26,
     "action": "run.reserve",
@@ -1601,7 +1687,7 @@
     "column": "job"
    },
    {
-    "time": "2026-10-23T11:54:27.700545+00:00",
+    "time": "2026-10-23T14:13:35.257698+00:00",
     "source": "revision",
     "revision": 27,
     "action": "run.promote",
@@ -1609,11 +1695,11 @@
     "execution_id": "e_fce6d0a75bf5a500c97c3ae0",
     "slot": "eda.distribution:job",
     "status": "promoted",
-    "result_id": "4402efd4"
+    "result_id": "7525eca9"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:28.553011+00:00",
+    "time": "2026-10-23T14:13:36.053551+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1625,16 +1711,17 @@
     "activity": "eda.distribution",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.distribution:job",
-    "result_id": "4402efd4"
+    "result_id": "7525eca9"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:28.779944+00:00",
+    "time": "2026-10-23T14:13:36.319918+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1645,7 +1732,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:28.871624+00:00",
+    "time": "2026-10-23T14:13:36.366834+00:00",
     "source": "revision",
     "revision": 28,
     "action": "run.reserve",
@@ -1655,7 +1742,7 @@
     "column": "previous"
    },
    {
-    "time": "2026-10-23T11:54:29.034305+00:00",
+    "time": "2026-10-23T14:13:36.527601+00:00",
     "source": "revision",
     "revision": 29,
     "action": "run.promote",
@@ -1663,11 +1750,11 @@
     "execution_id": "e_9bfea10e1d03fc0af5aa162b",
     "slot": "eda.distribution:previous",
     "status": "promoted",
-    "result_id": "de54335e"
+    "result_id": "ffc20256"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:29.740366+00:00",
+    "time": "2026-10-23T14:13:37.274598+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1679,16 +1766,17 @@
     "activity": "eda.distribution",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.distribution:previous",
-    "result_id": "de54335e"
+    "result_id": "ffc20256"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:29.963331+00:00",
+    "time": "2026-10-23T14:13:37.550948+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1699,7 +1787,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:30.089718+00:00",
+    "time": "2026-10-23T14:13:37.594039+00:00",
     "source": "revision",
     "revision": 30,
     "action": "run.reserve",
@@ -1708,7 +1796,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:30.776236+00:00",
+    "time": "2026-10-23T14:13:38.208091+00:00",
     "source": "revision",
     "revision": 31,
     "action": "run.promote",
@@ -1716,11 +1804,11 @@
     "execution_id": "e_dc60c4ca476066179e139318",
     "slot": "eda.correlation",
     "status": "promoted",
-    "result_id": "e038bedc"
+    "result_id": "3b952dc3"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:31.403740+00:00",
+    "time": "2026-10-23T14:13:38.872691+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1730,16 +1818,17 @@
     "activity": "eda.correlation",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "eda.correlation",
-    "result_id": "e038bedc"
+    "result_id": "3b952dc3"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:31.634150+00:00",
+    "time": "2026-10-23T14:13:39.131450+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1750,7 +1839,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:31.677749+00:00",
+    "time": "2026-10-23T14:13:39.175957+00:00",
     "source": "revision",
     "revision": 32,
     "action": "run.reserve",
@@ -1759,7 +1848,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:31.876620+00:00",
+    "time": "2026-10-23T14:13:39.361176+00:00",
     "source": "revision",
     "revision": 33,
     "action": "run.promote",
@@ -1767,11 +1856,11 @@
     "execution_id": "e_056df3f4fa8f8aaf96fa6c38",
     "slot": "fit.baseline",
     "status": "promoted",
-    "result_id": "e23e44fb"
+    "result_id": "fdce45ce"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:32.615475+00:00",
+    "time": "2026-10-23T14:13:40.035694+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1781,16 +1870,17 @@
     "activity": "fit.baseline",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "fit.baseline",
-    "result_id": "e23e44fb"
+    "result_id": "fdce45ce"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:32.867892+00:00",
+    "time": "2026-10-23T14:13:40.291561+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1801,7 +1891,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:32.917323+00:00",
+    "time": "2026-10-23T14:13:40.337413+00:00",
     "source": "revision",
     "revision": 34,
     "action": "run.reserve",
@@ -1810,7 +1900,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:33.138018+00:00",
+    "time": "2026-10-23T14:13:40.577297+00:00",
     "source": "revision",
     "revision": 35,
     "action": "run.promote",
@@ -1818,11 +1908,11 @@
     "execution_id": "e_c4ffa7146bc75b1b1b3352d5",
     "slot": "fit.logistic",
     "status": "promoted",
-    "result_id": "45051af2"
+    "result_id": "9862ea70"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:33.917640+00:00",
+    "time": "2026-10-23T14:13:41.376843+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1832,16 +1922,17 @@
     "activity": "fit.logistic",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "fit.logistic",
-    "result_id": "45051af2"
+    "result_id": "9862ea70"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:34.178007+00:00",
+    "time": "2026-10-23T14:13:41.687791+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1852,7 +1943,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:34.219428+00:00",
+    "time": "2026-10-23T14:13:41.727814+00:00",
     "source": "revision",
     "revision": 36,
     "action": "decide.propose",
@@ -1862,7 +1953,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:34.996340+00:00",
+    "time": "2026-10-23T14:13:42.374369+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
@@ -1874,6 +1965,7 @@
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1881,7 +1973,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:35.264363+00:00",
+    "time": "2026-10-23T14:13:42.667749+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1892,7 +1984,7 @@
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:35.311981+00:00",
+    "time": "2026-10-23T14:13:42.727729+00:00",
     "source": "revision",
     "revision": 37,
     "action": "decide.confirm",
@@ -1907,7 +1999,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:35.920168+00:00",
+    "time": "2026-10-23T14:13:43.428603+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
@@ -1924,6 +2016,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -1931,7 +2024,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:36.170633+00:00",
+    "time": "2026-10-23T14:13:43.668323+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -1942,7 +2035,7 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:36.215090+00:00",
+    "time": "2026-10-23T14:13:43.714389+00:00",
     "source": "revision",
     "revision": 38,
     "action": "run.reserve",
@@ -1951,7 +2044,7 @@
     "status": "running"
    },
    {
-    "time": "2026-10-23T11:54:36.440004+00:00",
+    "time": "2026-10-23T14:13:43.963434+00:00",
     "source": "revision",
     "revision": 39,
     "action": "run.promote",
@@ -1959,11 +2052,11 @@
     "execution_id": "e_fd2d4cab3d29a091ff558cfa",
     "slot": "fit.variant",
     "status": "promoted",
-    "result_id": "05f1fdf7"
+    "result_id": "72ea4d07"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:37.076283+00:00",
+    "time": "2026-10-23T14:13:44.739448+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -1973,27 +2066,28 @@
     "activity": "fit.variant",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "fit.variant",
-    "result_id": "05f1fdf7"
+    "result_id": "72ea4d07"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:37.318591+00:00",
+    "time": "2026-10-23T14:13:45.053569+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 39,
     "options": {},
-    "current_step": "policy",
-    "next_action": "run"
+    "current_step": "model_choice",
+    "next_action": "propose"
    },
    {
-    "time": "2026-10-23T11:54:37.362431+00:00",
+    "time": "2026-10-23T14:13:45.101004+00:00",
     "source": "revision",
     "revision": 40,
     "action": "run.reserve",
@@ -2005,7 +2099,7 @@
     ]
    },
    {
-    "time": "2026-10-23T11:54:37.500742+00:00",
+    "time": "2026-10-23T14:13:45.256817+00:00",
     "source": "revision",
     "revision": 41,
     "action": "run.promote",
@@ -2013,11 +2107,11 @@
     "execution_id": "e_9f1e0272a9e69c5abdc408f8",
     "slot": "policy.evaluation",
     "status": "promoted",
-    "result_id": "d0bd4cdf"
+    "result_id": "d7fa486f"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:38.142963+00:00",
+    "time": "2026-10-23T14:13:46.068569+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
@@ -2031,48 +2125,50 @@
     "activity": "policy.evaluate",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "policy.evaluation",
-    "result_id": "d0bd4cdf"
+    "result_id": "d7fa486f"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:38.375577+00:00",
+    "time": "2026-10-23T14:13:46.451708+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 41,
     "options": {},
-    "current_step": "policy",
-    "next_action": "run"
+    "current_step": "model_choice",
+    "next_action": "propose"
    },
    {
-    "time": "2026-10-23T11:54:38.386003+00:00",
+    "time": "2026-10-23T14:13:46.465879+00:00",
     "source": "revision",
     "revision": 42,
     "action": "decide.propose",
-    "decision_id": "policy",
+    "decision_id": "model_choice",
     "proposal_id": "p_7",
     "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:38.992058+00:00",
+    "time": "2026-10-23T14:13:47.259644+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
     "revision": 42,
     "options": {},
-    "decision_id": "policy",
+    "decision_id": "model_choice",
     "proposal_id": "p_7",
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -2080,22 +2176,22 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:39.263864+00:00",
+    "time": "2026-10-23T14:13:47.663563+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 42,
     "options": {},
-    "current_step": "policy",
+    "current_step": "model_choice",
     "next_action": "await_user_words"
    },
    {
-    "time": "2026-10-23T11:54:39.277770+00:00",
+    "time": "2026-10-23T14:13:47.675632+00:00",
     "source": "revision",
     "revision": 43,
     "action": "decide.confirm",
-    "decision_id": "policy",
+    "decision_id": "model_choice",
     "proposal_id": "p_7",
     "basis": "restated",
     "delegation_scope": null,
@@ -2106,14 +2202,14 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:40.070936+00:00",
+    "time": "2026-10-23T14:13:48.448901+00:00",
     "command": "decide",
     "verb": "confirm",
     "exit_code": 0,
     "ok": true,
     "revision": 43,
     "options": {},
-    "decision_id": "policy",
+    "decision_id": "model_choice",
     "proposal_id": "p_7",
     "replayed": false,
     "status": "confirmed",
@@ -2123,6 +2219,7 @@
      "stale_results": 0
     },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -2130,7 +2227,7 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:40.360306+00:00",
+    "time": "2026-10-23T14:13:48.741896+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
@@ -2141,87 +2238,180 @@
     "next_action": "run"
    },
    {
-    "time": "2026-10-23T11:54:40.411164+00:00",
+    "time": "2026-10-23T14:13:48.753124+00:00",
     "source": "revision",
     "revision": 44,
-    "action": "run.reserve",
-    "activity": "diag.binary",
-    "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
-    "status": "running"
-   },
-   {
-    "time": "2026-10-23T11:54:40.694839+00:00",
-    "source": "revision",
-    "revision": 45,
-    "action": "run.promote",
-    "activity": "diag.binary",
-    "execution_id": "e_2b04fa6f77e5b1b2b57e0777",
-    "slot": "diag.binary",
-    "status": "promoted",
-    "result_id": "7dc8f415"
+    "action": "decide.propose",
+    "decision_id": "policy",
+    "proposal_id": "p_8",
+    "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:41.527671+00:00",
-    "command": "run",
+    "time": "2026-10-23T14:13:49.556268+00:00",
+    "command": "decide",
+    "verb": "propose",
+    "exit_code": 0,
+    "ok": true,
+    "revision": 44,
+    "options": {},
+    "decision_id": "policy",
+    "proposal_id": "p_8",
+    "replayed": false,
+    "status": "open",
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    }
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-23T14:13:49.812760+00:00",
+    "command": "status",
     "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 44,
+    "options": {},
+    "current_step": "policy",
+    "next_action": "await_user_words"
+   },
+   {
+    "time": "2026-10-23T14:13:49.826414+00:00",
+    "source": "revision",
+    "revision": 45,
+    "action": "decide.confirm",
+    "decision_id": "policy",
+    "proposal_id": "p_8",
+    "basis": "restated",
+    "delegation_scope": null,
+    "invalidation": {
+     "mutation": "first_confirmation",
+     "stale_results": 0
+    }
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-23T14:13:50.524352+00:00",
+    "command": "decide",
+    "verb": "confirm",
     "exit_code": 0,
     "ok": true,
     "revision": 45,
     "options": {},
-    "activity": "diag.binary",
-    "status": "promoted",
+    "decision_id": "policy",
+    "proposal_id": "p_8",
+    "replayed": false,
+    "status": "confirmed",
+    "basis": "restated",
+    "invalidation": {
+     "mutation": "first_confirmation",
+     "stale_results": 0
+    },
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
-    },
-    "slot": "diag.binary",
-    "result_id": "7dc8f415"
+    }
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:41.769902+00:00",
+    "time": "2026-10-23T14:13:50.767893+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
     "revision": 45,
     "options": {},
+    "current_step": "policy",
+    "next_action": "run"
+   },
+   {
+    "time": "2026-10-23T14:13:50.817284+00:00",
+    "source": "revision",
+    "revision": 46,
+    "action": "run.reserve",
+    "activity": "diag.binary",
+    "execution_id": "e_6ed23e1b9a8128024e723b74",
+    "status": "running"
+   },
+   {
+    "time": "2026-10-23T14:13:51.095706+00:00",
+    "source": "revision",
+    "revision": 47,
+    "action": "run.promote",
+    "activity": "diag.binary",
+    "execution_id": "e_6ed23e1b9a8128024e723b74",
+    "slot": "diag.binary",
+    "status": "promoted",
+    "result_id": "141c7a9e"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-23T14:13:51.858211+00:00",
+    "command": "run",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 47,
+    "options": {},
+    "activity": "diag.binary",
+    "status": "promoted",
+    "artifacts": {
+     "editable": "ok",
+     "notebook": "ok",
+     "report": "ok",
+     "workbench": "ok"
+    },
+    "slot": "diag.binary",
+    "result_id": "141c7a9e"
+   },
+   {
+    "source": "session_log",
+    "time": "2026-10-23T14:13:52.119836+00:00",
+    "command": "status",
+    "verb": null,
+    "exit_code": 0,
+    "ok": true,
+    "revision": 47,
+    "options": {},
     "current_step": "final_test",
     "next_action": "propose"
    },
    {
-    "time": "2026-10-23T11:54:41.845166+00:00",
+    "time": "2026-10-23T14:13:52.199687+00:00",
     "source": "revision",
-    "revision": 46,
+    "revision": 48,
     "action": "run.reserve",
     "activity": "policy.evaluation",
-    "execution_id": "e_08e526346896c3129f460359",
+    "execution_id": "e_405ea565bcf4773f753be1e0",
     "status": "running",
     "rules": [
      "capacity:100"
     ]
    },
    {
-    "time": "2026-10-23T11:54:42.518390+00:00",
+    "time": "2026-10-23T14:13:52.994043+00:00",
     "source": "revision",
-    "revision": 47,
+    "revision": 49,
     "action": "run.promote",
     "activity": "policy.evaluation",
-    "execution_id": "e_08e526346896c3129f460359",
+    "execution_id": "e_405ea565bcf4773f753be1e0",
     "slot": "policy.evaluation",
     "status": "promoted",
-    "result_id": "2409a40b"
+    "result_id": "97dd9c63"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:43.221294+00:00",
+    "time": "2026-10-23T14:13:53.895844+00:00",
     "command": "run",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 47,
+    "revision": 49,
     "options": {
      "rules": [
       "capacity:100"
@@ -2230,48 +2420,50 @@
     "activity": "policy.evaluate",
     "status": "promoted",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
     },
     "slot": "policy.evaluation",
-    "result_id": "2409a40b"
+    "result_id": "97dd9c63"
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:43.458305+00:00",
+    "time": "2026-10-23T14:13:54.160567+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 47,
+    "revision": 49,
     "options": {},
     "current_step": "final_test",
     "next_action": "propose"
    },
    {
-    "time": "2026-10-23T11:54:43.871004+00:00",
+    "time": "2026-10-23T14:13:54.851113+00:00",
     "source": "revision",
-    "revision": 48,
+    "revision": 50,
     "action": "decide.propose",
     "decision_id": "policy",
-    "proposal_id": "p_8",
+    "proposal_id": "p_9",
     "superseded": []
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:44.509786+00:00",
+    "time": "2026-10-23T14:13:55.715409+00:00",
     "command": "decide",
     "verb": "propose",
     "exit_code": 0,
     "ok": true,
-    "revision": 48,
+    "revision": 50,
     "options": {},
     "decision_id": "policy",
-    "proposal_id": "p_8",
+    "proposal_id": "p_9",
     "replayed": false,
     "status": "open",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -2279,12 +2471,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:44.745481+00:00",
+    "time": "2026-10-23T14:13:55.976356+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 48,
+    "revision": 50,
     "options": {
      "json": true,
      "summary": true
@@ -2294,12 +2486,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:45.123404+00:00",
+    "time": "2026-10-23T14:13:56.384378+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 48,
+    "revision": 50,
     "options": {
      "digest": true,
      "json": true,
@@ -2310,12 +2502,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:46.430449+00:00",
+    "time": "2026-10-23T14:13:57.774429+00:00",
     "command": "status",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 48,
+    "revision": 50,
     "options": {
      "json": true
     },
@@ -2324,17 +2516,18 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:47.949298+00:00",
+    "time": "2026-10-23T14:13:59.420044+00:00",
     "command": "render",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 48,
+    "revision": 50,
     "options": {
      "json": true
     },
     "status": "ok",
     "artifacts": {
+     "editable": "ok",
      "notebook": "ok",
      "report": "ok",
      "workbench": "ok"
@@ -2342,12 +2535,12 @@
    },
    {
     "source": "session_log",
-    "time": "2026-10-23T11:54:48.754864+00:00",
+    "time": "2026-10-23T14:14:00.227899+00:00",
     "command": "check",
     "verb": null,
     "exit_code": 0,
     "ok": true,
-    "revision": 48,
+    "revision": 50,
     "options": {
      "json": true
     },

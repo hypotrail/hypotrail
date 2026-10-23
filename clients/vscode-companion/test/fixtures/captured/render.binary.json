@@ -14,24 +14,33 @@
   "schema": "hypotrail.render/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 48,
+  "revision": 50,
   "status": "ok",
   "artifacts": {
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 48,
-    "last_ok_revision": 48,
+    "revision": 50,
+    "last_ok_revision": 50,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 48,
-    "last_ok_revision": 48,
+    "revision": 50,
+    "last_ok_revision": 50,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 50,
+    "last_ok_revision": 50,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",

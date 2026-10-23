@@ -18,7 +18,7 @@ import re
 
 import pytest
 
-from panel_cases import TABS, load_views, open_case
+from panel_cases import TABS, expand_eda, load_views, open_case
 
 @pytest.fixture(scope='module')
 def views(model, payload):
@@ -115,6 +115,7 @@ def test_the_rate_by_chart_is_a_point_an_interval_a_band_and_n(open_panel, views
     panel = open_case(open_panel, views)
     page = panel.page
     page.locator('[role="tab"][data-tab="eda"]').click()
+    expand_eda(page)
     card = page.locator('[data-eda-card="eda.rate_by:job"]')
     rows = card.locator('[data-bar]')
     assert rows.count() > 3
@@ -192,6 +193,7 @@ def test_cards_put_provenance_in_a_faint_source_line(open_panel, views):
     panel = open_case(open_panel, views)
     page = panel.page
     page.locator('[role="tab"][data-tab="eda"]').click()
+    expand_eda(page)
     for card in page.locator('[data-eda-card]').all():
         src = card.locator('.ht-card-f .ht-src')
         assert src.count() == 1

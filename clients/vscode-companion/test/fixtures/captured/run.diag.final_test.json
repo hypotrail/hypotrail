@@ -15,13 +15,13 @@
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-cv",
   "action": "run",
-  "request_id": "v23",
+  "request_id": "v25",
   "replayed": false,
-  "revision": 35,
+  "revision": 37,
   "activity": "diag.final_test",
-  "execution_id": "e_6f568a7e009178d11fe5261f",
+  "execution_id": "e_f09116e554021da514197565",
   "status": "promoted",
-  "result_id": "c492ac76bb77162ab5fff4bb3727804e8960df82b575a45b2200606d33925b68",
+  "result_id": "8caab7e0df67b532d57712e1a30c72e4864b9f6beff5dd19e4c4ea42c04253c2",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "cc2e10a82b7000175dc768acb3e4f1087d029122008b878072bf199b5bc120bc",
+   "final_evaluation": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -843,23 +843,23 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "cc2e10a82b7000175dc768acb3e4f1087d029122008b878072bf199b5bc120bc"
+     "predictions": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
   },
   "result": {
-   "execution_id": "e_6f568a7e009178d11fe5261f",
+   "execution_id": "e_f09116e554021da514197565",
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "c492ac76bb77162ab5fff4bb3727804e8960df82b575a45b2200606d33925b68",
-   "input_key": "e322588770694fdcc2aca30c5cd0dd6d4340f8cb473cd1913e4ac70ece74f420",
+   "result_id": "8caab7e0df67b532d57712e1a30c72e4864b9f6beff5dd19e4c4ea42c04253c2",
+   "input_key": "5378e1a9882cca4ce6189ca62d30ff1cdcfd8cf0c8776382e07e46ba996ae074",
    "reason": null,
-   "started_revision": 34,
+   "started_revision": 36,
    "invalidation": null,
    "exposure_ids": [
-    "x_e00a61aa5f234d7981dffeb841ba0069"
+    "x_0622ded877884bfcadf4ffd83182ad57"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -868,18 +868,27 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 35,
-    "last_ok_revision": 35,
+    "revision": 37,
+    "last_ok_revision": 37,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 35,
-    "last_ok_revision": 35,
+    "revision": 37,
+    "last_ok_revision": 37,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 37,
+    "last_ok_revision": 37,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -906,11 +915,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "action",
     "language": "en",
-    "revision": 35,
+    "revision": 37,
     "position": {
      "step_id": "train_eda",
-     "completed": 10,
-     "total": 12
+     "completed": 11,
+     "total": 13
     },
     "learned": [],
     "limitations": [

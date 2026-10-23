@@ -7,7 +7,7 @@
   "argv": [
    "preview",
    "effects",
-   "p_8",
+   "p_9",
    "--json"
   ],
   "note": ""
@@ -16,8 +16,8 @@
   "schema": "hypotrail.preview_effects/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"",
-  "revision": 48,
-  "proposal_id": "p_8",
+  "revision": 50,
+  "proposal_id": "p_9",
   "decision_id": "policy",
   "value": "capacity:100",
   "previous": {
@@ -25,14 +25,14 @@
    "user_words": "Yes, call everyone scored at 0.2 or more",
    "basis": "restated",
    "channel": "chat",
-   "revision": 43,
-   "proposal_id": "p_7"
+   "revision": 45,
+   "proposal_id": "p_8"
   },
   "mutation": "policy.rule_type",
   "row": 6,
   "reason": "policy changed (§3.7 row 6: policy.rule_type)",
   "stale_results": [
-   "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e"
+   "141c7a9e61e8bebc92cdc5a39d8ce6587c0eb025433d21e0456834045d877f75"
   ],
   "stale_slots": [
    "diag.binary"
@@ -62,11 +62,12 @@
    "diag.binary"
   ],
   "reconfirm_required": [],
-  "supersedes_proposal": "p_7",
+  "supersedes_proposal": "p_8",
   "blocked": [],
   "artifacts_after": {
    "report": "regenerated",
    "notebook": "regenerated",
+   "editable": "synced_if_unedited",
    "workbench": "unchanged"
   },
   "notes": [

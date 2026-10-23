@@ -22,7 +22,7 @@
   "activity": "eda.distribution",
   "execution_id": "e_17bb42fe2af6771b4815132d",
   "status": "promoted",
-  "result_id": "a8ea04b2ed328e56e9d865b17e8a2ffce1067413067c6a91de4f628f624f5fb8",
+  "result_id": "d111d579bde4cc8148ea65993039108ed56994816e79b1e15904c3baf6089513",
   "values": {
    "partition": "train",
    "column": "age",
@@ -136,13 +136,13 @@
    "activity": "eda.distribution",
    "slot": "eda.distribution:age",
    "status": "promoted",
-   "result_id": "a8ea04b2ed328e56e9d865b17e8a2ffce1067413067c6a91de4f628f624f5fb8",
-   "input_key": "325a71e28e3d3ccb8048d622f999f60d4edd5dd3c8f086ad0efaa0dd8d5bbc63",
+   "result_id": "d111d579bde4cc8148ea65993039108ed56994816e79b1e15904c3baf6089513",
+   "input_key": "b17ec2cef71d6fe49ff39e6ea109c54b44dcb1659517b77efd82d3309bb3e293",
    "reason": null,
    "started_revision": 24,
    "invalidation": null,
    "exposure_ids": [
-    "x_e9a06cd883644d789cbcf02d9e77f3c3"
+    "x_a66fa78a9fe2420a8842c8743c9bc551"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -163,6 +163,15 @@
     "last_ok_revision": 25,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 25,
+    "last_ok_revision": 25,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -193,13 +202,13 @@
     "position": {
      "step_id": "models",
      "completed": 7,
-     "total": 12
+     "total": 13
     },
     "learned": [],
     "limitations": [
      {
       "code": "unconfirmed_decisions",
-      "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+      "text": "Not confirmed by you yet: the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
      },
      {
       "code": "validation_is_not_independent",

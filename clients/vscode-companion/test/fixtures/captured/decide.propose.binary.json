@@ -18,9 +18,9 @@
   "action": "decide.propose",
   "request_id": "b-prop",
   "replayed": false,
-  "revision": 48,
+  "revision": 50,
   "result": {
-   "proposal_id": "p_8",
+   "proposal_id": "p_9",
    "decision_id": "policy",
    "status": "open",
    "decision_status": "confirmed",
@@ -33,18 +33,27 @@
    "report": {
     "status": "ok",
     "path": "reports/study.html",
-    "revision": 48,
-    "last_ok_revision": 48,
+    "revision": 50,
+    "last_ok_revision": 50,
     "error": null,
     "message": "The report (reports/study.html) is up to date."
    },
    "notebook": {
     "status": "ok",
     "path": "notebooks/study_generated.py",
-    "revision": 48,
-    "last_ok_revision": 48,
+    "revision": 50,
+    "last_ok_revision": 50,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 50,
+    "last_ok_revision": 50,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -58,7 +67,7 @@
   },
   "next_action": {
    "kind": "await_user_words",
-   "proposal_id": "p_8",
+   "proposal_id": "p_9",
    "decision": "policy",
    "message": "Show the restatement, then ask the closed question \"Do you adopt this decision?\" and record the reply verbatim. A bare \"ok\" before that question is not a decision.",
    "audience": "agent",
@@ -71,11 +80,11 @@
     "schema": "hypotrail.pause/1",
     "kind": "decision",
     "language": "en",
-    "revision": 48,
+    "revision": 50,
     "position": {
      "step_id": "final_test",
-     "completed": 10,
-     "total": 12
+     "completed": 11,
+     "total": 13
     },
     "learned": [],
     "limitations": [
@@ -92,7 +101,7 @@
       "text": "The data were explored or published before this study; its rows are not unseen."
      }
     ],
-    "proposal_id": "p_8",
+    "proposal_id": "p_9",
     "proposal_text": "Call the 100 clients with the highest scores.",
     "recommended_option": "adopt",
     "options": [
@@ -100,7 +109,7 @@
      "change",
      "explain"
     ],
-    "question": "Do you adopt this decision?",
+    "question": "Call the 100 clients with the highest scores.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
