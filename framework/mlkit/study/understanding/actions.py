@@ -14,7 +14,7 @@ from typing import Mapping
 from mlkit.reliability import Handler
 from mlkit.study import commands as cmd
 
-from . import DIMENSIONS, bank as bk, canonical, evaluate as ev, model, policy as pol, refuse
+from . import DIMENSIONS, taskset as bk, canonical, evaluate as ev, model, policy as pol, refuse
 from . import service as sv
 
 P = 'understanding.'
@@ -41,8 +41,8 @@ def _need_status(session: Mapping, *allowed) -> None:
                      session_id=session['session_id'], status=session['status'])
 
 
-def _session_bank(store, session) -> dict:
-    return sv.blob_json(store, session['bank_blob'], 'bank')
+def _session_taskset(store, session) -> dict:
+    return sv.blob_json(store, session['taskset_blob'], 'taskset')
 
 
 def _allowed_refs(store, session) -> set:
@@ -50,7 +50,7 @@ def _allowed_refs(store, session) -> set:
     out = {e['logical_key'] for e in snapdoc['local']['entries']}
     out |= {e['path'] for e in snapdoc['local']['entries'] if e.get('path')}
     out |= set(snapdoc.get('refs') or {})
-    for t in _session_bank(store, session)['tasks']:
+    for t in _session_taskset(store, session)['tasks']:
         out |= set(t['source_refs'])
     return out
 
@@ -103,14 +103,14 @@ def _start(ctx) -> Handler:
             raise refuse('context_changed', 'The policy changed since the plan was made.',
                          'Make the plan again.')
         plan = sv.blob_json(ctx.store, params['plan_sha'], 'plan')
-        bank = sv.current_bank(state)
-        if bk.digest(bank) != params['bank_digest']:
-            raise refuse('context_changed', 'The task bank changed since the plan was made.',
+        taskset = sv.current_taskset(state)
+        if bk.digest(taskset) != params['taskset_digest']:
+            raise refuse('context_changed', 'The taskset changed since the plan was made.',
                          'Make the plan again.')
         # The capture is recomputed here, on the state reread under the lock: a source or
         # a decision that moved in between is a conflict, never a hybrid snapshot.
         frozen: dict = {}
-        cap = sv.capture(state, ext, policy_digest=params['policy_digest'], bank_doc=bank,
+        cap = sv.capture(state, ext, policy_digest=params['policy_digest'], taskset_doc=taskset,
                          repo=plan.get('repo'), sources=plan['sources'], frozen=frozen)
         if cap['local_snapshot_digest'] != params['local_digest'] \
                 or cap['source_scope_digest'] != params['scope_digest']:
@@ -133,9 +133,9 @@ def _start(ctx) -> Handler:
             'profile': plan['profile'], 'milestone': plan['milestone'],
             'dimensions': dims, 'task_ids': list(plan['task_ids']),
             'policy_digest': params['policy_digest'], 'policy_blob': ext['policy']['blob'],
-            'bank_id': bank['bank_id'], 'bank_digest': params['bank_digest'],
-            'bank_blob': sv.put_json(ctx.store, bank), 'bank_qualified': bk.qualified(bank),
-            'bank_simulated': bk.simulated_qualification(bank),
+            'taskset_id': taskset['taskset_id'], 'taskset_digest': params['taskset_digest'],
+            'taskset_blob': sv.put_json(ctx.store, taskset), 'taskset_qualified': bk.qualified(taskset),
+            'taskset_simulated': bk.simulated_qualification(taskset),
             'plan_blob': params['plan_sha'], 'snapshot_blob': params['snapshot_sha'],
             'local_snapshot_digest': cap['local_snapshot_digest'],
             'source_scope_digest': cap['source_scope_digest'],
@@ -146,7 +146,7 @@ def _start(ctx) -> Handler:
                 'local_snapshot_digest': cap['local_snapshot_digest'],
                 'source_scope_digest': cap['source_scope_digest']}
     return Handler(frozenset({'plan_sha', 'snapshot_sha', 'local_digest', 'scope_digest',
-                              'bank_digest', 'policy_digest'}), run)
+                              'taskset_digest', 'policy_digest'}), run)
 
 
 def _close(ctx) -> Handler:
@@ -226,14 +226,14 @@ def _submit(ctx) -> Handler:
         s = _session(ext, params['session_id'])
         _need_status(s, 'active')
         tid = params['task_id']
-        bank = _session_bank(ctx.store, s)
-        task = bk.task(bank, tid)
+        taskset = _session_taskset(ctx.store, s)
+        task = bk.task(taskset, tid)
         if tid not in s['task_ids'] and not _reservation_variant(ext, s, task):
             raise refuse('invalid_transition', 'This task is neither in the session plan nor a '
                          'new variant for an open reservation.',
                          'Ask for the next task with `understanding task`.', task_id=tid)
         refs = sv.session_snapshot(ctx.store, s).get('refs') or {}
-        _, missing = bk.resolve(task['prompt_template'], refs, task['prerequisite_refs'])
+        _, missing = bk.resolve(task['prompt_template'], refs, task['required_refs'])
         if missing:
             raise refuse('prerequisite_missing', 'The task cites a study element that does not '
                          'exist yet.', 'Take the study further first, or pick another task.',
@@ -286,8 +286,8 @@ def _coach(ctx) -> Handler:
                          'Submit a first answer, then ask for coaching.')
         s = _session(ext, a['session_id'])
         _need_status(s, 'active', 'awaiting_review')
-        bank = _session_bank(ctx.store, s)
-        r = bk.rubric(bank, a['task_ref']['rubric_id'])
+        taskset = _session_taskset(ctx.store, s)
+        r = bk.rubric(taskset, a['task_ref']['rubric_id'])
         hints = [f'{r["rubric_id"]}#hint{i}' for i in range(len(r['hints']))]
         ext['assistance_events'].append({
             'kind': 'coaching', 'attempt_id': a['attempt_id'], 'session_id': s['session_id'],
@@ -334,8 +334,8 @@ def _propose(ctx) -> Handler:
         if a is None or a['session_id'] != s['session_id']:
             raise refuse('evidence_invalid', 'The proposal names no attempt of this session.',
                          'Name an attempt of the session.')
-        bank = _session_bank(ctx.store, s)
-        r = bk.rubric(bank, a['task_ref']['rubric_id'])
+        taskset = _session_taskset(ctx.store, s)
+        r = bk.rubric(taskset, a['task_ref']['rubric_id'])
         if doc['rubric_digest'] != canonical.digest(r):
             raise refuse('evidence_invalid', 'The proposal was made on another rubric.',
                          'Use the rubric of the session.')
@@ -460,7 +460,7 @@ def _review(ctx) -> Handler:
                 or len(doc['decisions']) > len(DIMENSIONS) * 2:
             raise refuse('evidence_invalid', 'decisions lists one to sixteen decisions.',
                          'Correct the review file.')
-        bank = _session_bank(ctx.store, s)
+        taskset = _session_taskset(ctx.store, s)
         allowed = _allowed_refs(ctx.store, s)
         created = []
         for i, d in enumerate(doc['decisions']):
@@ -495,7 +495,7 @@ def _review(ctx) -> Handler:
                                  'locally; a new review cannot rest on it.',
                                  'Its historical judgement stays; collect a new answer.',
                                  attempt_id=aid)
-            rubric = bk.rubric_for(bank, dim)
+            rubric = bk.rubric_for(taskset, dim)
             results = _criteria(d['criterion_results'], rubric)
             _status_consistent(d['status'], results, rubric)
             rationale = model.text(d['rationale'], 'rationale', limit=4000)
@@ -547,7 +547,7 @@ def _review(ctx) -> Handler:
                              'Name the proposal or null.')
             did = model.new_id('ud', ctx.request_id, str(i))
             task_keys = sorted({k for x in attempts for k in bk.task(
-                bank, ext['attempts'][x]['task_ref']['task_id'])['dependency_keys']})
+                taskset, ext['attempts'][x]['task_ref']['task_id'])['dependency_keys']})
             ext['decisions'][did] = {
                 'kind': 'attempt', 'decision_id': did, 'session_id': s['session_id'],
                 'reviewer_declared_id': reviewer, 'reviewed_actor_id': actor,
@@ -557,7 +557,7 @@ def _review(ctx) -> Handler:
                 'snapshot_digest': s['local_snapshot_digest'],
                 'source_scope_digest': s['source_scope_digest'],
                 'policy_digest': s['policy_digest'],
-                'rubric_digest': canonical.digest(rubric), 'bank_digest': s['bank_digest'],
+                'rubric_digest': canonical.digest(rubric), 'taskset_digest': s['taskset_digest'],
                 'supersedes_ids': supersedes, 'resolves_reservation_ids': resolves,
                 'assurance': pol.SUPPORTED_ASSURANCE, 'proposal_ref': d['proposal_ref'],
                 'declaration': declaration, 'simulated': doc['simulated'],
@@ -806,9 +806,9 @@ def _transfer_start(ctx) -> Handler:
                          'a two-person coverage needs two distinct declared people (a '
                          'distinction that does not authenticate either of them).',
                          'Name another colleague as peer.')
-        task = bk.task(_session_bank(ctx.store, s), params['task_id'])
+        task = bk.task(_session_taskset(ctx.store, s), params['task_id'])
         if task is None or task['kind'] != 'transfer':
-            raise refuse('evidence_invalid', 'A handover task is a bank task of kind transfer.',
+            raise refuse('evidence_invalid', 'A handover task is a taskset task of kind transfer.',
                          'Pick a transfer task.')
         note = ev.current_handover_digest(ext, s['session_id'])
         if note is None:

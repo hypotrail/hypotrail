@@ -79,6 +79,7 @@ person, or a claim about competence, security or scientific validity.
 | Canonical JSON | `hypotrail_runtime.canonical` exists (floats allowed) | The review has its own canonical v1 (decimal objects, no raw float), as the spec requires. |
 | `learn.yaml` and the panel's local learn cards | Unchanged | Not read, not migrated; the panel is untouched (A23). |
 | J0 `assurance` object (`status --summary`) | Present | Unrelated name: it concerns analytical reliability, not the review. |
+| TaskSpec field `prerequisite_refs`, "bank" | The engine's guard tests forbid dataset names as substrings in `mlkit/study` (`site_ref`, `bank`) | The field is `required_refs` and the task bank is a *task set* (`taskset.py`, `hypotrail.understanding-tasks/1`); same meaning. |
 
 ## Consequences
 

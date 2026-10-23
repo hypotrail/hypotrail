@@ -11,7 +11,7 @@ Modules:
 
 * :mod:`.canonical` canonical JSON v1 and its digests;
 * :mod:`.policy` the versioned policy (modes off, coaching, required);
-* :mod:`.bank` the task bank and rubrics of a case (``<case>/understanding.yaml``);
+* :mod:`.taskset` the taskset and rubrics of a case (``<case>/understanding.yaml``);
 * :mod:`.snapshot` the local snapshot and the public source scope, freshness;
 * :mod:`.model` the ``understanding`` extension of the study state and input checks;
 * :mod:`.evaluate` dimension states, conflicts, reservations, peer coverage, the gate;

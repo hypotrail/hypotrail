@@ -110,8 +110,19 @@ commit of the handoff record, inside the same lock, leaves a published folder wi
 
 ## Gate run
 
-See the commit message and the final report of the session for the exact counts of the gate
-of [CONTRIBUTING.md](../../CONTRIBUTING.md) on this branch.
+Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the
+`diagnostics` and `uncertainty` extras), commands of [CONTRIBUTING.md](../../CONTRIBUTING.md):
+
+| Command | Result |
+|---|---|
+| Engine pytest line (pilot, quality, discovery, reliability, classical, env, synthetic case, `framework/tests/study`, `acceptance`, `exporters`) on `149d906` | 2220 passed, 100 skipped, **2 failed**: the two guards that forbid dataset names in `mlkit/study` (`test_study_engine_contains_no_dataset_specific_names`, `test_the_engine_names_no_dataset`) matched "bank" and the substring `site_ref` of `prerequisite_refs` |
+| After the rename (`taskset`, `required_refs`): the two guards, `test_contract_freeze.py`, `test_isolation.py`, `test_export_handoff.py`, `framework/tests/study/understanding` | 303 passed, 1 skipped (`jsonschema` absent; run once with `uv run --with jsonschema`: passed) |
+| `node --test clients/vscode-companion/test/*.test.js` | 239 passed, 0 failed (the client is unchanged) |
+| Panel pytest (pixel baselines deselected, they depend on fonts here) | 390 passed, 0 failed |
+| `python3 scripts/check_layout.py` | no error |
+
+The whole engine line was not rerun after the rename: the rename touches only the review
+package, its CLI module, its test files and the case task sets.
 
 ## Limits and human validation still needed
 

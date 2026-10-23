@@ -64,7 +64,7 @@ def test_review_activity_never_changes_the_source_digests(u):
     from mlkit.study.understanding import service as sv
     plan = sv.session_plan(sv.open_store(u.study), session)
     again = snap.capture_context(u.state(), policy_digest=session['policy_digest'],
-                                 bank_doc=sv.current_bank(u.state()), repo=u.repo,
+                                 taskset_doc=sv.current_taskset(u.state()), repo=u.repo,
                                  sources=plan['sources'], salt=ext['salt'])
     assert (again['source_scope_digest'], again['local_snapshot_digest']) == first
     for k in ('capture_revision', 'captured_at', 'revision'):

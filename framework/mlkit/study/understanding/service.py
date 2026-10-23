@@ -1,4 +1,4 @@
-"""Reading side of the review: one study, its blobs, its bank, its current context.
+"""Reading side of the review: one study, its blobs, its taskset, its current context.
 
 Used by the CLI and by the action handlers (which call it on the state they hold under
 the writer lock). It never writes the state; :func:`put_json` and :func:`put_bytes` only
@@ -13,7 +13,7 @@ from typing import Any, Mapping
 from mlkit.study import read
 from mlkit.study.store import StudyStore
 
-from . import bank as bk, canonical, evaluate as ev, model, policy as pol, refuse
+from . import taskset as bk, canonical, evaluate as ev, model, policy as pol, refuse
 from . import snapshot as snap
 
 
@@ -85,7 +85,7 @@ def case_dir(state: Mapping) -> Path | None:
     return f.parent if f is not None else None
 
 
-def current_bank(state: Mapping) -> dict:
+def current_taskset(state: Mapping) -> dict:
     d = case_dir(state)
     if d is None:
         raise refuse('unsupported_case', 'The case directory of this study cannot be located.',
@@ -93,10 +93,10 @@ def current_bank(state: Mapping) -> dict:
     return bk.load(d, case_id=(state.get('case') or {}).get('id'))
 
 
-def bank_or_none(state: Mapping) -> dict | None:
+def taskset_or_none(state: Mapping) -> dict | None:
     try:
-        return current_bank(state)
-    except Exception:            # noqa: BLE001 - a missing or broken bank reads as absent
+        return current_taskset(state)
+    except Exception:            # noqa: BLE001 - a missing or broken taskset reads as absent
         return None
 
 
@@ -109,9 +109,9 @@ def session_snapshot(store: StudyStore, session: Mapping) -> dict:
 
 
 def capture(state: Mapping, ext: Mapping | None, *, policy_digest: str | None,
-            bank_doc: Mapping | None, repo, sources, frozen: dict | None = None) -> dict:
+            taskset_doc: Mapping | None, repo, sources, frozen: dict | None = None) -> dict:
     salt = ext['salt'] if ext else 'unset'
-    return snap.capture_context(state, policy_digest=policy_digest, bank_doc=bank_doc,
+    return snap.capture_context(state, policy_digest=policy_digest, taskset_doc=taskset_doc,
                                 repo=Path(repo).resolve() if repo else None, sources=sources,
                                 salt=salt, frozen=frozen)
 
@@ -128,7 +128,7 @@ def current_for(store: StudyStore, state: Mapping, ext: Mapping, *, repo_overrid
             if repo and not Path(repo).is_dir():
                 repo = None
             doc = capture(state, ext, policy_digest=session['policy_digest'],
-                          bank_doc=bank_or_none(state), repo=repo, sources=plan['sources'])
+                          taskset_doc=taskset_or_none(state), repo=repo, sources=plan['sources'])
             cache[session['session_id']] = doc['local']
         return cache[session['session_id']]
     return run
@@ -139,7 +139,7 @@ def gate(store: StudyStore, state: Mapping, milestone: str, *, policy_override=N
     ext = model.of(state) or model.empty('unset')
     doc = policy_override if policy_override is not None else policy_doc(store, ext)
     return ev.gate(ext, milestone=milestone, policy_doc=doc, policy_source=policy_source,
-                   bank_for=lambda s: bank_or_none(state),
+                   taskset_for=lambda s: taskset_or_none(state),
                    captured_for=lambda s: session_snapshot(store, s)['local'],
                    current_for=current_for(store, state, ext, repo_override=repo_override),
                    blob_ok=lambda sha: blob_ok(store, sha), checked_at=now(), today=today)

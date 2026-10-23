@@ -4,9 +4,9 @@
 # handover have reviewed the rubrics and recorded their review; until then this bank never
 # produces a required result. Prompts cite the study through {decision:...}, {fact:...} and
 # {case:...} references resolved at capture: no figure is written here.
-schema: hypotrail.understanding-bank/1
-bank_id: hotel-understanding
-bank_version: 1
+schema: hypotrail.understanding-tasks/1
+taskset_id: hotel-understanding
+taskset_version: 1
 case_id: hotel-booking-resort-v1
 case_contract_version: hypotrail.case/1
 locale: en
@@ -260,7 +260,7 @@ tasks:
   prompt_template: 'The case describes one row as: {fact:observation_unit}. In your own words, who or
     what is predicted, which decision the prediction supports ({fact:decision}), and why the moment of
     prediction you confirmed ({decision:prediction_time}) constrains the inputs.'
-  prerequisite_refs:
+  required_refs:
   - fact:observation_unit
   - fact:decision
   - decision:prediction_time
@@ -291,7 +291,7 @@ tasks:
   prompt_template: Suppose the team moved the prediction later than the moment you confirmed ({decision:prediction_time}).
     What would change for the population predicted and for the decision ({fact:decision})? Explain with
     the case terms.
-  prerequisite_refs:
+  required_refs:
   - decision:prediction_time
   - fact:decision
   source_refs:
@@ -321,7 +321,7 @@ tasks:
   prompt_template: One input of this case would only be known after the event the study predicts ({case:target}).
     Without naming the answer from memory, how do you find such an input with the data card and the availability
     decision you confirmed, what must change in the input selection, and why? Point to the rule concerned.
-  prerequisite_refs:
+  required_refs:
   - case:target
   source_refs:
   - case:contract
@@ -351,7 +351,7 @@ tasks:
   prompt_template: A colleague proposes to keep an input recorded after the prediction moment ({decision:prediction_time})
     because it raises the validation score. Predict what happens to the measured performance and to the
     conclusion, and say where in this study that input would be excluded.
-  prerequisite_refs:
+  required_refs:
   - decision:prediction_time
   source_refs:
   - case:contract
@@ -379,7 +379,7 @@ tasks:
   kind: explain
   prompt_template: 'Your split is: {decision:split}. Explain the role of each partition of this study
     and why the final test is opened only once.'
-  prerequisite_refs:
+  required_refs:
   - decision:split
   source_refs:
   - case:contract
@@ -408,7 +408,7 @@ tasks:
   prompt_template: Results have already been looked at. Someone proposes to change the split ({decision:split})
     and present a new test as independent. Can they? Explain what the exposure history of this study records
     and what it implies.
-  prerequisite_refs:
+  required_refs:
   - decision:split
   source_refs:
   - case:contract
@@ -436,7 +436,7 @@ tasks:
   prompt_template: 'Your success criterion is: {decision:success_criterion}. The model improves a ranking
     metric. Which operational conclusion is justified for the decision of this case ({fact:decision}),
     and which information is still missing?'
-  prerequisite_refs:
+  required_refs:
   - decision:success_criterion
   - fact:decision
   - result:policy.evaluation
@@ -466,7 +466,7 @@ tasks:
   prompt_template: If the team could act on twice as many cases as the rule you evaluate, what would you
     expect to happen to the gain against the baseline under your criterion ({decision:success_criterion}),
     and what would you check before saying so?
-  prerequisite_refs:
+  required_refs:
   - decision:success_criterion
   - result:policy.evaluation
   source_refs:
@@ -494,7 +494,7 @@ tasks:
   kind: explain
   prompt_template: 'Your preprocessing is: {decision:preprocessing}. For each step, say what it learns
     and on which rows it is fitted, and how the same step is applied when the model predicts.'
-  prerequisite_refs:
+  required_refs:
   - decision:preprocessing
   source_refs:
   - case:contract
@@ -523,7 +523,7 @@ tasks:
   prompt_template: On a synthetic pipeline (not this study), missing values are imputed with the mean
     of all rows before the split. Locate the problem, predict its effect on the validation score, and
     say where the correction belongs.
-  prerequisite_refs: []
+  required_refs: []
   source_refs: []
   rubric_id: hotel-d5
   variant_family: d5-transforms
@@ -549,7 +549,7 @@ tasks:
   kind: explain
   prompt_template: Using the mapped code of the repository, follow one input row to the prediction and
     name the files on the way. Where is the list of inputs built?
-  prerequisite_refs: []
+  required_refs: []
   source_refs: []
   rubric_id: hotel-d6
   variant_family: d6-implementation
@@ -575,7 +575,7 @@ tasks:
   kind: diagnose
   prompt_template: The prediction for one row looks wrong. Without changing the reference study, how would
     you locate the cause in the mapped code? Name the control you would check first and where it is implemented.
-  prerequisite_refs: []
+  required_refs: []
   source_refs: []
   rubric_id: hotel-d6
   variant_family: d6-implementation
@@ -603,7 +603,7 @@ tasks:
   prompt_template: Under your success criterion ({decision:success_criterion}), which assumptions does
     a conclusion of this study rest on, which uses does it not cover ({fact:intended_use}), and which
     conditions would forbid a conclusion?
-  prerequisite_refs:
+  required_refs:
   - decision:success_criterion
   - fact:intended_use
   source_refs:
@@ -632,7 +632,7 @@ tasks:
   kind: predict_consequence
   prompt_template: A manager wants to apply the result to next year. What would have to be true for that,
     and what in this study would you report as not yet defensible?
-  prerequisite_refs: []
+  required_refs: []
   source_refs:
   - case:contract
   rubric_id: hotel-d7
@@ -660,7 +660,7 @@ tasks:
   prompt_template: Where do you check the version of a dependency and the security rules that apply before
     adopting generated code in this project? What do you do if you cannot establish its provenance or
     behaviour?
-  prerequisite_refs: []
+  required_refs: []
   source_refs: []
   rubric_id: hotel-d8
   variant_family: d8-safety
@@ -687,7 +687,7 @@ tasks:
   kind: predict_consequence
   prompt_template: An assistant suggests adding a new library to speed up the pipeline. Which check comes
     first, who must verify the change, and where is the point of return if it misbehaves?
-  prerequisite_refs: []
+  required_refs: []
   source_refs: []
   rubric_id: hotel-d8
   variant_family: d8-safety
@@ -716,7 +716,7 @@ tasks:
   prompt_template: With the handover note and the repository only, find the transformation applied to
     the inputs, explain on which rows it learns, and say where you would act if one input became unavailable.
     Cite the files you used.
-  prerequisite_refs: []
+  required_refs: []
   source_refs: []
   rubric_id: hotel-d5
   variant_family: transfer-takeover

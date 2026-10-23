@@ -1,7 +1,7 @@
 """Dimension states, conflicts, reservations, peer coverage and the milestone gate (§09–§11).
 
 Pure computations over the ``understanding`` extension and loaders given by the caller
-(blobs, the bank, current context captures). Nothing here writes.
+(blobs, the taskset, current context captures). Nothing here writes.
 
 Axes are kept apart: a dimension has a **status** (``not_evaluated``, ``demonstrated``,
 ``to_consolidate``, ``needs_review``), a **freshness** (``current``, ``stale``,
@@ -157,14 +157,14 @@ def _today() -> str:
 
 
 def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_source: str,
-         bank_for: Callable[[Mapping], Mapping | None],
+         taskset_for: Callable[[Mapping], Mapping | None],
          captured_for: Callable[[Mapping], Mapping],
          current_for: Callable[[Mapping], Mapping],
          blob_ok: Callable[[str], bool], checked_at: str, today: str | None = None) -> dict:
     """The ``GateResult`` of ``milestone`` (SPEC §10). ``captured_for(session)`` is the
     local projection frozen when the session started; ``current_for(session)`` captures the
-    current one with the same source mapping; ``bank_for(session)`` loads the session's
-    bank as it is on disk now (``None`` when absent)."""
+    current one with the same source mapping; ``taskset_for(session)`` loads the session's
+    taskset as it is on disk now (``None`` when absent)."""
     reasons: list[dict] = []
     limitations = set()
     result = {'schema': GATE_SCHEMA, 'milestone': milestone, 'policy_digest': None,
@@ -227,7 +227,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         d = ext['decisions'][did]
         info.update(decision_id=did, status=d['status'], session_id=d['session_id'])
         session = ext['sessions'].get(d['session_id'])
-        problems = _decision_problems(ext, d, session, actor, dim, pdigest, bank_for)
+        problems = _decision_problems(ext, d, session, actor, dim, pdigest, taskset_for)
         lost = arbitrated_ids(ext).get(did)
         if lost is not None and lost['chosen_decision_id'] != did:
             problems.append('lost_arbitration')
@@ -263,7 +263,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
             cur = contexts[session['session_id']] = current_for(session)
             context_digests.add(canonical.digest(cur))
         fresh = snap.freshness(captured_for(session), cur,
-                               decision_dependency_keys(ext, d, bank_for(session)))
+                               decision_dependency_keys(ext, d, taskset_for(session)))
         if expired:
             fresh = {'status': 'stale', 'changed': ['expiration_rule'], 'unknown': []}
         info['freshness'] = fresh['status']
@@ -281,7 +281,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
     for dim in policy_doc['peer_required_dimensions']:
         if dim not in required:
             continue
-        cover = selected_peer_coverage(ext, actor, dim, selection, pdigest, bank_for,
+        cover = selected_peer_coverage(ext, actor, dim, selection, pdigest, taskset_for,
                                        captured_for, current_for)
         result['dimensions'].setdefault(dim, {})['peer'] = cover
         if cover['people'] < policy_doc['team_coverage']['minimum_people'] \
@@ -295,7 +295,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
     return _finish(result, reasons, limitations, policy_doc, ext, milestone, today)
 
 
-def selected_peer_coverage(ext, author, dim, selection, pdigest, bank_for, captured_for,
+def selected_peer_coverage(ext, author, dim, selection, pdigest, taskset_for, captured_for,
                            current_for) -> dict:
     """Peer coverage from the transfer reviews the selection names, never a search for an
     old pass: each is ``demonstrated``, by a reviewer other than the peer, on a peer other than
@@ -325,12 +325,12 @@ def selected_peer_coverage(ext, author, dim, selection, pdigest, bank_for, captu
         if t['input_note_digest'] != current_handover_digest(ext, t['session_id']):
             problems.append('stale')
             continue
-        bank = bank_for(session)
+        taskset = taskset_for(session)
         keys = set()
-        if bank is not None:
-            from . import bank as bk
-            task = bk.task(bank, t['task_ref']['task_id'])
-            r = bk.rubric_for(bank, dim)
+        if taskset is not None:
+            from . import taskset as bk
+            task = bk.task(taskset, t['task_ref']['task_id'])
+            r = bk.rubric_for(taskset, dim)
             keys.update(task['dependency_keys'] if task else [])
             keys.update(r['dependency_keys'] if r else [])
         fresh = snap.freshness(captured_for(session), current_for(session), keys)
@@ -354,7 +354,7 @@ def _private_key(key: str) -> bool:
     return key.startswith(('study:', 'case:', 'data:', 'engine:'))
 
 
-def _decision_problems(ext, d, session, actor, dim, pdigest, bank_for) -> list[str]:
+def _decision_problems(ext, d, session, actor, dim, pdigest, taskset_for) -> list[str]:
     out = []
     if session is None:
         return ['session_missing']
@@ -364,35 +364,35 @@ def _decision_problems(ext, d, session, actor, dim, pdigest, bank_for) -> list[s
         out.append('actor_mismatch')
     if d['policy_digest'] != pdigest:
         out.append('decision_policy_changed')
-    bank = bank_for(session)
-    if bank is None:
-        out.append('bank_missing')
+    taskset = taskset_for(session)
+    if taskset is None:
+        out.append('taskset_missing')
     else:
-        from . import bank as bk
-        r = bk.rubric_for(bank, dim)
+        from . import taskset as bk
+        r = bk.rubric_for(taskset, dim)
         if r is None or canonical.digest(r) != d['rubric_digest']:
             out.append('rubric_changed')
-        if not bk.qualified(bank):
-            out.append('bank_not_qualified')
-        if d['bank_digest'] != bk.digest(bank):
-            out.append('bank_changed')
+        if not bk.qualified(taskset):
+            out.append('taskset_not_qualified')
+        if d['taskset_digest'] != bk.digest(taskset):
+            out.append('taskset_changed')
     if d['decision_id'] in superseded_ids(ext):
         out.append('decision_superseded')
     return out
 
 
-def decision_dependency_keys(ext: Mapping, d: Mapping, bank: Mapping | None) -> list[str]:
+def decision_dependency_keys(ext: Mapping, d: Mapping, taskset: Mapping | None) -> list[str]:
     keys = set(d.get('dependency_keys') or [])
-    if bank is not None:
-        from . import bank as bk
-        r = bk.rubric_for(bank, d['dimension_id'])
+    if taskset is not None:
+        from . import taskset as bk
+        r = bk.rubric_for(taskset, d['dimension_id'])
         if r is not None:
             keys.update(r['dependency_keys'])
     return sorted(keys)
 
 
 def peer_coverage(ext: Mapping, author: str, dim: str, selection: Mapping | None,
-                  bank_for) -> dict:
+                  taskset_for) -> dict:
     """Distinct declared people who can carry ``dim``: the author and every peer whose
     transfer on the current handover content was reviewed ``demonstrated`` by a human
     distinct from the peer. A transfer done on an earlier handover version is ``stale``."""

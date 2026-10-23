@@ -10,7 +10,7 @@ import yaml
 import flowkit as fk
 import ukit
 from mlkit.study import cli
-from mlkit.study.understanding import bank as bk
+from mlkit.study.understanding import taskset as bk
 
 REPO = fk.REPO
 CASES = {'hotel-booking': ('hotel-booking-resort-v1', 'binary'),
@@ -103,7 +103,7 @@ def test_case_banks_are_valid_contextual_and_honest(case):
     doc = yaml.safe_load((REPO / 'use-cases' / case / 'case.yaml').read_text())
     facts = {f['id'] for f in doc['facts']}
     for t in bank['tasks']:
-        for ref in t['prerequisite_refs']:
+        for ref in t['required_refs']:
             if ref.startswith('fact:'):
                 assert ref[5:] in facts, (t['task_id'], ref)
     text = ' '.join(t['prompt_template'] for t in bank['tasks']).lower()
@@ -120,7 +120,7 @@ def test_real_case_plan_resolves_from_the_study(tmp_path):
     u = ukit.U(tmp_path, case_dir=REPO / 'use-cases' / 'bank-marketing', repo=False)
     u.set_policy(ukit.POLICY)
     plan = u.call('plan', '--profile', 'analyst', '--milestone', 'handoff', '--actor', 'alice')
-    assert plan['bank']['qualification'] == 'to_qualify'
+    assert plan['taskset']['qualification'] == 'to_qualify'
     assert 'D4' in {m['dimension_id'] for m in plan['prerequisites_missing']}
     plan_file = tmp_path / 'plan.json'
     u.call('plan', '--profile', 'analyst', '--milestone', 'handoff', '--actor', 'alice',

@@ -47,7 +47,7 @@ import json
 from pathlib import Path
 
 from . import commands as cmd
-from .understanding import (actions, bank as bk, canonical, evaluate as ev, export as ex,
+from .understanding import (actions, taskset as bk, canonical, evaluate as ev, export as ex,
                             model, policy as pol, refuse, service as sv, snapshot as snap,
                             verify as vf)
 
@@ -268,27 +268,27 @@ def _plan(args) -> dict:
                      'Plan for --milestone handoff.', milestone=args.milestone)
     actor = model.actor(args.actor, 'actor')
     dims = pol.author_dimensions(doc, args.profile)
-    bank = sv.current_bank(state)
+    taskset = sv.current_taskset(state)
     sources = _sources(args.sources_file)
     repo = str(Path(args.repo).resolve()) if args.repo else None
     ext = model.of(state)
-    cap = sv.capture(state, ext, policy_digest=pol.digest(doc), bank_doc=bank, repo=repo,
+    cap = sv.capture(state, ext, policy_digest=pol.digest(doc), taskset_doc=taskset, repo=repo,
                      sources=sources)
     refs = cap['refs']
     chosen, missing, uncovered = [], [], []
     for dim in dims:
-        tasks = [t for t in bank['tasks'] if dim in t['dimension_ids'] and t['kind'] != 'transfer']
-        ready = [t for t in tasks if not bk.resolve(t['prompt_template'], refs, t['prerequisite_refs'])[1]]
+        tasks = [t for t in taskset['tasks'] if dim in t['dimension_ids'] and t['kind'] != 'transfer']
+        ready = [t for t in tasks if not bk.resolve(t['prompt_template'], refs, t['required_refs'])[1]]
         if not tasks:
             uncovered.append(dim)
         elif not ready:
             missing.append({'dimension_id': dim, 'missing_refs': sorted(
-                {r for t in tasks for r in bk.resolve(t['prompt_template'], refs, t['prerequisite_refs'])[1]})})
+                {r for t in tasks for r in bk.resolve(t['prompt_template'], refs, t['required_refs'])[1]})})
         else:
             chosen.append(ready[0]['task_id'])
-    transfer = [t['task_id'] for t in bank['tasks'] if t['kind'] == 'transfer'
+    transfer = [t['task_id'] for t in taskset['tasks'] if t['kind'] == 'transfer'
                 and set(t['dimension_ids']) & set(doc['peer_required_dimensions'])]
-    minutes = sum(ESTIMATE_MINUTES[bk.task(bank, t)['kind']] for t in chosen)
+    minutes = sum(ESTIMATE_MINUTES[bk.task(taskset, t)['kind']] for t in chosen)
     plan = {'schema': PLAN_SCHEMA, 'actor_declared_id': actor, 'profile': args.profile,
             'milestone': args.milestone, 'task_ids': chosen, 'transfer_task_ids': transfer,
             'sources': sources, 'repo': repo, 'previous_session_id': args.previous_session,
@@ -304,9 +304,9 @@ def _plan(args) -> dict:
                                          if d in dims],
                prerequisites_missing=missing, dimensions_without_task=uncovered,
                estimate_minutes=minutes,
-               bank={'bank_id': bank['bank_id'], 'qualification':
-                     bank['qualification']['status'],
-                     'simulated_qualification': bk.simulated_qualification(bank)},
+               taskset={'taskset_id': taskset['taskset_id'], 'qualification':
+                     taskset['qualification']['status'],
+                     'simulated_qualification': bk.simulated_qualification(taskset)},
                will_be_kept_locally=['answers', 'assistance declarations', 'proposals',
                                      'human review decisions'],
                may_be_committed=['an approved synthesis: understanding-review.json, '
@@ -333,13 +333,13 @@ def _status(args) -> dict:
         if args.session and s['session_id'] != args.session:
             continue
         snapdoc = sv.session_snapshot(store, s)
-        bank = sv.blob_json(store, s['bank_blob'], 'bank')
+        taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
         dims = []
         for dim in s['dimensions']:
             v = ev.dimension_view(ext, s['actor_declared_id'], dim)
             d = ext['decisions'].get(v['decision_id']) if v['decision_id'] else None
-            keys = ev.decision_dependency_keys(ext, d, bank) if d else \
-                ((bk.rubric_for(bank, dim) or {}).get('dependency_keys') or [])
+            keys = ev.decision_dependency_keys(ext, d, taskset) if d else \
+                ((bk.rubric_for(taskset, dim) or {}).get('dependency_keys') or [])
             fresh = snap.freshness(snapdoc['local'], current(s), keys)
             avail = ev.evidence_availability(ext, d['attempt_ids'],
                                              lambda sha: sv.blob_ok(store, sha)) if d else None
@@ -360,7 +360,7 @@ def _status(args) -> dict:
             'attempts': len(attempts),
             'unavailable_answers': sum(1 for a in attempts
                                        if not sv.blob_ok(store, a['response_sha256'])),
-            'bank_qualified': s['bank_qualified'], 'bank_simulated': s['bank_simulated'],
+            'taskset_qualified': s['taskset_qualified'], 'taskset_simulated': s['taskset_simulated'],
             'local_snapshot_digest': s['local_snapshot_digest'],
             'source_scope_digest': s['source_scope_digest']})
     return _ok('status', store.study_dir, mode=pol.mode(doc), revision=state['revision'],
@@ -379,7 +379,7 @@ def _task(args) -> dict:
     s = ext['sessions'].get(args.session)
     if s is None:
         raise refuse('invalid_transition', 'Unknown session.', 'Check the session id.')
-    bank = sv.blob_json(store, s['bank_blob'], 'bank')
+    taskset = sv.blob_json(store, s['taskset_blob'], 'taskset')
     refs = sv.session_snapshot(store, s).get('refs') or {}
     answered = {a['task_ref']['task_id'] for a in ext['attempts'].values()
                 if a['session_id'] == s['session_id']}
@@ -391,18 +391,18 @@ def _task(args) -> dict:
                     if a in ext['attempts']}
             family = {ext['attempts'][a]['task_ref']['variant_family'] for a in r['attempt_ids']
                       if a in ext['attempts']}
-            for t in bank['tasks']:
+            for t in taskset['tasks']:
                 if t['variant_family'] in family and t['variant_id'] not in used \
                         and t['task_id'] not in answered and t['task_id'] not in pending:
-                    if not bk.resolve(t['prompt_template'], refs, t['prerequisite_refs'])[1]:
+                    if not bk.resolve(t['prompt_template'], refs, t['required_refs'])[1]:
                         pending.append(t['task_id'])
                         break
     if not pending:
         return _ok('task', store.study_dir, session_id=s['session_id'], task=None,
                    message='No admissible task is left in this session. A reservation without '
                            'a new qualified variant stays to_consolidate or needs_review.')
-    t = bk.task(bank, pending[0])
-    text, missing = bk.resolve(t['prompt_template'], refs, t['prerequisite_refs'])
+    t = bk.task(taskset, pending[0])
+    text, missing = bk.resolve(t['prompt_template'], refs, t['required_refs'])
     if missing:
         raise refuse('prerequisite_missing', 'The next task cites a study element that does not '
                      'exist yet.', 'Take the study further first.', missing=missing)
@@ -541,13 +541,13 @@ def _start(args) -> dict:
     for _ in range(3):              # a source moving during the capture: bounded retry
         state = sv.load_state(args.study)
         doc = sv.require_mode(store, state)
-        bank = sv.current_bank(state)
+        taskset = sv.current_taskset(state)
         ext = model.of(state)
         for t in plan['task_ids']:
-            if bk.task(bank, t) is None:
-                raise refuse('evidence_invalid', 'The plan names a task the bank does not have.',
+            if bk.task(taskset, t) is None:
+                raise refuse('evidence_invalid', 'The plan names a task the taskset does not have.',
                              'Make the plan again.', task_id=t)
-        cap = sv.capture(state, ext, policy_digest=pol.digest(doc), bank_doc=bank,
+        cap = sv.capture(state, ext, policy_digest=pol.digest(doc), taskset_doc=taskset,
                          repo=plan['repo'], sources=plan['sources'])
         snap_sha = sv.put_json(store, {'local': cap['local'], 'public': cap['public'],
                                        'refs': cap['refs'], 'meta': {
@@ -556,7 +556,7 @@ def _start(args) -> dict:
         params = {'plan_sha': sv.put_json(store, plan), 'snapshot_sha': snap_sha,
                   'local_digest': cap['local_snapshot_digest'],
                   'scope_digest': cap['source_scope_digest'],
-                  'bank_digest': bk.digest(bank), 'policy_digest': pol.digest(doc)}
+                  'taskset_digest': bk.digest(taskset), 'policy_digest': pol.digest(doc)}
         try:
             return _ok('start', store.study_dir, **_apply(args, 'start', params))
         except Exception as exc:          # noqa: BLE001
@@ -592,7 +592,7 @@ def _coach(args) -> dict:
     ext = model.of(state)
     a = ext['attempts'][args.attempt]
     s = ext['sessions'][a['session_id']]
-    rubric = bk.rubric(sv.blob_json(store, s['bank_blob'], 'bank'), a['task_ref']['rubric_id'])
+    rubric = bk.rubric(sv.blob_json(store, s['taskset_blob'], 'taskset'), a['task_ref']['rubric_id'])
     return _ok('coach', store.study_dir, **out, hints=list(rubric['hints']),
                expected_criteria=[c['text'] for c in rubric['criteria']],
                note='This help is recorded: a later answer to this task is an aided answer. '

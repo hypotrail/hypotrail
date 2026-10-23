@@ -1283,13 +1283,14 @@ def test_library_integration_v1_contract():
 
 def test_understanding_contract_is_frozen():
     from mlkit.study import cmd_understanding as cu
-    from mlkit.study.understanding import (CODES, DIMENSIONS, STATE_SCHEMA, bank, canonical,
-                                           evaluate, export, model, policy, snapshot, verify)
+    from mlkit.study.understanding import (CODES, DIMENSIONS, STATE_SCHEMA, canonical,
+                                           evaluate, export, model, policy, snapshot,
+                                           taskset, verify)
     assert cu.SCHEMA == 'hypotrail.understanding/1'
     assert STATE_SCHEMA == 'hypotrail.understanding-state/1'
     assert policy.SCHEMA == 'hypotrail.understanding-policy/1'
-    assert bank.SCHEMA == 'hypotrail.understanding-bank/1'
-    assert bank.TASK_SCHEMA == 'hypotrail.understanding-task/1'
+    assert taskset.SCHEMA == 'hypotrail.understanding-tasks/1'
+    assert taskset.TASK_SCHEMA == 'hypotrail.understanding-task/1'
     assert export.SCHEMA == 'hypotrail.understanding-review/1'
     assert export.MANIFEST_SCHEMA == 'hypotrail.understanding-export-manifest/1'
     assert snapshot.PUBLIC_SCHEMA == 'hypotrail.public-source-scope/1'

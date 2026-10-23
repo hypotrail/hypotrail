@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 from typing import Mapping
 
-from . import DIMENSION_TITLES, bank as bk, canonical, evaluate as ev, model, policy as pol
+from . import DIMENSION_TITLES, taskset as bk, canonical, evaluate as ev, model, policy as pol
 from . import refuse, service as sv, snapshot as snap
 
 SCHEMA = 'hypotrail.understanding-review/1'
@@ -62,8 +62,8 @@ DIMENSION_FIELDS = ('id', 'title', 'required', 'critical', 'status', 'freshness_
                     'criteria', 'task_refs', 'attempt_refs', 'assistance_summary',
                     'reviewer_alias', 'human_review_ref', 'rationale', 'safe_evidence_refs',
                     'dependency_keys', 'evidence_availability', 'next_step')
-PROVENANCE_FIELDS = ('engine', 'canonical', 'float_rule', 'bank_id', 'bank_version',
-                     'bank_qualification', 'policy_id', 'policy_version', 'base_commit')
+PROVENANCE_FIELDS = ('engine', 'canonical', 'float_rule', 'taskset_id', 'taskset_version',
+                     'taskset_qualification', 'policy_id', 'policy_version', 'base_commit')
 STATUSES = model.DIMENSION_STATUSES
 FRESHNESS = ('current', 'stale', 'unknown')
 AVAILABILITY = ('available', 'unavailable', 'redacted', 'not_applicable')
@@ -94,7 +94,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     """The approval projection of ``session`` (see the module docstring)."""
     ext = model.of(state)
     doc = sv.blob_json(store, session['policy_blob'], 'policy')
-    bank = sv.blob_json(store, session['bank_blob'], 'bank')
+    taskset = sv.blob_json(store, session['taskset_blob'], 'taskset')
     snapdoc = sv.session_snapshot(store, session)
     scope = snapdoc['public']
     current = sv.current_for(store, state, ext)(session)
@@ -106,9 +106,9 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         d = ext['decisions'].get(view['decision_id']) if view['decision_id'] else None
         if d is not None and d['session_id'] != session['session_id']:
             d = None
-        r = bk.rubric_for(bank, dim)
+        r = bk.rubric_for(taskset, dim)
         fresh = snap.freshness(snapdoc['local'], current,
-                               ev.decision_dependency_keys(ext, d, bank) if d else
+                               ev.decision_dependency_keys(ext, d, taskset) if d else
                                (r['dependency_keys'] if r else []))
         attempts = d['attempt_ids'] if d else []
         for aid in attempts:
@@ -134,7 +134,7 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
             'human_review_ref': d['decision_id'] if d else None,
             'rationale': d['rationale'] if d else None,
             'safe_evidence_refs': evidence,
-            'dependency_keys': ev.decision_dependency_keys(ext, d, bank) if d
+            'dependency_keys': ev.decision_dependency_keys(ext, d, taskset) if d
             else sorted(r['dependency_keys'] if r else []),
             'evidence_availability': (ev.evidence_availability(
                 ext, attempts, lambda sha: sv.blob_ok(store, sha)) if attempts
@@ -196,10 +196,10 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     limitations = set(pol.limitations(doc))
     if any(x['simulated'] for x in decisions):
         limitations.add('simulated_human_decisions')
-    if not session['bank_qualified']:
-        limitations.add('bank_not_qualified')
-    if session['bank_simulated']:
-        limitations.add('bank_qualification_simulated')
+    if not session['taskset_qualified']:
+        limitations.add('taskset_not_qualified')
+    if session['taskset_simulated']:
+        limitations.add('taskset_qualification_simulated')
     if scope['omitted_private']:
         limitations.add('private_context_opaque')
     selection = ev.latest_selection(ext, session['milestone'])
@@ -207,12 +207,12 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         'schema': SCHEMA, 'study_public_id': study_public_id(ext),
         'session_ref': _opaque(ext, 'session', session['session_id']),
         'public_source_scope': scope, 'policy': doc, 'policy_digest': pol.digest(doc),
-        'tasks': [_task_public(bank, t) for _, t in sorted(used_tasks.items())],
+        'tasks': [_task_public(taskset, t) for _, t in sorted(used_tasks.items())],
         'rubrics': [{'dimension_id': r['dimension_id'], 'rubric_id': r['rubric_id'],
                      'version': r['version'], 'digest': canonical.digest(r),
                      'criteria': [{'criterion_id': c['criterion_id'], 'text': c['text'],
                                    'mandatory': c['mandatory']} for c in r['criteria']]}
-                    for r in bank['rubrics'] if r['dimension_id'] in session['dimensions']],
+                    for r in taskset['rubrics'] if r['dimension_id'] in session['dimensions']],
         'source_manifest': [e for e in scope['entries'] if e['path']],
         'source_scope_digest': canonical.digest(scope),
         'handover_content': sv.blob_json(store, handover['blob'], 'handover')
@@ -224,15 +224,15 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         'limitations': sorted(limitations), 'safe_evidence': sorted(safe),
         'assurance': pol.SUPPORTED_ASSURANCE,
         'provenance': {'engine': 'hypotrail', 'canonical': canonical.VERSION,
-                       'float_rule': canonical.FLOAT_RULE, 'bank_id': bank['bank_id'],
-                       'bank_version': bank['bank_version'],
-                       'bank_qualification': bank['qualification']['status'],
+                       'float_rule': canonical.FLOAT_RULE, 'taskset_id': taskset['taskset_id'],
+                       'taskset_version': taskset['taskset_version'],
+                       'taskset_qualification': taskset['qualification']['status'],
                        'policy_id': doc['policy_id'], 'policy_version': doc['version']}}
     return {k: proj[k] for k in APPROVAL_FIELDS}
 
 
-def _task_public(bank, ref) -> dict:
-    t = bk.task(bank, ref['task_id'])
+def _task_public(taskset, ref) -> dict:
+    t = bk.task(taskset, ref['task_id'])
     return bk.public_task(t) if t else {k: ref[k] for k in ('task_id', 'task_version')}
 
 

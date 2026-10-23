@@ -1,8 +1,8 @@
-# Understanding and handover review rv\-256354704ead28cff27e
+# Understanding and handover review rv\-0ff6cb0ae5ab14c4a6bc
 
 This note records what the team can explain and take over about this study at the time of export. It is not a grade, it certifies neither general competence, nor security, nor the scientific validity of the study, and its assurance is **human\_declared** (attributed by local declarations, not authenticated).
 
-Exported context: created 2026\-10\-23T21:07:07\+00:00, policy team\-default v1 (required), source scope `1dbaa44ada62b3c1ef203a0a3f0fdc1d9b7e1355eeb81e382477b90d98d32141`. It describes this context, never the current state of the work.
+Exported context: created 2026\-10\-23T23:49:34\+00:00, policy team\-default v1 (required), source scope `84af88e077549770f7ea7fc9ed1a2f0a8f0fc63d76435154cc6a97d28be10489`. It describes this context, never the current state of the work.
 
 ## Work and scope
 
@@ -58,17 +58,17 @@ uv sync, then run the pipeline on a copy of the data\.
 A dimension marked *aided* rests only on answers given after hints or with declared AI help. A relevant change of a listed source makes a dimension stale; time alone does not.
 
 - assurance\_human\_declared
-- bank\_qualification\_simulated
 - local\_policy\_cooperative
 - private\_context\_opaque
 - simulated\_human\_decisions
+- taskset\_qualification\_simulated
 
 ## Approvals
 
 Privacy review: approved; required contributors: alice, bob, carol.
 
-- alice approved `256354704ead28cff27e91ae97a60cf947281774ab96ffedf8e472bd5342226a`
-- bob approved `256354704ead28cff27e91ae97a60cf947281774ab96ffedf8e472bd5342226a`
-- carol approved `256354704ead28cff27e91ae97a60cf947281774ab96ffedf8e472bd5342226a`
+- alice approved `0ff6cb0ae5ab14c4a6bc516a351f34ddc0312e9a6db08a11aa1df4993973c6fc`
+- bob approved `0ff6cb0ae5ab14c4a6bc516a351f34ddc0312e9a6db08a11aa1df4993973c6fc`
+- carol approved `0ff6cb0ae5ab14c4a6bc516a351f34ddc0312e9a6db08a11aa1df4993973c6fc`
 
 Rendered by hypotrail.understanding-render/1 from understanding-review.json.

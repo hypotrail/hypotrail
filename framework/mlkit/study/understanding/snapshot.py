@@ -203,7 +203,7 @@ def case_file_of(state: Mapping) -> Path | None:
     return Path(path) if isinstance(path, str) and os.path.isabs(path) else None
 
 
-def capture_context(state: Mapping, *, policy_digest: str | None, bank_doc: Mapping | None,
+def capture_context(state: Mapping, *, policy_digest: str | None, taskset_doc: Mapping | None,
                     repo: Path | None, sources: Iterable[Mapping], salt: str,
                     frozen: dict | None = None) -> dict:
     """The snapshot document of ``state`` (one revision) and the mapped sources.
@@ -223,8 +223,8 @@ def capture_context(state: Mapping, *, policy_digest: str | None, bank_doc: Mapp
     if policy_digest:
         entries.append({'logical_key': 'contract:policy', 'origin': 'contract', 'path': None,
                         'role': 'policy', 'sha256': policy_digest})
-    if bank_doc is not None:
-        for r in bank_doc['rubrics']:
+    if taskset_doc is not None:
+        for r in taskset_doc['rubrics']:
             entries.append({'logical_key': f'contract:rubric:{r["dimension_id"]}',
                             'origin': 'contract', 'path': None, 'role': 'rubric',
                             'sha256': canonical.digest(r)})

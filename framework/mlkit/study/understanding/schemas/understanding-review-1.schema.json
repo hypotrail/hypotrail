@@ -561,7 +561,7 @@
             }
           ]
         },
-        "bank_id": {
+        "taskset_id": {
           "anyOf": [
             {
               "type": "string"
@@ -571,10 +571,10 @@
             }
           ]
         },
-        "bank_version": {
+        "taskset_version": {
           "type": "integer"
         },
-        "bank_qualification": {
+        "taskset_qualification": {
           "anyOf": [
             {
               "type": "string"
@@ -612,9 +612,9 @@
         "engine",
         "canonical",
         "float_rule",
-        "bank_id",
-        "bank_version",
-        "bank_qualification",
+        "taskset_id",
+        "taskset_version",
+        "taskset_qualification",
         "policy_id",
         "policy_version",
         "base_commit"

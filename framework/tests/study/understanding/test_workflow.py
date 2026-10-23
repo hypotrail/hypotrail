@@ -275,7 +275,7 @@ def test_new_rubric_needs_a_new_review(tmp_path):
                                              'Ties the inclusion of an input'))
     gate = u.call('check', '--milestone', 'handoff')['gate']
     assert gate['decision'] == 'blocked'
-    assert {'rubric_changed', 'bank_changed'} <= {r['code'] for r in gate['reasons']}
+    assert {'rubric_changed', 'taskset_changed'} <= {r['code'] for r in gate['reasons']}
 
 
 def test_removed_answer_keeps_judgement_and_follows_evidence_requirement(tmp_path):
