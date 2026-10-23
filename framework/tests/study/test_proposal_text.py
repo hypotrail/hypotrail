@@ -91,8 +91,9 @@ def test_a_conclusion_citing_current_figures_is_accepted(flow):
 
 
 def test_a_percentage_traces_to_results_not_to_the_value(tmp_path, synthetic_case_dir):
-    flow = Flow(tmp_path / 'fresh', synthetic_case_dir)      # no result to trace to
-    flow.init()
+    study = fk.prepare(synthetic_case_dir, tmp_path / 'fresh')
+    flow = Flow(study, synthetic_case_dir)
+    flow.decide('model_choice', 'fit.logistic')
     out = _propose(flow, 'policy', 'capacity:100', 'Call the top 100 clients, at 100% precision.',
                    expect=2)
     assert out['error']['code'] == 'literal_number_in_text'

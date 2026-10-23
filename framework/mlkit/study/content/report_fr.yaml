@@ -1,0 +1,334 @@
+schema: hypotrail.content.report_fr/1
+title: Rapport de l'étude
+subtitle: Un rapport évolutif de l'étude. Il décrit l'état enregistré ; il ne prend aucune décision.
+authority: Cette page ne se met pas à jour seule. L'état lu avec hypotrail status fait foi.
+no_controls: Cette page ne contient aucun contrôle de décision. Les décisions sont prises dans le chat ou avec hypotrail decide, à partir de votre réponse.
+theme_toggle: Changer de thème
+generated_for_revision: Généré pour la révision de l'étude
+generated_by_for_revision: Généré par Hypotrail pour la révision de l'étude
+last_written_for_revision: dernière génération pour la révision
+companion_origin: Proposée depuis le compagnon.
+sections:
+  verdict: Conclusion
+  objective: Objectif
+  data: Données
+  charts: Ce que montrent les résultats
+  revision: Révision et livrables
+  plan: Avancement de l'étude
+  decisions: Décisions
+  facts: Ce que dit le cas
+  evidence: Preuves par étape
+  policy: Comparaison des règles
+  diagnostics: Diagnostics du modèle
+  not_yet_defensible: Ce qui n'est pas encore défendable
+  annex: Annexe des résultats
+surfaces:
+  report: Rapport HTML
+  notebook: Notebook généré
+  editable: Notebook d'étude éditable
+  workbench: Établi
+surface_status:
+  ok: À jour pour cette révision
+  stale: Obsolète
+  failed: Échec de génération
+  not_rendered: Pas encore généré
+  not_tracked: Créé une fois et jamais écrasé ; ses essais ne sont pas suivis
+step_status:
+  done: Terminé
+  needs_reconfirmation: À confirmer de nouveau
+  awaiting_confirmation: En attente de votre réponse
+  ready: Prêt
+  blocked: Bloqué par une étape précédente
+decision_status:
+  open: Ouverte, rien n'est proposé
+  proposed: Proposée, non confirmée
+  confirmed: Décision confirmée
+  reconfirm_required: À reconfirmer
+  superseded: Remplacée
+fact_status:
+  documented_fact: Fait documenté
+  scenario_assumption: Hypothèse du scénario
+  observed: Observé dans les données
+  unknown: Inconnu
+availability:
+  available_at_prediction: Disponible au moment de la prédiction
+  not_available: Indisponible au moment de la prédiction
+  uncertain_excluded: Incertaine, exclue
+  uncertain_included: Incertaine, incluse et signalée comme limite
+  missing: Aucun statut
+availability_head:
+  status: Statut utilisé
+  basis: Qui a décidé
+  case: Ce que dit le cas
+availability_basis:
+  discussed: Votre décision (nommée dans vos mots)
+  default_from_case: Issu du cas, sans discussion
+  proposed_not_discussed: Proposé par l'assistant, sans discussion
+availability_basis_open: Proposé, non confirmé
+availability_not_stated: disponibilité au moment de la prédiction non documentée
+verdict:
+  adopt_policy: Adopter la règle
+  keep_baseline: Garder le modèle de référence
+  inconclusive: Non concluant
+current_marker: Vous êtes ici
+next_action: Prochaine action
+user_words: Vos mots
+delegated: Déléguée au choix recommandé par l'assistant
+delegated_words: Vos mots déléguant le choix
+delegated_note: Décidé par délégation au choix par défaut de l'assistant, et non par votre propre jugement. Confirmez-le vous-même quand vous le pourrez.
+delegated_restatement: Choix recommandé que vous avez délégué
+not_authenticated: Mots enregistrés, pas une signature authentifiée.
+restatement: Reformulation à laquelle vous avez répondu
+proposal_waiting: En attente de votre réponse
+hold_open: En attente selon vos mots
+hold_open_note: Cette décision ne peut pas être confirmée tant que vos mots n'ont pas levé la condition.
+hold_resolved: Condition levée
+hold_resolved_by: Levée dans vos mots
+hold_withdrawn: Condition retirée
+hold_withdrawn_by: Retirée dans vos mots
+agent_concern: Point soulevé par l'agent
+agent_concern_kept: conservé par l'utilisateur, qui a confirmé ces mots
+no_reason_given: aucune raison donnée
+adoption_option: choisie comme option dans le chat
+structure_words:
+  time_column: colonne temporelle
+  group_column: identifiant d'entité (colonne indiquant ce qui se répète)
+  row_unit: ce que décrit une ligne
+  duplicates: lignes dupliquées
+policy_note: Les chiffres sont calculés sur les lignes de validation après un choix fait sur elles. Ils sont optimistes et ne prédisent pas une campagne future.
+policy_note_oof: Les chiffres sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles. Ce sont des preuves de développement, optimistes, et non une prévision ; seul le test final, ouvert une fois, est indépendant.
+policy_missing: Aucune évaluation actuelle de la règle.
+paired_heading: Écarts appariés, modèle moins référence (bootstrap apparié sur les mêmes lignes de validation)
+comparison_heading: Variante contre modèle candidat (variante moins candidat, bootstrap apparié sur les mêmes lignes)
+tied_none: Aucune égalité au seuil
+tied_yes: Égalités au seuil comptées au prorata
+adopted: Règle adoptée
+proposed_rule: Règle proposée
+not_cited: Non cité
+annex_note: Chaque nombre de ce rapport cite un résultat enregistré. Survolez-le pour voir son résultat et son chemin.
+verdict_card:
+  not_concluded: Pas encore de conclusion.
+  proposed: Une conclusion est proposée et attend votre réponse.
+  criterion: Critère de succès
+  criterion_none: Aucun critère de succès fixé.
+  rule: Règle adoptée
+  rule_none: Aucune règle adoptée.
+  figures: Chiffres clés
+  figures_none: Aucune évaluation actuelle à citer.
+  limits: Limites principales
+  all_limits: Toutes les limites de cette étude
+  development: Preuves de développement
+  development_note: Les chiffres suivants sont hors pli sur les lignes de développement et ont servi au choix ; ils sont optimistes et ne constituent pas le résultat final.
+  validation_note: Les chiffres suivants proviennent des lignes de validation utilisées pour choisir ; ils sont optimistes et ne constituent pas le résultat final.
+  final: Test final
+  final_absent: Cette étude n'a pas de test final ; elle ne contient aucune preuve indépendante.
+  final_sealed: Toujours scellé. Il est ouvert une fois, après le choix, avec votre réponse.
+  final_missing: Ouvert, mais son évaluation ne peut pas être citée.
+  final_opened: Ouvert une fois, sur
+  final_rows: lignes que rien n'avait vues, avec la configuration choisie réajustée sur toutes les lignes de développement.
+  final_found: Lignes positives trouvées sur le test final
+  final_mae: Erreur absolue moyenne sur le test final
+  final_criterion: Critère de succès sur le test final
+  final_gain: Gain de précision sur la référence
+  final_reduction: Réduction de l'erreur de référence
+  judged_final: sur le test final, où il est jugé une fois celui-ci ouvert.
+  development_status: "Sur les lignes de développement, à titre de contexte :"
+  status_differ: Ils diffèrent parce que les chiffres de développement ont servi au choix et peuvent être optimistes ; le test final, mesuré une fois sur des lignes que rien n'avait vues, tranche.
+  final_after: Après le test final
+  final_after_note: Quelque chose a changé après l'ouverture ; le test final ne mesure donc plus l'état actuel de l'étude.
+  trials: Configurations comparées
+  trials_note: configurations évaluées sur les mêmes lignes ; plus elles sont nombreuses, plus la meilleure peut devoir son rang au hasard.
+  status:
+    met: Atteint
+    uncertain: Incertain, l'intervalle contient zéro
+    not_met: Non atteint
+    not_assessed: Pas encore évalué
+data_section:
+  unit: Une ligne
+  development: Lignes de développement
+  columns: Colonnes
+  final_test_sealed: lignes sont mises de côté comme test final et restent scellées ; ce rapport ne les lit pas.
+  final_test_absent: Cette étude ne possède pas de test final.
+  final_test_opened: lignes ont été mises de côté comme test final ; il a été ouvert une fois pour mesurer la configuration choisie.
+  final_test_changed_after: Quelque chose a changé après l'ouverture ; le test final ne mesure plus l'état actuel.
+  case_uncertain: Le cas indique une disponibilité incertaine ; la variable est utilisée comme connue au moment de la prédiction.
+  case_unknown: Le cas ne documente pas sa disponibilité ; la variable est utilisée comme connue au moment de la prédiction.
+  target: Cible
+  dictionary: Colonnes par groupe
+  rows: Premières lignes de développement, cible en premier
+  rows_note: Lignes fixes montrées pour rendre les colonnes concrètes. Il s'agit uniquement de lignes de développement.
+  rows_missing: Les lignes d'exemple n'ont pas pu être lues.
+  ungrouped: Autres colonnes
+  missing: Valeurs manquantes dans les lignes de développement
+  scroll_hint: Sur un écran étroit, faites défiler chaque tableau horizontalement.
+  head:
+    name: Colonne
+    meaning: Signification
+    type: Type et unité
+charts_intro: Chaque graphique répond à une question et provient uniquement de résultats enregistrés.
+charts_none: Aucun résultat à représenter.
+basis:
+  explicit: Vos propres mots
+  restated: Reformulée dans vos mots
+  endorsed: Approuvée dans vos mots
+  delegated_default: Déléguée à l'assistant
+recorded_at: Enregistrée à la révision
+looks:
+  summary: Regards sur le résultat dans les lignes de développement
+  note: Chaque exploration qui lit la cible compte comme un regard. Plus il y en a, plus un motif peut être dû au hasard.
+  count: regards jusqu'ici
+model_names:
+  fit.logistic: Modèle logistique
+  fit.baseline: Modèle de référence (sans classement)
+  fit.linear: Modèle linéaire
+  fit.variant: Variante
+rows_label:
+  train: lignes d'entraînement
+  validation: lignes de validation
+  development: lignes de développement
+  final_test: lignes du test final
+  all: toutes les lignes
+regression:
+  sections:
+    policy: Comparaison des modèles
+  verdict_card:
+    rule: Modèle choisi
+    rule_none: Aucun modèle choisi.
+  verdict:
+    adopt_model: Adopter le modèle linéaire
+    keep_baseline: Garder la moyenne de référence
+    inconclusive: Non concluant
+  chosen_model: Modèle choisi
+  proposed_model: Modèle proposé
+  model_missing: Aucune comparaison actuelle de modèles.
+  model_note: Les erreurs sont calculées sur les lignes de validation après un choix fait sur elles, dans l'unité de la cible. Elles sont optimistes et ne prédisent pas l'erreur sur de futures lignes.
+  model_note_oof: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
+  model_paired_heading: Écarts appariés, modèle linéaire moins moyenne de référence (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes lignes de validation)
+  residuals_heading: Résidus sur les lignes de validation (valeur observée moins prédiction)
+  residuals_by_heading: Résidus par période
+  model_names:
+    fit.baseline: Moyenne de référence
+  not_yet_defensible_extra:
+    grouped_split_unsupported: Le résultat du découpage indique combien de valeurs de groupe les deux partitions partagent et combien de lignes de validation elles contiennent.
+    no_causality: L'étude compare des prédictions ; elle ne montre pas que modifier une variable modifierait la cible.
+    validation_is_not_independent: Un modèle choisi sur les lignes de validation rend son erreur de validation optimiste.
+    workbench_not_tracked: Les essais dans l'établi ne changent rien et ne prouvent rien.
+  cross_validation:
+    model_note: Les erreurs sont des prédictions hors pli sur les lignes de développement, après un choix fait sur elles, dans l'unité de la cible. Ce sont des preuves de développement optimistes ; seul le test final, ouvert une fois, est indépendant.
+    model_paired_heading: Écarts appariés, modèle linéaire moins moyenne de référence (un écart négatif indique une erreur plus faible ; bootstrap apparié sur les mêmes prédictions hors pli)
+    residuals_heading: Résidus des prédictions hors pli (valeur observée moins prédiction)
+    not_yet_defensible_extra:
+      grouped_split_unsupported: Le résultat du découpage indique combien de valeurs de groupe les plis partagent.
+      validation_is_not_independent: Un modèle choisi sur les prédictions hors pli rend son erreur hors pli optimiste ; seul le test final, ouvert une fois, est indépendant.
+cross_validation:
+  charts_intro: Chaque graphique répond à une question et provient de résultats enregistrés. Les lignes de développement sont explorées et leurs prédictions hors pli servent à comparer et choisir ; le test final reste à part.
+  rows_label:
+    train: lignes de développement
+    validation: lignes de développement prédites hors pli
+  capacity_population:
+    after: lignes de développement prédites hors pli (une capacité conserve sa part dans chaque pli), qui représentent une part des lignes scorées et non une population entière. Reportez le taux de volume sur une autre population avant d'en donner un nombre.
+  looks:
+    summary: Regards sur le résultat dans les lignes de développement
+    note: Chaque exploration qui lit la cible sur les lignes de développement compte comme un regard. Plus il y en a, plus un motif trouvé peut être dû au hasard.
+  motivation:
+    contingent: Choisi après avoir regardé le résultat sur les lignes de développement ; les chiffres hors pli peuvent donc être légèrement optimistes.
+    not_contingent: Choisi avant tout regard sur le résultat dans les lignes de développement.
+  paired_heading: Écarts appariés, modèle moins référence (bootstrap apparié sur les mêmes prédictions hors pli, rééchantillonnées dans chaque pli)
+  policy_note: Chiffres issus de prédictions hors pli sur les lignes de développement, après un choix fait sur elles. Ce sont des preuves de développement optimistes, pas une prévision ; seul le test final, ouvert une fois, est indépendant.
+  slot_labels:
+    eda.single_feature_signal: Signal de chaque variable seule sur les lignes de développement
+  not_yet_defensible_extra:
+    validation_is_not_independent: Un seuil ou une capacité choisi sur des prédictions hors pli rend ces chiffres optimistes ; seul le test final, ouvert une fois, est indépendant.
+
+capacity_population:
+  before: Une règle de capacité sélectionne ici ce nombre parmi les
+  after: lignes de validation, qui représentent une part des lignes scorées et non une population entière. Reportez son taux de volume sur une autre population avant d'en donner un nombre.
+contradiction:
+  title: Les mots et la valeur se contredisent
+  exclude: Vos mots excluent {variable}, mais la valeur la conserve.
+  keep: Vos mots conservent {variable}, mais la valeur l'exclut.
+correction: Correction dans vos mots
+correction_note: Enregistrée après la confirmation ; la décision n'a pas été reposée.
+credit_heading: Qui a décidé quoi
+credit_explicit: "Confirmé dans les propres mots de l'analyste :"
+credit_delegated: "Choix par défaut recommandé par l'assistant, délégué par l'analyste (et non choisi par l'analyste) :"
+motivation:
+  contingent: Choisi après avoir regardé le résultat sur les lignes d'entraînement ; les chiffres de validation peuvent donc être légèrement optimistes.
+  not_contingent: Choisi avant tout regard sur le résultat dans les lignes d'entraînement.
+  not_current: Une analyse antérieure qui n'est plus actuelle.
+  looks: L'étude avait {n} regard{s} sur le résultat avant cette proposition.
+  questions: "Questions à l'origine de cette préparation :"
+roles:
+  target: La cible
+  time: Colonne temporelle, ordonne le découpage
+  group_id: Identifiant de groupe, pas une variable du modèle
+  id: Identifiant de ligne, pas une variable du modèle
+slot_labels:
+  eda.quality: Qualité des lignes de développement (sans lire la cible)
+  eda.single_feature_signal: Signal de chaque variable seule sur les lignes d'entraînement
+not_yet_defensible_extra:
+  capacity_exceeds_validation: Tout sélectionner ne dit rien sur la qualité du classement ; choisissez une capacité inférieure au nombre de lignes de validation.
+  delegated_decisions: Vous avez laissé l'assistant choisir. Le choix est enregistré, mais ses raisons sont celles de l'assistant, pas les vôtres.
+  high_cardinality_grouping: Relancez l'exploration avec un --max-groups plus grand pour voir davantage de groupes.
+  no_causality: L'étude classe les lignes ; elle ne montre pas qu'agir modifierait le résultat.
+  no_time_or_entity_identifier: Sans colonne temporelle ni identifiant d'entité, la dérive et les entités répétées ne peuvent pas être vérifiées.
+  open_holds: Vous avez demandé d'attendre. Rien de ce qui est en attente n'est confirmé tant que vos propres mots n'ont pas levé la condition.
+  public_data_already_explored: Ces données publiques peuvent déjà avoir été explorées par vous, par d'autres ou par le modèle qui vous assiste.
+  small_validation_partition: Avec si peu de lignes de validation, une ou deux lignes peuvent changer un chiffre ; comparez les modèles avec prudence.
+  uncertain_features_included: Des variables dont la disponibilité est incertaine sont incluses et peuvent contenir de l'information postérieure au moment de la prédiction.
+  validation_is_not_independent: Un seuil ou une capacité choisi sur les lignes de validation rend les chiffres de validation optimistes.
+  workbench_not_tracked: Les essais avec les curseurs de l'établi ne changent rien et ne prouvent rien.
+notebook:
+  banner_current: Généré à cette révision. Les nombres sont figés par identifiant de résultat.
+  banner_stale: L'étude a changé depuis la génération de ce notebook. Générez-le à nouveau avant de vous y fier.
+  read_only: Lecture seule. Écrivez vos notes dans study_editable.py ou workbench.py ; ce fichier est régénéré et ses modifications sont archivées.
+  source_changed: Le module a changé après le calcul de ce résultat ; le code affiché n'est pas celui qui a été exécuté.
+  source_label: Source de l'activité (affichée, non exécutée)
+diagnostics:
+  intro: Où le modèle se trompe et jusqu'où ses scores peuvent se lire comme des probabilités. Chaque partie répond à une question à partir des prédictions enregistrées.
+  pending: Aucun diagnostic pour le moment. Ils sont calculés à partir des prédictions après ajustement et comparaison des modèles.
+  stale: Ces diagnostics ne décrivent plus les modèles ou la règle actuels ; ils ne sont pas cités avant un nouveau calcul.
+  before_opening: Calculé avant l'ouverture du test final.
+  after_opening: Calculé après l'ouverture du test final, uniquement sur les lignes de développement ; cela n'ajoute aucune preuve finale.
+  development: Preuves de développement
+  development_note: Calculé sur les prédictions des lignes de développement qui ont servi à choisir le modèle et la règle. Elles décrivent le choix ; seul le test final est indépendant.
+  final: Preuves finales
+  final_absent: Cette étude n'a pas de test final.
+  final_sealed: Le test final est encore scellé et n'a donc aucun diagnostic. Ils ne sont calculés qu'après son ouverture.
+  final_pending: Le test final est ouvert ; ses diagnostics ne sont pas encore calculés.
+  final_note: Calculé une fois le test final ouvert, à partir des prédictions de son unique évaluation, uniquement pour la configuration choisie.
+  model: Modèle affiché
+  rule: Règle de ces chiffres
+  models_heading: Modèles côte à côte
+  confusion_heading: Matrice de confusion à la règle
+  confusion_rows: Résultat observé
+  confusion_selected: Sélectionnée par la règle
+  confusion_not_selected: Non sélectionnée
+  confusion_positive: Positive
+  confusion_negative: Négative
+  confusion_expected: Une égalité à la limite est comptée au prorata ; ces effectifs sont donc attendus.
+  gain_heading: Courbe de gain
+  roc_heading: Qualité du classement
+  calibration_heading: Calibration
+  calibration_table: Tranches de calibration (même nombre de lignes, dans l'ordre des scores)
+  coefficients_heading: Coefficients avec intervalles bootstrap
+  coefficients_note: Plus grands coefficients en valeur absolue. Ce sont des associations conditionnelles aux autres variables, pas les effets d'une modification.
+  segments_heading: Précision et rappel à la règle, par segment
+  segments_note: Segments choisis par le moteur ; une cellule avec peu de lignes ou de lignes sélectionnées est signalée et ne doit pas être lue seule.
+  examples_heading: Exemples d'erreurs
+  examples_none: Aucune à cette règle.
+  false_negatives: Non sélectionnées alors que le résultat est positif (scores croissants)
+  false_positives: Sélectionnées alors que le résultat est négatif (scores décroissants)
+  residuals_heading: Résidus
+  residual_summary: Distribution des résidus (valeur observée moins prédiction)
+  by_feature_heading: Résidus par variable
+  hetero_heading: L'erreur augmente-t-elle avec la prédiction ?
+  hetero_yes: Signalé
+  hetero_no: Non signalé
+  largest_heading: Plus grandes erreurs
+  smearing: Transformation de la cible
+  rule_source:
+    adopted: la règle que vous avez adoptée
+    proposed: la règle proposée au moment du calcul
+    scenario_default: la part du scénario pédagogique, avant toute proposition de règle
+    engine_default: une part par défaut, avant toute proposition de règle

@@ -5,9 +5,11 @@ tools: ['vscode/askQuestions', 'execute', 'execute/runInTerminal', 'execute/getT
 ---
 
 Follow `.github/copilot-instructions.md` (the study rules) and the skill `{{SKILL}}`
-exactly. At every guided pause: first the pause message with the quoted decision block in
-the chat, then #tool:vscode/askQuestions with one single-select question, "Adoptez-vous
-cette décision ?", and three options: "J'adopte cette décision" (recommended, described
+exactly. At every guided pause: first
+the pause message with the quoted decision block in the chat, then #tool:vscode/askQuestions
+with one self-contained single-select question: decision title, one-line restatement,
+then "Adoptez-vous cette décision ?". Use
+three options: "J'adopte cette décision" (recommended, described
 by the decision in one line), "Changer quelque chose", "Expliquer d'abord". Adopt picked:
 confirm with `--channel choice --user-words "<label, verbatim>"`. Without the picker, ask
 in text. Run each command in the terminal as `{{HYPOTRAIL}} <command> ... --study {{STUDY}}`

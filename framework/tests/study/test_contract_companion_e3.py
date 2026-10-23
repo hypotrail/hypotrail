@@ -70,7 +70,7 @@ def test_c4_unevaluated_rule_and_refusals(binary, tmp_path):
     assert {'capability', 'decisions'} <= set(cc.refusal(p)[1])
     code, p = cc.run('preview', 'proposal', 'model_choice', '--value', 'fit.linear',
                      '--study', binary.study)
-    assert code == 2 and cc.refusal(p)[0] == 'unknown_decision', p
+    assert code == 2 and cc.refusal(p)[0] == 'unsupported_capability', p
     code, p = cc.run('preview', 'proposal', 'policy', '--value', 'capacity:none',
                      '--study', binary.study)
     assert code == 2 and cc.refusal(p)[0] == 'invalid_value', p

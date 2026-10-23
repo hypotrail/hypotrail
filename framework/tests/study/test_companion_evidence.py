@@ -107,9 +107,10 @@ def test_bank_impact_of_a_feature_set_change(bank):
     assert not set(impact['stale_slots']) & set(impact['kept_slots'])
     # WP-B1: the variant is the candidate with one change, so it refits too.
     assert impact['refit'] == ['fit.logistic', 'fit.variant'] and impact['reconfirm'] == ['policy']
-    # Rows 1 to 6 of the binary table, each for a confirmed decision; WP-A4 adds the
-    # preprocessing (row 14) and the success criterion (row 16); WP-B1 the variant (17).
-    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 5, 6, 14, 16, 17]
+    # Rows 1 to 6 of the binary table, each for a confirmed decision; WP-B2 adds the
+    # explicit model choice (13), WP-A4 preprocessing (14) and success criterion (16),
+    # and WP-B1 the variant (17).
+    assert [i['row'] for i in p['impacts']] == [1, 2, 3, 4, 5, 6, 13, 14, 16, 17]
     split = next(i for i in p['impacts'] if i['mutation'] == 'split')
     assert 'fit.baseline' in split['stale_slots'] and split['kept_slots'] == []
     rule = next(i for i in p['impacts'] if i['mutation'] == 'policy.parameter')

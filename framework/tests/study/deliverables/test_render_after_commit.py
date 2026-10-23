@@ -63,7 +63,7 @@ def test_every_commit_renders_every_artifact(b, no_hooks):
     out = _propose(b)
     assert out.exit_code == 0
     arts = out.payload['artifacts']
-    assert set(arts) == {'report', 'notebook', 'workbench'}
+    assert set(arts) == {'report', 'notebook', 'editable', 'workbench'}
     rev = out.payload['revision']
     assert all(a['status'] == 'ok' for a in arts.values())
     assert arts['report']['revision'] == arts['notebook']['revision'] == rev

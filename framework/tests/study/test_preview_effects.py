@@ -78,6 +78,7 @@ def bank(tmp_path_factory):
     flow.run('fit.baseline')
     flow.run('fit.logistic')
     flow.run('policy.evaluate', '--rule', 'threshold:0.2')
+    flow.decide('model_choice', 'fit.logistic')
     flow.decide('policy', 'threshold:0.2')
     return flow
 

@@ -1,9 +1,10 @@
 'use strict';
-// The two Marimo launches of the panel (WP-A5; ADR 0004 amendment "local launch";
-// COMPANION-ADVANCED §6.1.4). The panel may open the study's two notebooks with Marimo's
+// The Marimo launches of the panel (WP-A5; ADR 0004 amendment "local launch";
+// COMPANION-ADVANCED §6.1.4). The panel may open the study's three notebooks with Marimo's
 // own local server, and nothing else:
 //
 //   notebook   notebooks/study_generated.py   `marimo run`   (read: it is regenerated)
+//   editable   notebooks/study_editable.py    `marimo edit`  (synced until first edit)
 //   workbench  notebooks/workbench.py         `marimo edit`  (the junior's own file)
 //
 // The argv is the engine's (`deliverables.launch.<name>.argv` of `status --json`, CLI-CONTRACT
@@ -18,6 +19,7 @@ const path = require('path');
 
 const NOTEBOOKS = Object.freeze({
   notebook: Object.freeze({ path: 'notebooks/study_generated.py', mode: 'run' }),
+  editable: Object.freeze({ path: 'notebooks/study_editable.py', mode: 'edit' }),
   workbench: Object.freeze({ path: 'notebooks/workbench.py', mode: 'edit' }),
 });
 const MAX_ARG = 4096;
@@ -89,7 +91,7 @@ const quote = a => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(a) ? a : `"${a.replace(/(["\
  * notebook with its study-relative file, and the engine environment, from agent.json.
  */
 function display(agent) {
-  const out = { kernel: null, notebook: null, workbench: null };
+  const out = { kernel: null, notebook: null, editable: null, workbench: null };
   if (!agent) return out;
   const prefix = prefixFromAgent(agent.argv);
   if (prefix) out.kernel = prefix[0] === 'uv' ? path.join(prefix[3], '.venv') : prefix[0];

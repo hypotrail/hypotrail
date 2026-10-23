@@ -78,9 +78,9 @@ def test_c1_digest_keys_moments_pauses_and_last_session(binary):
     assert p['pauses'][0]['decisions'] == ['prediction_time', 'feature_availability']
     # WP-A4: the split pause also holds the success criterion and the preprocessing.
     assert p['pauses'][1]['decisions'] == ['split', 'success_criterion', 'preprocessing']
-    # WP-B1: the variant before the policy, the opening of the final test after it.
-    assert p['pauses'][2]['decisions'] == ['model_variant', 'policy', 'final_test',
-                                           'conclusion']
+    # The variant and explicit model choice precede the policy and final-test opening.
+    assert p['pauses'][2]['decisions'] == ['model_variant', 'model_choice', 'policy',
+                                           'final_test', 'conclusion']
     assert [x['status'] for x in p['pauses']] == ['closed', 'closed', 'open']
     assert tuple(p['last_session']) == cc.LAST_SESSION_KEYS
     digest = p['digest']
@@ -138,18 +138,18 @@ def test_c2_decisions_keys(binary):
     assert [d['decision_id'] for d in p['decisions']] == ['prediction_time',
                                                           'feature_availability', 'split',
                                                           'success_criterion', 'preprocessing',
-                                                          'model_variant', 'policy',
+                                                          'model_variant', 'model_choice', 'policy',
                                                           'final_test', 'conclusion']
     for d in p['decisions']:
         assert tuple(d) == cc.DECISIONS_ITEM_KEYS
     for item in p['proposals']:
         assert tuple(item) == cc.DECISIONS_PROPOSAL_KEYS
         assert item['origin'] is None or tuple(item['origin']) == cc.ORIGIN_KEYS
-    # WP-B1: the variant the evaluation compares is confirmed too.
+    # The compared variant and the model used by the rule are both confirmed.
     assert [h['decision_id'] for h in p['history']] == ['prediction_time',
                                                         'feature_availability', 'split',
                                                         'success_criterion', 'preprocessing',
-                                                        'model_variant']
+                                                        'model_variant', 'model_choice']
     for h in p['history']:
         assert tuple(h) == cc.DECISIONS_HISTORY_KEYS
         assert h['current'] is True and h['superseded_at'] is None

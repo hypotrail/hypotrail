@@ -539,7 +539,8 @@ def summary(view: dict) -> dict:
                                                         dec.get('feature_basis'))}
     proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],
                   'value': _compact_value(p['decision_id'], p['value']),
-                  'restatement': p['restatement'], 'revision': p['revision']}
+                  'restatement': p.get('label') or p['restatement'],
+                  'revision': p['revision']}
                  for p in view['open_proposals']]
     results = {slot: {'result_id': r['result_id'], 'current': r['current'],
                       'stale_reason': r['stale_reason'], 'integrity': r['integrity']}
@@ -793,7 +794,7 @@ def _recap_decision(decision_id: str, d: dict, errors: dict | None = None,
         if headline and headline['adopted']:
             text += f' ({headline["short_junior_text" if junior else "short_text"]})'
     elif decision_id == 'model_choice' and isinstance(value, str):
-        text = f'{label}: {MODEL_CHOICE_WORDS.get(value, value)}'
+        text = f'{label}: {audience.model_words(value)}'
         mae = (errors or {}).get('mae', {}).get(value)
         if mae is not None:
             where = 'out-of-fold' if cv else 'validation'
@@ -985,7 +986,7 @@ def recap(summary_out: dict, view: dict, junior: bool = False) -> list[str]:
     chosen = summary_out['decisions'].get('model_choice') or {}
     if errors and chosen.get('status') not in ('confirmed', 'reconfirm_required'):
         # Before the model choice, "Now" gives both validation errors (P3).
-        named = '; '.join(f'{MODEL_CHOICE_WORDS.get(slot, slot)} {mae} {errors["unit"]}'
+        named = '; '.join(f'{audience.model_words(slot)} {mae} {errors["unit"]}'
                           for slot, mae in sorted(errors['mae'].items()))
         step += (f' (validation MAE: {named})' if junior else
                  f' (validation MAE: {named}; result {errors["result_id"][:RECAP_RID]})')
@@ -1273,6 +1274,12 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
     state = study.state
     executions, suspected = _executions(state, leases)
     plan = st.derive_plan(state)
+    language = st.language_of(state)
+    # The state keeps canonical English plan text; surfaces receive localized copies.
+    plan = [{**step,
+             'title': junior.step_text(step['title'], language),
+             'question': junior.step_text(step['question'], language)}
+            for step in plan]
     results = _results(study, state)
     defensible = st.not_yet_defensible(state)
     _case_uncertain_limit(state, defensible)
@@ -1319,7 +1326,6 @@ def build(study_dir, *, leases: dict | None = None) -> dict:
                if r['integrity'] == 'ok' and r['current']}
     final_test = partition.final_test_status(state, started)
     defensible.extend(_governance_limits(state, criterion, final_test))
-    language = st.language_of(state)
     out = {
         'schema': SCHEMA,
         'study': str(study.study_dir),

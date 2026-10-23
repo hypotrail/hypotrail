@@ -95,13 +95,15 @@ COMPANION_FORBIDDEN = re.compile(
     r"|vscode\.lm\b|WebSocket|localStorage|indexedDB|\bfetch\(|workspaceState")
 
 # ADR 0004 amendment "local launch" (WP-A5): the panel may open a VS Code terminal for
-# exactly two commands, Marimo's own server on the study's two notebooks (`marimo run` of
-# the generated notebook, `marimo edit` of the workbench). The terminal is created once,
+# exactly three commands, Marimo's own server on the study's three notebooks (`marimo run`
+# of the generated notebook, `marimo edit` of the editable copy and of the workbench). The
+# terminal is created once,
 # in extension.js, with an argument list (shellPath and shellArgs), after lib/launch.js
 # accepted the argv; nothing types into a terminal and no other file creates one.
 COMPANION_LAUNCH_FILE = 'lib/launch.js'
 COMPANION_TERMINAL_FILE = 'extension.js'
 COMPANION_NOTEBOOKS = {"notebook: Object.freeze({ path: 'notebooks/study_generated.py', mode: 'run' })",
+                       "editable: Object.freeze({ path: 'notebooks/study_editable.py', mode: 'edit' })",
                        "workbench: Object.freeze({ path: 'notebooks/workbench.py', mode: 'edit' })"}
 TERMINAL_CALL = re.compile(r'createTerminal\s*\(')
 TERMINAL_FORBIDDEN = re.compile(r'\bsendText\b|\bcreateTerminal\s*\(\s*[\'"`]|\bshellPath\s*:\s*[\'"`]'
@@ -135,7 +137,7 @@ def companion_terminal_errors(sources):
             modes = re.findall(r"^\s*\w+: Object\.freeze\(\{ path: '[^']*', mode: '[^']*' \}\)", launch, re.M)
             if {m.strip() for m in modes} != COMPANION_NOTEBOOKS:
                 errors.append(f'Companion client {COMPANION_LAUNCH_FILE} launches other than marimo run of the '
-                              'generated notebook and marimo edit of the workbench')
+                              'generated notebook and marimo edit of the editable copy or workbench')
             if "tail[0] !== 'marimo'" not in launch:
                 errors.append(f'Companion client {COMPANION_LAUNCH_FILE} does not require the marimo command')
     return errors

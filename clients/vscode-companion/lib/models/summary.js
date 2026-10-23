@@ -18,9 +18,11 @@ const SUMMARY_SCHEMA = 'hypotrail.summary/1';
 const ARTIFACT_PATHS = {
   report: 'reports/study.html',
   notebook: 'notebooks/study_generated.py',
+  editable: 'notebooks/study_editable.py',
   workbench: 'notebooks/workbench.py',
 };
-const ARTIFACT_LABELS = { report: 'Report', notebook: 'Generated notebook', workbench: 'Workbench' };
+const ARTIFACT_LABELS = { report: 'Report', notebook: 'Generated notebook',
+  editable: 'Editable study notebook', workbench: 'Workbench' };
 const PROPOSAL_ID = /^p_[0-9]+$/;
 // The items of `not_yet_defensible.top` that the frame's alert strip shows (§4.1).
 const ALERT_IDS = ['sources_changed', 'interrupted_executions', 'result_integrity'];
@@ -68,7 +70,7 @@ function deliverablesModel(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const launch = obj(raw.launch);
   const out = {};
-  for (const name of ['notebook', 'workbench']) {
+  for (const name of ['notebook', 'editable', 'workbench']) {
     const l = obj(launch[name]);
     if (Array.isArray(l.argv) && l.argv.every(a => typeof a === 'string')) {
       out[name] = { mode: str(l.mode), path: str(l.path), argv: l.argv.slice(), shell: str(l.shell) };

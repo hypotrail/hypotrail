@@ -24,7 +24,8 @@ Decision                   Concepts
                            (``missing_indicator``, ``rare_categories``, ``caps``,
                            ``log_transform``), or ``no_preprocessing``
 ``policy``                 ``capacity`` or ``threshold``, and ``rule_number``
-``model_choice``           ``linear_model`` or ``baseline_model``
+``model_choice``           ``logistic_model`` or ``model_variant`` (binary),
+                           ``linear_model`` or ``baseline_model`` (regression)
 ``conclusion``             the verdict: ``adopt``, ``keep_baseline``, or ``inconclusive``
 any other decision         ``restatement``: the reply repeats a word or a number of the
                            value or a label (:func:`confirm.restates`)
@@ -249,9 +250,15 @@ def concept_map(state: Mapping, proposal: Mapping) -> list[dict]:
             items.append(_number_concept('rule_number', forms))
             return items
     if decision_id == 'model_choice' and isinstance(value, str):
+        if value.startswith('fit.variant'):
+            return [_terms_concept('model_variant')]
         from . import preconditions
-        concept = 'linear_model' if value == preconditions.REGRESSION_CANDIDATE \
-            else 'baseline_model'
+        if task == st.BINARY:
+            concept = ('logistic_model' if value == preconditions.BINARY_CANDIDATE
+                       else 'baseline_model')
+        else:
+            concept = ('linear_model' if value == preconditions.REGRESSION_CANDIDATE
+                       else 'baseline_model')
         return [_terms_concept(concept)]
     if decision_id == 'conclusion' and isinstance(value, Mapping):
         concept = VERDICT_CONCEPTS.get(value.get('verdict'))

@@ -611,7 +611,7 @@
       buttons.push(el('button', { type: 'button', 'data-open': 'report', text: c.openInBrowser, 'aria-label': c.openReportName,
         onclick: () => ctx.send({ type: 'open_artifact', artifact: 'report' }) }));
     } else {
-      const edit = a.name === 'workbench';
+      const edit = a.name === 'workbench' || a.name === 'editable';
       if (!(edit && ctx.reviewer)) {
         buttons.push(el('button', { type: 'button', 'data-marimo': a.name, text: edit ? c.marimoEdit : c.marimoRead,
           onclick: () => ctx.send({ type: 'open_marimo', artifact: a.name }) }));
@@ -619,15 +619,16 @@
       buttons.push(el('button', { type: 'button', className: 'secondary', 'data-open': a.name, text: c.openFile,
         'aria-label': c.openInEditorName(str(a.label)), onclick: () => ctx.send({ type: 'open_artifact', artifact: a.name }) }));
     }
-    const status = a.name === 'workbench' ? 'yours' : str(a.status);
-    const text = a.name === 'workbench' ? '' : a.juniorMessage || (a.audience === 'agent' ? (c.statusText[a.status] || '') : str(a.message));
+    const owned = a.name === 'workbench' || a.name === 'editable';
+    const status = owned ? 'yours' : str(a.status);
+    const text = owned ? '' : a.juniorMessage || (a.audience === 'agent' ? (c.statusText[a.status] || '') : str(a.message));
     return el('div', { className: 'ov-deliverable', 'data-artifact': str(a.name), 'data-status': str(a.status) }, [
       el('div', { className: 'ov-deliverable-main' }, [
         el('div', { className: 'ov-deliverable-label', text: c.deliverableLabel(str(d.label || a.label), fileName(a.path)) }),
         el('div', { className: 'ht-mono ov-path muted', text: str(a.path) }),
         el('div', { className: 'ov-deliverable-what', text: str(d.what) }),
         el('div', {}, [
-          el('span', { className: `ht-status ${a.name === 'workbench' ? 'ht-st-neutral' : STATUS_CLASS[a.status] || 'ht-st-stale'}`,
+          el('span', { className: `ht-status ${owned ? 'ht-st-neutral' : STATUS_CLASS[a.status] || 'ht-st-stale'}`,
             'data-status-chip': status, text: c.statusChip[status] || status }), ' ',
           a.juniorMessage && text === a.juniorMessage
             ? HT.components.engineText(text, { attrs: { className: 'ov-deliverable-status', 'data-message': true, title: a.message || null } })
@@ -644,11 +645,12 @@
     const children = items.length ? items.map(a => deliverableRow(a, model, ctx))
       : [el('p', { className: 'muted', text: c.nothingRendered })];
     const m = ctx.init && ctx.init.marimo;
-    if (m && (m.notebook || m.workbench)) {
+    if (m && (m.notebook || m.editable || m.workbench)) {
       children.push(el('div', { className: 'ov-launch', 'data-launch-info': true }, [
         el('p', { className: 'ov-launch-title', text: c.launchTitle }),
         el('p', { text: c.launchWhat }),
         m.notebook ? el('pre', { className: 'ht-mono', 'data-launch': 'notebook', text: m.notebook }) : null,
+        m.editable ? el('pre', { className: 'ht-mono', 'data-launch': 'editable', text: m.editable }) : null,
         m.workbench ? el('pre', { className: 'ht-mono', 'data-launch': 'workbench', text: m.workbench }) : null,
         el('p', { className: 'muted', 'data-kernel': true }, [c.kernel, m.kernel ? el('code', { text: m.kernel }) : c.kernelUnknown, c.kernelTail]),
       ]));

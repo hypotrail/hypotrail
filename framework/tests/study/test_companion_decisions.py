@@ -70,8 +70,8 @@ def test_history_proposals_and_delegation(bank):
     assert policy[0]['superseded_at'] == policy[1]['revision'] and policy[1]['superseded_at'] is None
     assert policy[1]['channel'] == 'webview' and policy[0]['channel'] == 'chat'
     # WP-A4: the success criterion and the preprocessing are confirmed too; WP-B1: and the
-    # variant the policy compares.
-    assert sum(h['current'] for h in p['history']) == 7
+    # variant the policy compares, and the explicit model choice before that policy.
+    assert sum(h['current'] for h in p['history']) == 8
     split = next(h for h in p['history'] if h['decision_id'] == 'split')
     assert (split['basis'], split['delegation_scope']) == ('delegated_default', 'this_decision')
     assert split['user_words'] == DELEGATION_WORDS

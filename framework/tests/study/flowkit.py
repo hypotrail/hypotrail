@@ -98,6 +98,9 @@ def wp_a4_shape(state: dict) -> dict:
     task = st.task_of(state)
     for d in st.WP_B1_DECISIONS:
         state['decisions'].pop(d, None)
+    for d in tuple(state['decisions']):
+        if d not in st.FULL_DECISION_IDS_BY_TASK[task]:
+            state['decisions'].pop(d)
     for d, dec in state['decisions'].items():
         dec['depends_on'] = list(st.FULL_DEPENDS_ON_BY_TASK[task][d])
     return state
@@ -154,6 +157,12 @@ class Flow:
         return self.call('init', '--case', self.case_dir, '--study', self.study)
 
     def decide(self, decision, value, words=None):
+        if decision == 'policy':
+            from mlkit.study import records as rec, state as st
+            state = self.state()
+            choice = state['decisions'].get('model_choice')
+            if st.has_explicit_binary_model_choice(state) and choice['status'] != 'confirmed':
+                self.decide('model_choice', rec.policy_model(value))
         p = self.call('decide', 'propose', decision, '--value-json', json.dumps(value),
                       '--restatement', f'You decide the {decision} as stated.',
                       '--rationale', 'It fits the scenario.', '--request-id', self.rid(),

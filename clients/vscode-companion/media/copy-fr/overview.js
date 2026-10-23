@@ -126,6 +126,7 @@
     deliverable: {
       report: { label: 'Rapport', what: 'Le rapport HTML évolutif, pour votre responsable ou un relecteur.' },
       notebook: { label: "Notebook de l'étude", what: "Généré par le moteur. Lisez-le comme une application ; il est régénéré après chaque décision." },
+      editable: { label: "Copie éditable de l'étude", what: "Elle suit le notebook généré jusqu'à votre première modification, puis n'est plus jamais écrasée. Elle ne constitue pas une preuve officielle." },
       workbench: { label: 'Votre établi', what: "Votre espace à vous. Jamais écrasé, et non suivi : rien de ce qu'il contient ne compte comme preuve." },
     },
     statusChip: { ok: 'à jour', stale: 'en retard', failed: 'en échec', missing: 'absent', edited: 'modifié', yours: 'à vous' },

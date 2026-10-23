@@ -191,6 +191,29 @@ def test_setup_stages_are_ordered():
         setup.Setup(Path('/nonexistent'), 'bank').advance('unknown_stage')
 
 
+def test_binary_setup_records_model_choice_before_policy(tmp_path):
+    """The demo driver must not mistake a compared variant for the adopted model."""
+    setup = _load('study_setup')
+    workspace = tmp_path / 'study'
+    workspace.mkdir()
+    setup.prepare_study('synthetic', workspace, tmp_path / 'hidden')
+
+    driver = setup.Setup(workspace, 'synthetic')
+    driver.advance('policy_adopted')
+    view = setup.status(workspace)['view']
+    decisions = view['decisions']
+
+    assert decisions['model_variant']['status'] == 'confirmed'
+    assert decisions['model_choice']['status'] == 'confirmed'
+    assert decisions['policy']['status'] == 'confirmed'
+    chosen = decisions['model_choice']['value']
+    policy = decisions['policy']['value']
+    if chosen == 'fit.logistic':
+        assert policy == driver.rule()
+    else:
+        assert policy.endswith(f'@{chosen}')
+
+
 def test_audit_allows_the_recorded_cli_invocation():
     cli = 'uv run --project /repo/framework hypotrail'
     t = Transcript().tool('Bash', command=f'{cli} status --json --study /s')

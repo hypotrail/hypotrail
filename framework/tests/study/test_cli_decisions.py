@@ -458,18 +458,18 @@ def test_three_pauses_are_preconditions(study, work, features):
     assert split['superseded'] == [pid]
     confirm(study, work, split['proposal_id'], 'Yes, split before exploring.', rid='s4',
             rev=rev + 1)
-    pol = propose(study, work, 'policy', value='capacity:100', rid='p1', rev=rev + 2,
-                  restatement='Call the 100 highest-scored members.')['result']['proposal_id']
+    choice = propose(study, work, 'model_choice', value='fit.logistic', rid='p1',
+                     rev=rev + 2, restatement='Retain the logistic model.')['result']['proposal_id']
     # WP-A9 (H1): the words give a reason, so the refusal is the missing precondition.
-    out = confirm(study, work, pol, 'Yes, call the top hundred because the desk has that '
-                  'capacity.', rid='p2', rev=rev + 3, expect=2)
+    out = confirm(study, work, choice, 'Yes, retain the logistic model because it is the '
+                  'candidate.', rid='p2', rev=rev + 3, expect=2)
     assert out['error']['code'] == 'precondition_missing'
     # WP-A4: the success criterion and the preprocessing come first, then (WP-B1) the
-    # variant the policy compares, then the evaluation.
+    # variant the model choice compares, then its current fit.
     missing = out['error']['details']['missing']
     assert [m.get('decision') for m in missing[:3]] == ['success_criterion', 'preprocessing',
                                                         'model_variant']
-    assert missing[3]['slot'] == 'policy.evaluation'
+    assert missing[3]['slot'] == 'fit.logistic'
     concl = propose(study, work, 'conclusion', value_json={'verdict': 'adopt_policy',
                                                            'text': 'Adopt the model.'},
                     rid='c1', rev=rev + 3)['result']['proposal_id']
@@ -531,8 +531,8 @@ def test_invalid_proposals_are_refused_without_effect(study, work, decision, val
 
 
 def test_literal_numbers_in_text_are_refused(study, work):
-    code, out = hyp('decide', 'propose', 'policy', '--value', 'capacity:100', '--restatement',
-                    'Call the 100 top members; that reaches 37% of buyers.', '--rationale', 'x',
+    code, out = hyp('decide', 'propose', 'split', '--value-json', json.dumps(SPLIT), '--restatement',
+                    'Split 70/30 with seed 20261017; that reaches 37% of buyers.', '--rationale', 'x',
                     '--request-id', 'r1', '--expected-revision', 1, '--study', study, cwd=work)
     assert code == 2 and out['error']['code'] == 'literal_number_in_text'
     # Since review fix L3 a refused percentage is reported as written, with its sign.

@@ -87,6 +87,7 @@ def test_a_french_study_walkthrough_says_vous(tmp_path):
     flow.run('fit.logistic')
     _assert_vous(flow, seen)
     flow.variant()
+    flow.decide('model_choice', 'fit.logistic')
     flow.run('policy.evaluate', '--rule', 'capacity:40')
     _assert_vous(flow, seen)
     flow.decide('policy', 'capacity:40',
@@ -156,6 +157,22 @@ def test_every_french_text_function_says_vous():
                                      'fr')['junior_message']
             assert not tu_forms(text), (name, status, text)
     assert not tu_forms(render_notebook.RECOMPUTE_NOTE_FR)
+
+
+def test_the_french_report_translates_every_static_report_label():
+    """A new English report label cannot silently leak into a French report."""
+    from mlkit.study import texts
+
+    def leaf_paths(value, prefix=()):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                yield from leaf_paths(child, prefix + (key,))
+        else:
+            yield prefix
+
+    english = texts.load('report')
+    french = texts.load('report_fr')
+    assert set(leaf_paths(french)) - {('schema',)} == set(leaf_paths(english)) - {('schema',)}
 
 
 @pytest.mark.parametrize('module', [junior, audience, criterion, view_mod, render_notebook,

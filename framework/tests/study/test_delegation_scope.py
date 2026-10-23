@@ -35,6 +35,8 @@ def pause(tmp_path, synthetic_case_dir):
     first three decisions were confirmed by a standing delegation."""
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='models',
                  standing_delegation=STANDING)
+    b.decide('model_choice', 'fit.logistic', 'Retain fit.logistic for the rule.',
+             'I adopt fit.logistic because it fits the study.')
     fx.put_policy_evaluation(b)
     return b
 

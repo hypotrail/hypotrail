@@ -104,8 +104,15 @@ def test_gallery_shows_the_registered_eda_results_in_order(open_panel, model, ta
     assert [c['slot'] for c in eda['cards'] if c['kind'] != 'quality'] == ORDER[task]
     # Each card names its activity and result id in its faint source line (v0.3, WP-E2: six
     # characters, never in the prose); the source line opens Evidence.
+    gallery = [item for item in eda['cards'] if item['kind'] != 'quality']
     for card in eda['cards']:
         hook = "data-quality-card" if card["kind"] == "quality" else "data-eda-card"
+        if card['kind'] != 'quality':
+            details = page.locator(f'[{hook}="{card["slot"]}"] details.eda-analysis')
+            is_open = details.get_attribute('open')
+            assert is_open == ('' if card['slot'] == gallery[-1]['slot'] else None)
+            if is_open is None:
+                details.locator(':scope > summary').click()
         chip = page.locator(f'[{hook}="{card["slot"]}"] [data-chip]')
         assert chip.get_attribute('data-chip') == card['resultId']
         assert card['resultId'][:6] in chip.inner_text()
@@ -235,6 +242,7 @@ def test_ed6_regression_cards_and_no_decision_rule_or_binary_vocabulary(open_pan
 def test_binary_target_card_introduces_the_term_first(open_panel, model):
     panel, eda = open_eda(open_panel, model, 'binary')
     card = panel.page.locator('[data-eda-card="eda.target_rate"]')
+    card.locator('details.eda-analysis > summary').click()
     term = card.locator('[data-term]')
     assert term.get_attribute('data-term') == 'class_imbalance'
     assert term.inner_text() == 'Class imbalance: one value of the target is much rarer.'
@@ -243,6 +251,7 @@ def test_binary_target_card_introduces_the_term_first(open_panel, model):
     balanced = copy.deepcopy(eda)
     balanced['cards'][0]['data']['imbalanced'] = False
     panel.view_data('eda', balanced)
+    card.locator('details.eda-analysis > summary').click()
     assert term.inner_text() == 'Base rate: how often the outcome occurs in the training rows.'
 
 
@@ -412,6 +421,7 @@ def test_stale_card_is_listed_without_figures(open_panel, model, payload):
             r.update(current=False, stale_reason='upstream_changed', values=None, headline=None)
     panel, _ = open_eda(open_panel, model, 'binary', eda=model('eda', p))
     card = panel.page.locator('[data-eda-card="eda.rate_by:job"]')
+    card.locator('details.eda-analysis > summary').click()
     assert card.get_attribute('data-current') == 'false'
     assert card.locator('[data-stale]').inner_text() == 'Stale · not cited'
     assert card.locator('[data-result-id]').count() == 0
@@ -461,7 +471,9 @@ def test_loading_error_and_updating_states(open_panel, model):
 def test_chip_opens_the_result_in_evidence(open_panel, model):
     panel, eda = open_eda(open_panel, model, 'binary')
     page = panel.page
-    page.locator('[data-eda-card="eda.rate_by:job"] [data-chip]').click()
+    card = page.locator('[data-eda-card="eda.rate_by:job"]')
+    card.locator('details.eda-analysis > summary').click()
+    card.locator('[data-chip]').click()
     assert page.locator('[role="tab"][aria-selected="true"]').get_attribute('data-tab') == 'evidence'
 
 

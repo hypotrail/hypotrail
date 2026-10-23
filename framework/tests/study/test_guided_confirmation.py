@@ -174,6 +174,7 @@ def pause3(fitted, tmp_path, synthetic_case_dir):
     study = fk.clone(fitted, tmp_path / 'p3')
     f = Flow(study, synthetic_case_dir, prefix='g')
     f.run('policy.evaluate', '--rule', 'capacity:20')
+    f.decide('model_choice', 'fit.logistic')
     return f
 
 
@@ -207,7 +208,8 @@ def test_a_delegation_needs_no_reason(pause3):
 
 def test_reason_decisions_by_task():
     # WP-B1: the opening of the final test too.
-    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion', 'final_test'),
+    assert cf.REASON_DECISIONS == {'binary': ('model_choice', 'policy', 'conclusion',
+                                              'final_test'),
                                    'regression': ('model_choice', 'conclusion', 'final_test')}
     assert not cf.has_reason('oui je confirme cela') and not cf.has_reason('I agree')
     assert cf.has_reason('je confirme car le service est limité')
@@ -242,7 +244,8 @@ def test_owner_availability_sentence_confirms_and_records_the_concern(bank):
     item = next(d for d in decisions['decisions'] if d['decision_id'] == 'feature_availability')
     assert item['confirmation']['agent_concern'] == OWNER_CONCERN
     html = (bank.study / 'reports' / 'study.html').read_text(encoding='utf-8')
-    assert 'Point raised by the agent' in html and 'kept by the user' in html
+    assert 'Point soulevé par l&#x27;agent' in html
+    assert 'conservé par l&#x27;utilisateur' in html
 
 
 def test_words_that_contradict_the_value_stop_until_the_agent_raises_them(bank):
@@ -275,7 +278,7 @@ def test_words_that_contradict_the_value_stop_until_the_agent_raises_them(bank):
     assert [w['variable'] for w in item['confirmation']['warnings']] == ['contact']
     html = (bank.study / 'reports' / 'study.html').read_text(encoding='utf-8')
     assert 'data-warning="words_contradict_value"' in html
-    assert 'Your words exclude contact, but the value keeps it' in html
+    assert 'Vos mots excluent contact, mais la valeur la conserve' in html
 
 
 def test_a_confirmation_without_contradiction_records_no_warnings(bank):

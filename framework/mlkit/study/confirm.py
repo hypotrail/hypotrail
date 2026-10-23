@@ -143,7 +143,7 @@ REASON_CONNECTOR = re.compile(r"""
 # The trade-offs, per task: the choice of the third pause, the final-test opening and the
 # conclusion. v0.3 (WP-B, R27): only the training mode requires a reason for them; every
 # mode records whether the junior's words give one (``reason_given``).
-REASON_DECISIONS = {st.BINARY: ('policy', 'conclusion', st.FINAL_TEST),
+REASON_DECISIONS = {st.BINARY: ('model_choice', 'policy', 'conclusion', st.FINAL_TEST),
                     st.REGRESSION: ('model_choice', 'conclusion', st.FINAL_TEST)}
 
 

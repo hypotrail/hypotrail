@@ -28,7 +28,7 @@ from importlib import resources
 
 import yaml
 
-CONTENT_FILES = ('glossary', 'steps', 'activities', 'report',
+CONTENT_FILES = ('glossary', 'steps', 'activities', 'report', 'report_fr',
                  # Advanced companion (CLI-CONTRACT-COMPANION C11): WP-0 stubs that carry
                  # their schema header only; WP-E1 fills digest, WP-E2 evidence and learn,
                  # WP-E3 drafts.
@@ -185,7 +185,7 @@ def glossary(term_id: str, task: str | None = None) -> dict | None:
 
 
 @functools.cache
-def _report(task: str, scheme: str = VALIDATION) -> dict:
+def _report(task: str, scheme: str = VALIDATION, language: str = 'en') -> dict:
     data = load('report')
     base = {k: v for k, v in data.items() if k not in (REGRESSION, CROSS_VALIDATION)}
     regression = {k: v for k, v in (data.get(REGRESSION) or {}).items()
@@ -195,11 +195,19 @@ def _report(task: str, scheme: str = VALIDATION) -> dict:
         out = _merge(out, data.get(CROSS_VALIDATION, {}))
         if task == REGRESSION:
             out = _merge(out, (data.get(REGRESSION) or {}).get(CROSS_VALIDATION, {}))
+    if language == 'fr':
+        french = load('report_fr')
+        out = _merge(out, {k: v for k, v in french.items()
+                           if k not in ('schema', REGRESSION, CROSS_VALIDATION)})
+        if task == REGRESSION:
+            out = _merge(out, french.get(REGRESSION, {}))
+        if scheme == CROSS_VALIDATION:
+            out = _merge(out, french.get(CROSS_VALIDATION, {}))
     return out
 
 
 def report(task: str | None = None) -> dict:
-    return _report(current_task(task), current_scheme())
+    return _report(current_task(task), current_scheme(), report_language())
 
 
 def step(step_id: str, task: str | None = None) -> dict:

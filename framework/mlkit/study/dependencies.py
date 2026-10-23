@@ -90,6 +90,13 @@ MUTATIONS: tuple[dict, ...] = (
      'notes': ('The affected activity and everything downstream of it (registry lineage) '
                'are stale; no decision changes.',)},
     {'row': 12, 'mutation': 'dataset', 'refusal': 'dataset_changed'},
+    # WP-B2. Changing the selected binary model reuses the stored predictions and the
+    # comparison, but the rule must be adopted again for that model.
+    {'row': 13, 'mutation': 'model_choice', 'refit': (), 're_eda': (), 're_policy': (),
+     'recompute': (), 'reconfirm': ('policy', 'conclusion'), 'blocked_until': (),
+     'notes': ('No refit and no new evaluation: the stored predictions and the current '
+               'comparison are reused. The decision rule must be confirmed for the newly '
+               'selected model.',)},
     # v0.2a (WP-A4). Row 14: the preprocessing parameters changed; the candidate model is
     # fitted again with them, its evaluation follows, and the choice and conclusion are asked
     # again. The EDA is unchanged (it never applies the preprocessing). Row 15: only the
@@ -450,7 +457,8 @@ DECISION_OF_MUTATION = {'prediction_time': 'prediction_time',
 DECISION_MUTATIONS = {
     st.BINARY: ('prediction_time', 'feature_availability.feature_set',
                 'feature_availability.wording', 'split', 'policy.parameter',
-                'policy.rule_type', 'preprocessing', 'success_criterion', 'model_variant'),
+                'policy.rule_type', 'model_choice', 'preprocessing', 'success_criterion',
+                'model_variant'),
     st.REGRESSION: ('prediction_time', 'feature_availability.feature_set',
                     'feature_availability.wording', 'split', 'model_choice', 'preprocessing',
                     'success_criterion', 'model_variant'),

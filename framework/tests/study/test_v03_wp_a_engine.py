@@ -264,6 +264,7 @@ def test_every_write_returns_the_post_write_revision(tmp_path):
         assert out['revision'] == flow.rev()
     flow.variant()
     flow.run('policy.evaluate', '--rule', 'capacity:40')
+    flow.decide('model_choice', 'fit.logistic')
     p = _propose(flow, 'policy', 'capacity:40', 'You call the 40 best-scored clients.')
     assert p['revision'] == flow.rev()
     done = flow.call('decide', 'confirm', p['result']['proposal_id'], '--user-words',

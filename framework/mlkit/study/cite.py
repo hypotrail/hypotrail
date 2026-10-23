@@ -181,7 +181,7 @@ def format_value(value: float | int | None, kind: str = 'auto', language: str = 
         return ('indéfini : ' if language == 'fr' else 'undefined: ') + reason
     if not is_number(value):
         raise untraceable('A formatted value must be a finite number or null.', value=value)
-    if kind == 'integer':
+    if kind in ('integer', 'int'):
         text = f'{round(value):,}'
     elif kind == 'fraction':
         text = f'{100 * value:.1f}%'
@@ -193,7 +193,7 @@ def format_value(value: float | int | None, kind: str = 'auto', language: str = 
     else:
         text = fmt_number(value, kind)
     if language == 'fr':
-        if kind == 'integer':
+        if kind in ('integer', 'int'):
             return text.replace(',', '\u202f')
         head, sep, tail = text.partition(' ')
         head = head.replace('.', ',')
@@ -261,10 +261,12 @@ class Cited:
 class Citer:
     """Cites numbers from a fixed set of results (a view, or frozen registry entries)."""
 
-    def __init__(self, results: Mapping[str, Cited], facts: Mapping[str, str] | None = None):
+    def __init__(self, results: Mapping[str, Cited], facts: Mapping[str, str] | None = None,
+                 language: str = 'en'):
         self.results = dict(results)
         self.by_slot = {c.slot: rid for rid, c in self.results.items() if c.slot}
         self.facts = dict(facts or {})
+        self.language = language if language in ('en', 'fr') else 'en'
         self.cited: list[dict] = []
 
     @classmethod
@@ -276,7 +278,7 @@ class Citer:
                                                item['integrity'])
         facts = {f['id']: f['value'] for items in view['facts']['by_status'].values()
                  for f in items}
-        return cls(results, facts)
+        return cls(results, facts, view.get('language', 'en'))
 
     def citable(self, rid: str | None) -> bool:
         c = self.results.get(rid) if rid else None
@@ -314,7 +316,7 @@ class Citer:
 
     def num(self, rid: str, path: str, fmt: str = 'auto') -> str:
         value = self.lookup(rid, path)
-        text = fmt_number(value, fmt)
+        text = format_value(value, fmt, self.language)
         self.cited.append({'result_id': rid, 'path': path, 'value': value, 'text': text})
         scale = (f' data-scale="{SCALED_FORMATS[fmt]}"' if fmt in SCALED_FORMATS else '')
         return (f'<data value="{html.escape(json.dumps(value))}" '
@@ -333,7 +335,7 @@ class Citer:
         ``data-result-id``, ``data-path`` and ``data-value``. ``prefix`` and ``suffix`` are
         words without digits."""
         value = self.lookup(rid, path)
-        text = fmt_number(value, fmt)
+        text = format_value(value, fmt, self.language)
         self.cited.append({'result_id': rid, 'path': path, 'value': value, 'text': text})
         scale = (f' data-scale="{SCALED_FORMATS[fmt]}"' if fmt in SCALED_FORMATS else '')
         return (f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" class="{cls}" '

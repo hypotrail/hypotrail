@@ -109,6 +109,9 @@ def test_the_activity_flow_through_processes(tmp_path, work, cases, name):
         assert item['result_id'] == payload['result_id'] and item['values'] == payload['values']
     steps = {step['id']: step['status'] for step in view['plan']}
     assert steps['train_eda'] == 'done' and steps['models'] == 'done'
+    cli.decide('model_choice', 'fit.logistic',
+               'Yes, retain the logistic model because it is the selected candidate')
+    view = cli('status')['view']
     # v0.3 (WP-F1, R28): the diagnostics are part of the choice step, before the rule.
     assert view['next_action']['kind'] == 'run' and \
         view['next_action']['activity'] == 'diag.binary'

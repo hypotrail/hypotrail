@@ -101,11 +101,13 @@ def _reconfirm_queue(state: dict, view: dict, ids) -> list[dict]:
 def decisions(study_dir) -> dict:
     """The ``hypotrail.decisions/1`` payload."""
     from . import read
+    from . import junior
     from . import state as st
     from . import view as vw
 
     study = read.open(study_dir)
     state = study.state
+    language = st.language_of(state)
     ids = st.decision_ids(state)
     steps = {s['decision']: s for s in st.steps(state) if s.get('decision')}
     view_decisions = vw._decisions(state)
@@ -113,12 +115,16 @@ def decisions(study_dir) -> dict:
     for d in ids:
         v = view_decisions[d]
         step = steps.get(d) or {}
-        items.append({'decision_id': d, 'title': step.get('title'), 'pause': step.get('pause'),
+        title = step.get('title')
+        items.append({'decision_id': d,
+                      'title': junior.step_text(title, language) if title else title,
+                      'pause': step.get('pause'),
                       'step': step.get('id'), 'status': v['status'], 'value': v['value'],
                       'depends_on': v['depends_on'], 'reason': v['reason'],
                       'confirmation': v['confirmation'], 'open_proposals': v['open_proposals']})
     proposals = [{'proposal_id': p['proposal_id'], 'decision_id': p['decision_id'],
-                  'value': copy.deepcopy(p['value']), 'restatement': p['restatement'],
+                  'value': copy.deepcopy(p['value']),
+                  'restatement': st.label_of(p, language),
                   'rationale': p['rationale'], 'status': p['status'], 'revision': p['revision'],
                   'created': p['created'], 'closed_revision': p.get('closed_revision'),
                   'closed_reason': p.get('closed_reason'),

@@ -406,6 +406,9 @@
     const node = document.querySelector(`[data-nav="${CSS.escape(`${target.kind}:${target.id}`)}"]`);
     if (!node) return;
     state.pendingNav = null;
+    // Result cards may be collapsed to keep EDA scannable; a deep link always reveals it.
+    const disclosure = node.matches('details') ? node : node.querySelector('details.eda-analysis');
+    if (disclosure) disclosure.open = true;
     // Its own heading (h2 to h4, WP-I), else the first h2 or h3 inside it (a wrapper of one
     // card), else the target itself; never the h4 of a nested target.
     const heading = [...node.querySelectorAll('h2, h3, h4')].find(h => h.closest('[data-nav]') === node)

@@ -138,8 +138,8 @@ def test_step_zero_shows_the_data_card_until_the_first_proposal(tmp_path):
     assert init['next_action']['kind'] == 'show_data_card'
     view = flow.view()
     assert view['current_step'] == 'discover_data'
-    # WP-B1: a new study's plan (st.FULL_STEP_IDS stays the plan of a v0.2a study).
-    assert [s['id'] for s in view['plan']] == list(st.B1_STEP_IDS)
+    # WP-B2: a new binary study has separate model-choice and policy steps.
+    assert [s['id'] for s in view['plan']] == list(st.B2_BINARY_STEP_IDS)
     nxt = view['next_action']
     assert nxt['audience'] == 'agent' and 'hypotrail data' in nxt['message']
     assert 'hypotrail' not in nxt['junior_message'] and 'Nothing is decided' in nxt['junior_message']
@@ -456,6 +456,7 @@ def _pre_wp_a4_state(case_dir: Path) -> dict:
     state = st.initial_state(c.load_case(case_dir))
     for d in st.WP_A4_DECISIONS + st.WP_B1_DECISIONS:
         del state['decisions'][d]
+    state['decisions'].pop('model_choice', None)
     for d, dec in state['decisions'].items():
         dec['depends_on'] = list(st.DEPENDS_ON[d])
     return state

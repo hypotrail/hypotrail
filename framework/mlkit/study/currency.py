@@ -3,8 +3,8 @@
 **An artefact is current** iff its recorded status is ``ok``, the revision it was
 written for equals the state revision, and every result it consumes is still current
 (promoted and not stale), **and** (review fix M4) its file exists with the bytes the
-manifest records. The workbench (``generated: false``) is never stale: it is created once
-and its experiments are not tracked.
+manifest records. The editable copy and workbench (``generated: false``) are never stale:
+their experiments are not tracked as evidence.
 
 Shared by :mod:`mlkit.study.manifest` (the writer side) and :mod:`mlkit.study.view`
 (the read side, which may not import a module that writes). The rule itself is pure;
@@ -114,7 +114,8 @@ def effective_status(item: Mapping | None, state: Mapping, is_current=None,
     return 'stale' if stale_reason(item, state, is_current, file) else 'ok'
 
 
-NAMES = {'report': 'report', 'notebook': 'generated notebook', 'workbench': 'workbench'}
+NAMES = {'report': 'report', 'notebook': 'generated notebook',
+         'editable': 'editable study notebook', 'workbench': 'workbench'}
 
 
 def message(name: str, item: Mapping | None, state: Mapping, is_current=None,
@@ -130,6 +131,10 @@ def message(name: str, item: Mapping | None, state: Mapping, is_current=None,
     status = effective_status(item, state, is_current, file)
     if status == 'not_rendered':
         return f'The {label} ({path}) has not been rendered yet.'
+    if (item or {}).get('generated') is False and name == 'editable':
+        return (f'The editable study notebook ({path}) follows the generated notebook until '
+                f'you edit it; after that it is never overwritten and does not count as '
+                f'official evidence.')
     if (item or {}).get('generated') is False:
         return (f'The {label} ({path}) is the junior\'s free space: created once, never '
                 f'overwritten, and not tracked by the study.')

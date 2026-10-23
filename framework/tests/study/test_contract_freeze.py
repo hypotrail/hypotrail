@@ -231,9 +231,15 @@ B1_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'success_
 B1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split',
                               'success_criterion', 'preprocessing', 'model_variant',
                               'model_choice', 'final_test', 'conclusion')
+B2_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', 'success_criterion',
+                   'preprocessing', 'model_variant', 'model_choice', 'policy', 'final_test',
+                   'conclusion')
 B1_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
                'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
                'policy', 'final_test', 'conclusion')
+B2_BINARY_STEP_IDS = ('discover_data', 'prediction_time', 'feature_availability', 'split',
+                      'success_criterion', 'train_eda', 'preprocessing', 'models',
+                      'model_variant', 'model_choice', 'policy', 'final_test', 'conclusion')
 CV_METHODS = ('kfold_stratified', 'kfold_quantile', 'temporal_folds',
               'forward_chaining', 'ordered_retrospective', 'group_disjoint')
 TRIALS_KEYS = ('count', 'results', 'note')
@@ -328,6 +334,8 @@ MUTATION_IDS = {1: 'prediction_time', 2: 'feature_availability.feature_set',
                 3: 'feature_availability.wording', 4: 'split', 5: 'policy.parameter',
                 6: 'policy.rule_type', 7: 'settings.bootstrap', 8: 'usage_label', 9: 'eda_added',
                 10: 'conclusion', 11: 'code_fingerprint', 12: 'dataset',
+                # WP-B2: explicit selected model in a binary study.
+                13: 'model_choice',
                 # v0.2a (WP-A4).
                 14: 'preprocessing', 15: 'preprocessing.motivation', 16: 'success_criterion',
                 # v0.2b (WP-B1).
@@ -433,6 +441,7 @@ PHASE3_PAYLOAD_KEYS = {
               'traced'),
 }
 ARTIFACT_NAMES = {'report': 'reports/study.html', 'notebook': 'notebooks/study_generated.py',
+                  'editable': 'notebooks/study_editable.py',
                   'workbench': 'notebooks/workbench.py'}
 MANIFEST_ITEM_KEYS = ('path', 'kind', 'revision', 'status', 'consumed', 'sha256', 'generated',
                       'template_version', 'error', 'last_ok_revision', 'user_edits_preserved',
@@ -528,9 +537,9 @@ def test_status_summary_keys(flow):
     assert view.SUMMARY_KEYS == SUMMARY_PAYLOAD_KEYS[6:]
     assert tuple(payload['goal']) == SUMMARY_GOAL_KEYS
     assert [tuple(step) for step in payload['plan']] == [('id', 'title', 'status')] * len(
-        B1_STEP_IDS)
-    # WP-B1: a new study has the nine decisions (st.FULL_DECISION_IDS stays the v0.2a set).
-    assert tuple(payload['decisions']) == st.B1_DECISION_IDS == B1_DECISION_IDS
+        B2_BINARY_STEP_IDS)
+    # New binary studies choose the model and its policy separately; legacy B1 stays stable.
+    assert tuple(payload['decisions']) == st.B2_DECISION_IDS == B2_DECISION_IDS
     assert all(tuple(d) == SUMMARY_DECISION_KEYS for d in payload['decisions'].values())
     assert tuple(payload['executions']) == EXECUTION_VIEW_KEYS
     assert tuple(payload['not_yet_defensible']) == ('top', 'more')
@@ -549,7 +558,7 @@ def test_status_summary_keys(flow):
     # WP-A7: the mode, and each launch's argument list (no interpreter, no shell form).
     assert payload['mode'] == 'guided'
     assert tuple(payload['deliverables']) == view.SUMMARY_DELIVERABLES_KEYS == ('launch',)
-    assert tuple(payload['deliverables']['launch']) == ('notebook', 'workbench')
+    assert tuple(payload['deliverables']['launch']) == ('notebook', 'editable', 'workbench')
     assert all(tuple(x) == view.SUMMARY_LAUNCH_KEYS == ('mode', 'path', 'argv')
                for x in payload['deliverables']['launch'].values())
     assert view.SUMMARY_NOTE_KEYS == SUMMARY_NOTE_KEYS
@@ -569,7 +578,7 @@ def test_view_model_keys(flow):
     assert view.CONFIRMATION_VIEW_KEYS == CONFIRMATION_VIEW_KEYS
     assert view.PROPOSAL_VIEW_KEYS == PROPOSAL_VIEW_KEYS
     assert view.RESULT_VIEW_KEYS == RESULT_VIEW_KEYS
-    assert tuple(v['decisions']) == st.B1_DECISION_IDS
+    assert tuple(v['decisions']) == st.B2_DECISION_IDS
     assert all(tuple(d) == DECISION_VIEW_KEYS for d in v['decisions'].values())
     assert tuple(v['criterion']) == CRITERION_VIEW_KEYS
     assert tuple(v['eda_looks']) == EDA_LOOKS_KEYS
@@ -588,7 +597,7 @@ def test_view_model_keys(flow):
         == LIVENESS_VALUES
     assert not [k for k in (*EXECUTION_VIEW_KEYS, *LIVENESS_VALUES, 'liveness')
                 if k not in DOC_TOKENS]
-    assert [s['id'] for s in v['plan']] == list(B1_STEP_IDS)
+    assert [s['id'] for s in v['plan']] == list(B2_BINARY_STEP_IDS)
     assert all(tuple(s) == STEP_KEYS for s in v['plan'])
     assert {'kind', 'message'} <= set(v['next_action'])
     assert {x['id'] for x in v['not_yet_defensible']} <= NOT_YET_DEFENSIBLE_IDS
@@ -1050,8 +1059,9 @@ def test_confirmation_modes_and_guided_rules_are_documented(tmp_path, synthetic_
     assert st.DEFAULT_MODE == 'guided' and st.LANGUAGES == LANGUAGES
     assert st.DEFAULT_LANGUAGE == 'en' and st.MODE_CHANGE_KEYS == MODE_CHANGE_KEYS
     assert st.MODES_AVAILABLE_IN == {} and st.MODE_STRICTNESS == MODE_STRICTNESS
-    # WP-B1: the opening of the final test needs a reason too.
-    assert cf.REASON_DECISIONS == {'binary': ('policy', 'conclusion', 'final_test'),
+    # The model choice, policy, conclusion and final-test opening carry trade-offs.
+    assert cf.REASON_DECISIONS == {'binary': ('model_choice', 'policy', 'conclusion',
+                                              'final_test'),
                                    'regression': ('model_choice', 'conclusion', 'final_test')}
     assert cf.WORDS_CONTRADICT_VALUE == 'words_contradict_value'
     warning = cf.availability_warnings('exclude contact', {'contact': 'available_at_prediction'})
@@ -1094,7 +1104,9 @@ def test_wp_b1_contract_constants():
     from mlkit.study import activities as act, governance, partition
     assert st.B1_DECISION_IDS == B1_DECISION_IDS
     assert st.B1_REGRESSION_DECISION_IDS == B1_REGRESSION_DECISION_IDS
+    assert st.B2_DECISION_IDS == B2_DECISION_IDS
     assert st.B1_STEP_IDS == B1_STEP_IDS and st.WP_B1_DECISIONS == ('model_variant', 'final_test')
+    assert st.B2_BINARY_STEP_IDS == B2_BINARY_STEP_IDS
     assert st.CV_METHODS == CV_METHODS and st.CV_KEYS == ('method', 'folds', 'seed')
     assert st.TEMPORAL_CV_KEYS == ('method', 'folds', 'gap')
     assert (st.DEFAULT_FOLDS, st.MIN_FOLDS, st.MAX_FOLDS) == (5, 3, 10)
@@ -1115,7 +1127,8 @@ def test_wp_b1_contract_constants():
         'decision_status', 'basis')
     assert rec.POLICY_MODELS == ('fit.logistic', 'fit.variant', 'fit.variant:2',
                                  'fit.variant:3')
-    keys = (set(B1_DECISION_IDS) | set(B1_STEP_IDS) | set(CV_METHODS) | set(TRIALS_KEYS)
+    keys = (set(B1_DECISION_IDS) | set(B2_DECISION_IDS) | set(B1_STEP_IDS)
+            | set(B2_BINARY_STEP_IDS) | set(CV_METHODS) | set(TRIALS_KEYS)
             | set(OPENING_RESULT_KEYS) | set(st.VARIANT_KINDS) | set(st.VARIANT_STRENGTHS)
             | set(act.B1_ACTIVITIES) | set(partition.OPENING_KEYS)
             | {'fit.variant', 'final_test.evaluation', 'comparisons', 'cross_validation',

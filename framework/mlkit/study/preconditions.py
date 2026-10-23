@@ -42,8 +42,9 @@ CONCLUSION_VERDICTS_BY_TASK = {st.BINARY: CONCLUSION_VERDICTS,
                                st.REGRESSION: REGRESSION_CONCLUSION_VERDICTS}
 # Model slots of a regression study: the reference (training mean) and the candidate.
 REGRESSION_BASELINE, REGRESSION_CANDIDATE = 'fit.baseline', 'fit.linear'
+BINARY_BASELINE, BINARY_CANDIDATE = 'fit.baseline', 'fit.logistic'
 MODEL_CHOICES = (REGRESSION_CANDIDATE, REGRESSION_BASELINE)
-FIT_SLOTS = {st.BINARY: ('fit.baseline', 'fit.logistic'),
+FIT_SLOTS = {st.BINARY: (BINARY_BASELINE, BINARY_CANDIDATE),
              st.REGRESSION: (REGRESSION_BASELINE, REGRESSION_CANDIDATE)}
 
 DECISION_REQUIRES = {
@@ -94,8 +95,12 @@ def decision_requires(state: Mapping, decision_id: str) -> tuple[str, ...]:
         base = tuple(dict.fromkeys(base + extra))
     if st.has_wp_b1_decisions(state):
         extra = WP_B1_REQUIRES.get(decision_id, ())
+        if decision_id == 'policy' and st.has_explicit_binary_model_choice(state):
+            extra = extra + ('model_choice',)
         if decision_id == st.FINAL_TEST:
             extra = extra + (st.choice_decision(state),)
+            if st.has_explicit_binary_model_choice(state):
+                extra = extra + ('model_choice',)
         base = tuple(dict.fromkeys(base + extra))
     return base
 
@@ -162,7 +167,16 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                                     'detail': 'The current evaluation did not evaluate this '
                                               'model.'})
     if decision_id == 'model_choice':
-        if not st.is_current(state, REGRESSION_EVALUATION):
+        if st.task_of(state) == st.BINARY:
+            required = ['fit.logistic']
+            if isinstance(value, str) and trials.is_variant_slot(value):
+                required.append(value)
+            for slot in required:
+                if not st.is_current(state, slot):
+                    missing.append({'requirement': 'result_current', 'slot': slot,
+                                    'detail': 'Fit every compared model on development rows '
+                                              'before selecting one.'})
+        elif not st.is_current(state, REGRESSION_EVALUATION):
             missing.append({'requirement': 'result_current', 'slot': REGRESSION_EVALUATION,
                             'detail': 'Evaluate the models on validation before choosing one.'})
         elif store is not None and value is not None:

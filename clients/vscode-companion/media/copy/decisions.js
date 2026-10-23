@@ -50,7 +50,7 @@
     becomesStale: 'Becomes stale',
     refitted: 'To compute again',
     nothing: 'nothing',
-    artefactNames: { report: 'report', notebook: 'notebook', workbench: 'workbench' },
+    artefactNames: { report: 'report', notebook: 'notebook', editable: 'editable notebook', workbench: 'workbench' },
     and: ' and ',
     // Short names of the decisions to confirm again (the mockup's "the conclusion").
     decisionNames: task => ({

@@ -1,4 +1,4 @@
-"""The ``scripts/check_layout.py`` rule of the two Marimo launches (WP-A5; ADR 0004
+"""The ``scripts/check_layout.py`` rule of the three Marimo launches (WP-A5; ADR 0004
 amendment "local launch"), scope U: the real client sources pass; each way of widening the
 launch (another file, another command, a shell string, typed text, a second call) fails.
 """

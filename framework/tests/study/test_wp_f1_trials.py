@@ -357,6 +357,9 @@ def test_three_variants_are_compared_chosen_and_opened(tmp_path):
     refused = _propose(flow, 'model_variant', {'variants': [TUNED, HGB, EBM]}, expect=2)
     assert refused['error']['code'] == 'invalid_value'
     assert refused['error']['details']['budget'] == {'max': 3, 'used': 3, 'would_use': 4}
+    assert flow.view()['next_action']['decision'] == 'model_choice'
+    flow.decide('model_choice', 'fit.variant:2',
+                words='Yes, retain the boosting variant because it ranks best')
     assert flow.view()['next_action']['activity'] == 'policy.evaluation'
     flow.run('policy.evaluate', '--rule', 'capacity:30')
     evaluation = _values(flow, 'policy.evaluation')

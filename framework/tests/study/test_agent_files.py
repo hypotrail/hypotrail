@@ -151,7 +151,8 @@ def test_instructions_name_only_real_decisions_activities_and_commands():
                    'not supported in this version'):
         assert phrase in text, phrase
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
-    assert 'status --json' in resume and 'five lines' in resume
+    assert 'status --json' in resume and 'Résultats clés' in resume
+    assert 'twelve bullets' in resume and 'whether the Hypotrail panel is open' in resume
 
 
 def _skill(task: str = 'binary') -> Flat:
@@ -190,7 +191,7 @@ def test_instructions_carry_the_acceptance_fixes():
     assert 'goal' in view.SUMMARY_KEYS
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
     assert 'status --summary' in resume                                   # D12
-    assert resume.index('goal.intended_use') < resume.index('Where we are')
+    assert resume.index('Objectif') < resume.index('État actuel')
     assert 'goal.prediction_time' in resume and 'unless the' in resume
     skill = _skill()
     assert '{{GLOSSARY}}' in skill
@@ -225,7 +226,7 @@ def test_instructions_carry_the_rerun_fixes():
 
 def test_instructions_carry_the_rerun_wording_fixes():
     """R2, R4, R5, R7 of the acceptance rerun: scoped requests, no invented figures in
-    examples, the five-line "where are we?", and the unchanged model on a new rule."""
+    examples, the structured "where are we?", and the unchanged model on a new rule."""
     text = _binary('CLAUDE.md.in')
     skill = _skill()
     resume = _binary('dot-claude/commands/hypotrail-resume.md')
@@ -247,12 +248,13 @@ def test_instructions_carry_the_rerun_wording_fixes():
         for invented in ('38 subscribers', 'we will get 38', '115 selected', '3,164',
                          '3fa9c2e1', '31 %', 'call 250', 'limit of 100'):
             assert invented not in template, invented
-    # R5: a plain "where are we?" gets the resume command's five lines, goal first.
+    # R5: a plain "where are we?" gets the resume command's compact structured briefing.
     resuming = Flat(skill.split('## Resuming', 1)[1].split('\n## ', 1)[0])
     for phrase in ('A plain "where are we?" gets the same answer as the resume command',
-                   '`recap_junior`', 'five flat lines, goal first', 'no revision number'):
+                   'Objectif', 'Résultats clés', 'at most twelve bullets',
+                   'no ids or revision number'):
         assert phrase in resuming, phrase
-    assert 'five lines' in resume and 'excluded features by name' in resume
+    assert '**Objectif**' in resume and 'name exclusions' in resume
     # R7: a new capacity or threshold leaves the model and its predictions unchanged.
     rule9 = _rule(text, 9)
     for phrase in ('When a capacity or a threshold changes, say that the model and its '
@@ -472,12 +474,12 @@ def test_the_agent_relays_the_engine_payloads(task):
 
 @pytest.mark.parametrize('task', af.TASKS)
 def test_the_panel_rule(task):
-    """WP-D, R13, R20, R35: one question at step 0, only in VS Code; one line per step
-    naming the tab, never a substitute for the chat; panel actions said as such."""
+    """WP-D, R13, R20, R35: remember an already-open panel without interrupting resumes;
+    one line per step names the tab; panel actions are said as such."""
     text = Flat(af.select_task((af.SOURCE / 'CLAUDE.md.in').read_text(), task))
     rule6 = _rule(text, 6)
-    for phrase in ('If the junior works in VS Code', 'ask once',
-                   'whether the Hypotrail panel is open', 'otherwise do not ask',
+    for phrase in ('If the junior works in VS Code',
+                   'has already said the Hypotrail panel is open', 'Do not append a panel-open',
                    'one short line per step naming the tab', 'Data & EDA ("Données et EDA")',
                    'after the data card and the charts', 'Decisions ("Décisions") at a proposal',
                    'Evidence ("Preuves") after the fits, the diagnostics, and the opening',

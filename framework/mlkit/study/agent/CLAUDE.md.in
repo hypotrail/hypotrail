@@ -61,10 +61,16 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
       **preprocessing**;
    3. after the fits and their diagnostics, the **variant** (`model_variant`);
 <!-- hypotrail:task binary -->
-   4. the decision rule (`policy`), the **final test opening** (rule 10), the conclusion.
+   4. the **model choice** (`model_choice`), then the decision rule (`policy`),
+      then a configuration check, the **final test opening** (rule 10), the conclusion.
+      Comparing a variant does not select it.
 <!-- hypotrail:task regression -->
    4. the model choice, the **final test opening** (rule 10), the conclusion.
 <!-- hypotrail:end -->
+
+   Before runs, visibly state what was decided, what you will compute and why, expected
+   delays, and whether the final test stays sealed. Summarize completion before the pause;
+   tool traces or reasoning are not status messages.
 
    "Continue" or a plan approval ("that plan looks good") approves the work between two
    pauses: do it without asking permission (exploration, fits, diagnostics, evaluations),
@@ -88,7 +94,10 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    penalty tuned by nested cross-validation) unless the junior wants another variant:
    **regularisation**, dropping one feature group, or another family. Offer a family
    (`ebm`, `hgb`) only when `model_families.recommendation` is `compare_nonlinear` and you
-   have shown the junior the diagnostic flags behind it; otherwise relay that the linear
+   have shown the junior the diagnostic flags behind it. In the demo, ask “Pourquoi le
+   moteur envisage-t-il une famille non linéaire ?” Answer with the flags, uncertainty,
+   limits, why they justify exploration rather than adoption, and the same-protocol
+   comparison. Otherwise relay that the linear
    model stays. At most three variants ever (`trials` in the summary); each has a
    question. After the evaluation, relay `model_selection`: the **one-standard-error
    rule** (`one_se`, the simplest configuration within one standard error of the best),
@@ -123,7 +132,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
      nothing is decided yet. For a list decision (feature availability), the block names
      every column it excludes with its reason, and what it keeps. With an interactive
      choice tool ({{CHOICE_TOOL}}), use it at every pause: send that message first,
-     then offer one single-choice question with three options in the junior's language: adopt ("J'adopte cette décision", its
+     then offer one single-choice question repeating the decision title and one-line
+     restatement before the closed question, so it survives collapsed prose. Use three
+     options in the junior's language: adopt ("J'adopte cette décision", its
      description the decision in one line, e.g. "J'exclus les 4 colonnes connues après la
      réservation"), change something, explain first. Without one, ask it in text.
      Adopt picked: confirm with `--channel choice --user-words "<the label, verbatim>"`. A
@@ -189,9 +200,9 @@ unknown outcome. Pedagogy: the skill `{{SKILL}}`; glossary: `{{GLOSSARY}}`.
    timeout, replay the same id with the same arguments. On `stale_revision`, reread the
    summary, explain the change in one sentence (`error.details.changes_since`), and
    propose again if it still applies.
-6. **The panel.** If the junior works in VS Code (Copilot, or Claude Code in VS Code), ask
-   once, with step 0 or the first message of a resumed chat, whether the Hypotrail panel is
-   open, and remember the answer; otherwise do not ask. When it is open, add one short
+6. **The panel.** If the junior works in VS Code (Copilot, or Claude Code in VS Code) and
+   has already said the Hypotrail panel is open, remember it. Do not append a panel-open
+   question to a resume, decision summary, or conclusion. When it is open, add one short
    line per step naming the tab to look at: Data & EDA ("Données et EDA") after the data
    card and the charts, Decisions ("Décisions") at a proposal, Evidence ("Preuves") after
    the fits, the diagnostics, and the opening,

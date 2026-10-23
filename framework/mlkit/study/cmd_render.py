@@ -4,7 +4,8 @@
 
 renders, under the writer lock and from one view (:func:`mlkit.study.view.build`):
 
-1. ``notebooks/study_generated.py`` (regenerated, user edits preserved) and
+1. ``notebooks/study_generated.py`` (regenerated, user edits archived),
+   ``notebooks/study_editable.py`` (synced until its first user edit), and
    ``notebooks/workbench.py`` (created once) — :mod:`mlkit.study.render_notebook`;
 2. ``reports/study.html`` — :mod:`mlkit.study.render_html`, written atomically;
 3. ``.hypotrail/artifacts.json`` — :mod:`mlkit.study.manifest`.
@@ -166,7 +167,8 @@ def _render_notebooks(study: Path, view: dict, manifest: dict) -> dict:
         from . import render_notebook
 
         out = render_notebook.render(study, view, manifest)
-        return {'notebook': out['notebook'], 'workbench': out['workbench']}
+        return {'notebook': out['notebook'], 'editable': out['editable'],
+                'workbench': out['workbench']}
     except Exception as exc:
         item = mf.item(manifest, 'notebook', kind='marimo_notebook')
         item.update(status='failed', revision=view['revision'], error=_error(exc))
@@ -174,6 +176,9 @@ def _render_notebooks(study: Path, view: dict, manifest: dict) -> dict:
         if manifest.get('artifacts', {}).get('workbench'):
             out['workbench'] = mf.item(manifest, 'workbench', kind='marimo_notebook',
                                        generated=False)
+        if manifest.get('artifacts', {}).get('editable'):
+            out['editable'] = mf.item(manifest, 'editable', kind='marimo_notebook',
+                                      generated=False)
         return out
 
 
@@ -239,8 +244,8 @@ def after_commit(study_dir: Path, payload: dict) -> dict:
 # --- CLI --------------------------------------------------------------------------------
 
 def configure(parser: argparse.ArgumentParser) -> None:
-    parser.description = ('Render the HTML report, the generated notebook, and the workbench '
-                          'from the current study state.')
+    parser.description = ('Render the HTML report, the generated and editable notebooks, '
+                          'and the workbench from the current study state.')
     # v0.3 (WP-J, R35): the study panel passes webview; recorded as an event, not a revision.
     parser.add_argument('--channel', default=None,
                         help='chat (the default), cli, or webview: where the render came from')

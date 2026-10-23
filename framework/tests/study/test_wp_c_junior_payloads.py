@@ -163,6 +163,9 @@ def test_a_french_study_emits_no_english_junior_text(french):
     flow.variant()
     flow.run('policy.evaluate', '--rule', 'capacity:40')
     _assert_french(flow, seen)
+    flow.decide('model_choice', 'fit.logistic',
+                words='Yes, retain the logistic model because it is the selected candidate')
+    _assert_french(flow, seen)
     flow.decide('policy', 'capacity:40',
                 words='Yes, I adopt that rule because the desk can make that many calls')
     value = st.b1_default_value(flow.state(), 'final_test')

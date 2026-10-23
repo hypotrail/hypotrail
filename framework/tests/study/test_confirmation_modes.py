@@ -113,6 +113,9 @@ MATRIX = [
     (REGRESSION, 'model_choice', 'fit.baseline',
      ['on garde la moyenne', 'keep the mean baseline'],
      [('I agree', ['baseline_model'])]),
+    (BINARY, 'model_choice', 'fit.logistic',
+     ['garder le modèle logistique', 'keep the logistic model'],
+     [('I agree', ['logistic_model'])]),
     (BINARY, 'conclusion', {'verdict': 'adopt_policy', 'text': 'Adopt the rule.'},
      ["j'adopte la règle", 'we should use the rule'],
      [('je confirme', ['adopt'])]),
@@ -268,6 +271,7 @@ def fitted(tmp_path_factory, synthetic_case_dir):
 def pause3(fitted, tmp_path, synthetic_case_dir):
     study = fk.clone(fitted, tmp_path / 'p3')
     f = Flow(study, synthetic_case_dir, prefix='m')
+    f.decide('model_choice', 'fit.logistic')
     f.run('policy.evaluate', '--rule', 'capacity:20')
     return f
 

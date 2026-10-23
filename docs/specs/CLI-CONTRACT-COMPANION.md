@@ -145,14 +145,14 @@ A string of `view.CURRENCY_HEX` (16) lowercase hex characters: the first charact
 |---|---|
 | `revision` | The current revision |
 | `sources` | `{case, dataset}`: the sha256 of each file as it is now (the recorded one when it matches, null when missing) |
-| `artifacts` | `{status, items}`: the overall effective status, and per deliverable `{status, stale_reason, file}`; `file` is the hash of the file on disk that the currency rule compares (`currency.file_fingerprint`: `edit_check_sha256` for the generated notebook, `sha256` otherwise; null when missing), and null for the workbench, the junior's free space |
+| `artifacts` | `{status, items}`: the overall effective status, and per deliverable `{status, stale_reason, file}`; `file` is the hash of the file on disk that the currency rule compares (`currency.file_fingerprint`: `edit_check_sha256` for the generated notebook, `sha256` otherwise; null when missing), and null for the editable copy and workbench, the junior's free spaces |
 | `sources_changed` | Whether `not_yet_defensible` holds `sources_changed` |
 | `alerts` | The ids of `not_yet_defensible`, in order |
 | `next_action` | Its `kind` |
 | `executions` | `{interrupted, suspected_interrupted, late}`: sorted execution ids |
 | `results` | Per promoted slot, `[result_id, current, integrity]`: the registry's current set with the derived currency |
 
-Purpose: a client that polls `status --summary --digest` compares `currency` with the value it last showed and redraws when it differs. It changes on every new revision, and also on what changes **without** one: an edited, deleted, or restored case or dataset file; a render (a deliverable becoming current, failing, or being rewritten); an edited, replaced, or deleted report or generated notebook (CLI-CONTRACT §8.3, M4); a result whose code changed; an execution whose outcome became unknown. It is equal otherwise: for repeated reads, for an edited workbench, and for Marimo's rewrite of the notebook's `__generated_with` stamp. It holds no absolute path and reads no clock (R4), so two studies with equal content have equal `currency`. It reads the deliverables' bytes once more than `status`; it reads no dataset row (R2).
+Purpose: a client that polls `status --summary --digest` compares `currency` with the value it last showed and redraws when it differs. It changes on every new revision, and also on what changes **without** one: an edited, deleted, or restored case or dataset file; a render (a deliverable becoming current, failing, or being rewritten); an edited, replaced, or deleted report or generated notebook (CLI-CONTRACT §8.3, M4); a result whose code changed; an execution whose outcome became unknown. It is equal otherwise: for repeated reads, for an edited editable copy or workbench, and for Marimo's rewrite of the notebook's `__generated_with` stamp. It holds no absolute path and reads no clock (R4), so two studies with equal content have equal `currency`. It reads the deliverables' bytes once more than `status`; it reads no dataset row (R2).
 
 `currency` is present **only** with `--digest`: without it the summary stays byte-for-byte unchanged (the frozen golden of CLI-CONTRACT §4). A client from stage `v1` reads `status --summary --digest`. The values are opaque: a client compares them for equality only.
 
@@ -229,7 +229,7 @@ Payload `hypotrail.preview_effects/1`, keys: `schema`, `ok`, `study`, `revision`
 | `reconfirm_required` | The confirmed decisions that would need the junior's words again |
 | `supersedes_proposal` | The proposal id that the confirmation would mark `superseded`, or `null` |
 | `blocked` | The refusals that `decide confirm` would give **whatever the words**, in the engine's order, as `{code, reason, message, details}`: `dataset_changed`; `decision_on_hold` (`details.notes`); `proposal_stale` (as `{code: "ambiguous_confirmation", reason: "proposal_stale"}`); `invalid_value`; `precondition_missing` (`details.missing`). It is empty when nothing blocks |
-| `artifacts_after` | `{report: "regenerated", notebook: "regenerated", workbench: "unchanged"}`. These are the renders that `after_commit` performs; the workbench is never written |
+| `artifacts_after` | `{report: "regenerated", notebook: "regenerated", editable: "synced_if_unedited", workbench: "unchanged"}`. These are the renders that `after_commit` performs; the editable copy follows the generated notebook only until its first user edit, and the workbench is never written |
 | `notes` | The notes of the dependency-table row |
 | `recorded` | Always `false` |
 | `note` | "Preview of a confirmation: nothing was recorded. The engine still checks the words when you confirm." |
