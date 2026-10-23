@@ -27,6 +27,7 @@ def bank(tmp_path_factory):
     study = fk.prepare(fk.BANK, tmp_path_factory.mktemp('bank') / 'study', upto='fits')
     flow = fk.Flow(study, fk.BANK, prefix='b')
     flow.run('policy.evaluate', *[x for r in BANK_RULES for x in ('--rule', r)])
+    flow.decide('model_choice', 'fit.logistic')
     return flow
 
 
@@ -124,11 +125,12 @@ def test_auto_mpg_model_choice_drafts_cite_the_evaluation(auto, model, tmp_path)
 
 
 def test_a_draft_never_crosses_tasks_and_refuses_other_decisions(bank, auto):
-    for flow, decision, value in ((bank, 'model_choice', 'fit.linear'),
-                                  (auto, 'policy', 'capacity:100')):
-        p = flow.call('preview', 'proposal', decision, '--value', value, '--study', flow.study,
-                      expect=2)
-        assert p['error']['code'] == 'unknown_decision', p
+    p = bank.call('preview', 'proposal', 'model_choice', '--value', 'fit.linear',
+                  '--study', bank.study, expect=2)
+    assert p['error']['code'] == 'unsupported_capability', p
+    p = auto.call('preview', 'proposal', 'policy', '--value', 'capacity:100',
+                  '--study', auto.study, expect=2)
+    assert p['error']['code'] == 'unknown_decision', p
     for flow, decision in ((bank, 'split'), (auto, 'conclusion')):
         p = flow.call('preview', 'proposal', decision, '--value', 'x', '--study', flow.study,
                       expect=2)

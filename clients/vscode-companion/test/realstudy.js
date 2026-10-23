@@ -147,6 +147,9 @@ class Study {
       this.run('fit.baseline');
       this.run('fit.logistic');
       this.variant();
+      // New binary studies make the fitted configuration explicit before any rule is
+      // adopted; comparing the variant alone does not select it.
+      this.decide('model_choice', 'fit.logistic');
       this.run('policy.evaluate', '--rule', 'capacity:100');
     } else {
       for (const a of ['split', 'eda.target_summary', 'eda.special_values']) this.run(a);

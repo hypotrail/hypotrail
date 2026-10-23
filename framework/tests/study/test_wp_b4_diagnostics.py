@@ -149,6 +149,7 @@ def test_binary_diagnostics_read_the_out_of_fold_predictions(tmp_path):
 def test_the_rule_follows_the_proposal_then_the_adoption(tmp_path):
     flow = _ready(tmp_path)
     flow.run('policy.evaluate', '--rule', 'capacity:40', '--rule', 'capacity:30')
+    flow.decide('model_choice', 'fit.logistic')
     p = flow.call('decide', 'propose', 'policy', '--value-json', json.dumps('capacity:40'),
                   '--restatement', 'You call the forty best-scored rows.', '--rationale', 'x',
                   '--request-id', flow.rid(), '--expected-revision', flow.rev(),

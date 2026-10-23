@@ -83,6 +83,8 @@ def evaluated(tmp_path, synthetic_case_dir):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='models',
                  standing_delegation=STANDING)
     fx.put_policy_evaluation(b)
+    b.decide('model_choice', 'fit.logistic', 'You retain the logistic model.',
+             'Yes, retain the logistic model because it is the selected candidate.')
     return b
 
 
@@ -139,7 +141,9 @@ def test_a_hold_on_a_confirmed_decision_asks_for_it_and_its_dependants_again(ado
 def test_a_hold_on_an_upstream_decision_reaches_every_decision_resting_on_it(adopted):
     out = _note(adopted.study, 'hold-split', '--about', 'split', '--text',
                 'Wait, the data owner has to approve this split first.')
-    assert out['result']['reconfirm_required'] == ['split', 'policy', 'conclusion']
+    assert out['result']['reconfirm_required'] == [
+        'split', 'model_choice', 'policy', 'conclusion',
+    ]
     out = _note(adopted.study, 'hold-pt', '--about', 'prediction_time', '--text',
                 'Hold the prediction moment until I check the calling calendar.')
     assert out['result']['reconfirm_required'] == ['prediction_time', 'feature_availability']

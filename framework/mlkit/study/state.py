@@ -63,8 +63,8 @@ FULL_DECISION_IDS_BY_TASK = {BINARY: FULL_DECISION_IDS, REGRESSION: FULL_REGRESS
 # analytical variant of the candidate model the junior compares under the same evaluation
 # protocol (a regularisation strength or a feature group left out); ``final_test`` opens the
 # sealed final test once, in the junior's words, after the choice. A study created by
-# ``init`` since WP-B1 has the nine decisions; a study created before keeps its five or seven
-# (never migrated): :func:`decision_ids` reads which set a state holds.
+# ``init`` originally wrote these nine decisions; a study created before keeps its five,
+# seven, or nine decisions (never migrated): :func:`decision_ids` reads the set in the state.
 MODEL_VARIANT, FINAL_TEST = 'model_variant', 'final_test'
 WP_B1_DECISIONS = (MODEL_VARIANT, FINAL_TEST)
 B1_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
@@ -73,7 +73,12 @@ B1_REGRESSION_DECISION_IDS = ('prediction_time', 'feature_availability', 'split'
                               SUCCESS_CRITERION, PREPROCESSING, MODEL_VARIANT, 'model_choice',
                               FINAL_TEST, 'conclusion')
 B1_DECISION_IDS_BY_TASK = {BINARY: B1_DECISION_IDS, REGRESSION: B1_REGRESSION_DECISION_IDS}
-ALL_DECISION_IDS = tuple(dict.fromkeys(B1_DECISION_IDS + B1_REGRESSION_DECISION_IDS))
+# New binary studies record the selected model separately from the rule. Existing B1
+# studies keep their nine decisions and are never migrated implicitly.
+B2_DECISION_IDS = ('prediction_time', 'feature_availability', 'split', SUCCESS_CRITERION,
+                   PREPROCESSING, MODEL_VARIANT, 'model_choice', 'policy', FINAL_TEST,
+                   'conclusion')
+ALL_DECISION_IDS = tuple(dict.fromkeys(B2_DECISION_IDS + B1_REGRESSION_DECISION_IDS))
 # The decision of the third pause, per task (the choice made on validation results).
 CHOICE_DECISION = {BINARY: 'policy', REGRESSION: 'model_choice'}
 DECISION_STATUSES = ('open', 'proposed', 'confirmed', 'reconfirm_required', 'superseded')
@@ -206,6 +211,19 @@ def _b1_depends(choice: str) -> dict:
 
 
 B1_DEPENDS_ON_BY_TASK = {BINARY: _b1_depends('policy'), REGRESSION: _b1_depends('model_choice')}
+
+
+def _b2_binary_depends() -> dict:
+    out = _b1_depends('policy')
+    out['model_choice'] = _B1_COMMON
+    out['policy'] = ('prediction_time', 'feature_availability', 'split', PREPROCESSING,
+                     MODEL_VARIANT, 'model_choice')
+    out[FINAL_TEST] = _B1_COMMON + ('model_choice', 'policy')
+    out['conclusion'] = _B1_COMMON + ('model_choice', 'policy', FINAL_TEST)
+    return out
+
+
+B2_BINARY_DEPENDS_ON = _b2_binary_depends()
 
 DEFAULT_SETTINGS = {'bootstrap': {'replicates': 2000, 'seed': 20261017, 'level': 0.95}}
 
@@ -403,6 +421,14 @@ VARIANT_STEP = {
     'expected_output': 'A confirmed list of variants and their out-of-fold predictions, '
                        'evaluated like the candidate.',
     'completion': 'Decision model_variant is confirmed and every variant fit is current.'}
+MODEL_CHOICE_STEP = {
+    'id': 'model_choice', 'pause': 3, 'decision': 'model_choice',
+    'activities': (), 'requires': (MODEL_VARIANT, 'models'),
+    'title': 'Choose the model',
+    'question': 'Given the development comparison, which model is retained for the decision '
+                'rule? Comparing a model does not select it.',
+    'expected_output': 'An explicit confirmed model choice, distinct from the rule.',
+    'completion': 'Decision model_choice is confirmed.'}
 FINAL_TEST_STEP = {
     'id': FINAL_TEST, 'pause': 3, 'decision': FINAL_TEST,
     'activities': ('final_test.evaluation',), 'requires': (),
@@ -428,6 +454,15 @@ def _b1_steps(full: tuple, choice: str) -> tuple:
 
 
 B1_STEPS = _b1_steps(FULL_STEPS, 'policy')
+B2_BINARY_STEPS = tuple(
+    item
+    for step in B1_STEPS
+    for item in ((MODEL_CHOICE_STEP, dict(step, requires=('models', MODEL_VARIANT,
+                                                          'model_choice')))
+                 if step['id'] == 'policy'
+                 else ((dict(step, requires=('model_choice', 'policy')),) if
+                       step['id'] == FINAL_TEST else (step,)))
+)
 B1_REGRESSION_STEPS = tuple(
     # B6c (M3): a regression study chooses a model, not a rule.
     dict(s, question='Now that the model is chosen, do you open the sealed final test, once, '
@@ -511,6 +546,7 @@ def uses_cross_validation(state: Mapping | None) -> bool:
     return True
 B1_STEPS_BY_TASK = {BINARY: B1_STEPS, REGRESSION: B1_REGRESSION_STEPS}
 B1_STEP_IDS = tuple(s['id'] for s in B1_STEPS)
+B2_BINARY_STEP_IDS = tuple(s['id'] for s in B2_BINARY_STEPS)
 B1_REGRESSION_STEP_IDS = tuple(s['id'] for s in B1_REGRESSION_STEPS)
 B1_ACTIVITY_SLOTS_BY_TASK = {task: tuple(a for s in steps_ for a in s['activities'])
                              for task, steps_ in B1_STEPS_BY_TASK.items()}
@@ -591,6 +627,15 @@ def has_wp_b1_decisions(state: Mapping | str | None) -> bool:
     return True
 
 
+def has_explicit_binary_model_choice(state: Mapping | str | None) -> bool:
+    """Whether a binary study uses the explicit model -> rule -> final-test flow."""
+    if task_of(state) != BINARY:
+        return False
+    if isinstance(state, Mapping) and isinstance(state.get('decisions'), Mapping):
+        return 'model_choice' in state['decisions']
+    return True
+
+
 def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
     """Whether a study has the WP-A4 decisions (``success_criterion``, ``preprocessing``).
 
@@ -605,6 +650,8 @@ def has_wp_a4_decisions(state: Mapping | str | None) -> bool:
 def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
     """The decisions of a study (or of a task name, for a new study)."""
     if has_wp_b1_decisions(state):
+        if has_explicit_binary_model_choice(state):
+            return B2_DECISION_IDS
         return B1_DECISION_IDS_BY_TASK[task_of(state)]
     table = FULL_DECISION_IDS_BY_TASK if has_wp_a4_decisions(state) else DECISION_IDS_BY_TASK
     return table[task_of(state)]
@@ -612,6 +659,8 @@ def decision_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
 
 def depends_on(state: Mapping | str | None, decision_id: str) -> tuple[str, ...]:
     if has_wp_b1_decisions(state):
+        if has_explicit_binary_model_choice(state):
+            return B2_BINARY_DEPENDS_ON[decision_id]
         return B1_DEPENDS_ON_BY_TASK[task_of(state)][decision_id]
     table = FULL_DEPENDS_ON_BY_TASK if has_wp_a4_decisions(state) else DEPENDS_ON_BY_TASK
     return table[task_of(state)][decision_id]
@@ -652,7 +701,8 @@ def steps(state: Mapping | str | None = None) -> tuple[dict, ...]:
     """The plan steps of a study's task. A study created before WP-A4 has the step "Discover
     the data" and its own five decisions' steps (the models then need the split only)."""
     if has_wp_b1_decisions(state):
-        out = B1_STEPS_BY_TASK[task_of(state)]
+        out = (B2_BINARY_STEPS if has_explicit_binary_model_choice(state)
+               else B1_STEPS_BY_TASK[task_of(state)])
         if uses_cross_validation(state):
             texts = CV_STEP_TEXTS_BY_TASK[task_of(state)]
             out = tuple(dict(s, **texts.get(s['id'], {})) for s in out)
@@ -675,6 +725,8 @@ def step_ids(state: Mapping | str | None = None) -> tuple[str, ...]:
 
 def activity_slots(state: Mapping | str | None = None) -> tuple[str, ...]:
     if has_wp_b1_decisions(state):
+        if has_explicit_binary_model_choice(state):
+            return tuple(a for s in B2_BINARY_STEPS for a in s['activities'])
         return B1_ACTIVITY_SLOTS_BY_TASK[task_of(state)]
     return ACTIVITY_SLOTS_BY_TASK[task_of(state)]
 
@@ -1398,6 +1450,14 @@ def choice_config(state: Mapping) -> dict | None:
     (binary; ``rule`` is its canonical rule, ``model`` the candidate or the variant) or the
     confirmed model choice (regression; ``rule`` is None); None when nothing is chosen."""
     from . import records as rec
+    if has_explicit_binary_model_choice(state):
+        model = state['decisions']['model_choice']
+        policy = state['decisions']['policy']
+        if model.get('status') != 'confirmed' or policy.get('status') != 'confirmed':
+            return None
+        rule = rec.policy_rule(policy.get('value'))
+        return ({'model': model.get('value'), 'rule': rule}
+                if isinstance(model.get('value'), str) and rule is not None else None)
     choice = choice_decision(state)
     decision = state['decisions'].get(choice) or {}
     if decision.get('status') != 'confirmed':

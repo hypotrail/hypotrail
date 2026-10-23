@@ -407,8 +407,10 @@ def junior_text(item: Mapping, lang: str = EN) -> str:
 # --- deliverables ------------------------------------------------------------------------
 
 ARTIFACT_WORDS = {'report': 'the report', 'notebook': 'the generated notebook',
+                  'editable': 'the editable study notebook',
                   'workbench': 'the workbench'}
 ARTIFACT_WORDS_FR = {'report': 'le rapport', 'notebook': 'le notebook généré',
+                     'editable': "le notebook éditable de l'étude",
                      'workbench': "l'atelier (workbench)"}
 
 
@@ -418,7 +420,11 @@ def artifact(name: str, item: Mapping, lang: str = EN) -> dict:
     status = item.get('status')
     if lang == FR:
         label = ARTIFACT_WORDS_FR.get(name, ' '.join(str(name).split('_')))
-        if item.get('generated') is False or name == 'workbench':
+        if name == 'editable':
+            junior = (f"{_capital(label)} suit le notebook généré jusqu'à votre première "
+                      "modification ; ensuite il n'est jamais écrasé et ne constitue pas "
+                      "une preuve officielle.")
+        elif item.get('generated') is False or name == 'workbench':
             junior = (f"{_capital(label)} est votre espace libre : il est créé une fois, jamais "
                       "écrasé, et n'est pas suivi par l'étude.")
         elif status == 'ok':
@@ -433,7 +439,10 @@ def artifact(name: str, item: Mapping, lang: str = EN) -> dict:
                       "écriture. Ne vous y fiez pas tant qu'il n'est pas réécrit.")
         return {'audience': AGENT, 'junior_message': junior}
     label = ARTIFACT_WORDS.get(name, ' '.join(str(name).split('_')))
-    if item.get('generated') is False or name == 'workbench':
+    if name == 'editable':
+        junior = (f'{_capital(label)} follows the generated notebook until your first edit; '
+                  'after that it is never overwritten and is not official evidence.')
+    elif item.get('generated') is False or name == 'workbench':
         junior = (f'{_capital(label)} is your free space: it is created once, never '
                   'overwritten, and not tracked by the study.')
     elif status == 'ok':

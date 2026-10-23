@@ -110,21 +110,25 @@
   }
 
   /** One EDA card in the pattern of the design system. */
-  function edaCard(ctx, c, card, { id, eyebrow, title, sub = null, body = [], finding = null, why = [], wide = false, attrs = {} }) {
+  function edaCard(ctx, c, card, { id, eyebrow, title, sub = null, body = [], finding = null, why = [], wide = false, expanded = false, attrs = {} }) {
     const w = ctx.components.why(why);
     return el('section', { className: `card eda-card${wide ? ' eda-wide' : ''}`, 'aria-labelledby': id,
       'data-eda-card': card.slot, 'data-activity': card.activity, 'data-current': card.current ? 'true' : 'false',
       'data-nav': `result:${card.resultId}`, ...attrs }, [
-      el('div', { className: 'ht-card-h' }, [el('div', {}, [
+      el('details', { className: 'eda-analysis', open: expanded ? true : null }, [
+      el('summary', { className: 'ht-card-h' }, [el('div', {}, [
         el('span', { className: 'ht-cap', 'data-eyebrow': true, text: eyebrow }),
-        // The engine's question as it sent it ("(en)" in a French panel when it is English).
-        el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null },
-          [card.question ? ctx.components.engineText(card.question) : title]),
+        // Use the panel's localized question instead of leaking the engine's canonical text.
+        el('h3', { id, className: 'eda-question', 'data-question': true,
+          text: c.requestQuestion(card.activity, card.column || null) || title }),
         sub,
       ])]),
+      el('div', { className: 'eda-analysis-body' }, [
       ...body,
       finding ? el('p', { className: 'ht-finding', 'data-finding': true }, Array.isArray(finding) ? finding : [finding]) : null,
       el('div', { className: 'ht-card-f' }, [w, sourceButton(ctx, c, card)]),
+      ]),
+      ]),
     ]);
   }
 
@@ -693,7 +697,7 @@
     }
   }
 
-  function cardNode(ctx, c, card, i, task) {
+  function cardNode(ctx, c, card, i, task, expanded = false) {
     const id = `eda-card-${i}`;
     const wide = card.kind === 'rate_by' || card.kind === 'mean_by' || card.kind === 'correlation'
       || (card.kind === 'distribution' && card.data && card.data.numeric && card.data.numeric.skewed)
@@ -710,7 +714,7 @@
     else parts = distribution(ctx, c, card);
     const column = ['rate_by', 'mean_by', 'distribution'].includes(card.kind) ? card.column : null;
     return edaCard(ctx, c, card, { id, eyebrow: eyebrowOf(c, card), title: titleOf(c, card), sub: subLine(ctx, column),
-      body: parts.body || [], finding: parts.finding || null, why: parts.why || [], wide });
+      body: parts.body || [], finding: parts.finding || null, why: parts.why || [], wide, expanded });
   }
 
   // --- Run another chart --------------------------------------------------------------------
@@ -897,7 +901,8 @@
       if (error) out.push(el('p', { className: 'alert', role: 'alert', 'data-eda-error': true, text: `${c.loadError} ${error.message}` }));
       const grid = el('div', { className: 'eda-gallery', 'aria-label': c.galleryLabel });
       if (!gallery.length) out.push(el('div', { className: 'ht-empty', 'data-eda-empty': true, text: c.empty }));
-      gallery.forEach((card, i) => grid.appendChild(cardNode(ctx, c, card, i, task)));
+      gallery.forEach((card, i) => grid.appendChild(cardNode(ctx, c, card, i, task,
+        i === gallery.length - 1)));
       grid.appendChild(requestCard(ctx, c, data, task));
       out.push(grid);
       return out;

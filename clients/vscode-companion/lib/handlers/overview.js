@@ -113,7 +113,7 @@ function deliverablesOf(payload) {
 async function openMarimo(message, ctx) {
   const name = message.artifact;
   const rel = ARTIFACT_PATHS[name];
-  if (ctx.settings.reviewer && name === 'workbench') {
+  if (ctx.settings.reviewer && (name === 'workbench' || name === 'editable')) {
     ctx.post({ type: 'notice', politeness: 'assertive', text: ctx.say('reviewerWorkbench') });
     return;
   }

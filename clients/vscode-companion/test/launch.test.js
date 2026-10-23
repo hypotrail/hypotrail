@@ -1,5 +1,5 @@
 'use strict';
-// The two Marimo launches (WP-A5, ADR 0004 amendment "local launch"): scope U.
+// The three Marimo launches (WP-A5, ADR 0004 amendment "local launch"): scope U.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -8,6 +8,7 @@ const { launchFor, isMarimoLaunch, prefixFromAgent } = require('../lib/launch');
 
 const STUDY = '/home/j/studies/bank';
 const NB = path.join(STUDY, 'notebooks', 'study_generated.py');
+const EDITABLE = path.join(STUDY, 'notebooks', 'study_editable.py');
 const WB = path.join(STUDY, 'notebooks', 'workbench.py');
 const UV = { studyDir: STUDY, argv: ['uv', 'run', '--project', '/opt/hypotrail/framework', 'hypotrail'] };
 const PY = { studyDir: STUDY, argv: ['/opt/hypotrail/framework/.venv/bin/python', '-m', 'mlkit.study.cli'] };
@@ -23,12 +24,13 @@ test('the engine argv is used when it has exactly the expected form', () => {
 
 test('without an engine launch, the argv is built from agent.json: uv project or python -m', () => {
   assert.deepEqual(launchFor(UV, 'notebook').argv, ['uv', 'run', '--project', '/opt/hypotrail/framework', 'marimo', 'run', NB]);
+  assert.deepEqual(launchFor(UV, 'editable').argv, ['uv', 'run', '--project', '/opt/hypotrail/framework', 'marimo', 'edit', EDITABLE]);
   assert.deepEqual(launchFor(UV, 'workbench').argv, ['uv', 'run', '--project', '/opt/hypotrail/framework', 'marimo', 'edit', WB]);
   assert.deepEqual(launchFor(PY, 'workbench').argv, ['/opt/hypotrail/framework/.venv/bin/python', '-m', 'marimo', 'edit', WB]);
   assert.equal(launchFor(PY, 'notebook').source, 'agent');
 });
 
-test('only marimo run of the generated notebook and marimo edit of the workbench are accepted', () => {
+test('only generated read and owned editable Marimo notebooks are accepted', () => {
   const bad = [
     ['uv', 'run', '--project', '/x', 'marimo', 'edit', NB],          // the generated notebook is never edited
     ['uv', 'run', '--project', '/x', 'marimo', 'run', WB],           // the workbench opens for editing
@@ -40,7 +42,7 @@ test('only marimo run of the generated notebook and marimo edit of the workbench
     ['/usr/bin/bash', '-m', 'marimo', 'run', NB],
     ['uv', 'run', '--project', '/x', 'marimo', 'run', `${NB}\0`],
   ];
-  for (const argv of bad) assert.equal(isMarimoLaunch(argv, STUDY, 'notebook') && isMarimoLaunch(argv, STUDY, 'workbench'), false, argv.join(' '));
+  for (const argv of bad) assert.equal(isMarimoLaunch(argv, STUDY, 'notebook') && isMarimoLaunch(argv, STUDY, 'editable') && isMarimoLaunch(argv, STUDY, 'workbench'), false, argv.join(' '));
   for (const argv of bad.slice(0, 6)) {
     const l = launchFor(UV, 'notebook', { argv });
     assert.equal(l.source, 'agent', `an unexpected engine argv is not used: ${argv.join(' ')}`);

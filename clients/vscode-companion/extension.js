@@ -45,7 +45,7 @@ let current = null;   // {panel, controller, watcher, agent, reviewer}
 const marimoTerminals = new Map();
 
 /**
- * Open one of the two Marimo launches of lib/launch.js in a VS Code terminal, created with
+ * Open one of the three Marimo launches of lib/launch.js in a VS Code terminal, created with
  * an argument list (shellPath, shellArgs): no shell string, nothing typed in. The argv is
  * checked again here, so no other command can reach a terminal. Returns true when an open
  * terminal for the same file was shown again, false when a new one was created.

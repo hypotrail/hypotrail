@@ -222,6 +222,9 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     chat = Chat(study, work, 'chat3')
     evaluation = chat.run('policy.evaluate', '--rule', THRESHOLD)
     assert evaluation['status'] == 'promoted'
+    p = chat.propose('model_choice', 'fit.logistic',
+                     'You retain the logistic model for the decision rule.')
+    chat.confirm(p, 'I retain the logistic model because it is the selected candidate.')
     p = chat.propose('policy', THRESHOLD, 'You call every client whose score is at least 0.2.')
     chat.confirm(p, 'Yes, call everyone scored 0.2 or more.')
     # v0.3 (WP-F1, R28): the diagnostics run again at the adopted rule.
@@ -233,7 +236,7 @@ def test_walkthrough(name, cases, tmp_path, capsys):
     view = Chat(study, work, 'chat4').view
     decisions = view['decisions']
     for d in ('prediction_time', 'feature_availability', 'split', 'success_criterion',
-              'preprocessing', 'policy'):
+              'preprocessing', 'model_choice', 'policy'):
         assert decisions[d]['status'] == 'confirmed', d
     assert decisions['prediction_time']['confirmation']['user_words'] == junior['words']
     assert decisions['policy']['value'] == THRESHOLD

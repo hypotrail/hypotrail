@@ -177,8 +177,9 @@ JUNIOR['shoppers'].update(act='follow up', unit='sessions')
 JUNIOR['hotel'].update(act='contact', unit='bookings')
 JUNIOR['bank-full'] = dict(JUNIOR['bank'])
 
-# v0.2b (WP-B6b): a new study has nine decisions. After the fits come the variant
-# (``model_variant`` confirmed, ``fit.variant`` run), the rule or model choice, and the
+# v0.2b (WP-B6b) introduced nine decisions; current binary studies have ten because the
+# model and rule are explicit separate choices. After the fits come the variant
+# (``model_variant`` confirmed, ``fit.variant`` run), the model and rule choices, and the
 # final-test opening. In a regression study the stage names keep their binary spelling:
 # ``baseline_and_logistic_fitted`` fits the mean baseline and the linear model,
 # ``policy_evaluated`` runs ``evaluate.regression``, and ``policy_adopted`` (alias
@@ -595,7 +596,7 @@ class Setup:
         return decision in (self.view().get('decisions') or {})
 
     def regression(self) -> bool:
-        return 'model_choice' in (self.view().get('decisions') or {})
+        return self.view().get('task') == 'regression'
 
     def default_value(self, decision: str):
         """The engine's drafted value for ``decision`` (``next_action.default_value`` when the
@@ -692,15 +693,31 @@ class Setup:
             if regression:
                 p = self.propose('model_choice', 'fit.linear', 'You adopt the linear model.')
                 self.confirm(p, j['choice_words'])
-            elif rule == THRESHOLD:
-                p = self.propose('policy', THRESHOLD,
-                                 'You call every client whose score is at least 0.2.')
-                self.confirm(p, 'Yes, call everyone scored 0.2 or more.')
             else:
-                pct = f'{float(rule[6:]) * 100:g}%'
-                p = self.propose('policy', rule, f"You {j['act']} the top {pct} of "
-                                                 f"{j['unit']}, ranked by the model's score.")
-                self.confirm(p, j['policy_words'])
+                selected_model = 'fit.logistic'
+                if self.has_decision('model_choice'):
+                    selection = self.view().get('model_selection') or {}
+                    selected_model = ((selection.get('one_se') or {}).get('pick')
+                                      or selection.get('best') or 'fit.logistic')
+                    p = self.propose('model_choice', selected_model,
+                                     f'You retain {selected_model} for the decision rule.')
+                    self.confirm(
+                        p,
+                        f'I retain {selected_model} because it is the selected development '
+                        'configuration.',
+                    )
+                policy_value = (rule if selected_model == 'fit.logistic'
+                                else f'{rule}@{selected_model}')
+                if rule == THRESHOLD:
+                    p = self.propose('policy', policy_value,
+                                     'You call every client whose score is at least 0.2.')
+                    self.confirm(p, 'Yes, call everyone scored 0.2 or more.')
+                else:
+                    pct = f'{float(rule[6:]) * 100:g}%'
+                    p = self.propose('policy', policy_value,
+                                     f"You {j['act']} the top {pct} of {j['unit']}, ranked by "
+                                     f"{selected_model}.")
+                    self.confirm(p, j['policy_words'])
             # v0.3 (WP-F1, R28): the diagnostics at the adopted rule (or of the chosen model)
             # are the next step after the choice; the agent runs them when ``next_action``
             # names them, so a study past the choice has them.

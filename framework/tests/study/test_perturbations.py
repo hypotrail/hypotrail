@@ -199,6 +199,8 @@ class Walk:
             capacity = capacity or max(1, n_val // 3)
             ev = self.run('policy.evaluate', '--rule', 'threshold:0.2', '--rule',
                           f'capacity:{capacity}')['values']
+            self.decide('model_choice', 'fit.logistic',
+                        'Yes, retain the logistic model because it is the selected candidate.')
             self.decide('policy', f'capacity:{capacity}',
                         f'Yes, review the {capacity} highest scores.')
         if b1:

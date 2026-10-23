@@ -91,6 +91,8 @@ def test_no_fake_decision_controls_and_offline(full_view):
 
 def test_decisions_facts_and_assumptions_have_distinct_text_labels(tmp_path, synthetic_case_dir):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='models')
+    b.decide('model_choice', 'fit.logistic', 'Retain fit.logistic for the rule.',
+             'I retain fit.logistic because it fits the study.')
     b.apply('decide.propose', {'decision_id': 'policy', 'value': 'capacity:20',
                                'restatement': 'Call the 20 highest-scored members.',
                                'rationale': 'Desk capacity.'})

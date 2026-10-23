@@ -46,7 +46,7 @@
     becomesStale: 'Devient périmé',
     refitted: 'À recalculer',
     nothing: 'rien',
-    artefactNames: { report: 'rapport', notebook: 'notebook', workbench: 'établi' },
+    artefactNames: { report: 'rapport', notebook: 'notebook', editable: 'notebook éditable', workbench: 'établi' },
     and: ' et ',
     decisionNames: task => ({
       prediction_time: 'le moment de la prédiction',

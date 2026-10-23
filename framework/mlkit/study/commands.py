@@ -488,6 +488,15 @@ def validate_value(state: Mapping, decision_id: str, value: Any) -> None:
             # v0.3 (WP-F1): a rule applies to a variant the decision names.
             raise _invalid('The policy names a variant the variant decision does not declare.',
                            models=[rec.POLICY_CANDIDATE] + named)
+        if st.has_explicit_binary_model_choice(state):
+            selected = state['decisions']['model_choice']
+            if selected.get('status') != 'confirmed':
+                raise _invalid('Choose the model explicitly before proposing its decision rule.',
+                               decision='model_choice')
+            if rec.policy_model(value) != selected.get('value'):
+                raise _invalid('The decision rule must name the explicitly selected model.',
+                               selected_model=selected.get('value'),
+                               policy_model=rec.policy_model(value))
         from . import assurance
         if assurance.profile(state) == 'review-v1':
             criterion_value = (state['decisions'].get(st.SUCCESS_CRITERION) or {}).get('value')
@@ -573,6 +582,8 @@ def model_choices(state: Mapping) -> tuple[str, ...]:
     (WP-B1) the variant (v0.3, WP-F1: every variant the decision names)."""
     if st.has_wp_b1_decisions(state):
         named = tuple(trials.declared_slots(state)) or ('fit.variant',)
+        if st.task_of(state) == st.BINARY:
+            return (rec.POLICY_CANDIDATE,) + named
         return preconditions.MODEL_CHOICES[:1] + named + preconditions.MODEL_CHOICES[1:]
     return preconditions.MODEL_CHOICES
 

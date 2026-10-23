@@ -112,6 +112,9 @@ concepts:
   linear_model:
     hint: which model is chosen (the linear model)
     terms: [linear*, lineaire*, regression lineaire, candidate, candidat, droite, line]
+  logistic_model:
+    hint: which model is chosen (the logistic model)
+    terms: [logistic*, logistique*, regression logistique, candidate, candidat, lineaire*, linear*]
   baseline_model:
     hint: which model is chosen (the mean baseline)
     terms: [baseline, mean, average, moyenne, reference, de base, constant*, simple, naive]

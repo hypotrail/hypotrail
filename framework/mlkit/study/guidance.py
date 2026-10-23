@@ -33,14 +33,22 @@ def pause(view: Mapping) -> dict:
     options = []
     recommended = None
     if kind == 'decision':
-        question = ('Adoptez-vous cette décision ?' if language == 'fr'
-                    else 'Do you adopt this decision?')
+        closed = ('Adoptez-vous cette décision ?' if language == 'fr'
+                  else 'Do you adopt this decision?')
+        # Copilot may collapse surrounding assistant prose as reasoning. Keep the actual
+        # interactive prompt self-contained so the decision is still visible.
+        question = f'{proposal_text}\n\n{closed}' if proposal_text else closed
         options = ['adopt', 'change', 'explain']
         recommended = 'adopt'
     elif kind == 'action':
         question = action.get('question') or action.get('junior_message')
         options = ['continue', 'explain']
         recommended = 'continue'
+    nonlinear = ((view.get('model_families') or {}).get('recommendation')
+                 == 'compare_nonlinear')
+    topics = ['metric', 'uncertainty']
+    if nonlinear:
+        topics.append('why-consider-a-nonlinear-family')
     return {
         'schema': SCHEMA, 'kind': kind, 'language': language,
         'revision': view['revision'],
@@ -50,5 +58,5 @@ def pause(view: Mapping) -> dict:
         'proposal_id': proposal['proposal_id'] if proposal is not None else None,
         'proposal_text': proposal_text,
         'recommended_option': recommended, 'options': options, 'question': question,
-        'evidence_refs': [], 'detail_topics': ['metric', 'uncertainty'],
+        'evidence_refs': [], 'detail_topics': topics,
     }

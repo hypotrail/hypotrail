@@ -346,12 +346,14 @@ def test_a_cross_validated_study_speaks_of_folds_not_validation_rows(name, reque
         assert 'the rule' not in limit['text']
 
 
-def test_the_selection_chart_plots_the_adopted_configuration(opened, tmp_path):
+def test_the_selection_chart_plots_the_adopted_configuration(tmp_path):
     """B6c (M4): a policy that applies its rule to the variant is drawn with the variant."""
-    flow = Flow(fk.clone(opened.study, tmp_path / 'study'), opened.case_dir, prefix='m4')
+    flow = _flow(tmp_path)
     chart = re.search(r'<figure data-chart="selection">.*?</figure>', _page(flow), re.S).group(0)
     assert 'models.[fit.logistic].true_positives' in chart
     assert 'Model (logistic, the candidate)' in chart
+    flow.decide('model_choice', 'fit.variant',
+                words='Yes, retain the variant because it ranks as well with fewer terms')
     flow.decide('policy', 'capacity:40@fit.variant',
                 words='Yes, the variant with that rule because it ranks as well with fewer terms')
     assert flow.view()['criterion']['model'] == 'fit.variant'

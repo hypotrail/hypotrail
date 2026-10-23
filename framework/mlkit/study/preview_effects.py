@@ -29,7 +29,8 @@ PAYLOAD_KEYS = ('schema', 'ok', 'study', 'revision', 'proposal_id', 'decision_id
 PREVIOUS_KEYS = ('value', 'user_words', 'basis', 'channel', 'revision', 'proposal_id')
 BLOCKED_KEYS = ('code', 'reason', 'message', 'details')
 # The renders that ``after_commit`` performs; the workbench is never written.
-ARTIFACTS_AFTER = {'report': 'regenerated', 'notebook': 'regenerated', 'workbench': 'unchanged'}
+ARTIFACTS_AFTER = {'report': 'regenerated', 'notebook': 'regenerated',
+                   'editable': 'synced_if_unedited', 'workbench': 'unchanged'}
 NOTE = ('Preview of a confirmation: nothing was recorded. The engine still checks the words '
         'when you confirm.')
 EFFECT_LISTS = ('refit', 're_eda', 're_policy', 'recompute')

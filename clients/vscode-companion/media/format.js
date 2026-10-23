@@ -9,8 +9,12 @@
   'use strict';
   const FORMATS = ['int', 'pct0', 'pct1', 'pct2', 'f1', 'f2', 'f3', 'f4', 'auto'];
 
-  function group(digits) {
-    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  function language() {
+    return HT.language && HT.language() === 'fr' ? 'fr' : 'en';
+  }
+
+  function group(digits, lang = language()) {
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'fr' ? '\u202f' : ',');
   }
 
   function increment(digits) {
@@ -40,13 +44,13 @@
     return [negative, digits.slice(0, digits.length - d) || '0', digits.slice(digits.length - d)];
   }
 
-  function fixed(x, d, { grouping = false } = {}) {
+  function fixed(x, d, { grouping = false, lang = language() } = {}) {
     if (Number.isNaN(x)) return 'nan';
     if (!Number.isFinite(x)) return x > 0 ? 'inf' : '-inf';
     if (Math.abs(x) >= 1e21) return String(x);
     const [negative, whole, frac] = rounded(x, d);
-    const head = grouping ? group(whole.replace(/^0+(?=\d)/, '')) : whole.replace(/^0+(?=\d)/, '');
-    return `${negative ? '-' : ''}${head}${d > 0 ? '.' + frac : ''}`;
+    const head = grouping ? group(whole.replace(/^0+(?=\d)/, ''), lang) : whole.replace(/^0+(?=\d)/, '');
+    return `${negative ? '-' : ''}${head}${d > 0 ? (lang === 'fr' ? ',' : '.') + frac : ''}`;
   }
 
   function integer(x) {
@@ -59,13 +63,14 @@
   function number(value, fmt = 'auto') {
     if (!FORMATS.includes(fmt)) throw new Error(`unknown number format ${fmt}`);
     const x = Number(value);
+    const lang = language();
     if (fmt === 'int') return integer(x);
-    if (fmt.startsWith('pct')) return `${fixed(100 * x, Number(fmt.slice(3)))}%`;
-    if (fmt.startsWith('f')) return fixed(x, Number(fmt.slice(1)));
+    if (fmt.startsWith('pct')) return `${fixed(100 * x, Number(fmt.slice(3)), { lang })}${lang === 'fr' ? '\u00a0%' : '%'}`;
+    if (fmt.startsWith('f')) return fixed(x, Number(fmt.slice(1)), { lang });
     if (Number.isInteger(x)) return integer(x);
-    if (Math.abs(x) >= 100) return fixed(x, 1, { grouping: true });
-    if (Math.abs(x) >= 1) return fixed(x, 2);
-    return fixed(x, 3);
+    if (Math.abs(x) >= 100) return fixed(x, 1, { grouping: true, lang });
+    if (Math.abs(x) >= 1) return fixed(x, 2, { lang });
+    return fixed(x, 3, { lang });
   }
 
   /** A recorded ISO time in the viewer's local format (a clock of the view, not a figure). */

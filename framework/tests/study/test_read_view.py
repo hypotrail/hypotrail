@@ -192,7 +192,7 @@ def test_view_has_the_contract_keys_and_is_deterministic(populated):
                                        'success_criterion', 'preprocessing', 'policy',
                                        'conclusion',
                                        # WP-B1
-                                       'model_variant', 'final_test'}
+                                           'model_variant', 'model_choice', 'final_test'}
     assert all(tuple(d) == view.DECISION_VIEW_KEYS for d in first['decisions'].values())
     assert first['not_yet_defensible'][0]['id'] == 'unconfirmed_decisions'
     assert _tree_digest(store.study_dir) == before

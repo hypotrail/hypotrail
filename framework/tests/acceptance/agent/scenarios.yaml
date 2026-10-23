@@ -58,7 +58,8 @@ defaults:
   repetitions: 1
   bash_policy: hypotrail_cli_only
 #
-# v0.2b (WP-B6b): a new study has nine decisions (cross-validation as the split, the
+# v0.2b (WP-B6b) introduced nine decisions; a current binary study has ten because the
+# model choice is separate from the rule (cross-validation as the split, the
 # success criterion, the preprocessing, `model_variant`, `final_test`); the setup stages
 # confirm them where a scenario needs a later state (study_setup.STAGES: `variant_fitted`,
 # the case's teaching share as the rule, the model choice in a regression study,

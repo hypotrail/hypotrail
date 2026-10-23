@@ -8,6 +8,7 @@ The manifest records, for every deliverable, what was written and from what::
                       template_version, error, last_ok_revision, user_edits_preserved,
                       candidate},
         "notebook":  {... same keys, plus edit_check_sha256},
+        "editable":  {... same keys, generated false; synchronized until first edit},
         "workbench": {... same keys, plus sha256_at_creation}}}
 
 ``revision`` is the study revision the artefact was last written for (or attempted
@@ -17,9 +18,10 @@ at, when it failed); ``consumed`` lists the result ids whose numbers it cites.
 revision, every result it consumes is still current (promoted and not stale), and its
 file exists with the recorded hash (review fix M4, :func:`currency.file_check`).
 :func:`effective_status` computes this against a state; the stored ``status`` only
-says how the last render went. The workbench is not generated (``generated: false``):
-it is created once, never overwritten, and its experiments are not tracked, so it is
-never stale.
+says how the last render went. The editable copy and workbench are not generated
+(``generated: false``): the former follows the generated notebook until its first edit,
+the latter is created once, and neither is overwritten once owned by the junior nor
+tracked as evidence, so neither is stale.
 
 The status logic is pure; :func:`save` imports the store's atomic writer lazily, so
 this module can be read by the read side without importing a writer.
@@ -39,6 +41,7 @@ FILE = 'artifacts.json'
 HOME = '.hypotrail'
 ARTIFACTS = {'report': 'reports/study.html',
              'notebook': 'notebooks/study_generated.py',
+             'editable': 'notebooks/study_editable.py',
              'workbench': 'notebooks/workbench.py'}
 ITEM_KEYS = ('path', 'kind', 'revision', 'status', 'consumed', 'sha256', 'generated',
              'template_version', 'error', 'last_ok_revision', 'user_edits_preserved',

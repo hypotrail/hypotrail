@@ -25,7 +25,7 @@ function protocolFactory() {
   const WRITE_OPS = ['W4', 'W5', 'W6', 'W7'];
   const OUTCOME_KINDS = ['ok', 'ok_with_problems', 'not_promoted', 'refused', 'failed', 'invalid', 'cancelled'];
   const NAV_KINDS = ['result', 'decision', 'proposal', 'step', 'limit', 'execution', 'term'];
-  const ARTIFACTS = ['report', 'notebook', 'workbench'];
+  const ARTIFACTS = ['report', 'notebook', 'editable', 'workbench'];
   const MAX_WORDS = 4000;
   const PROPOSAL_ID = '^p_[0-9]+$';
   const RESULT_ID = '^[0-9a-f]{64}$';
@@ -97,7 +97,7 @@ function protocolFactory() {
     // edit` for the workbench. Not a write of the study; the argv is built in lib/launch.js.
     open_marimo: {
       stage: 'v0',
-      fields: { artifact: { t: 'enum', values: ['notebook', 'workbench'] } },
+      fields: { artifact: { t: 'enum', values: ['notebook', 'editable', 'workbench'] } },
     },
     navigate_external: {
       stage: 'v3',
@@ -156,7 +156,7 @@ function protocolFactory() {
         marimo: {
           t: 'obj', opt: true,
           fields: { kernel: { t: 'str', nullable: true }, notebook: { t: 'str', nullable: true },
-            workbench: { t: 'str', nullable: true } },
+            editable: { t: 'str', nullable: true, opt: true }, workbench: { t: 'str', nullable: true } },
         },
       },
     },

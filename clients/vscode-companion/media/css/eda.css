@@ -3,6 +3,14 @@
 .eda-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--s3); margin: var(--s3) 0; }
 .eda-gallery > .card { margin: 0; }
 .eda-card { display: flex; flex-direction: column; min-width: 0; }
+.eda-analysis { min-width: 0; }
+.eda-analysis > summary { cursor: pointer; list-style: none; }
+.eda-analysis > summary::-webkit-details-marker { display: none; }
+.eda-analysis > summary::after { content: "›"; color: var(--ht-link); font-size: 22px;
+  line-height: 1; transform: rotate(90deg); transition: transform .12s ease; }
+.eda-analysis[open] > summary::after { transform: rotate(-90deg); }
+.eda-analysis-body { display: flex; flex-direction: column; min-width: 0; padding-top: var(--s2); }
+.eda-analysis-body > .ht-card-f { margin-top: auto; }
 .eda-card > .ht-card-f { margin-top: auto; }
 .eda-card > .ht-figure + .ht-card-f, .eda-card > .ht-finding + .ht-card-f { margin-top: var(--s3); }
 .eda-wide { grid-column: 1 / -1; }

@@ -72,6 +72,7 @@ def _steps_fr() -> dict[str, str]:
         st.SUCCESS_STEP['title']: 'Fixer le critère de succès avant de voir un modèle',
         st.PREPROCESSING_STEP['title']: 'Décider comment le modèle prépare les variables',
         st.VARIANT_STEP['title']: 'Choisir les variantes à comparer',
+        st.MODEL_CHOICE_STEP['title']: 'Choisir le modèle',
         st.FINAL_TEST_STEP['title']: "Ouvrir une fois l'échantillon de test final",
         cv['train_eda']['title']: "Explorer l'échantillon de développement",
         # questions
@@ -149,6 +150,10 @@ def _steps_fr() -> dict[str, str]:
                                      'variables, ou une autre famille de modèles quand les '
                                      'diagnostics montrent une forme que le modèle linéaire ne '
                                      'suit pas ?',
+        st.MODEL_CHOICE_STEP['question']: 'Compte tenu de la comparaison sur les données de '
+                                          'développement, quel modèle retenez-vous pour la '
+                                          'règle de décision ? Comparer un modèle ne le '
+                                          'sélectionne pas.',
         st.FINAL_TEST_STEP['question']: 'Maintenant que le modèle et la règle sont choisis, '
                                         "ouvrez-vous l'échantillon de test final scellé, une "
                                         'seule fois, pour mesurer la configuration choisie '
@@ -223,7 +228,7 @@ def step_text(text: str, lang: str = EN) -> str:
 def all_step_texts() -> list[str]:
     """Every English step title and question of every plan variant (for the tests)."""
     groups = [st.STEPS, st.REGRESSION_STEPS, st.FULL_STEPS, st.FULL_REGRESSION_STEPS,
-              st.B1_STEPS, st.B1_REGRESSION_STEPS]
+              st.B1_STEPS, st.B2_BINARY_STEPS, st.B1_REGRESSION_STEPS]
     for task, steps in st.B1_STEPS_BY_TASK.items():
         texts = st.CV_STEP_TEXTS_BY_TASK[task]
         groups.append(tuple(dict(s, **texts.get(s['id'], {})) for s in steps))
@@ -830,6 +835,14 @@ def _digest_propose(decision: str, view: Mapping, ctx: dict, lang: str,
                           f'Le scénario suppose : {audience.policy_words(share, FR)}.'))
         return out
     if decision == 'model_choice':
+        if view.get('task') == st.BINARY:
+            return [_t(lang, 'Model choice: retain the logistic candidate or one confirmed '
+                             'variant, using their comparison on the same development folds. '
+                             'Comparing a model does not select it.',
+                       'Choix du modèle : retenir le candidat logistique ou une variante '
+                       'confirmée, d’après leur comparaison sur les mêmes plis de '
+                       'développement. Comparer un modèle ne le sélectionne pas.'),
+                    _criterion_status_words(view, lang) or '']
         return [_t(lang, 'Model choice: keep the mean baseline or adopt the linear model, read '
                          'on the mean absolute error (MAE) and its paired interval.',
                    'Choix du modèle : garder la moyenne de référence ou adopter le modèle '

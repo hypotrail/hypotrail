@@ -1,4 +1,4 @@
-"""Agent instructions after v0.1: the five-line resume (T8) and one menu per pause (F5),
+"""Agent instructions after v0.1: the structured resume (T8) and one menu per pause (F5),
 plus numbers in words (F3, rule 2). The phrases tested are where the agent reads them and
 name the engine's real fields."""
 from __future__ import annotations
@@ -22,25 +22,24 @@ def _rule(text: str, n: int) -> Flat:
 
 
 def _items(text: str) -> list[str]:
-    """The bold headings of a numbered five-line list, in order."""
+    """The bold headings of the structured resume, in order."""
     import re
-    return re.findall(r'^\s*\d\. \*\*([^*]+)\*\*', text, re.MULTILINE)
+    return re.findall(r'^\s*- \*\*([^*]+)\*\*', text, re.MULTILINE)
 
 
-def test_the_resume_answer_is_goal_decisions_position_next_limit():
-    """The resume command lists the five lines; the skill's "where are we?" quotes the same
-    engine recap (v0.3, WP-D: stated once, the skill points to the command)."""
+def test_the_resume_answer_is_structured_and_scannable():
+    """The resume command groups objective, choices, evidence, position, action and limits."""
     assert view.RECAP_LABELS == ('Goal', 'Decided', 'Now', 'Next', 'Limit')
-    expected = ['The goal first', 'Decisions made', 'Where we are', 'The next decision',
-                'One limitation']
+    expected = ['Objectif', 'Décisions', 'Résultats clés', 'État actuel',
+                'Prochaine action', 'Risques et limites']
     resume = Flat(RESUME)
     assert _items(RESUME) == expected, _items(RESUME)
-    for phrase in ('`recap_junior`', 'quote it', 'excluded features by name', 'illustrative',
-                   'revision numbers', 'in at most five lines'):
+    for phrase in ('`goal.intended_use`', '`goal.prediction_time`', 'name exclusions',
+                   'illustrative', 'revision numbers', 'at most twelve bullets'):
         assert phrase in resume, phrase
     resuming = Flat(SKILL.split('## Resuming', 1)[1].split('\n## ', 1)[0])
-    for phrase in ('the same answer as the resume command', '`recap_junior`',
-                   'five flat lines, goal first, quoted', 'no revision number'):
+    for phrase in ('the same answer as the resume command', 'Objectif', 'Résultats clés',
+                   'at most twelve bullets', 'no ids or revision number'):
         assert phrase in resuming, phrase
     assert 'recap_junior' in view.SUMMARY_KEYS
 
@@ -72,10 +71,10 @@ def test_both_task_renderings_carry_f3_f5_t8():
         assert 'superseded proposal without its figure' in ' '.join(rule2.split()), task
         assert 'ask a single question' in _rule(claude, 4), task
         assert 'do not repeat the menu: ask one question' in skill, task
-        expected = ['The goal first', 'Decisions made', 'Where we are', 'The next decision',
-                    'One limitation']
+        expected = ['Objectif', 'Décisions', 'Résultats clés', 'État actuel',
+                    'Prochaine action', 'Risques et limites']
         assert _items(resume) == expected, (task, _items(resume))
-        assert '`recap_junior`' in resume and '`recap_junior`' in skill, task
+        assert '`goal.intended_use`' in resume and 'Objectif' in skill, task
         assert 'hypotrail:task' not in claude + skill + resume
     regression_rule2 = ' '.join(_rule(af.select_task(CLAUDE, 'regression'), 2).split())
     assert '"about six <unit>"' in regression_rule2 and 'the target unit included' in \

@@ -167,6 +167,7 @@ def evaluated(tmp_path_factory, synthetic_case_dir):
     study = fk.prepare(synthetic_case_dir, tmp_path_factory.mktemp('h1') / 'study')
     flow = Flow(study, synthetic_case_dir, prefix='e')
     flow.run('policy.evaluate', '--rule', 'share:0.1', '--rule', 'capacity:20')
+    flow.decide('model_choice', 'fit.logistic')
     return study
 
 

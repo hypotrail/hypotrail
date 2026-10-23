@@ -84,6 +84,15 @@ class Builder:
 
     def decide(self, decision_id, value, restatement, words, basis='explicit',
                delegation_scope=None) -> cmd.Outcome:
+        if decision_id == 'policy':
+            from mlkit.study import records as rec, state as st
+            state = read.open(self.study).state
+            choice = state['decisions'].get('model_choice')
+            if st.has_explicit_binary_model_choice(state) and choice['status'] != 'confirmed':
+                model = rec.policy_model(value)
+                self.decide('model_choice', model,
+                            f'Retain {model} for the decision rule.',
+                            f'I retain {model} because it fits the study.')
         out = self.apply(cmd.ACTION_PROPOSE, {'decision_id': decision_id, 'value': value,
                                               'restatement': restatement,
                                               'rationale': 'The agent recommends it.'})

@@ -151,6 +151,8 @@ def test_training_mode_asks_a_restatement_of_the_variant_and_a_reason_for_the_op
     assert done['result']['mode'] == 'training' and done['result']['basis'] == st.RESTATED
     flow.run('fit.variant')
     flow.run('policy.evaluate', '--rule', 'capacity:40')
+    flow.decide('model_choice', 'fit.logistic',
+                words='I choose the logistic model because it is the selected candidate')
     flow.decide('policy', 'capacity:40',
                 words='I adopt capacity 40 because the desk can make 40 calls')
     value = st.b1_default_value(flow.state(), 'final_test')

@@ -66,3 +66,17 @@ def test_format_list_is_the_engine_list():
     out = subprocess.run([NODE, '-e', script], capture_output=True, text=True, check=True,
                          cwd=CLIENT, timeout=60).stdout
     assert tuple(json.loads(out)) == cite.FORMATS
+
+
+def test_french_format_matches_the_report_with_decimal_commas_and_grouping():
+    values = [0.259, 0.886, 5353, 32049, 12.345]
+    formats = ['pct1', 'pct1', 'int', 'int', 'f2']
+    script = ("globalThis.Hypotrail={language:()=> 'fr'};require('./media/format.js');"
+              "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{"
+              "const {values,formats}=JSON.parse(s);process.stdout.write(JSON.stringify("
+              "values.map((v,i)=>globalThis.Hypotrail.format.number(v,formats[i]))))});")
+    out = subprocess.run([NODE, '-e', script], input=json.dumps({'values': values,
+                         'formats': formats}), capture_output=True, text=True, check=True,
+                         cwd=CLIENT, timeout=60).stdout
+    assert json.loads(out) == [cite.format_value(v, f, 'fr')
+                               for v, f in zip(values, formats)]

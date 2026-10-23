@@ -55,6 +55,8 @@ def pause(tmp_path, synthetic_case_dir):
     b = fx.build(tmp_path / 'study', synthetic_case_dir, upto='models',
                  standing_delegation=STANDING)
     fx.put_policy_evaluation(b)
+    b.decide('model_choice', 'fit.logistic', 'You retain the logistic model.',
+             'Yes, retain the logistic model because it is the selected candidate.')
     return b
 
 

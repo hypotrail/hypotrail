@@ -280,6 +280,8 @@ def test_digest_of_one_session_truncated_and_empty(open_panel, regression, binar
 MARIMO = {'kernel': '/opt/hypotrail/framework/.venv',
           'notebook': 'uv run --project /opt/hypotrail/framework marimo run notebooks/study_generated.py',
           'workbench': 'uv run --project /opt/hypotrail/framework marimo edit notebooks/workbench.py'}
+MARIMO_EDITABLE = {**MARIMO,
+    'editable': 'uv run --project /opt/hypotrail/framework marimo edit notebooks/study_editable.py'}
 
 
 @pytest.mark.parametrize('scheme', THEMES)
@@ -320,6 +322,29 @@ def test_ov7_reviewer_has_no_marimo_edit(open_panel, binary):
     assert page.locator('[data-marimo="workbench"]').count() == 0
     assert page.locator('[data-marimo="notebook"]').count() == 1
     assert_clean(panel)
+
+
+def test_ov7_editable_study_notebook_opens_for_editing_and_reviewer_cannot_edit(open_panel, binary):
+    summary = copy.deepcopy(binary)
+    generated = next(a for a in summary['artifacts'] if a['name'] == 'notebook')
+    editable = {**generated, 'name': 'editable', 'label': 'Editable study notebook',
+                'path': 'notebooks/study_editable.py', 'generated': False,
+                'message': 'The editable study notebook follows the generated notebook until you edit it.',
+                'juniorMessage': 'This copy is yours to edit.'}
+    workbench_at = next(i for i, a in enumerate(summary['artifacts']) if a['name'] == 'workbench')
+    summary['artifacts'].insert(workbench_at, editable)
+
+    panel = opened(open_panel, summary, marimo=MARIMO_EDITABLE)
+    row = panel.page.locator('[data-artifact="editable"]')
+    assert row.locator('[data-status-chip]').inner_text() == 'yours'
+    row.locator('[data-marimo="editable"]').click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'editable'}
+    assert panel.page.locator('[data-launch="editable"]').inner_text() == MARIMO_EDITABLE['editable']
+    assert_clean(panel)
+
+    reviewer = opened(open_panel, summary, reviewer=True, marimo=MARIMO_EDITABLE)
+    assert reviewer.page.locator('[data-marimo="editable"]').count() == 0
+    assert_clean(reviewer)
 
 
 def test_ov7_ov8_regenerate_when_stale_busy_and_outcome_with_problems(open_panel, health, payload):

@@ -114,7 +114,8 @@ PREVIEW_EFFECTS_NOTE = ('Preview of a confirmation: nothing was recorded. The en
 # The part of a confirmation's ``result.invalidation`` the preview must equal (CC §3).
 PREVIEW_EQUALS_INVALIDATION = ('mutation', 'row', 'reason', 'stale_results', 'stale_slots',
                                'reconfirm_required')
-ARTIFACTS_AFTER = {'report': 'regenerated', 'notebook': 'regenerated', 'workbench': 'unchanged'}
+ARTIFACTS_AFTER = {'report': 'regenerated', 'notebook': 'regenerated',
+                   'editable': 'synced_if_unedited', 'workbench': 'unchanged'}
 
 # --- C4 (CC §4) --------------------------------------------------------------------------
 DRAFT_SCHEMA = 'hypotrail.proposal_draft/1'
@@ -180,8 +181,8 @@ EXPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'kind', 'out', 'files', 'inc
                'warnings')
 EXPORT_FILE_KEYS = ('path', 'sha256', 'bytes')
 HANDOFF_KEYS = ('schema', 'study', 'revision', 'task', 'case', 'dataset', 'goal', 'decisions',
-                'results_cited', 'exposure', 'history', 'not_yet_defensible', 'open_items',
-                'deliverables', 'reproduce', 'environment')
+                'results_cited', 'exposure', 'not_yet_defensible', 'open_items', 'deliverables',
+                'reproduce', 'environment', 'history')
 HANDOFF_CITED_KEYS = ('result_id', 'activity', 'path', 'value', 'shown')
 EXPORT_WARNINGS = ('report_not_current', 'open_proposals', 'open_holds', 'interrupted_executions',
                    'sources_changed', 'unconfirmed_decisions')
@@ -249,6 +250,8 @@ def binary_study(case_dir: Path, study: Path) -> fk.Flow:
     for activity in ('split', 'eda.target_rate', 'eda.special_values', 'fit.baseline',
                      'fit.logistic'):
         flow.run(activity)
+    flow.variant()
+    flow.decide('model_choice', 'fit.logistic')
     flow.run('policy.evaluate', '--rule', POLICY_RULE)
     flow.call('decide', 'propose', 'policy', '--value', POLICY_RULE, '--restatement',
               'You decide the policy as stated.', '--rationale', 'It fits the scenario.',

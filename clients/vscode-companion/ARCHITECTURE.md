@@ -11,8 +11,8 @@ lib/study.js            study discovery and agent.json validation (the CLI argv)
 lib/watch.js            fs.watch of .hypotrail/ (debounced), no polling
 lib/cli.js              THE ONLY child_process user: read builders (READS), write builders W4-W7 (WRITES), run()
                         (W1-W3 withdrawn in v0.3, ADR 0004 decision 8; check_layout refuses a `decide` write)
-lib/launch.js           the two Marimo launches (WP-A5, ADR 0004 "local launch"): marimo run of the generated
-                        notebook, marimo edit of the workbench; argv from status --json or agent.json
+lib/launch.js           the three Marimo launches (WP-A5, ADR 0004 "local launch"): marimo run of the generated
+                        notebook, marimo edit of the editable copy and workbench; argv from status --json or agent.json
 lib/protocol.js         hypotrail.panel/2 schema table and validators; emits media/protocol.js
 lib/controller.js       router: validation, stage gate, reviewer refusal, summary, load dispatch,
                         cache + coalescing + read limits, exclusive write lock, outcome mapping
@@ -44,7 +44,7 @@ media/views/<view>.js   one view per tab, registered with Hypotrail.register
 media/css/*.css         tokens.css (theme), core.css (frame, components), <view>.css
 ```
 
-Only `lib/cli.js` starts a process. The one exception is not a child process of the panel: `extension.js` opens a VS Code terminal for the two Marimo launches that `lib/launch.js` accepts (`createTerminal` with `shellPath`/`shellArgs`), and `scripts/check_layout.py` refuses any other terminal. Every read runs with `cli.READ_ENV` (`HYPOTRAIL_SESSION_LOG=0`) merged over the host's environment, so the opt-in session log never records the panel's polling; writes inherit the environment (COMPANION-ADVANCED §5). Only `extension.js` requires `vscode`, so the controller and handlers run under `node --test` with a fake CLI.
+Only `lib/cli.js` starts a process. The one exception is not a child process of the panel: `extension.js` opens a VS Code terminal for the three Marimo launches that `lib/launch.js` accepts (`createTerminal` with `shellPath`/`shellArgs`), and `scripts/check_layout.py` refuses any other terminal. Every read runs with `cli.READ_ENV` (`HYPOTRAIL_SESSION_LOG=0`) merged over the host's environment, so the opt-in session log never records the panel's polling; writes inherit the environment (COMPANION-ADVANCED §5). Only `extension.js` requires `vscode`, so the controller and handlers run under `node --test` with a fake CLI.
 
 ## Message flow
 

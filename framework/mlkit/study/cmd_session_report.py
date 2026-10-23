@@ -46,7 +46,7 @@ EVENTS_FILE = 'events.jsonl'
 # The plan's three pauses (CLAUDE.md rule 3) and the decisions each one holds, per task:
 # a regression study's third pause is the model choice (M3), not a policy.
 PAUSES = {1: ('prediction_time', 'feature_availability'), 2: ('split',),
-          3: ('policy', 'conclusion')}
+          3: ('model_choice', 'policy', 'conclusion')}
 TASK_PAUSES = {'binary': PAUSES,
                'regression': {**PAUSES, 3: ('model_choice', 'conclusion')}}
 DEFAULT_GAP_MINUTES = 20

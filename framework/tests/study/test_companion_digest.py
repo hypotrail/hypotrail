@@ -45,7 +45,9 @@ def test_constants_follow_the_contract():
         pauses[2] = ['split', 'success_criterion', 'preprocessing']
         # WP-B1: the third pause names the variant first and may open the final test.
         choice = pauses[3][0]
-        pauses[3] = ['model_variant', choice, 'final_test', 'conclusion']
+        pauses[3] = (['model_variant', choice, 'policy', 'final_test', 'conclusion']
+                     if task == 'binary' else
+                     ['model_variant', choice, 'final_test', 'conclusion'])
         assert view.pause_decisions(task) == pauses
 
 

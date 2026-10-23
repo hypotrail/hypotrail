@@ -32,6 +32,7 @@ test('ready: init, then the summary; v0 reads without --digest, v1 with it', asy
       study: studyKey(AGENT.studyDir),
       // WP-A5: what "Open in Marimo" runs, for display (lib/launch.js display).
       marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
+        editable: '/opt/py/bin/python -m marimo edit notebooks/study_editable.py',
         workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
       // v0.3 (WP-E2, R21): the panel language setting, `auto` by default.
       language: 'auto' });
@@ -267,6 +268,7 @@ test('settings: updateSettings posts init again; navigate validates its target',
   assert.deepEqual(posted.at(-1), { v: 2, type: 'init', stage: 'v2', reviewer: false, learningLayer: true, chatInsert: true, task: null,
     study: studyKey(AGENT.studyDir),
     marimo: { kernel: '/opt/py/bin/python', notebook: '/opt/py/bin/python -m marimo run notebooks/study_generated.py',
+        editable: '/opt/py/bin/python -m marimo edit notebooks/study_editable.py',
         workbench: '/opt/py/bin/python -m marimo edit notebooks/workbench.py' },
     language: 'auto' });
   assert.equal(c.navigate({ tab: 'evidence', kind: 'result', id: 'a'.repeat(64) }), true);

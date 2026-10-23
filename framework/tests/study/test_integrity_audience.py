@@ -84,12 +84,13 @@ def test_existing_settings_are_kept_and_the_line_is_given(tmp_path, synthetic_ca
     assert 'local source file remains accessible' in protection['junior_message']
 
 
-def test_launch_commands_open_the_two_notebooks_with_the_engine(flow):
+def test_launch_commands_open_the_three_notebooks_with_the_engine(flow):
     init_deliverables = launch.deliverables(flow.study)
     assert flow.view()['deliverables'] == init_deliverables
     launch_ = init_deliverables['launch']
-    assert set(launch_) == {'notebook', 'workbench'}
+    assert set(launch_) == {'notebook', 'editable', 'workbench'}
     for name, mode, rel in (('notebook', 'run', 'notebooks/study_generated.py'),
+                            ('editable', 'edit', 'notebooks/study_editable.py'),
                             ('workbench', 'edit', 'notebooks/workbench.py')):
         item = launch_[name]
         assert tuple(item) == launch.LAUNCH_KEYS and item['mode'] == mode

@@ -1,4 +1,4 @@
-"""Generated notebook and workbench (plan WP3.2, §6; ADR 0001 decision 1).
+"""Generated, editable-copy, and workbench notebooks (plan WP3.2, §6).
 
 Permanent versions of the WP0.6 spike checks (``framework/tests/spikes``), run against
 the real modules: headless execution, no fit and no state write, the read-only guard,
@@ -42,7 +42,8 @@ def render(study: Path, **kw) -> dict:
     """What ``hypotrail render`` does for the notebooks (without the HTML)."""
     manifest = mf.load(study)
     out = rn.render(study, view.build(study), manifest, **kw)
-    manifest['artifacts'].update(notebook=out['notebook'], workbench=out['workbench'])
+    manifest['artifacts'].update(notebook=out['notebook'], editable=out['editable'],
+                                 workbench=out['workbench'])
     mf.save(study, manifest)
     return out
 
@@ -70,6 +71,10 @@ def _workbench(study):
     return study / rn.WORKBENCH
 
 
+def _editable(study):
+    return study / rn.EDITABLE
+
+
 def _env(**extra):
     env = {k: v for k, v in os.environ.items() if k not in ('HYPOTRAIL_READ_ONLY',
                                                               'HYPOTRAIL_FAULT')}
@@ -90,9 +95,10 @@ def _hashes(study: Path) -> dict:
 
 # --- 1. headless execution --------------------------------------------------------------
 
-@pytest.mark.parametrize('which', ['generated', 'workbench'])
+@pytest.mark.parametrize('which', ['generated', 'editable', 'workbench'])
 def test_notebooks_run_as_scripts(study, which):
-    path = _generated(study) if which == 'generated' else _workbench(study)
+    path = {'generated': _generated, 'editable': _editable,
+            'workbench': _workbench}[which](study)
     proc = _run([sys.executable, str(path)], cwd=study.parent)
     assert proc.returncode == 0, proc.stderr
     assert 'Traceback' not in proc.stderr, proc.stderr
@@ -321,6 +327,34 @@ def test_pending_steps_say_not_executed_yet(tmp_path, synthetic_case_dir):
 
 
 # --- 4. workbench intact ----------------------------------------------------------------
+
+def test_editable_copy_follows_generated_until_the_first_user_edit(study):
+    editable = _editable(study)
+    original = editable.read_bytes()
+    assert original.startswith(b'# EDITABLE HYPOTRAIL COPY')
+    assert _generated(study).read_bytes() in original
+
+    new_rev = advance(study)
+    render(study)
+    synced = editable.read_bytes()
+    assert synced != original and f'through revision {new_rev}'.encode() in synced
+    assert _generated(study).read_bytes() in synced
+
+    mine = synced + b'\n# My analysis: keep this cell.\n'
+    editable.write_bytes(mine)
+    advance(study)
+    render(study)
+    assert editable.read_bytes() == mine
+    item = mf.load(study)['artifacts']['editable']
+    assert item['generated'] is False and item['sha256'] == hashlib.sha256(synced).hexdigest()
+    assert item['user_edits_preserved'] == [rn.EDITABLE]
+
+    # Ownership is permanent, even if the bytes later happen to equal an old synced copy.
+    editable.write_bytes(synced)
+    advance(study)
+    render(study)
+    assert editable.read_bytes() == synced
+
 
 def test_workbench_is_byte_identical_across_regenerations(study):
     workbench = _workbench(study)

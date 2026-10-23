@@ -71,7 +71,9 @@ def test_initial_state_is_valid_and_takes_no_decision(state, synthetic_case):
     # WP-B1: and on the variant it compares.
     assert state['decisions']['policy']['depends_on'] == ['prediction_time',
                                                            'feature_availability', 'split',
-                                                           'preprocessing', 'model_variant']
+                                                           'preprocessing', 'model_variant',
+                                                           'model_choice']
+    assert state['decisions']['model_choice']['status'] == 'open'
     assert st.depends_on(_a4(state), 'policy') == (
         'prediction_time', 'feature_availability', 'split', 'preprocessing')
 
@@ -286,14 +288,15 @@ def test_the_plan_of_a_new_study_names_a_variant_and_may_open_the_final_test(sta
     then the opening of the final test, optional: a blocked opening never hides the
     conclusion, and once the choice is confirmed the engine drafts the opening."""
     plan = st.derive_plan(state)
-    assert [s['id'] for s in plan] == list(st.B1_STEP_IDS)
+    assert [s['id'] for s in plan] == list(st.B2_BINARY_STEP_IDS)
     by_id = {s['id']: s for s in plan}
     assert by_id['model_variant']['activities'] == ['fit.variant']
     assert by_id['model_variant']['requires'] == ['models']
-    assert by_id['policy']['requires'] == ['models', 'model_variant']
-    assert by_id['final_test']['requires'] == ['policy']
+    assert by_id['model_choice']['requires'] == ['model_variant', 'models']
+    assert by_id['policy']['requires'] == ['models', 'model_variant', 'model_choice']
+    assert by_id['final_test']['requires'] == ['model_choice', 'policy']
     assert by_id['final_test']['activities'] == ['final_test.evaluation']
-    assert [s['pause'] for s in plan] == [None, 1, 1, 2, 2, None, 2, None, 3, 3, 3, 3]
+    assert [s['pause'] for s in plan] == [None, 1, 1, 2, 2, None, 2, None, 3, 3, 3, 3, 3]
     _confirm(state, 'prediction_time', 'before the first reminder')
     _confirm(state, 'feature_availability', {'holds_open': 'available_at_prediction'})
     action = st.next_action(state)
@@ -322,6 +325,8 @@ def test_the_plan_of_a_new_study_names_a_variant_and_may_open_the_final_test(sta
     assert st.next_action(state)['activity'] == 'fit.variant'
     state['current']['fit.variant'] = 'r_variant'
     state['current']['policy.evaluation'] = 'r_policy'
+    assert st.next_action(state)['decision'] == 'model_choice'
+    _confirm(state, 'model_choice', 'fit.variant')
     assert st.next_action(state)['decision'] == 'policy'
     # Before the choice, the opening is blocked and skipped: the conclusion comes next.
     _confirm(state, 'conclusion', {'verdict': 'keep_baseline', 'text': 'Keep it.'})
@@ -346,6 +351,7 @@ def test_a_state_written_before_wp_a4_keeps_its_plan(state):
     is step 0 then the v0.1 steps, and its models need the split only."""
     for d in st.WP_A4_DECISIONS + st.WP_B1_DECISIONS:
         del state['decisions'][d]
+    state['decisions'].pop('model_choice', None)
     for d, dec in state['decisions'].items():
         dec['depends_on'] = list(st.DEPENDS_ON[d])
     assert st.validate_state(state) == []

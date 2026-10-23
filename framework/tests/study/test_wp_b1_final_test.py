@@ -82,19 +82,19 @@ def _ready(tmp_path, task='binary') -> Flow:
 
 # --- the evaluation scheme ---------------------------------------------------------------
 
-def test_a_new_study_has_nine_decisions_and_drafts_cross_validation(tmp_path):
+def test_a_new_study_has_explicit_model_choice_and_drafts_cross_validation(tmp_path):
     case_dir = fk.make_case(tmp_path / 'case', n_rows=300)['case'].parent
     flow = Flow(tmp_path / 'study', case_dir)
     flow.init()
     state = flow.state()
-    assert set(state['decisions']) == set(st.B1_DECISION_IDS)
-    assert st.decision_ids(state) == st.B1_DECISION_IDS == (
+    assert set(state['decisions']) == set(st.B2_DECISION_IDS)
+    assert st.decision_ids(state) == st.B2_DECISION_IDS == (
         'prediction_time', 'feature_availability', 'split', 'success_criterion',
-        'preprocessing', 'model_variant', 'policy', 'final_test', 'conclusion')
-    assert [s['id'] for s in flow.view()['plan']] == list(st.B1_STEP_IDS) == [
+        'preprocessing', 'model_variant', 'model_choice', 'policy', 'final_test', 'conclusion')
+    assert [s['id'] for s in flow.view()['plan']] == list(st.B2_BINARY_STEP_IDS) == [
         'discover_data', 'prediction_time', 'feature_availability', 'split',
-        'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant', 'policy',
-        'final_test', 'conclusion']
+        'success_criterion', 'train_eda', 'preprocessing', 'models', 'model_variant',
+        'model_choice', 'policy', 'final_test', 'conclusion']
     flow.decide('prediction_time', 'when the record is created, before the outcome')
     flow.decide('feature_availability', fk.availability(case_dir))
     action = flow.view()['next_action']
@@ -238,6 +238,43 @@ def test_the_variant_is_compared_with_the_candidate_and_can_be_chosen(tmp_path):
     assert out['result']['invalidation']['reconfirm_required'] == ['policy']
 
 
+def test_binary_model_choice_is_recorded_before_the_rule_and_controls_the_final_config(tmp_path):
+    """A comparison names candidates; it does not silently keep logistic or select a winner."""
+    flow = _flow(tmp_path, split=CV)
+    flow.run('fit.baseline')
+    flow.run('fit.logistic')
+    flow.variant({'kind': 'regularisation', 'strength': 'weak'})
+    flow.run('policy.evaluate', '--rule', 'capacity:40')
+
+    def propose_policy(value, expect):
+        return flow.call('decide', 'propose', 'policy', '--value-json', json.dumps(value),
+                         '--restatement', 'Retain this model and rule.', '--rationale',
+                         'The comparison supports it.', '--request-id', flow.rid(),
+                         '--expected-revision', flow.rev(), '--study', flow.study,
+                         expect=expect)
+
+    missing = propose_policy('capacity:40', 2)
+    assert missing['error']['code'] == 'invalid_value'
+    assert missing['error']['details']['decision'] == 'model_choice'
+
+    flow.decide('model_choice', 'fit.variant')
+    mismatch = propose_policy('capacity:40', 2)
+    assert mismatch['error']['code'] == 'invalid_value'
+    assert mismatch['error']['details'] == {
+        'selected_model': 'fit.variant', 'policy_model': 'fit.logistic'}
+
+    flow.decide('policy', 'capacity:40 @ fit.variant',
+                words='I use the variant and select forty rows because that is our capacity')
+    state = flow.state()
+    assert state['decisions']['model_choice']['value'] == 'fit.variant'
+    assert st.choice_config(state) == {'model': 'fit.variant', 'rule': 'capacity:40'}
+    history = flow.call('decisions', '--study', flow.study)['history']
+    assert any(row['decision_id'] == 'model_choice' and row['current'] is True
+               for row in history)
+    assert st.b1_default_value(state, 'final_test') == {
+        'model': 'fit.variant', 'rule': 'capacity:40'}
+
+
 def test_a_drop_group_variant_and_a_variant_model_choice(tmp_path):
     auto = Flow(tmp_path / 'auto', AUTO)
     auto.init()
@@ -270,6 +307,8 @@ def test_a_study_created_before_wp_b1_has_no_variant(tmp_path):
     state = st.initial_state(c.load_case(case_dir))
     for d in st.WP_B1_DECISIONS:
         state['decisions'].pop(d)
+    if st.task_of(state) == st.BINARY:
+        state['decisions'].pop('model_choice', None)
     for d, dec in state['decisions'].items():
         dec['depends_on'] = list(st.FULL_DEPENDS_ON_BY_TASK['binary'][d])
     store.create(state)
