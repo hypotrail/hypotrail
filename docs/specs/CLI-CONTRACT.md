@@ -955,3 +955,59 @@ hypotrail export azureml --study DIR --expected-revision REV [--profile FILE]
 ```
 
 Implemented in `framework/mlkit/exporters/azureml/` (handoff: `docs/handoff/AZUREML-EXPORT-V1.md`); `cmd_export` only routes it. It reads one revision through chantier A's `read_export_source(study_path, expected_revision)` and never fits, evaluates, reads the final test, contacts Azure or changes the study (no state, event, exposure or channel record). Payload `hypotrail.azureml_export/1`, keys `schema`, `ok`, `plan`, `study_revision`, `snapshot_id`, `export_id`, `out`, `template`, `files`, `configuration_status` (`draft` or `configured`), `artifact_status` (`missing`, `captured` or `packaged`), `checks`, `missing_fields`, `warnings`, `next_commands` (each with `scope` `local`, `network_read` or `azure_write`). `--plan` writes nothing. A refusal is `hypotrail.error/1`, exit code 2, nothing written; its `details` carry `path` and `remediation`. Codes: the existing `stale_revision`, `export_target_exists` (contract code `destination_not_empty` in `details.contract_code`), `read_only` and `invalid_arguments`; and `contract_invalid`, `schema_version_unsupported`, `capability_not_supported`, `optional_dependency_missing`, `model_not_captured`, `artifact_integrity_failed`, `environment_unqualified`, `scientific_config_changed`, `template_layout_mismatch`, `template_unsupported`, `data_identity_mismatch`. These codes are emitted by `mlkit.exporters` (outside `mlkit/study`, so `test_contract_freeze.py` does not scan them); `framework/tests/exporters/azureml/` pins them.
+
+## 16. Understanding and handover review (ADR 0008)
+
+Opt-in, **off** by default: a study without `understanding` in its state behaves exactly as
+before, `export handoff` included. Guide: [docs/understanding/README.md](../understanding/README.md).
+Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-export`,
+`hypotrail.understanding-verification/1`). Frozen by `test_contract_freeze.py::test_understanding_contract_is_frozen`.
+
+| Verb | Kind | What it does |
+|---|---|---|
+| `policy show` | read | mode, policy, digest, change events |
+| `policy set --file F --author ID --reason T` | mutation | validates `hypotrail.understanding-policy/1`; logs previous and new digest |
+| `plan --profile P --milestone handoff --actor ID [--repo DIR --sources-file F] [--write-plan F]` | read | dimensions (profile plus critical), tasks whose references resolve, missing prerequisites, estimate, what stays local |
+| `start --plan-file F` | mutation | captures the snapshot (bounded retry, `context_changed`), freezes the mapped sources, creates the session |
+| `status [--session ID] [--repo DIR]` | read | per dimension: status, freshness, assistance, evidence availability, assurance |
+| `task --session ID` | read | the next admissible task (a new variant for an open reservation), never an expected answer |
+| `submit --session ID --task ID --response-file F --assistance-file F [--cite REF]` | mutation | a new attempt; the answer is a local blob, never printed |
+| `coach --attempt ID` | mutation | records the help, then returns hints and criteria |
+| `rectify --attempt ID --assistance-file F` | mutation | help found later; dependent reviews are re-opened |
+| `propose-review --session ID --file F` | mutation | stores a proposal (exact excerpts, allowlisted refs); never a human decision |
+| `review --session ID --file F` | mutation | the explicit human act (`declaration`, `simulated`); opens reservations |
+| `arbitrate --session ID --file F` | mutation | settles conflicts and reservations on identified evidence |
+| `select --file F` | mutation | the coverage selection of a milestone (completed sessions only) |
+| `waive --file F` | mutation | a waiver (`waived`); accepted only by a policy that allows it (`allowed_by_waiver`) |
+| `handover set --session ID --file F` | mutation | `HandoverContent`; a change stales earlier transfers |
+| `transfer start/submit/review` | mutation | the peer's own task, references and human review |
+| `close --session ID --to STATUS --reason T` | mutation | `active`, `awaiting_review`, `completed`, `abandoned` |
+| `check --milestone M [--policy-file F]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation |
+| `export preview --session ID --repo DIR` | read | the draft and its `content_digest`, the required contributors |
+| `export approve --session ID --contributor ID --content-digest D` | mutation | one declared approval of exactly that projection |
+| `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt |
+| `git-plan`, `git-stage --index-identity H` | read / index only | exact paths and hashes; stages only the artefacts; never commits |
+| `git-receipt --session ID --repo DIR --commit OID` | mutation | a local receipt once the commit holds the bytes |
+| `verify-export --repo DIR --target worktree\|index\|COMMIT [--policy-file F] [--study DIR]` | read, no study needed | separate axes: public integrity, declared conformity, public source freshness, private context verification, evidence availability, assurance |
+
+Mutations take `--request-id` and `--expected-revision` (replay, `idempotency_conflict`,
+`stale_revision` as in §3). Refusals exit 2 with `details.next_action` and never echo an
+answer. Codes: `understanding_disabled`, `policy_invalid`, `unsupported_assurance`,
+`unsupported_capability` (`purge_after_days`), `invalid_transition`, `context_changed`,
+`unsupported_case`, `prerequisite_missing`, `evidence_invalid`, `review_required`,
+`privacy_approval_required`, `evidence_unavailable`, `path_outside_scope`,
+`git_index_conflict`, `export_stale`, `milestone_blocked`; the spec's `request_id_conflict`
+is the engine's `idempotency_conflict`.
+
+**`export handoff` under a required policy naming `handoff`** (the only change to §7/C7):
+the export computes the gate under the writer lock, reserves the milestone (one revision,
+`milestone_blocked` and nothing written when blocked), renders the deliverables and the
+pack from that revision into a temporary folder, revalidates under the lock, renames onto
+`--out` (never a replacement), records the outcome (one revision) and adds
+`understanding: {milestone, decision, reservation_id, assurance, limitations}` to its
+payload. A relevant change in between refuses with `context_changed` and leaves the folder
+as `<out>.candidate-<id>`, never a handoff.
+
+State: optional top-level key `understanding` (`hypotrail.understanding-state/1`), §9; a
+newer version is read as `unsupported` and never written. Schemas of the exported review and
+the policy: `framework/mlkit/study/understanding/schemas/` (generated, `--check` in the tests).

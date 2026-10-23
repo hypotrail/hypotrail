@@ -1535,7 +1535,8 @@ def _looks(view: Mapping) -> str:
 
 def build(view: Mapping, *, surfaces: Mapping | None = None,
           variables: list[dict] | None = None,
-          sample: Mapping | None = None) -> tuple[str, list[str]]:
+          sample: Mapping | None = None,
+          understanding: str = '') -> tuple[str, list[str]]:
     """``(html, consumed result ids)`` of the report for ``view``.
 
     ``surfaces`` gives the status of each deliverable for the revision banner; the
@@ -1547,14 +1548,18 @@ def build(view: Mapping, *, surfaces: Mapping | None = None,
 
     Order (v0.2a, WP-A6): the verdict card, the objective, the data, the charts, the
     plan, the decisions, the evidence by step, the comparison, the limits, the case
-    statements, the surfaces, and the annex (collapsed).
+    statements, the surfaces, and the annex (collapsed). ``understanding`` (ADR 0008) is the
+    separate section of the understanding review, already escaped
+    (:func:`mlkit.study.understanding.render.section`); empty when the review was never
+    enabled, so such a report is unchanged.
     """
     with texts.study_context(view), texts.report_language_context(view.get('language')):
-        return _build(view, surfaces=surfaces, variables=variables, sample=sample)
+        return _build(view, surfaces=surfaces, variables=variables, sample=sample,
+                      understanding=understanding)
 
 
 def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | None,
-           sample: Mapping | None = None) -> tuple[str, list[str]]:
+           sample: Mapping | None = None, understanding: str = '') -> tuple[str, list[str]]:
     labels = _labels()
     citer = cite.Citer.from_view(view)
     surfaces = dict(surfaces or {})
@@ -1566,7 +1571,7 @@ def _build(view: Mapping, *, surfaces: Mapping | None, variables: list[dict] | N
         _charts(view, citer), _plan(view), _decisions(view, variables or []),
         _evidence(view, citer), comparison, render_trials.section(view, citer),
         render_diagnostics.section(view, citer),
-        _not_yet_defensible(view), _facts(view), _history(view),
+        _not_yet_defensible(view), understanding, _facts(view), _history(view),
         _surfaces(view, surfaces), _annex(view, citer)])
 
     consumed = sorted({c['result_id'] for c in citer.cited})

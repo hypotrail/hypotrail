@@ -1,5 +1,14 @@
 # Implementation handoff (v0.2)
 
+## Understanding and handover review v1 (23 October 2026)
+
+An opt-in review, off by default, that keeps the team's understanding of a study: tasks per
+responsibility, first answers before help, human reviews (declared, not authenticated), a
+colleague's handover task, freshness by dependency, an approved export committed with the
+work, and a gate on `export handoff` under a required policy. It certifies neither
+competence, security nor scientific validity; no pilot with people was run. Details, the
+A01–A31 matrix and limits: [UNDERSTANDING-V1.md](UNDERSTANDING-V1.md), [ADR 0008](../decisions/0008-understanding-review.md).
+
 ## Library integration v1, workstream A (23 October 2026)
 
 Shared v1 contracts, the separately installable predictor runtime, `run predictor.capture`

@@ -1,0 +1,656 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "type": "string",
+      "pattern": "^rv-[0-9a-f]{20}$"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "renderer_version": {
+      "const": "hypotrail.understanding-render/1"
+    },
+    "privacy_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "approved"
+          ]
+        },
+        "required_contributors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{1,31}$"
+          }
+        },
+        "approvals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "approver_alias": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{1,31}$"
+              },
+              "approved_at": {
+                "type": "string"
+              },
+              "content_digest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "approver_alias",
+              "approved_at",
+              "content_digest"
+            ]
+          }
+        }
+      },
+      "required": [
+        "status",
+        "required_contributors",
+        "approvals"
+      ]
+    },
+    "schema": {
+      "const": "hypotrail.understanding-review/1"
+    },
+    "study_public_id": {
+      "type": "string"
+    },
+    "session_ref": {
+      "type": "string"
+    },
+    "public_source_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "hypotrail.public-source-scope/1"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "logical_key": {
+                "type": "string"
+              },
+              "path": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "role": {
+                "enum": [
+                  "code",
+                  "config",
+                  "data_contract",
+                  "transform_recipe",
+                  "model",
+                  "protocol",
+                  "metrics",
+                  "dependency_lock",
+                  "security_rule",
+                  "documentation",
+                  "decision",
+                  "partition",
+                  "result",
+                  "case_contract",
+                  "data_identity",
+                  "engine_code",
+                  "policy",
+                  "rubric"
+                ]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "ref": {
+                "const": "public_ref"
+              }
+            },
+            "required": [
+              "logical_key",
+              "path",
+              "role",
+              "sha256",
+              "ref"
+            ]
+          }
+        },
+        "omitted_private": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "opaque_private_ref": {
+                "type": "string",
+                "pattern": "^opq-[0-9a-f]{24}$"
+              },
+              "role": {
+                "enum": [
+                  "code",
+                  "config",
+                  "data_contract",
+                  "transform_recipe",
+                  "model",
+                  "protocol",
+                  "metrics",
+                  "dependency_lock",
+                  "security_rule",
+                  "documentation",
+                  "decision",
+                  "partition",
+                  "result",
+                  "case_contract",
+                  "data_identity",
+                  "engine_code",
+                  "policy",
+                  "rubric"
+                ]
+              }
+            },
+            "required": [
+              "opaque_private_ref",
+              "role"
+            ]
+          }
+        },
+        "unreadable_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "entries",
+        "omitted_private",
+        "unreadable_sources"
+      ]
+    },
+    "policy": {
+      "$ref": "understanding-policy-1.schema.json"
+    },
+    "policy_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "rubrics": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "source_manifest": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "logical_key": {
+            "type": "string"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "enum": [
+              "code",
+              "config",
+              "data_contract",
+              "transform_recipe",
+              "model",
+              "protocol",
+              "metrics",
+              "dependency_lock",
+              "security_rule",
+              "documentation",
+              "decision",
+              "partition",
+              "result",
+              "case_contract",
+              "data_identity",
+              "engine_code",
+              "policy",
+              "rubric"
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "ref": {
+            "const": "public_ref"
+          }
+        },
+        "required": [
+          "logical_key",
+          "path",
+          "role",
+          "sha256",
+          "ref"
+        ]
+      }
+    },
+    "source_scope_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "handover_content": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "handover_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "coverage_selection": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "dimensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "enum": [
+              "D1",
+              "D2",
+              "D3",
+              "D4",
+              "D5",
+              "D6",
+              "D7",
+              "D8"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "critical": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "not_evaluated",
+              "demonstrated",
+              "to_consolidate",
+              "needs_review"
+            ]
+          },
+          "freshness_at_export": {
+            "enum": [
+              "current",
+              "stale",
+              "unknown"
+            ]
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "criterion_id": {
+                  "type": "string"
+                },
+                "result": {
+                  "enum": [
+                    "met",
+                    "not_met",
+                    "not_applicable",
+                    "uncertain"
+                  ]
+                }
+              },
+              "required": [
+                "criterion_id",
+                "result"
+              ]
+            }
+          },
+          "task_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "attempt_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assistance_summary": {
+            "enum": [
+              "unaided",
+              "aided",
+              "none"
+            ]
+          },
+          "reviewer_alias": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{1,31}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "human_review_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "safe_evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependency_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_availability": {
+            "enum": [
+              "available",
+              "unavailable",
+              "redacted",
+              "not_applicable"
+            ]
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "required",
+          "critical",
+          "status",
+          "freshness_at_export",
+          "criteria",
+          "task_refs",
+          "attempt_refs",
+          "assistance_summary",
+          "reviewer_alias",
+          "human_review_ref",
+          "rationale",
+          "safe_evidence_refs",
+          "dependency_keys",
+          "evidence_availability",
+          "next_step"
+        ],
+        "if": {
+          "properties": {
+            "status": {
+              "const": "demonstrated"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "human_review_ref": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "peer_coverage": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "decisions_summary": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "reservation_resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "known_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ]
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "safe_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assurance": {
+      "const": "human_declared"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "canonical": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "float_rule": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bank_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bank_version": {
+          "type": "integer"
+        },
+        "bank_qualification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_version": {
+          "type": "integer"
+        },
+        "base_commit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "engine",
+        "canonical",
+        "float_rule",
+        "bank_id",
+        "bank_version",
+        "bank_qualification",
+        "policy_id",
+        "policy_version",
+        "base_commit"
+      ]
+    }
+  },
+  "required": [
+    "review_id",
+    "created_at",
+    "renderer_version",
+    "privacy_review",
+    "schema",
+    "study_public_id",
+    "session_ref",
+    "public_source_scope",
+    "policy",
+    "policy_digest",
+    "tasks",
+    "rubrics",
+    "source_manifest",
+    "source_scope_digest",
+    "handover_content",
+    "handover_digest",
+    "coverage_selection",
+    "dimensions",
+    "peer_coverage",
+    "decisions_summary",
+    "reservation_resolutions",
+    "known_gaps",
+    "limitations",
+    "safe_evidence",
+    "assurance",
+    "provenance"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "understanding-review-1.schema.json",
+  "title": "hypotrail.understanding-review/1",
+  "description": "An exported understanding and handover review. Numbers are canonical JSON v1 (no raw float). A schema check is not an integrity check: digests, rendering and approvals are verified by `hypotrail understanding verify-export`."
+}

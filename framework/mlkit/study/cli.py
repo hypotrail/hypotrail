@@ -81,6 +81,8 @@ EXTENSIONS = {
     'export': 'mlkit.study.cmd_export',
     # v0.2a (WP-A4, R2): the read-only data card.
     'data': 'mlkit.study.cmd_data',
+    # ADR 0008: the opt-in understanding and handover review (off by default).
+    'understanding': 'mlkit.study.cmd_understanding',
 }
 # One line per extension command for ``hypotrail --help`` (v0.2a, WP-A1): the help lists
 # every command without importing the extension modules.
@@ -95,6 +97,7 @@ EXTENSION_HELP = {
     'explain': 'glossary terms, step texts, and examples cited from this study',
     'export': 'export a handoff pack of the study into a new folder',
     'data': 'read-only data card: row unit, sizes, grouped columns, five development rows',
+    'understanding': 'opt-in understanding and handover review (off by default; ADR 0008)',
 }
 REFUSALS = (CommandRefused, StudyError, CaseError)
 
@@ -115,9 +118,10 @@ class Parser(argparse.ArgumentParser):
         raise ArgumentError(message)
 
 
-def _common() -> argparse.ArgumentParser:
+def _common(study_required: bool = True) -> argparse.ArgumentParser:
     common = Parser(add_help=False)
-    common.add_argument('--study', required=True, help='study directory (holds .hypotrail/)')
+    common.add_argument('--study', required=study_required, default=None,
+                        help='study directory (holds .hypotrail/)')
     common.add_argument('--format', choices=('json', 'text'), default='json')
     common.add_argument('--json', dest='format', action='store_const', const='json',
                         help='JSON output (the default)')
@@ -246,7 +250,11 @@ def build_parser(extension: str | None = None, *, listing: bool = False
 
     if extension is not None:
         module = importlib.import_module(EXTENSIONS[extension])
-        p = sub.add_parser(extension, parents=[common], help=EXTENSION_HELP.get(extension))
+        # ADR 0008: a module may name verbs that need no study (the standalone verifier);
+        # their ``--study`` is optional and the module checks it for the other verbs.
+        optional = bool(getattr(module, 'STUDY_OPTIONAL', ()))
+        p = sub.add_parser(extension, parents=[_common(not optional) if optional else common],
+                           help=EXTENSION_HELP.get(extension))
         module.configure(p)
     elif listing:
         for name in EXTENSIONS:
@@ -404,6 +412,9 @@ def _text(payload: dict) -> str:
     if schema == 'hypotrail.data/1':
         from .cmd_data import text
         return text(payload)
+    if schema.startswith('hypotrail.understanding'):
+        from .cmd_understanding import text
+        return text(payload)
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
@@ -443,7 +454,8 @@ def _run(argv: list) -> cmd.Outcome:
     name = argv[0] if argv else ''
     # A command with a verb is named with it (`decide confirm`, `export handoff`), as its
     # own payloads name it (WP-I).
-    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode') else name
+    command = ' '.join(argv[:2]) if name in ('decide', 'export', 'mode', 'understanding') \
+        else name
     try:
         extension = name if name in EXTENSIONS else None
         if extension and importlib.util.find_spec(EXTENSIONS[extension]) is None:

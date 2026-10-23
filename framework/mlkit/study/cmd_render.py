@@ -121,6 +121,21 @@ def sample_rows(study: Path, view: dict) -> dict | None:
         return None
 
 
+def _understanding(study: Path) -> str:
+    """The understanding section (ADR 0008), empty when the study never enabled it."""
+    from . import read
+    state = read.load_state(study)
+    if 'understanding' not in state:
+        return ''
+    from .understanding import render
+    try:
+        return render.section(study, state)
+    except Exception:          # noqa: BLE001 - the report renders; status shows the review
+        return ('<section class="card" id="understanding"><h2>Understanding and handover'
+                '</h2><p>The review summary could not be read; run hypotrail understanding '
+                'status.</p></section>')
+
+
 def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> dict:
     from . import render_html
     from .store import atomic_write
@@ -130,7 +145,8 @@ def _render_report(study: Path, view: dict, manifest: dict, surfaces: dict) -> d
     try:
         _inject('render_html')
         page, consumed = render_html.build(view, surfaces=surfaces, variables=_variables(view),
-                                           sample=sample_rows(study, view))
+                                           sample=sample_rows(study, view),
+                                           understanding=_understanding(study))
         data = page.encode('utf-8')
         atomic_write(path, data)
     except Exception as exc:

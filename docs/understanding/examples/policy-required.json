@@ -1,0 +1,67 @@
+{
+  "schema": "hypotrail.understanding-policy/1",
+  "policy_id": "team-default",
+  "version": 1,
+  "mode": "required",
+  "milestones": [
+    "handoff"
+  ],
+  "required_dimensions": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "D7",
+    "D8"
+  ],
+  "responsibility_profiles": {
+    "analyst": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D7"
+    ],
+    "pipeline": [
+      "D2",
+      "D3",
+      "D5",
+      "D6",
+      "D8"
+    ]
+  },
+  "critical_dimensions": [
+    "D2",
+    "D3"
+  ],
+  "peer_required_dimensions": [
+    "D2"
+  ],
+  "minimum_assurance": "human_declared",
+  "assistance_rule": {
+    "critical": "unaided_required",
+    "other": "aided_allowed"
+  },
+  "expiration_rule": {
+    "kind": "none"
+  },
+  "evidence_retention": "durable",
+  "evidence_requirement": "payloads_available",
+  "context_requirement": "complete",
+  "export_policy": {
+    "include_excerpts": false,
+    "include_contacts": false,
+    "external_sources": "allowed"
+  },
+  "exemptions_policy": {
+    "waivers_allowed": false
+  },
+  "team_coverage": {
+    "minimum_people": 2
+  },
+  "role_policy": {
+    "arbiters": "any_declared"
+  }
+}

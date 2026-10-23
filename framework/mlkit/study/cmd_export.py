@@ -508,6 +508,10 @@ def export_handoff(study_dir, *, out=None, expected_revision=None) -> tuple[dict
                                           or expected_revision < 0):
         raise StudyError('invalid_arguments', '--expected-revision must be a revision number.',
                          details={'field': 'expected_revision'})
+    from .understanding import milestone
+    if milestone.required(study_dir, 'handoff'):
+        return milestone.export_handoff_gated(study_dir, out=out,
+                                              expected_revision=expected_revision)
     study, view, files, included = build(study_dir)
     _expected(study, view, expected_revision)
     target = _target(study.study_dir, out, view['revision'])

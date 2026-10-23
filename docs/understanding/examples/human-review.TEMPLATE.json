@@ -1,0 +1,41 @@
+{
+  "reviewer_declared_id": "REVIEWER-ALIAS",
+  "declaration": {
+    "source": "reviewer_file",
+    "statement": "I, the reviewer, read the answer and record this judgement myself."
+  },
+  "simulated": false,
+  "decisions": [
+    {
+      "dimension_id": "D2",
+      "reviewed_actor_id": "AUTHOR-ALIAS",
+      "attempt_ids": [
+        "ATTEMPT-ID"
+      ],
+      "criterion_results": [
+        {
+          "criterion_id": "availability_rule",
+          "result": "met",
+          "note": null
+        },
+        {
+          "criterion_id": "effect_on_validity",
+          "result": "met",
+          "note": null
+        },
+        {
+          "criterion_id": "where_to_change",
+          "result": "not_met",
+          "note": "Location not given."
+        }
+      ],
+      "status": "demonstrated",
+      "rationale": "Reviewer's own words.",
+      "evidence_refs": [],
+      "supersedes_ids": [],
+      "resolves_reservation_ids": [],
+      "proposal_ref": null,
+      "correction_of_review_error": false
+    }
+  ]
+}

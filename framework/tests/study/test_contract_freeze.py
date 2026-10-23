@@ -424,7 +424,9 @@ EXTENSIONS = {'run': 'mlkit.study.cmd_run', 'render': 'mlkit.study.cmd_render',
               'decisions': 'mlkit.study.cmd_decisions', 'evidence': 'mlkit.study.cmd_evidence',
               'explain': 'mlkit.study.cmd_explain', 'export': 'mlkit.study.cmd_export',
               # v0.2a (WP-A4, R2): the read-only data card.
-              'data': 'mlkit.study.cmd_data'}
+              'data': 'mlkit.study.cmd_data',
+              # ADR 0008: the opt-in understanding and handover review.
+              'understanding': 'mlkit.study.cmd_understanding'}
 # Post-v0.1 observation kit: ``session-report`` and the opt-in session log.
 SESSION_REPORT_SCHEMA = 'hypotrail.session_report/1'
 SESSION_REPORT_KEYS = ('schema', 'ok', 'study', 'revision', 'since', 'sources', 'span',
@@ -654,7 +656,7 @@ def test_notes_hold_a_decision_until_the_junior_resolves_them(tmp_path, syntheti
     """P2 (post-v0.1): ``decide note --about`` / ``--resolve``, its state, view, summary and
     refusal keys."""
     assert st.TOP_OPTIONAL_KEYS == ('task', 'notes', 'partition', 'mode', 'language',
-                                    'mode_history', 'exploration')
+                                    'mode_history', 'exploration', 'understanding')
     assert st.NOTE_KEYS == NOTE_STATE_KEYS and st.NOTE_RESOLUTION_KEYS == NOTE_RESOLUTION_KEYS
     assert st.NOTE_KINDS == ('hold', 'correction') and st.NOTE_STATUSES == NOTE_STATUSES
     assert view.NOTE_VIEW_KEYS == NOTE_VIEW_KEYS
@@ -1275,3 +1277,51 @@ def test_library_integration_v1_contract():
         'contract_code', 'evidence_binding', 'engine_parity', 'semantic_dependencies',
         'evidently_snapshot', 'read_export_source', 'hypotrail.export_source/1'}
     assert not sorted(t for t in tokens if t not in DOC_TOKENS)
+
+
+# --- ADR 0008: the understanding and handover review (CLI-CONTRACT §15) -----------------------
+
+def test_understanding_contract_is_frozen():
+    from mlkit.study import cmd_understanding as cu
+    from mlkit.study.understanding import (CODES, DIMENSIONS, STATE_SCHEMA, bank, canonical,
+                                           evaluate, export, model, policy, snapshot, verify)
+    assert cu.SCHEMA == 'hypotrail.understanding/1'
+    assert STATE_SCHEMA == 'hypotrail.understanding-state/1'
+    assert policy.SCHEMA == 'hypotrail.understanding-policy/1'
+    assert bank.SCHEMA == 'hypotrail.understanding-bank/1'
+    assert bank.TASK_SCHEMA == 'hypotrail.understanding-task/1'
+    assert export.SCHEMA == 'hypotrail.understanding-review/1'
+    assert export.MANIFEST_SCHEMA == 'hypotrail.understanding-export-manifest/1'
+    assert snapshot.PUBLIC_SCHEMA == 'hypotrail.public-source-scope/1'
+    assert evaluate.GATE_SCHEMA == 'hypotrail.understanding-gate/1'
+    assert verify.SCHEMA == 'hypotrail.understanding-verification/1'
+    assert canonical.VERSION == 'hypotrail.canonical-json/1'
+    assert DIMENSIONS == ('D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8')
+    assert policy.MODES == ('off', 'coaching', 'required')
+    assert policy.MILESTONES == ('handoff',)
+    assert policy.KEYS == ('schema', 'policy_id', 'version', 'mode', 'milestones',
+                           'required_dimensions', 'responsibility_profiles',
+                           'critical_dimensions', 'peer_required_dimensions',
+                           'minimum_assurance', 'assistance_rule', 'expiration_rule',
+                           'evidence_retention', 'evidence_requirement', 'context_requirement',
+                           'export_policy', 'exemptions_policy', 'team_coverage', 'role_policy')
+    assert model.DIMENSION_STATUSES == ('not_evaluated', 'demonstrated', 'to_consolidate',
+                                        'needs_review')
+    assert evaluate.DECISIONS == ('not_applicable', 'allowed', 'blocked', 'allowed_by_waiver')
+    assert CODES == ('understanding_disabled', 'policy_invalid', 'unsupported_assurance',
+                     'stale_revision', 'idempotency_conflict', 'invalid_transition',
+                     'context_changed', 'unsupported_case', 'prerequisite_missing',
+                     'evidence_invalid', 'review_required', 'privacy_approval_required',
+                     'evidence_unavailable', 'path_outside_scope', 'git_index_conflict',
+                     'export_stale', 'milestone_blocked', 'unsupported_capability')
+    assert export.FILES == ('understanding-review.json', 'understanding-review.md',
+                            'export-manifest.json')
+    assert export.EXPORT_DIR == 'docs/understanding'
+    assert cu.STUDY_OPTIONAL == ('verify-export',)
+    assert sorted(cu.HANDLERS) == sorted([
+        'policy show', 'policy set', 'plan', 'start', 'status', 'task', 'submit', 'coach',
+        'rectify', 'propose-review', 'review', 'arbitrate', 'select', 'waive', 'handover set',
+        'transfer start', 'transfer submit', 'transfer review', 'close', 'check',
+        'export preview', 'export approve', 'export write', 'git-plan', 'git-stage',
+        'git-receipt'])
+

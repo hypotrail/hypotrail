@@ -571,8 +571,10 @@ TOP_KEYS = ('schema', 'revision', 'created', 'updated', 'case', 'dataset', 'fact
 # ``mode`` and ``language`` (ADR 0005, v0.2a) are written by every new study; a state
 # without them is a guided study in English. ``mode_history`` appears with the first
 # ``mode set``.
+# ``understanding`` (ADR 0008): the opt-in understanding and handover review; a state
+# without it is ``off`` (``mlkit.study.understanding.model``).
 TOP_OPTIONAL_KEYS = ('task', 'notes', 'partition', 'mode', 'language', 'mode_history',
-                     'exploration')
+                     'exploration', 'understanding')
 DECISION_KEYS = ('status', 'value', 'proposal_id', 'confirmation', 'depends_on', 'revision',
                  'reason')
 PROPOSAL_KEYS = ('proposal_id', 'decision_id', 'value', 'restatement', 'rationale', 'revision',
@@ -1160,6 +1162,9 @@ def validate_state(state: Any) -> list[dict]:
                 and state['settings']['reliability_profile'] not in assurance.PROFILES:
             problems.append({'path': 'settings.reliability_profile',
                              'problem': 'must be legacy or review-v1'})
+    if 'understanding' in present:
+        from .understanding import model as understanding
+        problems.extend(understanding.check(state['understanding']))
     return problems
 
 
