@@ -19,12 +19,27 @@ ATTESTATIONS: tuple[dict, ...] = (
     {
         'module': 'mlkit.study.activities',
         'from_sha256': 'b04e5fad6c3ae1e9d563d086a879422cce372e79593bec2b31eaebb098d3f30e',
-        'to_sha256': '3065f4d623f1ea2346c43ef27c0dd0f9a948c8eb007355c9cb625967b17cc9e1',
+        'to_sha256': '4179e60b93eeb60d976a473c239a911bcc2d0398d3a53922519a026a9e48f9a3',
         'activities': ['diag.final_test'],
         'reason': ('The intervening activity changes add inspection and development-only '
-                   'metadata; final-test diagnostic dispatch and values are unchanged.'),
+                   'metadata, then (library integration v1) the predictor.capture and '
+                   'diagnostics.population dispatch; final-test diagnostic dispatch and values '
+                   'are unchanged.'),
         'evidence': ['framework/tests/study/test_v03_wp_j_engine.py',
-                     'framework/tests/study/test_reliability_j4_j7.py'],
+                     'framework/tests/study/test_reliability_j4_j7.py',
+                     'framework/tests/study/libraries/test_capture_final.py'],
+    },
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': '3065f4d623f1ea2346c43ef27c0dd0f9a948c8eb007355c9cb625967b17cc9e1',
+        'to_sha256': '4179e60b93eeb60d976a473c239a911bcc2d0398d3a53922519a026a9e48f9a3',
+        'activities': ['diag.final_test'],
+        'reason': ('Library integration v1 adds the predictor.capture and '
+                   'diagnostics.population activities and a final-test branch taken only when '
+                   'a capture is current; final-test diagnostic dispatch and values are '
+                   'unchanged.'),
+        'evidence': ['framework/tests/study/test_wp_b4_diagnostics.py',
+                     'framework/tests/study/libraries/test_capture_final.py'],
     },
     {
         'module': 'mlkit.study.diagnostics',
