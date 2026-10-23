@@ -234,7 +234,9 @@ class StudyMachine(RuleBasedStateMachine):
 
     @rule()
     def conflicting_duplicate(self):
-        if self.last_request is None:
+        # Only a request that left a receipt can conflict: an ``already_current`` answer
+        # reserves nothing and records no receipt, so its id is not consumed.
+        if self.last_request is None or self.last_request[1].get('status') == 'already_current':
             return
         args = list(self.last_request[0])
         rid = args[args.index('--request-id') + 1]

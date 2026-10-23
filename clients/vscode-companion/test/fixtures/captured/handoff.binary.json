@@ -174,189 +174,189 @@
   ],
   "results_cited": [
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
+    "result_id": "6673caf88da0cfdf31f88f386ff30419549e554616d9f2ecfadf67a227617b81",
     "activity": "eda.target_rate",
     "path": "rate",
     "value": 0.11536941920189649,
     "shown": "11.5%"
    },
    {
-    "result_id": "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
+    "result_id": "6673caf88da0cfdf31f88f386ff30419549e554616d9f2ecfadf67a227617b81",
     "activity": "eda.target_rate",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "617ca5add7cfe8ca5601f5442244fd443fc0777f62e9c47e012b50f2f67c6053",
+    "result_id": "c597c0d18b50158ffd83ca11eabd139c19f474681d4f06058436508802dd9897",
     "activity": "eda.special_values",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "eaec8156da4eb18fde707bd52c46030ea432684dee8a73a1159a5d998b8621fd",
+    "result_id": "a8ea04b2ed328e56e9d865b17e8a2ffce1067413067c6a91de4f628f624f5fb8",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "9c973607dcc7418ffe59590e571a1e7e8056ca0a884cb2d08b7b022bfc5da3c4",
+    "result_id": "4402efd43501d5267d2e1dd1ad6ca60a43e6a34fbec8e898252ad8828730639b",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "0b80fcc0811541d2c83ec7465921dba99f8790b2097486ab3df47b49f4063c4a",
+    "result_id": "de54335e87f61845401fbe8d1b5e86b0c6459e067259d19381853e34da578c7e",
     "activity": "eda.distribution",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
+    "result_id": "0bec0674a93533f2347e1654da15ea584d62b1daed8b292152d235b76eef1d55",
     "activity": "eda.rate_by",
     "path": "n_groups",
     "value": 12,
     "shown": "12"
    },
    {
-    "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
+    "result_id": "0bec0674a93533f2347e1654da15ea584d62b1daed8b292152d235b76eef1d55",
     "activity": "eda.rate_by",
     "path": "n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "bfc3ae7d1816fe70002cdcb6512a816716b1db4d0620e65a036193afed8d9850",
+    "result_id": "e23e44fb8fe6262d46080f6f92e969ccd60a30ae84e57e91e81312e8fdf3e72c",
     "activity": "fit.baseline",
     "path": "validation.roc_auc",
     "value": 0.5,
     "shown": "0.500"
    },
    {
-    "result_id": "bfc3ae7d1816fe70002cdcb6512a816716b1db4d0620e65a036193afed8d9850",
+    "result_id": "e23e44fb8fe6262d46080f6f92e969ccd60a30ae84e57e91e81312e8fdf3e72c",
     "activity": "fit.baseline",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "5590a47affccfb4512baa8218b040b4d7698546f14e7f90adddd619fbed8874c",
+    "result_id": "45051af2d20f7c21db0ce46324f77b991eaffddb8ae839147ac37a1151915246",
     "activity": "fit.logistic",
     "path": "validation.roc_auc",
     "value": 0.7347096774193549,
     "shown": "0.735"
    },
    {
-    "result_id": "5590a47affccfb4512baa8218b040b4d7698546f14e7f90adddd619fbed8874c",
+    "result_id": "45051af2d20f7c21db0ce46324f77b991eaffddb8ae839147ac37a1151915246",
     "activity": "fit.logistic",
     "path": "validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
+    "result_id": "2409a40ba4a691edd9759f3a71a11aa151c6a05a720373b91e60d5428fa43083",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].precision",
     "value": 0.38144329896907214,
     "shown": "38.1%"
    },
    {
-    "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
+    "result_id": "2409a40ba4a691edd9759f3a71a11aa151c6a05a720373b91e60d5428fa43083",
     "activity": "policy.evaluation",
     "path": "rules.[threshold:0.2].models.[fit.logistic].recall",
     "value": 0.296,
     "shown": "29.6%"
    },
    {
-    "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
+    "result_id": "2409a40ba4a691edd9759f3a71a11aa151c6a05a720373b91e60d5428fa43083",
     "activity": "policy.evaluation",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1",
+    "result_id": "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e",
     "activity": "diag.binary",
     "path": "models.[fit.logistic].calibration.brier",
     "value": 0.08742712462824617,
     "shown": "0.0874"
    },
    {
-    "result_id": "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1",
+    "result_id": "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e",
     "activity": "diag.binary",
     "path": "models.[fit.logistic].roc_auc",
     "value": 0.7347096774193549,
     "shown": "0.735"
    },
    {
-    "result_id": "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1",
+    "result_id": "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e",
     "activity": "diag.binary",
     "path": "n",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "n_rows",
     "value": 3617,
     "shown": "3,617"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
     "shown": "1,086"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.train.n_rows",
     "value": 2531,
     "shown": "2,531"
    },
    {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "activity": "split",
     "path": "partitions.validation.n_rows",
     "value": 1086,
@@ -599,8 +599,8 @@
     "scikit-learn": "1.9.1",
     "scipy": "1.18.1"
    },
-   "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-   "python": "3.13.5"
+   "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+   "python": "3.13.16"
   },
   "history": {
    "dataset_sha256": "dc8d576e9bda0f41ee891251bd84bab9a39ce576cba715aac08adc2374a01fde",

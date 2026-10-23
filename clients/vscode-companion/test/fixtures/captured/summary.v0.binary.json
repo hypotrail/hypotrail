@@ -319,91 +319,91 @@
   },
   "results": {
    "diag.binary": {
-    "result_id": "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1",
+    "result_id": "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.correlation": {
-    "result_id": "f1104ca7bfb721c9926880e26f49be21e4b21509c0ca2df551739f3a04492834",
+    "result_id": "e038bedc3564c03d90e36714f01de4c352219f81a82d1c167c4428aa4d8ee77b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:age": {
-    "result_id": "eaec8156da4eb18fde707bd52c46030ea432684dee8a73a1159a5d998b8621fd",
+    "result_id": "a8ea04b2ed328e56e9d865b17e8a2ffce1067413067c6a91de4f628f624f5fb8",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:job": {
-    "result_id": "9c973607dcc7418ffe59590e571a1e7e8056ca0a884cb2d08b7b022bfc5da3c4",
+    "result_id": "4402efd43501d5267d2e1dd1ad6ca60a43e6a34fbec8e898252ad8828730639b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:previous": {
-    "result_id": "0b80fcc0811541d2c83ec7465921dba99f8790b2097486ab3df47b49f4063c4a",
+    "result_id": "de54335e87f61845401fbe8d1b5e86b0c6459e067259d19381853e34da578c7e",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "1893ea8a52d6e89140df1ecc6446c740070ae3fd7143fc01d15ea5d53882232c",
+    "result_id": "5bbb72bde2c4df189684b75fbddc23be03cccc97b91a69130110da264ac0f6d4",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.rate_by:job": {
-    "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
+    "result_id": "0bec0674a93533f2347e1654da15ea584d62b1daed8b292152d235b76eef1d55",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "28e6e9b2371d95fb4862b3526099641dd2cdbd5e520fd545e27e4e50f322de2d",
+    "result_id": "79ddb96d9863b93d5a908acf4edd9ea336f84ed687138c37037ed391740cc72c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "617ca5add7cfe8ca5601f5442244fd443fc0777f62e9c47e012b50f2f67c6053",
+    "result_id": "c597c0d18b50158ffd83ca11eabd139c19f474681d4f06058436508802dd9897",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_rate": {
-    "result_id": "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
+    "result_id": "6673caf88da0cfdf31f88f386ff30419549e554616d9f2ecfadf67a227617b81",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "bfc3ae7d1816fe70002cdcb6512a816716b1db4d0620e65a036193afed8d9850",
+    "result_id": "e23e44fb8fe6262d46080f6f92e969ccd60a30ae84e57e91e81312e8fdf3e72c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.logistic": {
-    "result_id": "5590a47affccfb4512baa8218b040b4d7698546f14e7f90adddd619fbed8874c",
+    "result_id": "45051af2d20f7c21db0ce46324f77b991eaffddb8ae839147ac37a1151915246",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "adcf355177e792341a87b1507325444d3297d5651bbaf8c49ac5d376b8653557",
+    "result_id": "05f1fdf7b7bba65935028a8af88b9d60b58ba624296572ded40cb43b56a5625d",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "policy.evaluation": {
-    "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
+    "result_id": "2409a40ba4a691edd9759f3a71a11aa151c6a05a720373b91e60d5428fa43083",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "a933309442979211ca8885e88f362c991e77d184df8cd21322c0f8a9fb3941c6",
+    "result_id": "4fb77760bc0f6e93f71199e0acb74f6dd8886daabfee8bba3a77e84960b7c4ed",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -520,16 +520,16 @@
   "eda_looks": {
    "target_looks": 5,
    "results": [
-    "599ccaa05711c05b0d45fec14242ce18340e14b2007a7bac10ec07bb3d34587d",
-    "617ca5add7cfe8ca5601f5442244fd443fc0777f62e9c47e012b50f2f67c6053",
-    "28e6e9b2371d95fb4862b3526099641dd2cdbd5e520fd545e27e4e50f322de2d",
-    "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
-    "4eefc1665884ffc02a84b0b1f7db04a10d17e75e293696d505e333e93cbc16e1"
+    "6673caf88da0cfdf31f88f386ff30419549e554616d9f2ecfadf67a227617b81",
+    "c597c0d18b50158ffd83ca11eabd139c19f474681d4f06058436508802dd9897",
+    "79ddb96d9863b93d5a908acf4edd9ea336f84ed687138c37037ed391740cc72c",
+    "0bec0674a93533f2347e1654da15ea584d62b1daed8b292152d235b76eef1d55",
+    "7dc8f415ea01f71c07c7a80b026f4bad17c23a7a449134e5444d565272007b2e"
    ]
   },
   "recap": [
    "Goal: Teaching simulation: prioritize contacts when call capacity is limited; the prediction is made before the first contact of the campaign, from the client file.",
-   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 7e73cfae).",
+   "Decided: prediction moment; feature availability (excluded campaign, day, duration, month; kept despite a doubt: contact); split (stratified random, 30% for validation); success criterion (precision gain over the baseline of at least 5 points); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation); policy threshold:0.2 (the logistic model on the 1086 validation rows: precision 38.1%, recall 29.6%, result 2409a40b).",
    "Now: Open the final test once; the report and notebook are up to date.",
    "Next: whether you adopt the policy: \"Call the 100 clients with the highest scores.\"",
    "Limit: These features are used although their availability at prediction time is uncertain: contact. The case calls the availability of these features uncertain (or does not document it), yet they are used as known at prediction time: age, default, education, housing, job, loan, marital. Check that they are known at that moment."

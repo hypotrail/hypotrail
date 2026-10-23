@@ -21,7 +21,7 @@
   "activity": "diag.final_test",
   "execution_id": "e_6f568a7e009178d11fe5261f",
   "status": "promoted",
-  "result_id": "559fae2c537b218c9d9ed119254490a9ecf0693dc91891b34ee89f6011211b47",
+  "result_id": "c492ac76bb77162ab5fff4bb3727804e8960df82b575a45b2200606d33925b68",
   "values": {
    "question": "On rows nothing had seen, where does the chosen model err at the rule, and do its scores match the observed rates?",
    "evidence": "final",
@@ -30,7 +30,7 @@
    "evaluation": "final_test",
    "n": 904,
    "model": "fit.logistic",
-   "final_evaluation": "7d64e269014e78c00dc1ff59cb4df2742beca4289d3214f958393effc655a04a",
+   "final_evaluation": "cc2e10a82b7000175dc768acb3e4f1087d029122008b878072bf199b5bc120bc",
    "n_positive": 104,
    "base_rate": 0.11504424778761062,
    "rule": "share:0.1",
@@ -295,9 +295,9 @@
         "bin": 1,
         "n": 91,
         "n_positive": 4,
-        "score_min": 0.01088588855966554,
+        "score_min": 0.01088588855966555,
         "score_max": 0.0293692201009569,
-        "mean_predicted": 0.02308016247213154,
+        "mean_predicted": 0.023080162472131543,
         "observed_rate": 0.04395604395604396,
         "low": 0.01722436644411733,
         "high": 0.10763093384266353,
@@ -308,8 +308,8 @@
         "n": 90,
         "n_positive": 6,
         "score_min": 0.02943115098958867,
-        "score_max": 0.04143794248066127,
-        "mean_predicted": 0.03501968123890013,
+        "score_max": 0.041437942480661294,
+        "mean_predicted": 0.03501968123890015,
         "observed_rate": 0.06666666666666667,
         "low": 0.030909927745827924,
         "high": 0.13790094774325526,
@@ -319,9 +319,9 @@
         "bin": 3,
         "n": 91,
         "n_positive": 6,
-        "score_min": 0.041702129417584256,
-        "score_max": 0.05738822789996837,
-        "mean_predicted": 0.04887614613643309,
+        "score_min": 0.04170212941758427,
+        "score_max": 0.05738822789996842,
+        "mean_predicted": 0.04887614613643311,
         "observed_rate": 0.06593406593406594,
         "low": 0.03056628647161548,
         "high": 0.13646466199411572,
@@ -331,9 +331,9 @@
         "bin": 4,
         "n": 90,
         "n_positive": 10,
-        "score_min": 0.057417584937176774,
+        "score_min": 0.05741758493717682,
         "score_max": 0.07283333002589401,
-        "mean_predicted": 0.06648009342378859,
+        "mean_predicted": 0.0664800934237886,
         "observed_rate": 0.1111111111111111,
         "low": 0.06148319189297713,
         "high": 0.19257785021261037,
@@ -345,7 +345,7 @@
         "n_positive": 9,
         "score_min": 0.07286077626283075,
         "score_max": 0.0918929298301578,
-        "mean_predicted": 0.08116332520078333,
+        "mean_predicted": 0.08116332520078334,
         "observed_rate": 0.1,
         "low": 0.05350675169712493,
         "high": 0.17924174875433652,
@@ -368,8 +368,8 @@
         "n": 90,
         "n_positive": 9,
         "score_min": 0.10833118980895226,
-        "score_max": 0.1334701643940436,
-        "mean_predicted": 0.12194580835051565,
+        "score_max": 0.13347016439404366,
+        "mean_predicted": 0.12194580835051566,
         "observed_rate": 0.1,
         "low": 0.05350675169712493,
         "high": 0.17924174875433652,
@@ -379,8 +379,8 @@
         "bin": 8,
         "n": 91,
         "n_positive": 11,
-        "score_min": 0.1335047898587846,
-        "score_max": 0.1579282750548173,
+        "score_min": 0.13350478985878467,
+        "score_max": 0.15792827505481732,
         "mean_predicted": 0.14458528420577305,
         "observed_rate": 0.12087912087912088,
         "low": 0.06885508485107264,
@@ -391,9 +391,9 @@
         "bin": 9,
         "n": 90,
         "n_positive": 13,
-        "score_min": 0.15808797833669694,
-        "score_max": 0.21208108149877453,
-        "mean_predicted": 0.18202766550050223,
+        "score_min": 0.15808797833669697,
+        "score_max": 0.2120810814987746,
+        "mean_predicted": 0.18202766550050226,
         "observed_rate": 0.14444444444444443,
         "low": 0.08639988786660784,
         "high": 0.23159877920135785,
@@ -405,7 +405,7 @@
         "n_positive": 25,
         "score_min": 0.21221756012439313,
         "score_max": 0.8301295129800422,
-        "mean_predicted": 0.4172313868060945,
+        "mean_predicted": 0.41723138680609456,
         "observed_rate": 0.2777777777777778,
         "low": 0.19579689194686647,
         "high": 0.3779522749706121,
@@ -414,7 +414,7 @@
       ],
       "brier": 0.0949071265875692,
       "brier_base_rate": 0.10180906883859348,
-      "mean_absolute_gap": 0.03764681613503112,
+      "mean_absolute_gap": 0.037646816135031125,
       "bins_outside_interval": 1,
       "definition": "The Brier score is the mean squared difference between the score and the outcome (0 or 1); the constant base rate gives the reference. A bin whose mean score lies outside the interval of its observed rate is miscalibrated."
      },
@@ -718,7 +718,7 @@
        },
        {
         "row_key": "L2268",
-        "score": 0.7123677365818355,
+        "score": 0.7123677365818354,
         "values": {
          "age": "55",
          "job": "admin.",
@@ -738,7 +738,7 @@
       "false_negatives": [
        {
         "row_key": "L4178",
-        "score": 0.022469038763755403,
+        "score": 0.022469038763755417,
         "values": {
          "age": "32",
          "job": "blue-collar",
@@ -756,7 +756,7 @@
        },
        {
         "row_key": "L2197",
-        "score": 0.026405624833978642,
+        "score": 0.026405624833978653,
         "values": {
          "age": "23",
          "job": "entrepreneur",
@@ -774,7 +774,7 @@
        },
        {
         "row_key": "L4063",
-        "score": 0.026572948275165313,
+        "score": 0.026572948275165324,
         "values": {
          "age": "28",
          "job": "blue-collar",
@@ -843,7 +843,7 @@
       ],
       "note": "Rows whose selection at the rule disagrees with the outcome, with the feature values as written in the file. Examples to read, not a sample."
      },
-     "predictions": "7d64e269014e78c00dc1ff59cb4df2742beca4289d3214f958393effc655a04a"
+     "predictions": "cc2e10a82b7000175dc768acb3e4f1087d029122008b878072bf199b5bc120bc"
     }
    },
    "note": "Final evidence: computed once the final test was opened, from the predictions of its one evaluation, on rows no choice had seen."
@@ -853,13 +853,13 @@
    "activity": "diag.final_test",
    "slot": "diag.final_test",
    "status": "promoted",
-   "result_id": "559fae2c537b218c9d9ed119254490a9ecf0693dc91891b34ee89f6011211b47",
-   "input_key": "ccdc9aa28e8c357ed315f3595b549be1bdced7f605ffbd9dc39995a640c9e1f1",
+   "result_id": "c492ac76bb77162ab5fff4bb3727804e8960df82b575a45b2200606d33925b68",
+   "input_key": "e322588770694fdcc2aca30c5cd0dd6d4340f8cb473cd1913e4ac70ece74f420",
    "reason": null,
    "started_revision": 34,
    "invalidation": null,
    "exposure_ids": [
-    "x_c83c418fe2f443a39bf8f5e71634e46a"
+    "x_e00a61aa5f234d7981dffeb841ba0069"
    ],
    "registry_created": true,
    "nondeterministic": false

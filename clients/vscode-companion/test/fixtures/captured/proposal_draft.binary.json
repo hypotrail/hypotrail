@@ -23,9 +23,9 @@
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the rule capacity:100: act on the 100 highest-scored rows. On the 1,086 validation rows the logistic model's selection had precision 38.0% against 11.5% for the baseline, and recall 30.4%. These validation rows were used to choose the rule, so these figures are optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 7e73cfae).",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 2409a40b).",
   "evidence": {
-   "result_id": "7e73cfaeebd7a5a30905eb07b4052796f6950a0da50ddb9239e4e4c0ce249541",
+   "result_id": "2409a40ba4a691edd9759f3a71a11aa151c6a05a720373b91e60d5428fa43083",
    "activity": "policy.evaluation",
    "figures": [
     {

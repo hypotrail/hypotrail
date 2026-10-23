@@ -87,14 +87,44 @@ framework --group dev --group browser --extra diagnostics --extra uncertainty`).
 
 | Suite | Result |
 |---|---|
-| `framework/tests/study/libraries/` (contracts, parity, capture/final, export source, Pandera, wheel, SciPy, Evidently, population activity, MAPIE, optional dependencies, Hypothesis) | see the gate run below |
+| `framework/tests/study/libraries/` (contracts, parity, capture/final, export source, Pandera, wheel, SciPy, Evidently, population activity, MAPIE, optional dependencies, Hypothesis) | 116 passed, 4 skipped (opt-in matrix) |
 | Extras installation matrix (`HYPOTRAIL_EXTRAS_MATRIX=1`, four fresh environments: base, diagnostics, uncertainty, both) | 4 passed (run once, 36 s) |
 | Runtime wheel in a fresh uv environment, bundle moved away from its deleted study, `python -I`, no `mlkit`/`marimo`/`mlflow`/`azure`/`hydra`/`evidently`/`mapie` importable | passed |
 | Gate (CONTRIBUTING) | see "Gate run" |
 
 ### Gate run
 
-Filled in by the final commit of this workstream (below).
+Run on this branch in this cloud container (Python 3.13.x, Linux, 4 cores), framework
+environment synced with `--group dev --group browser --extra diagnostics --extra uncertainty`:
+
+| Line of the gate | Result |
+|---|---|
+| `python3 scripts/check_layout.py` | no error |
+| engine pytest line (CONTRIBUTING) | 1968 passed, 98 skipped, 2 failed (1 h 24): `test_contract_companion_e2.py::test_c7_export_handoff` **fails identically at the base `581c7b3`** (export key order, unrelated); the Hypothesis machine failed in the version collected at the start of that run and was fixed during it (oracle too strict on a replayed `already_current` run) |
+| `framework/tests/study/libraries` + `test_contract_freeze.py`, re-run after the fixes | 120 passed, 4 skipped (the opt-in extras matrix) |
+| Hypothesis machine at 40 examples × 30 steps | passed (40 passing cases) |
+| `node --test clients/vscode-companion/test/*.test.js` | 239 passed |
+| panel pytest line (after recapturing the fixtures) | 389 passed, 12 skipped; **12 pixel baselines fail, and fail identically at the base** in this container (font rendering; the fontconfig profile of the J0 run is not available here). No baseline was rewritten. |
+
+Reference run at the base `581c7b3` in a separate worktree (same container, without the
+browser group): 1875 passed, 95 skipped, 1 failed (`test_c7_export_handoff`).
+
+The panel's captured fixtures were regenerated with `capture.py` (documented procedure after
+an engine change): result ids follow the code fingerprint. Recapturing at the base in this
+container changes the same floating-point fields (`std_error`, interval bounds) as on this
+branch, and the branch's capture differs from the base's only by random exposure ids and
+hashes: the numeric differences come from the environment, not from this work.
+
+### Observations made by the state machine (engine behaviour, unchanged)
+
+- A refused command still appends to the session log (`events.jsonl`) and rewrites the
+  writer lock's bookkeeping; study state, registry and exposure files are untouched.
+- After a process dies mid-run, the next command records the interruption (with its
+  planned reads, `result_id: null`) and then refuses: that first refusal writes state.
+- A `run` answered `already_current` reserves nothing and records no receipt: replaying it
+  is not marked `replayed`, and its request id is not consumed (it can be reused for another
+  command without `idempotency_conflict`). Harmless (nothing was recorded) but worth knowing
+  for clients that treat request ids as consumed.
 
 ## Dependency changes
 
@@ -126,16 +156,17 @@ own sources on first compilation). Evidently is imported only by `diagnostics.po
 
 ## Source compatibility of existing studies
 
-Editing `activities.py` and `fit.py` changes the code fingerprint of every activity, which
-would make every result of an existing study "code changed" (not current) although nothing it
-computes changed. The repository's J4 mechanism records exact, reviewable attestations
-(`mlkit/study/code_compat.py`): one directed edge per module from the base digest to the final
-digest, scoped to the activities that existed at the base. The engine paths of those
-activities are unchanged when a study holds no capture (the new branches run only for the new
-activities or when `predictor.capture` is current), as the unchanged existing suite and
-`test_capture_final.py::test_a_study_without_capture_keeps_the_historical_refit` show. **This
-is the author's attestation; the reviewer should confirm or remove it** (removing it only
-makes old results non-current, never wrong).
+Editing `activities.py` (in every activity's fingerprint) and `fit.py` makes the results of
+studies computed at the base report `code_changed` (kept, not current), as every earlier
+engine change did; consistent with the repository's practice (J0–J3: "no new code
+equivalence exception"), **no broad attestation was added**. Only the existing, reviewed
+`diag.final_test` edge of `mlkit/study/code_compat.py` was retargeted to the new bytes of
+`activities.py`, plus the same edge from the base digest
+(`3065f4d6…` → `4179e60b…`): the final-test diagnostic dispatch is unchanged. The
+reviewer may add edges for other activities (their engine paths are unchanged when no
+capture exists) or remove these; either way nothing becomes wrong, only current or not.
+Any further edit of `activities.py` (including the merge with `main`) must recompute these
+digests.
 
 ## Limits and what is not done
 

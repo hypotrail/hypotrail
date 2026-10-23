@@ -22,7 +22,7 @@
    "schema": "hypotrail.view/1",
    "study": "/studies/auto mpg",
    "revision": 38,
-   "updated": "2026-10-22T18:59:46.487454+00:00",
+   "updated": "2026-10-23T11:56:54.050620+00:00",
    "case": {
     "id": "uci-auto-mpg-v1",
     "path": "/hypotrail/use-cases/auto-mpg/case.yaml",
@@ -323,7 +323,7 @@
      "restatement": "Adopt the linear model.",
      "rationale": "Lower error on later years.",
      "revision": 38,
-     "created": "2026-10-22T18:59:46.487428+00:00",
+     "created": "2026-10-23T11:56:54.050582+00:00",
      "labels": null,
      "label": "Adopt the linear model.",
      "origin": {
@@ -347,7 +347,7 @@
       "restatement": "You decide the prediction_time as stated.",
       "proposal_id": "p_1",
       "revision": 3,
-      "time": "2026-10-22T18:59:33.525570+00:00",
+      "time": "2026-10-23T11:56:34.898105+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -384,7 +384,7 @@
       "restatement": "You decide the feature_availability as stated.",
       "proposal_id": "p_2",
       "revision": 5,
-      "time": "2026-10-22T18:59:34.203021+00:00",
+      "time": "2026-10-23T11:56:36.039722+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -423,7 +423,7 @@
       "restatement": "You decide the split as stated.",
       "proposal_id": "p_3",
       "revision": 7,
-      "time": "2026-10-22T18:59:35.188678+00:00",
+      "time": "2026-10-23T11:56:37.406536+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -454,7 +454,7 @@
       "restatement": "You decide the success_criterion as stated.",
       "proposal_id": "p_4",
       "revision": 9,
-      "time": "2026-10-22T18:59:36.191561+00:00",
+      "time": "2026-10-23T11:56:38.761140+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -490,7 +490,7 @@
       "restatement": "You decide the preprocessing as stated.",
       "proposal_id": "p_5",
       "revision": 11,
-      "time": "2026-10-22T18:59:37.227860+00:00",
+      "time": "2026-10-23T11:56:40.178114+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -521,7 +521,7 @@
       "restatement": "You decide the model_variant as stated.",
       "proposal_id": "p_6",
       "revision": 33,
-      "time": "2026-10-22T18:59:44.615347+00:00",
+      "time": "2026-10-23T11:56:51.394074+00:00",
       "authenticated": false,
       "basis": "restated",
       "delegation_scope": null,
@@ -669,7 +669,7 @@
    "results": {
     "eda.correlation": {
      "slot": "eda.correlation",
-     "result_id": "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
+     "result_id": "d8a4a040f970e73c06d5a5526647da8e00ff86603a92c17b710fb11bfd46716c",
      "activity": "eda.correlation",
      "current": true,
      "stale_reason": null,
@@ -909,7 +909,7 @@
        }
       ]
      },
-     "code_fingerprint": "d5e4007116df3d4e265d24dbc1c4958abcb01e8d32b5d7176a09e47b17ca6249",
+     "code_fingerprint": "f862ca329332ce7ffd0f847612c4a9a6ebbcb253c91b4c988d43ec17339df759",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -919,17 +919,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_284db43c31758f9aef75cd0b",
-     "exposure_id": "x_73fc31a721304a008ff96b9162a9890c",
+     "exposure_id": "x_5db8d87a454443819299cf0e89b35988",
      "started_revision": 26,
      "integrity": "ok"
     },
     "eda.distribution:weight": {
      "slot": "eda.distribution:weight",
-     "result_id": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
+     "result_id": "34b12c3583d0cff8ca3c019fbc41e4ebfd8f7665f765899c69fed9d72ebfbd80",
      "activity": "eda.distribution",
      "current": true,
      "stale_reason": null,
@@ -1055,11 +1055,11 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "special_values": []
      },
-     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
+     "code_fingerprint": "d6d4cf7690dee23a715561a6c98879d9876cd69063673be6f514ceb41c4b75b0",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -1069,17 +1069,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_622dd0c704d6af123eea761a",
-     "exposure_id": "x_0651586f6e894515bf54abfd6eba31bf",
+     "exposure_id": "x_f5d7077266dd486cbe61cb72ca3dc642",
      "started_revision": 24,
      "integrity": "ok"
     },
     "eda.mean_by:model_year": {
      "slot": "eda.mean_by:model_year",
-     "result_id": "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
+     "result_id": "b72897aac4a9053f0f1518881f98009ca38b5de969944f8f1620ed5298e4594d",
      "activity": "eda.mean_by",
      "current": true,
      "stale_reason": null,
@@ -1289,7 +1289,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "special_values": [],
       "target": {
@@ -1297,7 +1297,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
+     "code_fingerprint": "d6d4cf7690dee23a715561a6c98879d9876cd69063673be6f514ceb41c4b75b0",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -1307,17 +1307,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_5f95a7d242e4ea751ed82afb",
-     "exposure_id": "x_c86e69b6cf574b5c8799ffa35cdcfd23",
+     "exposure_id": "x_34d64f8db31344988af6757dd23a8c6e",
      "started_revision": 22,
      "integrity": "ok"
     },
     "eda.quality": {
      "slot": "eda.quality",
-     "result_id": "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
+     "result_id": "3eb85bdd75b83fad765398b8033bc49ed2dfd5399ebb1638af0ec129d92f510d",
      "activity": "eda.quality",
      "current": true,
      "stale_reason": null,
@@ -2505,7 +2505,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       }
      },
-     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
+     "code_fingerprint": "d6d4cf7690dee23a715561a6c98879d9876cd69063673be6f514ceb41c4b75b0",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2515,17 +2515,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_808e66ec55e19cf01a72e71c",
-     "exposure_id": "x_97bff6abc20149dd808f5d38f720eb6e",
+     "exposure_id": "x_7138213a2b834aba997c8a53e69f06b4",
      "started_revision": 18,
      "integrity": "ok"
     },
     "eda.single_feature_signal": {
      "slot": "eda.single_feature_signal",
-     "result_id": "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
+     "result_id": "408e2b127cde737b6d2d54df2729444a88976a9aa77ed9a9d5c5433765156df4",
      "activity": "eda.single_feature_signal",
      "current": true,
      "stale_reason": null,
@@ -2562,14 +2562,14 @@
        {
         "feature": "horsepower",
         "availability": "available_at_prediction",
-        "score": 0.6239501978472505,
+        "score": 0.6239501978472506,
         "rank": 4,
         "flag": false
        },
        {
         "feature": "origin",
         "availability": "available_at_prediction",
-        "score": 0.3449029817324961,
+        "score": 0.3449029817324962,
         "rank": 5,
         "flag": false
        },
@@ -2581,7 +2581,7 @@
         "flag": false
        }
       ],
-      "median": 0.644421495874133,
+      "median": 0.6444214958741331,
       "level": 0.8,
       "gap": 0.4,
       "questions": [],
@@ -2618,7 +2618,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "special_values": [
        {
@@ -2631,7 +2631,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "9f5e656ffe98e09758ba07f5ca1c376f063beade51a1280fd192f1739df7a3ce",
+     "code_fingerprint": "e59422a33ef339674f3f1c9d8b3dde7ec978d18774f0080a0aad0b951f8769e8",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2641,17 +2641,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_75c47b1ef767a30eb39cdb4d",
-     "exposure_id": "x_b6d7eb8fe8f34503be492598e3aae53f",
+     "exposure_id": "x_67282c145cdb426595e0ef0746c755ed",
      "started_revision": 20,
      "integrity": "ok"
     },
     "eda.special_values": {
      "slot": "eda.special_values",
-     "result_id": "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
+     "result_id": "fcb6b0898b53fee0d27fffd4d52a49d891f980ea5bb1ed7e7f01a6809055d447",
      "activity": "eda.special_values",
      "current": true,
      "stale_reason": null,
@@ -2688,7 +2688,7 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "special_values": [
        {
@@ -2701,7 +2701,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
+     "code_fingerprint": "d6d4cf7690dee23a715561a6c98879d9876cd69063673be6f514ceb41c4b75b0",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2711,17 +2711,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_305370681065d9971a93f227",
-     "exposure_id": "x_455e98bf1c474f25a137637b9f683359",
+     "exposure_id": "x_4d8fa13f2174415eaa63cc711c14cdb6",
      "started_revision": 16,
      "integrity": "ok"
     },
     "eda.target_summary": {
      "slot": "eda.target_summary",
-     "result_id": "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
+     "result_id": "ede1c496d3f0c34de015fdf6e92707d3374166398424c4f42d36c454bad5239c",
      "activity": "eda.target_summary",
      "current": true,
      "stale_reason": null,
@@ -2760,14 +2760,14 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "target": {
        "column": "mpg",
        "positive_label": null
       }
      },
-     "code_fingerprint": "22bb21e49eab77ac4536a160dd787b23922b3b3b7d909a8a9c8dbf540785c12a",
+     "code_fingerprint": "d6d4cf7690dee23a715561a6c98879d9876cd69063673be6f514ceb41c4b75b0",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -2777,17 +2777,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_f37508d21e9ebda7c2ebce28",
-     "exposure_id": "x_41bc8c98013943389a922ff63421dc2a",
+     "exposure_id": "x_595f9fed5fb34c00b679c1d9f2e67f59",
      "started_revision": 14,
      "integrity": "ok"
     },
     "evaluate.regression": {
      "slot": "evaluate.regression",
-     "result_id": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+     "result_id": "1ddeadffdef313250d4f53b54ecc5374980d0819735361e5718462d0f6b4a8cc",
      "activity": "evaluate.regression",
      "current": true,
      "stale_reason": null,
@@ -2812,15 +2812,15 @@
         "rmse": 7.664419781686159,
         "mean_residual": 6.394515464632113,
         "median_abs_residual": 5.572351386623355,
-        "max_abs_residual": 18.453047853152373
+        "max_abs_residual": 18.45304785315237
        },
        "fit.variant": {
         "n": 96,
         "mae": 6.505297098322088,
         "rmse": 7.754118337852464,
         "mean_residual": 6.409752295558562,
-        "median_abs_residual": 5.673693089740423,
-        "max_abs_residual": 18.794732120875597
+        "median_abs_residual": 5.673693089740421,
+        "max_abs_residual": 18.794732120875594
        }
       },
       "intervals": {
@@ -2836,11 +2836,11 @@
        },
        "fit.linear": {
         "mae": {
-         "low": 5.690730215654783,
-         "high": 7.305849617407722
+         "low": 5.690730215654784,
+         "high": 7.3058496174077225
         },
         "rmse": {
-         "low": 6.765424236359605,
+         "low": 6.765424236359606,
          "high": 8.545695275480197
         }
        },
@@ -2850,7 +2850,7 @@
          "high": 7.367522314327747
         },
         "rmse": {
-         "low": 6.833640498704086,
+         "low": 6.833640498704084,
          "high": 8.65974474375661
         }
        }
@@ -2859,13 +2859,13 @@
        "fit.linear": {
         "mae": {
          "point": -3.792215923650031,
-         "low": -4.375861635363239,
+         "low": -4.375861635363238,
          "high": -3.159283658688826
         },
         "rmse": {
          "point": -4.260082695719677,
          "low": -4.785149196088145,
-         "high": -3.7022079436311013
+         "high": -3.7022079436310995
         }
        },
        "fit.variant": {
@@ -2898,25 +2898,25 @@
         "n": 96,
         "mean": 6.394515464632113,
         "sd": 4.2475209438452115,
-        "min": -1.7765995191585056,
-        "q05": 0.41185178765314934,
+        "min": -1.776599519158502,
+        "q05": 0.41185178765315067,
         "q25": 3.261984922442746,
         "median": 5.572351386623355,
-        "q75": 8.998533037532635,
+        "q75": 8.998533037532638,
         "q95": 15.165754635580324,
-        "max": 18.453047853152373
+        "max": 18.45304785315237
        },
        "fit.variant": {
         "n": 96,
         "mean": 6.409752295558562,
-        "sd": 4.3865547731222545,
-        "min": -2.01547476534812,
-        "q05": 0.48045573571023015,
-        "q25": 3.390125374385283,
-        "median": 5.673693089740423,
-        "q75": 9.178199377862294,
-        "q95": 15.431844902403547,
-        "max": 18.794732120875597
+        "sd": 4.386554773122254,
+        "min": -2.0154747653481238,
+        "q05": 0.4804557357102279,
+        "q25": 3.3901253743852857,
+        "median": 5.673693089740421,
+        "q75": 9.178199377862295,
+        "q95": 15.431844902403551,
+        "max": 18.794732120875594
        }
       },
       "residuals_by": [
@@ -2935,11 +2935,11 @@
             "mean_residual": 4.2074119574119555
            },
            "fit.linear": {
-            "mae": 3.958008031973129,
-            "mean_residual": 3.807868612211448
+            "mae": 3.95800803197313,
+            "mean_residual": 3.807868612211449
            },
            "fit.variant": {
-            "mae": 3.92494543602748,
+            "mae": 3.924945436027481,
             "mean_residual": 3.753553139485518
            }
           }
@@ -2958,7 +2958,7 @@
             "mean_residual": 8.90008671054259
            },
            "fit.variant": {
-            "mae": 9.001567586383981,
+            "mae": 9.00156758638398,
             "mean_residual": 8.944454210939016
            }
           }
@@ -2973,8 +2973,8 @@
             "mean_residual": 9.646684684684683
            },
            "fit.linear": {
-            "mae": 5.8417373097433645,
-            "mean_residual": 5.699609348210683
+            "mae": 5.841737309743365,
+            "mean_residual": 5.699609348210685
            },
            "fit.variant": {
             "mae": 5.9372553994158785,
@@ -2996,8 +2996,8 @@
             "mean_residual": 6.960322415109672
            },
            "fit.variant": {
-            "mae": 6.947628591508135,
-            "mean_residual": 6.947628591508135
+            "mae": 6.947628591508134,
+            "mean_residual": 6.947628591508134
            }
           }
          }
@@ -3006,9 +3006,9 @@
        }
       ],
       "predictions": {
-       "fit.baseline": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
-       "fit.linear": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
-       "fit.variant": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa"
+       "fit.baseline": "8f4f70d15dd58118b2e885651a94ca2ddc65fa01ca44089018350cc172878cf8",
+       "fit.linear": "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
+       "fit.variant": "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f"
       },
       "reference": "fit.baseline",
       "candidate": "fit.linear",
@@ -3052,13 +3052,13 @@
         "reference": "fit.linear",
         "mae": {
          "point": 0.028706715665814286,
-         "low": -0.0419417884932868,
-         "high": 0.09590339908292533
+         "low": -0.04194178849329033,
+         "high": 0.09590339908292789
         },
         "rmse": {
          "point": 0.08969855616630529,
-         "low": 0.021499179657066665,
-         "high": 0.15014827065407665
+         "low": 0.021499179657065777,
+         "high": 0.15014827065407482
         }
        }
       },
@@ -3094,10 +3094,10 @@
        "model_year"
       ],
       "results": {
-       "fit.baseline": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
-       "fit.linear": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
-       "fit.variant": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "fit.baseline": "8f4f70d15dd58118b2e885651a94ca2ddc65fa01ca44089018350cc172878cf8",
+       "fit.linear": "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
+       "fit.variant": "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f",
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "target": {
        "column": "mpg",
@@ -3117,7 +3117,7 @@
        }
       ]
      },
-     "code_fingerprint": "3ed4e0f45519121efc177f2140dd7849b786d1940c8b61a455f0f775ab695f6b",
+     "code_fingerprint": "08acc259eba738666462aef4c40f83858f19b69f49c687c71a18d6c93d18ce55",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3127,17 +3127,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_952532c3c79c0a600a6ca16b",
-     "exposure_id": "x_bb69c14488664bbd8cb982993f9dafc3",
+     "exposure_id": "x_38132e6f3dc24d8798dc294deb47c994",
      "started_revision": 36,
      "integrity": "ok"
     },
     "fit.baseline": {
      "slot": "fit.baseline",
-     "result_id": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+     "result_id": "8f4f70d15dd58118b2e885651a94ca2ddc65fa01ca44089018350cc172878cf8",
      "activity": "fit.baseline",
      "current": true,
      "stale_reason": null,
@@ -3190,14 +3190,14 @@
        "row_keys": "a109b989961132723b9b265e8aaa73cd7740fb224c174744545a2b0a3376dc73"
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "target": {
        "column": "mpg",
        "positive_label": null
       }
      },
-     "code_fingerprint": "d85d17d1bc95b07b484612bea5d687dee991f8cea6f3c83a73cf0224b977f14b",
+     "code_fingerprint": "275b8187e2486ae708d68b063e4a0eccd6632b54ea4cef78f355546732d8fc2d",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3207,17 +3207,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_aa1477c41bc44c975f9888ce",
-     "exposure_id": "x_5fb8b259d54f40e6894012fdd487769a",
+     "exposure_id": "x_5241a7b1c5c7419da4835d3fe3e0579e",
      "started_revision": 28,
      "integrity": "ok"
     },
     "fit.linear": {
      "slot": "fit.linear",
-     "result_id": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+     "result_id": "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
      "activity": "fit.linear",
      "current": true,
      "stale_reason": null,
@@ -3241,21 +3241,21 @@
       "n_terms": 8,
       "intercept": 21.07139386751173,
       "coefficients": {
-       "num__cylinders": -0.37022387198762663,
-       "num__displacement": 0.41888510741149965,
-       "num__horsepower": -1.1866635219111492,
-       "num__weight": -4.06198454531306,
-       "num__horsepower=?": -0.04154318702939362,
-       "cat__origin_1": -0.9522927696703998,
-       "cat__origin_2": -0.18834773058375193,
-       "cat__origin_3": 1.1406405002541524
+       "num__cylinders": -0.37022387198762724,
+       "num__displacement": 0.41888510741149876,
+       "num__horsepower": -1.1866635219111468,
+       "num__weight": -4.061984545313062,
+       "num__horsepower=?": -0.04154318702939566,
+       "cat__origin_1": -0.9522927696704008,
+       "cat__origin_2": -0.1883477305837519,
+       "cat__origin_3": 1.1406405002541518
       },
       "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
       "train": {
        "n_rows": 222,
        "mae": 2.107827519590371,
        "rmse": 2.828244905141762,
-       "mean_residual": -7.681543089298381e-16
+       "mean_residual": 6.40128590774865e-17
       },
       "validation": {
        "n_rows": 96,
@@ -3298,7 +3298,7 @@
       }
      },
      "blobs": {
-      "predictions": "dc3e1d7b12820c80eb9a45b7b30b3eb0aab78a1c2dbfb7f1f02255349becc978"
+      "predictions": "b225513593321a8cd516ceab26c06227e17d6bf51924f6ea4540990cbc70f997"
      },
      "params": {
       "estimator": "sklearn.linear_model.LinearRegression",
@@ -3329,7 +3329,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "special_values": [
        {
@@ -3342,7 +3342,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "81dfd8793db136025ac70dae1f92735cbc6e63c30a9c250c151be3a5c8c2a71a",
+     "code_fingerprint": "5e89736491374d2839c8883f5bc84535a96bfdc9a4391836f0409d5e74161b2b",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3352,17 +3352,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_2033db067e905124ef78ea82",
-     "exposure_id": "x_9d118df0e2aa4e2d9b430556113c5a04",
+     "exposure_id": "x_b2b710f70f544dd29fdaaa545c547d50",
      "started_revision": 30,
      "integrity": "ok"
     },
     "fit.variant": {
      "slot": "fit.variant",
-     "result_id": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
+     "result_id": "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f",
      "activity": "fit.variant",
      "current": true,
      "stale_reason": null,
@@ -3386,21 +3386,21 @@
       "n_terms": 8,
       "intercept": 20.943266941816127,
       "coefficients": {
-       "num__cylinders": -0.5206655589928504,
-       "num__displacement": -0.4706630199042812,
-       "num__horsepower": -1.04610270691046,
-       "num__weight": -3.187671107660324,
-       "num__horsepower=?": -0.04053541390734947,
-       "cat__origin_1": -0.7060718689819631,
-       "cat__origin_2": -0.20009242812717767,
-       "cat__origin_3": 0.9061642971091314
+       "num__cylinders": -0.5206655589928507,
+       "num__displacement": -0.4706630199042758,
+       "num__horsepower": -1.0461027069104654,
+       "num__weight": -3.1876711076603237,
+       "num__horsepower=?": -0.04053541390734935,
+       "cat__origin_1": -0.7060718689819638,
+       "cat__origin_2": -0.20009242812717776,
+       "cat__origin_3": 0.9061642971091335
       },
       "coefficient_scale": "target units per standard deviation of the training rows (numeric) or per category (one-hot, not identifiable one by one); associations, not effects",
       "train": {
        "n_rows": 222,
-       "mae": 2.098319455024603,
-       "rmse": 2.850621784281929,
-       "mean_residual": -8.321671680073245e-16
+       "mae": 2.0983194550246034,
+       "rmse": 2.8506217842819295,
+       "mean_residual": -7.681543089298381e-16
       },
       "validation": {
        "n_rows": 96,
@@ -3448,7 +3448,7 @@
       "alpha": 10.0
      },
      "blobs": {
-      "predictions": "91506dcf18d05fabed770007382d6e25a76005f60d74e5f1b24b0d1d326e6ae2"
+      "predictions": "fcfaca99fb29acdff0d7692638ce6b441a48e9a9be801eb29e6ec58f7273b066"
      },
      "params": {
       "alpha": 10.0,
@@ -3480,7 +3480,7 @@
        "rare_category_min_rows": 0
       },
       "results": {
-       "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
       },
       "special_values": [
        {
@@ -3497,7 +3497,7 @@
        "strength": "strong"
       }
      },
-     "code_fingerprint": "627174e6c3617f7fda059d1e137381bb49249766a91ab5a634de4b124f4fb019",
+     "code_fingerprint": "e90713a95b3862a274c1bfe8e19f864c2c3949bb31692b579b12ef95f3db9af5",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3507,17 +3507,17 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_9ef87905207eafeced71da38",
-     "exposure_id": "x_ca620677b7d64ca7aaf7f0fe11fbd6bb",
+     "exposure_id": "x_2c00b2943a8248e683639d086e84a028",
      "started_revision": 34,
      "integrity": "ok"
     },
     "split": {
      "slot": "split",
-     "result_id": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e",
+     "result_id": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82",
      "activity": "split",
      "current": true,
      "stale_reason": null,
@@ -3590,7 +3590,7 @@
        "positive_label": null
       }
      },
-     "code_fingerprint": "39c88f58258ac3e65b5c6c018e6eb6c41fb3ed14759ca24f6cc706c5d45e5e26",
+     "code_fingerprint": "c30c1b8abe48e32a29a4afbf0145b5bde705f41fc52da21acc33c70af54a5d35",
      "environment": {
       "implementation": "cpython",
       "packages": {
@@ -3600,11 +3600,11 @@
        "scikit-learn": "1.9.1",
        "scipy": "1.18.1"
       },
-      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
-      "python": "3.13.5"
+      "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+      "python": "3.13.16"
      },
      "execution_id": "e_ea1ff066194e9ce5fbc1533b",
-     "exposure_id": "x_8d492ce8a9b64560be190e104b726640",
+     "exposure_id": "x_e26218539a60493e9956f7fb5cf97c32",
      "started_revision": 12,
      "integrity": "ok"
     }
@@ -3624,27 +3624,27 @@
      "notebook": {
       "candidate": null,
       "consumed": [
-       "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
-       "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
-       "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
-       "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
-       "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
-       "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
-       "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
-       "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
-       "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
-       "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
-       "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
-       "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f",
+       "1ddeadffdef313250d4f53b54ecc5374980d0819735361e5718462d0f6b4a8cc",
+       "34b12c3583d0cff8ca3c019fbc41e4ebfd8f7665f765899c69fed9d72ebfbd80",
+       "3eb85bdd75b83fad765398b8033bc49ed2dfd5399ebb1638af0ec129d92f510d",
+       "408e2b127cde737b6d2d54df2729444a88976a9aa77ed9a9d5c5433765156df4",
+       "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
+       "8f4f70d15dd58118b2e885651a94ca2ddc65fa01ca44089018350cc172878cf8",
+       "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82",
+       "b72897aac4a9053f0f1518881f98009ca38b5de969944f8f1620ed5298e4594d",
+       "d8a4a040f970e73c06d5a5526647da8e00ff86603a92c17b710fb11bfd46716c",
+       "ede1c496d3f0c34de015fdf6e92707d3374166398424c4f42d36c454bad5239c",
+       "fcb6b0898b53fee0d27fffd4d52a49d891f980ea5bb1ed7e7f01a6809055d447"
       ],
-      "edit_check_sha256": "5aa570ac42ff585431bdee50078b276f4912751e0d2abb6ddddc2d45afac2cc7",
+      "edit_check_sha256": "54bbd3bfd1fe72509cc07a0ab1473882cc796b0908bb57ca55ef623806aeafe0",
       "error": null,
       "generated": true,
       "kind": "marimo_notebook",
       "last_ok_revision": 38,
       "path": "notebooks/study_generated.py",
       "revision": 38,
-      "sha256": "8aa49c7d98d76bf0d28f94587ec9bfa430165a31f29c8a169f357f3d18a2ed8f",
+      "sha256": "c43d14f93734a35eb8a9b808f7f6da5ce9afd4c35f9b7bf30435625ecace2b86",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3657,18 +3657,18 @@
      "report": {
       "candidate": null,
       "consumed": [
-       "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
-       "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
-       "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
-       "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
-       "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
-       "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
-       "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
-       "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
-       "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
-       "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
-       "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
-       "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+       "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f",
+       "1ddeadffdef313250d4f53b54ecc5374980d0819735361e5718462d0f6b4a8cc",
+       "34b12c3583d0cff8ca3c019fbc41e4ebfd8f7665f765899c69fed9d72ebfbd80",
+       "3eb85bdd75b83fad765398b8033bc49ed2dfd5399ebb1638af0ec129d92f510d",
+       "408e2b127cde737b6d2d54df2729444a88976a9aa77ed9a9d5c5433765156df4",
+       "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
+       "8f4f70d15dd58118b2e885651a94ca2ddc65fa01ca44089018350cc172878cf8",
+       "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82",
+       "b72897aac4a9053f0f1518881f98009ca38b5de969944f8f1620ed5298e4594d",
+       "d8a4a040f970e73c06d5a5526647da8e00ff86603a92c17b710fb11bfd46716c",
+       "ede1c496d3f0c34de015fdf6e92707d3374166398424c4f42d36c454bad5239c",
+       "fcb6b0898b53fee0d27fffd4d52a49d891f980ea5bb1ed7e7f01a6809055d447"
       ],
       "error": null,
       "generated": true,
@@ -3676,7 +3676,7 @@
       "last_ok_revision": 38,
       "path": "reports/study.html",
       "revision": 38,
-      "sha256": "2bf8d5481ebb7dd1ecbc1abf7da69cdcaf60d882b2ec663caa2a8714686f9551",
+      "sha256": "82ff95d58c2d73fe1dbd2fa0e2fdcac21d104909d63e2278883d2a543d3617d3",
       "status": "ok",
       "template_version": 2,
       "user_edits_preserved": [],
@@ -3868,12 +3868,12 @@
     },
     "metric": "mae_reduction",
     "status": "met",
-    "result_id": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+    "result_id": "1ddeadffdef313250d4f53b54ecc5374980d0819735361e5718462d0f6b4a8cc",
     "rule": null,
     "model": "fit.linear",
     "gain": 0.36929471747082676,
     "low": 0.30765831630777174,
-    "high": 0.4261314806060685,
+    "high": 0.4261314806060684,
     "minimum": 0.1,
     "unit": "share",
     "interval_includes_zero": false,
@@ -3886,10 +3886,10 @@
    "eda_looks": {
     "target_looks": 4,
     "results": [
-     "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
-     "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
-     "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
-     "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25"
+     "ede1c496d3f0c34de015fdf6e92707d3374166398424c4f42d36c454bad5239c",
+     "fcb6b0898b53fee0d27fffd4d52a49d891f980ea5bb1ed7e7f01a6809055d447",
+     "408e2b127cde737b6d2d54df2729444a88976a9aa77ed9a9d5c5433765156df4",
+     "b72897aac4a9053f0f1518881f98009ca38b5de969944f8f1620ed5298e4594d"
     ],
     "by_activity": {
      "eda.mean_by": 1,
@@ -3903,8 +3903,8 @@
    "trials": {
     "count": 2,
     "results": [
-     "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
-     "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa"
+     "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
+     "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f"
     ],
     "note": "Each candidate or variant configuration fitted is a trial. Choosing the best of several trials on the same rows makes its figures slightly optimistic; the final test, opened once, is not affected."
    },
@@ -4023,18 +4023,18 @@
     "schema": "hypotrail.presentation/1",
     "revision": 38,
     "result_ids": {
-     "eda.correlation": "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
-     "eda.distribution:weight": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
-     "eda.mean_by:model_year": "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
-     "eda.quality": "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
-     "eda.single_feature_signal": "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
-     "eda.special_values": "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
-     "eda.target_summary": "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
-     "evaluate.regression": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
-     "fit.baseline": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
-     "fit.linear": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
-     "fit.variant": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
-     "split": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e"
+     "eda.correlation": "d8a4a040f970e73c06d5a5526647da8e00ff86603a92c17b710fb11bfd46716c",
+     "eda.distribution:weight": "34b12c3583d0cff8ca3c019fbc41e4ebfd8f7665f765899c69fed9d72ebfbd80",
+     "eda.mean_by:model_year": "b72897aac4a9053f0f1518881f98009ca38b5de969944f8f1620ed5298e4594d",
+     "eda.quality": "3eb85bdd75b83fad765398b8033bc49ed2dfd5399ebb1638af0ec129d92f510d",
+     "eda.single_feature_signal": "408e2b127cde737b6d2d54df2729444a88976a9aa77ed9a9d5c5433765156df4",
+     "eda.special_values": "fcb6b0898b53fee0d27fffd4d52a49d891f980ea5bb1ed7e7f01a6809055d447",
+     "eda.target_summary": "ede1c496d3f0c34de015fdf6e92707d3374166398424c4f42d36c454bad5239c",
+     "evaluate.regression": "1ddeadffdef313250d4f53b54ecc5374980d0819735361e5718462d0f6b4a8cc",
+     "fit.baseline": "8f4f70d15dd58118b2e885651a94ca2ddc65fa01ca44089018350cc172878cf8",
+     "fit.linear": "609826286647538b4c4b26f2ec1e6110510caf5a62ed29b45a79295dc81b0c1f",
+     "fit.variant": "0b9844ab26ba78f1eeadb2c7c89a60f7c5a5cdfe09a5e5cb66e40bebcf89685f",
+     "split": "94ff1bd69cc2160e8b52ac9425d2d20bb62e5ecba7e90c7eea50c6f0779e4a82"
     },
     "eligibility": null,
     "uncertainty": {},
