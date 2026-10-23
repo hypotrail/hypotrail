@@ -33,16 +33,19 @@ MAX_BUNDLE_BYTES = 200 * 1024 * 1024
 
 def _json(bundle_dir: Path, relative, where: str) -> dict:
     try:
-        path = mp._inside(bundle_dir, relative, where)
+        path = mp.inside(bundle_dir, relative, where)
         return mp._read_json(path, where)
     except mp.PackagingError as error:
         raise from_packaging(error) from error
 
 
 def read_files(root: Path) -> dict[str, bytes]:
-    """Every file under ``root`` by POSIX relative path; a symlink is refused."""
+    """Every file under ``root`` by POSIX relative path; a symlink is refused; bytecode
+    caches (``__pycache__``) are not part of a bundle and are not copied."""
     out, total = {}, 0
     for path in sorted(root.rglob('*')):
+        if '__pycache__' in path.relative_to(root).parts:
+            continue
         rel = path.relative_to(root).as_posix()
         if path.is_symlink():
             raise ExportError('artifact_integrity_failed', 'The bundle holds a symbolic link.',

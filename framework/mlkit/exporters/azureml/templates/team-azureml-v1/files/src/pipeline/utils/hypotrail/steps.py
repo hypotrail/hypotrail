@@ -19,10 +19,14 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from . import canonical, contracts, runtime_bridge
 from .config import write_frozen
 from .errors import ProjectError
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 CANDIDATE_ROLE = "rebuilt_candidate"
 REPORT_SCHEMA = "hypotrail.technical_report/1"
@@ -30,6 +34,7 @@ RUN_SCHEMA = "hypotrail.candidate_run/1"
 PARTITIONS_FILE = "partitions.json"
 PARITY_FALLBACK_ROWS = 20
 BUNDLE_FOLDER = "bundle"
+LOCK_PATH = "aml/pipelines/training/requirements.lock"
 
 
 def _write_json(path: Path, document: dict) -> Path:
@@ -118,7 +123,8 @@ def split(frozen: dict) -> dict:
     config = frozen["config"]
     found = contracts.load(frozen)
     prepared = contracts.read_rows(
-        Path(config["preprocessed_data"]["path"]) / config["preprocessed_data"]["file"], found.data_contract
+        Path(config["preprocessed_data"]["path"]) / config["preprocessed_data"]["file"],
+        found.data_contract,
     )
     by_key = prepared.set_index(contracts.KEY_COLUMN, drop=False)
     out_dir = Path(config["train_data"]["path"])
@@ -159,7 +165,7 @@ def _code_fingerprint() -> str:
     return canonical.canonical_sha256([[p.relative_to(root).as_posix(), contracts.sha256_file(p)] for p in files])
 
 
-def _training_rows(frozen: dict, found: contracts.Contracts):
+def _training_rows(frozen: dict, found: contracts.Contracts) -> pd.DataFrame:
     import pandas as pd
 
     folder = Path(frozen["config"]["train_data"]["path"])
@@ -170,28 +176,33 @@ def _training_rows(frozen: dict, found: contracts.Contracts):
     rows = pd.concat(frames, ignore_index=True).drop_duplicates(subset=[contracts.KEY_COLUMN])
     order = development_keys(found.plan)
     if sorted(rows[contracts.KEY_COLUMN], key=_key_order) != order:
-        raise ProjectError("data_identity_mismatch", "The partitions do not cover the development rows.", path=PARTITIONS_FILE)
+        raise ProjectError(
+            "data_identity_mismatch", "The partitions do not cover the development rows.", path=PARTITIONS_FILE,
+        )
     rows = rows.set_index(contracts.KEY_COLUMN).loc[order]
     rows.index.name = None
     return rows
 
 
 def evaluated_bundle(found: contracts.Contracts) -> Path | None:
-    """The folder of the evaluated model's native bundle, when the export carries one."""
+    """Return the evaluated model's native bundle folder, when the export carries one."""
     folder = found.data_dir / "models" / "evaluated"
     return folder if (folder / "predictor_bundle.json").is_file() else None
 
 
-def parity_features(found: contracts.Contracts, rows):
-    """The parity rows: the evaluated bundle's (authorised development rows or synthetic
-    cases), else the first development rows in key order; features only, no target."""
+def parity_features(found: contracts.Contracts, rows: pd.DataFrame) -> tuple[pd.DataFrame, str]:
+    """Return the parity rows (features only, no target) and their origin.
+
+    They are the evaluated bundle's (authorised development rows or synthetic cases), else
+    the first development rows in key order.
+    """
     from . import mlflow_packaging as mp
 
     bundle_dir = evaluated_bundle(found)
     if bundle_dir is not None:
         bundle = contracts.load_json(bundle_dir / "predictor_bundle.json")
         spec = mp.ParitySpec.from_bundle(bundle)
-        return mp.read_table(mp._inside(bundle_dir, spec.features_path, "parity.features_path")), "evaluated_bundle"
+        return mp.read_table(mp.inside(bundle_dir, spec.features_path, "parity.features_path")), "evaluated_bundle"
     features = list(found.recipe["features"])
     return rows[features].head(PARITY_FALLBACK_ROWS).reset_index(drop=True), "development_rows"
 
@@ -210,12 +221,11 @@ def train(frozen: dict) -> dict:
     packaging = config["packaging"]
     rt = runtime_bridge.runtime()
     packager = None
-    if packaging["format"] == "mlflow_pyfunc":
-        if packaging["required"] or runtime_bridge.available("mlflow"):
-            runtime_bridge.mlflow()
-            from . import mlflow_packaging
+    if packaging["format"] == "mlflow_pyfunc" and (packaging["required"] or runtime_bridge.available("mlflow")):
+        runtime_bridge.mlflow()
+        from . import mlflow_packaging
 
-            packager = mlflow_packaging.ArtifactPackager(rt)
+        packager = mlflow_packaging.ArtifactPackager(rt)
     found = contracts.load(frozen)
     rows = _training_rows(frozen, found)
     recipe = rt.validate_recipe(found.recipe)
@@ -228,7 +238,8 @@ def train(frozen: dict) -> dict:
     }
     fitted = rt.fit_predictor(recipe, data_contract, rows, scope)
     snapshot = found.snapshot
-    lock = contracts.ROOT / "aml" / "pipelines" / "training" / "requirements.lock"
+    # The code upload excludes aml/: the lock's identity comes from the export manifest.
+    lock_sha = next((f["sha256"] for f in found.manifest["files"] if f["path"] == LOCK_PATH), None)
     context = {
         "schema_version": "hypotrail.computation_context/1",
         "activity_id": f"azureml-rebuild-{frozen['scientific_sha256'][:16]}",
@@ -236,9 +247,16 @@ def train(frozen: dict) -> dict:
         "expected_revision": snapshot["study_revision"],
         "protocol_id": found.plan["protocol_id"],
         "decision_refs": [snapshot["selected"]["decision_id"]],
-        "input_refs": [{"id": "development_rows", "sha256": found.plan["development_keys_sha256"], "role": "development"}],
+        "input_refs": [
+            {"id": "development_rows", "sha256": found.plan["development_keys_sha256"], "role": "development"},
+        ],
         "partition_refs": [
-            {"id": p["id"], "membership_sha256": p["keys_sha256"], "role": p["role"], "exposure_status": p.get("exposure_status")}
+            {
+                "id": p["id"],
+                "membership_sha256": p["keys_sha256"],
+                "role": p["role"],
+                "exposure_status": p.get("exposure_status"),
+            }
             for p in found.plan["partitions"]
         ],
         "code_fingerprint": _code_fingerprint(),
@@ -246,7 +264,7 @@ def train(frozen: dict) -> dict:
         "backend": "hypotrail_runtime",
         "method_contract_version": found.recipe["method_contract_version"],
         "semantic_dependencies": [],
-        "environment_lock_sha256": contracts.sha256_file(lock) if lock.is_file() else None,
+        "environment_lock_sha256": lock_sha,
     }
     features, parity_origin = parity_features(found, rows)
     models = Path(config["models"]["path"])
@@ -303,12 +321,12 @@ def evaluate(frozen: dict) -> dict:
         {
             "id": "no_inherited_evidence",
             "status": "passed" if not bundle.get("evidence_binding_path") else "failed",
-        }
+        },
     )
     spec = mp.ParitySpec.from_bundle(bundle)
-    features = mp.read_table(mp._inside(bundle_dir, spec.features_path, "parity.features_path"))
+    features = mp.read_table(mp.inside(bundle_dir, spec.features_path, "parity.features_path"))
     native = mp.batch_frame(rt.load_predictor(bundle_dir).predict(features.copy()))
-    expected = mp.read_table(mp._inside(bundle_dir, spec.expected_outputs_path, "parity.expected_outputs_path"))
+    expected = mp.read_table(mp.inside(bundle_dir, spec.expected_outputs_path, "parity.expected_outputs_path"))
     reload = mp.compare(native, expected, spec.rtol, spec.atol)
     checks.append({"id": "candidate_reload_parity", "status": "passed" if reload["equal"] else "failed", **reload})
     packages = [p for p in bundle.get("optional_packages") or [] if p.get("format") == mp.FORMAT]
@@ -323,8 +341,8 @@ def evaluate(frozen: dict) -> dict:
     if evaluated_dir is not None:
         evaluated = contracts.load_json(evaluated_dir / "predictor_bundle.json")
         espec = mp.ParitySpec.from_bundle(evaluated)
-        efeatures = mp.read_table(mp._inside(evaluated_dir, espec.features_path, "parity.features_path"))
-        eexpected = mp.read_table(mp._inside(evaluated_dir, espec.expected_outputs_path, "parity.expected_outputs_path"))
+        efeatures = mp.read_table(mp.inside(evaluated_dir, espec.features_path, "parity.features_path"))
+        eexpected = mp.read_table(mp.inside(evaluated_dir, espec.expected_outputs_path, "parity.expected_outputs_path"))
         candidate = mp.batch_frame(rt.load_predictor(bundle_dir).predict(efeatures.copy()))
         observed = mp.compare(candidate, eexpected, espec.rtol, espec.atol)
         deviation = {

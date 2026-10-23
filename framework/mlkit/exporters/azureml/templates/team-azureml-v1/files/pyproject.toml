@@ -20,6 +20,16 @@ target-version = "py313"
 [tool.ruff.lint.per-file-ignores]
 "schemas.py" = ["N805"]
 "tests/**.py" = ["S101"]
+# Hypotrail export: byte copies of the generator's modules (their SHA-256 is in the export
+# manifest); they keep the generator's style and are never edited here.
+"src/pipeline/utils/hypotrail/canonical.py" = ["ALL"]
+"src/pipeline/utils/hypotrail/projection.py" = ["ALL"]
+"src/pipeline/utils/hypotrail/transfer.py" = ["ALL"]
+"src/pipeline/utils/hypotrail/azure_yaml.py" = ["ALL"]
+"src/pipeline/utils/hypotrail/mlflow_packaging.py" = ["ALL"]
+# Structured refusals carry their message as data (code, path, message, remediation).
+"src/pipeline/utils/hypotrail/*.py" = ["EM101", "EM102"]
+"src/pipeline/utils/project.py" = ["EM101", "EM102"]
 
 [tool.ruff.lint]
 ignore = [

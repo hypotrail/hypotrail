@@ -13,9 +13,13 @@ import hashlib
 import math
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from . import canonical
 from .errors import ProjectError
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[4]
 CODE_CONTRACTS = ROOT / "src" / "conf" / "hypotrail" / "contracts"
@@ -69,7 +73,9 @@ def verify_data_dir(data_dir: Path) -> dict[str, str]:
     for name, digest in sums.items():
         path = data_dir / name
         if ".." in Path(name).parts or Path(name).is_absolute():
-            raise ProjectError("artifact_integrity_failed", "A checksum names a path outside the data folder.", path=name)
+            raise ProjectError(
+                "artifact_integrity_failed", "A checksum names a path outside the data folder.", path=name,
+            )
         if not path.is_file() or path.is_symlink():
             raise ProjectError(
                 "artifact_integrity_failed",
@@ -131,14 +137,24 @@ def load(frozen: dict) -> Contracts:
         raise ProjectError("artifact_integrity_failed", "The recipe does not match its identity.", path=FILES["recipe"])
     if canonical.canonical_sha256(docs["data_contract"]) != hyp["data_contract_sha256"]:
         raise ProjectError(
-            "artifact_integrity_failed", "The data contract does not match its identity.", path=FILES["data_contract"]
+            "artifact_integrity_failed",
+            "The data contract does not match its identity.",
+            path=FILES["data_contract"],
         )
     if canonical.canonical_sha256(docs["projection"]) != hyp["expected_scientific_sha256"]:
         raise ProjectError(
-            "artifact_integrity_failed", "The scientific projection does not match its identity.", path=FILES["projection"]
+            "artifact_integrity_failed",
+            "The scientific projection does not match its identity.",
+            path=FILES["projection"],
         )
     return Contracts(
-        data_dir, docs["recipe"], docs["data_contract"], docs["plan"], docs["snapshot"], docs["projection"], docs["manifest"]
+        data_dir,
+        docs["recipe"],
+        docs["data_contract"],
+        docs["plan"],
+        docs["snapshot"],
+        docs["projection"],
+        docs["manifest"],
     )
 
 
@@ -151,14 +167,13 @@ def _na_tokens(contract: dict) -> set[str]:
 
 
 def _convert(value: str, column: dict, na: set[str]) -> object:
-    """Declared conversion of one text value; ``None`` for a declared NA token."""
+    """Convert one text value as declared; return ``None`` for a declared NA token."""
     if value in na or value == "":
         return None
     kind = str(column.get("physical_type"))
     if kind in ("int64", "int32"):
         text = value.strip()
-        if text.endswith(".0"):
-            text = text[:-2]
+        text = text.removesuffix(".0")
         if not text.lstrip("-").isdigit():
             raise ValueError(value)
         return int(text)
@@ -175,11 +190,31 @@ def _convert(value: str, column: dict, na: set[str]) -> object:
     return value
 
 
-def typed_frame(frame, contract: dict):
-    """The rows of ``frame`` (text values, key column first) converted per the data
-    contract: declared NA tokens become missing, every other value must convert, a
-    non-nullable column may not be missing, ``allowed_values`` are enforced. No row is
-    dropped and no value is imputed; the row order is kept."""
+def _column_values(column: dict, keys: list[str], raws: list[str], na: set[str], problems: list) -> list:
+    """Convert one column, recording each value that breaks the contract in ``problems``."""
+    values = []
+    allowed = column.get("allowed_values")
+    for key, raw in zip(keys, raws, strict=True):
+        try:
+            value = _convert(raw, column, na)
+        except ValueError:
+            problems.append({"row_key": key, "column": column["name"], "problem": "not_convertible"})
+            value = None
+        if value is None and not column.get("nullable"):
+            problems.append({"row_key": key, "column": column["name"], "problem": "missing_not_allowed"})
+        if value is not None and allowed is not None and value not in allowed:
+            problems.append({"row_key": key, "column": column["name"], "problem": "value_not_allowed"})
+        values.append(value)
+    return values
+
+
+def typed_frame(frame: pd.DataFrame, contract: dict) -> pd.DataFrame:
+    """Convert text rows (key column first) as the data contract declares.
+
+    Declared NA tokens become missing, every other value must convert, a non-nullable
+    column may not be missing, and ``allowed_values`` are enforced. No row is dropped and
+    no value is imputed; the row order is kept.
+    """
     import pandas as pd
 
     columns = [c for c in contract["columns"] if isinstance(c, dict)]
@@ -192,24 +227,11 @@ def typed_frame(frame, contract: dict):
             details={"expected": expected, "found": list(frame.columns)[:50]},
         )
     na = _na_tokens(contract)
-    out = {KEY_COLUMN: frame[KEY_COLUMN].astype(str).tolist()}
-    problems = []
+    keys = frame[KEY_COLUMN].astype(str).tolist()
+    problems: list = []
+    out = {KEY_COLUMN: keys}
     for column in columns:
-        name = column["name"]
-        values = []
-        for key, raw in zip(out[KEY_COLUMN], frame[name].astype(str).tolist()):
-            try:
-                value = _convert(raw, column, na)
-            except ValueError:
-                problems.append({"row_key": key, "column": name, "problem": "not_convertible"})
-                value = None
-            if value is None and not column.get("nullable"):
-                problems.append({"row_key": key, "column": name, "problem": "missing_not_allowed"})
-            allowed = column.get("allowed_values")
-            if value is not None and allowed is not None and value not in allowed:
-                problems.append({"row_key": key, "column": name, "problem": "value_not_allowed"})
-            values.append(value)
-        out[name] = values
+        out[column["name"]] = _column_values(column, keys, frame[column["name"]].astype(str).tolist(), na, problems)
     if problems:
         raise ProjectError(
             "contract_invalid",
@@ -228,7 +250,7 @@ def typed_frame(frame, contract: dict):
     return typed
 
 
-def read_rows(path: Path, contract: dict):
+def read_rows(path: Path, contract: dict) -> pd.DataFrame:
     """Read a CSV of text values written by this project and type it."""
     import pandas as pd
 
@@ -236,7 +258,7 @@ def read_rows(path: Path, contract: dict):
     return typed_frame(frame, contract)
 
 
-def write_rows(frame, path: Path) -> None:
+def write_rows(frame: pd.DataFrame, path: Path) -> None:
     """Write typed rows as text CSV (missing values empty), creating the folder."""
     path.parent.mkdir(parents=True, exist_ok=True)
     text = frame.astype(object).where(frame.notna(), "")

@@ -3,9 +3,8 @@
 import logging
 import sys
 
-from omegaconf import DictConfig
-
 import hydra
+from omegaconf import DictConfig
 
 from ..utils.hypotrail import steps
 from ..utils.hypotrail.config import freeze
@@ -40,7 +39,7 @@ def main(cfg: DictConfig) -> None:
         steps.log_json(result)
         mlf.end_run()
     except ProjectError as error:
-        logging.error("%s", error.to_json())  # noqa: TRY400
+        logging.error("%s", error.to_json())
         sys.exit(2)
 
 

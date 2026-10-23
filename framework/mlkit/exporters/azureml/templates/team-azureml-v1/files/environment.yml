@@ -8,3 +8,9 @@ dependencies:
   - pip
   - pip:
       - -r aml/pipelines/training/requirements.lock
+      # Development tools of the team template (ruff as pinned in .pre-commit-config.yaml);
+      # not part of the Azure ML environment.
+      - ruff==0.4.5
+      - pytest==9.1.1
+      - pytest-cov==7.1.0
+      - pre-commit==4.7.0

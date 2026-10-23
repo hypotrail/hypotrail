@@ -14,7 +14,7 @@ class ProjectError(RuntimeError):
     """A refusal without effect."""
 
     def __init__(
-        self,
+        self: ProjectError,
         code: str,
         message: str,
         *,
@@ -30,7 +30,7 @@ class ProjectError(RuntimeError):
         self.remediation = remediation
         self.details = details or {}
 
-    def to_dict(self) -> dict:
+    def to_dict(self: ProjectError) -> dict:
         """Return the JSON form of the refusal."""
         return {
             "code": self.code,
@@ -40,6 +40,6 @@ class ProjectError(RuntimeError):
             "details": self.details,
         }
 
-    def to_json(self) -> str:
+    def to_json(self: ProjectError) -> str:
         """Return the refusal as one JSON line."""
         return json.dumps({"ok": False, "error": self.to_dict()}, ensure_ascii=False, sort_keys=True)

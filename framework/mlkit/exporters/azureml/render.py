@@ -72,11 +72,38 @@ def _yaml(value) -> str:
     return json.dumps(cj.normalise(value), ensure_ascii=False, sort_keys=True)
 
 
-def _py(value) -> str:
-    return repr(cj.normalise(value))
+def _py(value, indent: int = 0) -> str:
+    """A Python literal in the style of the team's ruff rules: double quotes, one item
+    per line with a trailing comma."""
+    value = cj.normalise(value) if indent == 0 else value
+    pad, inner = '    ' * indent, '    ' * (indent + 1)
+    if isinstance(value, dict):
+        if not value:
+            return '{}'
+        items = ''.join(f'{inner}{json.dumps(k, ensure_ascii=False)}: {_py(v, indent + 1)},\n'
+                        for k, v in value.items())
+        return '{\n' + items + pad + '}'
+    if isinstance(value, list):
+        if not value:
+            return '[]'
+        return '[\n' + ''.join(f'{inner}{_py(v, indent + 1)},\n' for v in value) + pad + ']'
+    if isinstance(value, bool) or value is None:
+        return repr(value)
+    if isinstance(value, str):
+        return json.dumps(value, ensure_ascii=False)
+    return repr(value)
 
 
 FILTERS = {'text': lambda v: str(v), 'yaml': _yaml, 'json': _yaml, 'py': _py}
+
+
+def _yaml_block(value, indent: int) -> str:
+    """A non-empty mapping or list as block YAML under its key, indented by ``indent``."""
+    import yaml
+    dumped = yaml.safe_dump(cj.normalise(value), sort_keys=True, default_flow_style=False,
+                            allow_unicode=True, width=1000)
+    pad = ' ' * (indent + 2)
+    return '\n' + '\n'.join(pad + line for line in dumped.rstrip('\n').split('\n'))
 
 
 def substitute(text: str, context: Mapping, where: str) -> str:
@@ -85,8 +112,13 @@ def substitute(text: str, context: Mapping, where: str) -> str:
         if kind not in FILTERS or name not in context:
             raise ExportError('template_layout_mismatch', f'Unknown template marker {match.group(0)}.',
                               path=where, remediation='The template and the generator disagree.')
-        return FILTERS[kind](context[name])
-    out = MARKER.sub(one, text)
+        value = context[name]
+        if kind == 'yaml' and isinstance(value, (dict, list)) and value:
+            line = text[text.rfind('\n', 0, match.start()) + 1:match.start()]
+            return _yaml_block(value, len(line) - len(line.lstrip(' ')))
+        return FILTERS[kind](value)
+    # A block value follows "key: ", whose space would be trailing whitespace.
+    out = re.sub(r'[ \t]+\n', '\n', MARKER.sub(one, text))
     if '@@' in out:
         raise ExportError('template_layout_mismatch', 'A template marker was not replaced.',
                           path=where, remediation='The template and the generator disagree.')
@@ -357,11 +389,27 @@ def _shared(module: str) -> bytes:
     return path.read_bytes()
 
 
+def _no_interpolation(value, path: str) -> None:
+    """A scientific value rendered into Hydra YAML may not look like an interpolation."""
+    if isinstance(value, str) and ('${' in value or '@@' in value):
+        raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", '
+                          'which the project configuration would interpret.', path=path,
+                          remediation='Rename the value in the study.')
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            _no_interpolation(key, f'{path}.{key}')
+            _no_interpolation(item, f'{path}.{key}')
+    elif isinstance(value, list):
+        for i, item in enumerate(value):
+            _no_interpolation(item, f'{path}[{i}]')
+
+
 def render(snapshot: Snapshot, normal: Mapping, missing: list,
            template: layout.Template) -> tuple[list[File], dict]:
     """``(files, summary)``: every file of the project, in path order, and the identities,
     statuses and checks the command reports."""
     ids = identities(snapshot, normal, template)
+    _no_interpolation(ids['scientific'], 'scientific_projection')
     ctx = context(snapshot, normal, missing, template, ids)
     lock, lock_status = lock_bytes(template, snapshot)
     ready = readiness(snapshot, missing, ids)

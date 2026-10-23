@@ -34,8 +34,9 @@ hypotrail = "mlkit.study.cli:main"
 [dependency-groups]
 dev = ["pytest>=8.0"]
 browser = ["playwright==1.55.0"]
-# The same pins as the azureml extra, so the export tests run in the gate environment.
-azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2"]
+# The same pins as the azureml extra, so the export tests run in the gate environment, and
+# the team template's ruff (its .pre-commit-config.yaml pin) to lint an exported project.
+azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2", "ruff==0.4.5"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["mlkit"]

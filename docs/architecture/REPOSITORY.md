@@ -64,6 +64,8 @@ The experimental runtime accesses case resources through repository-relative sym
 
 `framework/mlkit/` is the canonical engine source. It installs in editable mode through `framework/pyproject.toml` with a locked environment. Explicit project selection and distribution of notebook and template resources remain implementation work.
 
+`framework/mlkit/exporters/azureml/` (`hypotrail export azureml`) and `framework/mlkit/integrations/mlflow_packaging.py` belong to the Azure ML export (chantier B, [handoff](../handoff/AZUREML-EXPORT-V1.md)). The exporter reads a study only through the engine's `read_export_source` and the captured predictor only through `hypotrail_runtime`; its versioned template (`templates/team-azureml-v1/`) ships inside the package. Hydra, OmegaConf and MLflow are the optional `azureml` extra, imported lazily; the study engine never imports them.
+
 ## Sources, outputs, and state
 
 - Reusable sources: `framework/mlkit`, `framework/templates`, and `framework/notebooks`.

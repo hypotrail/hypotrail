@@ -72,6 +72,15 @@ def test_default_configuration_freezes_to_the_exported_identity() -> None:
 
 
 @pytest.mark.skipif(not HAS_HYDRA, reason="Hydra is not installed")
+def test_frozen_configuration_ignores_a_later_environment_change(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An environment interpolation is resolved once; the frozen copy no longer changes."""
+    monkeypatch.setenv("HYPOTRAIL_RUN_DEBUG", "true")
+    frozen = _compose(["debug=${oc.env:HYPOTRAIL_RUN_DEBUG}"])
+    monkeypatch.setenv("HYPOTRAIL_RUN_DEBUG", "false")
+    assert frozen["config"]["debug"] == "true"
+
+
+@pytest.mark.skipif(not HAS_HYDRA, reason="Hydra is not installed")
 def test_operational_override_keeps_the_identity() -> None:
     """Changing paths or logs keeps the scientific identity."""
     assert _compose(["models.path=/tmp/elsewhere", "debug=true"])["scientific_sha256"] == _compose([])["scientific_sha256"]
@@ -87,6 +96,7 @@ def test_operational_override_keeps_the_identity() -> None:
         ("+surprise=1", "contract_invalid"),
         ("+components.training._target_=os.system", "contract_invalid"),
         ("hypotrail.execution.allow_scientific_override=true", "capability_not_supported"),
+        ("models.path=???", "contract_invalid"),
     ],
 )
 def test_scientific_or_unknown_override_is_refused(override: str, code: str) -> None:

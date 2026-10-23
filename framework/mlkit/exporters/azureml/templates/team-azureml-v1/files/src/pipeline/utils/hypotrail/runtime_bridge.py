@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
-from types import ModuleType
+from typing import TYPE_CHECKING
 
 from .errors import ProjectError
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 def available(name: str) -> bool:

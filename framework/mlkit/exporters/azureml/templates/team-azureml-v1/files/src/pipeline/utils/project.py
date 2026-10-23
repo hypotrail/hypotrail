@@ -26,9 +26,13 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .hypotrail import azure_yaml, canonical, contracts, runtime_bridge, transfer
 from .hypotrail.errors import ProjectError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 ROOT = contracts.ROOT
 DATA_DIR = ROOT / "data" / "hypotrail"
@@ -37,10 +41,22 @@ OUTPUTS = ROOT / "outputs"
 TARGET = CONF_DIR / "azure" / "target.yaml"
 MISSING = "MISSING-"
 STEPS = ("data_preparation", "data_splitting", "training", "evaluation")
-UPLOAD_ALLOWED = re.compile(r"^(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|README\.md|environment\.yml|pyproject\.toml)$")
+UPLOAD_ALLOWED = re.compile(
+    r"^(src/.+|\.amlignore|\.gitignore|\.pre-commit-config\.yaml|README\.md|environment\.yml|pyproject\.toml)$",
+)
 # Credential shapes, written in pieces so that this file does not match itself.
-SECRET = re.compile("(" + "|".join(["Account" + "Key=", "SharedAccess" + "Signature=", "-----BEGIN [A-Z ]*PRIVATE" + " KEY",
-                                    r"client_" + r"secret\s*[:=]\s*\S"]) + ")")
+SECRET = re.compile(
+    "("
+    + "|".join(
+        [
+            "Account" + "Key=",
+            "SharedAccess" + "Signature=",
+            "-----BEGIN [A-Z ]*PRIVATE" + " KEY",
+            r"client_" + r"secret\s*[:=]\s*\S",
+        ],
+    )
+    + ")",
+)
 TEXT_SUFFIXES = {".py", ".yml", ".yaml", ".json", ".md", ".txt", ".toml", ".sh", ".lock", ".csv", ""}
 
 
@@ -59,7 +75,7 @@ def _target() -> dict:
     return yaml.safe_load(TARGET.read_text(encoding="utf-8"))
 
 
-def _check(checks: list, check_id: str, function) -> None:
+def _check(checks: list, check_id: str, function: Callable[[], object]) -> None:
     try:
         result = function()
     except ProjectError as error:
@@ -93,18 +109,20 @@ def _azure_yaml() -> tuple[str, object]:
         return "not_run", "PyYAML is not installed."
     problems, graph = azure_yaml.check(ROOT)
     if problems:
-        raise ProjectError("contract_invalid", "The Azure ML YAML has problems.", path="aml", details={"problems": problems[:20]})
+        raise ProjectError(
+            "contract_invalid", "The Azure ML YAML has problems.", path="aml", details={"problems": problems[:20]},
+        )
     return "passed", graph
 
 
 def _markers() -> tuple[str, object]:
     readiness = _readiness()
-    found = []
-    for path in sorted((ROOT / "aml").rglob("*.yml")) + [TARGET, ROOT / ".ci" / "deploy-pipeline.yml"]:
-        if MISSING in path.read_text(encoding="utf-8"):
-            found.append(path.relative_to(ROOT).as_posix())
+    paths = [*sorted((ROOT / "aml").rglob("*.yml")), TARGET, ROOT / ".ci" / "deploy-pipeline.yml"]
+    found = [p.relative_to(ROOT).as_posix() for p in paths if MISSING in p.read_text(encoding="utf-8")]
     if readiness["configuration"] == "configured" and found:
-        raise ProjectError("contract_invalid", "A configured export still holds a missing-value marker.", details={"files": found})
+        raise ProjectError(
+            "contract_invalid", "A configured export still holds a missing-value marker.", details={"files": found},
+        )
     if readiness["configuration"] == "draft":
         return "draft", {"missing_fields": readiness.get("missing_fields", []), "files": found}
     return "passed", None
@@ -152,12 +170,21 @@ def _evaluated() -> tuple[str, object]:
     rt.verify_bundle(folder)
     bundle = contracts.load_json(folder / "predictor_bundle.json")
     spec = mp.ParitySpec.from_bundle(bundle)
-    features = mp.read_table(mp._inside(folder, spec.features_path, "parity.features_path"))
-    expected = mp.read_table(mp._inside(folder, spec.expected_outputs_path, "parity.expected_outputs_path"))
-    result = mp.compare(mp.batch_frame(rt.load_predictor(folder).predict(features.copy())), expected, spec.rtol, spec.atol)
+    features = mp.read_table(mp.inside(folder, spec.features_path, "parity.features_path"))
+    expected = mp.read_table(mp.inside(folder, spec.expected_outputs_path, "parity.expected_outputs_path"))
+    result = mp.compare(
+        mp.batch_frame(rt.load_predictor(folder).predict(features.copy())), expected, spec.rtol, spec.atol,
+    )
     if not result["equal"]:
-        raise ProjectError("artifact_integrity_failed", "The evaluated model does not reproduce its parity outputs.", details=result)
-    return "passed", {"rows": len(features), "max_abs_diff": result["max_abs_diff"], "rtol": spec.rtol, "atol": spec.atol}
+        raise ProjectError(
+            "artifact_integrity_failed", "The evaluated model does not reproduce its parity outputs.", details=result,
+        )
+    return "passed", {
+        "rows": len(features),
+        "max_abs_diff": result["max_abs_diff"],
+        "rtol": spec.rtol,
+        "atol": spec.atol,
+    }
 
 
 def _mlflow_package() -> tuple[str, object]:
@@ -174,7 +201,11 @@ def _mlflow_package() -> tuple[str, object]:
         return "not_run", "hypotrail_runtime or MLflow is not installed."
     result = mp.ArtifactPackager(runtime_bridge.runtime()).verify(folder, folder / packages[0]["relative_path"])
     if result.status != "passed":
-        raise ProjectError("artifact_integrity_failed", "The MLflow package does not match the native model.", details=result.to_dict())
+        raise ProjectError(
+            "artifact_integrity_failed",
+            "The MLflow package does not match the native model.",
+            details=result.to_dict(),
+        )
     return "passed", {"rows": result.n_rows}
 
 
@@ -230,15 +261,19 @@ def predict(args: argparse.Namespace) -> int:
 
     folder = Path(args.model) if args.model else DATA_DIR / "models" / "evaluated"
     if not (folder / "predictor_bundle.json").is_file():
-        raise ProjectError("model_not_captured", "No captured model in this folder.", path=str(folder),
-                           remediation="The study exported its recipe only; run-local builds a new candidate.")
+        raise ProjectError(
+            "model_not_captured",
+            "No captured model in this folder.",
+            path=str(folder),
+            remediation="The study exported its recipe only; run-local builds a new candidate.",
+        )
     rt = runtime_bridge.runtime()
     rt.verify_bundle(folder)
     bundle = contracts.load_json(folder / "predictor_bundle.json")
     manifest = contracts.load_json(folder / bundle["predictor_manifest_path"])
     if args.parity:
         spec = mp.ParitySpec.from_bundle(bundle)
-        source = mp._inside(folder, spec.features_path, "parity.features_path")
+        source = mp.inside(folder, spec.features_path, "parity.features_path")
     elif args.input:
         source = Path(args.input)
     else:
@@ -263,7 +298,7 @@ def predict(args: argparse.Namespace) -> int:
 
 
 def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[str], list[list[str]]]:
-    """The development rows of a positional source, selected by line before parsing."""
+    """Return the development rows of a positional source, selected by line before parsing."""
     import csv
     import io
     import shlex
@@ -271,8 +306,11 @@ def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[
     parser = contract["parser"]
     identity = contract["row_identity"]
     if identity.get("kind") != "source_position":
-        raise ProjectError("capability_not_supported", "Only source_position row keys are materialised by this version.",
-                           path="row_identity.kind")
+        raise ProjectError(
+            "capability_not_supported",
+            "Only source_position row keys are materialised by this version.",
+            path="row_identity.kind",
+        )
     text = source.read_bytes().decode(parser.get("encoding", "utf-8"))
     lines = text.splitlines()
     header = 1 if parser.get("header") else 0
@@ -286,11 +324,18 @@ def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[
         if parser.get("delimiter") == "whitespace":
             values = shlex.split(line, posix=True)
         else:
-            values = next(csv.reader(io.StringIO(line), delimiter=parser.get("delimiter", ","),
-                                     quotechar=parser.get("quotechar", '"')))
+            values = next(
+                csv.reader(
+                    io.StringIO(line), delimiter=parser.get("delimiter", ","), quotechar=parser.get("quotechar", '"'),
+                ),
+            )
         if len(values) != len(names):
-            raise ProjectError("data_identity_mismatch", "A source line does not have the contract's columns.",
-                               path=key, details={"expected": len(names), "found": len(values)})
+            raise ProjectError(
+                "data_identity_mismatch",
+                "A source line does not have the contract's columns.",
+                path=key,
+                details={"expected": len(names), "found": len(values)},
+            )
         keys.append(key)
         rows.append(values)
     return keys, rows
@@ -307,14 +352,20 @@ def materialize(args: argparse.Namespace) -> int:
     plan = contracts.load_json(DATA_DIR / "contracts" / "development-plan.json")
     source = Path(args.source)
     if contracts.sha256_file(source) != contract["source_sha256"]:
-        raise ProjectError("data_identity_mismatch", "The source file is not the study's dataset (sha256 differs).",
-                           path=str(source), remediation="Use the file the study was made on; a modified file is a new source.")
+        raise ProjectError(
+            "data_identity_mismatch",
+            "The source file is not the study's dataset (sha256 differs).",
+            path=str(source),
+            remediation="Use the file the study was made on; a modified file is a new source.",
+        )
     wanted = development_keys(plan)
     keys, rows = _source_lines(source, contract, set(wanted))
     if sorted(keys) != sorted(wanted):
-        raise ProjectError("data_identity_mismatch", "The source does not hold every development row.", path=str(source))
+        raise ProjectError(
+            "data_identity_mismatch", "The source does not hold every development row.", path=str(source),
+        )
     order = {k: i for i, k in enumerate(wanted)}
-    pairs = sorted(zip(keys, rows), key=lambda kv: order[kv[0]])
+    pairs = sorted(zip(keys, rows, strict=False), key=lambda kv: order[kv[0]])
     folder = DATA_DIR / "development"
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / "development.csv"
@@ -342,11 +393,17 @@ def materialize(args: argparse.Namespace) -> int:
 def run_local(args: argparse.Namespace) -> int:
     """Run the four steps in order as separate processes, as Azure ML would."""
     if args.mode != "rebuild_final_candidate":
-        raise ProjectError("capability_not_supported", f"Mode {args.mode!r} is not available in this version.", path="mode")
+        raise ProjectError(
+            "capability_not_supported", f"Mode {args.mode!r} is not available in this version.", path="mode",
+        )
     base = Path(args.run_dir) if args.run_dir else OUTPUTS / "local-run"
     if base.exists() and any(base.iterdir()):
-        raise ProjectError("destination_not_empty", "The run folder is not empty.", path=str(base),
-                           remediation="Pass a new --run-dir; runs never overwrite each other.")
+        raise ProjectError(
+            "destination_not_empty",
+            "The run folder is not empty.",
+            path=str(base),
+            remediation="Pass a new --run-dir; runs never overwrite each other.",
+        )
     overrides = [
         f"preprocessed_data.path={base / '02_processed'}",
         f"train_data.path={base / '03_partitions'}",
@@ -355,29 +412,52 @@ def run_local(args: argparse.Namespace) -> int:
         f"hydra.run.dir={base / 'hydra'}",
     ]
     for step in STEPS:
-        result = subprocess.run([sys.executable, "-m", f"src.pipeline.{step}.main", *overrides], cwd=ROOT, check=False)  # noqa: S603
+        # The steps' logs go to stderr, so this command still prints one JSON document.
+        # This interpreter and this project's own modules only.
+        result = subprocess.run(
+            [sys.executable, "-m", f"src.pipeline.{step}.main", *overrides],  # noqa: S603
+            cwd=ROOT,
+            check=False,
+            stdout=sys.stderr,
+        )
         if result.returncode != 0:
             return _emit({"ok": False, "failed_step": step, "run_dir": str(base)}, 2)
     report = contracts.load_json(base / "05_reports" / "technical-report.json")
-    return _emit({"ok": True, "run_dir": str(base), "role": "rebuilt_candidate", "technical_status": report["status"],
-                  "scientific_verdict": report["scientific_verdict"]})
+    return _emit(
+        {
+            "ok": True,
+            "run_dir": str(base),
+            "role": "rebuilt_candidate",
+            "technical_status": report["status"],
+            "scientific_verdict": report["scientific_verdict"],
+        },
+    )
 
 
 # --- Azure commands --------------------------------------------------------------------
 
 
 def _scope(target: dict) -> list[str]:
-    return ["--subscription", target["subscription_id"], "--resource-group", target["resource_group"],
-            "--workspace-name", target["workspace"]]
+    return [
+        "--subscription",
+        target["subscription_id"],
+        "--resource-group",
+        target["resource_group"],
+        "--workspace-name",
+        target["workspace"],
+    ]
 
 
 def _require_configured() -> dict:
     readiness = _readiness()
     if readiness["configuration"] != "configured":
-        raise ProjectError("contract_invalid", "This export is a draft: the destination profile is incomplete.",
-                           path="src/conf/azure/target.yaml",
-                           remediation="Export again with a complete --profile.",
-                           details={"missing_fields": readiness.get("missing_fields", [])})
+        raise ProjectError(
+            "contract_invalid",
+            "This export is a draft: the destination profile is incomplete.",
+            path="src/conf/azure/target.yaml",
+            remediation="Export again with a complete --profile.",
+            details={"missing_fields": readiness.get("missing_fields", [])},
+        )
     return _target()
 
 
@@ -385,19 +465,63 @@ def _commands_preflight(target: dict) -> list[dict]:
     scope = _scope(target)
     return [
         {"argv": ["az", "account", "show", "--subscription", target["subscription_id"]], "scope": "network_read"},
-        {"argv": ["az", "ml", "workspace", "show", "--subscription", target["subscription_id"], "--resource-group",
-                  target["resource_group"], "--name", target["workspace"]], "scope": "network_read"},
+        {
+            "argv": [
+                "az",
+                "ml",
+                "workspace",
+                "show",
+                "--subscription",
+                target["subscription_id"],
+                "--resource-group",
+                target["resource_group"],
+                "--name",
+                target["workspace"],
+            ],
+            "scope": "network_read",
+        },
         {"argv": ["az", "ml", "compute", "show", "--name", target["compute"], *scope], "scope": "network_read"},
-        {"argv": ["az", "ml", "data", "show", "--name", target["data_asset"]["name"], "--version",
-                  target["data_asset"]["version"], *scope], "scope": "network_read", "absent_is_expected": True},
-        {"argv": ["az", "ml", "environment", "show", "--name", target["environment"]["name"], "--version",
-                  target["environment"]["version"], *scope], "scope": "network_read", "absent_is_expected": True},
+        {
+            "argv": [
+                "az",
+                "ml",
+                "data",
+                "show",
+                "--name",
+                target["data_asset"]["name"],
+                "--version",
+                target["data_asset"]["version"],
+                *scope,
+            ],
+            "scope": "network_read",
+            "absent_is_expected": True,
+        },
+        {
+            "argv": [
+                "az",
+                "ml",
+                "environment",
+                "show",
+                "--name",
+                target["environment"]["name"],
+                "--version",
+                target["environment"]["version"],
+                *scope,
+            ],
+            "scope": "network_read",
+            "absent_is_expected": True,
+        },
     ]
 
 
 def _run(argv: list[str]) -> dict:
     result = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True, check=False)  # noqa: S603
-    return {"argv": argv, "exit_code": result.returncode, "stdout": result.stdout[-2000:], "stderr": result.stderr[-2000:]}
+    return {
+        "argv": argv,
+        "exit_code": result.returncode,
+        "stdout": result.stdout[-2000:],
+        "stderr": result.stderr[-2000:],
+    }
 
 
 def preflight(args: argparse.Namespace) -> int:
@@ -405,11 +529,21 @@ def preflight(args: argparse.Namespace) -> int:
     target = _require_configured()
     commands = _commands_preflight(target)
     if not args.execute:
-        return _emit({"ok": True, "executed": False, "commands": commands,
-                      "meaning": "Read-only checks; a passing preflight does not guarantee a future run."})
+        return _emit(
+            {
+                "ok": True,
+                "executed": False,
+                "commands": commands,
+                "meaning": "Read-only checks; a passing preflight does not guarantee a future run.",
+            },
+        )
     results = [{**_run(c["argv"]), "absent_is_expected": c.get("absent_is_expected", False)} for c in commands]
     failed = [r for r in results if r["exit_code"] != 0 and not r["absent_is_expected"]]
-    document = {"schema_version": "hypotrail.azure_preflight/1", "status": "failed" if failed else "passed", "results": results}
+    document = {
+        "schema_version": "hypotrail.azure_preflight/1",
+        "status": "failed" if failed else "passed",
+        "results": results,
+    }
     OUTPUTS.mkdir(exist_ok=True)
     (OUTPUTS / "preflight.json").write_bytes(canonical.pretty_bytes(document))
     return _emit(document, 1 if failed else 0)
@@ -422,17 +556,44 @@ def submit(args: argparse.Namespace) -> int:
     training = "aml/pipelines/training"
     commands = [
         {"argv": ["az", "ml", "data", "create", "--file", f"{training}/data.yml", *scope], "scope": "azure_write"},
-        {"argv": ["az", "ml", "environment", "create", "--file", f"{training}/aml-environment.yml", *scope], "scope": "azure_write"},
-        {"argv": ["az", "ml", "job", "create", "--file", f"{training}/pipeline-job.yml", "--query", "name", "-o", "tsv", *scope],
-         "scope": "azure_write"},
+        {
+            "argv": ["az", "ml", "environment", "create", "--file", f"{training}/aml-environment.yml", *scope],
+            "scope": "azure_write",
+        },
+        {
+            "argv": [
+                "az",
+                "ml",
+                "job",
+                "create",
+                "--file",
+                f"{training}/pipeline-job.yml",
+                "--query",
+                "name",
+                "-o",
+                "tsv",
+                *scope,
+            ],
+            "scope": "azure_write",
+        },
     ]
     if not args.execute:
-        return _emit({"ok": True, "executed": False, "commands": commands,
-                      "meaning": "These commands write to Azure. Run again with --execute to submit one pipeline job."})
+        return _emit(
+            {
+                "ok": True,
+                "executed": False,
+                "commands": commands,
+                "meaning": "These commands write to Azure. Run again with --execute to submit one pipeline job.",
+            },
+        )
     submission = OUTPUTS / "submission.json"
     if submission.is_file() and not args.new_submission:
-        raise ProjectError("destination_not_empty", "A job was already submitted from this folder.", path=str(submission),
-                           remediation="Read its status with az ml job show, or pass --new-submission deliberately.")
+        raise ProjectError(
+            "destination_not_empty",
+            "A job was already submitted from this folder.",
+            path=str(submission),
+            remediation="Read its status with az ml job show, or pass --new-submission deliberately.",
+        )
     validation = OUTPUTS / "validation.json"
     manifest_sha = contracts.sha256_file(DATA_DIR / "contracts" / "export-manifest.json")
     if not validation.is_file():
@@ -441,12 +602,16 @@ def submit(args: argparse.Namespace) -> int:
     if checked.get("status") != "passed" or checked.get("export_manifest_sha256") != manifest_sha:
         raise ProjectError("contract_invalid", "The last validation did not pass on this export.", path=str(validation))
     if _development_rows()[0] != "passed":
-        raise ProjectError("data_identity_mismatch", "Materialise the development rows before submitting.", path="data/hypotrail/development")
+        raise ProjectError(
+            "data_identity_mismatch",
+            "Materialise the development rows before submitting.",
+            path="data/hypotrail/development",
+        )
     results = []
     for command in commands[:2]:
         result = _run(command["argv"])
         if result["exit_code"] != 0 and "already exists" not in (result["stderr"] + result["stdout"]).lower():
-            return _emit({"ok": False, "status": "not_submitted", "results": results + [result]}, 1)
+            return _emit({"ok": False, "status": "not_submitted", "results": [*results, result]}, 1)
         result["reused_existing"] = result["exit_code"] != 0
         results.append(result)
     job = _run(commands[2]["argv"])
@@ -454,8 +619,13 @@ def submit(args: argparse.Namespace) -> int:
     if job["exit_code"] != 0:
         return _emit({"ok": False, "status": "not_submitted", "results": results}, 1)
     name = job["stdout"].strip().splitlines()[-1]
-    document = {"schema_version": "hypotrail.azure_submission/1", "status": "submitted", "job_name": name, "results": results,
-                "meaning": "Submitted, result not observed yet; a submitted job is not a successful run."}
+    document = {
+        "schema_version": "hypotrail.azure_submission/1",
+        "status": "submitted",
+        "job_name": name,
+        "results": results,
+        "meaning": "Submitted, result not observed yet; a submitted job is not a successful run.",
+    }
     OUTPUTS.mkdir(exist_ok=True)
     submission.write_bytes(canonical.pretty_bytes(document))
     if args.wait:
@@ -467,7 +637,7 @@ def submit(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """The command-line interface."""
+    """Build the command-line interface."""
     parser = argparse.ArgumentParser(prog="python -m src.pipeline.utils.project")
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("validate")

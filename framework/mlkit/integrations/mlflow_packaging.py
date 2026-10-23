@@ -36,6 +36,7 @@ import json
 import math
 import os
 import shutil
+import sys
 import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -232,7 +233,7 @@ def _relative(path, where: str) -> str:
     return path
 
 
-def _inside(root: Path, relative: str, where: str) -> Path:
+def inside(root: Path, relative: str, where: str) -> Path:
     target = root / _relative(relative, where)
     real_root = Path(os.path.realpath(root))
     real = Path(os.path.realpath(target))
@@ -244,9 +245,11 @@ def _inside(root: Path, relative: str, where: str) -> Path:
 
 def _inventory(root: Path) -> list[dict]:
     """``[{relative_path, size_bytes, sha256}]`` of every file under ``root``, sorted; a
-    symlink is refused."""
+    symlink is refused; ``__pycache__`` folders (bytecode) are not part of a package."""
     out = []
     for path in sorted(root.rglob('*')):
+        if '__pycache__' in path.relative_to(root).parts:
+            continue
         if path.is_symlink():
             raise PackagingError('artifact_integrity_failed',
                                  'A package may not contain a symbolic link.',
@@ -369,15 +372,15 @@ class ArtifactPackager:
                                  'The native bundle is not hypotrail.predictor_bundle/1.',
                                  path='schema_version',
                                  details={'found': bundle.get('schema_version')})
-        manifest = _read_json(_inside(bundle_dir, bundle.get('predictor_manifest_path'),
+        manifest = _read_json(inside(bundle_dir, bundle.get('predictor_manifest_path'),
                                       'predictor_manifest_path'), 'predictor_manifest_path')
-        contract = _read_json(_inside(bundle_dir, bundle.get('data_contract_path'),
+        contract = _read_json(inside(bundle_dir, bundle.get('data_contract_path'),
                                       'data_contract_path'), 'data_contract_path')
         return bundle, manifest, contract
 
     def _parity_frames(self, bundle_dir: Path, spec: ParitySpec):
-        features = read_table(_inside(bundle_dir, spec.features_path, 'parity.features_path'))
-        expected = read_table(_inside(bundle_dir, spec.expected_outputs_path,
+        features = read_table(inside(bundle_dir, spec.features_path, 'parity.features_path'))
+        expected = read_table(inside(bundle_dir, spec.expected_outputs_path,
                                       'parity.expected_outputs_path'))
         return features, expected
 
@@ -505,8 +508,16 @@ class ArtifactPackager:
 
     def _pyfunc_parity(self, package_dir: Path, features, native, spec: ParitySpec) -> dict:
         mlflow = _import('mlflow', 'the azureml extra (mlflow-skinny)')
-        model = mlflow.pyfunc.load_model(str(package_dir))
-        result = model.predict(features.copy())
+        # Loading imports the wrapper from the package folder: no bytecode may be written
+        # there (it would hold a local path and change the package's files).
+        previous = sys.dont_write_bytecode
+        sys.dont_write_bytecode = True
+        try:
+            model = mlflow.pyfunc.load_model(str(package_dir))
+            result = model.predict(features.copy())
+        finally:
+            sys.dont_write_bytecode = previous
+            sys.modules.pop(Path(WRAPPER_FILE).stem, None)
         pd = _import('pandas', 'pandas')
         if not isinstance(result, pd.DataFrame):
             result = pd.DataFrame({native.columns[0]: list(result)})
@@ -582,3 +593,24 @@ def _neutralise_code_path(package_dir: Path) -> None:
     for name, artifact in (pyfunc.get('artifacts') or {}).items():
         artifact['uri'] = name
     path.write_text(yaml.safe_dump(document, sort_keys=True), encoding='utf-8')
+
+
+# --- the hook of capture_predictor (contract v1 §6) ------------------------------------
+
+# Export profiles of the capture: ``base`` captures the native bundle only; ``atelier``
+# (the workshop) requires the MLflow package, written before the final test is opened.
+PROFILES = {'base': None, 'atelier': FORMAT}
+
+
+def packager_for(profile: str, runtime=None) -> 'ArtifactPackager | None':
+    """The packager to inject into ``capture_predictor(..., packager=...)`` for an export
+    profile: ``None`` for ``base``; for ``atelier``, an :class:`ArtifactPackager`, or
+    ``optional_dependency_missing`` **before** anything is captured when MLflow is not
+    installed. Chantier A calls this known adapter lazily; no code is discovered from YAML."""
+    if profile not in PROFILES:
+        raise PackagingError('capability_not_supported', f'Unknown export profile {profile!r}.',
+                             path='profile', remediation=f'Use one of {", ".join(PROFILES)}.')
+    if PROFILES[profile] is None:
+        return None
+    _import('mlflow', 'the azureml extra (mlflow-skinny)')
+    return ArtifactPackager(runtime)

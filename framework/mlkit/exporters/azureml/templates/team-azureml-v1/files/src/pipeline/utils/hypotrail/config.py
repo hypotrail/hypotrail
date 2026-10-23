@@ -109,7 +109,9 @@ def freeze(cfg: object) -> dict:
             remediation="Give the value with an operational override or in the profile.",
         ) from error
     except InterpolationResolutionError as error:
-        raise ProjectError("contract_invalid", f"An interpolation cannot be resolved: {error}", path="config") from error
+        raise ProjectError(
+            "contract_invalid", f"An interpolation cannot be resolved: {error}", path="config",
+        ) from error
     return freeze_container(container, _overrides())
 
 
