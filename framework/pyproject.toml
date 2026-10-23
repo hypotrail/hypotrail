@@ -25,16 +25,22 @@ dependencies = [
     "pandera>=0.20",
 ]
 
-[project.optional-dependencies]
-# Optional backends, imported lazily; the engine works without them.
-diagnostics = ["evidently==0.7.23"]
-uncertainty = ["mapie==1.6.0"]
-
-[tool.uv.sources]
-hypotrail-runtime = { path = "runtime", editable = true }
 # interpret-core (MIT) is a core dependency since v0.3 (WP-F1, ADR 0007): the study engine
 # fits the Explainable Boosting Machine as a model family; pinned, and its version is part
 # of the code fingerprint of the fits that use it.
+
+[project.optional-dependencies]
+# Optional backends, imported lazily; the engine works without them.
+# Library integration v1 (docs/handoff/LIBRARIES-V1.md): diagnostics and uncertainty.
+diagnostics = ["evidently==0.7.23"]
+uncertainty = ["mapie==1.6.0"]
+# Azure ML export (docs/handoff/AZUREML-EXPORT-V1.md): `hypotrail export azureml` and the
+# MLflow packager. Hydra/OmegaConf run in the exported project; nothing in the engine
+# imports them outside mlkit.exporters.azureml and mlkit.integrations.mlflow_packaging.
+azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2"]
+
+[tool.uv.sources]
+hypotrail-runtime = { path = "runtime", editable = true }
 
 [project.scripts]
 hypotrail = "mlkit.study.cli:main"
@@ -42,6 +48,9 @@ hypotrail = "mlkit.study.cli:main"
 [dependency-groups]
 dev = ["pytest>=8.0", "hypothesis>=6.100"]
 browser = ["playwright==1.55.0"]
+# The same pins as the azureml extra, so the export tests run in the gate environment, and
+# the team template's ruff (its .pre-commit-config.yaml pin) to lint an exported project.
+azureml = ["hydra-core==1.3.7", "omegaconf==2.3.1", "mlflow-skinny==3.17.2", "ruff==0.4.5"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["mlkit"]

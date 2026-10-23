@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+
+# Hypotrail export: one versioned asset for the development rows (data/hypotrail/development,
+# materialised first with `project.py materialize`), the contracts and the evaluated model.
+# It never holds the study's final test. Expected development materialisation sha256:
+# @@text:materialization_sha256@@
+type: uri_folder
+name: @@text:data_asset_name@@
+version: @@yaml:data_asset_version@@
+description: @@yaml:data_asset_description@@
+path: ../../../data/hypotrail

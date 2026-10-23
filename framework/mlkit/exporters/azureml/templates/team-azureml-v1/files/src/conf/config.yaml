@@ -1,0 +1,20 @@
+defaults:
+  - base_config
+  - components/data_preparation: default
+  - components/data_splitting: default
+  - components/training: default
+  - components/evaluation: default
+  - hypotrail: replay
+  - override hydra/job_logging: custom
+  - _self_
+
+hydra:
+  job:
+    # The steps use the I/O paths they receive (Azure outputs locally or in the cloud);
+    # Hydra's logs do not replace a component's outputs.
+    chdir: false
+  run:
+    dir: ./hydra/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+# No sweeper and no multirun in this project: a new exploration of models or parameters is
+# a new activity of the study, not a deployment option. The template's random_forest
+# profile is kept in components/training/ as an inactive, not evaluated profile.

@@ -1,0 +1,13 @@
+{
+    "recommendations": [
+        "ms-toolsai.vscode-ai",
+        "ms-toolsai.vscode-ai-remote",
+        "ms-vscode.azure-repos",
+        "charliermarsh.ruff",
+        "sanaajani.taskrunnercode",
+        "eamodio.gitlens",
+        "almenon.arepl",
+        "randomfractalsinc.vscode-data-preview",
+        "bierner.github-markdown-preview"
+    ]
+}

@@ -1,0 +1,15 @@
+# @package hypotrail
+# Hypotrail export identities (generated, not to be edited): the frozen scientific
+# projection of this run configuration must hash to expected_scientific_sha256.
+execution:
+  purpose: replay_selected_recipe
+  allow_scientific_override: false
+study_id: @@yaml:study_id@@
+study_revision: @@yaml:study_revision@@
+snapshot_id: @@yaml:snapshot_id@@
+recipe_sha256: @@yaml:recipe_sha256@@
+data_contract_sha256: @@yaml:data_contract_sha256@@
+method_contract_version: @@yaml:method_contract_version@@
+runtime_api_version: @@yaml:runtime_api_version@@
+selection_reference: @@yaml:selection_reference@@
+expected_scientific_sha256: @@yaml:expected_scientific_sha256@@

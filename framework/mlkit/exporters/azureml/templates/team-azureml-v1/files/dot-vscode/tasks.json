@@ -1,0 +1,215 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run_data_prep_locally",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.data_preparation.main"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "run_data_split_locally",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.data_splitting.main"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "run_training_locally",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.training.main"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "run_evaluation_locally",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.evaluation.main"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "run_all_steps_locally",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.utils.project",
+                "run-local",
+                "--mode",
+                "rebuild_final_candidate"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "validate_offline",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.utils.project",
+                "validate",
+                "--offline"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "predict_parity_rows",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.utils.project",
+                "predict",
+                "--parity",
+                "--output",
+                "outputs/predictions.json"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "azure_preflight_commands",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.utils.project",
+                "preflight"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "run_azure_ml_training_job",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "src.pipeline.utils.project",
+                "submit"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "quality",
+            "type": "shell",
+            "command": "echo '>>> check linting with ruff' && ruff check src",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "format",
+            "type": "shell",
+            "command": "echo '>>> ruff files' && ruff check --fix src",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "tests",
+            "type": "shell",
+            "command": "echo '>>> running unit tests' && pytest",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "echo '>>> cleaning compiled files' && find . -type d -name '__pycache__' -prune -exec rm -r {} + && find . -type d -name '.pytest_cache' -prune -exec rm -r {} +",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "clean_git_ignored_files",
+            "type": "shell",
+            "command": "echo '>>> Files ignored by git (dry run, nothing is deleted)' && git clean -nXd",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "login_to_azure",
+            "type": "shell",
+            "command": "echo '>>> Log to Azure' && az login",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "login_to_azure_with_code",
+            "type": "shell",
+            "command": "echo '>>> Log to Azure' && az login --use-device-code",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "logout_from_azure",
+            "type": "shell",
+            "command": "echo '>>> Logout from Azure' && az logout",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "update_azure_ml_cli",
+            "type": "shell",
+            "command": "echo '>>> Commands to update the Azure CLI ML extension (printed)' && echo 'az extension update -n ml'",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

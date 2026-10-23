@@ -1,0 +1,20 @@
+{
+    "[python]": {
+        "editor.tabSize": 4,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        }
+    },
+    "files.associations": {
+        "*.py.in": "python",
+        "*.pyi.in": "python"
+    },
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "python.defaultInterpreterPath": "/anaconda/envs/@@text:project_name@@",
+    "ruff.organizeImports": true
+}

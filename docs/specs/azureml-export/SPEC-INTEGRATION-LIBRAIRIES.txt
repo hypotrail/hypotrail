@@ -1,0 +1,329 @@
+HYPOTRAIL — SPECIFICATION NORMATIVE v1
+23 octobre 2026
+
+01 / Contrat de livraison
+
+Deux branches, un contrat commun
+
+Intégrer les bibliothèques utiles sans retarder la préparation Azure ML de l’atelier. Les deux chantiers avancent depuis le même commit, dans deux worktrees distincts. Leur point de rencontre est un prédicteur complet et un contrat d’échange versionné.
+
+Livrable atelier : étude → choix confirmé → modèle capturé → dossier au format exact du template → rechargement local et comparaison des prédictions. Le moteur reste utilisable sans Azure, Hydra, MLflow, Evidently ou MAPIE.
+
+Cette spec complète la revue des bibliothèques et amende la spec Azure ML précédente : ses nouvelles racines azure/, deployment/, model/, scripts/ sont abandonnées. Les fichiers supplémentaires se rangent dans les dossiers existants du template. Le transfert du prédicteur et son runtime sont confiés exclusivement au chantier A.
+
+Statut : spécification à implémenter. Les tests d’intégration décrits ici sont des exigences, pas des résultats obtenus. La base auditée est 581c7b3723629260a18e1281ef9e18583ae060a7 ; les sessions doivent comparer cette base à leur vrai checkout avant de modifier le code.
+
+02 / Contrat de livraison
+
+Responsabilités et zones de conflit
+
+Domaine | A · bibliothèques | B · Azure ML | 
+Contrats partagés et empreintes | Autorité : modèles Pydantic, schémas JSON, migrations, bundle | Consommateur ; fixtures privées conformes au contrat | 
+Prétraitement et estimateur | Runtime autonome, capture, rechargement, fit et provenance | Appelle le runtime, ne copie pas le fit | 
+Diagnostic et incertitude | Pandera, SciPy, Evidently, MAPIE, Hypothesis | Transporte uniquement les capacités explicitement supportées | 
+Configuration | Validation du contrat scientifique JSON | Hydra/OmegaConf dans le projet exporté ; résolution et comparaison | 
+MLflow | Point d’extension de packaging, aucune dépendance MLflow de base | Implémente le packager, signature, parité et tracking explicite | 
+Snapshot de déploiement | Fournit les données et artefacts via API de lecture | Compose le snapshot de destination et le manifeste d’export | 
+Template / scripts Azure | Aucun changement | Seul propriétaire du générateur, template, YAML et documentation exportée | 
+CLI et dépendances | Commandes moteur et extras diagnostics/uncertainty | Commande export azureml ; extras azureml/export déclarés | 
+Fichiers communs inévitables | pyproject, lock, dispatch CLI, handoff | Diffs minimaux ; intégrateur les fusionne et régénère le lock | 
+Chemins proposés : A possède framework/mlkit/contracts/, framework/mlkit/integrations/{pandera_validation,scipy_bootstrap,evidently_diagnostics,mapie_uncertainty}.py, les adaptations de study/{fit,case,objective,registry} et une distribution minimale hypotrail_runtime sous framework/. B possède framework/mlkit/exporters/azureml/, framework/mlkit/integrations/mlflow_packaging.py et le template versionné. Les chemins sont à ajuster au dépôt réel une seule fois en conservant ces responsabilités.
+
+Une fixture de B peut simuler un bundle synthétique ; elle ne doit jamais être proposée comme moteur de production. Aucun cherry-pick sauvage entre branches. Les changements d’interface passent par une version et une note de migration ; la session de fusion vérifie les deux côtés.
+
+
+
+03 / Contrat de livraison
+
+Périmètre et activation des bibliothèques
+
+Bibliothèque | Statut cible | Travail / limite | 
+Pydantic | Socle | Contrats aux frontières et résultat sérialisable ; pas de réécriture générale de tout l’état | 
+Pandera | Socle, validation tabulaire | Contrats dérivés des décisions du cas ; pas de correction automatique des données | 
+scikit-learn + SciPy | Déjà présents, mieux exploités | Pipeline complète + adaptateur bootstrap explicite ; les anciens calculs restent lisibles | 
+Hypothesis | Dépendance de développement | Tests génératifs et machine à états sur les vraies opérations, avec oracle indépendant | 
+Evidently | Extra diagnostics | Pilote fonctionnel intégré au rapport ; activé seulement sur demande / profil explicite | 
+MAPIE | Extra uncertainty | Deux capacités indépendantes : contrôle de risque à seuil fixe ; intervalles split-conformal | 
+Hydra + OmegaConf | Extra export Azure / projet généré | Conserver les groupes YAML du template ; pas de migration globale du moteur | 
+MLflow | Extra export Azure / projet généré | Packaging et tracking explicite ; aucun serveur obligatoire ni nouvelle source de vérité | 
+Ne pas ajouter simultanément msgspec/jsonschema comme validateurs concurrents, Deepchecks, Great Expectations, crepes, Alibi Detect ou un orchestrateur complet. Ils restent des alternatives documentées, hors implémentation demandée. JSON Schema peut servir à la vérification externe des contrats générés ; son schéma provient de Pydantic.
+
+Les versions testées dans les revues précédentes sont des indices de faisabilité, pas des pins imposés. Chaque branche produit un lock réellement résolu sous Python 3.13 et une matrice import/exécution/wheel/environnement Azure. Ne pas modifier la plage Python du moteur pour masquer un problème d’intégration.
+
+
+
+04 / Contrat de livraison
+
+Contrats communs normatifs v1
+
+Le fichier CONTRAT-COMMUN-v1.txt du pack fixe les champs, les API et les erreurs minimales. A en possède l’implémentation. B le lit sans inventer un second schéma. La sérialisation JSON n’utilise ni objets Pydantic picklés ni types Hydra.
+
+Objet | Contenu obligatoire | Règle | 
+ModelRecipe /1 | Tâche, modèle, paramètres résolus, variables ordonnées, types, transformations, cible, unité, classe positive, graines | Recette apprise distincte de l’état ajusté ; aucun défaut implicite | 
+DataContract /1 | Identité de source, colonnes, NA, catégories, clé de ligne, règles de parsing et d’exclusion | Même contrat logique pour Pandera et pour le runtime exporté | 
+ComputationContext /1 | Code, versions effectives, contrat de méthode, références de données/partitions et décisions | Les versions pertinentes entrent dans l’identité réutilisable du résultat | 
+PredictorArtifact /1 | ID du prédicteur, payloads+hashes, recette, environnement, runtime, fit scope, filiation, résultat lié éventuel | Lien au modèle évalué distinct de rebuilt_candidate ou development_candidate | 
+PredictorBundle /1 | Manifestes, payload natif, wheel/runtime immuable, jeu de parité autorisé, packaging optionnel | Le bundle ne contient pas le test final ni toute la base d’étude | 
+DiagnosticResult /1 | Backend, méthode, seuil, sens, taille, partitions, statistiques, état, avertissements | Séparer non calculable, non exécuté, alerte et absence d’alerte | 
+UncertaintyResult /1 | Grandeur, méthode, hypothèses, niveaux, partitions, modèle, bornes/seuils et causes d’échec | Pas de confusion intervalle prédictif / intervalle du gain / contrôle du risque | 
+États de calcul : ok, not_applicable, insufficient_data, failed. Le diagnostic ajoute alert=true|false|null. L’état du modèle et celui du calcul sont deux champs distincts. Toute version majeure inconnue est refusée ; les extensions ne sont acceptées que dans un espace explicitement prévu.
+
+Les erreurs comprennent au moins code, path, message, remediation. Le texte explicatif reste localisable ; le code reste stable. Une chaîne « 3 » et le booléen true ne doivent pas satisfaire silencieusement un entier métier. Les nombres non finis sont interdits dans les JSON de preuve ; une valeur indéfinie devient null avec sa cause.
+
+
+
+05 / Contrat de livraison
+
+Identité, invalidation et compatibilité
+
+L-01. Définir une sérialisation canonique commune : clés triées, UTF-8, séparateurs fixes, listes ordonnées, nombres normalisés selon leur type de schéma, aucune valeur non finie. Hacher des descripteurs typés ; distinguer hash du contrat scientifique, hash d’un fichier binaire et ID de run. Le manifeste exclut son propre digest du contenu qu’il signe.
+
+L-02. L’identité d’un calcul inclut les inputs pertinents, les appartenances, les décisions utilisées, la version de la méthode, le code/runtime et les versions des moteurs effectivement appelés. Un changement de package sans rapport avec ce calcul ne l’invalide pas. Une méthode en environnement incomplet ne peut pas hériter d’une preuve connue.
+
+L-03. Le manifeste capture aussi le lock complet pour audit. Ce lock ne remplace pas la liste de dépendances sémantiques du calcul. Une nouvelle version de backend produit une nouvelle identité ; une simple équivalence observée ne permet pas d’usurper l’ancienne.
+
+L-04. Les anciennes études restent ouvrables et leurs résultats restent historiques. Elles ne reçoivent ni artefact, ni consentement, ni validation rétroactive. Sans modèle capturé : export de recette possible, statut explicite. Aucun réentraînement silencieux et aucune réouverture du test final.
+
+L-05. Transaction : préparer l’artefact dans une zone temporaire, calculer ses empreintes, vérifier son rechargement, puis lier atomiquement l’activité et le manifeste. La réservation/exposition du test final doit résister aux pannes. Un échec de journalisation après lecture ne rend jamais les lignes de nouveau « non vues ». Nettoyage des objets orphelins distinct de l’état d’exposition.
+
+
+
+06 / Contrat de livraison
+
+Pydantic et Pandera : un schéma, deux niveaux
+
+L-06 · Pydantic. Commencer par ModelRecipe, DataContract et les résultats des adaptateurs. Valider en mode strict avec champs supplémentaires refusés hors extensions. Vérifier séparément les règles sémantiques : compatibilité tâche/métrique, disponibilité des variables au moment de prédire, référence de protocole actuelle, partition autorisée. Une structure valide ne confirme jamais une décision.
+
+Préserver les codes d’erreur publics et produire un adaptateur d’erreurs lisible par la CLI. Générer les schémas JSON à partir des modèles et tester des documents historiques acceptés/refusés ; documenter chaque différence intentionnelle. Pas de migration générale de SQLite en parallèle.
+
+L-07 · Pandera. Construire le schéma à partir du DataContract ; ne pas écrire un second contrat manuel pour Auto MPG. Séparer parsing déclaré, contrôle structurel et contrôle des valeurs des partitions autorisées. Les validations de valeurs du test final, même non supervisées, ne doivent pas contourner la politique d’exposition.
+
+Par défaut : aucune coercition, suppression de lignes, imputation ou ajout de colonnes. Si une conversion est nécessaire, la décrire et la tracer avant la validation. Exclure explicitement cible et clé technique du contrat d’inférence. Rendre les colonnes manquantes, supplémentaires, dupliquées, types erronés, catégories inconnues et NA avec lignes/colonnes concernées ; limiter les exemples affichés. Les catégories nouvelles peuvent être autorisées si le prédicteur définit leur traitement : elles ne sont pas systématiquement des erreurs.
+
+Tests : entier/booléen, nombres encodés en chaînes, cible absente à l’inférence, colonnes permutées, colonne inconnue, NA autorisé/interdit, doublons de clés, ensemble vide. Ni le DataFrame ni l’ordre des lignes ne sont mutés à l’insu du moteur.
+
+
+
+07 / Contrat de livraison
+
+Prédicteur complet : le prérequis de l’atelier
+
+L-08. Extraire le calcul effectif des chemins de fit, y compris les conversions et transformations actuellement hors pipeline. Tout état appris — imputation, catégories rares, bornes, encodage, transformations — doit être appris sur la partition d’entraînement appropriée et conservé. Un pipeline scikit-learn ou un wrapper compatible porte l’ensemble, pas uniquement l’estimateur.
+
+Conserver les règles existantes avant toute amélioration méthodologique. Parité sur données synthétiques pour régression et classification, valeurs spéciales, catégories inconnues et ordre des colonnes. État indépendant pour chaque fold ; aucun fit_transform sur validation/test. Le modèle final réajusté sur développement est identifié séparément des modèles de folds.
+
+L-09. API minimale du runtime : charger/vérifier un bundle, reconstruire une recette autorisée, prédire sur features brutes, retourner des sorties typées. La classification expose explicitement scores de la classe positive et, si supportée, la règle de décision. La régression expose prediction et unité. Les sorties suivent l’ordre d’entrée ; aucune cible requise.
+
+La distribution runtime est installable seule depuis un wheel dans un environnement vierge, sans cli moteur, Marimo, étude locale, Azure ou serveur MLflow. Les éventuelles dépendances par famille sont déclarées. Pas d’import de fonctions définies dans __main__, de notebook ou de chemin absolu du développeur. MVP export : régression linéaire d’Auto MPG et tests synthétiques de classification ; toute famille non qualifiée est refusée explicitement, sans changer le modèle choisi.
+
+L-10. Capturer le modèle avant d’ouvrir les labels du test final ; vérifier le chargement et la parité à ce moment. Le packaging optionnel de B est également effectué avant cette ouverture dans le profil atelier. Le modèle évalué est le modèle rechargé depuis l’artefact ou une instance dont la parité avec celui-ci est établie avant exposition. Le résultat final référence son hash précis.
+
+Sérialisation locale de confiance autorisée ; manifeste et compatibilité contrôlés avant chargement. Le hash ne rend pas sûr un pickle fourni par un tiers. Tolérances de parité proposées pour sorties float64 : rtol=1e-10 et atol=1e-12, à qualifier par famille et plateforme ; classes et sélections doivent coïncider exactement. Pas de relâchement automatique en cas d’échec.
+
+
+
+08 / Contrat de livraison
+
+SciPy : migration statistique sans glissement implicite
+
+L-11. Introduire un adaptateur pour le bootstrap apparié de lignes indépendantes. Déclarer explicitement paired=True, method="percentile", niveau, réplications, générateur et graine ; le défaut BCa de SciPy ne reproduit pas la méthode actuelle. L’ordre référence/candidat, le sens du gain et son unité font partie du contrat.
+
+Attention supplémentaire au code audité : il utilise random.Random, tandis que SciPy utilise un générateur NumPy. La même graine numérique ne garantit donc pas les mêmes rééchantillonnages. Une version de backend nouvelle doit être enregistrée, même si la méthode statistique est la même.
+
+L-12. Préserver la politique actuelle : une réplication requise indéfinie invalide l’intervalle concerné selon le contrat ; ne pas la supprimer silencieusement. Aligner les sorties pour modèle, référence et différence sur les mêmes indices. Tester petites tailles, objectifs indéfinis, référence parfaite, constante, classe absente, sélection vide, dépendances temporelles et groupes.
+
+Oracle : cas énumérables à très petit n et calcul direct des statistiques/quantiles avec rééchantillonnages contrôlés ; puis simulations reproductibles pour vérifier les propriétés attendues. Ne pas exiger l’égalité numérique de deux simulations ayant seulement la même graine mais des RNG différents. Si SciPy ne permet pas de préserver proprement les cas limites, garder le backend historique pour ces cas et publier la matrice de capacités. Aucun fallback silencieux.
+
+Le bootstrap de lignes ne devient pas valide pour des séries temporelles, groupes ou lots interdépendants parce qu’il est calculé par SciPy. L’admissibilité reste décidée avant appel ; aucune généralisation à capacity/share hors contrats actuels.
+
+
+
+09 / Contrat de livraison
+
+Evidently : une suite explicite, intégrée aux preuves
+
+L-13. Ajouter un profil diagnostics versionné, activable sur développement ou populations de suivi autorisées. Séparer : qualité des données ; distributions marginales ; relations entre variables ; performances sur observations labellisées. Un écran « pas d’alerte de dérive » n’autorise jamais « modèle toujours valide ».
+
+Le profil décrit pour chaque colonne : type, méthode, paramétrage, seuil, sens de comparaison, minimum d’observations et traitement des manquants. Aucun choix automatique dépendant de la taille. Stocker aussi taille d’effet, effectifs et limites. Un test à p-value et une distance n’emploient pas les mêmes unités ni le même sens de seuil.
+
+Pour des tests multiples, déclarer la famille et une correction préspécifiée telle que Holm lorsqu’un signal global est interprété comme test ; sinon annoncer des alertes exploratoires non corrigées. Un « pourcentage de colonnes en dérive » reste un indicateur de profil, pas une probabilité de mauvais modèle. Les seuils par défaut sont des valeurs de démonstration à justifier, jamais des garanties métier.
+
+L-14. Exécuter Evidently uniquement sur des DataFrames déjà autorisés. Mapper ses résultats dans DiagnosticResult ; garder le payload brut versionné comme annexe. Le rapport Hypotrail reste l’interface principale. Une exception backend produit failed avec sa cause, pas une absence d’alerte. Ne pas envoyer de données à un service distant.
+
+Recette synthétique : décalage de moyenne ; variation des NA ; catégorie inconnue ; colonne constante ; colonne entièrement vide ; passage 1 000→1 001 lignes sans changement de méthode ; corrélation inversée avec marges inchangées ; relation cible inversée avec marges inchangées. Les deux derniers cas doivent montrer les limites du test univarié et, si les labels sont autorisés, la dégradation des performances. Ne pas exiger que le test univarié détecte ce qu’il ne mesure pas.
+
+Critère d’intégration : couverture utile, erreurs explicites, contrat stable et coût mesuré de dépendances/import/temps/mémoire. La suppression de code n’est pas un prérequis. La détection multivariée avancée reste hors MVP.
+
+
+
+10 / Contrat de livraison
+
+MAPIE : deux capacités, deux contrats
+
+L-15 · Calibration. Ajouter un rôle de partition dédié, réservé avant utilisation, disjoint de l’entraînement, du tuning, de la sélection et du test final pour le périmètre simple retenu. Le modèle et la famille de règles doivent être figés avant d’examiner cette calibration. Les données déjà explorées ne redeviennent pas une calibration fraîche par renommage. Sur une ancienne étude sans partition admissible, afficher not_applicable ; ne pas découper après coup les observations exposées.
+
+La calibration a un statut d’exposition durable. Changer modèle, variables, recette, classe positive, famille de seuils ou objectif invalide l’objet calibré ; cela ne rend pas la même partition libre pour des essais adaptatifs répétés. Une nouvelle procédure exige des données appropriées ou une méthode justifiant explicitement cette réutilisation, hors première version.
+
+L-16 · Contrôle du risque. Premier périmètre : classification binaire, scores d’un modèle fixe, grille de seuils fixée, règle par observation threshold:t. Spécifier précision cible, niveau de contrôle, correction des tests et convention en cas de sélection vide. L’adaptateur doit vérifier que l’API réellement installée et sa définition du risque correspondent à l’objectif demandé.
+
+Le résultat conserve tous les seuils admissibles, la règle de choix préspécifiée, le seuil retenu, la taille de calibration, les hypothèses, le modèle et les paramètres du contrôleur. États distincts : seuil trouvé ; aucun seuil admissible ; calibration invalide ; erreur backend. Aucun remplacement par le meilleur seuil empirique. Une contrainte de précision absolue n’établit pas un gain contre référence. Les règles top-k / share sont refusées dans cette première intégration.
+
+La formulation pédagogique porte sur la probabilité que la procédure certifie à tort une règle, sous ses hypothèses ; elle ne promet pas une précision minimale sur chaque lot futur. Tester de façon déterministe les cas calculables et l’absence de seuil, puis des simulations à budget fixé avec tolérances statistiques annoncées. Une simulation favorable n’est pas une preuve universelle.
+
+L-17 · Intervalles. Première méthode : split-conformal de régression, modèle fixé, résidus sur calibration indépendante, couverture marginale nominale explicite. Tester le quantile corrigé en échantillon fini par calcul direct, le cas d’échantillon insuffisant et les sorties infinies/indéfinies. Rapporter largeur et couverture empirique sur données autorisées ; les diagnostics par sous-groupes sont descriptifs si aucune garantie conditionnelle n’est démontrée.
+
+Conserver le prédicteur de base, le calibrateur et la politique comme artefacts liés distincts. Le packaging Azure des objets MAPIE est une capacité séparée : tant que sa parité, son environnement et sa signature ne sont pas qualifiés, refuser l’export de la capacité calibrée. Ne pas l’enlever silencieusement. Pour Auto MPG, l’atelier peut se terminer sans MAPIE : l’intégration complète comprend néanmoins les deux adaptateurs, leurs contrôles et leurs tests synthétiques.
+
+
+
+11 / Contrat de livraison
+
+Hydra et MLflow : travail du chantier Azure
+
+L-18 · Hydra. Garder les points d’entrée et groupes de configuration du template. Composer puis résoudre avec rejet des valeurs manquantes ; convertir en types JSON, valider via le contrat commun, comparer la projection scientifique et figer avant exécution. Une interpolation d’environnement ne doit plus pouvoir changer le run après ce gel. Interdire les _target_ arbitraires et contrôler aussi les clés ajoutées par les overrides Hydra.
+
+Les changements de compute, chemins et logs sont opérationnels ; modèle, variables, transformations, métriques, calibration et appartenances sont scientifiques. Un override scientifique est refusé en replay fidèle. Ne pas résoudre les expressions Azure ${{…}} avec OmegaConf. Pas de multirun dans le parcours atelier ; pas de dépendance Hydra pour relire une étude historique.
+
+L-19 · MLflow. B implémente un packager local qui consomme le bundle de A, sans fit ni accès à l’étude, et produit un modèle pyfunc avec signature explicite, dépendances et manifeste. Tester chargement natif et pyfunc sur le même jeu de parité. Le hook de packaging se branche avant l’exposition finale quand le profil atelier le demande ; A ne doit pas réimplémenter MLflow.
+
+Le wrapper conserve tout le prétraitement et le sens de la sortie. Le packaging est un artefact dérivé avec son propre hash, lié au prédicteur natif ; il ne devient pas une nouvelle preuve scientifique. Réutiliser le package capturé lors d’un export répété. Le tracking est explicite : paramètres, versions, IDs et métriques autorisés ; pas d’autolog global, pas de données sensibles ajoutées par défaut, pas de registration avant contrôle, pas de service externe obligatoire.
+
+
+
+12 / Contrat de livraison
+
+Amendement Azure : structure exacte du template
+
+AZ-STRUCT-01. Le ZIP fourni est la référence de structure, pas seulement une inspiration. Le pack contient son inventaire normalisé et son hash SHA-256. Conserver les noms et emplacements du code réutilisable, les quatre étapes et leurs points d’entrée ; les contenus sont adaptés à l’étude. Aucune nouvelle racine métier.
+
+Seules exclusions par défaut : historique .git, métadonnées macOS, caches, secrets détectés et trois fichiers de données métier d’exemple. Garder leurs répertoires vides et remplacer le notebook d’exemple par un notebook de l’étude, au même chemin. Conserver le profil random_forest.yaml comme profil documenté non sélectionné, même si l’étude utilise un autre modèle ; le charger n’hérite d’aucun verdict. Conserver cli-aliases.sh comme aide locale inerte, sans modifier le shell global.
+
+Proposition précédente | Chemin imposé maintenant | 
+azure/target.yaml | src/conf/azure/target.yaml | 
+deployment/*.json | data/hypotrail/contracts/*.json | 
+src/contracts/ | src/conf/hypotrail/contracts/ — copie minimale non secrète des contrats nécessaires au run | 
+model/evaluated/ | data/hypotrail/models/evaluated/ | 
+scripts/project.py | src/pipeline/utils/project.py | 
+requirements.lock à la racine | aml/pipelines/training/requirements.lock | 
+aml/environments/runtime/ | aml/pipelines/training/runtime/ | 
+SHA256SUMS à la racine | data/hypotrail/SHA256SUMS | 
+Documentation nouvelle | docs/pages/deployment.md ; les pages existantes gardent leurs chemins | 
+Les nouveaux fichiers techniques à la racine sont limités à .amlignore, nécessaire aux exclusions ; aucun autre sans révision explicite du contrat. La configuration Azure est opérationnelle ; les contrats scientifiques font foi dans le bundle. Toute copie nécessaire aux composants est vérifiée par hash, jamais éditable comme seconde autorité.
+
+Les étapes restent data_preparation → data_splitting → training → evaluation. Préparation pure ; découpage par appartenances enregistrées ; entraînement d’un nouveau candidat ; évaluation technique ou de développement explicitement autorisée. Aucune lecture du test final historique. Le modèle évalué transporté est séparé du candidat reconstruit.
+
+AZ-STRUCT-02. Test automatique : tous les chemins conservés existent, seuls les chemins exclus sont retirés, tous les ajouts figurent dans l’allowlist, aucune racine interdite, aucune expression Azure détruite, aucun code shuttles/reviews/companies actif. Vérifier les globs d’exclusion sur le contenu effectivement transférable, pas seulement la présence de .amlignore. La spec Azure initiale reste applicable sur les autres points.
+
+
+
+13 / Contrat de livraison
+
+Parcours utilisateur et interfaces
+
+L’agent continue à présenter le plan et la progression dans le chat, le rapport HTML et Marimo. Aucun écran de configuration des bibliothèques, nouveau serveur, MCP ni extension obligatoire. Les messages expliquent le résultat et l’action utile ; ils n’exigent pas d’apprendre les packages.
+
+Action | Réponse attendue | 
+Valider les données | Anomalies concrètes et décisions nécessaires ; aucune correction muette | 
+Entraîner / comparer | Même parcours, références de versions et de modèle conservées ; pas de changement de protocole implicite | 
+Diagnostiquer une population | Contrôles choisis, partitions lues, alertes et limites ; trace d’exposition | 
+Demander une garantie de précision | Vérifie l’admissibilité de calibration avant de calculer ; résultat négatif possible | 
+Demander un intervalle | Distingue prédiction individuelle et incertitude sur un gain | 
+Préparer Azure ML | Dossier familier, statut draft/configured, artefact présent/manquant et validations acquises | 
+Relancer après changement | Anciennes preuves conservées mais non présentées comme actuelles | 
+Échec d’une option | Cause et remède ; parcours de base toujours utilisable | 
+Les noms CLI exacts des nouvelles activités diagnostics/calibration doivent s’aligner sur les conventions du dépôt au premier lot ; le contrat JSON et les autorisations sont prioritaires. La commande Azure reste hypotrail export azureml de la spec précédente, avec --plan, --profile, --expected-revision, --out et --json. L’export ne déclenche ni fit, ni test, ni appel Azure.
+
+Fin d’atelier de 10–15 minutes : demander l’export ; ouvrir src/conf/config.yaml et aml/pipelines/training/pipeline-job.yml ; lancer le contrôle local via src/pipeline/utils/project.py ; charger le modèle et montrer la parité ; expliquer séparément la soumission Azure. Pas de promesse d’endpoint déployé lorsque seul le dossier existe.
+
+
+
+14 / Contrat de livraison
+
+Lots, dépendances et arrêt utile
+
+Lot | Travail | Condition de fin | 
+C0 · commun | Choisir un BASE_SHA partagé, adopter le contrat v1 et l’inventaire template | Les deux sessions enregistrent le même SHA ; aucun schéma divergent | 
+A1 | Propriétés existantes, contrats Pydantic, identité et migration | Tests historiques + erreurs strictes + invalidation ciblée | 
+A2 · critique atelier | DataContract/Pandera, runtime complet, capture et hook packaging | Wheel autonome, parité, pas de test final rouvert ; bundle utilisable par B | 
+B1 · parallèle A1–A2 | Template fidèle, rendu, profil, Hydra, CLI --plan ; fixtures privées | Inventaire conforme ; placeholders signalés ; aucun import du fit copié | 
+B2 · parallèle A2 | Packager MLflow et projet local sur fixture conforme | Signature, chargement isolé et tests de chemins ; dépendance réelle encore annoncée | 
+A3 | SciPy versionné, diagnostic Evidently | Oracle statistique et huit scénarios diagnostics passent | 
+A4 | MAPIE, partitions de calibration, risque + intervalles | États négatifs, invalidation et garanties correctement exposés | 
+B3 | Brancher vrai bundle/runtime ; intégrer hook et capturer package | Essai bout en bout réel en environnement propre après fusion | 
+I1 · intégration | Fusion, dépendances, CLI, historique, template, parcours et CI | Matrice des critères ; commits des branches et résultat de merge enregistrés | 
+I2 · cloud | Préflight puis recette Azure explicitement autorisée | Job terminé, logs, artefacts et environnement ; sinon statut cloud non qualifié | 
+A2+B2 sont le jalon de préparation locale de l’atelier. A3/A4 ne sont pas nécessaires pour montrer l’export, mais restent dans le chantier bibliothèques demandé. Ne pas déclarer celui-ci achevé si seuls des stubs ou dépendances installées existent. Une capacité non qualifiable doit avoir un rapport de blocage précis et rester désactivée.
+
+
+
+15 / Contrat de livraison
+
+Recette : critères bloquants
+
+ID | Vérification indépendante attendue | 
+AC01 | Base commune enregistrée ; worktrees séparés ; aucun travail utilisateur écrasé | 
+AC02 | Pydantic refuse booléen/entier ambigu, champ inconnu et valeurs non finies avec erreur stable | 
+AC03 | Pandera dérivé du même DataContract ; aucune mutation silencieuse des lignes/valeurs | 
+AC04 | Version de backend pertinente change l’identité ; version étrangère à ce calcul ne la change pas | 
+AC05 | Ancienne étude lisible sans modèle inventé, confirmation ajoutée ou holdout rouvert | 
+AC06 | Prétraitements fit seulement sur train, y compris chaque fold et transformations hors pipeline historiques | 
+AC07 | Prédictions native/avant capture/après chargement coïncident dans des tolérances déclarées | 
+AC08 | Wheel runtime installé et exécuté sans sources, étude, Marimo ni services cloud | 
+AC09 | Panne avant/après exposition finale : pas de nouvelle lecture autorisée par erreur, preuve incomplète non valide | 
+AC10 | Bootstrap apparié, percentile, sens du gain, politique indéfinie et backend/RNG explicites | 
+AC11 | Oracle statistique indépendant ; pas de faux test d’égalité fondé uniquement sur la graine | 
+AC12 | Evidently : huit scénarios, méthodes figées, NA séparés, alertes nulles en cas d’erreur | 
+AC13 | Calibration MAPIE disjointe et non explorée ; test final inaccessible à la sélection du seuil | 
+AC14 | Aucun seuil admissible produit un résultat négatif, sans seuil de remplacement | 
+AC15 | Top-k/share et réutilisation adaptative de calibration refusés dans le périmètre initial | 
+AC16 | Intervalles confrontés au quantile direct ; hypothèses et absence de garantie conditionnelle affichées | 
+AC17 | Hydra rejette missing/clé ajoutée non autorisée ; configuration figée stable après changement d’environnement | 
+AC18 | Override scientifique refusé en replay ; override opérationnel conserve identité scientifique | 
+AC19 | MLflow ne réentraîne pas ; parité pyfunc et signature vérifiées dans environnement propre | 
+AC20 | Arborescence comparée à inventaire ZIP ; aucune nouvelle racine azure/deployment/model/scripts | 
+AC21 | Export répété : hashes de fichiers scientifiques stables ; artefacts préexistants réutilisés ; aucune collision écrasée | 
+AC22 | Dossier déplacé : quatre étapes locales et inférence fonctionnent sans chemin vers l’étude | 
+AC23 | Rebuilt_candidate ne reçoit pas le verdict du modèle évalué ; aucune métrique train présentée comme généralisation | 
+AC24 | Labels test et secrets absents des bundles, fixtures et contexte code transférable | 
+AC25 | Installation socle, extras séparés et ensemble des extras testés ; imports optionnels paresseux | 
+AC26 | Contrats partagés testés avec vrais producteurs/consommateurs après fusion, pas uniquement mocks | 
+AC27 | CLI, rapport HTML et Marimo restent complets sans extension VS Code ; messages lisibles | 
+AC28 | Qualification cloud séparée : schéma YAML valide ≠ job Azure réussi ≠ endpoint disponible | 
+Hypothesis doit notamment explorer proposer → confirmer → calculer → changer contrat → retirer confirmation → reprendre → conclure/exporter. L’oracle est un modèle réduit des droits et états, pas un appel aux mêmes fonctions que le système testé. Inclure révisions périmées, identifiants dupliqués, reprise après panne et séquences d’exposition. Utiliser des fixtures synthétiques et des budgets reproductibles.
+
+
+
+16 / Contrat de livraison
+
+Fusion : règles de résolution et validation
+
+Créer une troisième branche d’intégration depuis la base commune, dans un troisième worktree. Fusionner A puis B sans squash initial pour conserver la provenance. Lire chaque conflit dans son contexte ; ne jamais appliquer ours/theirs globalement. Un conflit résolu syntaxiquement peut encore casser les hypothèses scientifiques.
+
+Priorités : A fait foi pour les schémas et le runtime ; B pour la structure du template et les adaptateurs Azure/MLflow ; cette spec et le contrat commun font foi sur les interfaces. Pour pyproject, réunir les groupes justifiés puis régénérer le lock avec uv. Pour la CLI, conserver toutes les commandes et les contrôles de révision/exposition. Pour les docs, écrire l’état final, pas deux textes contradictoires.
+
+La fusion doit exécuter le scénario réel étude synthétique → entraînement autorisé → capture → test final synthétique contrôlé → export → dossier déplacé → chargement natif/MLflow → replay → candidat distinct. Vérifier aussi les anciennes études et toutes les capacités optionnelles. Un test réel ne peut être remplacé par les mocks de B.
+
+Rapport final : SHA de base et des deux branches, conflits et raisons des résolutions, commandes/tests et résultats, capacités livrées/bloquées, statut local/cloud et risques résiduels. Pas de force-push ni de suppression des branches. La branche d’intégration est le résultat reviewable ; fusion sur la branche cible ou publication uniquement si demandée dans la session concernée.
+
+
+
+17 / Contrat de livraison
+
+Sources, limites et livrables
+
+Base de conception : les deux rapports précédents relus, inventaire direct du ZIP et inspection complémentaire des chemins de capture, du contrat de cas et du bootstrap au commit audité. Aucun nouvel essai des packages ni job Azure n’a été lancé pour cette spec. Les observations expérimentales des revues précédentes ne sont pas revendiquées comme une recette du système intégré.
+
+Les décisions normatives (branches, contrats, chemins, états et critères) sont des choix de conception spécifiques au projet. Les documentations primaires consultées confirment les mécanismes sous-jacents ; l’API exacte doit être vérifiée contre les versions verrouillées lors de l’implémentation.
+
+SciPy : paramètres et méthodes bootstrap.
+
+Hydra : Compose API et portée de l’initialisation.
+
+Evidently : choix de méthode et seuils.
+
+MAPIE : théorie du contrôle du risque.
+
+Le pack contient cette spec HTML, une transcription texte, le contrat commun v1, l’inventaire du template, les trois prompts, les deux rapports de référence et le ZIP original. Chaque prompt indique ses entrées et sa branche ; aucun ne suppose que la session connaît cette conversation.
+
+
+
