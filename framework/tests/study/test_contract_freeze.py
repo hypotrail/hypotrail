@@ -1247,3 +1247,18 @@ def test_review_v1_j1_j3_contract_constants():
         'final_evidence_current_for_configuration')
     assert objective.DECISION_RULES == ('point_estimate', 'lower_bound')
     assert objective.BINARY_METRICS == ('precision', 'recall')
+
+
+def test_library_integration_v1_contract():
+    """Library integration v1 (workstream A): the added activities, their place in the
+    activity list, and the mapping of contract errors to frozen engine codes."""
+    from mlkit.contracts import errors as cerr
+    from mlkit.study import activities as act
+    assert act.EXPORT_ACTIVITIES == ('predictor.capture', 'diagnostics.population')
+    for task in ('binary', 'regression'):
+        assert act.task_activities(task)[-4:-2] == act.EXPORT_ACTIVITIES
+    assert set(cerr.ENGINE_CODES.values()) <= ERROR_CODES
+    tokens = set(act.EXPORT_ACTIVITIES) | set(cerr.ENGINE_CODES) | {
+        'contract_code', 'evidence_binding', 'engine_parity', 'semantic_dependencies',
+        'evidently_snapshot', 'read_export_source', 'hypotrail.export_source/1'}
+    assert not sorted(t for t in tokens if t not in DOC_TOKENS)

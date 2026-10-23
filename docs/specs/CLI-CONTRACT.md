@@ -1,5 +1,50 @@
 # CLI and study contract (`hypotrail`, v0.1, extended through v0.2)
 
+## Library integration v1 additions (workstream A, 2026-10-23)
+
+Specification: [`integration-libraries/`](integration-libraries/README.md); interfaces and
+status: [`LIBRARIES-V1.md`](../handoff/LIBRARIES-V1.md). All additions are additive; a study
+that uses none of them keeps its identities and payloads.
+
+* **Activities** (`activities.EXPORT_ACTIVITIES`, listed by `task_activities` before the
+  diagnostics): `predictor.capture` (a study with a final test) and `diagnostics.population`
+  (opt-in, needs the `diagnostics` extra).
+* **`run predictor.capture [--profile base|workshop] [--packager FORMAT]`**: before the final
+  test is opened and once the policy (or model choice) is confirmed, fits the complete
+  predictor of the chosen configuration on every development row (exposure `train_fit`,
+  partition `development`), validates the rows against the data contract, checks parity with
+  the engine's fit, writes and reloads its bundle under `.hypotrail/predictors/<predictor_id>/`
+  and records its descriptor (`values.predictor_id`, `bundle`, `recipe_sha256`,
+  `data_contract_sha256`, `parity`, `engine_parity`, `packages`, `profile`, `limitations`).
+  `--profile workshop` requires packaging (`mlflow_pyfunc` unless `--packager` names another
+  known format); a packager that cannot be imported is refused before any read. `--profile`
+  and `--packager` are refused with any other activity (`invalid_arguments`).
+* **`final_test.evaluation`** in a study holding a `predictor.capture` result: confirming
+  `final_test` requires a current capture of the configuration it opens
+  (`precondition_missing`, slot `predictor.capture`); the evaluation records
+  `inputs.predictor` and `inputs.results["predictor.capture"]`, scores the final rows with the
+  reloaded capture (no refit) and adds `values.predictor`; after promotion `run.result`
+  carries `evidence_binding` (`written` or `failed: ...`) and
+  `.hypotrail/predictors/<id>/evidence_binding.json` holds `hypotrail.evidence_binding/1`.
+* **`run diagnostics.population`**: compares two development populations (first and last fold
+  or window, or training and validation rows) on the model's feature columns, never the
+  target (exposure `structural_inspection`); `values.diagnostic` is a
+  `hypotrail.diagnostic_result/1`; blob `evidently_snapshot` keeps the raw payload; the
+  Evidently, NumPy, pandas and SciPy versions are in `params` (`semantic_dependencies`), so a
+  new backend version is a new identity.
+* **Errors.** Contract v1 codes are mapped to the frozen engine codes
+  (`mlkit.contracts.errors.ENGINE_CODES`): `contract_invalid` → `invalid_value`;
+  `schema_version_unsupported`, `capability_not_supported`, `optional_dependency_missing`,
+  `environment_unqualified` → `unsupported_capability`; `partition_not_authorized`,
+  `calibration_not_eligible`, `model_not_captured` → `precondition_missing`;
+  `artifact_integrity_failed` → `integrity_error`; `backend_failed` → `internal_error`;
+  `destination_not_empty` → `export_target_exists`; `stale_revision` → `stale_revision`;
+  workstream B's `scientific_config_changed` and `template_layout_mismatch` → `invalid_value`.
+  The v1 code is kept in `details` as `contract_code`, with `path` and `remediation`.
+* **Read API.** `read_export_source` (module `mlkit.contracts.export_source`), called with the
+  study directory and the expected revision, returns `hypotrail.export_source/1` (read-only,
+  no rows, no labels).
+
 ## Reliability roadmap J4--J7 additions
 
 `run policy.inspect --rule R [--rule R ...] [--intervals]` records a consultation of

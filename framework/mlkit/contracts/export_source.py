@@ -116,5 +116,12 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
            'dataset_sha256': state['dataset']['sha256'], 'scientific_contracts': contracts,
            'decisions': decisions, 'results': results, 'development_plan': plan,
            'final_test': final_test, 'predictor': predictor,
-           'limitations': _limitations(predictor, opened), 'extensions': {}}
+           'limitations': _limitations(predictor, opened),
+           'extensions': {'hypotrail.capabilities': {
+               'native_predictor': predictor['status'],
+               # The engine reserves no calibration partition (spec L-15): the MAPIE
+               # capabilities are not applicable to any study it creates today.
+               'risk_control': 'not_applicable: no calibration partition',
+               'conformal_intervals': 'not_applicable: no calibration partition',
+               'calibrated_export': 'refused: packaging of calibrated objects not qualified'}}}
     return parse(ExportSource, doc)

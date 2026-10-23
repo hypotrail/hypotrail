@@ -31,10 +31,10 @@ Test scopes:
 
 ### The gate
 
-Run it, fully green, before each commit. It installs the `browser` group, so the offline report test (`framework/tests/study/deliverables/test_html_offline.py`, Playwright) runs instead of being skipped:
+Run it, fully green, before each commit. It installs the `browser` group, so the offline report test (`framework/tests/study/deliverables/test_html_offline.py`, Playwright) runs instead of being skipped, and the `diagnostics` and `uncertainty` extras, so the Evidently and MAPIE tests of `framework/tests/study/libraries/` run instead of being skipped (library integration v1, [LIBRARIES-V1](docs/handoff/LIBRARIES-V1.md); the runtime wheel test needs `uv` on the path):
 
 ```sh
-uv sync --project framework --group dev --group browser
+uv sync --project framework --group dev --group browser --extra diagnostics --extra uncertainty
 uv run --project framework python -m playwright install chromium
 python3 scripts/check_layout.py
 uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py framework/tests/test_synthetic_case.py framework/tests/study framework/tests/acceptance
@@ -55,6 +55,10 @@ and **have the owner review every changed baseline from the diff images** in tha
 At the v0.1 closure it reported about 800 passed, 1159 after the advanced companion's integration (WP-I), and 1603 passed at the v0.2 closure (the Node line 236 tests, the panel pytest line 322 passed); the only skips are the opt-in agent scenarios of `framework/tests/acceptance/agent/test_scenarios.py` (34 at v0.1, 66 since WP-B6b). Without the `browser` group the same command passes but skips the offline browser test with a `PytestWarning` that says so; that run is not the full gate.
 
 `framework/tests/study/` covers the junior study engine, including real `hypotrail` CLI processes (`test_cli_decisions.py`, `test_walkthrough.py` on Bank, the synthetic case, and WDBC; `test_regression_walkthrough.py` on Auto MPG, the synthetic regression case, and diabetes; `test_perturbations.py` on 26 rewritten synthetic cases) and the frozen CLI contract (`test_contract_freeze.py`, see `docs/specs/CLI-CONTRACT.md`). A contract change updates the document and the freeze test in the same commit. The `hypotrail` command is installed in `framework/.venv` by `uv sync`; run it with `uv run --project framework hypotrail <command> --study DIR`. Create test studies in a temporary directory outside the repository.
+
+### Library integration v1 (opt-in parts)
+
+The installation matrix of the extras (base, `diagnostics`, `uncertainty`, both; four fresh environments from the lock) runs with `HYPOTRAIL_EXTRAS_MATRIX=1`; the Hypothesis state machine's budget is raised with `HYPOTRAIL_HYPOTHESIS_EXAMPLES` and `HYPOTRAIL_HYPOTHESIS_STEPS`. Regenerate the JSON schemas of the contracts after a model change with `uv run --project framework python -m hypotrail_runtime.schemas` (the gate checks them).
 
 ### Marimo spike (opt-in)
 

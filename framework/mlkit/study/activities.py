@@ -122,11 +122,14 @@ DIAG_FINAL = 'diag.final_test'
 # Library integration v1 (workstream A): the complete predictor of the chosen configuration,
 # captured before the final test is opened (mlkit.contracts.capture).
 CAPTURE = 'predictor.capture'
+# Library integration v1 (opt-in, extra ``diagnostics``): an Evidently profile comparing two
+# development populations on feature columns (mlkit.contracts.population).
+POPULATION = 'diagnostics.population'
 ACTIVITIES = (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
               POLICY_INSPECT,
               TARGET_SUMMARY, MEAN_BY, LINEAR, REGRESSION_EVALUATION, DISTRIBUTION, QUALITY,
               SIGNAL, VARIANT, FINAL, DIAG_BINARY, DIAG_REGRESSION, DIAG_FINAL, CORRELATION,
-              CAPTURE)
+              CAPTURE, POPULATION)
 TASK_ACTIVITIES = {
     'binary': (SPLIT, TARGET_RATE, SPECIAL_VALUES, RATE_BY, BASELINE, LOGISTIC, POLICY,
                POLICY_INSPECT),
@@ -143,7 +146,7 @@ DIAG_ACTIVITIES = {'binary': (DIAG_BINARY, DIAG_FINAL),
                    'regression': (DIAG_REGRESSION, DIAG_FINAL)}
 DEVELOPMENT_DIAGNOSTICS = (DIAG_BINARY, DIAG_REGRESSION)
 # Library integration v1: activities of every task in a study that has a final test.
-EXPORT_ACTIVITIES = (CAPTURE,)
+EXPORT_ACTIVITIES = (CAPTURE, POPULATION)
 
 
 def task_activities(task: str) -> tuple[str, ...]:
@@ -219,6 +222,10 @@ MODULES = {
               'hypotrail_runtime.contracts', 'hypotrail_runtime.preprocess',
               'hypotrail_runtime.predictor', 'hypotrail_runtime.families',
               'hypotrail_runtime.inference', 'hypotrail_runtime.canonical', 'sklearn'),
+    # The Evidently versions it calls are in its params (semantic dependencies).
+    POPULATION: (_BASE, 'mlkit.contracts.population', 'mlkit.contracts.context',
+                 'mlkit.integrations.evidently_diagnostics', 'hypotrail_runtime.contracts',
+                 'hypotrail_runtime.canonical'),
 }
 # The regression fit of the baseline also uses the error module.
 REGRESSION_MODULES = {BASELINE: (_BASE, 'mlkit.study.fit', 'mlkit.study.regression')}
@@ -484,7 +491,7 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
                              details={'activities': list(task_activities(task)), 'task': task})
     options = normalize_options(activity, options)
     from . import state as st
-    if (activity in B1_ACTIVITIES or activity in EXPORT_ACTIVITIES or activity == DIAG_FINAL) \
+    if (activity in B1_ACTIVITIES or activity == CAPTURE or activity == DIAG_FINAL) \
             and not st.has_wp_b1_decisions(state):
         raise CommandRefused('invalid_arguments',
                              f'{activity} is not an activity of this study: it was created before '
@@ -598,6 +605,9 @@ def plan(store, state: Mapping, activity: str, options: Mapping, *,
     elif activity == CAPTURE:
         from mlkit.contracts import capture
         capture.plan(store, state, case, inputs, params, options, expose)
+    elif activity == POPULATION:
+        from mlkit.contracts import population
+        population.plan(store, state, case, inputs, params, expose)
     elif activity == DIAG_FINAL:
         params = _plan_final_diagnostics(store, state, case, inputs, expose)
     elif activity in DEVELOPMENT_DIAGNOSTICS:
@@ -1786,6 +1796,9 @@ def compute(store, plan_: Mapping) -> dict:
     if activity == CAPTURE:
         from mlkit.contracts import capture
         return capture.compute(store, plan_)
+    if activity == POPULATION:
+        from mlkit.contracts import population
+        return population.compute(store, plan_)
     if activity in MODEL_FITS:
         from . import fit
         case, dataset = load(plan_, store)
