@@ -1,0 +1,80 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "All Steps",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.pipeline.utils.project",
+            "args": [
+                "run-local",
+                "--mode",
+                "rebuild_final_candidate"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "1_data_prep",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.pipeline.data_preparation.main",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "2_data_split",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.pipeline.data_splitting.main",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "3_train",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.pipeline.training.main",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "4_evaluate",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.pipeline.evaluation.main",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "validate",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.pipeline.utils.project",
+            "args": [
+                "validate",
+                "--offline"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}

@@ -52,6 +52,7 @@
   "artifacts_after": {
    "report": "regenerated",
    "notebook": "regenerated",
+   "editable": "synced_if_unedited",
    "workbench": "unchanged"
   },
   "notes": [

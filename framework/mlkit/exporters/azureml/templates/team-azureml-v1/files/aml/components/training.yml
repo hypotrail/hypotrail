@@ -1,0 +1,21 @@
+# <component>
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: @@text:component_prefix@@_train_model
+display_name: TrainModel@@text:display_suffix@@
+version: @@yaml:component_version@@
+type: command
+inputs:
+  hypotrail_data_path:
+    type: uri_folder
+  partitions_path:
+    type: uri_folder
+outputs:
+  model_path:
+    type: uri_folder
+code: ./../../
+environment: azureml:@@text:environment_name@@:@@text:environment_version@@
+command: >-
+  python -m src.pipeline.training.main mlflow_tracking=@@text:mlflow_tracking_cloud@@ data_dir=${{inputs.hypotrail_data_path}} train_data.path=${{inputs.partitions_path}} models.path=${{outputs.model_path}}
+
+
+# </component>

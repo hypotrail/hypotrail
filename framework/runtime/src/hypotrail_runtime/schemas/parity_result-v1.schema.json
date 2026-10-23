@@ -1,0 +1,121 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "JsonValue": {},
+  "Tolerance": {
+   "additionalProperties": false,
+   "properties": {
+    "atol": {
+     "minimum": 0,
+     "title": "Atol",
+     "type": "number"
+    },
+    "exact": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Exact",
+     "type": "array"
+    },
+    "rtol": {
+     "minimum": 0,
+     "title": "Rtol",
+     "type": "number"
+    }
+   },
+   "required": [
+    "rtol",
+    "atol",
+    "exact"
+   ],
+   "title": "Tolerance",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/parity_result-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "exact_mismatches": {
+   "minimum": 0,
+   "title": "Exact Mismatches",
+   "type": "integer"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "max_abs_diff": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Max Abs Diff"
+  },
+  "max_rel_diff": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Max Rel Diff"
+  },
+  "n_rows": {
+   "minimum": 0,
+   "title": "N Rows",
+   "type": "integer"
+  },
+  "reason": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Reason"
+  },
+  "schema_version": {
+   "const": "hypotrail.parity_result/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "status": {
+   "enum": [
+    "ok",
+    "failed"
+   ],
+   "title": "Status",
+   "type": "string"
+  },
+  "tolerance": {
+   "$ref": "#/$defs/Tolerance"
+  }
+ },
+ "required": [
+  "schema_version",
+  "status",
+  "n_rows",
+  "max_abs_diff",
+  "max_rel_diff",
+  "exact_mismatches",
+  "tolerance",
+  "reason"
+ ],
+ "title": "ParityResult",
+ "type": "object"
+}

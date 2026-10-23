@@ -144,7 +144,7 @@
      "change",
      "explain"
     ],
-    "question": "Do you adopt this decision?",
+    "question": "Adopt the linear model.\n\nDo you adopt this decision?",
     "evidence_refs": [],
     "detail_topics": [
      "metric",
@@ -297,73 +297,73 @@
   },
   "results": {
    "eda.correlation": {
-    "result_id": "298a2127260f997b3dc2f7b1e11e320a4587ee23ca2544baf687b4fb014d9cca",
+    "result_id": "583c4e2e561f96efa00cc45c89bd21a95c153d3daf307c7cc04e5cbde67227e2",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.distribution:weight": {
-    "result_id": "9030b75e70d6b506b398480076afbfe22558a1dede7957b21cb9630c87fc463c",
+    "result_id": "b68e2a872bb35e1f4f79f86a4fbc75d82833c936131cf93de5510b32a21caf02",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.mean_by:model_year": {
-    "result_id": "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25",
+    "result_id": "c1cd99311d66d56e155b23fdd943442fff76869c4bb78d489d1085ea8634c07f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.quality": {
-    "result_id": "7a2a97a97d6a923c288cda35f9cc3c434f2ac3e5520b598c4d77dd27a590c77f",
+    "result_id": "8489a7f5ead58fd171e63ebea151219ab58cb469b6ebd4569ce09b2e2703cfc0",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.single_feature_signal": {
-    "result_id": "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
+    "result_id": "5b3c4935c23a87ab6a2572c3286d11a9c894fb657c75c3881573b9743e7e3b11",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.special_values": {
-    "result_id": "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
+    "result_id": "c9643ad268ecb1e31156303bed5abaf6fcdad49b564dd7d086169f65970bd748",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "eda.target_summary": {
-    "result_id": "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
+    "result_id": "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "evaluate.regression": {
-    "result_id": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+    "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.baseline": {
-    "result_id": "920484231eee94858d154b06a501d005842bb94fa39042198a4c573c1214554c",
+    "result_id": "b6b270c7110f2b295ac5122ae9144119b8671180e19d1a04b05dbef1d25353fb",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.linear": {
-    "result_id": "dbec6c1b1517db00e15e96fd3d2aa45d42a1939c902cfe630b47c788cf45ffaf",
+    "result_id": "6c5edebf385d0f90967eedb40e07575b13b9b18471f8928dcc83ce9dfb476e93",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "fit.variant": {
-    "result_id": "96430c7a0025caaccb7b54accc48f2019c5897e3ce3ac4a794fb20247603f8fa",
+    "result_id": "004185cee65589c9d8f1f69db33979c1f781cf40aa81edf7476608f60846074b",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
    },
    "split": {
-    "result_id": "f4cb3cbdd6bd2f0890aae09fd6cae4972e747c8159b520c686b1eee6cfa2fa4e",
+    "result_id": "ae74b16b6f43c17895b642ec3576564a4c6ebcf5d6ec69bfdd68895d6f7a4a7f",
     "current": true,
     "stale_reason": null,
     "integrity": "ok"
@@ -372,6 +372,14 @@
   "artifacts": {
    "status": "ok",
    "items": {
+    "editable": {
+     "status": "ok",
+     "revision": 38,
+     "last_ok_revision": 38,
+     "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence.",
+     "audience": "agent",
+     "junior_message": "The editable study notebook follows the generated notebook until your first edit; after that it is never overwritten and is not official evidence."
+    },
     "notebook": {
      "status": "ok",
      "revision": 38,
@@ -465,11 +473,11 @@
    "status": "met",
    "gain": 0.36929471747082676,
    "low": 0.30765831630777174,
-   "high": 0.4261314806060685,
+   "high": 0.4261314806060684,
    "minimum": 0.1,
    "unit": "share",
    "rule": null,
-   "result_id": "449282fc16ba0ecb946e87ac3d48072d41912af00813edc51a851a5e633e3e5a",
+   "result_id": "5821e0cc0b6b7fa2b94daf03aa6424b004737a68dd918cf02ebd475f519d448c",
    "contradicts_verdict": false,
    "final_test": null,
    "model": "fit.linear",
@@ -479,16 +487,16 @@
   "eda_looks": {
    "target_looks": 4,
    "results": [
-    "075b0ffb72456774870445cfad28cbdafe6b2516b5e78c354df2f6744ad4ef74",
-    "bf9198f3d40116f45eb75e9a511db17d038810e1f54cfdcfbeb79be5f676ae40",
-    "8630e022c2e0cde58bca0345c29a7c596037a81420bbef76af24ae011b0c94fc",
-    "7ae41047c7cfdc61b7a1d15e4d1164180eceb69e2360f37d23e838a02f5faf25"
+    "33e9e3394afc107d0917147c52ec09372bbc9b2ca8a0676c7a61d1dee09c0060",
+    "c9643ad268ecb1e31156303bed5abaf6fcdad49b564dd7d086169f65970bd748",
+    "5b3c4935c23a87ab6a2572c3286d11a9c894fb657c75c3881573b9743e7e3b11",
+    "c1cd99311d66d56e155b23fdd943442fff76869c4bb78d489d1085ea8634c07f"
    ]
   },
   "recap": [
    "Goal: Exercise: estimate a future model fuel efficiency from technical characteristics; the prediction is made when the technical characteristics of a new model are fixed, before its fuel efficiency is measured.",
    "Decided: prediction moment; feature availability (excluded acceleration); split (ordinal cutoff on model_year, validation from 79); success criterion (validation error at least 10% below the mean baseline); preprocessing (the default: no missing-value indicator, every category kept, no cap, no transform); variant (stronger regularisation).",
-   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 449282fc); the report and notebook are up to date.",
+   "Now: Choose the model (validation MAE: the mean baseline 10.27 mpg; the linear model 6.48 mpg; the variant 6.51 mpg; result 5821e0cc); the report and notebook are up to date.",
    "Next: whether you adopt the model choice: \"Adopt the linear model.\"",
    "Limit: Validation rows are used to compare the models and to choose one, so validation errors are not independent evidence of future error."
   ],
@@ -514,6 +522,19 @@
       "marimo",
       "run",
       "/studies/auto mpg/notebooks/study_generated.py"
+     ]
+    },
+    "editable": {
+     "mode": "edit",
+     "path": "notebooks/study_editable.py",
+     "argv": [
+      "uv",
+      "run",
+      "--project",
+      "/hypotrail/framework",
+      "marimo",
+      "edit",
+      "/studies/auto mpg/notebooks/study_editable.py"
      ]
     },
     "workbench": {

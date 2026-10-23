@@ -1,0 +1,12 @@
+# Scientific (the study's selected recipe, decision @@text:selection_decision@@): a replay
+# fits exactly this. Any change is refused with scientific_config_changed.
+status: selected
+task: @@yaml:task@@
+model:
+  type: @@yaml:family@@
+  params: @@yaml:parameters@@
+preprocessing: @@yaml:preprocessing@@
+seeds: @@yaml:seeds@@
+output_contract: @@yaml:output_contract@@
+# Operational: rebuild_final_candidate fits the recipe on every authorised development row.
+mode: rebuild_final_candidate

@@ -1,5 +1,15 @@
 # Implementation handoff (v0.2)
 
+## Library integration v1, workstream A (23 October 2026)
+
+Shared v1 contracts, the separately installable predictor runtime, `run predictor.capture`
+(the chosen model captured, reloaded and parity-checked before the final test opens; the
+final test then scores the reloaded capture), `read_export_source` for the Azure ML
+workstream, Pandera validation from the data contract, a SciPy bootstrap backend, an opt-in
+Evidently profile (`run diagnostics.population`) and MAPIE risk control and split-conformal
+adapters. Details, interfaces, test evidence, limits and the AC01–AC28 matrix:
+[LIBRARIES-V1.md](LIBRARIES-V1.md).
+
 ## Review remediation J0--J3 (22 October 2026)
 
 J0 adds an opt-in `init --reliability-profile review-v1`, static `analysis_contract`

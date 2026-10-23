@@ -1,6 +1,8 @@
 """``hypotrail export handoff``: a reviewer's pack written under ``--out`` only.
 
     hypotrail export handoff --study DIR [--out DIR] [--expected-revision REV] [--json]
+    hypotrail export azureml --study DIR --expected-revision REV [--profile FILE]
+                     [--template team-azureml-v1] [--require-configured] (--out DIR | --plan)
 
 CLI-CONTRACT-COMPANION §7 (C7), payloads ``hypotrail.export/1`` (stdout) and
 ``hypotrail.handoff/1`` (``handoff.json``).
@@ -50,7 +52,7 @@ HANDOFF_KEYS = ('schema', 'study', 'revision', 'task', 'case', 'dataset', 'goal'
                 'reproduce', 'environment', 'history')
 CITED_KEYS = ('result_id', 'activity', 'path', 'value', 'shown')
 FILE_KEYS = ('path', 'sha256', 'bytes')
-KINDS = ('handoff',)
+KINDS = ('handoff', 'azureml')
 FILES = ('handoff.md', 'handoff.json', 'study.html', 'SHA256SUMS')
 WARNINGS = ('report_not_current', 'open_proposals', 'open_holds', 'interrupted_executions',
             'sources_changed', 'unconfirmed_decisions')
@@ -90,6 +92,15 @@ def configure(parser: argparse.ArgumentParser) -> None:
     # v0.3 (WP-J, R35): the study panel passes webview; recorded as an event.
     parser.add_argument('--channel', default=None,
                         help='chat (the default), cli, or webview: where the export came from')
+    # export azureml (chantier B): mlkit.exporters.azureml.
+    parser.add_argument('--profile', default=None, metavar='FILE',
+                        help='azureml: the destination profile (hypotrail.azure_target/1)')
+    parser.add_argument('--template', default='team-azureml-v1',
+                        help='azureml: the project template (team-azureml-v1)')
+    parser.add_argument('--plan', action='store_true',
+                        help='azureml: list files, statuses and missing fields; write nothing')
+    parser.add_argument('--require-configured', action='store_true',
+                        help='azureml: refuse a draft (incomplete profile)')
 
 
 # --- the target folder -----------------------------------------------------------------
@@ -517,6 +528,16 @@ def export_handoff(study_dir, *, out=None, expected_revision=None) -> tuple[dict
 
 
 def main(args: argparse.Namespace) -> cmd.Outcome:
+    if args.kind == 'azureml':
+        from mlkit.exporters.azureml import export_azureml
+        payload, code = export_azureml(args.study, expected_revision=args.expected_revision,
+                                       out=args.out, profile_path=args.profile,
+                                       template_id=args.template, plan=args.plan,
+                                       require_configured=args.require_configured)
+        return cmd.Outcome(payload, code)
+    if args.plan or args.profile or args.require_configured:
+        raise StudyError('invalid_arguments', '--plan, --profile and --require-configured are '
+                         'options of export azureml.', details={'field': 'kind'})
     from .cmd_render import record_channel
     from .executions import channel_param
     channel = getattr(args, 'channel', None)

@@ -118,9 +118,14 @@
       el('details', { className: 'eda-analysis', open: expanded ? true : null }, [
       el('summary', { className: 'ht-card-h' }, [el('div', {}, [
         el('span', { className: 'ht-cap', 'data-eyebrow': true, text: eyebrow }),
-        // Use the panel's localized question instead of leaking the engine's canonical text.
-        el('h3', { id, className: 'eda-question', 'data-question': true,
-          text: c.requestQuestion(card.activity, card.column || null) || title }),
+        // Each card is titled by the engine's question (ED-7). In a French panel a per-column
+        // chart takes the panel's French question rather than the English engine text; other
+        // cards keep the engine's text with its "(en)" marker.
+        HT.language && HT.language() === 'fr' && PER_COLUMN.includes(card.activity) && card.column
+          ? el('h3', { id, className: 'eda-question', 'data-question': true,
+            text: c.requestQuestion(card.activity, card.column) })
+          : el('h3', { id, className: card.question ? 'eda-question' : null, 'data-question': card.question ? true : null },
+            [card.question ? ctx.components.engineText(card.question) : title]),
         sub,
       ])]),
       el('div', { className: 'eda-analysis-body' }, [

@@ -80,6 +80,7 @@ WP_B1_REQUIRES = {
                     st.PREPROCESSING, st.MODEL_VARIANT),
 }
 FINAL_TEST_EVALUATION = 'final_test.evaluation'
+CAPTURE = 'predictor.capture'
 VARIANT_FIT = 'fit.variant'
 # WP-B4: the diagnostics of the final test.
 FINAL_DIAGNOSTICS = 'diag.final_test'
@@ -146,6 +147,21 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                             'slot': diag_slot,
                             'detail': 'Current candidate development diagnostics are required '
                                       'before the challenger discussion.'})
+    if decision_id == st.FINAL_TEST and state['current'].get(CAPTURE):
+        # Library integration v1: a study that captured its predictor opens the final test
+        # only on a current capture of the configuration it opens.
+        if not st.is_current(state, CAPTURE):
+            missing.append({'requirement': 'result_current', 'slot': CAPTURE,
+                            'detail': 'Capture the chosen model again before opening the final '
+                                      'test: the capture is no longer current.'})
+        elif store is not None and value is not None:
+            from . import registry
+            entry = registry.get(store, state['current'][CAPTURE])
+            if entry['inputs'].get('configuration') != value:
+                missing.append({'requirement': 'result_current', 'slot': CAPTURE,
+                                'captured': entry['inputs'].get('configuration'),
+                                'detail': 'The captured predictor is another configuration; '
+                                          'capture the one the final test would open.'})
     if decision_id == 'policy':
         if not st.is_current(state, POLICY_EVALUATION):
             missing.append({'requirement': 'result_current', 'slot': POLICY_EVALUATION,
@@ -296,6 +312,10 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
     """Unmet requirements to run ``activity`` (a slot name such as ``fit.logistic``)."""
     if activity in NO_REQUIREMENT_ACTIVITIES:
         return []
+    if activity == CAPTURE:
+        # Library integration v1: the chosen configuration, before the final test opens.
+        from mlkit.contracts import capture
+        return capture.missing(state)
     if activity == FINAL_TEST_EVALUATION:
         # WP-B1: only after the opening decision, once.
         missing = [] if _confirmed(state, st.FINAL_TEST) else [_need_decision(state,

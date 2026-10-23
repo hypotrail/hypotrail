@@ -1,0 +1,3 @@
+# Scientific: the study's metrics. The evaluation step makes technical checks of the run's
+# candidate (reload, MLflow parity); it never reads the study's final test.
+metrics: @@yaml:metrics@@

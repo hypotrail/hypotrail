@@ -1,0 +1,37 @@
+# Cloud CI (Hypotrail export): MANUAL by default. It never runs on a push or a pull request
+# (trigger: none, pr: none) until the team enables it deliberately. It checks the export,
+# runs the read-only preflight, then creates the assets and submits the training pipeline
+# and waits for its terminal state. It never deploys an endpoint and registers no model.
+# Cloud CI enabled in the export profile: @@text:cloud_ci_enabled@@
+trigger: none
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: AzureCLI@2
+    displayName: "install Azure ML CLI"
+    inputs:
+      azureSubscription: '@@text:service_connection@@'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: "az extension add -n ml -y"
+
+  - task: AzureCLI@2
+    displayName: "validate the export and run the read-only preflight"
+    inputs:
+      azureSubscription: '@@text:service_connection@@'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        python -m src.pipeline.utils.project validate --offline
+        python -m src.pipeline.utils.project preflight --execute
+
+  - task: AzureCLI@2
+    displayName: "register data asset and environment, run pipeline job, wait"
+    inputs:
+      azureSubscription: '@@text:service_connection@@'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: 'python -m src.pipeline.utils.project submit --execute --wait'

@@ -1,0 +1,390 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hypotrail — Choisir les bonnes briques</title><style>
+:root{--board:#20312C;--board2:#1A2925;--chalk:#EDE8DA;--chalk2:#C9C4B6;--dust:rgba(237,232,218,.55);--ink:#EDE8DA;--faint:#8F9A93;--line:rgba(237,232,218,.14);--line2:rgba(237,232,218,.3);--yellow:#F0D178;--pink:#EFA3B8;--mint:#B9E2C4;--teal:#9FE0D2;--violet:#C8B6F5;--blue:#A7CCEB;--green:#B9E2C4;--coral:#F3A28F;--amber:#F0D178;--card:#F5F1E6;--cardink:#22302B;--cardmuted:#4E5A55;--cardline:rgba(34,48,43,.14);--cardsoft:#ECE7D8;--gridmm:rgba(38,72,124,.11);--red:#B8322A;--pen:#1E4E9E;--hl:rgba(255,222,64,.55);--ochre:#B07418;--slate:#2E5446;--serif:Georgia,"Iowan Old Style","Times New Roman",serif;--sans:"Avenir Next",Avenir,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--math:Georgia,"Times New Roman",serif;--mono:ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+body.white{--board:#F1F3F1;--board2:#E4E8E4;--chalk:#1E2A36;--chalk2:#3E4A57;--dust:rgba(30,42,54,.6);--ink:#1E2A36;--faint:#7C8896;--line:rgba(30,42,54,.12);--line2:rgba(30,42,54,.3);--yellow:#B7791F;--pink:#B93A5A;--mint:#1F7A44;--teal:#0F8A7C;--violet:#6B46C1;--blue:#1F5FA8;--green:#1F7A44;--coral:#C0392B;--amber:#B7791F;--card:#FFFFFF;--cardsoft:#F1EFE9;--cardline:rgba(34,48,43,.12);color-scheme:light}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:70px}body{margin:0;background:var(--board);color:var(--ink);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;background-image:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.05),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(255,255,255,.04),transparent 50%)}body.white{background-image:none}p,li{overflow-wrap:anywhere}p{margin:.7em 0}a{color:var(--chalk);text-decoration-color:var(--yellow);text-underline-offset:4px}a:hover{color:var(--yellow)}h1,h2{font-family:var(--serif);font-weight:400;line-height:1.15;color:var(--chalk);text-shadow:0 0 1px var(--dust)}h1{font-size:clamp(36px,4.5vw,64px);margin:.3em 0}h2{font-size:32px;margin:0 0 24px}h2:before{content:"";display:inline-block;width:22px;height:2px;background:var(--yellow);vertical-align:middle;margin-right:12px;filter:url(#chalkf)}h3{font-size:19px;line-height:1.4;margin:1.25em 0 .4em;color:var(--chalk)}header{max-width:1200px;margin:auto;padding:75px 35px 35px;border-bottom:1px solid var(--line2)}.eyebrow,.tag{font:600 12px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow)}.subtitle{font:22px/1.5 var(--serif);max-width:800px;color:var(--chalk2)}.meta,.small{font-size:13px;color:var(--chalk2)}.layout{max-width:1200px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:40px;margin:auto;padding:30px 35px 80px}.sidebar{position:sticky;top:80px;align-self:start;border-left:2px solid var(--yellow);padding-left:16px}.sidebar a{display:block;text-decoration:none;font-size:13px;color:var(--chalk2);padding:7px 0}.sidebar a:hover{color:var(--yellow)}.sidebar summary{font:20px var(--serif);padding-bottom:12px;cursor:pointer}main{min-width:0}section{padding:20px 0 38px;border-bottom:1px solid var(--line);margin-bottom:28px}.lead{font:23px/1.5 var(--serif)}.callout,blockquote{background:var(--board2);border-left:3px solid var(--yellow);padding:18px 22px;margin:22px 0;color:var(--chalk)}blockquote{font:21px/1.5 var(--serif)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0}.grid.two{grid-template-columns:1fr 1fr}.grid article,.exercise,.answer{background:var(--board2);border:1px solid var(--line2);border-radius:4px;padding:18px}.grid article h3{margin:.4em 0}.grid article p{font-size:14px;color:var(--chalk2)}.tbl{overflow-x:auto;position:relative;margin:20px 0}table{width:100%;border-collapse:collapse;font:14px/1.5 var(--sans);font-variant-numeric:tabular-nums}td,th{border:1px solid var(--line2);padding:12px;vertical-align:top;text-align:left}th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;background:var(--board2);color:var(--chalk2)}.time{white-space:nowrap;color:var(--yellow)}code{font:13px var(--mono);overflow-wrap:anywhere;color:var(--yellow)}pre{font:13px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--board2);border:1px solid var(--line2);padding:18px;border-radius:4px;color:var(--chalk)}.answer{padding:0;margin:12px 0}.answer summary{padding:15px 18px;font-weight:600;cursor:pointer}.answer>div{padding:0 18px 16px;color:var(--chalk2)}.feedback{padding:16px;border-left:3px solid var(--yellow);background:var(--board);margin-top:18px;min-height:95px}button,select{font:500 14px var(--sans);color:var(--ink);background:var(--board2);border:1.5px solid var(--line2);border-radius:3px;padding:10px 14px;cursor:pointer}button:hover,button[aria-pressed=true]{border-color:var(--yellow);color:var(--yellow)}select{width:100%;margin:8px 0 14px}label{display:block}.check{display:flex;align-items:flex-start;gap:10px}.check input{margin-top:7px;accent-color:var(--yellow)}.buttons{display:flex;gap:10px;flex-wrap:wrap}.tb{font:500 13px var(--sans);padding:6px 12px;white-space:nowrap}#themeBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 14px);z-index:30;background:var(--board2);box-shadow:0 6px 16px -8px rgba(0,0,0,.55)}.topline{padding-right:128px}.ledge{position:fixed;left:0;right:0;bottom:0;height:8px;background:linear-gradient(#5b4632,#3b2b1c);opacity:.9;z-index:5}body.white .ledge{background:linear-gradient(#c8ccd0,#9aa1a8)}:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}li{margin:8px 0}footer{font-size:13px;color:var(--chalk2);padding-top:20px}@media(max-width:1040px){.layout{display:block}.sidebar{position:static;margin-bottom:28px;border:1px solid var(--line2);border-left:2px solid var(--yellow);padding:15px}.sidebar summary{padding:0}.sidebar[open] summary{padding-bottom:10px}}@media(max-width:600px){header{padding:70px 20px 25px}.layout{padding:20px 20px 65px}h2{font-size:27px}.grid,.grid.two{grid-template-columns:1fr}.lead{font-size:21px}td,th{padding:9px;font-size:13px}.callout,blockquote{padding:15px}ul,ol{padding-left:22px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important;filter:none!important}}
+input[type=number]{display:block;width:100%;font:16px var(--sans);padding:10px 12px;margin:8px 0 16px;background:var(--board);color:var(--ink);border:1px solid var(--line2);border-radius:3px} .sidebar a{font-size:12px;padding:5px 0} section p{max-width:78ch} .tbl table{min-width:540px} .answer>div{overflow:hidden} </style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="chalkf" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G"/></filter></svg><div class="ledge" aria-hidden="true"></div>
+<button class="tb" id="themeBtn" aria-pressed="false">Tableau blanc</button>
+<header><p class="eyebrow topline">Hypotrail · proposition d’architecture · 23 octobre 2026</p><h1>Choisir les bonnes briques.<br>Garder la méthode lisible.</h1><p class="subtitle">Ce qu’il faut déléguer, ce qu’il faut conserver, et dans quel ordre faire évoluer le produit.</p><p class="meta">Code actuel · alternatives comparées · essais Python 3.13 · roadmap conditionnelle<br>Version approfondie : Evidently, Hydra et MAPIE réexaminés. Lecture rapide : 01, 03 et 10 ; essais supplémentaires en 11.</p></header><div class="layout"><details class="sidebar"><summary>Dans cette revue</summary><a href="#decision">01 · La proposition </a><a href="#code">02 · Ce que le code actuel change dans le diagnostic.</a><a href="#compare">03 · Les choix, fonction par fonction.</a><a href="#contracts">04 · Un contrat de calcul avant une collection de wrappers.</a><a href="#hydra">05 · Hydra </a><a href="#statistics">06 · Trois substitutions qui exigent de la prudence scientifique.</a><a href="#diagnostics">07 · Diagnostics </a><a href="#other">08 · Les alternatives d’architecture à garder en réserve.</a><a href="#experience">09 · Ce qui change pour un participant à l’atelier.</a><a href="#roadmap">10 · Une migration en lots, avec des critères d’arrêt.</a><a href="#tests">11 · Ce que j’ai réellement vérifié.</a><a href="#sources">12 · Sources, portée et points à approfondir.</a></details><main><section id="decision"><p class="eyebrow">01 / Revue d’architecture</p><h2>La proposition : un petit socle, des extensions ciblées.</h2>
+<p class="lead">Oui, Hypotrail gagnerait à déléguer davantage. Mais intégrer tous les packages évoqués rendrait probablement le produit plus difficile à maintenir et à expliquer.</p>
+<p>Je recommande de renforcer le cœur existant avec <strong>Hypothesis, Pydantic et Pandera</strong>, d’utiliser davantage <strong>SciPy et scikit-learn déjà présents</strong>, puis d’ajouter des adaptateurs facultatifs lorsque leur bénéfice est démontré : <strong>Evidently, Hydra, MLflow et MAPIE</strong>. Chaque ajout doit réduire une responsabilité technique maison ou apporter une capacité utile et justifiée. La vérification approfondie conduit à relever la priorité d’un prototype MAPIE de contrôle du risque, et à distinguer le bénéfice de couverture fonctionnelle d’Evidently de la seule suppression de code.</p>
+<div class="callout"><strong>La valeur d’Hypotrail reste le lien entre une question, un protocole, des décisions et leurs preuves.</strong> Une bibliothèque calcule ou valide un objet. Hypotrail décide si ce calcul est autorisé à ce stade, à quelles données il peut accéder, et ce qu’il permet réellement de conclure.</div>
+<p>Je corrige donc l’impression que pourrait donner une proposition « tout intégrer » : ce serait une mauvaise cible d’architecture. Le meilleur produit final comporte moins de mécanismes maison, mais aussi moins d’outils imposés à l’utilisateur.</p>
+<p class="small">Revue au 23 octobre 2026. Code inspecté au commit <code>581c7b3</code> (« complete reliability roadmap J4–J7 »). Analyse du code, sources officielles, métadonnées PyPI, résolutions de dépendances et essais isolés. Aucune modification du dépôt.</p>
+</section><section id="code"><p class="eyebrow">02 / Revue d’architecture</p><h2>Ce que le code actuel change dans le diagnostic.</h2><div class="tbl"><table><thead><tr><th>Constat vérifié</th><th>Conséquence pour la proposition</th></tr></thead><tbody><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/pyproject.toml">Le socle utilise déjà NumPy, pandas, scikit-learn et SciPy</a></td><td>Il ne faut pas présenter leur adoption comme une nouveauté. La question est de mieux répartir les responsabilités autour de ces bibliothèques.</td></tr><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/mlkit/study/case.py">La validation de cas mêle structure et règles métier</a></td><td>Un schéma typé peut remplacer une partie des contrôles de clés et de types. Les règles sur les décisions et le protocole restent spécifiques.</td></tr><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/mlkit/study/evaluation_plan.py">Les plans enregistrent explicitement entraînement, validation et exclusions</a></td><td>Préserver ce contrat : groupes et doublons sont combinés ; les protocoles temporels contrôlent aussi la disponibilité de la cible. Un simple TimeSeriesSplit ne fait pas la même chose.</td></tr><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/mlkit/study/objective.py">Le bootstrap est apparié, par lignes, avec intervalles percentile</a></td><td>SciPy peut fournir le moteur numérique ; ses valeurs par défaut changeraient la méthode. Les cas indéfinis et les hypothèses restent à traiter.</td></tr><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/mlkit/study/diagnostics.py">Les intervalles de coefficients incluent une covariance calculée pour des ajustements pénalisés</a></td><td>statsmodels ne constitue pas un remplacement automatique : changer d’estimateur ou de covariance peut changer la question statistique.</td></tr><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/mlkit/study/registry.py">Le registre décrit un environnement séparé de l’identité générique du résultat</a></td><td>Avant de déléguer davantage, rendre explicite la version du backend dans les conditions de réutilisation. Certaines familles enregistrent déjà leurs versions : le problème est la couverture homogène, pas une absence totale.</td></tr><tr><td><a href="https://github.com/chadlis/hypotrail/blob/581c7b3723629260a18e1281ef9e18583ae060a7/framework/mlkit/study/store.py">Le stockage gère écritures atomiques, journal, récupération et blobs</a></td><td>SQLite est une piste crédible pour réduire cette complexité, mais ce serait un chantier distinct, avec migration et tests de panne.</td></tr></tbody></table></div></section><section id="compare"><p class="eyebrow">03 / Revue d’architecture</p><h2>Les choix, fonction par fonction.</h2><div class="tbl"><table><thead><tr><th>Besoin</th><th>Choix recommandé</th><th>Alternatives et arbitrage</th></tr></thead><tbody><tr><td>Contrats Python / JSON</td><td><strong>Pydantic</strong>, strict aux frontières</td><td><strong>jsonschema</strong> si le contrat JSON interlangages devient la source première ; <strong>msgspec</strong> si l’on privilégie un contrat compact et la sérialisation. Un seul schéma fait autorité.</td></tr><tr><td>Qualité des tables</td><td><strong>Pandera</strong>, sur un périmètre initial restreint</td><td><strong>Great Expectations</strong> devient intéressant pour une plateforme de données avec suites, checkpoints et documentation partagée. Ce cadre est trop large pour le besoin local actuel.</td></tr><tr><td>Calcul et préparation</td><td><strong>scikit-learn + SciPy</strong></td><td>Conserver les pipelines déjà en place. Ne remplacer les plans de découpage que lorsque les appartenances et règles sont équivalentes.</td></tr><tr><td>Tests des invariants</td><td><strong>Hypothesis + pytest</strong></td><td>Complète les exemples fixes et tests de régression. Ne remplace ni une justification statistique ni une recette utilisateur.</td></tr><tr><td>Diagnostics de distributions</td><td><strong>SciPy pour quelques contrôles ; pilote Evidently pour une couche de diagnostics étendue</strong></td><td><strong>Deepchecks</strong> apporte des suites plus larges, mais son installation résolue échoue ici à l’import. <strong>Alibi Detect</strong> et <strong>NannyML</strong> ciblent d’autres besoins, notamment le suivi après déploiement.</td></tr><tr><td>Intervalles de prédiction et contrôle du risque</td><td><strong>MAPIE</strong> : prototype prioritaire pour le contrôle de précision ; intervalles en module distinct</td><td><strong>crepes</strong> mérite une comparaison ciblée : prédiction conforme, normalisation et variantes Mondrian. Pour les seuls intervalles simples, pas de supériorité universelle ; MAPIE apporte aussi un contrôleur de risque binaire. <strong>nonconformist</strong> est beaucoup plus ancien sur PyPI.</td></tr><tr><td>Inférence des coefficients</td><td><strong>statsmodels</strong> pour un cas statistique précisément supporté</td><td>Limiter les promesses sur les modèles pénalisés ou sélectionnés. Supprimer une inférence mal justifiée est parfois préférable à l’envelopper dans une autre API.</td></tr><tr><td>Configuration des expériences</td><td><strong>Schéma simple d’abord ; Hydra facultatif</strong></td><td><strong>OmegaConf seul</strong> pour composition/interpolation sans orchestration. <strong>pydantic-settings</strong> ou <strong>Dynaconf</strong> servent surtout la configuration d’application et d’environnement.</td></tr><tr><td>Recherche d’hyperparamètres</td><td><strong>Recherche sklearn bornée</strong> au départ</td><td><strong>Optuna</strong> si les espaces deviennent réellement complexes. Il optimise dans le protocole autorisé ; il ne choisit pas ce protocole.</td></tr><tr><td>Consultation des essais</td><td><strong>Export MLflow facultatif</strong></td><td><strong>MLflow-skinny</strong> comme client à évaluer ; l’étude locale reste la référence des décisions. Un tableau de runs ne remplace pas le journal de preuves.</td></tr><tr><td>Versionnement de gros jeux de données</td><td><strong>Empreintes existantes</strong> pour commencer</td><td><strong>DVC</strong> si le stockage et la synchronisation des données deviennent un besoin concret. Ne pas dupliquer automatiquement le graphe d’étude dans un second moteur.</td></tr><tr><td>Persistance</td><td><strong>Conserver le contrat de stockage</strong> ; prototype SQLite séparé</td><td>SQLite offre des transactions sans serveur. L’immuabilité, les migrations et les blobs externes restent à concevoir.</td></tr><tr><td>Orchestration complète</td><td><strong>Ne pas migrer maintenant</strong></td><td><strong>Kedro, Prefect, Dagster</strong> : à reconsidérer en présence de calcul distant, planification ou exécutions distribuées. Ce n’est pas aujourd’hui le principal problème d’Hypotrail.</td></tr><tr><td>Rapport et explications</td><td><strong>Conserver la couche pédagogique et les références de preuves</strong></td><td><strong>Jinja2</strong> peut simplifier des gabarits ; il ne garantit ni l’origine des chiffres ni la pertinence d’une explication.</td></tr></tbody></table></div></section><section id="contracts"><p class="eyebrow">04 / Revue d’architecture</p><h2>Un contrat de calcul avant une collection de wrappers.</h2>
+<p>Un wrapper utile ne se contente pas de renommer une fonction. Il délimite ce que la bibliothèque reçoit, ce qu’elle produit et les conditions de validité. Sinon, on garde toute la complexité maison et on ajoute celle de la dépendance.</p>
+<div class="grid two"><article><span class="tag">Hypotrail</span><h3>Question, autorisations, preuves</h3><p>Objectif et seuil, partitions permises, révisions, décisions confirmées, accès au test final, références des résultats et explication.</p></article><article><span class="tag">Bibliothèques</span><h3>Fonctions spécialisées</h3><p>Validation de structure ou de table, apprentissage, calcul statistique, diagnostic explicitement paramétré, export.</p></article></div>
+<p>Je propose un objet de calcul figé — appelons-le <code>ExecutionSpec</code> — qui contient les empreintes des données et du plan, les paramètres résolus, l’identifiant de la décision qui autorise le calcul, ainsi que le backend et sa version. Les secrets de connexion restent en dehors de cet objet.</p>
+<p>La sortie normalisée comprend la valeur, son unité, son périmètre, la méthode, les hypothèses, un statut explicite (<code>ok</code>, <code>unavailable</code>, <code>unsupported</code>), les diagnostics et la provenance. Un intervalle indisponible ne devient jamais zéro ; un avertissement n’est jamais transformé silencieusement en succès.</p>
+<p><strong>Exemple.</strong> « Baisse de l’erreur moyenne » doit référencer la métrique, les deux modèles, les mêmes observations et le plan d’évaluation. Une valeur issue d’Evidently ou de SciPy ne devient pas une preuve utilisable dans le rapport simplement parce qu’elle est numérique.</p>
+<p><strong>Pourquoi Pydantic plutôt que msgspec ?</strong> Le besoin principal est ici de décrire des contraintes, de produire des erreurs compréhensibles et de faire évoluer les contrats, davantage que de gagner du débit de sérialisation. msgspec est déjà présent transitivement dans le verrou du dépôt et constitue donc une alternative économique à vérifier sur un petit contrat. Je retiens Pydantic provisoirement pour ses outils de validation ; le lot 1 doit confirmer que ce bénéfice justifie une dépendance explicite supplémentaire. Quel que soit le choix, ne pas dépendre implicitement de la dépendance transitive d’un autre outil.</p><h3>La version des dépendances fait partie du contrat de réutilisation.</h3>
+<p>Le registre générique affiche aujourd’hui un environnement séparé de l’identité. Avec plus de backends, il faut déclarer les dépendances pertinentes par activité et conserver le verrou de dépendances. Une mise à jour statistique ne doit pas réutiliser silencieusement un ancien calcul comme si l’implémentation était inchangée. Une ancienne preuve reste une preuve historique ; la question est de savoir si elle est réutilisable ou comparable dans le nouveau contexte.</p>
+<p>Une empreinte seule ne suffit pas à reproduire un calcul : garder aussi les versions, paramètres et artefacts nécessaires à sa reconstruction. Pour une compatibilité explicitement attestée, conserver le mécanisme borné existant au lieu de supposer une équivalence générale entre versions.</p>
+</section><section id="hydra"><p class="eyebrow">05 / Revue d’architecture</p><h2>Hydra : pertinent pour préparer une expérience.</h2>
+<p>Hydra répond à un vrai besoin : composer des profils de données, modèles et paramètres, proposer des variantes et organiser des ensembles d’exécutions. Il devient utile quand Hypotrail doit gérer plusieurs familles de cas ou des expériences répétées. Le limiter à une commodité YAML sous-estimait ce bénéfice.</p>
+<p>Mais la configuration initiale et l’état d’une étude sont deux objets différents. La première décrit ce qu’on envisage d’exécuter ; le second enregistre ce qui a été confirmé, observé, modifié ou rendu historique. Hydra couvre surtout le premier.</p>
+<h3>Ce que les essais montrent</h3>
+<ul><li><strong>Une configuration incomplète peut être composée.</strong> Un champ <code>???</code> n’a déclenché une erreur que lors de la conversion avec <code>throw_on_missing=True</code>.</li>
+<li><strong>Une interpolation peut rester vivante.</strong> Après composition, une variable d’environnement modifiée a changé la valeur lue de 1 à 2. L’instantané déjà résolu conservait 1. C’est le fonctionnement attendu d’OmegaConf ; il faut le maîtriser pour la traçabilité.</li>
+<li><strong>Le contrôle des clés ne contrôle pas la méthode.</strong> Une surcharge inconnue ordinaire a été refusée ; <code>+typo=7</code> l’a ajoutée. Modifier une référence de protocole existante a été accepté par Hydra. C’est à Hypotrail de distinguer un changement de paramètre d’une décision à reconfirmer.</li></ul>
+<p>La documentation prévient aussi que les configurations d’un multirun sont composées au lancement des jobs : modifier les fichiers en cours de campagne peut affecter les jobs suivants. Un dossier de configurations n’est donc pas à lui seul un instantané scientifique immuable. <a href="https://hydra.cc/docs/1.3/tutorials/basic/running_your_app/multi-run/">Source Hydra.</a></p>
+<h3>L’intégration que je recommande</h3>
+<ol><li>Composer les profils et appliquer les surcharges dans un adaptateur isolé.</li><li>Résoudre les interpolations et refuser les champs obligatoires manquants.</li><li>Valider le contrat Hypotrail, puis produire un diff compréhensible des changements.</li><li>Faire passer les changements méthodologiques par les confirmations et règles de révision existantes.</li><li>Exécuter uniquement la configuration canonique figée ; enregistrer les choix explicites, les versions et les empreintes nécessaires.</li></ol>
+<p>Le contrat canonique doit être un objet propre à Hypotrail, sérialisable et indépendant d’OmegaConf. On peut ainsi retirer Hydra sans migrer les études. Garder des identifiants de modèles autorisés et leurs paramètres ; ne pas ouvrir un mécanisme générique <code>_target_</code> pour instancier des objets depuis les propositions de l’agent. <a href="https://hydra.cc/docs/1.3/advanced/instantiate_objects/overview/">Hydra documente la portée de cette instanciation.</a></p>
+<p><strong>Alternatives.</strong> Un schéma Pydantic avec un fichier YAML explicite suffit pour une configuration simple. OmegaConf seul convient à la fusion et aux interpolations ; Hydra devient plus intéressant avec des groupes de configurations et des campagnes. Sa Compose API permet de l’intégrer sans remplacer la CLI, mais ne fournit pas automatiquement le multirun ni la gestion des répertoires du lanceur.</p>
+<p><strong>Compatibilité.</strong> Hydra 1.3.7 et OmegaConf 2.3.1 fonctionnent dans les chemins testés sous CPython 3.13.16. La documentation 1.3 annonce une plage Python plus ancienne : ce test ne remplace pas une qualification de support. L’installation a nécessité la construction d’ANTLR. Hydra 1.3.7 impose OmegaConf &lt; 2.4 ; la version 1.4 candidate ne doit pas être confondue avec la version stable testée.</p>
+<div class="callout"><strong>Verdict :</strong> adapter Hydra dès qu’un besoin de composition récurrent existe ; le garder facultatif et extérieur à l’état d’étude. Pour l’atelier à un seul cas, ne pas l’imposer. Son rôle est de préparer des expériences, pas de valider leurs conclusions.</div>
+</section><section id="statistics"><p class="eyebrow">06 / Revue d’architecture</p><h2>Trois substitutions qui exigent de la prudence scientifique.</h2>
+<h3>1. SciPy ne conserve pas automatiquement le bootstrap actuel.</h3>
+<p>Le dépôt rééchantillonne les mêmes lignes pour tous les modèles, calcule des quantiles percentile et rend les intervalles indisponibles si une réplication nécessaire est indéfinie. SciPy utilise par défaut un bootstrap non apparié et une méthode BCa. Pour une migration technique fidèle, déclarer notamment <code>paired=True</code> et <code>method="percentile"</code>, puis préserver la politique sur les cas indéfinis.</p>
+<p>Le petit essai réalisé donne un intervalle [1 ; 1] pour un gain constant avec percentile ; BCa produit un intervalle non fini sur ce même cas dégénéré. Cela n’établit pas que percentile serait généralement supérieur : cela montre qu’un changement de défaut peut changer le résultat. Un changement de générateur aléatoire peut aussi changer les réplications à graine identique.</p>
+<p>Plus profondément, un bootstrap par lignes n’est justifié que pour l’unité et les dépendances annoncées. Des clients répétés ou une série temporelle peuvent exiger un rééchantillonnage par groupes ou blocs. L’intervalle actuel conditionne sur la configuration sélectionnée ; il ne résume pas toute l’incertitude du processus de recherche et de sélection.</p>
+<h3>2. statsmodels ne rend pas valide toute barre d’erreur.</h3>
+<p>Un intervalle robuste HC3 sur une régression OLS répond à une question définie. Ce n’est pas automatiquement l’intervalle d’un coefficient ridge après réglage d’hyperparamètres, sélection de variables ou transformations apprises. Le code actuel justifie une revue statistique ciblée ; mon inspection ne constitue pas une démonstration que sa formule est fausse.</p>
+<p>Je recommande d’énumérer les cas supportés et leurs hypothèses. Pour les autres, afficher une analyse descriptive de stabilité ou un statut non supporté, sans lui donner le sens d’un intervalle de confiance validé.</p>
+
+<h3>3. MAPIE : l’intérêt dépasse les intervalles de prédiction.</h3>
+<p><strong>Correction de la première revue.</strong> Présenter MAPIE uniquement comme un futur outil de plages de prédiction était incomplet. Il propose aussi <code>BinaryClassificationController</code>, un contrôle du risque pertinent pour le choix des seuils binaires d’Hypotrail.</p>
+<p>Le besoin peut être formulé ainsi : « Parmi les dossiers sélectionnés, viser une précision d’au moins 75 %, avec une procédure dont la probabilité de certifier à tort un seuil est bornée à 5 %. » Le modèle est fixé avant la calibration ; on teste une famille de seuils préétablie avec une correction pour les comparaisons multiples. C’est une garantie sous hypothèses sur la procédure, pas une promesse que chaque prochain lot aura effectivement au moins 75 % de positifs.</p>
+<p>Cette approche relève de Learn Then Test. La documentation distingue les garanties en espérance de certaines méthodes et les garanties en probabilité de LTT/RCPS ; elles ne sont pas interchangeables. Le contrôleur binaire examiné utilise des tests de risque et une procédure de contrôle des erreurs familiales. <a href="https://mapie.readthedocs.io/en/stable/content/risk-control/theory/">Méthodes MAPIE</a> ; <a href="https://arxiv.org/abs/2110.01052">article Learn Then Test</a>.</p>
+<p><strong>Correspondance avec le code actuel.</strong> Une règle <code>threshold:t</code> choisit chaque observation à partir d’un seuil fixé : c’est le premier périmètre raisonnable. Les règles <code>capacity:k</code> et <code>share:p</code> classent tout un lot et peuvent fractionner les ex æquo. Leurs décisions dépendent des autres lignes ; elles ne récupèrent pas automatiquement les garanties du contrôleur binaire appliqué observation par observation. Une généralisation demanderait une justification statistique dédiée, éventuellement avec le lot comme unité.</p>
+<p>Autre distinction : contrôler une précision absolue ne prouve pas le gain minimal par rapport à la référence qu’exige un objectif Hypotrail. Il faut préserver les deux évaluations, et annoncer exactement celle qui a été obtenue.</p>
+<h3>Le protocole requis pour ce premier adaptateur</h3>
+<ul><li>Modèle, prétraitement et famille de seuils fixés avant l’usage de la partition de calibration.</li><li>Calibration séparée de l’entraînement et de la sélection du modèle ; test final conservé pour la recette indépendante.</li><li>Risque, cible, niveau de confiance, correction des tests et population explicitement déclarés.</li><li>Un résultat « aucun seuil admissible » est conservé comme résultat valable ; aucun repli silencieux vers le meilleur seuil observé.</li><li>Pas de prétention à une garantie i.i.d. pour des observations temporelles ou groupées sans argument supplémentaire.</li><li>Un réentraînement après calibration exige de réexaminer la validité du seuil ; les scores du nouveau modèle peuvent différer.</li></ul>
+<p><strong>Essais synthétiques.</strong> Avec une fonction de score fixée, 3 000 lignes de calibration, 17 seuils préétablis, une précision cible de 75 % et une confiance de 95 %, le contrôleur a retenu un seuil de 0,65. La précision sur 20 000 observations indépendantes était 80,15 %. Avec 30 lignes et une cible de 99 %, aucun seuil n’était admissible. Ces essais vérifient les chemins de succès et d’insuffisance ; ils ne constituent pas une validation empirique générale de la garantie.</p>
+<h3>Pour les intervalles : MAPIE ou crepes ?</h3>
+<p>Sur un cas simple de split conformal avec 100 résidus de calibration et un niveau de 90 %, MAPIE et crepes ont donné exactement les mêmes bornes que le calcul direct utilisant le 91e résidu absolu trié. Cela vérifie ce cas précis ; ce n’est pas une équivalence de leurs algorithmes complets.</p>
+<p>crepes reste une excellente alternative pour des intervalles, des systèmes prédictifs et des variantes Mondrian. MAPIE est plus intéressant pour Hypotrail si l’on veut aussi le contrôle de risque binaire. Ni l’un ni l’autre n’est universellement supérieur pour un intervalle simple.</p>
+<p><strong>Ce que « 90 % » ne veut pas dire.</strong> Dans 40 réplications synthétiques avec 100 lignes de calibration et 5 000 observations de test par réplication, la couverture moyenne MAPIE était 89,74 % ; selon le jeu de calibration elle allait de 81,38 à 94,26 %. Après un décalage artificiel de la cible de +3 unités, sans changer X, elle tombait en moyenne à 8,86 %. Dans un autre scénario hétéroscédastique, la couverture globale était 88,81 %, mais celle du groupe rare seulement 9,46 %. Ce sont des illustrations construites, pas des estimations de performance sur Auto MPG.</p>
+<p>La garantie standard est marginale et dépend notamment de l’échangeabilité des observations appropriées. Elle ne garantit pas un taux par voiture, par sous-groupe ou par jeu de calibration fixé. Les méthodes par groupes ou les scores adaptatifs peuvent répondre à certains besoins conditionnels, avec leurs propres contraintes d’effectif et hypothèses.</p>
+<p>Auto MPG contient 398 lignes, des années et des noms de modèles répétés. Un découpage aléatoire ne démontre pas à lui seul l’échangeabilité, et une calibration supplémentaire coûte des données. L’atelier devrait présenter les intervalles comme une extension méthodologique explicite.</p>
+<p><strong>Échangeabilité et monitoring.</strong> MAPIE propose des tests de non-échangeabilité et un suivi du risque sur des observations nouvellement labellisées. L’absence d’alerte ne prouve pas les hypothèses. Le monitoring du risque réel peut devenir plus pertinent qu’une alerte générique de distribution lorsque les labels arrivent ; il n’élimine pas les contrôles de qualité des données.</p>
+<div class="callout"><strong>Verdict :</strong> relever la priorité d’un prototype MAPIE pour <code>threshold:t</code>. Garder les intervalles de prédiction dans un module distinct. Ne pas déléguer les garanties de capacité, le gain contre référence ou le traitement des séries temporelles sans protocole approprié.</div>
+</section><section id="diagnostics"><p class="eyebrow">07 / Revue d’architecture</p><h2>Diagnostics : expliquer un problème, pas collectionner les alertes.</h2>
+<p><strong>Correction du critère précédent.</strong> « Intégrer Evidently seulement s’il supprime du code » est trop restrictif. Une bibliothèque peut être utile parce qu’elle apporte des contrôles manquants, une sortie cohérente, une maintenance partagée et une meilleure couverture des cas limites. Le bon critère est le gain de capacité et de fiabilité, rapporté au coût total d’intégration.</p>
+<p>Le dépôt contient deux périmètres distincts : le module historique <code>mlkit/drift.py</code> et le moteur junior <code>mlkit.study</code>, qui n’importe pas ce module. Les fonctions historiques ne constituent donc pas automatiquement une couche de diagnostics déjà exploitable dans le parcours actuel. L’EDA junior décrit des distributions sur l’entraînement ; les diagnostics de modèles analysent notamment les erreurs, segments et calibration. Il faut cartographier ces activités avant de promettre une suppression de code.</p>
+<h3>Quatre questions différentes</h3>
+<div class="tbl"><table><thead><tr><th>Question</th><th>Preuve recherchée</th><th>Responsabilité</th></tr></thead><tbody><tr><td>Les données sont-elles conformes ?</td><td>Valeurs manquantes, colonnes attendues, catégories inconnues, types.</td><td>Contrat de données ; Pandera ou contrôles ciblés.</td></tr><tr><td>Les populations ont-elles changé ?</td><td>Distributions de X et, après accès autorisé, de Y.</td><td>Comparaison de populations ; Evidently ou SciPy.</td></tr><tr><td>Les relations ont-elles changé ?</td><td>Dépendances entre variables ; relation de X à Y.</td><td>Diagnostics multivariés ou conditionnels ; hypothèses explicites.</td></tr><tr><td>Le modèle fonctionne-t-il moins bien ?</td><td>Performance, perte ou risque sur des données labellisées.</td><td>Évaluation de performance ; suivi du risque si usage séquentiel.</td></tr></tbody></table></div>
+<p>Evidently apporte des métriques, des tests et des rapports réutilisables. C’est un argument réel pour une couche étendue de comparaison de populations. Son API permet aussi de récupérer une sortie structurée ; son interface complète et son hébergement ne sont pas nécessaires au parcours Hypotrail.</p>
+<h3>Les essais qui délimitent son usage</h3>
+<div class="tbl"><table><thead><tr><th>Construction synthétique</th><th>Résultat observé</th><th>Conséquence</th></tr></thead><tbody><tr><td>Déplacement de 0,13 unité de deux distributions presque identiques ; 1 000 puis 1 001 lignes.</td><td>À 1 000 lignes : KS, p ≈ 0,134, donc pas d’alerte au seuil de 0,05. À 1 001 : Wasserstein normalisée ≈ 0,130, au-dessus du seuil de 0,1.</td><td>Le choix automatique change de méthode et de sens du score. Fixer méthode et seuil, et enregistrer les réglages effectifs.</td></tr><tr><td>Même distribution des valeurs présentes ; taux de valeurs manquantes de 0 à 50 %.</td><td>ValueDrift configuré en KS : p = 1.</td><td>Ajouter explicitement un contrôle des valeurs manquantes. Ce test ne mesure pas leur fréquence.</td></tr><tr><td>Marginales identiques ; corrélation entre deux variables de +1 à −1.</td><td>Les tests KS des colonnes ne signalent rien.</td><td>Un contrôle univarié ne couvre pas les dépendances multivariées.</td></tr><tr><td>Relation Y = X remplacée par Y = −X, sur une grille symétrique.</td><td>Les marginales de X et Y restent inchangées ; l’erreur moyenne du prédicteur fixe passe de 0 à 3,006.</td><td>Absence de dérive marginale ne signifie pas maintien de performance.</td></tr><tr><td>Colonne entièrement manquante dans la population courante.</td><td>ValueError explicite.</td><td>L’adaptateur doit retourner « comparaison indisponible » et conserver l’alerte qualité, pas assimiler cet état à une absence de dérive.</td></tr></tbody></table></div>
+<p>Ces résultats concernent les appels <code>ValueDrift</code> testés, pas tous les outils d’Evidently. Le package propose d’autres métriques, notamment pour les valeurs manquantes et les corrélations. Le résultat montre qu’il faut sélectionner une suite adaptée plutôt que prendre une métrique ou un preset comme certificat général. <a href="https://docs.evidentlyai.com/metrics/all_metrics">Catalogue actuel</a> ; <a href="https://docs.evidentlyai.com/metrics/customize_data_drift">réglages de dérive</a>.</p>
+<p>Les alertes statistiques doivent afficher un effet, un effectif, une méthode et un statut. Un test non significatif ne démontre pas l’identité de deux populations. Avec de nombreux tests, prévoir la multiplicité si l’on souhaite une décision statistique globale ; avec des fenêtres temporelles répétées, une correction sur les colonnes d’une seule fenêtre ne règle pas à elle seule la surveillance séquentielle.</p>
+<h3>Alternatives et décision</h3>
+<p><strong>SciPy</strong> reste le choix proportionné pour quelques mesures clairement définies. <strong>Evidently</strong> est le meilleur candidat déjà examiné pour mutualiser une couche étendue de métriques et rapports tabulaires. <strong>Alibi Detect</strong> est une alternative plus ciblée si le besoin central est la détection multivariée, par exemple MMD ; cela ajoute un autre périmètre et des réglages de puissance/coût. <strong>NannyML</strong> répond notamment à l’estimation de performance quand les labels sont retardés, sous hypothèses supplémentaires. <strong>MAPIE RiskMonitoring</strong> mérite un examen séparé si l’objectif est de détecter une dégradation du risque avec contrôle des fausses alertes et labels disponibles.</p>
+<p>Deepchecks reste un candidat moins favorable sur l’environnement testé, vu l’échec à l’import déjà documenté. Le nombre de distributions supplémentaires n’est qu’un coût d’intégration à examiner : il ne suffit pas à classer la qualité scientifique de ces options.</p>
+<div class="callout"><strong>Verdict :</strong> un pilote Evidently est justifié si l’objectif produit inclut une vraie comparaison de populations. Le module reste facultatif dans l’installation minimale. Pour un seul écart de taux de cible ou quelques statistiques, les calculs existants suffisent. Le critère de décision devient : couverture utile, interprétation correcte et maintenance totale.</div>
+<p>Premier contrat proposé : références explicites des populations, autorisations d’accès, variables et types déclarés, méthodes figées, valeurs manquantes séparées, effectifs exploitables, tailles d’effet, politique de multiplicité, version et preuves citées. Conserver le rendu pédagogique d’Hypotrail. Ne jamais utiliser le diagnostic pour rouvrir l’optimisation sur le test final déjà consulté.</p>
+</section><section id="other"><p class="eyebrow">08 / Revue d’architecture</p><h2>Les alternatives d’architecture à garder en réserve.</h2>
+<h3>MLflow et DVC : deux services différents.</h3>
+<p>MLflow permet de consulter les essais, paramètres, métriques et artefacts. Je le brancherais en export après l’enregistrement local, avec un identifiant stable pour éviter les doublons. Une panne de l’export ne doit pas faire perdre une décision ni bloquer une étude locale.</p>
+<p>DVC sert au versionnement des données et des dépendances de pipelines. Il devient utile quand les fichiers doivent être partagés et reproduits à une échelle que les empreintes locales ne couvrent plus. Recréer le graphe d’Hypotrail dans DVC dès maintenant introduirait deux systèmes d’invalidation à maintenir.</p>
+<h3>SQLite : une alternative plus structurelle que Hydra.</h3>
+<p>Le stockage actuel comporte déjà un protocole de récupération. Une base SQLite pourrait regrouper état, événements et index dans des transactions locales. Cela mérite un prototype si la maintenance du stockage devient coûteuse : arrêt au milieu d’une écriture, reprise, deux écrivains et migration d’une ancienne étude.</p>
+<p>Mais SQLite ne garantit pas à lui seul l’immutabilité du journal. Les gros fichiers hors base ne participent pas automatiquement à sa transaction. Il faut conserver le contenu adressé par empreinte et définir la publication des blobs, les règles de reprise et, si besoin, une file d’exports persistante. Je séparerais complètement ce chantier de l’adoption des packages scientifiques.</p>
+<h3>Kedro, Prefect et Dagster : ne pas réécrire le produit autour d’eux.</h3>
+<p>Ces cadres deviennent intéressants lorsque l’exécution de pipelines, leur planification ou leur exploitation à distance constituent le problème central. Ils ne remplacent pas les confirmations, les limites d’accès aux données ou la signification des preuves. Si ces besoins arrivent, exposer une activité Hypotrail comme tâche externe sera plus prudent que transférer tout l’état de l’étude.</p>
+<h3>Optuna : seulement après avoir borné la recherche.</h3>
+<p>Un optimiseur plus puissant peut multiplier les essais sans améliorer la validité de la conclusion. Définir le budget, les partitions accessibles et le critère avant son lancement. La recherche reste dans l’évaluation interne autorisée ; le test final reste réservé. Pour le cas simple de l’atelier, une comparaison bornée de variantes suffit.</p>
+</section><section id="experience"><p class="eyebrow">09 / Revue d’architecture</p><h2>Ce qui change pour un participant à l’atelier.</h2><div class="tbl"><table><thead><tr><th>Étape Auto MPG</th><th>Ce que voit le participant</th><th>Ce qui travaille derrière</th></tr></thead><tbody><tr><td>Cadrer</td><td>Une question, une référence naïve, un critère de succès et des limites historiques.</td><td>Pydantic vérifie la forme ; Hypotrail contrôle la cohérence et enregistre les décisions.</td></tr><tr><td>Lire les données</td><td>« La puissance manque pour certaines voitures. Voici la stratégie proposée. »</td><td>Pandera décrit le problème ; l’imputation est apprise dans le pipeline sur les partitions autorisées.</td></tr><tr><td>Comparer</td><td>Une référence puis un modèle simple, évalués sur le plan confirmé.</td><td>scikit-learn ajuste ; Hypotrail conserve les appartenances et la provenance.</td></tr><tr><td>Améliorer</td><td>Une seule modification compréhensible et son coût.</td><td>Configuration explicite ; Hydra peut préparer une variante en coulisses, sans nouvelle notion imposée.</td></tr><tr><td>Conclure</td><td>Gain, incertitude éligible, limites et décision lisibles.</td><td>SciPy calcule ; Hypotrail qualifie le résultat et lie chaque chiffre à sa preuve.</td></tr><tr><td>Consulter / partager</td><td>Le même rapport d’étude.</td><td>MLflow éventuellement en export. MAPIE seulement dans un prolongement consacré aux plages de prédiction.</td></tr></tbody></table></div><p>La force pédagogique vient de la continuité de la question jusqu’à la conclusion. Le participant n’a pas besoin d’apprendre sept outils. Pour ce premier atelier, je garderais un seul cas, une référence, un modèle, une variante et une conclusion ; aucun service distant requis.</p></section><section id="roadmap"><p class="eyebrow">10 / Revue d’architecture</p><h2>Une migration en lots, avec des critères d’arrêt.</h2><div class="tbl"><table><thead><tr><th>Lot</th><th>Livrable concret</th><th>Condition pour continuer</th></tr></thead><tbody><tr><td>0 · Contrat et référence</td><td>Inventaire des responsabilités ; manifeste des backends par activité ; jeux de résultats de référence et cas indéfinis.</td><td>Les conditions de réutilisation sont explicites ; une mise à jour de backend ne passe pas inaperçue ; les anciennes preuves restent lisibles.</td></tr><tr><td>1 · Invariants et frontières</td><td>Hypothesis en développement ; Pydantic sur les nouvelles entrées, sans réécrire tout le stockage ; Pandera sur une activité d’import.</td><td>Entrées invalides refusées de façon claire ; aucune correction silencieuse de données ; pas de double source de schéma ; propriétés testées sur groupes, temps et révisions.</td></tr><tr><td>2 · Calculs délégués</td><td>Adaptateur SciPy du bootstrap ; inventaire des cas d’inférence supportés ; conservation des plans de découpage.</td><td>Même sens statistique, traitement explicite des cas indéfinis, résultats de référence expliqués ; différences de RNG documentées ; aucun intervalle non justifié présenté comme valide.</td></tr><tr><td>3 · Diagnostics, si rentables</td><td>Prototype Evidently sur un cas de régression et un cas binaire ; comparaison avec le calcul minimal existant.</td><td>Couverture utile démontrée, coût de maintenance acceptable, paramètres figés et sortie normalisée. Les cas de manque de données, dépendances et accès au test final sont explicites ; comparer au socle SciPy.</td></tr><tr><td>4 · Confort avancé, à la demande</td><td>Adaptateurs indépendants Hydra et export MLflow ; chacun peut être absent.</td><td>Une étude fonctionne hors ligne ; aucune surcharge ne contourne une décision ; export rejouable sans doublons ; pas de seconde source de vérité.</td></tr><tr><td>5 · Garanties statistiques : prototype à avancer</td><td>Prototype MAPIE de contrôle de précision pour threshold:t, à engager dès que les contrats sont prêts ; module séparé MAPIE/crepes pour les intervalles.</td><td>Calibration indépendante, modèle figé, multiplicité et absence de seuil admissible traitées ; aucune extension implicite aux règles de capacité. Pour les intervalles : couverture et largeur par sous-groupe.</td></tr><tr><td>Chantier séparé</td><td>Prototype SQLite et migration réversible, uniquement si le stockage justifie l’investissement.</td><td>Tests de panne et de concurrence, conservation de l’historique, restauration et export vérifiés avant migration.</td></tr></tbody></table></div><p><strong>Priorité proposée :</strong> engager les lots 0 et 1, puis une seule substitution statistique au lot 2. Ne pas lancer simultanément le stockage, l’orchestration et les diagnostics. La numérotation ne fixe pas un calendrier : après les fondations, avancer le prototype MAPIE de contrôle du risque avant le confort Hydra. Le pilote Evidently répond à un besoin de comparaison de populations. Les autres ajouts restent conditionnels.</p>
+<p>Mesurer le nombre de responsabilités maison supprimées, la durée du parcours, les messages incompréhensibles, les erreurs de reprise et le coût de maintenance. Le nombre de packages intégrés et le nombre de lignes supprimées ne sont pas, à eux seuls, des critères de succès.</p></section><section id="tests"><p class="eyebrow">11 / Revue d’architecture</p><h2>Ce que j’ai réellement vérifié.</h2>
+<p><strong>Trois niveaux d’évidence.</strong> Métadonnées de 26 distributions ; résolution isolée de 15 candidats par rapport aux contraintes du dépôt ; essais ciblés dans un environnement Linux CPython 3.13.16. Les versions ci-dessous sont les versions stables observées sur PyPI au moment de la revue, pas des recommandations de mise à jour automatique.</p>
+<p>Le socle résolu comporte 42 distributions. La colonne « ajout » mesure le nombre de distributions supplémentaires pour chaque candidat pris séparément. Ce n’est ni le poids en octets, ni un temps d’installation, ni une note de qualité. Les ajouts ne s’additionnent pas lorsqu’on combine plusieurs candidats.</p>
+<div class="tbl"><table><thead><tr><th>Candidat</th><th>Version</th><th>Ajout au socle</th><th>Résolution Linux / 3.13</th></tr></thead><tbody><tr><td>pydantic</td><td>2.14.1</td><td>4</td><td>Résolution réussie</td></tr><tr><td>jsonschema</td><td>4.26.0</td><td>5</td><td>Résolution réussie</td></tr><tr><td>msgspec</td><td>0.22.0</td><td>0</td><td>Résolution réussie</td></tr><tr><td>pandera [pandas]</td><td>0.34.1</td><td>8</td><td>Résolution réussie</td></tr><tr><td>hydra-core</td><td>1.3.7</td><td>3</td><td>Construction ANTLR nécessaire</td></tr><tr><td>omegaconf</td><td>2.4.0</td><td>1</td><td>Résolution réussie</td></tr><tr><td>evidently</td><td>0.7.23</td><td>58</td><td>Résolution réussie</td></tr><tr><td>deepchecks</td><td>0.19.1</td><td>82</td><td>Résolution réussie</td></tr><tr><td>great-expectations</td><td>1.24.1</td><td>25</td><td>Résolution réussie</td></tr><tr><td>mapie</td><td>1.6.0</td><td>1</td><td>Résolution réussie</td></tr><tr><td>crepes</td><td>0.9.1</td><td>1</td><td>Résolution réussie</td></tr><tr><td>statsmodels</td><td>0.15.0</td><td>5</td><td>Résolution réussie</td></tr><tr><td>hypothesis</td><td>6.170.8</td><td>2</td><td>Résolution réussie</td></tr><tr><td>mlflow-skinny</td><td>3.17.2</td><td>31</td><td>Résolution réussie</td></tr><tr><td>optuna</td><td>5.0.0</td><td>7</td><td>Résolution réussie</td></tr></tbody></table></div>
+<h3>Essais exécutés</h3>
+<ul><li><strong>Hypothesis :</strong> 50 cas de groupes disjoints et 50 cas temporels générés sur le vrai module <code>evaluation_plan.py</code> du commit inspecté. Disjonction et contraintes de disponibilité temporelle vérifiées sur ce périmètre.</li>
+<li><strong>Pydantic :</strong> quatre entrées invalides refusées : booléen à la place d’un entier, chaîne à la place d’un entier, NaN interdit, champ supplémentaire.</li>
+<li><strong>Pandera :</strong> validation d’une table avec puissance nullable ; détection d’une cible négative et d’une cible manquante ; table valide inchangée.</li>
+<li><strong>Hydra :</strong> composition d’un profil et d’une surcharge ; configuration résolue conforme ; répertoire courant inchangé dans ce chemin d’appel.</li>
+<li><strong>SciPy :</strong> comparaison percentile/BCa sur une différence constante et rééchantillonnage apparié.</li>
+<li><strong>MAPIE :</strong> apprentissage, calibration séparée et production de 20 intervalles finis, ordonnés. Cet essai initial vérifie seulement l’API ; les simulations supplémentaires sont décrites plus bas et en section 06.</li>
+<li><strong>Evidently :</strong> exécution d’un diagnostic univarié sur deux tables synthétiques et récupération de la sortie structurée.</li>
+<li><strong>statsmodels :</strong> ajustement OLS avec covariance HC3 et intervalles finis, sans extrapolation aux modèles pénalisés.</li>
+<li><strong>Deepchecks :</strong> échec à l’import de <code>deepchecks.tabular</code>, composant <code>pkg_resources</code> manquant. Aucun contournement testé.</li></ul>
+<p class="small">Limites : pas de recette complète d’Hypotrail, pas de benchmark de vitesse, pas d’essai Windows/macOS, pas d’audit de sécurité ou de conformité des licences. Les essais d’API partagent un environnement isolé ; les résolutions de candidats sont séparées. Les tests de propriétés ne couvrent pas encore toutes les transitions d’état, les doublons transitifs et les pannes de stockage. Les résultats justifient une expérimentation de migration, pas une certification.</p>
+<h3>Complément de vérification approfondie : trois packages</h3><p>Les sections 05 à 07 intègrent maintenant les essais supplémentaires : méthodes automatiques et cas limites Evidently, interpolations et frontières Hydra, couverture simulée et contrôle du risque MAPIE, comparaison exacte avec crepes. Les tests utilisent Evidently 0.7.23, Hydra 1.3.7/OmegaConf 2.3.1 et MAPIE 1.6.0 sous CPython 3.13.16. Ce sont des expériences contrôlées ; aucun résultat sur les données réelles de l’atelier n’est revendiqué.</p><details class="answer"><summary>Résultats détaillés des essais supplémentaires</summary><div><pre>{
+  &quot;versions&quot;: {
+    &quot;hydra-core&quot;: &quot;1.3.7&quot;,
+    &quot;omegaconf&quot;: &quot;2.3.1&quot;,
+    &quot;evidently&quot;: &quot;0.7.23&quot;,
+    &quot;mapie&quot;: &quot;1.6.0&quot;,
+    &quot;numpy&quot;: &quot;2.5.4&quot;,
+    &quot;scipy&quot;: &quot;1.18.1&quot;,
+    &quot;scikit-learn&quot;: &quot;1.9.1&quot;
+  },
+  &quot;python&quot;: &quot;3.13.16 (main, Oct  3 2026, 01:06:22) [Clang 22.1.3 ]&quot;,
+  &quot;evidently&quot;: {
+    &quot;size_1000&quot;: {
+      &quot;id&quot;: &quot;a405eeba08bef8251ba929d5632a71c7&quot;,
+      &quot;metric_name&quot;: &quot;ValueDrift(column=x,method=K-S p_value,threshold=0.05)&quot;,
+      &quot;config&quot;: {
+        &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+        &quot;column&quot;: &quot;x&quot;,
+        &quot;method&quot;: &quot;K-S p_value&quot;,
+        &quot;threshold&quot;: 0.05
+      },
+      &quot;value&quot;: 0.13385273551786803
+    },
+    &quot;size_1001&quot;: {
+      &quot;id&quot;: &quot;a405eeba08bef8251ba929d5632a71c7&quot;,
+      &quot;metric_name&quot;: &quot;ValueDrift(column=x,method=Wasserstein distance (normed),threshold=0.1)&quot;,
+      &quot;config&quot;: {
+        &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+        &quot;column&quot;: &quot;x&quot;,
+        &quot;method&quot;: &quot;Wasserstein distance (normed)&quot;,
+        &quot;threshold&quot;: 0.1
+      },
+      &quot;value&quot;: 0.13008454674821454
+    },
+    &quot;joint_shift&quot;: {
+      &quot;metrics&quot;: [
+        {
+          &quot;id&quot;: &quot;126d8be91b4b5fdbc3077d8096808942&quot;,
+          &quot;metric_name&quot;: &quot;ValueDrift(column=x1,method=ks,threshold=0.05)&quot;,
+          &quot;config&quot;: {
+            &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+            &quot;column&quot;: &quot;x1&quot;,
+            &quot;method&quot;: &quot;ks&quot;,
+            &quot;threshold&quot;: 0.05
+          },
+          &quot;value&quot;: 1.0
+        },
+        {
+          &quot;id&quot;: &quot;d257f449895f8fc62ddc013c9e6fccf1&quot;,
+          &quot;metric_name&quot;: &quot;ValueDrift(column=x2,method=ks,threshold=0.05)&quot;,
+          &quot;config&quot;: {
+            &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+            &quot;column&quot;: &quot;x2&quot;,
+            &quot;method&quot;: &quot;ks&quot;,
+            &quot;threshold&quot;: 0.05
+          },
+          &quot;value&quot;: 0.9999999999999998
+        }
+      ],
+      &quot;correlations&quot;: [
+        1.0,
+        -1.0
+      ]
+    },
+    &quot;missing_shift&quot;: {
+      &quot;metric&quot;: {
+        &quot;id&quot;: &quot;b308fb3ed97cde56b6e857c4bc7bed92&quot;,
+        &quot;metric_name&quot;: &quot;ValueDrift(column=x,method=ks,threshold=0.05)&quot;,
+        &quot;config&quot;: {
+          &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+          &quot;column&quot;: &quot;x&quot;,
+          &quot;method&quot;: &quot;ks&quot;,
+          &quot;threshold&quot;: 0.05
+        },
+        &quot;value&quot;: 1.0
+      },
+      &quot;missing_rates&quot;: [
+        0.0,
+        0.5
+      ]
+    },
+    &quot;relationship_flip&quot;: {
+      &quot;metrics&quot;: [
+        {
+          &quot;id&quot;: &quot;b308fb3ed97cde56b6e857c4bc7bed92&quot;,
+          &quot;metric_name&quot;: &quot;ValueDrift(column=x,method=ks,threshold=0.05)&quot;,
+          &quot;config&quot;: {
+            &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+            &quot;column&quot;: &quot;x&quot;,
+            &quot;method&quot;: &quot;ks&quot;,
+            &quot;threshold&quot;: 0.05
+          },
+          &quot;value&quot;: 1.0
+        },
+        {
+          &quot;id&quot;: &quot;c85690f9165f713e07f9d08478b8f34d&quot;,
+          &quot;metric_name&quot;: &quot;ValueDrift(column=y,method=ks,threshold=0.05)&quot;,
+          &quot;config&quot;: {
+            &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+            &quot;column&quot;: &quot;y&quot;,
+            &quot;method&quot;: &quot;ks&quot;,
+            &quot;threshold&quot;: 0.05
+          },
+          &quot;value&quot;: 0.9999999999999998
+        }
+      ],
+      &quot;fixed_predictor_mae&quot;: [
+        0.0,
+        3.0060120240480965
+      ]
+    },
+    &quot;same_constant&quot;: {
+      &quot;id&quot;: &quot;b308fb3ed97cde56b6e857c4bc7bed92&quot;,
+      &quot;metric_name&quot;: &quot;ValueDrift(column=x,method=ks,threshold=0.05)&quot;,
+      &quot;config&quot;: {
+        &quot;type&quot;: &quot;evidently:metric_v2:ValueDrift&quot;,
+        &quot;column&quot;: &quot;x&quot;,
+        &quot;method&quot;: &quot;ks&quot;,
+        &quot;threshold&quot;: 0.05
+      },
+      &quot;value&quot;: 1.0
+    },
+    &quot;all_missing&quot;: {
+      &quot;error&quot;: &quot;ValueError&quot;,
+      &quot;message&quot;: &quot;An empty column &#x27;x&#x27; was provided for drift calculation in the current dataset.&quot;
+    }
+  },
+  &quot;hydra&quot;: {
+    &quot;compose_allows_missing&quot;: true,
+    &quot;freeze_rejects_missing&quot;: &quot;MissingMandatoryValue&quot;,
+    &quot;environment&quot;: {
+      &quot;snapshot_alpha&quot;: &quot;1.0&quot;,
+      &quot;live_alpha&quot;: &quot;2.0&quot;
+    },
+    &quot;unknown_override&quot;: &quot;ConfigCompositionException&quot;,
+    &quot;added_key&quot;: 7,
+    &quot;changed_protocol&quot;: &quot;unconfirmed-v2&quot;
+  },
+  &quot;mapie&quot;: {
+    &quot;coverage_simulation&quot;: {
+      &quot;repetitions&quot;: 40,
+      &quot;train&quot;: 300,
+      &quot;calibration&quot;: 100,
+      &quot;test_per_rep&quot;: 5000,
+      &quot;iid_mean&quot;: 0.897375,
+      &quot;iid_range&quot;: [
+        0.8138,
+        0.9426
+      ],
+      &quot;target_shift_plus_3_mean&quot;: 0.08862999999999999,
+      &quot;mean_width&quot;: 3.2904544880214757,
+      &quot;limits&quot;: &quot;controlled synthetic illustration, not production benchmark&quot;
+    },
+    &quot;subgroups&quot;: {
+      &quot;overall&quot;: 0.88805,
+      &quot;common_group&quot;: 0.9730417935233878,
+      &quot;rare_group&quot;: 0.09457364341085271,
+      &quot;rare_count&quot;: 1935
+    },
+    &quot;feasible&quot;: {
+      &quot;n_calibration&quot;: 3000,
+      &quot;target_precision&quot;: 0.75,
+      &quot;confidence&quot;: 0.95,
+      &quot;valid_thresholds&quot;: [
+        0.65,
+        0.7000000000000001,
+        0.75,
+        0.8,
+        0.85,
+        0.9
+      ],
+      &quot;best_threshold&quot;: 0.65,
+      &quot;warnings&quot;: [],
+      &quot;independent_test_precision&quot;: 0.8015380065069506,
+      &quot;independent_test_selected&quot;: 6762
+    },
+    &quot;insufficient&quot;: {
+      &quot;n_calibration&quot;: 30,
+      &quot;target_precision&quot;: 0.99,
+      &quot;confidence&quot;: 0.95,
+      &quot;valid_thresholds&quot;: [],
+      &quot;best_threshold&quot;: null,
+      &quot;warnings&quot;: [
+        &quot;No predict parameters were found to control the risk at the given target and confidence levels. Try using a larger calibration set or a better model or less strict target and confidence levels.&quot;
+      ]
+    }
+  },
+  &quot;mapie_crepes_equivalence&quot;: {
+    &quot;n_calibration&quot;: 100,
+    &quot;confidence&quot;: 0.9,
+    &quot;order_statistic_rank&quot;: 91,
+    &quot;manual_radius&quot;: 1.4306847828652696,
+    &quot;max_abs_mapie_vs_manual&quot;: 0.0,
+    &quot;max_abs_crepes_vs_manual&quot;: 0.0
+  }
+}</pre></div></details><details class="answer"><summary>Script des essais principaux (environnement isolé)</summary><div><pre>import json, warnings, os, tempfile, pathlib, sys
+import numpy as np
+import pandas as pd
+from scipy import stats
+from evidently import Report
+from evidently.metrics import ValueDrift
+from hydra import initialize_config_dir, compose
+from omegaconf import OmegaConf
+from mapie.regression import SplitConformalRegressor
+from mapie.risk_control import BinaryClassificationController
+from sklearn.linear_model import LinearRegression
+from importlib.metadata import version
+R={&#x27;versions&#x27;:{p:version(p) for p in [&#x27;hydra-core&#x27;,&#x27;omegaconf&#x27;,&#x27;evidently&#x27;,&#x27;mapie&#x27;,&#x27;numpy&#x27;,&#x27;scipy&#x27;,&#x27;scikit-learn&#x27;]},&#x27;python&#x27;:sys.version}
+def metric(ref,cur,column,method=None):
+ m=ValueDrift(column=column,**({&#x27;method&#x27;:method} if method else {}))
+ return Report([m]).run(reference_data=ref,current_data=cur).dict()[&#x27;metrics&#x27;][0]
+E={}
+for n in [1000,1001]:
+ x=stats.norm.ppf((np.arange(n)+.5)/n)
+ E[&#x27;size_&#x27;+str(n)]=metric(pd.DataFrame({&#x27;x&#x27;:x}),pd.DataFrame({&#x27;x&#x27;:x+.13}),&#x27;x&#x27;)
+x=np.linspace(-3,3,500)
+r=pd.DataFrame({&#x27;x1&#x27;:x,&#x27;x2&#x27;:x});c=pd.DataFrame({&#x27;x1&#x27;:x,&#x27;x2&#x27;:-x})
+E[&#x27;joint_shift&#x27;]={&#x27;metrics&#x27;:[metric(r,c,k,&#x27;ks&#x27;) for k in [&#x27;x1&#x27;,&#x27;x2&#x27;]],&#x27;correlations&#x27;:[r.corr().iloc[0,1],c.corr().iloc[0,1]]}
+r=pd.DataFrame({&#x27;x&#x27;:np.tile(np.arange(100,dtype=float),10)});c=pd.DataFrame({&#x27;x&#x27;:np.r_[np.tile(np.arange(100,dtype=float),5),np.repeat(np.nan,500)]})
+E[&#x27;missing_shift&#x27;]={&#x27;metric&#x27;:metric(r,c,&#x27;x&#x27;,&#x27;ks&#x27;),&#x27;missing_rates&#x27;:[float(r.x.isna().mean()),float(c.x.isna().mean())]}
+r=pd.DataFrame({&#x27;x&#x27;:x,&#x27;y&#x27;:x});c=pd.DataFrame({&#x27;x&#x27;:x,&#x27;y&#x27;:-x})
+E[&#x27;relationship_flip&#x27;]={&#x27;metrics&#x27;:[metric(r,c,k,&#x27;ks&#x27;) for k in [&#x27;x&#x27;,&#x27;y&#x27;]],&#x27;fixed_predictor_mae&#x27;:[0.,float(np.mean(abs(c.x-c.y)))]}
+for name,rv,cv in [(&#x27;same_constant&#x27;,[1.]*100,[1.]*100),(&#x27;all_missing&#x27;,[1.]*100,[np.nan]*100)]:
+ try:E[name]=metric(pd.DataFrame({&#x27;x&#x27;:rv}),pd.DataFrame({&#x27;x&#x27;:cv}),&#x27;x&#x27;,&#x27;ks&#x27;)
+ except Exception as e:E[name]={&#x27;error&#x27;:type(e).__name__,&#x27;message&#x27;:str(e)[:400]}
+R[&#x27;evidently&#x27;]=E
+H={}
+with tempfile.TemporaryDirectory() as d:
+ p=pathlib.Path(d); (p/&#x27;config.yaml&#x27;).write_text(&#x27;seed: 42\nprotocol: confirmed-v1\nalpha: ${oc.env:HYPOTRAIL_PROBE_ALPHA,1.0}\nrequired: ???\n&#x27;)
+ with initialize_config_dir(config_dir=d,version_base=&#x27;1.3&#x27;):
+  cfg=compose(config_name=&#x27;config&#x27;);H[&#x27;compose_allows_missing&#x27;]=True
+  try:OmegaConf.to_container(cfg,resolve=True,throw_on_missing=True)
+  except Exception as e:H[&#x27;freeze_rejects_missing&#x27;]=type(e).__name__
+  cfg.required=&#x27;present&#x27;;os.environ[&#x27;HYPOTRAIL_PROBE_ALPHA&#x27;]=&#x27;1.0&#x27;
+  snap=OmegaConf.to_container(cfg,resolve=True,throw_on_missing=True)
+  os.environ[&#x27;HYPOTRAIL_PROBE_ALPHA&#x27;]=&#x27;2.0&#x27;
+  H[&#x27;environment&#x27;]={&#x27;snapshot_alpha&#x27;:snap[&#x27;alpha&#x27;],&#x27;live_alpha&#x27;:cfg.alpha}
+  del os.environ[&#x27;HYPOTRAIL_PROBE_ALPHA&#x27;]
+  try:compose(config_name=&#x27;config&#x27;,overrides=[&#x27;typo=7&#x27;])
+  except Exception as e:H[&#x27;unknown_override&#x27;]=type(e).__name__
+  H[&#x27;added_key&#x27;]=OmegaConf.to_container(compose(config_name=&#x27;config&#x27;,overrides=[&#x27;+typo=7&#x27;]))[&#x27;typo&#x27;]
+  H[&#x27;changed_protocol&#x27;]=compose(config_name=&#x27;config&#x27;,overrides=[&#x27;protocol=unconfirmed-v2&#x27;]).protocol
+R[&#x27;hydra&#x27;]=H
+M={}
+rng=np.random.default_rng(42);train_x=rng.normal(size=(300,1));train_y=2*train_x[:,0]+rng.normal(size=300)
+model=LinearRegression().fit(train_x,train_y)
+cover=[];shift=[];width=[]
+for seed in range(40):
+ rng=np.random.default_rng(seed+100)
+ xc=rng.normal(size=(100,1));yc=2*xc[:,0]+rng.normal(size=100)
+ xt=rng.normal(size=(5000,1));yt=2*xt[:,0]+rng.normal(size=5000)
+ m=SplitConformalRegressor(model,confidence_level=.9,prefit=True).conformalize(xc,yc)
+ _,ints=m.predict_interval(xt);lo,hi=ints[:,0,0],ints[:,1,0]
+ cover.append(np.mean((yt&gt;=lo)&amp;(yt&lt;=hi)));shift.append(np.mean((yt+3&gt;=lo)&amp;(yt+3&lt;=hi)));width.append(np.mean(hi-lo))
+M[&#x27;coverage_simulation&#x27;]={&#x27;repetitions&#x27;:40,&#x27;train&#x27;:300,&#x27;calibration&#x27;:100,&#x27;test_per_rep&#x27;:5000,&#x27;iid_mean&#x27;:float(np.mean(cover)),&#x27;iid_range&#x27;:[float(min(cover)),float(max(cover))],&#x27;target_shift_plus_3_mean&#x27;:float(np.mean(shift)),&#x27;mean_width&#x27;:float(np.mean(width)),&#x27;limits&#x27;:&#x27;controlled synthetic illustration, not production benchmark&#x27;}
+# Heteroscedastic subgroup with marginal guarantee only.
+rng=np.random.default_rng(7)
+def sample(n):
+ group=(rng.random(n)&lt;.1).astype(float);xx=np.column_stack([rng.normal(size=n),group]);yy=2*xx[:,0]+rng.normal(size=n)*np.where(group==1,5.,.3);return xx,yy
+xtr,ytr=sample(1000);xc,yc=sample(1000);xt,yt=sample(20000)
+m=SplitConformalRegressor(LinearRegression(),confidence_level=.9,prefit=False).fit(xtr,ytr).conformalize(xc,yc)
+_,ints=m.predict_interval(xt);hit=(yt&gt;=ints[:,0,0])&amp;(yt&lt;=ints[:,1,0]);g=xt[:,1]==1
+M[&#x27;subgroups&#x27;]={&#x27;overall&#x27;:float(hit.mean()),&#x27;common_group&#x27;:float(hit[~g].mean()),&#x27;rare_group&#x27;:float(hit[g].mean()),&#x27;rare_count&#x27;:int(g.sum())}
+# Known score function, fixed before calibration. Multiple thresholds tested.
+def proba(X):
+ p=np.asarray(X).reshape(-1);return np.column_stack([1-p,p])
+for name,n,target in [(&#x27;feasible&#x27;,3000,.75),(&#x27;insufficient&#x27;,30,.99)]:
+ rng=np.random.default_rng(42);x=rng.uniform(.05,.95,n);y=rng.binomial(1,x)
+ ctl=BinaryClassificationController(proba,risk=&#x27;precision&#x27;,target_level=target,confidence_level=.95,list_predict_params=np.linspace(.1,.9,17),fwer_method=&#x27;bonferroni_holm&#x27;)
+ with warnings.catch_warnings(record=True) as ws:
+  ctl.calibrate(x[:,None],y)
+ result={&#x27;n_calibration&#x27;:n,&#x27;target_precision&#x27;:target,&#x27;confidence&#x27;:.95,&#x27;valid_thresholds&#x27;:np.asarray(ctl.valid_predict_params).tolist(),&#x27;best_threshold&#x27;:float(ctl.best_predict_param) if ctl.best_predict_param is not None else None,&#x27;warnings&#x27;:[str(w.message) for w in ws]}
+ if ctl.best_predict_param is not None:
+  xt=rng.uniform(.05,.95,20000);yt=rng.binomial(1,xt);pred=ctl.predict(xt[:,None]);sel=pred==1
+  result.update({&#x27;independent_test_precision&#x27;:float(yt[sel].mean()),&#x27;independent_test_selected&#x27;:int(sel.sum())})
+ M[name]=result
+R[&#x27;mapie&#x27;]=M
+pathlib.Path(__file__).with_name(&#x27;deep-probe-results.json&#x27;).write_text(json.dumps(R,indent=2,ensure_ascii=False,default=str))
+print(json.dumps(R,indent=2,ensure_ascii=False,default=str))
+</pre><p>La comparaison MAPIE/crepes utilise les mêmes prédictions et résidus : le rayon de référence est le résidu absolu de rang ceil((n+1) × 0,9), avec n = 100. Les deux écarts maximaux aux bornes de référence sont nuls dans ce cas.</p></div></details></section><section id="sources"><p class="eyebrow">12 / Revue d’architecture</p><h2>Sources, portée et points à approfondir.</h2>
+<p>La comparaison s’appuie sur les sources officielles ci-dessous et sur le code figé au commit indiqué. La documentation expose des capacités ; les choix d’architecture sont mes recommandations pour Hypotrail. La fréquence des releases et la taille des dépendances sont des indices, pas une mesure complète de solidité.</p>
+<p>Trois résultats de recherche expliquent les limites maintenues dans la proposition : Cawley et Talbot montrent le risque de surajustement lors de la sélection ; Kapoor et Narayanan documentent les fuites qui dépassent les erreurs de prétraitement ; Angelopoulos et Bates détaillent les garanties et limites de la prédiction conforme. Aucun package ne supprime ces problèmes par sa seule présence.</p>
+<ol><li><a href="https://docs.pydantic.dev/latest/concepts/strict_mode/">Contrats Pydantic</a></li><li><a href="https://python-jsonschema.readthedocs.io/en/stable/">JSON Schema et validation</a></li><li><a href="https://jcristharif.com/msgspec/">msgspec</a></li><li><a href="https://pandera.readthedocs.io/en/stable/">Pandera</a></li><li><a href="https://docs.greatexpectations.io/docs/core/introduction/gx_overview/">Great Expectations : composants</a></li><li><a href="https://hydra.cc/docs/1.3/advanced/compose_api/">Hydra 1.3 : composition</a></li><li><a href="https://omegaconf.readthedocs.io/en/latest/structured_config.html">OmegaConf : schémas structurés</a></li><li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html">SciPy : bootstrap</a></li><li><a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn : pièges courants</a></li><li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html">scikit-learn : TimeSeriesSplit</a></li><li><a href="https://hypothesis.readthedocs.io/en/latest/stateful.html">Hypothesis : tests avec état</a></li><li><a href="https://docs.evidentlyai.com/metrics/customize_data_drift">Evidently : choix de dérive</a></li><li><a href="https://pypi.org/project/deepchecks/">Deepchecks : distribution et licence déclarée</a></li><li><a href="https://mapie.readthedocs.io/en/stable/">MAPIE</a></li><li><a href="https://crepes.readthedocs.io/en/latest/">crepes</a></li><li><a href="https://www.statsmodels.org/stable/generated/statsmodels.regression.linear_model.OLSResults.get_robustcov_results.html">statsmodels : covariance robuste OLS</a></li><li><a href="https://mlflow.org/docs/latest/ml/tracking/">MLflow Tracking</a></li><li><a href="https://doc.dvc.org/user-guide/project-structure/dvcyaml-files">DVC : fichiers de pipelines</a></li><li><a href="https://docs.python.org/3.13/library/sqlite3.html">SQLite Python 3.13</a></li><li><a href="https://optuna.readthedocs.io/en/stable/">Optuna</a></li><li><a href="https://nannyml.readthedocs.io/en/stable/how_it_works/performance_estimation.html">NannyML : estimation de performance</a></li><li><a href="https://docs.seldon.ai/alibi-detect">Alibi Detect</a></li><li><a href="https://docs.kedro.org/en/stable/configure/configuration_basics/">Kedro : configuration</a></li><li><a href="https://www.jmlr.org/papers/v11/cawley10a.html">Cawley & Talbot, 2010 : biais de sélection</a></li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10499856/">Kapoor & Narayanan, 2023 : fuite de données</a></li><li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos & Bates : prédiction conforme</a></li></ol>
+<details class="answer"><summary>Versions PyPI examinées — inventaire de veille</summary><div><div class="tbl"><table><thead><tr><th>Distribution</th><th>Version observée</th><th>Date de publication</th></tr></thead><tbody><tr><td><a href="https://pypi.org/project/hydra-core/">hydra-core</a></td><td>1.3.7</td><td>2026-09-14</td></tr><tr><td><a href="https://pypi.org/project/omegaconf/">omegaconf</a></td><td>2.4.0</td><td>2026-10-09</td></tr><tr><td><a href="https://pypi.org/project/pydantic/">pydantic</a></td><td>2.14.1</td><td>2026-10-11</td></tr><tr><td><a href="https://pypi.org/project/pydantic-settings/">pydantic-settings</a></td><td>2.16.1</td><td>2026-10-20</td></tr><tr><td><a href="https://pypi.org/project/jsonschema/">jsonschema</a></td><td>4.26.0</td><td>2026-01-07</td></tr><tr><td><a href="https://pypi.org/project/msgspec/">msgspec</a></td><td>0.22.0</td><td>2026-09-29</td></tr><tr><td><a href="https://pypi.org/project/dynaconf/">dynaconf</a></td><td>3.3.5</td><td>2026-08-05</td></tr><tr><td><a href="https://pypi.org/project/pandera/">pandera</a></td><td>0.34.1</td><td>2026-10-06</td></tr><tr><td><a href="https://pypi.org/project/great-expectations/">great-expectations</a></td><td>1.24.1</td><td>2026-10-22</td></tr><tr><td><a href="https://pypi.org/project/evidently/">evidently</a></td><td>0.7.23</td><td>2026-09-11</td></tr><tr><td><a href="https://pypi.org/project/deepchecks/">deepchecks</a></td><td>0.19.1</td><td>2024-12-15</td></tr><tr><td><a href="https://pypi.org/project/mapie/">mapie</a></td><td>1.6.0</td><td>2026-10-19</td></tr><tr><td><a href="https://pypi.org/project/crepes/">crepes</a></td><td>0.9.1</td><td>2026-06-12</td></tr><tr><td><a href="https://pypi.org/project/nonconformist/">nonconformist</a></td><td>2.1.0</td><td>2017-06-20</td></tr><tr><td><a href="https://pypi.org/project/scipy/">scipy</a></td><td>1.18.1</td><td>2026-08-21</td></tr><tr><td><a href="https://pypi.org/project/statsmodels/">statsmodels</a></td><td>0.15.0</td><td>2026-08-27</td></tr><tr><td><a href="https://pypi.org/project/scikit-learn/">scikit-learn</a></td><td>1.9.1</td><td>2026-09-10</td></tr><tr><td><a href="https://pypi.org/project/hypothesis/">hypothesis</a></td><td>6.170.8</td><td>2026-10-22</td></tr><tr><td><a href="https://pypi.org/project/mlflow/">mlflow</a></td><td>3.17.2</td><td>2026-10-21</td></tr><tr><td><a href="https://pypi.org/project/mlflow-skinny/">mlflow-skinny</a></td><td>3.17.2</td><td>2026-10-21</td></tr><tr><td><a href="https://pypi.org/project/dvc/">dvc</a></td><td>3.67.1</td><td>2026-03-31</td></tr><tr><td><a href="https://pypi.org/project/optuna/">optuna</a></td><td>5.0.0</td><td>2026-09-07</td></tr><tr><td><a href="https://pypi.org/project/prefect/">prefect</a></td><td>3.9.0</td><td>2026-10-21</td></tr><tr><td><a href="https://pypi.org/project/kedro/">kedro</a></td><td>1.7.0</td><td>2026-09-28</td></tr><tr><td><a href="https://pypi.org/project/dagster/">dagster</a></td><td>1.13.26</td><td>2026-10-09</td></tr><tr><td><a href="https://pypi.org/project/jinja2/">jinja2</a></td><td>3.1.6</td><td>2025-03-05</td></tr></tbody></table></div><p>Certains candidats n’ont fait l’objet que d’une comparaison documentaire. Consulter la section des essais pour distinguer résolution, import et exécution.</p></div></details>
+<p>Sources additionnelles : <a href="https://mapie.readthedocs.io/en/stable/content/risk-control/theory/">MAPIE Risk Control</a>, <a href="https://mapie.readthedocs.io/en/stable/content/exchangeability-testing/theory/">MAPIE échangeabilité et suivi du risque</a>, <a href="https://arxiv.org/abs/2110.01052">Learn Then Test</a>, <a href="https://hydra.cc/docs/1.3/tutorials/basic/running_your_app/multi-run/">Hydra multirun</a>, <a href="https://omegaconf.readthedocs.io/en/2.3_branch/usage.html">OmegaConf 2.3</a>, <a href="https://docs.evidentlyai.com/metrics/all_metrics">métriques Evidently</a>, <a href="https://docs.seldon.ai/alibi-detect/cd/methods/offline/mmddrift">Alibi Detect MMD</a>.</p><p>Avant toute migration : mesurer sur une étude complète la quantité de code effectivement remplacée, le comportement des anciennes études et la qualité des messages en français. Ces points ne peuvent pas être déduits des essais isolés.</p>
+</section><footer>Proposition de conception. Aucun package ajouté au dépôt, aucune étude historique modifiée.</footer></main></div><script>const btn=document.getElementById('themeBtn');function apply(on){document.body.classList.toggle('white',on);btn.textContent=on?'Tableau noir':'Tableau blanc';btn.setAttribute('aria-pressed',String(on));}apply(matchMedia('(prefers-color-scheme: light)').matches);btn.onclick=()=>apply(!document.body.classList.contains('white'));const side=document.querySelector('.sidebar');function navsize(){side.open=innerWidth>1040;}navsize();window.addEventListener('resize',navsize);</script></body></html>

@@ -1,5 +1,51 @@
 # CLI and study contract (`hypotrail`, v0.1, extended through v0.2)
 
+## Library integration v1 additions (workstream A, 2026-10-23)
+
+Specification: [`integration-libraries/`](integration-libraries/README.md); interfaces and
+status: [`LIBRARIES-V1.md`](../handoff/LIBRARIES-V1.md). All additions are additive; a study
+that uses none of them keeps its identities and payloads.
+
+* **Activities** (`activities.EXPORT_ACTIVITIES`, listed by `task_activities` before the
+  diagnostics): `predictor.capture` (a study with a final test) and `diagnostics.population`
+  (opt-in, needs the `diagnostics` extra).
+* **`run predictor.capture [--profile base|workshop] [--packager FORMAT]`**: before the final
+  test is opened and once the policy (or model choice) is confirmed, fits the complete
+  predictor of the chosen configuration on every development row (exposure `train_fit`,
+  partition `development`), validates the rows against the data contract, checks parity with
+  the engine's fit, writes and reloads its bundle under `.hypotrail/predictors/<predictor_id>/`
+  and records its descriptor (`values.predictor_id`, `bundle`, `recipe_sha256`,
+  `data_contract_sha256`, `parity`, `engine_parity`, `packages`, `profile`, `limitations`).
+  `--profile workshop` requires packaging (`mlflow_pyfunc` unless `--packager` names another
+  known format); a packager that cannot be imported is refused before any read. `--profile`
+  and `--packager` are refused with any other activity (`invalid_arguments`).
+* **`final_test.evaluation`** in a study holding a `predictor.capture` result: confirming
+  `final_test` requires a current capture of the configuration it opens
+  (`precondition_missing`, slot `predictor.capture`); the evaluation records
+  `inputs.predictor` and `inputs.results["predictor.capture"]`, scores the final rows with the
+  reloaded capture (no refit) and adds `values.predictor`; after promotion `run.result`
+  carries `evidence_binding` (`written` or `failed: ...`) and
+  `.hypotrail/predictors/<id>/evidence/binding-<n>.json` holds `hypotrail.evidence_binding/1`,
+  named by the bundle document's `evidence_binding_path`.
+* **`run diagnostics.population`**: compares two development populations (first and last fold
+  or window, or training and validation rows) on the model's feature columns, never the
+  target (exposure `structural_inspection`); `values.diagnostic` is a
+  `hypotrail.diagnostic_result/1`; blob `evidently_snapshot` keeps the raw payload; the
+  Evidently, NumPy, pandas and SciPy versions are in `params` (`semantic_dependencies`), so a
+  new backend version is a new identity.
+* **Errors.** Contract v1 codes are mapped to the frozen engine codes
+  (`mlkit.contracts.errors.ENGINE_CODES`): `contract_invalid` → `invalid_value`;
+  `schema_version_unsupported`, `capability_not_supported`, `optional_dependency_missing`,
+  `environment_unqualified` → `unsupported_capability`; `partition_not_authorized`,
+  `calibration_not_eligible`, `model_not_captured` → `precondition_missing`;
+  `artifact_integrity_failed` → `integrity_error`; `backend_failed` → `internal_error`;
+  `destination_not_empty` → `export_target_exists`; `stale_revision` → `stale_revision`;
+  workstream B's `scientific_config_changed` and `template_layout_mismatch` → `invalid_value`.
+  The v1 code is kept in `details` as `contract_code`, with `path` and `remediation`.
+* **Read API.** `read_export_source` (module `mlkit.contracts.export_source`), called with the
+  study directory and the expected revision, returns `hypotrail.export_source/1` (read-only,
+  no rows, no labels).
+
 ## Reliability roadmap J4--J7 additions
 
 `run policy.inspect --rule R [--rule R ...] [--intervals]` records a consultation of
@@ -900,3 +946,12 @@ Additive: no schema version changes, nothing migrated. A study created before WP
 **Diagnostics in the plan (R28).** In a WP-B1 study the plan lists the development diagnostics (`state.DIAG_SLOT`): in the `models` step after the fits while the variant decision is not confirmed, and in the choice step (`policy` or `model_choice`) after the evaluation (`state._wp_f1_steps`); `next_action` is `{kind: run, activity: "diag.binary"}` (or `diag.regression`) when they are missing or stale. Before the variant decision the diagnostics need the candidate and the baseline only; the variant decision confirmed with other variants (its first confirmation included) makes them stale (`dependencies._diagnostics_follow_the_variants`), and a policy adopted at another rule than theirs too (§13). Dependency row 17 now refits only the variants whose model changed or that the decision no longer names (`trials.changed_slots`); restating the same variants (a question reworded, a v0.2b value written as a list) has no effect (`unchanged_value`). The rows that refit the candidate refit every variant fitted.
 
 **Report and notebook.** The report has a "Variants and model families" section (`render_trials.section`, `id="variants"`, in the study language) after the comparison: the budget (recorded literals), the shortlist with the flags of the linear fit (cited from the diagnostics), the configurations compared fold by fold with the one-standard-error pick, the optimism and the advice (cited from the evaluation's `model_selection`), the value chosen per fold, and each family's diagnostics (cited from the variant fits). With several variants, the comparison table names each row's model. The generated notebook's variant step gains `recompute_selection` (`code_cells.selection_cell`): a pandas table of the per-fold metrics from the fits, the means, standard errors, best mean and optimism recomputed and asserted equal to the stored `model_selection`.
+
+## 15. Export to Azure ML (chantier B, contract v1)
+
+```text
+hypotrail export azureml --study DIR --expected-revision REV [--profile FILE]
+                 [--template team-azureml-v1] [--require-configured] (--out DIR | --plan)
+```
+
+Implemented in `framework/mlkit/exporters/azureml/` (handoff: `docs/handoff/AZUREML-EXPORT-V1.md`); `cmd_export` only routes it. It reads one revision through chantier A's `read_export_source(study_path, expected_revision)` and never fits, evaluates, reads the final test, contacts Azure or changes the study (no state, event, exposure or channel record). Payload `hypotrail.azureml_export/1`, keys `schema`, `ok`, `plan`, `study_revision`, `snapshot_id`, `export_id`, `out`, `template`, `files`, `configuration_status` (`draft` or `configured`), `artifact_status` (`missing`, `captured` or `packaged`), `checks`, `missing_fields`, `warnings`, `next_commands` (each with `scope` `local`, `network_read` or `azure_write`). `--plan` writes nothing. A refusal is `hypotrail.error/1`, exit code 2, nothing written; its `details` carry `path` and `remediation`. Codes: the existing `stale_revision`, `export_target_exists` (contract code `destination_not_empty` in `details.contract_code`), `read_only` and `invalid_arguments`; and `contract_invalid`, `schema_version_unsupported`, `capability_not_supported`, `optional_dependency_missing`, `model_not_captured`, `artifact_integrity_failed`, `environment_unqualified`, `scientific_config_changed`, `template_layout_mismatch`, `template_unsupported`, `data_identity_mismatch`. These codes are emitted by `mlkit.exporters` (outside `mlkit/study`, so `test_contract_freeze.py` does not scan them); `framework/tests/exporters/azureml/` pins them.

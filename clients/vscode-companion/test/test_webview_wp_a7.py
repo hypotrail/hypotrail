@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from conftest import inline_styles_ok
+from panel_cases import expand_eda
 
 import themes
 
@@ -78,6 +79,7 @@ def open_tab(open_panel, views, task, tab, theme='light', width=900, summary=Non
 def feed_eda(panel, views, task, eda=None):
     panel.view_data('data', views[f'data.{task}'])
     panel.view_data('eda', eda or views[f'eda.{task}'])
+    expand_eda(panel.page)
 
 
 def clean(panel):

@@ -7,14 +7,14 @@
   "argv": [
    "decide",
    "confirm",
-   "p_8",
+   "p_9",
    "--user-words=Yes, call the 100 best-scored clients",
    "--channel",
    "webview",
    "--request-id",
    "b-held",
    "--expected-revision",
-   "49",
+   "51",
    "--json"
   ],
   "note": ""
@@ -28,7 +28,7 @@
    "message": "The junior put the policy on hold in their own words; it cannot be confirmed until their words resolve the hold (decide note --resolve). Tell them what is still pending and ask whether the condition is met.",
    "details": {
     "decision_id": "policy",
-    "proposal_id": "p_8",
+    "proposal_id": "p_9",
     "notes": [
      {
       "note_id": "n_1",

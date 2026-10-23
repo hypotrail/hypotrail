@@ -22,7 +22,7 @@
   "activity": "eda.rate_by",
   "execution_id": "e_3b7e9da2df5de95232824246",
   "status": "promoted",
-  "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
+  "result_id": "ed070172cfb8fc97e3d437d5221cefe80ef5ea4713c114058ea2c8d5eef7cf02",
   "values": {
    "partition": "train",
    "column": "job",
@@ -263,13 +263,13 @@
    "activity": "eda.rate_by",
    "slot": "eda.rate_by:job",
    "status": "promoted",
-   "result_id": "1959a5b2d07a2c5f3ce4031bb0f182e1561144c1a2ce2e8607d1cf107eaf3423",
-   "input_key": "1418c18f90590fe33c415731d06690340d0ac317f7084af341a03fc215b88ec2",
+   "result_id": "ed070172cfb8fc97e3d437d5221cefe80ef5ea4713c114058ea2c8d5eef7cf02",
+   "input_key": "e153a9c58f3099d68d786d69f34e8b9106a360c06fe871ced683e4fdb1f5a476",
    "reason": null,
    "started_revision": 22,
    "invalidation": null,
    "exposure_ids": [
-    "x_15a21ec2b1b34b79981a8c300c9a2125"
+    "x_ab011eaeda754c66b5c492dbba9b5d9d"
    ],
    "registry_created": true,
    "nondeterministic": false
@@ -290,6 +290,15 @@
     "last_ok_revision": 23,
     "error": null,
     "message": "The generated notebook (notebooks/study_generated.py) is up to date."
+   },
+   "editable": {
+    "status": "ok",
+    "path": "notebooks/study_editable.py",
+    "revision": 23,
+    "last_ok_revision": 23,
+    "error": null,
+    "tracked": false,
+    "message": "The editable study notebook (notebooks/study_editable.py) follows the generated notebook until you edit it; after that it is never overwritten and does not count as official evidence."
    },
    "workbench": {
     "status": "ok",
@@ -320,13 +329,13 @@
     "position": {
      "step_id": "models",
      "completed": 7,
-     "total": 12
+     "total": 13
     },
     "learned": [],
     "limitations": [
      {
       "code": "unconfirmed_decisions",
-      "text": "Not confirmed by you yet: the variant to compare, the decision policy, the opening of the final test and the conclusion."
+      "text": "Not confirmed by you yet: the variant to compare, the model choice, the decision policy, the opening of the final test and the conclusion."
      },
      {
       "code": "validation_is_not_independent",

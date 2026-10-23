@@ -1,0 +1,34 @@
+# Operational settings (Hypotrail export): paths, logs and tracking. Changing them is an
+# operational override: the scientific projection, hence the run's identity, is unchanged.
+debug: false
+
+mlflow_tracking: false
+
+data_dir: "data/hypotrail"
+
+raw_data:
+  path: "${data_dir}/development"
+  file: "development.csv"
+
+contracts:
+  path: "${data_dir}/contracts"
+
+preprocessed_data:
+  path: "outputs/local/02_processed"
+  file: "development.prepared.csv"
+
+train_data:
+  path: "outputs/local/03_partitions"
+
+models:
+  path: "outputs/local/04_model"
+  evaluated_path: "${data_dir}/models/evaluated"
+
+reports:
+  path: "outputs/local/05_reports"
+
+# The candidate's MLflow package is written during its capture, before any check
+# (workshop profile: required). "none" keeps the native bundle only.
+packaging:
+  format: "@@text:packaging_format@@"
+  required: @@yaml:packaging_required@@

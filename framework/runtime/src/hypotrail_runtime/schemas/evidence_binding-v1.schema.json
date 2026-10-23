@@ -1,0 +1,103 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "JsonValue": {}
+ },
+ "$id": "https://hypotrail.invalid/schemas/evidence_binding-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "decision_refs": {
+   "items": {
+    "maxLength": 512,
+    "minLength": 1,
+    "type": "string"
+   },
+   "title": "Decision Refs",
+   "type": "array"
+  },
+  "evaluation_context_id": {
+   "anyOf": [
+    {
+     "maxLength": 512,
+     "minLength": 1,
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Evaluation Context Id"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "final_result_id": {
+   "anyOf": [
+    {
+     "maxLength": 512,
+     "minLength": 1,
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Final Result Id"
+  },
+  "predictor_id": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Predictor Id",
+   "type": "string"
+  },
+  "protocol_id": {
+   "anyOf": [
+    {
+     "maxLength": 512,
+     "minLength": 1,
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Protocol Id"
+  },
+  "schema_version": {
+   "const": "hypotrail.evidence_binding/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "status": {
+   "enum": [
+    "evaluated",
+    "unassessed",
+    "stale"
+   ],
+   "title": "Status",
+   "type": "string"
+  },
+  "study_revision": {
+   "minimum": 0,
+   "title": "Study Revision",
+   "type": "integer"
+  }
+ },
+ "required": [
+  "schema_version",
+  "predictor_id",
+  "final_result_id",
+  "study_revision",
+  "decision_refs",
+  "protocol_id",
+  "evaluation_context_id",
+  "status"
+ ],
+ "title": "EvidenceBinding",
+ "type": "object"
+}

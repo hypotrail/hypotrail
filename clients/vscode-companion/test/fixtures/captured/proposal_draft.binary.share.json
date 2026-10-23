@@ -17,15 +17,15 @@
   "schema": "hypotrail.proposal_draft/1",
   "ok": true,
   "study": "/studies/bank marketing \"demo\"-cv",
-  "revision": 37,
+  "revision": 39,
   "decision_id": "policy",
   "value": "share:0.2",
   "proposable": true,
   "missing": [],
   "restatement": "Adopt the rule share:0.2: act on the 20% highest-scored rows, 725 of the 3,617 development rows in the out-of-fold predictions. There the logistic model's selection had precision 25.2% against 11.5% for the baseline, and recall 43.9%. These predictions were used to choose the rule, so these figures are development evidence and optimistic.",
-  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result 421bd137).",
+  "rationale": "Chosen by the junior in the companion's What if? view, among rules already evaluated (result aefc4f57).",
   "evidence": {
-   "result_id": "421bd1377df92c077f6bedbfa3473741060a64be2ea71e37c0d8812f71c0ad63",
+   "result_id": "aefc4f57b363225b1b919479564e8d91518dc8e952011cfba9ed79fa23da0b95",
    "activity": "policy.evaluation",
    "figures": [
     {

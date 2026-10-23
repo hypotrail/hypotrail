@@ -1,0 +1,5 @@
+# Scientific (the study's recorded development plan): the rows of each partition are in
+# data/hypotrail/contracts/development-plan.json; no new split is ever drawn.
+protocol_id: @@yaml:protocol_id@@
+keys_sha256: @@yaml:keys_sha256@@
+roles: @@yaml:roles@@

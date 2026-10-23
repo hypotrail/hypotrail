@@ -31,16 +31,18 @@ Test scopes:
 
 ### The gate
 
-Run it, fully green, before each commit. It installs the `browser` group, so the offline report test (`framework/tests/study/deliverables/test_html_offline.py`, Playwright) runs instead of being skipped:
+Run it, fully green, before each commit. It installs the `browser` group, so the offline report test (`framework/tests/study/deliverables/test_html_offline.py`, Playwright) runs instead of being skipped, and the `diagnostics` and `uncertainty` extras, so the Evidently and MAPIE tests of `framework/tests/study/libraries/` run instead of being skipped (library integration v1, [LIBRARIES-V1](docs/handoff/LIBRARIES-V1.md); the runtime wheel test needs `uv` on the path):
 
 ```sh
-uv sync --project framework --group dev --group browser
+uv sync --project framework --group dev --group browser --group azureml --extra diagnostics --extra uncertainty
 uv run --project framework python -m playwright install chromium
 python3 scripts/check_layout.py
-uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py framework/tests/test_synthetic_case.py framework/tests/study framework/tests/acceptance
+uv run --project framework python -m pytest -q framework/tests/test_pilot_revision.py framework/tests/test_quality.py framework/tests/test_discovery.py framework/tests/test_reliability.py framework/tests/test_classical.py framework/tests/test_env_smoke.py framework/tests/test_synthetic_case.py framework/tests/study framework/tests/acceptance framework/tests/exporters
 node --test clients/vscode-companion/test/*.test.js
 uv run --project framework python -m pytest -q -p no:cacheprovider clients/vscode-companion/test
 ```
+
+The `azureml` group (Hydra, OmegaConf, MLflow-skinny; the same pins as the `azureml` extra) is needed by `framework/tests/exporters/` (`hypotrail export azureml` and the MLflow packager, [handoff](docs/handoff/AZUREML-EXPORT-V1.md)); without it, the tests that need MLflow or Hydra skip with that reason, which is not the full gate. Those tests use a private test double of chantier A's `hypotrail_runtime`; `HYPOTRAIL_EXPORT_REAL_RUNTIME=1` reruns them against the real runtime once it is merged.
 
 The last two lines test the study panel (`clients/vscode-companion/`, ADRs 0003 and 0004), and both must be green. The Node line runs the unit tests (a fake `vscode` module and a fake CLI) and the integration tests that drive the real controller and the real `hypotrail` CLI: `integration.test.js` on a temporary synthetic study, and `integration-v1/v2/v3.test.js` on temporary Bank Marketing and Auto MPG studies made from the committed cases (only read); about a minute in all, mostly the Bank fits. The pytest line runs the offline Playwright tests of the webview document (one file per view), the client and engine key lists (`test_contract_keys.py`), the fixture drift check against real payloads (`test_fixture_drift.py`, which also captures again from the live engine), and the requirement coverage (`test_requirement_coverage.py`); about a minute and a half. Run that pytest command separately: pytest takes its configuration from `framework/pyproject.toml` only when every path is under `framework/`. After an engine change that alters a payload, run `uv run --project framework python clients/vscode-companion/test/fixtures/capture.py` and fix the hand-written fixtures the drift test names. None of these runs a real VS Code; the manual checklist is `clients/vscode-companion/MANUAL-TEST.md`.
 
@@ -55,6 +57,10 @@ and **have the owner review every changed baseline from the diff images** in tha
 At the v0.1 closure it reported about 800 passed, 1159 after the advanced companion's integration (WP-I), and 1603 passed at the v0.2 closure (the Node line 236 tests, the panel pytest line 322 passed); the only skips are the opt-in agent scenarios of `framework/tests/acceptance/agent/test_scenarios.py` (34 at v0.1, 66 since WP-B6b). Without the `browser` group the same command passes but skips the offline browser test with a `PytestWarning` that says so; that run is not the full gate.
 
 `framework/tests/study/` covers the junior study engine, including real `hypotrail` CLI processes (`test_cli_decisions.py`, `test_walkthrough.py` on Bank, the synthetic case, and WDBC; `test_regression_walkthrough.py` on Auto MPG, the synthetic regression case, and diabetes; `test_perturbations.py` on 26 rewritten synthetic cases) and the frozen CLI contract (`test_contract_freeze.py`, see `docs/specs/CLI-CONTRACT.md`). A contract change updates the document and the freeze test in the same commit. The `hypotrail` command is installed in `framework/.venv` by `uv sync`; run it with `uv run --project framework hypotrail <command> --study DIR`. Create test studies in a temporary directory outside the repository.
+
+### Library integration v1 (opt-in parts)
+
+The installation matrix of the extras (base, `diagnostics`, `uncertainty`, both; four fresh environments from the lock) runs with `HYPOTRAIL_EXTRAS_MATRIX=1`; the Hypothesis state machine's budget is raised with `HYPOTRAIL_HYPOTHESIS_EXAMPLES` and `HYPOTRAIL_HYPOTHESIS_STEPS`. Regenerate the JSON schemas of the contracts after a model change with `uv run --project framework python -m hypotrail_runtime.schemas` (the gate checks them).
 
 ### Marimo spike (opt-in)
 

@@ -117,3 +117,10 @@ def open_case(open_panel, views, case='binary', theme='light-modern', width=900,
     for view in ['decisions', 'evidence', 'eda', 'whatif', 'explain', 'data', 'trials']:
         panel.view_data(view, views[f'{view}.{case}'])
     return panel
+
+
+def expand_eda(page):
+    """Open every collapsed EDA card, as the junior does (only the last one starts open)."""
+    closed = page.locator('details.eda-analysis:not([open]) > summary')
+    while closed.count():
+        closed.first.click()

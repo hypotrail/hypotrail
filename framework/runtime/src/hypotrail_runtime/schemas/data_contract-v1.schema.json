@@ -1,0 +1,386 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "ColumnSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "allowed_values": {
+     "anyOf": [
+      {
+       "items": {
+        "anyOf": [
+         {
+          "type": "boolean"
+         },
+         {
+          "type": "integer"
+         },
+         {
+          "type": "number"
+         },
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Allowed Values"
+    },
+    "name": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Name",
+     "type": "string"
+    },
+    "nullable": {
+     "title": "Nullable",
+     "type": "boolean"
+    },
+    "physical_type": {
+     "enum": [
+      "float64",
+      "int64",
+      "bool",
+      "string"
+     ],
+     "title": "Physical Type",
+     "type": "string"
+    },
+    "role": {
+     "enum": [
+      "feature",
+      "target",
+      "key",
+      "auxiliary"
+     ],
+     "title": "Role",
+     "type": "string"
+    },
+    "semantic_type": {
+     "enum": [
+      "numeric",
+      "category",
+      "boolean"
+     ],
+     "title": "Semantic Type",
+     "type": "string"
+    }
+   },
+   "required": [
+    "name",
+    "physical_type",
+    "semantic_type",
+    "nullable",
+    "allowed_values",
+    "role"
+   ],
+   "title": "ColumnSpec",
+   "type": "object"
+  },
+  "Conversion": {
+   "additionalProperties": false,
+   "properties": {
+    "column": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Column",
+     "type": "string"
+    },
+    "rule": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Rule",
+     "type": "string"
+    },
+    "source": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Source",
+     "type": "string"
+    },
+    "target": {
+     "enum": [
+      "float64",
+      "int64",
+      "bool",
+      "string"
+     ],
+     "title": "Target",
+     "type": "string"
+    }
+   },
+   "required": [
+    "column",
+    "source",
+    "target",
+    "rule"
+   ],
+   "title": "Conversion",
+   "type": "object"
+  },
+  "Exclusion": {
+   "additionalProperties": false,
+   "properties": {
+    "justification": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Justification",
+     "type": "string"
+    },
+    "rule": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Rule",
+     "type": "string"
+    }
+   },
+   "required": [
+    "rule",
+    "justification"
+   ],
+   "title": "Exclusion",
+   "type": "object"
+  },
+  "InferencePolicy": {
+   "additionalProperties": false,
+   "properties": {
+    "canonical_order": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Canonical Order",
+     "type": "array"
+    },
+    "conversions": {
+     "items": {
+      "$ref": "#/$defs/Conversion"
+     },
+     "title": "Conversions",
+     "type": "array"
+    },
+    "extra_columns": {
+     "enum": [
+      "reject",
+      "ignore"
+     ],
+     "title": "Extra Columns",
+     "type": "string"
+    },
+    "required_columns": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Required Columns",
+     "type": "array"
+    },
+    "unknown_categories": {
+     "enum": [
+      "reject",
+      "predictor_handles"
+     ],
+     "title": "Unknown Categories",
+     "type": "string"
+    }
+   },
+   "required": [
+    "required_columns",
+    "extra_columns",
+    "conversions",
+    "canonical_order",
+    "unknown_categories"
+   ],
+   "title": "InferencePolicy",
+   "type": "object"
+  },
+  "JsonValue": {},
+  "Parser": {
+   "additionalProperties": false,
+   "properties": {
+    "decimal": {
+     "default": ".",
+     "maxLength": 1,
+     "minLength": 1,
+     "title": "Decimal",
+     "type": "string"
+    },
+    "delimiter": {
+     "maxLength": 16,
+     "minLength": 1,
+     "title": "Delimiter",
+     "type": "string"
+    },
+    "encoding": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Encoding",
+     "type": "string"
+    },
+    "header": {
+     "title": "Header",
+     "type": "boolean"
+    },
+    "na_values": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Na Values",
+     "type": "array"
+    },
+    "quotechar": {
+     "anyOf": [
+      {
+       "maxLength": 1,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Quotechar"
+    }
+   },
+   "required": [
+    "encoding",
+    "delimiter",
+    "header",
+    "quotechar",
+    "na_values"
+   ],
+   "title": "Parser",
+   "type": "object"
+  },
+  "RowIdentity": {
+   "additionalProperties": false,
+   "properties": {
+    "columns": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Columns",
+     "type": "array"
+    },
+    "kind": {
+     "enum": [
+      "stable_key",
+      "source_position"
+     ],
+     "title": "Kind",
+     "type": "string"
+    },
+    "source_hash_required": {
+     "title": "Source Hash Required",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "kind",
+    "columns",
+    "source_hash_required"
+   ],
+   "title": "RowIdentity",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/data_contract-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "columns": {
+   "items": {
+    "$ref": "#/$defs/ColumnSpec"
+   },
+   "minItems": 1,
+   "title": "Columns",
+   "type": "array"
+  },
+  "dataset_id": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Dataset Id",
+   "type": "string"
+  },
+  "exclusions": {
+   "items": {
+    "$ref": "#/$defs/Exclusion"
+   },
+   "title": "Exclusions",
+   "type": "array"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "format": {
+   "enum": [
+    "csv",
+    "dataframe"
+   ],
+   "title": "Format",
+   "type": "string"
+  },
+  "inference_policy": {
+   "$ref": "#/$defs/InferencePolicy"
+  },
+  "materialization_sha256": {
+   "anyOf": [
+    {
+     "pattern": "^[0-9a-f]{64}$",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Materialization Sha256"
+  },
+  "parser": {
+   "$ref": "#/$defs/Parser"
+  },
+  "row_identity": {
+   "$ref": "#/$defs/RowIdentity"
+  },
+  "schema_version": {
+   "const": "hypotrail.data_contract/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "source_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Source Sha256",
+   "type": "string"
+  }
+ },
+ "required": [
+  "schema_version",
+  "dataset_id",
+  "source_sha256",
+  "format",
+  "parser",
+  "columns",
+  "row_identity",
+  "exclusions",
+  "inference_policy"
+ ],
+ "title": "DataContract",
+ "type": "object"
+}

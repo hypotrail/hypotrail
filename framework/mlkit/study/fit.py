@@ -827,10 +827,15 @@ FINAL_NOTE = ('Measured once on the sealed final-test rows, with the configurati
 
 
 def final_evaluation(case: c.Case, development, final, inputs: Mapping,
-                     params: Mapping) -> dict:
+                     params: Mapping, predictor=None) -> dict:
     """The chosen configuration on the final test (WP-B1): refit on every development row,
     score the final-test rows once, compare with the baseline refitted the same way, and
-    judge the success criterion on them."""
+    judge the success criterion on them.
+
+    Library integration v1: ``predictor`` (``(loaded, parity)`` from
+    :func:`mlkit.contracts.capture.load_for_final`) is the reloaded capture of the chosen
+    configuration; it scores the final-test rows instead of a new fit, and the values name
+    its predictor id."""
     import numpy as np
     from . import policy, regression
     from .activities import guard_read_only, positive
@@ -853,14 +858,20 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
                         'features': list(model_inputs.get('features') or [])},
               'evaluation': 'final_test'}
     final_info: dict = {}
+
+    def chosen_output(binary_task: bool):
+        if predictor is not None:
+            loaded, _ = predictor
+            return loaded.predict(final[list(loaded.recipe.features)]).values
+        return _fit_predict(case, development, final, model_inputs, model_params, binary_task,
+                            info=final_info)[0]
     if (model_params or {}).get('family'):
         values['family'] = model_params['family']      # WP-F1 (additive)
     if binary:
         y_dev = positive(development, case).to_numpy()
         y = positive(final, case).to_numpy()
         base = np.full(n, float(y_dev.mean()))
-        score = base if chosen == 'fit.baseline' else _fit_predict(
-            case, development, final, model_inputs, model_params, True, info=final_info)[0]
+        score = base if chosen == 'fit.baseline' else chosen_output(True)
         from .records import capacity_of
         rule = params['rule']
         if capacity_of(rule) is not None and params.get('capacity_share') is not None:
@@ -937,8 +948,7 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
         y = _target(case, final, 'final test')
         baseline_value = float(np.median(y_dev)) if review else float(y_dev.mean())
         base = np.full(n, baseline_value)
-        pred = base if chosen == 'fit.baseline' else _fit_predict(
-            case, development, final, model_inputs, model_params, False, info=final_info)[0]
+        pred = base if chosen == 'fit.baseline' else chosen_output(False)
         predictions = {'fit.baseline': base}
         if chosen != 'fit.baseline':
             predictions[chosen] = pred
@@ -1030,5 +1040,12 @@ def final_evaluation(case: c.Case, development, final, inputs: Mapping,
     values['bootstrap'] = {'replicates': B, 'seed': seed, 'level': level,
                            'method': 'paired percentile bootstrap over the final-test rows'}
     values['note'] = FINAL_NOTE
+    if predictor is not None:
+        loaded, parity = predictor
+        values['predictor'] = {           # library integration v1 (additive)
+            'predictor_id': loaded.predictor_id, 'capture': inputs['predictor']['result_id'],
+            'evaluated': 'reloaded_capture', 'parity_before_opening': parity.status,
+            'note': 'The final-test rows were scored by the captured predictor, reloaded and '
+                    'checked on its parity rows before they were read; no model was refitted.'}
     return {'values': values, 'blobs': {'predictions': blob}, 'partition': 'final_test',
             'n_rows': n}

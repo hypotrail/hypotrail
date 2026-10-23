@@ -1,0 +1,364 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "FeatureType": {
+   "additionalProperties": false,
+   "properties": {
+    "physical": {
+     "enum": [
+      "float64",
+      "int64",
+      "bool",
+      "string"
+     ],
+     "title": "Physical",
+     "type": "string"
+    },
+    "semantic": {
+     "enum": [
+      "numeric",
+      "category",
+      "boolean"
+     ],
+     "title": "Semantic",
+     "type": "string"
+    }
+   },
+   "required": [
+    "semantic",
+    "physical"
+   ],
+   "title": "FeatureType",
+   "type": "object"
+  },
+  "JsonValue": {},
+  "OutputContract": {
+   "additionalProperties": false,
+   "properties": {
+    "columns": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "minItems": 1,
+     "title": "Columns",
+     "type": "array"
+    },
+    "kind": {
+     "enum": [
+      "regression_point",
+      "binary_score"
+     ],
+     "title": "Kind",
+     "type": "string"
+    },
+    "positive_label": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "integer"
+      },
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Positive Label"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "kind",
+    "columns",
+    "unit",
+    "positive_label"
+   ],
+   "title": "OutputContract",
+   "type": "object"
+  },
+  "PreprocessingStep": {
+   "additionalProperties": false,
+   "properties": {
+    "operation": {
+     "enum": [
+      "category_as_text",
+      "special_value_indicator",
+      "missing_indicator",
+      "rare_category",
+      "cap_quantiles",
+      "signed_log",
+      "numeric_median_impute_scale",
+      "categorical_mode_impute_onehot"
+     ],
+     "title": "Operation",
+     "type": "string"
+    },
+    "parameters": {
+     "additionalProperties": {
+      "$ref": "#/$defs/JsonValue"
+     },
+     "propertyNames": {
+      "maxLength": 512,
+      "minLength": 1
+     },
+     "title": "Parameters",
+     "type": "object"
+    },
+    "version": {
+     "minimum": 1,
+     "title": "Version",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "operation",
+    "version",
+    "parameters"
+   ],
+   "title": "PreprocessingStep",
+   "type": "object"
+  },
+  "SelectionReference": {
+   "additionalProperties": false,
+   "properties": {
+    "decision_id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Decision Id",
+     "type": "string"
+    },
+    "evidence_ids": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Evidence Ids",
+     "type": "array"
+    },
+    "revision": {
+     "minimum": 0,
+     "title": "Revision",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "decision_id",
+    "revision",
+    "evidence_ids"
+   ],
+   "title": "SelectionReference",
+   "type": "object"
+  },
+  "Target": {
+   "additionalProperties": false,
+   "properties": {
+    "name": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Name",
+     "type": "string"
+    },
+    "positive_label": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "integer"
+      },
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Positive Label"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "name",
+    "unit",
+    "positive_label"
+   ],
+   "title": "Target",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/model_recipe-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "family": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Family",
+   "type": "string"
+  },
+  "feature_types": {
+   "additionalProperties": {
+    "$ref": "#/$defs/FeatureType"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Feature Types",
+   "type": "object"
+  },
+  "features": {
+   "items": {
+    "maxLength": 512,
+    "minLength": 1,
+    "type": "string"
+   },
+   "minItems": 1,
+   "title": "Features",
+   "type": "array"
+  },
+  "method_contract_version": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Method Contract Version",
+   "type": "string"
+  },
+  "output_contract": {
+   "$ref": "#/$defs/OutputContract"
+  },
+  "parameters": {
+   "additionalProperties": {
+    "anyOf": [
+     {
+      "type": "boolean"
+     },
+     {
+      "type": "integer"
+     },
+     {
+      "type": "number"
+     },
+     {
+      "type": "string"
+     },
+     {
+      "type": "null"
+     }
+    ]
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Parameters",
+   "type": "object"
+  },
+  "preprocessing": {
+   "items": {
+    "$ref": "#/$defs/PreprocessingStep"
+   },
+   "title": "Preprocessing",
+   "type": "array"
+  },
+  "runtime_api_version": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Runtime Api Version",
+   "type": "string"
+  },
+  "schema_version": {
+   "const": "hypotrail.model_recipe/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "seeds": {
+   "additionalProperties": {
+    "type": "integer"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Seeds",
+   "type": "object"
+  },
+  "selection_reference": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/SelectionReference"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "target": {
+   "$ref": "#/$defs/Target"
+  },
+  "task": {
+   "enum": [
+    "regression",
+    "binary"
+   ],
+   "title": "Task",
+   "type": "string"
+  }
+ },
+ "required": [
+  "schema_version",
+  "task",
+  "family",
+  "parameters",
+  "features",
+  "feature_types",
+  "preprocessing",
+  "target",
+  "seeds",
+  "output_contract",
+  "selection_reference",
+  "method_contract_version",
+  "runtime_api_version"
+ ],
+ "title": "ModelRecipe",
+ "type": "object"
+}

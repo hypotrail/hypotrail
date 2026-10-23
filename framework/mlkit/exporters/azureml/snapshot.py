@@ -1,0 +1,381 @@
+"""The deployment snapshot ``hypotrail.deployment_snapshot/1`` (export spec §08, contract §6).
+
+The export never reads the study's internal tables. It calls chantier A's
+``read_export_source(study_path, expected_revision)``, which reads one consistent revision
+without fitting and without any new exposure, and builds the snapshot from the returned
+``ExportSource`` only. Until chantier A's function exists in this checkout, the export
+refuses with ``optional_dependency_missing`` (there is no fallback reader): tests pass a
+private test double through ``reader=``.
+
+``ExportSource`` fields read here (contract v1 §6; the exact structure belongs to A, the
+names below are the ones this consumer expects and are listed as an interface point to
+confirm at merge in ``docs/handoff/AZUREML-EXPORT-V1.md``): ``study_id``, ``revision``,
+``scientific_contracts.model_recipe``, ``scientific_contracts.data_contract``,
+``decisions`` (confirmed ones), ``results`` (references with ``current``), ``validity``,
+``development_plan``, ``predictor`` (``bundle_dir`` or null), ``limitations``, and the
+optional ``case``, ``metrics``, ``conclusion``, ``development_data``. A Pydantic object is
+read through ``model_dump(mode='json')``.
+"""
+from __future__ import annotations
+
+import importlib
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Mapping
+
+from . import canonical as cj
+from .errors import ExportError
+
+SCHEMA = 'hypotrail.deployment_snapshot/1'
+PLAN_SCHEMA = 'hypotrail.development_plan/1'
+SOURCE_MODULE = 'mlkit.contracts.export_source'
+SOURCE_FUNCTION = 'read_export_source'
+RUNTIME_MODULE = 'hypotrail_runtime'
+RECIPE_SCHEMA = 'hypotrail.model_recipe/1'
+DATA_CONTRACT_SCHEMA = 'hypotrail.data_contract/1'
+RECIPE_KEYS = ('schema_version', 'task', 'family', 'parameters', 'features', 'feature_types',
+               'preprocessing', 'target', 'seeds', 'output_contract', 'selection_reference',
+               'method_contract_version', 'runtime_api_version')
+DATA_CONTRACT_KEYS = ('schema_version', 'dataset_id', 'source_sha256', 'format', 'parser',
+                      'columns', 'row_identity', 'exclusions', 'inference_policy')
+DEVELOPMENT_ROLES = ('train', 'validation', 'development')
+FOLD_PREFIX = 'fold_'
+PREDICTOR_ROLES = ('development_fit', 'fold_fit', 'final_development_refit', 'rebuilt_candidate')
+
+
+def _plain(value: Any) -> Any:
+    if hasattr(value, 'model_dump'):
+        return value.model_dump(mode='json')
+    return value
+
+
+def field(obj: Any, name: str, default: Any = ...) -> Any:
+    """``obj[name]`` or ``obj.name``; ``contract_invalid`` when absent and no default."""
+    obj = _plain(obj)
+    if isinstance(obj, Mapping):
+        if name in obj:
+            return _plain(obj[name])
+    elif hasattr(obj, name):
+        return _plain(getattr(obj, name))
+    if default is ...:
+        raise ExportError('contract_invalid', f'The export source has no {name!r}.',
+                          path=f'export_source.{name}',
+                          remediation='Update the engine: read_export_source must return '
+                                      'this field (contract v1 §6).')
+    return default
+
+
+def read_source(study, expected_revision: int, reader: Callable | None = None):
+    """Chantier A's ``ExportSource`` of ``study`` at ``expected_revision``."""
+    if reader is None:
+        try:
+            module = importlib.import_module(SOURCE_MODULE)
+            reader = getattr(module, SOURCE_FUNCTION)
+        except (ImportError, AttributeError) as error:
+            raise ExportError('optional_dependency_missing',
+                              'This engine has no read_export_source yet (chantier A, '
+                              'contract v1 §6), so no study can be exported to Azure ML.',
+                              path=f'{SOURCE_MODULE}.{SOURCE_FUNCTION}',
+                              remediation='Use an engine version that ships '
+                                          'read_export_source; nothing was read or written.'
+                              ) from error
+    source = reader(Path(study), expected_revision)
+    revision = field(source, 'revision')
+    if type(revision) is not int:
+        raise ExportError('contract_invalid', 'The export source revision is not an integer.',
+                          path='export_source.revision', remediation='Fix the engine.')
+    if revision != expected_revision:
+        raise ExportError('stale_revision',
+                          f'The study is at revision {revision}, not {expected_revision}: read '
+                          'it again before exporting; nothing was written.',
+                          path='expected_revision', remediation='Pass the current revision.',
+                          details={'expected_revision': expected_revision,
+                                   'current_revision': revision})
+    return source
+
+
+def runtime(required_for: str):
+    try:
+        return importlib.import_module(RUNTIME_MODULE)
+    except ImportError as error:
+        raise ExportError('optional_dependency_missing',
+                          f'hypotrail_runtime is needed to {required_for}.',
+                          path=RUNTIME_MODULE,
+                          remediation='Install the runtime distribution of the engine '
+                                      '(chantier A) in this environment.') from error
+
+
+# --- validation of the scientific contracts (the fields the export uses) ---------------
+
+def _require(document: Any, keys: tuple, schema: str, where: str) -> dict:
+    if not isinstance(document, Mapping):
+        raise ExportError('contract_invalid', f'{where} is not a JSON object.', path=where,
+                          remediation='Fix the engine output.')
+    version = document.get('schema_version')
+    if not isinstance(version, str) or not version.startswith(schema.rsplit('/', 1)[0] + '/'):
+        raise ExportError('contract_invalid', f'{where} is not {schema}.',
+                          path=f'{where}.schema_version', remediation='Fix the engine output.')
+    if version != schema:
+        raise ExportError('schema_version_unsupported',
+                          f'{where} has version {version}; this exporter reads {schema}.',
+                          path=f'{where}.schema_version',
+                          remediation='Use an exporter that supports this version.')
+    missing = [k for k in keys if k not in document]
+    if missing:
+        raise ExportError('contract_invalid', f'{where} misses required fields.', path=where,
+                          remediation='Fix the engine output.', details={'missing': missing})
+    try:
+        return cj.normalise(document, where)
+    except cj.CanonicalError as error:
+        raise ExportError('contract_invalid', str(error), path=error.path,
+                          remediation='Contract documents hold strict JSON values.') from error
+
+
+def _check_recipe(recipe: dict, contract: dict) -> None:
+    columns = {c.get('name'): c for c in contract['columns'] if isinstance(c, Mapping)}
+    features = recipe['features']
+    if not isinstance(features, list) or not features or \
+            not all(isinstance(f, str) for f in features) or len(set(features)) != len(features):
+        raise ExportError('contract_invalid', 'The recipe features are not a list of distinct '
+                          'names.', path='model_recipe.features', remediation='Fix the recipe.')
+    for name in features:
+        column = columns.get(name)
+        if column is None or column.get('role') != 'feature':
+            raise ExportError('contract_invalid', f'Feature {name!r} is not a feature column '
+                              'of the data contract.', path='model_recipe.features',
+                              remediation='The recipe and data contract must agree.')
+        if name not in recipe['feature_types']:
+            raise ExportError('contract_invalid', f'Feature {name!r} has no type.',
+                              path='model_recipe.feature_types', remediation='Fix the recipe.')
+    target = recipe['target']
+    column = columns.get(target.get('name')) if isinstance(target, Mapping) else None
+    if column is None or column.get('role') != 'target':
+        raise ExportError('contract_invalid', 'The recipe target is not the target column of '
+                          'the data contract.', path='model_recipe.target.name',
+                          remediation='The recipe and data contract must agree.')
+    if recipe['task'] == 'binary' and target.get('positive_label') is None:
+        raise ExportError('contract_invalid', 'A binary recipe names its positive label.',
+                          path='model_recipe.target.positive_label', remediation='Fix the recipe.')
+
+
+@dataclass(frozen=True)
+class Snapshot:
+    """What the generator renders from: plain JSON documents, no live object."""
+
+    document: dict              # hypotrail.deployment_snapshot/1
+    snapshot_id: str
+    recipe: dict
+    data_contract: dict
+    plan: dict                  # hypotrail.development_plan/1 (development keys only)
+    recipe_sha256: str
+    data_contract_sha256: str
+    metrics: list
+    predictor: dict | None      # {bundle_dir, manifest, bundle, binding, packages, ...}
+    development_data: dict | None
+    checks: list
+    warnings: list
+
+
+def _plan(source_plan: Any, contract: dict) -> dict:
+    """The development plan with development row keys only; the final test is metadata
+    (status and row count), never keys or labels."""
+    plan = _plain(source_plan)
+    if not isinstance(plan, Mapping):
+        raise ExportError('contract_invalid', 'The development plan is not an object.',
+                          path='export_source.development_plan', remediation='Fix the engine.')
+    partitions = []
+    for i, part in enumerate(plan.get('partitions') or []):
+        role = part.get('role') if isinstance(part, Mapping) else None
+        where = f'development_plan.partitions[{i}]'
+        if role == 'final_test':
+            continue
+        if not isinstance(role, str) or not (role in DEVELOPMENT_ROLES or
+                                             (role.startswith(FOLD_PREFIX) and
+                                              role[len(FOLD_PREFIX):].isdigit())):
+            raise ExportError('capability_not_supported',
+                              f'Partition role {role!r} is not replayed by this template.',
+                              path=f'{where}.role',
+                              remediation='Export a study whose plan uses train/validation or '
+                                          'cross-validation folds.')
+        keys = part.get('row_keys')
+        if not isinstance(keys, list) or not all(isinstance(k, str) for k in keys) \
+                or len(set(keys)) != len(keys):
+            raise ExportError('contract_invalid', 'A partition lists distinct string row keys.',
+                              path=f'{where}.row_keys', remediation='Fix the engine.')
+        partitions.append({'id': str(part.get('id') or role), 'role': role,
+                           'row_keys': sorted(keys, key=_key_order),
+                           'keys_sha256': cj.canonical_sha256(sorted(keys, key=_key_order)),
+                           'membership_sha256': part.get('membership_sha256'),
+                           'exposure_status': part.get('exposure_status')})
+    if not partitions:
+        raise ExportError('contract_invalid', 'The development plan has no development '
+                          'partition.', path='development_plan.partitions',
+                          remediation='Export a study whose split is confirmed.')
+    partitions.sort(key=lambda p: (_role_order(p['role']), p['id']))
+    development = sorted({k for p in partitions for k in p['row_keys']}, key=_key_order)
+    final = next((p for p in plan.get('partitions') or []
+                  if isinstance(p, Mapping) and p.get('role') == 'final_test'), None)
+    final_keys = set(final.get('row_keys') or []) if final else set()
+    if final_keys & set(development):
+        raise ExportError('contract_invalid', 'A final-test row is listed as development.',
+                          path='development_plan.partitions',
+                          remediation='Fix the engine: the final test is disjoint.')
+    final_meta = plan.get('final_test') if isinstance(plan.get('final_test'), Mapping) else {}
+    protocol = plan.get('protocol_id')
+    if not isinstance(protocol, str) or not protocol:
+        raise ExportError('contract_invalid', 'The development plan names no protocol.',
+                          path='development_plan.protocol_id', remediation='Fix the engine.')
+    out = {
+        'schema_version': PLAN_SCHEMA,
+        'protocol_id': protocol,
+        'dataset_id': contract['dataset_id'],
+        'source_sha256': contract['source_sha256'],
+        'row_identity': contract['row_identity'],
+        'partitions': partitions,
+        'development_keys_sha256': cj.canonical_sha256(development),
+        'n_development_rows': len(development),
+        'final_test': {'status': final_meta.get('status', 'unknown'),
+                       'n_rows': final_meta.get('n_rows', len(final_keys) if final else None),
+                       'labels_included': False, 'row_keys_included': False},
+        'keys_sha256_rule': 'sha256 of the canonical JSON of the sorted row keys',
+    }
+    out['keys_sha256'] = cj.canonical_sha256({p['id']: p['row_keys'] for p in partitions})
+    return out
+
+
+def _key_order(key: str):
+    digits = key[1:] if key[:1].isalpha() else key
+    return (0, int(digits), key) if digits.isdigit() else (1, 0, key)
+
+
+def _role_order(role: str) -> int:
+    return {'development': 0, 'train': 1, 'validation': 2}.get(role, 3)
+
+
+def build(source, *, template_capabilities: list, verify_predictor: Callable | None = None
+          ) -> Snapshot:
+    """The snapshot of an ``ExportSource``; refuses an export that would not be faithful.
+
+    ``verify_predictor(bundle_dir, recipe, data_contract)`` returns the predictor record
+    (see :mod:`mlkit.exporters.azureml.artifact`); it is called only when the source
+    names a captured predictor."""
+    contracts = field(source, 'scientific_contracts')
+    recipe = _require(field(contracts, 'model_recipe'), RECIPE_KEYS, RECIPE_SCHEMA,
+                      'model_recipe')
+    contract = _require(field(contracts, 'data_contract'), DATA_CONTRACT_KEYS,
+                        DATA_CONTRACT_SCHEMA, 'data_contract')
+    _check_recipe(recipe, contract)
+    checks, warnings = [], []
+    capability = next((c for c in template_capabilities
+                       if c['task'] == recipe['task'] and c['family'] == recipe['family']
+                       and c['output_kind'] == recipe['output_contract'].get('kind')), None)
+    if capability is None:
+        raise ExportError('capability_not_supported',
+                          f'This template does not qualify the {recipe["task"]} family '
+                          f'{recipe["family"]!r} with output '
+                          f'{recipe["output_contract"].get("kind")!r}; the selected model is '
+                          'kept and not replaced.', path='model_recipe.family',
+                          remediation='Export a study whose selected model is in the '
+                                      'template support matrix, or qualify this family first.',
+                          details={'supported': template_capabilities})
+    for name in ('calibration', 'intervals', 'threshold_policy'):
+        if (recipe.get('extensions') or {}).get(f'hypotrail.{name}') is not None or \
+                recipe.get(name) is not None:
+            raise ExportError('capability_not_supported',
+                              f'The recipe carries a {name} capability, which this template '
+                              'does not qualify for Azure ML; it is not removed to export.',
+                              path=f'model_recipe.{name}',
+                              remediation='Export without requesting this capability only if '
+                                          'the study selected a model without it.')
+    checks.append({'id': 'family_supported', 'status': 'passed'})
+    decisions = [_plain(d) for d in field(source, 'decisions')]
+    confirmed = {d.get('decision_id'): d for d in decisions
+                 if isinstance(d, Mapping) and d.get('status') == 'confirmed'}
+    selection = recipe['selection_reference']
+    if selection.get('decision_id') not in confirmed:
+        raise ExportError('contract_invalid', 'The selected model rests on a decision that is '
+                          'not confirmed; a proposal is not a decision.',
+                          path='model_recipe.selection_reference.decision_id',
+                          remediation='Confirm the model choice in the chat, then export.',
+                          details={'reason': 'selection_not_confirmed'})
+    checks.append({'id': 'selection_confirmed', 'status': 'passed'})
+    results = [_plain(r) for r in field(source, 'results')]
+    by_id = {r.get('result_id'): r for r in results if isinstance(r, Mapping)}
+    for rid in selection.get('evidence_ids') or []:
+        item = by_id.get(rid)
+        if item is None or item.get('current') is not True:
+            raise ExportError('contract_invalid', 'A result the selection rests on is not '
+                              'current.', path='model_recipe.selection_reference.evidence_ids',
+                              remediation='Run the stale activity again and confirm, then '
+                                          'export.',
+                              details={'reason': 'selected_result_not_current', 'result_id': rid})
+    checks.append({'id': 'selected_results_current', 'status': 'passed'})
+    plan = _plan(field(source, 'development_plan'), contract)
+    metrics = field(source, 'metrics', None) or []
+    if not isinstance(metrics, list) or not all(isinstance(m, str) for m in metrics):
+        raise ExportError('contract_invalid', 'The metrics are not a list of names.',
+                          path='export_source.metrics', remediation='Fix the engine.')
+    recipe_sha = cj.canonical_sha256(recipe)
+    contract_sha = cj.canonical_sha256(contract)
+    predictor = None
+    descriptor = field(source, 'predictor', None)
+    # A's ExportSource always describes the predictor; only a bundle makes it captured
+    # (a stale capture no longer describes the chosen configuration: it is not exported).
+    if descriptor and field(descriptor, 'bundle_dir', None) and \
+            field(descriptor, 'status', 'captured') == 'captured':
+        bundle_dir = field(descriptor, 'bundle_dir')
+        if verify_predictor is None:
+            raise ExportError('optional_dependency_missing', 'No predictor verifier.',
+                              path='predictor', remediation='Internal: pass verify_predictor.')
+        predictor = verify_predictor(Path(bundle_dir), recipe, contract)
+        checks += predictor['checks']
+        warnings += predictor['warnings']
+    else:
+        checks.append({'id': 'predictor_captured', 'status': 'missing',
+                       'detail': 'No captured predictor: the recipe is exported, the evaluated '
+                                 'model is not (artifact_status missing).'})
+        warnings.append('artifact_missing')
+    case = field(source, 'case', None) or {}
+    conclusion = field(source, 'conclusion', None)
+    limitations = [str(x) for x in (field(source, 'limitations', None) or [])]
+    validity = field(source, 'validity', None) or {}
+    development_data = field(source, 'development_data', None)
+    document = {
+        'schema_version': SCHEMA,
+        'study_id': str(field(source, 'study_id')),
+        'study_revision': field(source, 'revision'),
+        'case': {k: case.get(k) for k in ('id', 'title') if isinstance(case, Mapping)},
+        'task': recipe['task'],
+        'selected': {'decision_id': selection.get('decision_id'),
+                     'revision': selection.get('revision'),
+                     'evidence_ids': list(selection.get('evidence_ids') or []),
+                     'family': recipe['family'], 'parameters': recipe['parameters']},
+        'decisions': sorted(({'decision_id': d, 'value': confirmed[d].get('value')}
+                             for d in confirmed), key=lambda d: d['decision_id']),
+        'results': sorted(({'result_id': r.get('result_id'), 'activity': r.get('activity'),
+                            'current': r.get('current')} for r in results),
+                          key=lambda r: str(r['result_id'])),
+        'evaluation_plan': {'protocol_id': plan['protocol_id'],
+                            'keys_sha256': plan['keys_sha256'],
+                            'roles': [p['role'] for p in plan['partitions']],
+                            'n_development_rows': plan['n_development_rows'],
+                            'final_test': plan['final_test']},
+        'evidence_state': validity,
+        'conclusion': conclusion,
+        'limitations': limitations,
+        'metrics': metrics,
+        'recipe_sha256': recipe_sha,
+        'data_contract_sha256': contract_sha,
+        'predictor': None if predictor is None else {
+            'predictor_id': predictor['predictor_id'], 'role': predictor['role'],
+            'evidence_status': predictor['evidence_status'],
+            'artifact_status': predictor['artifact_status']},
+    }
+    try:
+        document = cj.normalise(document, 'snapshot')
+    except cj.CanonicalError as error:
+        raise ExportError('contract_invalid', str(error), path=error.path,
+                          remediation='The engine returned a non-JSON value.') from error
+    return Snapshot(document, cj.canonical_sha256(document), recipe, contract, plan,
+                    recipe_sha, contract_sha, metrics, predictor,
+                    _plain(development_data) if development_data else None, checks, warnings)

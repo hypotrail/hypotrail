@@ -1,0 +1,43 @@
+# Quality CI (Hypotrail export): local checks only, no Azure credential, no cloud call.
+trigger:
+  branches:
+    include:
+      - "develop"
+      - "release"
+      - "main"
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+
+  - script: conda env create --quiet --name conda_env_ci --file environment.yml
+    displayName: Create Anaconda environment
+
+  - bash: |
+      source activate conda_env_ci
+      pip install aml/pipelines/training/runtime/*.whl || echo "No runtime wheel in this export"
+    displayName: "Install the Hypotrail runtime shipped with the model"
+
+  - bash: |
+      source activate conda_env_ci
+      ruff check src
+    displayName: "Run lint tests"
+
+  - bash: |
+      source activate conda_env_ci
+      python -m src.pipeline.utils.project validate --offline
+    displayName: "Validate the export offline"
+
+  - bash: |
+      source activate conda_env_ci
+      coverage run -m pytest
+      coverage xml -o coverage.xml
+    displayName: "Run unit tests and coverage"
+
+  - task: PublishCodeCoverageResults@2
+    inputs:
+      summaryFileLocation: '**/coverage.xml'

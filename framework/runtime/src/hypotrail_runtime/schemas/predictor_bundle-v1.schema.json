@@ -1,0 +1,250 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "JsonValue": {},
+  "OptionalPackage": {
+   "additionalProperties": false,
+   "properties": {
+    "artifact_id": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Artifact Id",
+     "type": "string"
+    },
+    "format": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Format",
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Manifest Sha256",
+     "type": "string"
+    },
+    "relative_path": {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "title": "Relative Path",
+     "type": "string"
+    }
+   },
+   "required": [
+    "format",
+    "artifact_id",
+    "relative_path",
+    "manifest_sha256"
+   ],
+   "title": "OptionalPackage",
+   "type": "object"
+  },
+  "ParitySpec": {
+   "additionalProperties": false,
+   "properties": {
+    "expected_outputs_path": {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "title": "Expected Outputs Path",
+     "type": "string"
+    },
+    "features_path": {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "title": "Features Path",
+     "type": "string"
+    },
+    "n_rows": {
+     "minimum": 1,
+     "title": "N Rows",
+     "type": "integer"
+    },
+    "origin": {
+     "enum": [
+      "synthetic",
+      "authorized_development"
+     ],
+     "title": "Origin",
+     "type": "string"
+    },
+    "sha256s": {
+     "patternProperties": {
+      "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$": {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      }
+     },
+     "propertyNames": {
+      "maxLength": 512,
+      "minLength": 1
+     },
+     "title": "Sha256S",
+     "type": "object"
+    },
+    "tolerance": {
+     "$ref": "#/$defs/Tolerance"
+    }
+   },
+   "required": [
+    "features_path",
+    "expected_outputs_path",
+    "sha256s",
+    "origin",
+    "tolerance",
+    "n_rows"
+   ],
+   "title": "ParitySpec",
+   "type": "object"
+  },
+  "PayloadFile": {
+   "additionalProperties": false,
+   "properties": {
+    "relative_path": {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "title": "Relative Path",
+     "type": "string"
+    },
+    "sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Sha256",
+     "type": "string"
+    },
+    "size_bytes": {
+     "minimum": 0,
+     "title": "Size Bytes",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "relative_path",
+    "size_bytes",
+    "sha256"
+   ],
+   "title": "PayloadFile",
+   "type": "object"
+  },
+  "Tolerance": {
+   "additionalProperties": false,
+   "properties": {
+    "atol": {
+     "minimum": 0,
+     "title": "Atol",
+     "type": "number"
+    },
+    "exact": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Exact",
+     "type": "array"
+    },
+    "rtol": {
+     "minimum": 0,
+     "title": "Rtol",
+     "type": "number"
+    }
+   },
+   "required": [
+    "rtol",
+    "atol",
+    "exact"
+   ],
+   "title": "Tolerance",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/predictor_bundle-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "data_contract_path": {
+   "maxLength": 512,
+   "minLength": 1,
+   "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+   "title": "Data Contract Path",
+   "type": "string"
+  },
+  "evidence_binding_path": {
+   "anyOf": [
+    {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Evidence Binding Path"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "files": {
+   "items": {
+    "$ref": "#/$defs/PayloadFile"
+   },
+   "minItems": 1,
+   "title": "Files",
+   "type": "array"
+  },
+  "optional_packages": {
+   "items": {
+    "$ref": "#/$defs/OptionalPackage"
+   },
+   "title": "Optional Packages",
+   "type": "array"
+  },
+  "parity": {
+   "$ref": "#/$defs/ParitySpec"
+  },
+  "predictor_id": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Predictor Id",
+   "type": "string"
+  },
+  "predictor_manifest_path": {
+   "maxLength": 512,
+   "minLength": 1,
+   "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+   "title": "Predictor Manifest Path",
+   "type": "string"
+  },
+  "recipe_path": {
+   "maxLength": 512,
+   "minLength": 1,
+   "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+   "title": "Recipe Path",
+   "type": "string"
+  },
+  "schema_version": {
+   "const": "hypotrail.predictor_bundle/1",
+   "title": "Schema Version",
+   "type": "string"
+  }
+ },
+ "required": [
+  "schema_version",
+  "predictor_id",
+  "recipe_path",
+  "data_contract_path",
+  "predictor_manifest_path",
+  "parity",
+  "optional_packages",
+  "evidence_binding_path",
+  "files"
+ ],
+ "title": "PredictorBundle",
+ "type": "object"
+}

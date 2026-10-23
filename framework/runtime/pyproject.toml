@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hypotrail-runtime"
+version = "1.0.0"
+description = "Hypotrail predictor runtime: shared v1 contracts, complete predictor, bundle loading (no study engine)."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+# The runtime installs alone from its wheel: no engine CLI, Marimo, study, Azure or MLflow.
+# scikit-learn carries the qualified families (linear, ridge, logistic) and their pipeline.
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scikit-learn>=1.5",
+    "pydantic>=2.7,<3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hypotrail_runtime"]

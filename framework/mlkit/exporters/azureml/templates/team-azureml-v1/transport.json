@@ -1,0 +1,401 @@
+{
+  "original_name": "ml_project_template(1).zip",
+  "original_sha256": "b2c3e9435ede819a0e81404fd117448a0bf68aec3b9602432ebdfdc1fd88cd7e",
+  "delivered_name": "ml_project_template-sans-historique.zip",
+  "delivered_sha256": "b4bbe14ef751e8ac5ec8a4e587f9f74dc70f96a39f8bc1ccc229753f49e11a62",
+  "unchanged_files": [
+    {
+      "path": "ml_project_template/environment.yml",
+      "sha256": "f65892c80e6debe6d6677162d689c0956c6088583b4294f20005d485ef29c553"
+    },
+    {
+      "path": "ml_project_template/.pre-commit-config.yaml",
+      "sha256": "a8d05c3132ac3ab98c2f46b872c01d40fa3d971fe1829e6be3e04f113c0e0252"
+    },
+    {
+      "path": "ml_project_template/Makefile",
+      "sha256": "fbb889cf47937f68708e90f9a8ae4a5d846275d67c763ddb6d271f6853fcc40e"
+    },
+    {
+      "path": "ml_project_template/pyproject.toml",
+      "sha256": "49a1ddafd2c6435466128646264ab530281070e329d5690dbeaa425cd191f90b"
+    },
+    {
+      "path": "ml_project_template/README.md",
+      "sha256": "306253c0ac1a1282c19c61cbec13cfcf5900504cd48e46880539a4aebd43d47b"
+    },
+    {
+      "path": "ml_project_template/cli-aliases.sh",
+      "sha256": "5207ae4b2cf08cad1437dc49d70c7d6cb49ffe07daa04e1b41b6d88b61e784ae"
+    },
+    {
+      "path": "ml_project_template/.gitignore",
+      "sha256": "ba474496a360b1d83d4f7a704ebc8bbadb63a3dfe7c0578213f7ea0b6ee4c7f0"
+    },
+    {
+      "path": "ml_project_template/.ci/pipeline.yml",
+      "sha256": "c22ee0317ce36bc808ac2b63afb69813b44eb8f7f0573f1d876d42b846c59d29"
+    },
+    {
+      "path": "ml_project_template/.ci/deploy-pipeline.yml",
+      "sha256": "48b57fa122bba3bffc97b1d739fdd2ba230129c070d948819e7b3e80c7981664"
+    },
+    {
+      "path": "ml_project_template/tests/conftest.py",
+      "sha256": "7fd0e7d0d1685d1e9763f5dc52ed7eec6b7425d222fd2fa24221a036913f6cd4"
+    },
+    {
+      "path": "ml_project_template/.vscode/settings.json",
+      "sha256": "040b5667d12d47f7fdd1ff7fadaed1ef6e57107759c739ca532cdfef0c61d35c"
+    },
+    {
+      "path": "ml_project_template/.vscode/extensions.json",
+      "sha256": "839c8115daf3284f93fa962f0eca76562fb50b0b7b566717a42c13a9f8519672"
+    },
+    {
+      "path": "ml_project_template/.vscode/launch.json",
+      "sha256": "31e5a9f36eb234a3c609f7f2abaebb928c10a9f691484e13c1a9ae83c53b0419"
+    },
+    {
+      "path": "ml_project_template/.vscode/tasks.json",
+      "sha256": "be1f6d466586e0e8483163401cdb97341b77ca91e82fcced76ad025c6553dff1"
+    },
+    {
+      "path": "ml_project_template/data/.gitignore",
+      "sha256": "bee61d1d6d047baa1f2ff1d3402747d2af1257b3e3e7bd7c61ece650a7836130"
+    },
+    {
+      "path": "ml_project_template/notebooks/01_first_draft.ipynb",
+      "sha256": "a487b601491da020d50ad63c1421271902c397894de7ed270ebab3e963c40d1b"
+    },
+    {
+      "path": "ml_project_template/tests/pipeline/__init__.py",
+      "sha256": "6048b487bed1619bcaee6aa462c89b942489e4feb57dae6fcf48415c066dd024"
+    },
+    {
+      "path": "ml_project_template/docs/pages/architecture.md",
+      "sha256": "f9b3bd9e32fbbca27dfbcd79eca09998e4cfe98a5d8915f6720771204e284471"
+    },
+    {
+      "path": "ml_project_template/docs/pages/data.md",
+      "sha256": "4b2162ef21d6d90017bbe066704c3d9d76e7e1cdb210938af9894215e6f04874"
+    },
+    {
+      "path": "ml_project_template/docs/pages/references.md",
+      "sha256": "0bb69b5d4ed78046494a4f4620c2e9e53fed15414c4eaff3ca75b09fdfe38a35"
+    },
+    {
+      "path": "ml_project_template/docs/pages/.order",
+      "sha256": "98cdcda1934a7c82195f826352eb8dd8293929d64ce605abe9a8f877ac5b6121"
+    },
+    {
+      "path": "ml_project_template/docs/pages/code.md",
+      "sha256": "acd6c7c6e78f72967359e3d61e72712d174ad05d7e59a0ebcfb94d20b8c7a9d3"
+    },
+    {
+      "path": "ml_project_template/docs/media/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "ml_project_template/aml/components/training.yml",
+      "sha256": "b40755920fdb83cc3914b1bd13e55959e89605e653e9aa77316c649346bc58f1"
+    },
+    {
+      "path": "ml_project_template/aml/components/data_preparation.yml",
+      "sha256": "8acc3cc9bec3b016f1d65f3123f061a17f8af7528dfed7742ce5534e28150f0d"
+    },
+    {
+      "path": "ml_project_template/aml/components/data_splitting.yml",
+      "sha256": "f225bb50aab07b36fb34e420b00d3268c83388b6eee956ea392fae8be35ab8c7"
+    },
+    {
+      "path": "ml_project_template/aml/components/evaluation.yml",
+      "sha256": "a998437b65b397a6ffc34b6bc097fa45db5c743edf0b94652b2f6ff8f7f84cfe"
+    },
+    {
+      "path": "ml_project_template/data/01_raw/reviews.csv",
+      "sha256": "cba99d4ab0d67aa7e10d80cdf89fbcd0741f54496d1431cd62fe2bcf2a09f18b"
+    },
+    {
+      "path": "ml_project_template/data/01_raw/companies.csv",
+      "sha256": "0b55aafa0d4da157092634c604a974502b3cb483edda81803db28f3887699099"
+    },
+    {
+      "path": "ml_project_template/data/01_raw/shuttles.xlsx",
+      "sha256": "a70ef84305695b637a397b98598f8aacd726b23c20e3250a98c09f024f1ab9a3"
+    },
+    {
+      "path": "ml_project_template/src/conf/logging_config.yaml",
+      "sha256": "2512617b44fc7d0f7cae77fde7df449f2c7bb7c2b08c452e981f1683755f0c79"
+    },
+    {
+      "path": "ml_project_template/src/conf/base_config.yaml",
+      "sha256": "a6b1a61d767d9ed88b072e5a03da210850b3dcfe7f7b2d7eda7f4540ee0dc6f2"
+    },
+    {
+      "path": "ml_project_template/src/conf/config.yaml",
+      "sha256": "b60d1cd8e443fdd514cb6b0ebd8c1460a2e7d6cea6e77317d217ac4e671315ec"
+    },
+    {
+      "path": "ml_project_template/tests/pipeline/data_preparation/__init__.py",
+      "sha256": "a0d9dca678f2998f0acb5babd7bc407630221675ff33f44e8eb4fa14e8b11fb2"
+    },
+    {
+      "path": "ml_project_template/tests/pipeline/data_preparation/test_main.py",
+      "sha256": "92a523ff578c4cf8ead52133211d279c901451f53b9dd18731f617e0adc44a33"
+    },
+    {
+      "path": "ml_project_template/aml/pipelines/training/pipeline-job.yml",
+      "sha256": "cd9de0729ce9dc2973ef3f8f5b83eed871d62c7f0098278219c9838fd29b5278"
+    },
+    {
+      "path": "ml_project_template/aml/pipelines/training/data.yml",
+      "sha256": "6eb5e2b7696ff9e759f2999b2f1234c2a3fede3ee8817e71af87e7deb9d49e28"
+    },
+    {
+      "path": "ml_project_template/aml/pipelines/training/aml-environment.yml",
+      "sha256": "bae3a04579c1f7887a17596c7d2f8fccf3d3e229050cf9a219e850907ac0e088"
+    },
+    {
+      "path": "ml_project_template/aml/pipelines/training/pipeline.yml",
+      "sha256": "aa5521899903908bea96378b6724a8e35e2b8820686fed85af317234a75f90b1"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/data_splitting/main.py",
+      "sha256": "348ffdc35ee0a399976db94829207538832ba0ca562c9d5ab44087074cc8bc51"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/training/main.py",
+      "sha256": "0ef617ec965939bbd7a1b75ddd882eb15ba6772c98f089f5ccaaa158f30e0bdf"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/data_preparation/main.py",
+      "sha256": "f293ab6f221e2d97f6ebaa29a9a7aa2c7729e685fea3c812c805e94ad632899c"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/utils/enums.py",
+      "sha256": "54d940775ef19f65f7f9fa94c3426b58d03164821ac3e57d413b2f2fcf655f34"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/utils/schemas.py",
+      "sha256": "78c4fdba2f5a6a6b734fd9ba241cbeba43b71f4a2bd0e7b9d2869ceb66d7139e"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/utils/data_management.py",
+      "sha256": "a371e6cee9c4bee8fc86b8b61583a8f99524aa34422fd1e20a7ef8bd0f349340"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/utils/tracking.py",
+      "sha256": "2f6e83c16489707cbe03a9dd6a646953d10db148f53d2a9a547aada4021b1166"
+    },
+    {
+      "path": "ml_project_template/src/pipeline/evaluation/main.py",
+      "sha256": "5d4275b96fb6b329312dac78f8458009a5d70a288242186e50768054b8a5f99d"
+    },
+    {
+      "path": "ml_project_template/src/conf/components/data_splitting/default.yaml",
+      "sha256": "c031b6633bdbd5d61e31f03a2562c8e4695a99036ea8396dc7f866072599eba7"
+    },
+    {
+      "path": "ml_project_template/src/conf/components/training/random_forest.yaml",
+      "sha256": "1bf17bf3a3a084311f84aae02a5b6347bd2b8e67481d3da2e2c74c8c6f1ddfd6"
+    },
+    {
+      "path": "ml_project_template/src/conf/components/training/default.yaml",
+      "sha256": "37a26e463a3d53ac9e7530b60e1d86f9ed42ccb886d769e84b051ab706d4b616"
+    },
+    {
+      "path": "ml_project_template/src/conf/components/data_preparation/default.yaml",
+      "sha256": "7daa33d1dcfb71ffcf72e9e9c621f312f5328010ed7ba9ad9110438cbf626412"
+    },
+    {
+      "path": "ml_project_template/src/conf/components/evaluation/default.yaml",
+      "sha256": "3066c04991b4f1cebc3c2314db0ff16a0312594b20396411c8cdb6f56294d021"
+    },
+    {
+      "path": "ml_project_template/src/conf/hydra/job_logging/custom.yaml",
+      "sha256": "202f6131117427c9565bf3edc5c7fff59d483c78483ca9b0dc7055b9c532a994"
+    }
+  ],
+  "removed_metadata_paths": [
+    "ml_project_template/.DS_Store",
+    "__MACOSX/ml_project_template/._.DS_Store",
+    "ml_project_template/.git/",
+    "ml_project_template/docs/.DS_Store",
+    "__MACOSX/ml_project_template/docs/._.DS_Store",
+    "ml_project_template/aml/.DS_Store",
+    "__MACOSX/ml_project_template/aml/._.DS_Store",
+    "ml_project_template/.git/ORIG_HEAD",
+    "ml_project_template/.git/config",
+    "ml_project_template/.git/objects/",
+    "ml_project_template/.git/HEAD",
+    "ml_project_template/.git/info/",
+    "ml_project_template/.git/logs/",
+    "ml_project_template/.git/description",
+    "ml_project_template/.git/hooks/",
+    "ml_project_template/.git/refs/",
+    "ml_project_template/.git/gk/",
+    "ml_project_template/.git/index",
+    "ml_project_template/.git/packed-refs",
+    "ml_project_template/.git/FETCH_HEAD",
+    "__MACOSX/ml_project_template/.git/._FETCH_HEAD",
+    "ml_project_template/src/.DS_Store",
+    "__MACOSX/ml_project_template/src/._.DS_Store",
+    "ml_project_template/.git/objects/0c/",
+    "ml_project_template/.git/objects/03/",
+    "ml_project_template/.git/objects/32/",
+    "ml_project_template/.git/objects/51/",
+    "ml_project_template/.git/objects/0b/",
+    "ml_project_template/.git/objects/0e/",
+    "ml_project_template/.git/objects/d7/",
+    "ml_project_template/.git/objects/b3/",
+    "ml_project_template/.git/objects/a2/",
+    "ml_project_template/.git/objects/e2/",
+    "ml_project_template/.git/objects/f3/",
+    "ml_project_template/.git/objects/fc/",
+    "ml_project_template/.git/objects/e3/",
+    "ml_project_template/.git/objects/cf/",
+    "ml_project_template/.git/objects/pack/",
+    "ml_project_template/.git/objects/11/",
+    "ml_project_template/.git/objects/8a/",
+    "ml_project_template/.git/objects/38/",
+    "ml_project_template/.git/objects/info/",
+    "ml_project_template/.git/objects/62/",
+    "ml_project_template/.git/objects/3a/",
+    "ml_project_template/.git/objects/98/",
+    "ml_project_template/.git/objects/5e/",
+    "ml_project_template/.git/objects/6c/",
+    "ml_project_template/.git/objects/39/",
+    "ml_project_template/.git/objects/0f/",
+    "ml_project_template/.git/objects/bf/",
+    "ml_project_template/.git/objects/d4/",
+    "ml_project_template/.git/objects/ba/",
+    "ml_project_template/.git/objects/a7/",
+    "ml_project_template/.git/objects/d2/",
+    "ml_project_template/.git/objects/c4/",
+    "ml_project_template/.git/objects/e9/",
+    "ml_project_template/.git/objects/f8/",
+    "ml_project_template/.git/objects/1b/",
+    "ml_project_template/.git/objects/15/",
+    "ml_project_template/.git/objects/47/",
+    "ml_project_template/.git/objects/78/",
+    "ml_project_template/.git/info/exclude",
+    "ml_project_template/.git/logs/HEAD",
+    "ml_project_template/.git/logs/refs/",
+    "ml_project_template/.git/hooks/commit-msg.sample",
+    "ml_project_template/.git/hooks/pre-rebase.sample",
+    "ml_project_template/.git/hooks/pre-commit.sample",
+    "ml_project_template/.git/hooks/applypatch-msg.sample",
+    "ml_project_template/.git/hooks/fsmonitor-watchman.sample",
+    "ml_project_template/.git/hooks/pre-receive.sample",
+    "ml_project_template/.git/hooks/prepare-commit-msg.sample",
+    "ml_project_template/.git/hooks/post-update.sample",
+    "ml_project_template/.git/hooks/pre-merge-commit.sample",
+    "ml_project_template/.git/hooks/pre-applypatch.sample",
+    "ml_project_template/.git/hooks/pre-push.sample",
+    "ml_project_template/.git/hooks/update.sample",
+    "ml_project_template/.git/hooks/push-to-checkout.sample",
+    "ml_project_template/.git/refs/heads/",
+    "ml_project_template/.git/refs/tags/",
+    "ml_project_template/.git/refs/remotes/",
+    "ml_project_template/.git/gk/config",
+    "ml_project_template/.git/objects/0c/701db2676fb62183ba847756c995174487560c",
+    "ml_project_template/.git/objects/03/e7bd3e62fa4b424e6bf455fd961a3dbcd25ccd",
+    "ml_project_template/.git/objects/32/a61c05af7d0e2d20f03055db0e341ef4d482f5",
+    "ml_project_template/.git/objects/51/6e412b0488560d2fd4467dbe83163a31bc260b",
+    "ml_project_template/.git/objects/0b/8a69ac2fa458540cdd0624004464df518e6e1b",
+    "ml_project_template/.git/objects/0b/e950789a3b4570041ea5f392f3183636c0666f",
+    "ml_project_template/.git/objects/0e/877c4d4ea6aa88860d81beae5ebae8073c52a3",
+    "ml_project_template/.git/objects/d7/14edd3adfe6e062cb37f3bf53adb069526338c",
+    "ml_project_template/.git/objects/b3/f99151e0d7255fc56ba4535b9bdd41a045592c",
+    "ml_project_template/.git/objects/a2/29e87b00a4c3d7082c4ed0ba83f5e5bdcc2040",
+    "ml_project_template/.git/objects/e2/ec96f46f3522af065eb053a2e3dc16806e40ff",
+    "ml_project_template/.git/objects/f3/73a3ba8add44f310eb5bc0c5db035067490cbd",
+    "ml_project_template/.git/objects/fc/f54c24e64419af18b3a44f91ab80b130ef01b8",
+    "ml_project_template/.git/objects/e3/995e3bd8154085b23f76550c1a7123fbc7bb6c",
+    "ml_project_template/.git/objects/cf/1a520b4ff3a17572713133f503f5e5d986e3c7",
+    "ml_project_template/.git/objects/pack/pack-3c092e6f9a1e72ee868939704975d4dedb8e9447.idx",
+    "__MACOSX/ml_project_template/.git/objects/pack/._pack-3c092e6f9a1e72ee868939704975d4dedb8e9447.idx",
+    "ml_project_template/.git/objects/pack/pack-3c092e6f9a1e72ee868939704975d4dedb8e9447.pack",
+    "__MACOSX/ml_project_template/.git/objects/pack/._pack-3c092e6f9a1e72ee868939704975d4dedb8e9447.pack",
+    "ml_project_template/.git/objects/pack/pack-8fded6a8cf7f59833ad984edfc75e8673bfa7922.pack",
+    "ml_project_template/.git/objects/pack/pack-9b4534ada337f3256b62d2e6e0e638b7548535a0.idx",
+    "ml_project_template/.git/objects/pack/pack-9b4534ada337f3256b62d2e6e0e638b7548535a0.pack",
+    "ml_project_template/.git/objects/pack/pack-9f0f1f86598870f79992f3ec79f855063a6544fe.pack",
+    "ml_project_template/.git/objects/pack/pack-9f0f1f86598870f79992f3ec79f855063a6544fe.idx",
+    "ml_project_template/.git/objects/pack/pack-16834eb42eda1531fe0163e4cbaa09ad2d358148.pack",
+    "ml_project_template/.git/objects/pack/pack-16834eb42eda1531fe0163e4cbaa09ad2d358148.idx",
+    "ml_project_template/.git/objects/pack/pack-8fded6a8cf7f59833ad984edfc75e8673bfa7922.idx",
+    "ml_project_template/.git/objects/11/7e842b4eb4c5a2f89378e68d2b5f14ab11687f",
+    "ml_project_template/.git/objects/8a/2a0b39f78dc37dec143e27df193ac3c1a825b4",
+    "ml_project_template/.git/objects/8a/882a7387192605e298b35c770fa7403473307b",
+    "ml_project_template/.git/objects/38/4622c078b93dc333fc4ade919945f89ad11045",
+    "ml_project_template/.git/objects/info/commit-graphs/",
+    "ml_project_template/.git/objects/62/956faf4fd5202c1e465fd8e0bb17e0b7694bbc",
+    "ml_project_template/.git/objects/3a/72b9f8f55345dfb63d4936be87a59341a5d716",
+    "ml_project_template/.git/objects/98/22d220bdecba64acff9a40d6b420884de3a3c4",
+    "ml_project_template/.git/objects/5e/337f92dd76d58d494b61854d58587e9c8ca74c",
+    "ml_project_template/.git/objects/6c/2614e2f21a126e925dd3062dbc611b9214fe78",
+    "ml_project_template/.git/objects/39/919f32ba574251df90a748ff3f334d3d1dfed3",
+    "ml_project_template/.git/objects/0f/e9219e26bb318ba9313b5eb564f5b5f685831f",
+    "ml_project_template/.git/objects/bf/5b84fc42811de2c0e67d52332680db70be2ce9",
+    "ml_project_template/.git/objects/d4/ba6ab3bc62c87a5358473da6be1fa96399f37a",
+    "ml_project_template/.git/objects/ba/4fcaae88767acf531b6df2d82be6210cc1b4c8",
+    "ml_project_template/.git/objects/a7/7265f2953e2809ecae0b25b0c88fd80d661253",
+    "ml_project_template/.git/objects/d2/b349345b1c14362194e3c82b8d3c276c1971fe",
+    "ml_project_template/.git/objects/c4/62e97dc4e6ad68cedebf3b2010de91098fffed",
+    "ml_project_template/.git/objects/e9/07c18f73930974a8410f3c481382f19e504ee6",
+    "ml_project_template/.git/objects/f8/67fc7301799ecdde3dd245b28374d1e945c2c3",
+    "ml_project_template/.git/objects/1b/d2f0222ff49d6eaf76b7f8f2c5f0569ffd721b",
+    "ml_project_template/.git/objects/15/56c5a29390e7859b8b333899fc07c3f7b84ac2",
+    "ml_project_template/.git/objects/47/0789e39443965bcefb6b955a3a0432c077c3b0",
+    "ml_project_template/.git/objects/78/1150adc8afd7333a14326b856d8b5e148cd4ad",
+    "ml_project_template/.git/logs/refs/heads/",
+    "ml_project_template/.git/logs/refs/remotes/",
+    "ml_project_template/.git/refs/heads/develop",
+    "ml_project_template/.git/refs/heads/main",
+    "ml_project_template/.git/refs/remotes/origin/",
+    "ml_project_template/.git/objects/info/commit-graphs/commit-graph-chain",
+    "ml_project_template/.git/objects/info/commit-graphs/graph-0bb300d6fa10e1d75ecd602d860b946a2b11414f.graph",
+    "ml_project_template/.git/logs/refs/heads/develop",
+    "ml_project_template/.git/logs/refs/heads/main",
+    "ml_project_template/.git/logs/refs/remotes/origin/",
+    "ml_project_template/.git/refs/remotes/origin/bm_tmp_copier",
+    "ml_project_template/.git/refs/remotes/origin/develop",
+    "ml_project_template/.git/refs/remotes/origin/c4dx-530-enhance-configuration",
+    "ml_project_template/.git/refs/remotes/origin/HEAD",
+    "ml_project_template/.git/refs/remotes/origin/example-subpipeline",
+    "ml_project_template/.git/refs/remotes/origin/feature/",
+    "ml_project_template/.git/refs/remotes/origin/fix-debug-config",
+    "ml_project_template/.git/refs/remotes/origin/main",
+    "ml_project_template/.git/refs/remotes/origin/ignite-template-classical-ml-ml-azure",
+    "ml_project_template/.git/logs/refs/remotes/origin/bm_tmp_copier",
+    "ml_project_template/.git/logs/refs/remotes/origin/develop",
+    "ml_project_template/.git/logs/refs/remotes/origin/c4dx-530-enhance-configuration",
+    "ml_project_template/.git/logs/refs/remotes/origin/HEAD",
+    "ml_project_template/.git/logs/refs/remotes/origin/example-subpipeline",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/",
+    "ml_project_template/.git/logs/refs/remotes/origin/fix-debug-config",
+    "ml_project_template/.git/logs/refs/remotes/origin/main",
+    "ml_project_template/.git/logs/refs/remotes/origin/ignite-template-classical-ml-ml-azure",
+    "ml_project_template/.git/refs/remotes/origin/feature/FlexibleMLprojectTemplate",
+    "__MACOSX/ml_project_template/.git/refs/remotes/origin/feature/._FlexibleMLprojectTemplate",
+    "ml_project_template/.git/refs/remotes/origin/feature/SonarExperiments_1",
+    "ml_project_template/.git/refs/remotes/origin/feature/simpleSonarScenario",
+    "ml_project_template/.git/refs/remotes/origin/feature/package-release-classical-ml",
+    "ml_project_template/.git/refs/remotes/origin/feature/sonarqubeExperimentPandas",
+    "ml_project_template/.git/refs/remotes/origin/feature/AmLMonitor",
+    "__MACOSX/ml_project_template/.git/refs/remotes/origin/feature/._AmLMonitor",
+    "ml_project_template/.git/refs/remotes/origin/feature/AddSonarQube",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/FlexibleMLprojectTemplate",
+    "__MACOSX/ml_project_template/.git/logs/refs/remotes/origin/feature/._FlexibleMLprojectTemplate",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/SonarExperiments_1",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/simpleSonarScenario",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/package-release-classical-ml",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/sonarqubeExperimentPandas",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/AmLMonitor",
+    "__MACOSX/ml_project_template/.git/logs/refs/remotes/origin/feature/._AmLMonitor",
+    "ml_project_template/.git/logs/refs/remotes/origin/feature/AddSonarQube"
+  ],
+  "scope": "Transport only. All retained files are byte-identical to the original template. Shared contract and base SHA unchanged."
+}

@@ -17,7 +17,7 @@
    "--request-id",
    "v-again",
    "--expected-revision",
-   "41",
+   "43",
    "--json"
   ],
   "note": ""
@@ -31,10 +31,10 @@
    "message": "The final test was already opened; it is opened once. A later change is shown as made after the final test, never measured on it again.",
    "details": {
     "opening": {
-     "revision": 32,
+     "revision": 34,
      "model": "fit.logistic",
      "rule": "share:0.1",
-     "result_id": "7d64e269014e78c00dc1ff59cb4df2742beca4289d3214f958393effc655a04a"
+     "result_id": "3f77ae0e7f1973240c458c24a80bc1f996b94956c409a9687c2eb02f409320a4"
     }
    }
   }

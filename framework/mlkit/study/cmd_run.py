@@ -63,6 +63,11 @@ def configure(parser: argparse.ArgumentParser) -> None:
                              'p of the scored rows, 0 < p < 1) (repeatable)')
     parser.add_argument('--intervals', action='store_true',
                         help='with policy.inspect: also compute paired bootstrap intervals')
+    parser.add_argument('--profile', default=None, choices=('base', 'workshop'),
+                        help='with predictor.capture: base (native bundle) or workshop '
+                             '(packaging required before the final test opens)')
+    parser.add_argument('--packager', default=None,
+                        help='with predictor.capture: the packaging format (mlflow_pyfunc)')
     parser.add_argument('--acknowledge-interruption', dest='acknowledge', default=None,
                         metavar='EXECUTION_ID',
                         help='acknowledge an execution with an unknown outcome (no restart)')
@@ -131,7 +136,7 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
     # is ``__main__`` and a class imported from ``mlkit.study.cli`` would not be caught.
     if args.acknowledge is not None:
         if args.activity or args.column or args.rule or args.intervals \
-                or args.max_groups is not None:
+                or args.max_groups is not None or args.profile or args.packager:
             raise StudyError('invalid_arguments',
                              '--acknowledge-interruption takes no activity or option.')
         if not isinstance(args.user_words, str) or not args.user_words.strip():
@@ -152,7 +157,8 @@ def main(args: argparse.Namespace) -> cmd.Outcome:
                                           expected_revision=args.expected_revision,
                                           user_words=args.user_words, channel=args.channel)
         options = {'column': args.column, 'rules': args.rule, 'max_groups': args.max_groups,
-                   'intervals': True if args.intervals else None}
+                   'intervals': True if args.intervals else None,
+                   'profile': args.profile, 'packager': args.packager}
         return executions.run(args.study, args.activity, options, request_id=args.request_id,
                               expected_revision=args.expected_revision, hooks=test_hooks(),
                               channel=args.channel)
