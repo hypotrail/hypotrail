@@ -17,7 +17,21 @@ dependencies = [
     "marimo==0.25.1",
     "interpret-core==0.7.3",
     "matplotlib>=3.8",
+    # Library integration v1 (workstream A, docs/handoff/LIBRARIES-V1.md): the shared
+    # contracts and the complete predictor live in the separately installable runtime;
+    # Pydantic validates the contracts at the boundaries and Pandera the tabular data.
+    "hypotrail-runtime",
+    "pydantic>=2.7,<3",
+    "pandera>=0.20",
 ]
+
+[project.optional-dependencies]
+# Optional backends, imported lazily; the engine works without them.
+diagnostics = ["evidently==0.7.23"]
+uncertainty = ["mapie==1.6.0"]
+
+[tool.uv.sources]
+hypotrail-runtime = { path = "runtime", editable = true }
 # interpret-core (MIT) is a core dependency since v0.3 (WP-F1, ADR 0007): the study engine
 # fits the Explainable Boosting Machine as a model family; pinned, and its version is part
 # of the code fingerprint of the fits that use it.
@@ -26,7 +40,7 @@ dependencies = [
 hypotrail = "mlkit.study.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "hypothesis>=6.100"]
 browser = ["playwright==1.55.0"]
 
 [tool.hatch.build.targets.wheel]

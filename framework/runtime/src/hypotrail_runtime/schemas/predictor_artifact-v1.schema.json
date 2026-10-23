@@ -1,0 +1,369 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "Distribution": {
+   "additionalProperties": false,
+   "properties": {
+    "distribution": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Distribution",
+     "type": "string"
+    },
+    "version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "distribution",
+    "version"
+   ],
+   "title": "Distribution",
+   "type": "object"
+  },
+  "EnvironmentRef": {
+   "additionalProperties": false,
+   "properties": {
+    "lock_relative_path": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Lock Relative Path"
+    },
+    "lock_sha256": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Lock Sha256"
+    },
+    "platform": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Platform",
+     "type": "string"
+    },
+    "python": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Python",
+     "type": "string"
+    },
+    "semantic_dependencies": {
+     "items": {
+      "$ref": "#/$defs/Distribution"
+     },
+     "title": "Semantic Dependencies",
+     "type": "array"
+    }
+   },
+   "required": [
+    "python",
+    "platform",
+    "semantic_dependencies",
+    "lock_relative_path",
+    "lock_sha256"
+   ],
+   "title": "EnvironmentRef",
+   "type": "object"
+  },
+  "JsonValue": {},
+  "OutputContract": {
+   "additionalProperties": false,
+   "properties": {
+    "columns": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "minItems": 1,
+     "title": "Columns",
+     "type": "array"
+    },
+    "kind": {
+     "enum": [
+      "regression_point",
+      "binary_score"
+     ],
+     "title": "Kind",
+     "type": "string"
+    },
+    "positive_label": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "integer"
+      },
+      {
+       "type": "number"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Positive Label"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Unit"
+    }
+   },
+   "required": [
+    "kind",
+    "columns",
+    "unit",
+    "positive_label"
+   ],
+   "title": "OutputContract",
+   "type": "object"
+  },
+  "PayloadFile": {
+   "additionalProperties": false,
+   "properties": {
+    "relative_path": {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "title": "Relative Path",
+     "type": "string"
+    },
+    "sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Sha256",
+     "type": "string"
+    },
+    "size_bytes": {
+     "minimum": 0,
+     "title": "Size Bytes",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "relative_path",
+    "size_bytes",
+    "sha256"
+   ],
+   "title": "PayloadFile",
+   "type": "object"
+  },
+  "RuntimeRef": {
+   "additionalProperties": false,
+   "properties": {
+    "api_version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Api Version",
+     "type": "string"
+    },
+    "distribution": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Distribution",
+     "type": "string"
+    },
+    "version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Version",
+     "type": "string"
+    },
+    "wheel_relative_path": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Wheel Relative Path"
+    },
+    "wheel_sha256": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Wheel Sha256"
+    }
+   },
+   "required": [
+    "api_version",
+    "distribution",
+    "version",
+    "wheel_relative_path",
+    "wheel_sha256"
+   ],
+   "title": "RuntimeRef",
+   "type": "object"
+  },
+  "TrainingScope": {
+   "additionalProperties": false,
+   "properties": {
+    "dataset_id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Dataset Id",
+     "type": "string"
+    },
+    "membership_sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Membership Sha256",
+     "type": "string"
+    },
+    "protocol_id": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Protocol Id"
+    },
+    "role": {
+     "enum": [
+      "development_fit",
+      "fold_fit",
+      "final_development_refit",
+      "rebuilt_candidate"
+     ],
+     "title": "Role",
+     "type": "string"
+    }
+   },
+   "required": [
+    "role",
+    "dataset_id",
+    "membership_sha256",
+    "protocol_id"
+   ],
+   "title": "TrainingScope",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/predictor_artifact-v1.schema.json",
+ "additionalProperties": false,
+ "description": "The content manifest of a predictor. ``predictor_id`` is the artifact id: the\nSHA-256 of this manifest's canonical content without ``predictor_id`` itself.",
+ "properties": {
+  "code_fingerprint": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Code Fingerprint",
+   "type": "string"
+  },
+  "data_contract_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Data Contract Sha256",
+   "type": "string"
+  },
+  "environment": {
+   "$ref": "#/$defs/EnvironmentRef"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "input_contract_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Input Contract Sha256",
+   "type": "string"
+  },
+  "native_format": {
+   "const": "sklearn_pickle/1",
+   "title": "Native Format",
+   "type": "string"
+  },
+  "output_contract": {
+   "$ref": "#/$defs/OutputContract"
+  },
+  "payload_files": {
+   "items": {
+    "$ref": "#/$defs/PayloadFile"
+   },
+   "minItems": 1,
+   "title": "Payload Files",
+   "type": "array"
+  },
+  "predictor_id": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Predictor Id",
+   "type": "string"
+  },
+  "recipe_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Recipe Sha256",
+   "type": "string"
+  },
+  "runtime": {
+   "$ref": "#/$defs/RuntimeRef"
+  },
+  "schema_version": {
+   "const": "hypotrail.predictor_artifact/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "training_scope": {
+   "$ref": "#/$defs/TrainingScope"
+  }
+ },
+ "required": [
+  "schema_version",
+  "predictor_id",
+  "recipe_sha256",
+  "data_contract_sha256",
+  "input_contract_sha256",
+  "output_contract",
+  "native_format",
+  "payload_files",
+  "runtime",
+  "environment",
+  "training_scope",
+  "code_fingerprint"
+ ],
+ "title": "PredictorArtifact",
+ "type": "object"
+}

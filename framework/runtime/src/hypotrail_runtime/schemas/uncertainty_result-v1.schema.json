@@ -1,0 +1,569 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "ComputationContext": {
+   "additionalProperties": false,
+   "properties": {
+    "activity_id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Activity Id",
+     "type": "string"
+    },
+    "backend": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Distribution"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "code_fingerprint": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Code Fingerprint",
+     "type": "string"
+    },
+    "decision_refs": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Decision Refs",
+     "type": "array"
+    },
+    "environment_lock_sha256": {
+     "anyOf": [
+      {
+       "pattern": "^[0-9a-f]{64}$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Environment Lock Sha256"
+    },
+    "expected_revision": {
+     "minimum": 0,
+     "title": "Expected Revision",
+     "type": "integer"
+    },
+    "extensions": {
+     "patternProperties": {
+      "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+       "$ref": "#/$defs/JsonValue"
+      }
+     },
+     "title": "Extensions",
+     "type": "object"
+    },
+    "input_refs": {
+     "items": {
+      "$ref": "#/$defs/InputRef"
+     },
+     "title": "Input Refs",
+     "type": "array"
+    },
+    "method_contract_version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Method Contract Version",
+     "type": "string"
+    },
+    "partition_refs": {
+     "items": {
+      "$ref": "#/$defs/PartitionRef"
+     },
+     "title": "Partition Refs",
+     "type": "array"
+    },
+    "protocol_id": {
+     "anyOf": [
+      {
+       "maxLength": 512,
+       "minLength": 1,
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Protocol Id"
+    },
+    "runtime_version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Runtime Version",
+     "type": "string"
+    },
+    "schema_version": {
+     "const": "hypotrail.computation_context/1",
+     "title": "Schema Version",
+     "type": "string"
+    },
+    "semantic_dependencies": {
+     "items": {
+      "$ref": "#/$defs/Distribution"
+     },
+     "title": "Semantic Dependencies",
+     "type": "array"
+    },
+    "study_id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Study Id",
+     "type": "string"
+    }
+   },
+   "required": [
+    "schema_version",
+    "activity_id",
+    "study_id",
+    "expected_revision",
+    "protocol_id",
+    "decision_refs",
+    "input_refs",
+    "partition_refs",
+    "code_fingerprint",
+    "runtime_version",
+    "backend",
+    "method_contract_version",
+    "semantic_dependencies",
+    "environment_lock_sha256"
+   ],
+   "title": "ComputationContext",
+   "type": "object"
+  },
+  "Distribution": {
+   "additionalProperties": false,
+   "properties": {
+    "distribution": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Distribution",
+     "type": "string"
+    },
+    "version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "distribution",
+    "version"
+   ],
+   "title": "Distribution",
+   "type": "object"
+  },
+  "InputRef": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Id",
+     "type": "string"
+    },
+    "role": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Role",
+     "type": "string"
+    },
+    "sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Sha256",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "sha256",
+    "role"
+   ],
+   "title": "InputRef",
+   "type": "object"
+  },
+  "IntervalBound": {
+   "additionalProperties": false,
+   "properties": {
+    "high": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "High"
+    },
+    "low": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Low"
+    },
+    "row": {
+     "minimum": 0,
+     "title": "Row",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "row",
+    "low",
+    "high"
+   ],
+   "title": "IntervalBound",
+   "type": "object"
+  },
+  "JsonValue": {},
+  "Method": {
+   "additionalProperties": false,
+   "properties": {
+    "name": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Name",
+     "type": "string"
+    },
+    "parameters": {
+     "additionalProperties": {
+      "$ref": "#/$defs/JsonValue"
+     },
+     "propertyNames": {
+      "maxLength": 512,
+      "minLength": 1
+     },
+     "title": "Parameters",
+     "type": "object"
+    },
+    "version": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "name",
+    "version",
+    "parameters"
+   ],
+   "title": "Method",
+   "type": "object"
+  },
+  "PartitionRef": {
+   "additionalProperties": false,
+   "properties": {
+    "exposure_status": {
+     "enum": [
+      "unseen",
+      "reserved",
+      "exposed",
+      "consumed"
+     ],
+     "title": "Exposure Status",
+     "type": "string"
+    },
+    "id": {
+     "maxLength": 512,
+     "minLength": 1,
+     "title": "Id",
+     "type": "string"
+    },
+    "membership_sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Membership Sha256",
+     "type": "string"
+    },
+    "role": {
+     "enum": [
+      "train",
+      "validation",
+      "development",
+      "fold_train",
+      "fold_validation",
+      "calibration",
+      "final_test",
+      "monitoring",
+      "parity"
+     ],
+     "title": "Role",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "membership_sha256",
+    "role",
+    "exposure_status"
+   ],
+   "title": "PartitionRef",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/uncertainty_result-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "artifact_refs": {
+   "items": {
+    "maxLength": 512,
+    "minLength": 1,
+    "type": "string"
+   },
+   "title": "Artifact Refs",
+   "type": "array"
+  },
+  "assumptions": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Assumptions",
+   "type": "array"
+  },
+  "backend": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Distribution"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "calibration_ref": {
+   "anyOf": [
+    {
+     "maxLength": 512,
+     "minLength": 1,
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Calibration Ref"
+  },
+  "confidence_level": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Confidence Level"
+  },
+  "context": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/ComputationContext"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "coverage_level": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Coverage Level"
+  },
+  "eligibility": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Eligibility",
+   "type": "object"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "interval_bounds": {
+   "anyOf": [
+    {
+     "items": {
+      "$ref": "#/$defs/IntervalBound"
+     },
+     "type": "array"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Interval Bounds"
+  },
+  "method": {
+   "$ref": "#/$defs/Method"
+  },
+  "predictor_id": {
+   "anyOf": [
+    {
+     "pattern": "^[0-9a-f]{64}$",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Predictor Id"
+  },
+  "reason": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Reason"
+  },
+  "result_id": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Result Id",
+   "type": "string"
+  },
+  "risk_target": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Risk Target"
+  },
+  "schema_version": {
+   "const": "hypotrail.uncertainty_result/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "selected_threshold": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Selected Threshold"
+  },
+  "selection_rule": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Selection Rule"
+  },
+  "status": {
+   "enum": [
+    "ok",
+    "not_applicable",
+    "insufficient_data",
+    "failed"
+   ],
+   "title": "Status",
+   "type": "string"
+  },
+  "target_quantity": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Target Quantity",
+   "type": "string"
+  },
+  "undefined_replicates": {
+   "anyOf": [
+    {
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Undefined Replicates"
+  },
+  "valid_thresholds": {
+   "anyOf": [
+    {
+     "items": {
+      "type": "number"
+     },
+     "type": "array"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "title": "Valid Thresholds"
+  },
+  "warnings": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Warnings",
+   "type": "array"
+  }
+ },
+ "required": [
+  "result_id",
+  "status",
+  "reason",
+  "context",
+  "backend",
+  "method",
+  "warnings",
+  "artifact_refs",
+  "schema_version",
+  "target_quantity",
+  "assumptions",
+  "eligibility",
+  "calibration_ref",
+  "predictor_id",
+  "confidence_level",
+  "coverage_level",
+  "risk_target",
+  "selection_rule",
+  "valid_thresholds",
+  "selected_threshold",
+  "interval_bounds",
+  "undefined_replicates"
+ ],
+ "title": "UncertaintyResult",
+ "type": "object"
+}

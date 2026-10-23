@@ -1,0 +1,221 @@
+{
+ "$comment": "Generated from hypotrail_runtime.contracts; do not edit. Validation semantics are those of the Pydantic model (strict).",
+ "$defs": {
+  "JsonValue": {},
+  "ParityResult": {
+   "additionalProperties": false,
+   "properties": {
+    "exact_mismatches": {
+     "minimum": 0,
+     "title": "Exact Mismatches",
+     "type": "integer"
+    },
+    "max_abs_diff": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Max Abs Diff"
+    },
+    "max_rel_diff": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Max Rel Diff"
+    },
+    "n_rows": {
+     "minimum": 0,
+     "title": "N Rows",
+     "type": "integer"
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "title": "Reason"
+    },
+    "schema_version": {
+     "const": "hypotrail.parity_result/1",
+     "title": "Schema Version",
+     "type": "string"
+    },
+    "status": {
+     "enum": [
+      "ok",
+      "failed"
+     ],
+     "title": "Status",
+     "type": "string"
+    },
+    "tolerance": {
+     "$ref": "#/$defs/Tolerance"
+    }
+   },
+   "required": [
+    "schema_version",
+    "status",
+    "n_rows",
+    "max_abs_diff",
+    "max_rel_diff",
+    "exact_mismatches",
+    "tolerance",
+    "reason"
+   ],
+   "title": "ParityResult",
+   "type": "object"
+  },
+  "PayloadFile": {
+   "additionalProperties": false,
+   "properties": {
+    "relative_path": {
+     "maxLength": 512,
+     "minLength": 1,
+     "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*(/[A-Za-z0-9_@+-][A-Za-z0-9._@+-]*)*$",
+     "title": "Relative Path",
+     "type": "string"
+    },
+    "sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "title": "Sha256",
+     "type": "string"
+    },
+    "size_bytes": {
+     "minimum": 0,
+     "title": "Size Bytes",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "relative_path",
+    "size_bytes",
+    "sha256"
+   ],
+   "title": "PayloadFile",
+   "type": "object"
+  },
+  "Tolerance": {
+   "additionalProperties": false,
+   "properties": {
+    "atol": {
+     "minimum": 0,
+     "title": "Atol",
+     "type": "number"
+    },
+    "exact": {
+     "items": {
+      "maxLength": 512,
+      "minLength": 1,
+      "type": "string"
+     },
+     "title": "Exact",
+     "type": "array"
+    },
+    "rtol": {
+     "minimum": 0,
+     "title": "Rtol",
+     "type": "number"
+    }
+   },
+   "required": [
+    "rtol",
+    "atol",
+    "exact"
+   ],
+   "title": "Tolerance",
+   "type": "object"
+  }
+ },
+ "$id": "https://hypotrail.invalid/schemas/package_descriptor-v1.schema.json",
+ "additionalProperties": false,
+ "properties": {
+  "artifact_id": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Artifact Id",
+   "type": "string"
+  },
+  "environment": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Environment",
+   "type": "object"
+  },
+  "extensions": {
+   "patternProperties": {
+    "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$": {
+     "$ref": "#/$defs/JsonValue"
+    }
+   },
+   "title": "Extensions",
+   "type": "object"
+  },
+  "files": {
+   "items": {
+    "$ref": "#/$defs/PayloadFile"
+   },
+   "minItems": 1,
+   "title": "Files",
+   "type": "array"
+  },
+  "format": {
+   "maxLength": 512,
+   "minLength": 1,
+   "title": "Format",
+   "type": "string"
+  },
+  "parity_result": {
+   "$ref": "#/$defs/ParityResult"
+  },
+  "predictor_id": {
+   "pattern": "^[0-9a-f]{64}$",
+   "title": "Predictor Id",
+   "type": "string"
+  },
+  "schema_version": {
+   "const": "hypotrail.package_descriptor/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "signature": {
+   "additionalProperties": {
+    "$ref": "#/$defs/JsonValue"
+   },
+   "propertyNames": {
+    "maxLength": 512,
+    "minLength": 1
+   },
+   "title": "Signature",
+   "type": "object"
+  }
+ },
+ "required": [
+  "schema_version",
+  "format",
+  "artifact_id",
+  "predictor_id",
+  "files",
+  "signature",
+  "environment",
+  "parity_result"
+ ],
+ "title": "PackageDescriptor",
+ "type": "object"
+}
