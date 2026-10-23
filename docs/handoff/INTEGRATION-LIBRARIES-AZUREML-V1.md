@@ -1,6 +1,6 @@
 # Integration I1 — library integration (A) + Azure ML export (B) + main
 
-Status: **ready for review, validated locally; cloud not qualified.** Nothing was merged
+Status: **ready to merge into `main` after review — validated locally; cloud not qualified.** Nothing was merged
 into `main`; no branch was deleted or force-pushed.
 
 ## Branches and SHAs
@@ -71,7 +71,7 @@ diagnostics --extra uncertainty`.
 |---|---|
 | `uv run --project framework python -m pytest framework/tests/study framework/tests/acceptance framework/tests/exporters -q` | **2084 passed, 99 skipped, 0 failed** (1 h 16). Includes the runtime and contract suites, Hypothesis properties and state machine, wheel build and fresh-environment install, fault injections (kill during capture, failure after reservation, altered payload), statistical oracles (bootstrap, DKW, conformal quantile, risk control), Hydra overrides, the B suites on the real runtime, and `test_end_to_end_real.py` (real Auto MPG study → workshop capture with MLflow → final test → export → moved folder). `test_contract_companion_e2.py::test_c7_export_handoff`, red at the base, passes. |
 | `node --test` in `clients/vscode-companion` | **243 passed, 0 failed** |
-| `uv run --project framework python -m pytest clients/vscode-companion/test -k "not pixel and not baseline"` | subset of the 8 previously failing files: passed (34 passed, 12 skipped); full run pending, result to be recorded |
+| `uv run --project framework python -m pytest clients/vscode-companion/test -k "not pixel and not baseline"` | **390 passed, 12 skipped, 0 failed** (pixel baselines deselected) |
 | `uv run --project framework python scripts/check_layout.py` | OK, no error |
 | `uv lock --check --project framework` | lock current |
 | Extras matrix (core only; `diagnostics`; `uncertainty`; all) | 4/4 on workstream A before the merge; **not rerun after the integration** |
@@ -158,7 +158,7 @@ the panel tests other than `test_webview_eda.py`. Fixes:
   MLflow packager; a real end-to-end test runs from a study to a moved exported project.
 - **main's fixes:** merged without textual conflict; the panel regressions `main` carried
   (stale fixtures, EDA card titles, collapsed cards in tests, French decimals) are fixed.
-- **Validation:** engine gate 2084 passed / 0 failed; Node 243/243; panel suite: previously failing tests fixed, full run pending;
+- **Validation:** engine gate 2084 passed / 0 failed; Node 243/243; panel 390 passed / 0 failed;
   layout OK. Not run: Azure, real Copilot/VS Code session, extras matrix after the merge,
   pixel baselines (font-dependent here).
 - **Merge:** merge commit (no rebase, no force-push); the branch contains `main` at `506180a`.
