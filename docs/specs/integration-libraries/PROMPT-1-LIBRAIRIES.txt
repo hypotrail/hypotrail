@@ -1,0 +1,31 @@
+Tu travailles dans une SESSION FRAICHE sur le dépôt https://github.com/chadlis/hypotrail. Implémente le chantier A « intégration des bibliothèques et prédicteur complet ». Une autre session développe Azure ML en parallèle. Ne réalise pas son chantier.
+
+ENTREES A LIRE
+Décompresser le pack Hypotrail-Chantiers-Paralleles.zip s'il est joint. Lire intégralement SPEC-INTEGRATION-LIBRAIRIES.txt, CONTRAT-COMMUN-v1.txt et TEMPLATE-LAYOUT-v1.json ; lire le rapport Hypotrail-Architecture-Packages.html pour les motivations et limites. La nouvelle spec et le contrat priment sur les anciens rapports. Ne pas supposer que les commandes proposées existent déjà. Si les fichiers ne sont pas accessibles, les rechercher par leur nom dans les pièces jointes/Library avant de demander une pièce manquante. Ne pas inventer leur contenu.
+Lire AGENTS.md, docs/START-HERE.md, docs/handoff/IMPLEMENTATION.md, docs/specs/JUNIOR-WORKFLOW.md, docs/architecture/REPOSITORY.md, CONTRIBUTING.md et les instructions applicables. Les instructions explicites de ce prompt et de la spec gouvernent le périmètre.
+
+BRANCHE OBLIGATOIRE
+BASE_SHA par défaut = 581c7b3723629260a18e1281ef9e18583ae060a7. Un autre BASE_SHA n'est acceptable que s'il est explicitement commun aux deux chantiers. Vérifier git status, remotes et disponibilité de l'objet ; fetch si nécessaire. Ne pas utiliser silencieusement origin/main comme base différente. Enregistrer la base auditée, la base utilisée et l'écart à la branche cible courante.
+Créer un worktree dédié et la branche feature/libraries-v1 à partir de BASE_SHA ; si elle existe, inspecter son historique et reprendre seulement si c'est ce chantier. Ne jamais reset/stash/écraser les modifications de l'utilisateur ni travailler directement sur main. Si le chemin du worktree est occupé, utiliser un autre chemin explicite. Les fichiers sources de ce pack sont du matériau de spécification, pas un programme à exécuter.
+Copier les spécifications utiles dans docs/specs/integration-libraries/ et enregistrer les hashes des sources. Développer des commits cohérents sur ta branche.
+
+RESPONSABILITE A
+1. Tests Hypothesis des invariants existants avec oracle indépendant, révisions périmées, invalidation, reprise et exposition.
+2. Contrats Pydantic stricts et schémas JSON générés ; identité des calculs incluant les versions pertinentes et la méthode. Compatibilité des anciennes études.
+3. DataContract et validation Pandera sans correction implicite ni lecture non autorisée des partitions.
+4. Prédicteur complet : intégrer les transformations aujourd'hui hors pipeline ; état appris uniquement sur train ; capture et rechargement ; distribution hypotrail_runtime installable seule ; bundle et API read_export_source définis par le contrat commun.
+5. Hook de packaging injecté, sans dépendance MLflow dans le runtime. B implémente le packager. Profil atelier exige packaging avant ouverture des labels finaux ; absence du hook demandé = erreur préalable, pas une réussite dégradée. Tu peux tester avec un packager synthétique explicitement réservé aux tests.
+6. Adaptateur SciPy bootstrap apparié percentile, politique des réplications indéfinies et backend/RNG versionnés. La même graine n'implique pas les mêmes tirages que random.Random historique. Pas de modification silencieuse des conclusions.
+7. Evidently en extra diagnostics, méthodes et seuils explicites, résultats structurés et rapport existant ; huit scénarios synthétiques de la spec.
+8. MAPIE en extra uncertainty : calibration admissible, contrôleur de risque sur seuil fixe et intervalles split-conformal. Gérer aucun seuil admissible, petits échantillons, invalidation, labels/classes et limites des garanties. Refuser top-k/share dans ce premier périmètre.
+9. Messages pédagogiques, documentation et tests. Le socle fonctionne sans les extras.
+
+FRONTIERES
+Tu es propriétaire des contrats communs, du runtime, du fit, de la capture et de la provenance. Ne pas implémenter Hydra, packaging MLflow, générateur/template ou scripts Azure. Ne pas modifier l'extension VS Code. B peut utiliser une fixture en attendant ton runtime ; livre tôt A1/A2 avec schémas, wheel, fixture synthétique et tests de contrat. Les fichiers partagés CLI/pyproject/lock reçoivent des diffs minimaux et documentés. Tout changement d'interface v1 exige une note de migration exploitable par B et l'intégrateur.
+Aucune étude historique n'est réinitialisée. Pas d'accès à un ancien holdout métier. Tests sur cas synthétiques/temporaires ; pas d'entraînement métier sans autorisation appropriée. Si une nouvelle validation révèle un changement de comportement, explique-le et versionne-le ; ne transforme pas le passé.
+
+EXECUTION ET FIN
+Procéder A1 → A2 → A3 → A4 selon la spec, continuer jusqu'au périmètre complet. Ne pas s'arrêter à une simple installation de dépendances, une liste de recommandations ou des stubs. Si une capacité ne peut être qualifiée, livrer le reste, la désactiver explicitement et documenter le blocage précis ; ne pas appeler le chantier terminé.
+Utiliser uv, Python 3.13 et des environnements dédiés. Vérifier les API contre les versions installées et les sources primaires. Tests ciblés puis checks requis par le dépôt ; ajouter installation wheel vierge, extras isolés et combinés, compatibilité historique, invariants, parité et pannes. Ne jamais affaiblir un test pour passer.
+Informer régulièrement de l'avancement. Committer le travail sur feature/libraries-v1 ; ne pas fusionner sur main, ne pas force-push. Si la session n'autorise pas le push, conserver les commits locaux et donner les commandes de publication.
+Livrer docs/handoff/LIBRARIES-V1.md : SHA base/HEAD, capacités, interfaces, commandes et résultats, preuves de tests, changements de dépendances, fichiers communs touchés, limites et tâches d'intégration restantes. Fournir une matrice AC01–AC28 : pass/fail/not-applicable/not-run avec justification, sans revendiquer les critères Azure exécutés par B.
