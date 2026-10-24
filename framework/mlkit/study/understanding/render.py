@@ -42,6 +42,7 @@ def section(study_dir, state: Mapping) -> str:
     rows, gaps = [], []
     sessions = sorted(ext['sessions'].values(), key=lambda s: s['created_revision'])
     current = sv.current_for(store, state, ext)
+    loaders = sv.gate_loaders(store, state, ext)
     for s in sessions[-3:]:
         actor = s['actor_declared_id']
         try:
@@ -66,9 +67,20 @@ def section(study_dir, state: Mapping) -> str:
             if v['status'] != 'demonstrated':
                 gaps.append(f'{_lit(dim)} {e(DIMENSION_TITLES[dim])} for {_lit(actor)}: '
                             f'{e(v["status"].replace("_", " "))}')
+        # The gate's own selection-based coverage (round 2, C2-3), never a search for any
+        # demonstrated transfer: without a selection for this person and profile, missing.
+        selection = ev.latest_selection(ext, s['milestone'])
+        if selection is None or selection['actor_scope'] != {'actor_declared_id': actor,
+                                                             'profile': s['profile']}:
+            selection = None
         for dim in (doc or {}).get('peer_required_dimensions', []):
             if dim in s['dimensions']:
-                cover = ev.peer_coverage(ext, actor, dim, None, None)
+                try:
+                    cover = ev.selected_peer_coverage(
+                        ext, actor, dim, selection, pol.digest(doc), loaders['taskset_for'],
+                        loaders['captured_for'], loaders['current_for'], policy_doc=doc)
+                except Exception:      # noqa: BLE001 - coverage unknown, the report renders
+                    cover = {'status': 'unknown'}
                 if cover['status'] != 'current':
                     gaps.append(f'{_lit(dim)} handover by a colleague: {e(cover["status"])}')
     simulated = any(d.get('simulated') for d in ext['decisions'].values())

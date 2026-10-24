@@ -308,9 +308,9 @@ def test_markdown_rendering_of_hostile_handover(done):
                                        'inline:code_inline', 'code_block', 'inline:s_open')]
     codes = [c.content for t in tokens for c in (t.children or []) if c.type == 'code_inline']
     print('CODE SPANS', codes)
-    # The renderer's own code spans hold digests and ids only; no hostile text is one.
-    if all(c and all(ch in '0123456789abcdef-' for ch in c) or c.startswith(('rv-', 'D'))
-           for c in codes):
+    # The renderer's own code spans hold digests, and '@' alone (an e-mail address is split so
+    # that GFM forms no link); no hostile text is one.
+    if all(c == '@' or c and all(ch in '0123456789abcdef' for ch in c) for c in codes):
         bad = [k for k in bad if k != 'inline:code_inline']
     print('BAD', bad)
     assert 'Injected heading via CR and setext' not in headings

@@ -63,7 +63,7 @@ ATTESTATIONS: tuple[dict, ...] = (
                      'framework/tests/study/code_compat_evidence.py',
                      'docs/handoff/LIBRARIES-V1.md#source-compatibility-of-existing-studies: '
                      'the same 95 commands on four temporary studies (synthetic binary '
-                     'holdout, synthetic binary 5-fold, Auto MPG regression holdout, '
+                     'holdout, synthetic binary 5-fold, a public regression case holdout, '
                      'synthetic regression 5-fold, each to an opened final test with '
                      'diag.final_test) with the 506180a and 621d607 engines: 73 results with '
                      'byte-identical blobs and params; 53 with byte-identical values, the 20 '
