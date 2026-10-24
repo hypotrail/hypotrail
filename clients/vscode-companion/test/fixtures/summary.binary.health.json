@@ -464,11 +464,11 @@
      "path": "notebooks/study_editable.py",
      "argv": [
       "uv",
-      "edit",
+      "run",
       "--project",
       "/hypotrail/framework",
       "marimo",
-      "run",
+      "edit",
       "/studies/bank marketing \"demo\"/notebooks/study_editable.py"
      ]
     },

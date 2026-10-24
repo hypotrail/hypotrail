@@ -227,8 +227,14 @@
       bandInside: ['L’écart entre les groupes, ', ', reste dans ce que produisent les ', ' mélanges du résultat (jusqu’à ',
         ") : on ne peut pas le distinguer du hasard."],
       requestQuestion: (activity, column) => (activity === 'eda.distribution'
-        ? `Comment les valeurs de ${column} se répartissent-elles sur les lignes d'entraînement ? Y a-t-il des valeurs extrêmes ?`
-        : `Le taux de résultat diffère-t-il selon les valeurs de ${column} sur les lignes d'entraînement, plus que le hasard ne le produit ?`),
+        ? `Comment les valeurs de ${column} se répartissent-elles parmi les lignes d'entraînement ?`
+        : `Le taux de résultat diffère-t-il entre les groupes de ${column} plus que le hasard seul ne le produit ?`),
+      cv: {
+        ...common.cv,
+        requestQuestion: (activity, column) => (activity === 'eda.distribution'
+          ? `Comment les valeurs de ${column} se répartissent-elles parmi les lignes de développement ?`
+          : `Le taux de résultat diffère-t-il entre les groupes de ${column} plus que le hasard seul ne le produit ?`),
+      },
       targetTitle: target => `Cible · ${target}`,
       targetChart: target => `Résultat ${target}, lignes d'entraînement`,
       targetLine: ['', ' ', ' · ', ' sur ', ' lignes'],
@@ -258,8 +264,14 @@
       bandInside: ['L’écart entre les moyennes des groupes, ', ', reste dans ce que produisent les ', ' mélanges de la cible (jusqu’à ',
         ") : on ne peut pas le distinguer du hasard."],
       requestQuestion: (activity, column) => (activity === 'eda.distribution'
-        ? `Comment les valeurs de ${column} se répartissent-elles sur les lignes d'entraînement ? Y a-t-il des valeurs extrêmes ?`
-        : `La moyenne de la cible diffère-t-elle selon les valeurs de ${column} sur les lignes d'entraînement, plus que le hasard ne le produit ?`),
+        ? `Comment les valeurs de ${column} se répartissent-elles parmi les lignes d'entraînement ?`
+        : `La moyenne de la cible diffère-t-elle entre les groupes de ${column} plus que le hasard seul ne le produit ?`),
+      cv: {
+        ...common.cv,
+        requestQuestion: (activity, column) => (activity === 'eda.distribution'
+          ? `Comment les valeurs de ${column} se répartissent-elles parmi les lignes de développement ?`
+          : `La moyenne de la cible diffère-t-elle entre les groupes de ${column} plus que le hasard seul ne le produit ?`),
+      },
       targetTitle: target => `Cible · ${target}`,
       summaryChart: target => `Distribution de la cible ${target}, lignes d'entraînement`,
       summaryTerm: 'Distribution de la cible',

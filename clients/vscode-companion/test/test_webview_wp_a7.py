@@ -339,10 +339,12 @@ def test_ed12_run_another_chart_shows_its_question_before_it_runs(open_panel, vi
     # v0.3 (WP-E2): the per-column chart's question (the correlation matrix has its own).
     q = page.locator('[data-request-question]:not([data-request-question="eda.correlation"])')
     assert q.get_attribute('data-request-question') == 'eda.distribution'
-    assert 'How are the values of balance spread on the training rows?' in q.inner_text()
+    # The engine's own question for that chart (the title of the card a run adds).
+    assert q.inner_text() == 'It answers: How are the values of balance distributed among the training rows?'
     assert page.locator('[data-one-more-look]').count() == 0
     page.locator('#eda-chart').select_option('eda.rate_by')
-    assert 'Does the outcome rate differ across the values of balance' in q.inner_text()
+    assert q.inner_text() == ('It answers: Does the positive rate differ across the groups of balance by more '
+                              'than chance alone draws?')
     assert page.locator('[data-one-more-look]').count() == 1
     options = page.locator('#eda-chart option').evaluate_all('os => os.map(o => o.value)')
     assert set(options) <= {'eda.distribution', 'eda.rate_by', 'eda.mean_by'}

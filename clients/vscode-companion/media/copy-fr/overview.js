@@ -137,6 +137,7 @@
     openInBrowser: 'Ouvrir dans le navigateur',
     marimoRead: 'Ouvrir dans Marimo (lecture)',
     marimoEdit: 'Ouvrir dans Marimo (édition)',
+    marimoName: (action, label) => `${action} : ${label}`,
     openReportName: 'Ouvrir le rapport dans le navigateur',
     openInEditorName: label => `Ouvrir ${label.toLowerCase()} dans l'éditeur`,
     launchTitle: 'Ce que fait « Ouvrir dans Marimo »',

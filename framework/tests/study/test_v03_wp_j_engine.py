@@ -126,7 +126,12 @@ def test_results_before_wp_j_stay_current_except_the_development_diagnostics(tmp
     Flow(tmp_path / 'study', case_dir).init()
     study = read.open(tmp_path / 'study')
     now = registry.code_fingerprint(['mlkit.study.metrics'])['modules']
-    pre_j = {r['module']: r['from_sha256'] for r in code_compat.ATTESTATIONS}
+    # The pre-WP-J digests: the first edge of each module that covers diag.final_test only
+    # (the library-v1 edges start from the 506180a digest, a later one).
+    pre_j = {}
+    for r in code_compat.ATTESTATIONS:
+        if r['activities'] == ['diag.final_test']:
+            pre_j.setdefault(r['module'], r['from_sha256'])
     assert set(pre_j) == {'mlkit.study.activities', 'mlkit.study.diagnostics'}
     entry = {'activity': 'diag.final_test', 'code': {'modules': {**pre_j, **now}}}
     assert study.code_changed(entry) == []

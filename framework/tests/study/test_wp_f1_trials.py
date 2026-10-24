@@ -483,7 +483,11 @@ def test_source_compatibility_needs_an_exact_destination_and_activity(tmp_path):
     study = read.open(tmp_path / 'study')
     now = registry.code_fingerprint(['mlkit.study.metrics'])['modules']
     assert code_compat.integrity()
-    old = {r['module']: r['from_sha256'] for r in code_compat.ATTESTATIONS}
+    # The pre-WP-J digests: the first edge of each module that covers diag.final_test only.
+    old = {}
+    for r in code_compat.ATTESTATIONS:
+        if r['activities'] == ['diag.final_test']:
+            old.setdefault(r['module'], r['from_sha256'])
     assert set(old) == {'mlkit.study.activities', 'mlkit.study.diagnostics'}
     entry = {'activity': 'diag.final_test', 'code': {'modules': {**old, **now}}}
     assert study.code_changed(entry) == []

@@ -1324,5 +1324,5 @@ def test_understanding_contract_is_frozen():
         'rectify', 'propose-review', 'review', 'arbitrate', 'select', 'waive', 'handover set',
         'transfer start', 'transfer submit', 'transfer review', 'close', 'check',
         'export preview', 'export approve', 'export write', 'git-plan', 'git-stage',
-        'git-receipt'])
+        'git-receipt', 'relocate'])
 

@@ -23,9 +23,10 @@
   const RARE_SHOWN = 6;
 
   // View memory (in this webview only; nothing here is study state): the Request choice,
-  // the last W4 outcome (rendered in the Request card, `outcomes: ['W4']`), and the language
-  // of the dictionary's meanings (null: the panel language).
-  const memory = { column: null, activity: null, outcome: null, meanings: null };
+  // the last W4 outcome (rendered in the Request card, `outcomes: ['W4']`), the language
+  // of the dictionary's meanings (null: the panel language), and the cards the junior opened
+  // or closed (slot -> open), so a re-render or the language toggle keeps them as they were.
+  const memory = { column: null, activity: null, outcome: null, meanings: null, open: new Map() };
 
   function taskOf(data, ctx, model) {
     const t = (data && data.task) || ctx.task || (model && model.task);
@@ -109,13 +110,25 @@
       onclick: () => ctx.navigate({ tab: 'evidence', kind: 'result', id: card.resultId }) });
   }
 
+  /** Whether the card of `slot` is open: the junior's last choice, else the default. */
+  function isOpen(slot, expanded) {
+    return memory.open.has(slot) ? memory.open.get(slot) : expanded;
+  }
+
   /** One EDA card in the pattern of the design system. */
   function edaCard(ctx, c, card, { id, eyebrow, title, sub = null, body = [], finding = null, why = [], wide = false, expanded = false, attrs = {} }) {
     const w = ctx.components.why(why);
     return el('section', { className: `card eda-card${wide ? ' eda-wide' : ''}`, 'aria-labelledby': id,
       'data-eda-card': card.slot, 'data-activity': card.activity, 'data-current': card.current ? 'true' : 'false',
       'data-nav': `result:${card.resultId}`, ...attrs }, [
-      el('details', { className: 'eda-analysis', open: expanded ? true : null }, [
+      el('details', { className: 'eda-analysis', open: isOpen(card.slot, expanded) ? true : null,
+        // Remembered only where it differs from the default, so a card that becomes the
+        // default open one later is not held closed by a choice nobody made.
+        ontoggle: e => {
+          if (e.target !== e.currentTarget) return;
+          if (e.currentTarget.open === expanded) memory.open.delete(card.slot);
+          else memory.open.set(card.slot, e.currentTarget.open);
+        } }, [
       el('summary', { className: 'ht-card-h' }, [el('div', {}, [
         el('span', { className: 'ht-cap', 'data-eyebrow': true, text: eyebrow }),
         // Each card is titled by the engine's question (ED-7). In a French panel a per-column

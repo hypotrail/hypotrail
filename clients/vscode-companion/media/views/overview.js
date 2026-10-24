@@ -613,7 +613,9 @@
     } else {
       const edit = a.name === 'workbench' || a.name === 'editable';
       if (!(edit && ctx.reviewer)) {
+        // Two rows have an "edit" button: the accessible name says which deliverable it opens.
         buttons.push(el('button', { type: 'button', 'data-marimo': a.name, text: edit ? c.marimoEdit : c.marimoRead,
+          'aria-label': c.marimoName(edit ? c.marimoEdit : c.marimoRead, str(d.label || a.label)),
           onclick: () => ctx.send({ type: 'open_marimo', artifact: a.name }) }));
       }
       buttons.push(el('button', { type: 'button', className: 'secondary', 'data-open': a.name, text: c.openFile,
@@ -621,7 +623,11 @@
     }
     const owned = a.name === 'workbench' || a.name === 'editable';
     const status = owned ? 'yours' : str(a.status);
-    const text = owned ? '' : a.juniorMessage || (a.audience === 'agent' ? (c.statusText[a.status] || '') : str(a.message));
+    // The workbench row says nothing more than its description; the editable copy shows the
+    // engine's junior message (it tracks the generated notebook until the first edit and is
+    // never official evidence), as the other deliverables do.
+    const text = a.name === 'workbench' ? ''
+      : a.juniorMessage || (owned ? '' : a.audience === 'agent' ? (c.statusText[a.status] || '') : str(a.message));
     return el('div', { className: 'ov-deliverable', 'data-artifact': str(a.name), 'data-status': str(a.status) }, [
       el('div', { className: 'ov-deliverable-main' }, [
         el('div', { className: 'ov-deliverable-label', text: c.deliverableLabel(str(d.label || a.label), fileName(a.path)) }),

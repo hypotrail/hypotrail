@@ -71,7 +71,14 @@ mlkit.contracts.capture.PACKAGERS  # {'mlflow_pyfunc': (mlflow_packaging, 'packa
 `environment/requirements.lock`, `parity/features.json` (`hypotrail.parity_frame/1`, feature
 columns only, at most 50 development rows), `parity/expected_outputs.json`,
 `packages/<format>/` and `packages/<format>.descriptor.json` (optional) and, after the final
-evaluation, `evidence/binding-<n>.json`.
+evaluation, `evidence/binding-<n>.json`. Every one of these files except the bundle document,
+the evidence bindings and the packages is bound to the predictor id by the manifest (review
+2026-10-24, below).
+
+> **Updated after the review of 24 October 2026** ([REVIEW-2026-10-24](../acceptance/REVIEW-2026-10-24.md),
+> area A; see "Review 2026-10-24 fixes" below): the predictor id now binds every immutable
+> byte of the bundle (the parity block and the computation context enter the manifest's
+> extensions), and a bundle holding packages lives at `predictors/<predictor_id>+<format>`.
 
 **Migration notes for B.**
 1. B's packager module is `mlkit.integrations.mlflow_packaging` exposing `packager()` that
@@ -87,6 +94,71 @@ evaluation, `evidence/binding-<n>.json`.
    the exported project passes its own bundle directory.
 5. `contract_invalid` and the other v1 codes reach the CLI as frozen engine codes with
    `details.contract_code` (CLI-CONTRACT, "Library integration v1 additions").
+
+## Review 2026-10-24 fixes (area A)
+
+Regression tests: `framework/tests/study/libraries/test_review_2026_10_24_a.py`.
+
+- **A1, what the predictor id binds.** `verify_bundle` compares every digest the manifest
+  records with the bytes: `payload_files[].sha256`, `runtime.wheel_sha256`,
+  `environment.lock_sha256`. The parity block of `predictor_bundle.json` (paths, digests,
+  origin, row count, tolerance) must equal the manifest extension `hypotrail.parity`, and
+  the computation context is bound by `hypotrail.computation_context`
+  (`{relative_path, sha256}`, or null when the capture had none). A listed file that neither
+  the manifest nor a declared package binds is refused, and so is a manifest without these
+  two extensions (a bundle captured before the fix: capture again). `check_parity` re-reads
+  the parity digests before comparing. Consequences: swapping the payload (even with the
+  parity outputs regenerated and the bundle document edited), changing the wheel or the
+  lock, relaxing the tolerance, or removing, adding or editing the context is refused with
+  `artifact_integrity_failed`; a capture's id now changes with its tolerance and its
+  computation context, which records the study revision at the capture (two captures of one
+  configuration at two revisions are two predictors). The evidence binding stays outside the
+  id, mutable and versioned; its temporary document is written under `evidence/`, so a crash
+  cannot leave an unlisted file beside the bundle document. Predictor ids of earlier bundles
+  are not valid any more (pre-release v1); recipe and data-contract ids are unchanged (the
+  frozen `RECIPE_ID` and `CONTRACT_ID` vectors did not move).
+- **Optional packages** are made from the verified native bundle after its id exists, so
+  they stay outside the id; `verify_bundle` checks each one against its descriptor
+  (`packages/<format>`, one per format, descriptor listed with its recorded digest, same
+  format, predictor id and artefact id, parity `ok`, every descriptor file present with its
+  digest). `packager.format` is checked (`[A-Za-z0-9][A-Za-z0-9_-]{0,63}`) before it becomes
+  a path.
+- **A2.** `trusted_roots` is None or a collection of paths; a string, bytes, a single path or
+  a non-path element is refused with `contract_invalid` before anything is read.
+- **A3.** The bundle folder is `<predictor_id>` without packages and
+  `<predictor_id>+<format>[+...]` with packages; a capture reuses only a bundle of the same id
+  and the same formats, reports the packages of the bundle it names (so does
+  `read_export_source`), verifies every existing bundle of the same predictor first (an
+  altered one refuses the capture), and removes its staging folder on every outcome.
+- **A4.** The MAPIE calibration ledger keys a use on the rows: the membership digest of
+  `calibration_ref` (same rows under another partition id are refused for another
+  procedure, reproduced for the same one) and, with `claim(..., keys=...)`, per-row digests
+  (an overlapping set or a superset is refused). Without `keys`, only an identical
+  membership is recognised; callers should pass the keys.
+- **Minor items.** A recipe feature absent at inference is `missing_columns` even when the
+  contract does not require it; string columns (`object`, `string[python]`,
+  `string[pyarrow]`) reach the preparation with `NaN` for a missing value, and the
+  preparation reads `pd.NA` as the engine reads `NaN`; a lone surrogate is
+  `contract_invalid`; at the conformal boundary (rank ⌈(n+1)·level⌉ = n, refused by
+  MAPIE 1.x) the adapter keeps its own finite-sample rule and computes the quantile itself
+  (`hypotrail.quantile: adapter_rank_rule`, with a warning); Evidently compares categories
+  after writing an integral float as an integer, validates the profile strictly, refuses an
+  inverted alert (a p-value alerts with `lt`/`le`, a distance with `gt`/`ge`), reports an
+  empty profile as `failed` with "the profile declares no check" and a profile column
+  absent from a population as `contract_invalid`; the Pandera schema honours the declared
+  conversions as the runtime does; `C=1` and `C=1.0` (any real-valued family parameter) give
+  one recipe id; validated contracts are immutable all the way down (their dicts and lists
+  refuse mutation); a bootstrap whose point estimate is undefined on the full sample is
+  `insufficient_data`; a missing MAPIE submodule is `optional_dependency_missing`; the lock
+  header names the platform as the manifest does (`sys.platform`-machine), not the kernel
+  build. The test-only synthetic packager hands its raw pipeline NaN for a missing text
+  value, as the runtime's input check does.
+- **Evidence after the fixes:** `framework/tests/study/libraries` 167 passed, 4 skipped
+  (opt-in extras matrix); the Azure ML exporter files that build bundles
+  (`test_mlflow_packaging`, `test_export_command`, `test_contract_units`, `test_review_fixes`)
+  139 passed, 1 skipped. Editing the runtime modules changes the code fingerprint of
+  `predictor.capture` and `diagnostics.population`: earlier results of these two activities
+  read as not current.
 
 ## Commands and test evidence
 
@@ -164,17 +236,82 @@ own sources on first compilation). Evidently is imported only by `diagnostics.po
 
 ## Source compatibility of existing studies
 
-Editing `activities.py` (in every activity's fingerprint) and `fit.py` makes the results of
-studies computed at the base report `code_changed` (kept, not current), as every earlier
-engine change did; consistent with the repository's practice (J0–J3: "no new code
-equivalence exception"), **no broad attestation was added**. Only the existing, reviewed
-`diag.final_test` edge of `mlkit/study/code_compat.py` was retargeted to the new bytes of
-`activities.py`, plus the same edge from the base digest
-(`3065f4d6…` → `4179e60b…`): the final-test diagnostic dispatch is unchanged. The
-reviewer may add edges for other activities (their engine paths are unchanged when no
-capture exists) or remove these; either way nothing becomes wrong, only current or not.
-Any further edit of `activities.py` (including the merge with `main`) must recompute these
-digests.
+Editing `activities.py` (in every activity's fingerprint) and `fit.py` changed their digests
+(`activities.py` `3065f4d6…` → `d6806ce3…`, `fit.py` `28c00840…` → `d39f3f5b…` between the
+base `506180a` and `621d607`). Without an attestation every result of a study computed at the
+base reports `code_changed` and is not current at HEAD. That is a real loss, not a cosmetic
+one: the results can be recomputed, except `final_test.evaluation`, which runs once, so a
+study whose final test was opened could never be current again (review 2026-10-24, E1).
+
+Decision of the integrator (2026-10-24): attest the paths that are unchanged when no capture
+is used, and only with evidence. `mlkit/study/code_compat.py` now holds, besides the reviewed
+`diag.final_test` edges, two exact edges from the base digests to the `621d607` digests:
+
+- `mlkit.study.activities` `3065f4d6…` → `d6806ce3…` for the twenty other activities of the
+  base engine (`split`, the nine `eda.*`, `fit.baseline`, `fit.logistic`, `fit.linear`,
+  `fit.variant`, `policy.evaluation`, `policy.inspect`, `evaluate.regression`, `diag.binary`,
+  `diag.regression`, `final_test.evaluation`). The change adds the `predictor.capture` and
+  `diagnostics.population` constants, option checks and dispatch, and a final-test plan branch
+  and load that are taken only when a `predictor.capture` result is current, which no study of
+  the base has.
+- `mlkit.study.fit` `28c00840…` → `d39f3f5b…` for the eight activities whose fingerprint holds
+  it (`fit.baseline`, `fit.logistic`, `fit.linear`, `fit.variant`, `eda.single_feature_signal`,
+  `diag.binary`, `diag.regression`, `final_test.evaluation`). The change adds the optional
+  `predictor` argument of `final_evaluation`, `None` without a capture.
+
+`predictor.capture` and `diagnostics.population` are not attested: they did not exist at the
+base. No other fingerprinted module changed (`scikit-learn` 1.9.1 and `interpret-core` 0.7.3
+are pinned at both commits).
+
+Documented loss, not attested (review fix A, 2026-10-24): the review fixes changed the
+runtime and the capture behaviour (`hypotrail_runtime` `predictor`, `contracts`, `canonical`,
+`families`, `inference`, `preprocess`; `mlkit/contracts/capture.py`; the MAPIE, Evidently,
+Pandera and SciPy integrations), and a bundle without the new manifest extensions is now
+refused. A `predictor.capture` or `diagnostics.population` result computed before those fixes
+(at `621d607` or on a branch of it) therefore reports `code_changed` and is not current, by
+design; there is no byte equality to attest. Re-running the activity recaptures the predictor.
+The consequence that cannot be repaired: a `final_test.evaluation` that scored a reloaded
+capture names that capture among its inputs, so it is not current either (upstream not
+current), with the `diag.final_test` computed from it, and the final test is not run twice.
+Such a study keeps its recorded final figures, shown as not current; its evidence can only be
+current again in a new study. Studies of the base (`506180a`) have no capture and are not
+affected.
+
+Evidence (`framework/tests/study/code_compat_evidence.py`, reproducible; the opt-in test
+`test_code_compat_library_v1.py::test_byte_comparison_with_the_base_engine` runs it when
+`HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT` name a `506180a` checkout with its
+own `uv sync --frozen` environment). The same 95 commands ran with the `506180a` engine and with
+the current one on four temporary studies made from the same case files: a synthetic binary
+case with the default holdout and three variants (tuned, gradient boosting, stronger penalty),
+the same case under 5-fold stratified cross-validation (stronger penalty, EBM), Auto MPG with
+the default holdout (tuned, gradient boosting), and a synthetic regression case under 5-fold
+quantile cross-validation (stronger penalty, EBM); each runs every activity of its task, then
+confirms the model and (binary) the rule, opens the final test (`final_test.evaluation`) and
+runs `diag.final_test`. All 95 commands had the same outcome. Of the 73 registry results, all
+have byte-identical blobs (prediction and row-key digests), params, partition and row count;
+53 have byte-identical values and output digest; the 20 others (`policy.*`, `evaluate.regression`
+and the diagnostics) differ only by the ids of the upstream results they name, because a
+result id hashes the code fingerprint. Then, in copies of the four `506180a` studies, the
+current engine found every promoted result current (67 of 67) and recomputed the 42 leaf
+results (every EDA, `policy.inspect`, `policy.evaluation`, `evaluate.regression`, the
+diagnostics and `diag.final_test`), whose upstream ids stay the old ones: all 42 are
+byte-identical to the `506180a` results (values, output digest, blobs, params, inputs).
+The comparison was run again on the working tree after the review fixes of the runtime and
+the capture had landed (none of them touches a module these activities fingerprint): the
+same counts, all matching.
+`test_code_compat_library_v1.py` also checks, without the old engine, that the attested
+digests are the bytes of both commits and of the current files, that each activity list is
+explicit and complete, and that the edges stay exact, directed and scoped.
+
+With the reviewer's drivers, the `506180a` studies (an open binary study, the same with its
+final test opened and `diag.final_test`, Auto MPG) are current again at HEAD (9 of 9, 11 of
+11, 8 of 8), including the opened final test, and `check`, `render` and `export handoff` pass.
+
+Any further edit of `activities.py` or `fit.py` (including the merge with `main`) makes these
+edges stop matching: the `506180a` studies lose their current results again unless the
+comparison is re-run against the new bytes and, if it matches, new edges are added from the
+base digests (no transitivity). `test_the_library_v1_edges_target_the_current_bytes` fails
+then, with that instruction.
 
 ## Limits and what is not done
 

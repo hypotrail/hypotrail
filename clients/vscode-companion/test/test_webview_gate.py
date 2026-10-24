@@ -62,7 +62,7 @@ from pathlib import Path
 import pytest
 
 import themes
-from panel_cases import OVERFLOW, PROSE, STYLE_ATTRS, TABS, UNDERLINED, VISIBLE, load_views, open_case
+from panel_cases import OVERFLOW, PROSE, STYLE_ATTRS, TABS, UNDERLINED, VISIBLE, expand_eda, load_views, open_case
 
 HERE = Path(__file__).resolve().parent
 BASELINES = HERE / 'baselines'
@@ -263,6 +263,12 @@ def test_every_tab_passes_the_structural_gate(open_panel, views, payload, theme,
             assert page.locator(f'#panel-{tab} [data-tab-lead="{tab}"]').count() == 1, (tab, 'one lead sentence per tab (I1)')
             if width != 1280 and (case == 'binary' or tab in ('overview', 'evidence', 'decisions')):
                 shot(page, f'{tab}-{case}-{theme}-{width}-{lang}')
+            if tab == 'eda':
+                # The EDA cards start collapsed but the last: the gate also reads every card
+                # open, as the junior sees it after opening them.
+                expand_eda(page)
+                assert page.locator('details.eda-analysis:not([open])').count() == 0
+                structural(panel, f'{case}/{tab}-open/{theme}/{width}/{lang}', column_names(payload, 'binary'))
 
 
 @pytest.mark.parametrize('width', WIDTHS)
@@ -273,6 +279,10 @@ def test_regression_tabs_pass_the_structural_gate_in_french(open_panel, views, p
         structural(panel, f'regression/{tab}/{width}', column_names(payload, 'regression'))
         if width != 1280:
             shot(panel.page, f'{tab}-regression-light-modern-{width}-fr')
+        if tab == 'eda':
+            expand_eda(panel.page)
+            assert panel.page.locator('details.eda-analysis:not([open])').count() == 0
+            structural(panel, f'regression/{tab}-open/{width}', column_names(payload, 'regression'))
 
 
 @pytest.mark.parametrize('theme', THEMES)

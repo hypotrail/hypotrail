@@ -41,6 +41,53 @@ ATTESTATIONS: tuple[dict, ...] = (
         'evidence': ['framework/tests/study/test_wp_b4_diagnostics.py',
                      'framework/tests/study/libraries/test_capture_final.py'],
     },
+    # Library integration v1, review E1 (integrator decision 2026-10-24): the activities whose
+    # code path is unchanged when no predictor capture is used, attested only after their
+    # results were compared between the engine of 506180a and that of 621d607.
+    {
+        'module': 'mlkit.study.activities',
+        'from_sha256': '3065f4d623f1ea2346c43ef27c0dd0f9a948c8eb007355c9cb625967b17cc9e1',
+        'to_sha256': 'd6806ce3ff8f40c90eec7342c4ea2693a87c39a387a660dc1633364edd5c1f10',
+        'activities': ['split', 'eda.target_rate', 'eda.special_values', 'eda.rate_by',
+                       'eda.target_summary', 'eda.mean_by', 'eda.distribution', 'eda.quality',
+                       'eda.single_feature_signal', 'eda.correlation', 'fit.baseline',
+                       'fit.logistic', 'fit.linear', 'fit.variant', 'policy.evaluation',
+                       'policy.inspect', 'evaluate.regression', 'diag.binary',
+                       'diag.regression', 'final_test.evaluation'],
+        'reason': ('Library integration v1 only adds the predictor.capture and '
+                   'diagnostics.population constants, option checks and dispatch, and a '
+                   'final-test plan branch and load taken only when a predictor.capture result '
+                   'is current; a study made before it has none, so every one of these '
+                   'activities plans and computes exactly as before.'),
+        'evidence': ['framework/tests/study/test_code_compat_library_v1.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#source-compatibility-of-existing-studies: '
+                     'the same 95 commands on four temporary studies (synthetic binary '
+                     'holdout, synthetic binary 5-fold, Auto MPG regression holdout, '
+                     'synthetic regression 5-fold, each to an opened final test with '
+                     'diag.final_test) with the 506180a and 621d607 engines: 73 results with '
+                     'byte-identical blobs and params; 53 with byte-identical values, the 20 '
+                     'others (policy, evaluation and diagnostics) differ only by the ids of '
+                     'their upstream results, and all 42 leaf results recomputed at 621d607 '
+                     'inside the 506180a studies (upstream ids kept) are byte-identical.'],
+    },
+    {
+        'module': 'mlkit.study.fit',
+        'from_sha256': '28c00840fe9f9a5c17d0e9a0d483cd7dbdc9ed2cc4d715a8f65073399d989161',
+        'to_sha256': 'd39f3f5bfbc0927c79af7371b8358b9b4d72892b869c2ed726498a798a744579',
+        'activities': ['fit.baseline', 'fit.logistic', 'fit.linear', 'fit.variant',
+                       'eda.single_feature_signal', 'diag.binary', 'diag.regression',
+                       'final_test.evaluation'],
+        'reason': ('Library integration v1 only adds the optional predictor argument of '
+                   'final_evaluation (None unless a predictor.capture result is current) and '
+                   'the values it adds in that case; the fits and, without a capture, the '
+                   'final evaluation are unchanged.'),
+        'evidence': ['framework/tests/study/test_code_compat_library_v1.py',
+                     'framework/tests/study/code_compat_evidence.py',
+                     'docs/handoff/LIBRARIES-V1.md#source-compatibility-of-existing-studies: '
+                     'the same comparison as the mlkit.study.activities edge of the same '
+                     'commits.'],
+    },
     {
         'module': 'mlkit.study.diagnostics',
         'from_sha256': '3d3244edc2b3bc7a7b5cb6e5519e18751ed2ad8eb7d3066ef5585242ac52059d',

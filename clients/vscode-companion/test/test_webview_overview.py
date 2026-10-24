@@ -294,8 +294,12 @@ def test_ov7_deliverables_junior_messages_open_file_and_marimo_launches(open_pan
     for a in binary['artifacts']:
         row = page.locator(f'[data-ov="deliverables"] [data-artifact="{a["name"]}"]')
         # Two-layer copy: the junior variant; the engine message (it names paths) in the hover.
-        expected = '' if a['name'] in ('workbench', 'editable') else a['juniorMessage']
+        # The editable copy shows its engine junior message too (it is not official evidence);
+        # the workbench row says nothing beyond its description.
+        expected = '' if a['name'] == 'workbench' else a['juniorMessage']
         assert row.locator('[data-message]').inner_text() == expected
+        if a['name'] == 'editable':
+            assert expected and 'not official evidence' in expected
         assert row.locator('[data-message]').get_attribute('title') == a['message']
     assert page.locator('[data-ov="deliverables"] [data-artifact="report"] .ov-deliverable-label').inner_text() == \
         'Report · study.html'
@@ -309,6 +313,17 @@ def test_ov7_deliverables_junior_messages_open_file_and_marimo_launches(open_pan
     page.get_by_role('button', name='Open in Marimo (read)').click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'notebook'}
     page.locator('[data-artifact="workbench"]').get_by_role('button', name='Open in Marimo (edit)').click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'workbench'}
+    # The two "edit" buttons have distinct accessible names that name their deliverable, and
+    # each starts with its visible text.
+    names = page.locator('[data-ov="deliverables"] [data-marimo]').evaluate_all(
+        'bs => bs.map(b => [b.dataset.marimo, b.getAttribute("aria-label"), b.textContent])')
+    assert names == [['notebook', 'Open in Marimo (read): Study notebook', 'Open in Marimo (read)'],
+                     ['editable', 'Open in Marimo (edit): Editable study copy', 'Open in Marimo (edit)'],
+                     ['workbench', 'Open in Marimo (edit): Your workbench', 'Open in Marimo (edit)']]
+    page.get_by_role('button', name='Open in Marimo (edit): Editable study copy', exact=True).click()
+    assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'editable'}
+    page.get_by_role('button', name='Open in Marimo (edit): Your workbench', exact=True).click()
     assert panel.posted()[-1] == {'v': 2, 'type': 'open_marimo', 'artifact': 'workbench'}
     assert page.locator('[data-launch="notebook"]').inner_text() == MARIMO['notebook']
     assert page.locator('[data-launch="workbench"]').inner_text() == MARIMO['workbench']

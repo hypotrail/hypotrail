@@ -251,7 +251,8 @@ def test_binary_target_card_introduces_the_term_first(open_panel, model):
     balanced = copy.deepcopy(eda)
     balanced['cards'][0]['data']['imbalanced'] = False
     panel.view_data('eda', balanced)
-    card.locator('details.eda-analysis > summary').click()
+    # The card the junior opened stays open across the new read (view memory).
+    assert card.locator('details.eda-analysis').get_attribute('open') == ''
     assert term.inner_text() == 'Base rate: how often the outcome occurs in the training rows.'
 
 
