@@ -133,8 +133,8 @@ Regression tests: `framework/tests/study/libraries/test_review_2026_10_24_a.py`.
 - **A4.** The MAPIE calibration ledger keys a use on the rows: the membership digest of
   `calibration_ref` (same rows under another partition id are refused for another
   procedure, reproduced for the same one) and, with `claim(..., keys=...)`, per-row digests
-  (an overlapping set or a superset is refused). Without `keys`, only an identical
-  membership is recognised; callers should pass the keys.
+  (an overlapping set or a superset is refused). Round 2 makes `keys` mandatory (see
+  below).
 - **Minor items.** A recipe feature absent at inference is `missing_columns` even when the
   contract does not require it; string columns (`object`, `string[python]`,
   `string[pyarrow]`) reach the preparation with `NaN` for a missing value, and the
@@ -159,6 +159,39 @@ Regression tests: `framework/tests/study/libraries/test_review_2026_10_24_a.py`.
   139 passed, 1 skipped. Editing the runtime modules changes the code fingerprint of
   `predictor.capture` and `diagnostics.population`: earlier results of these two activities
   read as not current.
+
+**Round 2.** Regression tests: `framework/tests/study/libraries/test_review_round2_a.py`
+(ported from the reviewer's probes). **A1-R2a:** a package is outside the predictor id, so
+its embedded native bundle is now checked against the predictor. `verify_bundle` verifies
+every folder of a package holding a `predictor_bundle.json` (and the folder the descriptor
+names with `hypotrail.native_bundle`, which must exist) as a bundle of its own, and requires
+the same predictor id, manifest, recipe, data contract and payload, no package of its own,
+and exactly the files the outer predictor id binds with the same digests; otherwise
+`artifact_integrity_failed` (so the final-test opening and the Azure ML export refuse it).
+`ArtifactPackager.verify` (and `package`, before publishing) also requires the packager's
+own wrapper bytes, an `MLmodel` that loads that wrapper on `artifacts/native_bundle`, and the
+same byte identity, raising `artifact_integrity_failed`; a parity mismatch is still a
+`failed` result. A package re-captured with another model that agrees on the parity rows,
+and re-described consistently, used to verify under the evaluated id and be exported as
+`packaged`. **A4-R2:** `CalibrationLedger.claim(ref, procedure, *, keys)` requires the row
+keys (`None`, a string or an empty set is `contract_invalid`; omitting the argument is a
+`TypeError`); a recorded use without row digests cannot be shown disjoint and blocks every
+other membership (`recorded_rows_unknown`); a claim reads, checks and appends under an
+exclusive `flock` on `<ledger>.lock`, so two concurrent claims never both bind. Changed
+expectations: the round-1 ledger tests (`test_mapie_uncertainty.py`,
+`test_review_2026_10_24_a.py`) now pass keys; the refusal they assert is unchanged. The
+round-1 xfail `test_ledger_overlapping_superset_also_escapes` was not in this repository; a
+test of that name now passes in the round-2 file. **N1:** the Evidently adapter reads `None`,
+`NaN`, `pd.NA` and `NaT` as missing in a categorical column of any dtype (never the category
+`'<NA>'`). **N2:** an integer given for a real-valued family parameter that no float
+represents exactly (`10**400`, `2**53 + 1`) is `contract_invalid`, from a mapping and from
+JSON bytes, never a raw `OverflowError` or a silent rounding. **N4 (observation, behaviour
+unchanged):** below 0.5, MAPIE can take one rank above the adapter's rule (its 1 − α is
+`0.30000000000000004` at 0.3), a wider interval; documented in the `mapie_uncertainty`
+docstring and bounded by a test. No contract docstring changed: the JSON schemas are
+current (`python -m hypotrail_runtime.schemas --check`). Evidence:
+`framework/tests/study/libraries` 202 passed, 5 skipped (the opt-in extras matrix and one integer beyond the JSON
+reader's digit limit); the four Azure ML exporter files above 139 passed, 1 skipped.
 
 ## Commands and test evidence
 

@@ -452,16 +452,19 @@ def _eligibility(name, keys):
 
 
 def test_ledger_refuses_the_same_rows_under_another_name(tmp_path):
+    """Row keys are mandatory since review A4, round 2: the claims pass them (the
+    expectations are unchanged)."""
     from mlkit.integrations import mapie_uncertainty as mu
     ledger = mu.CalibrationLedger(tmp_path / 'l.jsonl')
     a, b = _eligibility('calibration', 'abc'), _eligibility('calibration-bis', 'abc')
-    first = ledger.claim(a['calibration_ref'], {'p': 1})
+    keys = list('abc')
+    first = ledger.claim(a['calibration_ref'], {'p': 1}, keys=keys)
     with pytest.raises(ContractError) as e:
-        ledger.claim(b['calibration_ref'], {'p': 2})
+        ledger.claim(b['calibration_ref'], {'p': 2}, keys=keys)
     assert e.value.code == 'calibration_not_eligible'
     assert e.value.details['reason'] == 'same_rows'
     # The same procedure on the same rows is a reproduction, whatever the name.
-    assert ledger.claim(b['calibration_ref'], {'p': 1}) == first
+    assert ledger.claim(b['calibration_ref'], {'p': 1}, keys=keys) == first
     assert len(ledger.uses()) == 1
 
 
@@ -488,7 +491,7 @@ def test_ledger_keys_must_be_the_rows_of_the_reference(tmp_path):
     ledger = mu.CalibrationLedger(tmp_path / 'l.jsonl')
     ref = _eligibility('cal', ['c1', 'c2'])['calibration_ref']
     _refused(ledger.claim, ref, {'p': 1}, keys=['c1'], code='contract_invalid')
-    _refused(ledger.claim, 'no-membership', {'p': 1}, code='contract_invalid')
+    _refused(ledger.claim, 'no-membership', {'p': 1}, keys=['c1'], code='contract_invalid')
 
 
 # --- minor library findings ----------------------------------------------------------------

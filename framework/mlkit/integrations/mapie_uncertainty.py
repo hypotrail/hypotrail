@@ -13,9 +13,10 @@ positive class, threshold family or objective) is refused as adaptive reuse
 (``calibration_not_eligible``) — and a changed model invalidates the calibrated object
 without ever making the partition unseen again. The ledger keys a use on the *rows*, not on
 the partition's name: the membership digest of ``calibration_ref`` (the same rows under
-another id are the same calibration) and, when the caller passes the row keys, their
-per-row digests (a superset or any overlap of rows already used is refused unless it is
-the very same membership and procedure).
+another id are the same calibration) and the per-row digests of the row keys, which every
+claim must pass (a superset or any overlap of rows already used is refused unless it is
+the very same membership and procedure). A claim is atomic: it reads, checks and appends
+under a file lock, so two concurrent claims never both bind.
 
 **Risk control (L-16).** Binary classification, scores of a *fixed* model, a threshold grid
 fixed in advance, the per-row rule ``threshold:t``. The target is a minimum precision with a
@@ -47,12 +48,21 @@ than reporting ``insufficient_data`` for a calibration size its rule accepts; th
 says so (``hypotrail.quantile``: ``adapter_rank_rule``, and a warning). Otherwise the
 quantile is MAPIE's (``hypotrail.quantile``: ``mapie``).
 
+A known conservative difference below 0.5 (review A, round 2, observation N4; behaviour
+unchanged). MAPIE receives the level, works with α = 1 − level and computes its rank from
+1 − α, which in floating point can exceed the level (1 − (1 − 0.3) = 0.30000000000000004).
+When (n+1)·level is an integer, MAPIE's ceiling then lands one rank above the adapter's
+rule ⌈(n+1)·level⌉ (computed with a 1e-12 guard), so its interval is the next residual up:
+wider, never narrower, and only at levels below 0.5, which are not usual coverage levels.
+At 0.5 and above the two ranks agree on every calibration size the tests sweep.
+
 Exporting a calibrated capability is not qualified (parity, environment and signature of
 MAPIE objects in the exported project are untested): :func:`require_exportable` refuses it
 explicitly rather than dropping it.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import math
 import os
@@ -121,7 +131,13 @@ def eligibility(calibration: Mapping | None, *, other_partitions: Mapping[str, I
 
 class CalibrationLedger:
     """Durable record of the procedures that used a calibration partition (append-only,
-    one JSON line per use, fsync'd). Exposure is never undone by an invalidation."""
+    one JSON line per use, fsync'd). Exposure is never undone by an invalidation.
+
+    Every claim names its rows (``keys``, mandatory since review A4 round 2): a use is
+    keyed on the membership digest and on per-row digests, so an overlap or a superset of
+    rows already used is always recognised. A claim reads the ledger, checks it and appends
+    under an exclusive ``flock`` on ``<ledger>.lock``, so two concurrent claims cannot both
+    bind the same rows (POSIX only, as the study writer lock)."""
 
     def __init__(self, path: Path):
         self.path = Path(path)
@@ -150,55 +166,79 @@ class CalibrationLedger:
     def row_digests(keys: Iterable[str]) -> list[str]:
         return sorted({canonical.sha256_hex(str(k).encode()) for k in keys})
 
+    @contextlib.contextmanager
+    def _locked(self):
+        """An exclusive ``flock`` on the ledger's lock file for one read-check-append."""
+        if os.name == 'nt':
+            raise ContractError('capability_not_supported', 'The calibration ledger needs '
+                                'POSIX file locking (fcntl.flock).',
+                                remediation='Use Linux, macOS or WSL.')
+        import fcntl
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(self.path.with_name(self.path.name + '.lock'), os.O_CREAT | os.O_RDWR,
+                     0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+
     def claim(self, calibration_ref: str, procedure: Mapping, *,
-              keys: Iterable[str] | None = None) -> dict:
+              keys: Iterable[str]) -> dict:
         """Record the use before computing; the same procedure on the same rows may be
         reproduced; anything else on rows already used is refused
-        (``calibration_not_eligible``). Rows are recognised by their membership digest
-        whatever the partition is called, and, when ``keys`` are given (they must be the rows
-        of ``calibration_ref``), by each row: a superset or an overlap is refused."""
+        (``calibration_not_eligible``). ``keys`` are the rows of ``calibration_ref``
+        (mandatory, ``contract_invalid`` otherwise): rows are recognised by their membership
+        digest whatever the partition is called, and by each row, so a superset or an
+        overlap is refused. A recorded use without row digests (written before keys were
+        mandatory) cannot be shown disjoint: it blocks every other membership."""
         pid = self.procedure_id(procedure)
         membership = self.membership(calibration_ref)
-        digests = None
-        if keys is not None:
-            keys = sorted({str(k) for k in keys})
-            if canonical.sha256_hex('\n'.join(keys).encode()) != membership:
-                raise ContractError('contract_invalid', 'The row keys are not the rows of this '
-                                    'calibration reference.', path='keys',
-                                    remediation='Pass the keys the eligibility was computed '
-                                                'on.')
-            digests = self.row_digests(keys)
-        for use in self.uses():
-            used = use.get('membership_sha256') or self.membership(use['calibration_ref'])
-            same_rows = used == membership
-            overlap = same_rows or (digests is not None and use.get('row_digests') is not None
-                                    and not set(digests).isdisjoint(use['row_digests']))
-            if not overlap:
-                continue
-            if same_rows and use['procedure_id'] == pid:
-                return use
-            raise ContractError('calibration_not_eligible',
-                                'These calibration rows (or some of them) already calibrated '
-                                'a procedure; reusing them adaptively, under any partition '
-                                'name or inside a larger set, is outside this version.',
-                                path='calibration', remediation='Reserve new calibration rows '
-                                'for the new model, rule or objective.',
-                                details={'bound_procedure': use['procedure_id'],
-                                         'requested': pid,
-                                         'bound_calibration_ref': use['calibration_ref'],
-                                         'reason': 'same_rows' if same_rows
-                                         else 'overlapping_rows'})
-        use = {'schema': LEDGER_SCHEMA, 'calibration_ref': calibration_ref,
-               'membership_sha256': membership, 'procedure_id': pid,
-               'procedure': dict(procedure)}
-        if digests is not None:
-            use['row_digests'] = digests
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, 'a', encoding='utf-8') as fh:
-            fh.write(canonical.dumps(use).decode() + '\n')
-            fh.flush()
-            os.fsync(fh.fileno())
-        return use
+        if keys is None or isinstance(keys, (str, bytes)):
+            raise ContractError('contract_invalid', 'A calibration claim names its rows: pass '
+                                'the row keys of the calibration reference.', path='keys',
+                                remediation='Pass the keys the eligibility was computed on.')
+        keys = sorted({str(k) for k in keys})
+        if not keys or canonical.sha256_hex('\n'.join(keys).encode()) != membership:
+            raise ContractError('contract_invalid', 'The row keys are not the rows of this '
+                                'calibration reference.', path='keys',
+                                remediation='Pass the keys the eligibility was computed '
+                                            'on.')
+        digests = self.row_digests(keys)
+        with self._locked():
+            for use in self.uses():
+                used = use.get('membership_sha256') or self.membership(use['calibration_ref'])
+                same_rows = used == membership
+                recorded = use.get('row_digests')
+                overlap = same_rows or recorded is None \
+                    or not set(digests).isdisjoint(recorded)
+                if not overlap:
+                    continue
+                if same_rows and use['procedure_id'] == pid:
+                    return use
+                raise ContractError(
+                    'calibration_not_eligible',
+                    'These calibration rows (or some of them) already calibrated a procedure; '
+                    'reusing them adaptively, under any partition name or inside a larger '
+                    'set, is outside this version.', path='calibration',
+                    remediation='Reserve new calibration rows for the new model, rule or '
+                                'objective.',
+                    details={'bound_procedure': use['procedure_id'], 'requested': pid,
+                             'bound_calibration_ref': use['calibration_ref'],
+                             'reason': 'same_rows' if same_rows else
+                             'overlapping_rows' if recorded is not None
+                             else 'recorded_rows_unknown'})
+            use = {'schema': LEDGER_SCHEMA, 'calibration_ref': calibration_ref,
+                   'membership_sha256': membership, 'procedure_id': pid,
+                   'procedure': dict(procedure), 'row_digests': digests}
+            with open(self.path, 'a', encoding='utf-8') as fh:
+                fh.write(canonical.dumps(use).decode() + '\n')
+                fh.flush()
+                os.fsync(fh.fileno())
+            return use
 
 
 def is_current(procedure: Mapping, *, predictor_id: str, recipe_sha256: str,

@@ -66,13 +66,17 @@ def test_not_applicable_without_an_eligible_partition():
 
 
 def test_adaptive_reuse_is_refused_and_exposure_is_kept(tmp_path):
+    """Row keys are mandatory for a claim since review A4, round 2: this test passes the
+    keys of ``ELIGIBLE`` (its expectations are unchanged)."""
     ledger = mu.CalibrationLedger(tmp_path / 'calibration.jsonl')
     proc = {'predictor_id': 'p' * 64, 'recipe_sha256': 'r' * 64, 'positive_label': 'yes',
             'rule_family': 'threshold', 'objective': 'precision>=0.8'}
-    first = ledger.claim(ELIGIBLE['calibration_ref'], proc)
-    assert ledger.claim(ELIGIBLE['calibration_ref'], proc) == first        # reproduction
+    keys = ['c1', 'c2', 'c3']
+    first = ledger.claim(ELIGIBLE['calibration_ref'], proc, keys=keys)
+    assert ledger.claim(ELIGIBLE['calibration_ref'], proc, keys=keys) == first  # reproduction
     with pytest.raises(ContractError) as e:
-        ledger.claim(ELIGIBLE['calibration_ref'], {**proc, 'objective': 'precision>=0.7'})
+        ledger.claim(ELIGIBLE['calibration_ref'], {**proc, 'objective': 'precision>=0.7'},
+                     keys=keys)
     assert e.value.code == 'calibration_not_eligible'
     assert len(ledger.uses()) == 1                       # the use stays recorded
     assert not mu.is_current(proc, predictor_id='q' * 64, recipe_sha256='r' * 64,

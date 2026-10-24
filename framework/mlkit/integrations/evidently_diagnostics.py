@@ -144,11 +144,15 @@ def profile_of(doc) -> Profile:
 def _category_text(series):
     """Categorical values as text, missing kept missing; an integral float is written as
     an integer (``1.0`` -> ``'1'``), so a missing value that made pandas read an integer
-    column as ``float64`` does not turn every category into an unseen one."""
+    column as ``float64`` does not turn every category into an unseen one. Every missing
+    marker (``None``, ``NaN``, ``pd.NA``, ``NaT``) stays missing, whatever the column's
+    dtype (``object``, ``string``, ``Int64``): it is never the category ``'<NA>'``
+    (review A, round 2, N1)."""
     import numpy as np
+    import pandas as pd
 
     def text(v):
-        if v is None or (isinstance(v, float) and v != v):
+        if v is None or (pd.api.types.is_scalar(v) and pd.isna(v)):
             return np.nan
         if isinstance(v, (float, np.floating)) and float(v).is_integer():
             return str(int(v))

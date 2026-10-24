@@ -24,7 +24,8 @@ verdict without changing the id. Outside the id, by design: the evidence binding
 (``evidence/``, mutable and versioned) and the optional packages, which are made from the
 verified native bundle after its id exists; each package is checked against its own
 descriptor (present, listed, digests, ``predictor_id``, ``artifact_id``), never trusted
-blindly.
+blindly, and a native bundle embedded in a package must be the predictor itself, byte for
+byte (review A1, round 2).
 * :meth:`Predictor.predict` checks the raw features against the data contract and returns
   a :class:`PredictionBatch` in input order: the score of the named positive class, or a
   prediction in the target unit.
@@ -652,7 +653,8 @@ def verify_bundle(bundle_dir: Path) -> BundleDescriptor:
     payload, the runtime wheel, the environment lock, the parity files and the computation
     context) is compared with the bytes too; the bundle document's parity block must be the
     one the manifest binds; every listed file must be bound by the manifest or belong to a
-    declared optional package (checked against its descriptor)."""
+    declared optional package (checked against its descriptor, and any native bundle it
+    embeds against this one)."""
     root = Path(bundle_dir)
     if not (root / BUNDLE).is_file():
         raise ContractError('model_not_captured', f'{root} holds no {BUNDLE}.',
@@ -802,6 +804,7 @@ def _check_packages(root: Path, bundle: PredictorBundle, actual: Mapping[str, st
             if actual.get(rel) != f.sha256:
                 _refuse_integrity(f'A file of the {entry.format} package is missing or '
                                   'altered.', path=rel)
+        _check_embedded_bundles(root, bundle, entry, descriptor, actual, bound)
         owned += [descriptor_rel, entry.relative_path + '/']
     unbound = sorted(rel for rel in actual if rel not in bound
                      and not any(rel == o or (o.endswith('/') and rel.startswith(o))
@@ -809,6 +812,60 @@ def _check_packages(root: Path, bundle: PredictorBundle, actual: Mapping[str, st
     if unbound:
         _refuse_integrity('The bundle lists files that neither the predictor id nor a '
                           'declared package binds.', files=unbound)
+
+
+def _check_embedded_bundles(root: Path, bundle: PredictorBundle, entry, descriptor,
+                            actual: Mapping[str, str], bound: set[str]) -> None:
+    """A native bundle carried inside a package is the outer predictor, byte for byte
+    (review A1, round 2): the package is outside the predictor id, so a copy re-captured
+    with another model that agrees on the parity rows would otherwise be served under the
+    evaluated id. Every folder of the package holding a listed ``predictor_bundle.json``,
+    and the folder the descriptor names (extension ``hypotrail.native_bundle``), is verified
+    as a bundle of its own and must name the same predictor, recipe, data contract and payload,
+    and list exactly the files the outer predictor id binds, with the same digests. It holds
+    no package of its own."""
+    prefix = entry.relative_path + '/'
+    # Every listed file of the package, described or not (an unlisted one is refused before).
+    inside_package = [rel[len(prefix):] for rel in actual if rel.startswith(prefix)]
+    folders = {rel.rpartition('/')[0] for rel in inside_package
+               if rel == BUNDLE or rel.endswith('/' + BUNDLE)}
+    declared = descriptor.extensions.get('hypotrail.native_bundle')
+    if declared is not None:
+        if not isinstance(declared, str) or declared.strip('/') not in folders:
+            _refuse_integrity(f'The {entry.format} package descriptor names an embedded native '
+                              'bundle that the package does not hold.',
+                              path=f'{prefix}{declared}' if isinstance(declared, str)
+                              else f'{entry.relative_path}.descriptor.json')
+    expected = {rel: actual[rel] for rel in bound}
+    for folder in sorted(folders):
+        rel = prefix + folder if folder else entry.relative_path
+        try:
+            inner = verify_bundle(_inside(root, rel))
+        except ContractError as exc:
+            _refuse_integrity(f'The native bundle embedded in the {entry.format} package does '
+                              f'not verify: {exc.message}', path=rel, inner_code=exc.code)
+        if inner.predictor_id != bundle.predictor_id:
+            _refuse_integrity(f'The native bundle embedded in the {entry.format} package is '
+                              'another predictor.', path=rel, recorded=bundle.predictor_id,
+                              found=inner.predictor_id)
+        if inner.bundle.optional_packages:
+            _refuse_integrity(f'The native bundle embedded in the {entry.format} package holds '
+                              'packages of its own.', path=rel)
+        found = {f.relative_path: f.sha256 for f in inner.bundle.files}
+        for what, path in (('predictor manifest', bundle.predictor_manifest_path),
+                           ('recipe', bundle.recipe_path),
+                           ('data contract', bundle.data_contract_path),
+                           *(('payload', f.relative_path)
+                             for f in inner.manifest.payload_files)):
+            if found.get(path) != expected.get(path):
+                _refuse_integrity(f'The {what} of the native bundle embedded in the '
+                                  f'{entry.format} package differs from the predictor\'s.',
+                                  path=f'{rel}/{path}')
+        if found != expected:
+            _refuse_integrity(f'The native bundle embedded in the {entry.format} package does '
+                              'not hold exactly the files the predictor id binds.', path=rel,
+                              files=sorted(set(found) ^ set(expected)
+                                           | {k for k in found if found[k] != expected.get(k)}))
 
 
 def environment_issues(manifest: PredictorArtifact) -> list[dict]:

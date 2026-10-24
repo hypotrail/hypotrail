@@ -13,7 +13,13 @@ scientific evidence.
   it back with ``mlflow.pyfunc.load_model``, compares its predictions with the native ones,
   writes ``hypotrail-package.json`` (the package descriptor) and publishes the folder by a
   rename. Any failure leaves no package behind.
-* :meth:`ArtifactPackager.verify` repeats the two comparisons on an existing package.
+* :meth:`ArtifactPackager.verify` repeats the two comparisons on an existing package, after
+  checking that the package serves the native bundle it was made from: its wrapper is this
+  packager's, ``MLmodel`` loads it on ``artifacts/native_bundle``, and the bundle there
+  verifies and is byte-identical to the native one (same predictor id, manifest, recipe,
+  data contract, payload and bound files). ``package`` makes the same check before
+  publishing. The package is outside the predictor id; parity on the bundle's rows alone
+  would accept another model that agrees on them (review A1, round 2).
 
 The wrapper inside the package (``hypotrail_pyfunc.py``, MLflow "models from code") imports
 only ``hypotrail_runtime``, ``mlflow`` and ``pandas``: it keeps the whole preprocessing of the
@@ -524,6 +530,7 @@ class ArtifactPackager:
                 signature=_mlflow_signature(signature),
                 pip_requirements=self._requirements(manifest))
             _neutralise_code_path(package_dir)
+            self._check_embedded(bundle_dir, bundle, package_dir)
             second = self._pyfunc_parity(package_dir, features, native, spec)
             if not second['equal']:
                 raise PackagingError('artifact_integrity_failed',
@@ -571,11 +578,62 @@ class ArtifactPackager:
             result = pd.DataFrame({native.columns[0]: list(result)})
         return compare(result.reset_index(drop=True), native, spec.rtol, spec.atol)
 
+    def _check_embedded(self, bundle_dir: Path, bundle: Mapping, package: Path) -> None:
+        """The package serves the native bundle it was made from (review A1, round 2): the
+        wrapper is this packager's, ``MLmodel`` loads it from ``artifacts/native_bundle``,
+        and the bundle there verifies on its own and is byte-identical to the native one
+        (same predictor id, manifest, recipe, data contract and payload; exactly the files
+        the predictor id binds, with the same digests). The package is outside the
+        predictor id, so parity on the bundle's rows alone would accept another model that
+        agrees on them. ``artifact_integrity_failed`` otherwise."""
+        def refuse(message, **details):
+            raise PackagingError('artifact_integrity_failed', message, path=str(package.name),
+                                 remediation='Capture the predictor again; never edit a '
+                                             'package.', details=details)
+        wrapper = inside(package, WRAPPER_FILE, 'package wrapper')
+        if not wrapper.is_file() or wrapper.read_bytes() != WRAPPER_SOURCE.encode('utf-8'):
+            refuse('The package wrapper is not the one this packager writes.',
+                   file=WRAPPER_FILE)
+        import yaml
+        try:
+            model = yaml.safe_load(inside(package, 'MLmodel', 'MLmodel').read_text(
+                encoding='utf-8'))
+            pyfunc = model['flavors']['python_function']
+            artifacts = pyfunc.get('artifacts') or {}
+            located = (pyfunc.get('loader_module'), pyfunc.get('model_code_path'),
+                       pyfunc.get('code'), sorted(artifacts),
+                       (artifacts.get(NATIVE_ARTIFACT) or {}).get('path'))
+        except (OSError, yaml.YAMLError, KeyError, TypeError, AttributeError) as error:
+            refuse('The package MLmodel is not readable.', error=str(error)[:200])
+        if located != ('mlflow.pyfunc.loaders.code_model', WRAPPER_FILE, None,
+                       [NATIVE_ARTIFACT], f'artifacts/{NATIVE_ARTIFACT}'):
+            refuse('The package MLmodel does not load this packager\'s wrapper on the '
+                   'embedded native bundle.', found=[str(v) for v in located])
+        embedded = inside(package, f'artifacts/{NATIVE_ARTIFACT}', 'native bundle')
+        try:
+            self.runtime.verify_bundle(embedded)
+        except Exception as error:      # noqa: BLE001 - the runtime's refusal is the cause
+            refuse('The native bundle embedded in the package does not verify.',
+                   error=f'{type(error).__name__}: {error}'[:300])
+        inner, inner_manifest, _ = self._documents(embedded)
+        _, manifest, _ = self._documents(bundle_dir)
+        for key in ('predictor_id', 'recipe_sha256', 'data_contract_sha256', 'payload_files'):
+            if inner_manifest.get(key) != manifest.get(key):
+                refuse('The native bundle embedded in the package is another predictor '
+                       f'({key} differs).', field=key)
+        if inner.get('optional_packages'):
+            refuse('The native bundle embedded in the package holds packages of its own.')
+        if _files(inner) != _native_files(bundle):
+            refuse('The native bundle embedded in the package does not hold exactly the '
+                   'files of the native bundle.')
+
     def verify(self, native_bundle_dir, package_dir, parity_spec: ParitySpec | None = None
                ) -> ParityResult:
         """Check an existing package against its native bundle: file hashes of the
-        descriptor, native parity, then pyfunc parity. ``failed`` with a reason, never an
-        exception for a mismatch; an unreadable package is ``artifact_integrity_failed``."""
+        descriptor, the embedded native bundle (:meth:`_check_embedded`), native parity,
+        then pyfunc parity. ``failed`` with a reason, never an exception, for a parity
+        mismatch; an unreadable package, or one that would serve another bundle than the
+        native one, is ``artifact_integrity_failed``."""
         bundle_dir, package = Path(native_bundle_dir), Path(package_dir)
         self.runtime.verify_bundle(bundle_dir)
         bundle, manifest, _ = self._documents(bundle_dir)
@@ -589,6 +647,7 @@ class ArtifactPackager:
         if actual != listed:
             return ParityResult('failed', None, [], spec.rtol, spec.atol, [],
                                 'package_files_changed')
+        self._check_embedded(bundle_dir, bundle, package)
         features, expected, native = self._native_parity(bundle_dir, spec)
         first = compare(native, expected, spec.rtol, spec.atol)
         second = self._pyfunc_parity(package, features, native, spec)
@@ -608,6 +667,22 @@ def _spec(parity_spec, bundle: Mapping) -> ParitySpec:
     if isinstance(parity_spec, Mapping):
         return ParitySpec.from_bundle({'parity': parity_spec})
     return ParitySpec.from_bundle(bundle)
+
+
+def _files(bundle: Mapping) -> dict:
+    """``{relative_path: sha256}`` of the files a bundle document lists."""
+    return {f.get('relative_path'): f.get('sha256') for f in bundle.get('files') or []
+            if isinstance(f, Mapping)}
+
+
+def _native_files(bundle: Mapping) -> dict:
+    """The listed files of a bundle that belong to the native predictor: every file but
+    those of its optional packages (``packages/<format>/...`` and their descriptors)."""
+    owned = [p['relative_path'] for p in bundle.get('optional_packages') or []
+             if isinstance(p, Mapping) and isinstance(p.get('relative_path'), str)]
+    return {rel: sha for rel, sha in _files(bundle).items()
+            if not any(rel == f'{o}.descriptor.json' or rel.startswith(o + '/')
+                       for o in owned)}
 
 
 def _skip(bundle_dir: Path, bundle: Mapping, out: Path, staging: Path):

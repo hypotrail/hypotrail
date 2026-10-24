@@ -47,7 +47,9 @@ def normalized_parameters(family: Any, parameters: Any) -> Any:
     """``parameters`` with every integer given for a real-valued parameter of a registered
     family written as a float (``C=1`` and ``C=1.0`` are one estimator, so one recipe id).
     Anything else (an unknown family or parameter, a boolean, a string) is returned as is,
-    for validation to judge."""
+    for validation to judge. An integer that no float represents exactly (``10**400``
+    overflows, ``2**53 + 1`` would round to another value) is refused with
+    ``contract_invalid`` rather than changed or raised raw (review A, round 2, N2)."""
     spec = FAMILIES.get(family) if isinstance(family, str) else None
     if not spec or not spec['parameters'] or not isinstance(parameters, Mapping):
         return parameters
@@ -56,8 +58,22 @@ def normalized_parameters(family: Any, parameters: Any) -> Any:
         declared = spec['parameters'].get(name)
         if declared is not None and float in declared[0] and isinstance(value, int) \
                 and not isinstance(value, bool):
-            out[name] = float(value)
+            out[name] = _exact_float(value, name)
     return out
+
+
+def _exact_float(value: int, name: str) -> float:
+    try:
+        written = float(value)
+    except OverflowError:
+        written = None
+    if written is None or int(written) != value:
+        raise ContractError('contract_invalid', f'The parameter {name} is an integer that no '
+                            'float represents exactly; write the real value it stands for.',
+                            path=f'parameters/{name}',
+                            remediation=f'Give {name} as a number a float holds exactly.',
+                            details={'parameter': name, 'bit_length': value.bit_length()})
+    return written
 
 
 def parameter_issues(task: str, family: str, parameters: Mapping[str, Any]) -> list[dict]:
