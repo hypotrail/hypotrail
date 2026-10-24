@@ -1,8 +1,8 @@
-# Understanding and handover review rv\-f3ac34e8f518eb661010
+# Understanding and handover review rv\-7b049baaf7dc45e1bbcb
 
 This note records what the team can explain and take over about this study at the time of export. It is not a grade, it certifies neither general competence, nor security, nor the scientific validity of the study, and its assurance is **human\_declared** (attributed by local declarations, not authenticated).
 
-Exported context: created 2026\-10\-24T19\:32\:01\+00\:00, policy team\-default v1 (required), source scope `9e2c5975bf93696f1aec881119e402ae847d3ab66b76e244ab6c982f3551c895`. It describes this context, never the current state of the work.
+Exported context: created 2026\-10\-24T20\:52\:22\+00\:00, policy team\-default v1 (required), source scope `845e7b420317136bfc3ef2b0765d2bf98482e7cbb116e8b5bb758ed5be9f8251`. It describes this context, never the current state of the work.
 
 ## Work and scope
 
@@ -67,8 +67,8 @@ A dimension marked *aided* rests only on answers given after hints or with decla
 
 Privacy review: approved; required contributors: alice, bob, carol.
 
-- alice approved `f3ac34e8f518eb66101057be5ab8a442dea2926dc3df6882df14f612fb6591d8`
-- bob approved `f3ac34e8f518eb66101057be5ab8a442dea2926dc3df6882df14f612fb6591d8`
-- carol approved `f3ac34e8f518eb66101057be5ab8a442dea2926dc3df6882df14f612fb6591d8`
+- alice approved `7b049baaf7dc45e1bbcbff44e5f6360086f024ec1474aa028c5db3f4eb087fde`
+- bob approved `7b049baaf7dc45e1bbcbff44e5f6360086f024ec1474aa028c5db3f4eb087fde`
+- carol approved `7b049baaf7dc45e1bbcbff44e5f6360086f024ec1474aa028c5db3f4eb087fde`
 
-Rendered by hypotrail.understanding-render/1 from understanding-review.json.
+Rendered by hypotrail\.understanding\-render/1 from understanding\-review\.json.

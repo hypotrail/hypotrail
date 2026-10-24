@@ -291,7 +291,7 @@ def test_markdown_rendering_of_hostile_handover(done):
     doc = canonical.loads((gen(u, rid) / ex.JSON_FILE).read_bytes())
     doc['handover_content'] = dict(doc['handover_content'] or {}, **HOSTILE)
     md = ex.markdown(doc)
-    from markdown_it import MarkdownIt
+    MarkdownIt = pytest.importorskip('markdown_it').MarkdownIt
     tokens = MarkdownIt('commonmark').enable(['table','strikethrough']).parse(md)
     print('MD-PURPOSE-REGION', [l for l in md.splitlines() if 'Benign' in l or 'Injected' in l or 'mallory' in l or 'evil' in l or 'fake' in l or 'red' in l])
     kinds = {}

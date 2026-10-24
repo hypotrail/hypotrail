@@ -29,7 +29,10 @@ from . import canonical, export as ex, policy as pol, refuse, snapshot as snap
 
 SCHEMA = 'hypotrail.understanding-verification/1'
 MAX_FILE = 4 * 1024 * 1024
-GIT_ENV = {'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0', 'LC_ALL': 'C'}
+# GIT_NO_LAZY_FETCH: a partial clone never fetches a missing object (Git 2.44 and later);
+# older Git is covered by refusing a partial clone (Tree).
+GIT_ENV = {'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0', 'LC_ALL': 'C',
+           'GIT_NO_LAZY_FETCH': '1'}
 
 
 def git(repo: Path, *args: str, input_: bytes | None = None) -> bytes:
@@ -43,6 +46,23 @@ def git(repo: Path, *args: str, input_: bytes | None = None) -> bytes:
                      'Check that --repo is a Git repository and the target exists.',
                      command=args[0], stderr=proc.stderr.decode(errors='replace')[-300:])
     return proc.stdout
+
+
+def _partial_clone(repo: Path) -> bool:
+    """A promisor remote is configured (the repository may fetch objects on demand)."""
+    proc = subprocess.run(['git', '-C', str(repo), 'config', '--get-regexp',
+                           r'^(extensions\.partialclone|remote\..*\.promisor)$'],
+                          capture_output=True, env={**os.environ, **GIT_ENV}, check=False)
+    return proc.returncode == 0 and bool(proc.stdout.strip())
+
+
+def _case_variant(path: str) -> bool:
+    """A path that a case-insensitive checkout would put under the export folder, but
+    that is not spelt as it (it would be invisible to this verifier otherwise)."""
+    folded, exact = path.casefold(), ex.EXPORT_DIR + '/'
+    return folded.startswith(exact.casefold()) and not path.startswith(exact) or (
+        path.startswith(exact) and path[len(exact):].casefold().startswith(('rv-', '.rv-'))
+        and not path[len(exact):].startswith(('rv-', '.rv-')))
 
 
 def _safe(path: str) -> bool:
@@ -63,6 +83,11 @@ class Tree:
         self._entries: dict[str, tuple[str, str]] | None = None    # path -> (mode, oid)
         if target == 'worktree':
             return
+        if _partial_clone(self.repo):
+            raise refuse('git_index_conflict', 'This is a partial clone: reading a missing '
+                         'object would fetch it and run the configured transport.',
+                         'Verify in a full clone (git fetch --refetch, or clone without '
+                         '--filter).')
         if target == 'index':
             self.index_id = self._index_identity()
             self._entries = self._ls_index()
@@ -150,10 +175,20 @@ class Tree:
         prefix = ex.EXPORT_DIR + '/'
         names = set()
         if self._entries is None:
+            parts = ex.EXPORT_DIR.split('/')
+            for i, part in enumerate(parts):
+                parent = self.repo.joinpath(*parts[:i])
+                if parent.is_dir():
+                    for p in parent.iterdir():
+                        if p.name != part and p.name.casefold() == part.casefold():
+                            self.problems.append('case variant of the export folder: '
+                                                 + p.relative_to(self.repo).as_posix())
             base = self.repo / ex.EXPORT_DIR
             if not base.is_dir():
                 return []
             for p in base.iterdir():
+                if _case_variant(f'{ex.EXPORT_DIR}/{p.name}'):
+                    self.problems.append(f'case variant of a generation: {p.name}')
                 if p.name.startswith('.rv-'):
                     self.problems.append(f'leftover temporary folder {p.name}')
                 elif p.name.startswith('rv-'):
@@ -163,6 +198,8 @@ class Tree:
                         names.add(p.name)
             return sorted(names)
         for path in self._entries:
+            if _case_variant(path):
+                self.problems.append(f'case variant of the export folder: {path}')
             if path.startswith(prefix):
                 rest = path[len(prefix):].split('/')
                 if rest[0].startswith('.rv-'):
@@ -260,8 +297,9 @@ def verify(repo, target: str, *, policy_doc: Mapping | None = None,
            review_id: str | None = None) -> dict:
     """Verify every generation (or ``review_id``) in ``target`` of ``repo``.
 
-    ``local(review)`` (local mode, the study is accessible) returns
-    ``{'private_context_verification', 'evidence_availability'}`` for a review."""
+    ``local(review, file_hashes)`` (local mode, the study is accessible) returns
+    ``{'private_context_verification', 'evidence_availability', 'study_binding'}`` for a
+    review whose three files have ``file_hashes``."""
     tree = Tree(Path(repo), target)
     generations = tree.generations()
     if review_id is not None:
@@ -356,7 +394,12 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     need = set(ex.required_contributors(ex.approval_projection(doc)))
     if set(doc['privacy_review']['required_contributors']) != need:
         problems.append('required contributors do not match the published content')
-    approvers = {a['approver_alias'] for a in doc['privacy_review']['approvals']}
+    listed = [a['approver_alias'] for a in doc['privacy_review']['approvals']]
+    approvers = set(listed)
+    if len(listed) != len(approvers):
+        problems.append('more than one approval by the same person')
+    if not approvers <= need:
+        problems.append('an approval by someone who is not a contributor')
     if doc['privacy_review']['status'] == 'approved' and not need <= approvers:
         problems.append('approved without every contributor')
     if doc['privacy_review']['status'] == 'pending' and need <= approvers:
@@ -371,7 +414,7 @@ def _verify_one(tree: Tree, rid: str, policy_doc, local) -> dict:
     if axes['unresolved_private_refs']:
         limitations.append('private_refs_not_resolvable_outside_the_study')
     if local is not None:
-        axes.update(local(doc))
+        axes.update(local(doc, {n: canonical.sha256_hex(raw[n]) for n in ex.FILES}))
         if axes.get('study_binding') == 'not_recorded':
             problems.append('this generation was not exported by the given study')
             axes['public_integrity'] = 'invalid'
@@ -414,10 +457,11 @@ def git_plan(repo, files: Mapping[str, bytes], sources: list[Mapping]) -> dict:
         if ws != s['sha256'] or is_ != s['sha256']:
             conflicts.append({'path': s['path'], 'snapshot': s['sha256'], 'worktree': ws,
                               'index': is_})       # an untracked source is a conflict too
-    staged = git(repo, 'diff', '--cached', '--no-renames', '--name-only', '-z').split(b'\0') \
-        if head else \
+    staged = git(repo, 'diff', '--cached', '--no-renames', '--ignore-submodules=none',
+                 '--name-only', '-z').split(b'\0') if head else \
         git(repo, 'ls-files', '-z').split(b'\0')
-    staged = sorted(p.decode() for p in staged if p)
+    # A path that is not UTF-8 is reported with its bytes escaped, never a crash.
+    staged = sorted(p.decode('utf-8', 'backslashreplace') for p in staged if p)
     allowed = set(files) | {s['path'] for s in sources if s['path']}
     foreign = [p for p in staged if p not in allowed]
     return {'base_commit': head, 'artefacts': [{'path': p, 'sha256': hashlib.sha256(d)

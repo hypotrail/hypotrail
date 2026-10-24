@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 from typing import Mapping
 
-from . import DIMENSION_TITLES, taskset as bk, canonical, evaluate as ev, model, policy as pol
+from . import DIMENSIONS, DIMENSION_TITLES, taskset as bk, canonical, evaluate as ev, model, policy as pol
 from . import refuse, service as sv, snapshot as snap
 
 SCHEMA = 'hypotrail.understanding-review/1'
@@ -332,9 +332,11 @@ def _md(text) -> str:
     out = ''.join(' ' if (ord(ch) < 0x20 or ch in '\x7f\x85\u2028\u2029') else ch
                   for ch in str(text))          # no line break, carriage return or control
     out = out.strip().replace('\\', '\\\\')
-    for ch in '`*_{}[]()#+-.!|<>=~:':
+    for ch in '`*_{}[]()#+-.!|<>=~:&$':       # & entities, $ math
         out = out.replace(ch, '\\' + ch)
-    return out
+    # GFM links an e-mail address after escapes are resolved: '@' as its own code span
+    # splits the text, so no address forms (the rendered text still reads, and copies, '@').
+    return out.replace('@', '`@`')
 
 
 def markdown(doc: Mapping) -> str:
@@ -345,7 +347,7 @@ def markdown(doc: Mapping) -> str:
          'security, nor the scientific validity of the study, and its assurance is '
          f'**{_md(doc["assurance"])}** (attributed by local declarations, not authenticated).',
          '', f'Exported context: created {_md(doc["created_at"])}, policy '
-         f'{_md(doc["policy"]["policy_id"])} v{doc["policy"]["version"]} '
+         f'{_md(doc["policy"]["policy_id"])} v{_md(doc["policy"]["version"])} '
          f'({_md(doc["policy"]["mode"])}), source scope `{doc["source_scope_digest"]}`. '
          'It describes this context, never the current state of the work.', '']
     h = doc['handover_content']
@@ -365,20 +367,22 @@ def markdown(doc: Mapping) -> str:
           '| Dimension | Status | Freshness at export | Help | Reviewer | Evidence |',
           '|---|---|---|---|---|---|']
     for d in doc['dimensions']:
-        L.append(f'| {d["id"]} {_md(d["title"])}{" (critical)" if d["critical"] else ""} | '
-                 f'{d["status"]} | {d["freshness_at_export"]} | {d["assistance_summary"]} | '
-                 f'{_md(d["reviewer_alias"])} | {d["evidence_availability"]} |')
+        L.append(f'| {_md(d["id"])} {_md(d["title"])}{" (critical)" if d["critical"] else ""}'
+                 f' | {_md(d["status"])} | {_md(d["freshness_at_export"])} | '
+                 f'{_md(d["assistance_summary"])} | {_md(d["reviewer_alias"])} | '
+                 f'{_md(d["evidence_availability"])} |')
     L.append('')
     for d in doc['dimensions']:
         if d['rationale']:
-            L.append(f'- {d["id"]}, reviewer\'s rationale: {_md(d["rationale"])}')
+            L.append(f'- {_md(d["id"])}, reviewer\'s rationale: {_md(d["rationale"])}')
     L += ['', '## What a colleague could take over', '']
     if not doc['peer_coverage']:
         L.append('No handover task was required.')
     for p in doc['peer_coverage']:
-        L.append(f'- {p["dimension_id"]}: {p["people"]} declared people, {p["status"]}')
+        L.append(f'- {_md(p["dimension_id"])}: {_md(p["people"])} declared people, '
+                 f'{_md(p["status"])}')
         for t in p['transfers']:
-            L.append(f'  - {_md(t["peer_alias"])}: {t["status"]}, reviewed by '
+            L.append(f'  - {_md(t["peer_alias"])}: {_md(t["status"])}, reviewed by '
                      f'{_md(t["reviewer_alias"])}'
                      + ('' if t['on_current_handover'] else
                         ', on an earlier version of the handover content'))
@@ -394,11 +398,11 @@ def markdown(doc: Mapping) -> str:
           'does not.', '']
     L += [f'- {_md(x)}' for x in doc['limitations']]
     L += ['', '## Approvals', '',
-          f'Privacy review: {doc["privacy_review"]["status"]}; required contributors: '
+          f'Privacy review: {_md(doc["privacy_review"]["status"])}; required contributors: '
           + ', '.join(_md(x) for x in doc['privacy_review']['required_contributors']) + '.', '']
     L += [f'- {_md(a["approver_alias"])} approved `{a["content_digest"]}`'
           for a in doc['privacy_review']['approvals']]
-    L += ['', f'Rendered by {doc["renderer_version"]} from {JSON_FILE}.', '']
+    L += ['', f'Rendered by {_md(doc["renderer_version"])} from {_md(JSON_FILE)}.', '']
     return '\n'.join(L)
 
 
@@ -416,6 +420,17 @@ def files_of(doc: Mapping) -> dict:
 
 # --- validation (shared with the verifier) ---------------------------------------------------
 
+def _is_code(value) -> bool:
+    """A status code of the engine (peer coverage statuses are its problem codes)."""
+    return isinstance(value, str) and 0 < len(value) <= 40 and all(
+        c in 'abcdefghijklmnopqrstuvwxyz_' for c in value)
+
+
+def _is_digest(value) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(
+        c in '0123456789abcdef' for c in value)
+
+
 def validate_review(doc) -> list[str]:
     """Problems of a review document against the closed schema (empty when valid)."""
     p = []
@@ -425,6 +440,15 @@ def validate_review(doc) -> list[str]:
         p.append('schema')
     if doc['assurance'] != pol.SUPPORTED_ASSURANCE:
         p.append('assurance')
+    if doc['renderer_version'] != RENDERER_VERSION:
+        p.append('renderer_version')
+    for key in ('source_scope_digest', 'policy_digest'):
+        if not _is_digest(doc[key]):
+            p.append(key)
+    try:
+        pol.validate(doc['policy'])
+    except Exception:          # noqa: BLE001 - any refusal of the embedded policy
+        p.append('policy')
     if not isinstance(doc['dimensions'], list):
         return p + ['dimensions']
     ids = [d.get('id') for d in doc['dimensions'] if isinstance(d, dict)]
@@ -434,6 +458,8 @@ def validate_review(doc) -> list[str]:
         if not isinstance(d, dict) or set(d) != set(DIMENSION_FIELDS):
             p.append('dimension fields')
             continue
+        if d['id'] not in DIMENSIONS:
+            p.append('dimension id')
         if d['status'] not in STATUSES or d['freshness_at_export'] not in FRESHNESS \
                 or d['evidence_availability'] not in AVAILABILITY \
                 or d['assistance_summary'] not in ASSISTANCE:
@@ -443,10 +469,20 @@ def validate_review(doc) -> list[str]:
     if not isinstance(doc['provenance'], dict) or set(doc['provenance']) != \
             set(PROVENANCE_FIELDS):
         p.append('provenance')
+    peers = doc['peer_coverage']
+    if not isinstance(peers, list) or not all(
+            isinstance(c, dict) and c.get('dimension_id') in DIMENSIONS
+            and type(c.get('people')) is int and c['people'] >= 1
+            and _is_code(c.get('status')) for c in peers):
+        p.append('peer_coverage')
     pr = doc['privacy_review']
     if not isinstance(pr, dict) or set(pr) != {'status', 'required_contributors', 'approvals'} \
             or pr['status'] not in ('pending', 'approved'):
         p.append('privacy_review')
+    elif not isinstance(pr['approvals'], list) or not all(
+            isinstance(a, dict) and _is_digest(a.get('content_digest'))
+            for a in pr['approvals']):
+        p.append('privacy_review approvals')
     scope = doc['public_source_scope']
     if not isinstance(scope, dict) or scope.get('schema') != snap.PUBLIC_SCHEMA:
         p.append('public_source_scope')
@@ -546,6 +582,12 @@ def publish(repo: Path, review_id_: str, files: Mapping[str, bytes], *, fault=No
                 return 'already_published'
             raise refuse('export_stale', 'Another export published this review id first with '
                          'other content.', 'Export a new generation.') from None
+        except OSError as exc:       # no rename without replacement here: never emulated
+            raise refuse('unsupported_capability', 'This filesystem or platform has no atomic '
+                         'rename without replacement, so the generation was not published '
+                         f'({exc.strerror or exc}).', 'Export into a repository on a local '
+                         'Linux or macOS filesystem; a retry there reconciles the same '
+                         'export.') from None
         _fsync_dir(parent)
     finally:
         if tmp.exists():

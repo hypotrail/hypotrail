@@ -729,6 +729,7 @@ def _export_write(args, *, fault=None) -> dict:
     # Its request is derived from the intent, so a full retry replays it.
     iid = intent['result']['intent_id']
     receipt = _receipt(args.study, iid, on_disk)
+    _settle_interrupted(args.study, repo, s['session_id'], iid)
     if args.latest:
         ex.write_latest(repo, rid)
     return _ok('export write', store.study_dir, review_id=rid, publication=outcome,
@@ -738,6 +739,23 @@ def _export_write(args, *, fault=None) -> dict:
                next_steps=['understanding git-plan', 'stage the listed paths only',
                            'verify-export --target index', 'git commit',
                            'verify-export --target HEAD'])
+
+
+def _settle_interrupted(study, repo: Path, session_id: str, done: str) -> None:
+    """Earlier intents of the session left ``reserved`` by a publication interrupted before
+    its receipt get their receipt now when their folder holds the announced bytes (the
+    receipt revalidates them: ``published`` or ``not_current``). Others stay reserved."""
+    ext = model.of(sv.load_state(study))
+    for x in list(ext['exports'].values()):
+        if x['session_id'] != session_id or x['status'] != 'reserved' or x['intent_id'] == done:
+            continue
+        folder = repo / x['destination']
+        try:
+            held = {n: canonical.sha256_hex((folder / n).read_bytes()) for n in ex.FILES}
+        except OSError:
+            continue
+        if held == x['files'] and not folder.is_symlink():
+            _receipt(study, x['intent_id'], held)
 
 
 def _receipt(study, intent_id, files) -> dict:
@@ -796,7 +814,7 @@ def _local_checker(study, repo):
     state = sv.load_state(study)
     ext = model.of(state)
 
-    def run(doc) -> dict:
+    def run(doc, file_hashes=None) -> dict:
         if not ext:
             return {}
         session = next((s for s in ext['sessions'].values()
@@ -804,12 +822,15 @@ def _local_checker(study, repo):
                        None)
         if session is None:
             return {'private_context_verification': 'unknown', 'study_binding': 'not_recorded'}
-        # The artefact must be one this study exported: same review id and same approved
-        # projection as a recorded export intent (a forged generation is not).
+        # The artefact must be one this study exported: same review id, same approved
+        # projection and the very bytes a recorded export intent announced (a forged or an
+        # edited generation is not). A reserved intent counts when its bytes are there: its
+        # publication was interrupted before the receipt.
         digest = canonical.digest(ex.approval_projection(doc))
         recorded = any(x['review_id'] == doc['review_id'] and x['projection_digest'] == digest
                        and x['session_id'] == session['session_id']
-                       and x['status'] in ('published', 'not_current')
+                       and x['status'] in ('published', 'not_current', 'reserved')
+                       and file_hashes is not None and x['files'] == file_hashes
                        for x in ext['exports'].values())
         if not recorded:
             return {'private_context_verification': 'unknown', 'study_binding': 'not_recorded',

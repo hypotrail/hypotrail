@@ -148,6 +148,33 @@ expectation changed with a fix say so in their docstring).
   dimension ids are refused; zero mapped public sources read as `unknown`; the report
   section shows freshness per session; `verify-export` on a missing repository refuses.
 
+## Review round 2: fixes (area D)
+
+Regression tests: `framework/tests/study/understanding/test_adv2_d*.py` (the round-2
+review's own probes; the GFM rendering checks skip without `cmarkgfm`).
+
+* Local verification (`verify-export --study`) binds a generation to a recorded export
+  intent by its three file hashes as well as its review id, projection and session: a
+  generation edited outside the projection (approvals, times, base commit, renderer
+  version) is `not_recorded` and invalid. A reserved intent whose bytes are present counts
+  (an interrupted publication), and the next `export write` of the session gives such
+  intents their receipt.
+* The verifier refuses approvals by a non-contributor or several approvals by one person,
+  a renderer version other than the engine's, a dimension id outside D1–D8, malformed peer
+  coverage, digests that are not SHA-256 hex and an embedded policy the engine refuses.
+  Every field rendered into the Markdown is escaped; `&` and `$` are escaped too and `@` is
+  rendered as its own code span, so no GFM e-mail link, entity or math forms.
+* A partial clone is refused (reading a missing object would fetch it and run the
+  configured transport); `GIT_NO_LAZY_FETCH=1` is set for Git that honours it.
+* `git-plan` sees staged submodule changes (`--ignore-submodules=none`) and reports a
+  staged path that is not UTF-8 instead of crashing; a case variant of
+  `docs/understanding` or of an `rv-*` folder is a problem for every target.
+* Without an atomic rename without replacement, `export write` refuses with
+  `unsupported_capability` (a retry where it exists reconciles the same export).
+* Not changed, owner decision pending (D2-9): an approval binds a content digest, so content
+  changed and changed back to an approved digest counts those approvals again. The test
+  `test_withdrawn_content_revives_old_approvals` is a strict xfail until decided.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the
