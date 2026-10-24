@@ -81,7 +81,8 @@ def test_team_coverage_of_three_people_can_be_satisfied(tmp_path):
 def test_moved_repository_check_and_export_agree(tmp_path):
     """After the repository moves, `check` and the protected action agree (A16): both read
     the recorded repository (`check --repo` is a preview that says so); `relocate` records
-    the new place and both then allow."""
+    the new place and both then allow. Round 2 (C2-1): `relocate` now also takes the
+    declared `--author` and a `--reason` (the expectation is unchanged)."""
     import shutil
     u = U(tmp_path)
     custom_flow(u, REQ)
@@ -97,7 +98,8 @@ def test_moved_repository_check_and_export_agree(tmp_path):
     assert 'repo_note' in u.call('check', '--milestone', 'handoff', '--repo', str(new))
     assert g_def['decision'] != 'allowed' and o.exit_code not in (0, 3)
     for s in u.ext()['sessions']:
-        u.m('relocate', '--session', s, '--repo', new)
+        u.m('relocate', '--session', s, '--repo', new, '--author', 'alice', '--reason',
+            'The repository moved.')
     assert gate(u)['decision'] == 'allowed'
     o = cli.run(['export', 'handoff', '--study', str(u.study), '--out', str(tmp_path / 'h2')])
     assert o.exit_code in (0, 3), o.payload

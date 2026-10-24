@@ -10,8 +10,9 @@ export runs this protocol instead, so no direct call bypasses the review and no 
    and the gate are computed again; a blocked gate refuses with ``milestone_blocked`` and
    writes nothing; otherwise the reservation records the policy, scope and context digests
    (one revision);
-2. **render** the pack out of the lock, only from the study at the reserved revision
-   (``cmd_export.build``) into a temporary sibling folder of the target;
+2. **render** the pack out of the lock, only from the study at the reserved revision, or
+   at a later one when only milestone bookkeeping of concurrent handoffs happened since
+   (``cmd_export.build``), into a temporary sibling folder of the target;
 3. **revalidate** under the writer lock: no revision since the reserved one other than
    milestone reservations and records (concurrent handoffs), and the gate, recomputed again, has the same decision, policy, scope and context digests. Only
    then is the folder renamed onto the target (never a replacement). Any relevant change in
@@ -106,7 +107,11 @@ def export_handoff_gated(study_dir, *, out=None, expected_revision=None):
     try:
         cmd.after_commit(Path(study_dir), {'ok': True})   # the report at the reserved revision
         study, view, files, included = ce.build(study_dir)
-        if view['revision'] != reserved_revision:
+        # Another handoff may reserve (or record) between this reservation and the build:
+        # its bookkeeping changes neither the pack nor the gate, so it is tolerated here as
+        # in the revalidation (round 2, C2-6); any other revision refuses.
+        if view['revision'] != reserved_revision and \
+                not _only_bookkeeping_since(store, reserved_revision):
             raise refuse('context_changed', 'The study changed while the pack was built.',
                          'Run export handoff again.')
         target = ce._target(study.study_dir, out, view['revision'])

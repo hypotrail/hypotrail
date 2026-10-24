@@ -31,6 +31,8 @@
     hypotrail understanding git-plan --session ID --repo DIR --study DIR
     hypotrail understanding git-stage --session ID --repo DIR --index-identity H --study DIR
     hypotrail understanding git-receipt --session ID --repo DIR --commit OID     (mutation)
+    hypotrail understanding relocate --session ID --repo DIR --author ID --reason TEXT
+                                                                                (mutation)
     hypotrail understanding verify-export --repo DIR --target worktree|index|COMMIT
                                    [--policy-file F] [--review-id ID] [--study DIR]
 
@@ -180,7 +182,10 @@ def configure(parser: argparse.ArgumentParser) -> None:
     _mut(p)
     p = sub.add_parser('relocate', parents=[common])
     p.add_argument('--session', required=True)
-    p.add_argument('--repo', required=True, help='the new place of the moved repository')
+    p.add_argument('--repo', required=True, help='the new place of the moved repository '
+                   '(the top level of its Git work tree)')
+    p.add_argument('--author', required=True, help='declared alias of who records the move')
+    p.add_argument('--reason', required=True)
     _mut(p)
     p = sub.add_parser('verify-export', parents=[common])
     p.add_argument('--repo', required=True)
@@ -364,7 +369,11 @@ def _status(args) -> dict:
                                        if not sv.blob_ok(store, a['response_sha256'])),
             'taskset_qualified': s['taskset_qualified'], 'taskset_simulated': s['taskset_simulated'],
             'local_snapshot_digest': s['local_snapshot_digest'],
-            'source_scope_digest': s['source_scope_digest']})
+            'source_scope_digest': s['source_scope_digest'],
+            'repository': sv.repository_of(store, s, repo_override=args.repo),
+            'relocations': [{k: r[k] for k in ('from', 'to', 'author_declared_id', 'reason',
+                                               'revision')}
+                            for r in s.get('relocations') or []]})
     return _ok('status', store.study_dir, mode=pol.mode(doc), revision=state['revision'],
                policy_digest=pol.digest(doc) if doc else None, sessions=sessions,
                conflicts=ev.conflicts(ext),
@@ -770,14 +779,35 @@ def _receipt(study, intent_id, files) -> dict:
                          request_id=f'receipt-{intent_id}', expected_revision=state['revision'])
 
 
+def _git_toplevel(repo: Path) -> Path | None:
+    """The top level of the Git work tree holding ``repo`` (None outside one)."""
+    import os
+    import subprocess
+    env = {**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GIT_OPTIONAL_LOCKS': '0', 'LC_ALL': 'C'}
+    try:
+        proc = subprocess.run(['git', '-C', str(repo), '-c', 'core.hooksPath=/dev/null',
+                               '-c', 'core.fsmonitor=false', 'rev-parse', '--show-toplevel'],
+                              capture_output=True, env=env, timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    out = proc.stdout.decode(errors='replace').strip()
+    return Path(out).resolve() if proc.returncode == 0 and out else None
+
+
 def _relocate(args) -> dict:
     store = sv.open_store(args.study)
     repo = Path(args.repo).resolve()
     if not repo.is_dir():
         raise refuse('path_outside_scope', '--repo is not a directory.', 'Name the repository.')
+    if _git_toplevel(repo) != repo:
+        raise refuse('path_outside_scope', '--repo is not the top level of a Git work tree; '
+                     'nothing was recorded.', 'Name the top level of the moved repository.')
     return _ok('relocate', store.study_dir, **_apply(args, 'relocate', {
-        'session_id': args.session, 'repo': str(repo)}),
-        note='Freshness is read from this repository from now on; the digests are unchanged.')
+        'session_id': args.session, 'repo': str(repo), 'author_declared_id': args.author,
+        'reason': args.reason}),
+        note='Freshness is read from this repository from now on; the digests are unchanged. '
+             'A relocation records a move declared by a person; it does not authenticate the '
+             'content of the new place.')
 
 
 def _git_receipt(args) -> dict:

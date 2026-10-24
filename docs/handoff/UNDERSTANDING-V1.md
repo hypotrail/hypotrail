@@ -175,6 +175,41 @@ review's own probes; the GFM rendering checks skip without `cmarkgfm`).
   changed and changed back to an approved digest counts those approvals again. The test
   `test_withdrawn_content_revives_old_approvals` is a strict xfail until decided.
 
+## Review round 2: fixes (area C)
+
+Regression tests: `framework/tests/study/understanding/test_review_round2_c.py` (simulated
+humans, temporary directories; several are the reviewer's reproducing tests, ported).
+
+* C2-1: `understanding relocate` records a **move**: it needs `--author` and `--reason`
+  (kept in the session's `relocations` history), the recorded repository must be gone, and
+  `--repo` must be the top level of a Git work tree (checked by the CLI with `git rev-parse
+  --show-toplevel`; the handler, which runs no Git, checks the old path is gone and the new
+  one holds `.git`). The gate result (`repositories`) and `status` (`repository`,
+  `relocations`) say which repository each session's freshness was read from. Residual,
+  cooperative limit: nothing authenticates the content of the new place, so whoever
+  controls the repository (or removes the original and relocates to a re-initialised copy)
+  can still fake freshness.
+* C2-2: the gate re-checks only the arbitrations it relies on: those whose conflict
+  includes the selected decision, or that settle a conflict or resolve a reservation of the
+  person and dimension in the selected decision's session. They must still be admissible
+  under the current policy **and** the session's policy (C-M3 kept; `arbitrate` itself now
+  also applies the session policy's arbiter list). An arbitration of a session the
+  selection does not use no longer blocks for ever.
+* C2-3: the export projection computes `peer_coverage` with the gate's own function and
+  loaders (`evaluate.selected_peer_coverage`, `service.gate_loaders`) from the latest
+  selection of the session's author and profile; without one it is `missing`, never a search
+  for any demonstrated transfer. The `export-valid` fixture did not change. The HTML report
+  section (`render.py`) still shows the history-based coverage; it is informative only.
+* C2-4: an arbitration refuses a reservation opened by a handover review.
+* C2-5: such a reservation is resolved only by another transfer started after the failed
+  review and on the current handover content.
+* C2-6: `export handoff` tolerates, before the build, revisions that are only other
+  handoffs' milestone bookkeeping (as the revalidation already did).
+* C2-7 (**integrator default awaiting the owner's decision**): a transfer whose peer
+  declared AI assistance (or no declaration) does not count toward the peer coverage of a
+  dimension whose assistance rule is `unaided_required` (`peer_assistance_not_admissible`);
+  under `aided_allowed` it counts.
+
 ## Gate run
 
 Run in this container (Python 3.13, uv 0.11, the `dev`, `browser` and `azureml` groups and the

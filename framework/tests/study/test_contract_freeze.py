@@ -1325,4 +1325,11 @@ def test_understanding_contract_is_frozen():
         'transfer start', 'transfer submit', 'transfer review', 'close', 'check',
         'export preview', 'export approve', 'export write', 'git-plan', 'git-stage',
         'git-receipt', 'relocate'])
+    # Round 2 (C2-1): `relocate` records a declared move, so --author and --reason are
+    # required (checked before any study is opened).
+    out = cli.run(['understanding', 'relocate', '--session', 's', '--repo', '/x', '--study',
+                   '/nonexistent-study', '--request-id', 'r', '--expected-revision', '0'])
+    assert out.exit_code == 2 and out.payload['error']['code'] == 'invalid_arguments'
+    assert '--author' in out.payload['error']['message']
+    assert '--reason' in out.payload['error']['message']
 

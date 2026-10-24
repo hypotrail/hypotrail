@@ -142,6 +142,7 @@ def _start(ctx) -> Handler:
             'local_snapshot_digest': cap['local_snapshot_digest'],
             'source_scope_digest': cap['source_scope_digest'],
             'created_revision': _rev(state), 'created_at': sv.now(), 'repo_override': None,
+            'relocations': [],
             'previous_session_id': previous,
             'transitions': [{'to': 'active', 'revision': _rev(state), 'reason': 'started'}]}
         return {'session_id': sid, 'status': 'active', 'dimensions': dims,
@@ -603,10 +604,13 @@ def _arbitrate(ctx) -> Handler:
                          + ', '.join(ARBITRATION_KEYS) + '.', 'Collect the arbitration.')
         arbiter = model.actor(doc['arbiter_declared_id'], 'arbiter_declared_id')
         declaration = _declaration(doc)
-        allowed_arbiters = doc_policy['role_policy']['arbiters']
-        if allowed_arbiters != 'any_declared' and arbiter not in allowed_arbiters:
-            raise refuse('review_required', 'The policy does not name this arbiter.',
-                         'Ask an arbiter the policy names.')
+        # The session's own policy and the current one both apply (the stricter wins).
+        session_policy = sv.blob_json(ctx.store, s['policy_blob'], 'policy')
+        for p_ in (doc_policy, session_policy):
+            allowed_arbiters = p_['role_policy']['arbiters']
+            if allowed_arbiters != 'any_declared' and arbiter not in allowed_arbiters:
+                raise refuse('review_required', 'The policy does not name this arbiter.',
+                             'Ask an arbiter the policy names.')
         ids = model.str_list(doc['conflicting_decision_ids'], 'conflicting_decision_ids')
         decisions = [ext['decisions'].get(x) for x in ids]
         if any(d is None or d['session_id'] != s['session_id'] for d in decisions):
@@ -618,6 +622,11 @@ def _arbitrate(ctx) -> Handler:
             if r is None or r['status'] != 'open':
                 raise refuse('evidence_invalid', 'A reservation is unknown or closed.',
                              'Name open reservations.')
+            if r.get('origin') == 'transfer':
+                raise refuse('evidence_invalid', 'A reservation opened by a handover review is '
+                             'resolved only by a later handover task reviewed demonstrated, '
+                             'never by an arbitration.', 'Run a new handover task.',
+                             reservation_id=rid)
         if not ids and not reservations:
             raise refuse('evidence_invalid', 'An arbitration settles decisions or '
                          'reservations.', 'Name them.')
@@ -638,9 +647,7 @@ def _arbitrate(ctx) -> Handler:
         if len(actors) > 1 or len(dims) > 1:
             raise refuse('evidence_invalid', 'One arbitration settles one person and one '
                          'dimension.', 'Split the arbitration.')
-        # The session's own policy and the current one both apply (the stricter wins): a
-        # policy toggled in between never relaxes who may arbitrate.
-        session_policy = sv.blob_json(ctx.store, s['policy_blob'], 'policy')
+        # A policy toggled in between never relaxes who may arbitrate.
         critical = set(doc_policy['critical_dimensions']) | \
             set(session_policy['critical_dimensions'])
         if arbiter in actors and dims & critical:
@@ -929,10 +936,14 @@ def _transfer_review(ctx) -> Handler:
             if r is None or r['status'] != 'open' or r.get('origin') != 'transfer' \
                     or r['actor'] != t['author_declared_id'] or r['dimension_id'] not in dims \
                     or r.get('transfer_id') == t['transfer_id'] \
-                    or doc['status'] != 'demonstrated':
+                    or doc['status'] != 'demonstrated' \
+                    or t['recorded_revision'] <= r['opened_revision'] \
+                    or t['input_note_digest'] != ev.current_handover_digest(
+                        ext, t['session_id']):
                 raise refuse('evidence_invalid', 'A handover reservation is resolved by a '
-                             'demonstrated review of another, later handover task on the same '
-                             'dimension.', 'Run a new handover task.')
+                             'demonstrated review of another handover task, started after the '
+                             'review that opened it, on the current handover content and the '
+                             'same dimension.', 'Run a new handover task.')
         did = model.new_id('udt', ctx.request_id)
         s = _session(ext, t['session_id'])
         ext['decisions'][did] = {
@@ -1117,17 +1128,48 @@ def _milestone_record(ctx) -> Handler:
 
 def _relocate(ctx) -> Handler:
     """The repository of a session moved: record its new local path (the source digests
-    are relative and unchanged; freshness is then read from the new place)."""
+    are relative and unchanged; freshness is then read from the new place).
+
+    A move, not a second copy (round 2, C2-1): the place recorded now must be gone, the new
+    one is another directory holding a Git work tree (the CLI checks, before the request,
+    that it is the top level of one; this handler runs no Git), and a declared author and a
+    reason are kept in the session's relocation history. This does not authenticate the
+    content of the new place: whoever controls the repository can still fake freshness
+    (the review is cooperative, assurance ``human_declared``)."""
     def run(state, params):
+        from pathlib import Path
         sv.require_mode(ctx.store, state)
         ext = model.require_writable(state)
         s = _session(ext, params['session_id'])
         repo = params['repo']
         if not isinstance(repo, str) or not repo.startswith('/') or len(repo) > 4000:
             raise refuse('path_outside_scope', 'repo is an absolute path.', 'Give --repo.')
+        author = model.actor(params['author_declared_id'], 'author_declared_id')
+        reason = model.text(params['reason'], 'reason', limit=1000)
+        where = sv.repository_of(ctx.store, s)
+        recorded = where['repository']
+        if recorded is None:
+            raise refuse('invalid_transition', 'This session recorded no repository; there is '
+                         'nothing to relocate.', 'Start a session with --repo.',
+                         session_id=s['session_id'])
+        if Path(recorded).resolve() == Path(repo).resolve():
+            raise refuse('invalid_transition', 'The session already reads this repository.',
+                         'Nothing to record.', session_id=s['session_id'])
+        if Path(recorded).exists():
+            raise refuse('invalid_transition', 'The recorded repository still exists: relocate '
+                         'records a move, never a second copy to read freshness from.',
+                         'Move the repository first, or keep working where it is.',
+                         session_id=s['session_id'])
+        if not Path(repo).is_dir() or not (Path(repo) / '.git').exists():
+            raise refuse('path_outside_scope', 'The new place is not a Git work tree.',
+                         'Name the top level of the moved repository.')
         s['repo_override'] = repo
-        return {'session_id': s['session_id'], 'repo_recorded': True}
-    return Handler(frozenset({'session_id', 'repo'}), run)
+        s.setdefault('relocations', []).append({
+            'from': recorded, 'to': repo, 'author_declared_id': author, 'reason': reason,
+            'revision': _rev(state), 'time': sv.now(), 'request_id': ctx.request_id})
+        return {'session_id': s['session_id'], 'repo_recorded': True, 'from': recorded,
+                'to': repo, 'relocations': len(s['relocations'])}
+    return Handler(frozenset({'session_id', 'repo', 'author_declared_id', 'reason'}), run)
 
 
 FACTORIES = {

@@ -98,7 +98,8 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
     taskset = sv.blob_json(store, session['taskset_blob'], 'taskset')
     snapdoc = sv.session_snapshot(store, session)
     scope = snapdoc['public']
-    current = sv.current_for(store, state, ext)(session)
+    loaders = sv.gate_loaders(store, state, ext)
+    current = loaders['current_for'](session)
     actor = session['actor_declared_id']
     critical = set(doc['critical_dimensions'])
     dims, gaps, safe, used_tasks = [], [], set(), {}
@@ -148,10 +149,20 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
             gaps.append({'kind': 'open_reservation', 'ref': rid})
     peers = []
     handover = ev.current_handover(ext, session['session_id'])
+    # The same selection-based coverage as the gate (same function, same loaders), for this
+    # session's author and profile; without such a selection it is missing, never a search
+    # for any demonstrated transfer (round 2, C2-3).
+    selection = ev.latest_selection(ext, session['milestone'])
+    scope_sel = selection if selection is not None and \
+        selection['actor_scope'] == {'actor_declared_id': actor,
+                                     'profile': session['profile']} else None
+    gate_policy = sv.policy_doc(store, ext) or doc
     for dim in doc['peer_required_dimensions']:
         if dim not in session['dimensions']:
             continue
-        cover = ev.peer_coverage(ext, actor, dim, None, None)
+        cover = ev.selected_peer_coverage(ext, actor, dim, scope_sel, pol.digest(gate_policy),
+                                          loaders['taskset_for'], loaders['captured_for'],
+                                          loaders['current_for'], policy_doc=gate_policy)
         reviews = [x for x in ext['decisions'].values() if x['kind'] == 'transfer'
                    and dim in x['dimension_ids'] and x['session_id'] == session['session_id']]
         transfers = []
@@ -200,7 +211,6 @@ def projection(store, state: Mapping, session: Mapping) -> dict:
         limitations.add('taskset_qualification_simulated')
     if scope['omitted_private']:
         limitations.add('private_context_opaque')
-    selection = ev.latest_selection(ext, session['milestone'])
     proj = {
         'schema': SCHEMA, 'study_public_id': study_public_id(ext),
         'session_ref': _opaque(ext, 'session', session['session_id']),

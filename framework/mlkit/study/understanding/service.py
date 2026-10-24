@@ -116,17 +116,32 @@ def capture(state: Mapping, ext: Mapping | None, *, policy_digest: str | None,
                                 salt=salt, frozen=frozen)
 
 
+def repository_of(store: StudyStore, session: Mapping, *, repo_override=None) -> dict:
+    """Which repository the freshness of ``session`` is read from: ``preview`` (a
+    ``--repo`` given to a read command), ``relocated`` (the last ``understanding relocate``)
+    or ``recorded_at_start`` (the plan's). ``exists`` is false when that place is gone (its
+    sources then read as unknown)."""
+    if repo_override:
+        path, origin = repo_override, 'preview'
+    elif session.get('repo_override'):
+        path, origin = session['repo_override'], 'relocated'
+    else:
+        path, origin = session_plan(store, session).get('repo'), 'recorded_at_start'
+    return {'repository': str(path) if path else None, 'origin': origin,
+            'exists': bool(path) and Path(path).is_dir(),
+            'relocations': len(session.get('relocations') or [])}
+
+
 def current_for(store: StudyStore, state: Mapping, ext: Mapping, *, repo_override=None):
     """A function giving the current local projection of a session (same source mapping,
-    the repository given now or the one recorded in the plan)."""
+    the repository given now, the relocated one or the one recorded in the plan)."""
     cache = {}
 
     def run(session: Mapping) -> Mapping:
         if session['session_id'] not in cache:
             plan = session_plan(store, session)
-            repo = repo_override or session.get('repo_override') or plan.get('repo')
-            if repo and not Path(repo).is_dir():
-                repo = None
+            where = repository_of(store, session, repo_override=repo_override)
+            repo = where['repository'] if where['exists'] else None
             doc = capture(state, ext, policy_digest=session['policy_digest'],
                           taskset_doc=taskset_or_none(state), repo=repo, sources=plan['sources'])
             cache[session['session_id']] = doc['local']
@@ -134,15 +149,25 @@ def current_for(store: StudyStore, state: Mapping, ext: Mapping, *, repo_overrid
     return run
 
 
+def gate_loaders(store: StudyStore, state: Mapping, ext: Mapping, *,
+                 repo_override=None) -> dict:
+    """The loaders the gate reads a session through; the export projection uses the very
+    same ones for its peer coverage, so the two never disagree."""
+    return {'taskset_for': lambda s: taskset_or_none(state),
+            'captured_for': lambda s: session_snapshot(store, s)['local'],
+            'current_for': current_for(store, state, ext, repo_override=repo_override)}
+
+
 def gate(store: StudyStore, state: Mapping, milestone: str, *, policy_override=None,
          policy_source: str = 'study', repo_override=None, today=None) -> dict:
     ext = model.of(state) or model.empty('unset')
     doc = policy_override if policy_override is not None else policy_doc(store, ext)
     return ev.gate(ext, milestone=milestone, policy_doc=doc, policy_source=policy_source,
-                   taskset_for=lambda s: taskset_or_none(state),
-                   captured_for=lambda s: session_snapshot(store, s)['local'],
-                   current_for=current_for(store, state, ext, repo_override=repo_override),
-                   blob_ok=lambda sha: blob_ok(store, sha), checked_at=now(), today=today)
+                   **gate_loaders(store, state, ext, repo_override=repo_override),
+                   blob_ok=lambda sha: blob_ok(store, sha), checked_at=now(), today=today,
+                   session_policy_for=lambda s: blob_json(store, s['policy_blob'], 'policy'),
+                   repository_for=lambda s: repository_of(store, s,
+                                                          repo_override=repo_override))
 
 
 def require_mode(store: StudyStore, state: Mapping, *, allowed=('coaching', 'required')) -> dict:

@@ -170,11 +170,24 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
          taskset_for: Callable[[Mapping], Mapping | None],
          captured_for: Callable[[Mapping], Mapping],
          current_for: Callable[[Mapping], Mapping],
-         blob_ok: Callable[[str], bool], checked_at: str, today: str | None = None) -> dict:
+         blob_ok: Callable[[str], bool], checked_at: str, today: str | None = None,
+         session_policy_for: Callable[[Mapping], Mapping | None] | None = None,
+         repository_for: Callable[[Mapping], Mapping] | None = None) -> dict:
     """The ``GateResult`` of ``milestone`` (SPEC §10). ``captured_for(session)`` is the
     local projection frozen when the session started; ``current_for(session)`` captures the
     current one with the same source mapping; ``taskset_for(session)`` loads the session's
-    taskset as it is on disk now (``None`` when absent)."""
+    taskset as it is on disk now (``None`` when absent); ``session_policy_for(session)``
+    loads the policy the session started under (arbitrations are re-checked against it and
+    the current one); ``repository_for(session)`` says which repository the session's
+    freshness is read from (reported in ``repositories``)."""
+    seen_repos: dict = {}
+    read_current = current_for
+
+    def current_for(session):         # noqa: F811 - the same loader, which also records
+        if repository_for is not None and session['session_id'] not in seen_repos:
+            seen_repos[session['session_id']] = dict(repository_for(session))
+        return read_current(session)
+
     reasons: list[dict] = []
     limitations = set()
     result = {'schema': GATE_SCHEMA, 'milestone': milestone, 'policy_digest': None,
@@ -183,7 +196,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
               'decision': 'not_applicable', 'reasons': reasons, 'missing_dimensions': [],
               'stale_dimensions': [], 'missing_peer_dimensions': [],
               'assurance': pol.SUPPORTED_ASSURANCE, 'waiver_ref': None, 'limitations': [],
-              'dimensions': {}}
+              'dimensions': {}, 'repositories': []}
     if not policy_doc or policy_doc['mode'] != 'required' \
             or milestone not in policy_doc['milestones']:
         reasons.append({'code': 'no_required_check',
@@ -241,8 +254,15 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         lost = arbitrated_ids(ext).get(did)
         if lost is not None and lost['chosen_decision_id'] != did:
             problems.append('lost_arbitration')
-        for a in arbitrations_on(ext, actor, dim):
-            if not arbitration_admissible(a, actor, dim, policy_doc, ext):
+        for a in arbitrations_relied_on(ext, actor, dim, d):
+            try:
+                owner = ext['sessions'].get(a['session_id'])
+                spol = session_policy_for(owner) if session_policy_for and owner else None
+                ok = arbitration_admissible(a, actor, dim, policy_doc, ext,
+                                            session_policy=spol)
+            except Exception:       # noqa: BLE001 - an unreadable session policy never admits
+                ok = False
+            if not ok:
                 problems.append('arbitration_not_admissible')
                 break
         if d.get('assistance_at_review') and any(
@@ -295,7 +315,7 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         if dim not in required:
             continue
         cover = selected_peer_coverage(ext, actor, dim, selection, pdigest, taskset_for,
-                                       captured_for, current_for)
+                                       captured_for, current_for, policy_doc=policy_doc)
         result['dimensions'].setdefault(dim, {})['peer'] = cover
         if cover['people'] < policy_doc['team_coverage']['minimum_people'] \
                 or cover['status'] != 'current':
@@ -305,15 +325,22 @@ def gate(ext: Mapping, *, milestone: str, policy_doc: Mapping | None, policy_sou
         if cover.get('simulated'):
             limitations.add('simulated_human_decisions')
     result['checked_context_digest'] = canonical.digest(sorted(context_digests))
+    result['repositories'] = [{'session_id': k, **v} for k, v in sorted(seen_repos.items())]
     return _finish(result, reasons, limitations, policy_doc, ext, milestone, today)
 
 
 def selected_peer_coverage(ext, author, dim, selection, pdigest, taskset_for, captured_for,
-                           current_for) -> dict:
+                           current_for, *, policy_doc: Mapping | None = None) -> dict:
     """Peer coverage from the transfer reviews the selection names, never a search for an
     old pass: each is ``demonstrated``, by a reviewer other than the peer, on a peer other than
     the author, in a completed session, under the current policy, on the current handover
-    content, and its context is still fresh for the dimension."""
+    content, and its context is still fresh for the dimension. Without a selection (or one
+    naming no transfer for ``dim``) the coverage is ``missing``.
+
+    Integrator default awaiting the owner's decision (round 2, C2-7): when ``policy_doc``
+    requires ``unaided_required`` for ``dim``, a transfer whose peer declared AI assistance
+    (or declared nothing) does not count (``peer_assistance_not_admissible``). The export
+    projection calls this same function with the same inputs as the gate."""
     chosen = (selection or {}).get('transfer_decision_map', {}).get(dim)
     ids = [chosen] if isinstance(chosen, str) else list(chosen or [])
     peers, problems, simulated = set(), [], False
@@ -338,6 +365,10 @@ def selected_peer_coverage(ext, author, dim, selection, pdigest, taskset_for, ca
         if t['input_note_digest'] != current_handover_digest(ext, t['session_id']):
             problems.append('stale')
             continue
+        if policy_doc is not None and _peer_rule(policy_doc, dim) == 'unaided_required' \
+                and not transfer_unaided(t):
+            problems.append('peer_assistance_not_admissible')
+            continue
         taskset = taskset_for(session)
         keys = set()
         if taskset is not None:
@@ -357,6 +388,32 @@ def selected_peer_coverage(ext, author, dim, selection, pdigest, taskset_for, ca
             'problems': problems, 'simulated': simulated}
 
 
+def _peer_rule(policy_doc: Mapping, dim: str) -> str:
+    critical = dim in policy_doc['critical_dimensions']
+    return policy_doc['assistance_rule']['critical' if critical else 'other']
+
+
+def transfer_unaided(t: Mapping) -> bool:
+    """The peer declared their handover answer without AI assistance (a transfer has no
+    hints or coaching; an answer without a declaration is not unaided)."""
+    a = t.get('assistance')
+    return isinstance(a, Mapping) and a.get('ai_assistance_declared') is False
+
+
+def arbitrations_relied_on(ext: Mapping, actor: str, dim: str, d: Mapping) -> list:
+    """The arbitrations the gate relies on for the selected decision ``d`` of ``actor`` on
+    ``dim``: those whose conflict includes ``d``, and those that settle a conflict or resolve
+    a reservation of ``actor`` on ``dim`` in the session of ``d`` (the reservations and
+    conflicts the gate counts against that evidence). An arbitration names only decisions
+    and reservations of its own session, so these are the arbitrations of that session on
+    that person and dimension. An arbitration of another session (one the selection does not
+    use) is history: re-checking it under a later policy would block for ever on something
+    nothing relies on, with no way to settle it again (round 2, C2-2)."""
+    return [a for a in arbitrations_on(ext, actor, dim)
+            if d['decision_id'] in a['conflicting_decision_ids']
+            or a['session_id'] == d['session_id']]
+
+
 def arbitrations_on(ext: Mapping, actor: str, dim: str) -> list:
     out = []
     for a in ext['arbitrations'].values():
@@ -370,15 +427,18 @@ def arbitrations_on(ext: Mapping, actor: str, dim: str) -> list:
 
 
 def arbitration_admissible(a: Mapping, actor: str, dim: str, policy_doc: Mapping,
-                           ext: Mapping) -> bool:
-    """Checked again by the gate under the policy it applies (spec §09): the arbiter is a
-    declared person the policy allows, not the person reviewed on a critical dimension, and
-    not one of the reviewers whose decisions are in conflict."""
-    arbiters = policy_doc['role_policy']['arbiters']
-    if arbiters != 'any_declared' and a['arbiter_declared_id'] not in arbiters:
-        return False
-    if dim in policy_doc['critical_dimensions'] and a['arbiter_declared_id'] == actor:
-        return False
+                           ext: Mapping, *, session_policy: Mapping | None = None) -> bool:
+    """Checked again by the gate under the policy it applies and the policy the session
+    started under (spec §09; the stricter wins): the arbiter is a declared person both
+    allow, not the person reviewed on a dimension either makes critical, and not one of the
+    reviewers whose decisions are in conflict."""
+    docs = [policy_doc] + ([session_policy] if session_policy else [])
+    for doc in docs:
+        arbiters = doc['role_policy']['arbiters']
+        if arbiters != 'any_declared' and a['arbiter_declared_id'] not in arbiters:
+            return False
+        if dim in doc['critical_dimensions'] and a['arbiter_declared_id'] == actor:
+            return False
     parties = {ext['decisions'][x]['reviewer_declared_id']
                for x in a['conflicting_decision_ids'] if x in ext['decisions']}
     return a['arbiter_declared_id'] not in parties

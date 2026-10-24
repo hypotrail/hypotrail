@@ -971,21 +971,21 @@ Payloads: `hypotrail.understanding/1` (stdout of every verb except `verify-expor
 | `policy set --file F --author ID --reason T` | mutation | validates `hypotrail.understanding-policy/1`; logs previous and new digest |
 | `plan --profile P --milestone handoff --actor ID [--repo DIR --sources-file F] [--write-plan F]` | read | dimensions (profile plus critical), tasks whose references resolve, missing prerequisites, estimate, what stays local |
 | `start --plan-file F` | mutation | captures the snapshot (bounded retry, `context_changed`), freezes the mapped sources, creates the session |
-| `status [--session ID] [--repo DIR]` | read | per dimension: status, freshness, assistance, evidence availability, assurance |
+| `status [--session ID] [--repo DIR]` | read | per dimension: status, freshness, assistance, evidence availability, assurance; per session: `repository` (`{repository, origin: recorded_at_start\|relocated\|preview, exists, relocations}`, where freshness is read from) and the `relocations` history |
 | `task --session ID` | read | the next admissible task (a new variant for an open reservation), never an expected answer |
 | `submit --session ID --task ID --response-file F --assistance-file F [--cite REF]` | mutation | a new attempt; the answer is a local blob, never printed |
 | `coach --attempt ID` | mutation | records the help, then returns hints and criteria |
 | `rectify --attempt ID --assistance-file F` | mutation | help found later; dependent reviews are re-opened |
 | `propose-review --session ID --file F` | mutation | stores a proposal (exact excerpts, allowlisted refs); never a human decision |
 | `review --session ID --file F` | mutation | the explicit human act (`declaration`, `simulated`); opens reservations |
-| `arbitrate --session ID --file F` | mutation | settles conflicts and reservations on identified evidence |
+| `arbitrate --session ID --file F` | mutation | settles conflicts and reservations on identified evidence; never a reservation opened by a handover review (only a later handover task, started after that review, on the current handover content and reviewed `demonstrated`, resolves it) |
 | `select --file F` | mutation | the coverage selection of a milestone (completed sessions only) |
 | `waive --file F` | mutation | a waiver (`waived`); accepted only by a policy that allows it (`allowed_by_waiver`) |
 | `handover set --session ID --file F` | mutation | `HandoverContent`; a change stales earlier transfers |
 | `transfer start/submit/review` | mutation | the peer's own task, references and human review |
 | `close --session ID --to STATUS --reason T` | mutation | `active`, `awaiting_review`, `completed`, `abandoned` |
-| `check --milestone M [--policy-file F] [--repo DIR]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation; `--repo` is a preview (`repo_note`): the protected action reads each session's recorded repository |
-| `relocate --session ID --repo DIR` | mutation | records the new place of a moved repository for that session (digests unchanged); `check` and `export handoff` then read it |
+| `check --milestone M [--policy-file F] [--repo DIR]` | read | `hypotrail.understanding-gate/1`; informative, never an authorisation; `--repo` is a preview (`repo_note`): the protected action reads each session's recorded repository; `repositories` names, per session read, the repository its freshness was read from and its origin |
+| `relocate --session ID --repo DIR --author ID --reason T` | mutation | records the new place of a **moved** repository for that session (digests unchanged); `check` and `export handoff` then read it. Refused (`invalid_transition`) while the recorded repository still exists (a move, never a second copy), when it is the same place or the session recorded none; refused (`path_outside_scope`) unless `--repo` is the top level of a Git work tree. The declared author and the reason are kept in the session's relocation history. It does not authenticate the new place's content: whoever controls the repository can still fake freshness (cooperative limit) |
 | `export preview --session ID --repo DIR` | read | the draft and its `content_digest`, the required contributors |
 | `export approve --session ID --contributor ID --content-digest D` | mutation | one declared approval of exactly that projection |
 | `export write --session ID --repo DIR [--latest]` | mutation | intent, immutable generation `docs/understanding/<review_id>/`, receipt |
@@ -1013,7 +1013,9 @@ as `<out>.candidate-<id>`, never a handoff. Revisions made in between by other h
 (their own reservations and records) are not relevant changes, so concurrent handoffs each
 publish. `--expected-revision` is checked against the study before the reservation; the
 pack is then rendered at the reservation's revision, one more than the one given (the
-ungated contract renders at the given revision). Without `--expected-revision`, a
+ungated contract renders at the given revision), or at a later one when only other
+handoffs' reservations and records happened since (they are tolerated before the build as in
+the revalidation). Without `--expected-revision`, a
 reservation that loses a race to another write is retried on the new revision (at most three
 times).
 
