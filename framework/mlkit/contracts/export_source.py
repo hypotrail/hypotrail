@@ -11,14 +11,21 @@ registry entries and the bundle manifests. Raw data and final-test labels never 
   not current: earlier evidence is kept, never presented as current);
 * ``predictor``: ``captured`` (a current capture of the confirmed selection: id, bundle,
   digests, profile, packages), ``stale`` (a capture that no longer describes current state,
-  or that captured another selection than the confirmed one: another configuration, or a
-  confirmation at another revision), ``not_captured`` (no capture: the recipe can be
-  described but no model is invented), or ``not_applicable`` (a study created before the
-  final test existed). ``evidence_status`` is ``evaluated`` only when the final evaluation
-  scored that very predictor and it is still the captured selection;
+  that captured another configuration than the confirmed one, or whose configuration awaits
+  re-confirmation in the chat), ``not_captured`` (no capture: the recipe can be described
+  but no model is invented), or ``not_applicable`` (a study created before the final test
+  existed). A capture is the confirmed selection when its configuration equals the
+  configuration confirmed now **and** the engine reports the capture result current (the
+  rule the engine itself applies before it opens the final test): re-confirming the same
+  choice at a later revision keeps it selected; the raw decision revision is not the
+  criterion. ``evidence_status`` is ``evaluated`` only when the final evaluation scored that
+  very predictor and it is still the captured selection;
 * ``scientific_contracts``: the captured bundle's recipe and data contract only when the
   predictor is ``captured``; otherwise the recipe of the confirmed configuration (never the
-  recipe of a superseded capture);
+  recipe of a superseded capture). Its ``selection`` block states how the capture relates to
+  the confirmed selection (``capture``: ``selected``, ``awaiting_reconfirmation``,
+  ``superseded``, ``not_current`` or null), with both configurations and the decision's
+  status and revision, so the exporter applies the same rule;
 * ``study_id``: a stable identity of the study, independent of the folder it is read from:
   the first 16 hex digits of the SHA-256 of the canonical JSON of its creation time, case
   id, dataset SHA-256 and final-test partition seed (the same study copied elsewhere has the
@@ -40,24 +47,37 @@ CAPTURE = 'predictor.capture'
 FINAL = 'final_test.evaluation'
 
 
-def _limitations(predictor: dict, opened: bool, superseded: bool = False) -> list[str]:
+SELECTED, AWAITING, SUPERSEDED, NOT_CURRENT = ('selected', 'awaiting_reconfirmation',
+                                               'superseded', 'not_current')
+AWAITING_LIMITATION = ('The model choice awaits re-confirmation in the chat: the captured '
+                       'predictor is not exported until the choice is confirmed again. '
+                       'Re-confirming the same choice in the chat makes the export possible '
+                       'again (the capture and its final evaluation are kept).')
+
+
+def _limitations(predictor: dict, opened: bool, relation: str | None = None) -> list[str]:
     out = ['A development-row parity set checks reproduction, not generalisation.']
     if predictor['status'] == 'not_captured':
         out.append('No predictor was captured: the export can describe the recipe only; no '
                    'model is rebuilt or presented as evaluated.')
     if predictor['status'] == 'stale':
-        if superseded:
-            out.append('The captured predictor is not the confirmed selection (another model '
-                       'or a later confirmation): it is not exported as the selected model.')
+        if relation == AWAITING:
+            # The capture is still the one the final test scored: nothing earlier was
+            # evaluated, the choice only has to be confirmed again.
+            out.append(AWAITING_LIMITATION)
+        elif relation == SUPERSEDED:
+            out.append('The captured predictor is not the confirmed selection (another '
+                       'configuration was confirmed after the capture): it is not exported as '
+                       'the selected model.')
         else:
             out.append('The captured predictor no longer describes current state: it is kept '
                        'as history, not as the current model.')
-        if opened:
+        if opened and relation != AWAITING:
             out.append('The final test evaluated an earlier predictor: its verdict is not '
                        'inherited by the recipe of the current selection.')
     if not opened:
         out.append('The final test is sealed: no independent evidence exists yet.')
-    elif predictor['evidence_status'] != 'evaluated':
+    elif predictor['evidence_status'] != 'evaluated' and relation != AWAITING:
         out.append('The final evaluation did not score a captured predictor: a model rebuilt '
                    'for export would be a rebuilt candidate without its verdict.')
     return out
@@ -200,8 +220,9 @@ def _conclusion(state) -> dict | None:
             'revision': d.get('revision')}
 
 
-def _study_id(state) -> str:
-    """A stable identity of the study (see the module docstring), not its folder path."""
+def study_id(state) -> str:
+    """A stable identity of the study (see the module docstring), not its folder path. The
+    capture's computation context uses the same identity (:mod:`mlkit.contracts.capture`)."""
     import json
     basis = {'created': state.get('created'), 'case_id': (state.get('case') or {}).get('id'),
              'dataset_sha256': (state.get('dataset') or {}).get('sha256'),
@@ -210,18 +231,70 @@ def _study_id(state) -> str:
     return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
 
 
-def _captures_selection(state, entry: dict) -> bool:
-    """Whether a capture registry entry captured the selection confirmed now: the same
-    configuration, from the same confirmation (decision and revision)."""
+CHOICE_DECISIONS = ('model_choice', 'policy')
+
+
+def _held_config(state) -> dict | None:
+    """The configuration the study would choose if every choice decision that awaits
+    re-confirmation (``reconfirm_required``, a hold stated after its confirmation) were
+    confirmed again with its recorded value; None when none awaits re-confirmation."""
+    import copy
     from mlkit.study import state as st
-    config = st.choice_config(state)
-    choice = st.choice_decision(state)
-    decision = state['decisions'].get(choice) or {}
+    decisions = state.get('decisions') or {}
+    held = [d for d in CHOICE_DECISIONS
+            if (decisions.get(d) or {}).get('status') == 'reconfirm_required']
+    if not held:
+        return None
+    view = copy.deepcopy(dict(state))
+    for d in held:
+        view['decisions'][d]['status'] = 'confirmed'
+    return st.choice_config(view)
+
+
+def _selection_relation(state, entry: dict, current: bool) -> str:
+    """How a capture registry entry relates to the selection confirmed now (the engine's own
+    rule, :func:`mlkit.contracts.capture.matching_capture` and the final-test
+    preconditions): ``selected`` when its configuration equals the confirmed configuration
+    and the capture result is current, whatever the revision of the confirmation (the same
+    choice confirmed again keeps it); ``awaiting_reconfirmation`` when the choice is on hold
+    and confirming it again with its recorded value would select it; ``not_current`` for the
+    same configuration whose capture is no longer current; ``superseded`` when another
+    configuration (or no configuration) is chosen."""
+    from mlkit.study import state as st
+    captured = entry['inputs'].get('configuration')
     reference = entry['inputs'].get('selection_reference') or {}
-    return (config is not None and decision.get('status') == 'confirmed'
-            and entry['inputs'].get('configuration') == dict(config)
-            and reference.get('decision_id') == choice
-            and reference.get('revision') == decision.get('revision'))
+    if reference.get('decision_id') != st.choice_decision(state):
+        return SUPERSEDED
+    config = st.choice_config(state)
+    if config is None:
+        held = _held_config(state)
+        if held is not None and captured == dict(held):
+            return AWAITING if current else NOT_CURRENT
+        return SUPERSEDED
+    if captured != dict(config):
+        return SUPERSEDED
+    return SELECTED if current else NOT_CURRENT
+
+
+def _selection_block(state, capture_rid, entry, relation) -> dict:
+    """``scientific_contracts.selection``: what the exporter needs to apply the same rule."""
+    from mlkit.study import state as st
+    choice = st.choice_decision(state)
+    decision = (state.get('decisions') or {}).get(choice) or {}
+    statuses = [(state['decisions'].get(d) or {}).get('status') for d in CHOICE_DECISIONS
+                if d in (state.get('decisions') or {})]
+    status = 'reconfirm_required' if 'reconfirm_required' in statuses \
+        else decision.get('status')
+    config = st.choice_config(state)
+    return {'decision_id': choice, 'decision_status': status,
+            'decision_revision': decision.get('revision'),
+            'confirmed_configuration': None if config is None else dict(config),
+            'capture_result_id': capture_rid,
+            'capture_configuration': None if entry is None
+            else entry['inputs'].get('configuration'),
+            'capture': relation,
+            'rule': 'the capture is the confirmed selection when its configuration equals '
+                    'the confirmed configuration and the capture result is current'}
 
 
 def read_export_source(study_path, expected_revision: int) -> ExportSource:
@@ -258,13 +331,13 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
     if not st.has_wp_b1_decisions(state):
         predictor['status'] = 'not_applicable'
     capture_rid = state['current'].get(CAPTURE)
-    superseded = False
+    relation, entry = None, None
     if capture_rid is not None:
         entry = registry.get(store, capture_rid)
         values = entry['output']['values']
-        current = study.currency(capture_rid)['current']
-        superseded = not _captures_selection(state, entry)
-        predictor.update(status='captured' if current and not superseded else 'stale',
+        current = bool(study.currency(capture_rid)['current'])
+        relation = _selection_relation(state, entry, current)
+        predictor.update(status='captured' if relation == SELECTED else 'stale',
                          predictor_id=values['predictor_id'], capture_result_id=capture_rid,
                          bundle_dir=str(Path(store.home) / values['bundle']),
                          recipe_sha256=values['recipe_sha256'],
@@ -290,10 +363,11 @@ def read_export_source(study_path, expected_revision: int) -> ExportSource:
             'partitions': _partitions(store, state, results),
             'final_test': {'status': final_test['status'], 'n_rows': final_test['n_rows']},
             'n_source_records': part.get('n_rows')}
-    limitations = _limitations(predictor, opened, superseded)
+    limitations = _limitations(predictor, opened, relation)
     contracts = _contracts(store, state, predictor, limitations)
+    contracts['selection'] = _selection_block(state, capture_rid, entry, relation)
     doc = {'schema_version': 'hypotrail.export_source/1',
-           'study_id': _study_id(state),
+           'study_id': study_id(state),
            'revision': study.revision, 'task': st.task_of(state),
            'case': _case(state),
            'dataset_sha256': state['dataset']['sha256'], 'scientific_contracts': contracts,

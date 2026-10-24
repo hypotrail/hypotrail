@@ -334,42 +334,52 @@ def test_a_source_that_is_not_in_the_contract_encoding_is_refused(project_module
     assert error.value.code == 'data_identity_mismatch'
 
 
-def test_a_decimal_comma_contract_types_its_values(project_module):
+def _typed_number(project_module, tmp_path, text: str, kind: str = 'float64',
+                  decimal: str = '.'):
+    """The value ``text`` of a prediction input in a ``kind`` column (round 2: number typing
+    is what pandas reads, ``contracts.typed_features``; the private ``_convert`` of round 1
+    was removed with the text typing it implemented)."""
     contracts = sys.modules['src.pipeline.utils.hypotrail.contracts']
     contract = {'parser': {'encoding': 'utf-8', 'delimiter': ';', 'header': True,
-                           'quotechar': '"', 'na_values': [], 'decimal': ','},
-                'columns': [{'name': 'x', 'physical_type': 'float64', 'nullable': False}]}
-    frame = pd.DataFrame({contracts.KEY_COLUMN: ['L2', 'L3'], 'x': ['1,5', '-2,25e1']})
-    assert contracts.typed_frame(frame, contract)['x'].tolist() == [1.5, -22.5]
-    # A point is not the decimal mark of this contract (pandas would not read it either).
-    frame = pd.DataFrame({contracts.KEY_COLUMN: ['L2'], 'x': ['1.5']})
-    with pytest.raises(contracts.ProjectError):
-        contracts.typed_frame(frame, contract)
+                           'quotechar': '"', 'na_values': [], 'decimal': decimal},
+                'columns': [{'name': 'x', 'physical_type': kind, 'nullable': False,
+                             'semantic_type': 'numeric', 'allowed_values': None}]}
+    path = tmp_path / 'rows.csv'
+    path.write_text('x\n"' + text.replace('"', '""') + '"\n', encoding='utf-8')
+    return contracts.typed_features(path, contract)['x'].tolist()[0]
 
 
-@pytest.mark.parametrize('text', ['1_000', '0x10', '\u0663', '1e', 'inf', 'Infinity', 'nan',
-                                  '1,5', '--1'])
-def test_python_only_float_syntax_is_refused(project_module, text):
+def test_a_decimal_comma_contract_types_its_values(project_module, tmp_path):
+    """Round 2 changed one expectation: with a decimal comma, a value written with a point
+    is not a number for pandas' parser but ``pandas.to_numeric`` (the engine's conversion,
+    ``mlkit.study.data.check_values``) reads it, so the engine reads ``1.5`` as 1.5 and the
+    export does too (round 1 refused it)."""
+    assert _typed_number(project_module, tmp_path, '1,5', decimal=',') == 1.5
+    assert _typed_number(project_module, tmp_path, '-2,25e1', decimal=',') == -22.5
+    assert _typed_number(project_module, tmp_path, '1.5', decimal=',') == 1.5
+
+
+@pytest.mark.parametrize('text', ['1_000', '0x10', '\u0663', '1e', 'nan', '1,5', '--1'])
+def test_python_only_float_syntax_is_refused(project_module, tmp_path, text):
+    """Round 2 changed two expectations: ``inf`` and ``Infinity`` are numbers for pandas
+    (the engine's reader), so they are accepted (``test_review_round2``); the other texts
+    are still refused."""
     contracts = sys.modules['src.pipeline.utils.hypotrail.contracts']
-    column = {'name': 'x', 'physical_type': 'float64', 'nullable': False}
-    with pytest.raises(ValueError):
-        contracts._convert(text, column, set())
+    with pytest.raises(contracts.ProjectError):
+        _typed_number(project_module, tmp_path, text)
 
 
 @pytest.mark.parametrize('text', ['1_000', '\u0663', '4.5', '0x4'])
-def test_python_only_integer_syntax_is_refused(project_module, text):
+def test_python_only_integer_syntax_is_refused(project_module, tmp_path, text):
     contracts = sys.modules['src.pipeline.utils.hypotrail.contracts']
-    column = {'name': 'x', 'physical_type': 'int64', 'nullable': False}
-    with pytest.raises(ValueError):
-        contracts._convert(text, column, set())
+    with pytest.raises(contracts.ProjectError):
+        _typed_number(project_module, tmp_path, text, kind='int64')
 
 
 @pytest.mark.parametrize(('text', 'value'), [(' 1e3 ', 1000.0), ('+1.5', 1.5), ('.5', 0.5),
                                              ('5.', 5.0), ('-.5e-3', -0.0005)])
-def test_the_number_syntax_pandas_reads_is_accepted(project_module, text, value):
-    contracts = sys.modules['src.pipeline.utils.hypotrail.contracts']
-    column = {'name': 'x', 'physical_type': 'float64', 'nullable': False}
-    assert contracts._convert(text, column, set()) == value
+def test_the_number_syntax_pandas_reads_is_accepted(project_module, tmp_path, text, value):
+    assert _typed_number(project_module, tmp_path, text) == value
 
 
 # --- B-M4 and the README: the exported commands, as an engineer runs them -------------

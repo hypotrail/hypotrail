@@ -12,9 +12,14 @@ final test would open) **before** the final test is opened:
    the declared tolerance refuses the capture (nothing is relaxed);
 3. the bundle is written in a staging directory, reloaded and checked for parity, optionally
    packaged by an injected packager (workshop profile: packaging is required), then moved
-   atomically to ``.hypotrail/predictors/<predictor_id>/`` (content-addressed: the same
-   capture again reuses the verified bundle). The packages are made from the native bundle
-   after its id exists, so they are not part of the id: a bundle that holds packages lives
+   atomically to ``.hypotrail/predictors/<predictor_id>/``. The predictor id is the content
+   id of the manifest, whose computation context names the study (its path-independent
+   ``study_id``) and the revision at which the capture started: a capture run again at a
+   later revision gets a new id and a new bundle folder, even for the same configuration;
+   only the same capture at the same revision (an execution retried after an interruption)
+   finds a bundle of its id, which is verified and reused instead of being rewritten. The
+   packages are made from the native bundle after its id exists, so they are not part of
+   the id: a bundle that holds packages lives
    at ``<predictor_id>+<format>[+<format>...]`` and a capture is reused only from the
    bundle of the same id *and* the same package formats; the result always reports the
    packages of the bundle it names (review A3, 2026-10-24). Before a bundle is added or
@@ -230,7 +235,13 @@ def _membership(inputs: Mapping, keys) -> str:
 
 
 def _study_id(store) -> str:
-    return hashlib.sha256(str(Path(store.study_dir).resolve()).encode()).hexdigest()[:16]
+    """The study's identity in the computation context: the export's path-independent
+    ``study_id`` (SHA-256 of the canonical JSON of its creation time, case id, dataset
+    SHA-256 and final-test partition seed, first 16 hex digits), never its folder path, so
+    the context copied into an export or an MLflow package names no local path and the same
+    study read from another folder has the same identity."""
+    from .export_source import study_id
+    return study_id(store.load_state())
 
 
 def predictors_root(store) -> Path:

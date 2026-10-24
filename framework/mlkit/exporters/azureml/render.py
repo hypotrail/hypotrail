@@ -237,7 +237,8 @@ def context(snapshot: Snapshot, normal: Mapping, missing: list, template: layout
         'parameters_inline': json.dumps(recipe['parameters'], sort_keys=True),
         'features': recipe['features'], 'features_inline': ', '.join(f'`{f}`' for f in
                                                                    recipe['features']),
-        'feature_types': recipe['feature_types'], 'preprocessing': recipe['preprocessing'],
+        'feature_types': recipe['feature_types'],
+        'preprocessing': _config_preprocessing(recipe['preprocessing']),
         'seeds': recipe['seeds'], 'output_contract': recipe['output_contract'],
         'target': target, 'target_name': target['name'],
         'target_unit_suffix': f' (in {unit})' if unit else '',
@@ -390,13 +391,29 @@ def _shared(module: str) -> bytes:
     return path.read_bytes()
 
 
+def _config_preprocessing(preprocessing):
+    """The recipe's preprocessing as the Hydra configuration carries it: a literal value of
+    the dataset that OmegaConf would interpret (``???``, ``${``) is encoded
+    (:func:`projection.encode_literals`) and decoded by the projection, never refused."""
+    try:
+        return projection.encode_literals(preprocessing)
+    except projection.ProjectionError as error:
+        raise ExportError('contract_invalid', f'The recipe preprocessing cannot be carried in '
+                          f'the project configuration: {error}', path=error.path,
+                          remediation='Report this recipe; it is not changed to export.') from error
+
+
 def _no_interpolation(value, path: str) -> None:
     """A scientific value rendered into Hydra YAML may not look like an interpolation, nor
-    be OmegaConf's mandatory-missing marker ``???`` (read back as a missing value)."""
+    be OmegaConf's mandatory-missing marker ``???`` (read back as a missing value). It is
+    checked on the values as the configuration carries them: the literals of the recipe's
+    preprocessing are encoded, every other value (a name, a unit the case states) is refused
+    with a remediation the junior can follow."""
     if isinstance(value, str) and ('${' in value or '@@' in value or value == OMEGACONF_MISSING):
         raise ExportError('contract_invalid', 'A recipe or plan value contains "${" or "@@", '
                           'or is "???", which the project configuration would interpret.',
-                          path=path, remediation='Rename the value in the study.')
+                          path=path, remediation='Rename the value in the case of the study '
+                                                 '(a name or a unit), then export.')
     if isinstance(value, Mapping):
         for key, item in value.items():
             _no_interpolation(key, f'{path}.{key}')
@@ -411,7 +428,9 @@ def render(snapshot: Snapshot, normal: Mapping, missing: list,
     """``(files, summary)``: every file of the project, in path order, and the identities,
     statuses and checks the command reports."""
     ids = identities(snapshot, normal, template)
-    _no_interpolation(ids['scientific'], 'scientific_projection')
+    carried = {**ids['scientific'],
+               'preprocessing': _config_preprocessing(ids['scientific']['preprocessing'])}
+    _no_interpolation(carried, 'scientific_projection')
     ctx = context(snapshot, normal, missing, template, ids)
     lock, lock_status = lock_bytes(template, snapshot)
     ready = readiness(snapshot, missing, ids)

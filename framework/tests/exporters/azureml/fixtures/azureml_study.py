@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import random
 from pathlib import Path
 
@@ -171,7 +172,8 @@ def export_source(folder: Path, *, bundle_dir: Path | None, the_recipe: dict | N
                   confirmed: bool = True, current: bool = True, revision: int = REVISION,
                   contract: dict | None = None, source: Path | None = None) -> dict:
     source = source or folder / 'cars.data'
-    contract = contract or data_contract(source)
+    # Copies: a test may change the document without changing the session's material.
+    contract = copy.deepcopy(contract or data_contract(source))
     the_recipe = copy.deepcopy(the_recipe or recipe())
     return {
         'study_id': 'study-synthetic-cars', 'revision': revision,
@@ -190,13 +192,25 @@ def export_source(folder: Path, *, bundle_dir: Path | None, the_recipe: dict | N
         'development_plan': plan(),
         # The predictor as read_export_source describes a current capture of the selection
         # that the final test evaluated (the binding beside the bundle can only lower it).
+        # It names the predictor id the capture recorded (the export requires the bundle at
+        # bundle_dir to be that predictor).
         'predictor': None if bundle_dir is None else {
             'status': 'captured', 'bundle_dir': str(bundle_dir), 'evidence_status': 'evaluated',
+            'predictor_id': _bundle_id(bundle_dir),
             'capture_result_id': 'r-capture-1', 'final_result_id': 'r-final-1'},
         'limitations': ['Synthetic data: a test of the export, not of a model.'],
         'metrics': ['mae', 'rmse'],
         'conclusion': {'verdict': 'adopt_model', 'text': 'Synthetic conclusion for tests.'},
     }
+
+
+def _bundle_id(bundle_dir: Path) -> str | None:
+    """The id the capture recorded: the bundle document's, read without verification (the
+    tests of an altered bundle alter it after the capture)."""
+    try:
+        return json.loads((Path(bundle_dir) / 'predictor_bundle.json').read_text())['predictor_id']
+    except (OSError, ValueError, KeyError):
+        return None
 
 
 def reader_of(source_doc: dict):

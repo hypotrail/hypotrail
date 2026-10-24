@@ -1,7 +1,8 @@
 """Test suite for the data preparation module (Hypotrail export).
 
 The team template's example test was replaced: these tests check the declared conversions of
-the study's data contract on rows built here, without the runtime.
+the study's data contract on rows built here (in this project's row format: a missing value is
+``contracts.MISSING_TEXT``, an empty text is an empty text), without the runtime.
 """
 
 import json
@@ -44,8 +45,17 @@ def test_missing_value_in_a_required_column_is_refused() -> None:
     if required is None:
         pytest.skip("every column of this contract is nullable")
     with pytest.raises(ProjectError) as error:
-        contracts.typed_frame(_frame([_row("L1", {required["name"]: ""})]), CONTRACT)
+        contracts.typed_frame(_frame([_row("L1", {required["name"]: contracts.MISSING_TEXT})]), CONTRACT)
     assert error.value.code == "contract_invalid"
+
+
+def test_an_empty_text_is_a_value_not_a_missing_one() -> None:
+    """An empty cell of a text column is the empty text the study read, never a missing value."""
+    text = next((c for c in CONTRACT["columns"] if c["physical_type"] == "string"), None)
+    if text is None:
+        pytest.skip("this contract has no text column")
+    typed = contracts.typed_frame(_frame([_row("L1", {text["name"]: ""})]), CONTRACT)
+    assert typed[text["name"]].tolist() == [""]
 
 
 def test_columns_out_of_order_are_refused() -> None:

@@ -18,8 +18,14 @@ read through ``model_dump(mode='json')``. The predictor's ``status`` and ``evide
 and ``final_test.status`` decide what is exported: only a ``captured`` predictor (a current
 capture of the confirmed selection) is transported, with the evidence status the study
 records; a ``stale`` one is refused while the final test is sealed and left out (recipe
-only) after the opening. A ``hypotrail_runtime`` ``ContractError`` of the reader is
-answered as an export refusal (:func:`from_contract_error`).
+only) after the opening, except a capture whose choice only awaits re-confirmation in the
+chat (``scientific_contracts.selection.capture``), which is refused with a remediation that
+says so. A recipe selected at an earlier confirmation is accepted only under the engine's
+rule: the captured configuration equals the confirmed one and the capture is current. The
+bundle found at the recorded path must be the recorded predictor (same predictor id, and
+recipe and data contract digests); another bundle is ``artifact_integrity_failed``. A
+``hypotrail_runtime`` ``ContractError`` of the reader is answered as an export refusal
+(:func:`from_contract_error`).
 """
 from __future__ import annotations
 
@@ -197,6 +203,71 @@ def _check_recipe(recipe: dict, contract: dict) -> None:
                           path='model_recipe.target.positive_label', remediation='Fix the recipe.')
 
 
+def _reconfirmed_capture(source, descriptor, predictor_status, contracts: Mapping,
+                         selection: Mapping, revision: int, by_id: Mapping) -> bool:
+    """Whether a recipe selected at an earlier confirmation is still the confirmed selection:
+    the same rule as ``read_export_source`` (the engine's): the captured configuration
+    equals the configuration confirmed now and the capture result is current. Only a
+    captured bundle qualifies; another configuration confirmed after the capture never
+    does."""
+    state = contracts.get('selection')
+    if not isinstance(state, Mapping) or predictor_status != 'captured' \
+            or contracts.get('source') != 'captured_bundle' or state.get('capture') != 'selected':
+        return False
+    plan = field(source, 'development_plan', None)
+    confirmed = plan.get('configuration') if isinstance(plan, Mapping) else None
+    capture_rid = field(descriptor, 'capture_result_id', None)
+    earlier = selection.get('revision')
+    return (confirmed is not None
+            and state.get('capture_configuration') == confirmed
+            and state.get('confirmed_configuration') == confirmed
+            and state.get('decision_id') == selection.get('decision_id')
+            and state.get('decision_revision') == revision
+            and state.get('capture_result_id') == capture_rid and capture_rid is not None
+            and (by_id.get(capture_rid) or {}).get('current') is True
+            and isinstance(earlier, int) and not isinstance(earlier, bool)
+            and earlier <= revision)
+
+
+def _same_predictor(descriptor, predictor: Mapping) -> None:
+    """The bundle found at the recorded path is the predictor the capture recorded (and,
+    through it, the one the final test evaluated): same predictor id, and the same recipe
+    and data contract digests when the study records them. A self-consistent bundle put in
+    its place is refused, never exported under the study's evidence."""
+    expected = field(descriptor, 'predictor_id', None)
+    manifest = predictor.get('manifest') or {}
+    found = predictor.get('predictor_id')
+    mismatched = []
+    if not isinstance(expected, str) or not expected:
+        raise ExportError('contract_invalid', 'The export source names no predictor id for its '
+                          'captured predictor.', path='predictor.predictor_id',
+                          remediation='Fix the engine: read_export_source names the captured '
+                                      'predictor id.')
+    if found != expected:
+        mismatched.append('predictor_id')
+    for key in ('recipe_sha256', 'data_contract_sha256'):
+        recorded = field(descriptor, key, None)
+        if recorded is not None and manifest.get(key) != recorded:
+            mismatched.append(key)
+    binding = predictor.get('binding') or {}
+    final_rid = field(descriptor, 'final_result_id', None)
+    if predictor.get('evidence_status') == 'evaluated' and (
+            binding.get('predictor_id') != expected
+            or (final_rid is not None and binding.get('final_result_id') != final_rid)):
+        mismatched.append('evidence_binding')
+    if mismatched:
+        raise ExportError('artifact_integrity_failed', 'The bundle at the recorded path is not '
+                          'the predictor the study captured and evaluated; nothing was '
+                          'written.', path='predictor.bundle_dir',
+                          remediation='Restore the captured bundle from a copy you trust (or '
+                                      'capture again before opening the final test); never '
+                                      'replace or edit a bundle.',
+                          details={'reason': 'bundle_not_recorded_predictor',
+                                   'mismatched': mismatched,
+                                   'recorded_predictor_id': expected,
+                                   'found_predictor_id': found})
+
+
 @dataclass(frozen=True)
 class Snapshot:
     """What the generator renders from: plain JSON documents, no live object."""
@@ -358,19 +429,36 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
     descriptor = field(source, 'predictor', None)
     predictor_status = field(descriptor, 'status', 'captured') if descriptor else None
     final_status = _final_status(source)
+    contracts = field(source, 'scientific_contracts')
+    selection_state = (contracts.get('selection') if isinstance(contracts, Mapping) else None)
+    selection_state = selection_state if isinstance(selection_state, Mapping) else {}
+    if predictor_status == 'stale' and selection_state.get('capture') == 'awaiting_reconfirmation':
+        # The model choice is on hold after its confirmation: the capture (and the final
+        # evaluation that scored it) is kept, the choice only has to be confirmed again.
+        raise ExportError('contract_invalid', 'The model choice awaits re-confirmation in the '
+                          'chat, so no selection is confirmed now; nothing was written.',
+                          path='predictor.status',
+                          remediation='Confirm the same model choice again in the chat (the '
+                                      'captured predictor and its final evaluation are kept); '
+                                      'that makes the export possible again. Then export.',
+                          details={'reason': 'selection_awaits_reconfirmation',
+                                   'decision_id': selection_state.get('decision_id'),
+                                   'capture_result_id': field(descriptor, 'capture_result_id',
+                                                              None),
+                                   'limitations': [str(x) for x in
+                                                   (field(source, 'limitations', None) or [])]})
     if predictor_status == 'stale' and final_status == 'sealed':
         # Before the opening a capture of the confirmed selection is still possible: the
         # export neither ships the superseded model nor drops it silently.
         raise ExportError('model_not_captured', 'The captured predictor is not the current '
-                          'confirmed selection (another model, a later confirmation, or a '
-                          'change since the capture); the export does not substitute it and '
-                          'nothing was written.', path='predictor.status',
+                          'confirmed selection (another configuration confirmed after it, or '
+                          'a change since the capture that made it not current); the export '
+                          'does not substitute it and nothing was written.', path='predictor.status',
                           remediation='Run hypotrail run predictor.capture again, so the '
                                       'capture is the confirmed selection, then export.',
                           details={'reason': 'capture_not_current_selection',
                                    'capture_result_id': field(descriptor, 'capture_result_id',
                                                               None)})
-    contracts = field(source, 'scientific_contracts')
     if not isinstance(contracts, Mapping) or contracts.get('model_recipe') is None:
         _refuse_without_recipe(source, predictor_status, final_status)
     recipe = _require(field(contracts, 'model_recipe'), RECIPE_KEYS, RECIPE_SCHEMA,
@@ -413,8 +501,12 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                           details={'reason': 'selection_not_confirmed'})
     decision = confirmed[selection.get('decision_id')]
     revision = decision.get('revision')
-    if not isinstance(revision, int) or isinstance(revision, bool) or \
-            revision != selection.get('revision'):
+    results = [_plain(r) for r in field(source, 'results')]
+    by_id = {r.get('result_id'): r for r in results if isinstance(r, Mapping)}
+    if not isinstance(revision, int) or isinstance(revision, bool) or (
+            revision != selection.get('revision')
+            and not _reconfirmed_capture(source, descriptor, predictor_status, contracts,
+                                         selection, revision, by_id)):
         raise ExportError('contract_invalid', 'The recipe was selected by another confirmation '
                           'than the one in force; the export does not substitute a model and '
                           'nothing was written.',
@@ -426,8 +518,6 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
                                    'selection_revision': selection.get('revision'),
                                    'decision_revision': decision.get('revision')})
     checks.append({'id': 'selection_confirmed', 'status': 'passed'})
-    results = [_plain(r) for r in field(source, 'results')]
-    by_id = {r.get('result_id'): r for r in results if isinstance(r, Mapping)}
     for rid in selection.get('evidence_ids') or []:
         item = by_id.get(rid)
         if item is None or item.get('current') is not True:
@@ -453,6 +543,7 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
             raise ExportError('optional_dependency_missing', 'No predictor verifier.',
                               path='predictor', remediation='Internal: pass verify_predictor.')
         predictor = verify_predictor(Path(bundle_dir), recipe, contract)
+        _same_predictor(descriptor, predictor)
         checks += predictor['checks']
         warnings += predictor['warnings']
         # The study's own record decides the evidence status; the binding beside the bundle

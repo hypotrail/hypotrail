@@ -312,8 +312,10 @@ def predict(args: argparse.Namespace) -> int:
     # Rows given by a user are typed as the data contract declares (never by inference); a
     # runtime parity frame (hypotrail.parity_frame/1, such as the model's own parity features)
     # carries its declared types and is read by the runtime.
-    if args.parity or _is_parity_frame(source):
+    if args.parity:
         features = mp.read_table(source)
+    elif _is_parity_frame(source):
+        features = _parity_frame(source)
     else:
         features = contracts.typed_features(source, bundle_contract(folder))
     predictor = rt.load_predictor(folder, trusted_roots=[folder])
@@ -343,11 +345,30 @@ def _is_parity_frame(path: Path) -> bool:
     return isinstance(document, dict) and document.get("schema_version") == "hypotrail.parity_frame/1"
 
 
+def _parity_frame(path: Path) -> object:
+    """Read a runtime parity frame given as input; a malformed one is a refusal."""
+    from .hypotrail import mlflow_packaging as mp
+
+    try:
+        return mp.read_table(path)
+    except Exception as error:  # a structured refusal is kept; any other failure is the input's
+        if from_exception(error) is not None:
+            raise
+        raise ProjectError(
+            "contract_invalid",
+            "The input is not a valid hypotrail.parity_frame/1 document.",
+            path=str(path),
+            remediation="Give a parity frame written by the runtime, or a CSV of feature values with a header.",
+            details={"error": f"{type(error).__name__}: {error}"[:300]},
+        ) from error
+
+
 # --- materialize -----------------------------------------------------------------------
 
 
 # The engine's record reader (``mlkit.study.data.row_index`` and ``_field_splitter``), copied
-# here because this project never imports the engine: records are split on "\n" only (never
+# here because this project never imports the engine; it gives the row keys (the values are
+# read by the engine's pandas call, ``contracts.read_source``): records are split on "\n" only (never
 # on U+2028, form feed, NEL or a lone "\r", which ``str.splitlines`` would split on), a final
 # empty line is dropped, a trailing "\r" is removed, and fields are split by ``csv.reader``
 # on one line, or, for ``whitespace``, by the engine's tokenizer (a quoted field with doubled
@@ -435,10 +456,19 @@ def _source_lines(source: Path, contract: dict, wanted: set[str]) -> tuple[list[
     return [key for key, _ in pairs], [fields for _, fields in pairs]
 
 
-def materialize(args: argparse.Namespace) -> int:
-    """Extract the development rows of the original file into data/hypotrail/development."""
-    import csv
+def _pandas_version() -> str:
+    import pandas as pd
 
+    return pd.__version__
+
+
+def materialize(args: argparse.Namespace) -> int:
+    """Extract the development rows of the original file into data/hypotrail/development.
+
+    The row keys are the engine's (its record splitter); the values are read by the
+    engine's own ``pandas.read_csv`` call on the whole file (``contracts.read_source``) and
+    converted as the engine converts them (``contracts.engine_values``).
+    """
     from .hypotrail.steps import development_keys
 
     contracts.verify_data_dir(DATA_DIR)
@@ -465,32 +495,31 @@ def materialize(args: argparse.Namespace) -> int:
             remediation="Use the file the study was made on, unmodified.",
             details={"records_found": len(records), "records_expected": expected},
         )
-    wanted_set = set(wanted)
-    pairs_found = [(key, fields) for key, fields in records if key in wanted_set]
-    keys = [key for key, _ in pairs_found]
-    rows = [fields for _, fields in pairs_found]
-    if sorted(keys) != sorted(wanted):
+    keys = [key for key, _ in records]
+    if not set(wanted) <= set(keys):
         raise ProjectError(
             "data_identity_mismatch", "The source does not hold every development row.", path=str(source),
         )
-    order = {k: i for i, k in enumerate(wanted)}
-    pairs = sorted(zip(keys, rows, strict=False), key=lambda kv: order[kv[0]])
+    # The values are the engine's: the same pandas.read_csv call on the whole file, the rows
+    # restricted to the development rows (file order), the engine's numeric conversion.
+    frame = contracts.read_source(source, contract, keys)
+    wanted_set = set(wanted)
+    development = frame.loc[[key for key in keys if key in wanted_set]]
+    development = contracts.engine_values(development, contract, str(source)).loc[wanted]
     folder = DATA_DIR / "development"
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / "development.csv"
-    with target.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, lineterminator="\n")
-        writer.writerow([contracts.KEY_COLUMN] + [c["name"] for c in contract["columns"]])
-        for key, values in pairs:
-            writer.writerow([key, *values])
+    contracts.write_rows(development.reset_index(), target)
     manifest = {
         "schema_version": contracts.MATERIALIZATION_SCHEMA,
         "source_sha256": contract["source_sha256"],
         "materialization_sha256": contracts.sha256_file(target),
         "row_key_column": contracts.KEY_COLUMN,
-        "n_rows": len(pairs),
+        "n_rows": len(development),
         "development_keys_sha256": canonical.canonical_sha256(wanted),
         "final_test_rows_included": False,
+        "values": "read as the engine read them: pandas.read_csv with the data contract's parser",
+        "pandas_version": _pandas_version(),
     }
     (folder / contracts.DEVELOPMENT_MANIFEST).write_bytes(canonical.pretty_bytes(manifest))
     return _emit({"ok": True, **manifest})

@@ -98,6 +98,51 @@ def _no_target(value: Any, path: str) -> None:
             _no_target(item, f'{path}[{i}]')
 
 
+# A recipe's preprocessing holds literal values of the dataset (a special value, a token the
+# case reads as missing). OmegaConf would read some texts as configuration syntax: ``???``
+# (a mandatory missing value) and anything holding ``${`` (an interpolation); the generator
+# also reserves ``@@``. Such a text is carried in the Hydra configuration as
+# ``{LITERAL_KEY: <hexadecimal UTF-8 bytes>}``, a value OmegaConf never interprets, and
+# :func:`from_config` decodes it, so the projection holds the exact token.
+LITERAL_KEY = 'hypotrail_literal_utf8_hex'
+OMEGACONF_MISSING = '???'
+
+
+def interpreted(text: str) -> bool:
+    """Whether OmegaConf (or the generator's markers) would not read ``text`` as itself."""
+    return text == OMEGACONF_MISSING or '${' in text or '@@' in text
+
+
+def encode_literals(value: Any, path: str = 'preprocessing') -> Any:
+    """``value`` with every text :func:`interpreted` would change carried as a literal."""
+    if isinstance(value, str):
+        return {LITERAL_KEY: value.encode('utf-8').hex()} if interpreted(value) else value
+    if isinstance(value, Mapping):
+        if list(value) == [LITERAL_KEY]:
+            raise ProjectionError('a value has the shape of an encoded literal', path)
+        out = {}
+        for key, item in value.items():
+            if interpreted(str(key)):
+                raise ProjectionError('a key would be read as configuration syntax',
+                                      f'{path}.{key}')
+            out[key] = encode_literals(item, f'{path}.{key}')
+        return out
+    if isinstance(value, list):
+        return [encode_literals(item, f'{path}[{i}]') for i, item in enumerate(value)]
+    return value
+
+
+def decode_literals(value: Any) -> Any:
+    """The inverse of :func:`encode_literals` (plain containers)."""
+    if isinstance(value, Mapping):
+        if list(value) == [LITERAL_KEY] and isinstance(value[LITERAL_KEY], str):
+            return bytes.fromhex(value[LITERAL_KEY]).decode('utf-8')
+        return {key: decode_literals(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [decode_literals(item) for item in value]
+    return value
+
+
 def from_recipe(recipe: Mapping, *, protocol_id: str, keys_sha256: str, metrics: list,
                 recipe_sha256: str, data_contract_sha256: str) -> dict:
     """The projection of a study's selected recipe and development plan."""
@@ -134,7 +179,7 @@ def from_config(config: Mapping) -> dict:
         'target': dict(prep['target']),
         'features': list(prep['features']),
         'feature_types': dict(prep['feature_types']),
-        'preprocessing': [dict(p) for p in training['preprocessing']],
+        'preprocessing': [dict(p) for p in decode_literals(training['preprocessing'])],
         'model': {'family': training['model']['type'],
                   'parameters': dict(training['model']['params'] or {})},
         'seeds': dict(training['seeds'] or {}),

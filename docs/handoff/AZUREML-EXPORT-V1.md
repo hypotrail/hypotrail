@@ -428,3 +428,42 @@ export minor items). Regression tests: `framework/tests/exporters/azureml/test_r
   signs (`infinities_differ`).
 - **Not covered.** `HYPOTRAIL_EXPORT_REAL_RUNTIME` is no longer read: since I1 the suites
   always run on the real runtime (`export_env.REAL_RUNTIME = True`).
+
+**Round 2 fixes** (round-2 review N1 to N7 and A1-R2b; regression tests:
+`framework/tests/exporters/azureml/test_review_round2.py`). They supersede the round-1
+sentences above that say otherwise. *Selection (N1, N5)*: a capture is the confirmed
+selection when its configuration equals the configuration confirmed now and the engine
+reports the capture current (the rule the engine applies before it opens the final test);
+the decision's revision is not the criterion, so confirming the same choice again (after a
+hold, or by a new proposal) keeps the captured, evaluated export. `read_export_source` adds
+`scientific_contracts.selection` (`capture`: `selected`, `awaiting_reconfirmation`,
+`superseded`, `not_current`), and the exporter accepts an earlier `selection_reference`
+revision only under that rule. While the choice is on hold the export is refused
+(`contract_invalid`, `details.reason: selection_awaits_reconfirmation`) with a remediation
+saying that confirming the same choice again in the chat makes it possible again; no
+limitation then claims that an earlier predictor was evaluated. Another configuration
+confirmed after the capture is still refused or exported recipe-only as in round 1.
+*Recorded predictor (A1-R2b)*: the bundle at the recorded path must have the predictor id
+the capture recorded (and its recipe and data-contract digests), and an `evaluated` binding
+must name that id and the study's final result; otherwise `artifact_integrity_failed`
+(`details.reason: bundle_not_recorded_predictor`). The registry records no separate payload
+digest; the predictor id is the content id of the manifest, which binds it. *Study identity
+(N4)*: the capture's computation context names the study by the export's path-independent
+`study_id`, so new captures get new context digests and predictor ids. *Values (N2, N3)*:
+`materialize` reads the values with the engine's own `pandas.read_csv` call on the whole
+file (the contract's separator, encoding, decimal mark, quote character, header, only its
+`na_values`, `keep_default_na=False`) and the engine's numeric conversion, then checks the
+contract's physical types; row keys still come from the engine's record splitter. The
+project's row files (`development.csv`, the prepared rows, the partitions) are lossless CSV
+written and read with the `csv` module: a missing value is `\N`, a text starting with a
+backslash gets one more, so an empty category stays an empty text. `predict --input` reads
+a CSV with the dataset's reading rules (comma-separated, semicolon when the decimal mark is
+a comma); a number is what pandas reads (`inf`, `Infinity`, a number wrapped in form feed),
+an empty cell of a number column is missing. Two round-1 expectations changed accordingly
+(`inf` and `Infinity` are accepted; a point under a decimal comma reads as the engine reads
+it). *Predict input (N6)*: a malformed `hypotrail.parity_frame/1` document is a refusal
+(`contract_invalid`, exit code 2). *Configuration literals (N7)*: a text of the recipe's
+preprocessing that OmegaConf would interpret (`???`, `${`) is carried in the Hydra
+configuration as `{hypotrail_literal_utf8_hex: ...}` and decoded by the projection, so the
+project reads the exact token; a name or unit of the case equal to `???` is still refused
+with a remediation the junior can follow.
