@@ -555,8 +555,12 @@ def build(source, *, template_capabilities: list, verify_predictor: Callable | N
         predictor = {**predictor, 'evidence_status': evidence}
     else:
         checks.append({'id': 'predictor_captured', 'status': 'missing',
-                       'detail': 'No captured predictor: the recipe is exported, the evaluated '
-                                 'model is not (artifact_status missing).'})
+                       'detail': 'The captured predictor is not current (kept as history; '
+                                 'source status stale): the recipe is exported, the evaluated '
+                                 'model is not (artifact_status missing).'
+                       if predictor_status == 'stale' else
+                       'No captured predictor: the recipe is exported, the evaluated '
+                       'model is not (artifact_status missing).'})
         warnings.append('artifact_missing')
     case = field(source, 'case', None) or {}
     conclusion = field(source, 'conclusion', None)

@@ -186,8 +186,13 @@ def _contracts(store, state, predictor: dict, limitations: list) -> dict:
     except ContractError as exc:
         limitations.append(f'No recipe: {exc.message}')
         return {'source': 'none'}
-    limitations.append('The recipe is described from the chosen configuration; no model was '
-                       'captured, so the export carries no evaluated predictor.')
+    if predictor.get('status') == 'stale':
+        limitations.append('The recipe is described from the chosen configuration; the '
+                           'captured predictor is not current (kept as history), so the export '
+                           'carries no evaluated predictor.')
+    else:
+        limitations.append('The recipe is described from the chosen configuration; no model '
+                           'was captured, so the export carries no evaluated predictor.')
     return {'model_recipe': recipe.model_dump(mode='json'),
             'data_contract': contract.model_dump(mode='json'), 'source': 'configuration'}
 
