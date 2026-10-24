@@ -149,19 +149,34 @@ def missing_for_decision(state: Mapping, decision_id: str, value: Any = None, *,
                                       'before the challenger discussion.'})
     if decision_id == st.FINAL_TEST and state['current'].get(CAPTURE):
         # Library integration v1: a study that captured its predictor opens the final test
-        # only on a current capture of the configuration it opens.
-        if not st.is_current(state, CAPTURE):
-            missing.append({'requirement': 'result_current', 'slot': CAPTURE,
-                            'detail': 'Capture the chosen model again before opening the final '
-                                      'test: the capture is no longer current.'})
-        elif store is not None and value is not None:
+        # only on a current capture of the configuration it opens. Review round 2 (E2-1, A
+        # F1): current by the rule ``status`` and ``evidence`` use (stale map, code changed
+        # under the attestations, upstream), and loadable as the final evaluation loads it
+        # (bundle verification, environment, parity rows), checked here, before the
+        # confirmation commits and so before anything is marked opened.
+        from mlkit.contracts import capture
+        if store is not None:
+            problem = capture.currency_problem(store, state)
+        elif not st.is_current(state, CAPTURE):
+            problem = {'requirement': 'result_current', 'slot': CAPTURE,
+                       'detail': 'Capture the chosen model again before opening the final '
+                                 'test: the capture is no longer current.'}
+        else:
+            problem = None
+        if problem is not None:
+            missing.append(problem)
+        elif store is not None:
             from . import registry
             entry = registry.get(store, state['current'][CAPTURE])
-            if entry['inputs'].get('configuration') != value:
+            if value is not None and entry['inputs'].get('configuration') != value:
                 missing.append({'requirement': 'result_current', 'slot': CAPTURE,
                                 'captured': entry['inputs'].get('configuration'),
                                 'detail': 'The captured predictor is another configuration; '
                                           'capture the one the final test would open.'})
+            else:
+                loading = capture.loading_problem(store, state, capture.predictor_of(entry))
+                if loading is not None:
+                    missing.append(loading)
     if decision_id == 'policy':
         if not st.is_current(state, POLICY_EVALUATION):
             missing.append({'requirement': 'result_current', 'slot': POLICY_EVALUATION,
@@ -376,8 +391,14 @@ def missing_for_activity(state: Mapping, activity: str) -> list[dict]:
 
 def _refuse(missing: list[dict], subject: str) -> None:
     if missing:
+        details: dict = {'missing': missing}
+        # Review round 2 (E2-1): an unmet requirement written for the junior (the capture
+        # of the final test) is relayed as the refusal's junior message.
+        junior = [m['junior_message'] for m in missing if m.get('junior_message')]
+        if junior:
+            details['junior_message'] = ' '.join(dict.fromkeys(junior))
         raise CommandRefused('precondition_missing', f'{subject} is not possible yet.',
-                             details={'missing': missing})
+                             details=details)
 
 
 def require_decision(state: Mapping, decision_id: str, value: Any = None, *, store=None) -> None:

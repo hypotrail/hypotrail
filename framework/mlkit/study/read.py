@@ -133,6 +133,26 @@ class Study:
         self._currency: dict[str, dict] = {}
         self._sources: list[dict] | None = None
 
+    @classmethod
+    def at_state(cls, study_dir, state: dict) -> 'Study':
+        """A snapshot over ``state`` as given (a copy), instead of the one on disk.
+
+        A writer that holds the lock uses it to apply the same currency rule as ``status``
+        and ``evidence`` (:meth:`currency`: stale map, code changed under the code
+        attestations, upstream) to the state it is about to mutate, before it decides
+        (review round 2, E2-1..E2-3). Nothing is written; the registry and blobs are read and
+        verified from disk as for any snapshot.
+        """
+        self = cls.__new__(cls)
+        self.study_dir = Path(study_dir).resolve()
+        self.home = self.study_dir / HOME
+        self._state = copy.deepcopy(dict(state))
+        self._entries = {}
+        self._module_shas = {}
+        self._currency = {}
+        self._sources = None
+        return self
+
     # state
 
     @property

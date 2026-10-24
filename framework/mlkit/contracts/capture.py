@@ -206,7 +206,7 @@ def matching_capture(store, state: Mapping, case, model_inputs: Mapping,
     """The capture the final evaluation must use: None when the study never captured;
     otherwise the current capture of this exact configuration, or a refusal
     (``model_not_captured``)."""
-    from mlkit.study import registry, state as st
+    from mlkit.study import registry
     rid = state['current'].get(CAPTURE)
     if rid is None:
         return None
@@ -214,15 +214,166 @@ def matching_capture(store, state: Mapping, case, model_inputs: Mapping,
     same = (entry['inputs'].get('configuration') == dict(config)
             and entry['inputs'].get('model_inputs') == dict(model_inputs)
             and entry['params'].get('model_params') == dict(model_params))
-    if not same or not st.is_current(state, CAPTURE):
+    if not same:
         _refuse('model_not_captured', 'The captured predictor does not describe the '
-                'configuration the final test would open (or is no longer current).',
+                'configuration the final test would open.',
                 capture=rid, remediation='Run predictor.capture again before opening the '
                                          'final test.')
+    # Review round 2 (E2-1): current by the rule ``status`` and ``evidence`` use (stale map,
+    # code changed under the attestations, upstream), not only by the stale map.
+    problem = currency_problem(store, state)
+    if problem is not None:
+        _refuse('model_not_captured', 'The captured predictor is no longer current: '
+                f'{problem["reason"]}.', capture=rid,
+                remediation='Run predictor.capture again before opening the final test.',
+                stale_reason=problem['reason'], junior_message=problem['junior_message'])
+    return predictor_of(entry)
+
+
+def predictor_of(entry: Mapping) -> dict:
+    """The ``inputs.predictor`` record of the final evaluation, from a capture's entry."""
     values = entry['output']['values']
-    return {'result_id': rid, 'predictor_id': values['predictor_id'],
+    return {'result_id': entry['result_id'], 'predictor_id': values['predictor_id'],
             'bundle': values['bundle'], 'profile': entry['params'].get('profile'),
             'packages': [p['format'] for p in values.get('packages') or []]}
+
+
+# --- before the final test is opened (review round 2, E2-1 and A F1) ----------------------------
+#
+# The final test is opened once. Everything that can refuse the captured predictor is checked
+# before the opening is recorded: the capture's currency by the same rule as ``status`` and
+# ``evidence``, then the bundle verification, the environment check and the parity rows of
+# :func:`load_for_final`. A refusal there leaves the final test sealed and no final-test row is
+# read; the junior is told what to do.
+
+# ``details`` key of a refusal raised before any final-test row was read.
+FINAL_TEST_ROWS_READ = 'final_test_rows_read'
+NOT_READ = {'en': 'No final-test row was read: the final test is still sealed.',
+            'fr': "Aucune ligne de l'échantillon de test final n'a été lue : il reste scellé."}
+
+
+def _lang(state: Mapping) -> str:
+    from mlkit.study import state as st
+    return 'fr' if st.language_of(state) == 'fr' else 'en'
+
+
+def currency_problem(store, state: Mapping) -> dict | None:
+    """Why the current capture is not current, by the rule of ``status`` and ``evidence``
+    (:meth:`mlkit.study.read.Study.currency` on ``state``), or None (current, or no capture).
+
+    ``{requirement, slot, result_id, reason, code_changed, upstream_not_current, detail,
+    junior_message}``.
+    """
+    from mlkit.study import read
+    rid = state['current'].get(CAPTURE)
+    if rid is None:
+        return None
+    currency = read.Study.at_state(store.study_dir, state).currency(rid)
+    if currency['current']:
+        return None
+    reason = currency['reason'] or {}
+    changed = list(reason.get('code_changed') or [])
+    upstream = list(reason.get('upstream_not_current') or [])
+    text = str(reason.get('reason') or 'it is no longer current')
+    lang = _lang(state)
+    if changed:
+        junior = ('Your captured model was made by code that has changed since (an engine '
+                  'update), so the final test cannot score it. Run predictor.capture again '
+                  'first, then open the final test.' if lang == 'en' else
+                  "Votre modèle capturé a été produit par un code qui a changé depuis (une mise "
+                  "à jour du moteur) : l'échantillon de test final ne peut pas l'évaluer. "
+                  "Relancez d'abord predictor.capture, puis ouvrez l'échantillon de test final.")
+    elif upstream:
+        junior = ('Your captured model was made from results that are no longer current, so '
+                  'the final test cannot score it. Bring those results up to date, run '
+                  'predictor.capture again, then open the final test.' if lang == 'en' else
+                  "Votre modèle capturé a été produit à partir de résultats qui ne sont plus "
+                  "à jour : l'échantillon de test final ne peut pas l'évaluer. Mettez ces "
+                  "résultats à jour, relancez predictor.capture, puis ouvrez l'échantillon de "
+                  "test final.")
+    else:
+        junior = ('Your captured model is no longer current, so the final test cannot score '
+                  'it. Run predictor.capture again first, then open the final test.'
+                  if lang == 'en' else
+                  "Votre modèle capturé n'est plus à jour : l'échantillon de test final ne "
+                  "peut pas l'évaluer. Relancez d'abord predictor.capture, puis ouvrez "
+                  "l'échantillon de test final.")
+    return {'requirement': 'result_current', 'slot': CAPTURE, 'result_id': rid,
+            'reason': text, 'code_changed': changed, 'upstream_not_current': upstream,
+            'detail': f'The capture is not current ({text}): run predictor.capture again before '
+                      'opening the final test. No final-test row was read.',
+            'junior_message': f'{junior} {NOT_READ[lang]}'}
+
+
+def loading_problem(store, state: Mapping, predictor: Mapping | None = None) -> dict | None:
+    """Why :func:`load_for_final` would refuse the current capture (bundle verification,
+    environment, its own parity rows), or None. Reads the bundle only, never a final-test
+    row. ``{requirement: "capture_loadable", slot, result_id, code, contract_code, message,
+    remediation, detail, junior_message}``."""
+    from mlkit.study import registry
+    from mlkit.study.errors import StudyError
+    if predictor is None:
+        rid = state['current'].get(CAPTURE)
+        if rid is None:
+            return None
+        predictor = predictor_of(registry.get(store, rid))
+    try:
+        load_for_final(store, predictor)
+    except StudyError as exc:
+        return loading_refusal(state, predictor, exc)
+    return None
+
+
+def loading_refusal(state: Mapping, predictor: Mapping, exc) -> dict:
+    """The ``capture_loadable`` item of a refusal ``exc`` of :func:`load_for_final`."""
+    details = dict(getattr(exc, 'details', None) or {})
+    contract = details.get('contract_code')
+    lang = _lang(state)
+    if contract == 'environment_unqualified':
+        junior = ('This environment differs from the one your model was captured in (a '
+                  'library version changed), so it cannot be loaded for the final test. '
+                  'Install the captured versions again (the environment lock inside the '
+                  'bundle), then open the final test.' if lang == 'en' else
+                  "Cet environnement diffère de celui de la capture (une version de "
+                  "bibliothèque a changé) : le modèle ne peut pas être chargé pour "
+                  "l'échantillon de test final. Réinstallez les versions capturées (le "
+                  "verrou d'environnement du bundle), puis ouvrez l'échantillon de test final.")
+    elif contract == 'artifact_integrity_failed':
+        junior = ('The saved bundle of your captured model does not verify: a file in its '
+                  'folder was added, changed or removed (a .DS_Store or an editor backup, '
+                  'for example). Remove the stray file or restore the bundle, then open the '
+                  'final test.' if lang == 'en' else
+                  "Le bundle enregistré de votre modèle capturé ne se vérifie pas : un fichier "
+                  "de son dossier a été ajouté, modifié ou supprimé (un .DS_Store ou une "
+                  "sauvegarde d'éditeur, par exemple). Retirez le fichier en trop ou restaurez "
+                  "le bundle, puis ouvrez l'échantillon de test final.")
+    else:
+        junior = ('Your captured model cannot be loaded for the final test. Run '
+                  'predictor.capture again first, then open the final test.' if lang == 'en'
+                  else "Votre modèle capturé ne peut pas être chargé pour l'échantillon de "
+                       "test final. Relancez d'abord predictor.capture, puis ouvrez "
+                       "l'échantillon de test final.")
+    return {'requirement': 'capture_loadable', 'slot': CAPTURE,
+            'result_id': predictor.get('result_id'), 'code': getattr(exc, 'code', None),
+            'contract_code': contract, 'message': getattr(exc, 'message', str(exc)),
+            'path': details.get('path'), 'remediation': details.get('remediation'),
+            'detail': 'The captured predictor cannot be loaded for the final test '
+                      f'({getattr(exc, "message", exc)}); fix it before opening. No final-test '
+                      'row was read.',
+            'junior_message': f'{junior} {NOT_READ[lang]}'}
+
+
+def require_loadable(store, state: Mapping, predictor: Mapping) -> None:
+    """Refuse (``precondition_missing``, nothing written) when :func:`load_for_final` would
+    refuse ``predictor``: called before the opening is recorded."""
+    problem = loading_problem(store, state, predictor)
+    if problem is not None:
+        from mlkit.reliability import CommandRefused
+        raise CommandRefused('precondition_missing', 'Opening the final test is not possible '
+                             'yet: the captured predictor cannot be loaded. No final-test row '
+                             'was read.',
+                             details={'missing': [problem],
+                                      'junior_message': problem['junior_message']})
 
 
 # --- computation ---------------------------------------------------------------------------------
@@ -385,7 +536,23 @@ def _place(root: Path, staging: Path, descriptor):
 
 def load_for_final(store, predictor: Mapping):
     """The verified, reloaded predictor the final evaluation scores with (its own parity
-    rows are checked first)."""
+    rows are checked first).
+
+    It reads the bundle only, and is called before any final-test row is read (by the
+    evaluation, and before the opening is recorded): a refusal carries
+    ``details.final_test_rows_read: false`` and a ``junior_message`` (review round 2, A F1),
+    so a run that fails here withdraws its opening instead of consuming the final test."""
+    from mlkit.study.errors import StudyError
+    try:
+        return _load_for_final(store, predictor)
+    except StudyError as exc:
+        problem = loading_refusal({}, predictor, exc)
+        exc.details = {**exc.details, FINAL_TEST_ROWS_READ: False,
+                       'junior_message': problem['junior_message']}
+        raise
+
+
+def _load_for_final(store, predictor: Mapping):
     from hypotrail_runtime import check_parity, load_predictor
     root = predictors_root(store)
     try:

@@ -310,6 +310,31 @@ Such a study keeps its recorded final figures, shown as not current; its evidenc
 current again in a new study. Studies of the base (`506180a`) have no capture and are not
 affected.
 
+A study whose final test is still sealed is not lost (review round 2, E2-1, 2026-10-24). Until
+then, the engine opened the final test on such a capture: the opening checked the capture
+against the stale map only, while `status` and `evidence` also apply `code_changed` (with the
+code attestations) and upstream currency, so the opening either failed (`integrity_error` on an
+old bundle) or produced a final result that was not current from the start, and the final test
+was used up either way. Now the engine refuses to open the final test on a capture that is not
+current by the rule `status` and `evidence` use, for any fingerprinted module change, and
+equally on a capture the final evaluation could not load (a stray file in the bundle such as a
+`.DS_Store`, an environment whose library versions differ from the capture's; area A, F1). The
+check runs before the `final_test` confirmation commits and again when the evaluation is
+reserved, before the opening is recorded: the confirmation is refused with
+`precondition_missing` (slot `predictor.capture`, requirement `result_current` with
+`code_changed` / `upstream_not_current`, or `capture_loadable`), nothing is marked opened, no
+final-test row is read or recorded as exposed, and `details.junior_message` tells the junior
+what to do. What the junior does: run `predictor.capture` again (after bringing any result it
+was made from up to date) when the capture is not current; remove the stray file or restore the
+captured environment when it cannot be loaded; then confirm the opening again. If the bundle
+changes between the reservation and the evaluation, the evaluation refuses it before reading
+any final-test row and the opening is withdrawn (`run.fail` with `final_test_unread`), so the
+final test is still not consumed. After an opening, `run final_test.evaluation` and `run
+diag.final_test` no longer answer `already_current` for a result that is not current: they say
+it cannot be recomputed (E2-2). An identical request on a result that is current under a code
+attestation is answered by that result instead of recomputing and replacing it (E2-3); a module
+change no exact attestation covers for that activity is still a new request.
+
 Evidence (`framework/tests/study/code_compat_evidence.py`, reproducible; the opt-in test
 `test_code_compat_library_v1.py::test_byte_comparison_with_the_base_engine` runs it when
 `HYPOTRAIL_COMPAT_OLD_PYTHON` and `HYPOTRAIL_COMPAT_OLD_ROOT` name a `506180a` checkout with its

@@ -21,7 +21,17 @@ that uses none of them keeps its identities and payloads.
   and `--packager` are refused with any other activity (`invalid_arguments`).
 * **`final_test.evaluation`** in a study holding a `predictor.capture` result: confirming
   `final_test` requires a current capture of the configuration it opens
-  (`precondition_missing`, slot `predictor.capture`); the evaluation records
+  (`precondition_missing`, slot `predictor.capture`); since review round 2 (E2-1, A F1)
+  "current" is the rule of `status` and `evidence` (stale map, `code_changed` under the code
+  attestations, upstream; the item carries `code_changed`, `upstream_not_current` and a
+  `junior_message`), and the capture must load as the evaluation loads it (requirement
+  `capture_loadable`: `contract_code` `artifact_integrity_failed` or
+  `environment_unqualified`, `remediation`), checked before the confirmation commits and again
+  by the reservation before the opening is recorded; `details.junior_message` says what to do
+  and that no final-test row was read. A refusal of the reloaded capture inside the evaluation
+  (before any final-test row is read) records `run.fail` with `final_test_unread: true`,
+  withdraws the opening (`result.final_test: "sealed"`) and records no final-test exposure, so
+  the confirmation's `opening.status` is `refused`; the evaluation records
   `inputs.predictor` and `inputs.results["predictor.capture"]`, scores the final rows with the
   reloaded capture (no refit) and adds `values.predictor`; after promotion `run.result`
   carries `evidence_binding` (`written` or `failed: ...`) and
@@ -616,7 +626,7 @@ An activity is identified by its **slot** name, which is also its registry `acti
    | `hypotrail.run/1` | `run`, `run --acknowledge-interruption` | `schema`, `ok`, `study`, `action` (`run` or `run.acknowledge`), `request_id`, `replayed`, `revision`, `activity`, `execution_id`, `status`, `result_id`, `values`, `result`, `artifacts`, `next_action` (v0.3, WP-J, §3.2) |
    | `hypotrail.preview/1` | `preview policy` | `schema`, `ok`, `study`, `revision`, `kind`, `rules`, `models`, `evaluations`, `intervals`, `adopted`, `recorded` (`false`), `note`, `warnings` |
 
-   `run.status` is one of `promoted`, `late_not_promoted`, `already_current`, `running`, `failed`, `interrupted_unknown`, `acknowledged`. An `acknowledged` result holds `execution_id`, `activity`, `status`, `restarted` (`false`), `started_revision`, `user_words`, `note`. `values` are the registry values of `result_id` (cite them only while the slot is current, §4); since review fix L6 a `late_not_promoted` payload has `values: null` and `result.citable: false` (the result is stored in the registry, but it describes a state that no longer holds). Since review fix L7, a `run` whose slot and `input_key` equal those of an active execution is refused with `execution_in_progress` (`details.execution_id`, `slot`, `activity`, `started_revision`) instead of computing twice. `preview` writes nothing and records no exposure; `validation_policy_selection` is recorded by `run policy.evaluate`. `preview.warnings` (post-v0.1 fixes, D4; additive) lists the G.12 warnings that bear on the previewed rules, as `not_yet_defensible` items words them (§4): `capacity_exceeds_validation` for the previewed capacities at least as large as the validation rows the fits scored, first, then `small_validation_partition` when the current split's validation partition is small; `[]` otherwise.
+   `run.status` is one of `promoted`, `late_not_promoted`, `already_current`, `running`, `failed`, `interrupted_unknown`, `acknowledged`. An `acknowledged` result holds `execution_id`, `activity`, `status`, `restarted` (`false`), `started_revision`, `user_words`, `note`. `values` are the registry values of `result_id` (cite them only while the slot is current, §4); since review fix L6 a `late_not_promoted` payload has `values: null` and `result.citable: false` (the result is stored in the registry, but it describes a state that no longer holds). Since review round 2 (E2-2, E2-3), `already_current` needs the slot's result to be current by the rule of `status` and `evidence` (§4: stale map, code, upstream) and to answer the request: the same `input_key`, or the same activity, params, inputs and module set with every module either at its recorded digest or covered by an exact attestation for that activity (`code_changed` empty); nothing is recomputed then. A `final_test.evaluation` (or a `diag.final_test` whose final evaluation is not current) that is not current after the opening is refused (`final_test_already_opened`, resp. `precondition_missing`, `details.current: false`, `stale_reason`, `junior_message`): it cannot be recomputed. Since review fix L7, a `run` whose slot and `input_key` equal those of an active execution is refused with `execution_in_progress` (`details.execution_id`, `slot`, `activity`, `started_revision`) instead of computing twice. `preview` writes nothing and records no exposure; `validation_policy_selection` is recorded by `run policy.evaluate`. `preview.warnings` (post-v0.1 fixes, D4; additive) lists the G.12 warnings that bear on the previewed rules, as `not_yet_defensible` items words them (§4): `capacity_exceeds_validation` for the previewed capacities at least as large as the validation rows the fits scored, first, then `small_validation_partition` when the current split's validation partition is small; `[]` otherwise.
 
 ### 8.2 Read API (Phase 2 and 3)
 

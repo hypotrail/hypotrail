@@ -2185,6 +2185,8 @@ def _opening(store: StudyStore, payload: dict, request_id: str) -> dict | None:
     except Exception as exc:
         # Refused before its reservation (nothing opened), or failed after it (the final test
         # is opened and consumed: run.fail recorded the failure and the rows it may have read).
+        # Review round 2 (A F1): a failure before any final-test row was read (the captured
+        # predictor refused when loaded) withdraws the opening, so it reads as refused.
         state = read.open(store.study_dir).state
         opening = (state.get('partition') or {}).get('opening') or {}
         error = (refusal_dict(exc) if isinstance(exc, (CommandRefused, StudyError)) else

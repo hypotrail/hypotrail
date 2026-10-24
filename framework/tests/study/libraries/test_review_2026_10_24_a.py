@@ -419,9 +419,11 @@ def test_refused_capture_leaves_no_staging_folder(tmp_path, monkeypatch):
 
 def test_final_test_refuses_a_swapped_payload(tmp_path):
     """End to end: the payload replaced and only the bundle document updated; the opening
-    fails with an integrity error and records no final result."""
+    is refused with an integrity error and records no final result. Since review round 2
+    (area A, F1) the refusal comes before the confirmation commits: the final test stays
+    sealed and none of its rows is read."""
     import test_capture_final as tcf
-    from mlkit.study import activities as act, read
+    from mlkit.study import activities as act, read, state as st
     flow = tcf._chosen(tmp_path, 'regression')
     v = flow.run('predictor.capture')['values']
     b = tcf._home(flow) / v['bundle']
@@ -429,11 +431,13 @@ def test_final_test_refuses_a_swapped_payload(tmp_path):
     other.named_steps['model'].coef_ = other.named_steps['model'].coef_ * 0.5
     (b / 'payload/model.pkl').write_bytes(pickle.dumps(other, protocol=5))
     _refresh(b, 'payload/model.pkl')
-    out = tcf._open(flow, expect=None)
-    opening = out['result']['opening']
-    assert opening['status'] == 'failed'
-    assert opening['error']['details']['contract_code'] == 'artifact_integrity_failed'
-    assert act.FINAL not in read.open(flow.study).state['current']
+    out = tcf._open(flow, expect=2)
+    assert out['error']['code'] == 'precondition_missing'
+    item = next(x for x in out['error']['details']['missing']
+                if x['requirement'] == 'capture_loadable')
+    assert item['contract_code'] == 'artifact_integrity_failed'
+    state = read.open(flow.study).state
+    assert act.FINAL not in state['current'] and not st.final_test_opened(state)
     assert not (b / 'evidence').exists()                # no evidence binding was written
 
 
